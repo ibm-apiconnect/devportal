@@ -1,0 +1,224 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the plan module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function plan_install() {
+  // Ensure the plan node type is available.
+  node_types_rebuild();
+  _plan_add_custom_fields();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function plan_uninstall() {
+  _plan_delete_node_content('plan');
+  _plan_delete_custom_fields();
+  node_type_delete('plan');
+  field_purge_batch(500);
+}
+
+/**
+ * Custom fields for Plan content type.
+ */
+function _plan_installed_fields() {
+  $t = get_t();
+  return array(
+    'plan_apimhostname' => array(
+      'field_name' => 'plan_apimhostname',
+      'label' => t('APIC Hostname'),
+      'type' => 'text'),
+    'plan_providerid' => array(
+      'field_name' => 'plan_providerid',
+      'label' => t('Provider ID'),
+      'type' => 'text'),
+    'plan_environmentid' => array(
+      'field_name' => 'plan_environmentid',
+      'label' => t('Environment ID'),
+      'type' => 'text'),
+    'plan_apiid' => array('field_name' => 'plan_apiid', 'label' => t('ID'), 'type' => 'text'),
+    'plan_version' => array(
+      'field_name' => 'plan_version',
+      'label' => t('Version'),
+      'type' => 'text'),
+    'plan_productid' => array(
+      'field_name' => 'plan_productid',
+      'label' => t('Product ID'),
+      'type' => 'text'),
+    'plan_description' => array(
+      'field_name' => 'plan_description',
+      'label' => t('Description'),
+      'type' => 'text_long'),
+    'plan_displayname' => array(
+      'field_name' => 'plan_displayname',
+      'label' => t('Display Name'),
+      'type' => 'text'),
+    'plan_requiresapproval' => array(
+      'field_name' => 'plan_requiresapproval',
+      'label' => t('Requires Approval'),
+      'type' => 'text'),
+    'plan_subscribable' => array(
+      'field_name' => 'plan_subscribable',
+      'label' => t('Subscribable'),
+      'type' => 'text'),
+    'plan_apis' => array('field_name' => 'plan_apis', 'label' => t('APIs'), 'type' => 'text_long'),
+    'plan_url' => array('field_name' => 'plan_url', 'label' => t('URL'), 'type' => 'text'),
+    'plan_updated' => array(
+      'field_name' => 'plan_updated',
+      'label' => t('Updated'),
+      'type' => 'text'));
+}
+
+function _plan_installed_instances() {
+  $t = get_t();
+  return array(
+    'plan_apimhostname' => array(
+      'field_name' => 'plan_apimhostname',
+      'type' => 'text',
+      'label' => t('APIC Hostname'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('APIC Hostname'), 'type' => 'text'),
+        'teaser' => array('label' => t('APIC Hostname'), 'type' => 'text')
+      )
+    ),
+    'plan_providerid' => array(
+      'field_name' => 'plan_providerid',
+      'type' => 'text',
+      'label' => t('Provider ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Provider ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('Provider ID'), 'type' => 'text'))),
+    'plan_environmentid' => array(
+      'field_name' => 'plan_environmentid',
+      'type' => 'text',
+      'label' => t('Environment ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Environment ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('Environment ID'), 'type' => 'text'))),
+    'plan_apiid' => array(
+      'field_name' => 'plan_apiid',
+      'type' => 'text',
+      'label' => t('ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('ID'), 'type' => 'text'))),
+    'plan_version' => array(
+      'field_name' => 'plan_version',
+      'type' => 'text',
+      'label' => t('Version'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Version'), 'type' => 'text'),
+        'teaser' => array('label' => t('Version'), 'type' => 'text'))),
+    'plan_productid' => array(
+      'field_name' => 'plan_productid',
+      'type' => 'text',
+      'label' => t('Product ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Product ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('Product ID'), 'type' => 'text'))),
+    'plan_description' => array(
+      'field_name' => 'plan_description',
+      'type' => 'text_long',
+      'label' => t('Description'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('Description'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('Description'), 'type' => 'text_long'))),
+    'plan_displayname' => array(
+      'field_name' => 'plan_displayname',
+      'type' => 'text',
+      'label' => t('Display Name'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Display Name'), 'type' => 'text'),
+        'teaser' => array('label' => t('Display Name'), 'type' => 'text_long'))),
+    'plan_requiresapproval' => array(
+      'field_name' => 'plan_requiresapproval',
+      'type' => 'text',
+      'label' => t('Requires Approval'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array('default' => array('label' => t('Requires Approval'), 'type' => 'text'))),
+    'plan_subscribable' => array(
+      'field_name' => 'plan_subscribable',
+      'type' => 'text',
+      'label' => t('Subscribable'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array('default' => array('label' => t('Subscribable'), 'type' => 'text'))),
+    'plan_apis' => array(
+      'field_name' => 'plan_apis',
+      'type' => 'text_long',
+      'label' => t('APIs'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array('default' => array('label' => t('APIs'), 'type' => 'text_long'))),
+    'plan_url' => array(
+      'field_name' => 'plan_url',
+      'type' => 'text',
+      'label' => t('URL'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array('default' => array('label' => t('URL'), 'type' => 'text'))),
+    'plan_updated' => array(
+      'field_name' => 'plan_updated',
+      'type' => 'text',
+      'label' => t('Updated'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Updated'), 'type' => 'text'),
+        'teaser' => array('label' => t('Updated'), 'type' => 'text'))));
+}
+
+function _plan_add_custom_fields() {
+  // Plan
+  foreach (_plan_installed_fields() as $field) {
+    $existingfield = field_info_field($field['field_name']);
+    if (!isset($existingfield)) {
+      field_create_field($field);
+    }
+  }
+  foreach (_plan_installed_instances() as $fieldinstance) {
+    $fieldinstance['entity_type'] = 'node';
+    $fieldinstance['bundle'] = 'plan';
+    field_create_instance($fieldinstance);
+  }
+}
+
+function _plan_delete_custom_fields() {
+  // Plan
+  foreach (array_keys(_application_installed_fields()) as $field) {
+    field_delete_field($field);
+  }
+  $instances = field_info_instances('node', 'plan');
+  foreach ($instances as $instance_name => $fieldinstance) {
+    field_delete_instance($fieldinstance);
+  }
+}
+
+// delete all nodes of specified type
+function _plan_delete_node_content($type) {
+  $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
+  $result = db_query($sql, array(':type' => $type));
+  try {
+    node_delete_multiple($result);
+  }
+  catch (Exception $e) {
+    // quietly swallow exceptions from dropping the nodes.
+  }
+}
+
+/**
+ * Update code to handle upgrade from earlier version
+ */
+function plan_update_7400() {
+
+}

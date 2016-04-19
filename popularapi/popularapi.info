@@ -1,0 +1,11 @@
+name = Popular API Block
+description = A featured API block
+core = 7.x
+package = IBM API Connect v5
+files[] = popularapi.module
+files[] = "plugins/bean/popularapi.popularapi_block.inc"
+
+dependencies[] = bean
+dependencies[] = image
+
+version = VERSION

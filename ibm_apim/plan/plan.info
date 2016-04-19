@@ -1,0 +1,10 @@
+name = IBM API Connect Plan
+description = IBM API Connect Plan Node Content Type
+package = IBM API Connect v5
+core = 7.x
+dependencies[] = field
+dependencies[] = node
+dependencies[] = ibm_apim
+dependencies[] = ctools
+
+version = VERSION

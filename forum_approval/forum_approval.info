@@ -1,0 +1,12 @@
+name = Forum Approval
+description = A custom view to aid in forum content approvals
+core = 7.x
+package = Advanced Forum
+files[] = forum_approval.module
+
+dependencies[] = advanced_forum
+dependencies[] = content_approval
+dependencies[] = fasttoggle
+dependencies[] = views_bulk_operations
+
+version = VERSION

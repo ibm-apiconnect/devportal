@@ -1,0 +1,243 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the devorg module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function devorg_install() {
+  // Ensure the devorg node type is available.
+  node_types_rebuild();
+  _devorg_add_custom_fields();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function devorg_uninstall() {
+  _devorg_delete_node_content('devorg');
+  _devorg_delete_custom_fields();
+  node_type_delete('devorg');
+  field_purge_batch(500);
+}
+
+/**
+ * Custom fields for devorg content type.
+ *
+ * @return array
+ */
+function _devorg_installed_fields() {
+  $t = get_t();
+  return array(
+    'devorg_id' => array(
+      'field_name' => 'devorg_id',
+      'label' => t('Organization ID'),
+      'type' => 'text'
+    ),
+    'devorg_name' => array(
+      'field_name' => 'devorg_name',
+      'label' => t('Organization Name'),
+      'type' => 'text'
+    ),
+    'devorg_owner' => array(
+      'field_name' => 'devorg_owner',
+      'label' => t('Organization Owner'),
+      'type' => 'text'
+    ),
+    'devorg_tags' => array(
+      'field_name' => 'devorg_tags',
+      'label' => t('Organization Tags'),
+      'type' => 'text'
+    ),
+    'devorg_members' => array(
+      'field_name' => 'devorg_members',
+      'label' => t('Members'),
+      'type' => 'text_long'
+    ),
+    'devorg_apimhostname' => array(
+      'field_name' => 'devorg_apimhostname',
+      'label' => t('APIC Hostname'),
+      'type' => 'text'
+    ),
+    'devorg_providerid' => array(
+      'field_name' => 'devorg_providerid',
+      'label' => t('Provider ID'),
+      'type' => 'text'
+    ),
+    'devorg_environmentid' => array(
+      'field_name' => 'devorg_environmentid',
+      'label' => t('Environment ID'),
+      'type' => 'text'
+    )
+  );
+}
+
+/**
+ * @return array
+ */
+function _devorg_installed_instances() {
+  $t = get_t();
+  return array(
+    'devorg_id' => array(
+      'field_name' => 'devorg_id',
+      'type' => 'text',
+      'label' => t('Organization ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Organization ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('Organization ID'), 'type' => 'text')
+      )
+    ),
+    'devorg_name' => array(
+      'field_name' => 'devorg_name',
+      'type' => 'text',
+      'label' => t('Organization Name'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Organization Name'), 'type' => 'text'),
+        'teaser' => array('label' => t('Organization Name'), 'type' => 'text')
+      )
+    ),
+    'devorg_owner' => array(
+      'field_name' => 'devorg_owner',
+      'type' => 'text',
+      'label' => t('Organization Name'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Organization Owner'), 'type' => 'text'),
+        'teaser' => array('label' => t('Organization Owner'), 'type' => 'text')
+      )
+    ),
+    'devorg_tags' => array(
+      'field_name' => 'devorg_tags',
+      'type' => 'text',
+      'label' => t('Organization Name'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Organization Tags'), 'type' => 'text'),
+        'teaser' => array('label' => t('Organization Tags'), 'type' => 'text')
+      )
+    ),
+    'devorg_members' => array(
+      'field_name' => 'devorg_members',
+      'type' => 'text_long',
+      'label' => t('Members'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('Members'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('Members'), 'type' => 'text_long')
+      )
+    ),
+    'devorg_apimhostname' => array(
+      'field_name' => 'devorg_apimhostname',
+      'type' => 'text',
+      'label' => t('APIC Hostname'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('APIC Hostname'), 'type' => 'text'),
+        'teaser' => array('label' => t('APIC Hostname'), 'type' => 'text')
+      )
+    ),
+    'devorg_providerid' => array(
+      'field_name' => 'devorg_providerid',
+      'type' => 'text',
+      'label' => t('Provider ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Provider ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('Provider ID'), 'type' => 'text')
+      )
+    ),
+    'devorg_environmentid' => array(
+      'field_name' => 'devorg_environmentid',
+      'type' => 'text',
+      'label' => t('Environment ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Environment ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('Environment ID'), 'type' => 'text')
+      )
+    )
+  );
+}
+
+function _devorg_add_custom_fields() {
+  // devorg
+  foreach (_devorg_installed_fields() as $field) {
+    $existingfield = field_info_field($field['field_name']);
+    if (!isset($existingfield)) {
+      field_create_field($field);
+    }
+  }
+  foreach (_devorg_installed_instances() as $fieldinstance) {
+    $fieldinstance['entity_type'] = 'node';
+    $fieldinstance['bundle'] = 'devorg';
+    field_create_instance($fieldinstance);
+  }
+}
+
+function _devorg_delete_custom_fields() {
+  // devorg
+  foreach (array_keys(_devorg_installed_fields()) as $field) {
+    field_delete_field($field);
+  }
+  $instances = field_info_instances('node', 'devorg');
+  foreach ($instances as $instance_name => $fieldinstance) {
+    field_delete_instance($fieldinstance);
+  }
+}
+
+/**
+ * delete all nodes of specified type
+ *
+ * @param $type
+ */
+function _devorg_delete_node_content($type) {
+  $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
+  $result = db_query($sql, array(':type' => $type));
+  try {
+    node_delete_multiple($result);
+  } catch (Exception $e) {
+    // quietly swallow exceptions from dropping the nodes.
+  }
+}
+
+/**
+ * Update code to handle upgrade from earlier version
+ */
+function devorg_update_7400() {
+  foreach (_devorg_installed_fields() as $field) {
+    $field_name = field_info_field($field['field_name']);
+    if (!$field_name) {
+      field_create_field($field);
+      watchdog('devorg', 'Field %field_name has been successfully added', array(
+        '%field_name' => $field['field_name']
+      ));
+    }
+    else {
+      watchdog('devorg', 'Field %field_name already exists', array(
+        '%field_name' => $field['field_name']
+      ));
+    }
+  }
+
+  foreach (_devorg_installed_instances() as $fieldinstance) {
+    $instance_name = field_info_field($fieldinstance['field_name']);
+    if (!$instance_name) {
+      $fieldinstance['entity_type'] = 'node';
+      $fieldinstance['bundle'] = 'devorg';
+      field_create_instance($fieldinstance);
+      watchdog('devorg', 'Instance %instance_name has been successfully added', array(
+        '%instance_name' => $fieldinstance['field_name']
+      ));
+    }
+    else {
+      watchdog('devorg', 'Instance %instance_name already exists', array(
+        '%instance_name' => $fieldinstance['field_name']
+      ));
+    }
+  }
+}

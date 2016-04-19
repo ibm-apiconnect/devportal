@@ -1,0 +1,3860 @@
+<?php
+
+/**
+ * Implement hook_install().
+ *
+ * Perform actions to set up the site for this profile.
+ *
+ * @throws \Exception
+ */
+function apim_profile_install() {
+  // Do the standard install
+  include_once DRUPAL_ROOT . '/profiles/standard/standard.install';
+  standard_install();
+
+  // need to enable this one on its own first to avoid a drupal static cache issue.
+  drupal_static_reset('i18n_object_info');
+  module_enable(array('i18n_string'), TRUE);
+
+  // Enable modules that are not enabled via the .info
+  $modules = array(
+    'bean_admin_ui',
+    'page_manager',
+    'flag_bookmark',
+    'auth_apic',
+    'api',
+    'product',
+    'devorg',
+    'application',
+    'image_captcha',
+    'hs_taxonomy',
+    'i18n_redirect',
+    'i18n_translation',
+    'i18n_node',
+    'i18n_field',
+    'i18n_menu',
+    'i18n_block',
+    'image_captcha_refresh',
+    'messaging_template',
+    'messaging_mail',
+    'messaging_htmlmail',
+    'notifications',
+    'notifications_content',
+    'notifications_tags',
+    'notifications_forum',
+    'notifications_account',
+    'content_approval_field',
+    'fasttoggle_node',
+    'site_uploader',
+    'comprehensive_uninstaller',
+    'slick_ui',
+    'slick_fields',
+    'metatag',
+    'metatag_dc',
+    'metatag_facebook',
+    'metatag_twitter_cards',
+    'metatag_opengraph',
+    'panels_mini',
+    'popularproduct',
+    'password_policy_password_tab',
+    'account_tabs'
+  );
+  module_enable($modules, TRUE);
+  variable_set('ibm_apim_enable_password_tab', 1);
+  variable_set('ibm_apim_enable_account_tabs', 1);
+
+  _apim_profile_enable_htmlmail();
+  variable_set('ibm_apim_enable_htmlmail', 1);
+
+  // Don't need these
+  module_disable(array('shortcut', 'group', 'dblog', 'context', 'toolbar', 'i18n_update'), TRUE);
+
+  // turn off display of error messages
+  variable_set('error_level', '0');
+
+  // allow user registration by default
+  variable_set('user_register', 1);
+
+  // set up to use local translations
+  variable_set('l10n_update_download_store', 'sites/all/translations');
+  variable_set('l10n_update_check_mode', '2');
+  variable_set('ibm_apim_disable_i18n_update', 1);
+
+  // enable language detection
+  variable_set('language_negotiation_language', array(
+    "locale-user" => array(
+      "callbacks" => array("language" => "locale_language_from_user"),
+      "file" => "includes/locale.inc"
+    ),
+    "locale-browser" => array(
+      "callbacks" => array("language" => "locale_language_from_browser"),
+      "file" => "includes/locale.inc",
+      "cache" => 0
+    ),
+    "language-default" => array("callbacks" => array("language" => "locale_language_from_default"))
+  ));
+  variable_set('language_negotiation_language_content', array(
+    "locale-interface" => array(
+      "callbacks" => array("language" => "locale_language_from_interface"),
+      "file" => "includes/locale.inc"
+    )
+  ));
+  variable_set('language_negotiation_language_url', array(
+    "locale-url" => array(
+      "callbacks" => array(
+        "language" => "locale_language_from_url",
+        "switcher" => "locale_language_switcher_url",
+        "url_rewrite" => "locale_language_url_rewrite_url"
+      ),
+      "file" => "includes/locale.inc"
+    ),
+    "locale-url-fallback" => array(
+      "callbacks" => array("language" => "locale_language_url_fallback"),
+      "file" => "includes/locale.inc"
+    )
+  ));
+  variable_set('locale_language_providers_weight_language', array(
+    "locale-url" => "-8",
+    "locale-session" => "-6",
+    "locale-user" => "-4",
+    "locale-browser" => "-2",
+    "language-default" => "10"
+  ));
+  variable_set('language_content_type_page', "2");
+  variable_set('language_content_type_faq', "2");
+
+  // The Language label is an extra_field so is only stored in cache
+  // hide the language labels from pages and faqs
+  $info = array(
+    'form' => array(
+      'language' => array('label' => 'Language', 'description' => 'Language selection', 'weight' => 0),
+      'title' => array('label' => 'Title', 'description' => 'Node module element', 'weight' => -5)
+    ),
+    'display' => array(
+      'language' => array(
+        'label' => 'Language',
+        'description' => 'Language',
+        'display' => array(
+          'default' => array('weight' => "0", 'visible' => FALSE),
+          'full' => array('weight' => 0, 'visible' => FALSE),
+          'teaser' => array('weight' => 0, 'visible' => TRUE),
+          'rss' => array('weight' => 0, 'visible' => TRUE),
+          'search_index' => array('weight' => 0, 'visible' => TRUE),
+          'search_result' => array('weight' => 0, 'visible' => TRUE),
+          'notifications' => array('weight' => 0, 'visible' => TRUE),
+          'token' => array('weight' => 0, 'visible' => TRUE)
+        )
+      )
+    )
+  );
+
+  // Store in persistent cache.
+  if (lock_acquire("field_info:bundle_extra:node:page")) {
+    cache_set("field_info:bundle_extra:node:page", $info, 'cache_field');
+    lock_release("field_info:bundle_extra:node:page");
+  }
+  if (lock_acquire("field_info:bundle_extra:node:faq")) {
+    cache_set("field_info:bundle_extra:node:faq", $info, 'cache_field');
+    lock_release("field_info:bundle_extra:node:faq");
+  }
+
+  // set the default number of nodes per page for paging
+  variable_set('default_nodes_main', "10");
+
+  // Enable our theme and set as default
+  $themes = array('connect_theme');
+  theme_enable($themes);
+  variable_set('theme_default', 'connect_theme');
+  variable_set('ibm_apim_enable_connect_theme', 1);
+
+  // enable the adminimal admin theme
+  theme_enable(array('adminimal'));
+  variable_set('admin_theme', 'adminimal');
+  variable_set('ibm_apim_admin_theme_enabled', 1);
+
+  // Disable bartik as we have installed our own default theme
+  // Also disable the seven admin theme as it causes warnings during install
+  // and you can still do all the admin stuff even without it enabled.
+  theme_disable(array('bartik', 'seven'));
+
+  // Create content author role
+  $role = new stdClass();
+  $role->name = 'content author';
+  user_role_save($role);
+
+  // Create forum moderator role
+  $modrole = new stdClass();
+  $modrole->name = 'forum moderator';
+  user_role_save($modrole);
+
+  // configure tinymce
+  db_insert('wysiwyg')->fields(array(
+    'format' => 'filtered_html',
+    'editor' => 'tinymce',
+    'settings' => 'a:20:{s:7:"default";i:1;s:11:"user_choose";i:0;s:11:"show_toggle";i:0;s:5:"theme";s:8:"advanced";s:8:"language";s:2:"en";s:7:"buttons";a:1:{s:7:"default";a:26:{s:4:"bold";i:1;s:6:"italic";i:1;s:9:"underline";i:1;s:13:"strikethrough";i:1;s:11:"justifyleft";i:1;s:13:"justifycenter";i:1;s:12:"justifyright";i:1;s:11:"justifyfull";i:1;s:7:"bullist";i:1;s:7:"numlist";i:1;s:7:"outdent";i:1;s:6:"indent";i:1;s:4:"undo";i:1;s:4:"redo";i:1;s:4:"link";i:1;s:6:"unlink";i:1;s:6:"anchor";i:1;s:12:"formatselect";i:1;s:3:"sup";i:1;s:3:"sub";i:1;s:4:"code";i:1;s:2:"hr";i:1;s:3:"cut";i:1;s:4:"copy";i:1;s:5:"paste";i:1;s:7:"charmap";i:1;}}s:11:"toolbar_loc";s:3:"top";s:13:"toolbar_align";s:4:"left";s:8:"path_loc";s:6:"bottom";s:8:"resizing";i:1;s:11:"verify_html";i:1;s:12:"preformatted";i:0;s:22:"convert_fonts_to_spans";i:0;s:17:"remove_linebreaks";i:0;s:23:"apply_source_formatting";i:0;s:27:"paste_auto_cleanup_on_paste";i:1;s:13:"block_formats";s:32:"p,address,pre,h2,h3,h4,h5,h6,div";s:11:"css_setting";s:5:"theme";s:8:"css_path";s:0:"";s:11:"css_classes";s:0:"";}'
+  ))->execute();
+  db_insert('wysiwyg')->fields(array(
+    'format' => 'full_html',
+    'editor' => 'tinymce',
+    'settings' => 'a:20:{s:7:"default";i:1;s:11:"user_choose";i:0;s:11:"show_toggle";i:1;s:5:"theme";s:8:"advanced";s:8:"language";s:2:"en";s:7:"buttons";a:20:{s:7:"default";a:36:{s:4:"bold";i:1;s:6:"italic";i:1;s:9:"underline";i:1;s:13:"strikethrough";i:1;s:11:"justifyleft";i:1;s:13:"justifycenter";i:1;s:12:"justifyright";i:1;s:11:"justifyfull";i:1;s:7:"bullist";i:1;s:7:"numlist";i:1;s:7:"outdent";i:1;s:6:"indent";i:1;s:4:"undo";i:1;s:4:"redo";i:1;s:4:"link";i:1;s:6:"unlink";i:1;s:6:"anchor";i:1;s:5:"image";i:1;s:7:"cleanup";i:1;s:12:"formatselect";i:1;s:11:"styleselect";i:1;s:10:"fontselect";i:1;s:14:"fontsizeselect";i:1;s:9:"forecolor";i:1;s:9:"backcolor";i:1;s:3:"sup";i:1;s:3:"sub";i:1;s:10:"blockquote";i:1;s:4:"code";i:1;s:2:"hr";i:1;s:3:"cut";i:1;s:4:"copy";i:1;s:5:"paste";i:1;s:9:"visualaid";i:1;s:12:"removeformat";i:1;s:7:"charmap";i:1;}s:5:"advhr";a:1:{s:5:"advhr";i:1;}s:8:"advimage";a:1:{s:8:"advimage";i:1;}s:7:"advlink";a:1:{s:7:"advlink";i:1;}s:11:"contextmenu";a:1:{s:11:"contextmenu";i:1;}s:14:"directionality";a:2:{s:3:"ltr";i:1;s:3:"rtl";i:1;}s:8:"emotions";a:1:{s:8:"emotions";i:1;}s:10:"fullscreen";a:1:{s:10:"fullscreen";i:1;}s:12:"inlinepopups";a:1:{s:12:"inlinepopups";i:1;}s:14:"insertdatetime";a:2:{s:10:"insertdate";i:1;s:10:"inserttime";i:1;}s:5:"layer";a:4:{s:11:"insertlayer";i:1;s:11:"moveforward";i:1;s:12:"movebackward";i:1;s:8:"absolute";i:1;}s:5:"paste";a:2:{s:9:"pastetext";i:1;s:9:"pasteword";i:1;}s:5:"style";a:1:{s:10:"styleprops";i:1;}s:5:"table";a:1:{s:13:"tablecontrols";i:1;}s:5:"media";a:1:{s:5:"media";i:1;}s:10:"xhtmlxtras";a:1:{s:7:"attribs";i:1;}s:9:"wordcount";a:1:{s:9:"wordcount";i:1;}s:4:"imce";a:1:{s:4:"imce";i:1;}s:6:"linkit";a:1:{s:6:"linkit";i:1;}s:6:"drupal";a:1:{s:5:"break";i:1;}}s:11:"toolbar_loc";s:3:"top";s:13:"toolbar_align";s:4:"left";s:8:"path_loc";s:6:"bottom";s:8:"resizing";i:1;s:11:"verify_html";i:1;s:12:"preformatted";i:0;s:22:"convert_fonts_to_spans";i:0;s:17:"remove_linebreaks";i:0;s:23:"apply_source_formatting";i:0;s:27:"paste_auto_cleanup_on_paste";i:1;s:13:"block_formats";s:32:"p,address,pre,h2,h3,h4,h5,h6,div";s:11:"css_setting";s:5:"theme";s:8:"css_path";s:0:"";s:11:"css_classes";s:0:"";}'
+  ))->execute();
+  db_insert('wysiwyg')->fields(array('format' => 'php_code', 'editor' => 'tinymce', 'settings' => NULL))->execute();
+  db_insert('wysiwyg')->fields(array('format' => 'plain_text', 'editor' => 'tinymce', 'settings' => NULL))->execute();
+
+  db_update('filter')->fields(array(
+    'settings' => 'a:3:{s:12:"allowed_html";s:126:"<a> <em> <strong> <cite> <blockquote> <code> <ul> <ol> <li> <dl> <dt> <dd> <h2> <h3> <h4> <h5> <h6> <p> <div> <address> <span>";s:16:"filter_html_help";i:1;s:20:"filter_html_nofollow";i:0;}',
+    'status' => 1
+  ))->condition('format', 'filtered_html')->condition('module', 'filter')->condition('name', 'filter_html')->execute();
+  // Make full_html the default for those who can use it
+  db_update('filter_format')->fields(array('weight' => -10))->condition('format', 'full_html')->execute();
+  db_update('filter_format')->fields(array('weight' => -9))->condition('format', 'filtered_html')->execute();
+  db_update('filter_format')->fields(array('weight' => -8))->condition('format', 'plain_text')->execute();
+
+  // configure IMCE
+  db_update('variable')->fields(array(
+    'value' => 'a:1:{i:1;a:10:{s:4:"name";s:15:"Default profile";s:7:"usertab";i:1;s:8:"filesize";s:2:"10";s:5:"quota";s:3:"200";s:7:"tuquota";s:1:"0";s:10:"extensions";s:16:"gif png jpg jpeg";s:10:"dimensions";s:8:"1140x800";s:7:"filenum";s:1:"1";s:11:"directories";a:1:{i:0;a:7:{s:4:"name";s:5:"u%uid";s:6:"subnav";i:0;s:6:"browse";i:1;s:6:"upload";i:1;s:5:"thumb";i:1;s:6:"delete";i:0;s:6:"resize";i:0;}}s:10:"thumbnails";a:1:{i:0;a:4:{s:4:"name";s:5:"Thumb";s:10:"dimensions";s:5:"90x90";s:6:"prefix";s:6:"thumb_";s:6:"suffix";s:0:"";}}}}'
+  ))->condition('name', 'imce_profiles')->execute();
+  variable_set('imce_roles_profiles', array(
+    1 => array("weight" => 0, "public_pid" => 0),
+    2 => array("weight" => 0, "public_pid" => 0),
+    3 => array("weight" => 0, "public_pid" => 1),
+    4 => array("weight" => 0, "public_pid" => 1)
+  ));
+  variable_set('imce_settings_absurls', '');
+  variable_set('imce_settings_disable_private', '1');
+  variable_set('imce_settings_replace', '0');
+  variable_set('imce_settings_textarea', '');
+  variable_set('imce_settings_thumb_method', 'scale_and_crop');
+  variable_set('ibm_apim_update_upload_limit_done', 1);
+
+  variable_set('ibm_apim_done_phpmailer_removal', 1);
+
+  // configure linkit
+  db_insert('linkit_profiles')->fields(array(
+    'pid' => 1,
+    'name' => 'node_profile',
+    'admin_title' => 'Node profile',
+    'admin_description' => 'Search existing nodes',
+    'profile_type' => 1,
+    'data' => 'a:13:{s:12:"text_formats";a:3:{s:9:"full_html";s:9:"full_html";s:13:"filtered_html";i:0;s:10:"plain_text";i:0;}s:14:"search_plugins";a:7:{s:11:"entity:bean";a:2:{s:7:"enabled";i:0;s:6:"weight";s:3:"-10";}s:14:"entity:comment";a:2:{s:7:"enabled";i:0;s:6:"weight";s:3:"-10";}s:11:"entity:user";a:2:{s:7:"enabled";i:0;s:6:"weight";s:3:"-10";}s:11:"entity:node";a:2:{s:7:"enabled";i:1;s:6:"weight";s:3:"-10";}s:20:"entity:taxonomy_term";a:2:{s:7:"enabled";i:0;s:6:"weight";s:3:"-10";}s:11:"entity:file";a:2:{s:7:"enabled";i:0;s:6:"weight";s:3:"-10";}s:21:"entity:support_client";a:2:{s:7:"enabled";i:0;s:6:"weight";s:3:"-10";}}s:11:"entity:bean";a:1:{s:18:"result_description";s:0:"";}s:14:"entity:comment";a:3:{s:18:"result_description";s:0:"";s:7:"bundles";a:10:{s:16:"comment_node_api";i:0;s:24:"comment_node_application";i:0;s:20:"comment_node_article";i:0;s:17:"comment_node_page";i:0;s:17:"comment_node_blog";i:0;s:16:"comment_node_faq";i:0;s:18:"comment_node_forum";i:0;s:20:"comment_node_product";i:0;s:17:"comment_node_poll";i:0;s:27:"comment_node_support_ticket";i:0;}s:15:"group_by_bundle";i:0;}s:11:"entity:node";a:4:{s:18:"result_description";s:0:"";s:7:"bundles";a:10:{s:3:"api";i:0;s:11:"application";i:0;s:7:"article";i:0;s:4:"page";i:0;s:4:"blog";i:0;s:3:"faq";i:0;s:5:"forum";i:0;s:7:"product";i:0;s:4:"poll";i:0;s:14:"support_ticket";i:0;}s:15:"group_by_bundle";i:0;s:19:"include_unpublished";i:0;}s:11:"entity:file";a:4:{s:18:"result_description";s:0:"";s:11:"show_scheme";i:0;s:15:"group_by_scheme";i:0;s:16:"image_extra_info";a:2:{s:9:"thumbnail";s:9:"thumbnail";s:10:"dimensions";s:10:"dimensions";}}s:20:"entity:taxonomy_term";a:3:{s:18:"result_description";s:0:"";s:7:"bundles";a:2:{s:6:"forums";i:0;s:4:"tags";i:0;}s:15:"group_by_bundle";i:0;}s:11:"entity:user";a:1:{s:18:"result_description";s:0:"";}s:21:"entity:support_client";a:1:{s:18:"result_description";s:0:"";}s:13:"insert_plugin";a:1:{s:10:"url_method";s:1:"2";}s:17:"attribute_plugins";a:6:{s:6:"target";a:2:{s:7:"enabled";i:0;s:6:"weight";s:3:"-10";}s:2:"id";a:2:{s:7:"enabled";i:0;s:6:"weight";s:3:"-10";}s:5:"title";a:2:{s:7:"enabled";i:0;s:6:"weight";s:3:"-10";}s:5:"class";a:2:{s:7:"enabled";i:0;s:6:"weight";s:3:"-10";}s:9:"accesskey";a:2:{s:7:"enabled";i:0;s:6:"weight";s:3:"-10";}s:3:"rel";a:2:{s:7:"enabled";i:0;s:6:"weight";s:3:"-10";}}s:4:"imce";i:0;s:12:"autocomplete";a:3:{s:9:"charLimit";s:1:"3";s:4:"wait";s:3:"350";s:13:"remoteTimeout";s:5:"10000";}}'
+  ))->execute();
+  db_insert('variable')->fields(array(
+    'name' => 'linkit_picker_views',
+    'value' => 'a:1:{s:12:"node_profile";a:1:{s:5:"views";a:3:{s:18:"linkit_picker_node";s:18:"linkit_picker_node";s:18:"linkit_picker_term";i:0;s:18:"linkit_picker_user";i:0;}}}'
+  ))->execute();
+
+  // disable user email verification as the apim module doesn't currently work with it enabled
+  variable_set('user_email_verification', FALSE);
+
+  // Setup the block class styles
+  module_load_include('inc', 'block_class_styles', 'block_class_styles.admin');
+  $form_state = form_state_defaults();
+  $styles = 'menu-bar-float-right|Inline Float Right menu-bar-float-left|Inline Float Left ';
+  $form_state['values'] = array('block_class_styles_presets' => $styles);
+  drupal_form_submit('block_class_styles_admin_settings', $form_state);
+  variable_set('block_class_styles_presets', array(
+    "menu-bar-float-right" => "Inline Float Right",
+    "menu-bar-float-left" => "Inline Float Left"
+  ));
+
+  apim_profile_enable_connect_theme();
+
+  // Add url aliases for our custom nodes
+  $add_alias = function ($node, $alias) {
+    $alias_array = array('source' => 'node/' . $node, 'alias' => $alias);
+    path_save($alias_array);
+  };
+
+  $add_alias('1', 'start');
+  $add_alias('2', 'help');
+  $add_alias('3', 'terms');
+  $add_alias('4', 'privacy');
+
+  // set navigation menu to only display on certain pages but hidden by default
+  db_update('block')->fields(array(
+    'region' => '-1',
+    'pages' => '<front>
+api
+api/*
+application
+application/*
+forum
+forum/*
+product
+product/*'
+  ))->condition('module', 'system')->condition('delta', 'navigation')->execute();
+
+  // create welcome banner bean
+  apim_profile_create_bannerblock();
+
+  $path = dirname(__FILE__);
+
+  // Create a page for the welcome block
+  if (module_exists('panels_mini')) {
+    require_once $path . '/content/welcome.page.inc';
+    apim_profile_create_welcome_page();
+    variable_set('ibm_apim_create_v5_frontpage', 1);
+  }
+
+  // Set the page as the site home
+  variable_set('site_frontpage', 'home');
+
+  // create sample content
+  require_once $path . '/content/nodes.import.inc';
+  apim_profile_create_nodes();
+
+  // hide Add Content link from navigation menu
+  $mlid = db_query("SELECT mlid FROM {menu_links} WHERE link_title=:link_title AND  link_path=:link_path AND menu_name=:menu_name", array(
+    ':link_title' => 'Add content',
+    ':link_path' => 'node/add',
+    ':menu_name' => 'navigation'
+  ))->fetchField();
+  $link = menu_link_load($mlid);
+  // Alter "hidden" value.
+  $link['hidden'] = 1;
+  $link['customized'] = 1;
+  menu_link_save($link);
+
+  // Add menu entries for forums and blogs
+  $blogitem = array(
+    'menu_name' => 'main-menu',
+    'link_path' => 'blog',
+    'router_path' => 'blog',
+    'link_title' => 'Blogs',
+    'description' => 'Read what we\'re up to',
+    'weight' => 20,
+    'customized' => 1
+  );
+  $bmlid = menu_link_save($blogitem);
+
+  $forumitem = array(
+    'menu_name' => 'main-menu',
+    'link_path' => 'forum',
+    'router_path' => 'forum',
+    'link_title' => 'Forums',
+    'weight' => 25,
+    'description' => 'Ask our community',
+    'customized' => 1
+  );
+  $fmlid = menu_link_save($forumitem);
+
+  // Create Support menu
+  $supportmenu = array('menu_name' => 'support-menu', 'title' => 'Support', 'description' => 'Support menu');
+  menu_save($supportmenu);
+
+  $forumitem = array(
+    'link_path' => 'forum',
+    'link_title' => 'Forum',
+    'menu_name' => 'support-menu',
+    'weight' => 0,
+    'plid' => 0,
+    'module' => 'menu'
+  );
+  menu_link_save($forumitem);
+  $faqitem = array(
+    'link_path' => 'faq-page',
+    'link_title' => 'Frequently Asked Questions',
+    'menu_name' => 'support-menu',
+    'weight' => 5,
+    'plid' => 0,
+    'module' => 'menu'
+  );
+  menu_link_save($faqitem);
+  $issueitem = array(
+    'link_path' => 'support',
+    'link_title' => 'Raise a support ticket',
+    'menu_name' => 'support-menu',
+    'weight' => 7,
+    'plid' => 0,
+    'module' => 'menu'
+  );
+  menu_link_save($issueitem);
+  $contactitem = array(
+    'link_path' => 'contact',
+    'link_title' => 'Contact Us',
+    'menu_name' => 'support-menu',
+    'weight' => 10,
+    'plid' => 0,
+    'module' => 'menu'
+  );
+  menu_link_save($contactitem);
+
+  // set support menu to only show on support page
+  db_insert('block')->fields(array(
+    'pages' => 'help',
+    'visibility' => 1,
+    'status' => 1,
+    'cache' => 8,
+    'region' => 'sidebar_first',
+    'module' => 'menu',
+    'delta' => 'support-menu',
+    'theme' => 'connect_theme'
+  ))->execute();
+
+  // Create Login menu
+  $supportmenu = array('menu_name' => 'login-menu', 'title' => 'Login', 'description' => 'Login menu');
+  menu_save($supportmenu);
+
+  $loginitem = array(
+    'link_path' => 'user/login',
+    'link_title' => 'Login',
+    'menu_name' => 'login-menu',
+    'weight' => 1,
+    'plid' => 0,
+    'module' => 'menu'
+  );
+  menu_link_save($loginitem);
+  $registeritem = array(
+    'link_path' => 'user/register',
+    'link_title' => 'Create an account',
+    'menu_name' => 'login-menu',
+    'weight' => 0,
+    'plid' => 0,
+    'module' => 'menu'
+  );
+  menu_link_save($registeritem);
+
+  // Create taxonomy menu
+  db_insert('block')->fields(array(
+    'status' => 1,
+    'region' => 'collapsible',
+    'title' => 'Tags',
+    'module' => 'apic_taxonomy_menu_block',
+    'delta' => '1',
+    'visibility' => 1,
+    'pages' => 'node/*
+api
+api/*
+product
+product/*
+application
+application/*',
+    'theme' => 'connect_theme'
+  ))->execute();
+  variable_set('apic_taxonomy_menu_block_1', array(
+    'delta' => 1,
+    'admin_title' => 'Tags',
+    'vid' => '2',
+    'parent' => '0',
+    'parent_fixed' => '3',
+    'parent_dynamic' => '1',
+    'depth' => '0',
+    'home_link' => 0,
+    'nodes' => 1,
+    'nodes_aggregation' => 1,
+    'hide_empty' => 0,
+    'ctype' => array()
+  ));
+  variable_set('apic_taxonomy_menu_block_ids', array(0 => 1));
+  variable_set('ibm_apim_taxonomy_menu_upgrade', 1);
+  variable_set('ibm_apim_v5_menu_upgrade', 1);
+
+  // workaround a jquery update bug in hierarchical_select
+  variable_set('jquery_update_compression_type', 'min');
+  variable_set('jquery_update_jquery_cdn', 'none');
+  variable_set('jquery_update_jquery_version', '1.8');
+
+  // Enable pathologic to make sure all links are correct. If we don't
+  // do this then the footer links do not work on all pages.
+  $enable_pathologic = function ($text_format) {
+    db_update('filter')
+      ->fields(array(
+        'weight' => 50,
+        'status' => 1,
+        'settings' => 'a:2:{s:11:"local_paths";s:0:"";s:14:"protocol_style";s:4:"path";}'
+      ))
+      ->condition('format', $text_format)
+      ->condition('module', 'pathologic')
+      ->condition('name', 'pathologic')
+      ->execute();
+  };
+
+  $enable_pathologic('filtered_html');
+  $enable_pathologic('full_html');
+
+  // Set session timeout
+  module_load_include('inc', 'autologout', 'autologout.admin');
+  $form_state = form_state_defaults();
+  $form_state['values'] = array(
+    'autologout_timeout' => '1800',
+    'autologout_padding' => '0',
+    'autologout_no_dialog' => 1
+  );
+  drupal_form_submit('autologout_settings', $form_state);
+  variable_set('ibm_apim_done_autologout_upgrade', 1);
+
+  // Set default password policy
+  $policy = array("character_types" => "3", "length" => "8");
+  db_insert('password_policy')->fields(array(
+    'pid' => 1,
+    'name' => 'password-strength',
+    'description' => 'Policy to enforce APIC password strength',
+    'enabled' => 1,
+    'policy' => serialize($policy)
+  ))->execute();
+
+  // enforce password policy for all authenticated users
+  db_insert('password_policy_role')->fields(array('pid' => 1, 'rid' => 2))->execute();
+  // force change of password if using a one-time password reset link
+  variable_set('password_policy_force_change_reset', 1);
+  variable_set('password_policy_show_restrictions', 1);
+
+  variable_set('ibm_apim_done_unlock_fields_upgrade', 1);
+
+  // disable comments on applications
+  variable_set('comment_application', '0');
+
+  // add Ratings support
+  _apim_profile_add_ratings();
+
+  // add Tags support
+  _apim_profile_add_tags();
+
+  // turn on add to any for products
+  variable_set('addtoany_nodetypes', array('api', 'product', 'article', 'page', 'blog'));
+  variable_set('addtoany_display_in_teasers', 0);
+  variable_set('ibm_apim_addtoany_upgrade', 1);
+
+  // Create Support settings
+  db_insert('support_client')->fields(array(
+    'name' => 'APIs',
+    'path' => 'apis',
+    'status' => 1,
+    'parent' => 0,
+    'integrate_email' => 0,
+    'mailbox' => "INBOX",
+    'protocol' => 0,
+    'extra' => "/novalidate-cert",
+    'port' => 0,
+    'domains' => '*',
+    'thread_subject' => 0,
+    'user_creation' => 0
+  ))->execute();
+
+  variable_set('support_autocreate_users', 0);
+
+  // auto create forums
+  _apim_profile_configure_forums();
+  variable_set('ibm_apim_done_forum_access_upgrade', 1);
+  variable_set('ibm_apim_autocreate_apiforum', 1);
+
+  variable_set('ibm_apim_show_placeholder_images', 1);
+
+  variable_set('ibm_apim_show_register_app', 1);
+
+  variable_set('ibm_apim_enable_api_test', 1);
+
+  variable_set('ibm_apim_autotag_with_phase', 0);
+
+  // set user registration defaults
+  variable_set('ibm_apim_username_show', FALSE);
+  variable_set('ibm_apim_username_reqd', FALSE);
+  variable_set('ibm_apim_email_show', TRUE);
+  variable_set('ibm_apim_email_reqd', TRUE);
+  variable_set('ibm_apim_email_as_username', TRUE);
+  variable_set('ibm_apim_organization_show', TRUE);
+  variable_set('ibm_apim_organization_reqd', TRUE);
+  variable_set('ibm_apim_firstname_show', TRUE);
+  variable_set('ibm_apim_firstname_reqd', TRUE);
+  variable_set('ibm_apim_lastname_show', TRUE);
+  variable_set('ibm_apim_lastname_reqd', TRUE);
+  variable_set('ibm_apim_password_show', TRUE);
+  variable_set('ibm_apim_password_reqd', TRUE);
+  variable_set('ibm_apim_company_show', FALSE);
+  variable_set('ibm_apim_company_reqd', FALSE);
+  variable_set('ibm_apim_phone_show', FALSE);
+  variable_set('ibm_apim_phone_reqd', FALSE);
+  variable_set('ibm_apim_address_show', FALSE);
+  variable_set('ibm_apim_address_reqd', FALSE);
+
+  // change forum style
+  variable_set('advanced_forum_style', 'cloudless_day');
+
+  // configure captchas
+  variable_set('captcha_default_challenge', 'image_captcha/Image');
+  variable_set('captcha_persistence', "2");
+
+  // disable captcha on login forms & password change
+  db_insert('captcha_points')
+    ->fields(array('captcha_type' => NULL, 'module' => NULL, 'form_id' => 'user_login'))
+    ->execute();
+  db_insert('captcha_points')
+    ->fields(array('captcha_type' => NULL, 'module' => NULL, 'form_id' => 'user_login_block'))
+    ->execute();
+  db_insert('captcha_points')
+    ->fields(array('captcha_type' => NULL, 'module' => NULL, 'form_id' => 'user_pass'))
+    ->execute();
+
+  // set up permissions
+  $admin_role = user_role_load_by_name('administrator');
+  $admin_rid = $admin_role->rid;
+  $adminpermissions = array(
+    'edit any api content',
+    'edit any product content',
+    'edit any popularapi_block bean',
+    'create any popularapi_block bean',
+    'delete any popularapi_block bean',
+    'view any popularapi_block bean',
+    'edit any popularproduct_block bean',
+    'create any popularproduct_block bean',
+    'delete any popularproduct_block bean',
+    'view any popularproduct_block bean',
+    'edit any socialblock_block bean',
+    'create any socialblock_block bean',
+    'delete any socialblock_block bean',
+    'view any socialblock_block bean'
+  );
+  user_role_grant_permissions($admin_rid, $adminpermissions);
+  $anonpermissions = array(
+    'access site-wide contact form',
+    'view faq page',
+    'view bean page',
+    'view any banner_block bean',
+    'search content',
+    'use advanced search',
+    'use Search Autocomplete',
+    'view any twitter_timeline bean',
+    'view any popularproduct_block bean',
+    'view any popularapi_block bean',
+    'view any socialblock_block bean',
+    'search api content',
+    'search blog content',
+    'search product content',
+    'search article content',
+    'search faq content',
+    'search page content',
+    'search poll content',
+    'search forum content',
+    'search api content',
+    'access resource node'
+  );
+  user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, $anonpermissions);
+  user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array('search all content', 'search all excluded entities'));
+  $authpermissions = array(
+    'access site-wide contact form',
+    'view faq page',
+    'rate content',
+    'create forum content',
+    'view bean page',
+    'view any banner_block bean',
+    'vote on polls',
+    'create support_ticket content',
+    'edit own support_ticket content',
+    'access APIs tickets',
+    'search content',
+    'use advanced search',
+    'use Search Autocomplete',
+    'maintain own subscriptions',
+    'manage own subscriptions',
+    'subscribe to content',
+    'subscribe to content type',
+    'create subscriptions',
+    'subscribe to taxonomy terms',
+    'subscribe to taxonomy vocabulary',
+    'view any twitter_timeline bean',
+    'view any popularproduct_block bean',
+    'view any popularapi_block bean',
+    'view any socialblock_block bean',
+    'search api content',
+    'search blog content',
+    'search product content',
+    'search article content',
+    'search faq content',
+    'search page content',
+    'search poll content',
+    'search forum content',
+    'search api content',
+    'access resource node'
+  );
+  user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, $authpermissions);
+  user_role_revoke_permissions(DRUPAL_AUTHENTICATED_RID, array('search all content', 'search all excluded entities'));
+  // Find the correct vid for the tags vocab. The vid cannot be determined in a cluster as auto incremented
+  // fields have gaps in their sequence when using galera due some some cleverness in its auto increment protocol
+  $vid = db_query("SELECT vid FROM taxonomy_vocabulary WHERE machine_name=:machine_name", array(':machine_name' => 'tags'))->fetchField();
+  $delete_terms = 'delete terms in ' . $vid;
+  $edit_terms = 'edit terms in ' . $vid;
+  $editor_role = user_role_load_by_name('content author');
+  $editor_rid = $editor_role->rid;
+  $editorpermissions = array(
+    'access site-wide contact form',
+    'create any banner_block bean',
+    'edit any banner_block bean',
+    'view any banner_block bean',
+    'delete any banner_block bean',
+    'edit any popularapi_block bean',
+    'create any popularapi_block bean',
+    'delete any popularapi_block bean',
+    'view any popularapi_block bean',
+    'edit any socialblock_block bean',
+    'create any socialblock_block bean',
+    'delete any socialblock_block bean',
+    'view any socialblock_block bean',
+    'edit any popularproduct_block bean',
+    'create any popularproduct_block bean',
+    'delete any popularproduct_block bean',
+    'view any popularproduct_block bean',
+    'view faq page',
+    'rate content',
+    'create forum content',
+    'vote on polls',
+    'create support_ticket content',
+    'edit own support_ticket content',
+    'access APIs tickets',
+    'search content',
+    'use advanced search',
+    'use text format full_html',
+    'use text format filtered_html',
+    'administer faq',
+    'administer faq order',
+    'access content',
+    'access content overview',
+    'view own unpublished content',
+    'create blog content',
+    'create article content',
+    'create faq content',
+    'create page content',
+    'create poll content',
+    'delete own blog content',
+    'delete own article content',
+    'delete own faq content',
+    'delete own page content',
+    'delete own poll content',
+    'edit any blog content',
+    'edit any article content',
+    'edit any faq content',
+    'edit any page content',
+    'edit any poll content',
+    'edit own blog content',
+    'edit own article content',
+    'edit own faq content',
+    'edit own page content',
+    'edit own poll content',
+    'edit any api content',
+    'edit any product content',
+    'search api content',
+    'search blog content',
+    'search product content',
+    'search article content',
+    'search faq content',
+    'search page content',
+    'search poll content',
+    'search forum content',
+    'search api content',
+    $delete_terms,
+    $edit_terms,
+    'view the administration theme',
+    'administer tags vocabulary terms',
+    'access administration pages'
+  );
+  user_role_grant_permissions($editor_rid, $editorpermissions);
+  // Find the correct vid for the tags vocab. The vid cannot be determined in a cluster as auto incremented
+  // fields have gaps in their sequence when using galera due some some cleverness in its auto increment protocol
+  $vid = db_query("SELECT vid FROM taxonomy_vocabulary WHERE machine_name=:machine_name", array(':machine_name' => 'forums'))->fetchField();
+  $delete_terms = 'delete terms in ' . $vid;
+  $edit_terms = 'edit terms in ' . $vid;
+
+  $mod_role = user_role_load_by_name('forum moderator');
+  $mod_rid = $mod_role->rid;
+  $modpermissions = array(
+    'view faq page',
+    'create forum content',
+    'create support_ticket content',
+    'edit own support_ticket content',
+    'access APIs tickets',
+    'search content',
+    'use advanced search',
+    'use Search Autocomplete',
+    'use text format filtered_html',
+    'delete own forum content',
+    'delete any forum content',
+    'edit any forum content',
+    'edit own forum content',
+    $delete_terms,
+    $edit_terms,
+    'view forum statistics',
+    'administer advanced forum',
+    'administer forums',
+    'view the administration theme',
+    'administer forums vocabulary terms',
+    'access administration pages',
+    'make posts sticky',
+    'moderate posts'
+  );
+  user_role_grant_permissions($mod_rid, $modpermissions);
+  variable_set('ibm_apim_popularapi_perms_done', 1);
+  variable_set('ibm_apim_socialblock_perms_done', 1);
+  variable_set('ibm_apim_restws_config_done', 1);
+  variable_set('ibm_apim_revoke_blog_perms_done', 1);
+  // have to create the skip content approval permission programmatically
+  db_insert('role_permission')->fields(array(
+    'module' => 'content_approval',
+    'permission' => 'skip forum content approval prior their publication',
+    'rid' => $mod_rid
+  ))->execute();
+
+  // make the developer_org_select block only show for logged in users
+  db_insert('block_role')
+    ->fields(array('module' => 'ibm_apim', 'delta' => 'developer_org_select', 'rid' => $admin_rid))
+    ->execute();
+  db_insert('block_role')->fields(array(
+    'module' => 'ibm_apim',
+    'delta' => 'developer_org_select',
+    'rid' => DRUPAL_AUTHENTICATED_RID
+  ))->execute();
+  db_insert('block_role')->fields(array(
+    'module' => 'ibm_apim',
+    'delta' => 'developer_org_select',
+    'rid' => $editor_rid
+  ))->execute();
+  db_insert('block_role')
+    ->fields(array('module' => 'ibm_apim', 'delta' => 'developer_org_select', 'rid' => $mod_rid))
+    ->execute();
+
+  // turn on bookmark flag for our content types
+  db_insert('flag_types')->fields(array('fid' => 1, 'type' => 'api'))->execute();
+  db_insert('flag_types')->fields(array('fid' => 1, 'type' => 'application'))->execute();
+  db_insert('flag_types')->fields(array('fid' => 1, 'type' => 'product'))->execute();
+  db_insert('flag_types')->fields(array('fid' => 1, 'type' => 'support_ticket'))->execute();
+
+  // configure FAQs
+  variable_set('faq_display', 'hide_answer');
+  variable_set('faq_hide_qa_accordion', 1);
+
+  // performance tuning options
+  variable_set('block_cache', 1);
+  variable_set('cache_lifetime', "0");
+  variable_set('page_cache_maximum_age', "900");
+  variable_set('page_compression', 1);
+  variable_set('preprocess_js', 1);
+  variable_set('preprocess_css', 1);
+  variable_set('ibm_apim_done_csspreprocess_upgrade', 1);
+
+  // disable cloning of our content types
+  variable_set('clone_omitted', array(
+    'api' => 'api',
+    'application' => 'application',
+    'product' => 'product',
+    'devorg' => 'devorg',
+    'article' => 0,
+    'page' => 0,
+    'blog' => 0,
+    'faq' => 0,
+    'forum' => 0,
+    'poll' => 0,
+    'support_ticket' => 0
+  ));
+
+  // setup some example security questions
+  drupal_load('module', 'security_questions');
+  security_questions_add_question('What is the name of the place your wedding reception was held?');
+  security_questions_add_question('In what city or town does your nearest sibling live?');
+  security_questions_add_question('What was the name of your elementary / primary school?');
+  security_questions_add_question('In what town or city did you meet your spouse/partner?');
+  security_questions_add_question('What time of the day were you born? (hh:mm)');
+  module_disable(array('security_questions'), TRUE);
+
+  // configure cron
+  variable_set('ultimate_cron_plugin_logger_default', 'cache');
+  variable_set('ultimate_cron_plugin_logger_cache_settings', array('bin' => 'cache_ultimate_cron', 'timeout' => '-1'));
+
+  // Always set this as we have changed poorman_keepalive from 0 to 1
+  variable_set('ultimate_cron_plugin_launcher_serial_settings', array(
+    'lock_timeout' => '3600',
+    'max_threads' => '1',
+    'poorman_keepalive' => 0,
+    'thread' => 'any'
+  ));
+
+  // Always set this as we are changing a default setting that already exists
+  variable_set('ultimate_cron_plugin_settings_poorman_settings', array(
+    'launcher' => '',
+    'early_page_flush' => 1,
+    'user_agent' => 'Ultimate Cron'
+  ));
+
+  // configure search 404 and advanced CSS/JS aggregation
+  variable_set('search404_ignore_query', 'css js gz gif jpg jpeg bmp png');
+
+  // Make our cron job run every minute
+  db_insert('ultimate_cron_job')->fields(array(
+    'name' => 'auth_apic_cron',
+    'title' => 'Clear forum block cache',
+    'settings' => 'a:3:{s:9:"scheduler";a:2:{s:4:"name";s:0:"";s:6:"simple";a:1:{s:5:"rules";a:1:{i:0;s:9:"* * * * *";}}}s:8:"launcher";a:2:{s:4:"name";s:0:"";s:6:"serial";a:0:{}}s:6:"logger";a:2:{s:4:"name";s:0:"";s:5:"cache";a:0:{}}}'
+  ))->execute();
+  // Make our bgsync cron job run every 15 minutes
+  db_insert('ultimate_cron_job')->fields(array(
+    'name' => 'ibm_apim_cron',
+    'title' => 'Background sync',
+    'settings' => 'a:3:{s:9:"scheduler";a:2:{s:4:"name";s:0:"";s:6:"simple";a:1:{s:5:"rules";a:1:{i:0;s:14:"*/15+@ * * * *";}}}s:8:"launcher";a:2:{s:4:"name";s:0:"";s:6:"serial";a:0:{}}s:6:"logger";a:2:{s:4:"name";s:0:"";s:5:"cache";a:0:{}}}'
+  ))->execute();
+  variable_set('ibm_apim_cron_update', 1);
+
+  variable_set('seckit_clickjacking', array(
+    "x_frame" => "1",
+    "x_frame_allow_from" => "",
+    "js_css_noscript" => 1,
+    "noscript_message" => "Sorry, you need to enable JavaScript to visit this website."
+  ));
+  variable_set('ibm_apim_done_frameprevention_upgrade', 1);
+  variable_set('seckit_csrf', array('origin' => 1, 'origin_whitelist' => ""));
+  variable_set('seckit_ssl', array('hsts' => 1, 'hsts_max_age' => "1000", 'hsts_subdomains' => 1));
+  variable_set('seckit_various', array('from_origin' => 0, 'from_origin_destination' => "same"));
+  variable_set('seckit_xss', array(
+    'csp' => array(
+      'checkbox' => 0,
+      'report-only' => 0,
+      'default-src' => "'self'",
+      'script-src' => "",
+      'object-src' => "",
+      'style-src' => "",
+      'img-src' => "",
+      'media-src' => "",
+      'frame-src' => "",
+      'font-src' => "",
+      'connect-src' => "",
+      'report-uri' => "admin/config/system/seckit/csp-report",
+      'policy-uri' => ""
+    ),
+    'x_xss' => array('select' => "0"),
+    'x_content_type' => array('checkbox' => 1)
+  ));
+  variable_set('ibm_apim_done_seckit_upgrade', 1);
+
+  // workaround a security hole in flag_bookmarks allowing users to see other people's bookmarks
+  _apim_profile_create_bookmark_view();
+  variable_set('ibm_apim_done_flag_bookmark_upgrade', 1);
+
+  variable_set('ibm_apim_disable_jqmulti', 1);
+
+  // set frontpage page title
+  if (module_exists('metatag')) {
+    db_insert('metatag_config')->fields(array(
+      'instance' => 'global:frontpage',
+      'config' => 'a:13:{s:5:"title";a:1:{s:5:"value";s:11:"[site:name]";}s:9:"canonical";a:1:{s:5:"value";s:10:"[site:url]";}s:9:"shortlink";a:1:{s:5:"value";s:10:"[site:url]";}s:13:"dcterms.title";a:1:{s:5:"value";s:11:"[site:name]";}s:19:"dcterms.description";a:1:{s:5:"value";s:13:"[site:slogan]";}s:18:"dcterms.identifier";a:1:{s:5:"value";s:10:"[site:url]";}s:7:"og:type";a:1:{s:5:"value";s:7:"website";}s:6:"og:url";a:1:{s:5:"value";s:10:"[site:url]";}s:8:"og:title";a:1:{s:5:"value";s:11:"[site:name]";}s:14:"og:description";a:1:{s:5:"value";s:13:"[site:slogan]";}s:11:"twitter:url";a:1:{s:5:"value";s:10:"[site:url]";}s:13:"twitter:title";a:1:{s:5:"value";s:11:"[site:name]";}s:19:"twitter:description";a:1:{s:5:"value";s:13:"[site:slogan]";}}'
+    ))->execute();
+    variable_set('ibm_apim_set_frontpage_title', 1);
+  }
+
+  // set login_security options
+  variable_set('login_security_host_wrong_count', "50");
+  variable_set('login_security_disable_core_login_error', 0);
+  variable_set('ibm_apim_stop_hiding_login_errors', 1);
+  variable_set('login_security_user_wrong_count', "5");
+  variable_set('ibm_apim_done_loginsecurity_upgrade', 1);
+
+  variable_set('no_autocomplete_login_form', 1);
+  variable_set('no_autocomplete_profile_form', 1);
+  variable_set('ibm_apim_done_no_autocomplete_upgrade', 1);
+
+  // Configure Search
+  variable_set('search_active_modules', array('ibm_apim' => 'ibm_apim', 'user' => 'user', 'node' => 0, 'support' => 0));
+  variable_set('search_default_module', 'ibm_apim');
+  variable_set('ibm_apim_default_search_done', 1);
+
+  // search config
+  variable_set('search_config', array(
+    'forms' => array(
+      'toggle_forms' => 0,
+      'move_keyword_search' => 0,
+      'advanced_populate' => 0,
+      'remove_containing_wrapper' => 'default',
+      'advanced_expand' => 'default'
+    ),
+    'fields' => array(
+      'containing_any' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+      'containing_phrase' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+      'containing_none' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+      'types' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+      'filter' => array(
+        'application' => 'application',
+        'devorg' => 'devorg',
+        'api' => 0,
+        'article' => 0,
+        'page' => 0,
+        'blog' => 0,
+        'faq' => 0,
+        'forum' => 0,
+        'poll' => 0,
+        'product' => 0,
+        'support_ticket' => 0
+      ),
+      'groupings' => array()
+    ),
+    'category' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+    'language' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+    'results' => array('limit' => '10'),
+    'restrictions' => array('admin_bypass' => 1)
+  ));
+  variable_set('ibm_apim_search_config_done', 1);
+
+  // Update the menu router information.
+  menu_rebuild();
+
+  // rebuild node access tables
+  node_access_rebuild();
+
+  // Flush all caches to ensure that any full bootstraps during the installer
+  // do not leave stale cached data, and that any content types or other items
+  // registered by the install profile are registered correctly.
+  drupal_flush_all_caches();
+
+  // Also clear all caches for good measure. What is the difference between
+  // flushing and clearing. Who knows.
+  cache_clear_all();
+}
+
+/**
+ * Task callback: returns the form allowing the user to add example store content on install.
+ *
+ * @return mixed
+ */
+function apim_profile_configure_connection_form() {
+  drupal_set_title(st('Configure API Management'));
+  global $base_url;
+
+  $form['apim_config'] = array('#type' => 'fieldset', '#title' => st('Configure API Mangement'));
+  $form['apim_config']['apim_hostname'] = array(
+    '#title' => t('API Manager Hostname'),
+    '#description' => t('To configure this Developer Portal to work with the API Manager host you must also go to /apim on the API Manager host, select the environment for this Developer Portal and ensure that the "Custom Developer Portal URL" is set to: @baseurl', array(
+      'baseurl' => $base_url
+    )),
+    '#type' => 'textfield'
+  );
+  $form['apim_config']['apim_insecure'] = array(
+    '#title' => t('Accept Self-Signed SSL Certificates (Developer Mode)'),
+    '#description' => t('WARNING: This should only be used for testing and development purporses as it leaves you vulnerable to a man-in-the-middle attack. Check this if the API Manager uses a self-signed SSL certificate.'),
+    '#type' => 'checkbox',
+    '#default_value' => 0
+  );
+  $form['apim_config']['apim_autocreate_forums'] = array(
+    '#title' => t('Create a Forum per API'),
+    '#description' => t('If checked then a new forum will be created for each API that is available to a developer. Note that the forums will only be created when a developer first sees the APIs listed in the Developer Portal.'),
+    '#type' => 'checkbox',
+    '#default_value' => 1
+  );
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => st('Finish'), '#weight' => 15);
+
+  return $form;
+}
+
+/**
+ * Submit callback: creates the requested sample content.
+ *
+ * @param $form
+ * @param $form_state
+ */
+function apim_profile_configure_connection_form_submit(&$form, &$form_state) {
+  variable_set('ibm_apim_insecure', $form_state['values']['apim_insecure']);
+  variable_set('ibm_apim_autocreate_apiforum', $form_state['values']['apim_autocreate_forums']);
+  variable_set('ibm_apim_host', $form_state['values']['apim_hostname']);
+  // modify notification settings for default installs
+  variable_set('update_notification_threshold', 'security');
+  variable_del('update_notify_emails');
+}
+
+/**
+ * Implements hook_install_tasks().
+ *
+ * @return array
+ */
+function apim_profile_install_tasks() {
+  // Remove any status messages that might have been set. They are unneeded.
+  drupal_get_messages('status', TRUE);
+
+  $tasks = array();
+
+  // Add installation step asking for additional languages to install.
+  $tasks['apim_profile_configure_translations_form'] = array(
+    'display_name' => st('Configure languages'),
+    'type' => 'form'
+  );
+
+  // Add batch process installing selected additional languages.
+  $tasks['apim_profile_import_translations'] = array('display_name' => st('Import translations'), 'type' => 'batch');
+
+  $tasks['apim_profile_configure_connection_form'] = array(
+    'display_name' => st('Configure API Management'),
+    'type' => 'form'
+  );
+
+  return $tasks;
+}
+
+/**
+ * Implements hook_nstall_tasks_alter().
+ *
+ * Skip the profile and locale selection screen as we only have one option for each.
+ *
+ * @param $tasks
+ * @param $install_state
+ */
+function apim_profile_install_tasks_alter(&$tasks, $install_state) {
+  $tasks['install_select_locale']['function'] = 'apim_profile_locale_selection';
+  $tasks['install_select_profile']['display'] = FALSE;
+  $tasks['install_select_locale']['display'] = FALSE;
+}
+
+/**
+ * Just set the en locale.
+ * It's the only one we have
+ *
+ * @param $install_state
+ */
+function apim_profile_locale_selection(&$install_state) {
+  $install_state['parameters']['locale'] = 'en';
+}
+
+/**
+ * Installation task callback: returns the form allowing the user to select
+ * additional languages to install.
+ *
+ * @return mixed
+ */
+function apim_profile_configure_translations_form() {
+  // Provides predefined country list.
+  include_once DRUPAL_ROOT . '/includes/iso.inc';
+
+  $form['translations'] = array(
+    '#type' => 'select',
+    '#title' => st('Additional languages'),
+    '#description' => st('Select additional languages to enable and download contributed interface translations. (English is always installed.)'),
+    '#options' => _apim_profile_locale_get_predefined_list(),
+    '#multiple' => TRUE,
+
+    // '#default_value' => array_keys(_apim_profile_locale_get_predefined_list()),
+    '#size' => 11
+  );
+
+  $form['submit'] = array('#type' => 'submit', '#value' => st('Install selected languages'));
+
+  return $form;
+}
+
+/**
+ * @return array
+ */
+function _apim_profile_locale_get_predefined_list() {
+  return array(
+    'de' => 'Deutsch',
+    'es' => 'Español',
+    'fr' => 'Français',
+    'it' => 'Italiano',
+    'ja' => '日本語',
+    'ko' => '한국어',
+    'nl' => 'Nederlands',
+    'pt-br' => 'Português',
+    'tr' => 'Türkçe',
+    'zh-hans' => '简体中文',
+    'zh-hant' => '繁體中文'
+  );
+}
+
+/**
+ * Submit callback: saves selected languages to be processed on the next step.
+ *
+ * @param $form
+ * @param $form_state
+ */
+function apim_profile_configure_translations_form_submit(&$form, &$form_state) {
+  variable_set('apim_profile_selected_translations', $form_state['values']['translations']);
+}
+
+/**
+ * Installation task callback: creates batch process to enable additional
+ * languages and download relevant interface translations.
+ *
+ * @return mixed
+ */
+function apim_profile_import_translations() {
+  include_once DRUPAL_ROOT . '/includes/locale.inc';
+  module_load_include('check.inc', 'l10n_update');
+  module_load_include('batch.inc', 'l10n_update');
+
+  if ($translations = variable_get('apim_profile_selected_translations', array())) {
+    // No need to keep this variable anymore.
+    variable_del('apim_profile_selected_translations');
+
+    // Prepare batch process to enable languages and download translations.
+    $operations = array();
+    foreach ($translations as $translation) {
+      locale_add_language(strtolower($translation));
+
+      // Build batch with l10n_update module.
+      $history = l10n_update_get_history();
+      $available = l10n_update_available_releases();
+      $updates = l10n_update_build_updates($history, $available);
+
+      $operations = array_merge($operations, _l10n_update_prepare_updates($updates, NULL, array()));
+    }
+
+    $batch = l10n_update_batch_multiple($operations, LOCALE_IMPORT_KEEP);
+    return $batch;
+  }
+}
+
+/**
+ * Show completion message and run a bunch of tasks to run cron and flush caches etc.
+ *
+ * @param $install_state
+ * @return string
+ */
+function apim_profile_install_finished(&$install_state) {
+  drupal_set_title(st('@drupal installation complete', array('@drupal' => drupal_install_profile_distribution_name())), PASS_THROUGH);
+  $messages = drupal_set_message();
+  $output = '<p>' . st('Congratulations, you installed @drupal!', array('@drupal' => drupal_install_profile_distribution_name())) . '</p>';
+  $output .= '<p>' . (isset($messages['error']) ? st('Review the messages above before visiting <a href="@url">your new site</a>.', array(
+      '@url' => url('')
+    )) : st('<a href="@url">Visit your new site</a>.', array('@url' => url('')))) . '</p>';
+
+  // Run cron to populate update status tables (if available) so that users
+  // will be warned if they've installed an out of date Drupal version.
+  // Will also trigger indexing of profile-supplied content or feeds.
+  drupal_cron_run();
+
+  // Flush all caches to ensure that any full bootstraps during the installer
+  // do not leave stale cached data, and that any content types or other items
+  // registered by the install profile are registered correctly.
+  drupal_flush_all_caches();
+
+  // Also clear all caches for good measure. What is the difference between
+  // flushing and clearing. Who knows.
+  cache_clear_all();
+
+  // Rebuild node types
+  node_types_rebuild();
+
+  // rebuild node access tables
+  node_access_rebuild();
+
+  // Rebuild the menu
+  menu_rebuild();
+
+  // Refresh registry
+  list_themes(TRUE);
+  drupal_theme_rebuild();
+
+  // Remember the profile which was used.
+  variable_set('install_profile', drupal_get_profile());
+
+  // Installation profiles are always loaded last
+  db_update('system')
+    ->fields(array('weight' => 1000))
+    ->condition('type', 'module')
+    ->condition('name', drupal_get_profile())
+    ->execute();
+
+  // Cache a fully-built schema.
+  drupal_get_schema(NULL, TRUE);
+
+  // run status check to get around the version check that seems to exist the first time
+  module_load_include('inc', 'system', 'system.admin');
+  system_status(TRUE);
+
+  return $output;
+}
+
+function apim_profile_enable_connect_theme() {
+  // set login menu to show on header
+  $loginid = db_query("SELECT bid FROM {block} WHERE module=:module AND delta=:delta AND theme=:theme", array(
+    ':module' => 'menu',
+    ':delta' => 'login-menu',
+    ':theme' => 'connect_theme'
+  ))->fetchField();
+  if (isset($loginid) && is_numeric($loginid)) {
+    db_update('block')
+      ->fields(array('css_class' => '', 'region' => 'header'))
+      ->condition('module', 'menu')
+      ->condition('delta', 'login-menu')
+      ->condition('theme', 'connect_theme')
+      ->execute();
+  }
+  else {
+    db_insert('block')->fields(array(
+      'status' => 1,
+      'region' => 'header',
+      'title' => '<none>',
+      'pages' => "",
+      'module' => 'menu',
+      'delta' => 'login-menu',
+      'theme' => 'connect_theme'
+    ))->execute();
+  }
+
+  // set follow user to show on sidebar right
+  $followid = db_query("SELECT bid FROM {block} WHERE module=:module AND delta=:delta AND theme=:theme", array(
+    ':module' => 'follow',
+    ':delta' => 'user',
+    ':theme' => 'connect_theme'
+  ))->fetchField();
+  if (isset($followid) && is_numeric($followid)) {
+    db_update('block')
+      ->fields(array('visibility' => 1, 'cache' => 2, 'pages' => "user/*", 'css_class' => '', 'region' => 'sidebar_second'))
+      ->condition('module', 'follow')
+      ->condition('delta', 'user')
+      ->condition('theme', 'connect_theme')
+      ->execute();
+  }
+  else {
+    db_insert('block')->fields(array(
+      'status' => 1,
+      'region' => 'sidebar_second',
+      'module' => 'follow',
+      'delta' => 'user',
+      'theme' => 'connect_theme',
+      'title' => '',
+      'pages' => "user/*",
+      'visibility' => 1,
+      'cache' => 2
+    ))->execute();
+  }
+  variable_set('follow_user_block_title', '1');
+
+  // Move Main Menu block to the Menu Bar region
+  $mainmenuid = db_query("SELECT bid FROM {block} WHERE module=:module AND delta=:delta AND theme=:theme", array(
+    ':module' => 'system',
+    ':delta' => 'main-menu',
+    ':theme' => 'connect_theme'
+  ))->fetchField();
+  if (isset($mainmenuid) && is_numeric($mainmenuid)) {
+    db_update('block')
+      ->fields(array('weight' => -12, 'cache' => -1, 'css_class' => '', 'region' => 'menu_bar'))
+      ->condition('module', 'system')
+      ->condition('delta', 'main-menu')
+      ->condition('theme', 'connect_theme')
+      ->execute();
+  }
+  else {
+    db_insert('block')->fields(array(
+      'region' => 'menu_bar',
+      'module' => 'system',
+      'delta' => 'main-menu',
+      'status' => 1,
+      'cache' => -1,
+      'pages' => "",
+      'title' => "",
+      'weight' => -12,
+      'css_class' => "",
+      'theme' => 'connect_theme'
+    ))->execute();
+  }
+
+  // Move Search block to the Menu Bar region
+  $searchid = db_query("SELECT bid FROM {block} WHERE module=:module AND delta=:delta AND theme=:theme", array(
+    ':module' => 'search',
+    ':delta' => 'form',
+    ':theme' => 'connect_theme'
+  ))->fetchField();
+  if (isset($searchid) && is_numeric($searchid)) {
+    db_update('block')
+      ->fields(array('weight' => -11, 'css_class' => '', 'region' => 'menu_bar'))
+      ->condition('module', 'search')
+      ->condition('delta', 'form')
+      ->condition('theme', 'connect_theme')
+      ->execute();
+  }
+  else {
+    db_insert('block')->fields(array(
+      'region' => 'menu_bar',
+      'module' => 'search',
+      'delta' => 'form',
+      'status' => 1,
+      'cache' => -1,
+      'pages' => "",
+      'title' => "",
+      'weight' => -11,
+      'css_class' => "",
+      'theme' => 'connect_theme'
+    ))->execute();
+  }
+
+  // Hide login block in left nav as we have a header login link
+  $loginblockid = db_query("SELECT bid FROM {block} WHERE module=:module AND delta=:delta AND theme=:theme", array(
+    ':module' => 'user',
+    ':delta' => 'login',
+    ':theme' => 'connect_theme'
+  ))->fetchField();
+  if (isset($loginblockid) && is_numeric($loginblockid)) {
+    db_update('block')
+      ->fields(array('region' => -1))
+      ->condition('module', 'user')
+      ->condition('delta', 'login')
+      ->condition('theme', 'connect_theme')
+      ->execute();
+  }
+  else {
+    db_insert('block')->fields(array(
+      'region' => -1,
+      'module' => 'user',
+      'delta' => 'login',
+      'status' => 1,
+      'cache' => -1,
+      'pages' => "",
+      'title' => "<none>",
+      'css_class' => "",
+      'theme' => 'connect_theme'
+    ))->execute();
+  }
+
+  // Move User Menu block to the Header region
+  $usermenuid = db_query("SELECT bid FROM {block} WHERE module=:module AND delta=:delta AND theme=:theme", array(
+    ':module' => 'system',
+    ':delta' => 'user-menu',
+    ':theme' => 'connect_theme'
+  ))->fetchField();
+  if (isset($usermenuid) && is_numeric($usermenuid)) {
+    db_update('block')
+      ->fields(array('weight' => 10, 'cache' => -1, 'css_class' => '', 'region' => 'header'))
+      ->condition('module', 'system')
+      ->condition('delta', 'user-menu')
+      ->condition('theme', 'connect_theme')
+      ->execute();
+  }
+  else {
+    db_insert('block')->fields(array(
+      'region' => 'header',
+      'module' => 'system',
+      'delta' => 'user-menu',
+      'status' => 1,
+      'cache' => -1,
+      'pages' => "",
+      'title' => "<none>",
+      'css_class' => "",
+      'weight' => 10,
+      'theme' => 'connect_theme'
+    ))->execute();
+  }
+  $orgselectid = db_query("SELECT bid FROM {block} WHERE module=:module AND delta=:delta AND theme=:theme", array(
+    ':module' => 'ibm_apim',
+    ':delta' => 'developer_org_select',
+    ':theme' => 'connect_theme'
+  ))->fetchField();
+  if (isset($orgselectid) && is_numeric($orgselectid)) {
+    db_update('block')
+      ->fields(array('weight' => 5, 'cache' => -1, 'css_class' => '', 'region' => 'header'))
+      ->condition('module', 'ibm_apim')
+      ->condition('delta', 'developer_org_select')
+      ->condition('theme', 'connect_theme')
+      ->execute();
+  }
+  else {
+    db_insert('block')->fields(array(
+      'region' => 'header',
+      'module' => 'ibm_apim',
+      'delta' => 'developer_org_select',
+      'status' => 1,
+      'cache' => -1,
+      'pages' => "",
+      'title' => "<none>",
+      'css_class' => "",
+      'weight' => 5,
+      'theme' => 'connect_theme'
+    ))->execute();
+  }
+  $notificationid = db_query("SELECT bid FROM {block} WHERE module=:module AND delta=:delta AND theme=:theme", array(
+    ':module' => 'ibm_apim',
+    ':delta' => 'apim_notification_count',
+    ':theme' => 'connect_theme'
+  ))->fetchField();
+  if (isset($notificationid) && is_numeric($notificationid)) {
+    db_update('block')
+      ->fields(array('weight' => 15, 'cache' => -1, 'css_class' => '', 'region' => 'header'))
+      ->condition('module', 'ibm_apim')
+      ->condition('delta', 'apim_notification_count')
+      ->condition('theme', 'connect_theme')
+      ->execute();
+  }
+  else {
+    db_insert('block')->fields(array(
+      'region' => 'header',
+      'module' => 'ibm_apim',
+      'delta' => 'apim_notification_count',
+      'status' => 1,
+      'cache' => -1,
+      'pages' => "",
+      'title' => "<none>",
+      'css_class' => "",
+      'weight' => 15,
+      'theme' => 'connect_theme'
+    ))->execute();
+  }
+
+  $blockid = db_query("SELECT bid FROM {block_custom} WHERE info=:info", array(
+    ':info' => 'Developer portal footer'
+  ))->fetchField();
+
+  if (!isset($blockid) || !is_numeric($blockid)) {
+    // Create a custom footer block
+    db_insert('block_custom')->fields(array(
+      'body' => '<div class="footer"><span class="centered_link"><a href="terms">Terms of use</a></span><span class="centered_link"><a href="privacy">Privacy policy</a></span></p>',
+      'info' => 'Developer portal footer',
+      'format' => 'full_html'
+    ))->execute();
+    $blockid = db_query("SELECT bid FROM {block_custom} WHERE info=:info", array(
+      ':info' => 'Developer portal footer'
+    ))->fetchField();
+  }
+
+  // And remove the powered by drupal one
+  db_delete('block')
+    ->condition('region', 'footer')
+    ->condition('module', 'system')
+    ->condition('delta', 'powered-by')
+    ->condition('theme', 'connect_theme')
+    ->execute();
+
+  if (isset($blockid)) {
+    // Place it in the footer region
+    db_insert('block')->fields(array(
+      'region' => 'footer',
+      'module' => 'block',
+      'delta' => $blockid,
+      'status' => 1,
+      'cache' => -1,
+      'pages' => "",
+      'title' => "<none>",
+      'css_class' => "",
+      'theme' => 'connect_theme'
+    ))->execute();
+  }
+
+  // set theme settings for logos
+  // Must do this before we ensure the layout is correct
+  // or we still end up with a single column
+  $theme_name = 'connect_theme';
+  $var_name = 'theme_' . $theme_name . '_settings';
+  $settings = variable_get($var_name, array());
+  $settings['default_logo'] = 1;
+  $settings['default_favicon'] = 1;
+  $settings['toggle_name'] = 0;
+  $settings['toggle_logo'] = 1;
+  $settings['toggle_favicon'] = 1;
+  $settings['toggle_slogan'] = 0;
+  $settings['disable_responsive_styles'] = 0;
+  $settings['enable_extensions'] = 1;
+  $settings['enable_font_settings'] = 1;
+  $settings['enable_heading_settings'] = 1;
+  $settings['enable_image_settings'] = 1;
+  $settings['enable_markup_overides'] = 1;
+
+  // These are the things that change once you submit the settings form
+  // for the theme in the UI
+  $settings['base_font_type'] = 'cfs';
+  $settings['base_font_cfs'] = '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial, sans-serif';
+  $settings['base_font_size'] = '81.3%';
+  $settings['site_font_type'] = 'cfs';
+  $settings['site_font_cfs'] = '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial, sans-serif';
+  $settings['site_slogan_type'] = 'cfs';
+  $settings['site_slogan_cfs'] = '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial, sans-serif';
+  $settings['page_title_font_type'] = 'cfs';
+  $settings['page_title_font_cfs'] = '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial, sans-serif';
+  $settings['node_title_font_type'] = 'cfs';
+  $settings['node_title_font_cfs'] = '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial, sans-serif';
+  $settings['comment_title_font_type'] = 'cfs';
+  $settings['comment_title_font_cfs'] = '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial, sans-serif';
+  $settings['block_title_font_type'] = 'cfs';
+  $settings['block_title_font_cfs'] = '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial, sans-serif';
+  $settings['content_headings_h1h4_font_type'] = 'cfs';
+  $settings['content_headings_h1h4_font_cfs'] = '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial, sans-serif';
+  $settings['content_headings_h5h6_font_type'] = 'cfs';
+  $settings['content_headings_h5h6_font_cfs'] = '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial, sans-serif';
+  $settings['main_menu_font_type'] = 'cfs';
+  $settings['main_menu_font_cfs'] = '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial, sans-serif';
+  $settings['secondary_menu_font_type'] = 'cfs';
+  $settings['secondary_menu_font_cfs'] = '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial, sans-serif';
+  $settings['block_menu_font_type'] = 'cfs';
+  $settings['block_menu_font_cfs'] = '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial, sans-serif';
+  $settings['selectors_font_type'] = 'cfs';
+  $settings['selectors_font_cfs'] = '"Open Sans","Segoe UI","Helvetica Neue",Helvetica,Arial, sans-serif';
+  $settings['site_name_case'] = 'snc-n';
+  $settings['site_name_weight'] = 'snw-n';
+  $settings['site_name_alignment'] = 'sna-l';
+  $settings['site_name_shadow'] = 'sns-n';
+  $settings['site_slogan_case'] = 'ssc-n';
+  $settings['site_slogan_weight'] = 'ssw-n';
+  $settings['site_slogan_alignment'] = 'ssa-l';
+  $settings['site_slogan_shadow'] = 'sss-n';
+
+  $settings['content_corner_radius'] = 'rc-0';
+  $settings['tabs_corner_radius'] = 'rct-0';
+
+  // This isn't in the file but we need to set it here so that the max width
+  // setting that is there gets honoured.
+  $settings['bigscreen_set_max_width'] = 0;
+
+  variable_set($var_name, $settings);
+
+  // Ensure that the layout is correct for the theme
+  module_load_include('inc', 'system', 'system.admin');
+  $form_state = form_state_defaults();
+  $form_state['build_info']['args'][] = 'connect_theme';
+  $form_state['values'] = array(
+    'global_files_path' => 'public_files',
+    'enable_custom_media_queries' => 1,
+    'enable_extensions' => 1,
+    'enable_font_settings' => 1,
+    'enable_heading_settings' => 1,
+    'enable_image_settings' => 1,
+    'enable_markup_overides' => 1,
+    'global_default_layout' => 'smalltouch-portrait',
+    'at-color' => 1
+  );
+  drupal_form_submit('system_theme_settings', $form_state);
+
+  // Do not use the administration theme when editing or creating content.
+  variable_set('node_admin_theme', '0');
+
+  // set favicon for admin theme (seven) too
+  $var_name = 'theme_seven_settings';
+  $settings = variable_get($var_name, array());
+  $settings['favicon_path'] = drupal_get_path('theme', 'connect_theme') . '/favicon.ico';
+  $settings['default_favicon'] = 0;
+  $settings['favicon_mimetype'] = "image/vnd.microsoft.icon";
+  variable_set($var_name, $settings);
+}
+
+/**
+ * Add ratings field for APIs, Apps and Products.
+ * Enabled for APIs and Products and disabled for Apps.
+ *
+ * @throws \Exception
+ */
+function _apim_profile_add_ratings() {
+  // add Ratings to APIs
+  db_insert('field_config')->fields(array(
+    'id' => 600,
+    'field_name' => 'field_apirating',
+    'type' => 'fivestar',
+    'module' => 'fivestar',
+    'active' => 1,
+    'storage_type' => 'field_sql_storage',
+    'storage_module' => 'field_sql_storage',
+    'storage_active' => 1,
+    'locked' => 0,
+    'data' => 'a:7:{s:12:"translatable";s:1:"0";s:12:"entity_types";a:0:{}s:8:"settings";a:1:{s:4:"axis";s:4:"vote";}s:7:"storage";a:5:{s:4:"type";s:17:"field_sql_storage";s:8:"settings";a:0:{}s:6:"module";s:17:"field_sql_storage";s:6:"active";s:1:"1";s:7:"details";a:1:{s:3:"sql";a:2:{s:18:"FIELD_LOAD_CURRENT";a:1:{s:26:"field_data_field_apirating";a:2:{s:6:"rating";s:22:"field_apirating_rating";s:6:"target";s:22:"field_apirating_target";}}s:19:"FIELD_LOAD_REVISION";a:1:{s:30:"field_revision_field_apirating";a:2:{s:6:"rating";s:22:"field_apirating_rating";s:6:"target";s:22:"field_apirating_target";}}}}}s:12:"foreign keys";a:0:{}s:7:"indexes";a:0:{}s:2:"id";s:3:"600";}',
+    'cardinality' => 1,
+    'translatable' => 0,
+    'deleted' => 0
+  ))->execute();
+
+  db_insert('field_config_instance')->fields(array(
+    'id' => 601,
+    'field_name' => 'field_apirating',
+    'field_id' => 600,
+    'entity_type' => 'node',
+    'bundle' => 'api',
+    'data' => 'a:7:{s:5:"label";s:6:"Rating";s:6:"widget";a:5:{s:6:"weight";s:1:"7";s:4:"type";s:7:"exposed";s:6:"module";s:8:"fivestar";s:6:"active";i:1;s:8:"settings";a:0:{}}s:8:"settings";a:6:{s:5:"stars";s:1:"5";s:11:"allow_clear";i:0;s:12:"allow_revote";i:1;s:13:"allow_ownvote";i:1;s:6:"target";s:4:"none";s:18:"user_register_form";b:0;}s:7:"display";a:3:{s:7:"default";a:5:{s:5:"label";s:5:"above";s:4:"type";s:26:"fivestar_formatter_default";s:6:"weight";s:2:"11";s:8:"settings";a:4:{s:6:"widget";a:1:{s:15:"fivestar_widget";s:54:"sites/all/modules/fivestar/widgets/outline/outline.css";}s:6:"expose";i:1;s:5:"style";s:7:"average";s:4:"text";s:7:"average";}s:6:"module";s:8:"fivestar";}s:6:"teaser";a:5:{s:5:"label";s:5:"above";s:4:"type";s:26:"fivestar_formatter_default";s:6:"weight";s:1:"0";s:8:"settings";a:4:{s:6:"widget";a:1:{s:15:"fivestar_widget";s:54:"sites/all/modules/fivestar/widgets/outline/outline.css";}s:6:"expose";i:0;s:5:"style";s:7:"average";s:4:"text";s:7:"average";}s:6:"module";s:8:"fivestar";}s:8:"embedded";a:5:{s:5:"label";s:6:"hidden";s:4:"type";s:26:"fivestar_formatter_default";s:6:"weight";s:2:"11";s:8:"settings";a:4:{s:6:"widget";a:1:{s:15:"fivestar_widget";s:54:"sites/all/modules/fivestar/widgets/outline/outline.css";}s:6:"expose";i:1;s:5:"style";s:7:"average";s:4:"text";s:4:"none";}s:6:"module";s:8:"fivestar";}}s:8:"required";i:0;s:11:"description";s:0:"";s:13:"default_value";N;}',
+    'deleted' => 0
+  ))->execute();
+
+  db_create_table('field_data_field_apirating', array(
+    'description' => "Data storage for field 600 (field_apirating)",
+    'fields' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The entity type this data is attached to'
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The field instance bundle to which this row belongs, used when deleting a field instance'
+      ),
+      'deleted' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'A boolean indicating whether this data item has been deleted'
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity id this data is attached to'
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'The entity revision id this data is attached to, or NULL if the entity type is not versioned'
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The language for this data item.'
+      ),
+      'delta' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The sequence number for this data item, used for multi-value fields'
+      ),
+      'field_apirating_rating' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'description' => ''),
+      'field_apirating_target' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'description' => '')
+    ),
+    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'indexes' => array(
+      'entity_type' => array('entity_type'),
+      'bundle' => array('bundle'),
+      'deleted' => array('deleted'),
+      'entity_id' => array('entity_id'),
+      'revision_id' => array('revision_id'),
+      'language' => array('language')
+    )
+  ));
+
+  db_create_table('field_revision_field_apirating', array(
+    'description' => "Revision archive storage for field 600 (field_apirating)",
+    'fields' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The entity type this data is attached to'
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The field instance bundle to which this row belongs, used when deleting a field instance'
+      ),
+      'deleted' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'A boolean indicating whether this data item has been deleted'
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity id this data is attached to'
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity revision id this data is attached to, or NULL if the entity type is not versioned'
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The language for this data item.'
+      ),
+      'delta' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The sequence number for this data item, used for multi-value fields'
+      ),
+      'field_apirating_rating' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'description' => ''),
+      'field_apirating_target' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'description' => '')
+    ),
+    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'indexes' => array(
+      'entity_type' => array('entity_type'),
+      'bundle' => array('bundle'),
+      'deleted' => array('deleted'),
+      'entity_id' => array('entity_id'),
+      'revision_id' => array('revision_id'),
+      'language' => array('language')
+    )
+  ));
+
+  // add disabled ratings support for apps
+  db_insert('field_config')->fields(array(
+    'id' => 610,
+    'field_name' => 'field_applicationrating',
+    'type' => 'fivestar',
+    'module' => 'fivestar',
+    'active' => 1,
+    'storage_type' => 'field_sql_storage',
+    'storage_module' => 'field_sql_storage',
+    'storage_active' => 1,
+    'locked' => 0,
+    'data' => 'a:7:{s:12:"translatable";s:1:"0";s:12:"entity_types";a:0:{}s:8:"settings";a:1:{s:4:"axis";s:4:"vote";}s:7:"storage";a:5:{s:4:"type";s:17:"field_sql_storage";s:8:"settings";a:0:{}s:6:"module";s:17:"field_sql_storage";s:6:"active";s:1:"1";s:7:"details";a:1:{s:3:"sql";a:2:{s:18:"FIELD_LOAD_CURRENT";a:1:{s:34:"field_data_field_applicationrating";a:2:{s:6:"rating";s:30:"field_applicationrating_rating";s:6:"target";s:30:"field_applicationrating_target";}}s:19:"FIELD_LOAD_REVISION";a:1:{s:38:"field_revision_field_applicationrating";a:2:{s:6:"rating";s:30:"field_applicationrating_rating";s:6:"target";s:30:"field_applicationrating_target";}}}}}s:12:"foreign keys";a:0:{}s:7:"indexes";a:0:{}s:2:"id";s:3:"610";}',
+    'cardinality' => 1,
+    'translatable' => 0,
+    'deleted' => 0
+  ))->execute();
+
+  db_insert('field_config_instance')->fields(array(
+    'id' => 611,
+    'field_name' => 'field_applicationrating',
+    'field_id' => 610,
+    'entity_type' => 'node',
+    'bundle' => 'application',
+    'data' => 'a:7:{s:5:"label";s:6:"Rating";s:6:"widget";a:5:{s:6:"weight";i:0;s:4:"type";s:7:"exposed";s:6:"module";s:8:"fivestar";s:6:"active";i:1;s:8:"settings";a:0:{}}s:8:"settings";a:6:{s:5:"stars";s:1:"5";s:11:"allow_clear";i:0;s:12:"allow_revote";i:1;s:13:"allow_ownvote";i:1;s:6:"target";s:4:"none";s:18:"user_register_form";b:0;}s:7:"display";a:1:{s:7:"default";a:4:{s:5:"label";s:5:"above";s:4:"type";s:6:"hidden";s:6:"weight";s:2:"11";s:8:"settings";a:0:{}}}s:8:"required";i:0;s:11:"description";s:0:"";s:13:"default_value";N;}',
+    'deleted' => 0
+  ))->execute();
+
+  db_create_table('field_data_field_applicationrating', array(
+    'description' => "Data storage for field 610 (field_applicationrating)",
+    'fields' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The entity type this data is attached to'
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The field instance bundle to which this row belongs, used when deleting a field instance'
+      ),
+      'deleted' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'A boolean indicating whether this data item has been deleted'
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity id this data is attached to'
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'The entity revision id this data is attached to, or NULL if the entity type is not versioned'
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The language for this data item.'
+      ),
+      'delta' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The sequence number for this data item, used for multi-value fields'
+      ),
+      'field_applicationrating_rating' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => ''
+      ),
+      'field_applicationrating_target' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => ''
+      )
+    ),
+    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'indexes' => array(
+      'entity_type' => array('entity_type'),
+      'bundle' => array('bundle'),
+      'deleted' => array('deleted'),
+      'entity_id' => array('entity_id'),
+      'revision_id' => array('revision_id'),
+      'language' => array('language')
+    )
+  ));
+
+  db_create_table('field_revision_field_applicationrating', array(
+    'description' => "Revision archive storage for field 610 (field_applicationrating)",
+    'fields' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The entity type this data is attached to'
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The field instance bundle to which this row belongs, used when deleting a field instance'
+      ),
+      'deleted' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'A boolean indicating whether this data item has been deleted'
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity id this data is attached to'
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity revision id this data is attached to, or NULL if the entity type is not versioned'
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The language for this data item.'
+      ),
+      'delta' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The sequence number for this data item, used for multi-value fields'
+      ),
+      'field_applicationrating_rating' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => ''
+      ),
+      'field_applicationrating_target' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => ''
+      )
+    ),
+    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'indexes' => array(
+      'entity_type' => array('entity_type'),
+      'bundle' => array('bundle'),
+      'deleted' => array('deleted'),
+      'entity_id' => array('entity_id'),
+      'revision_id' => array('revision_id'),
+      'language' => array('language')
+    )
+  ));
+
+  // products
+  apim_profile_add_product_ratings_field();
+}
+
+/**
+ * Add a new forum container that we can auto-create forums for the APIs inside.
+ */
+function _apim_profile_configure_forums() {
+  module_load_include('inc', 'forum', 'forum.admin');
+  $form_state = form_state_defaults();
+  $forum_container_fields = array();
+  $forum_container_fields['values']['name'] = 'APIs';
+  $forum_container_fields['values']['description'] = 'Get help and advice on the use of our APIs.';
+  $forum_container_fields['values']['parent'][0] = 0;
+  $forum_container_fields['values']['weight'] = 0;
+  $forum_container_fields['values']['vid'] = variable_get('forum_nav_vocabulary', 1);
+  $container = forum_form_container($forum_container_fields, $form_state);
+  $container['form_id']['#value'] = 'forum_form_container';
+  forum_form_submit($container, $forum_container_fields);
+}
+
+/**
+ * Add tags field for APIs, Apps & Products.
+ * Enabled for APIs and Products and disabled for Apps.
+ *
+ * @throws \Exception
+ */
+function _apim_profile_add_tags() {
+  db_insert('variable')->fields(array(
+    'name' => 'hs_config_taxonomy-field_apitags',
+    'value' => 'a:7:{s:9:"config_id";s:22:"taxonomy-field_apitags";s:12:"save_lineage";s:1:"0";s:15:"enforce_deepest";s:1:"0";s:9:"resizable";s:1:"1";s:12:"level_labels";a:1:{s:6:"status";i:0;}s:7:"dropbox";a:4:{s:6:"status";i:1;s:5:"title";s:14:"All selections";s:5:"limit";s:1:"0";s:8:"reset_hs";s:1:"1";}s:11:"editability";a:3:{s:6:"status";i:1;s:16:"allow_new_levels";i:1;s:10:"max_levels";s:1:"0";}}'
+  ))->execute();
+
+  // add tags to APIs
+  db_insert('field_config')->fields(array(
+    'id' => 700,
+    'field_name' => 'field_apitags',
+    'type' => 'taxonomy_term_reference',
+    'module' => 'taxonomy',
+    'active' => 1,
+    'storage_type' => 'field_sql_storage',
+    'storage_module' => 'field_sql_storage',
+    'storage_active' => 1,
+    'locked' => 0,
+    'data' => 'a:7:{s:12:"translatable";s:1:"0";s:12:"entity_types";a:0:{}s:8:"settings";a:1:{s:14:"allowed_values";a:1:{i:0;a:2:{s:10:"vocabulary";s:4:"tags";s:6:"parent";s:1:"0";}}}s:7:"storage";a:5:{s:4:"type";s:17:"field_sql_storage";s:8:"settings";a:0:{}s:6:"module";s:17:"field_sql_storage";s:6:"active";s:1:"1";s:7:"details";a:1:{s:3:"sql";a:2:{s:18:"FIELD_LOAD_CURRENT";a:1:{s:24:"field_data_field_apitags";a:1:{s:3:"tid";s:17:"field_apitags_tid";}}s:19:"FIELD_LOAD_REVISION";a:1:{s:28:"field_revision_field_apitags";a:1:{s:3:"tid";s:17:"field_apitags_tid";}}}}}s:12:"foreign keys";a:1:{s:3:"tid";a:2:{s:5:"table";s:18:"taxonomy_term_data";s:7:"columns";a:1:{s:3:"tid";s:3:"tid";}}}s:7:"indexes";a:1:{s:3:"tid";a:1:{i:0;s:3:"tid";}}s:2:"id";s:3:"701";}',
+    'cardinality' => -1,
+    'translatable' => 0,
+    'deleted' => 0
+  ))->execute();
+
+  db_insert('field_config_instance')->fields(array(
+    'id' => 701,
+    'field_name' => 'field_apitags',
+    'field_id' => 700,
+    'entity_type' => 'node',
+    'bundle' => 'api',
+    'data' => 'a:7:{s:5:"label";s:4:"Tags";s:6:"widget";a:5:{s:6:"weight";s:1:"8";s:4:"type";s:11:"taxonomy_hs";s:6:"module";s:11:"hs_taxonomy";s:6:"active";i:0;s:8:"settings";a:2:{s:4:"size";i:60;s:17:"autocomplete_path";s:21:"taxonomy/autocomplete";}}s:8:"settings";a:1:{s:18:"user_register_form";b:0;}s:7:"display";a:2:{s:7:"default";a:5:{s:5:"label";s:5:"above";s:4:"type";s:54:"hs_taxonomy_term_reference_hierarchical_text_last_link";s:6:"weight";s:2:"12";s:8:"settings";a:0:{}s:6:"module";s:11:"hs_taxonomy";}s:6:"teaser";a:4:{s:5:"label";s:5:"above";s:4:"type";s:6:"hidden";s:6:"weight";s:1:"0";s:8:"settings";a:0:{}}}s:8:"required";i:0;s:11:"description";s:0:"";s:13:"default_value";N;}',
+    'deleted' => 0
+  ))->execute();
+
+  db_create_table('field_data_field_apitags', array(
+    'description' => "Data storage for field 700 (field_apitags)",
+    'fields' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The entity type this data is attached to'
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The field instance bundle to which this row belongs, used when deleting a field instance'
+      ),
+      'deleted' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'A boolean indicating whether this data item has been deleted'
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity id this data is attached to'
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'The entity revision id this data is attached to, or NULL if the entity type is not versioned'
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The language for this data item.'
+      ),
+      'delta' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The sequence number for this data item, used for multi-value fields'
+      ),
+      'field_apitags_tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => ''
+      )
+    ),
+    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'indexes' => array(
+      'entity_type' => array('entity_type'),
+      'bundle' => array('bundle'),
+      'deleted' => array('deleted'),
+      'entity_id' => array('entity_id'),
+      'revision_id' => array('revision_id'),
+      'language' => array('language')
+    )
+  ));
+
+  db_create_table('field_revision_field_apitags', array(
+    'description' => "Revision archive storage for field 700 (field_apitags)",
+    'fields' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The entity type this data is attached to'
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The field instance bundle to which this row belongs, used when deleting a field instance'
+      ),
+      'deleted' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'A boolean indicating whether this data item has been deleted'
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity id this data is attached to'
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity revision id this data is attached to, or NULL if the entity type is not versioned'
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The language for this data item.'
+      ),
+      'delta' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The sequence number for this data item, used for multi-value fields'
+      ),
+      'field_apitags_tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => ''
+      )
+    ),
+    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'indexes' => array(
+      'entity_type' => array('entity_type'),
+      'bundle' => array('bundle'),
+      'deleted' => array('deleted'),
+      'entity_id' => array('entity_id'),
+      'revision_id' => array('revision_id'),
+      'language' => array('language')
+    )
+  ));
+
+  // add tags to Applications
+  db_insert('variable')->fields(array(
+    'name' => 'hs_config_taxonomy-field_applicationtags',
+    'value' => 'a:7:{s:9:"config_id";s:30:"taxonomy-field_applicationtags";s:12:"save_lineage";s:1:"0";s:15:"enforce_deepest";s:1:"0";s:9:"resizable";s:1:"1";s:12:"level_labels";a:1:{s:6:"status";i:0;}s:7:"dropbox";a:4:{s:6:"status";i:1;s:5:"title";s:14:"All selections";s:5:"limit";s:1:"0";s:8:"reset_hs";s:1:"1";}s:11:"editability";a:3:{s:6:"status";i:1;s:16:"allow_new_levels";i:1;s:10:"max_levels";s:1:"0";}}'
+  ))->execute();
+
+  db_insert('field_config')->fields(array(
+    'id' => 710,
+    'field_name' => 'field_applicationtags',
+    'type' => 'taxonomy_term_reference',
+    'module' => 'taxonomy',
+    'active' => 1,
+    'storage_type' => 'field_sql_storage',
+    'storage_module' => 'field_sql_storage',
+    'storage_active' => 1,
+    'locked' => 0,
+    'data' => 'a:7:{s:12:"translatable";s:1:"0";s:12:"entity_types";a:0:{}s:8:"settings";a:1:{s:14:"allowed_values";a:1:{i:0;a:2:{s:10:"vocabulary";s:4:"tags";s:6:"parent";s:1:"0";}}}s:7:"storage";a:5:{s:4:"type";s:17:"field_sql_storage";s:8:"settings";a:0:{}s:6:"module";s:17:"field_sql_storage";s:6:"active";s:1:"1";s:7:"details";a:1:{s:3:"sql";a:2:{s:18:"FIELD_LOAD_CURRENT";a:1:{s:32:"field_data_field_applicationtags";a:1:{s:3:"tid";s:25:"field_applicationtags_tid";}}s:19:"FIELD_LOAD_REVISION";a:1:{s:36:"field_revision_field_applicationtags";a:1:{s:3:"tid";s:25:"field_applicationtags_tid";}}}}}s:12:"foreign keys";a:1:{s:3:"tid";a:2:{s:5:"table";s:18:"taxonomy_term_data";s:7:"columns";a:1:{s:3:"tid";s:3:"tid";}}}s:7:"indexes";a:1:{s:3:"tid";a:1:{i:0;s:3:"tid";}}s:2:"id";s:3:"711";}',
+    'cardinality' => -1,
+    'translatable' => 0,
+    'deleted' => 0
+  ))->execute();
+
+  db_insert('field_config_instance')->fields(array(
+    'id' => 711,
+    'field_name' => 'field_applicationtags',
+    'field_id' => 710,
+    'entity_type' => 'node',
+    'bundle' => 'application',
+    'data' => 'a:7:{s:5:"label";s:4:"Tags";s:6:"widget";a:5:{s:6:"weight";s:1:"8";s:4:"type";s:11:"taxonomy_hs";s:6:"module";s:11:"hs_taxonomy";s:6:"active";i:0;s:8:"settings";a:2:{s:4:"size";i:60;s:17:"autocomplete_path";s:21:"taxonomy/autocomplete";}}s:8:"settings";a:1:{s:18:"user_register_form";b:0;}s:7:"display";a:2:{s:7:"default";a:5:{s:5:"label";s:5:"above";s:4:"type";s:54:"hs_taxonomy_term_reference_hierarchical_text_last_link";s:6:"weight";s:2:"12";s:8:"settings";a:0:{}s:6:"module";s:11:"hs_taxonomy";}s:6:"teaser";a:4:{s:5:"label";s:5:"above";s:4:"type";s:6:"hidden";s:6:"weight";s:1:"0";s:8:"settings";a:0:{}}}s:8:"required";i:0;s:11:"description";s:0:"";s:13:"default_value";N;}',
+    'deleted' => 0
+  ))->execute();
+
+  db_create_table('field_data_field_applicationtags', array(
+    'description' => "Data storage for field 710 (field_applicationtags)",
+    'fields' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The entity type this data is attached to'
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The field instance bundle to which this row belongs, used when deleting a field instance'
+      ),
+      'deleted' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'A boolean indicating whether this data item has been deleted'
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity id this data is attached to'
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'The entity revision id this data is attached to, or NULL if the entity type is not versioned'
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The language for this data item.'
+      ),
+      'delta' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The sequence number for this data item, used for multi-value fields'
+      ),
+      'field_applicationtags_tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => ''
+      )
+    ),
+    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'indexes' => array(
+      'entity_type' => array('entity_type'),
+      'bundle' => array('bundle'),
+      'deleted' => array('deleted'),
+      'entity_id' => array('entity_id'),
+      'revision_id' => array('revision_id'),
+      'language' => array('language')
+    )
+  ));
+
+  db_create_table('field_revision_field_applicationtags', array(
+    'description' => "Revision archive storage for field 710 (field_applicationtags)",
+    'fields' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The entity type this data is attached to'
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The field instance bundle to which this row belongs, used when deleting a field instance'
+      ),
+      'deleted' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'A boolean indicating whether this data item has been deleted'
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity id this data is attached to'
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity revision id this data is attached to, or NULL if the entity type is not versioned'
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The language for this data item.'
+      ),
+      'delta' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The sequence number for this data item, used for multi-value fields'
+      ),
+      'field_applicationtags_tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => ''
+      )
+    ),
+    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'indexes' => array(
+      'entity_type' => array('entity_type'),
+      'bundle' => array('bundle'),
+      'deleted' => array('deleted'),
+      'entity_id' => array('entity_id'),
+      'revision_id' => array('revision_id'),
+      'language' => array('language')
+    )
+  ));
+
+  // products
+  apim_profile_add_product_tags_field();
+}
+
+/**
+ * @throws \Exception
+ */
+function apim_profile_add_product_tags_field() {
+  db_insert('variable')->fields(array(
+    'name' => 'hs_config_taxonomy-field_producttags',
+    'value' => 'a:7:{s:9:"config_id";s:26:"taxonomy-field_producttags";s:12:"save_lineage";s:1:"0";s:15:"enforce_deepest";s:1:"0";s:9:"resizable";s:1:"1";s:12:"level_labels";a:1:{s:6:"status";i:0;}s:7:"dropbox";a:4:{s:6:"status";i:1;s:5:"title";s:14:"All selections";s:5:"limit";s:1:"0";s:8:"reset_hs";s:1:"1";}s:11:"editability";a:3:{s:6:"status";i:1;s:16:"allow_new_levels";i:1;s:10:"max_levels";s:1:"0";}}'
+  ))->execute();
+
+  // add tags to Products
+  db_insert('field_config')->fields(array(
+    'field_name' => 'field_producttags',
+    'type' => 'taxonomy_term_reference',
+    'module' => 'taxonomy',
+    'active' => 1,
+    'storage_type' => 'field_sql_storage',
+    'storage_module' => 'field_sql_storage',
+    'storage_active' => 1,
+    'locked' => 0,
+    'data' => 'a:7:{s:12:"translatable";s:1:"0";s:12:"entity_types";a:0:{}s:8:"settings";a:1:{s:14:"allowed_values";a:1:{i:0;a:2:{s:10:"vocabulary";s:4:"tags";s:6:"parent";s:1:"0";}}}s:7:"storage";a:5:{s:4:"type";s:17:"field_sql_storage";s:8:"settings";a:0:{}s:6:"module";s:17:"field_sql_storage";s:6:"active";s:1:"1";s:7:"details";a:1:{s:3:"sql";a:2:{s:18:"FIELD_LOAD_CURRENT";a:1:{s:28:"field_data_field_producttags";a:1:{s:3:"tid";s:21:"field_producttags_tid";}}s:19:"FIELD_LOAD_REVISION";a:1:{s:32:"field_revision_field_producttags";a:1:{s:3:"tid";s:21:"field_producttags_tid";}}}}}s:12:"foreign keys";a:1:{s:3:"tid";a:2:{s:5:"table";s:18:"taxonomy_term_data";s:7:"columns";a:1:{s:3:"tid";s:3:"tid";}}}s:7:"indexes";a:1:{s:3:"tid";a:1:{i:0;s:3:"tid";}}s:2:"id";s:3:"731";}',
+    'cardinality' => -1,
+    'translatable' => 0,
+    'deleted' => 0
+  ))->execute();
+  $fcid = db_query("SELECT id FROM {field_config} WHERE field_name=:field_producttags AND type=:taxonomy_term_reference", array(
+    ':field_producttags' => 'field_producttags',
+    ':taxonomy_term_reference' => 'taxonomy_term_reference'
+  ))->fetchField();
+
+  db_insert('field_config_instance')->fields(array(
+    'field_name' => 'field_producttags',
+    'field_id' => $fcid,
+    'entity_type' => 'node',
+    'bundle' => 'product',
+    'data' => 'a:7:{s:5:"label";s:4:"Tags";s:6:"widget";a:5:{s:6:"weight";s:1:"8";s:4:"type";s:11:"taxonomy_hs";s:6:"module";s:11:"hs_taxonomy";s:6:"active";i:0;s:8:"settings";a:2:{s:4:"size";i:60;s:17:"autocomplete_path";s:21:"taxonomy/autocomplete";}}s:8:"settings";a:1:{s:18:"user_register_form";b:0;}s:7:"display";a:2:{s:7:"default";a:5:{s:5:"label";s:5:"above";s:4:"type";s:54:"hs_taxonomy_term_reference_hierarchical_text_last_link";s:6:"weight";s:2:"12";s:8:"settings";a:0:{}s:6:"module";s:11:"hs_taxonomy";}s:6:"teaser";a:4:{s:5:"label";s:5:"above";s:4:"type";s:6:"hidden";s:6:"weight";s:1:"0";s:8:"settings";a:0:{}}}s:8:"required";i:0;s:11:"description";s:0:"";s:13:"default_value";N;}',
+    'deleted' => 0
+  ))->execute();
+  $fciid = db_query("SELECT id FROM {field_config_instance} WHERE field_name=:field_producttags", array(
+    ':field_producttags' => 'field_producttags'
+  ))->fetchField();
+
+  db_update('field_config')
+    ->fields(array('data' => 'a:7:{s:12:"translatable";s:1:"0";s:12:"entity_types";a:0:{}s:8:"settings";a:1:{s:14:"allowed_values";a:1:{i:0;a:2:{s:10:"vocabulary";s:4:"tags";s:6:"parent";s:1:"0";}}}s:7:"storage";a:5:{s:4:"type";s:17:"field_sql_storage";s:8:"settings";a:0:{}s:6:"module";s:17:"field_sql_storage";s:6:"active";s:1:"1";s:7:"details";a:1:{s:3:"sql";a:2:{s:18:"FIELD_LOAD_CURRENT";a:1:{s:28:"field_data_field_producttags";a:1:{s:3:"tid";s:21:"field_producttags_tid";}}s:19:"FIELD_LOAD_REVISION";a:1:{s:32:"field_revision_field_producttags";a:1:{s:3:"tid";s:21:"field_producttags_tid";}}}}}s:12:"foreign keys";a:1:{s:3:"tid";a:2:{s:5:"table";s:18:"taxonomy_term_data";s:7:"columns";a:1:{s:3:"tid";s:3:"tid";}}}s:7:"indexes";a:1:{s:3:"tid";a:1:{i:0;s:3:"tid";}}s:2:"id";s:' . strlen((string) $fciid) . ':"' . $fciid . '";}'))
+    ->condition('id', $fcid)
+    ->execute();
+
+  db_create_table('field_data_field_producttags', array(
+    'description' => "Data storage for field " . $fcid . " (field_producttags)",
+    'fields' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The entity type this data is attached to'
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The field instance bundle to which this row belongs, used when deleting a field instance'
+      ),
+      'deleted' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'A boolean indicating whether this data item has been deleted'
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity id this data is attached to'
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'The entity revision id this data is attached to, or NULL if the entity type is not versioned'
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The language for this data item.'
+      ),
+      'delta' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The sequence number for this data item, used for multi-value fields'
+      ),
+      'field_producttags_tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => ''
+      )
+    ),
+    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'indexes' => array(
+      'entity_type' => array('entity_type'),
+      'bundle' => array('bundle'),
+      'deleted' => array('deleted'),
+      'entity_id' => array('entity_id'),
+      'revision_id' => array('revision_id'),
+      'language' => array('language')
+    )
+  ));
+
+  db_create_table('field_revision_field_producttags', array(
+    'description' => "Revision archive storage for field " . $fcid . " (field_producttags)",
+    'fields' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The entity type this data is attached to'
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The field instance bundle to which this row belongs, used when deleting a field instance'
+      ),
+      'deleted' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'A boolean indicating whether this data item has been deleted'
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity id this data is attached to'
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity revision id this data is attached to, or NULL if the entity type is not versioned'
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The language for this data item.'
+      ),
+      'delta' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The sequence number for this data item, used for multi-value fields'
+      ),
+      'field_producttags_tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => ''
+      )
+    ),
+    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'indexes' => array(
+      'entity_type' => array('entity_type'),
+      'bundle' => array('bundle'),
+      'deleted' => array('deleted'),
+      'entity_id' => array('entity_id'),
+      'revision_id' => array('revision_id'),
+      'language' => array('language')
+    )
+  ));
+}
+
+/**
+ * @throws \Exception
+ */
+function apim_profile_add_product_ratings_field() {
+  // add Ratings to Products
+  db_insert('field_config')->fields(array(
+    'field_name' => 'field_productrating',
+    'type' => 'fivestar',
+    'module' => 'fivestar',
+    'active' => 1,
+    'storage_type' => 'field_sql_storage',
+    'storage_module' => 'field_sql_storage',
+    'storage_active' => 1,
+    'locked' => 0,
+    'data' => 'a:7:{s:12:"translatable";s:1:"0";s:12:"entity_types";a:0:{}s:8:"settings";a:1:{s:4:"axis";s:4:"vote";}s:7:"storage";a:5:{s:4:"type";s:17:"field_sql_storage";s:8:"settings";a:0:{}s:6:"module";s:17:"field_sql_storage";s:6:"active";s:1:"1";s:7:"details";a:1:{s:3:"sql";a:2:{s:18:"FIELD_LOAD_CURRENT";a:1:{s:30:"field_data_field_productrating";a:2:{s:6:"rating";s:26:"field_productrating_rating";s:6:"target";s:26:"field_productrating_target";}}s:19:"FIELD_LOAD_REVISION";a:1:{s:34:"field_revision_field_productrating";a:2:{s:6:"rating";s:26:"field_productrating_rating";s:6:"target";s:26:"field_productrating_target";}}}}}s:12:"foreign keys";a:0:{}s:7:"indexes";a:0:{}s:2:"id";s:3:"630";}',
+    'cardinality' => 1,
+    'translatable' => 0,
+    'deleted' => 0
+  ))->execute();
+  $fcid = db_query("SELECT id FROM {field_config} WHERE field_name=:field_productrating AND type=:fivestar", array(
+    ':field_productrating' => 'field_productrating',
+    ':fivestar' => 'fivestar'
+  ))->fetchField();
+
+  db_insert('field_config_instance')->fields(array(
+    'field_name' => 'field_productrating',
+    'field_id' => $fcid,
+    'entity_type' => 'node',
+    'bundle' => 'product',
+    'data' => 'a:7:{s:5:"label";s:6:"Rating";s:6:"widget";a:5:{s:6:"weight";s:1:"7";s:4:"type";s:7:"exposed";s:6:"module";s:8:"fivestar";s:6:"active";i:1;s:8:"settings";a:0:{}}s:8:"settings";a:6:{s:5:"stars";s:1:"5";s:11:"allow_clear";i:0;s:12:"allow_revote";i:1;s:13:"allow_ownvote";i:1;s:6:"target";s:4:"none";s:18:"user_register_form";b:0;}s:7:"display";a:2:{s:7:"default";a:5:{s:5:"label";s:5:"above";s:4:"type";s:26:"fivestar_formatter_default";s:6:"weight";s:2:"11";s:8:"settings";a:4:{s:6:"widget";a:1:{s:15:"fivestar_widget";s:54:"sites/all/modules/fivestar/widgets/outline/outline.css";}s:6:"expose";i:1;s:5:"style";s:7:"average";s:4:"text";s:7:"average";}s:6:"module";s:8:"fivestar";}s:6:"teaser";a:5:{s:5:"label";s:5:"above";s:4:"type";s:26:"fivestar_formatter_default";s:6:"weight";s:1:"0";s:8:"settings";a:4:{s:6:"widget";a:1:{s:15:"fivestar_widget";s:54:"sites/all/modules/fivestar/widgets/outline/outline.css";}s:6:"expose";i:0;s:5:"style";s:7:"average";s:4:"text";s:7:"average";}s:6:"module";s:8:"fivestar";}}s:8:"required";i:0;s:11:"description";s:0:"";s:13:"default_value";N;}',
+    'deleted' => 0
+  ))->execute();
+  $fciid = db_query("SELECT id FROM {field_config_instance} WHERE field_name=:field_productrating", array(
+    ':field_productrating' => 'field_productrating'
+  ))->fetchField();
+
+  db_update('field_config')
+    ->fields(array('data' => 'a:7:{s:12:"translatable";s:1:"0";s:12:"entity_types";a:0:{}s:8:"settings";a:1:{s:4:"axis";s:4:"vote";}s:7:"storage";a:5:{s:4:"type";s:17:"field_sql_storage";s:8:"settings";a:0:{}s:6:"module";s:17:"field_sql_storage";s:6:"active";s:1:"1";s:7:"details";a:1:{s:3:"sql";a:2:{s:18:"FIELD_LOAD_CURRENT";a:1:{s:30:"field_data_field_productrating";a:2:{s:6:"rating";s:26:"field_productrating_rating";s:6:"target";s:26:"field_productrating_target";}}s:19:"FIELD_LOAD_REVISION";a:1:{s:34:"field_revision_field_productrating";a:2:{s:6:"rating";s:26:"field_productrating_rating";s:6:"target";s:26:"field_productrating_target";}}}}}s:12:"foreign keys";a:0:{}s:7:"indexes";a:0:{}s:2:"id";s:' . strlen((string) $fciid) . ':"' . $fciid . '";}'))
+    ->condition('id', $fcid)
+    ->execute();
+
+  db_create_table('field_data_field_productrating', array(
+    'description' => "Data storage for field " . $fcid . " (field_productrating)",
+    'fields' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The entity type this data is attached to'
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The field instance bundle to which this row belongs, used when deleting a field instance'
+      ),
+      'deleted' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'A boolean indicating whether this data item has been deleted'
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity id this data is attached to'
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'The entity revision id this data is attached to, or NULL if the entity type is not versioned'
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The language for this data item.'
+      ),
+      'delta' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The sequence number for this data item, used for multi-value fields'
+      ),
+      'field_productrating_rating' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => ''
+      ),
+      'field_productrating_target' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => ''
+      )
+    ),
+    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'indexes' => array(
+      'entity_type' => array('entity_type'),
+      'bundle' => array('bundle'),
+      'deleted' => array('deleted'),
+      'entity_id' => array('entity_id'),
+      'revision_id' => array('revision_id'),
+      'language' => array('language')
+    )
+  ));
+
+  db_create_table('field_revision_field_productrating', array(
+    'description' => "Revision archive storage for field " . $fcid . " (field_productrating)",
+    'fields' => array(
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The entity type this data is attached to'
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The field instance bundle to which this row belongs, used when deleting a field instance'
+      ),
+      'deleted' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'A boolean indicating whether this data item has been deleted'
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity id this data is attached to'
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The entity revision id this data is attached to, or NULL if the entity type is not versioned'
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The language for this data item.'
+      ),
+      'delta' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The sequence number for this data item, used for multi-value fields'
+      ),
+      'field_productrating_rating' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => ''
+      ),
+      'field_productrating_target' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => ''
+      )
+    ),
+    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'indexes' => array(
+      'entity_type' => array('entity_type'),
+      'bundle' => array('bundle'),
+      'deleted' => array('deleted'),
+      'entity_id' => array('entity_id'),
+      'revision_id' => array('revision_id'),
+      'language' => array('language')
+    )
+  ));
+}
+
+/**
+ * Create default banner block
+ */
+function apim_profile_create_bannerblock() {
+  $bean = bean_create(array('type' => 'banner_block'));
+  $bean->label = 'Welcome Banner';
+  $bean->title = '';
+  $bean->delta = 'banner_block';
+  $bean->bannercontent = array(
+    'und' => array(
+      array(
+        'value' => '<h1 style="text-align: center; padding-top: 120px; margin-top: 0;"><span style="font-size: 1.5em; color: #ffffff;">Innovate with our APIs</span></h1><p style="text-align: center;"><span style="color: #ffffff;">Welcome to our API portal where you will find a great selection of APIs for your awesome innovative apps</span></p><p style="text-align: center;">&nbsp;</p>',
+        'format' => 'full_html'
+      )
+    )
+  );
+  $bean->save();
+}
+
+/**
+ * Update code to handle upgrade from earlier version
+ */
+function apim_profile_update_7400() {
+  // enable cron
+  $modules = array(
+    'clone',
+    'menu_item_visibility',
+    'site_uploader',
+    'comprehensive_uninstaller',
+    'ultimate_cron',
+    'markdown',
+    'front_page',
+    'label_help',
+    'slick',
+    'slick_views',
+    'slick_extras',
+    'slick_ui',
+    'slick_fields',
+    'profanity',
+    'seckit',
+    'restrict_by_ip',
+    'search_config',
+    'no_autocomplete',
+    'ejectorseat',
+    'session_limit',
+    'transliteration',
+    'metatag',
+    'metatag_dc',
+    'metatag_facebook',
+    'metatag_twitter_cards',
+    'metatag_opengraph',
+    'restws',
+    'apic_taxonomy_menu_block',
+    'panels_mini',
+    'popularapi',
+    'popularproduct',
+    'socialblock',
+    'admin_menu',
+    'adminimal_admin_menu'
+  );
+  module_enable($modules, TRUE);
+
+  // ensure user registration options haven't been played with
+  variable_set('user_register', 1);
+  variable_set('user_email_verification', FALSE);
+  variable_set('comment_preview_product', "0");
+  variable_set('comment_preview_api', "0");
+
+  // configure cron
+  if (variable_get('ultimate_cron_plugin_logger_default', NULL) == NULL) {
+    variable_set('ultimate_cron_plugin_logger_default', 'cache');
+  }
+
+  if (variable_get('ultimate_cron_plugin_logger_cache_settings', NULL) == NULL) {
+    variable_set('ultimate_cron_plugin_logger_cache_settings', array(
+      'bin' => 'cache_ultimate_cron',
+      'timeout' => '-1'
+    ));
+  }
+
+  // temporarily force CSP to be off since doesnt currently work
+  variable_set('seckit_xss', array(
+    'csp' => array(
+      'checkbox' => 0,
+      'report-only' => 0,
+      'default-src' => "'self'",
+      'script-src' => "",
+      'object-src' => "",
+      'style-src' => "",
+      'img-src' => "",
+      'media-src' => "",
+      'frame-src' => "",
+      'font-src' => "",
+      'connect-src' => "",
+      'report-uri' => "admin/config/system/seckit/csp-report",
+      'policy-uri' => ""
+    ),
+    'x_xss' => array('select' => "0"),
+    'x_content_type' => array('checkbox' => 1)
+  ));
+
+  if (variable_get('ibm_apim_set_frontpage_title', NULL) == NULL) {
+    // set frontpage page title
+    if (module_exists('metatag')) {
+      $cid = db_query("SELECT cid FROM {metatag_config} WHERE instance=:instance", array(
+        ':instance' => 'global:frontpage'
+      ))->fetchField();
+      if (isset($cid) && is_numeric($cid)) {
+        db_update('metatag_config')
+          ->fields(array('config' => 'a:13:{s:5:"title";a:1:{s:5:"value";s:11:"[site:name]";}s:9:"canonical";a:1:{s:5:"value";s:10:"[site:url]";}s:9:"shortlink";a:1:{s:5:"value";s:10:"[site:url]";}s:13:"dcterms.title";a:1:{s:5:"value";s:11:"[site:name]";}s:19:"dcterms.description";a:1:{s:5:"value";s:13:"[site:slogan]";}s:18:"dcterms.identifier";a:1:{s:5:"value";s:10:"[site:url]";}s:7:"og:type";a:1:{s:5:"value";s:7:"website";}s:6:"og:url";a:1:{s:5:"value";s:10:"[site:url]";}s:8:"og:title";a:1:{s:5:"value";s:11:"[site:name]";}s:14:"og:description";a:1:{s:5:"value";s:13:"[site:slogan]";}s:11:"twitter:url";a:1:{s:5:"value";s:10:"[site:url]";}s:13:"twitter:title";a:1:{s:5:"value";s:11:"[site:name]";}s:19:"twitter:description";a:1:{s:5:"value";s:13:"[site:slogan]";}}'))
+          ->condition('instance', 'global:frontpage')
+          ->execute();
+      }
+      else {
+        db_insert('metatag_config')->fields(array(
+          'instance' => 'global:frontpage',
+          'config' => 'a:13:{s:5:"title";a:1:{s:5:"value";s:11:"[site:name]";}s:9:"canonical";a:1:{s:5:"value";s:10:"[site:url]";}s:9:"shortlink";a:1:{s:5:"value";s:10:"[site:url]";}s:13:"dcterms.title";a:1:{s:5:"value";s:11:"[site:name]";}s:19:"dcterms.description";a:1:{s:5:"value";s:13:"[site:slogan]";}s:18:"dcterms.identifier";a:1:{s:5:"value";s:10:"[site:url]";}s:7:"og:type";a:1:{s:5:"value";s:7:"website";}s:6:"og:url";a:1:{s:5:"value";s:10:"[site:url]";}s:8:"og:title";a:1:{s:5:"value";s:11:"[site:name]";}s:14:"og:description";a:1:{s:5:"value";s:13:"[site:slogan]";}s:11:"twitter:url";a:1:{s:5:"value";s:10:"[site:url]";}s:13:"twitter:title";a:1:{s:5:"value";s:11:"[site:name]";}s:19:"twitter:description";a:1:{s:5:"value";s:13:"[site:slogan]";}}'
+        ))->execute();
+      }
+    }
+    variable_set('ibm_apim_set_frontpage_title', 1);
+  }
+
+  if (variable_get('ibm_apim_admin_theme_enabled', NULL) == NULL) {
+    module_disable(array('toolbar'), TRUE);
+    // enable the adminimal admin theme
+    theme_enable(array('adminimal'));
+    variable_set('admin_theme', 'adminimal');
+    variable_set('ibm_apim_admin_theme_enabled', 1);
+  }
+  if (variable_get('ibm_apim_create_v5_frontpage', NULL) == NULL) {
+    // Create a page for the welcome block
+    if (module_exists('panels_mini')) {
+      $path = dirname(__FILE__);
+      require_once $path . '/content/welcome.page.inc';
+      apim_profile_create_welcome_page('v5welcome');
+    }
+    variable_set('ibm_apim_create_v5_frontpage', 1);
+  }
+  if (variable_get('ibm_apim_enable_connect_theme', NULL) == NULL) {
+    $theme_default = variable_get('theme_default');
+    if (isset($theme_default) && $theme_default == 'ibm_apim_theme') {
+      variable_set('theme_default', 'connect_theme');
+      apim_profile_enable_connect_theme();
+      $path = dirname(__FILE__);
+      require_once $path . '/content/welcome.page.inc';
+      apim_profile_migrate_frontpage();
+      db_update('block')
+        ->fields(array('css_class' => ""))
+        ->condition('module', 'system')
+        ->condition('delta', 'main-menu')
+        ->condition('theme', 'connect_theme')
+        ->execute();
+      db_update('block')
+        ->fields(array('css_class' => ""))
+        ->condition('module', 'search')
+        ->condition('delta', 'form')
+        ->condition('theme', 'connect_theme')
+        ->execute();
+      // check if banner block has been updated, if not then use our new look
+      $beans = bean_get_all_beans();
+      if (isset($beans)) {
+        foreach ($beans as $bean) {
+          if (isset($bean->delta) && ($bean->delta == 'banner_block') || (isset($bean->type) && $bean->type == 'banner_block')) {
+            $oldcontent = '<h1 style="text-align: center;"><span style="font-size: 1.5em; color: #ffffff;">Develop, Manage, Socialize</span></h1><p style="text-align: center;"><span style="color: #ffffff;">IBM\'s Cloud based API Management solution enables you to</span><br><span style="color: #ffffff;">Design, Manage, Analyze and Scale your API in minutes</span></p><p style="text-align: center;" class="banner_button"><a href="api" title="Browse our APIs"><span style="color: #ffffff;">See what our APIs can do for you</span></a></p><p style="text-align: center;">&nbsp;</p>';
+            if ($bean->bannercontent['und'][0]['value'] == $oldcontent) {
+              $bean->bannercontent = array(
+                'und' => array(
+                  array(
+                    'value' => '<h1 style="text-align: center; padding-top: 120px; margin-top: 0;"><span style="font-size: 1.5em; color: #ffffff;">Innovate with our APIs</span></h1><p style="text-align: center;"><span style="color: #ffffff;">Welcome to our API portal where you will find a great selection of APIs for your awesome innovative apps</span></p><p style="text-align: center;">&nbsp;</p>',
+                    'format' => 'full_html'
+                  )
+                )
+              );
+              $file = file_load($bean->bannerbgimage['und'][0]['fid']);
+              // unset the field for the bean
+              unset($bean->bannerbgimage['und'][0]);
+              // delete file from disk and from database
+              file_delete($file);
+              $bean->save();
+            }
+          }
+        }
+      }
+    }
+    variable_set('ibm_apim_enable_connect_theme', 1);
+  }
+
+  if (variable_get('ibm_apim_v5_menu_upgrade', NULL) == NULL) {
+    $mlid = db_query("SELECT mlid FROM {menu_links} WHERE router_path=:router_path AND link_path=:link_path AND menu_name=:menu_name", array(
+      ':router_path' => 'api',
+      ':link_path' => 'api',
+      ':menu_name' => 'main-menu'
+    ))->fetchField();
+    if (isset($mlid)) {
+      $link = menu_link_load($mlid);
+      if (isset($link) && isset($link['link_path'])) {
+        // Alter "hidden" value.
+        $link['hidden'] = 1;
+        $link['customized'] = 1;
+        $weight = $link['weight'];
+        menu_link_save($link);
+        if (isset($weight)) {
+          $prodmlid = db_query("SELECT mlid FROM {menu_links} WHERE router_path=:router_path AND link_path=:link_path AND menu_name=:menu_name", array(
+            ':router_path' => 'product',
+            ':link_path' => 'product',
+            ':menu_name' => 'main-menu'
+          ))->fetchField();
+          if (isset($prodmlid)) {
+            $prodlink = menu_link_load($prodmlid);
+            if (isset($prodlink) && isset($prodmlid['link_path'])) {
+              // Alter "hidden" value.
+              $prodlink['weight'] = $weight;
+              menu_link_save($prodlink);
+            }
+          }
+        }
+      }
+    }
+    $navmlid = db_query("SELECT mlid FROM {menu_links} WHERE router_path=:router_path AND link_path=:link_path AND menu_name=:menu_name", array(
+      ':router_path' => 'api',
+      ':link_path' => 'api',
+      ':menu_name' => 'navigation'
+    ))->fetchField();
+    if (isset($navmlid)) {
+      $navlink = menu_link_load($navmlid);
+      if (isset($navlink) && isset($navlink['link_path'])) {
+        // Alter "hidden" value.
+        $navlink['hidden'] = 1;
+        $navlink['customized'] = 1;
+        menu_link_save($navlink);
+      }
+    }
+    variable_set('ibm_apim_v5_menu_upgrade', 1);
+  }
+
+  if (variable_get('ibm_apim_enable_htmlmail', NULL) == NULL) {
+    module_enable(array('mailsystem', 'htmlmail'), TRUE);
+    _apim_profile_enable_htmlmail();
+    variable_set('ibm_apim_enable_htmlmail', 1);
+  }
+
+  if (variable_get('ibm_apim_addtoany_upgrade', NULL) == NULL) {
+    // turn on add to any for products
+    variable_set('addtoany_nodetypes', array('api', 'product', 'article', 'page', 'blog'));
+    variable_set('ibm_apim_addtoany_upgrade', 1);
+  }
+
+  if (variable_get('ibm_apim_enable_password_tab', NULL) == NULL) {
+    module_enable(array('password_policy_password_tab'), TRUE);
+    variable_set('ibm_apim_enable_password_tab', 1);
+  }
+
+  if (variable_get('ibm_apim_enable_account_tabs', NULL) == NULL) {
+    module_enable(array('account_tabs'), TRUE);
+    variable_set('ibm_apim_enable_account_tabs', 1);
+  }
+
+  if (variable_get('ibm_apim_disable_jqmulti', NULL) == NULL) {
+    module_disable(array('jqmulti'), TRUE);
+    variable_set('ibm_apim_disable_jqmulti', 1);
+  }
+
+  if (variable_get('ibm_apim_disable_i18n_update', NULL) == NULL) {
+    module_disable(array('i18n_update'), TRUE);
+    variable_set('ibm_apim_disable_i18n_update', 1);
+  }
+
+  if (variable_get('ibm_apim_taxonomy_menu_upgrade', NULL) == NULL) {
+    // delete old taxonomy menu
+    $taxonomy_menu = array();
+    $taxonomy_menu['menu_name'] = 'tags';
+    $taxonomy_menu['title'] = 'Tags';
+    $taxonomy_menu['description'] = 'Browse content by category.';
+    menu_delete($taxonomy_menu);
+    if (module_exists('taxonomy_menu')) {
+      module_disable(array('taxonomy_menu'), TRUE);
+    }
+    db_insert('block')->fields(array(
+      'status' => 1,
+      'region' => 'collapsible',
+      'title' => 'Tags',
+      'module' => 'apic_taxonomy_menu_block',
+      'delta' => '1',
+      'visibility' => 1,
+      'pages' => 'node/*
+api
+api/*
+product
+product/*
+application
+application/*',
+      'theme' => 'connect_theme'
+    ))->execute();
+    variable_set('apic_taxonomy_menu_block_1', array(
+      'delta' => 1,
+      'admin_title' => 'Tags',
+      'vid' => '2',
+      'parent' => '0',
+      'parent_fixed' => '3',
+      'parent_dynamic' => '1',
+      'depth' => '0',
+      'home_link' => 0,
+      'nodes' => 1,
+      'nodes_aggregation' => 1,
+      'hide_empty' => 0,
+      'ctype' => array()
+    ));
+    variable_set('apic_taxonomy_menu_block_ids', array(0 => 1));
+    variable_set('ibm_apim_taxonomy_menu_upgrade', 1);
+  }
+
+  // update the default filesize quota
+  if (variable_get('ibm_apim_update_upload_limit_done', NULL) == NULL) {
+    $imce_profiles = variable_get('imce_profiles', NULL);
+    if (isset($imce_profiles)) {
+      $newprofiles = array();
+      foreach ($imce_profiles as $profile) {
+        if (isset($profile['name']) && $profile['name'] == 'Default profile') {
+          if (isset($profile['filesize']) && $profile['filesize'] < 10) {
+            $profile['filesize'] = '10';
+          }
+          if (isset($profile['quota']) && $profile['quota'] < 200) {
+            $profile['quota'] = '200';
+          }
+        }
+        $newprofiles[] = $profile;
+      }
+      variable_set('imce_profiles', $newprofiles);
+    }
+    variable_set('ibm_apim_update_upload_limit_done', 1);
+  }
+
+  // Always set this as we have changed poorman_keepalive from 0 to 1
+  variable_set('ultimate_cron_plugin_launcher_serial_settings', array(
+    'lock_timeout' => '3600',
+    'max_threads' => '1',
+    'poorman_keepalive' => 0,
+    'thread' => 'any'
+  ));
+
+  // Always set this as we are changing a default setting that already exists
+  variable_set('ultimate_cron_plugin_settings_poorman_settings', array(
+    'launcher' => '',
+    'early_page_flush' => 1,
+    'user_agent' => 'Ultimate Cron'
+  ));
+
+  // Make our cron job run every minute
+  $name = db_query("SELECT name FROM {ultimate_cron_job} WHERE name='ibm_apim_cron'")->fetchField();
+
+  if ($name != 'ibm_apim_cron') {
+    db_insert('ultimate_cron_job')->fields(array(
+      'name' => 'ibm_apim_cron',
+      'title' => 'Default cron handler',
+      'settings' => 'a:3:{s:9:"scheduler";a:2:{s:4:"name";s:0:"";s:6:"simple";a:1:{s:5:"rules";a:1:{i:0;s:9:"* * * * *";}}}s:8:"launcher";a:2:{s:4:"name";s:0:"";s:6:"serial";a:0:{}}s:6:"logger";a:2:{s:4:"name";s:0:"";s:5:"cache";a:0:{}}}'
+    ))->execute();
+  }
+
+  if (variable_get('ibm_apim_enable_api_test', NULL) == NULL) {
+    variable_set('ibm_apim_enable_api_test', 1);
+  }
+  if (variable_get('ibm_apim_autotag_with_phase', NULL) == NULL) {
+    variable_set('ibm_apim_autotag_with_phase', 0);
+  }
+
+  if (variable_get('ibm_apim_cron_update', NULL) == NULL) {
+    // Make our cron job run every minute
+    db_insert('ultimate_cron_job')->fields(array(
+      'name' => 'auth_apic_cron',
+      'title' => 'Clear forum block cache',
+      'settings' => 'a:3:{s:9:"scheduler";a:2:{s:4:"name";s:0:"";s:6:"simple";a:1:{s:5:"rules";a:1:{i:0;s:9:"* * * * *";}}}s:8:"launcher";a:2:{s:4:"name";s:0:"";s:6:"serial";a:0:{}}s:6:"logger";a:2:{s:4:"name";s:0:"";s:5:"cache";a:0:{}}}'
+    ))->execute();
+    // Make our bgsync cron job run every 15 minutes
+    db_update('ultimate_cron_job')->fields(array(
+      'title' => 'Background sync',
+      'settings' => 'a:3:{s:9:"scheduler";a:2:{s:4:"name";s:0:"";s:6:"simple";a:1:{s:5:"rules";a:1:{i:0;s:14:"*/15+@ * * * *";}}}s:8:"launcher";a:2:{s:4:"name";s:0:"";s:6:"serial";a:0:{}}s:6:"logger";a:2:{s:4:"name";s:0:"";s:5:"cache";a:0:{}}}'
+    ))->condition('name', 'ibm_apim_cron')->execute();
+    variable_set('ibm_apim_cron_update', 1);
+  }
+
+  // disable cloning of our content types
+  variable_set('clone_omitted', array(
+    'api' => 'api',
+    'application' => 'application',
+    'product' => 'product',
+    'devorg' => 'devorg',
+    'article' => 0,
+    'page' => 0,
+    'blog' => 0,
+    'faq' => 0,
+    'forum' => 0,
+    'poll' => 0,
+    'support_ticket' => 0
+  ));
+
+  // setup some example security questions
+  $modules = array('security_questions');
+  module_enable($modules, TRUE);
+  drupal_load('module', 'security_questions');
+  $questions = security_questions_question_load_multiple();
+  if (!isset($questions) || empty($questions) || count($questions) == 0) {
+    security_questions_add_question('What is the name of the place your wedding reception was held?');
+    security_questions_add_question('In what city or town does your nearest sibling live?');
+    security_questions_add_question('What was the name of your elementary / primary school?');
+    security_questions_add_question('In what town or city did you meet your spouse/partner?');
+    security_questions_add_question('What time of the day were you born? (hh:mm)');
+  }
+  module_disable(array('security_questions'), TRUE);
+
+  if (variable_get('ibm_apim_done_autologout_upgrade', NULL) == NULL) {
+    module_load_include('inc', 'autologout', 'autologout.admin');
+    $form_state = form_state_defaults();
+    $form_state['values'] = array('autologout_padding' => '0', 'autologout_no_dialog' => 1);
+    drupal_form_submit('autologout_settings', $form_state);
+    variable_set('ibm_apim_done_autologout_upgrade', 1);
+  }
+
+  if (variable_get('ibm_apim_done_unlock_fields_upgrade', NULL) == NULL) {
+    foreach (array(
+               'field_apirating',
+               'field_applicationrating',
+               'field_productrating',
+               'field_apitags',
+               'field_applicationtags',
+               'field_producttags'
+             ) as $fieldname) {
+      db_update('field_config')->fields(array('locked' => 0))->condition('field_name', $fieldname)->execute();
+    }
+    variable_set('ibm_apim_done_unlock_fields_upgrade', 1);
+  }
+
+  if (variable_get('ibm_apim_done_phpmailer_removal', NULL) == NULL) {
+    if (module_exists('phpmailer')) {
+      module_disable(array('phpmailer'), TRUE);
+    }
+    variable_set('ibm_apim_done_phpmailer_removal', 1);
+  }
+
+  // update jquery_version
+  variable_set('jquery_update_jquery_version', '1.8');
+
+  // update forum access records
+  if (variable_get('ibm_apim_done_forum_access_upgrade', NULL) == NULL) {
+    // only do upgrade if forum is enabled
+    if (module_exists('forum')) {
+      $modules = array('acl', 'chain_menu_access', 'forum_access');
+      module_enable($modules, TRUE);
+      if (module_exists('forum_access')) {
+        // set forum_access
+        $containerID = taxonomy_get_term_by_name('APIs');
+        $vid = variable_get('forum_nav_vocabulary', 1);
+        if (isset($containerID)) {
+          $children = taxonomy_get_children($containerID, $vid);
+          if (!empty($children)) {
+            foreach ($children as $child) {
+              $forumID = $child->tid;
+              if (!empty($forumID)) {
+                db_insert('forum_access')->fields(array(
+                  'tid' => $forumID,
+                  'rid' => 1,
+                  'grant_view' => 1,
+                  'grant_update' => 0,
+                  'grant_delete' => 0,
+                  'grant_create' => 0,
+                  'priority' => 0
+                ))->execute();
+                db_insert('forum_access')->fields(array(
+                  'tid' => $forumID,
+                  'rid' => 2,
+                  'grant_view' => 1,
+                  'grant_update' => 0,
+                  'grant_delete' => 0,
+                  'grant_create' => 1,
+                  'priority' => 0
+                ))->execute();
+                db_insert('forum_access')->fields(array(
+                  'tid' => $forumID,
+                  'rid' => 3,
+                  'grant_view' => 0,
+                  'grant_update' => 0,
+                  'grant_delete' => 0,
+                  'grant_create' => 0,
+                  'priority' => 0
+                ))->execute();
+                db_insert('forum_access')->fields(array(
+                  'tid' => $forumID,
+                  'rid' => 4,
+                  'grant_view' => 0,
+                  'grant_update' => 0,
+                  'grant_delete' => 0,
+                  'grant_create' => 0,
+                  'priority' => 0
+                ))->execute();
+                db_insert('forum_access')->fields(array(
+                  'tid' => $forumID,
+                  'rid' => 5,
+                  'grant_view' => 1,
+                  'grant_update' => 1,
+                  'grant_delete' => 1,
+                  'grant_create' => 1,
+                  'priority' => 0
+                ))->execute();
+              }
+            }
+            node_access_rebuild();
+          }
+        }
+      }
+    }
+    variable_set('ibm_apim_done_forum_access_upgrade', 1);
+  }
+  // enable product module if not already present
+  if (!module_exists('product')) {
+    $modules = array('product');
+    module_enable($modules, TRUE);
+    db_insert('flag_types')->fields(array('fid' => 1, 'type' => 'product'))->execute();
+  }
+  // enable auth_apic module if not already present
+  if (!module_exists('auth_apic')) {
+    $modules = array('auth_apic');
+    module_enable($modules, TRUE);
+  }
+  // enable devorg module
+  if (!module_exists('devorg')) {
+    module_enable(array('devorg'), TRUE);
+  }
+  // add product tags and ratings
+  $prod_field_name = field_info_field('field_productrating');
+  if (!isset($prod_field_name) || empty($prod_field_name)) {
+    apim_profile_add_product_ratings_field();
+  }
+  $tag_field_name = field_info_field('field_producttags');
+  if (!isset($tag_field_name) || empty($tag_field_name)) {
+    apim_profile_add_product_tags_field();
+  }
+
+  // fix password policy
+  $policy = array("character_types" => "3", "length" => "8");
+  db_update('password_policy')
+    ->fields(array('policy' => serialize($policy)))
+    ->condition('pid', 1)
+    ->condition('name', 'password-strength')
+    ->execute();
+
+  if (variable_get('ibm_apim_done_csspreprocess_upgrade', NULL) == NULL) {
+    variable_set('preprocess_css', 1);
+    variable_set('ibm_apim_done_csspreprocess_upgrade', 1);
+  }
+
+  // fix a security hole in bookmarks allowing user to access other people's bookmarks
+  if (variable_get('ibm_apim_done_flag_bookmark_upgrade', NULL) == NULL) {
+    _apim_profile_create_bookmark_view();
+    variable_set('ibm_apim_done_flag_bookmark_upgrade', 1);
+  }
+
+  if (variable_get('ibm_apim_done_frameprevention_upgrade', NULL) == NULL) {
+    variable_set('seckit_clickjacking', array(
+      "x_frame" => "1",
+      "x_frame_allow_from" => "",
+      "js_css_noscript" => 1,
+      "noscript_message" => "Sorry, you need to enable JavaScript to visit this website."
+    ));
+    variable_set('ibm_apim_done_frameprevention_upgrade', 1);
+  }
+
+  if (variable_get('ibm_apim_done_seckit_upgrade', NULL) == NULL) {
+    if (variable_get('seckit_csrf', NULL) == NULL) {
+      variable_set('seckit_csrf', array('origin' => 1, 'origin_whitelist' => ""));
+    }
+    if (variable_get('seckit_ssl', NULL) == NULL) {
+      variable_set('seckit_ssl', array('hsts' => 1, 'hsts_max_age' => "1000", 'hsts_subdomains' => 1));
+    }
+    if (variable_get('seckit_various', NULL) == NULL) {
+      variable_set('seckit_various', array('from_origin' => 0, 'from_origin_destination' => "same"));
+    }
+    if (variable_get('seckit_xss', NULL) == NULL) {
+      variable_set('seckit_xss', array(
+        'csp' => array(
+          'checkbox' => 0,
+          'report-only' => 0,
+          'default-src' => "'self'",
+          'script-src' => "",
+          'object-src' => "",
+          'style-src' => "",
+          'img-src' => "",
+          'media-src' => "",
+          'frame-src' => "",
+          'font-src' => "",
+          'connect-src' => "",
+          'report-uri' => "admin/config/system/seckit/csp-report",
+          'policy-uri' => ""
+        ),
+        'x_xss' => array('select' => "0"),
+        'x_content_type' => array('checkbox' => 1)
+      ));
+    }
+    variable_set('ibm_apim_done_seckit_upgrade', 1);
+  }
+
+  if (variable_get('ibm_apim_done_loginsecurity_upgrade', NULL) == NULL) {
+    module_disable(array('flood_control'), TRUE);
+    module_enable(array('login_security'), TRUE);
+    variable_set('login_security_host_wrong_count', "50");
+    variable_set('login_security_user_wrong_count', "5");
+    variable_set('ibm_apim_done_loginsecurity_upgrade', 1);
+  }
+  if (variable_get('ibm_apim_stop_hiding_login_errors', NULL) == NULL) {
+    variable_set('login_security_disable_core_login_error', 0);
+    variable_set('ibm_apim_stop_hiding_login_errors', 1);
+  }
+
+  if (variable_get('ibm_apim_done_no_autocomplete_upgrade', NULL) == NULL) {
+    variable_set('no_autocomplete_login_form', 1);
+    variable_set('no_autocomplete_profile_form', 1);
+    variable_set('ibm_apim_done_no_autocomplete_upgrade', 1);
+  }
+
+  // Configure Default Search
+  if (variable_get('ibm_apim_default_search_done', NULL) == NULL) {
+    variable_set('search_active_modules', array(
+      'ibm_apim' => 'ibm_apim',
+      'user' => 'user',
+      'node' => 0,
+      'support' => 0
+    ));
+    variable_set('search_default_module', 'ibm_apim');
+    variable_set('ibm_apim_default_search_done', 1);
+  }
+
+  // configure perms for RESTWS
+  if (variable_get('ibm_apim_restws_config_done', NULL) == NULL) {
+    user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access resource node'));
+    user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('access resource node'));
+    variable_set('ibm_apim_restws_config_done', 1);
+  }
+
+  if (variable_get('ibm_apim_popularapi_perms_done', NULL) == NULL) {
+    if (!module_exists('popularproduct')) {
+      $modules = array('popularapi', 'popularproduct');
+      module_enable($modules, TRUE);
+    }
+    $perms = array('view any popularapi_block bean', 'view any popularproduct_block bean');
+    user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, $perms);
+    user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, $perms);
+    $adminperms = array(
+      'edit any popularapi_block bean',
+      'create any popularapi_block bean',
+      'delete any popularapi_block bean',
+      'view any popularapi_block bean',
+      'edit any popularproduct_block bean',
+      'create any popularproduct_block bean',
+      'delete any popularproduct_block bean',
+      'view any popularproduct_block bean'
+    );
+    $admin_role = user_role_load_by_name('administrator');
+    $admin_rid = $admin_role->rid;
+    user_role_grant_permissions($admin_rid, $adminperms);
+    $editor_role = user_role_load_by_name('content author');
+    $editor_rid = $editor_role->rid;
+    user_role_grant_permissions($editor_rid, $adminperms);
+    variable_set('ibm_apim_popularapi_perms_done', 1);
+  }
+
+  if (variable_get('ibm_apim_socialblock_perms_done', NULL) == NULL) {
+    if (!module_exists('socialblock')) {
+      $modules = array('socialblock');
+      module_enable($modules, TRUE);
+    }
+    $perms = array('view any socialblock_block bean');
+    user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, $perms);
+    user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, $perms);
+    $adminperms = array(
+      'edit any socialblock_block bean',
+      'create any socialblock_block bean',
+      'delete any socialblock_block bean',
+      'view any socialblock_block bean'
+    );
+    $admin_role = user_role_load_by_name('administrator');
+    $admin_rid = $admin_role->rid;
+    user_role_grant_permissions($admin_rid, $adminperms);
+    $editor_role = user_role_load_by_name('content author');
+    $editor_rid = $editor_role->rid;
+    user_role_grant_permissions($editor_rid, $adminperms);
+    variable_set('ibm_apim_socialblock_perms_done', 1);
+  }
+  // revoke create blog post perms
+  if (variable_get('ibm_apim_revoke_blog_perms_done', NULL) == NULL) {
+    $perms = array(
+      'create blog content',
+      'create article content',
+      'create faq content',
+      'create page content',
+      'create poll content',
+      'delete own blog content',
+      'delete own article content',
+      'delete own faq content',
+      'delete own page content',
+      'delete own poll content',
+      'edit any blog content',
+      'edit any article content',
+      'edit any faq content',
+      'edit any page content',
+      'edit any poll content',
+      'edit own blog content',
+      'edit own article content',
+      'edit own faq content',
+      'edit own page content',
+      'edit own poll content',
+      'edit any api content',
+      'edit any product content'
+    );
+    user_role_revoke_permissions(DRUPAL_AUTHENTICATED_RID, $perms);
+    variable_set('ibm_apim_revoke_blog_perms_done', 1);
+  }
+
+  // configure search_config
+  if (variable_get('ibm_apim_search_config_done', NULL) == NULL) {
+    user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array('search all content', 'search all excluded entities'));
+    user_role_revoke_permissions(DRUPAL_AUTHENTICATED_RID, array('search all content', 'search all excluded entities'));
+    $perms = array(
+      'search api content',
+      'search blog content',
+      'search product content',
+      'search article content',
+      'search faq content',
+      'search page content',
+      'search poll content',
+      'search forum content',
+      'search api content'
+    );
+    user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, $perms);
+    user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, $perms);
+
+    variable_set('search_config', array(
+      'forms' => array(
+        'toggle_forms' => 0,
+        'move_keyword_search' => 0,
+        'advanced_populate' => 0,
+        'remove_containing_wrapper' => 'default',
+        'advanced_expand' => 'default'
+      ),
+      'fields' => array(
+        'containing_any' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+        'containing_phrase' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+        'containing_none' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+        'types' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+        'filter' => array(
+          'application' => 'application',
+          'devorg' => 'devorg',
+          'api' => 0,
+          'article' => 0,
+          'page' => 0,
+          'blog' => 0,
+          'faq' => 0,
+          'forum' => 0,
+          'poll' => 0,
+          'product' => 0,
+          'support_ticket' => 0
+        ),
+        'groupings' => array()
+      ),
+      'category' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+      'language' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+      'results' => array('limit' => '10'),
+      'restrictions' => array('admin_bypass' => 1)
+    ));
+    variable_set('ibm_apim_search_config_done', 1);
+  }
+
+  // no longer need the plan module
+  module_disable(array('plan'), TRUE);
+
+  // force a menu rebuild
+  menu_rebuild();
+
+  // Flush all caches to ensure that any full bootstraps during the installer
+  // do not leave stale cached data, and that any content types or other items
+  // registered by the install profile are registered correctly.
+  drupal_flush_all_caches();
+
+  // Also clear all caches for good measure. What is the difference between
+  // flushing and clearing. Who knows.
+  cache_clear_all();
+}
+
+/**
+ * Create the view used for bookmarks
+ */
+function _apim_profile_create_bookmark_view() {
+  $view = views_get_view('flag_bookmarks_tab', TRUE);
+  if (!isset($view)) {
+    $view = new view();
+    $view->name = 'flag_bookmarks_tab';
+    $view->description = 'Provides a tab on all users\' profile pages containing bookmarks for that user.';
+    $view->tag = 'flag';
+    $view->base_table = 'node';
+    $view->human_name = '';
+    $view->core = 0;
+    $view->api_version = '3.0';
+    $view->disabled = FALSE;
+  }
+  /* Display: Defaults */
+  $handler = $view->new_display('default', 'Defaults', 'default');
+  $handler->display->display_options['title'] = 'User bookmarks';
+  $handler->display->display_options['use_more_always'] = FALSE;
+  $handler->display->display_options['access']['type'] = 'perm';
+  $handler->display->display_options['access']['perm'] = 'flag bookmarks';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'none';
+  $handler->display->display_options['style_plugin'] = 'table';
+  $handler->display->display_options['style_options']['grouping'] = '';
+  $handler->display->display_options['style_options']['columns'] = array(
+    'type' => 'type',
+    'title' => 'title',
+    'name' => 'name',
+    'comment_count' => 'comment_count',
+    'last_comment_timestamp' => 'last_comment_timestamp'
+  );
+  $handler->display->display_options['style_options']['default'] = 'last_comment_timestamp';
+  $handler->display->display_options['style_options']['info'] = array(
+    'type' => array('sortable' => TRUE),
+    'title' => array('sortable' => TRUE),
+    'name' => array('sortable' => TRUE),
+    'comment_count' => array('sortable' => TRUE),
+    'last_comment_timestamp' => array('sortable' => TRUE)
+  );
+  $handler->display->display_options['style_options']['override'] = FALSE;
+  $handler->display->display_options['style_options']['sticky'] = TRUE;
+  $handler->display->display_options['style_options']['order'] = 'desc';
+  /* No results behavior: Global: Text area */
+  $handler->display->display_options['empty']['text']['id'] = 'area';
+  $handler->display->display_options['empty']['text']['table'] = 'views';
+  $handler->display->display_options['empty']['text']['field'] = 'area';
+  $handler->display->display_options['empty']['text']['content'] = 'This user has not yet bookmarked any content.';
+  $handler->display->display_options['empty']['text']['format'] = 'plain_text';
+  /* Relationship: Flags: bookmarks */
+  $handler->display->display_options['relationships']['flag_content_rel']['id'] = 'flag_content_rel';
+  $handler->display->display_options['relationships']['flag_content_rel']['table'] = 'node';
+  $handler->display->display_options['relationships']['flag_content_rel']['field'] = 'flag_content_rel';
+  $handler->display->display_options['relationships']['flag_content_rel']['label'] = 'bookmarks';
+  $handler->display->display_options['relationships']['flag_content_rel']['flag'] = 'bookmarks';
+  $handler->display->display_options['relationships']['flag_content_rel']['user_scope'] = 'any';
+  /* Relationship: Content: Author */
+  $handler->display->display_options['relationships']['uid_1']['id'] = 'uid_1';
+  $handler->display->display_options['relationships']['uid_1']['table'] = 'node';
+  $handler->display->display_options['relationships']['uid_1']['field'] = 'uid';
+  /* Relationship: Flags: User */
+  $handler->display->display_options['relationships']['uid']['id'] = 'uid';
+  $handler->display->display_options['relationships']['uid']['table'] = 'flagging';
+  $handler->display->display_options['relationships']['uid']['field'] = 'uid';
+  $handler->display->display_options['relationships']['uid']['relationship'] = 'flag_content_rel';
+  $handler->display->display_options['relationships']['uid']['label'] = 'bookmarks_user';
+  $handler->display->display_options['relationships']['uid']['required'] = TRUE;
+  /* Field: Content: Type */
+  $handler->display->display_options['fields']['type']['id'] = 'type';
+  $handler->display->display_options['fields']['type']['table'] = 'node';
+  $handler->display->display_options['fields']['type']['field'] = 'type';
+  /* Field: Content: Title */
+  $handler->display->display_options['fields']['title']['id'] = 'title';
+  $handler->display->display_options['fields']['title']['table'] = 'node';
+  $handler->display->display_options['fields']['title']['field'] = 'title';
+  /* Field: User: Name */
+  $handler->display->display_options['fields']['name']['id'] = 'name';
+  $handler->display->display_options['fields']['name']['table'] = 'users';
+  $handler->display->display_options['fields']['name']['field'] = 'name';
+  $handler->display->display_options['fields']['name']['relationship'] = 'uid_1';
+  $handler->display->display_options['fields']['name']['label'] = 'Author';
+  /* Field: Content: Comment count */
+  $handler->display->display_options['fields']['comment_count']['id'] = 'comment_count';
+  $handler->display->display_options['fields']['comment_count']['table'] = 'node_comment_statistics';
+  $handler->display->display_options['fields']['comment_count']['field'] = 'comment_count';
+  $handler->display->display_options['fields']['comment_count']['label'] = 'Replies';
+  /* Field: Content: Last comment time */
+  $handler->display->display_options['fields']['last_comment_timestamp']['id'] = 'last_comment_timestamp';
+  $handler->display->display_options['fields']['last_comment_timestamp']['table'] = 'node_comment_statistics';
+  $handler->display->display_options['fields']['last_comment_timestamp']['field'] = 'last_comment_timestamp';
+  $handler->display->display_options['fields']['last_comment_timestamp']['label'] = 'Last Post';
+  /* Contextual filter: User: Uid */
+  $handler->display->display_options['arguments']['uid']['id'] = 'uid';
+  $handler->display->display_options['arguments']['uid']['table'] = 'users';
+  $handler->display->display_options['arguments']['uid']['field'] = 'uid';
+  $handler->display->display_options['arguments']['uid']['relationship'] = 'uid';
+  $handler->display->display_options['arguments']['uid']['default_action'] = 'empty';
+  $handler->display->display_options['arguments']['uid']['exception']['title_enable'] = TRUE;
+  $handler->display->display_options['arguments']['uid']['title_enable'] = TRUE;
+  $handler->display->display_options['arguments']['uid']['title'] = '%1\'s bookmarks';
+  $handler->display->display_options['arguments']['uid']['default_argument_type'] = 'fixed';
+  $handler->display->display_options['arguments']['uid']['summary']['number_of_records'] = '0';
+  $handler->display->display_options['arguments']['uid']['summary']['format'] = 'default_summary';
+  $handler->display->display_options['arguments']['uid']['summary_options']['items_per_page'] = '25';
+  $handler->display->display_options['arguments']['uid']['specify_validation'] = TRUE;
+  $handler->display->display_options['arguments']['uid']['validate']['type'] = 'php';
+  $handler->display->display_options['arguments']['uid']['validate_options']['code'] = 'global $user;
+if($argument == $user->uid){
+  	return TRUE;
+ } else {
+  	return FALSE;
+}';
+  $handler->display->display_options['arguments']['uid']['validate']['fail'] = 'access denied';
+  /* Filter criterion: Content: Published */
+  $handler->display->display_options['filters']['status']['id'] = 'status';
+  $handler->display->display_options['filters']['status']['table'] = 'node';
+  $handler->display->display_options['filters']['status']['field'] = 'status';
+  $handler->display->display_options['filters']['status']['value'] = 1;
+  $handler->display->display_options['filters']['status']['group'] = '0';
+  $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
+
+  /* Display: Page */
+  $handler = $view->new_display('page', 'Page', 'page');
+  $handler->display->display_options['path'] = 'user/%/bookmarks';
+  $handler->display->display_options['menu']['type'] = 'tab';
+  $handler->display->display_options['menu']['title'] = 'Bookmarks';
+  $handler->display->display_options['menu']['weight'] = '0';
+  $translatables['flag_bookmarks_tab'] = array(
+    t('Defaults'),
+    t('User bookmarks'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('This user has not yet bookmarked any content.'),
+    t('bookmarks'),
+    t('author'),
+    t('bookmarks_user'),
+    t('Type'),
+    t('Title'),
+    t('Author'),
+    t('Replies'),
+    t('.'),
+    t(','),
+    t('Last Post'),
+    t('All'),
+    t('%1\'s bookmarks'),
+    t('Page')
+  );
+  views_save_view($view);
+}
+
+/**
+ * Fix the view used for autosuggest to not include applications
+ */
+function _apim_profile_fix_autosuggest_nodeview() {
+  $view = new view();
+  $view->name = 'nodes_autocomplete';
+  $view->description = '';
+  $view->tag = 'default';
+  $view->base_table = 'node';
+  $view->human_name = 'nodes-autocomplete';
+  $view->core = 7;
+  $view->api_version = '3.0';
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+
+  /* Display: Master */
+  $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['title'] = 'Node title suggestions for autocompletion';
+  $handler->display->display_options['use_more_always'] = FALSE;
+  $handler->display->display_options['use_more_text'] = 'plus';
+  $handler->display->display_options['access']['type'] = 'perm';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['query']['options']['query_comment'] = FALSE;
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['exposed_form']['options']['submit_button'] = 'Search';
+  $handler->display->display_options['exposed_form']['options']['exposed_sorts_label'] = 'Sort by';
+  $handler->display->display_options['pager']['type'] = 'some';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '15';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['style_plugin'] = 'search_autocomplete';
+  $handler->display->display_options['style_options']['group_by'] = 'type';
+  $handler->display->display_options['style_options']['input_label'] = 'title';
+  $handler->display->display_options['style_options']['input_link'] = 'view_node';
+  $handler->display->display_options['style_options']['output_fields'] = array(
+    'title' => 'title',
+    'name' => 'name',
+    'comment_count' => 'comment_count',
+  );
+  /* Relationship: Content: Author */
+  $handler->display->display_options['relationships']['uid']['id'] = 'uid';
+  $handler->display->display_options['relationships']['uid']['table'] = 'node';
+  $handler->display->display_options['relationships']['uid']['field'] = 'uid';
+  /* Field: Content: Link */
+  $handler->display->display_options['fields']['view_node']['id'] = 'view_node';
+  $handler->display->display_options['fields']['view_node']['table'] = 'views_entity_node';
+  $handler->display->display_options['fields']['view_node']['field'] = 'view_node';
+  $handler->display->display_options['fields']['view_node']['label'] = '';
+  $handler->display->display_options['fields']['view_node']['element_label_colon'] = FALSE;
+  /* Field: Content: Title */
+  $handler->display->display_options['fields']['title']['id'] = 'title';
+  $handler->display->display_options['fields']['title']['table'] = 'node';
+  $handler->display->display_options['fields']['title']['field'] = 'title';
+  $handler->display->display_options['fields']['title']['label'] = '';
+  $handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['title']['link_to_node'] = FALSE;
+  /* Field: User: Name */
+  $handler->display->display_options['fields']['name']['id'] = 'name';
+  $handler->display->display_options['fields']['name']['table'] = 'users';
+  $handler->display->display_options['fields']['name']['field'] = 'name';
+  $handler->display->display_options['fields']['name']['relationship'] = 'uid';
+  $handler->display->display_options['fields']['name']['label'] = 'author';
+  $handler->display->display_options['fields']['name']['link_to_user'] = FALSE;
+  /* Field: Content: Comment count */
+  $handler->display->display_options['fields']['comment_count']['id'] = 'comment_count';
+  $handler->display->display_options['fields']['comment_count']['table'] = 'node_comment_statistics';
+  $handler->display->display_options['fields']['comment_count']['field'] = 'comment_count';
+  $handler->display->display_options['fields']['comment_count']['label'] = '';
+  $handler->display->display_options['fields']['comment_count']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['comment_count']['separator'] = ' ';
+  $handler->display->display_options['fields']['comment_count']['suffix'] = ' comment(s)';
+  /* Field: Content: Type */
+  $handler->display->display_options['fields']['type']['id'] = 'type';
+  $handler->display->display_options['fields']['type']['table'] = 'node';
+  $handler->display->display_options['fields']['type']['field'] = 'type';
+  $handler->display->display_options['fields']['type']['label'] = '';
+  $handler->display->display_options['fields']['type']['element_label_colon'] = FALSE;
+  /* Sort criterion: Content: Title */
+  $handler->display->display_options['sorts']['title']['id'] = 'title';
+  $handler->display->display_options['sorts']['title']['table'] = 'node';
+  $handler->display->display_options['sorts']['title']['field'] = 'title';
+  /* Filter criterion: Content: Published */
+  $handler->display->display_options['filters']['status']['id'] = 'status';
+  $handler->display->display_options['filters']['status']['table'] = 'node';
+  $handler->display->display_options['filters']['status']['field'] = 'status';
+  $handler->display->display_options['filters']['status']['value'] = 1;
+  $handler->display->display_options['filters']['status']['group'] = 1;
+  $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
+  /* Filter criterion: Content revision: Title */
+  $handler->display->display_options['filters']['title']['id'] = 'title';
+  $handler->display->display_options['filters']['title']['table'] = 'node_revision';
+  $handler->display->display_options['filters']['title']['field'] = 'title';
+  $handler->display->display_options['filters']['title']['operator'] = 'contains';
+  $handler->display->display_options['filters']['title']['exposed'] = TRUE;
+  $handler->display->display_options['filters']['title']['expose']['operator_id'] = 'title_op';
+  $handler->display->display_options['filters']['title']['expose']['label'] = 'title';
+  $handler->display->display_options['filters']['title']['expose']['operator'] = 'title_op';
+  $handler->display->display_options['filters']['title']['expose']['identifier'] = 'filter';
+  $handler->display->display_options['filters']['title']['expose']['remember_roles'] = array(
+    2 => '2',
+    1 => 0,
+    4 => 0,
+    3 => 0,
+  );
+  /* Filter criterion: Content: Type */
+  $handler->display->display_options['filters']['type']['id'] = 'type';
+  $handler->display->display_options['filters']['type']['table'] = 'node';
+  $handler->display->display_options['filters']['type']['field'] = 'type';
+  $handler->display->display_options['filters']['type']['operator'] = 'not in';
+  $handler->display->display_options['filters']['type']['value'] = array(
+    'application' => 'application',
+  );
+
+  /* Display: Page */
+  $handler = $view->new_display('page', 'Page', 'page');
+  $handler->display->display_options['path'] = 'nodes-autocomplete';
+  views_save_view($view);
+}
+
+/**
+ * Create Phase tags
+ */
+function _apim_profile_phase_tag() {
+  $vocabulary = 'tags';
+  $phase_parentname = 'Phase';
+  $vobj = taxonomy_vocabulary_machine_name_load($vocabulary);
+  $phase_parenttag = taxonomy_get_term_by_name($phase_parentname, $vocabulary);
+  // get the 'Phase' tag container tid if exists, if not create it.
+  if (isset($phase_parenttag) && !empty($phase_parenttag)) {
+    $phase_parentterms = array_values($phase_parenttag);
+    $phaseparenttid = $phase_parentterms[0]->tid;
+  }
+  else {
+    $phaseparentterm = new stdClass();
+    $phaseparentterm->name = $phase_parentname;
+    $phaseparentterm->vid = $vobj->vid;
+    $phaseparentterm->parent = 0;
+    taxonomy_term_save($phaseparentterm);
+    $phaseparenttid = $phaseparentterm->tid;
+  }
+  if (isset($phaseparenttid)) {
+    // create tag for this phase if it does not already exist
+    foreach (array('Realized', 'Specified', 'Identified') as $origphase) {
+      $phase = ucfirst($origphase);
+      $phase_tag = taxonomy_get_term_by_name($phase, $vocabulary);
+      if (empty($phase_tag)) {
+        $phaseterm = new stdClass();
+        $phaseterm->name = $phase;
+        $phaseterm->vid = $vobj->vid;
+        $phaseterm->parent = $phaseparenttid;
+        taxonomy_term_save($phaseterm);
+      }
+    }
+  }
+}
+
+function _apim_profile_enable_htmlmail() {
+  variable_set('mail_system', array('default-system' => "HTMLMailSystem", 'htmlmail' => "HTMLMailSystem"));
+
+  variable_set('user_mail_cancel_confirm_body', '<p  style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">A request to cancel your account has been made at [site:name].</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">You may now cancel your account on <a href="[site:url-brief]">[site:url-brief]</a> by clicking this link or copying and pasting it into your browser:<br/><br/>
+<a href="[user:cancel-url]">[user:cancel-url]</a></p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif"><b>NOTE</b>: The cancellation of your account is not reversible.</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">This link expires in one day and nothing will happen if it is not used.</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
+  variable_set('user_mail_cancel_confirm_subject', 'Account cancellation request for [user:name] at [site:name]');
+
+  variable_set('user_mail_password_reset_body', '<p  style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">A request to reset the password for your account has been made at [site:name].</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">You may now log in by clicking this link or copying and pasting it to your browser:<br/><br/>
+<a href="[user:one-time-login-url]">[user:one-time-login-url]</a></p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">This link can only be used once to log in and will lead you to a page where you can set your password. It expires after one day and nothing will happen if it\'s not used.</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
+  variable_set('user_mail_password_reset_subject', 'Replacement login information for [user:name] at [site:name]');
+
+  variable_set('user_mail_status_blocked_body', '<p  style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">Your account on [site:name] has been blocked.</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
+  variable_set('user_mail_status_blocked_subject', 'Account details for [user:name] at [site:name] (blocked)');
+
+  variable_set('user_mail_status_canceled_body', '<p  style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">Your account on [site:name] has been canceled.</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
+  variable_set('user_mail_status_canceled_subject', 'Account details for [user:name] at [site:name] (canceled)');
+
+  variable_set('user_mail_status_activated_body', '<p  style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">Your account at [site:name] has been activated.</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">You may now log in by clicking this link or copying and pasting it into your browser:<br/><br/>
+<a href="[user:one-time-login-url]">[user:one-time-login-url]</a></p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">This link can only be used once to log in and will lead you to a page where you can set your password.</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">After setting your password, you will be able to log in at <a href="[site:login-url]">[site:login-url]</a> in the future using:<br/><br/>
+username: [user:name]<br/>
+password: Your password</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
+  variable_set('user_mail_status_activated_subject', 'Account details for [user:name] at [site:name] (approved)');
+
+  variable_set('user_mail_register_no_approval_required_body', '<p  style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">Thank you for registering at [site:name]. You may now log in by clicking this link or copying and pasting it to your browser:<br/><br/>
+<a href="[user:one-time-login-url]">[user:one-time-login-url]</a></p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">This link can only be used once to log in and will lead you to a page where you can set your password.</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">After setting your password, you will be able to log in at <a href="[site:login-url]">[site:login-url]</a> in the future using:<br/><br/>
+username: [user:name]<br/>
+password: Your password</p>
+<p style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
+  variable_set('user_mail_register_no_approval_required_subject', 'Account details for [user:name] at [site:name]');
+
+  variable_set('user_mail_register_pending_approval_body', '<p style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
+<p style="font-family: Arial, Helvetica, Sans-Serif">Thank you for registering at [site:name]. Your application for an account is currently pending approval. Once it has been approved, you will receive another e-mail containing information about how to log in, set your password, and other details.</p>
+<p style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
+  variable_set('user_mail_register_pending_approval_subject', 'Account details for [user:name] at [site:name] (pending admin approval)');
+
+  variable_set('user_mail_register_admin_created_body', '<p style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
+<p style="font-family: Arial, Helvetica, Sans-Serif">A site administrator at [site:name] has created an account for you. You may now log in by clicking this link or copying and pasting it to your browser:<br/><br/>
+<a href="[user:one-time-login-url]">[user:one-time-login-url]</a></p>
+<p style="font-family: Arial, Helvetica, Sans-Serif">This link can only be used once to log in and will lead you to a page where you can set your password.</p>
+<p style="font-family: Arial, Helvetica, Sans-Serif">After setting your password, you will be able to log in at <a href="[site:login-url]">[site:login-url]</a> in the future using:<br/><br/>
+username: [user:name]<br/>
+password: Your password</p>
+<p style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
+  variable_set('user_mail_register_admin_created_subject', 'An administrator created an account for you at [site:name]');
+}
+
+function _apim_profile_endswith($string, $test) {
+  $strlen = strlen($string);
+  $testlen = strlen($test);
+  if ($testlen > $strlen) {
+    return FALSE;
+  }
+  return substr_compare($string, $test, $strlen - $testlen, $testlen) === 0;
+}

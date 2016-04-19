@@ -1,0 +1,12 @@
+name = IBM API Connect E-mail Subscribers
+description = A module that provides the capability to email Product and Plan subscribers.
+package = IBM API Connect v5
+core = 7.x
+dependencies[] = ibm_apim
+dependencies[] = product
+dependencies[] = application
+
+files[] = mail_subscribers.admin.inc
+files[] = mail_subscribers.rules.inc
+
+version = VERSION

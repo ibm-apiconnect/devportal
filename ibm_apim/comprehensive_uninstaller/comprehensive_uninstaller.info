@@ -1,0 +1,7 @@
+name = Comprehensive Theme & Module Uninstaller
+description = A module that facilitates the removal of disabled theme and module files on the server file system.
+package = IBM API Connect v5
+core = 7.x
+dependencies[] = site_uploader
+
+version = VERSION

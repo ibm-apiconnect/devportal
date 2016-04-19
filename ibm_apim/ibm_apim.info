@@ -1,0 +1,16 @@
+name = IBM API Connect
+description = Integrate IBM API Connect v5 into Drupal
+core = 7.x
+package = IBM API Connect v5
+configure = admin/config/system/ibm_apim
+files[] = ibm_apim.module
+
+dependencies[] = entity
+dependencies[] = text
+dependencies[] = image
+
+scripts[] = js/dropit.js
+scripts[] = js/hideShowPassword.js
+scripts[] = js/simple_dialog.js
+
+version = VERSION

@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * * Implements hook_bean_types_api_info().
+ */
+function popularapi_bean_types_api_info() {
+  return array('api' => 4);
+}
+
+/**
+ * Utility method to truncate a string at a specified length and append an ellipsis
+ * @param $string
+ * @param int $length
+ * @param string $append
+ * @return array|string
+ */
+function popularapi_truncate_string($string, $length = 250, $append = "…") {
+  $string = trim($string);
+  if (strlen($string) > $length) {
+    $string = wordwrap($string, $length);
+    $string = explode("\n", $string, 2);
+    $string = trim($string[0]) . $append;
+  }
+  return $string;
+}
+
+/**
+ * * Implements hook_bean_types().
+ */
+function popularapi_bean_types() {
+  $plugins = array();
+  $plugins['popularapi_block'] = array(
+    'label' => t('Popular API'),
+    'description' => t('A featured API block.'),
+    'handler' => array(
+      'class' => 'PopularAPIBlockBean',
+      'parent' => 'bean',
+      'path' => drupal_get_path('module', 'popularapi') . '/plugins/bean',
+      'file' => 'popularapi.popularapi_block.inc',
+    ),
+  );
+  return $plugins;
+}
+
+?>

@@ -1,0 +1,162 @@
+.socialblock.background {
+    width: 100%;
+    height: auto;
+    margin-top: 1rem;
+}
+
+.socialblock.container {
+    text-align: center;
+    margin: 0 auto;
+}
+
+/* clearfix */
+.socialblock.container:after {
+    content: '';
+    display: block;
+    clear: both;
+}
+
+.socialblock.card {
+    text-align: left;
+    background-color: #fff;
+    /*-------------------*/
+    width: 20rem;
+    margin-bottom: 1.25rem;
+    box-sizing: border-box;
+    /*-------------------*/
+    box-shadow: 0 2px 2px 2px #eee;
+    transition: all 250ms;
+}
+
+.socialblock.card:hover {
+    transform: scale(1.05, 1.05);
+    box-shadow: 0 4px 10px 4px #eee;
+    transition: all 100ms;
+}
+
+.socialblock.title {
+    /*font-weight: 300;*/
+    color: #fff;
+    text-decoration: none !important;
+    /*-----------------------------*/
+    background-color: #007bd1;
+    /*----------------------*/
+    box-sizing: border-box;
+    border: 1.25rem solid #007bd1;
+    border-bottom-width: 1rem;
+    display: block;
+    /*-----------*/
+    transition: all 500ms;
+}
+
+.socialblock.title:hover {
+    background-color: #0096FF;
+    border-color: #0096FF;
+    transition: all 100ms;
+}
+
+.socialblock.info {
+    padding: 0.875rem 1.25rem 1rem; /*top l&r bottom*/
+}
+
+.socialblock.op {
+    color: #bebebe;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.socialblock.op_name {
+    color: #007bd1;
+}
+
+.socialblock.timestamp {
+    color: #cfcfcf;
+}
+
+.socialblock.tweet_info {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    box-sizing: border-box;
+    padding-top: 1.25rem;
+    margin-left: 1.25rem;
+    margin-right: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: #cfcfcf 1px solid;
+}
+
+/* clearfix */
+.socialblock.tweet_info:after {
+    content: '';
+    display: block;
+    clear: both;
+}
+
+.socialblock.profile_img {
+    margin-right: 0.75rem;
+    float: left;
+}
+
+.socialblock.user_info {
+    color: #555;
+    flex: 1;
+    margin-right: 0.75rem;
+}
+
+.socialblock.twitter_user {
+    font-weight: 600;
+    max-width: 11rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-decoration: none;
+}
+
+.socialblock.twitter_user:hover {
+    color: #0096FF;
+}
+
+.socialblock.twitter_handle {
+    color: #cfcfcf;
+    max-width: 11rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.socialblock.misc_info {
+    text-align: center;
+}
+
+.socialblock.twitter_bird {
+    width: 1.25rem;
+    height: 1.25rem;
+    background: url("../img/twitter_bird.svg") 0 0 no-repeat transparent;
+    display: inline-block;
+    clear: both;
+}
+
+.socialblock.twitter_bird:hover {
+    opacity: 0.8;
+}
+
+.socialblock.tweet_timestamp {
+    color: #cfcfcf;
+    clear: both;
+}
+
+.socialblock.iframe {
+    width: 20rem;
+    height: 11.25rem;
+}
+
+.socialblock.tweet_content {
+    color: #555;
+    padding: 0.5rem 1.25rem 1rem;
+}
+
+.socialblock.no_topics {
+    color: #bebebe;
+    margin: 0 auto;
+}

@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * * Implements hook_bean_types_api_info().
+ */
+function bannerblock_bean_types_api_info() {
+  return array('api' => 4);
+}
+
+/**
+ * * Implements hook_bean_types().
+ */
+function bannerblock_bean_types() {
+  $plugins = array();
+  $plugins['banner_block'] = array(
+      'label' => t('Banner'),
+      'description' => t('A welcome banner block.'),
+      'handler' => array(
+          'class' => 'BannerBlockBean',
+          'parent' => 'bean',
+          'path' => drupal_get_path('module', 'bannerblock') . '/plugins/bean',
+          'file' => 'bannerblock.banner_block.inc',
+      ),
+  );
+  return $plugins;
+}
+
+?>

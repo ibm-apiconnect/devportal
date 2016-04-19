@@ -1,0 +1,11 @@
+name = IBM API Connect Application
+description = IBM API Connect Application Node Content Type
+package = IBM API Connect v5
+core = 7.x
+dependencies[] = field
+dependencies[] = node
+dependencies[] = ibm_apim
+
+scripts[] = js/showclientid.js
+
+version = VERSION

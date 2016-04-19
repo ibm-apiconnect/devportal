@@ -1,0 +1,406 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the application module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function application_install() {
+  // Ensure the application node type is available.
+  node_types_rebuild();
+  _application_add_custom_fields();
+  variable_set('comment_application', '1');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function application_uninstall() {
+  _application_delete_node_content('application');
+  _application_delete_custom_fields();
+  node_type_delete('application');
+  field_purge_batch(500);
+}
+
+/**
+ * Custom fields for Application content type.
+ *
+ * @return array
+ */
+function _application_installed_fields() {
+  $t = get_t();
+  return array(
+    'application_apimhostname' => array(
+      'field_name' => 'application_apimhostname',
+      'label' => t('APIC Hostname'),
+      'type' => 'text'
+    ),
+    'application_providerid' => array(
+      'field_name' => 'application_providerid',
+      'label' => t('Provider ID'),
+      'type' => 'text'
+    ),
+    'application_environmentid' => array(
+      'field_name' => 'application_environmentid',
+      'label' => t('Environment ID'),
+      'type' => 'text'
+    ),
+    'application_apiid' => array(
+      'field_name' => 'application_apiid',
+      'label' => t('ID'),
+      'type' => 'text'
+    ),
+    'application_description' => array(
+      'field_name' => 'application_description',
+      'label' => t('Description'),
+      'type' => 'text_long'
+    ),
+    'application_orgid' => array(
+      'field_name' => 'application_orgid',
+      'label' => t('Organization ID'),
+      'type' => 'text'
+    ),
+    'application_enabled' => array(
+      'field_name' => 'application_enabled',
+      'label' => t('Enabled'),
+      'type' => 'text'
+    ),
+    'application_image' => array(
+      'field_name' => 'application_image',
+      'label' => t('Image'),
+      'type' => 'image',
+      'module' => 'image'
+    ),
+    'application_oauthredirecturi' => array(
+      'field_name' => 'application_oauthredirecturi',
+      'label' => t('OAuth Redirect URL'),
+      'type' => 'text'
+    ),
+    'application_url' => array(
+      'field_name' => 'application_url',
+      'label' => t('URL'),
+      'type' => 'text'
+    ),
+    'application_state' => array(
+      'field_name' => 'application_state',
+      'label' => t('State'),
+      'type' => 'text'
+    ),
+    'application_updated' => array(
+      'field_name' => 'application_updated',
+      'label' => t('Updated'),
+      'type' => 'text'
+    ),
+    'application_data' => array(
+      'field_name' => 'application_data',
+      'label' => t('Data'),
+      'type' => 'text_long'
+    ),
+    'application_credentials' => array(
+      'field_name' => 'application_credentials',
+      'label' => t('Credentials'),
+      'type' => 'text_long'
+    ),
+    'application_subscriptions' => array(
+      'field_name' => 'application_subscriptions',
+      'label' => t('Subscriptions'),
+      'type' => 'text_long'
+    )
+  );
+}
+
+/**
+ * @return array
+ */
+function _application_installed_instances() {
+  $t = get_t();
+  return array(
+    'application_apimhostname' => array(
+      'field_name' => 'application_apimhostname',
+      'type' => 'text',
+      'label' => t('APIC Hostname'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('APIC Hostname'), 'type' => 'text'),
+        'teaser' => array('label' => t('APIC Hostname'), 'type' => 'text')
+      )
+    ),
+    'application_providerid' => array(
+      'field_name' => 'application_providerid',
+      'type' => 'text',
+      'label' => t('Provider ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Provider ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('Provider ID'), 'type' => 'text')
+      )
+    ),
+    'application_environmentid' => array(
+      'field_name' => 'application_environmentid',
+      'type' => 'text',
+      'label' => t('Environment ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Environment ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('Environment ID'), 'type' => 'text')
+      )
+    ),
+    'application_apiid' => array(
+      'field_name' => 'application_apiid',
+      'type' => 'text',
+      'label' => t('ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('ID'), 'type' => 'text')
+      )
+    ),
+    'application_description' => array(
+      'field_name' => 'application_description',
+      'type' => 'text_long',
+      'label' => t('Description'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('Description'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('Description'), 'type' => 'text_long')
+      )
+    ),
+    'application_orgid' => array(
+      'field_name' => 'application_orgid',
+      'type' => 'text',
+      'label' => t('Organization ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Organization ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('Organization ID'), 'type' => 'text')
+      )
+    ),
+    'application_enabled' => array(
+      'field_name' => 'application_enabled',
+      'type' => 'text',
+      'label' => t('Enabled'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array(
+          'label' => t('Enabled'),
+          'type' => 'text'
+        ),
+        'teaser' => array(
+          'label' => t('Enabled'),
+          'type' => 'text'
+        )
+      )
+    ),
+    'application_image' => array(
+      'field_name' => 'application_image',
+      'type' => 'image',
+      'label' => t('Image'),
+      'required' => 0,
+      'description' => t('Logo or image for this Application'),
+      'widget' => array(
+        'type' => 'image_image',
+        'module' => 'image',
+        'active' => 1,
+        'settings' => array(
+          'progress_indicator' => 'throbber',
+          'preview_image_style' => 'thumbnail'
+        )
+      ),
+      'settings' => array(
+        'file_directory' => 'application',
+        'file_extensions' => 'png gif jpg jpeg',
+        'max_filesize' => '2 MB',
+        'max_resolution' => '640x480',
+        'min_resolution' => '',
+        'alt_field' => 1,
+        'title_field' => 1,
+        'default_image' => 0
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'image',
+          'module' => 'image'
+        ),
+        'teaser' => array(
+          'label' => 'hidden',
+          'type' => 'image',
+          'module' => 'image'
+        )
+      )
+    ),
+    'application_oauthredirecturi' => array(
+      'field_name' => 'application_oauthredirecturi',
+      'type' => 'text',
+      'label' => t('OAuth Redirect URI'),
+      'widget' => array('type' => 'text_textfield'),
+      'description' => t('The URL authenticated OAuth flows for this application should be redirected to.'),
+      'display' => array(
+        'default' => array('label' => t('OAuth Redirect URI'), 'type' => 'text')
+      )
+    ),
+    'application_url' => array(
+      'field_name' => 'application_url',
+      'type' => 'text',
+      'label' => t('URL'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array(
+          'label' => t('URL'),
+          'type' => 'text'
+        ),
+        'teaser' => array(
+          'label' => t('URL'),
+          'type' => 'text'
+        )
+      )
+    ),
+    'application_state' => array(
+      'field_name' => 'application_state',
+      'type' => 'text',
+      'label' => t('State'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array(
+          'label' => t('State'),
+          'type' => 'text'
+        )
+      )
+    ),
+    'application_updated' => array(
+      'field_name' => 'application_updated',
+      'type' => 'text',
+      'label' => t('Updated'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Updated'), 'type' => 'text'),
+        'teaser' => array('label' => t('Updated'), 'type' => 'text')
+      )
+    ),
+    'application_data' => array(
+      'field_name' => 'application_data',
+      'type' => 'text_long',
+      'label' => t('Data'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('Data'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('Data'), 'type' => 'text_long')
+      )
+    ),
+    'application_credentials' => array(
+      'field_name' => 'application_credentials',
+      'type' => 'text_long',
+      'label' => t('Credentials'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('Credentials'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('Credentials'), 'type' => 'text_long')
+      )
+    ),
+    'application_subscriptions' => array(
+      'field_name' => 'application_subscriptions',
+      'type' => 'text_long',
+      'label' => t('Subscriptions'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('Subscriptions'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('Subscriptions'), 'type' => 'text_long')
+      )
+    )
+  );
+}
+
+function _application_add_custom_fields() {
+  // Application
+  foreach (_application_installed_fields() as $field) {
+    field_create_field($field);
+  }
+  foreach (_application_installed_instances() as $fieldinstance) {
+    $fieldinstance['entity_type'] = 'node';
+    $fieldinstance['bundle'] = 'application';
+    field_create_instance($fieldinstance);
+  }
+}
+
+function _application_delete_custom_fields() {
+  // Application
+  foreach (array_keys(_application_installed_fields()) as $field) {
+    field_delete_field($field);
+  }
+  $instances = field_info_instances('node', 'application');
+  foreach ($instances as $instance_name => $fieldinstance) {
+    field_delete_instance($fieldinstance);
+  }
+}
+
+/**
+ * delete all nodes of specified type
+ *
+ * @param $type
+ */
+function _application_delete_node_content($type) {
+  $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
+  $result = db_query($sql, array(':type' => $type));
+  try {
+    node_delete_multiple($result);
+  } catch (Exception $e) {
+    // quietly swallow exceptions from dropping the nodes.
+  }
+}
+
+/**
+ * Update code to handle upgrade from earlier version
+ */
+function application_update_7400() {
+  $fields = field_info_field_map();
+  foreach (_application_installed_fields() as $field) {
+    if (!array_key_exists($field['field_name'], $fields)) {
+      field_create_field($field);
+      watchdog('application', 'Field %field_name has been successfully added', array(
+        '%field_name' => $field['field_name']
+      ));
+    }
+    else {
+      watchdog('application', 'Field %field_name already exists', array(
+        '%field_name' => $field['field_name']
+      ));
+    }
+  }
+
+  foreach (_application_installed_instances() as $fieldinstance) {
+    if (!array_key_exists($fieldinstance['field_name'], $fields)) {
+      $fieldinstance['entity_type'] = 'node';
+      $fieldinstance['bundle'] = 'application';
+      field_create_instance($fieldinstance);
+      watchdog('application', 'Instance %instance_name has been successfully added', array(
+        '%instance_name' => $fieldinstance['field_name']
+      ));
+    }
+    else {
+      watchdog('application', 'Instance %instance_name already exists', array(
+        '%instance_name' => $fieldinstance['field_name']
+      ));
+    }
+  }
+  // remove obsolete fields
+  $oldfields = array('application_public', 'application_imageurl');
+  foreach ($oldfields as $field_name) {
+    if (array_key_exists($field_name, $fields)) {
+      $field = field_info_field($field_name);
+      if ($field) {
+        try {
+          field_delete_field($field);
+          field_delete_instance($field);
+          watchdog('application', 'Field %field_name has been successfully removed', array(
+            '%field_name' => $field
+          ));
+        } catch (Exception $e) {
+          //ignore any errors
+        }
+      }
+    }
+  }
+}

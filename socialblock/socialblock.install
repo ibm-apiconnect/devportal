@@ -1,0 +1,5 @@
+<?php
+
+function socialblock_uninstall() {
+  variable_del('twitter_oauth_settings');
+}

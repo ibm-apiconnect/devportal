@@ -1,0 +1,114 @@
+<?php
+
+/**
+ * Implements hook_bean_types_api_info().
+ */
+function socialblock_bean_types_api_info() {
+  return array('api' => 4);
+}
+
+/**
+ * Implements hook_bean_types().
+ * @return array
+ */
+function socialblock_bean_types() {
+  $plugins = array();
+  $plugins['socialblock_block'] = array(
+    'label' => t('Social Block'),
+    'description' => t('Displays latest forum topics and tweets'),
+    'handler' => array(
+      'class' => 'SocialBlockBean',
+      'parent' => 'bean',
+      'path' => drupal_get_path('module', 'socialblock') . '/plugins/bean',
+      'file' => 'socialblock.socialblock_block.inc',
+    ),
+  );
+  return $plugins;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function socialblock_menu() {
+  $items = array();
+  $items['admin/config/system/socialblock'] = array(
+    'title' => 'Social Block Twitter OAuth',
+    'description' => 'Configure Twitter OAuth for Social Block module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('socialblock_admin'),
+    'file' => 'includes/socialblock.admin.inc',
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_cron().
+ */
+function socialblock_cron() {
+  // could be multiple socialblocks so need a variable for each one
+  $beans = bean_get_all_beans();
+  if (isset($beans)) {
+    $client_id = variable_get('ibm_apim_client_id');
+    $settings = unserialize(openssl_decrypt(variable_get('twitter_oauth_settings'), 'AES256', $client_id));
+    if (!isset($settings['twitter_consumer_key'])) {
+      $settings['twitter_consumer_key'] = '';
+    }
+    if (!isset($settings['twitter_consumer_secret'])) {
+      $settings['twitter_consumer_secret'] = '';
+    }
+    if (!isset($settings['twitter_access_token'])) {
+      $settings['twitter_access_token'] = '';
+    }
+    if (!isset($settings['twitter_token_secret'])) {
+      $settings['twitter_token_secret'] = '';
+    }
+
+    $consumer_key = $settings['twitter_consumer_key'];
+    $consumer_secret = $settings['twitter_consumer_secret'];
+    $access_token = $settings['twitter_access_token'];
+    $token_secret = $settings['twitter_token_secret'];
+    foreach ($beans as $bean) {
+      if (isset($bean->delta) && ($bean->delta == 'socialblock') || (isset($bean->type) && $bean->type == 'socialblock_block')) {
+        switch ($bean->twitter_api) {
+          case 0:
+            $api = 'statuses/user_timeline';
+            $api_param = 'screen_name';
+            break;
+          case 1:
+            $api = 'search/tweets';
+            $api_param = 'q';
+            break;
+          default:
+            $api = '';
+            $api_param = '';
+        }
+        if (isset($bean->twitter_param)) {
+          $connection = new Abraham\TwitterOAuth\TwitterOAuth(
+            $consumer_key,
+            $consumer_secret,
+            $access_token,
+            $token_secret
+          );
+          $connection->host = "https://api.twitter.com/1.1/";
+          $tweets = $connection->get(
+            $api,
+            array(
+              $api_param => $bean->twitter_param,
+              'count' => $bean->tiles
+            )
+          );
+          if (isset($tweets->errors)) {
+            $tweets = NULL;
+          }
+          variable_set('socialblock_tweets_' . $bean->bid, serialize($tweets));
+        }
+        else {
+          variable_set('socialblock_tweets_' . $bean->bid, serialize(array()));
+        }
+      }
+    }
+  }
+
+}

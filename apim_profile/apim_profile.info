@@ -1,0 +1,134 @@
+name = IBM API Management Developer Portal
+description = Provides modules to access the content in an API Manager node and a skeleton site which application developers can use to browse APIs. 
+core = 7.x
+distribution_name = IBM API Management Developer Portal
+
+;Force our installation profile to be the default and only profile
+exclusive = TRUE
+
+;Standard drupal dependencies will be added by running the standard install as part of this profile install
+dependencies[] = block
+dependencies[] = color
+dependencies[] = comment
+dependencies[] = contextual
+dependencies[] = dashboard
+dependencies[] = help
+dependencies[] = image
+dependencies[] = list
+dependencies[] = locale
+dependencies[] = menu
+dependencies[] = number
+dependencies[] = options
+dependencies[] = path
+dependencies[] = taxonomy
+dependencies[] = dblog
+dependencies[] = search
+dependencies[] = shortcut
+dependencies[] = overlay
+dependencies[] = field_ui
+dependencies[] = file
+dependencies[] = rdf
+dependencies[] = trigger
+
+;Additions to the standard modules
+dependencies[] = blog
+dependencies[] = poll
+dependencies[] = contact
+
+;We require forum support for advanced forums
+dependencies[] = forum
+
+;All the other modules we want to pull in
+dependencies[] = at_tools
+dependencies[] = addtoany
+dependencies[] = advanced_forum
+dependencies[] = autologout
+dependencies[] = bean
+dependencies[] = block_class
+dependencies[] = block_class_styles
+dependencies[] = ctools
+dependencies[] = entity
+dependencies[] = faq
+dependencies[] = fivestar
+dependencies[] = group
+dependencies[] = libraries
+dependencies[] = panels
+dependencies[] = jquery_update
+dependencies[] = password_policy
+dependencies[] = tagclouds
+dependencies[] = twitter_timeline
+dependencies[] = views
+dependencies[] = votingapi
+dependencies[] = wysiwyg
+dependencies[] = pathologic
+dependencies[] = support
+dependencies[] = module_filter
+dependencies[] = captcha
+dependencies[] = token
+dependencies[] = flag
+dependencies[] = imce
+dependencies[] = imce_wysiwyg
+dependencies[] = linkit
+dependencies[] = linkit_picker
+dependencies[] = l10n_update
+dependencies[] = hierarchical_select
+dependencies[] = vppr
+dependencies[] = tfa
+dependencies[] = tfa_basic
+dependencies[] = legal
+dependencies[] = variable
+dependencies[] = i18n
+dependencies[] = translation_helpers
+dependencies[] = addressfield
+dependencies[] = statsd
+dependencies[] = syslog_advanced
+dependencies[] = messaging
+dependencies[] = content_approval
+dependencies[] = fasttoggle
+dependencies[] = views_bulk_operations
+dependencies[] = security_questions
+dependencies[] = clone
+dependencies[] = menu_item_visibility
+dependencies[] = ultimate_cron
+dependencies[] = login_security
+dependencies[] = acl
+dependencies[] = chain_menu_access
+dependencies[] = forum_access
+dependencies[] = follow
+dependencies[] = search_autocomplete
+dependencies[] = markdown
+dependencies[] = alpha_pagination
+dependencies[] = front_page
+dependencies[] = slick
+dependencies[] = slick_views
+dependencies[] = slick_extras
+dependencies[] = profanity
+dependencies[] = label_help
+dependencies[] = seckit
+dependencies[] = restrict_by_ip
+dependencies[] = search404
+dependencies[] = search_config
+dependencies[] = no_autocomplete
+dependencies[] = ejectorseat
+dependencies[] = session_limit
+dependencies[] = transliteration
+dependencies[] = context
+dependencies[] = metatag
+dependencies[] = restws
+dependencies[] = admin_menu
+dependencies[] = adminimal_admin_menu
+dependencies[] = mailsystem
+dependencies[] = htmlmail
+
+;Enable our modules
+dependencies[] = ibm_apim
+dependencies[] = bannerblock
+dependencies[] = socialblock
+dependencies[] = popularapi
+dependencies[] = forum_approval
+dependencies[] = apic_taxonomy_menu_block
+
+version = VERSION
+
+;php version check
+php = 5.4.0

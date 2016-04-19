@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * Alter the Updater information array.
+ *
+ * An Updater is a class that knows how to update various parts of the Drupal
+ * file system, for example to update modules that have newer releases, or to
+ * install a new theme.
+ *
+ * @param array $updaters
+ *          Associative array of updaters as defined through hook_updater_info().
+ *          Alter this array directly.
+ *
+ * @see drupal_get_updaters()
+ * @see hook_updater_info()
+ */
+function site_uploader_updater_info_alter(&$updaters) {
+  // switch to using our custom Updaters
+  $updaters['module']['class'] = 'SiteModuleUpdater';
+  $updaters['theme']['class'] = 'SiteThemeUpdater';
+}
+
+?>

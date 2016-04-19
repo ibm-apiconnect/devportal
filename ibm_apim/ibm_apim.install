@@ -1,0 +1,85 @@
+<?php
+
+// hook_install() implementation
+function ibm_apim_install() {
+  // disable user email verification as this module doesn't currently work with it enabled
+  variable_set('user_email_verification', FALSE);
+
+  // create default fields
+  module_load_include('inc', 'ibm_apim', 'ibm_apim.userfields');
+  _ibm_apim_add_user_first_name_field();
+  _ibm_apim_add_user_last_name_field();
+  _ibm_apim_add_user_developerorg_field();
+  _ibm_apim_add_user_company_field();
+  _ibm_apim_add_user_phone_field();
+  if (module_exists('addressfield')) {
+    _ibm_apim_add_user_address_field();
+  }
+}
+
+/**
+ * Implementation of hook_requirements
+ *
+ * Check to see if php has curl support enabled. If it does not then this module will
+ * not work so flag this as an error in the requirements. We do this both at install time
+ * and at runtime, in case php-curl has been disabled after the module was installed.
+ *
+ * @param $phase
+ * @return array
+ */
+function ibm_apim_requirements($phase) {
+  $reqs = array();
+  $t = get_t();
+  if ($phase == "install" || $phase == "runtime") {
+    if (!function_exists("curl_init")) {
+      $reqs['ibm_apim_curl'] = array(
+        'title' => $t('IBM API Connect Module'),
+        'value' => FALSE,
+        'description' => t('The IBM API Connect module requires that PHP must have curl support enabled. This may require installation of a system package (e.g. php5-curl) or editing the curl.ini file located in the php config directory to enable curl support.'),
+        'severity' => REQUIREMENT_ERROR
+      );
+    }
+  }
+  if ($phase == 'runtime') {
+    $path = drupal_get_path('module', 'ibm_apim') . '/ibm_apim.info';
+    $info = drupal_parse_info_file($path);
+    $reqs['ibm_apim'] = array(
+      'title' => $t('IBM API Connect'),
+      'severity' => REQUIREMENT_OK,
+      'value' => t('IBM API Connect Developer Portal version %ver', array(
+        '%ver' => $info['version']
+      ))
+    );
+  }
+  return $reqs;
+}
+
+// hook_uninstall() implementation
+function ibm_apim_uninstall() {
+}
+
+/**
+ * Update code to handle upgrade from earlier version
+ */
+function ibm_apim_update_7400() {
+  // Change SAML Login link
+  $endpoint = variable_get('ibm_apim_saml_endpoint', NULL);
+  $saml = variable_get('ibm_apim_saml_idp', 0);
+  if (isset($endpoint) && !empty($endpoint) && $saml == 1) {
+    $mlid = db_query("SELECT mlid FROM {menu_links} WHERE link_path=:link_path", array(
+      ':link_path' => $endpoint
+    ))->fetchField();
+    if (isset($mlid)) {
+      $link = menu_link_load($mlid);
+      if (isset($link)) {
+        $link['link_path'] = 'ibm_apim/saml/login';
+        $link['customized'] = 1;
+        $link['external'] = 0;
+        menu_link_save($link);
+        menu_cache_clear_all();
+      }
+    }
+  }
+}
+
+?>

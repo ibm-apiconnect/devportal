@@ -1,0 +1,9 @@
+name = IBM API Connect API
+description = IBM API Connect API Node Content Type
+package = IBM API Connect v5
+core = 7.x
+dependencies[] = field
+dependencies[] = node
+dependencies[] = ibm_apim
+
+version = VERSION

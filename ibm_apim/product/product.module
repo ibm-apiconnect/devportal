@@ -1,0 +1,1435 @@
+<?php
+
+/**
+ * IBM API Connect Integration
+ *
+ * Adds the Product node content type to Drupal for representing Products from IBM APIC
+ */
+
+/**
+ * Implements hook_node_info().
+ *
+ * @return array
+ */
+function product_node_info() {
+  return array(
+    'product' => array(
+      'name' => t('Product'),
+      'base' => 'product',
+      'description' => t('A Product in IBM API Connect')
+    )
+  );
+}
+
+/**
+ * Implements hook_help().
+ *
+ * @param $path
+ * @param $arg
+ * @return string
+ */
+function product_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#product' :
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t("The Product module provides a new custom node type for use with IBM API Connect.") . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Select a product') . '</dt>';
+      $output .= '<dd>' . t("This module enables the user to see the different products available in IBM API Connect, showing the details and any rate limiting policy included in them.") . '</dd>';
+      $output .= '</dl>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * @param $form
+ * @param $form_state
+ */
+function product_form_product_node_form_alter(&$form, &$form_state) {
+  // this function hides all our custom fields from the edit node form as they are all set explicitly
+  $form['product_apimhostname']['#access'] = 0;
+  $form['product_providerid']['#access'] = 0;
+  $form['product_environmentid']['#access'] = 0;
+  $form['product_id']['#access'] = 0;
+  $form['product_name']['#access'] = 0;
+  $form['product_ref']['#access'] = 0;
+  $form['product_version']['#access'] = 0;
+  $form['product_description']['#access'] = 0;
+  $form['product_contact_name']['#access'] = 0;
+  $form['product_contact_email']['#access'] = 0;
+  $form['product_contact_url']['#access'] = 0;
+  $form['product_license_name']['#access'] = 0;
+  $form['product_license_url']['#access'] = 0;
+  $form['product_terms_of_service']['#access'] = 0;
+  $form['product_visibility']['#access'] = 0;
+  $form['product_view_enabled']['#access'] = 0;
+  $form['product_subscribe_enabled']['#access'] = 0;
+  $form['product_visibility_public']['#access'] = 0;
+  $form['product_visibility_authenticated']['#access'] = 0;
+  $form['product_visibility_custom_orgs']['#access'] = 0;
+  $form['product_visibility_custom_tags']['#access'] = 0;
+  $form['product_plans']['#access'] = 0;
+  $form['product_apis']['#access'] = 0;
+  $form['product_url']['#access'] = 0;
+  $form['product_state']['#access'] = 0;
+  $form['product_data']['#access'] = 0;
+  $form['title']['#access'] = 0;
+}
+
+/**
+ * Implements hook_form().
+ *
+ * @param $node
+ * @param $form_state
+ * @return array
+ */
+function product_form($node, $form_state) {
+  return node_content_form($node, $form_state);
+}
+
+/**
+ * Implements hook_view().
+ *
+ * @param $node
+ * @param $view_mode
+ * @return mixed
+ */
+function product_view($node, $view_mode) {
+  return $node;
+}
+
+/**
+ * Implements hook_node_view().
+ *
+ * @param $node
+ * @param $view_mode
+ */
+function product_node_view($node, $view_mode) {
+}
+
+
+/**
+ * Implements hook_node_access().
+ * This is checking if the specified product is accessible to the current user, if not it blocks access.
+ *
+ * @param $node
+ * @param $op
+ * @param $account
+ * @return int
+ */
+function product_node_access($node, $op, $account) {
+  $type = is_string($node) ? $node : $node->type;
+  if ($type == 'product' && $op == 'view') {
+    if (product_check_product_access($node)) {
+      return NODE_ACCESS_ALLOW;
+    }
+    else {
+      return NODE_ACCESS_DENY;
+    }
+  }
+  else {
+    return NODE_ACCESS_IGNORE;
+  }
+}
+
+/**
+ * Implements hook_menu().
+ *
+ * @return array
+ */
+function product_menu() {
+  // the use of _product_path_param_to_arg in some of these menu entries is to avoid a menu_translate error message
+  // we cant use a proper load method since we need both args to return the proper object
+  $items = array();
+  $items['product'] = array(
+    'title' => 'API Products',
+    'page callback' => 'product_collection_callback',
+    'menu_name' => 'main-menu',
+    'weight' => 4,
+    'description' => 'API Products',
+    'access callback' => TRUE
+  );
+  $items['product/%_product_path_param_to_arg'] = array(
+    'title' => 'View',
+    'page callback' => 'product_collection_callback',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK
+  );
+  return $items;
+}
+
+/**
+ * Menu callback;
+ * if a specific product has been requested will display that as full viewmode,
+ * else it will show teaser viewmode for all available products
+ *
+ * @param null $productid
+ * @return array|void
+ * @throws \Exception
+ */
+function product_collection_callback($productid = NULL) {
+  $build = array();
+  $host_pieces = _ibm_apim_parse_apim_host();
+  if (empty($host_pieces)) {
+    drupal_set_message(t('IBM APIC Module is not correctly configured. Specify a valid hostname and try again.'), 'error');
+    return NULL;
+  }
+  $limit = variable_get('default_nodes_main', 10);
+
+  // set so that drupal_set_message actually works
+  drupal_page_is_cacheable(FALSE);
+
+  if ($productid == NULL) {
+    $nids = product_list_products();
+    if (!empty($nids)) {
+      // handle paging
+      $page = pager_find_page();
+      $total = count($nids);
+      $offset = $limit * $page;
+      $chunk = array_slice($nids, $offset, $limit);
+      pager_default_initialize($total, $limit);
+
+      $finalnodes = node_load_multiple($chunk);
+      if ($finalnodes) {
+        $build = array(
+          'content' => node_view_multiple($finalnodes),
+          'pager' => array('#markup' => theme('pager'), '#weight' => $limit)
+        );
+      }
+      else {
+        drupal_set_message(t('No products have been found.'), 'warning');
+      }
+    }
+    else {
+      drupal_set_message(t('No products have been found.'), 'warning');
+    }
+
+  }
+  else {
+    // specific product
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'product')
+      ->fieldCondition('product_id', 'value', $productid);
+    $results = $query->execute();
+    if (isset($results['node'])) {
+      $keys = array_keys($results['node']);
+      $node = node_load($keys[0]);
+      if (product_check_product_access($node)) {
+        drupal_goto('node/' . $node->nid, array('query' => array('nocache' => 1)));
+      }
+      else {
+        drupal_set_message(t('The specified product could not be found or you do not have permission to access it.'), 'error');
+      }
+    }
+    else {
+      drupal_set_message(t('The specified product could not be found or you do not have permission to access it.'), 'error');
+    }
+  }
+  return $build;
+}
+
+//Creates or updates an existing node. Returns true if a new node was
+//created or false if an existing one was updated.
+function product_createOrUpdateProduct($product) {
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'product')
+    ->fieldCondition('product_ref', 'value', $product['document']['info']['name'] . ':' . $product['document']['info']['version']);
+
+  $results = $query->execute();
+
+  if (isset($results['node'])) {
+    product_updateProductNode($product);
+    $createdOrUpdated = FALSE;
+  }
+  else {
+    // no existing node for this Product so create one
+    _product_createNewProductNode($product);
+    $createdOrUpdated = TRUE;
+  }
+  return $createdOrUpdated;
+}
+
+/**
+ * @param $product
+ * @return mixed
+ * @throws \Exception
+ */
+function _product_createNewProductNode($product) {
+  $hostvariable = variable_get('ibm_apim_host');
+  $apim_session = &_ibm_apim_get_apim_session();
+  $oldtags = NULL;
+
+  if (isset($product) && isset($product['document']['info']) && isset($product['document']['info']['name']) && isset($product['document']['info']['version'])) {
+    $xname = $product['document']['info']['name'];
+  }
+
+  if (isset($xname)) {
+    // find if there is an existing node for this API (maybe at old version)
+    // using x-ibm-name from swagger doc
+    // if so then clone it and base new node on that.
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'product')
+      ->fieldCondition('product_name', 'value', $xname)
+      ->propertyOrderBy('nid', 'ASC');
+    $results = $query->execute();
+  }
+
+  if (isset($results) && isset($results['node'])) {
+    $prod_nids = array_keys($results['node']);
+    if (is_array($prod_nids) && count($prod_nids) > 0) {
+      $node = node_load($prod_nids[0]);
+    }
+  }
+  if (isset($node) && isset($node->nid)) {
+    if (isset($node->field_producttags[$node->language]) && is_array($node->field_producttags[$node->language])) {
+      foreach ($node->field_producttags[$node->language] as $tag) {
+        if (isset($tag['tid'])) {
+          $oldtags[] = $tag['tid'];
+        }
+      }
+    }
+    $node->field_producttags[$node->language] = array();
+    // unset version and node ids
+    // this is so that node_save creates a new node rather than updating the existing one
+    unset($node->nid);
+    unset($node->vid);
+    unset($node->path);
+    unset($node->product_apimhostname[$node->language]);
+    unset($node->product_providerid[$node->language]);
+    unset($node->product_environmentid[$node->language]);
+    unset($node->product_id[$node->language]);
+    unset($node->product_name[$node->language]);
+    unset($node->product_ref[$node->language]);
+    unset($node->product_version[$node->language]);
+    unset($node->product_description[$node->language]);
+    unset($node->product_contact_name[$node->language]);
+    unset($node->product_contact_email[$node->language]);
+    unset($node->product_contact_url[$node->language]);
+    unset($node->product_license_name[$node->language]);
+    unset($node->product_license_url[$node->language]);
+    unset($node->product_terms_of_service[$node->language]);
+    unset($node->product_visibility[$node->language]);
+    unset($node->product_view_enabled[$node->language]);
+    unset($node->product_subscribe_enabled[$node->language]);
+    unset($node->product_visibility_public[$node->language]);
+    unset($node->product_visibility_authenticated[$node->language]);
+    unset($node->product_visibility_custom_orgs[$node->language]);
+    unset($node->product_visibility_custom_tags[$node->language]);
+    unset($node->product_url[$node->language]);
+    unset($node->product_state[$node->language]);
+    unset($node->product_plans[$node->language]);
+    unset($node->product_apis[$node->language]);
+    unset($node->product_data[$node->language]);
+  }
+  else {
+    $node = new stdClass();
+    $node->type = "product";
+    node_object_prepare($node); // Sets some defaults. Invokes hook_prepare() and hook_node_prepare().
+  }
+
+  $node->title = ibm_apim_truncate_string($product['document']['info']['title']);
+  $node->language = LANGUAGE_NONE;
+  $node->uid = 1;
+  $node->status = 1;
+
+  $node->product_apimhostname[$node->language][] = array(
+    'value' => $hostvariable,
+    'format' => 'plain_text'
+  );
+  $node->product_providerid[$node->language][] = array(
+    'value' => $apim_session['org'],
+    'format' => 'plain_text'
+  );
+  $node->product_environmentid[$node->language][] = array(
+    'value' => $apim_session['env'],
+    'format' => 'plain_text'
+  );
+  $node->product_id[$node->language][] = array(
+    'value' => $product['id'],
+    'format' => 'plain_text'
+  );
+  $node->product_ref[$node->language][] = array(
+    'value' => $product['document']['info']['name'] . ':' . $product['document']['info']['version'],
+    'format' => 'plain_text'
+  );
+  $node->product_state[$node->language][] = array(
+    'value' => strtolower($product['state']),
+    'format' => 'plain_text'
+  );
+  $node->product_name[$node->language][] = array(
+    'value' => $product['document']['info']['name'],
+    'format' => 'plain_text'
+  );
+  $node->product_version[$node->language][] = array(
+    'value' => $product['document']['info']['version'],
+    'format' => 'plain_text'
+  );
+  // ensure description is at least set to empty string
+  if (!isset($product['document']['info']['description']) || empty($product['document']['info']['description'])) {
+    $product['document']['info']['description'] = '';
+  }
+  $node->product_description[$node->language][] = array(
+    'value' => $product['document']['info']['description'],
+    'format' => 'plain_text'
+  );
+  if (!isset($product['document']['info']['contact'])) {
+    $product['document']['info']['contact'] = array(
+      'name' => "",
+      'email' => "",
+      'url' => ""
+    );
+  }
+  if (!isset($product['document']['info']['contact']['name'])) {
+    $product['document']['info']['contact']['name'] = "";
+  }
+  if (!isset($product['document']['info']['contact']['email'])) {
+    $product['document']['info']['contact']['email'] = "";
+  }
+  if (!isset($product['document']['info']['contact']['url'])) {
+    $product['document']['info']['contact']['url'] = "";
+  }
+  $node->product_contact_name[$node->language][] = array(
+    'value' => $product['document']['info']['contact']['name'],
+    'format' => 'plain_text'
+  );
+  $node->product_contact_email[$node->language][] = array(
+    'value' => $product['document']['info']['contact']['email'],
+    'format' => 'plain_text'
+  );
+  $node->product_contact_url[$node->language][] = array(
+    'value' => $product['document']['info']['contact']['url'],
+    'format' => 'plain_text'
+  );
+  if (!isset($product['document']['info']['license'])) {
+    $product['document']['info']['license'] = array('name' => "", 'url' => "");
+  }
+  $node->product_license_name[$node->language][] = array(
+    'value' => $product['document']['info']['license']['name'],
+    'format' => 'plain_text'
+  );
+  $node->product_license_url[$node->language][] = array(
+    'value' => $product['document']['info']['license']['url'],
+    'format' => 'plain_text'
+  );
+  if (!isset($product['document']['info']['termsOfService']) || empty($product['document']['info']['termsOfService'])) {
+    $product['document']['info']['termsOfService'] = '';
+  }
+  $node->product_terms_of_service[$node->language][] = array(
+    'value' => $product['document']['info']['termsOfService'],
+    'format' => 'plain_text'
+  );
+  if (isset($product['visibility'])) {
+    $node->product_visibility[$node->language][] = array(
+      'value' => serialize($product['visibility']),
+      'format' => 'plain_text'
+    );
+  }
+  if (isset($product['visibility']['view']['type']) && strtolower($product['visibility']['view']['type']) == 'public') {
+    $node->product_visibility_public[$node->language][] = array('value' => 1);
+  }
+  else {
+    $node->product_visibility_public[$node->language][] = array('value' => 0);
+  }
+  if (isset($product['visibility']['view']['enabled']) && $product['visibility']['view']['enabled'] == TRUE) {
+    $node->product_view_enabled[$node->language][] = array('value' => 1);
+  }
+  else {
+    $node->product_view_enabled[$node->language][] = array('value' => 0);
+  }
+  if (isset($product['visibility']['subscribe']['enabled']) && $product['visibility']['subscribe']['enabled'] == TRUE) {
+    $node->product_subscribe_enabled[$node->language][] = array('value' => 1);
+  }
+  else {
+    $node->product_subscribe_enabled[$node->language][] = array('value' => 0);
+  }
+  if (isset($product['visibility']['view']['type']) && strtolower($product['visibility']['view']['type']) == 'authenticated') {
+    $node->product_visibility_authenticated[$node->language][] = array('value' => 1);
+  }
+  else {
+    $node->product_visibility_authenticated[$node->language][] = array('value' => 0);
+  }
+  $node->product_visibility_custom_orgs[$node->language] = array();
+  if (isset($product['visibility']['view']['type']) && $product['visibility']['view']['type'] == 'custom' && isset($product['visibility']['view']['orgs'])) {
+    foreach ($product['visibility']['view']['orgs'] as $org) {
+      $node->product_visibility_custom_orgs[$node->language][] = array('value' => $org, 'format' => 'plain_text');
+    }
+  }
+  $node->product_visibility_custom_tags[$node->language] = array();
+  if (isset($product['visibility']['view']['type']) && $product['visibility']['view']['type'] == 'custom' && isset($product['visibility']['view']['tags'])) {
+    foreach ($product['visibility']['view']['tags'] as $tag) {
+      $node->product_visibility_custom_tags[$node->language][] = array('value' => $tag, 'format' => 'plain_text');
+    }
+  }
+  $node->product_url[$node->language][] = array(
+    'value' => $product['url'],
+    'format' => 'plain_text'
+  );
+  if (isset($product['document']['apis'])) {
+    $node->product_apis[$node->language][] = array(
+      'value' => serialize($product['document']['apis']),
+      'format' => 'plain_text'
+    );
+  }
+  else {
+    $node->product_apis[$node->language][] = array(
+      'value' => NULL,
+      'format' => 'plain_text'
+    );
+  }
+  if (isset($product['document']['plans'])) {
+    // merge in the supersedes info which is outside the product doc
+    if (isset($product['plans'])) {
+      foreach ($product['plans'] as $key => $plan) {
+        if (isset($plan['supersedes']) && isset($product['document']['plans'][$key])) {
+          $product['document']['plans'][$key]['supersedes'] = $plan['supersedes'];
+        }
+        if (isset($plan['superseded-by']) && isset($product['document']['plans'][$key])) {
+          $product['document']['plans'][$key]['superseded-by'] = $plan['superseded-by'];
+        }
+      }
+    }
+    $node->product_plans[$node->language][] = array(
+      'value' => serialize($product['document']['plans']),
+      'format' => 'plain_text'
+    );
+  }
+  else {
+    $node->product_plans[$node->language][] = array(
+      'value' => NULL,
+      'format' => 'plain_text'
+    );
+  }
+  $node->product_data[$node->language][] = array(
+    'value' => yaml_emit($product['document']),
+    'format' => 'plain_text'
+  );
+  $node = node_submit($node); // Prepare node for saving
+  node_save($node);
+
+  if (isset($oldtags)) {
+    $currenttags = $node->field_producttags[$node->language];
+    if (!is_array($currenttags)) {
+      $currenttags = array();
+    }
+    foreach ($oldtags as $tid) {
+      if (isset($tid)) {
+        $found = FALSE;
+        foreach ($currenttags as $currentvalue) {
+          if (isset($currentvalue['tid']) && $currentvalue['tid'] == $tid) {
+            $found = TRUE;
+          }
+        }
+        if ($found == FALSE) {
+          $currenttags[] = array('tid' => $tid);
+        }
+      }
+    }
+    $node->field_producttags[$node->language] = $currenttags;
+    node_save($node);
+  }
+  return $node->nid;
+}
+
+/**
+ * Update an existing Product node
+ * Used to update the placeholder node for any new Product details returned by APIm
+ *
+ * @param $node
+ * @param $product
+ * @throws \Exception
+ */
+function _product_updateExistingProductNode($node, $product) {
+  $hostvariable = variable_get('ibm_apim_host');
+  $apim_session = &_ibm_apim_get_apim_session();
+  $node->title = ibm_apim_truncate_string($product['document']['info']['title']);
+  $node->product_apimhostname[$node->language][0]['value'] = $hostvariable;
+  $node->product_providerid[$node->language][0]['value'] = $apim_session['org'];
+  $node->product_environmentid[$node->language][0]['value'] = $apim_session['env'];
+  $node->product_id[$node->language][0]['value'] = $product['id'];
+  $node->product_state[$node->language][0]['value'] = strtolower($product['state']);
+  $node->product_ref[$node->language][0]['value'] = $product['document']['info']['name'] . ':' . $product['document']['info']['version'];
+  $node->product_name[$node->language][0]['value'] = $product['document']['info']['name'];
+  $node->product_version[$node->language][0]['value'] = $product['document']['info']['version'];
+  // ensure description is at least set to empty string
+  if (!isset($product['document']['info']['description']) || empty($product['document']['info']['description'])) {
+    $product['document']['info']['description'] = '';
+  }
+  $node->product_description[$node->language][0]['value'] = $product['document']['info']['description'];
+  if (!isset($product['document']['info']['contact'])) {
+    $product['document']['info']['contact'] = array(
+      'name' => "",
+      'email' => "",
+      'url' => ""
+    );
+  }
+  if (!isset($product['document']['info']['contact']['name'])) {
+    $product['document']['info']['contact']['name'] = "";
+  }
+  if (!isset($product['document']['info']['contact']['email'])) {
+    $product['document']['info']['contact']['email'] = "";
+  }
+  if (!isset($product['document']['info']['contact']['url'])) {
+    $product['document']['info']['contact']['url'] = "";
+  }
+  $node->product_contact_name[$node->language][0]['value'] = $product['document']['info']['contact']['name'];
+  $node->product_contact_email[$node->language][0]['value'] = $product['document']['info']['contact']['email'];
+  $node->product_contact_url[$node->language][0]['value'] = $product['document']['info']['contact']['url'];
+  if (!isset($product['document']['info']['license'])) {
+    $product['document']['info']['license'] = array(
+      'name' => "",
+      'url' => ""
+    );
+  }
+  $node->product_license_name[$node->language][0]['value'] = $product['document']['info']['license']['name'];
+  $node->product_license_url[$node->language][0]['value'] = $product['document']['info']['license']['url'];
+  if (!isset($product['document']['info']['termsOfService']) || empty($product['document']['info']['termsOfService'])) {
+    $product['document']['info']['termsOfService'] = '';
+  }
+  $node->product_terms_of_service[$node->language][0]['value'] = $product['document']['info']['termsOfService'];
+  if (isset($product['visibility'])) {
+    $node->product_visibility[$node->language][0]['value'] = serialize($product['visibility']);
+  }
+  if (isset($product['visibility']['view']['enabled']) && $product['visibility']['view']['enabled'] == TRUE) {
+    $node->product_view_enabled[$node->language][0] = array('value' => 1);
+  }
+  else {
+    $node->product_view_enabled[$node->language][0] = array('value' => 0);
+  }
+  if (isset($product['visibility']['subscribe']['enabled']) && $product['visibility']['subscribe']['enabled'] == TRUE) {
+    $node->product_subscribe_enabled[$node->language][0] = array('value' => 1);
+  }
+  else {
+    $node->product_subscribe_enabled[$node->language][0] = array('value' => 0);
+  }
+  if (isset($product['visibility']['view']['type']) && strtolower($product['visibility']['view']['type']) == 'public') {
+    $node->product_visibility_public[$node->language][0]['value'] = 1;
+  }
+  else {
+    $node->product_visibility_public[$node->language][0]['value'] = 0;
+  }
+  if (isset($product['visibility']['view']['type']) && strtolower($product['visibility']['view']['type']) == 'authenticated') {
+    $node->product_visibility_authenticated[$node->language][0]['value'] = 1;
+  }
+  else {
+    $node->product_visibility_authenticated[$node->language][0]['value'] = 0;
+  }
+  $node->product_visibility_custom_orgs[$node->language] = array();
+  if (isset($product['visibility']['view']['type']) && $product['visibility']['view']['type'] == 'custom' && isset($product['visibility']['view']['orgs'])) {
+    foreach ($product['visibility']['view']['orgs'] as $org) {
+      $node->product_visibility_custom_orgs[$node->language][] = array('value' => $org, 'format' => 'plain_text');
+    }
+  }
+  $node->product_visibility_custom_tags[$node->language] = array();
+  if (isset($product['visibility']['view']['type']) && $product['visibility']['view']['type'] == 'custom' && isset($product['visibility']['view']['tags'])) {
+    foreach ($product['visibility']['view']['tags'] as $tag) {
+      $node->product_visibility_custom_tags[$node->language][] = array('value' => $tag, 'format' => 'plain_text');
+    }
+  }
+  $node->product_url[$node->language][0]['value'] = $product['url'];
+  if (isset($product['document']['plans'])) {
+    // merge in the supersedes info which is outside the product doc
+    if (isset($product['plans'])) {
+      foreach ($product['plans'] as $key => $plan) {
+        if (isset($plan['supersedes']) && isset($product['document']['plans'][$key])) {
+          $product['document']['plans'][$key]['supersedes'] = $plan['supersedes'];
+        }
+        if (isset($plan['superseded-by']) && isset($product['document']['plans'][$key])) {
+          $product['document']['plans'][$key]['superseded-by'] = $plan['superseded-by'];
+        }
+      }
+    }
+    $node->product_plans[$node->language][0]['value'] = serialize($product['document']['plans']);
+  }
+  else {
+    $node->product_plans[$node->language][0]['value'] = NULL;
+  }
+  if (isset($product['document']['apis'])) {
+    $node->product_apis[$node->language][0]['value'] = serialize($product['document']['apis']);
+  }
+  else {
+    $node->product_apis[$node->language][0]['value'] = NULL;
+  }
+  $node->product_data[$node->language][0]['value'] = yaml_emit($product['document']);
+  node_save($node);
+}
+
+/**
+ * Implements hook_preprocess_node().
+ *
+ * @param $variables
+ */
+function product_preprocess_node(&$variables) {
+  if ($variables['node']->type == 'product' && $variables['view_mode'] == 'teaser') {
+    $variables['theme_hook_suggestions'][] = 'node__product__teaser';
+  }
+  if ($variables['node']->type == 'product' && $variables['view_mode'] == 'search_result') {
+    $variables['theme_hook_suggestions'][] = 'node__product__search_result';
+  }
+  if ($variables['node']->type == 'product') {
+    $variables['customfields'] = _product_get_custom_fields();
+    $showversion = variable_get('ibm_apim_show_versions', 1);
+    $versiontext = '';
+    if ($showversion == 1) {
+      $versiontext = '(v' . $variables['product_version'][0]['safe_value'] . ')';
+    }
+    $variables['titlelink'] = '<span class="apimTitle"> <a href="' . url('product/' . $variables['product_id'][0]['safe_value']) . '">' . $variables['title'] . '</a> <span class="versionText">' . $versiontext . '</span></span>';
+    $product_yaml = yaml_parse($variables['product_data'][0]['value']);
+    $variables['product'] = $product_yaml;
+    $api_nids = array();
+    if (isset($product_yaml) && is_array($product_yaml['apis'])) {
+      foreach ($product_yaml['apis'] as $apiref) {
+        // find the api matching this ref
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'api')
+          ->fieldCondition('api_ref', 'value', $apiref['name'])
+          ->pager(0); // intentionally disable paging on this request
+        $results = $query->execute();
+        if (isset($results['node'])) {
+          foreach ($results['node'] as $result) {
+            $api_nids[] = $result->nid;
+          }
+        }
+      }
+    }
+
+    if (isset($api_nids) && is_array($api_nids) && count($api_nids) > 0) {
+      $nodes = node_load_multiple($api_nids);
+      $variables['apinodes'] = $nodes;
+    }
+    else {
+      $variables['apinodes'] = array();
+    }
+
+    if ($variables['view_mode'] == 'full') {
+      $variables['apis'] = array();
+      $variables['expandedapis'] = array();
+      foreach ($variables['apinodes'] as $key => $api) {
+        $swagger = unserialize($api->api_resources[$api->language][0]['value']);
+        $variables['apis'][] = $swagger;
+        $expandedswagger = unserialize($api->api_expandedschema[$api->language][0]['value']);
+        if (isset($expandedswagger)) {
+          $variables['expandedapis'][] = $expandedswagger;
+        }
+      }
+      $variables['plans'] = unserialize($variables['product_plans'][0]['value']);
+
+      // build array of info needed to show plan content
+      // done here to keep the template cleaner
+      $planarray = array();
+      foreach ($variables['plans'] as $planname => $plan) {
+        $planid = $variables['product_name'][0]['safe_value'] . ':' . $variables['product_version'][0]['safe_value'] . ':' . $planname;
+        $planarray[$planid] = product_process_plan($product_yaml, $planid, $plan, $variables['apinodes']);
+        if (isset($plan['deploymentState'])) {
+          $planarray[$planid]['deploymentState'] = $plan['deploymentState'];
+        }
+        if (isset($plan['supersedes'])) {
+          $planarray[$planid]['supersedes'] = $plan['supersedes'];
+        }
+        if (isset($plan['superseded-by'])) {
+          $planarray[$planid]['superseded-by'] = $plan['superseded-by'];
+        }
+      }
+      $variables['planarray'] = $planarray;
+      $variables['subscribable'] = product_check_product_subscribe($variables['node']);
+
+      if (user_is_logged_in()) {
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'application')
+          ->fieldCondition('application_orgid', 'value', ibm_apim_get_current_developer_org()['id']);
+        $results = $query->execute();
+        if (isset($results['node'])) {
+          $nids = array_keys($results['node']);
+          $variables['apps'] = node_load_multiple($nids);
+        }
+      }
+      else {
+        $variables['apps'] = array();
+      }
+    }
+  }
+}
+
+/**
+ * Convert the programmatic rate limit into a translatable nicely formatted form
+ * @param $value
+ * @return null|string
+ */
+function product_parse_rate_limit($value) {
+  if (isset($value)) {
+    if (strtolower($value) == 'unlimited') {
+      return t('unlimited');
+    }
+    $parts = explode('/', $value);
+    $quantity = $parts[0];
+    $timeperiod = $parts[1];
+    preg_match("~^(\d+)~", $timeperiod, $m);
+    $periodcount = $m[1];
+    $period = trim(str_replace($periodcount, "", $timeperiod, $i));
+    if (!isset($periodcount)) {
+      $periodcount = 1;
+    }
+
+    switch ($period) {
+      case 'second' :
+        if ($periodcount == 1) {
+          return t('@quantity per second', array('@quantity' => $quantity));
+        }
+        else {
+          return t('@quantity per @periodcount seconds', array(
+            '@quantity' => $quantity,
+            '@periodcount' => $periodcount
+          ));
+        }
+        break;
+      case 'minute':
+        if ($periodcount == 1) {
+          return t('@quantity per minute', array('@quantity' => $quantity));
+        }
+        else {
+          return t('@quantity per @periodcount minutes', array(
+            '@quantity' => $quantity,
+            '@periodcount' => $periodcount
+          ));
+        }
+        break;
+      case 'hour':
+        if ($periodcount == 1) {
+          return t('@quantity per hour', array('@quantity' => $quantity));
+        }
+        else {
+          return t('@quantity per @periodcount hours', array('@quantity' => $quantity, '@periodcount' => $periodcount));
+        }
+        break;
+      case 'day':
+        if ($periodcount == 1) {
+          return t('@quantity per day', array('@quantity' => $quantity));
+        }
+        else {
+          return t('@quantity per @periodcount days', array('@quantity' => $quantity, '@periodcount' => $periodcount));
+        }
+        break;
+      case 'week':
+        if ($periodcount == 1) {
+          return t('@quantity per week', array('@quantity' => $quantity));
+        }
+        else {
+          return t('@quantity per @periodcount weeks', array('@quantity' => $quantity, '@periodcount' => $periodcount));
+        }
+        break;
+    }
+  }
+
+  return NULL;
+}
+
+/**
+ * @param $product_yaml
+ * @param $planid
+ * @param $plan
+ * @param $apinodes
+ * @return array
+ */
+function product_process_plan($product_yaml, $planid, $plan, $apinodes) {
+  $planarray = array();
+  $planarray['nodes'] = array();
+  $planarray['data'] = $plan;
+  $planratelimit = product_parse_rate_limit('unlimited');
+  if (isset($plan['rate-limit']) && isset($plan['rate-limit']['value'])) {
+    $planratelimit = product_parse_rate_limit($plan['rate-limit']['value']);
+  }
+  $planarray['rateLimit'] = $planratelimit;
+  if (isset($plan['requiresApproval'])) {
+    $planarray['requiresApproval'] = $plan['requiresApproval'];
+  }
+  else {
+    $planarray['requiresApproval'] = FALSE;
+  }
+  $planarray['planId'] = $planid;
+  if (is_array($apinodes) && count($apinodes) > 0) {
+    foreach ($apinodes as $apikey => $apinode) {
+      $apisafenoderef = drupal_html_class($apinode->api_ref[$apinode->language][0]['safe_value']);
+      $planarray['nodes'][$apisafenoderef] = array(
+        'context' => $apinode->api_context[$apinode->language][0]['safe_value']
+      );
+      $planarray['nodes'][$apisafenoderef]['nid'] = $apinode->nid;
+      $planarray['nodes'][$apisafenoderef]['enabled'] = FALSE;
+      $planarray['nodes'][$apisafenoderef]['title'] = $apinode->title;
+      $planarray['nodes'][$apisafenoderef]['protocol'] = $apinode->api_protocol[$apinode->language][0]['safe_value'];
+      $planarray['nodes'][$apisafenoderef]['url'] = $apinode->api_url[$apinode->language][0]['safe_value'];
+      $planarray['nodes'][$apisafenoderef]['id'] = $apinode->api_apiid[$apinode->language][0]['safe_value'];
+      $planarray['nodes'][$apisafenoderef]['version'] = $apinode->api_version[$apinode->language][0]['safe_value'];
+      $planarray['nodes'][$apisafenoderef]['resources'] = array();
+      $swagger = unserialize($apinode->api_resources[$apinode->language][0]['value']);
+      if (isset($swagger)) {
+        $paths = $swagger['paths'];
+        // build up list of resources
+        if (is_array($paths)) {
+          foreach ($paths as $pathname => $path) {
+            $planarray['nodes'][$apisafenoderef]['resources'][$pathname] = array();
+            foreach ($path as $verb => $op) {
+              if (in_array(strtoupper($verb), array(
+                'PUT',
+                'POST',
+                'GET',
+                'DELETE',
+                'OPTIONS',
+                'HEAD',
+                'PATCH'
+              ))) {
+                $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)] = array('enabled' => FALSE);
+                $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['rateLimit'] = $planratelimit;
+                if (isset($op['x-ibm-soap']['soap-action']) && !empty($op['x-ibm-soap']['soap-action'])) {
+                  $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['soap-action'] = $op['x-ibm-soap']['soap-action'];
+                }
+              }
+            }
+          }
+        }
+      }
+      // now mark included apis as enabled
+      if (isset($plan['apis']) && !empty($plan['apis'])) {
+        foreach ($plan['apis'] as $apiname => $planapi) {
+          $api = $product_yaml['apis'][$apiname];
+          if (isset($api) && drupal_html_class($api['name']) == $apisafenoderef) {
+            $planarray['nodes'][$apisafenoderef]['enabled'] = TRUE;
+            if (!isset($planarray['nodes'][$apisafenoderef]['resources']) || !is_array($planarray['nodes'][$apisafenoderef]['resources'])) {
+              $planarray['nodes'][$apisafenoderef]['resources'] = array();
+            }
+            if (isset($planapi['operations']) && is_array($planapi['operations'])) {
+              foreach ($planapi['operations'] as $resource) {
+                if (in_array(strtoupper(strtoupper($resource['operation'])), array(
+                  'PUT',
+                  'POST',
+                  'GET',
+                  'DELETE',
+                  'OPTIONS',
+                  'HEAD',
+                  'PATCH'
+                ))) {
+                  // remove any query param portion of the path
+                  $path = strstr($resource['path'], '?', TRUE) ?: $resource['path'];
+                  if (!isset($planarray['nodes'][$apisafenoderef]['resources'][$path][strtoupper($resource['operation'])])) {
+                    $planarray['nodes'][$apisafenoderef]['resources'][$path][strtoupper($resource['operation'])] = array();
+                  }
+                  $planarray['nodes'][$apisafenoderef]['resources'][$path][strtoupper($resource['operation'])]['enabled'] = TRUE;
+                  // include rate limit info
+                  $ratelimit = $planratelimit;
+                  if (isset($resource['rate-limit']) && isset($resource['rate-limit']['value'])) {
+                    $ratelimit = product_parse_rate_limit($resource['rate-limit']['value']);
+                  }
+                  elseif (isset($plan['rateLimit']['value'])) {
+                    $ratelimit = product_parse_rate_limit($plan['rateLimit']['value']);
+                  }
+                  $planarray['nodes'][$apisafenoderef]['resources'][$path][strtoupper($resource['operation'])]['rateLimit'] = $ratelimit;
+                  $planarray['nodes'][$apisafenoderef]['resources'][$path][strtoupper($resource['operation'])]['op'] = $resource;
+                  if (isset($resource['x-ibm-soap']['soap-action']) && !empty($resource['x-ibm-soap']['soap-action'])) {
+                    $pos = strpos($resource['x-ibm-soap']['soap-action'], ':');
+                    if ($pos !== FALSE) {
+                      $parts = explode(':', $resource['x-ibm-soap']['soap-action']);
+                      if (isset($parts[1])) {
+                        $planarray['nodes'][$apisafenoderef]['resources'][$path][strtoupper($resource['operation'])]['soap-action'] = $parts[1];
+                      }
+                      else {
+                        $planarray['nodes'][$apisafenoderef]['resources'][$path][strtoupper($resource['operation'])]['soap-action'] = $resource['x-ibm-soap']['soap-action'];
+                      }
+                    }
+                    else {
+                      $planarray['nodes'][$apisafenoderef]['resources'][$path][strtoupper($resource['operation'])]['soap-action'] = $resource['x-ibm-soap']['soap-action'];
+                    }
+                  }
+                }
+              }
+            }
+            else {
+              //assume all enabled
+              foreach ($planarray['nodes'][$apisafenoderef]['resources'] as $pathname => $path) {
+                foreach ($path as $verb => $op) {
+                  if (in_array(strtoupper($verb), array(
+                    'PUT',
+                    'POST',
+                    'GET',
+                    'DELETE',
+                    'OPTIONS',
+                    'HEAD',
+                    'PATCH'
+                  ))) {
+                    if (!isset($planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)])) {
+                      $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)] = array();
+                    }
+                    $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['enabled'] = TRUE;
+                    $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['rateLimit'] = $planratelimit;
+                    $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['op'] = $op;
+                    if (isset($op['soap-action']) && !empty($op['soap-action'])) {
+                      $pos = strpos($op['soap-action'], ':');
+                      if ($pos !== FALSE) {
+                        $parts = explode(':', $op['soap-action']);
+                        if (isset($parts[1])) {
+                          $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['soap-action'] = $parts[1];
+                        }
+                        else {
+                          $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['soap-action'] = $op['soap-action'];
+                        }
+                      }
+                      else {
+                        $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['soap-action'] = $op['soap-action'];
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      else {
+        // no $plan['apis'] means all enabled
+        $planarray['nodes'][$apisafenoderef]['enabled'] = TRUE;
+        foreach ($planarray['nodes'][$apisafenoderef]['resources'] as $pathname => $path) {
+          foreach ($path as $verb => $op) {
+            if (isset($planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)])) {
+              $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)] = array();
+            }
+            $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['enabled'] = TRUE;
+            $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['rateLimit'] = $planratelimit;
+            $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['op'] = $op;
+            if (isset($op['soap-action']) && !empty($op['soap-action'])) {
+              $pos = strpos($op['soap-action'], ':');
+              if ($pos !== FALSE) {
+                $parts = explode(':', $op['soap-action']);
+                if (isset($parts[1])) {
+                  $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['soap-action'] = $parts[1];
+                }
+                else {
+                  $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['soap-action'] = $op['soap-action'];
+                }
+              }
+              else {
+                $planarray['nodes'][$apisafenoderef]['resources'][$pathname][strtoupper($verb)]['soap-action'] = $op['soap-action'];
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return $planarray;
+}
+
+/**
+ * Implements hook_preprocess_search_result
+ *
+ * @param $variables
+ */
+function product_preprocess_search_result(&$variables) {
+  $node = $variables['result']['node'];
+  if ($node->nid && $node->type == 'product') { // if the result is an product node we can load the teaser
+    $variables['teaser'] = node_view($node, 'teaser');
+  }
+}
+
+/**
+ * Returns a list of NIDs for product nodes the current user is authorized to see
+ * @return array
+ */
+function product_list_products() {
+  $returnnids = array();
+  // users with right perms get to see all
+  if (ibm_apim_explicit_user_access('edit any product content')) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'product')
+      ->fieldCondition('product_state', 'value', 'published');
+    $results = $query->execute();
+    if (isset($results['node'])) {
+      $nids = array_keys($results['node']);
+      if (!empty($nids)) {
+        $returnnids = array_merge($returnnids, $nids);
+      }
+    }
+  }
+  else {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'product')
+      ->fieldCondition('product_state', 'value', 'published')
+      ->fieldCondition('product_view_enabled', 'value', 1)
+      ->fieldCondition('product_visibility_public', 'value', 1);
+    $results = $query->execute();
+    if (isset($results['node'])) {
+      $nids = array_keys($results['node']);
+      if (!empty($nids)) {
+        $returnnids = array_merge($returnnids, $nids);
+      }
+    }
+    if (user_is_logged_in()) {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'product')
+        ->fieldCondition('product_state', 'value', 'published')
+        ->fieldCondition('product_view_enabled', 'value', 1)
+        ->fieldCondition('product_visibility_authenticated', 'value', 1);
+      $results = $query->execute();
+      if (isset($results['node'])) {
+        $nids = array_keys($results['node']);
+        if (!empty($nids)) {
+          $returnnids = array_merge($returnnids, $nids);
+        }
+      }
+      $myorg = ibm_apim_get_current_developer_org();
+      if (isset($myorg['id'])) {
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'product')
+          ->fieldCondition('product_state', 'value', 'published')
+          ->fieldCondition('product_view_enabled', 'value', 1)
+          ->fieldCondition('product_visibility_custom_orgs', 'value', $myorg['id'], 'CONTAINS');
+        $results = $query->execute();
+        if (isset($results['node'])) {
+          $nids = array_keys($results['node']);
+          if (!empty($nids)) {
+            $returnnids = array_merge($returnnids, $nids);
+          }
+        }
+
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'devorg')
+          ->fieldCondition('devorg_id', 'value', $myorg['id']);
+        $devorgresults = $query->execute();
+        if (isset($devorgresults['node'])) {
+          $devorgnid = array_keys($devorgresults['node'])[0];
+          if (!empty($devorgnid)) {
+            $devorg = node_load($devorgnid);
+            $tags = unserialize($devorg->devorg_tags[$devorg->language][0]['value']);
+            if (isset($tags) && is_array($tags) && count($tags) > 0) {
+              $query = new EntityFieldQuery();
+              $query->entityCondition('entity_type', 'node')
+                ->entityCondition('bundle', 'product')
+                ->fieldCondition('product_state', 'value', 'published')
+                ->fieldCondition('product_view_enabled', 'value', 1)
+                ->fieldCondition('product_visibility_custom_tags', 'value', $tags, 'IN');
+              $results = $query->execute();
+              if (isset($results['node'])) {
+                $nids = array_keys($results['node']);
+                if (!empty($nids)) {
+                  $returnnids = array_merge($returnnids, $nids);
+                }
+              }
+            }
+          }
+        }
+
+        // also grab any products we're subscribed to in order to include deprecated products
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'application')
+          ->fieldCondition('application_orgid', 'value', $myorg['id']);
+        $appresults = $query->execute();
+        if (isset($appresults['node'])) {
+          $nids = array_keys($appresults['node']);
+          $nodes = node_load_multiple($nids);
+          if ($nodes) {
+            foreach ($nodes as $app) {
+              if (isset($app->application_subscriptions[$app->language][0]['value'])) {
+                $subs = unserialize($app->application_subscriptions[$app->language][0]['value']);
+                if (is_array($subs)) {
+                  foreach ($subs as $sub) {
+                    if (isset($sub['product'])) {
+                      $query = new EntityFieldQuery();
+                      $query->entityCondition('entity_type', 'node')
+                        ->entityCondition('bundle', 'product')
+                        ->fieldCondition('product_ref', 'value', $sub['product']);
+                      $results = $query->execute();
+                      if (isset($results['node'])) {
+                        $keys = array_keys($results['node']);
+                        $returnnids = array_merge($returnnids, $keys);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return array_reverse(array_unique($returnnids, SORT_NUMERIC));
+}
+
+/**
+ * Check if we have access to specified product Node
+ * @param $node
+ * @return bool
+ */
+function product_check_product_access($node) {
+  $found = FALSE;
+  $view_enabled = TRUE;
+  if (isset($node)) {
+    // if view disabled then no one has access
+    if (isset($node->product_view_enabled[$node->language][0]) && $node->product_view_enabled[$node->language][0]['value'] != 1) {
+      $view_enabled = FALSE;
+    }
+    $myorg = ibm_apim_get_current_developer_org();
+    // allow those with permission to bypass check
+    if (ibm_apim_explicit_user_access('edit any product content')) {
+      $found = TRUE;
+    }
+    elseif (isset($myorg['id'])) {
+      // if we're subscribed then allowed access
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'application')
+        ->fieldCondition('application_orgid', 'value', $myorg['id']);
+      $appresults = $query->execute();
+      if (isset($appresults['node'])) {
+        $nids = array_keys($appresults['node']);
+        $nodes = node_load_multiple($nids);
+        if ($nodes) {
+          foreach ($nodes as $app) {
+            if (isset($app->application_subscriptions[$app->language][0]['value'])) {
+              $subs = unserialize($app->application_subscriptions[$app->language][0]['value']);
+              if (is_array($subs)) {
+                foreach ($subs as $sub) {
+                  if (isset($sub['product']) && $sub['product'] == $node->product_ref[$node->language][0]['value']) {
+                    $found = TRUE;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if ($view_enabled == TRUE) {
+      // check public nodes
+      if (isset($node->product_visibility_public[$node->language][0]['value']) && $node->product_visibility_public[$node->language][0]['value'] == 1) {
+        $found = TRUE;
+      }
+      elseif (isset($node->product_visibility_authenticated[$node->language][0]['value']) && $node->product_visibility_authenticated[$node->language][0]['value'] == 1 && user_is_logged_in()) {
+        $found = TRUE;
+      }
+      elseif (isset($node->product_visibility_custom_orgs[$node->language]) && isset($myorg['id'])) {
+        foreach ($node->product_visibility_custom_orgs[$node->language] as $customorg) {
+          if (isset($customorg['value']) && $customorg['value'] == $myorg['id']) {
+            $found = TRUE;
+          }
+        }
+      }
+      elseif (isset($node->product_visibility_custom_tags[$node->language]) && isset($myorg['id'])) {
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'devorg')
+          ->fieldCondition('devorg_id', 'value', $myorg['id']);
+        $devorgresults = $query->execute();
+        if (isset($devorgresults['node'])) {
+          $devorgnid = array_keys($devorgresults['node'])[0];
+          if (!empty($devorgnid)) {
+            $devorg = node_load($devorgnid);
+            $tags = unserialize($devorg->devorg_tags[$devorg->language][0]['value']);
+            if (isset($tags) && is_array($tags) && count($tags) > 0) {
+              foreach ($node->product_visibility_custom_tags[$node->language] as $customtag) {
+                if (isset($customtag['value']) && in_array($customtag['value'], $tags)) {
+                  $found = TRUE;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return $found;
+}
+
+/**
+ * Check if we have access to subscribe to the specified product Node
+ * @param $node
+ * @return bool
+ */
+function product_check_product_subscribe($node) {
+  if (isset($node)) {
+    // if not logged in return false
+    if (!user_is_logged_in()) {
+      return FALSE;
+    }
+    // if not a developer return false
+    if (!_ibm_apim_user_is_developer()) {
+      return FALSE;
+    }
+    // if deprecated then no one has access
+    if (isset($node->product_state[$node->language][0]['value']) && strtolower($node->product_state[$node->language][0]['value']) == 'deprecated') {
+      return FALSE;
+    }
+    // if subscribe disabled then no one has access
+    if (!isset($node->product_subscribe_enabled[$node->language][0]) || $node->product_subscribe_enabled[$node->language][0]['value'] != 1) {
+      return FALSE;
+    }
+    $myorg = ibm_apim_get_current_developer_org();
+    $visibility = unserialize($node->product_visibility[$node->language][0]['value']);
+    if (isset($visibility)) {
+      if (isset($visibility['subscribe']['type']) && strtolower($visibility['subscribe']['type']) == 'public') {
+        return TRUE;
+      }
+      elseif (isset($visibility['subscribe']['type']) && strtolower($visibility['subscribe']['type']) == 'authenticated' && user_is_logged_in()) {
+        return TRUE;
+      }
+      elseif (isset($visibility['subscribe']['type']) && strtolower($visibility['subscribe']['type']) == 'custom' && isset($myorg['id'])) {
+        foreach ($visibility['subscribe']['orgs'] as $customorg) {
+          if ($customorg == $myorg['id']) {
+            return TRUE;
+          }
+        }
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'devorg')
+          ->fieldCondition('devorg_id', 'value', $myorg['id']);
+        $devorgresults = $query->execute();
+        if (isset($devorgresults['node'])) {
+          $devorgnid = array_keys($devorgresults['node'])[0];
+          if (!empty($devorgnid)) {
+            $devorg = node_load($devorgnid);
+            $tags = unserialize($devorg->devorg_tags[$devorg->language][0]['value']);
+            if (isset($tags) && is_array($tags) && count($tags) > 0) {
+              foreach ($visibility['subscribe']['tags'] as $customtag) {
+                if (isset($customtag) && in_array($customtag, $tags)) {
+                  return TRUE;
+                }
+              }
+            }
+          }
+          else {
+            return FALSE;
+          }
+        }
+        else {
+          return FALSE;
+        }
+      }
+      else {
+        return FALSE;
+      }
+    }
+    else {
+      return FALSE;
+    }
+  }
+  else {
+    return FALSE;
+  }
+  return FALSE;
+}
+
+/**
+ * @param $arg
+ * @return mixed
+ */
+function _product_path_param_to_arg($arg) {
+  return $arg;
+}
+
+function _product_get_ibm_fields() {
+  $ibmfields = array(
+    'product_apimhostname',
+    'product_providerid',
+    'product_environmentid',
+    'product_id',
+    'product_name',
+    'product_ref',
+    'product_version',
+    'product_image',
+    'product_description',
+    'product_contact_name',
+    'product_contact_email',
+    'product_contact_url',
+    'product_license_name',
+    'product_license_url',
+    'product_terms_of_service',
+    'product_visibility',
+    'product_view_enabled',
+    'product_subscribe_enabled',
+    'product_visibility_public',
+    'product_visibility_authenticated',
+    'product_visibility_custom_orgs',
+    'product_visibility_custom_tags',
+    'product_apis',
+    'product_plans',
+    'product_url',
+    'product_data',
+    'product_state',
+    'product_attachments',
+    'field_productrating',
+    'field_producttags'
+  );
+  return $ibmfields;
+}
+
+/**
+ * @return array
+ */
+function _product_get_custom_fields() {
+  $all_fields = field_info_instances("node", "product");
+  $keys = array_keys($all_fields);
+  $ibmfields = _product_get_ibm_fields();
+
+  $diff = array_diff($keys, $ibmfields);
+  return $diff;
+}
+
+function product_updateProductNode($product) {
+  if (isset($product)) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'product')
+      ->fieldCondition('product_ref', 'value', $product['document']['info']['name'] . ':' . $product['document']['info']['version']);
+
+    $results = $query->execute();
+
+    if (isset($results['node'])) {
+      $keys = array_keys($results['node']);
+      $node = node_load($keys[0]);
+      _product_updateExistingProductNode($node, $product);
+    }
+  }
+}
+
+function product_deleteProductNode($nid) {
+  _ibm_apim_delete_popular_block($nid);
+  node_delete($nid);
+  watchdog('product_deleteProductNode', 'delete product nid=@prod', array('@prod' => $nid), WATCHDOG_NOTICE);
+  // clear caches to ensure people don't get stale data
+  $nodeurl = url('node/' . $nid, array('absolute' => TRUE));
+  cache_clear_all($nodeurl, 'cache_page');
+  $nodeurl = url('product', array('absolute' => TRUE));
+  cache_clear_all(url($nodeurl), 'cache_page');
+}
+
+/**
+ * @return string - product icon for a given name
+ *
+ * @param $apiName
+ * @return string
+ */
+function product_random_image($apiName) {
+  $asInt = 0;
+  for ($i = 0; $i < strlen($apiName); $i++) {
+    $asInt += ord($apiName[$i]);
+  }
+  $digit = $asInt % 19;
+  if ($digit == 0) {
+    $digit = 1;
+  }
+  $num = str_pad($digit, 2, 0, STR_PAD_LEFT);
+
+  return "product_" . $num . ".png";
+}

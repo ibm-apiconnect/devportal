@@ -1,0 +1,787 @@
+<?php
+/**
+ * e-mail priorities.
+ */
+define('VIEWS_SEND_PRIORITY_NONE', 0);
+define('VIEWS_SEND_PRIORITY_HIGHEST', 1);
+define('VIEWS_SEND_PRIORITY_HIGH', 2);
+define('VIEWS_SEND_PRIORITY_NORMAL', 3);
+define('VIEWS_SEND_PRIORITY_LOW', 4);
+define('VIEWS_SEND_PRIORITY_LOWEST', 5);
+
+/**
+ * Capture PHP max_execution_time before drupal_cron_run().
+ * Workaround for Drupal 6.14. See http://drupal.org/node/584334
+ */
+define('VIEWS_SEND_MAX_EXECUTION_TIME', ini_get('max_execution_time'));
+
+/**
+ * Implements hook_menu().
+ */
+function mail_subscribers_menu() {
+  $items = array();
+  $items['admin/config/system/mail_subscribers'] = array(
+    'type' => MENU_NORMAL_ITEM,
+    'title' => 'Mail Subscribers',
+    'description' => 'Configure Mail Subscribers general options.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mail_subscribers_settings'),
+    'access arguments' => array('administer mail_subscribers'),
+    'file' => 'mail_subscribers.admin.inc',
+  );
+  $items['subscribers/mail'] = array(
+    'type' => MENU_NORMAL_ITEM,
+    'title' => 'Mail Subscribers',
+    'description' => 'Send email to Product and Plan subscribers',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mail_subscribers_select_form'),
+    'access arguments' => array('mass mailing with mail_subscribers'),
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function mail_subscribers_permission() {
+  $perms = array(
+    'administer mail_subscribers' => array(
+      'title' => t('Administer mass subscriber mail'),
+      'description' => t('Configure sending of e-mails to Product and Plan subscribers'),
+    ),
+    'mass mailing with mail_subscribers' => array(
+      'title' => t('Send mass mail to Product and Plan subscribers'),
+      'description' => t('Send e-mails to Product and Plan subscribers.'),
+    ),
+  );
+  return $perms;
+}
+
+/**
+ * Multistep form callback for the "configure" step.
+ *
+ */
+function mail_subscribers_select_form($form, &$form_state) {
+
+  // Add the custom CSS
+  $form['#attached']['css'][] = drupal_get_path('module', 'mail_subscribers') . '/mail_subscribers.css';
+
+  $productlist = product_list_products();
+  $options = array();
+
+  if (isset($productlist) && is_array($productlist)) {
+    $products = node_load_multiple($productlist);
+    foreach ($products as $product) {
+      $plans = unserialize($product->product_plans[$product->language][0]['value']);
+      if (isset($plans)) {
+        foreach ($plans as $planname => $plan) {
+          $options[$product->product_ref[$product->language][0]['value'] . ':' . $planname] = $product->title . ' - ' . $planname;
+        }
+      }
+    }
+  }
+
+  $form['plan'] = array(
+    '#type' => 'select',
+    '#title' => t('Plan'),
+    '#options' => $options,
+    '#description' => t('Select which plan subscribers to e-mail')
+  );
+
+  $form['from'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Sender'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['from']['mail_subscribers_from_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Sender\'s name'),
+    '#description' => t("Enter the sender's human readable name."),
+    '#default_value' => variable_get('mail_subscribers_from_name', variable_get('site_name', '')),
+    '#maxlen' => 255,
+  );
+  $form['from']['mail_subscribers_from_mail'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Sender\'s e-mail'),
+    '#description' => t("Enter the sender's e-mail address."),
+    '#required' => TRUE,
+    '#default_value' => variable_get('mail_subscribers_from_mail', variable_get('site_mail', ini_get('sendmail_from'))),
+    '#maxlen' => 255,
+  );
+
+  $form['mail'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('E-mail content'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['mail']['mail_subscribers_subject'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Subject'),
+    '#description' => t('Enter the e-mail\'s subject.'),
+    '#maxlen' => 255,
+    '#required' => TRUE,
+    '#default_value' => variable_get('mail_subscribers_subject', ''),
+  );
+  $saved_message = variable_get('mail_subscribers_message');
+  $form['mail']['mail_subscribers_message'] = array(
+    '#type' => 'text_format',
+    '#format' => isset($saved_message['format']) ? $saved_message['format'] : filter_fallback_format(),
+    '#title' => t('Message'),
+    '#description' => t('Enter the body of the message.'),
+    '#required' => TRUE,
+    '#rows' => 10,
+    '#default_value' => isset($saved_message['value']) ? $saved_message['value'] : '',
+  );
+
+  $form['additional'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Additional e-mail options'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['additional']['mail_subscribers_priority'] = array(
+    '#type' => 'select',
+    '#title' => t('Priority'),
+    '#options' => array(
+      VIEWS_SEND_PRIORITY_NONE => t('none'),
+      VIEWS_SEND_PRIORITY_HIGHEST => t('highest'),
+      VIEWS_SEND_PRIORITY_HIGH => t('high'),
+      VIEWS_SEND_PRIORITY_NORMAL => t('normal'),
+      VIEWS_SEND_PRIORITY_LOW => t('low'),
+      VIEWS_SEND_PRIORITY_LOWEST => t('lowest')
+    ),
+    '#description' => t('Note that e-mail priority is ignored by a lot of e-mail programs.'),
+    '#default_value' => variable_get('mail_subscribers_priority', 0),
+  );
+  $form['additional']['mail_subscribers_receipt'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Request receipt'),
+    '#default_value' => variable_get('mail_subscribers_receipt_', 0),
+    '#description' => t('Request a Read Receipt from your e-mails. A lot of e-mail programs ignore these so it is not a definitive indication of how many people have read your message.'),
+  );
+  $form['additional']['mail_subscribers_headers'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Additional headers'),
+    '#description' => t("Additional headers to be send with the message. You'll have to enter one per line. Example:<pre>Reply-To: noreply@example.com\nX-MyCustomHeader: Whatever</pre>"),
+    '#rows' => 4,
+    '#default_value' => variable_get('mail_subscribers_headers', ''),
+  );
+
+  $form['mail_subscribers_direct'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Send the message directly using the Batch API.'),
+    '#default_value' => variable_get('mail_subscribers_direct', TRUE),
+  );
+  $form['mail_subscribers_carbon_copy'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Send a copy of the message to the sender.'),
+    '#default_value' => variable_get('mail_subscribers_carbon_copy', TRUE),
+  );
+
+  $form['mail_subscribers_remember'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Remember these values for the next time a mass mail is sent. (The values are not stored per user.)'),
+    '#default_value' => variable_get('mail_subscribers_remember', FALSE),
+  );
+  $form['actions'] = array(
+    '#type' => 'container',
+    '#attributes' => array('class' => array('form-actions')),
+    '#weight' => 999,
+  );
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Next'),
+    '#validate' => array('mail_subscribers_config_form_validate'),
+    '#submit' => array('mail_subscribers_form_submit'),
+    '#suffix' => l(t('Cancel'), '<front>', array())
+  );
+
+  return $form;
+}
+
+/**
+ * Validation callback for the "configure" step.
+ */
+function mail_subscribers_select_form_validate($form, &$form_state) {
+  $values =& $form_state['values'];
+
+  $formats = filter_formats();
+  if (!filter_access($formats[$values['mail_subscribers_message']['format']])) {
+    form_set_error('mail_subscribers_message', t('Illegal format selected'));
+  }
+
+  // Check if sender's e-mail is a valid one.
+  if (!valid_email_address(trim($values['mail_subscribers_from_mail']))) {
+    form_set_error('mail_subscribers_from_mail',
+      t('The sender\'s e-mail is not a valid e-mail address: %mail',
+        array('%mail' => $values['mail_subscribers_from_mail'])
+      )
+    );
+  }
+}
+
+/**
+ * Multistep form callback for the "confirm" step.
+ * Allows the user to preview the whole message before sending it.
+ */
+function mail_subscribers_confirm_form($form, &$form_state, $view, $output) {
+
+  // Add the custom CSS
+  $form['#attached']['css'][] = drupal_get_path('module', 'mail_subscribers') . '/mail_subscribers.css';
+
+  drupal_set_title(t('Review and confirm the message that is about to be sent'));
+
+  // Values entered in the "config" step.
+  $configuration = $form_state['configuration'];
+
+  // From: parts.
+  $from_mail = trim($configuration['mail_subscribers_from_mail']);
+  $from_name = trim($configuration['mail_subscribers_from_name']);
+
+  $form['#attributes']['class'] = array('mail-subscribers-preview');
+  $form['from'] = array(
+    '#type' => 'item',
+    '#title' => t('From'),
+    '#markup' => '<div class="mail-subscribers-preview-value">' .
+      (empty($from_name) ? $from_mail : $from_name . check_plain(' <' . $from_mail . '>')) .
+      '</div>',
+  );
+
+  $plan = $form_state['plan'];
+  // get recipients
+  $recipients = mail_subscribers_get_recipients($plan);
+
+  $form['to'] = array(
+    '#type' => 'item',
+    '#title' => t('To'),
+    '#markup' => '<div id="mail-subscribers-preview-to" class="mail-subscribers-preview-value">' . implode(', ', $recipients) . '</div>',
+  );
+  $form['subject'] = array(
+    '#type' => 'item',
+    '#title' => t('Subject'),
+    '#markup' => '<div class="mail-subscribers-preview-value">' . $configuration['mail_subscribers_subject'] . '</div>',
+  );
+  $form['message'] = array(
+    '#type' => 'item',
+    '#title' => t('Message'),
+    '#markup' => '<div id="mail-subscribers-preview-message" class="mail-subscribers-preview-value">' . check_markup($configuration['mail_subscribers_message']['value'], $configuration['mail_subscribers_message']['format']) . '</div>',
+  );
+
+  $headers = array();
+  foreach (_mail_subscribers_headers($configuration['mail_subscribers_receipt'], $configuration['mail_subscribers_priority'], $configuration['mail_subscribers_from_mail'], $configuration['mail_subscribers_headers']) as $key => $value) {
+    $headers[] = $key . ': ' . $value;
+  }
+
+  $form['headers'] = array(
+    '#type' => 'item',
+    '#title' => t('Headers'),
+    '#markup' => '<div id="mail-subscribers-preview-headers" class="mail-subscribers-preview-value">' . implode('<br />', $headers) . '</div>',
+  );
+
+  $form['actions'] = array(
+    '#type' => 'container',
+    '#attributes' => array('class' => array('form-actions')),
+    '#weight' => 999,
+  );
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Send'),
+    '#submit' => array('mail_subscribers_form_submit'),
+    '#suffix' => l(t('Cancel'), '<front>', array()),
+  );
+
+  return $form;
+}
+
+/**
+ * Submit handler for all steps of the Mail Subscribers multistep form.
+ */
+function mail_subscribers_form_submit($form, &$form_state) {
+
+  switch ($form_state['step']) {
+    case 'mail_subscribers_select_form':
+      $display = $form['display']['#value'];
+      foreach ($form_state['values'] as $key => $value) {
+        $key = ($key == 'format') ? 'mail_subscribers_message_format' : $key;
+        if (substr($key, 0, 11) == 'mail_subscribers_') {
+          if ($form_state['values']['mail_subscribers_remember']) {
+            variable_set($key . '_' . $display, $value);
+          }
+          else {
+            variable_del($key . '_' . $display);
+          }
+        }
+      }
+      $form_state['configuration'] = $form_state['values'];
+
+      $form_state['step'] = 'mail_subscribers_confirm_form';
+      $form_state['rebuild'] = TRUE;
+      break;
+
+    case 'mail_subscribers_confirm_form':
+      // Queue the email for sending.
+      mail_subscribers_queue_mail($form_state['configuration'], $form_state['values']);
+
+      $form_state['redirect'] = array('<front>', array());
+      break;
+  }
+}
+
+/**
+ * Assembles the email and queues it for sending.
+ *
+ * @param $params
+ *   Data entered in the "config" step of the form.
+ * @param $selected_rows
+ *   An array with the indexes of the selected views rows.
+ * @param $values
+ *   The form values.
+ */
+function mail_subscribers_queue_mail($params, $values) {
+  global $user;
+  $plain_format = TRUE;
+  $operations = array();
+
+  if (!user_access('mass mailing with mail_subscribers')) {
+    drupal_set_message(
+      t('No mails sent since you aren\'t allowed to send mass mail. (<a href="@permurl">Edit the permission.</a>)',
+        array('@permurl' => url('admin/people/permissions', array('fragment' => 'module-mail_subscribers')))),
+      'error'
+    );
+    return;
+  }
+
+  $formats = filter_formats();
+
+  // From: parts.
+  $from_mail = trim($params['mail_subscribers_from_mail']);
+  $from_name = $params['mail_subscribers_from_name'];
+
+  $plan = $values['plan'];
+  $recipients = mail_subscribers_get_recipients($plan);
+
+  foreach ($recipients as $recipient) {
+
+    $subject = $params['mail_subscribers_subject'];
+    $body = $params['mail_subscribers_message']['value'];
+    $params['format'] = $params['mail_subscribers_message']['format'];
+
+    // This shouldn't happen, but better be 100% sure.
+    if (!filter_access($formats[$params['format']])) {
+      drupal_set_message(t('No mails sent since an illegal format is selected for the message.'));
+      return;
+    }
+
+    $body = check_markup($body, $params['format']);
+
+    if (variable_get('mimemail_format', 'plain_text') == 'plain_text') {
+      $body = drupal_html_to_text($body);
+    }
+
+    if ($params['format'] == 'plain_text') {
+      $plain_format = TRUE;
+    }
+    else {
+      $plain_format = FALSE;
+    }
+
+    // We transform receipt, priority in headers,
+    // merging them to the user defined headers.
+    $headers = _mail_subscribers_headers($params['mail_subscribers_receipt'], $params['mail_subscribers_priority'], $from_mail, $params['mail_subscribers_headers']);
+
+    $attachments = isset($params['mail_subscribers_attachments']) ? $params['mail_subscribers_attachments'] : array();
+
+    $message = array(
+      'uid' => $user->uid,
+      'timestamp' => time(),
+      'from_name' => trim($from_name),
+      'from_mail' => trim($from_mail),
+      'to_mail' => trim($recipient),
+      'subject' => strip_tags($subject),
+      'body' => $body,
+      'headers' => $headers,
+    );
+
+    // Enable other modules to alter the actual message before queueing it
+    // by providing the hook 'mail_subscribers_mail_alter'.
+    drupal_alter('mail_subscribers_mail', $message);
+
+    if ($params['mail_subscribers_direct']) {
+      $operations[] = array('mail_subscribers_batch_deliver', array($message, $plain_format, $attachments));
+    }
+    else {
+      _mail_subscribers_prepare_mail($message, $plain_format, $attachments);
+      // Queue the message to the spool table.
+      db_insert('mail_subscribers_spool')->fields($message)->execute();
+      if (module_exists('rules')) {
+        rules_invoke_event('mail_subscribers_email_added_to_spool', $message);
+      }
+    }
+
+    // Enabled other modules to act just after a message is queued
+    // by providing the hook 'mail_subscribers_mail_queued'.
+    module_invoke_all('mail_subscribers_mail_queued', $message, $plan, $recipient);
+  }
+
+  if ($params['mail_subscribers_direct']) {
+    if ($params['mail_subscribers_carbon_copy']) {
+      $message['to_mail'] = $from_mail;
+      $operations[] = array('mail_subscribers_batch_deliver', array($message, $plain_format));
+    }
+
+    $batch = array(
+      'operations' => $operations,
+      'finished' => 'mail_subscribers_batch_deliver_finished',
+      'progress_message' => t('Sent @current of @total messages.'),
+    );
+    batch_set($batch);
+    drupal_set_message(
+      format_plural(count($recipients), '1 message processed.', '@count messages processed.')
+    );
+  }
+  else {
+    if ($params['mail_subscribers_carbon_copy']) {
+      $message['to_name'] = $from_name;
+      $message['to_mail'] = $from_mail;
+      db_insert('mail_subscribers_spool')->fields($message)->execute();
+    }
+
+    drupal_set_message(
+      format_plural(count($recipients), '1 message added to the spool.', '@count messages added to the spool.')
+    );
+    if (module_exists('rules')) {
+      rules_invoke_event('mail_subscribers_all_email_added_to_spool', count($recipients));
+    }
+  }
+
+}
+
+// === Helper functions ========================================================
+
+/**
+ * Build header array with priority and receipt confirmation settings.
+ *
+ * @param $receipt
+ *   Boolean: If a receipt is requested.
+ * @param $priority
+ *   Integer: The message priority.
+ * @param $from
+ *   String: The sender's e-mail address.
+ *
+ * @return Header array with priority and receipt confirmation info
+ */
+function _mail_subscribers_headers($receipt, $priority, $from, $additional_headers) {
+  $headers = array();
+
+  // If receipt is requested, add headers.
+  if ($receipt) {
+    $headers['Disposition-Notification-To'] = $from;
+    $headers['X-Confirm-Reading-To'] = $from;
+  }
+
+  // Add priority if set.
+  switch ($priority) {
+    case VIEWS_SEND_PRIORITY_HIGHEST:
+      $headers['Priority'] = 'High';
+      $headers['X-Priority'] = '1';
+      $headers['X-MSMail-Priority'] = 'Highest';
+      break;
+    case VIEWS_SEND_PRIORITY_HIGH:
+      $headers['Priority'] = 'urgent';
+      $headers['X-Priority'] = '2';
+      $headers['X-MSMail-Priority'] = 'High';
+      break;
+    case VIEWS_SEND_PRIORITY_NORMAL:
+      $headers['Priority'] = 'normal';
+      $headers['X-Priority'] = '3';
+      $headers['X-MSMail-Priority'] = 'Normal';
+      break;
+    case VIEWS_SEND_PRIORITY_LOW:
+      $headers['Priority'] = 'non-urgent';
+      $headers['X-Priority'] = '4';
+      $headers['X-MSMail-Priority'] = 'Low';
+      break;
+    case VIEWS_SEND_PRIORITY_LOWEST:
+      $headers['Priority'] = 'non-urgent';
+      $headers['X-Priority'] = '5';
+      $headers['X-MSMail-Priority'] = 'Lowest';
+      break;
+  }
+
+  // Add general headers.
+  $headers['Precedence'] = 'bulk';
+
+  // Add additional headers.
+  $additional_headers = trim($additional_headers);
+  $additional_headers = str_replace("\r", "\n", $additional_headers);
+  $additional_headers = explode("\n", $additional_headers);
+  foreach ($additional_headers as $header) {
+    $header = trim($header);
+    if (!empty($header)) {
+      list($key, $value) = explode(': ', $header, 2);
+      $headers[$key] = trim($value);
+    }
+  }
+
+  return $headers;
+}
+
+/**
+ * Build a formatted e-mail address.
+ */
+function _mail_subscribers_format_address($mail, $name, $encode = TRUE) {
+  // Do not format address on Windows based PHP systems or when $name is empty.
+  if ((substr(PHP_OS, 0, 3) == 'WIN') || empty($name)) {
+    return $mail;
+  }
+  else {
+    $name = ($encode ? _mail_subscribers_mime_header_encode($name) : $name);
+    return sprintf('"%s" <%s>', $name, $mail);
+  }
+}
+
+/**
+ * Returns a mime-encoded string for strings that contain UTF-8.
+ *
+ * Simplified and correct version of mime_header_decode.
+ */
+function _mail_subscribers_mime_header_encode($string) {
+  if (preg_match('/[^\x20-\x7E]/', $string)) {
+    $string = '=?UTF-8?B?' . base64_encode($string) . '?=';
+  }
+  return $string;
+}
+
+/**
+ * Prepare the mail message before sending or spooling.
+ *
+ * @param array $message
+ *   which contains the following keys:
+ *   from_name
+ *     String holding the Sender's name.
+ *   from_mail
+ *     String holding the Sender's e-mail.
+ *   to_name
+ *     String holding the Recipient's name.
+ *   to_mail
+ *     String holding the Recipient's e-mail.
+ *   subject
+ *     String with the e-mail subject. This argument can be altered here.
+ *   body
+ *     Text with the e-mail body. This argument can be altered here.
+ *   headers
+ *     Associative array with e-mail headers. This argument can be altered here.
+ * @param boolean $plain_format
+ *   Whether the e-mail should be sent in plain format.
+ * @param array $attachments
+ *   An array with file information objects (as returned by file_save_upload).
+ */
+function _mail_subscribers_prepare_mail(&$message, $plain_format = TRUE, $attachments = array()) {
+  // Extract all variables/keys from the message.
+  extract($message);
+
+  /**
+   * TODO: In the future, this module will be able to send an existing node.
+   * $key will have to make the difference. A value when we pickup a node, other
+   * when user inputs the subject & body of the message.
+   */
+  $key = 'direct';
+
+  // Build message parameters.
+  $params = array();
+
+  $params['from_name'] = $from_name;
+  $params['from_mail'] = $from_mail;
+  $params['from_formatted'] = _mail_subscribers_format_address($from_mail, $from_name);
+
+  $params['to_mail'] = $to_mail;
+  $params['subject'] = $subject;
+  $params['body'] = $body;
+  $params['headers'] = $headers;
+
+  // Call Drupal standard mail function, but without sending.
+  $mail = drupal_mail('mail_subscribers', $key, $params['to_formatted'], language_default(), $params, $params['from_formatted'], FALSE);
+
+  // Updating message with data from generated mail
+  $message['to_mail'] = $mail['to'];
+  $message['from_mail'] = $mail['from'];
+  $message['subject'] = $mail['subject'];
+  $message['body'] = $mail['body'];
+  $message['headers'] = serialize($mail['headers']);
+}
+
+/**
+ * Sending a prepared message.
+ *
+ * @return
+ *   Boolean indicating if the message was sent successfully.
+ */
+function mail_subscribers_deliver($message) {
+  if (is_array($message)) {
+    $message = (object) $message;
+  }
+
+  $key = 'direct';
+  $headers = unserialize($message->headers);
+
+  $mail = array(
+    'bcc' => $message->to_mail,
+    'from' => $message->from_mail,
+    'subject' => $message->subject,
+    'body' => $message->body,
+    'headers' => $headers,
+  );
+
+  // Mime encode the subject before passing to the mail function
+  // to work around a bug in Drupal's mime_header_encode.
+  $mail['subject'] = _mail_subscribers_mime_header_encode($message->subject);
+
+  $system = drupal_mail_system('mail_subscribers', $key);
+  return $system->mail($mail);
+}
+
+/**
+ * Preparing and sending a message (coming from a batch job).
+ */
+function mail_subscribers_batch_deliver($message, $plain_format, $attachments, &$context) {
+  _mail_subscribers_prepare_mail($message, $plain_format, $attachments);
+  $status = mail_subscribers_deliver($message);
+
+  if ($status) {
+    if (variable_get('mail_subscribers_debug', FALSE)) {
+      watchdog('mail_subscribers', 'Message sent to %mail.', array('%mail' => $message['to_mail']));
+    }
+    if (module_exists('rules')) {
+      rules_invoke_event('mail_subscribers_email_sent', $message);
+    }
+  }
+  else {
+    $context['results'][] = t('Failed sending message to %mail - spooling it.',
+      array('%mail' => $message['to_mail']));
+    // Queue the message to the spool table.
+    db_insert('mail_subscribers_spool')->fields($message)->execute();
+    if (module_exists('rules')) {
+      rules_invoke_event('mail_subscribers_email_added_to_spool', $message);
+    }
+  }
+}
+
+/**
+ * Displays status after sending messages as a batch job.
+ */
+function mail_subscribers_batch_deliver_finished($success, $results, $operations) {
+  if ($success) {
+    foreach ($results as $result) {
+      drupal_set_message($result);
+    }
+  }
+}
+
+/**
+ * Returns property info for Mail Subscribers Email Message
+ */
+function _mail_subscribers_email_message_property_info() {
+  $propertyinfo = array(
+    'uid' => array(
+      'type' => 'integer',
+      'label' => t('User ID'),
+    ),
+    'timestamp' => array(
+      'type' => 'integer',
+      'label' => t('Timestamp'),
+    ),
+    'from_name' => array(
+      'type' => 'text',
+      'label' => t('Sender\'s name'),
+    ),
+    'from_mail' => array(
+      'type' => 'text',
+      'label' => t('Sender\'s e-mail'),
+    ),
+    'to_name' => array(
+      'type' => 'text',
+      'label' => t('Recipient\'s name'),
+    ),
+    'to_mail' => array(
+      'type' => 'text',
+      'label' => t('Recipient\'s e-mail'),
+    ),
+    'subject' => array(
+      'type' => 'text',
+      'label' => t('E-mail subject'),
+    ),
+    'body' => array(
+      'type' => 'text',
+      'label' => t('E-mail body'),
+    ),
+    'headers' => array(
+      'type' => 'text',
+      'label' => t('E-mail headers (serialized)'),
+    ),
+  );
+  return $propertyinfo;
+}
+
+
+function mail_subscribers_get_recipients($plan) {
+  $orgs = array();
+  // get subscribed apps
+  if (isset($plan)) {
+    $parts = explode(':', $plan);
+    $product = $parts[0];
+    $version = $parts[1];
+    $planname = $parts[2];
+
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'application');
+    $results = $query->execute();
+    if (isset($results['node'])) {
+      $nids = array_keys($results['node']);
+      $nodes = node_load_multiple($nids);
+      if (isset($nodes)) {
+        foreach ($nodes as $node) {
+          $subs = unserialize($node->application_subscriptions[0]['value']);
+          if (is_array($subs)) {
+            foreach ($subs as $sub) {
+              if (isset($sub['product']) && $sub['product'] == $product . ':' . $version && isset($sub['plan']) && $sub['plan'] == $planname) {
+                $orgs[] = $node->application_orgid[0]['value'];
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  $recipients = array();
+  // get users in those orgs
+  if (isset($orgs) && is_array($orgs)) {
+    foreach ($orgs as $org) {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'devorg')
+        ->fieldCondition('devorg_id', 'value', $org);
+      $results = $query->execute();
+      if (isset($results['node'])) {
+        $nids = array_keys($results['node']);
+        $nodes = node_load_multiple($nids);
+        if (isset($nodes) && is_array($nodes)) {
+          foreach ($nodes as $node) {
+            if (isset($node->devorg_members[0]['value'])) {
+              $members = unserialize($node->devorg_members[0]['value']);
+              foreach ($members as $member) {
+                if (isset($member['email'])) {
+                  $recipients[] = $member['email'];
+                }
+              }
+            }
+            $recipients[] = $node->devorg_owner[0]['value'];
+          }
+        }
+      }
+    }
+  }
+  return $recipients;
+}

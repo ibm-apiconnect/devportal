@@ -1,0 +1,68 @@
+.mail-subscribers-select-all-markup {
+  display: none;
+}
+
+/* "Select all" for table styles. */
+.mail-subscribers-selection-form thead .form-type-checkbox {
+  margin: 0;
+}
+
+.mail-subscribers-table-select-all {
+  display: none;
+}
+
+.views-table-row-select-all {
+  display: none;
+}
+
+.views-table-row-select-all td {
+  text-align: center;
+}
+
+.mail-subscribers-table-select-this-page {
+  margin: 0 !important;
+  padding: 2px 5px !important;
+}
+
+/* Generic "select all" */
+.mail-subscribers-fieldset-select-all {
+  text-align: center;
+  width: 210px;
+  padding: 0.6em 0;
+}
+
+.mail-subscribers-fieldset-select-all .form-item {
+  margin-bottom: 0;
+}
+
+.mail-subscribers-fieldset-select-all div {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+form.mail-subscribers-preview label {
+  float: left;
+  clear: both;
+  padding: 2px;
+}
+
+form.mail-subscribers-preview .mail-subscribers-preview-value {
+  margin-left: 100px;
+  overflow: auto;
+  border: 1px solid #bbbbbb;
+  padding: 2px;
+}
+
+#mail-subscribers-preview-to {
+  height: 50px;
+}
+
+#mail-subscribers-preview-message {
+  height: 150px;
+  white-space: pre;
+}
+
+#mail-subscribers-preview-headers, #mail-subscribers-preview-attachments {
+  height: 80px;
+  font-family: monospace;
+}

@@ -1,0 +1,71 @@
+<?php
+
+/**
+ * @file
+ * Installation file for taxonomy_block.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function apic_taxonomy_menu_block_uninstall() {
+  // Delete menu block variables.
+  foreach (variable_get('apic_taxonomy_menu_block_ids', array()) as $delta) {
+    variable_del("apic_taxonomy_menu_block_{$delta}");
+  }
+  variable_del('apic_taxonomy_menu_block_ids');
+
+  // Remove block configurations.
+  db_delete('block')
+    ->condition('module', 'apic_taxonomy_menu_block')
+    ->execute();
+  db_delete('block_role')
+    ->condition('module', 'apic_taxonomy_menu_block')
+    ->execute();
+  cache_clear_all();
+}
+
+/**
+ * Make old blocks compatible with newly added configuration options.
+ */
+function apic_taxonomy_menu_block_update_7100() {
+  module_load_include('inc', 'apic_taxonomy_menu_block', 'apic_taxonomy_menu_block.admin');
+
+  // Cache clear
+  cache_clear_all('apic_taxonomy_menu_block', 'cache', TRUE);
+
+  // Loop over all existing blocks and re-save them with the newly added options.
+  foreach (variable_get('apic_taxonomy_menu_block_ids', array()) as $delta) {
+    $config = apic_taxonomy_menu_block_get_config($delta);
+
+    if (!isset($config['nodes'])) {
+      $config['nodes'] = 0;
+    }
+    if (!isset($config['nodes_aggregation'])) {
+      $config['nodes_aggregation'] = 0;
+    }
+    if (!isset($config['hide_empty'])) {
+      $config['hide_empty'] = 0;
+    }
+
+    apic_taxonomy_menu_block_save_block($delta, $config);
+  }
+}
+
+/**
+ * Make old blocks compatible with new node options.
+ */
+function apic_taxonomy_menu_block_update_7101() {
+  module_load_include('inc', 'apic_taxonomy_menu_block', 'apic_taxonomy_menu_block.admin');
+
+  // Loop over all existing blocks and re-save them with the newly added options.
+  foreach (variable_get('apic_taxonomy_menu_block_ids', array()) as $delta) {
+    $config = apic_taxonomy_menu_block_get_config($delta);
+
+    if (!isset($config['ctype'])) {
+      $config['ctype'] = array();
+    }
+
+    apic_taxonomy_menu_block_save_block($delta, $config);
+  }
+}

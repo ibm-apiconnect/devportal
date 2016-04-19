@@ -1,0 +1,725 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the product module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function product_install() {
+  // Ensure the product node type is available.
+  node_types_rebuild();
+  _product_add_custom_fields();
+  // disable comment preview for products as preview submission doesn't work due to our content being within
+  // the comment form
+  variable_set('comment_preview_product', "0");
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function product_uninstall() {
+  _product_delete_node_content('product');
+  _product_delete_custom_fields();
+  node_type_delete('product');
+  field_purge_batch(500);
+}
+
+/**
+ * Custom fields for product content type.
+ *
+ * @return array
+ */
+function _product_installed_fields() {
+  $t = get_t();
+  return array(
+    'product_apimhostname' => array(
+      'field_name' => 'product_apimhostname',
+      'label' => t('APIC Hostname'),
+      'type' => 'text'
+    ),
+    'product_providerid' => array(
+      'field_name' => 'product_providerid',
+      'label' => t('Provider ID'),
+      'type' => 'text'
+    ),
+    'product_environmentid' => array(
+      'field_name' => 'product_environmentid',
+      'label' => t('Environment ID'),
+      'type' => 'text'
+    ),
+    'product_id' => array(
+      'field_name' => 'product_id',
+      'label' => t('ID'),
+      'type' => 'text'
+    ),
+    'product_ref' => array(
+      'field_name' => 'product_ref',
+      'label' => t('Reference'),
+      'type' => 'text_long'
+    ),
+    'product_name' => array(
+      'field_name' => 'product_name',
+      'label' => t('Name'),
+      'type' => 'text_long'
+    ),
+    'product_version' => array(
+      'field_name' => 'product_version',
+      'label' => t('Version'),
+      'type' => 'text'
+    ),
+    'product_image' => array(
+      'field_name' => 'product_image',
+      'label' => t('Image'),
+      'type' => 'image',
+      'module' => 'image'
+    ),
+    'product_description' => array(
+      'field_name' => 'product_description',
+      'label' => t('Description'),
+      'type' => 'text_long'
+    ),
+    'product_contact_name' => array(
+      'field_name' => 'product_contact_name',
+      'label' => t('Contact Name'),
+      'type' => 'text_long'
+    ),
+    'product_contact_email' => array(
+      'field_name' => 'product_contact_email',
+      'label' => t('Contact Email'),
+      'type' => 'text_long'
+    ),
+    'product_contact_url' => array(
+      'field_name' => 'product_contact_url',
+      'label' => t('Contact URL'),
+      'type' => 'text_long'
+    ),
+    'product_license_name' => array(
+      'field_name' => 'product_license_name',
+      'label' => t('License Name'),
+      'type' => 'text_long'
+    ),
+    'product_license_url' => array(
+      'field_name' => 'product_license_url',
+      'label' => t('License URL'),
+      'type' => 'text_long'
+    ),
+    'product_terms_of_service' => array(
+      'field_name' => 'product_terms_of_service',
+      'label' => t('Terms of Service'),
+      'type' => 'text_long'
+    ),
+    'product_visibility' => array(
+      'field_name' => 'product_visibility',
+      'label' => t('Visibility'),
+      'type' => 'text_long'
+    ),
+    'product_view_enabled' => array(
+      'field_name' => 'product_view_enabled',
+      'label' => t('View enabled'),
+      'type' => 'list_boolean',
+      'cardinality' => 1,
+      'settings' => array(
+        'allowed_values' => array(0 => 'Off', 1 => 'On')
+      )
+    ),
+    'product_subscribe_enabled' => array(
+      'field_name' => 'product_subscribe_enabled',
+      'label' => t('Subscribe enabled'),
+      'type' => 'list_boolean',
+      'cardinality' => 1,
+      'settings' => array(
+        'allowed_values' => array(0 => 'Off', 1 => 'On')
+      )
+    ),
+    'product_visibility_public' => array(
+      'field_name' => 'product_visibility_public',
+      'label' => t('Public visibility'),
+      'type' => 'list_boolean',
+      'cardinality' => 1,
+      'settings' => array(
+        'allowed_values' => array(0 => 'Off', 1 => 'On')
+      )
+    ),
+    'product_visibility_authenticated' => array(
+      'field_name' => 'product_visibility_authenticated',
+      'label' => t('Authenticated visibility'),
+      'type' => 'list_boolean',
+      'cardinality' => 1,
+      'settings' => array(
+        'allowed_values' => array(0 => 'Off', 1 => 'On')
+      )
+    ),
+    'product_visibility_custom_orgs' => array(
+      'field_name' => 'product_visibility_custom_orgs',
+      'label' => t('Custom visibility orgs'),
+      'type' => 'text_long',
+      'cardinality' => -1,
+    ),
+    'product_visibility_custom_tags' => array(
+      'field_name' => 'product_visibility_custom_tags',
+      'label' => t('Custom visibility tags'),
+      'type' => 'text_long',
+      'cardinality' => -1,
+    ),
+    'product_apis' => array(
+      'field_name' => 'product_apis',
+      'label' => t('APIs'),
+      'type' => 'text_long'
+    ),
+    'product_plans' => array(
+      'field_name' => 'product_plans',
+      'label' => t('Plans'),
+      'type' => 'text_long'
+    ),
+    'product_state' => array(
+      'field_name' => 'product_state',
+      'label' => t('State'),
+      'type' => 'text'
+    ),
+    'product_url' => array(
+      'field_name' => 'product_url',
+      'label' => t('URL'),
+      'type' => 'text'
+    ),
+    'product_data' => array(
+      'field_name' => 'product_data',
+      'label' => t('Data'),
+      'type' => 'text_long'
+    ),
+    'product_attachments' => array(
+      'field_name' => 'product_attachments',
+      'label' => t('Documentation'),
+      'type' => 'file',
+      'module' => 'file',
+      'cardinality' => 10,
+      'settings' => array('display_field' => 1, 'display_default' => 1)
+    )
+  );
+}
+
+/**
+ * @return array
+ */
+function _product_installed_instances() {
+  $t = get_t();
+  return array(
+    'product_apimhostname' => array(
+      'field_name' => 'product_apimhostname',
+      'type' => 'text',
+      'label' => t('APIC Hostname'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('APIC Hostname'), 'type' => 'text'),
+        'teaser' => array('label' => t('APIC Hostname'), 'type' => 'text')
+      )
+    ),
+    'product_providerid' => array(
+      'field_name' => 'product_providerid',
+      'type' => 'text',
+      'label' => t('Provider ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Provider ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('Provider ID'), 'type' => 'text')
+      )
+    ),
+    'product_environmentid' => array(
+      'field_name' => 'product_environmentid',
+      'type' => 'text',
+      'label' => t('Environment ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Environment ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('Environment ID'), 'type' => 'text')
+      )
+    ),
+    'product_id' => array(
+      'field_name' => 'product_id',
+      'type' => 'text',
+      'label' => t('ID'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('ID'), 'type' => 'text'),
+        'teaser' => array('label' => t('ID'), 'type' => 'text')
+      )
+    ),
+    'product_ref' => array(
+      'field_name' => 'product_ref',
+      'type' => 'text_long',
+      'label' => t('Reference'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('Reference'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('Reference'), 'type' => 'text_long')
+      )
+    ),
+    'product_name' => array(
+      'field_name' => 'product_name',
+      'type' => 'text_long',
+      'label' => t('Name'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('Name'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('Name'), 'type' => 'text_long')
+      )
+    ),
+    'product_version' => array(
+      'field_name' => 'product_version',
+      'type' => 'text',
+      'label' => t('Version'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array('label' => t('Version'), 'type' => 'text'),
+        'teaser' => array('label' => t('Version'), 'type' => 'text')
+      )
+    ),
+    'product_image' => array(
+      'field_name' => 'product_image',
+      'type' => 'image',
+      'label' => t('Image'),
+      'required' => 0,
+      'description' => t('Logo or image for this Product'),
+      'widget' => array(
+        'type' => 'image_image',
+        'module' => 'image',
+        'active' => 1,
+        'settings' => array(
+          'progress_indicator' => 'throbber',
+          'preview_image_style' => 'thumbnail'
+        )
+      ),
+      'settings' => array(
+        'file_directory' => 'api',
+        'file_extensions' => 'png gif jpg jpeg',
+        'max_filesize' => '2 MB',
+        'max_resolution' => '640x480',
+        'min_resolution' => '',
+        'alt_field' => 1,
+        'title_field' => 1,
+        'default_image' => 0
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'image',
+          'module' => 'image'
+        ),
+        'teaser' => array(
+          'label' => 'hidden',
+          'type' => 'image',
+          'module' => 'image'
+        )
+      )
+    ),
+    'product_description' => array(
+      'field_name' => 'product_description',
+      'type' => 'text_long',
+      'label' => t('Description'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('Description'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('Description'), 'type' => 'text_long')
+      )
+    ),
+    'product_contact_name' => array(
+      'field_name' => 'product_contact_name',
+      'type' => 'text_long',
+      'label' => t('Contact Name'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('Contact Name'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('Contact Name'), 'type' => 'text_long')
+      )
+    ),
+    'product_contact_email' => array(
+      'field_name' => 'product_contact_email',
+      'type' => 'text_long',
+      'label' => t('Contact Email'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('Contact Email'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('Contact Email'), 'type' => 'text_long')
+      )
+    ),
+    'product_contact_url' => array(
+      'field_name' => 'product_contact_url',
+      'type' => 'text_long',
+      'label' => t('Contact URL'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('Contact URL'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('Contact URL'), 'type' => 'text_long')
+      )
+    ),
+    'product_license_name' => array(
+      'field_name' => 'product_license_name',
+      'type' => 'text_long',
+      'label' => t('License Name'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('License Name'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('License Name'), 'type' => 'text_long')
+      )
+    ),
+    'product_license_url' => array(
+      'field_name' => 'product_license_url',
+      'type' => 'text_long',
+      'label' => t('License URL'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array('label' => t('License URL'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('License URL'), 'type' => 'text_long')
+      )
+    ),
+    'product_terms_of_service' => array(
+      'field_name' => 'product_terms_of_service',
+      'type' => 'text_long',
+      'label' => t('Terms of Service'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array(
+          'label' => t('Terms of Service'),
+          'type' => 'text_long'
+        ),
+        'teaser' => array(
+          'label' => t('Terms of Service'),
+          'type' => 'text_long'
+        )
+      )
+    ),
+    'product_visibility' => array(
+      'field_name' => 'product_visibility',
+      'type' => 'text',
+      'label' => t('Visibility'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array(
+          'label' => t('Visibility'),
+          'type' => 'text_long'
+        ),
+        'teaser' => array(
+          'label' => t('Visibility'),
+          'type' => 'text_long'
+        )
+      )
+    ),
+    'product_view_enabled' => array(
+      'field_name' => 'product_view_enabled',
+      'label' => t('View enabled'),
+      'widget' => array(
+        'type' => 'options_onoff',
+        'settings' => array('display_label' => 1),
+        'weight' => 8,
+      ),
+      'settings' => array(
+        'user_register_form' => 1,
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => t('View enabled'),
+          'module' => 'list',
+          'type' => 'list_default'
+        ),
+        'teaser' => array(
+          'label' => t('View enabled'),
+          'module' => 'list',
+          'type' => 'list_default'
+        )
+      )
+    ),
+    'product_subscribe_enabled' => array(
+      'field_name' => 'product_subscribe_enabled',
+      'label' => t('Subscribe enabled'),
+      'widget' => array(
+        'type' => 'options_onoff',
+        'settings' => array('display_label' => 1),
+        'weight' => 8,
+      ),
+      'settings' => array(
+        'user_register_form' => 1,
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => t('Subscribe enabled'),
+          'module' => 'list',
+          'type' => 'list_default'
+        ),
+        'teaser' => array(
+          'label' => t('Subscribe enabled'),
+          'module' => 'list',
+          'type' => 'list_default'
+        )
+      )
+    ),
+    'product_visibility_public' => array(
+      'field_name' => 'product_visibility_public',
+      'label' => t('Public visibility'),
+      'widget' => array(
+        'type' => 'options_onoff',
+        'settings' => array('display_label' => 1),
+        'weight' => 8,
+      ),
+      'settings' => array(
+        'user_register_form' => 1,
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => t('Public visibility'),
+          'module' => 'list',
+          'type' => 'list_default'
+        ),
+        'teaser' => array(
+          'label' => t('Public visibility'),
+          'module' => 'list',
+          'type' => 'list_default'
+        )
+      )
+    ),
+    'product_visibility_authenticated' => array(
+      'field_name' => 'product_visibility_authenticated',
+      'label' => t('Authenticated visibility'),
+      'widget' => array(
+        'type' => 'options_onoff',
+        'settings' => array('display_label' => 1),
+        'weight' => 8,
+      ),
+      'settings' => array(
+        'user_register_form' => 1,
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => t('Authenticated visibility'),
+          'module' => 'list',
+          'type' => 'list_default'
+        ),
+        'teaser' => array(
+          'label' => t('Authenticated visibility'),
+          'module' => 'list',
+          'type' => 'list_default'
+        )
+      )
+    ),
+    'product_visibility_custom_orgs' => array(
+      'field_name' => 'product_visibility_custom_orgs',
+      'type' => 'text_long',
+      'label' => t('Custom visibility orgs'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array(
+          'label' => t('Custom visibility orgs'),
+          'type' => 'text_long'
+        ),
+        'teaser' => array(
+          'label' => t('Custom visibility orgs'),
+          'type' => 'text_long'
+        )
+      )
+    ),
+    'product_visibility_custom_tags' => array(
+      'field_name' => 'product_visibility_custom_tags',
+      'type' => 'text_long',
+      'label' => t('Custom visibility tags'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array(
+          'label' => t('Custom visibility tags'),
+          'type' => 'text_long'
+        ),
+        'teaser' => array(
+          'label' => t('Custom visibility tags'),
+          'type' => 'text_long'
+        )
+      )
+    ),
+    'product_apis' => array(
+      'field_name' => 'product_apis',
+      'type' => 'text_long',
+      'label' => t('APIs'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array(
+          'label' => t('APIs'),
+          'type' => 'text_long'
+        ),
+        'teaser' => array(
+          'label' => t('APIs'),
+          'type' => 'text_long'
+        )
+      )
+    ),
+    'product_plans' => array(
+      'field_name' => 'product_plans',
+      'type' => 'text_long',
+      'label' => t('Plans'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array(
+          'label' => t('Plans'),
+          'type' => 'text_long'
+        ),
+        'teaser' => array(
+          'label' => t('Plans'),
+          'type' => 'text_long'
+        )
+      )
+    ),
+    'product_state' => array(
+      'field_name' => 'product_state',
+      'type' => 'text',
+      'label' => t('State'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array(
+          'label' => t('State'),
+          'type' => 'text'
+        ),
+        'teaser' => array(
+          'label' => t('State'),
+          'type' => 'text'
+        )
+      )
+    ),
+    'product_url' => array(
+      'field_name' => 'product_url',
+      'type' => 'text',
+      'label' => t('URL'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array(
+          'label' => t('URL'),
+          'type' => 'text'
+        ),
+        'teaser' => array(
+          'label' => t('URL'),
+          'type' => 'text'
+        )
+      )
+    ),
+    'product_data' => array(
+      'field_name' => 'product_data',
+      'type' => 'text_long',
+      'label' => t('Data'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array(
+          'label' => t('Data'),
+          'type' => 'text_long'
+        ),
+        'teaser' => array(
+          'label' => t('Data'),
+          'type' => 'text_long'
+        )
+      )
+    ),
+    'product_attachments' => array(
+      'field_name' => 'product_attachments',
+      'type' => 'file',
+      'label' => t('Documentation'),
+      'description' => t('Documentation file attachments for this Product'),
+      'required' => 0,
+      'widget' => array(
+        'type' => 'file_generic',
+        'module' => 'file',
+        'active' => 1,
+        'settings' => array(
+          'progress_indicator' => 'throbber',
+          'label_help_description' => ''
+        )
+      ),
+      'settings' => array(
+        'file_directory' => '',
+        'file_extensions' => 'txt doc pdf xls ppt pptx docx xslx rtf odt ods odp md json yaml tgz tar zip',
+        'max_filesize' => '10 MB',
+        'description_field' => 1,
+        'user_register_form' => FALSE
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'file_table',
+          'module' => 'file'
+        )
+      )
+    )
+  );
+}
+
+function _product_add_custom_fields() {
+  // product
+  foreach (_product_installed_fields() as $field) {
+    $existingfield = field_info_field($field['field_name']);
+    if (!isset($existingfield)) {
+      field_create_field($field);
+    }
+  }
+  foreach (_product_installed_instances() as $fieldinstance) {
+    $fieldinstance['entity_type'] = 'node';
+    $fieldinstance['bundle'] = 'product';
+    field_create_instance($fieldinstance);
+  }
+}
+
+function _product_delete_custom_fields() {
+  // product
+  foreach (array_keys(_product_installed_fields()) as $field) {
+    field_delete_field($field);
+  }
+  $instances = field_info_instances('node', 'product');
+  foreach ($instances as $instance_name => $fieldinstance) {
+    field_delete_instance($fieldinstance);
+  }
+}
+
+/**
+ * delete all nodes of specified type
+ *
+ * @param $type
+ */
+function _product_delete_node_content($type) {
+  $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
+  $result = db_query($sql, array(':type' => $type));
+  try {
+    node_delete_multiple($result);
+  } catch (Exception $e) {
+    // quietly swallow exceptions from dropping the nodes.
+  }
+}
+
+/**
+ * Update code to handle upgrade from earlier version
+ */
+function product_update_7400() {
+  $fields = field_info_field_map();
+  foreach (_product_installed_fields() as $field) {
+    if (!array_key_exists($field['field_name'], $fields)) {
+      field_create_field($field);
+      watchdog('product', 'Field %field_name has been successfully added', array(
+        '%field_name' => $field['field_name']
+      ));
+    }
+    else {
+      watchdog('product', 'Field %field_name already exists', array(
+        '%field_name' => $field['field_name']
+      ));
+    }
+  }
+
+  foreach (_product_installed_instances() as $fieldinstance) {
+    if (!array_key_exists($fieldinstance['field_name'], $fields)) {
+      $fieldinstance['entity_type'] = 'node';
+      $fieldinstance['bundle'] = 'product';
+      field_create_instance($fieldinstance);
+      watchdog('product', 'Instance %instance_name has been successfully added', array(
+        '%instance_name' => $fieldinstance['field_name']
+      ));
+    }
+    else {
+      watchdog('product', 'Instance %instance_name already exists', array(
+        '%instance_name' => $fieldinstance['field_name']
+      ));
+    }
+  }
+}

@@ -1,0 +1,108 @@
+<?php
+
+/**
+ * Inspired by the usertabs module: https://www.drupal.org/project/usertabs
+ */
+
+/**
+ * Implements hook_menu_alter().
+ *
+ * @param $callbacks
+ */
+function account_tabs_menu_alter(&$callbacks) {
+  $callbacks['user/%user/account'] = array(
+    'title' => 'Account',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+    'load arguments' => array('%map', '%index'),
+  );
+  //move the original edit and view items to below this container
+  _account_tabs_move_item($callbacks, 'user/%user/view', 'user/%user/account/view', MENU_DEFAULT_LOCAL_TASK);
+  _account_tabs_move_item($callbacks, 'user/%user/edit', 'user/%user/account/edit', MENU_LOCAL_TASK);
+  if (module_exists('tfa_basic')) {
+    _account_tabs_move_item($callbacks, 'user/%user/security/tfa', 'user/%user/account/security/tfa', MENU_LOCAL_TASK);
+  }
+  if (module_exists('session_limit')) {
+    _account_tabs_move_item($callbacks, 'user/%user/session-limit', 'user/%user/account/session-limit', MENU_LOCAL_TASK);
+  }
+  unset($callbacks['user/%user_category/edit/account']);
+  if (($categories = _user_categories()) && (count($categories) > 1)) {
+    foreach ($categories as $key => $category) {
+      // 'account' is already handled by the MENU_DEFAULT_LOCAL_TASK.
+      if ($category['name'] != 'account') {
+        _account_tabs_move_item($callbacks, 'user/%user_category/edit/' . $category['name'], 'user/%user/account/' . $category['name']);
+        $callbacks['user/%user/account/' . $category['name']]['tab_parent'] = 'user/%/account';
+      }
+    }
+  }
+}
+
+/**
+ * @param $callbacks
+ * @param $from
+ * @param $to
+ * @param null $type
+ */
+function _account_tabs_move_item(&$callbacks, $from, $to, $type = NULL) {
+  if (isset($callbacks[$from])) {
+    $callbacks[$to] = $callbacks[$from];
+    if ($type) {
+      $callbacks[$to]['type'] = $type;
+    }
+    unset($callbacks[$from]);
+  }
+}
+
+/**
+ * implements hook_url_outbound
+ *
+ * @param $path
+ * @param $options
+ * @param $original_path
+ */
+function account_tabs_url_outbound_alter(&$path, $options, $original_path) {
+  _account_tabs_update_user_edit_path($path);
+}
+
+/**
+ * implement hook_drupal_goto
+ *
+ * @param $path
+ * @param $options
+ * @param $response_code
+ */
+function account_tabs_drupal_goto_alter(&$path, $options, $response_code) {
+  _account_tabs_update_user_edit_path($path);
+}
+
+/**
+ * implements hook form_FORM_ID_alter
+ * change the user edit links on the user management form
+ *
+ * @param $link
+ */
+function account_tabs_preprocess_link(&$link) {
+  _account_tabs_update_user_edit_path($link['path']);
+}
+
+/**
+ * @param $path
+ */
+function _account_tabs_update_user_edit_path(&$path) {
+  if (substr($path, 0, 5) != 'user/') {
+    return;
+  }
+  $args = explode('/', $path);
+  if (!is_numeric($args[1])) {
+    return;
+  }
+  if (count($args) > 2 && $args[2] == 'edit') {
+    $path = str_replace('edit', 'account/edit', $path);
+  }
+  elseif (count($args) > 3 && $args[2] == 'security' && $args[3] == 'tfa' && module_exists('tfa_basic')) {
+    $path = str_replace('security/tfa', 'account/security/tfa', $path);
+  }
+  elseif (count($args) > 2 && $args[2] == 'session-limit' && module_exists('session_limit')) {
+    $path = str_replace('session-limit', 'account/session-limit', $path);
+  }
+}

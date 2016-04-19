@@ -1,0 +1,895 @@
+<?php
+
+/**
+ * @file
+ * Taxonomy Menu Block module allows you to make menu blocks out of your
+ * taxonomies in a very performant way.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function apic_taxonomy_menu_block_menu() {
+  // Add block form.
+  $items['admin/structure/block/add-taxonomy-menu-block'] = array(
+    'title' => 'Add taxonomy menu block',
+    'description' => 'Add a new taxonomy menu block.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('apic_taxonomy_menu_block_add_block_form'),
+    'access arguments' => array('administer blocks'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'apic_taxonomy_menu_block.admin.inc',
+  );
+
+  // Display "add taxonomy menu block" link on block overview page.
+  $default_theme = variable_get('theme_default', 'bartik');
+  foreach (list_themes() as $key => $theme) {
+    if ($key != $default_theme) {
+      $items['admin/structure/block/list/' . $key . '/add-taxonomy-menu-block'] = array(
+        'title' => 'Add taxonomy menu block',
+        'description' => 'Add a new taxonomy menu block.',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('apic_taxonomy_menu_block_add_block_form'),
+        'access arguments' => array('administer blocks'),
+        'type' => MENU_LOCAL_ACTION,
+        'file' => 'apic_taxonomy_menu_block.admin.inc',
+      );
+    }
+  }
+
+  // Delete block.
+  $items['admin/structure/block/delete-taxonomy-menu-block'] = array(
+    'title' => 'Delete taxonomy menu block',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('apic_taxonomy_menu_block_delete'),
+    'access arguments' => array('administer blocks'),
+    'type' => MENU_CALLBACK,
+    'file' => 'apic_taxonomy_menu_block.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function apic_taxonomy_menu_block_form_alter(&$form, &$form_state, $form_id) {
+  switch ($form_id) {
+    case 'apic_taxonomy_menu_block_add_block_form':
+      apic_taxonomy_menu_block_form_options($form, $form_state);
+      break;
+
+    case 'block_admin_configure':
+      if ($form['module']['#value'] == 'apic_taxonomy_menu_block') {
+        apic_taxonomy_menu_block_form_options($form, $form_state);
+        $form['#submit'][] = 'apic_taxonomy_menu_block_edit_block';
+        $form['#validate'][] = 'apic_taxonomy_menu_block_add_block_form_validate';
+      }
+      break;
+
+    case 'block_admin_display_form':
+      // Display a "delete" link next to each taxonomy menu block.
+      foreach (variable_get('apic_taxonomy_menu_block_ids', array()) as $delta) {
+        $form['blocks']['apic_taxonomy_menu_block_' . $delta]['delete'] = array(
+          '#type' => 'link',
+          '#title' => t('delete'),
+          '#href' => 'admin/structure/block/delete-taxonomy-menu-block/' . $delta
+        );
+      }
+      break;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function apic_taxonomy_menu_block_theme() {
+  return array(
+    'apic_taxonomy_menu_block' => array(
+      'variables' => array(
+        'items' => NULL,
+        'config' => NULL,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function apic_taxonomy_menu_block_block_info() {
+  $blocks = array();
+  $deltas = variable_get('apic_taxonomy_menu_block_ids', array());
+
+  foreach ($deltas as $delta) {
+    $name = apic_taxonomy_menu_block_get_name($delta);
+    $blocks[$delta]['info'] = $name;
+    $blocks[$delta]['cache'] = DRUPAL_CACHE_PER_PAGE;
+  }
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function apic_taxonomy_menu_block_block_view($delta = '') {
+  $config = apic_taxonomy_menu_block_get_config($delta);
+  $data = apic_taxonomy_menu_block_build($config);
+  return $data;
+}
+
+/**
+ * Function to build our tree.
+ *
+ * @param array $config
+ *   An array of configuration options that specifies how to build the
+ *   taxonomy tree
+ *   - admin_title: Administrative title to use on the block admin page
+ *   - vid: Taxonomy vocabulary id
+ *   - parent: What kind of tree we will build
+ *       0: Display the whole tree
+ *       1: Fixed parent: display only a branch of tree, parent is given
+ *       2: Dynamic tree: will look at currently viewed page, find an active tid
+ *          and display the children of that tid
+ *   - parent_fixed: The fixed parent tid in case parent is set to 1
+ *   - parent_dynamic: Determines at what depth we need to find the parent tid
+ *     in case parent is set to 2
+ *   - depth: Until what depth we need to render our tree.
+ *   - home_link: Whether to add a link to the frontpage at the beginning of the
+ *     menu or not.
+ *
+ * @return array
+ *   Array that contains one value: content, which is the fully rendered HTML
+ *   of our tree
+ */
+function apic_taxonomy_menu_block_build($config) {
+  // Initialize.
+  $tree = array();
+  $parent = NULL;
+  $data['content'] = '';
+  $data['subject'] = '';
+
+  // Get tree.
+  $taxonomy = apic_taxonomy_menu_block_get_taxonomy($config['vid']);
+  $tree = $taxonomy['tree'];
+
+  // Find active tid.
+  $tid = apic_taxonomy_menu_block_find_active_tid($tree, $config['vid']);
+
+  // Let other modules alter the active tid.
+  drupal_alter('apic_taxonomy_menu_block_active_tid', $tid, $config);
+
+  // If we have a dynamic parent and no active tid, bail out.
+  if ($config['parent'] == '2' && !$tid) {
+    return;
+  }
+
+  // Add the active trail.
+  $tree = apic_taxonomy_menu_block_add_active_trail($tree, $tid);
+
+  // Set parent for fixed parent blocks.
+  if ($config['parent'] == '1') {
+    $parent = $config['parent_fixed'];
+  }
+
+  // If we have a dynamic parent, find the parent tid.
+  if ($config['parent'] == '2') {
+    if ($config['parent_dynamic'] != '0') {
+      // Loop over tree and find the highest item in active trail, taking into
+      // account our specified depth.
+      foreach ($tree as $key => $term) {
+        if ($term['active_trail'] != '0' && $term['depth'] == ($config['parent_dynamic'] - 1)) {
+          $parent = $key;
+        }
+      }
+    }
+    else {
+      $parent = $tid;
+      // Store depth for later use.
+      $parent_depth = $tree[$parent]['depth'];
+    }
+
+    // Since we know we have an active tid, we should have a parent.
+    if (!$parent) {
+      return;
+    }
+  }
+
+  // Set title of block. Do it now when we still have the full tree, in case of
+  // a valid parent.
+  if ($parent) {
+    $data['subject'] = check_plain($tree[$parent]['name']);
+  }
+  else {
+    $data['subject'] = check_plain($taxonomy['name']);
+  }
+
+  // Trim tree to one branch.
+  if ($parent) {
+    // Loop over tree, store all items that have higher depth than parent.
+    // First item that has the same depth means new branch of tree.
+    $start = FALSE;
+    $branch = array();
+
+    foreach ($tree as $key => $term) {
+      // Stop storing once we hit a term with same depth as $parent.
+      if ($term['depth'] <= $tree[$parent]['depth']) {
+        $start = FALSE;
+      }
+      if ($start == TRUE) {
+        $branch[$key] = $term;
+      }
+      // Only start storing from when we hit $parent.
+      if ($key == $parent && $start != TRUE) {
+        $start = TRUE;
+      }
+    }
+
+    // An empty array means that we don't have any children for this branch.
+    if ($branch) {
+      $tree = $branch;
+    }
+    else {
+      return;
+    }
+  }
+
+  // If we have to add the number of nodes attached to each term.
+  if ($config['nodes']) {
+    $tree = apic_taxonomy_menu_block_nodes($tree, $config);
+  }
+
+  // If we have to remove the terms with no nodes attached.
+  if ($config['hide_empty']) {
+    $tree = apic_taxonomy_menu_block_hide_empty($tree, $config);
+  }
+
+  // Depth trim. Always do this last as to not lose the active trail.
+  if ($config['depth'] != '0') {
+    if ($config['parent'] == 2 && $config['parent_dynamic'] == 0) {
+      // Depth is relative to the parent term's depth.
+      $max_depth = $parent_depth + $config['depth'];
+    }
+    else {
+      // Depth is relative to the root. Substract one of our max depth
+      // because Drupal considers 0 to be the root level.
+      $max_depth = $config['depth'] - 1;
+    }
+
+    $temp_tree = array();
+    foreach ($tree as $tid => $term) {
+      if ($term['depth'] <= $max_depth) {
+        $temp_tree[$tid] = $term;
+      }
+    }
+
+    if ($temp_tree) {
+      $tree = $temp_tree;
+    }
+    else {
+      return;
+    }
+  }
+
+  // Last check. If we for some reason still don't have a built tree, bail.
+  if (empty($tree)) {
+    return;
+  }
+
+  // Add link to frontpage.
+  if ($config['home_link']) {
+    $home_link = array(
+      // Give it an impossible key so it doesn't get mistaken for a parent tid.
+      '-1' => array(
+        'name' => t('Home'),
+        'path' => '<front>',
+        'depth' => '0',
+        'parents' => array('0' => $parent ? $parent : '0'),
+        'active_trail' => drupal_is_front_page() ? '2' : '0',
+      ),
+    );
+
+    // Add to beginning of $tree array.
+    $tree = $home_link + $tree;
+  }
+
+  // Let other modules alter the taxonomy tree data after all the processing has
+  // been done.
+  drupal_alter('apic_taxonomy_menu_block', $tree, $config);
+
+  // Nest tree.
+  // If we have a parent, pass along parent.
+  if ($parent) {
+    $tree = apic_taxonomy_menu_block_nest_tree($tree, $parent);
+  }
+  else {
+    $tree = apic_taxonomy_menu_block_nest_tree($tree);
+  }
+
+  // Theme tree.
+  $data['content'] = array(
+    '#items' => $tree,
+    '#config' => $config,
+    '#theme' => 'apic_taxonomy_menu_block__' . $config['delta'],
+  );
+
+  return $data;
+}
+
+/**
+ * Returns the configuration for the requested block delta.
+ *
+ * @param string $delta
+ *   The delta that uniquely identifies the block in the block system. If
+ *   not specified, the default configuration will be returned.
+ *
+ * @return array
+ *   An associated array of configuration options.
+ */
+function apic_taxonomy_menu_block_get_config($delta = NULL) {
+  // Initialize.
+  $config = array(
+    'delta' => $delta,
+    'admin_title' => '',
+    'vid' => 1,
+    'parent' => 0,
+    'parent_fixed' => 0,
+    'parent_dynamic' => 1,
+    'depth' => 0,
+    'home_link' => 0,
+    'nodes' => 0,
+    'nodes_aggregation' => 0,
+    'hide_empty' => 0,
+    'ctype' => array(),
+  );
+
+  // Get the block configuration options.
+  if ($delta) {
+    $config = variable_get("apic_taxonomy_menu_block_{$delta}", array());
+  }
+
+  return $config;
+}
+
+/**
+ * Function to get block name.
+ */
+function apic_taxonomy_menu_block_get_name($delta) {
+  $name = t('Taxonomy Menu Block');
+  $config = apic_taxonomy_menu_block_get_config($delta);
+  if (!empty($config['admin_title'])) {
+    $name = $name . ' (' . $config['admin_title'] . ')';
+  }
+  return $name;
+}
+
+/**
+ * Get taxonomy tree & name, taking into account i18n.
+ */
+function apic_taxonomy_menu_block_get_taxonomy($vid) {
+  if (module_exists('i18n_taxonomy')) {
+    global $language;
+    $lang = $language->language;
+
+    // Get cache. Format of cache id: module_name-vid-language.
+    $cache = cache_get('apic_taxonomy_menu_block-' . $vid . '-' . $lang);
+
+    if ($cache) {
+      $taxonomy = $cache->data;
+    }
+    else {
+      $taxonomy = array();
+
+      $vocab = taxonomy_vocabulary_load($vid);
+      $taxonomy['name'] = i18n_taxonomy_vocabulary_name($vocab, $lang);
+
+      $tree = i18n_taxonomy_get_tree($vid, $lang);
+      // If data is empty, we have a vocabulary that is set to Translate or
+      // Fixed but none of the terms are actually translated
+      // (in the current language).
+      // Or the vacobulary is set to localize.
+      if (empty($tree)) {
+        $tree = i18n_taxonomy_localize_terms(i18n_taxonomy_get_tree($vid, 'und'));
+      }
+      $taxonomy['tree'] = apic_taxonomy_menu_block_structure_tree($tree, $vid, $lang);
+
+      $cache = cache_set('apic_taxonomy_menu_block-' . $vid . '-' . $lang, $taxonomy);
+    }
+  }
+  else {
+    $cache = cache_get('apic_taxonomy_menu_block-' . $vid);
+    if (!$cache) {
+      $taxonomy = array();
+
+      $vocab = taxonomy_vocabulary_load($vid);
+      $taxonomy['name'] = $vocab->name;
+
+      $tree = taxonomy_get_tree($vid);
+      $taxonomy['tree'] = apic_taxonomy_menu_block_structure_tree($tree, $vid);
+
+      $cache = cache_set('apic_taxonomy_menu_block-' . $vid, $taxonomy);
+    }
+    else {
+      $taxonomy = $cache->data;
+    }
+  }
+
+  return $taxonomy;
+}
+
+/**
+ * Structure tree with only the info we need.
+ */
+function apic_taxonomy_menu_block_structure_tree($data, $vid, $lang = NULL) {
+  $tree = array();
+
+  foreach ($data as $term) {
+    // If one term in a localized taxonomy isn't translated all terms get
+    // returned without a depth or a parent, giving us unusable results.
+    // We leave those out here.
+    if (isset($term->depth)) {
+      $branch['name'] = $term->name;
+      // Get path here as it requires an extra db query.
+      // This way we get it in cache.
+      $branch['path'] = drupal_get_path_alias('taxonomy/term/' . $term->tid, $lang);
+      $branch['depth'] = $term->depth;
+      $branch['parents'] = $term->parents;
+      $branch['active_trail'] = '0';
+
+      $tree[$term->tid] = $branch;
+    }
+  }
+
+  // Let other modules alter the tree data before it gets cached.
+  drupal_alter('apic_taxonomy_menu_block_tree', $tree, $vid);
+
+  return $tree;
+}
+
+/**
+ * Get currently active tid.
+ */
+function apic_taxonomy_menu_block_find_active_tid($tree, $vid) {
+  $active = NULL;
+
+  // Check on what kind of page we are.
+  $current = menu_get_item();
+
+  // Return if we have no access
+  if (!$current['access']) {
+    return $active;
+  }
+
+  // If we're on a NODE page.
+  if ($current['path'] == 'node/%') {
+    $term_reference_fields = array();
+
+    // Load all defined fields.
+    $fields = field_info_fields();
+
+    // Loop over them and pull out the taxonomy term fields that are attached
+    // to nodes.
+    foreach ($fields as $key => $field) {
+      if ($field['type'] == 'taxonomy_term_reference' && $field['deleted'] == '0' && isset($field['bundles']['node'])) {
+        foreach ($field['bundles']['node'] as $bundle) {
+          $term_reference_fields[$bundle][] = $key;
+        }
+      }
+    }
+
+    $node = $current['page_arguments'][0];
+
+    // Check if the current node has a term reference field.
+    if (isset($term_reference_fields) && isset($node) && isset($node->type) && isset($term_reference_fields[$node->type])) {
+      foreach ($term_reference_fields[$node->type] as $term_reference_field) {
+        $term_reference_field = $node->$term_reference_field;
+        if (!empty($term_reference_field[LANGUAGE_NONE])) {
+          // Only the last value will be selected, also for fields that allow
+          // multiple values. It doesn't make sense to have more than one
+          // active trail/items in a menu.
+          $tid = end($term_reference_field[LANGUAGE_NONE]);
+          $tid = $tid['tid'];
+          // Check if the term actually belongs to the vocabulary we need to
+          // display (node can have more than one term reference field).
+          if (isset($tree[$tid])) {
+            $active = $tid;
+          }
+        }
+      }
+    }
+  }
+
+  // If we're on a TAXONOMY page.
+  if ($current['path'] == 'taxonomy/term/%') {
+    $tid = end($current['original_map']);
+    // Check if the current tid is in our tree.
+    if (isset($tid) && isset($tree[$tid])) {
+      $active = $tid;
+    }
+  }
+
+  return $active;
+}
+
+/**
+ * Add active trail.
+ *
+ * Options:
+ *  0 = not active. Has been set as default in apic_taxonomy_menu_block_get_tree()
+ *  1 = active trail
+ *  2 = active
+ */
+function apic_taxonomy_menu_block_add_active_trail($tree, $tid = NULL) {
+  // If we have an active page, add the trail.
+  if ($tid) {
+    // Set current page as active.
+    $tree[$tid]['active_trail'] = '2';
+    // Add active trail to the parent(s).
+    $parent = $tree[$tid]['parents'][0];
+    for ($i = 0; $i < $tree[$tid]['depth']; $i++) {
+      $tree[$parent]['active_trail'] = '1';
+      $parent = $tree[$parent]['parents'][0];
+    }
+  }
+
+  return $tree;
+}
+
+/**
+ * Attach nr. of nodes to each term, plus the optional node options.
+ *
+ * @param type $tree
+ * @param type $config
+ * @return type
+ */
+function apic_taxonomy_menu_block_nodes($tree, $config) {
+  // Get the node count.
+  $tids = array_keys($tree);
+  $nodes = apic_taxonomy_menu_block_get_nodes($tids, $config['vid'], $config['ctype']);
+
+  // Add the "normal" node count.
+  foreach ($tree as $tid => $term) {
+    $tree[$tid]['nodes'] = 0;
+
+    if (isset($nodes[$tid])) {
+      $tree[$tid]['nodes'] = $nodes[$tid];
+    }
+  }
+
+  // Add the aggregation node count.
+  if ($config['nodes_aggregation']) {
+    foreach ($tree as $tid => $term) {
+      // Only aggregate if we have a parent and if the term is present in the
+      // current tree.
+      $parent_tid = $term['parents'][0];
+      if (isset($tree[$parent_tid]) && $parent_tid != '0') {
+        $tree[$parent_tid]['nodes'] = $tree[$parent_tid]['nodes'] + $term['nodes'];
+      }
+    }
+  }
+
+  return $tree;
+}
+
+/**
+ * Delete the terms with no nodes attached to them.
+ *
+ * @param type $tree
+ * @param type $config
+ */
+function apic_taxonomy_menu_block_hide_empty($tree, $config) {
+  // Get the node count.
+  $tids = array_keys($tree);
+  $nodes = apic_taxonomy_menu_block_get_nodes($tids, $config['vid'], $config['ctype']);
+
+  // Create helper array with subsequent keys.
+  $helper = array();
+  foreach ($tree as $tid => $term) {
+    $temp = array(
+      'tid' => $tid,
+      'depth' => $term['depth'],
+    );
+    $helper[] = $temp;
+  }
+
+  $branches = array();
+
+  foreach ($helper as $i => $term) {
+    // If the current term has any nodes, set any branches to which this term
+    // may belong to to non-delete
+    if (isset($nodes[$term['tid']])) {
+      foreach ($branches as $b => $branch) {
+        $branches[$b]['delete'] = FALSE;
+      }
+    }
+
+    // Get key for next term.
+    $key = $i + 1;
+    // If we have only one term or at the end of our array.
+    if (!isset($helper[$key])) {
+      if (!isset($nodes[$term['tid']])) {
+        unset($tree[$term['tid']]);
+      }
+    }
+    else {
+      // Get next term.
+      $next = $helper[$key];
+
+      // If current and next term have same depth.
+      if ($term['depth'] == $next['depth']) {
+        if (!isset($nodes[$term['tid']])) {
+          unset($tree[$term['tid']]);
+        }
+      }
+
+      // If next term is higher in depth, we have a new branch.
+      if ($term['depth'] < $next['depth']) {
+        // If we have no nodes, set parent of branch ready for deletion.
+        if (isset($nodes[$term['tid']])) {
+          $branches[$term['tid']] = array(
+            'tid' => $term['tid'],
+            'delete' => FALSE,
+          );
+        }
+        else {
+          $branches[$term['tid']] = array(
+            'tid' => $term['tid'],
+            'delete' => TRUE,
+          );
+        }
+      }
+
+      // If next term is lower in depth, we are at the end of a branch.
+      if ($term['depth'] > $next['depth']) {
+        // Find out how many branches were closed.
+        $depth = $term['depth'] - $next['depth'];
+        for ($i = 0; $i < $depth; $i++) {
+          // Get last open branch.
+          $branch = array_pop($branches);
+          if ($branch['delete']) {
+            unset($tree[$branch['tid']]);
+          }
+        }
+
+        // End of branch always means the current term is not a branch itself.
+        if (!isset($nodes[$term['tid']])) {
+          unset($tree[$term['tid']]);
+        }
+      }
+    }
+  }
+
+  // Check remaining branches
+  foreach ($branches as $b => $branch) {
+    if ($branch['delete']) {
+      unset($tree[$branch['tid']]);
+    }
+  }
+
+  return $tree;
+}
+
+/**
+ * Get the number of nodes attached to the terms of a vocabulary.
+ *
+ * We try to keep this as performant as possible by doing one query for all the
+ * terms in a vocabulary, which we will then cache.
+ */
+function apic_taxonomy_menu_block_get_nodes($tids, $vid, $ctype) {
+  $nodes = array();
+
+  if (!empty($ctype)) {
+    $ctypestring = implode('-', $ctype);
+  }
+
+  global $user;
+  if (!empty($ctype)) {
+    $cache_identifier = 'apic_taxonomy_menu_block-' . $vid . '-nodes' . '-' . $ctypestring . '-' . $user->uid;
+  }
+  else {
+    $cache_identifier = 'apic_taxonomy_menu_block-' . $vid . '-nodes' . '-' . $user->uid;
+  }
+
+  // First check if we have the result in cache already.
+  $cache = cache_get($cache_identifier);
+
+  if ($cache) {
+    $nodes = $cache->data;
+  }
+  else {
+    // build array of terms and count for each but honour the ACL
+    $terms = taxonomy_get_tree($vid);
+    foreach ($terms as $term) {
+      $nids = taxonomy_select_nodes($term->tid, FALSE);
+      $count = 0;
+      foreach ($nids as $nid) {
+        $node = node_load($nid);
+        if ($node->type == 'product' && (empty($ctype) || in_array('product', $ctype))) {
+          if (module_exists('product')) {
+            if (product_check_product_access($node)) {
+              $count++;
+            }
+          }
+          else {
+            $count++;
+          }
+        }
+        elseif ($node->type == 'api' && (empty($ctype) || in_array('api', $ctype))) {
+          if (module_exists('api')) {
+            if (api_check_api_access($node)) {
+              $count++;
+            }
+          }
+          else {
+            $count++;
+          }
+        }
+        elseif ($node->type == 'application' && (empty($ctype) || in_array('application', $ctype))) {
+          if (module_exists('application')) {
+            if (user_is_logged_in() && isset($node->application_orgid[$node->language][0]['value']) && $node->application_orgid[$node->language][0]['value'] == ibm_apim_get_current_developer_org()['id']) {
+              $count++;
+            }
+          }
+          else {
+            $count++;
+          }
+        }
+        else if (empty($ctype) || in_array($node->type, $ctype)) {
+          $count++;
+        }
+      }
+      $nodes[$term->tid] = $count;
+    }
+    $cache = cache_set($cache_identifier, $nodes);
+  }
+
+  // Find the same values of our two arrays
+  $tids = array_flip($tids);
+  $nodes = array_intersect_key($nodes, $tids);
+
+  return $nodes;
+}
+
+/**
+ * Nest tree.
+ */
+function apic_taxonomy_menu_block_nest_tree($tree, $root = '0') {
+  $nested_tree = array();
+
+  // Loop over the tree and search for direct children of the root.
+  foreach ($tree as $tid => $term) {
+    // Direct child is found.
+    if ($term['parents'][0] == $root) {
+      // Remove item from tree (we don't need to traverse this again).
+      unset($tree[$tid]);
+      // Append the child into result array and parse its children.
+      $nested_tree[$tid] = $term;
+      $nested_tree[$tid]['children'] = apic_taxonomy_menu_block_nest_tree($tree, $tid);
+    }
+  }
+  return $nested_tree;
+}
+
+/**
+ * Generate markup for our list.
+ */
+function theme_apic_taxonomy_menu_block($variables) {
+  $tree = $variables['items'];
+  $config = $variables['config'];
+
+  $num_items = count($tree);
+  $i = 0;
+
+  $output = '<ul>';
+  foreach ($tree as $tid => $term) {
+    $i++;
+    // Add classes.
+    $attributes = array();
+    if ($i == 1) {
+      $attributes['class'][] = 'first';
+    }
+    if ($i == $num_items) {
+      $attributes['class'][] = 'last';
+    }
+    if ($term['active_trail'] == '1') {
+      $attributes['class'][] = 'active-trail';
+    }
+    if ($term['active_trail'] == '2') {
+      $attributes['class'][] = 'active';
+    }
+
+    // Alter link text if we have to display the nodes attached.
+    if (isset($term['nodes'])) {
+      $term['name'] = $term['name'] . ' (' . $term['nodes'] . ')';
+    }
+
+    // Set alias option to true so we don't have to query for the alias every
+    // time, as this is cached anyway.
+    $output .= '<li' . drupal_attributes($attributes) . '>' . l($term['name'], $term['path'], $options = array('alias' => TRUE));
+    if (!empty($term['children'])) {
+      $output .= theme('apic_taxonomy_menu_block__' . $config['delta'], (array(
+        'items' => $term['children'],
+        'config' => $config
+      )));
+    }
+    $output .= '</li>';
+  }
+  $output .= '</ul>';
+
+  return $output;
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function apic_taxonomy_menu_block_entity_insert($entity, $type) {
+  switch ($type) {
+    case 'taxonomy_term':
+      // Clear cache for this vocabulary.
+      cache_clear_all('apic_taxonomy_menu_block-' . $entity->vid, 'cache', TRUE);
+      break;
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function apic_taxonomy_menu_block_entity_update($entity, $type) {
+  switch ($type) {
+    case 'taxonomy_vocabulary':
+    case 'taxonomy_term':
+      // Clear cache for this vocabulary.
+      cache_clear_all('apic_taxonomy_menu_block-' . $entity->vid, 'cache', TRUE);
+      break;
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function apic_taxonomy_menu_block_entity_delete($entity, $type) {
+  switch ($type) {
+    case 'taxonomy_vocabulary':
+    case 'taxonomy_term':
+      // Clear cache for this vocabulary.
+      cache_clear_all('apic_taxonomy_menu_block-' . $entity->vid, 'cache', TRUE);
+      break;
+  }
+}
+
+/**
+ * Implements hook_path_alias_types().
+ */
+function apic_taxonomy_menu_block_path_alias_types() {
+  // Clear cache. There's no way of knowing if taxonomy paths have been deleted
+  // so we clear all TMB caches.
+  cache_clear_all('apic_taxonomy_menu_block-', 'cache', TRUE);
+}
+
+/**
+ * Expand normal Block add/edit form.
+ */
+function apic_taxonomy_menu_block_form_options(&$form, &$form_state) {
+  // Off-load to another file to keep back-end functions in one place.
+  module_load_include('inc', 'apic_taxonomy_menu_block', 'apic_taxonomy_menu_block.admin');
+  return _apic_taxonomy_menu_block_form_options($form, $form_state);
+}
+
+/**
+ * Edit function.
+ */
+function apic_taxonomy_menu_block_edit_block($form, &$form_state) {
+  // Off-load to another file to keep back-end functions in one place.
+  module_load_include('inc', 'apic_taxonomy_menu_block', 'apic_taxonomy_menu_block.admin');
+  return _apic_taxonomy_menu_block_edit_block($form, $form_state);
+}
+
+/**
+ * Validate function.
+ */
+function apic_taxonomy_menu_block_add_block_form_validate($form, &$form_state) {
+  // Off-load to another file to keep back-end functions in one place.
+  module_load_include('inc', 'apic_taxonomy_menu_block', 'apic_taxonomy_menu_block.admin');
+  return _apic_taxonomy_menu_block_add_block_form_validate($form, $form_state);
+}
