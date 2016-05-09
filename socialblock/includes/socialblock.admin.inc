@@ -7,7 +7,10 @@
  */
 function socialblock_admin($form, &$form_state) {
   $client_id = variable_get('ibm_apim_client_id');
-  $settings = unserialize(openssl_decrypt(variable_get('twitter_oauth_settings'), 'AES256', $client_id));
+  $data = variable_get('twitter_oauth_settings');
+  $iv_size = mcrypt_get_iv_size(MCRYPT_CAST_256, MCRYPT_MODE_CBC);
+  $iv = substr($data, 0, $iv_size);
+  $settings = unserialize(openssl_decrypt(substr($data, $iv_size), "AES-256-CBC", $client_id, 0, $iv));
   if (!isset($settings['twitter_consumer_key'])) {
     $settings['twitter_consumer_key'] = '';
   }
@@ -27,34 +30,36 @@ function socialblock_admin($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Consumer key'),
     '#default_value' => $settings['twitter_consumer_key'],
-    '#required' => TRUE
+    '#required' => FALSE
   );
   $form['twitter_consumer_secret'] = array(
     '#type' => 'textfield',
     '#title' => t('Consumer secret'),
     '#default_value' => $settings['twitter_consumer_secret'],
-    '#required' => TRUE
+    '#required' => FALSE
   );
   $form['twitter_access_token'] = array(
     '#type' => 'textfield',
     '#title' => t('Access token'),
     '#default_value' => $settings['twitter_access_token'],
-    '#required' => TRUE
+    '#required' => FALSE
   );
   $form['twitter_token_secret'] = array(
     '#type' => 'textfield',
     '#title' => t('Token secret'),
     '#default_value' => $settings['twitter_token_secret'],
-    '#required' => TRUE
+    '#required' => FALSE
   );
 
   $form = system_settings_form($form);
+  $form['#attributes']['autocomplete'] = 'off';
 
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
   if (!empty($_POST) && form_get_errors()) {
     drupal_set_message(t('The settings have not been saved because of the errors.'), 'error');
   }
+  $form['#validate'][] = 'socialblock_admin_variable_settings_form_validate';
   $form['#submit'][] = 'socialblock_admin_variable_settings_form_submit';
   // By default, render the form using theme_system_settings_form().
   if (!isset($form['#theme'])) {
@@ -64,26 +69,46 @@ function socialblock_admin($form, &$form_state) {
   return $form;
 }
 
+
+function socialblock_admin_variable_settings_form_validate($form, &$form_state) {
+  $credentials = array();
+  $credentials['twitter_consumer_key'] = isset($form_state['values']['twitter_consumer_key']) ? trim($form_state['values']['twitter_consumer_key']) : '';
+  $credentials['twitter_consumer_secret'] = isset($form_state['values']['twitter_consumer_secret']) ? trim($form_state['values']['twitter_consumer_secret']) : '';
+  $credentials['twitter_access_token'] = isset($form_state['values']['twitter_access_token']) ? trim($form_state['values']['twitter_access_token']) : '';
+  $credentials['twitter_token_secret'] = isset($form_state['values']['twitter_token_secret']) ? trim($form_state['values']['twitter_token_secret']) : '';
+  $no_cred = empty($form_state['values']['twitter_consumer_key']) && empty($form_state['values']['twitter_consumer_secret']) && empty($form_state['values']['twitter_access_token']) && empty($form_state['values']['twitter_token_secret']);
+  $response = socialblock_call_twitter_api($credentials, 'application/rate_limit_status', array());
+  if (!$no_cred && $response == NULL) {
+    form_set_error(t('The credentials you have entered are invalid.'));
+    drupal_set_message(t('The credentials you have entered are invalid.'), 'error');
+  }
+}
+
+/**
+ * @param $form
+ * @param $form_state
+ */
 function socialblock_admin_variable_settings_form_submit($form, &$form_state) {
   // Exclude unnecessary elements.
   form_state_values_clean($form_state);
-  $settings = array();
+  $credentials = array();
   if (isset($form_state['values']['twitter_consumer_key'])) {
-    $settings['twitter_consumer_key'] = $form_state['values']['twitter_consumer_key'];
+    $credentials['twitter_consumer_key'] = trim($form_state['values']['twitter_consumer_key']);
   }
   if (isset($form_state['values']['twitter_consumer_secret'])) {
-    $settings['twitter_consumer_secret'] = $form_state['values']['twitter_consumer_secret'];
+    $credentials['twitter_consumer_secret'] = trim($form_state['values']['twitter_consumer_secret']);
   }
   if (isset($form_state['values']['twitter_access_token'])) {
-    $settings['twitter_access_token'] = $form_state['values']['twitter_access_token'];
+    $credentials['twitter_access_token'] = trim($form_state['values']['twitter_access_token']);
   }
   if (isset($form_state['values']['twitter_token_secret'])) {
-    $settings['twitter_token_secret'] = $form_state['values']['twitter_token_secret'];
+    $credentials['twitter_token_secret'] = trim($form_state['values']['twitter_token_secret']);
   }
   $client_id = variable_get('ibm_apim_client_id');
-  $value = openssl_encrypt(serialize($settings), 'AES256', $client_id);
-  variable_set('twitter_oauth_settings', $value);
-
+  $iv_size = mcrypt_get_iv_size(MCRYPT_CAST_256, MCRYPT_MODE_CBC);
+  $iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
+  $value = openssl_encrypt(serialize($credentials), "AES-256-CBC", $client_id, 0, $iv);
+  variable_set('twitter_oauth_settings', $iv . $value);
   drupal_set_message(t('The configuration options have been saved.'));
   // run cron to populate the cache
   socialblock_cron();

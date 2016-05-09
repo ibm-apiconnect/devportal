@@ -526,6 +526,9 @@ function api_createNewAPINode($api) {
   if (isset($api['document']['info']) && isset($api['document']['info']['x-ibm-name'])) {
     $xibmname = $api['document']['info']['x-ibm-name'];
   }
+  if (isset($api['document']['definitions']) && empty($api['document']['definitions'])) {
+    unset($api['document']['definitions']);
+  }
 
   if (isset($xibmname)) {
     // find if there is an existing node for this API (maybe at old version)
@@ -825,6 +828,10 @@ function api_updateExistingAPINode($node, $api) {
   $node->api_apiid[$node->language][0]['value'] = $api['id'];
   $node->api_version[$node->language][0]['value'] = $api['document']['info']['version'];
 
+  if (isset($api['document']['definitions']) && empty($api['document']['definitions'])) {
+    unset($api['document']['definitions']);
+  }
+
   // ensure description is at least set to empty string
   if (!isset($api['document']['info']['description']) || empty($api['document']['info']['description'])) {
     $api['document']['info']['description'] = '';
@@ -905,8 +912,8 @@ function api_updateExistingAPINode($node, $api) {
         }
         if (isset($node->api_attachments[$node->language])) {
           foreach ($node->api_attachments[$node->language] as $key => $existingdoc) {
-            if (isset($existingdoc['filename'])) {
-              $parts = explode('/', $existingdoc['filename']);
+            if (isset($existingdoc['uri'])) {
+              $parts = explode('/', $existingdoc['uri']);
               if (in_array($api['id'], $parts) && in_array('apiwsdl', $parts)) {
                 $node->api_attachments[$node->language][$key] = array(
                   'fid' => $file_temp->fid,
@@ -972,8 +979,8 @@ function api_updateExistingAPINode($node, $api) {
           $updated = FALSE;
           if (isset($node->api_attachments[$node->language])) {
             foreach ($node->api_attachments[$node->language] as $key => $existingdoc) {
-              if (isset($existingdoc['filename'])) {
-                $parts = explode('/', $existingdoc['filename']);
+              if (isset($existingdoc['uri'])) {
+                $parts = explode('/', $existingdoc['uri']);
                 if (in_array($api['id'], $parts) && in_array('apidoc', $parts) && in_array($attachment['id'], $parts)) {
                   $node->api_attachments[$node->language][$key] = array(
                     'fid' => $file_temp->fid,
@@ -986,14 +993,6 @@ function api_updateExistingAPINode($node, $api) {
                     'description' => $attachment['description']
                   );
                   $updated = TRUE;
-                }
-                elseif (in_array($api['id'], $parts) && in_array('apidoc', $parts)) {
-                  $partid = array_search($api['id'], $parts);
-                  // grab the key for the apiiid, and the docid should be the dir after that
-                  if (in_array($parts[($partid + 1)], $docids)) {
-                    // this is an old legacy doc now removed
-                    unset($node->api_attachments[$node->language][$key]);
-                  }
                 }
               }
             }
@@ -1013,6 +1012,22 @@ function api_updateExistingAPINode($node, $api) {
           node_save($node);
         }
       }
+    }
+    if (isset($node->api_attachments[$node->language]) && is_array($docids)) {
+      foreach ($node->api_attachments[$node->language] as $key => $existingdoc) {
+        if (isset($existingdoc['uri'])) {
+          $parts = explode('/', $existingdoc['uri']);
+          if (in_array($api['id'], $parts) && in_array('apidoc', $parts)) {
+            $partid = array_search($api['id'], $parts);
+            // grab the key for the apiiid, and the docid should be the dir after that
+            if (!in_array($parts[($partid + 1)], $docids)) {
+              // this is an old legacy doc now removed
+              unset($node->api_attachments[$node->language][$key]);
+            }
+          }
+        }
+      }
+      node_save($node);
     }
   }
 
@@ -1086,6 +1101,15 @@ function api_save_legacydoc($apiID, $docid, $data) {
         $fileparts = explode('=', $data->headers['Content-Disposition']);
         $filename = end($fileparts);
         $filename = str_replace(array('\'', '"'), '', $filename);
+        if (strlen($filename) > 100) {
+          $filenameparts = explode('.', $filename);
+          if (isset($filenameparts[1])) {
+            $filename = substr ( $filename , 0 , 96 );
+            $filename = $filename.'.'.$filenameparts[1];
+          } else {
+            $filename = substr ( $filename , 0 , 100 );
+          }
+        }
         $filename = urlencode($filename);
 
         if (!isset($filename)) {

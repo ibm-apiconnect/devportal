@@ -1,5 +1,7 @@
 <?php
 
+require_once(libraries_get_path('twitteroauth') . '/autoload.php');
+
 /**
  * Implements hook_bean_types_api_info().
  */
@@ -51,24 +53,22 @@ function socialblock_cron() {
   $beans = bean_get_all_beans();
   if (isset($beans)) {
     $client_id = variable_get('ibm_apim_client_id');
-    $settings = unserialize(openssl_decrypt(variable_get('twitter_oauth_settings'), 'AES256', $client_id));
-    if (!isset($settings['twitter_consumer_key'])) {
-      $settings['twitter_consumer_key'] = '';
+    $data = variable_get('twitter_oauth_settings');
+    $iv_size = mcrypt_get_iv_size(MCRYPT_CAST_256, MCRYPT_MODE_CBC);
+    $iv = substr($data, 0, $iv_size);
+    $credentials = unserialize(openssl_decrypt(substr($data, $iv_size), "AES-256-CBC", $client_id, 0, $iv));
+    if (!isset($credentials['twitter_consumer_key'])) {
+      $credentials['twitter_consumer_key'] = '';
     }
-    if (!isset($settings['twitter_consumer_secret'])) {
-      $settings['twitter_consumer_secret'] = '';
+    if (!isset($credentials['twitter_consumer_secret'])) {
+      $credentials['twitter_consumer_secret'] = '';
     }
-    if (!isset($settings['twitter_access_token'])) {
-      $settings['twitter_access_token'] = '';
+    if (!isset($credentials['twitter_access_token'])) {
+      $credentials['twitter_access_token'] = '';
     }
-    if (!isset($settings['twitter_token_secret'])) {
-      $settings['twitter_token_secret'] = '';
+    if (!isset($credentials['twitter_token_secret'])) {
+      $credentials['twitter_token_secret'] = '';
     }
-
-    $consumer_key = $settings['twitter_consumer_key'];
-    $consumer_secret = $settings['twitter_consumer_secret'];
-    $access_token = $settings['twitter_access_token'];
-    $token_secret = $settings['twitter_token_secret'];
     foreach ($beans as $bean) {
       if (isset($bean->delta) && ($bean->delta == 'socialblock') || (isset($bean->type) && $bean->type == 'socialblock_block')) {
         switch ($bean->twitter_api) {
@@ -85,30 +85,296 @@ function socialblock_cron() {
             $api_param = '';
         }
         if (isset($bean->twitter_param)) {
-          $connection = new Abraham\TwitterOAuth\TwitterOAuth(
-            $consumer_key,
-            $consumer_secret,
-            $access_token,
-            $token_secret
-          );
-          $connection->host = "https://api.twitter.com/1.1/";
-          $tweets = $connection->get(
-            $api,
-            array(
-              $api_param => $bean->twitter_param,
-              'count' => $bean->tiles
-            )
-          );
-          if (isset($tweets->errors)) {
-            $tweets = NULL;
-          }
-          variable_set('socialblock_tweets_' . $bean->bid, serialize($tweets));
+          $tweets = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles));
+          $markup = socialblock_render_posts($bean, $tweets);
+          variable_set('socialblock_tweets_' . $bean->bid, serialize($markup));
         }
         else {
-          variable_set('socialblock_tweets_' . $bean->bid, serialize(array()));
+          $markup = socialblock_render_posts($bean, array());
+          variable_set('socialblock_tweets_' . $bean->bid, serialize($markup));
         }
       }
     }
   }
+}
 
+/**
+ * @param $cred
+ * @param $api
+ * @param $params
+ * @return array|null|object
+ */
+function socialblock_call_twitter_api($cred, $api, $params) {
+  $connection = new Abraham\TwitterOAuth\TwitterOAuth(
+    $cred['twitter_consumer_key'],
+    $cred['twitter_consumer_secret'],
+    $cred['twitter_access_token'],
+    $cred['twitter_token_secret']
+  );
+  $connection->host = "https://api.twitter.com/1.1/";
+  $response = $connection->get(
+    $api,
+    $params
+  );
+  if (isset($response->errors)) {
+    $response = NULL;
+  } else if ($api == 'search/tweets') {
+    $response = $response->statuses;
+  }
+  return $response;
+}
+
+/**
+ * @param $bean
+ * @param $tweets
+ * @return string
+ */
+function socialblock_render_posts(&$bean, $tweets) {
+  $markup = '';
+  $tiles = $bean->tiles;
+  $forums = $bean->forums;
+  $posts = array();
+  if (isset($bean->display_all_forums) && $bean->display_all_forums == 1) {
+    $forums = socialblock_get_forum_tids();
+    $bean->forums = $forums;
+    $bean->data['forums'] = $forums;
+  }
+  // Any forums?
+  if (isset($forums) && !empty($forums)) {
+    foreach ($forums as $forum_tid) {
+      if ($forum_tid != 0 && !empty(forum_get_topics($forum_tid, 1, $tiles))) {
+        foreach (forum_get_topics($forum_tid, 1, $tiles) as $topic) {
+          $topic->tweet = FALSE;
+          array_push($posts, $topic);
+        }
+      }
+    }
+  }
+  // Any tweets?
+  if (isset($tweets) && !empty($tweets)) {
+    foreach ($tweets as $tweet) {
+      $tweet->tweet = TRUE;
+      array_push($posts, $tweet);
+    }
+  }
+  // Any forum posts or tweets?
+  if (isset($posts) && !empty($posts)) {
+    uasort($posts, 'socialblock_sort_by_created');
+    $posts = array_slice($posts, 0, $tiles);
+    foreach ($posts as $post) {
+      // This is a tweet
+      if ($post->tweet) {
+        // This is a retweet
+        if (isset($post->retweeted_status)) {
+          $post = $post->retweeted_status;
+        }
+        $tweet_id = $post->id_str;
+        $profile_img = $post->user->profile_image_url_https;
+        $name = $post->user->name;
+        $handle = $post->user->screen_name;
+        $timestamp = date_diff(date_create('@' . strtotime($post->created_at)), date_create('@' . time()));
+        $raw_content = $post->text;
+        $hashtags = $post->entities->hashtags;
+        $user_mentions = $post->entities->user_mentions;
+        $hashtags_replace = array();
+        foreach ($hashtags as $hashtag) {
+          $hashtag_replace = mb_substr($raw_content, $hashtag->indices[0], $hashtag->indices[1] - $hashtag->indices[0]);
+          array_push($hashtags_replace, $hashtag_replace);
+        }
+        $user_mentions_replace = array();
+        foreach ($user_mentions as $user_mention) {
+          $user_mention_replace = mb_substr($raw_content, $user_mention->indices[0], $user_mention->indices[1] - $user_mention->indices[0]);
+          array_push($user_mentions_replace, $user_mention_replace);
+        }
+        foreach ($hashtags_replace as $hashtag_replace) {
+          $raw_content = str_replace($hashtag_replace, '<a href="https://twitter.com/hashtag/' . ltrim($hashtag_replace, '#') . '" target="_blank" class="socialblock hashtag">' . $hashtag_replace . '</a>', $raw_content);
+        }
+        foreach ($user_mentions_replace as $user_mention_replace) {
+          $raw_content = str_replace($user_mention_replace, '<a href="https://twitter.com/' . ltrim($user_mention_replace, '@') . '" target="_blank" class="socialblock user_mention">' . $user_mention_replace . '</a>', $raw_content);
+        }
+        $media = isset($post->entities->media) ? $post->entities->media : array();
+        $photos = array();
+        $urls = isset($post->entities->urls) ? $post->entities->urls : array();
+        $video_ids = array();
+        foreach ($media as $medium) {
+          if ($medium->type == 'photo') {
+            array_push($photos, $medium);
+          }
+        }
+        foreach ($urls as $url) {
+          $short_url = $url->url;
+          $expanded_url = $url->expanded_url;
+          $true_url = socialblock_expand_url($expanded_url);
+          if (isset($true_url)) {
+            if (preg_match('/^(https?:\/\/)?(www\.)?youtube\.com\/.*/i', $true_url)) { //A wild YouTube video url appears!
+              array_push($video_ids, preg_replace('/^(https?:\/\/)?(www\.)?youtube\.com\/watch\?v=/i', '', $true_url));
+            }
+            else if (preg_match('/^(https?:\/\/)?(youtu\.be)\//i', $true_url)) {
+              array_push($video_ids, preg_replace('/^(https?:\/\/)?(youtu\.be)\//i', '', $true_url));
+            }
+          }
+          if (isset($short_url)) {
+            if (strpos($raw_content, $short_url) != FALSE) {
+              $raw_content = str_replace($short_url, '<a href="' . $expanded_url . '" target="_blank" class="socialblock url">' . $expanded_url . '</a>', $raw_content);
+            }
+            else {
+              $raw_content = str_replace($short_url, '', $raw_content);
+            }
+          }
+        }
+        $markup .= '<div class="socialblock card tweet">
+                        <div class="socialblock tweet_info">
+                          <div class="socialblock tweet_profile">
+                            <img class="socialblock profile_image" src="' . $profile_img . '">
+                            <div class="socialblock profile_name">
+                              <a href="https://twitter.com/' . $handle . '" target="_blank" class="socialblock profile_name name">' . $name . '</a>
+                              <div class="socialblock twitter_handle">@' . $handle . '</div>
+                            </div>
+                          </div>
+                          <div class="socialblock tweet_meta">
+                            <a href="https://twitter.com/statuses/' . $tweet_id . '" target="_blank" class="socialblock bird"></a>
+                            <div class="socialblock tweet_timestamp">' . socialblock_get_tweet_timediff($timestamp) . '</div>
+                          </div>
+                        </div>';
+        if (!empty($photos)) {
+          foreach ($photos as $photo) {
+            $markup .= '<img class="socialblock tweet_image" src="' . $photo->media_url_https . '">';
+          }
+        }
+        $markup .= !empty($video_ids) ? '<iframe class="socialblock iframe" src="https://www.youtube-nocookie.com/embed/' . $video_ids[0] . '?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>' : '';
+        $markup .= '<div class="socialblock tweet_text">' . $raw_content . '</div>
+                      </div>';
+      }
+      else { //This is a forum topic
+        $topic_node = node_load($post->nid);
+        $timestamp = date_diff(date_create('@' . $topic_node->created), date_create('@' . time()));
+        $op = user_load_by_name($topic_node->name);
+        $op_name = isset($op->field_first_name['und'][0]['value']) || isset($op->field_last_name['und'][0]['value']) ? $op->field_first_name['und'][0]['value'] . ' ' . $op->field_last_name['und'][0]['value'] : 'Admin';
+        $markup .= '<div class="socialblock card forum_topic">
+                          <a href="' . url('node/' . $post->nid) . '" class="socialblock title">' . $topic_node->title . '</a>
+                          <div class="socialblock info">
+                            <div class="socialblock op">' . t('Posted by') . ' <span class="socialblock op_name">' . $op_name . '</span></div>
+                            <div class="socialblock timestamp">' . socialblock_get_timediff($timestamp) . '</div>
+                          </div>
+                        </div>';
+      }
+    }
+  }
+  else {
+    $markup .= '<div class="socialblock no_topics">There are no posts to display.</div>';
+  }
+  return $markup;
+}
+
+/**
+ * @return array
+ */
+function socialblock_get_forum_vocabs() {
+  $vocabs = array();
+  $systemvocabs = taxonomy_get_vocabularies();
+  if (isset($systemvocabs)) {
+    foreach ($systemvocabs as $vocab) {
+      if ($vocab->machine_name == 'forums') {
+        $vocabs = taxonomy_get_tree($vocab->vid);
+      }
+    }
+  }
+  return $vocabs;
+}
+
+/**
+ * @return array
+ */
+function socialblock_get_forum_tids() {
+  $vocabs = socialblock_get_forum_vocabs();
+  $tids = array();
+  if (isset($vocabs)) {
+    foreach ($vocabs as $vocab) {
+      $tids[$vocab->tid] = intval($vocab->tid);
+    }
+  }
+  return $tids;
+}
+
+/**
+ * @param DateInterval $di
+ * @return string
+ */
+function socialblock_get_timediff(DateInterval $di) {
+  $years = $di->y;
+  $months = $di->m;
+  $days = $di->d;
+  $hours = $di->h;
+  $minutes = $di->i;
+  $seconds = $di->s;
+  $diff = $years == 0 ? ($months == 0 ? ($days == 0 ? ($hours == 0 ? ($minutes == 0 ? ($seconds == 0 ? t('Just now') : format_plural($seconds, '1 second ago', '@count seconds ago')) : format_plural($minutes, '1 minute ago', '@count minutes ago')) : format_plural($hours, '1 hour ago', '@count hours ago')) : format_plural($days, '1 day ago', '@count days ago')) : format_plural($months, '1 month ago', '@count months ago')) : format_plural($years, '1 year ago', '@count years ago');
+  return $diff;
+}
+
+/**
+ * @param DateInterval $di
+ * @return null|string
+ */
+function socialblock_get_tweet_timediff(DateInterval $di) {
+  $years = $di->y;
+  $months = $di->m;
+  $days = $di->d;
+  $hours = $di->h;
+  $minutes = $di->i;
+  $seconds = $di->s;
+  $diff = $years == 0 ? ($months == 0 ? ($days == 0 ? ($hours == 0 ? ($minutes == 0 ? ($seconds == 0 ? t('now') : $seconds . t('s')) : $minutes . t('m')) : $hours . t('h')) : $days . t('d')) : $months . t('M')) : $years . t('y');
+  return $diff;
+}
+
+/**
+ * @param $bean
+ * @return mixed
+ */
+function socialblock_get_tweets(&$bean) {
+  $tweets = unserialize(variable_get('socialblock_tweets_' . $bean->bid));
+  if (isset($tweets) && !empty($tweets)) {
+    return $tweets;
+  }
+  else {
+    return NULL;
+  }
+}
+
+/**
+ * @param $url
+ * @return string
+ */
+function socialblock_expand_url($url) {
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, $url);
+  curl_setopt($ch, CURLOPT_HEADER, TRUE);
+  curl_setopt($ch, CURLOPT_NOBODY, 1);
+  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, FALSE);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+  curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+  curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+  $a = curl_exec($ch);
+  curl_close($ch);
+  if (preg_match('#Location: (.*)#', $a, $r)) {
+    $l = trim($r[1]);
+    return $l;
+  }
+  else {
+    return $url;
+  }
+}
+
+/**
+ * @param $a
+ * @param $b
+ * @return int
+ */
+function socialblock_sort_by_created($a, $b) {
+  $at = intval($a->tweet ? strtotime($a->created_at) : $a->created);
+  $bt = intval($b->tweet ? strtotime($b->created_at) : $b->created);
+  if ($at == $bt) {
+    return 0;
+  }
+  return $at < $bt ? 1 : -1;
 }

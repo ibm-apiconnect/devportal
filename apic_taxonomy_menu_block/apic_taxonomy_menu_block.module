@@ -693,6 +693,9 @@ function apic_taxonomy_menu_block_get_nodes($tids, $vid, $ctype) {
 
   // First check if we have the result in cache already.
   $cache = cache_get($cache_identifier);
+  if (module_exists('ibm_apim')) {
+    $myorg = ibm_apim_get_current_developer_org();
+  }
 
   if ($cache) {
     $nodes = $cache->data;
@@ -727,7 +730,17 @@ function apic_taxonomy_menu_block_get_nodes($tids, $vid, $ctype) {
         }
         elseif ($node->type == 'application' && (empty($ctype) || in_array('application', $ctype))) {
           if (module_exists('application')) {
-            if (user_is_logged_in() && isset($node->application_orgid[$node->language][0]['value']) && $node->application_orgid[$node->language][0]['value'] == ibm_apim_get_current_developer_org()['id']) {
+            if (user_is_logged_in() && isset($myorg['id']) && isset($node->application_orgid[$node->language][0]['value']) && $node->application_orgid[$node->language][0]['value'] == $myorg['id']) {
+              $count++;
+            }
+          }
+          else {
+            $count++;
+          }
+        }
+        elseif ($node->type == 'devorg' && (empty($ctype) || in_array('devorg', $ctype))) {
+          if (module_exists('devorg')) {
+            if (user_is_logged_in() && isset($myorg['id']) && isset($node->devorg_id[$node->language][0]['value']) && $node->devorg_id[$node->language][0]['value'] == $myorg['id']) {
               $count++;
             }
           }

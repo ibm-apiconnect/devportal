@@ -241,7 +241,13 @@ function _auth_apic_user_login_form_alter(&$form, &$form_state) {
 function auth_apic_form_alter(&$form, &$form_state, $form_id) {
   switch ($form_id) {
     case 'password_policy_password_tab' :
-      $form['pass']['#attributes']['autocomplete'] = 'off';
+      if (variable_get('no_autocomplete_profile_form', FALSE)) {
+        if (empty($form['pass']['#attributes'])) {
+          $form['pass']['#attributes'] = array();
+        }
+        $form['pass']['#attributes']['autocomplete'] = 'off';
+        $form['#attributes']['autocomplete'] = 'off';
+      }
       $form['#validate'] = array_diff($form['#validate'], array(
         'user_account_form_validate',
         'user_validate_current_pass'
@@ -2032,7 +2038,13 @@ function auth_apic_forgotpwd_form($form, &$form_state, $path = NULL) {
     '#size' => 25,
     '#required' => TRUE
   );
-  $form['pass']['#attributes']['autocomplete'] = 'off';
+  if (variable_get('no_autocomplete_login_form', FALSE)) {
+    if (empty($form['pass']['#attributes'])) {
+      $form['pass']['#attributes'] = array();
+    }
+    $form['pass']['#attributes']['autocomplete'] = 'off';
+    $form['#attributes']['autocomplete'] = 'off';
+  }
   $form['token'] = array('#type' => 'hidden', '#value' => $resetPasswordToken);
 
   // if password policy module active then load the current policy and enforce it

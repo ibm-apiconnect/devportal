@@ -209,9 +209,9 @@ function _devorg_delete_node_content($type) {
  * Update code to handle upgrade from earlier version
  */
 function devorg_update_7400() {
+  $fields = field_info_field_map();
   foreach (_devorg_installed_fields() as $field) {
-    $field_name = field_info_field($field['field_name']);
-    if (!$field_name) {
+    if (!array_key_exists($field['field_name'], $fields)) {
       field_create_field($field);
       watchdog('devorg', 'Field %field_name has been successfully added', array(
         '%field_name' => $field['field_name']
@@ -223,18 +223,28 @@ function devorg_update_7400() {
       ));
     }
   }
-
   foreach (_devorg_installed_instances() as $fieldinstance) {
-    $instance_name = field_info_field($fieldinstance['field_name']);
-    if (!$instance_name) {
+    if (!array_key_exists($fieldinstance['field_name'], $fields)) {
       $fieldinstance['entity_type'] = 'node';
-      $fieldinstance['bundle'] = 'devorg';
+      $fieldinstance['bundle'] = 'application';
       field_create_instance($fieldinstance);
       watchdog('devorg', 'Instance %instance_name has been successfully added', array(
         '%instance_name' => $fieldinstance['field_name']
       ));
     }
     else {
+      // Fetch existing instance
+      $instance_info = field_info_instance('node', $fieldinstance['field_name'], 'devorg');
+      if (isset($instance_info)) {
+        // ensure all view modes are set
+        foreach ($fieldinstance['display'] as $key => $value) {
+          if (!isset($instance_info['display'][$key])) {
+            $instance_info['display'][$key] = $value;
+          }
+        }
+        // Write the changed instance back.
+        field_update_instance($instance_info);
+      }
       watchdog('devorg', 'Instance %instance_name already exists', array(
         '%instance_name' => $fieldinstance['field_name']
       ));

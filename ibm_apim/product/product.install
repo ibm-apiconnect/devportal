@@ -280,7 +280,6 @@ function _product_installed_instances() {
       'field_name' => 'product_image',
       'type' => 'image',
       'label' => t('Image'),
-      'required' => 0,
       'description' => t('Logo or image for this Product'),
       'widget' => array(
         'type' => 'image_image',
@@ -619,7 +618,6 @@ function _product_installed_instances() {
       'type' => 'file',
       'label' => t('Documentation'),
       'description' => t('Documentation file attachments for this Product'),
-      'required' => 0,
       'widget' => array(
         'type' => 'file_generic',
         'module' => 'file',
@@ -717,6 +715,18 @@ function product_update_7400() {
       ));
     }
     else {
+      // Fetch existing instance
+      $instance_info = field_info_instance('node', $fieldinstance['field_name'], 'product');
+      if (isset($instance_info)) {
+        // ensure all view modes are set
+        foreach ($fieldinstance['display'] as $key => $value) {
+          if (!isset($instance_info['display'][$key])) {
+            $instance_info['display'][$key] = $value;
+          }
+        }
+        // Write the changed instance back.
+        field_update_instance($instance_info);
+      }
       watchdog('product', 'Instance %instance_name already exists', array(
         '%instance_name' => $fieldinstance['field_name']
       ));

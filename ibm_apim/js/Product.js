@@ -22,10 +22,8 @@
             var headerbottom = headertop - scrolltop + headerdiv.outerHeight(true);
             $("#columns").css({'margin-top': ((headerbottom) + 'px')});
             if ($("body").hasClass("page-comment-reply")) {
-                // allow comment preview to apepar at the top so move the left nav down
-                var articlediv = $("article.node-product");
-                var articletop = articlediv.position().top;
-                $(".navigate-toc").css({'top': ((articletop) + 'px')});
+                // move entire page over to allow comment content to appear at the top
+                $('#page').css({'margin-left': '180px'});
             } else {
                 // set toc top to height of header
                 $(".navigate-toc").css({'top': ((headerbottom) + 'px')});
@@ -632,8 +630,10 @@
             } else if (api.produces) {
                 accept = api.produces[0];
             }
+            var contentheader = false;
             if (contenttype) {
                 headersarray.push({'name': 'content-type', 'value': contenttype});
+                contentheader = true;
             }
             if (accept) {
                 headersarray.push({'name': 'accept', 'value': accept});
@@ -645,7 +645,16 @@
             if (headerParameters.length > 0) {
                 headerParameters.forEach(function (parameter) {
                     headersarray.push({'name': parameter.name, 'value': 'REPLACE_THIS_VALUE'});
+                    if (parameter.name.toLowerCase() == 'content-type') {
+                        contentheader = true;
+                    }
                 });
+            }
+            // for POST and PUT we should always set content-type to *something*
+            if (verb.toUpperCase() == 'POST' || verb.toUpperCase() == 'PUT') {
+                if (contentheader != true) {
+                    headersarray.push({'name': 'content-type', 'value': 'application/json'});
+                }
             }
 
             // body
@@ -662,6 +671,7 @@
                     if (example) {
                         if (retXML) {
                             body = window.vkbeautify.xml(window.json2xml(example, {header: true}));
+                            body = _.unescape(body);
                         } else {
                             body = JSON.stringify(example);
                         }
@@ -680,7 +690,9 @@
                             exampleobj = JSON.stringify(exampleobj, null, 2);
                         }
                     }
-
+                    if (exampleobj && retXML) {
+                        exampleobj = _.unescape(exampleobj);
+                    }
                     $("#body_" + id + " textarea").val(exampleobj).height(150);
                 } catch (e) {
 

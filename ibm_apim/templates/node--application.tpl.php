@@ -228,6 +228,9 @@ drupal_add_js(drupal_get_path('module', 'application') . '/js/showclientid.js', 
               print "<div class='resourceView resourcePlanView'>";
               foreach ($api['resources'] as $pathname => $path) {
                 foreach ($path as $verb => $op) {
+                  if (!isset($op['description'])) {
+                    $op['description'] = '';
+                  }
                   print "<div class='displayInlineTop resourceHeadline'>";
                   if (isset($api['protocol']) && $api['protocol'] == 'wsdl') {
                     // remove soap action from path
@@ -236,9 +239,6 @@ drupal_add_js(drupal_get_path('module', 'application') . '/js/showclientid.js', 
                     $pathname = join('/', $dirs);
                     if (!isset($op['soap-action'])) {
                       $op['soap-action'] = '';
-                    }
-                    if (!isset($op['description'])) {
-                      $op['description'] = '';
                     }
                     print "<div class='displayInlineTop resourceMethod resourceMethodBadge'>" . check_plain($op['soap-action']) . "</div>
 		                   <div class='displayInlineTop resourcePathShort boundedText' title='" . check_plain($pathname) . "'>" . check_plain($pathname) . "</div>";

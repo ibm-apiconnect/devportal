@@ -2031,6 +2031,9 @@ function _ibm_apim_swaggerjson_callback($apiref) {
       $yaml = unserialize($node->api_resources[$node->language][0]['value']);
       header('Content-type: application/yaml');
       header('Content-Disposition: attachment; filename="' . $node->title . '.yaml"');
+      if (isset($yaml['definitions']) && empty($yaml['definitions'])) {
+        unset($yaml['definitions']);
+      }
       print yaml_emit($yaml);
     }
   }
@@ -2822,6 +2825,7 @@ function ibm_apim_form_alter(&$form, &$form_state, $form_id) {
       break;
     case 'seckit_admin_form':
       unset($form['seckit_xss']['csp']);
+      unset($form['seckit_ssl']);
       break;
   }
 }
@@ -3560,6 +3564,14 @@ function ibm_apim_cron($customurl = NULL) {
       }
     }
 
+    exec('bash -c "ADMIN_USER=$USER /home/admin/bin/clear_webhooks ' . $url . ' > >(ADMIN_USER=$USER ~admin/bin/background_sync_logger >> /var/log/devportal/background_sync.log) 2>&1"', $output, $rc);
+    if (isset($rc) && $rc != 0) {
+    	watchdog('ibm_apim_cron', 'clear_webhooks %rc. Output: %data', array(
+    	'%rc' => $rc,
+    	'%data' => var_export($output)
+    	), WATCHDOG_NOTICE);
+    }
+    
     $apim_host = variable_get('ibm_apim_host');
     exec('bash -c "/usr/local/bin/node /home/admin/bgsync/background_sync.js -o ' . $apim_host . ' -p ' . $url . ' ' . $secure . ' ' . $etagstring . ' 2> >(ADMIN_USER=$USER ~admin/bin/background_sync_logger >> /var/log/devportal/background_sync.log)"', $output, $rc);
     if (isset($rc) && $rc != 0) {

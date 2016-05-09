@@ -236,7 +236,6 @@ function _api_installed_instances() {
       'field_name' => 'api_image',
       'type' => 'image',
       'label' => t('Image'),
-      'required' => 0,
       'description' => t('Logo or image for this API'),
       'widget' => array(
         'type' => 'image_image',
@@ -448,7 +447,6 @@ function _api_installed_instances() {
       'type' => 'file',
       'label' => t('Documentation'),
       'description' => t('Documentation file attachments for this API'),
-      'required' => 0,
       'widget' => array(
         'type' => 'file_generic',
         'module' => 'file',
@@ -542,6 +540,18 @@ function api_update_7400() {
       watchdog('api', 'Instance %instance_name has been successfully added', array('%instance_name' => $fieldinstance['field_name']));
     }
     else {
+      // Fetch existing instance
+      $instance_info = field_info_instance('node', $fieldinstance['field_name'], 'api');
+      if (isset($instance_info)) {
+        // ensure all view modes are set
+        foreach ($fieldinstance['display'] as $key => $value) {
+          if (!isset($instance_info['display'][$key]) || $key == 'inner') {
+            $instance_info['display'][$key] = $value;
+          }
+        }
+        // Write the changed instance back.
+        field_update_instance($instance_info);
+      }
       watchdog('api', 'Instance %instance_name already exists', array('%instance_name' => $fieldinstance['field_name']));
     }
   }
@@ -569,4 +579,6 @@ function api_update_7400() {
       }
     }
   }
+
+
 }

@@ -553,6 +553,15 @@ header#header {
   margin-top: 84px;
 }
 
+.maintenance-page.in-maintenance .content {
+  padding: 50px;
+}
+
+/* Any menu block in the menu-bar region. */
+.menu-toggle {
+  display: none;
+}
+
 /* tablet landscape */
 @media screen and (min-width:769px) and (max-width:1024px) {
   h1#site-name {

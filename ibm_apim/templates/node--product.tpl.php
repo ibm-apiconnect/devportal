@@ -107,12 +107,22 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
                     'HEAD',
                     'PATCH'
                   ))) : ?>
+                    <?php if (isset($api['x-ibm-configuration']['type']) && strtolower($api['x-ibm-configuration']['type']) == 'wsdl' && isset($operation['x-ibm-soap']['soap-action'])) {
+                      $linktitle = $operation['x-ibm-soap']['soap-action'];
+                      $parts = explode(':', $linktitle);
+                      if (isset($parts[0]) && $parts[0] == 'urn' && isset($parts[1])) {
+                        $linktitle = $parts[1];
+                      }
+                    }
+                    else {
+                      $linktitle = strtoupper($verb) . ' ' . $pathSegment;
+                    } ?>
                     <li
                       class='tocItem toc-apis_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>_paths_<?php print preg_replace("/\W/", "", $pathSegment); ?>_<?php print $verb; ?>'>
                       <a class="<?php print strtolower($verb); ?>"
                          onclick="product.navigateop('apis_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>_paths_<?php print preg_replace("/\W/", "", $pathSegment); ?>_<?php print $verb; ?>', 'apis_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>')"
                          href="javascript:;"
-                         title="<?php print strtoupper($verb) . ' ' . $pathSegment; ?>"><?php print strtoupper($verb) . ' ' . $pathSegment; ?></a>
+                         title="<?php print $linktitle; ?>"><?php print $linktitle; ?></a>
                     </li>
                   <?php endif; ?>
                 <?php endforeach; ?>

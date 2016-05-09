@@ -108,7 +108,7 @@ class PopularAPIBlockBean extends BeanPlugin {
         }
         $markup .= '</div>'; // api image
         $markup .= '<div class="popularapi_title">' . popularapi_truncate_string($title, 50) . '<span class="version">' . $version . '</span></div>';
-        $markup .= '<div class="popularapi_description ' . $notop . '">' . $description . '</div>';
+        $markup .= '<div class="popularapi_description ' . $notop . '">' . ibm_apim_markdown_field($description) . '</div>';
         $markup .= '<div class="popularapi_detaillink"><span>' . t('Detail') . '</span></div>';
         $markup .= '</div></a></div>';
       }

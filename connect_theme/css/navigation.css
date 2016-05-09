@@ -75,10 +75,6 @@ ul.menu ul {
   padding: 0 10px;
 }
 
-/* Any menu block in the menu-bar region. */
-.menu-toggle {
-  display: none;
-}
 
 #menu-bar,
 #menu-bar .menu-wrapper {

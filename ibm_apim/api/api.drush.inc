@@ -45,28 +45,32 @@ function drush_api_cleanse_drush_command() {
   drupal_set_message(t('All API entries deleted.'), 'success');
 }
 
-function drush_api_createOrUpdateApi($func,$api) {
-	if (isset($api)) {
-		$api = json_decode($api, TRUE);
-		$ref = $api['document']['info']['x-ibm-name'] . ':' . $api['document']['info']['version'];
-		$createdOrUpdated = api_createOrUpdateAPI($api);
-		if ($createdOrUpdated) {
-			drupal_set_message(t('Drush @func created API @api', array( '@func' => $func, '@api' => $ref)), 'success');
-		} else {
-			drupal_set_message(t('Drush @func updated existing API @api', array( '@func' => $func, '@api' => $ref)), 'success');
-		}
-	}
-	else {
-		drupal_set_message(t('Drush @func No API provided', array( '@func' => $func)), 'error');
-	}
+function drush_api_createOrUpdateApi($func, $api) {
+  if (isset($api)) {
+    $api = json_decode($api, TRUE);
+    if (isset($api['document']['definitions']) && empty($api['document']['definitions'])) {
+      unset($api['document']['definitions']);
+    }
+    $ref = $api['document']['info']['x-ibm-name'] . ':' . $api['document']['info']['version'];
+    $createdOrUpdated = api_createOrUpdateAPI($api);
+    if ($createdOrUpdated) {
+      drupal_set_message(t('Drush @func created API @api', array('@func' => $func, '@api' => $ref)), 'success');
+    }
+    else {
+      drupal_set_message(t('Drush @func updated existing API @api', array('@func' => $func, '@api' => $ref)), 'success');
+    }
+  }
+  else {
+    drupal_set_message(t('Drush @func No API provided', array('@func' => $func)), 'error');
+  }
 }
 
 function drush_api_createapi($api) {
-  drush_api_createOrUpdateApi('CreateAPI',$api);
+  drush_api_createOrUpdateApi('CreateAPI', $api);
 }
 
 function drush_api_updateapi($api) {
-  drush_api_createOrUpdateApi('UpdateAPI',$api);
+  drush_api_createOrUpdateApi('UpdateAPI', $api);
 }
 
 function drush_api_deleteapi($id) {
@@ -81,37 +85,40 @@ function drush_api_deleteapi($id) {
       $keys = array_keys($results['node']);
       $nid = $keys[0];
       $api = node_load($nid);
-      
+
       //Check this api is not still referenced by a product
       $query = new EntityFieldQuery();
       $query->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', 'product')
+        ->entityCondition('bundle', 'product')
         ->fieldCondition('product_apis', 'value', $api->api_ref[$api->language][0]['value'], 'CONTAINS');
       $results = $query->execute();
       if (isset($results['node'])) {
-      	$prod_nids = array_keys($results['node']);
-      	$product_ids = array();
-      	if (is_array($prod_nids) && count($prod_nids) > 0) {
-      		foreach ($prod_nids as $prod_nid) {
-	      		$product = node_load($prod_nid);
-	      		$product_id = $product->product_ref[$product->language][0]['value'];
-	      		array_push($product_ids,$product_id);
-      		}
-      	}
-      	if (is_array($product_ids) && count($product_ids) > 0) {
-      		$prodids = implode(" ",$product_ids);
-      	} else {
-      		$prodids = implode(" ",$prod_nids);
-      	}
+        $prod_nids = array_keys($results['node']);
+        $product_ids = array();
+        if (is_array($prod_nids) && count($prod_nids) > 0) {
+          foreach ($prod_nids as $prod_nid) {
+            $product = node_load($prod_nid);
+            $product_id = $product->product_ref[$product->language][0]['value'];
+            array_push($product_ids, $product_id);
+          }
+        }
+        if (is_array($product_ids) && count($product_ids) > 0) {
+          $prodids = implode(" ", $product_ids);
+        }
+        else {
+          $prodids = implode(" ", $prod_nids);
+        }
         drupal_set_message(t('Drush DeleteAPI NOT deleting API @api as it is referenced by the following product(s) @prods', array(
           '@api' => $id,
           '@prods' => $prodids
         )), 'warning');
-      } else {
-      	api_deleteAPINode($nid);
+      }
+      else {
+        api_deleteAPINode($nid);
         drupal_set_message(t('Drush DeleteAPI deleted API @api', array('@api' => $id)), 'success');
       }
-    } else {
+    }
+    else {
       drupal_set_message(t('Drush DeleteAPI could not find API @api', array('@api' => $id)), 'warning');
     }
   }

@@ -16,6 +16,8 @@ drupal_add_css(drupal_get_path('module', 'ibm_apim') . '/css/mesh.css');
 drupal_add_css(drupal_get_path('module', 'ibm_apim') . '/css/product.css');
 drupal_add_css(drupal_get_path('module', 'ibm_apim') . '/css/sunburst.min.css');
 drupal_add_css(drupal_get_path('module', 'ibm_apim') . '/css/googlecode.min.css');
+libraries_load('underscore');
+drupal_add_library('underscore', 'underscore');
 $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
 $ibm_apim_enable_api_test = variable_get('ibm_apim_enable_api_test', 1);
 global $user;
@@ -108,7 +110,7 @@ else {
               </div>
             <?php endif; ?>
             <?php $docs = render($content['api_attachments']); ?>
-            <?php if ((isset($docs) && !empty($docs)) || (isset($api['externalDocs']) && !empty($api['externalDocs']) && isset($api['externalDocs']['url']))) : ?>
+            <?php if ((isset($docs) && !empty($docs)) || (isset($api['externalDocs']) && !empty($api['externalDocs']) && isset($api['externalDocs']['url'])) || isset($api['x-ibm-configuration']['externalDocs'])) : ?>
               <div>
                 <label><?php print t('Documentation'); ?></label>
                 <?php if (isset($api['externalDocs'])) : ?>
@@ -232,7 +234,11 @@ else {
   </div>
   <div class="pathHeading">
     <div class='left'>
-      <h2><?php print t('Paths'); ?></h2>
+      <?php if ($protocol == 'wsdl') : ?>
+        <h2><?php print t('Operations'); ?></h2>
+      <?php else: ?>
+        <h2><?php print t('Paths'); ?></h2>
+      <?php endif; ?>
     </div><div
       class='right'></div>
   </div>
@@ -781,7 +787,8 @@ else {
                             <?php endif; ?>
                           </div>
                         </div>
-                        <?php $bodypresent = FALSE; ?>
+                        <?php $bodypresent = FALSE;
+                        unset($bodyparam); ?>
                         <?php if (isset($path['parameters']) && is_array($path['parameters'])) : ?>
                           <?php foreach ($path['parameters'] as $parameter)  : ?>
                             <?php if (isset($parameter['$ref'])) {
@@ -789,7 +796,8 @@ else {
                               $parameter = api_get_ref_param($api, $parameter['$ref']);
                             } ?>
                             <?php if (isset($parameter['in']) && $parameter['in'] == "body")  : ?>
-                              <?php $bodypresent = TRUE; ?>
+                              <?php $bodypresent = TRUE;
+                              $bodyparam = $parameter; ?>
                             <?php endif; ?>
                           <?php endforeach; ?>
                         <?php endif; ?>
@@ -800,7 +808,8 @@ else {
                               $parameter = api_get_ref_param($api, $parameter['$ref']);
                             } ?>
                             <?php if (isset($parameter['in']) && $parameter['in'] == "body")  : ?>
-                              <?php $bodypresent = TRUE; ?>
+                              <?php $bodypresent = TRUE;
+                              $bodyparam = $parameter; ?>
                             <?php endif; ?>
                           <?php endforeach; ?>
                         <?php endif; ?>
@@ -809,7 +818,7 @@ else {
                           <div class="contrast">
                             <div class='parameter'
                                  id='body_apis_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>_paths_<?php print preg_replace("/\W/", "", $pathSegment) . '_' . $verb; ?>'>
-                              <textarea name="<?php print $parameter['name']; ?>" class='parameterValue'></textarea>
+                              <textarea name="<?php print $bodyparam['name']; ?>" class='parameterValue'></textarea>
                             </div>
                           </div>
                         <?php endif; ?>

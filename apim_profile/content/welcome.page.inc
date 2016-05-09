@@ -16,7 +16,7 @@ function apim_profile_create_welcome_page($name = 'welcome') {
     'cache' => 'a:0:{}',
     'title_pane' => 0,
     'hide_title' => 0,
-    'title' => 'Popular APIs',
+    'title' => 'Featured APIs',
     'uuid' => '60a355e1-ae82-46aa-9643-dbd87799e692'
   ))->execute();
   $minipanelid = db_query("SELECT did FROM {panels_display} WHERE uuid=:uuid", array(
@@ -26,7 +26,7 @@ function apim_profile_create_welcome_page($name = 'welcome') {
   db_insert('panels_mini')->fields(array(
     'name' => 'popular_apis',
     'did' => $minipanelid,
-    'admin_title' => 'Popular APIs',
+    'admin_title' => 'Featured APIs',
     'contexts' => 'a:0:{}',
     'requiredcontexts' => 'a:0:{}',
     'relationships' => 'a:0:{}'

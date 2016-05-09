@@ -308,3 +308,27 @@ function devorg_updateDevorgNode($consumer) {
     }
   }
 }
+
+/**
+ * Returns a list of NIDs for devorg nodes the current user is authorized to see
+ * @return array
+ */
+function devorg_list_devorgs() {
+  $returnnids = array();
+  if (user_is_logged_in()) {
+    $myorg = ibm_apim_get_current_developer_org();
+    if (isset($myorg['id'])) {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'devorg')
+        ->fieldCondition('devorg_id', 'value', $myorg['id']);
+      $results = $query->execute();
+
+      if (isset($results['node'])) {
+        $keys = array_keys($results['node']);
+        $returnnids = array_merge($returnnids, $keys);
+      }
+    }
+  }
+  return $returnnids;
+}

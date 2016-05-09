@@ -114,11 +114,11 @@ dependencies[] = session_limit
 dependencies[] = transliteration
 dependencies[] = context
 dependencies[] = metatag
-dependencies[] = restws
 dependencies[] = admin_menu
 dependencies[] = adminimal_admin_menu
 dependencies[] = mailsystem
 dependencies[] = htmlmail
+dependencies[] = underscore
 
 ;Enable our modules
 dependencies[] = ibm_apim

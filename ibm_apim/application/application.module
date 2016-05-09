@@ -1439,7 +1439,7 @@ function _application_edit_application_form($form, &$form_state, $appId = NULL) 
  *          The form state
  */
 function _application_edit_application_form_submit_handler($form, &$form_state) {
-  $name = $form_state['values']['title'];
+  $name = $form_state['input']['title'];
   $description = $form_state['input']['application_description']['und'][0]['value'];
   $oauthurl = $form_state['input']['application_oauthredirecturi']['und'][0]['value'];
   $developer_org = $form_state['input']['developerorg'];

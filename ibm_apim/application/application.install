@@ -380,6 +380,18 @@ function application_update_7400() {
       ));
     }
     else {
+      // Fetch existing instance
+      $instance_info = field_info_instance('node', $fieldinstance['field_name'], 'application');
+      if (isset($instance_info)) {
+        // ensure all view modes are set
+        foreach ($fieldinstance['display'] as $key => $value) {
+          if (!isset($instance_info['display'][$key])) {
+            $instance_info['display'][$key] = $value;
+          }
+        }
+        // Write the changed instance back.
+        field_update_instance($instance_info);
+      }
       watchdog('application', 'Instance %instance_name already exists', array(
         '%instance_name' => $fieldinstance['field_name']
       ));

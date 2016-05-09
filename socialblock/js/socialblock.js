@@ -4,7 +4,8 @@ window.onload = function () {
     const TITLE_CLASS = '.socialblock.title';
     const TITLES = document.querySelectorAll(TITLE_CLASS);
     const REM = getRem();
-
+    const SINGLE_COL = 20 * REM;
+    const MULTI_COL = (20 * 2 + 1.25) * REM;
     for (var i = 0; i < TITLES.length; i++) {
         var borderWidth = parseFloat(getComputedStyle(TITLES[i]).getPropertyValue('border-width'));
         var titleHeight = parseFloat(getComputedStyle(TITLES[i]).getPropertyValue('height')) - borderWidth * 2;
@@ -15,19 +16,36 @@ window.onload = function () {
             TITLES[i].style.overflow = 'hidden';
         }
     }
-
     var cards = document.querySelectorAll('.socialblock.card.tweet');
     for (var j = 0; j < cards.length; j++) {
         if (cards[j].children.length > 2) {
             cards[j].children[0].style.border = 'none';
         }
     }
-
-    var container = document.querySelectorAll(CONTAINER_CLASS);
-    for (var i = 0; i < container.length; i++) {
-        var msnry = new Masonry(container[i], {
+    var containers = document.querySelectorAll(CONTAINER_CLASS);
+    for (var k = 0; k < containers.length; k++) {
+        eqjs.definePts(containers[k], {
+            single_col: SINGLE_COL,
+            multi_col: MULTI_COL
+        });
+        jQuery(containers[k]).masonry({
             gutter: 1.25 * REM,
             fitWidth: true
+        });
+        containers[k].addEventListener('eqResize', function (e) {
+            var width = jQuery(e.target).width();
+            if (width <= SINGLE_COL) {
+                if (Masonry.data(e.target)) { //Masonry initialised
+                    jQuery(e.target).masonry('destroy');
+                }
+            } else {
+                if (!Masonry.data(e.target)) {
+                    jQuery(e.target).masonry({
+                        gutter: 1.25 * REM,
+                        fitWidth: true
+                    });
+                }
+            }
         });
     }
 };
