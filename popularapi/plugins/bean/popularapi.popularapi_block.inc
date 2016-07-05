@@ -77,18 +77,14 @@ class PopularAPIBlockBean extends BeanPlugin {
       if (isset($node)) {
         $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
 
-        $title = $node->title;
-        $description = $node->api_description[$node->language][0]['value'];
-        $version = $node->api_version[$node->language][0]['value'];
-        if (!isset($title)) {
-          $title = '';
-        }
-        if (!isset($description) || empty($description)) {
+        $title = isset($node->title) ? $node->title : '';
+        $version = isset($node->api_version[$node->language][0]['value']) ? $node->api_version[$node->language][0]['value'] : '';
+        if (!isset($node->api_description[$node->language][0]['value']) || empty($node->api_description[$node->language][0]['value'])) {
           $description = '';
           $notop = 'notop';
         }
-        if (!isset($version)) {
-          $version = '';
+        else {
+          $description = $node->api_description[$node->language][0]['value'];
         }
         $markup = '<div class="popularapiblock api"><a href="' . url('node/' . $nid) . '"><div class="wrapper"><div class="popularapi_image">';
         if (isset($node->api_image) && !empty($node->api_image)) {

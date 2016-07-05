@@ -1,0 +1,9 @@
+name = Site Test helpers
+description = Test helpers to be used with Simpletest test module.
+core = 7.x
+package = Other
+version = 7.x-1
+dependencies[] = simpletest
+dependencies[] = libraries
+dependencies[] = drupal_helpers
+files[] = site_test_helpers_case.php

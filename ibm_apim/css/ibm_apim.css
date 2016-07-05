@@ -65,7 +65,7 @@ body.node-type-api .main-content-header {
 .portal .section {
   border-bottom: 1px solid;
 
-  padding-top: 10px;
+  padding-top: 10px; 
   padding-bottom: 10px;
 }
 
@@ -96,8 +96,8 @@ body.node-type-api .main-content-header {
 .portal .apimInfoSection .section:last-child {
   border-bottom: 0;
 }
-.portal .section label.sectionHeader{
-  display: block;
+.portal .section label.sectionHeader{ 
+  display: block; 
   margin-bottom: 10px;
 }
 .portal .section.apimPlansApis {
@@ -139,9 +139,9 @@ p.apimTitle {
 
 @media only screen and (max-width:640px) {
   .apimTeaser {
-    float: none;
-    width: 100%;
-  }
+  float: none;
+  width: 100%;
+  }	
 }
 /* override the 50% for search results */
 li .apimTeaser {
@@ -170,7 +170,6 @@ li .apimTeaser {
   display: inline-block;
 }
 
-
 h3.apimSummaryTitle {
   margin-bottom: 0;
   font-size: 1.2em;
@@ -179,6 +178,11 @@ h4.apimSummaryTitle {
   margin-bottom: 0;
   margin-top: 10px;
   font-size: 1.08em;
+}
+
+.apimSummaryTitle .apicount {
+  font-size: 0.83em;
+  padding: 0 15px;
 }
 
 .apimUpdated {
@@ -192,8 +196,8 @@ h4.apimSummaryTitle {
   background-repeat: no-repeat;
   float: left;
   margin-right: 10px;
-  min-width: 100px;
-  min-height: 100px;
+  min-width: 48px;
+  min-height: 48px;
 }
 
 .apimAPIImage .apimIcon {
@@ -216,13 +220,22 @@ h4.apimSummaryTitle {
   width: 70px;
   height: 70px;
 }
+
+.node-product.node-teaser h2.apimSummaryTitle {
+  margin-top: 10px;
+}
+
+.node-teaser .apimTeaser .apimIcon {
+  width: 48px;
+  height: 48px;
+}
 .apimTeaser .apimIcon figure.clearfix.field-item {
   margin: 0;
   padding-top: 0;
 }
-.apimIcon .ia-c .field-type-image figure,
-.apimIcon .ia-n .field-type-image figure,
-.apimIcon .iat-c .field-type-image figure,
+.apimIcon .ia-c .field-type-image figure, 
+.apimIcon .ia-n .field-type-image figure, 
+.apimIcon .iat-c .field-type-image figure, 
 .apimIcon .iat-n .field-type-image figure {
   padding: 0;
 }
@@ -334,7 +347,7 @@ div.credentialTitle .addCredentials {
 }
 
 .planName {
-  line-height: 25px;
+  line-height: 25px;	
 }
 
 .apimMainContent {
@@ -359,7 +372,7 @@ div.credentialTitle .addCredentials {
   width: 20%;
 }
 
-.apiDocRight {
+.apiDocRight {  
   padding-bottom: 5px;
   margin-left: 30%;
 }
@@ -424,7 +437,7 @@ div.credentialTitle .addCredentials {
 }
 .apiDocumentIcon.txtDocType {
   background-image: url(../images/filetypes/txt.png);
-}
+} 
 .apiDocumentIcon.xlsDocType {
   background-image: url(../images/filetypes/xls.png);
 }
@@ -447,7 +460,7 @@ div.credentialTitle .addCredentials {
 }
 
 .plansection {
-  margin-top: 20px;
+  margin-top: 20px; 
 }
 .plansection .planintro {
   margin-top: 0;
@@ -487,7 +500,7 @@ div.credentialTitle .addCredentials {
   width: 200px;
 }
 .apiPlanSummary .portal .portalApi .resourcePathShort {
-  width: auto;
+  width: auto; 
 }
 .portal .portalApi .resourceName {
   width: 150px;
@@ -881,7 +894,7 @@ div.credentialInfo {
   padding-right: 20px;
 }
 .portalApi.animateMaxHeight {
-  max-height: 800px;
+  max-height: 800px; 
   overflow-y: auto;
   overflow-x: hidden;
   border-top: 1px solid rgb(204, 204, 204);
@@ -896,10 +909,10 @@ div.credentialInfo {
 }
 
 .apimTitleContainer .displayInlineTop {
-  padding-right: 20px;
+  padding-right: 20px; 
 }
 .apimTitleContainer .displayInlineTop.planName {
-  margin-bottom: 20px;
+  margin-bottom: 20px; 
   border-right: 1px solid #CCC;
 }
 /* checkboxes on admin panel */
@@ -925,7 +938,7 @@ div.password-indicator div[style="width: 10%;"] {
 .ui-accordion .ui-state-default,
 .ui-accordion .ui-widget-content .ui-state-default,
 .ui-accordion .ui-widget-header .ui-state-default {
-  background: none;
+  background: none; 
   border: 0;
 }
 
@@ -1040,23 +1053,23 @@ span.flag-wrapper.flag-bookmarks {
 
 /* d3 */
 .linepath {
-  fill:none;
-  stroke:white;
-  stroke-width:2px;
+    fill:none;
+    stroke:white;
+    stroke-width:2px;
 }
 
 .axis path, .axis line {
-  fill: none;
-  stroke: #777;
-  shape-rendering: crispEdges;
+    fill: none;
+    stroke: #777;
+    shape-rendering: crispEdges;
 }
 
 .tick {
-  stroke-dasharray: 1, 2;
+    stroke-dasharray: 1, 2;
 }
 
 .bar {
-  fill: FireBrick;
+    fill: FireBrick;
 }
 
 .line {
@@ -1072,40 +1085,40 @@ span.flag-wrapper.flag-bookmarks {
 }
 
 .path_avg {
-  stroke: steelblue;
+    stroke: steelblue;
 }
 .path_max {
-  stroke: red;
+    stroke: red;
 }
 .path_min {
-  stroke: green;
+    stroke: green;
 }
 .path_success {
-  stroke: #2ca02c;
+    stroke: #2ca02c;
 }
 .path_failure {
-  stroke: #d62728;
+    stroke: #d62728;
 }
 .path_total {
-  stroke: #9467bd;
+    stroke: #9467bd;
 }
 .fill_avg {
-  fill: steelblue;
+    fill: steelblue;
 }
 .fill_max {
-  fill: red;
+    fill: red;
 }
 .fill_min {
-  fill: green;
+    fill: green;
 }
 .fill_success {
-  fill: #2ca02c;
+    fill: #2ca02c;
 }
 .fill_failure {
-  fill: #d62728;
+    fill: #d62728;
 }
 .fill_total {
-  fill: #9467bd;
+    fill: #9467bd;
 }
 .circle-outer.path_avg {
   fill: steelblue;
@@ -1132,32 +1145,32 @@ span.flag-wrapper.flag-bookmarks {
   stroke: none;
 }
 
-.ui-tabs-vertical {
+.ui-tabs-vertical { 
   width: 100%;
 }
-.ui-tabs-vertical .ui-tabs-nav {
-  padding: .2em .1em .2em .2em;
-  float: left;
-  width: 12em;
+.ui-tabs-vertical .ui-tabs-nav { 
+  padding: .2em .1em .2em .2em; 
+  float: left; 
+  width: 12em; 
 }
-.ui-tabs-vertical .ui-tabs-nav li {
-  clear: left;
-  width: 100%;
-  border-bottom-width: 1px !important;
-  border-right-width: 0 !important;
-  margin: 0 -1px .2em 0;
+.ui-tabs-vertical .ui-tabs-nav li { 
+  clear: left; 
+  width: 100%; 
+  border-bottom-width: 1px !important; 
+  border-right-width: 0 !important; 
+  margin: 0 -1px .2em 0; 
 }
-.ui-tabs-vertical .ui-tabs-nav li a {
+.ui-tabs-vertical .ui-tabs-nav li a { 
   display: block;
   width: 75%;
 }
-.ui-tabs-vertical .ui-tabs-nav li.ui-tabs-active {
-  padding-bottom: 0;
+.ui-tabs-vertical .ui-tabs-nav li.ui-tabs-active { 
+  padding-bottom: 0; 
   border-right-width: 1px;
 }
-.ui-tabs-vertical .ui-tabs-panel {
+.ui-tabs-vertical .ui-tabs-panel { 
   padding: 5px 1em 1em 1em;
-  float: right;
+  float: right; 
   width: 47em;
 }
 
@@ -1187,8 +1200,8 @@ span.flag-wrapper.flag-bookmarks {
 .plantabs ul.ui-tabs-nav li.ui-state-active .selected-arrow {
   display: inline-block;
   float: right;
-  width: 0;
-  height: 0;
+  width: 0; 
+  height: 0; 
   border-top: 7px solid transparent;
   border-bottom: 7px solid transparent;
   border-right: 7px solid #ffffff;
@@ -1219,7 +1232,7 @@ span.flag-wrapper.flag-bookmarks {
   color: #d2d2d2;
 }
 
-.plantab p.plancontentheader{
+.plantab p.plancontentheader{    
   margin-bottom: 15px;
   padding: 0 5px;
 }
@@ -1237,7 +1250,7 @@ span.flag-wrapper.flag-bookmarks {
   font-weight: 600;
 }
 
-.plantab p.plancontentheader .planratelimit{
+.plantab p.plancontentheader .planratelimit{    
   float: right;
   color: #000000;
 }
@@ -1319,20 +1332,29 @@ p.all-apps-subscribed {
 }
 
 /* fix path to images for modules_filter module */
-#system-modules .expand.inner {
+.content #system-modules .expand.inner {
   background: transparent url(../../../../../misc/menu-collapsed.png) left 0.6em no-repeat;
   margin-left: -12px;
   padding-left: 12px;
 }
-#system-modules .expanded.expand.inner {
+
+.content #system-modules .expanded.expand.inner {
   background: transparent url(../../../../../misc/menu-expanded.png) left 0.6em no-repeat;
 }
+
+/* fix css for workbench_moderation module */
+@media screen and (max-width: 1064px) {
+  .content #workbench-moderation-states input.form-text {
+    max-width: 150px;
+  }
+}
+
 
 /* hide tags field on application create/edit form */
 form#application-node-form .field-type-taxonomy-term-reference-form {
   display: none;
 }
-form#application-node-form .image-widget-data input[type="submit"],
+form#application-node-form .image-widget-data input[type="submit"], 
 form#application-node-form .image-widget-data input.form-submit {
   line-height: 1.2em;
 }
@@ -1562,4 +1584,40 @@ p.all-apps-subscribed a {
 
 .page-user .columns-inner #tasks ul.tabs.secondary {
   border-top: 0;
+}
+
+article.node-product.node-teaser {
+  margin-left: auto;
+  margin-right: auto;
+  width: 70%;
+  min-width: 600px;
+}
+
+.page-user .hybridauth-widget-wrapper {
+  margin-bottom: 40px;
+}
+
+.node-type-application .multiRateLimits {
+  display: inline-block;
+}
+
+.node-type-application .plansFooter {
+  padding-top: 15px;
+  font-size: 0.8em;
+  color: #444849;
+}
+
+.ratePopup {
+  padding: 10px;
+  font-size: 0.89rem;
+}
+
+.ratePopup .rateLabel,
+.ratePopup .burstLabel {
+  font-weight: bold;
+  padding-bottom: 5px;
+}
+
+.ratePopup .burstLabel {
+  padding-top: 8px;
 }

@@ -80,6 +80,8 @@ function apim_profile_install() {
   variable_set('l10n_update_check_mode', '2');
   variable_set('ibm_apim_disable_i18n_update', 1);
 
+  variable_set('ibm_apim_disable_markdown', 1);
+
   // enable language detection
   variable_set('language_negotiation_language', array(
     "locale-user" => array(
@@ -499,7 +501,10 @@ application/*',
   // force change of password if using a one-time password reset link
   variable_set('password_policy_force_change_reset', 1);
   variable_set('password_policy_show_restrictions', 1);
-
+  //new line is important in variable value below!
+  variable_set('password_policy_force_change_extra_allowed_paths', 'system/ajax
+js/admin_menu/cache/*');
+  variable_set('ibm_apim_done_password_policy_path_upgd', 1);
   variable_set('ibm_apim_done_unlock_fields_upgrade', 1);
 
   // disable comments on applications
@@ -897,7 +902,7 @@ application/*',
   ));
   variable_set('ibm_apim_done_frameprevention_upgrade', 1);
   variable_set('seckit_csrf', array('origin' => 1, 'origin_whitelist' => ""));
-  variable_set('seckit_ssl', array('hsts' => 0, 'hsts_max_age' => "1000", 'hsts_subdomains' => 1));
+  variable_set('seckit_ssl', array('hsts' => 1, 'hsts_max_age' => "1000", 'hsts_subdomains' => 1));
   variable_set('seckit_various', array('from_origin' => 0, 'from_origin_destination' => "same"));
   variable_set('seckit_xss', array(
     'csp' => array(
@@ -2715,7 +2720,7 @@ function apim_profile_update_7400() {
     'site_uploader',
     'comprehensive_uninstaller',
     'ultimate_cron',
-    'markdown',
+    'ghmarkdown',
     'front_page',
     'label_help',
     'slick',
@@ -2743,7 +2748,9 @@ function apim_profile_update_7400() {
     'socialblock',
     'admin_menu',
     'adminimal_admin_menu',
-    'underscore'
+    'underscore',
+    'hide_submit',
+    'user_pwreset_timeout'
   );
   module_enable($modules, TRUE);
 
@@ -2763,6 +2770,26 @@ function apim_profile_update_7400() {
       'bin' => 'cache_ultimate_cron',
       'timeout' => '-1'
     ));
+  }
+
+  if (variable_get('ibm_apim_done_password_policy_path_upgd', NULL) == NULL) {
+    $unprocessed_paths = variable_get('password_policy_force_change_extra_allowed_paths', 'system/ajax');
+    $paths = array_filter(preg_split("/(\n|\r)/", $unprocessed_paths));
+    $found_adminjs = FALSE;
+    if (isset($paths) && is_array($paths)) {
+      foreach ($paths as $path) {
+        if ($path == 'js/admin_menu/cache/*') {
+          $found_adminjs = TRUE;
+        }
+      }
+    }
+    if ($found_adminjs == FALSE) {
+      // need new line char in this variable too
+      $unprocessed_paths .= '
+js/admin_menu/cache/*';
+      variable_set('password_policy_force_change_extra_allowed_paths', $unprocessed_paths);
+    }
+    variable_set('ibm_apim_done_password_policy_path_upgd', 1);
   }
 
   // temporarily force CSP to be off since doesnt currently work
@@ -2808,6 +2835,30 @@ function apim_profile_update_7400() {
     variable_set('ibm_apim_set_frontpage_title', 1);
   }
 
+  if (variable_get('ibm_apim_socialblock_encryption', NULL) == NULL) {
+    if (module_exists('socialblock')) {
+      if (variable_get('twitter_oauth_settings', NULL) == NULL) {
+        $settings = array();
+        $settings['twitter_consumer_key'] = variable_get('twitter_consumer_key', '');
+        $settings['twitter_consumer_secret'] = variable_get('twitter_consumer_secret', '');
+        $settings['twitter_access_token'] = variable_get('twitter_access_token', '');
+        $settings['twitter_token_secret'] = variable_get('twitter_token_secret', '');
+        $client_id = variable_get('ibm_apim_client_id');
+        if (isset($client_id)) {
+          $iv_size = mcrypt_get_iv_size(MCRYPT_CAST_256, MCRYPT_MODE_CBC);
+          $iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
+          $value = openssl_encrypt(serialize($settings), "AES-256-CBC", $client_id, 0, $iv);
+          variable_set('twitter_oauth_settings', $iv . $value);
+          variable_del('twitter_consumer_key');
+          variable_del('twitter_consumer_secret');
+          variable_del('twitter_access_token');
+          variable_del('twitter_token_secret');
+        }
+      }
+    }
+    variable_set('ibm_apim_socialblock_encryption', 1);
+  }
+
   if (variable_get('ibm_apim_admin_theme_enabled', NULL) == NULL) {
     module_disable(array('toolbar'), TRUE);
     // enable the adminimal admin theme
@@ -2824,31 +2875,6 @@ function apim_profile_update_7400() {
     }
     variable_set('ibm_apim_create_v5_frontpage', 1);
   }
-
-  if (variable_get('ibm_apim_socialblock_encryption', NULL) == NULL) {
-    if (module_exists('socialblock')) {
-      if (variable_get('twitter_oauth_settings', NULL) == NULL) {
-        $settings = array();
-        $settings['twitter_consumer_key'] = variable_get('twitter_consumer_key', '');
-        $settings['twitter_consumer_secret'] = variable_get('twitter_consumer_secret', '');
-        $settings['twitter_access_token'] = variable_get('twitter_access_token', '');
-        $settings['twitter_token_secret'] = variable_get('twitter_token_secret', '');
-        $client_id = variable_get('ibm_apim_client_id');
-        if (isset($client_id)) {
-          $iv_size = mcrypt_get_iv_size(MCRYPT_CAST_256, MCRYPT_MODE_CBC);
-          $iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
-          $value = openssl_encrypt(serialize($settings), "AES-256-CBC", $client_id, 0, $iv);
-          variable_set('twitter_oauth_settings', $iv.$value);
-          variable_del('twitter_consumer_key');
-          variable_del('twitter_consumer_secret');
-          variable_del('twitter_access_token');
-          variable_del('twitter_token_secret');
-        }
-      }
-    }
-    variable_set('ibm_apim_socialblock_encryption', 1);
-  }
-
   if (variable_get('ibm_apim_enable_connect_theme', NULL) == NULL) {
     $theme_default = variable_get('theme_default');
     if (isset($theme_default) && $theme_default == 'ibm_apim_theme') {
@@ -2976,6 +3002,11 @@ function apim_profile_update_7400() {
   if (variable_get('ibm_apim_enable_account_tabs', NULL) == NULL) {
     module_enable(array('account_tabs'), TRUE);
     variable_set('ibm_apim_enable_account_tabs', 1);
+  }
+
+  if (variable_get('ibm_apim_disable_markdown', NULL) == NULL) {
+    module_disable(array('markdown'), TRUE);
+    variable_set('ibm_apim_disable_markdown', 1);
   }
 
   if (variable_get('ibm_apim_disable_jqmulti', NULL) == NULL) {
@@ -3295,16 +3326,17 @@ application/*',
     if (variable_get('seckit_csrf', NULL) == NULL) {
       variable_set('seckit_csrf', array('origin' => 1, 'origin_whitelist' => ""));
     }
-    if (variable_get('seckit_various', NULL) == NULL) {
-      variable_set('seckit_various', array('from_origin' => 0, 'from_origin_destination' => "same"));
-    }
     if (variable_get('seckit_ssl', NULL) == NULL) {
       variable_set('seckit_ssl', array('hsts' => 0, 'hsts_max_age' => "1000", 'hsts_subdomains' => 1));
-    } else {
+    }
+    else {
       $hsts = variable_get('seckit_ssl');
       if ($hsts['hsts'] != 0) {
         variable_set('seckit_ssl', array('hsts' => 0, 'hsts_max_age' => "1000", 'hsts_subdomains' => 1));
       }
+    }
+    if (variable_get('seckit_various', NULL) == NULL) {
+      variable_set('seckit_various', array('from_origin' => 0, 'from_origin_destination' => "same"));
     }
     if (variable_get('seckit_xss', NULL) == NULL) {
       variable_set('seckit_xss', array(
@@ -3691,7 +3723,6 @@ function _apim_profile_fix_autosuggest_nodeview() {
   $handler->display->display_options['query']['options']['query_comment'] = FALSE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
   $handler->display->display_options['exposed_form']['options']['submit_button'] = 'Search';
-  $handler->display->display_options['exposed_form']['options']['exposed_sorts_label'] = 'Sort by';
   $handler->display->display_options['pager']['type'] = 'some';
   $handler->display->display_options['pager']['options']['items_per_page'] = '15';
   $handler->display->display_options['pager']['options']['offset'] = '0';
@@ -3781,6 +3812,23 @@ function _apim_profile_fix_autosuggest_nodeview() {
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
   $handler->display->display_options['path'] = 'nodes-autocomplete';
+  $translatables['nodes_autocomplete'] = array(
+    t('Master'),
+    t('Node title suggestions for autocompletion'),
+    t('plus'),
+    t('Search'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('author'),
+    t('.'),
+    t(' '),
+    t(' comment(s)'),
+    t('title'),
+    t('Page'),
+    t('more'),
+  );
   views_save_view($view);
 }
 

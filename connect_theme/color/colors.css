@@ -376,6 +376,10 @@ div.credentialTitle .addCredentials {
   border-bottom: 1px solid #dddddd;
 }
 
+.node-product.node-teaser .apimSummary {
+  border: 1px solid #dddddd;
+}
+
 /* forums */
 .forum-table-wrap .forum-table-superheader {
   background-color: #f2f2f2;

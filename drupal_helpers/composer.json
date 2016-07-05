@@ -1,0 +1,11 @@
+{
+  "require-dev": {
+    "alexdesignworks/dcr": "0.0.*",
+    "phpunit/phpunit": "4.8.*"
+  },
+  "autoload": {
+    "psr-0": {
+      "Drupal\\drupal_helpers\\": "lib/"
+    }
+  }
+}

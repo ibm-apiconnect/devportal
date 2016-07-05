@@ -1,0 +1,6 @@
+name = Drupal Helpers
+description = Collection of helper functions and classes.
+php = 5.3
+core = 7.x
+
+dependencies[] = xautoload (>= 7.x-4.0)

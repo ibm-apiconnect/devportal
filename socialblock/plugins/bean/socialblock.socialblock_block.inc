@@ -23,7 +23,8 @@ class SocialBlockBean extends BeanPlugin {
       'forums' => array(),
       'display_all_forums' => 1,
       'twitter_api' => 0,
-      'twitter_param' => 'ibmapiconnect'
+      'twitter_param' => 'ibmapiconnect',
+      'tweet_filter' => 0
     );
   }
 
@@ -80,7 +81,7 @@ class SocialBlockBean extends BeanPlugin {
     );
     $bean->forums = $bean->display_all_forums == 1 ? $this->forum_tids : (isset($bean->forums) ? $bean->forums : array());
     $form['cron_info'] = array(
-      '#markup' => '<p>' . t('These settings will take effect when cron next runs.') . '&nbsp;' . t('Navigate to <a href="@url">Administration >> Reports >> Status report</a> to run cron manually.', array('@url' => url('admin/reports/status'))) . '</p>'
+      '#markup' => '<p>' . t('NOTE: These settings will take effect when cron next runs.') . '&nbsp;' . t('Navigate to <a href="@url">Administration >> Reports >> Status report</a> to run cron manually.', array('@url' => url('admin/reports/status'))) . '</p>'
     );
     $form['forums'] = array(
       '#title' => t('Forums'),
@@ -91,7 +92,13 @@ class SocialBlockBean extends BeanPlugin {
       '#empty' => t('No forums available.'),
       '#multiple' => TRUE
     );
-    $form['twitter_api'] = array(
+    $form['twitter_api_config'] = array(
+      '#type' => 'container',
+      '#attributes' => array(
+        'class' => array('container-inline')
+      )
+    );
+    $form['twitter_api_config']['twitter_api'] = array(
       '#title' => t('Get tweets from'),
       '#type' => 'select',
       '#options' => array(
@@ -101,9 +108,19 @@ class SocialBlockBean extends BeanPlugin {
       '#default_value' => isset($bean->twitter_api) ? $bean->twitter_api : 0,
       '#required' => TRUE
     );
-    $form['twitter_param'] = array(
+    $form['twitter_api_config']['twitter_param'] = array(
       '#type' => 'textfield',
       '#default_value' => isset($bean->twitter_param) ? $bean->twitter_param : '',
+      '#required' => TRUE
+    );
+    $form['tweet_filter'] = array(
+      '#title' => 'Type of tweets to display',
+      '#type' => 'select',
+      '#options' => array(
+        0 => t('Tweets'),
+        1 => t('Tweets & replies')
+      ),
+      '#default_value' => isset($bean->tweet_filter) ? $bean->tweet_filter : 0,
       '#required' => TRUE
     );
     $form['#attached']['js'] = array(

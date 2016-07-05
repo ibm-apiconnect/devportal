@@ -1,0 +1,8 @@
+name = IBM API Connect Social Login
+description = A module to enable the portal to manage developer accounts enabling the use of Open ID Connect based social network logins.
+package = IBM API Connect v5
+core = 7.x
+dependencies[] = ibm_apim
+dependencies[] = hybridauth
+
+version = VERSION

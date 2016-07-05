@@ -7,7 +7,7 @@ function _ibm_apim_add_user_first_name_field() {
     $field = array(
       'field_name' => 'field_first_name',
       'type' => 'text',
-      'settings' => array('required' => FALSE, 'max_legnth' => '255')
+      'settings' => array('required' => FALSE, 'max_length' => '255')
     );
     field_create_field($field);
     $instance = array(
@@ -43,7 +43,7 @@ function _ibm_apim_add_user_last_name_field() {
     $field = array(
       'field_name' => 'field_last_name',
       'type' => 'text',
-      'settings' => array('required' => FALSE, 'max_legnth' => '255')
+      'settings' => array('required' => FALSE, 'max_length' => '255')
     );
     field_create_field($field);
     $instance = array(
@@ -79,7 +79,7 @@ function _ibm_apim_add_user_developerorg_field() {
     $field = array(
       'field_name' => 'field_developer_organization',
       'type' => 'text',
-      'settings' => array('required' => FALSE, 'max_legnth' => '255')
+      'settings' => array('required' => FALSE, 'max_length' => '255')
     );
     field_create_field($field);
     $instance = array(
@@ -115,7 +115,7 @@ function _ibm_apim_add_user_company_field() {
     $field = array(
       'field_name' => 'field_company',
       'type' => 'text',
-      'settings' => array('required' => FALSE, 'max_legnth' => '255')
+      'settings' => array('required' => FALSE, 'max_length' => '255')
     );
     field_create_field($field);
     $instance = array(
@@ -200,7 +200,7 @@ function _ibm_apim_add_user_phone_field() {
     $field = array(
       'field_name' => 'field_phone',
       'type' => 'text',
-      'settings' => array('required' => FALSE, 'max_legnth' => '255')
+      'settings' => array('required' => FALSE, 'max_length' => '255')
     );
     field_create_field($field);
     $instance = array(
@@ -224,6 +224,43 @@ function _ibm_apim_add_user_phone_field() {
       ),
       'description' => 'Enter your phone number.',
       'settings' => array('user_register_form' => 0, 'weight' => -5)
+    );
+    field_create_instance($instance);
+  }
+}
+
+function _ibm_apim_add_user_uid_field() {
+  // create uid field
+  $existingfield = field_info_field('field_uid');
+  if (!isset($existingfield)) {
+    $field = array(
+      'field_name' => 'field_uid',
+      'type' => 'text',
+      'settings' => array('required' => FALSE, 'max_length' => '191')
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => 'field_uid',
+      'entity_type' => 'user',
+      'label' => 'UID',
+      'bundle' => 'user',
+      'required' => 0,
+      'default_value' => NULL,
+      'widget' => array(
+        'active' => 1,
+        'weight' => '-6',
+        'module' => 'text',
+        'type' => 'text_textfield'
+      ),
+      'display' => array(
+        'default' => array(
+          'type' => 'hidden',
+          'module' => 'text'
+        )
+      ),
+      'description' => 'Enter your uid.',
+      'settings' => array('user_register_form' => 0, 'weight' => -6)
     );
     field_create_instance($instance);
   }

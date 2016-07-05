@@ -131,6 +131,11 @@ function _api_installed_fields() {
       'label' => t('IBM Configuration'),
       'type' => 'text_long'
     ),
+    'api_swaggertags' => array(
+      'field_name' => 'api_swaggertags',
+      'label' => t('Swagger Tags'),
+      'type' => 'text_long'
+    ),
     'api_attachments' => array(
       'field_name' => 'api_attachments',
       'label' => t('Documentation'),
@@ -186,7 +191,7 @@ function _api_installed_instances() {
     ),
     'api_xibmname' => array(
       'field_name' => 'api_xibmname',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('X-IBM-Name'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -198,7 +203,7 @@ function _api_installed_instances() {
     ),
     'api_ref' => array(
       'field_name' => 'api_ref',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Reference ID'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -281,7 +286,7 @@ function _api_installed_instances() {
     ),
     'api_description' => array(
       'field_name' => 'api_description',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Description'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -293,7 +298,7 @@ function _api_installed_instances() {
     ),
     'api_context' => array(
       'field_name' => 'api_context',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Context'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -325,7 +330,7 @@ function _api_installed_instances() {
     ),
     'api_security' => array(
       'field_name' => 'api_security',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Security'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -369,7 +374,7 @@ function _api_installed_instances() {
     ),
     'api_resources' => array(
       'field_name' => 'api_resources',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Operations'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -385,7 +390,7 @@ function _api_installed_instances() {
     ),
     'api_expandedschema' => array(
       'field_name' => 'api_expandedschema',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Expanded Schema'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -401,7 +406,7 @@ function _api_installed_instances() {
     ),
     'api_wsdl' => array(
       'field_name' => 'api_wsdl',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('WSDL'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -438,6 +443,26 @@ function _api_installed_instances() {
         ),
         'inner' => array(
           'label' => t('IBM Configuration'),
+          'type' => 'text_long'
+        )
+      )
+    ),
+    'api_swaggertags' => array(
+      'field_name' => 'api_swaggertags',
+      'type' => 'text',
+      'label' => t('Swagger Tags'),
+      'widget' => array('type' => 'text_textarea'),
+      'display' => array(
+        'default' => array(
+          'label' => t('Swagger Tags'),
+          'type' => 'text_long'
+        ),
+        'teaser' => array(
+          'label' => t('Swagger Tags'),
+          'type' => 'text_long'
+        ),
+        'inner' => array(
+          'label' => t('Swagger Tags'),
           'type' => 'text_long'
         )
       )
@@ -524,8 +549,18 @@ function api_update_7400() {
 
   foreach (_api_installed_fields() as $field) {
     if (!array_key_exists($field['field_name'], $fields)) {
-      field_create_field($field);
-      watchdog('api', 'Field %field_name has been successfully added', array('%field_name' => $field['field_name']));
+      $field_info = field_info_field($field['field_name']);
+      if (!isset($field_info) || empty($field_info)) {
+        field_create_field($field);
+        watchdog('api', 'Field %field_name has been successfully added', array(
+          '%field_name' => $field['field_name']
+        ));
+      }
+      else {
+        watchdog('api', 'Field %field_name already exists although instance doesnt', array(
+          '%field_name' => $field['field_name']
+        ));
+      }
     }
     else {
       watchdog('api', 'Field %field_name already exists', array('%field_name' => $field['field_name']));
@@ -568,10 +603,10 @@ function api_update_7400() {
       $field = field_info_field($field_name);
       if (isset($field)) {
         try {
-          field_delete_field($field);
-          field_delete_instance($field);
+          field_delete_field($field_name);
+          field_delete_instance($field_name);
           watchdog('application', 'Field %field_name has been successfully removed', array(
-            '%field_name' => $field
+            '%field_name' => $field_name
           ));
         } catch (Exception $e) {
           //ignore any errors
@@ -579,6 +614,4 @@ function api_update_7400() {
       }
     }
   }
-
-
 }

@@ -1,9 +1,11 @@
-.node-type-product #page > #columns {
+.node-type-product #page > #columns,
+.node-type-api #page > #columns {
   margin-left: 180px;
 }
 
 @media screen and (max-width: 800px) {
-  .node-type-product #page > #columns {
+  .node-type-product #page > #columns,
+  .node-type-api #page > #columns {
     margin-left: 0;
   }
 }
@@ -34,7 +36,8 @@
   margin: 0;
 }
 
-.node-type-product footer {
+.node-type-product footer,
+.node-type-api footer {
   margin-bottom: 0 !important;
   margin-left: 180px !important;
 }
@@ -74,16 +77,8 @@
   margin: 0;
 }
 
-.mesh-portal-product h1 {
-  font-size: 1.5em;
-}
-
 .mesh-portal-product h3 {
   font-size: 1.1em;
-}
-
-.mesh-portal-product h2 {
-  margin-top: 60px;
 }
 
 .mesh-portal-product a {
@@ -175,7 +170,7 @@
   border-right: 1px solid #ccc;
   margin-right: -1px;
   overflow: auto;
-  height: 100vh;
+  height: calc(100% - 85px);
   background: #f2f2f2;
 }
 
@@ -213,15 +208,43 @@
   display: flex;
 }
 
+.mesh-portal-product .toc ul .tocItem.toc-apis {
+  margin-top: 20px;
+}
+
+.mesh-portal-product .toc ul .tocItem.operationsHeader,
+.mesh-portal-product .toc ul .tocItem.definitionsHeader {
+  margin-top: 10px;
+}
+
+.mesh-portal-product .toc ul .tocItem.toc-apis span,
+.mesh-portal-product .toc ul .tocItem.operationsHeader span,
+.mesh-portal-product .toc ul .tocItem.definitionsHeader span {
+  border-bottom: 1px solid #ddd;
+  margin-left: 10px;
+  width: 100%;
+  display: inline-block;
+}
+
+.mesh-portal-product .toc ul .tocItem.operationsHeader span,
+.mesh-portal-product .toc ul .tocItem.definitionsHeader span {
+  margin-left: 20px;
+}
+
 .mesh-portal-product .toc ul .tocItem a:hover {
   background-color: rgba(0, 0, 0, 0.2);
   text-decoration: none;
 }
 
-.mesh-portal-product .toc ul .tocItem a {
-  padding-left: 10px;
+.mesh-portal-product .toc ul .tocItem a,
+.mesh-portal-product .toc ul .tocItem .moderatedAPI {
+  margin-left: 10px;
   width: 100%;
   display: inline-block;
+}
+
+.mesh-portal-product .toc ul .tocItem .moderatedAPI {
+  cursor: no-drop;
 }
 
 .mesh-portal-product .toc ul ul ul .tocItem a {
@@ -262,7 +285,7 @@
   background-color: #ad1625;
 }
 
-.mesh-portal-product .toc ul ul ul .tocItem a.options.selected:before  {
+.mesh-portal-product .toc ul ul ul .tocItem a.options.selected:before {
   background-color: #734098;
 }
 
@@ -336,17 +359,57 @@
   border-top: 1px solid #e4e4e4;
 }
 
+.mesh-portal-product .apimIcon {
+  float: none;
+}
+
+.mesh-portal-product .titleHeader {
+  display: table;
+}
+
+.mesh-portal-product .titleHeader .apimImage,
+.mesh-portal-product .titleHeader h1 {
+  display: table-cell;
+  vertical-align: middle;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+.mesh-portal-product .titleHeader h1 {
+  width: 100%;
+}
+
+.mesh-portal-product .titleHeader h1 .version {
+  font-size: 0.7em;
+}
+
+.mesh-portal-product .titleHeader .downloadButton,
+.mesh-portal-product .titleHeader .deprecated {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.mesh-portal-product .titleHeader .downloadButton {
+  text-align: center;
+}
+
+.mesh-portal-product .titleHeader .downloadButton,
+.mesh-portal-product .titleHeader .downloadButton button {
+  border: 0;
+}
+
+.mesh-portal-product .titleHeader .downloadButton button {
+  width: 130px;
+  margin-right: 0;
+}
+
 .mesh-portal-product .pathDetails .interact .topBorder {
   border-top: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .mesh-portal-product .pathDetails .interact .bottomBorder {
   border-bottom: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-.mesh-portal-product .documentationContent .info,
-.mesh-portal-product .documentationContent .apimImage {
-  float: left;
 }
 
 .mesh-portal-product .documentation {
@@ -372,6 +435,7 @@
 
 .mesh-portal-product .documentation label {
   color: #666;
+  font-weight: 600;
 }
 
 .mesh-portal-product .interact label {
@@ -389,16 +453,20 @@
   display: block;
 }
 
+.mesh-portal-product .documentation .security label,
+.mesh-portal-product .documentation .parameters label,
+.mesh-portal-product .documentation .responses label {
+  border-bottom: 1px solid #e4e4e4;
+}
+
 .mesh-portal-product .verb {
   text-transform: uppercase;
 }
 
 .mesh-portal-product .readAndInteract .operationDetails {
-  margin-bottom: 10px;
-}
-
-.mesh-portal-product .readAndInteract.open .operationDetails {
+  margin: 15px;
   padding-bottom: 20px;
+  border: 1px solid #e4e4e4;
 }
 
 .mesh-portal-product .operationDetails > a,
@@ -444,21 +512,22 @@
   border-left: 4px solid #008571;
 }
 
-.mesh-portal-product .operationDetails .header:hover {
-  background-color: #eee;
-}
-
 .mesh-portal-product .definitionsContent,
 .mesh-portal-product .operationContent {
   padding: 15px;
+}
+
+.mesh-portal-product .contactContainer .contactContent,
+.mesh-portal-product .licenseContainer .licenseContent {
+  padding: 10px 17px;
 }
 
 .mesh-portal-product .definitionsContent {
   padding-bottom: 50px;
 }
 
-.mesh-portal-product .expand_less,
-.mesh-portal-product .expand_more {
+.mesh-portal-product .planapiwrapper .expand_less,
+.mesh-portal-product .planapiwrapper .expand_more {
   float: right;
   margin-right: 15px;
 }
@@ -466,32 +535,46 @@
 .mesh-portal-product .readAndInteract .operationContent,
 .mesh-portal-product .readAndInteract .tabs-content,
 .mesh-portal-product .readAndInteract .tabs .tab,
-.mesh-portal-product .readAndInteract .expand_less,
-.mesh-portal-product .readAndInteract.open .expand_more,
 .mesh-portal-product .definitionsContent .definitionsWrapper,
-.mesh-portal-product .definitionsContent .expand_less,
-.mesh-portal-product .definitionsContent.open .expand_more,
-.mesh-portal-product .planapiwrapper .apicontents,
-.mesh-portal-product .planapiwrapper .expand_less,
-.mesh-portal-product .planapiwrapper.open .expand_more {
-  display: none;
-}
-
-.mesh-portal-product .readAndInteract.open .operationContent,
-.mesh-portal-product .readAndInteract.open .tabs-content,
-.mesh-portal-product .definitionsContent.open .definitionsWrapper,
-.mesh-portal-product .planapiwrapper.open .apicontents {
+.mesh-portal-product .planapiwrapper .apicontents {
   display: block;
 }
 
-.mesh-portal-product .readAndInteract.open .tabs .tab,
-.mesh-portal-product .readAndInteract .expand_more,
-.mesh-portal-product .readAndInteract.open .expand_less,
-.mesh-portal-product .definitionsContent .expand_more,
-.mesh-portal-product .definitionsContent.open .expand_less,
+.mesh-portal-product .planapiwrapper .apicontents,
+.mesh-portal-product .planapiwrapper .expand_less,
+.mesh-portal-product .planapiwrapper.open .expand_more,
+.mesh-portal-product .contactContainer .contactContent,
+.mesh-portal-product .contactContainer .expand_less,
+.mesh-portal-product .contactContainer.open .expand_more,
+.mesh-portal-product .licenseContainer .licenseContent,
+.mesh-portal-product .licenseContainer .expand_less,
+.mesh-portal-product .licenseContainer.open .expand_more {
+  display: none;
+}
+
+.mesh-portal-product .planapiwrapper.open .apicontents,
+.mesh-portal-product .contactContainer.open .contactContent,
+.mesh-portal-product .licenseContainer.open .licenseContent {
+  display: block;
+}
+
 .mesh-portal-product .planapiwrapper .expand_more,
-.mesh-portal-product .planapiwrapper.open .expand_less {
+.mesh-portal-product .planapiwrapper.open .expand_less,
+.mesh-portal-product .contactContainer .expand_more,
+.mesh-portal-product .contactContainer.open .expand_less,
+.mesh-portal-product .licenseContainer .expand_more,
+.mesh-portal-product .licenseContainer.open .expand_less {
   display: inline;
+}
+
+.mesh-portal-product .contactContainer,
+.mesh-portal-product .licenseContainer {
+  padding: 0 20px 20px 20px;
+}
+
+.mesh-portal-product .readAndInteract .contactContainer,
+.mesh-portal-product .readAndInteract .licenseContainer {
+  padding: 0 10px 10px 10px;
 }
 
 .mesh-portal-product .listHeader {
@@ -500,26 +583,27 @@
 
 .mesh-portal-product .listContent {
   border-bottom: 1px solid #e4e4e4;
-  line-height: 32px;
-  padding-top: 15px;
+  line-height: 26px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.mesh-portal-product .listContent:last-child {
+  border-bottom: none;
 }
 
 .mesh-portal-product .securitySection .name,
 .mesh-portal-product .securitySection .located-in,
 .mesh-portal-product .securitySection .type,
 .mesh-portal-product .parametersSection .name,
-.mesh-portal-product .parametersSection .located-in,
-.mesh-portal-product .parametersSection .required,
-.mesh-portal-product .parametersSection .schema,
+.mesh-portal-product .parametersSection .schemawrapper,
 .mesh-portal-product .responsesSection .code,
-.mesh-portal-product .responsesSection .schema {
+.mesh-portal-product .responsesSection .responseContent {
   display: inline-block;
   vertical-align: top;
 }
 
-.mesh-portal-product .securitySection .description,
-.mesh-portal-product .parametersSection .description,
-.mesh-portal-product .responsesSection .description {
+.mesh-portal-product .securitySection .description {
   display: block;
   margin-left: 30%;
   margin-bottom: 15px;
@@ -545,26 +629,29 @@
 
 .mesh-portal-product .parametersSection .name {
   width: 30%;
+  text-align: right;
+  padding-right: 20px;
 }
 
-.mesh-portal-product .parametersSection .located-in {
-  width: 15%;
+.mesh-portal-product .parametersSection .name .title {
+  font-weight: 600;
 }
 
-.mesh-portal-product .parametersSection .required {
-  width: 15%;
+.mesh-portal-product .parametersSection .name .required {
+  color: #bd530b;
 }
 
-.mesh-portal-product .parametersSection .schema {
-  width: 40%;
+.mesh-portal-product .parametersSection .schemawrapper {
+  width: 70%;
 }
 
 .mesh-portal-product .responsesSection .code {
-  width: 60%;
+  width: 20%;
 }
 
-.mesh-portal-product .responsesSection .schema {
-  width: 40%;
+.mesh-portal-product .responsesSection .responseContent {
+  width: 80%;
+  padding-top: 6px;
 }
 
 .mesh-portal-product .apiTag {
@@ -687,8 +774,10 @@
   background-color: #1f2638;
 }
 
-.mesh-portal-product pre.inlineSchema {
-  background-color: #ffffff;
+.mesh-portal-product pre.inlineSchema,
+.mesh-portal-product .markdown code,
+.mesh-portal-product .markdown pre {
+  background-color: #f8f9fc;
 }
 
 .mesh-portal-product .interact {
@@ -696,6 +785,7 @@
   display: inline-block;
   vertical-align: top;
   color: #ddd;
+  padding-top: 40px;
 }
 
 @media screen and (max-width: 800px) {
@@ -739,17 +829,18 @@
 
 .mesh-portal-product .interact .parameterValue {
   color: #FFF;
-  background: #2a3042;
+  background: #353b4c;
   border-width: 0 0 1px 0;
   border-radius: 0;
   word-wrap: break-word;
   word-break: break-all;
+  font-family: monospace;
+  font-size: 13px;
 }
 
 .mesh-portal-product .interact select.parameterValue,
 .mesh-portal-product .interact textarea.parameterValue {
-  border-width: 1px;
-  border-radius: 0;
+  border: 0;
 }
 
 .mesh-portal-product .interact .testForm {
@@ -781,7 +872,8 @@
   word-break: break-all;
 }
 
-.mesh-portal-product pre.inlineSchema {
+.mesh-portal-product pre.inlineSchema,
+.mesh-portal-product .markdown pre {
   color: #444849;
   font-size: 0.8em;
   line-height: 20px;
@@ -790,7 +882,7 @@
 }
 
 .mesh-portal-product .parametersSection pre.inlineSchema {
-  padding: 10px 0;
+  padding: 10px;
 }
 
 .mesh-portal-product .langtab pre,
@@ -932,32 +1024,26 @@
 
 .mesh-portal-product .langs-menu {
   margin: 0;
-  padding: 0 10px;
+  padding: 0;
 }
 
 .mesh-portal-product .langs-menu li {
-  height: 30px;
+  height: 35px;
   line-height: 30px;
   display: inline-block;
-  background-color: rgba(255, 255, 255, 0.15);
   list-style: none;
   margin-top: 4px;
 }
 
 .mesh-portal-product .langs-menu li.current {
   position: relative;
-  background-color: #fff;
-  border-bottom: 1px solid #fff;
+  border-bottom: 3px solid #fff;
 }
 
 .mesh-portal-product .langs-menu li a {
   padding: 10px;
   color: #fff;
   text-decoration: none;
-}
-
-.mesh-portal-product .langs-menu .current a {
-  color: #2e7da3;
 }
 
 .mesh-portal-product .langtab {
@@ -982,38 +1068,68 @@
   margin: 10px;
 }
 
-.mesh-portal-product .subscribeButton {
-  float: right;
-  display: inline-block;
-  border: 1px solid #fff;
-  color: #fff;
-  padding: 5px 8px;
-  font-size: 1rem;
-  vertical-align: middle;
-  margin: 7px 15px;
+.mesh-portal-product .rightHeader {
+  display: block;
+  width: 570px;
+  background: #202230;
+  min-height: 50px;
 }
 
-.mesh-portal-product .subscribeButton a,
-.mesh-portal-product .subscribeButton a:visited {
+.mesh-portal-product .rightHeader.stick {
+  position: fixed;
+  z-index: 100;
+}
+
+.mesh-portal-product .rightHeader .tableWrapper {
+  display: table;
+  width: 100%;
+  padding: 10px 10px 0 10px;
+}
+
+.mesh-portal-product .subscribeButton {
+  text-align: center;
+  display: inline-block;
+  color: #fff;
+  font-size: 1rem;
+  vertical-align: middle;
+}
+
+.mesh-portal-product .rightHeader ul,
+.mesh-portal-product .rightHeader .subscribeButton {
+  display: table-cell;
+}
+
+.mesh-portal-product .rightHeader.wsdl.false .subscribeButton {
+  float: right;
+}
+
+.mesh-portal-product .rightHeader .subscribeButton .subscribeButtonInner {
+  border: 1px solid #fff;
+  height: 32px;
+  vertical-align: middle;
+  margin: auto;
+  text-align: center;
+  padding: 5px 8px;
+  display: table-cell;
+}
+
+.mesh-portal-product .subscribeButton .subscribeButtonInner a,
+.mesh-portal-product .subscribeButton .subscribeButtonInner a:visited {
   color: #fff;
   text-decoration: none;
 }
 
-.mesh-portal-product .subscribeButton:hover {
+.mesh-portal-product .subscribeButton .subscribeButtonInner:hover {
   background: #fff none repeat scroll 0 0;
   border: 1px solid #fff;
   color: #1f2638;
 }
 
-.mesh-portal-product .subscribeButton:hover a,
-.mesh-portal-product .subscribeButton:hover a:visited,
-.mesh-portal-product .subscribeButton:hover a:hover {
+.mesh-portal-product .subscribeButton .subscribeButtonInner:hover a,
+.mesh-portal-product .subscribeButton .subscribeButtonInner:hover a:visited,
+.mesh-portal-product .subscribeButton .subscribeButtonInner:hover a:hover {
   color: #1f2638;
   text-decoration: none;
-}
-
-.mesh-portal-product.singleapi .subscribeButton {
-  display: none;
 }
 
 .mesh-portal-product.node ul.links li a {
@@ -1026,7 +1142,8 @@
 
 .mesh-portal-product .node-api ul.links li.addtoany,
 .mesh-portal-product .node-api ul.links li.flag-wrapper,
-.mesh-portal-product .node-api ul.links li.comment_forbidden {
+.mesh-portal-product .node-api ul.links li.comment_forbidden,
+.mesh-portal-product .productDetails.product ul.links li.comment_forbidden {
   display: none;
 }
 
@@ -1071,6 +1188,11 @@
   background-color: #fff;
 }
 
+.mesh-portal-product .node-unpublished .pathTitle.left,
+.mesh-portal-product .node-unpublished .pathHeading .left {
+  background-color: #fff4f4;
+}
+
 .mesh-portal-product .pathTitle.right,
 .mesh-portal-product .pathHeading .right {
   background-color: #1f2638;
@@ -1081,6 +1203,12 @@
   .mesh-portal-product .pathTitle.right,
   .mesh-portal-product .pathHeading .right {
     background-color: #fff;
+  }
+
+  .mesh-portal-product .node-unpublished .pathTitleWrapper,
+  .mesh-portal-product .node-unpublished .pathTitle.right,
+  .mesh-portal-product .node-unpublished .pathHeading .right {
+    background-color: #fff4f4;
   }
 }
 
@@ -1190,6 +1318,11 @@
   margin: 0 15px;
   border: 1px solid #444849;
   padding: 4px 7px;
+}
+
+.mesh-portal-product .plansFooter {
+  font-size: 0.8em;
+  color: #444849;
 }
 
 @media print {

@@ -37,9 +37,8 @@ function drush_product_cleanse_drush_command() {
     ->entityCondition('bundle', 'product');
   $results = $query->execute();
   if (isset($results['node'])) {
-    $keys = array_keys($results['node']);
-    foreach ($keys as $nid) {
-      node_delete($nid);
+    foreach ($results['node'] as $item) {
+      node_delete($item->nid);
     }
   }
   drupal_set_message(t('All Product entries deleted.'), 'success');
@@ -82,8 +81,8 @@ function drush_product_deleteproduct($ref) {
       ->fieldCondition('product_ref', 'value', $ref);
     $results = $query->execute();
     if (isset($results['node'])) {
-      $keys = array_keys($results['node']);
-      $nid = $keys[0];
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
       product_deleteProductNode($nid);
       drupal_set_message(t('Drush DeleteProduct deleted Product @prod', array( '@prod' => $ref)), 'success');
     } else {

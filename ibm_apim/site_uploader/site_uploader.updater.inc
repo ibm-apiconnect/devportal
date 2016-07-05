@@ -27,7 +27,7 @@ class SiteModuleUpdater extends Updater implements DrupalUpdaterInterface {
    */
   public function getInstallDirectory() {
     if ($relative_path = drupal_get_path('module', $this->name)) {
-      $relative_path = dirname($relative_path);
+      $relative_path = is_int(strpos($relative_path, 'sites/all/modules')) ? (conf_path() . '/modules') : dirname($relative_path);
     }
     else {
       $dir = 'all';

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<ruleset name="App">
+    <description>App custom PHP_CodeSniffer standards overrides.</description>
+
+    <!--Disable scanning for undefined variable in traits.-->
+    <rule ref="DrupalPractice.CodeAnalysis.VariableAnalysis.UndefinedVariable">
+        <exclude-pattern>*.*</exclude-pattern>
+    </rule>
+</ruleset>

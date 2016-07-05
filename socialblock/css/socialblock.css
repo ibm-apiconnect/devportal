@@ -1,8 +1,12 @@
+.socialblock.container {
+    margin-top: 0.8rem;
+}
+
 .socialblock.card {
     text-align: left;
     background-color: #fff;
     /*-------------------*/
-    max-width: 20rem;
+    width: 20rem;
     margin-bottom: 1.25rem;
     box-sizing: border-box;
     /*-------------------*/
@@ -30,8 +34,8 @@
 }
 
 .socialblock.title:hover {
-    background-color: #0096FF;
-    border-color: #0096FF;
+    background-color: #0096ff;
+    border-color: #0096ff;
     transition: all 100ms;
 }
 
@@ -59,10 +63,10 @@
     flex-wrap: nowrap;
     align-items: center;
     padding-bottom: 1rem;
-    border: 1px solid #bebebe;
+    border-bottom: 1px solid #eee;
     margin-left: 1rem;
     margin-right: 1rem;
-    margin-top: 1rem;
+    padding-top: 1rem;
 }
 
 .socialblock.tweet_profile {
@@ -87,8 +91,12 @@
     clear: both;
 }
 
+.socialblock.tweet_meta {
+    text-align: center;
+}
+
 .socialblock.bird {
-    display: block;
+    display: inline-block;
     background: url("../img/twitter_bird.svg") 0 0 no-repeat transparent;
     width: 1.25rem;
     height: 1.25rem;
@@ -104,8 +112,12 @@
     width: 100%;
 }
 
+.socialblock.yt_embed {
+    width: 100%;
+}
+
 .socialblock.tweet_text {
-    padding: 1rem;
+    padding: 0.7rem 1rem 1rem;
 }
 
 .socialblock.hashtag {

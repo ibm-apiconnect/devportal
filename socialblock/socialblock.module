@@ -57,71 +57,79 @@ function socialblock_cron() {
     $iv_size = mcrypt_get_iv_size(MCRYPT_CAST_256, MCRYPT_MODE_CBC);
     $iv = substr($data, 0, $iv_size);
     $credentials = unserialize(openssl_decrypt(substr($data, $iv_size), "AES-256-CBC", $client_id, 0, $iv));
-    if (!isset($credentials['twitter_consumer_key'])) {
-      $credentials['twitter_consumer_key'] = '';
-    }
-    if (!isset($credentials['twitter_consumer_secret'])) {
-      $credentials['twitter_consumer_secret'] = '';
-    }
-    if (!isset($credentials['twitter_access_token'])) {
-      $credentials['twitter_access_token'] = '';
-    }
-    if (!isset($credentials['twitter_token_secret'])) {
-      $credentials['twitter_token_secret'] = '';
-    }
-    foreach ($beans as $bean) {
-      if (isset($bean->delta) && ($bean->delta == 'socialblock') || (isset($bean->type) && $bean->type == 'socialblock_block')) {
-        switch ($bean->twitter_api) {
-          case 0:
-            $api = 'statuses/user_timeline';
-            $api_param = 'screen_name';
-            break;
-          case 1:
-            $api = 'search/tweets';
-            $api_param = 'q';
-            break;
-          default:
-            $api = '';
-            $api_param = '';
-        }
-        if (isset($bean->twitter_param)) {
-          $tweets = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles));
-          $markup = socialblock_render_posts($bean, $tweets);
-          variable_set('socialblock_tweets_' . $bean->bid, serialize($markup));
-        }
-        else {
-          $markup = socialblock_render_posts($bean, array());
-          variable_set('socialblock_tweets_' . $bean->bid, serialize($markup));
+    if (isset($credentials['twitter_consumer_key']) && isset($credentials['twitter_consumer_secret']) && isset($credentials['twitter_access_token']) && isset($credentials['twitter_token_secret'])) {
+      foreach ($beans as $bean) {
+        if (isset($bean->delta) && ($bean->delta == 'socialblock') || (isset($bean->type) && $bean->type == 'socialblock_block')) {
+          switch ($bean->twitter_api) {
+            case 0:
+              $api = 'statuses/user_timeline';
+              $api_param = 'screen_name';
+              break;
+            case 1:
+              $api = 'search/tweets';
+              $api_param = 'q';
+              break;
+            default:
+              $api = '';
+              $api_param = '';
+          }
+          if (isset($bean->twitter_param)) {
+            $tweets = array();
+            switch ($bean->tweet_filter) {
+              case 0:
+                $remaining_calls = socialblock_not_rate_limited($credentials);
+                if ($remaining_calls > 0) {
+                  $temp = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles));
+                  $temp2 = $temp;
+                  $remaining_calls--;
+                  $all_tweets = FALSE;
+                  while (!$all_tweets) {
+                    if ($remaining_calls > 0 && !empty($temp)) {
+                      $max_id = end($temp)->id;
+                      for ($i = 0; $i < sizeof($temp); $i++) {
+                        if (is_null($temp[$i]->in_reply_to_status_id)) {
+                          array_push($tweets, $temp[$i]);
+                        }
+                      }
+                      $all_tweets = sizeof($tweets) == $bean->tiles;
+                      if (!$all_tweets) {
+                        $temp = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles - sizeof($tweets), 'max_id' => $max_id - 1));
+                        $remaining_calls--;
+                        $temp2 = empty($temp) ? $temp2 : $temp;
+                      }
+                    } else {
+                      $tweets = $temp2;
+                      $all_tweets = TRUE;
+                    }
+                  }
+                } else {
+                  watchdog('socialblock', 'Social Block: Twitter API rate limit hit!', array(), WATCHDOG_INFO);
+                }
+                break;
+              case 1:
+                $remaining_calls = socialblock_not_rate_limited($credentials);
+                if ($remaining_calls > 0) {
+                  $tweets = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles));
+                } else {
+                  watchdog('socialblock', 'Social Block: Twitter API rate limit hit!', array(), WATCHDOG_INFO);
+                }
+                break;
+              default:
+                $tweets = array();
+            }
+            $markup = socialblock_render_posts($bean, $tweets);
+            variable_set('socialblock_tweets_' . $bean->bid, serialize($markup));
+          } else {
+            $markup = socialblock_render_posts($bean, array());
+            variable_set('socialblock_tweets_' . $bean->bid, serialize($markup));
+          }
         }
       }
     }
+    else {
+      watchdog('socialblock', 'Social Block: No Twitter credentials found, skipping tweets...', array(), WATCHDOG_INFO);
+    }
   }
-}
-
-/**
- * @param $cred
- * @param $api
- * @param $params
- * @return array|null|object
- */
-function socialblock_call_twitter_api($cred, $api, $params) {
-  $connection = new Abraham\TwitterOAuth\TwitterOAuth(
-    $cred['twitter_consumer_key'],
-    $cred['twitter_consumer_secret'],
-    $cred['twitter_access_token'],
-    $cred['twitter_token_secret']
-  );
-  $connection->host = "https://api.twitter.com/1.1/";
-  $response = $connection->get(
-    $api,
-    $params
-  );
-  if (isset($response->errors)) {
-    $response = NULL;
-  } else if ($api == 'search/tweets') {
-    $response = $response->statuses;
-  }
-  return $response;
 }
 
 /**
@@ -241,7 +249,7 @@ function socialblock_render_posts(&$bean, $tweets) {
             $markup .= '<img class="socialblock tweet_image" src="' . $photo->media_url_https . '">';
           }
         }
-        $markup .= !empty($video_ids) ? '<iframe class="socialblock iframe" src="https://www.youtube-nocookie.com/embed/' . $video_ids[0] . '?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>' : '';
+        $markup .= !empty($video_ids) ? '<iframe class="socialblock yt_embed" src="https://www.youtube.com/embed/' . $video_ids[0] . '?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>' : '';
         $markup .= '<div class="socialblock tweet_text">' . $raw_content . '</div>
                       </div>';
       }
@@ -294,6 +302,65 @@ function socialblock_get_forum_tids() {
     }
   }
   return $tids;
+}
+
+/**
+ * @param $cred
+ * @param $api
+ * @param $params
+ * @return array|null|object
+ */
+function socialblock_call_twitter_api($cred, $api, $params) {
+  $connection = new Abraham\TwitterOAuth\TwitterOAuth(
+    $cred['twitter_consumer_key'],
+    $cred['twitter_consumer_secret'],
+    $cred['twitter_access_token'],
+    $cred['twitter_token_secret']
+  );
+  $connection->host = "https://api.twitter.com/1.1/";
+  $response = $connection->get(
+    $api,
+    $params
+  );
+  if (isset($response->errors)) {
+    $response = NULL;
+  } else if ($api == 'search/tweets') {
+    $response = $response->statuses;
+  }
+  return $response;
+}
+
+/**
+ * @param $cred
+ * @return bool
+ */
+function socialblock_not_rate_limited($cred) {
+  $result = socialblock_call_twitter_api($cred, 'application/rate_limit_status', array('resources' => 'statuses'));
+  return $result->resources->statuses->{'/statuses/user_timeline'}->remaining > 0;
+}
+
+/**
+ * @param $id
+ * @return array
+ */
+function socialblock_get_approx_yt_embed_dimensions($id) {
+  $id = preg_replace('/&.*$/i', '', $id);
+  watchdog('socialblock.module', 'Video id: %id', array('%id' => json_encode($id)), WATCHDOG_INFO);
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, 'https://i.ytimg.com/vi/' . $id . '/maxresdefault.jpg');
+  curl_setopt($ch, CURLOPT_HEADER, FALSE);
+  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, FALSE);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+  curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+  curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+  $s = curl_exec($ch);
+  curl_close($ch);
+  $img = imagecreatefromstring($s);
+  $width = imagesx($img);
+  $height = imagesy($img);
+  watchdog('socialblock.module', 'Video dimensions: %s', array('%s' => json_encode($width) . '|' . json_encode($height)), WATCHDOG_INFO);
+  return array('width' => $width, 'height' => $height);
 }
 
 /**

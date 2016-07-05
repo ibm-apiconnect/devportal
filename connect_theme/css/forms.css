@@ -123,10 +123,6 @@ select {
 }
 
 /* Elements */
-input, select, textarea, button {
-  font-family: Verdana, Geneva, 'DejaVu Sans', Arial, Helvetica, sans-serif;
-}
-
 input.form-text {
   max-width: 100%;
 }
@@ -188,6 +184,16 @@ a.buttonLink,
   font-weight: 500;
   margin: 0 0.5em 0 0;
   overflow: hidden;
+  vertical-align: middle;
+}
+
+.form-actions a,
+.form-actions a:visited,
+.form-actions a:hover,
+.form-actions a:focus,
+.form-actions a:active {
+  display: inline-block;
+  line-height: 1.2em;
 }
 
 button:hover,

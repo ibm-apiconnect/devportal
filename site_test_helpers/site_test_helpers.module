@@ -1,0 +1,27 @@
+<?php
+/**
+ * @file
+ * Site test helpers module.
+ */
+
+/**
+ * Autoload callback for Symfony classes.
+ */
+function site_test_helpers_symfony_class_loader($class) {
+  $parts = explode('\\', $class);
+
+  // Not a Symfony class - bail.
+  if (reset($parts) !== 'Symfony') {
+    return;
+  }
+
+  $file = end($parts) . '.php';
+  $parts = array_slice($parts, 1, count($parts) - 2);
+  $path = implode('/', $parts);
+  $library_path = libraries_get_path('Symfony');
+  $filename = DRUPAL_ROOT . '/' . $library_path . '/' . $path . '/' . $file;
+  if (file_exists($filename)) {
+    require_once $filename;
+  }
+}
+

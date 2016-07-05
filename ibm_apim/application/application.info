@@ -6,6 +6,6 @@ dependencies[] = field
 dependencies[] = node
 dependencies[] = ibm_apim
 
-scripts[] = js/showclientid.js
+scripts[] = js/Application.js
 
 version = VERSION

@@ -1,0 +1,258 @@
+<?php
+
+class IbmApimProductWebTestCase extends SiteWebTestCase {
+  use SiteTestHelpers {
+    SiteTestHelpers::__construct as private __sthConstruct;
+  }
+  use ApicTestHelperFunctions {
+    ApicTestHelperFunctions::__construct as private __athfConstruct;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct($test_id = NULL) {
+    $this->__sthConstruct($test_id);
+    $this->__athfConstruct($test_id);
+  }
+
+  /**
+   * Provide information about the site test.
+   */
+  public static function getInfo() {
+    return [
+      'name' => 'IBM APIC Product test',
+      'description' => 'Testing the features of products within APIC portal',
+      'group' => 'IBM APIM group',
+      'mode' => 'site',
+    ];
+  }
+
+  /**
+   * Test case - Overall product page
+   */
+  public function testProductsPage() {
+
+    debug('Begin testProductsPage tests');
+    // Login with developer credentials
+    $this->login($this);
+
+    // Visit the product page and check the page
+    $this->drupalGet('product');
+    $this->assertTitle('API Products | API Portal');
+    $this->assertText('Terms of use', 'Terms of use appears on page');
+    $this->assertText('Privacy policy', 'Privacy policy link appears on page');
+    $this->assertLinkByHref('/terms', 0, 'Terms of use link is present');
+    $this->assertLinkByHref('/privacy', 0, 'Privacy policy link is present');
+
+    // Check that the list of products contains all expected products
+    $nodes = $this->findElementByCss('.node.node-product');
+    if ($nodes !== FALSE) {
+      $this->pass('There is at least one node on the products page');
+    }
+    else {
+      $this->pass('There are no products on this page, further tests require at least one product');
+      $this->assertText('No products have been found.', 'No products message displays correctly');
+      return NULL;
+    }
+
+    $products = $this->findElementByCss('.apimTitle a');
+    for ($i = 0; $i < (count($products)); $i++) {
+      $productNode = $this->getProductPage($this, $i, FALSE);
+      if ($productNode->title . ' (v' . ($productNode->product_version[$productNode->language][0]['value']) . ')' == ($products[$i][0])) {
+        $this->pass('The value for product ' . $products[$i][0] . ' is correctly found in the product page HTML');
+        $this->assertLinkByHref(($productNode->product_id[$productNode->language][0]['value']), 0, ' The product page link for ' . ($productNode->product_id[$productNode->language][0]['value']) . ' is correctly found on the products page');
+      }
+      else {
+        $this->fail('The product name found in the database does not match the value found in the page HTML, see debug below:');
+        debug('From DB: ' . $productNode->title . ' (v' . ($productNode->product_version[$productNode->language][0]['value']) . ')');
+        debug('From HTML: ' . $products[$i][0]);
+      }
+    }
+
+    // Logout
+    $this->drupalLogout();
+  }
+
+  /**
+   * Test case - Individual product page general
+   */
+  public function testSingleProductPage() {
+
+    debug('Begin testSingleProductPage tests');
+    // Login with developer credentials
+    $this->login($this);
+
+    // Visit the first product page
+    $node2 = $this->getProductPage($this, 0, TRUE);
+    if (isset($node2)) {
+      $this->pass('At least one product present');
+    }
+    else {
+      $this->pass('No products present, further tests require at least one product');
+      return NULL;
+    }
+
+    // General assertions about the product page
+    $this->assertRaw('<button type="button" id="planSignupButton"', 'The subscribe button is present on this page');
+    $this->assertText('Plans', 'The Plans section is present on this page');
+    $this->assertTitle($node2->title . ' | API Portal');
+
+    // Check the current number of plans are shown
+    $productPlans = (unserialize($node2->product_plans[$node2->language][0]['value']));
+    foreach ($productPlans as $planKey => $planValue) {
+      $this->assertText($planValue['title']);
+      $this->assertRaw($planValue['title']);
+    }
+    // Logout
+    $this->drupalLogout();
+  }
+
+  /**
+   * Test case - Individual product page contact information
+   */
+  public function testContactInfo() {
+
+    debug('Begin testContactInfo tests');
+    // Login with developer credentials
+    $this->login($this);
+
+    // Visit the first product page
+    $node3 = $this->getProductPage($this, 0, TRUE);
+    if (isset($node3)) {
+      $this->pass('At least one product present');
+    }
+    else {
+      $this->pass('No products present, further tests require at least one product');
+      return NULL;
+    }
+
+    // Check if the contact name OR email OR url property is present on this node
+    if ((property_exists($node3, 'product_contact_name')) || (property_exists($node3, 'product_contact_email')) || (property_exists($node3, 'product_contact_url'))) {
+      $productContactName = $node3->product_contact_name[$node3->language][0]['value'];
+      $productContactEmail = $node3->product_contact_email[$node3->language][0]['value'];
+      $productContactUrl = $node3->product_contact_url[$node3->language][0]['value'];
+
+      // Contact Name Field
+      if (strlen($productContactName) == 0) {
+        $this->pass('The contact name section is null');
+      }
+      else {
+        $this->pass('Content name is present and non-null');
+        $this->assertText($productContactName, 'The contact name value displayed matches the node object');
+      }
+
+      // Contact Email Field
+      if (strlen($productContactEmail) == 0) {
+        $this->pass('The contact email section is null');
+      }
+      else {
+        $this->assertText($productContactEmail, 'The contact email value displayed matches the node object');
+        $this->assertLinkByHref(('mailto:' . $productContactEmail), 0, 'The contact email link correctly matches the node object');
+        if (strpos($productContactEmail, '@') !== FALSE) {
+          $this->pass('Contact email is present and valid');
+        }
+        else {
+          $this->fail('Contact email is present but invalid');
+        }
+      }
+
+      // Contact URL Field
+      if (strlen($productContactUrl) == 0) {
+        $this->pass('The contact URL section is null');
+      }
+      else {
+        $this->assertText($productContactUrl, 'The contact URL value displayed matches the node object');
+        $this->assertLinkByHref($productContactUrl, 0, 'The contact URL link correctly matches the node object');
+        if (strpos($productContactUrl, 'http') !== FALSE) {
+          $this->pass('Contact URL is present and valid');
+        }
+        else {
+          $this->fail('Contact URL is present but invalid');
+        }
+      }
+
+      // Contact drop down checks
+      if ((strlen($productContactUrl) == 0) && (strlen($productContactEmail) == 0) && (strlen($productContactName) == 0)) {
+        $this->assertNoRaw('<span class="contactTitle">Contact information</span>', 'The contact information section is (correctly) not displayed');
+      }
+      else {
+        $this->assertRaw('<span class="contactTitle">Contact information</span>', 'The contact information section is displayed');
+      }
+
+      // Logout
+      $this->drupalLogout();
+    }
+  }
+
+  /**
+   * Test case - Individual product page license information
+   */
+  public function testLicenseInfo() {
+
+    debug('Begin testLicenseInfo tests');
+    // Login with developer credentials
+    $this->login($this);
+
+    // Visit the first product page
+    $node4 = $this->getProductPage($this, 0, TRUE);
+    if (isset($node4)) {
+      $this->pass('At least one product present');
+    }
+    else {
+      $this->pass('No products present, further tests require at least one product');
+      return NULL;
+    }
+
+    // Check if the product license name OR license url exists on the node
+    if ((property_exists($node4, 'product_license_name')) || (property_exists($node4, 'product_license_url')) || (property_exists($node4, 'product_terms_of_service'))) {
+      $productLicenseName = $node4->product_license_name[$node4->language][0]['value'];
+      $productLicenseUrl = $node4->product_license_url[$node4->language][0]['value'];
+      $productTermsOfService = $node4->product_terms_of_service[$node4->language][0]['value'];
+
+      // License name checks
+      if (strlen($productLicenseName) == 0) {
+        $this->pass('The product license name section is null');
+        $this->assertNoRaw('<label>License</label>', 'The license label is (correctly) not displayed');
+      }
+      else {
+        $this->assertText($productLicenseName, 'The product license name value displayed matches the node object');
+      }
+
+      // License URL checks
+      if (strlen($productLicenseUrl) == 0) {
+        $this->pass('The product license URL section is null');
+      }
+      else {
+        $this->assertLinkByHref($productLicenseUrl, 0, 'The product license URL link correctly matches the node object');
+        if (strpos($productLicenseUrl, 'http') !== FALSE) {
+          $this->pass('License URL is present and valid');
+        }
+        else {
+          $this->fail('License URL is present but invalid');
+        }
+      }
+
+      // Terms of service checks
+      if (strlen($productTermsOfService) == 0) {
+        $this->pass('The terms of service section is null');
+        $this->assertNoRaw('<label>Terms of service</label>', 'The terms of service label is (correctly) not displayed');
+      }
+      else {
+        $this->assertText($productTermsOfService, 'The terms of service value displayed matches the node object');
+      }
+
+      // License drop down checks
+      if ((strlen($productTermsOfService) == 0) && (strlen($productLicenseUrl) == 0) && (strlen($productLicenseName) == 0)) {
+        $this->assertNoRaw('<span class="contactTitle">License</span>', 'The license section is (correctly) not displayed');
+      }
+      else {
+        $this->assertRaw('<span class="contactTitle">License</span>', 'The license section is displayed');
+      }
+
+    }
+    // Logout
+    $this->drupalLogout();
+  }
+
+}

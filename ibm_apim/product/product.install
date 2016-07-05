@@ -248,7 +248,7 @@ function _product_installed_instances() {
     ),
     'product_ref' => array(
       'field_name' => 'product_ref',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Reference'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -258,7 +258,7 @@ function _product_installed_instances() {
     ),
     'product_name' => array(
       'field_name' => 'product_name',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Name'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -315,7 +315,7 @@ function _product_installed_instances() {
     ),
     'product_description' => array(
       'field_name' => 'product_description',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Description'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -325,7 +325,7 @@ function _product_installed_instances() {
     ),
     'product_contact_name' => array(
       'field_name' => 'product_contact_name',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Contact Name'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -335,7 +335,7 @@ function _product_installed_instances() {
     ),
     'product_contact_email' => array(
       'field_name' => 'product_contact_email',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Contact Email'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -345,7 +345,7 @@ function _product_installed_instances() {
     ),
     'product_contact_url' => array(
       'field_name' => 'product_contact_url',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Contact URL'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -355,7 +355,7 @@ function _product_installed_instances() {
     ),
     'product_license_name' => array(
       'field_name' => 'product_license_name',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('License Name'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -365,7 +365,7 @@ function _product_installed_instances() {
     ),
     'product_license_url' => array(
       'field_name' => 'product_license_url',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('License URL'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -375,7 +375,7 @@ function _product_installed_instances() {
     ),
     'product_terms_of_service' => array(
       'field_name' => 'product_terms_of_service',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Terms of Service'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -503,7 +503,7 @@ function _product_installed_instances() {
     ),
     'product_visibility_custom_orgs' => array(
       'field_name' => 'product_visibility_custom_orgs',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Custom visibility orgs'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -519,7 +519,7 @@ function _product_installed_instances() {
     ),
     'product_visibility_custom_tags' => array(
       'field_name' => 'product_visibility_custom_tags',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Custom visibility tags'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -535,7 +535,7 @@ function _product_installed_instances() {
     ),
     'product_apis' => array(
       'field_name' => 'product_apis',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('APIs'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -551,7 +551,7 @@ function _product_installed_instances() {
     ),
     'product_plans' => array(
       'field_name' => 'product_plans',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Plans'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -599,7 +599,7 @@ function _product_installed_instances() {
     ),
     'product_data' => array(
       'field_name' => 'product_data',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Data'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -693,10 +693,18 @@ function product_update_7400() {
   $fields = field_info_field_map();
   foreach (_product_installed_fields() as $field) {
     if (!array_key_exists($field['field_name'], $fields)) {
-      field_create_field($field);
-      watchdog('product', 'Field %field_name has been successfully added', array(
-        '%field_name' => $field['field_name']
-      ));
+      $field_info = field_info_field($field['field_name']);
+      if (!isset($field_info) || empty($field_info)) {
+        field_create_field($field);
+        watchdog('product', 'Field %field_name has been successfully added', array(
+          '%field_name' => $field['field_name']
+        ));
+      }
+      else {
+        watchdog('product', 'Field %field_name already exists although instance doesnt', array(
+          '%field_name' => $field['field_name']
+        ));
+      }
     }
     else {
       watchdog('product', 'Field %field_name already exists', array(

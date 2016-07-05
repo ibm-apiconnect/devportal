@@ -300,6 +300,7 @@ function application_form_application_node_form_alter(&$form, &$form_state) {
   $form['application_data']['#access'] = 0;
   $form['application_credentials']['#access'] = 0;
   $form['application_subscriptions']['#access'] = 0;
+  $form['application_etag']['#access'] = 0;
 }
 
 /**
@@ -349,8 +350,9 @@ function application_preprocess_node(&$variables) {
             ->fieldCondition('product_ref', 'value', $sub['product']);
           $results = $query->execute();
           if (isset($results['node'])) {
-            $keys = array_keys($results['node']);
-            $productnode = node_load($keys[0]);
+            $first = array_shift($results['node']);
+            $nid = $first->nid;
+            $productnode = node_load($nid);
             $productplans = unserialize($productnode->product_plans[$productnode->language][0]['value']);
             $product_yaml = yaml_parse($productnode->product_data[$productnode->language][0]['value']);
             if (isset($product_yaml) && is_array($product_yaml['apis'])) {
@@ -457,15 +459,20 @@ function application_collection_callback($appId = NULL) {
       $results = $query->execute();
     }
     else {
-      $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'application')
-        ->fieldCondition('application_orgid', 'value', ibm_apim_get_current_developer_org()['id']);
+      if (isset(ibm_apim_get_current_developer_org()['id'])) {
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'application')
+          ->fieldCondition('application_orgid', 'value', ibm_apim_get_current_developer_org()['id']);
 
-      $results = $query->execute();
+        $results = $query->execute();
+      }
     }
     if (isset($results['node'])) {
-      $nids = array_keys($results['node']);
+      $nids = array();
+      foreach ($results['node'] as $item) {
+        $nids[] = $item->nid;
+      }
 
       // handle paging
       $page = pager_find_page();
@@ -497,14 +504,14 @@ function application_collection_callback($appId = NULL) {
       $query->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', 'application')
         ->fieldCondition('application_orgid', 'value', ibm_apim_get_current_developer_org()['id'])
-        ->fieldCondition('application_apiid', 'value', $appId);
+        ->fieldCondition('application_apiid', 'value', check_plain($appId));
 
       $results = $query->execute();
 
       if (isset($results['node'])) {
-        $keys = array_keys($results['node']);
-        $node = node_load($keys[0]);
-        drupal_goto('node/' . $node->nid, array('query' => array('nocache' => 1)));
+        $first = array_shift($results['node']);
+        $nid = $first->nid;
+        drupal_goto('node/' . $nid, array('query' => array('nocache' => 1)));
       }
       else {
         drupal_set_message(t('The specified application could not be found or you do not have permission to access it.'), 'error');
@@ -530,9 +537,17 @@ function application_createOrUpdateApplication($application) {
   $results = $query->execute();
 
   if (isset($results['node'])) {
-    $keys = array_keys($results['node']);
-    $node = node_load($keys[0]);
-    application_updateExistingApplicationNode($node, $application);
+    $first = array_shift($results['node']);
+    $nid = $first->nid;
+    $node = node_load($nid);
+    if (!isset($application['timestamp']) || (isset($node->changed) && ($node->changed < $application['timestamp']))) {
+      application_updateExistingApplicationNode($node, $application);
+    }
+    else {
+      watchdog('application_updateExistingApplicationNode', 'ETag not set skipping update for %nid.', array(
+        '%nid' => $node->nid
+      ), WATCHDOG_NOTICE);
+    }
     $createdOrUpdated = FALSE;
   }
   else {
@@ -585,6 +600,13 @@ function application_createNewApplicationNode($app) {
   );
   $node->application_apiid[$node->language][] = array(
     'value' => $app['id'],
+    'format' => 'plain_text'
+  );
+  if (!isset($app['etag']) || empty($app['etag'])) {
+    $app['etag'] = '';
+  }
+  $node->application_etag[$node->language][] = array(
+    'value' => $app['etag'],
     'format' => 'plain_text'
   );
   // ensure description is at least set to empty string
@@ -709,6 +731,10 @@ function application_updateExistingApplicationNode($node, $app) {
   $node->application_providerid[$node->language][0]['value'] = $apim_session['org'];
   $node->application_environmentid[$node->language][0]['value'] = $apim_session['env'];
   $node->application_apiid[$node->language][0]['value'] = $app['id'];
+  if (!isset($app['etag']) || empty($app['etag'])) {
+    $app['etag'] = '';
+  }
+  $node->application_etag[$node->language][0]['value'] = $app['etag'];
   // ensure description is at least set to empty string
   if (!isset($app['description']) || empty($app['description'])) {
     $app['description'] = '';
@@ -729,9 +755,9 @@ function application_updateExistingApplicationNode($node, $app) {
       if (!isset($app['app-credentials'][$key]['description'])) {
         $app['app-credentials'][$key]['description'] = '';
       }
-    }
+      }
     $node->application_credentials[$node->language][0]['value'] = serialize($app['app-credentials']);
-  }
+    }
   elseif (isset($app['credentials'])) {
     // do not store client secrets
     foreach ($app['credentials'] as $key => $cred) {
@@ -741,9 +767,9 @@ function application_updateExistingApplicationNode($node, $app) {
       if (!isset($app['credentials'][$key]['description'])) {
         $app['credentials'][$key]['description'] = '';
       }
-    }
+      }
     $node->application_credentials[$node->language][0]['value'] = serialize($app['credentials']);
-  }
+    }
   else {
     $node->application_credentials[$node->language][0]['value'] = serialize(array());
   }
@@ -764,6 +790,9 @@ function application_details_contents($appId) {
   if ($appId == 'new') {
     $returnApp = '';
     return $returnApp;
+  }
+  else {
+    $appId = check_plain($appId);
   }
   $org = ibm_apim_get_current_developer_org();
   $developerOrg = $org['id'];
@@ -833,7 +862,7 @@ function application_new_application_clientcreds($form, &$form_state, $appid) {
       '#required' => FALSE,
       '#theme_options' => array('description at top' => t('Optionally specify a description to describe the use of these credentials'))
     );
-    $form['appid'] = array('#type' => 'hidden', '#value' => $appid);
+    $form['appid'] = array('#type' => 'hidden', '#value' => check_plain($appid));
 
     $form['submit'] = array('#type' => 'submit', '#value' => t('Submit'));
     $form['#submit'] = array('application_new_application_clientcreds_submit');
@@ -853,8 +882,8 @@ function application_new_application_clientcreds($form, &$form_state, $appid) {
  * @param $form_state
  */
 function application_new_application_clientcreds_submit($form, &$form_state) {
-  $appId = $form_state['values']['appid'];
-  $descr = $form_state['values']['description'];
+  $appId = check_plain($form_state['values']['appid']);
+  $descr = check_plain($form_state['values']['description']);
   $org = ibm_apim_get_current_developer_org();
   $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appId . '/credentials';
   $data = array("description" => $descr);
@@ -878,8 +907,9 @@ function application_new_application_clientcreds_submit($form, &$form_state) {
     $results = $query->execute();
 
     if (isset($results['node'])) {
-      $keys = array_keys($results['node']);
-      $node = node_load($keys[0]);
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
       if (isset($node)) {
         if (isset($node->application_credentials[$node->language][0]['value'])) {
           $existingcreds = unserialize($node->application_credentials[$node->language][0]['value']);
@@ -895,7 +925,7 @@ function application_new_application_clientcreds_submit($form, &$form_state) {
         $node->application_credentials[$node->language][0]['value'] = serialize($existingcreds);
         node_save($node);
         // Calling all modules implementing 'hook_ibm_apim_application_creds_create':
-        module_invoke_all('ibm_apim_application_creds_create');
+        module_invoke_all('ibm_apim_application_creds_create', $node, $result->data);
       }
       else {
         drupal_set_message(t('The specified application could not be found to store the new credentials.'), 'error');
@@ -923,6 +953,8 @@ function application_update_application_clientcreds($form, &$form_state, $appid,
   if (isset($isdev) && $isdev == TRUE) {
     $app_data['description'] = '';
     $org = ibm_apim_get_current_developer_org();
+    $appid = check_plain($appid);
+    $credid = check_plain($credid);
     $developerOrg = $org['id'];
     $result = ibm_apim_call('/v1/portal/orgs/' . $developerOrg . '/apps/' . $appid . '/credentials/' . $credid);
     if (isset($result) && isset($result->data) && !isset($result->data['errors'])) {
@@ -958,9 +990,9 @@ function application_update_application_clientcreds($form, &$form_state, $appid,
  * @param $form_state
  */
 function application_update_application_clientcreds_submit($form, &$form_state) {
-  $appId = $form_state['values']['appid'];
-  $credId = $form_state['values']['credid'];
-  $descr = $form_state['values']['description'];
+  $appId = check_plain($form_state['values']['appid']);
+  $credId = check_plain($form_state['values']['credid']);
+  $descr = check_plain($form_state['values']['description']);
   $org = ibm_apim_get_current_developer_org();
   $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appId . '/credentials/' . $credId;
   $data = array("description" => $descr);
@@ -975,8 +1007,9 @@ function application_update_application_clientcreds_submit($form, &$form_state) 
     $results = $query->execute();
 
     if (isset($results['node'])) {
-      $keys = array_keys($results['node']);
-      $node = node_load($keys[0]);
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
       if (isset($node)) {
         if (isset($node->application_credentials[$node->language][0]['value'])) {
           $existingcreds = unserialize($node->application_credentials[$node->language][0]['value']);
@@ -990,7 +1023,7 @@ function application_update_application_clientcreds_submit($form, &$form_state) 
           $node->application_credentials[$node->language][0]['value'] = serialize($existingcreds);
           node_save($node);
           // Calling all modules implementing 'hook_ibm_apim_application_creds_update':
-          module_invoke_all('ibm_apim_application_creds_update');
+          module_invoke_all('ibm_apim_application_creds_update', $node, $result->data);
         }
       }
       else {
@@ -1015,10 +1048,10 @@ function application_update_application_clientcreds_submit($form, &$form_state) 
 function application_delete_application_clientcreds($form, &$form_state, $appid, $credid) {
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE) {
-    $confirm_form['appid'] = array('#type' => 'value', '#value' => $appid);
-    $confirm_form['credid'] = array('#type' => 'value', '#value' => $credid);
+    $confirm_form['appid'] = array('#type' => 'value', '#value' => check_plain($appid));
+    $confirm_form['credid'] = array('#type' => 'value', '#value' => check_plain($credid));
 
-    return confirm_form($confirm_form, t('Are you sure you want to delete these client credentials?'), 'application/' . $appid, t('Are you sure you want to delete these client credentials?'), t('Delete'), t('Cancel'));
+    return confirm_form($confirm_form, t('Are you sure you want to delete these client credentials?'), 'application/' . check_plain($appid), t('Are you sure you want to delete these client credentials?'), t('Delete'), t('Cancel'));
   }
   else {
     drupal_set_message(t('Developer access required.'), 'error');
@@ -1033,8 +1066,8 @@ function application_delete_application_clientcreds($form, &$form_state, $appid,
  * @param $form_state
  */
 function application_delete_application_clientcreds_submit($form, &$form_state) {
-  $appId = $form_state['values']['appid'];
-  $credId = $form_state['values']['credid'];
+  $appId = check_plain($form_state['values']['appid']);
+  $credId = check_plain($form_state['values']['credid']);
   $org = ibm_apim_get_current_developer_org();
   $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appId . '/credentials/' . $credId;
   $result = ibm_apim_delete($url);
@@ -1048,8 +1081,9 @@ function application_delete_application_clientcreds_submit($form, &$form_state) 
     $results = $query->execute();
 
     if (isset($results['node'])) {
-      $keys = array_keys($results['node']);
-      $node = node_load($keys[0]);
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
       if (isset($node)) {
         $newcreds = array();
         if (isset($node->application_credentials[$node->language][0]['value'])) {
@@ -1063,7 +1097,7 @@ function application_delete_application_clientcreds_submit($form, &$form_state) 
         $node->application_credentials[$node->language][0]['value'] = serialize($newcreds);
         node_save($node);
         // Calling all modules implementing 'hook_ibm_apim_application_creds_delete':
-        module_invoke_all('ibm_apim_application_creds_delete');
+        module_invoke_all('ibm_apim_application_creds_delete', $node, $result->data);
       }
       else {
         drupal_set_message(t('The specified application could not be found to update the credentials.'), 'error');
@@ -1087,10 +1121,10 @@ function application_delete_application_clientcreds_submit($form, &$form_state) 
 function application_reset_application_clientid($form, &$form_state, $appid, $credid) {
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE) {
-    $confirm_form['appid'] = array('#type' => 'value', '#value' => $appid);
-    $confirm_form['credid'] = array('#type' => 'value', '#value' => $credid);
+    $confirm_form['appid'] = array('#type' => 'value', '#value' => check_plain($appid));
+    $confirm_form['credid'] = array('#type' => 'value', '#value' => check_plain($credid));
 
-    return confirm_form($confirm_form, t('Are you sure you want to reset your client ID?'), 'application/' . $appid, t('Are you sure you want to reset your client ID? This action cannot be undone.'), t('Reset'), t('Cancel'));
+    return confirm_form($confirm_form, t('Are you sure you want to reset your client ID?'), 'application/' . check_plain($appid), t('Are you sure you want to reset your client ID? This action cannot be undone.'), t('Reset'), t('Cancel'));
   }
   else {
     drupal_set_message(t('Developer access required.'), 'error');
@@ -1105,8 +1139,8 @@ function application_reset_application_clientid($form, &$form_state, $appid, $cr
  * @param $form_state
  * */
 function application_reset_application_clientid_submit($form, &$form_state) {
-  $appId = $form_state['values']['appid'];
-  $credId = $form_state['values']['credid'];
+  $appId = check_plain($form_state['values']['appid']);
+  $credId = check_plain($form_state['values']['credid']);
   $org = ibm_apim_get_current_developer_org();
   $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appId . '/credentials/' . $credId . '/reset';
   $data = array("clientSecret" => FALSE, "clientID" => TRUE);
@@ -1125,8 +1159,9 @@ function application_reset_application_clientid_submit($form, &$form_state) {
     $results = $query->execute();
 
     if (isset($results['node'])) {
-      $keys = array_keys($results['node']);
-      $node = node_load($keys[0]);
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
       if (isset($node)) {
         if (isset($node->application_credentials[$node->language][0]['value'])) {
           $existingcreds = unserialize($node->application_credentials[$node->language][0]['value']);
@@ -1140,7 +1175,7 @@ function application_reset_application_clientid_submit($form, &$form_state) {
           $node->application_credentials[$node->language][0]['value'] = serialize($existingcreds);
           node_save($node);
           // Calling all modules implementing 'hook_ibm_apim_application_clientid_reset':
-          module_invoke_all('ibm_apim_application_clientid_reset');
+          module_invoke_all('ibm_apim_application_clientid_reset', $node, $result->data);
         }
       }
       else {
@@ -1165,10 +1200,10 @@ function application_reset_application_clientid_submit($form, &$form_state) {
 function application_reset_application_secret($form, &$form_state, $appid, $credid) {
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE) {
-    $confirm_form['appid'] = array('#type' => 'value', '#value' => $appid);
-    $confirm_form['credid'] = array('#type' => 'value', '#value' => $credid);
+    $confirm_form['appid'] = array('#type' => 'value', '#value' => check_plain($appid));
+    $confirm_form['credid'] = array('#type' => 'value', '#value' => check_plain($credid));
 
-    return confirm_form($confirm_form, t('Are you sure you want to reset your client secret?'), 'application/' . $appid, t('Are you sure you want to reset your client secret? This action cannot be undone.'), t('Reset'), t('Cancel'));
+    return confirm_form($confirm_form, t('Are you sure you want to reset your client secret?'), 'application/' . check_plain($appid), t('Are you sure you want to reset your client secret? This action cannot be undone.'), t('Reset'), t('Cancel'));
   }
   else {
     drupal_set_message(t('Developer access required.'), 'error');
@@ -1183,8 +1218,8 @@ function application_reset_application_secret($form, &$form_state, $appid, $cred
  * @param $form_state
  */
 function application_reset_application_secret_submit($form, &$form_state) {
-  $appId = $form_state['values']['appid'];
-  $credId = $form_state['values']['credid'];
+  $appId = check_plain($form_state['values']['appid']);
+  $credId = check_plain($form_state['values']['credid']);
   $org = ibm_apim_get_current_developer_org();
   $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appId . '/credentials/' . $credId . '/reset';
   $data = array("clientSecret" => TRUE, "clientID" => FALSE);
@@ -1196,8 +1231,19 @@ function application_reset_application_secret_submit($form, &$form_state) {
       '!html_end' => '</label></div></div>'
     )));
   }
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'application')
+    ->fieldCondition('application_apiid', 'value', $appId);
+  $results = $query->execute();
+
+  if (isset($results['node'])) {
+    $first = array_shift($results['node']);
+    $nid = $first->nid;
+    $node = node_load($nid);
+  }
   // Calling all modules implementing 'hook_ibm_apim_application_clientsecret_reset':
-  module_invoke_all('ibm_apim_application_clientsecret_reset');
+  module_invoke_all('ibm_apim_application_clientsecret_reset', $node, $result->data);
   $form_state['redirect'] = 'application/' . $appId;
 }
 
@@ -1217,7 +1263,7 @@ function application_reset_application_secret_submit($form, &$form_state) {
 function _application_upload_application_image_form($form, &$form_state, $app_id) {
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE) {
-    $form['app_id'] = array('#type' => 'hidden', '#value' => $app_id);
+    $form['app_id'] = array('#type' => 'hidden', '#value' => check_plain($app_id));
     $form['title'] = array('#markup' => '<h1>' . t('Upload application image') . '</h1>');
     $form['image'] = array(
       '#type' => 'file',
@@ -1269,12 +1315,13 @@ function _application_upload_application_image_form_submit_handler($form, &$form
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'application')
-      ->fieldCondition('application_apiid', 'value', $form_state['values']['app_id']);
+      ->fieldCondition('application_apiid', 'value', check_plain($form_state['values']['app_id']));
     $results = $query->execute();
 
     if (isset($results['node'])) {
-      $keys = array_keys($results['node']);
-      $node = node_load($keys[0]);
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
       $node->application_image = array(
         $node->language => array(
           0 => array(
@@ -1292,7 +1339,7 @@ function _application_upload_application_image_form_submit_handler($form, &$form
     }
 
     drupal_set_message(t('Application image updated.'));
-    drupal_goto('application/' . $form_state['values']['app_id']);
+    drupal_goto('application/' . check_plain($form_state['values']['app_id']));
   }
 }
 
@@ -1300,15 +1347,10 @@ function _application_upload_application_image_form_submit_handler($form, &$form
  * Form to allow user to input their application secret for verification.
  *
  * @param $form
- *          The form
- *
  * @param $form_state
- *          The form state
- *
  * @param $appId
- *          The application ID that cooresponds to the secret
- *
- * @return array The form
+ * @param $credId
+ * @return array
  */
 function _application_verify_application_secret_form($form, &$form_state, $appId, $credId) {
   $form = array();
@@ -1320,8 +1362,8 @@ function _application_verify_application_secret_form($form, &$form_state, $appId
     '#maxlength' => 50,
     '#required' => TRUE
   );
-  $form['appid'] = array('#type' => 'hidden', '#value' => $appId);
-  $form['credid'] = array('#type' => 'hidden', '#value' => $credId);
+  $form['appid'] = array('#type' => 'hidden', '#value' => check_plain($appId));
+  $form['credid'] = array('#type' => 'hidden', '#value' => check_plain($credId));
   $form['submit'] = array('#type' => 'submit', '#value' => t('Submit'));
   $form['#submit'] = array('_application_verify_application_secret_form_submit_handler');
   return $form;
@@ -1344,8 +1386,11 @@ function _application_verify_application_secret_form($form, &$form_state, $appId
 function _application_edit_application_form($form, &$form_state, $appId = NULL) {
   if ($appId == NULL) {
     if (isset($form_state) && isset($form_state['input']) && isset($form_state['input']['appid'])) {
-      $appId = $form_state['input']['appid'];
+      $appId = check_plain($form_state['input']['appid']);
     }
+  }
+  else {
+    $appId = check_plain($appId);
   }
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE && isset($appId)) {
@@ -1366,8 +1411,9 @@ function _application_edit_application_form($form, &$form_state, $appId = NULL) 
     $results = $query->execute();
 
     if (isset($results['node'])) {
-      $keys = array_keys($results['node']);
-      $node = node_load($keys[0]);
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
     }
 
     if (isset($node)) {
@@ -1439,11 +1485,11 @@ function _application_edit_application_form($form, &$form_state, $appId = NULL) 
  *          The form state
  */
 function _application_edit_application_form_submit_handler($form, &$form_state) {
-  $name = $form_state['input']['title'];
-  $description = $form_state['input']['application_description']['und'][0]['value'];
-  $oauthurl = $form_state['input']['application_oauthredirecturi']['und'][0]['value'];
-  $developer_org = $form_state['input']['developerorg'];
-  $app_id = $form_state['input']['appid'];
+  $name = check_plain($form_state['input']['title']);
+  $description = check_plain($form_state['input']['application_description']['und'][0]['value']);
+  $oauthurl = check_plain($form_state['input']['application_oauthredirecturi']['und'][0]['value']);
+  $developer_org = check_plain($form_state['input']['developerorg']);
+  $app_id = check_plain($form_state['input']['appid']);
   if (!isset($name) || empty($name)) {
     drupal_set_message(t('ERROR: Title is a required field.'), 'error');
     $form_state['redirect'] = 'application/' . $app_id;
@@ -1473,8 +1519,9 @@ function _application_edit_application_form_submit_handler($form, &$form_state) 
       $results = $query->execute();
 
       if (isset($results['node'])) {
-        $keys = array_keys($results['node']);
-        $node = node_load($keys[0]);
+        $first = array_shift($results['node']);
+        $nid = $first->nid;
+        $node = node_load($nid);
         $node->title = ibm_apim_truncate_string($name);
         $node->application_description[$node->language][0]['value'] = $description;
         $node->application_description[$node->language][0]['safe_version'] = $description;
@@ -1485,7 +1532,7 @@ function _application_edit_application_form_submit_handler($form, &$form_state) 
       drupal_set_message(t('Application updated successfully.'));
       $form_state['redirect'] = 'application/' . $app_id;
       // Calling all modules implementing 'hook_ibm_apim_application_update':
-      module_invoke_all('ibm_apim_application_update');
+      module_invoke_all('ibm_apim_application_update', $node, $result->data);
     }
     else {
       $form_state['redirect'] = 'application';
@@ -1503,9 +1550,9 @@ function _application_edit_application_form_submit_handler($form, &$form_state) 
  *          The form state
  */
 function _application_verify_application_secret_form_submit_handler($form, &$form_state) {
-  $secret = $form_state['values']['secret'];
-  $appid = $form_state['values']['appid'];
-  $credid = $form_state['values']['credid'];
+  $secret = check_plain($form_state['values']['secret']);
+  $appid = check_plain($form_state['values']['appid']);
+  $credid = check_plain($form_state['values']['credid']);
   $org = ibm_apim_get_current_developer_org();
   $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appid . '/credentials/' . $credid . '/verify-secret';
   $data = array("clientSecret" => $secret);
@@ -1591,10 +1638,10 @@ function _application_add_application_form($form, &$form_state) {
  *          The form state
  */
 function _application_add_application_form_submit_handler($form, &$form_state) {
-  $name = $form_state['input']['title'];
-  $description = $form_state['input']['application_description']['und'][0]['value'];
-  $oauth = $form_state['input']['application_oauthredirecturi']['und'][0]['value'];
-  $developer_org = $form_state['input']['developerorg'];
+  $name = check_plain($form_state['input']['title']);
+  $description = check_plain($form_state['input']['application_description']['und'][0]['value']);
+  $oauth = check_plain($form_state['input']['application_oauthredirecturi']['und'][0]['value']);
+  $developer_org = check_plain($form_state['input']['developerorg']);
   if (!isset($name) || empty($name)) {
     drupal_set_message(t('ERROR: Title is a required field.'), 'error');
     $form_state['redirect'] = 'application/new';
@@ -1616,10 +1663,13 @@ function _application_add_application_form_submit_handler($form, &$form_state) {
         '!html_end' => '</label></div></div>'
       )));
       $app_data = application_details_contents($result->data['id']);
-      application_createNewApplicationNode($app_data);
+      $nid = application_createNewApplicationNode($app_data);
+      $node = node_load($nid);
 
-      // Calling all modules implementing 'hook_ibm_apim_application_create':
-      module_invoke_all('ibm_apim_application_create');
+      if (isset($node)) {
+        // Calling all modules implementing 'hook_ibm_apim_application_create':
+        module_invoke_all('ibm_apim_application_create', $node, $result->data);
+      }
 
       $form_state['redirect'] = 'application/' . $result->data['id'];
     }
@@ -1639,9 +1689,9 @@ function _application_add_application_form_submit_handler($form, &$form_state) {
 function _application_delete_application($form, &$form_state, $appid) {
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE) {
-    $confirm_form['appid'] = array('#type' => 'value', '#value' => $appid);
+    $confirm_form['appid'] = array('#type' => 'value', '#value' => check_plain($appid));
 
-    return confirm_form($confirm_form, t('Are you sure you want to delete this application?'), 'application/' . $appid, t('Are you sure you want to delete this application? This action cannot be undone.'), t('Delete'), t('Cancel'));
+    return confirm_form($confirm_form, t('Are you sure you want to delete this application?'), 'application/' . check_plain($appid), t('Are you sure you want to delete this application? This action cannot be undone.'), t('Delete'), t('Cancel'));
   }
   else {
     drupal_set_message(t('Developer access required.'), 'error');
@@ -1658,7 +1708,7 @@ function _application_delete_application_submit($form, &$form_state) {
   $apim_session = &_ibm_apim_get_apim_session();
   $org = ibm_apim_get_current_developer_org();
   $developerOrg = $org['id'];
-  $appId = $form_state['values']['appid'];
+  $appId = check_plain($form_state['values']['appid']);
   $url = '/v1/portal/orgs/' . $developerOrg . '/apps/' . $appId;
   $result = ibm_apim_delete($url);
   if (isset($result) && $result->code >= 200 && $result->code < 300) {
@@ -1669,15 +1719,17 @@ function _application_delete_application_submit($form, &$form_state) {
       ->fieldCondition('application_apiid', 'value', $appId);
     $dbresults = $query->execute();
     if (isset($dbresults['node'])) {
-      $keys = array_keys($dbresults['node']);
-      node_delete($keys[0]);
+      $first = array_shift($dbresults['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
+      node_delete($nid);
     }
     // clear session app cache
     unset($apim_session['apps']);
     $apim_session['apps'] = array();
     drupal_set_message(t('Application deleted successfully.'));
     // Calling all modules implementing 'hook_ibm_apim_application_delete':
-    module_invoke_all('ibm_apim_application_delete');
+    module_invoke_all('ibm_apim_application_delete', $node, $result->data);
   }
   $form_state['redirect'] = 'application';
 }
@@ -1692,9 +1744,9 @@ function _application_delete_application_submit($form, &$form_state) {
 function _application_delete_image($form, &$form_state, $appid) {
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE) {
-    $confirm_form['appid'] = array('#type' => 'value', '#value' => $appid);
+    $confirm_form['appid'] = array('#type' => 'value', '#value' => check_plain($appid));
 
-    return confirm_form($confirm_form, t('Are you sure you want to delete the application image?'), 'application/' . $appid, t('Are you sure you want to delete the application image? This action cannot be undone.'), t('Delete'), t('Cancel'));
+    return confirm_form($confirm_form, t('Are you sure you want to delete the application image?'), 'application/' . check_plain($appid), t('Are you sure you want to delete the application image? This action cannot be undone.'), t('Delete'), t('Cancel'));
   }
   else {
     drupal_set_message(t('Developer access required.'), 'error');
@@ -1708,7 +1760,7 @@ function _application_delete_image($form, &$form_state, $appid) {
  * @param $form_state
  */
 function _application_delete_image_submit($form, &$form_state) {
-  $appId = $form_state['values']['appid'];
+  $appId = check_plain($form_state['values']['appid']);
   $org = ibm_apim_get_current_developer_org();
   $developerOrg = $org['id'];
 
@@ -1720,8 +1772,9 @@ function _application_delete_image_submit($form, &$form_state) {
   $results = $query->execute();
 
   if (isset($results['node'])) {
-    $keys = array_keys($results['node']);
-    $node = node_load($keys[0]);
+    $first = array_shift($results['node']);
+    $nid = $first->nid;
+    $node = node_load($nid);
     $node_file = $node->application_image[$node->language][0]['fid'];
     $file = file_load($node_file);
     if (isset($file)) {
@@ -1766,8 +1819,8 @@ function application_unsubscribeapp($form, &$form_state, $appid = NULL, $subid =
  * @param $form_state
  */
 function application_unsubscribeapp_submit($form, &$form_state) {
-  $appId = $form_state['values']['appid'];
-  $subId = $form_state['values']['subid'];
+  $appId = check_plain($form_state['values']['appid']);
+  $subId = check_plain($form_state['values']['subid']);
   $org = ibm_apim_get_current_developer_org();
   $developerOrg = $org['id'];
   $url = '/v1/portal/orgs/' . $developerOrg . '/apps/' . $appId . '/subscriptions/' . $subId;
@@ -1775,8 +1828,18 @@ function application_unsubscribeapp_submit($form, &$form_state) {
   if (isset($result) && $result->code >= 200 && $result->code < 300) {
     application_remove_subscription_id($appId, $subId);
     drupal_set_message(t('Application unsubscribed successfully.'));
-    // Calling all modules implementing 'hook_ibm_apim_application_unsubscribe':
-    module_invoke_all('ibm_apim_application_unsubscribe');
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'application')
+      ->fieldCondition('application_apiid', 'value', $appId);
+    $dbresults = $query->execute();
+    if (isset($dbresults['node'])) {
+      $first = array_shift($dbresults['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
+      // Calling all modules implementing 'hook_ibm_apim_application_unsubscribe':
+      module_invoke_all('ibm_apim_application_unsubscribe', $node, $result->data);
+    }
   }
   $form_state['redirect'] = 'application/' . $appId;
 }
@@ -1810,10 +1873,10 @@ function application_migrateapp($form, &$form_state, $appid = NULL, $subid = NUL
  * @param $form_state
  */
 function application_migrateapp_submit($form, &$form_state) {
-  $appId = $form_state['values']['appid'];
-  $subId = $form_state['values']['subid'];
+  $appId = check_plain($form_state['values']['appid']);
+  $subId = check_plain($form_state['values']['subid']);
   $origplanref = $form_state['values']['planurl'];
-  $planref = ibm_apim_base64_url_decode($origplanref);
+  $planref = check_plain(ibm_apim_base64_url_decode($origplanref));
   $org = ibm_apim_get_current_developer_org();
   $developerOrg = $org['id'];
 
@@ -1855,12 +1918,13 @@ function _application_update_notification_settings_form($form, &$form_state, $ap
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'application')
-    ->fieldCondition('application_apiid', 'value', $appID);
+    ->fieldCondition('application_apiid', 'value', check_plain($appID));
   $results = $query->execute();
 
   if (isset($results['node'])) {
-    $keys = array_keys($results['node']);
-    $node = node_load($keys[0]);
+    $first = array_shift($results['node']);
+    $nid = $first->nid;
+    $node = node_load($nid);
     $appURL = $node->application_url[$node->language][0]['safe_value'];
     $result = ibm_apim_get_app_notification_settings($node->application_apiid[$node->language][0]['safe_value']);
   }
@@ -1977,11 +2041,11 @@ function _application_update_notification_settings_form_alter(&$form, &$form_sta
  *          The form state
  */
 function _application_update_notification_settings_form_submit_handler($form, &$form_state) {
-  $enabled = $form_state['values']['enabled'];
-  $emailEnabled = $form_state['values']['emailEnabled'];
-  $interval = $form_state['values']['interval'];
-  $limit = $form_state['values']['limit'];
-  $appURL = $form_state['values']['appurl'];
+  $enabled = check_plain($form_state['values']['enabled']);
+  $emailEnabled = check_plain($form_state['values']['emailEnabled']);
+  $interval = check_plain($form_state['values']['interval']);
+  $limit = check_plain($form_state['values']['limit']);
+  $appURL = check_plain($form_state['values']['appurl']);
 
   $settings = array();
   $settings['appURL'] = $appURL;
@@ -2021,8 +2085,9 @@ function _application_update_notification_settings_form_submit_handler($form, &$
     $results = $query->execute();
 
     if (isset($results['node'])) {
-      $keys = array_keys($results['node']);
-      $node = node_load($keys[0]);
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
       drupal_set_message(t('Notification settings updated successfully.'));
       $form_state['redirect'] = 'node/' . $node->nid;
     }
@@ -2048,7 +2113,7 @@ function application_subscribeapp_callback($planid = NULL, $approval = 'false') 
   ctools_include('ajax');
   ctools_include('modal');
   ctools_modal_add_js();
-  $app_form = drupal_get_form('application_subscribeapp_modal_form', $planid, $approval);
+  $app_form = drupal_get_form('application_subscribeapp_modal_form', check_plain($planid), check_plain($approval));
   $markup .= drupal_render($app_form);
   return array('#markup' => $markup);
 }
@@ -2066,6 +2131,8 @@ function application_subscribeapp_modal_form($form, &$form_state, $planId = NULL
     $form['message'] = array('#markup' => $markup);
   }
   else {
+    $planId = check_plain($planId);
+    $approval = check_plain($approval);
     $nodes = array();
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
@@ -2074,7 +2141,10 @@ function application_subscribeapp_modal_form($form, &$form_state, $planId = NULL
 
     $results = $query->execute();
     if (isset($results['node'])) {
-      $nids = array_keys($results['node']);
+      $nids = array();
+      foreach ($results['node'] as $item) {
+        $nids[] = $item->nid;
+      }
       $nodes = node_load_multiple($nids);
     }
 
@@ -2124,7 +2194,7 @@ function application_subscribeapp_modal_form($form, &$form_state, $planId = NULL
 
       if (is_array($nodes)) {
         foreach ($nodes as $app) {
-          if (isset($app->application_state[$app->language][0]['safe_value']) && strtoupper($app->application_state[$app->language][0]['safe_value']) == 'SUSPENDED') {
+          if (isset($app->application_state[$app->language][0]['safe_value']) && mb_strtoupper($app->application_state[$app->language][0]['safe_value']) == 'SUSPENDED') {
             $string = ibm_apim_base64_url_encode($app->application_apiid[$app->language][0]['safe_value']);
             $form['app'][$string]['#disabled'] = TRUE; // disables option
           }
@@ -2180,10 +2250,10 @@ function application_subscribeapp_modal_form_submit($form, &$form_state) {
   ctools_include('ajax');
   ctools_include('modal');
 
-  $appid = ibm_apim_base64_url_decode($form_state['values']['app']);
-  $planId = $form_state['values']['planId'];
-  $requiresapproval = $form_state['values']['approval'];
-  if (strtolower($requiresapproval) != 'true' && strtolower($requiresapproval != 'false')) {
+  $appid = check_plain(ibm_apim_base64_url_decode($form_state['values']['app']));
+  $planId = check_plain($form_state['values']['planId']);
+  $requiresapproval = check_plain($form_state['values']['approval']);
+  if (mb_strtolower($requiresapproval) != 'true' && mb_strtolower($requiresapproval != 'false')) {
     $requiresapproval = 'false';
   }
 
@@ -2202,7 +2272,8 @@ function application_subscribeapp_modal_form_submit($form, &$form_state) {
     ->fieldCondition('product_ref', 'value', $productname . ':' . $productversion);
   $results = $query->execute();
   if (isset($results['node'])) {
-    $nid = array_keys($results['node'])[0];
+    $first = array_shift($results['node']);
+    $nid = $first->nid;
     $redirect = 'node/' . $nid;
   }
   else {
@@ -2215,7 +2286,7 @@ function application_subscribeapp_modal_form_submit($form, &$form_state) {
   if (isset($result) && $result->code >= 200 && $result->code < 300 && (!isset($result->data) || (isset($result->data) && !isset($result->data['errors'])))) {
     // only print success message if it actually was successful
     // error messages will be automatically displayed if there are any
-    if (strtolower($requiresapproval) == 'true') {
+    if (mb_strtolower($requiresapproval) == 'true') {
       drupal_set_message(t("Subscription request for this plan has been submitted for approval."));
     }
     else {
@@ -2232,8 +2303,18 @@ function application_subscribeapp_modal_form_submit($form, &$form_state) {
         }
       }
       drupal_set_message(t("Successfully subscribed to this plan."));
-      // Calling all modules implementing 'hook_ibm_apim_application_subscribe':
-      module_invoke_all('ibm_apim_application_subscribe');
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'application')
+        ->fieldCondition('application_apiid', 'value', $appid);
+      $dbresults = $query->execute();
+      if (isset($dbresults['node'])) {
+        $first = array_shift($dbresults['node']);
+        $nid = $first->nid;
+        $node = node_load($nid);
+        // Calling all modules implementing 'hook_ibm_apim_application_subscribe':
+        module_invoke_all('ibm_apim_application_subscribe', $node, $result->data);
+      }
     }
   }
   $form_state['redirect'] = $redirect;
@@ -2253,12 +2334,13 @@ function application_create_subscription($appid, $subid, $product, $plan, $activ
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'application')
-    ->fieldCondition('application_apiid', 'value', $appid);
+    ->fieldCondition('application_apiid', 'value', check_plain($appid));
   $results = $query->execute();
 
   if (isset($results['node'])) {
-    $keys = array_keys($results['node']);
-    $node = node_load($keys[0]);
+    $first = array_shift($results['node']);
+    $nid = $first->nid;
+    $node = node_load($nid);
     if (isset($node)) {
       $appsub = array(
         'id' => $subid,
@@ -2328,12 +2410,13 @@ function application_remove_subscription($appid, $product, $plan) {
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'application')
-    ->fieldCondition('application_apiid', 'value', $appid);
+    ->fieldCondition('application_apiid', 'value', check_plain($appid));
   $results = $query->execute();
 
   if (isset($results['node'])) {
-    $keys = array_keys($results['node']);
-    $node = node_load($keys[0]);
+    $first = array_shift($results['node']);
+    $nid = $first->nid;
+    $node = node_load($nid);
     if (isset($node)) {
       if (isset($node->application_subscriptions[$node->language][0]) && is_array($node->application_subscriptions[$node->language][0])) {
         $existingsubs = unserialize($node->application_subscriptions[$node->language][0]['value']);
@@ -2365,12 +2448,13 @@ function application_remove_subscription_id($appid, $subid) {
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'application')
-    ->fieldCondition('application_apiid', 'value', $appid);
+    ->fieldCondition('application_apiid', 'value', check_plain($appid));
   $results = $query->execute();
 
   if (isset($results['node'])) {
-    $keys = array_keys($results['node']);
-    $node = node_load($keys[0]);
+    $first = array_shift($results['node']);
+    $nid = $first->nid;
+    $node = node_load($nid);
     if (isset($node)) {
       if (isset($node->application_subscriptions[$node->language][0]) && is_array($node->application_subscriptions[$node->language][0])) {
         $existingsubs = unserialize($node->application_subscriptions[$node->language][0]['value']);
@@ -2441,6 +2525,7 @@ function _application_get_ibm_fields() {
     'application_data',
     'application_credentials',
     'application_subscriptions',
+    'application_etag',
     'field_applicationrating',
     'field_applicationtags'
   );
@@ -2472,8 +2557,9 @@ function application_updateApplicationNode($app) {
     $results = $query->execute();
 
     if (isset($results['node'])) {
-      $keys = array_keys($results['node']);
-      $node = node_load($keys[0]);
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
       application_updateExistingApplicationNode($node, $app);
     }
   }
@@ -2487,7 +2573,7 @@ function application_updateApplicationNode($app) {
  */
 function application_random_image($apiName) {
   $asInt = 0;
-  for ($i = 0; $i < strlen($apiName); $i++) {
+  for ($i = 0; $i < mb_strlen($apiName); $i++) {
     $asInt += ord($apiName[$i]);
   }
   $digit = $asInt % 19;

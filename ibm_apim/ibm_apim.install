@@ -12,6 +12,7 @@ function ibm_apim_install() {
   _ibm_apim_add_user_developerorg_field();
   _ibm_apim_add_user_company_field();
   _ibm_apim_add_user_phone_field();
+  _ibm_apim_add_user_uid_field();
   if (module_exists('addressfield')) {
     _ibm_apim_add_user_address_field();
   }
@@ -80,6 +81,10 @@ function ibm_apim_update_7400() {
       }
     }
   }
+  // create uid field if doesn't already exist
+  $field_info = field_info_field('field_uid');
+  if (!isset($field_info) || empty($field_info)) {
+    module_load_include('inc', 'ibm_apim', 'ibm_apim.userfields');
+    _ibm_apim_add_user_uid_field();
+  }
 }
-
-?>

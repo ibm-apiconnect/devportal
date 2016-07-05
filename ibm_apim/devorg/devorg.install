@@ -212,10 +212,18 @@ function devorg_update_7400() {
   $fields = field_info_field_map();
   foreach (_devorg_installed_fields() as $field) {
     if (!array_key_exists($field['field_name'], $fields)) {
-      field_create_field($field);
-      watchdog('devorg', 'Field %field_name has been successfully added', array(
-        '%field_name' => $field['field_name']
-      ));
+      $field_info = field_info_field($field['field_name']);
+      if (!isset($field_info) || empty($field_info)) {
+        field_create_field($field);
+        watchdog('devorg', 'Field %field_name has been successfully added', array(
+          '%field_name' => $field['field_name']
+        ));
+      }
+      else {
+        watchdog('devorg', 'Field %field_name already exists although instance doesnt', array(
+          '%field_name' => $field['field_name']
+        ));
+      }
     }
     else {
       watchdog('devorg', 'Field %field_name already exists', array(
@@ -226,7 +234,7 @@ function devorg_update_7400() {
   foreach (_devorg_installed_instances() as $fieldinstance) {
     if (!array_key_exists($fieldinstance['field_name'], $fields)) {
       $fieldinstance['entity_type'] = 'node';
-      $fieldinstance['bundle'] = 'application';
+      $fieldinstance['bundle'] = 'devorg';
       field_create_instance($fieldinstance);
       watchdog('devorg', 'Instance %instance_name has been successfully added', array(
         '%instance_name' => $fieldinstance['field_name']

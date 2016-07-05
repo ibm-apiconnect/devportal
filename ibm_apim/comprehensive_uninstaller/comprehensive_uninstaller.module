@@ -82,7 +82,7 @@ function comprehensive_uninstaller_form_alter(&$form, &$form_state, $form_id) {
         $module_name = $disabled_module->info['name'] ? $disabled_module->info['name'] : $disabled_module->name;
         $form['modules'][$disabled_module->name]['#module_name'] = $module_name;
         $form['modules'][$disabled_module->name]['name']['#markup'] = $module_name;
-        $form['modules'][$disabled_module->name]['description']['#markup'] = t($disabled_module->info['description']);
+        $form['modules'][$disabled_module->name]['description']['#markup'] = $disabled_module->info['description'];
         $form['uninstall'][$disabled_module->name] = array(
           '#type' => 'checkbox',
           '#title' => t('Uninstall @module module', array('@module' => $module_name)),

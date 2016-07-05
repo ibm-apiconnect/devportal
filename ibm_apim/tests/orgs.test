@@ -1,0 +1,78 @@
+<?php
+
+class IbmApimOrgsWebTestCase extends SiteWebTestCase {
+  use SiteTestHelpers {
+    SiteTestHelpers::__construct as private __sthConstruct;
+  }
+  use ApicTestHelperFunctions {
+    ApicTestHelperFunctions::__construct as private __athfConstruct;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct($test_id = NULL) {
+    $this->__sthConstruct($test_id);
+    $this->__athfConstruct($test_id);
+  }
+
+  /**
+   * Provide information about the site test.
+   */
+  public static function getInfo() {
+    return [
+      'name' => 'IBM APIC Organisations test',
+      'description' => 'Testing the features of organisations within APIC portal',
+      'group' => 'IBM APIM group',
+      'mode' => 'site',
+    ];
+  }
+
+  /**
+   * Test Case - Testing the organisational aspects of APIC Portal
+   */
+  public function testOrganisations() {
+    $this->login($this);
+    $orgNameBanner = ($this->findElementByCss('div.elipsis-names')[0]);
+    $emailBanner = ($this->findElementByCss('div.elipsis-names')[1]);
+    $this->drupalGet('myorg');
+
+    // Check the email and org name correctly appear in the page HTML
+    $this->assertRaw('   ' . $orgNameBanner . '   ', 'Name of organisation appears on the page');
+    $this->assertRaw('legend">' . $emailBanner . '</span>', 'Email address of org owner appears on the page');
+    $this->assertTitle($orgNameBanner . ' | API Portal');
+
+    // Check the links
+    $this->assertLinkByHref('/myorg', 0, 'The Manage link is present in the HTML');
+    $this->assertText('Manage', 'The Manage link is present on page');
+    $this->assertLinkByHref('/myorg/analytics', 0, 'The Analytics link is present in the HTML');
+    $this->assertText('Analytics', 'The Analytics link is present on page');
+    $this->assertLinkByHref('/myorg/edit', 0, 'The Edit Organisation link is present in the HTML');
+    $this->assertText('Edit Organization', 'The Edit Organisation link is present on page');
+    $this->assertRaw('value="Invite new user" class="form-submit"', 'Invite new user button is present in the HTML');
+
+    // What's in the apim_session object
+    $apimSession = &_ibm_apim_get_apim_session();
+    //debug($apimSession);
+
+    // What's in the hostVariable
+    $hostVariable = variable_get('ibm_apim_host');
+    //debug($hostVariable);
+
+    $this->drupalGet('/myorg/edit');
+    $this->assertTitle('Edit My Organization | API Portal');
+    $this->assertText('Edit My Organization');
+    $this->assertRaw('value="Submit" class="form-submit"');
+
+    // Change the name of the org
+    $edit = array();
+    $edit['name'] = $this->randomName(10);
+    $this->drupalPost('/myorg/edit', $edit, t('Submit'));
+
+    // Check on the changes
+    $this->assertText($edit['name'], 'The name of the organisation has been successfully updated to: ' . $edit['name']);
+    $this->assertTitle($edit['name'] . ' | API Portal');
+
+    $this->drupalLogout();
+  }
+}

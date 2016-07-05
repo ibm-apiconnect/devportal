@@ -11,8 +11,14 @@ function plan_drush_command() {
 }
 
 function drush_plan_cleanse_drush_command() {
-  _plan_delete_node_content('plan');
-  _plan_delete_custom_fields();
-  field_purge_batch(500);
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'plan');
+  $results = $query->execute();
+  if (isset($results['node'])) {
+    foreach ($results['node'] as $item) {
+      node_delete($item->nid);
+    }
+  }
   drupal_set_message(t('All Plan entries deleted.'), 'success');
 }

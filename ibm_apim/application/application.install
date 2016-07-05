@@ -108,6 +108,11 @@ function _application_installed_fields() {
       'field_name' => 'application_subscriptions',
       'label' => t('Subscriptions'),
       'type' => 'text_long'
+    ),
+    'application_etag' => array(
+      'field_name' => 'application_etag',
+      'label' => t('ETag'),
+      'type' => 'text'
     )
   );
 }
@@ -160,7 +165,7 @@ function _application_installed_instances() {
     ),
     'application_description' => array(
       'field_name' => 'application_description',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Description'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -198,7 +203,6 @@ function _application_installed_instances() {
       'field_name' => 'application_image',
       'type' => 'image',
       'label' => t('Image'),
-      'required' => 0,
       'description' => t('Logo or image for this Application'),
       'widget' => array(
         'type' => 'image_image',
@@ -282,7 +286,7 @@ function _application_installed_instances() {
     ),
     'application_data' => array(
       'field_name' => 'application_data',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Data'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -292,7 +296,7 @@ function _application_installed_instances() {
     ),
     'application_credentials' => array(
       'field_name' => 'application_credentials',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Credentials'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -302,14 +306,26 @@ function _application_installed_instances() {
     ),
     'application_subscriptions' => array(
       'field_name' => 'application_subscriptions',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Subscriptions'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
         'default' => array('label' => t('Subscriptions'), 'type' => 'text_long'),
         'teaser' => array('label' => t('Subscriptions'), 'type' => 'text_long')
       )
-    )
+    ),
+    'application_etag' => array(
+      'field_name' => 'application_etag',
+      'type' => 'text',
+      'label' => t('ETag'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array(
+          'label' => t('ETag'),
+          'type' => 'text'
+        )
+      )
+    ),
   );
 }
 
@@ -358,10 +374,18 @@ function application_update_7400() {
   $fields = field_info_field_map();
   foreach (_application_installed_fields() as $field) {
     if (!array_key_exists($field['field_name'], $fields)) {
-      field_create_field($field);
-      watchdog('application', 'Field %field_name has been successfully added', array(
-        '%field_name' => $field['field_name']
-      ));
+      $field_info = field_info_field($field['field_name']);
+      if (!isset($field_info) || empty($field_info)) {
+        field_create_field($field);
+        watchdog('application', 'Field %field_name has been successfully added', array(
+          '%field_name' => $field['field_name']
+        ));
+      }
+      else {
+        watchdog('application', 'Field %field_name already exists although instance doesnt', array(
+          '%field_name' => $field['field_name']
+        ));
+      }
     }
     else {
       watchdog('application', 'Field %field_name already exists', array(
@@ -402,12 +426,12 @@ function application_update_7400() {
   foreach ($oldfields as $field_name) {
     if (array_key_exists($field_name, $fields)) {
       $field = field_info_field($field_name);
-      if ($field) {
+      if (isset($field)) {
         try {
-          field_delete_field($field);
-          field_delete_instance($field);
+          field_delete_field($field_name);
+          field_delete_instance($field_name);
           watchdog('application', 'Field %field_name has been successfully removed', array(
-            '%field_name' => $field
+            '%field_name' => $field_name
           ));
         } catch (Exception $e) {
           //ignore any errors

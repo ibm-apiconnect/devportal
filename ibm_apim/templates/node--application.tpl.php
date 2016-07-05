@@ -13,6 +13,7 @@
  * @ingroup themeable
  */
 drupal_add_library('system', 'ui.accordion');
+drupal_add_library('system', 'ui.tooltip');
 drupal_add_js('jQuery(document).ready(function(){
       jQuery("div#accordion").accordion({
         header: "> div > h3",
@@ -25,7 +26,7 @@ drupal_add_js('jQuery(document).ready(function(){
         event.preventDefault();
       });
     });', 'inline');
-drupal_add_js(drupal_get_path('module', 'application') . '/js/showclientid.js', array(
+drupal_add_js(drupal_get_path('module', 'application') . '/js/Application.js', array(
   'weight' => 3
 ));
 ?>
@@ -76,13 +77,13 @@ drupal_add_js(drupal_get_path('module', 'application') . '/js/showclientid.js', 
       <div class="apimInfoSection">
         <div class="apimTitleContainer">
           <div class="apimTitle">
-            <h1><?php print $title; ?></h1>
-            <?php print '<span class="apimAppActions">' . $analyticslink . ' | ' . $notificationsettingslink;
-            if (isset($isdev) && $isdev == TRUE) {
-              print ' | ' . $editlink . ' | ' . $deletelink;
-            }
-            print '</span>';
-            ?>
+          <h1><?php print $title; ?></h1>
+          <?php print '<span class="apimAppActions">' . $analyticslink . ' | ' . $notificationsettingslink;
+          if (isset($isdev) && $isdev == TRUE) {
+            print ' | ' . $editlink . ' | ' . $deletelink;
+          }
+          print '</span>';
+          ?>
           </div>
           <div class="apimUpdated clearBoth"><?php try {
               if (isset($application_updated[0]['value'])) {
@@ -248,11 +249,17 @@ drupal_add_js(drupal_get_path('module', 'application') . '/js/showclientid.js', 
 		                   <div class='displayInlineTop resourcePathShort boundedText' title='" . check_plain($pathname) . "'>" . check_plain($pathname) . "</div>";
                   }
                   print "<div class='displayInlineTop resourceDesc boundedText' title='" . check_plain($op['description']) . "'>" . check_plain($op['description']) . "</div>
-		      <div class='displayInlineTop boundedText tableLabel'>" . t('Rate Limit:') . "</div>
-		      <div class='displayInlineTop resourceRateLimit'>" . $op['rateLimit'] . "</div>";
+		          <div class='displayInlineTop boundedText tableLabel'>" . t('Rate Limit:') . "</div>";
+                  if (isset($op['rateLimit']) && isset($op['rateData'])) {
+                    print "<div class='multiRateLimits' data-ratelimits='" . json_encode($op['rateData']) . "'>" . $op['rateLimit'] . "</div>";
+                  }
+                  else {
+                    print "<div class='displayInlineTop resourceRateLimit'>" . $op['rateLimit'] . "</div>";
+                  }
                   print "</div>";
                 }
               }
+              print '<div class="plansFooter">' . t('* = Mouseover for more information') . '</div>';
               print "</div></div></div>";
             }
           }

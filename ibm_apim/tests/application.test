@@ -1,0 +1,456 @@
+<?php
+
+class IbmApimApplicationWebTestCase extends SiteWebTestCase {
+  use SiteTestHelpers {
+    SiteTestHelpers::__construct as private __sthConstruct;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct($test_id = NULL) {
+    $this->__sthConstruct($test_id);
+  }
+
+  /**
+   * Provide information about the site test.
+   */
+  public static function getInfo() {
+    return [
+      'name' => 'IBM APIC Application test',
+      'description' => 'testing list, view, create, delete and modification of IBM APIC Application.',
+      'group' => 'IBM APIM group',
+      'mode' => 'site',
+    ];
+  }
+
+  /**
+   *  Test to check listing of an app developer's org apps
+   */
+  public function testListApplications() {
+    debug("starting testListApplications");
+
+    // login as a developer
+    $this->login($this);
+
+    // go to the apps page for the user
+    $this->drupalGet('application');
+
+    // check we are on the resulting apps page
+    $this->assertTitle('Apps | API Portal');
+    $this->assertText(t('Register new Application'), 'The text "Register new Application" appears on the applications page.');
+
+    $nodes = $this->findElementByCss(".node.node-application");
+    if (empty($nodes)) {
+      $this->assertText(t('No applications have been found.'), 'No apps exist, correct message');
+    }
+    else {
+      foreach ($nodes as $app) {
+        //check app summary details on list page
+        $title = $app->xpath($this->cssToXpath(".apimTitle"));
+        $appURL = $this->getAbsoluteUrl($this->xmlAttribute($title[0]->a, 'href'));
+        $appName = (string) $title[0]->a;
+        $this->assertTrue($title, 'apimTitle: ' . $appName);
+
+        $updated = $app->xpath($this->cssToXpath(".apimUpdated"));
+        $this->assertTrue($updated, 'apimUpdated: ' . (string) $updated[0]);
+
+        $summaryDesc = $app->xpath($this->cssToXpath(".apimSummaryDescription"));
+        $this->assertTrue($summaryDesc, 'apimSummaryDescription: ' . (string) $summaryDesc[0]->p);
+
+        // go to app page
+        $this->drupalGet($appURL);
+
+        // check we're successfully on the correct app details page
+        $this->assertTitle($appName . ' | API Portal');
+      }
+      //$this->pass(var_export($_SERVER['SERVER_NAME'], TRUE));
+    }
+    // logout
+    $this->drupalLogout();
+    debug("finished testListApplications");
+  }
+
+  /**
+   * Test of the create application form and creation of an application
+   */
+  public function testCreateApplication() {
+    debug("starting testCreateApplication");
+    // login as a developer
+    $this->login($this);
+
+    // go to application create page
+    $this->drupalGet('application/new');
+
+    // check title and fields present
+    $this->assertTitle('Create Application | API Portal');
+    $this->assertText(t('Register application'), 'The text "Register Application" appears on the applications page.');
+
+    // create new application with valid values
+    $title = $this->randomName(8);
+    //$description = $this->randomString(90);
+    $description = $this->randomName(90);
+    $oAuthURL = 'https://' . $this->randomName(30);
+
+    $create = array();
+    $language = 'und';
+    $create['title'] = $title;
+    $create['application_description[' . $language . '][0][value]'] = $description;
+    $create['application_oauthredirecturi[' . $language . '][0][value]'] = $oAuthURL;
+
+    $this->drupalPost('application/new', $create, t('Submit'));
+
+    // check we're successfully on the resulting app details page
+    $this->assertTitle($title . ' | API Portal');
+    $this->assertText(t('Application created successfully.'), 'The text "Application created successfully." appears on the created application page.');
+
+    // Check that the node exists in the database.
+    $node = $this->drupalGetNodeByTitle($title);
+    $appId = $node->application_apiid[$node->language][0]['value'];
+
+    $this->assertTrue($node, 'Node found in database.');
+    $this->assertTrue($appId, 'Application ID set');
+
+    $this->assertEqual($node->application_description[$node->language][0]['value'], $description, 'Expected description value ' . $description);
+    $this->assertEqual($node->application_oauthredirecturi[$node->language][0]['value'], $oAuthURL, 'Expected oAuthURL value ' . $oAuthURL);
+
+    // tidy up - delete application
+    $delete = array();
+    $this->drupalPost('application/' . $appId . '/delete', $delete, t('Delete'));
+    $this->assertText(t('Application deleted successfully.'), 'Application has been deleted');
+
+    // logout
+    $this->drupalLogout();
+    debug("finished testCreateApplication");
+  }
+
+  /**
+   * Test to see if app with DBCS in title can be created
+   */
+  public function testCreateDBCSApplication() {
+    debug("begin testCreateDBCSApplication");
+
+    // login as a developer
+    $this->login($this);
+
+    // $title = $this->randomName(8).'ÇàâｱｲｳДфэأبتثअइउ €¥ 鯵㈱表噂ソ十豹竹敷～兎椄＊＠＇愛金—―〜～‖∥−－¦￤№鷗㐀葛渚噓𠀋𪆐𪚲か゚啊☆€㐁ᠠﭖꀀༀ䨭抎駡U郂𠀀𠀁𠀂𠀃𠀄𪛔𪛕𪛖';
+    //$title = 'ÇàâｱｲｳДфэأبتثअइउ €¥ 鯵㈱表噂ソ十豹竹敷～兎椄＊＠＇愛金—―〜～‖∥−－¦￤№鷗㐀葛渚噓𠀋𪆐𪚲か゚啊☆€㐁ᠠﭖꀀༀ䨭抎駡U郂𠀀𠀁𠀂𠀃𠀄𪛔𪛕𪛖';
+    //$title = 'たんじょびおめでとう';
+    $title = $this->randomName(8) . 'Iñtërnâtiônàlizætiøn';
+    $appId = $this->applicationCreateApp($title);
+
+    // tidy up - delete application
+    $node = $this->drupalGetNodeByTitle($title);
+    $delete = array();
+    $this->drupalPost('application/' . $appId . '/delete', $delete, t('Delete'));
+    $this->assertText(t('Application deleted successfully.'), 'Application has been deleted');
+
+    // logout
+    $this->drupalLogout();
+    debug("finished testCreateDBCSApplication");
+  }
+
+  /**
+   * Test for editing title, description and oAuth URL
+   */
+  public function testEditApplication() {
+    debug("begin testEditApplication");
+    // Login with developer credentials
+    $this->login($this);
+
+    // create initial app
+    $title = $this->randomName(8);
+    $appId = $this->applicationCreateApp($title);
+
+    // Edit the title
+    $editTitle = $this->randomName(8);
+    $description = $this->randomName(300);
+    $oAuthURL = 'https://' . $this->randomName(50);
+
+    $language = 'und';
+    $edit = array();
+    $edit['title'] = $editTitle;
+    $edit['application_description[' . $language . '][0][value]'] = $description;
+    $edit['application_oauthredirecturi[' . $language . '][0][value]'] = $oAuthURL;
+
+    $this->drupalPost('application/' . $appId . '/edit', $edit, t('Submit'));
+    // check we're successfully on the resulting app details page
+    $this->assertTitle($editTitle . ' | API Portal');
+
+    // test the correct values have been saved
+    $node = $this->drupalGetNodeByTitle($editTitle);
+    $this->assertEqual($node->application_description[$node->language][0]['value'], $description, 'Expected description value ' . $description);
+    $this->assertEqual($node->application_oauthredirecturi[$node->language][0]['value'], $oAuthURL, 'Expected oAuthURL value ' . $oAuthURL);
+
+    // tidy up - delete application
+    $delete = array();
+    $this->drupalPost('application/' . $appId . '/delete', $delete, t('Delete'));
+    $this->assertText(t('Application deleted successfully.'), 'Application has been deleted');
+
+    // logout
+    $this->drupalLogout();
+    debug("finished testEditApplication");
+  }
+
+  /**
+   * Test for editing title, description and oAuth URL
+   */
+  public function testEditApplicationWebHooks() {
+    debug("begin testEditApplicationWebHooks");
+    // Login with developer credentials
+    $this->login($this);
+
+    // create initial app
+    $title = $this->randomName(8);
+    $appId = $this->applicationCreateApp($title);
+    $node = $this->drupalGetNodeByTitle($title);
+    $nid = $node->nid;
+
+    // Edit the title
+    $editTitle = $this->randomName(8);
+    $description = $this->randomName(300);
+    $oAuthURL = 'https://' . $this->randomName(50);
+
+    $language = 'und';
+    $edit = array();
+    $edit['title'] = $editTitle;
+    $edit['application_description[' . $language . '][0][value]'] = $description;
+    $edit['application_oauthredirecturi[' . $language . '][0][value]'] = $oAuthURL;
+
+    $this->drupalPost('application/' . $appId . '/edit', $edit, t('Submit'));
+
+    for ($i = 1; $i <= 20; $i++) {
+      usleep(500);
+      $this->drupalGet('application/' . $appId);
+
+      // check we're successfully on the resulting app details page
+      $this->assertTitle($editTitle . ' | API Portal');
+
+      // test the correct values have been saved
+
+      // force clearing of internal node cache to ensure we get latest data
+      $node = node_load($nid, NULL, TRUE);
+      // need these debug lines otherwise get some kind of timing issue getting $node
+      debug($node->application_description[$node->language][0]['value']);
+      debug($node->application_oauthredirecturi[$node->language][0]['value']);
+      $this->assertEqual($node->application_description[$node->language][0]['value'], $description, 'Expected description value ' . $description);
+      $this->assertEqual($node->application_oauthredirecturi[$node->language][0]['value'], $oAuthURL, 'Expected oAuthURL value ' . $oAuthURL);
+
+    }
+
+    // tidy up - delete application
+    $delete = array();
+    $this->drupalPost('application/' . $appId . '/delete', $delete, t('Delete'));
+
+    $this->assertText(t('Application deleted successfully.'), 'Application has been deleted');
+
+    // logout
+    $this->drupalLogout();
+    debug("finished testEditApplicationWebHooks");
+  }
+
+  /**
+   * Test for updating app icon
+   */
+  public function testApplicationIcon() {
+    debug("begin testApplicationIcon");
+    // Login with developer credentials
+    $this->login($this);
+
+    // logout
+    $this->drupalLogout();
+    debug("finished testApplicationIcon");
+  }
+
+  /**
+   * Test that an app developer can create and modify application credentials
+   */
+  public function testApplicationCredentials() {
+    debug("begin testApplicationCredentials");
+    // login as a developer
+    $this->login($this);
+
+    // create an app to work with
+    $title = $this->randomName(8);
+    $appId = $this->applicationCreateApp($title);
+
+    // Create 2nd set of credentials
+    $credsform = array();
+    $credsform['description'] = $this->randomName(20);
+    $this->drupalPost('application/' . $appId . '/add-clientcreds', $credsform, t('Submit'));
+
+    $this->drupalGet('application/' . $appId);
+    // find number of credential fields on page
+    // check there are more than set of credentials on app page by finding clientID labels: '.label.apimField.apiClientID'
+    $credentialarray = $this->findElementByCss(".label.apimField.apiClientID");
+    $this->assertTrue(count($credentialarray) > 1, 'Credential count is greater than 1');
+
+    // update credential description of 1st set of credentials
+    $node = $this->drupalGetNodeByTitle($title);
+    $creds = unserialize($node->application_credentials[$node->language][0]['value']);
+    $credid = $creds[0]['id'];
+    $updatecredsform = array();
+    $updatecredsform['description'] = $this->randomName(20);
+    $this->drupalPost('application/' . $appId . '/update-clientcreds/' . $credid, $updatecredsform, t('Submit'));
+
+    // check description has been used for set of first credentials
+    $credentialDescriptions = $this->findElementByCss(".credentialInfoDescription");
+    foreach ($credentialDescriptions as $key => $cred) {
+      if ($cred['id'] == $credid) {
+        $this->assertTrue($cred['description'] == $updatecredsform['description'], 'Credential description updated');
+      }
+    }
+
+    // delete creds
+    $delcredsform = array();
+    $this->drupalPost('application/' . $appId . '/delete-clientcreds/' . $credid, $delcredsform, t('Delete'));
+    /*$node3 = $this->drupalGetNodeByTitle($title);
+    $credentialarray3 = unserialize($node3->application_credentials[$node3->language][0]['value']);
+    $this->assertTrue(count($credentialarray3) < 2, 'Credential count is less than 2');
+    */
+    $credentialarray1 = $this->findElementByCss(".label.apimField.apiClientID");
+    $this->assertTrue(count($credentialarray1) < 2, 'Credential count is greater than 2');
+
+    // delete application
+    $delete = array();
+    $this->drupalPost('application/' . $appId . '/delete', $delete, t('Delete'));
+    $this->assertText(t('Application deleted successfully.'), 'Application has been deleted');
+
+    // logout
+    $this->drupalLogout();
+    debug("finished testApplicationCredentials");
+  }
+
+  /**
+   * Test for accessing analytics
+   */
+  public function testApplicationAnalytics() {
+    debug("begin testApplicationAnalytics");
+    // Login with developer credentials
+    $this->login($this);
+
+    // create an app to work with
+    $title = $this->randomName(8);
+    $appId = $this->applicationCreateApp($title);
+
+    // go to application create page
+    $this->drupalGet('application/' . $appId);
+
+    $analyticsURL = $this->getAbsoluteUrl($this->xmlAttribute($this->findElementByCss('.apimAppActions a')[0], 'href'));
+
+    if ($analyticsURL) {
+      $this->drupalGet($analyticsURL);
+      $this->assertText('Analytics', 'Analytics view shown');
+      $this->pass(var_export($this->findElementByCss('analyticsAppSelector'), TRUE));
+      $this->pass(var_export($this->findElementByCss('analyticsAppSelector'), TRUE));
+      // $this->pass(var_export($this->drupalGetContent(), TRUE));
+    }
+    else {
+      $this->fail('Missing link for app analytics');
+    }
+
+    // delete application
+    $delete = array();
+    $this->drupalPost('application/' . $appId . '/delete', $delete, t('Delete'));
+    $this->assertText(t('Application deleted successfully.'), 'Application has been deleted');
+
+    // logout
+    $this->drupalLogout();
+    debug("finished testApplicationAnalytics");
+  }
+
+  /**
+   * Test for setting notifications
+   */
+  public function testApplicationNotificationsSet() {
+    debug("begin testApplicationNotificationsSet");
+    // Login with developer credentials
+    $this->login($this);
+
+    // logout
+    $this->drupalLogout();
+    debug("finished testApplicationNotificationsSet");
+  }
+
+  /**
+   * Test for deleting application - via the dialog and not via drupalPost
+   */
+  public function testDeleteApplication() {
+    debug("begin testDeleteApplication");
+    // Login with developer credentials
+    $this->login($this);
+
+    // create an app to work with
+    $title = $this->randomName(8);
+    $appId = $this->applicationCreateApp($title);
+
+    // go to application  page
+    $this->drupalGet('application/' . $appId);
+
+    // check title
+    $this->assertTitle($title . ' | API Portal');
+
+    $this->assertLinkByHref('/delete', 0, 'Delete link is present');
+
+    $this->drupalGet('application/' . $appId . '/delete');
+
+    $this->assertText('Are you sure you want to delete this application? This action cannot be undone.', "Warning message displayed");
+
+    $delete = array();
+    $this->drupalPost('application/' . $appId . '/delete', $delete, t('Delete'));
+
+
+    // logout
+    $this->drupalLogout();
+    debug("finished testDeleteApplication");
+  }
+
+  /**
+   * Test Helper functions
+   */
+
+  /**
+   *  Helper function to login a user to the portal site
+   */
+  public function login(&$var) {
+    $username = variable_get('ibm_apim_test_username');
+    $user = user_load_by_name($username);
+    $user->pass_raw = variable_get('ibm_apim_test_password');
+    $var->drupalLogin($user);
+  }
+
+  /**
+   * Helper function to create testing an app
+   * @param $title
+   * @return mixed
+   */
+  public function applicationCreateApp($title) {
+    // create form to submit
+    $create = array();
+    $create['title'] = $title;
+    $this->drupalPost('application/new', $create, t('Submit'));
+    // check we're successfully on the resulting app details page
+    $this->assertTitle($title . ' | API Portal');
+    // Check that the node exists in the database.
+    $node = $this->drupalGetNodeByTitle($title);
+    $appId = $node->application_apiid[$node->language][0]['value'];
+    $this->assertTrue($node, 'Node found in database.');
+    $this->assertTrue($appId, 'Application ID set');
+    return $appId;
+  }
+
+  /**
+   * Helper function for get the value of an attribute
+   * @param $object
+   * @param $attribute
+   * @return string
+   */
+  function xmlAttribute($object, $attribute) {
+    if (isset($object[$attribute])) {
+      return (string) $object[$attribute];
+    }
+    else {
+      return NULL;
+    }
+  }
+}

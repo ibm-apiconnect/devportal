@@ -96,7 +96,6 @@ dependencies[] = chain_menu_access
 dependencies[] = forum_access
 dependencies[] = follow
 dependencies[] = search_autocomplete
-dependencies[] = markdown
 dependencies[] = alpha_pagination
 dependencies[] = front_page
 dependencies[] = slick
@@ -119,11 +118,14 @@ dependencies[] = adminimal_admin_menu
 dependencies[] = mailsystem
 dependencies[] = htmlmail
 dependencies[] = underscore
+dependencies[] = hide_submit
+dependencies[] = user_pwreset_timeout
 
 ;Enable our modules
 dependencies[] = ibm_apim
 dependencies[] = bannerblock
 dependencies[] = socialblock
+dependencies[] = ghmarkdown
 dependencies[] = popularapi
 dependencies[] = forum_approval
 dependencies[] = apic_taxonomy_menu_block

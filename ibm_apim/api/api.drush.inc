@@ -37,9 +37,8 @@ function drush_api_cleanse_drush_command() {
     ->entityCondition('bundle', 'api');
   $results = $query->execute();
   if (isset($results['node'])) {
-    $keys = array_keys($results['node']);
-    foreach ($keys as $nid) {
-      node_delete($nid);
+    foreach ($results['node'] as $item) {
+      node_delete($item->nid);
     }
   }
   drupal_set_message(t('All API entries deleted.'), 'success');
@@ -82,8 +81,8 @@ function drush_api_deleteapi($id) {
     $results = $query->execute();
 
     if (isset($results['node'])) {
-      $keys = array_keys($results['node']);
-      $nid = $keys[0];
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
       $api = node_load($nid);
 
       //Check this api is not still referenced by a product

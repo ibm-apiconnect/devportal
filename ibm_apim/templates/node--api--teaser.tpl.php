@@ -58,7 +58,7 @@
     } catch (Exception $e) {
     } ?></div>
 
-                        <div class="apimSummaryDescription">
+					<div class="apimSummaryDescription markdown">
 
                         <?php
                         print '<div class="apimFade" title="'. $api_description[0]['safe_value'] .'">';

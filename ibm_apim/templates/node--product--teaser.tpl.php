@@ -11,15 +11,6 @@
  *
  * @ingroup themeable
  */
-drupal_add_library('system', 'ui.accordion');
-drupal_add_js('jQuery(document).ready(function(){
-      jQuery("div#accordion").accordion({
-        header: "> div > h3",
-        collapsible: true,
-        active: false,
-        heightStyle: "content",
-      });
-    });', 'inline');
 ?>
 <article id="node-<?php print $node->nid; ?>"
          class="<?php print $classes; ?> apimTeaser clearfix"
@@ -41,7 +32,7 @@ drupal_add_js('jQuery(document).ready(function(){
                   <figure class="clearfix field-item even">
                     <img typeof="foaf:Image" class="image-style-none"
                          src="<?php print file_create_url(drupal_get_path('module', 'ibm_apim') . '/images/icons/product/' . product_random_image($node->title)); ?>"
-                         width="123" height="123" alt="">
+                         width="48" height="48" alt="">
                   </figure>
                 </div>
               </div>
@@ -57,13 +48,13 @@ drupal_add_js('jQuery(document).ready(function(){
               } ?></div>
             <h2 class="apimSummaryTitle"><?php print $titlelink; ?>
               <?php if (isset($product_state[0]['value']) && strtolower($product_state[0]['value']) == 'deprecated') : ?>
-                <span class="deprecated">
+                <div class="deprecated">
                   <div class="protocol"><?php print t('Deprecated'); ?></div>
-                </span>
+                </div>
               <?php endif; ?>
             </h2>
             <div class="apimDescriptionContainer">
-              <div class="apimSummaryDescription">
+              <div class="apimSummaryDescription markdown">
 
               <?php
               if (isset($product_description[0]['safe_value']) && !empty($product_description[0]['safe_value'])) {
@@ -77,28 +68,6 @@ drupal_add_js('jQuery(document).ready(function(){
                 print '</div>';
               }
               ?>
-              </div>
-              <div id='accordion'>
-                <div><h3><?php print t('APIs'); ?></h3>
-                  <div class='portalApi animateMaxHeight'>
-                    <?php
-                    if (isset($apinodes) && is_array($apinodes) && count($apinodes) > 0) {
-                      $showversion = variable_get('ibm_apim_show_versions', 1);
-                      foreach ($apinodes as $apinode) {
-                        $versiontext = '';
-                        if ($showversion == 1) {
-                          $versiontext = '<span class="apiVersionText">' . $apinode->api_version[$apinode->language][0]['value'] . '</span>';
-                        }
-                        //print '<p class="productAPILink"><a href="' . url('node/' . $apinode->nid) . '">' . $apinode->title . '</a> ' . $versiontext . '</p>';
-                        print '<p class="productAPILink">' . $apinode->title . ' ' . $versiontext . '</p>';
-                      }
-                    }
-                    else {
-                      print "<p>" . t('No APIs found.') . "</p>";
-                    }
-                    ?>
-                  </div>
-                </div>
               </div>
             </div>
             <div class="extraFields">

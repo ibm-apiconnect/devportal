@@ -1,0 +1,47 @@
+<?php
+/**
+ * @file
+ * Site Test helpers install file.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function site_test_helpers_requirements($phase) {
+  $requirements = [];
+
+  $t = get_t();
+
+  switch ($phase) {
+    case 'install':
+      $filename = 'CssSelectorConverter.php';
+      $path = 'Symfony/Component/CssSelector';
+
+      // Get libraries path if at least one library exists or fallback to
+      // default libraries location.
+      $libraries_path = 'sites/all/libraries';
+      $libraries = libraries_get_libraries();
+      if (count($libraries) > 0) {
+        $libraries_path = reset($libraries);
+        $libraries_path = dirname($libraries_path);
+      }
+
+      $full_path = DRUPAL_ROOT . '/' . $libraries_path . '/' . $path . '/' . $filename;
+
+      if (!is_readable($full_path)) {
+        $requirements['library_cssselector'] = [
+          'title' => $t('CssSelector Symfony component'),
+          'severity' => REQUIREMENT_ERROR,
+          'description' => $t('Unable to enable <em>Site Test helpers</em> module. Please download <em>CssSelector Symfony component</em> from %url and place into %libraries directory so that a %file file is accessible at %path.', [
+            '%url' => 'https://github.com/symfony/css-selector',
+            '%libraries' => 'libraries/' . $path,
+            '%file' => $filename,
+            '%path' => $libraries_path . '/' . $path . '/' . $filename,
+          ]),
+        ];
+      }
+      break;
+  }
+
+  return $requirements;
+}

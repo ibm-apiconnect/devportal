@@ -1,0 +1,22 @@
+#
+# Configuration for drupal_helpers build on CircleCI.
+#
+machine:
+  php:
+    version: 5.6.2
+  environment:
+    APPROOT: "$HOME/$CIRCLE_PROJECT_REPONAME"
+    TEST_RESULTS: "$CIRCLE_TEST_REPORTS"
+    PATH: "$HOME/.composer/vendor/bin:$PATH"
+
+dependencies:
+  override:
+  - "if [ \"$GITHUB_TOKEN\" != \"\" ]; then composer config -g github-oauth.github.com $GITHUB_TOKEN; fi"
+  - cd $APPROOT && composer install --no-progress --no-interaction
+  - cd $APPROOT && bash vendor/bin/dcr install
+test:
+  override:
+  # Lint code.
+  - source ~/.profile && cd $APPROOT && dcr
+  # Run tests.
+  - source ~/.profile && cd $APPROOT && phpunit

@@ -1,0 +1,59 @@
+<?php
+
+/**
+ * @file
+ * Provides a Github Markdown input filter.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function ghmarkdown_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#markdown':
+      return t('<p>The Markdown filter allows you to enter content using <a href="http://daringfireball.net/projects/markdown">Markdown</a>, a simple plain-text syntax that is transformed into valid XHTML.</p>');
+  }
+}
+
+/**
+ * Implements hook_filter_info().
+ */
+function ghmarkdown_filter_info() {
+  $filters['filter_markdown'] = array(
+    'title' => t('Github Markdown'),
+    'description' => t('Allows content to be submitted using Github Markdown, a simple plain-text syntax that is filtered into valid XHTML.'),
+    'process callback' => '_filter_ghmarkdown'
+  );
+
+  return $filters;
+}
+
+/**
+ * Filter process callback.
+ */
+function _filter_ghmarkdown($text, $format) {
+  if (!empty($text)) {
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/Parser');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/block/CodeTrait');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/block/FencedCodeTrait');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/block/HeadlineTrait');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/block/HtmlTrait');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/block/ListTrait');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/block/QuoteTrait');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/block/RuleTrait');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/block/TableTrait');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/inline/CodeTrait');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/inline/EmphStrongTrait');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/inline/LinkTrait');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/inline/StrikeoutTrait');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/inline/UrlLinkTrait');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/Markdown');
+    module_load_include('php', 'ghmarkdown', 'cebe-markdown/GithubMarkdown');
+    $parser = new \cebe\markdown\GithubMarkdown();
+    $text = $parser->parse($text);
+  }
+
+  return $text;
+}
+
+

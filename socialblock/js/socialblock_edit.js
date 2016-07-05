@@ -13,7 +13,7 @@ window.onload = function () {
      * Appends an '@' in front of textfield if user selects tweets from twitter handle
      */
     function appendAtSign() {
-        var parentE = document.getElementById('edit-twitter-param').parentElement;
+        var parentE = document.getElementById('form-item-twitter-param');
         var prefix = document.createElement('span');
         prefix.appendChild(document.createTextNode('@'));
         if (twitterAPI.selectedIndex == 0) {

@@ -37,21 +37,46 @@ function auth_apic_help($path, $arg) {
  * @param $form_state
  */
 function auth_apic_form_user_login_block_alter(&$form, &$form_state) {
-  _auth_apic_user_login_form_alter($form, $form_state);
-  if (module_exists('security_questions')) {
-    // Redirect login block submissions to the main login form.
-    // @todo Is there a better way to hand off from the login block to /user?
-    $form['form_id']['#value'] = 'user_login';
-    // Preserve the login block's destination.
-    $url = drupal_parse_url($form['#action']);
-    if (isset($url['query']['destination'])) {
-      $options = array('query' => array('destination' => $url['query']['destination']));
+  $sociallogin = variable_get('ibm_apim_social_login', 0);
+  if ($sociallogin == 0) {
+    _auth_apic_user_login_form_alter($form, $form_state);
+    if (module_exists('security_questions')) {
+      // Redirect login block submissions to the main login form.
+      // @todo Is there a better way to hand off from the login block to /user?
+      $form['form_id']['#value'] = 'user_login';
+      // Preserve the login block's destination.
+      $url = drupal_parse_url($form['#action']);
+      if (isset($url['query']['destination'])) {
+        $options = array('query' => array('destination' => $url['query']['destination']));
+      }
+      else {
+        $options = array();
+      }
+      $form['#action'] = url('user', $options);
     }
-    else {
-      $options = array();
-    }
-    $form['#action'] = url('user', $options);
   }
+}
+
+/**
+ * Implement hook_requirements
+ * @param $phase
+ * @return array
+ */
+function auth_apic_requirements($phase) {
+  $requirements = array();
+  // Ensure translations don't break at install time
+  $t = get_t();
+
+  if ($phase == 'install') {
+    if (module_exists('social_login')) {
+      $requirements['auth_apic'] = array(
+        'title' => $t('Auth_apic'),
+        'value' => $t('Auth_APIC is not compatible with Social_login.'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+  }
+  return $requirements;
 }
 
 /**
@@ -239,144 +264,231 @@ function _auth_apic_user_login_form_alter(&$form, &$form_state) {
  * @param $form_id
  */
 function auth_apic_form_alter(&$form, &$form_state, $form_id) {
-  switch ($form_id) {
-    case 'password_policy_password_tab' :
-      if (variable_get('no_autocomplete_profile_form', FALSE)) {
-        if (empty($form['pass']['#attributes'])) {
-          $form['pass']['#attributes'] = array();
-        }
-        $form['pass']['#attributes']['autocomplete'] = 'off';
-        $form['#attributes']['autocomplete'] = 'off';
-      }
-      $form['#validate'] = array_diff($form['#validate'], array(
-        'user_account_form_validate',
-        'user_validate_current_pass'
-      ));
-      $form['#submit'] = array('_auth_apic_password_policy_password_tab_submit_handler');
-      break;
-    case 'user_login_block' :
-    case 'user_login' :
-      // disable autocomplete in login form if enabled
-      if (variable_get('no_autocomplete_login_form', FALSE)) {
-        if (empty($form['name']['#attributes'])) {
-          $form['name']['#attributes'] = array();
-        }
-        $form['name']['#attributes']['autocomplete'] = 'off';
-        if (empty($form['pass']['#attributes'])) {
-          $form['pass']['#attributes'] = array();
-        }
-        $form['pass']['#attributes']['autocomplete'] = 'off';
-      }
-      $ibm_apim_saml_idp = variable_get('ibm_apim_saml_idp', 0);
-      if ($ibm_apim_saml_idp == 1) {
-        // Add link to forgotten password form for IBMID since the main one will have been removed
-        // but we still need one for admins
-        $form['passwdreset'] = array('#markup' => '<p>' . l(t("Forgotten your password?"), 'user/password') . '</p>');
-      }
-      break;
-    // when using readonly IDP, for both register user forms disable the confirm password field and
-    // switch it to be a normal password field
-    case 'user_register_form' :
-    case 'auth_apic_activate_create_account_form' :
-      drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/usercreate.js', array(
-        'weight' => 3
-      ));
-      $ibm_apim_readonly_idp = variable_get('ibm_apim_readonly_idp', FALSE);
-      $ibm_apim_saml_idp = variable_get('ibm_apim_saml_idp', 0);
-      $emailasuser = variable_get('ibm_apim_email_as_username', 1);
-      if ($ibm_apim_readonly_idp == TRUE) {
-        if ($emailasuser == 1 || $ibm_apim_saml_idp == 1) {
-          $form['account']['mail']['#required'] = FALSE;
-          unset($form['account']['mail']);
-        }
-        if (isset($form['account']['name'])) {
-          unset($form['account']['name']['#description']);
-        }
-        $weight = $form['account']['#weight'] + 1;
-        unset($form['account']['pass']);
-        // no password field for IBMID
-        if ($ibm_apim_saml_idp != 1) {
-          $form['account']['pass'] = array(
-            '#type' => 'password',
-            '#title' => t('Password'),
-            '#size' => 60,
-            '#maxlength' => 64,
-            '#required' => TRUE,
-            '#weight' => $weight
-          );
-        }
-        for ($i = 0; $i < sizeof($form['#validate']); $i++) {
-          if ($form['#validate'][$i] == 'user_account_form_validate') {
-            $form['#validate'][$i] = 'auth_apic_user_register_validate';
-            break;
+  $sociallogin = variable_get('ibm_apim_social_login', 0);
+  if ($sociallogin == 0) {
+    switch ($form_id) {
+      case 'password_policy_password_tab' :
+        if (variable_get('no_autocomplete_profile_form', FALSE)) {
+          if (empty($form['pass']['#attributes'])) {
+            $form['pass']['#attributes'] = array();
           }
+          $form['pass']['#attributes']['autocomplete'] = 'off';
+          $form['#attributes']['autocomplete'] = 'off';
         }
-      }
-      break;
-    case 'user_profile_form' :
-      global $user;
-      $ibm_apim_username_show = variable_get('ibm_apim_username_show', FALSE);
-      $ibm_apim_email_show = variable_get('ibm_apim_email_show', TRUE);
-      $ibm_apim_username_reqd = variable_get('ibm_apim_username_reqd', FALSE);
-      $ibm_apim_email_reqd = variable_get('ibm_apim_email_reqd', TRUE);
-      $ibm_apim_readonly_idp = variable_get('ibm_apim_readonly_idp', FALSE);
-      $ibm_apim_email_as_username = variable_get('ibm_apim_email_as_username', TRUE);
-
-      if ($form['#user']->uid == $user->uid) {
-        // editing own profile
-
-        // Developer Org field is always readonly on edit profile
-        if ($form['field_developer_organization']) {
-          $form['field_developer_organization']['#disabled'] = TRUE;
-          $form['field_developer_organization']['#required'] = FALSE;
-          $form['field_developer_organization']['und']['#required'] = 0;
-          $form['field_developer_organization']['und'][0]['#required'] = FALSE;
-          $form['field_developer_organization']['und'][0]['value']['#required'] = FALSE;
-        }
-
-        if ($ibm_apim_username_show != TRUE) {
-          if (isset($form['account']['name'])) {
-            unset($form['account']['name']);
+        $form['#validate'] = array_diff($form['#validate'], array(
+          'user_account_form_validate',
+          'user_validate_current_pass'
+        ));
+        $form['#submit'] = array('_auth_apic_password_policy_password_tab_submit_handler');
+        break;
+      case 'user_login_block' :
+      case 'user_login' :
+        // disable autocomplete in login form if enabled
+        if (variable_get('no_autocomplete_login_form', FALSE)) {
+          if (empty($form['name']['#attributes'])) {
+            $form['name']['#attributes'] = array();
           }
-          if (isset($form['account']['mail'])) {
-            $form['account']['mail']['#disabled'] = TRUE;
+          $form['name']['#attributes']['autocomplete'] = 'off';
+          if (empty($form['pass']['#attributes'])) {
+            $form['pass']['#attributes'] = array();
+          }
+          $form['pass']['#attributes']['autocomplete'] = 'off';
+        }
+        $ibm_apim_saml_idp = variable_get('ibm_apim_saml_idp', 0);
+        if ($ibm_apim_saml_idp == 1) {
+          // Add link to forgotten password form for IBMID since the main one will have been removed
+          // but we still need one for admins
+          $form['passwdreset'] = array('#markup' => '<p>' . l(t("Forgotten your password?"), 'user/password') . '</p>');
+        }
+        break;
+      // when using readonly IDP, for both register user forms disable the confirm password field and
+      // switch it to be a normal password field
+      case 'user_register_form' :
+      case 'ibm_apim_activate_create_account_form' :
+        drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/usercreate.js', array(
+          'weight' => 3
+        ));
+        $ibm_apim_readonly_idp = variable_get('ibm_apim_readonly_idp', FALSE);
+        $ibm_apim_saml_idp = variable_get('ibm_apim_saml_idp', 0);
+        $emailasuser = variable_get('ibm_apim_email_as_username', 1);
+        if ($ibm_apim_readonly_idp == TRUE) {
+          if ($emailasuser == 1 || $ibm_apim_saml_idp == 1) {
             $form['account']['mail']['#required'] = FALSE;
-          }
-        }
-        else {
-          if ($ibm_apim_username_reqd == TRUE) {
-            $form['account']['name']['#required'] = TRUE;
-          }
-          else {
-            $form['account']['name']['#required'] = FALSE;
-          }
-        }
-        if ($ibm_apim_email_show != TRUE) {
-          if (isset($form['account']['mail'])) {
             unset($form['account']['mail']);
           }
           if (isset($form['account']['name'])) {
-            $form['account']['name']['#disabled'] = TRUE;
-            $form['account']['name']['#required'] = FALSE;
+            unset($form['account']['name']['#description']);
+          }
+          $weight = $form['account']['#weight'] + 1;
+          unset($form['account']['pass']);
+          // no password field for IBMID
+          if ($ibm_apim_saml_idp != 1) {
+            $form['account']['pass'] = array(
+              '#type' => 'password',
+              '#title' => t('Password'),
+              '#size' => 60,
+              '#maxlength' => 64,
+              '#required' => TRUE,
+              '#weight' => $weight
+            );
+          }
+          for ($i = 0; $i < sizeof($form['#validate']); $i++) {
+            if ($form['#validate'][$i] == 'user_account_form_validate') {
+              $form['#validate'][$i] = 'auth_apic_user_register_validate';
+              break;
+            }
+          }
+        }
+        break;
+      case 'user_profile_form' :
+        global $user;
+        $ibm_apim_username_show = variable_get('ibm_apim_username_show', FALSE);
+        $ibm_apim_email_show = variable_get('ibm_apim_email_show', TRUE);
+        $ibm_apim_username_reqd = variable_get('ibm_apim_username_reqd', FALSE);
+        $ibm_apim_email_reqd = variable_get('ibm_apim_email_reqd', TRUE);
+        $ibm_apim_readonly_idp = variable_get('ibm_apim_readonly_idp', FALSE);
+        $ibm_apim_email_as_username = variable_get('ibm_apim_email_as_username', TRUE);
+
+        if ($form['#user']->uid == $user->uid) {
+          // editing own profile
+
+          // Developer Org field is always readonly on edit profile
+          if ($form['field_developer_organization']) {
+            $form['field_developer_organization']['#disabled'] = TRUE;
+            $form['field_developer_organization']['#required'] = FALSE;
+            $form['field_developer_organization']['und']['#required'] = 0;
+            $form['field_developer_organization']['und'][0]['#required'] = FALSE;
+            $form['field_developer_organization']['und'][0]['value']['#required'] = FALSE;
+          }
+
+          if ($ibm_apim_username_show != TRUE) {
+            if (isset($form['account']['name'])) {
+              unset($form['account']['name']);
+            }
+            if (isset($form['account']['mail'])) {
+              $form['account']['mail']['#disabled'] = TRUE;
+              $form['account']['mail']['#required'] = FALSE;
+            }
+          }
+          else {
+            if ($ibm_apim_username_reqd == TRUE) {
+              $form['account']['name']['#required'] = TRUE;
+            }
+            else {
+              $form['account']['name']['#required'] = FALSE;
+            }
+          }
+          if ($ibm_apim_email_show != TRUE) {
+            if (isset($form['account']['mail'])) {
+              unset($form['account']['mail']);
+            }
+            if (isset($form['account']['name'])) {
+              $form['account']['name']['#disabled'] = TRUE;
+              $form['account']['name']['#required'] = FALSE;
+            }
+          }
+          else {
+            if ($ibm_apim_email_reqd == TRUE) {
+              $form['account']['mail']['#required'] = TRUE;
+            }
+            else {
+              $form['account']['mail']['#required'] = FALSE;
+            }
+          }
+          if ($ibm_apim_email_as_username == TRUE && isset($form['account']['mail'])) {
+            $form['account']['mail']['#disabled'] = TRUE;
+            $form['account']['mail']['#required'] = FALSE;
+          }
+          // if using a readonly registry then do not allow editing of profile fields
+          if ($ibm_apim_readonly_idp == TRUE) {
+            if (isset($form['account']['name'])) {
+              $form['account']['name']['#disabled'] = TRUE;
+              $form['account']['name']['#required'] = FALSE;
+            }
+            if (isset($form['account']['mail'])) {
+              $form['account']['mail']['#disabled'] = TRUE;
+              $form['account']['mail']['#required'] = FALSE;
+            }
+            if (isset($form['field_first_name'])) {
+              $form['field_first_name']['#disabled'] = TRUE;
+              $form['field_first_name']['#required'] = FALSE;
+              $form['field_first_name']['und']['#required'] = 0;
+              $form['field_first_name']['und'][0]['#required'] = FALSE;
+              $form['field_first_name']['und'][0]['value']['#required'] = FALSE;
+            }
+            if (isset($form['field_last_name'])) {
+              $form['field_last_name']['#disabled'] = TRUE;
+              $form['field_last_name']['#required'] = FALSE;
+              $form['field_last_name']['und']['#required'] = 0;
+              $form['field_last_name']['und'][0]['#required'] = FALSE;
+              $form['field_last_name']['und'][0]['value']['#required'] = FALSE;
+            }
+            if (isset($form['field_phone'])) {
+              $form['field_phone']['#disabled'] = TRUE;
+              $form['field_phone']['#required'] = FALSE;
+              $form['field_phone']['und']['#required'] = 0;
+              $form['field_phone']['und'][0]['#required'] = FALSE;
+              $form['field_phone']['und'][0]['value']['#required'] = FALSE;
+            }
+            if (isset($form['field_company'])) {
+              $form['field_company']['#disabled'] = TRUE;
+              $form['field_company']['#required'] = FALSE;
+              $form['field_company']['und']['#required'] = 0;
+              $form['field_company']['und'][0]['#required'] = FALSE;
+              $form['field_company']['und'][0]['value']['#required'] = FALSE;
+            }
+            if (isset($form['field_address'])) {
+              $form['field_address']['#disabled'] = TRUE;
+              $form['field_address']['und']['#required'] = 0;
+              $form['field_address']['und'][0]['#required'] = FALSE;
+            }
+            if (isset($user->uid) && $user->uid != 1) {
+              if ($form['account']['pass']) {
+                unset($form['account']['current_pass']);
+                unset($form['account']['pass']);
+              }
+            }
+          }
+          $remoteid = "";
+          if (isset($form['#user']->data['remote_id'])) {
+            $remoteid = $form['#user']->data['remote_id'];
+          }
+          $form['account']['remote_id'] = array(
+            '#type' => 'hidden',
+            '#value' => $remoteid
+          );
+          // allow admin to edit their own email address
+          if ($user->uid == 1) {
+            $form['account']['mail']['#disabled'] = FALSE;
+            $form['account']['mail']['#required'] = TRUE;
+            if (isset($form['field_first_name'])) {
+              $form['field_first_name']['#required'] = FALSE;
+              $form['field_first_name']['und']['#required'] = 0;
+              $form['field_first_name']['und'][0]['#required'] = FALSE;
+              $form['field_first_name']['und'][0]['value']['#required'] = FALSE;
+            }
+            if (isset($form['field_last_name'])) {
+              $form['field_last_name']['#required'] = FALSE;
+              $form['field_last_name']['und']['#required'] = 0;
+              $form['field_last_name']['und'][0]['#required'] = FALSE;
+              $form['field_last_name']['und'][0]['value']['#required'] = FALSE;
+            }
           }
         }
         else {
-          if ($ibm_apim_email_reqd == TRUE) {
-            $form['account']['mail']['#required'] = TRUE;
+          // admin editing user account
+          // disable all the fields to stop admins making changes that then would fail to sync to apic
+          if (isset($form['account']['roles'])) {
+            $form['account']['roles']['#disabled'] = TRUE;
+            $form['account']['roles']['#required'] = FALSE;
           }
-          else {
-            $form['account']['mail']['#required'] = FALSE;
-          }
-        }
-        if ($ibm_apim_email_as_username == TRUE && isset($form['account']['mail'])) {
-          $form['account']['mail']['#disabled'] = TRUE;
-          $form['account']['mail']['#required'] = FALSE;
-        }
-        // if using a readonly registry then do not allow editing of profile fields
-        if ($ibm_apim_readonly_idp == TRUE) {
           if (isset($form['account']['name'])) {
             $form['account']['name']['#disabled'] = TRUE;
             $form['account']['name']['#required'] = FALSE;
+          }
+          if (isset($form['account']['pass'])) {
+            $form['account']['pass']['#disabled'] = TRUE;
+            $form['account']['pass']['#required'] = FALSE;
           }
           if (isset($form['account']['mail'])) {
             $form['account']['mail']['#disabled'] = TRUE;
@@ -415,140 +527,59 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
             $form['field_address']['und']['#required'] = 0;
             $form['field_address']['und'][0]['#required'] = FALSE;
           }
-          if (isset($user->uid) && $user->uid != 1) {
-            if ($form['account']['pass']) {
-              unset($form['account']['current_pass']);
-              unset($form['account']['pass']);
+          if (isset($form['field_developer_organization'])) {
+            $form['field_developer_organization']['#disabled'] = TRUE;
+            $form['field_developer_organization']['#required'] = FALSE;
+            $form['field_developer_organization']['und']['#required'] = 0;
+            $form['field_developer_organization']['und'][0]['#required'] = FALSE;
+            $form['field_developer_organization']['und'][0]['value']['#required'] = FALSE;
+          }
+        }
+
+        $form['account']['#weight'] = -10;
+        $currentmax = field_info_max_weight('user', 'user', 'form');
+        if (isset($form['overlay-control'])) {
+          $form['overlay-control']['#weight'] = -3;
+        }
+        if (isset($form['picture'])) {
+          $form['picture']['#weight'] = -2;
+        }
+        if (isset($form['contact'])) {
+          $form['contact']['#weight'] = -1;
+        }
+        if (isset($form['signature_settings'])) {
+          $form['signature_settings']['#weight'] = $currentmax + 10;
+        }
+        if (isset($form['field_uid'])) {
+          unset($form['field_uid']);
+        }
+
+        $form['#validate'] = array_diff($form['#validate'], array(
+          'user_account_form_validate',
+          'user_validate_current_pass'
+        ));
+        // if readonly registry then need to disable the email validator
+        if ($ibm_apim_readonly_idp == TRUE) {
+          for ($i = 0; $i < sizeof($form['#validate']); $i++) {
+            if (isset($form['#validate'][$i]) && $form['#validate'][$i] == 'user_account_form_validate') {
+              $form['#validate'][$i] = 'auth_apic_user_register_validate';
+              break;
             }
           }
         }
-        $remoteid = "";
-        if (isset($form['#user']->data['remote_id'])) {
-          $remoteid = $form['#user']->data['remote_id'];
-        }
-        $form['account']['remote_id'] = array(
-          '#type' => 'hidden',
-          '#value' => $remoteid
-        );
-        // allow admin to edit their own email address
-        if ($user->uid == 1) {
-          $form['account']['mail']['#disabled'] = FALSE;
-          $form['account']['mail']['#required'] = TRUE;
-          if (isset($form['field_first_name'])) {
-            $form['field_first_name']['#required'] = FALSE;
-            $form['field_first_name']['und']['#required'] = 0;
-            $form['field_first_name']['und'][0]['#required'] = FALSE;
-            $form['field_first_name']['und'][0]['value']['#required'] = FALSE;
-          }
-          if (isset($form['field_last_name'])) {
-            $form['field_last_name']['#required'] = FALSE;
-            $form['field_last_name']['und']['#required'] = 0;
-            $form['field_last_name']['und'][0]['#required'] = FALSE;
-            $form['field_last_name']['und'][0]['value']['#required'] = FALSE;
-          }
-        }
-      }
-      else {
-        // admin editing user account
-        // disable all the fields to stop admins making changes that then would fail to sync to apic
-        if (isset($form['account']['roles'])) {
-          $form['account']['roles']['#disabled'] = TRUE;
-          $form['account']['roles']['#required'] = FALSE;
-        }
-        if (isset($form['account']['name'])) {
-          $form['account']['name']['#disabled'] = TRUE;
-          $form['account']['name']['#required'] = FALSE;
-        }
-        if (isset($form['account']['pass'])) {
-          $form['account']['pass']['#disabled'] = TRUE;
-          $form['account']['pass']['#required'] = FALSE;
-        }
-        if (isset($form['account']['mail'])) {
-          $form['account']['mail']['#disabled'] = TRUE;
-          $form['account']['mail']['#required'] = FALSE;
-        }
-        if (isset($form['field_first_name'])) {
-          $form['field_first_name']['#disabled'] = TRUE;
-          $form['field_first_name']['#required'] = FALSE;
-          $form['field_first_name']['und']['#required'] = 0;
-          $form['field_first_name']['und'][0]['#required'] = FALSE;
-          $form['field_first_name']['und'][0]['value']['#required'] = FALSE;
-        }
-        if (isset($form['field_last_name'])) {
-          $form['field_last_name']['#disabled'] = TRUE;
-          $form['field_last_name']['#required'] = FALSE;
-          $form['field_last_name']['und']['#required'] = 0;
-          $form['field_last_name']['und'][0]['#required'] = FALSE;
-          $form['field_last_name']['und'][0]['value']['#required'] = FALSE;
-        }
-        if (isset($form['field_phone'])) {
-          $form['field_phone']['#disabled'] = TRUE;
-          $form['field_phone']['#required'] = FALSE;
-          $form['field_phone']['und']['#required'] = 0;
-          $form['field_phone']['und'][0]['#required'] = FALSE;
-          $form['field_phone']['und'][0]['value']['#required'] = FALSE;
-        }
-        if (isset($form['field_company'])) {
-          $form['field_company']['#disabled'] = TRUE;
-          $form['field_company']['#required'] = FALSE;
-          $form['field_company']['und']['#required'] = 0;
-          $form['field_company']['und'][0]['#required'] = FALSE;
-          $form['field_company']['und'][0]['value']['#required'] = FALSE;
-        }
-        if (isset($form['field_address'])) {
-          $form['field_address']['#disabled'] = TRUE;
-          $form['field_address']['und']['#required'] = 0;
-          $form['field_address']['und'][0]['#required'] = FALSE;
-        }
-        if (isset($form['field_developer_organization'])) {
-          $form['field_developer_organization']['#disabled'] = TRUE;
-          $form['field_developer_organization']['#required'] = FALSE;
-          $form['field_developer_organization']['und']['#required'] = 0;
-          $form['field_developer_organization']['und'][0]['#required'] = FALSE;
-          $form['field_developer_organization']['und'][0]['value']['#required'] = FALSE;
-        }
-      }
-
-      $form['account']['#weight'] = -10;
-      $currentmax = field_info_max_weight('user', 'user', 'form');
-      if (isset($form['overlay-control'])) {
-        $form['overlay-control']['#weight'] = -3;
-      }
-      if (isset($form['picture'])) {
-        $form['picture']['#weight'] = -2;
-      }
-      if (isset($form['contact'])) {
-        $form['contact']['#weight'] = -1;
-      }
-      if (isset($form['signature_settings'])) {
-        $form['signature_settings']['#weight'] = $currentmax + 10;
-      }
-
-      $form['#validate'] = array_diff($form['#validate'], array(
-        'user_account_form_validate',
-        'user_validate_current_pass'
-      ));
-      // if readonly registry then need to disable the email validator
-      if ($ibm_apim_readonly_idp == TRUE) {
-        for ($i = 0; $i < sizeof($form['#validate']); $i++) {
-          if ($form['#validate'][$i] == 'user_account_form_validate') {
-            $form['#validate'][$i] = 'auth_apic_user_register_validate';
-            break;
-          }
-        }
-      }
-      $form['#submit'] = array('_auth_apic_user_profile_form_submit_handler');
-      break;
-    case 'user_admin_settings' :
-      // remove admin settings that do not work with APIC Integration
-      unset($form['registration_cancellation']['user_register']);
-      unset($form['registration_cancellation']['user_email_verification']);
-      unset($form['email_admin_created']);
-      unset($form['email_pending_approval']);
-      unset($form['email_no_approval_required']);
-      unset($form['email_password_reset']);
-      unset($form['email_activated']);
-      break;
+        $form['#submit'] = array('_auth_apic_user_profile_form_submit_handler');
+        break;
+      case 'user_admin_settings' :
+        // remove admin settings that do not work with APIC Integration
+        unset($form['registration_cancellation']['user_register']);
+        unset($form['registration_cancellation']['user_email_verification']);
+        unset($form['email_admin_created']);
+        unset($form['email_pending_approval']);
+        unset($form['email_no_approval_required']);
+        unset($form['email_password_reset']);
+        unset($form['email_activated']);
+        break;
+    }
   }
 }
 
@@ -663,13 +694,10 @@ function _auth_apic_password_policy_password_tab_submit_handler($form, &$form_st
  * @param $values
  */
 function _auth_apic_update_apic_profile($values) {
-  // Make sure we have the session variables set
-  _ibm_apim_check_and_get_config();
-  $apim_session = &_ibm_apim_get_apim_session();
   // do not update if user registry is readonly
   $readonly = variable_get('ibm_apim_readonly_idp', 0);
   if (isset($values) && $readonly != 1) {
-    $data = _auth_apic_convert_to_apic_address($values);
+    $data = ibm_apim_convert_to_apic_address($values);
     unset($data['username']);
     unset($data['organization']);
     unset($data['password']);
@@ -717,10 +745,8 @@ function auth_apic_user_presave(&$edit, $account, $category) {
  * from the IBM API Connect account.
  *
  * @param $form
- *          form
- *
  * @param $form_state
- *          state of the form
+ * @return bool|null
  */
 function auth_apic_authenticate_validate($form, &$form_state) {
   $name = $form_state['values']['name'];
@@ -813,7 +839,7 @@ function _auth_apic_authenticated_login($name, $pass, $authenticated, $login = T
   $orgs = array();
 
   // this sets up the external user with Drupal by creating a local entry. If they don't exist they are added
-  _auth_apic_external_login_register($name, array(
+  ibm_apim_external_login_register($name, array(
     'status' => 1,
     'pass' => $pass
   ), $login);
@@ -861,6 +887,7 @@ function _auth_apic_authenticated_login($name, $pass, $authenticated, $login = T
       )
     ),
     'field_developer_organization' => array('und' => array(0 => array('value' => $devorg))),
+    'field_uid' => array('und' => array(0 => array('value' => $json_user_info['id']))),
     'mail' => $json_user_info['email'],
     'data' => array(
       'remote_id' => $json_user_info['id'],
@@ -982,6 +1009,9 @@ function auth_apic_authenticate_submit_redirect($form, &$form_state) {
       else {
         $account = user_load($form_state['uid']);
         $edit = array('field_developer_organization' => array('und' => array(0 => array('value' => $devorg))));
+        if (isset($apim_session['memberid']) && (!isset($account->field_uid['und'][0]['value']) || empty($account->field_uid['und'][0]['value']))) {
+          $edit['field_uid'] = array('und' => array(0 => array('value' => $apim_session['memberid'])));
+        }
         user_save($account, $edit);
         drupal_goto('<front>');
       }
@@ -1009,7 +1039,6 @@ function auth_apic_authenticate_submit_redirect($form, &$form_state) {
 function auth_apic_authenticate($name, $pass) {
 
   // Make sure we have the session variables set
-  _ibm_apim_check_and_get_config();
   $apim_session = &_ibm_apim_get_apim_session();
 
   // Clear out our internal caches
@@ -1185,11 +1214,10 @@ function auth_apic_register_user($form, &$form_state) {
     $address = $form_state['values']['field_address']['und'][0];
   }
 
-  $data = _auth_apic_convert_to_apic_address($form_state['values']);
+  $data = ibm_apim_convert_to_apic_address($form_state['values']);
   $data["emailURLSuffix"] = "?q=ibm_apim/activate/x";
 
   // Make sure we have the session variables set
-  _ibm_apim_check_and_get_config();
   $apim_session = &_ibm_apim_get_apim_session();
   $host_pieces = _ibm_apim_parse_apim_host();
   $url = $host_pieces['url'] . '/v1/portal/users/register';
@@ -1229,7 +1257,7 @@ function auth_apic_register_user($form, &$form_state) {
     if ($ibm_apim_readonly_idp == TRUE) {
       $fields['status'] = 1;
     }
-    _auth_apic_external_login_register($username, $fields, TRUE);
+    ibm_apim_external_login_register($username, $fields, TRUE);
 
     if (module_exists('security_questions')) {
       $account = user_external_load($username);
@@ -1296,16 +1324,6 @@ function auth_apic_legal_login_submit(&$form, &$form_state) {
  * Implementation of hook_boot().
  */
 function auth_apic_boot() {
-}
-
-/**
- * Implements hook_cron().
- */
-function auth_apic_cron() {
-  // Clear the cache of the queries used to build up the forum
-  // blocks on the home page otherwise they only change when
-  // the ALL cache is cleared completely
-  cache_clear_all('forum_block_view:', 'cache', TRUE);
 }
 
 /**
@@ -1399,7 +1417,6 @@ function auth_apic_block_view($delta = '') {
 function _auth_apic_verify_saml_token($samltoken = NULL) {
   $returnVal = NULL;
   // Make sure we have the session variables set
-  _ibm_apim_check_and_get_config();
   $apim_session = &_ibm_apim_get_apim_session();
   $host_pieces = _ibm_apim_parse_apim_host();
   $url = $host_pieces['url'] . '/v1/portal/me?expand=true';
@@ -1466,7 +1483,6 @@ function _auth_apic_change_user_password($new_password, $authuser, $username, $c
     user_save((object) array('uid' => $acccount->uid), (array) $acccount);
   }
   // Make sure we have the session variables set
-  _ibm_apim_check_and_get_config();
   $apim_session = &_ibm_apim_get_apim_session();
   $apim_session['auth'] = base64_encode($username . ':' . $new_password);
 
@@ -1664,10 +1680,6 @@ function auth_apic_activate_id_callback($path = NULL) {
   // ACTIVATE USER LINK
   if (isset($actToken)) {
 
-    // Make sure we have the session variables set
-    _ibm_apim_check_and_get_config();
-    $apim_session = &_ibm_apim_get_apim_session();
-
     // decode the base64 encoded JSON in the incoming URL
     $activationObj = json_decode(base64_decode($actToken));
     // set global variables with the temp auth credentials from the incoming URL payload
@@ -1721,7 +1733,7 @@ function auth_apic_activate_id_callback($path = NULL) {
         if ($result->data && $result->data['errors']) {
           if (array_key_exists("missingFields", $result->data['errors'][0]) || array_key_exists("validation.resource.representation.missingOrEmptyValues", $result->data['errors'][0])) {
             // user invited by others and so needs to specify required fields to populate account
-            return drupal_get_form('auth_apic_activate_create_account_form', $actToken);
+            return drupal_get_form('ibm_apim_activate_create_account_form', $actToken);
           }
           elseif (array_key_exists("user.exists.in.portal.active", $result->data['errors'][0]) || array_key_exists("user.exists.in.portal.pending", $result->data['errors'][0])) {
             // user already exists
@@ -1762,244 +1774,6 @@ function auth_apic_activate_id_callback($path = NULL) {
     drupal_goto();
   }
   return TRUE;
-}
-
-/**
- * User invited by a dev org owner but hasnt got an account yet so needs to be prompted to create one
- * @param $token
- * @return object
- */
-function auth_apic_activate_create_account_form($token = NULL) {
-  global $user;
-  global $_GET;
-  if (isset($_GET['activationToken'])) {
-    $token = $_GET['activationToken'];
-  }
-  if (!isset($token)) {
-    drupal_set_message(t('Missing token. Contact the system administrator for assistance.'), 'error');
-    watchdog('auth_apic_activate_create_account_form', 'Missing token.', array(), WATCHDOG_NOTICE);
-    drupal_goto();
-  }
-  $activationObj = json_decode(base64_decode($token));
-  $userid = $activationObj->{'username'};
-  // If already logged on, go to the user page instead.
-  if ($user->uid) {
-    drupal_goto('user/' . $user->uid);
-  }
-  // if already a user with this email address error out
-  if (isset($userid) && !empty($userid)) {
-    $found = user_load_by_mail($userid);
-    if (isset($found) && isset($found->uid)) {
-      drupal_set_message(t('A user already exists with this email address. Use those credentials to log in.'), 'error');
-      drupal_goto('user/login');
-    }
-  }
-
-  $form = array();
-  // Ensure some defaults; if already set they will not be overridden.
-  $form_state = form_state_defaults();
-
-  drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/usercreate.js', array(
-    'weight' => 3
-  ));
-
-  // set some min values to get the addressfield to stop blocking other fields displaying
-  if (isset($form_state['values'])) {
-    $form_state['input'] = $form_state['values'];
-  }
-  else {
-    $form_state['input'] = array();
-    $form_state['values'] = array();
-  }
-  $form_state['build_info'] = array();
-  $form_state['build_info']['form_id'] = "";
-
-  $form['#user'] = drupal_anonymous_user();
-  $form['#user_category'] = 'register';
-
-  $form['#attached']['library'][] = array('system', 'jquery.cookie');
-  $form['#attributes']['class'][] = 'user-info-from-cookie';
-
-  $form['intro'] = array(
-    '#weight' => '-20',
-    '#markup' => '<p>' . t("You must fill in the form below to complete the activation of your account: @userid.", array(
-        '@userid' => $userid
-      )) . '</p>'
-  );
-  // for readonly registries with display name set add a prompt to use those credentials
-  $displayname = variable_get('ibm_apim_idp_displayname');
-  $ibm_apim_readonly_idp = variable_get('ibm_apim_readonly_idp', FALSE);
-  if ($ibm_apim_readonly_idp == TRUE && isset($displayname) && !empty($displayname)) {
-    $form['intro']['#markup'] .= '<p>' . t('Use your @displayname credentials to activate your account.', array(
-        '@displayname' => $displayname
-      )) . '</p>';
-  }
-
-  // Start with the default user account fields.
-  user_account_form($form, $form_state);
-  // remove username field if not set to show and disable mail since we already know it
-  $showusername = variable_get('ibm_apim_username_show', 0);
-  if ($showusername == 0) {
-    unset($form['account']['name']);
-  }
-  $form['account']['mail']['#default_value'] = $userid;
-  $form['account']['mail']['#disabled'] = TRUE;
-
-  // Attach field widgets, and hide the ones where the 'user_register_form'
-  // setting is not on. Plus hide the dev org field since we already know that.
-  $langcode = entity_language('user', $form['#user']);
-  field_attach_form('user', $form['#user'], $form, $form_state, $langcode);
-  foreach (field_info_instances('user', 'user') as $field_name => $instance) {
-    if (empty($instance['settings']['user_register_form']) || $field_name == "field_developer_organization") {
-      $form[$field_name]['#access'] = FALSE;
-    }
-  }
-
-  if (module_exists('security_questions')) {
-    // Hide the questions form when the user is being registered by an admin.
-    if (!user_access('administer users')) {
-      // Merge in security_questions user form.
-      module_load_include('inc', 'security_questions', 'security_questions.pages');
-      $form['questions'] = array('#tree' => TRUE);
-      $i = 0;
-
-      if (isset($account)) {
-        $form['account'] = array('#type' => 'value', '#value' => $account);
-        // Fields for changing existing answers.
-        $answers = security_questions_get_answer_list($account->uid);
-        foreach ($answers as $answer) {
-          $form['questions'][$i] = security_questions_selector_element('questions[' . $i . ']', $account, $answer);
-          $i++;
-        }
-      }
-
-      // Fields for selecting new answers.
-      $required = variable_get('security_questions_number_required', 3);
-      while ($i < $required) {
-        $form['questions'][$i] = security_questions_selector_element('questions[' . $i . ']', $account);
-        $i++;
-      }
-
-      $form['#validate'][] = 'security_questions_user_register_form_validate';
-      // Can't add security_questions submit handler here, because the user account doesn't
-      // exist yet. Instead, it will get the info during hook_user_insert().
-    }
-  }
-
-  $form['token'] = array('#type' => 'hidden', '#value' => $token);
-  $form['actions'] = array('#type' => 'actions');
-  $form['actions']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Activate')
-  );
-
-  $form['#validate'][] = 'user_register_validate';
-  $form['#submit'] = array('auth_apic_activate_create_account_form_submit_handler');
-  return $form;
-}
-
-/**
- * Submit handler to handle the create account form
- * does not actually create the account in drupal though
- * that will happen on first login
- * @param $form
- * @param $form_state
- */
-function auth_apic_activate_create_account_form_submit_handler($form, &$form_state) {
-  global $user;
-  $actToken = $form_state['values']['token'];
-  // decode the base64 encoded JSON in the incoming URL
-  $activationObj = json_decode(base64_decode($actToken));
-
-  // Make sure we have the session variables set
-  _ibm_apim_check_and_get_config();
-  $apim_session = &_ibm_apim_get_apim_session();
-
-  // set global variables with the temp auth credentials from the incoming URL payload
-  global $tempUser;
-  global $tempPwd;
-  $tempUser = $activationObj->{'authentication'}->{'username'};
-  $tempPwd = $activationObj->{'authentication'}->{'password'};
-  $org = $activationObj->{'providerContext'}->{'orgID'};
-  $env = $activationObj->{'providerContext'}->{'environmentID'};
-  $userid = $activationObj->{'username'};
-
-  $pass = $form_state['values']['pass'];
-  // create user object to send to apic
-  $data = _auth_apic_convert_to_apic_address($form_state['values']);
-  if (isset($form_state['values']['field_company']['und'][0]['value'])) {
-    $companyname = $form_state['values']['field_company']['und'][0]['value'];
-  }
-  if (isset($form_state['values']['field_phone']['und'][0]['value'])) {
-    $phone = $form_state['values']['field_phone']['und'][0]['value'];
-  }
-  if (isset($form_state['values']['field_address']['und'][0])) {
-    $address = $form_state['values']['field_address']['und'][0];
-  }
-  // activate from invitation cannot handle organization (and doesnt need it)
-  if (isset($data['organization'])) {
-    unset($data['organization']);
-  }
-
-  // verify the temp userid and password are valid
-  $url = $activationObj->{'url'};
-  if (!isset($url)) {
-    drupal_set_message(t('Token did not contain a valid URL. Contact the system administrator for assistance.'), 'error');
-    watchdog('auth_apic_activate_create_account_form_submit_handler', 'Invalid Token: Token did not contain a valid URL. token: %token', array(
-      '%token' => serialize($activationObj)
-    ), WATCHDOG_NOTICE);
-    drupal_goto();
-  }
-  $headers = array(
-    'Content-Type: application/json',
-    'Accept: application/json',
-    "X-IBM-APIManagement-Context: " . $org . '.' . $env,
-    'Authorization: Basic ' . base64_encode($tempUser . ':' . $tempPwd)
-  );
-
-  // override username since we already know that
-  $emailasuser = variable_get('ibm_apim_email_as_username', 1);
-  if ($emailasuser == 1) {
-    $data['username'] = $userid;
-  }
-  else {
-    $data['username'] = $form_state['values']['name'];
-  }
-
-  $result = _ibm_apim_json_http_request($url, 'POST', $headers, json_encode($data));
-
-  if (isset($result) && $result->code >= 200 && $result->code < 300) {
-    drupal_set_message(t('Your account was created successfully.'));
-
-    $fields = array(
-      'pass' => $pass,
-      'email' => $userid,
-      'mail' => $userid,
-      'status' => 1
-    );
-    _auth_apic_external_login_register($data['username'], $fields, TRUE);
-    global $user;
-    $edit = array_intersect_key((array) $user, $form_state['values']);
-    $account = user_save($user, $edit);
-    if (module_exists('security_questions')) {
-      security_questions_user_answers_save($user, $form_state['values']['questions']);
-    }
-
-    // forcibly log the user out since drupal will automatically log them in
-    // and nothing will actually work until they have activated the account in the APIm backend
-    // we also save a cookie here so that we can use this alongside the logout cookie to display a suitable message.
-    module_load_include('pages.inc', 'user');
-    user_cookie_save(array('ibmapiminvited' => 1));
-    user_logout();
-    drupal_goto('user/login');
-  }
-  else {
-    watchdog('auth_apic_activate_create_account_form_submit_handler', 'Error registering user %username. response: %response', array(
-      '%username' => $userid,
-      '%response' => serialize($result)
-    ), WATCHDOG_NOTICE);
-    drupal_set_message(t('There was an error creating your account: %data', array('%data' => serialize($result->data))), 'error');
-  }
 }
 
 /**
@@ -2124,10 +1898,6 @@ function auth_apic_forgotpwd_form_submit_handler($form, &$form_state) {
     drupal_goto('ibm_apim/forgotpwd/?resetPasswordToken=' . $resetPasswordToken);
     return;
   }
-
-  // Make sure we have the session variables set
-  _ibm_apim_check_and_get_config();
-  $apim_session = &_ibm_apim_get_apim_session();
 
   // decode the base64 encoded JSON in the incoming URL
   $activationObj = json_decode(base64_decode($resetPasswordToken));
@@ -2293,131 +2063,3 @@ function _auth_apic_get_saml_endpoint() {
   }
   return $endpoint;
 }
-
-/**
- * Utility method to create the user object to send to apic
- *
- * @param $values
- * @return array
- */
-function _auth_apic_convert_to_apic_address($values) {
-  $ibm_apim_readonly_idp = variable_get('ibm_apim_readonly_idp', FALSE);
-  $name = '';
-  $pass = '';
-  $name = '';
-  $fname = '';
-  $lname = '';
-  $developerorg = '';
-  $data = array();
-
-  if (isset($values['name'])) {
-    $name = $values['name'];
-  }
-  if (isset($values['pass'])) {
-    $pass = $values['pass'];
-    $data['password'] = $pass;
-  }
-  if (isset($values['field_first_name']['und'][0]['value'])) {
-    $fname = $values['field_first_name']['und'][0]['value'];
-    $data['firstName'] = $fname;
-  }
-  if (isset($values['field_last_name']['und'][0]['value'])) {
-    $lname = $values['field_last_name']['und'][0]['value'];
-    $data['lastName'] = $lname;
-  }
-  if (isset($values['field_developer_organization']['und'][0]['value'])) {
-    $developerorg = $values['field_developer_organization']['und'][0]['value'];
-    $data['organization'] = $developerorg;
-  }
-  if (isset($values['mail'])) {
-    $mail = $values['mail'];
-  }
-  else {
-    $mail = NULL;
-  }
-  $username = $name;
-  $emailasuser = variable_get('ibm_apim_email_as_username', 1);
-  if ($emailasuser) {
-    $username = $mail;
-  }
-  else {
-    if (isset($values['mail'])) {
-      // if username not email then update that too
-      // commented out until APIC API can handle it
-      //$data['email'] = $mail;
-    }
-  }
-  $data['username'] = $username;
-  // do not include additionalFields for readonly IDPs
-  if ($ibm_apim_readonly_idp != TRUE) {
-    $data['additionalFields'] = array();
-    if (isset($values['mail'])) {
-      $data['additionalFields']['email'] = $mail;
-    }
-    if (isset($values['field_company']['und'][0]['value'])) {
-      $companyname = $values['field_company']['und'][0]['value'];
-      $data['additionalFields']['company_name'] = $companyname;
-    }
-    if (isset($values['field_phone']['und'][0]['value'])) {
-      $phone = $values['field_phone']['und'][0]['value'];
-      $data['additionalFields']['phone_number'] = array(array('value' => $phone));
-    }
-    if (isset($values['field_address']['und'][0])) {
-      $administrative_area = @$values['field_address']['und'][0]['administrative_area'] or $administrative_area = "";
-      $country = @$values['field_address']['und'][0]['country'] or $country = "";
-      $locality = @$values['field_address']['und'][0]['locality'] or $locality = "";
-      $postal_code = @$values['field_address']['und'][0]['postal_code'] or $postal_code = "";
-      $thoroughfare = @$values['field_address']['und'][0]['thoroughfare'] or $thoroughfare = "";
-      $premise = @$values['field_address']['und'][0]['premise'] or $premise = "";
-      $address = array(
-        'administrative_area' => $administrative_area,
-        'country' => $country,
-        'locality' => $locality,
-        'postal_code' => $postal_code,
-        'thoroughfare' => $thoroughfare,
-        'premise' => $premise
-      );
-      $data['additionalFields']['addresses'] = array($address);
-    }
-  }
-
-  return $data;
-}
-
-/**
- * Using this not user_external_login_register so we can create the initial user with extra info
- *
- * @param $name
- * @param array $edit
- * @param bool $login
- * @throws \Exception
- */
-function _auth_apic_external_login_register($name, $edit = array(), $login = FALSE) {
-  $account = user_external_load($name);
-  if (!$account) {
-    // Register this new user.
-    $edit['name'] = $name;
-    if (!isset($edit['pass'])) {
-      $edit['pass'] = user_password();
-    }
-    $edit['init'] = $name;
-    $edit['access'] = REQUEST_TIME;
-
-    $account = user_save(drupal_anonymous_user(), $edit);
-    // Terminate if an error occurred during user_save().
-    if (!$account) {
-      drupal_set_message(t("Error saving user account."), 'error');
-      watchdog('_auth_apic_external_login_register', 'Error saving user account. userid: %name', array('%name' => serialize($name)), WATCHDOG_NOTICE);
-      return;
-    }
-    user_set_authmaps($account, array("authname_auth_apic" => $name));
-  }
-
-  if ($login) {
-    // Log user in.
-    $form_state['uid'] = $account->uid;
-    user_login_submit(array(), $form_state);
-  }
-}
-
-?>

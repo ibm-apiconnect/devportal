@@ -4,6 +4,12 @@ core = 7.x
 package = IBM API Connect v5
 configure = admin/config/system/ibm_apim
 files[] = ibm_apim.module
+files[] = tests/ibm_apim.test
+files[] = tests/application.test
+files[] = tests/product.test
+files[] = tests/api.test
+files[] = tests/orgs.test
+files[] = tests/apic_test_helper_functions.php
 
 dependencies[] = entity
 dependencies[] = text

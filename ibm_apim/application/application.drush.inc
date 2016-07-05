@@ -58,9 +58,8 @@ function drush_application_cleanse_drush_command() {
     ->entityCondition('bundle', 'application');
   $results = $query->execute();
   if (isset($results['node'])) {
-    $keys = array_keys($results['node']);
-    foreach ($keys as $nid) {
-      node_delete($nid);
+    foreach ($results['node'] as $item) {
+      node_delete($item->nid);
     }
   }
   drupal_set_message(t('All Application entries deleted.'), 'success');
@@ -104,8 +103,8 @@ function drush_application_deleteapp($id) {
     $results = $query->execute();
 
     if (isset($results['node'])) {
-      $keys = array_keys($results['node']);
-      $nid = $keys[0];
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
       node_delete($nid);
       drupal_set_message(t('Drush DeleteApplication deleted Application @app', array('@app' => $id)), 'success');
     }

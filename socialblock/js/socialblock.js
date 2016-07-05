@@ -16,10 +16,10 @@ window.onload = function () {
             TITLES[i].style.overflow = 'hidden';
         }
     }
-    var cards = document.querySelectorAll('.socialblock.card.tweet');
-    for (var j = 0; j < cards.length; j++) {
-        if (cards[j].children.length > 2) {
-            cards[j].children[0].style.border = 'none';
+    var tweet_cards = document.querySelectorAll('.socialblock.card.tweet');
+    for (var j = 0; j < tweet_cards.length; j++) {
+        if (tweet_cards[j].children.length > 2) {
+            tweet_cards[j].children[0].style.border = 'none';
         }
     }
     var containers = document.querySelectorAll(CONTAINER_CLASS);
@@ -34,9 +34,14 @@ window.onload = function () {
         });
         containers[k].addEventListener('eqResize', function (e) {
             var width = jQuery(e.target).width();
+            var all_cards = document.querySelectorAll('.socialblock.card');
             if (width <= SINGLE_COL) {
                 if (Masonry.data(e.target)) { //Masonry initialised
                     jQuery(e.target).masonry('destroy');
+                }
+                for (var l = 0; l < all_cards.length; l++) {
+                    all_cards[l].style.width = 'auto';
+                    all_cards[l].style.maxWidth = '20rem';
                 }
             } else {
                 if (!Masonry.data(e.target)) {
@@ -44,6 +49,10 @@ window.onload = function () {
                         gutter: 1.25 * REM,
                         fitWidth: true
                     });
+                }
+                for (var l = 0; l < all_cards.length; l++) {
+                    all_cards[l].style.width = '20rem';
+                    all_cards[l].style.maxWidth = '';
                 }
             }
         });

@@ -15,9 +15,9 @@
 }
 button.mesh {
   background: white;
-  border: 1px solid #5aaafa;
   color: #5aaafa;
   padding: 5px 15px;
+  border: 1px solid #5aaafa;
 }
 button.mesh:hover {
   background: #5aaafa;
@@ -27,7 +27,7 @@ button.mesh:hover {
 
 button.mesh:disabled {
   background: #ebebe4;
-  border: 1px solid #aaaaaa;
+  border: none;
   color: #ffffff;
   cursor: not-allowed;
 }

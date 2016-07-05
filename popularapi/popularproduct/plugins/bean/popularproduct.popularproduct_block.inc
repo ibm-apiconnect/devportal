@@ -76,18 +76,14 @@ class PopularProductBlockBean extends BeanPlugin {
       if (isset($node)) {
         $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
         $notop = '';
-        $title = $node->title;
-        $description = $node->product_description[$node->language][0]['value'];
-        $version = $node->product_version[$node->language][0]['value'];
-        if (!isset($title)) {
-          $title = '';
-        }
-        if (!isset($description) || empty($description)) {
+        $title = isset($node->title) ? $node->title : '';
+        $version = isset($node->product_version[$node->language][0]['value']) ? $node->product_version[$node->language][0]['value'] : '';
+        if (!isset($node->product_description[$node->language][0]['value']) || empty($node->product_description[$node->language][0]['value'])) {
           $description = '';
           $notop = 'notop';
         }
-        if (!isset($version)) {
-          $version = '';
+        else {
+          $description = $node->product_description[$node->language][0]['value'];
         }
         $markup = '<div class="popularapiblock product"><a href="' . url('node/' . $nid) . '"><div class="wrapper"><div class="popularapi_image">';
         if (isset($node->product_image) && !empty($node->product_image)) {

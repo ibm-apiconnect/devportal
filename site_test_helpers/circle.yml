@@ -1,0 +1,18 @@
+#
+# Configuration for site_test_helpers build on CircleCI.
+#
+machine:
+  php:
+    version: 5.6.2
+  environment:
+    APPROOT: "$HOME/$CIRCLE_PROJECT_REPONAME"
+    PATH: "$HOME/.composer/vendor/bin:$PATH"
+
+dependencies:
+  override:
+  - cd $APPROOT && composer require alexdesignworks/dcr
+  - cd $APPROOT && bash vendor/bin/dcr install
+test:
+  override:
+  # Lint code.
+  - source ~/.profile && cd $APPROOT && dcr

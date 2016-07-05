@@ -133,6 +133,35 @@ function devorg_node_access($node, $op, $account) {
   }
 }
 
+/**
+ * Implements hook_preprocess_node().
+ *
+ * @param $variables
+ */
+function devorg_preprocess_node(&$variables) {
+  if ($variables['node']->type == 'devorg' && $variables['view_mode'] == 'teaser') {
+    $variables['theme_hook_suggestions'][] = 'node__devorg__teaser';
+  }
+  if ($variables['node']->type == 'devorg' && $variables['view_mode'] == 'search_result') {
+    $variables['theme_hook_suggestions'][] = 'node__devorg__search_result';
+  }
+  if ($variables['node']->type == 'devorg') {
+
+  }
+}
+
+/**
+ * Implements hook_preprocess_search_result
+ *
+ * @param $variables
+ */
+function devorg_preprocess_search_result(&$variables) {
+  $node = $variables['result']['node'];
+  if ($node->nid && $node->type == 'devorg') { // if the result is an devorg node we can load the teaser
+    $variables['teaser'] = node_view($node, 'teaser');
+  }
+}
+
 function _devorg_get_ibm_fields() {
   $ibmfields = array(
     'devorg_id',
@@ -171,11 +200,13 @@ function devorg_createOrUpdateDevorg($devorg) {
   $results = $query->execute();
 
   if (isset($results['node'])) {
-    $keys = array_keys($results['node']);
-    $node = node_load($keys[0]);
+    $first = array_shift($results['node']);
+    $nid = $first->nid;
+    $node = node_load($nid);
     devorg_updateExistingDevorgNode($node, $devorg);
     $createdOrUpdated = FALSE;
-  } else {
+  }
+  else {
     // no existing node for this devorg so create one
     devorg_createNewDevorgNode($devorg);
     $createdOrUpdated = TRUE;
@@ -202,12 +233,11 @@ function devorg_createNewDevorgNode($consumer) {
       ->propertyOrderBy('nid', 'ASC');
     $results = $query->execute();
     if (isset($results) && isset($results['node'])) {
-      $org_nids = array_keys($results['node']);
-      if (is_array($org_nids) && count($org_nids) > 0) {
-        $node = node_load($org_nids[0]);
-        if (isset($node)) {
-          devorg_updateExistingDevorgNode($node, $consumer);
-        }
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
+      if (isset($node)) {
+        devorg_updateExistingDevorgNode($node, $consumer);
       }
     }
     else {
@@ -219,6 +249,7 @@ function devorg_createNewDevorgNode($consumer) {
       $node->language = LANGUAGE_NONE;
       $node->uid = 1;
       $node->status = 1;
+      $node->promote = 0;
 
       $node->devorg_apimhostname[$node->language][] = array(
         'value' => $hostvariable,
@@ -273,6 +304,7 @@ function devorg_updateExistingDevorgNode($node, $consumer) {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
   $node->title = ibm_apim_truncate_string($consumer['title']);
+  $node->promote = 0;
   $node->devorg_apimhostname[$node->language][0]['value'] = $hostvariable;
   $node->devorg_providerid[$node->language][0]['value'] = $apim_session['org'];
   $node->devorg_environmentid[$node->language][0]['value'] = $apim_session['env'];
@@ -302,8 +334,9 @@ function devorg_updateDevorgNode($consumer) {
     $results = $query->execute();
 
     if (isset($results['node'])) {
-      $keys = array_keys($results['node']);
-      $node = node_load($keys[0]);
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
       devorg_updateExistingDevorgNode($node, $consumer);
     }
   }
@@ -316,19 +349,45 @@ function devorg_updateDevorgNode($consumer) {
 function devorg_list_devorgs() {
   $returnnids = array();
   if (user_is_logged_in()) {
-    $myorg = ibm_apim_get_current_developer_org();
-    if (isset($myorg['id'])) {
-      $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'devorg')
-        ->fieldCondition('devorg_id', 'value', $myorg['id']);
-      $results = $query->execute();
-
-      if (isset($results['node'])) {
-        $keys = array_keys($results['node']);
-        $returnnids = array_merge($returnnids, $keys);
+    global $user;
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'devorg');
+    $results = $query->execute();
+    if (isset($results['node'])) {
+      $nids = array();
+      foreach ($results['node'] as $item) {
+        $nids[] = $item->nid;
+      }
+      $nodes = node_load_multiple($nids);
+      if (isset($nodes)) {
+        foreach ($nodes as $node) {
+          // check if owner
+          if (isset($node->devorg_owner[$node->language][0]['value']) && isset($user->mail) && $node->devorg_owner[$node->language][0]['value'] == $user->mail) {
+            $returnnids[] = $node->nid;
+          }
+          elseif (isset($node->devorg_members[$node->language][0]['value'])) {
+            // check if a member
+            $members = unserialize($node->devorg_members[$node->language][0]['value']);
+            foreach ($members as $member) {
+              if (isset($member['email']) && isset($user->mail) && $member['email'] == $user->mail) {
+                $returnnids[] = $node->nid;
+              }
+            }
+          }
+        }
       }
     }
   }
-  return $returnnids;
+  return array_unique($returnnids, SORT_NUMERIC);
+}
+
+/**
+ * Get expanded list of devorg nodes the current user is authorized to see
+ * @return mixed
+ */
+function devorg_list_devorg_nodes() {
+  $nids = devorg_list_devorgs();
+  $nodes = node_load_multiple($nids);
+  return $nodes;
 }

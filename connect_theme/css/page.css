@@ -59,6 +59,14 @@ body.not-front.node-type-page .columns-inner {
   padding: 0;
 }
 
+.maintenance-page.in-maintenance #main-content {
+  margin-top: 100px;
+}
+
+.maintenance-page.in-maintenance #content {
+  padding: 50px;
+}
+
 #branding {
   float: left;
   margin: 0;
@@ -521,6 +529,10 @@ img.site-logo {
   height: 36px;
 }
 
+.hybridauth-widget-wrapper .item-list-hybridauth-widget ul.hybridauth-widget li {
+  margin: 1px 3px;
+}
+
 header#header {
   position: fixed;
   top: 0;
@@ -553,17 +565,13 @@ header#header {
   margin-top: 84px;
 }
 
-.maintenance-page.in-maintenance .content {
-  padding: 50px;
-}
-
 /* Any menu block in the menu-bar region. */
 .menu-toggle {
   display: none;
 }
 
 /* tablet landscape */
-@media screen and (min-width:769px) and (max-width:1024px) {
+@media screen and (min-width: 769px) and (max-width: 1024px) {
   h1#site-name {
     font-size: 2.8em;
   }
@@ -589,8 +597,9 @@ header#header {
     margin-top: 140px;
   }
 }
+
 /* tablet portrait */
-@media screen and (min-width:481px) and (max-width:768px) {
+@media screen and (min-width: 481px) and (max-width: 768px) {
   body {
     padding: 0;
   }
@@ -620,8 +629,9 @@ header#header {
     margin-top: 100px;
   }
 }
+
 /* smartphone landscape */
-@media screen and (min-width:321px) and (max-width:480px) {
+@media screen and (min-width: 321px) and (max-width: 480px) {
   body {
     padding: 0;
   }
@@ -722,8 +732,9 @@ header#header {
     margin-top: 167px;
   }
 }
+
 /* smartphone portrait */
-@media screen and (max-width:320px) {
+@media screen and (max-width: 320px) {
   body {
     padding: 0;
   }

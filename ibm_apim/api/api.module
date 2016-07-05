@@ -135,6 +135,7 @@ function api_form_api_node_form_alter(&$form, &$form_state) {
   $form['api_resources']['#access'] = 0;
   $form['api_expandedschema']['#access'] = 0;
   $form['api_ibmconfiguration']['#access'] = 0;
+  $form['api_swaggertags']['#access'] = 0;
   $form['api_wsdl']['#access'] = 0;
 }
 
@@ -266,12 +267,13 @@ function api_preprocess_node(&$variables) {
       if (isset($variables['api_resources']['und'])) {
         $variables['api'] = unserialize($variables['api_resources']['und'][0]['value']);
         $expanded = unserialize($variables['api_expandedschema']['und'][0]['value']);
-      } else {
+      }
+      else {
         $variables['api'] = unserialize($variables['api_resources'][0]['value']);
         $expanded = unserialize($variables['api_expandedschema'][0]['value']);
       }
 
-      if (isset($expanded)) {
+      if (isset($expanded) && !empty($expanded)) {
         $variables['expandedapi'] = $expanded;
       }
       else {
@@ -287,20 +289,70 @@ function api_preprocess_node(&$variables) {
         }
       }
       if (module_exists('product')) {
-        $prod_nids = array();
-        $query = new EntityFieldQuery();
-        $query->entityCondition('entity_type', 'node')
-          ->entityCondition('bundle', 'product')
-          ->fieldCondition('product_apis', 'value', $variables['api_ref'][0]['value'], 'CONTAINS');
-        $results = $query->execute();
-        if (isset($results['node'])) {
-          $prod_nids = array_keys($results['node']);
+        $apim_session = &_ibm_apim_get_apim_session();
+        if (isset($apim_session['productid'])) {
+          $productnid = check_plain($apim_session['productid']);
         }
-        if (is_array($prod_nids) && count($prod_nids) > 0) {
-          // TODO handle API being in more than one product for now just grab first one
-          $productnode = node_load($prod_nids[0]);
+        if (!isset($productnid) || !is_numeric($productnid)) {
+          $prod_nids = array();
+          $query = new EntityFieldQuery();
+          $query->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'product')
+            ->fieldCondition('product_apis', 'value', $variables['api_ref'][0]['value'], 'CONTAINS');
+          $results = $query->execute();
+          if (isset($results['node'])) {
+            foreach ($results['node'] as $item) {
+              $prod_nids[] = $item->nid;
+            }
+          }
+          if (is_array($prod_nids) && count($prod_nids) > 0) {
+            // TODO handle API being in more than one product for now just grab first one
+            $productnid = $prod_nids[0];
+            $apim_session['productid'] = $productnid;
+          }
+        }
+        if (isset($productnid)) {
+          $productnode = node_load($productnid);
           $variables['productnode'] = $productnode;
-          $variables['plans'] = unserialize($productnode->product_plans[$productnode->language][0]['value']);
+          $variables['productnid'] = $productnid;
+        }
+
+        $variables['plans'] = unserialize($productnode->product_plans[$productnode->language][0]['value']);
+        // only get the apis in the product if in full mode
+        // if did this as part of inner view mode we might get into a loop
+        if ($variables['view_mode'] == 'full') {
+          // get the apis in this product
+          $product_yaml = yaml_parse($productnode->product_data[$productnode->language][0]['value']);
+          $variables['product'] = $product_yaml;
+          if (isset($product_yaml) && is_array($product_yaml['apis'])) {
+            foreach ($product_yaml['apis'] as $apiref) {
+              // find the api matching this ref
+              $query = new EntityFieldQuery();
+              $query->entityCondition('entity_type', 'node')
+                ->entityCondition('bundle', 'api')
+                ->fieldCondition('api_ref', 'value', $apiref['name'])
+                ->pager(0); // intentionally disable paging on this request
+              $results = $query->execute();
+              if (isset($results['node'])) {
+                $first = array_shift($results['node']);
+                $api_nids[] = $first->nid;
+              }
+            }
+          }
+          if (isset($api_nids) && is_array($api_nids) && count($api_nids) > 0) {
+            $nodes = node_load_multiple($api_nids);
+            $variables['apinodes'] = $nodes;
+
+          }
+          else {
+            $variables['apinodes'] = array();
+          }
+          $variables['apis'] = array();
+          $variables['expandedapis'] = array();
+          foreach ($variables['apinodes'] as $key => $api) {
+            $swagger = unserialize($api->api_resources[$api->language][0]['value']);
+            $variables['apis'][] = $swagger;
+          }
         }
       }
       if (module_exists('application')) {
@@ -312,7 +364,10 @@ function api_preprocess_node(&$variables) {
           ->fieldCondition('application_orgid', 'value', ibm_apim_get_current_developer_org()['id']);
         $results = $query->execute();
         if (isset($results['node'])) {
-          $nids = array_keys($results['node']);
+          $nids = array();
+          foreach ($results['node'] as $item) {
+            $nids[] = $item->nid;
+          }
           $nodes = node_load_multiple($nids);
           $apps = array();
           foreach ($nodes as $node) {
@@ -320,9 +375,9 @@ function api_preprocess_node(&$variables) {
             $node->appCredentials = unserialize($node->application_credentials[$node->language][0]['value']);
             $apps[] = $node;
             foreach ($node->appCredentials as $cred) {
-              $name = $node->title;
+              $name = check_plain($node->title);
               if (isset($cred['description']) && !empty($cred['description'])) {
-                $name .= ' : ' . $cred['description'];
+                $name .= ' : ' . check_plain($cred['description']);
               }
               $creds[] = array('id' => $cred['client-id'], 'name' => $name);
             }
@@ -376,7 +431,7 @@ function api_preprocess_search_result(&$variables) {
  * @return array|void
  * @throws \Exception
  */
-function api_collection_callback($apiref) {
+function api_collection_callback($apiref = NULL) {
   $build = array();
   $url = NULL;
   $host_pieces = _ibm_apim_parse_apim_host();
@@ -386,7 +441,7 @@ function api_collection_callback($apiref) {
   }
   $limit = variable_get('default_nodes_main', 10);
   if (isset($apiref)) {
-    $ref = ibm_apim_base64_url_decode($apiref);
+    $ref = check_plain(ibm_apim_base64_url_decode($apiref));
   }
   else {
     $ref = NULL;
@@ -397,6 +452,7 @@ function api_collection_callback($apiref) {
     if (ibm_apim_explicit_user_access('edit any api content')) {
       $query = new EntityFieldQuery();
       $query->entityCondition('entity_type', 'node')
+        ->propertyCondition('status', 1)
         ->entityCondition('bundle', 'api');
       $results = $query->execute();
     }
@@ -408,7 +464,7 @@ function api_collection_callback($apiref) {
         if (isset($productnode->product_apis[$productnode->language][0]['value'])) {
           $prodrefs = unserialize($productnode->product_apis[$productnode->language][0]['value']);
           foreach ($prodrefs as $prodref) {
-            $refarray[] = $prodref['$ref'];
+            $refarray[] = $prodref['name'];
           }
         }
       }
@@ -417,12 +473,16 @@ function api_collection_callback($apiref) {
         $query = new EntityFieldQuery();
         $query->entityCondition('entity_type', 'node')
           ->entityCondition('bundle', 'api')
+          ->propertyCondition('status', 1)
           ->fieldCondition('api_ref', 'value', $refarray);
         $results = $query->execute();
       }
     }
     if (isset($results) && isset($results['node'])) {
-      $finalnids = array_keys($results['node']);
+      $finalnids = array();
+      foreach ($results['node'] as $item) {
+        $finalnids[] = $item->nid;
+      }
 
       // handle paging
       $page = pager_find_page();
@@ -456,7 +516,7 @@ function api_collection_callback($apiref) {
       if (isset($productnode->product_apis[$productnode->language][0]['value'])) {
         $prodrefs = unserialize($productnode->product_apis[$productnode->language][0]['value']);
         foreach ($prodrefs as $prodref) {
-          if ($prodref['$ref'] == $ref) {
+          if ($prodref['name'] == $ref) {
             $found = TRUE;
           }
         }
@@ -467,14 +527,15 @@ function api_collection_callback($apiref) {
       $query = new EntityFieldQuery();
       $query->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', 'api')
+        ->propertyCondition('status', 1)
         ->fieldCondition('api_ref', 'value', $ref);
 
       $results = $query->execute();
 
       if (isset($results['node'])) {
-        $keys = array_keys($results['node']);
-        $node = node_load($keys[0]);
-        drupal_goto('node/' . $node->nid);
+        $first = array_shift($results['node']);
+        $nid = $first->nid;
+        drupal_goto('node/' . $nid);
       }
     }
     else {
@@ -497,8 +558,9 @@ function api_createOrUpdateAPI($api) {
   $results = $query->execute();
 
   if (isset($results['node'])) {
-    $keys = array_keys($results['node']);
-    $node = node_load($keys[0]);
+    $first = array_shift($results['node']);
+    $nid = $first->nid;
+    $node = node_load($nid);
     api_updateExistingAPINode($node, $api);
     $createdOrUpdated = FALSE;
   }
@@ -543,10 +605,9 @@ function api_createNewAPINode($api) {
   }
 
   if (isset($results) && isset($results['node'])) {
-    $api_nids = array_keys($results['node']);
-    if (is_array($api_nids) && count($api_nids) > 0) {
-      $node = node_load($api_nids[0]);
-    }
+    $first = array_shift($results['node']);
+    $nid = $first->nid;
+    $node = node_load($nid);
   }
   if (isset($node) && isset($node->nid)) {
     if (isset($node->field_apitags[$node->language]) && is_array($node->field_apitags[$node->language])) {
@@ -562,6 +623,7 @@ function api_createNewAPINode($api) {
     unset($node->nid);
     unset($node->vid);
     unset($node->path);
+    unset($node->status);
     unset($node->api_apimhostname[$node->language]);
     unset($node->api_providerid[$node->language]);
     unset($node->api_environmentid[$node->language]);
@@ -579,6 +641,7 @@ function api_createNewAPINode($api) {
     unset($node->api_wsdl[$node->language]);
     unset($node->api_resources[$node->language]);
     unset($node->api_expandedschema[$node->language]);
+    unset($node->api_swaggertags[$node->language]);
   }
   else {
     $node = new stdClass();
@@ -586,7 +649,9 @@ function api_createNewAPINode($api) {
     node_object_prepare($node); // Sets some defaults. Invokes hook_prepare() and hook_node_prepare().
   }
   $node->title = ibm_apim_truncate_string($api['document']['info']['title']);
-  $node->status = 1;
+  if (!module_exists('workbench_moderation')) {
+    $node->status = 1;
+  }
   $node->uid = 1;
   $node->language = LANGUAGE_NONE;
 
@@ -624,7 +689,7 @@ function api_createNewAPINode($api) {
   );
   $apitype = 'rest';
   if (isset($api['document']['x-ibm-configuration']['type'])) {
-    $apitype = strtolower($api['document']['x-ibm-configuration']['type']);
+    $apitype = mb_strtolower($api['document']['x-ibm-configuration']['type']);
   }
   $node->api_protocol[$node->language][] = array(
     'value' => $apitype,
@@ -673,6 +738,33 @@ function api_createNewAPINode($api) {
         'format' => 'plain_text'
       );
     }
+    $node->api_swaggertags[$node->language] = array();
+    if (isset($api['document']['tags'])) {
+      $tags = array();
+      foreach ($api['document']['tags'] as $tag) {
+        if (isset($tag['name'])) {
+          $tags[] = $tag['name'];
+        }
+      }
+      if (isset($api['document']['paths'])) {
+        foreach ($api['document']['paths'] as $path) {
+          foreach ($path as $verb => $operation) {
+            if (isset($operation['tags'])) {
+              foreach ($operation['tags'] as $tag) {
+                $tags[] = $tag;
+              }
+            }
+          }
+        }
+      }
+      $tags = array_unique($tags);
+      foreach ($tags as $tag) {
+        $node->api_swaggertags[$node->language][] = array(
+          'value' => $tag,
+          'format' => 'plain_text'
+        );
+      }
+    }
     if (isset($api['document']['info'])) {
       if (isset($api['document']['info']['x-ibm-name'])) {
 
@@ -704,7 +796,7 @@ function api_createNewAPINode($api) {
     watchdog('_api_createNewAPINode', 'Save of Swagger to database failed with: %data', array('%data' => $e->getMessage()), WATCHDOG_NOTICE);
   }
   // if SOAP API then go get the wsdl too
-  if (isset($api['document']['x-ibm-configuration']['type']) && (strtolower($api['document']['x-ibm-configuration']['type']) == 'wsdl')) {
+  if (isset($api['document']['x-ibm-configuration']['type']) && (mb_strtolower($api['document']['x-ibm-configuration']['type']) == 'wsdl')) {
     $catalog_config = unserialize(variable_get('ibm_apim_catalog_config'));
 
     $url = $catalog_config['url'] . '/apis/' . $api['id'] . '/wsdl?type=portal';
@@ -729,7 +821,7 @@ function api_createNewAPINode($api) {
       }
 
       $blob = mb_substr($data, 0, 5);
-      if (strpos($blob, 'PK') !== FALSE) {
+      if (mb_strpos($blob, 'PK') !== FALSE) {
         $data = _api_get_string_from_zip($data);
       }
       $serialized = filter_xss(serialize($data));
@@ -807,6 +899,7 @@ function api_createNewAPINode($api) {
       _api_phase_tag($node, $api['document']['x-ibm-configuration']['phase']);
     }
   }
+
   return $node->nid;
 }
 
@@ -840,7 +933,7 @@ function api_updateExistingAPINode($node, $api) {
   $node->api_context[$node->language][0]['value'] = $api['document']['basePath'];
   $apitype = 'rest';
   if (isset($api['document']['x-ibm-configuration']['type'])) {
-    $apitype = strtolower($api['document']['x-ibm-configuration']['type']);
+    $apitype = mb_strtolower($api['document']['x-ibm-configuration']['type']);
   }
   $node->api_protocol[$node->language][0]['value'] = $apitype;
   if (isset($api['document']['securityDefinitions'])) {
@@ -868,6 +961,33 @@ function api_updateExistingAPINode($node, $api) {
         'value' => serialize($api['expanded']),
         'format' => 'plain_text'
       );
+    }
+    $node->api_swaggertags[$node->language] = array();
+    if (isset($api['document']['tags'])) {
+      $tags = array();
+      foreach ($api['document']['tags'] as $tag) {
+        if (isset($tag['name'])) {
+          $tags[] = $tag['name'];
+        }
+      }
+      if (isset($api['document']['paths'])) {
+        foreach ($api['document']['paths'] as $path) {
+          foreach ($path as $verb => $operation) {
+            if (isset($operation['tags'])) {
+              foreach ($operation['tags'] as $tag) {
+                $tags[] = $tag;
+              }
+            }
+          }
+        }
+      }
+      $tags = array_unique($tags);
+      foreach ($tags as $tag) {
+        $node->api_swaggertags[$node->language][] = array(
+          'value' => $tag,
+          'format' => 'plain_text'
+        );
+      }
     }
     if (isset($api['document']['info'])) {
       if (isset($api['document']['info']['x-ibm-name'])) {
@@ -897,7 +1017,7 @@ function api_updateExistingAPINode($node, $api) {
     watchdog('api_updateExistingAPINode', 'Save of Swagger to database failed with: %data', array('%data' => $e->getMessage()), WATCHDOG_NOTICE);
   }
   // if SOAP API then go get the wsdl too
-  if (isset($api['document']['x-ibm-configuration']['type']) && (strtolower($api['document']['x-ibm-configuration']['type']) == 'wsdl')) {
+  if (isset($api['document']['x-ibm-configuration']['type']) && (mb_strtolower($api['document']['x-ibm-configuration']['type']) == 'wsdl')) {
     $catalog_config = unserialize(variable_get('ibm_apim_catalog_config'));
 
     $url = $catalog_config['url'] . '/apis/' . $api['id'] . '/wsdl?type=portal';
@@ -944,7 +1064,7 @@ function api_updateExistingAPINode($node, $api) {
       }
 
       $blob = mb_substr($data, 0, 5);
-      if (strpos($blob, 'PK') !== FALSE) {
+      if (mb_strpos($blob, 'PK') !== FALSE) {
         $data = _api_get_string_from_zip($data);
       }
       $serialized = filter_xss(serialize($data));
@@ -1101,13 +1221,14 @@ function api_save_legacydoc($apiID, $docid, $data) {
         $fileparts = explode('=', $data->headers['Content-Disposition']);
         $filename = end($fileparts);
         $filename = str_replace(array('\'', '"'), '', $filename);
-        if (strlen($filename) > 100) {
+        if (mb_strlen($filename) > 100) {
           $filenameparts = explode('.', $filename);
           if (isset($filenameparts[1])) {
-            $filename = substr ( $filename , 0 , 96 );
-            $filename = $filename.'.'.$filenameparts[1];
-          } else {
-            $filename = substr ( $filename , 0 , 100 );
+            $filename = mb_substr($filename, 0, 96);
+            $filename = $filename . '.' . $filenameparts[1];
+          }
+          else {
+            $filename = mb_substr($filename, 0, 100);
           }
         }
         $filename = urlencode($filename);
@@ -1555,10 +1676,6 @@ function _api_document_proxy_callback($encodedurl) {
  * @param $apiref
  */
 function _api_wsdl_proxy_callback($apiref) {
-  // Make sure we have the session variables set
-  _ibm_apim_check_and_get_config();
-  $apim_session = &_ibm_apim_get_apim_session();
-
   $org = ibm_apim_get_current_developer_org();
   $developerOrgs = $org['id'];
   if (isset($developerOrgs)) {
@@ -1607,8 +1724,8 @@ function _api_get_string_from_zip($data) {
     foreach ($files as $fileinfo) {
       $filename = $fileinfo->getFilename();
       $pathname = $fileinfo->getPathname();
-      $fourcharext = strtolower(substr($filename, -4));
-      $threecharext = strtolower(substr($filename, -3));
+      $fourcharext = mb_strtolower(mb_substr($filename, -4));
+      $threecharext = mb_strtolower(mb_substr($filename, -3));
       if ($fourcharext == "wsdl" || $threecharext == "xml" || $threecharext == "xsd") {
         $draft .= $filename . '\n';
         $handle = fopen($pathname, "r");
@@ -1687,6 +1804,7 @@ function _api_get_ibm_fields() {
     'api_updated',
     'api_ibmconfiguration',
     'api_attachments',
+    'api_swaggertags',
     'field_apirating',
     'field_apitags'
   );
@@ -1713,7 +1831,7 @@ function _api_get_custom_fields() {
  */
 function api_tag_to_class($tagName) {
   $asInt = 0;
-  for ($i = 0; $i < strlen($tagName); $i++) {
+  for ($i = 0; $i < mb_strlen($tagName); $i++) {
     $asInt += ord($tagName[$i]);
   }
   $asInt = $asInt % 19;
@@ -1728,7 +1846,7 @@ function api_tag_to_class($tagName) {
  */
 function api_random_image($apiName) {
   $asInt = 0;
-  for ($i = 0; $i < strlen($apiName); $i++) {
+  for ($i = 0; $i < mb_strlen($apiName); $i++) {
     $asInt += ord($apiName[$i]);
   }
   $digit = $asInt % 19;
@@ -1753,8 +1871,9 @@ function api_updateAPINode($api) {
     $results = $query->execute();
 
     if (isset($results['node'])) {
-      $keys = array_keys($results['node']);
-      $node = node_load($keys[0]);
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
       api_updateExistingAPINode($node, $api);
     }
   }
