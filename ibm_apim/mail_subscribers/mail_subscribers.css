@@ -64,5 +64,5 @@ form.mail-subscribers-preview .mail-subscribers-preview-value {
 
 #mail-subscribers-preview-headers, #mail-subscribers-preview-attachments {
   height: 80px;
-  font-family: monospace;
+  font-family: "DejaVu Sans Mono", monospace, sans-serif;
 }

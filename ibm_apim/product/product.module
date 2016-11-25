@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * IBM API Connect Integration
@@ -159,6 +169,13 @@ function product_menu() {
     'access callback' => TRUE,
     'type' => MENU_CALLBACK
   );
+  $items['product/select/%'] = array(
+    'title' => 'Select Product',
+    'page callback' => 'product_multiple_select_api',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK
+  );
   $items['productapi/%/%'] = array(
     'title' => 'View API',
     'page callback' => 'product_view_api',
@@ -229,7 +246,7 @@ function product_collection_callback($productid = NULL) {
       $nid = $first->nid;
       $node = node_load($nid);
       if (product_check_product_access($node)) {
-        drupal_goto('node/' . $node->nid, array('query' => array('nocache' => 1)));
+        drupal_goto('node/' . $node->nid);
       }
       else {
         drupal_set_message(t('The specified product could not be found or you do not have permission to access it.'), 'error');
@@ -282,26 +299,95 @@ function product_view_api($productid, $apiref) {
         $node = node_load($nid);
         // set product id in the session so we can access it in the api display code
         $apim_session['productid'] = $productid;
-        drupal_goto('node/' . $node->nid, array('query' => array('nocache' => 1)));
+        drupal_goto('node/' . $node->nid);
       }
       else {
         drupal_set_message(t('The specified API could not be found or you do not have permission to access it.'), 'error');
-        drupal_goto('node/' . $productid, array('query' => array('nocache' => 1)));
+        drupal_goto('node/' . $productid);
       }
     }
     else {
       drupal_set_message(t('The specified API could not be found or you do not have permission to access it.'), 'error');
-      drupal_goto('node/' . $productid, array('query' => array('nocache' => 1)));
+      drupal_goto('node/' . $productid);
     }
   }
   else {
     drupal_set_message(t('The specified product could not be found or you do not have permission to access it.'), 'error');
-    drupal_goto('node/' . $productid, array('query' => array('nocache' => 1)));
+    drupal_goto('node/' . $productid);
   }
 }
 
-//Creates or updates an existing node. Returns true if a new node was
-//created or false if an existing one was updated.
+/**
+ * Method used to get a specific API in the context of a specific product
+ * @param $apinid
+ * @return array
+ * @throws \Exception
+ */
+function product_multiple_select_api($apinid) {
+  $build = array();
+  $apim_session = &_ibm_apim_get_apim_session();
+  // set so that drupal_set_message actually works
+  drupal_page_is_cacheable(FALSE);
+
+  if (in_array($apinid, api_list_apis())) {
+    $api = node_load($apinid);
+    if (isset($api)) {
+      $allowed_products = product_list_products();
+      $prod_nids = array();
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'product')
+        ->fieldCondition('product_apis', 'value', $api->api_ref[$api->language][0]['value'], 'CONTAINS');
+      $results = $query->execute();
+      if (isset($results['node'])) {
+        foreach ($results['node'] as $item) {
+          if (in_array($item->nid, $allowed_products)) {
+            $prod_nids[] = $item->nid;
+          }
+        }
+      }
+      $limit = variable_get('default_nodes_main', 10);
+
+      // handle paging
+      $page = pager_find_page();
+      $total = count($prod_nids);
+      $offset = $limit * $page;
+      $chunk = array_slice($prod_nids, $offset, $limit);
+      pager_default_initialize($total, $limit);
+
+      $finalnodes = node_load_multiple($chunk);
+
+      if ($finalnodes) {
+        $build = array(
+          'content' => node_view_multiple($finalnodes),
+          'pager' => array('#markup' => theme('pager'), '#weight' => $limit)
+        );
+        array_unshift($build, array(
+          '#type' => 'markup',
+          '#markup' => '<h4>' . t('This API is in more than one Product. Select one from the list below.') . '</h4>',
+        ));
+      }
+      else {
+        drupal_set_message(t('No products containing this API have been found.'), 'warning');
+      }
+    }
+    else {
+      drupal_set_message(t('No API found.'), 'warning');
+    }
+  }
+  else {
+    drupal_set_message(t('Access denied.'), 'warning');
+  }
+
+  return $build;
+}
+
+/**
+ * Creates or updates an existing node. Returns true if a new node was
+ * created or false if an existing one was updated.
+ * @param $product
+ * @return bool
+ */
 function product_createOrUpdateProduct($product) {
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
@@ -326,6 +412,7 @@ function product_createOrUpdateProduct($product) {
 }
 
 /**
+ * Create a new product node
  * @param $product
  * @return mixed
  * @throws \Exception
@@ -530,13 +617,19 @@ function _product_createNewProductNode($product) {
   $node->product_visibility_custom_orgs[$node->language] = array();
   if (isset($product['visibility']['view']['type']) && $product['visibility']['view']['type'] == 'custom' && isset($product['visibility']['view']['orgs'])) {
     foreach ($product['visibility']['view']['orgs'] as $org) {
-      $node->product_visibility_custom_orgs[$node->language][] = array('value' => $org, 'format' => 'plain_text');
+      $node->product_visibility_custom_orgs[$node->language][] = array(
+        'value' => $org,
+        'format' => 'plain_text'
+      );
     }
   }
   $node->product_visibility_custom_tags[$node->language] = array();
   if (isset($product['visibility']['view']['type']) && $product['visibility']['view']['type'] == 'custom' && isset($product['visibility']['view']['tags'])) {
     foreach ($product['visibility']['view']['tags'] as $tag) {
-      $node->product_visibility_custom_tags[$node->language][] = array('value' => $tag, 'format' => 'plain_text');
+      $node->product_visibility_custom_tags[$node->language][] = array(
+        'value' => $tag,
+        'format' => 'plain_text'
+      );
     }
   }
   $node->product_url[$node->language][] = array(
@@ -579,7 +672,7 @@ function _product_createNewProductNode($product) {
     );
   }
   $node->product_data[$node->language][] = array(
-    'value' => yaml_emit($product['document']),
+    'value' => yaml_emit($product['document'], YAML_UTF8_ENCODING),
     'format' => 'plain_text'
   );
   $node = node_submit($node); // Prepare node for saving
@@ -696,13 +789,19 @@ function _product_updateExistingProductNode($node, $product) {
   $node->product_visibility_custom_orgs[$node->language] = array();
   if (isset($product['visibility']['view']['type']) && $product['visibility']['view']['type'] == 'custom' && isset($product['visibility']['view']['orgs'])) {
     foreach ($product['visibility']['view']['orgs'] as $org) {
-      $node->product_visibility_custom_orgs[$node->language][] = array('value' => $org, 'format' => 'plain_text');
+      $node->product_visibility_custom_orgs[$node->language][] = array(
+        'value' => $org,
+        'format' => 'plain_text'
+      );
     }
   }
   $node->product_visibility_custom_tags[$node->language] = array();
   if (isset($product['visibility']['view']['type']) && $product['visibility']['view']['type'] == 'custom' && isset($product['visibility']['view']['tags'])) {
     foreach ($product['visibility']['view']['tags'] as $tag) {
-      $node->product_visibility_custom_tags[$node->language][] = array('value' => $tag, 'format' => 'plain_text');
+      $node->product_visibility_custom_tags[$node->language][] = array(
+        'value' => $tag,
+        'format' => 'plain_text'
+      );
     }
   }
   $node->product_url[$node->language][0]['value'] = $product['url'];
@@ -729,9 +828,37 @@ function _product_updateExistingProductNode($node, $product) {
   else {
     $node->product_apis[$node->language][0]['value'] = NULL;
   }
-  $node->product_data[$node->language][0]['value'] = yaml_emit($product['document']);
+  $node->product_data[$node->language][0]['value'] = yaml_emit($product['document'], YAML_UTF8_ENCODING);
   node_save($node);
 }
+
+/**
+ * return the nids of the apis in this product
+ * @param $productnid
+ * @return array
+ */
+function product_get_apis($productnid) {
+  $productnode = node_load($productnid);
+  $product_yaml = yaml_parse($productnode->product_data[$productnode->language][0]['value']);
+  $api_nids = array();
+  if (isset($product_yaml) && is_array($product_yaml['apis'])) {
+    foreach ($product_yaml['apis'] as $apiref) {
+      // find the api matching this ref
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'api')
+        ->fieldCondition('api_ref', 'value', $apiref['name'])
+        ->pager(0); // intentionally disable paging on this request
+      $results = $query->execute();
+      if (isset($results['node'])) {
+        $first = array_shift($results['node']);
+        $api_nids[] = $first->nid;
+      }
+    }
+  }
+  return $api_nids;
+}
+
 
 /**
  * Implements hook_preprocess_node().
@@ -837,6 +964,8 @@ function product_preprocess_node(&$variables) {
       else {
         $variables['apps'] = array();
       }
+      $docpages = product_get_linked_pages($variables['node']->nid);
+      $variables['docpages'] = $docpages;
     }
   }
 }
@@ -891,7 +1020,10 @@ function product_parse_rate_limit($value) {
           return t('@quantity per hour', array('@quantity' => $quantity));
         }
         else {
-          return t('@quantity per @periodcount hours', array('@quantity' => $quantity, '@periodcount' => $periodcount));
+          return t('@quantity per @periodcount hours', array(
+            '@quantity' => $quantity,
+            '@periodcount' => $periodcount
+          ));
         }
         break;
       case 'day':
@@ -899,7 +1031,10 @@ function product_parse_rate_limit($value) {
           return t('@quantity per day', array('@quantity' => $quantity));
         }
         else {
-          return t('@quantity per @periodcount days', array('@quantity' => $quantity, '@periodcount' => $periodcount));
+          return t('@quantity per @periodcount days', array(
+            '@quantity' => $quantity,
+            '@periodcount' => $periodcount
+          ));
         }
         break;
       case 'week':
@@ -907,7 +1042,10 @@ function product_parse_rate_limit($value) {
           return t('@quantity per week', array('@quantity' => $quantity));
         }
         else {
-          return t('@quantity per @periodcount weeks', array('@quantity' => $quantity, '@periodcount' => $periodcount));
+          return t('@quantity per @periodcount weeks', array(
+            '@quantity' => $quantity,
+            '@periodcount' => $periodcount
+          ));
         }
         break;
     }
@@ -1349,6 +1487,56 @@ function product_list_products() {
 }
 
 /**
+ * Get all the doc pages that are listed as being linked to a given Product NID
+ * @param $apinid
+ * @return array
+ */
+function product_get_linked_pages($apinid) {
+  $finalnids = array();
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'page')
+    ->fieldCondition('field_all_products', 'value', 1);
+  $results = $query->execute();
+  if (isset($results) && isset($results['node'])) {
+    foreach ($results['node'] as $item) {
+      $finalnids[] = $item->nid;
+    }
+  }
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'page')
+    ->fieldCondition('field_products', 'target_id', $apinid);
+  $results = $query->execute();
+  if (isset($results) && isset($results['node'])) {
+    foreach ($results['node'] as $item) {
+      $finalnids[] = $item->nid;
+    }
+  }
+  return array_unique($finalnids, SORT_NUMERIC);
+}
+
+/**
+ * @param null $ref
+ * @return bool
+ */
+function product_get_nid_from_ref($ref = NULL) {
+  $nid = FALSE;
+  if (isset($ref)) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'product')
+      ->fieldCondition('product_ref', 'value', $ref);
+    $results = $query->execute();
+    if (isset($results['node'])) {
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+    }
+  }
+  return $nid;
+}
+
+/**
  * Check if we have access to specified product Node
  * @param $node
  * @return bool
@@ -1524,6 +1712,10 @@ function _product_path_param_to_arg($arg) {
   return $arg;
 }
 
+/**
+ * returns a list of all our custom fields
+ * @return array
+ */
 function _product_get_ibm_fields() {
   $ibmfields = array(
     'product_apimhostname',
@@ -1555,12 +1747,14 @@ function _product_get_ibm_fields() {
     'product_state',
     'product_attachments',
     'field_productrating',
-    'field_producttags'
+    'field_producttags',
+    'title_field'
   );
   return $ibmfields;
 }
 
 /**
+ * Get the instance info for all our fields
  * @return array
  */
 function _product_get_custom_fields() {
@@ -1572,6 +1766,10 @@ function _product_get_custom_fields() {
   return $diff;
 }
 
+/**
+ * Wrapper script to update an existing product node
+ * @param $product
+ */
 function product_updateProductNode($product) {
   if (isset($product)) {
     $query = new EntityFieldQuery();
@@ -1590,6 +1788,10 @@ function product_updateProductNode($product) {
   }
 }
 
+/**
+ * Delete the specified product node
+ * @param $nid
+ */
 function product_deleteProductNode($nid) {
   _ibm_apim_delete_popular_block($nid);
   node_delete($nid);

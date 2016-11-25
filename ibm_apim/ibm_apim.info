@@ -14,6 +14,9 @@ files[] = tests/apic_test_helper_functions.php
 dependencies[] = entity
 dependencies[] = text
 dependencies[] = image
+dependencies[] = list
+dependencies[] = entityreference
+dependencies[] = field_group
 
 scripts[] = js/dropit.js
 scripts[] = js/hideShowPassword.js

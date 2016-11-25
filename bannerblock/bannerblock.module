@@ -1,5 +1,16 @@
 <?php
 
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 /**
  * * Implements hook_bean_types_api_info().
  */
@@ -13,16 +24,73 @@ function bannerblock_bean_types_api_info() {
 function bannerblock_bean_types() {
   $plugins = array();
   $plugins['banner_block'] = array(
-      'label' => t('Banner'),
-      'description' => t('A welcome banner block.'),
-      'handler' => array(
-          'class' => 'BannerBlockBean',
-          'parent' => 'bean',
-          'path' => drupal_get_path('module', 'bannerblock') . '/plugins/bean',
-          'file' => 'bannerblock.banner_block.inc',
-      ),
+    'label' => t('Banner'),
+    'description' => t('A welcome banner block.'),
+    'handler' => array(
+      'class' => 'BannerBlockBean',
+      'parent' => 'bean',
+      'path' => drupal_get_path('module', 'bannerblock') . '/plugins/bean',
+      'file' => 'bannerblock.banner_block.inc',
+    ),
   );
   return $plugins;
 }
 
-?>
+/**
+ * Implementation of hook_form_alter()
+ *
+ * @param $form
+ * @param $form_state
+ * @param $form_id
+ */
+function bannerblock_form_alter(&$form, &$form_state, $form_id) {
+  switch ($form_id) {
+    case 'bean_form' :
+      $bean = $form['bean']['#value'];
+      if (isset($bean) && isset($bean->type) && $bean->type == 'banner_block') {
+        if (isset($form['title'])) {
+          unset($form['title']);
+        }
+        if ($form['view_mode']) {
+          unset($form['view_mode']);
+          $form['view_mode'] = array(
+            '#type' => 'hidden',
+            '#value' => 'default'
+          );
+        }
+        if (isset($bean->bannercontent)) {
+          foreach ($bean->bannercontent as $lang => $value) {
+            if ($lang == 'und') {
+              if (!isset($form['bannercontent']['en'])) {
+                $form['bannercontent']['en'] = array(0 => array());
+              }
+              $form['bannercontent']['en'][0]['#default_value'] = $value[0]['value'];
+            }
+            else {
+              if (!isset($form['bannercontent'][$lang])) {
+                $form['bannercontent'][$lang] = array(0 => array());
+              }
+              $form['bannercontent'][$lang][0]['#default_value'] = $value[0]['value'];
+            }
+          }
+        }
+        if (isset($bean->bannertitle)) {
+          foreach ($bean->bannertitle as $lang => $value) {
+            if ($lang == 'und') {
+              if (!isset($form['bannertitle']['en'])) {
+                $form['bannertitle']['en'] = array(0 => array());
+              }
+              $form['bannertitle']['en'][0]['#default_value'] = $value[0]['value'];
+            }
+            else {
+              if (!isset($form['bannertitle'][$lang])) {
+                $form['bannertitle'][$lang] = array(0 => array());
+              }
+              $form['bannertitle'][$lang][0]['#default_value'] = $value[0]['value'];
+            }
+          }
+        }
+      }
+      break;
+  }
+}

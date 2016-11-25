@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * IBM API Connect Integration
@@ -162,6 +172,10 @@ function devorg_preprocess_search_result(&$variables) {
   }
 }
 
+/**
+ * returns a list of all our custom fields
+ * @return array
+ */
 function _devorg_get_ibm_fields() {
   $ibmfields = array(
     'devorg_id',
@@ -171,12 +185,14 @@ function _devorg_get_ibm_fields() {
     'devorg_providerid',
     'devorg_environmentid',
     'devorg_owner',
-    'devorg_tags'
+    'devorg_tags',
+    'title_field'
   );
   return $ibmfields;
 }
 
 /**
+ * Get the instance info for all our fields
  * @return array
  */
 function _devorg_get_custom_fields() {
@@ -188,8 +204,12 @@ function _devorg_get_custom_fields() {
   return $diff;
 }
 
-//Creates or updates an existing node. Returns true if a new node was
-//created or false if an existing one was updated.
+/**
+ * Creates or updates an existing node. Returns true if a new node was
+ * created or false if an existing one was updated.
+ * @param $devorg
+ * @return bool
+ */
 function devorg_createOrUpdateDevorg($devorg) {
   $createdOrUpdated = FALSE;
   $ref = $devorg['id'];
@@ -216,6 +236,7 @@ function devorg_createOrUpdateDevorg($devorg) {
 }
 
 /**
+ * Create a new devorg node
  * @param $consumer
  * @throws \Exception
  */
@@ -296,6 +317,7 @@ function devorg_createNewDevorgNode($consumer) {
 }
 
 /**
+ * Update existing devorg node
  * @param $node
  * @param $consumer
  * @throws \Exception
@@ -323,6 +345,7 @@ function devorg_updateExistingDevorgNode($node, $consumer) {
 }
 
 /**
+ * Wrapper script to update an existing devorg
  * @param $consumer
  */
 function devorg_updateDevorgNode($consumer) {

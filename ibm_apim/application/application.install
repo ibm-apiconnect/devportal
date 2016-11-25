@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2015, 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -36,83 +46,99 @@ function _application_installed_fields() {
     'application_apimhostname' => array(
       'field_name' => 'application_apimhostname',
       'label' => t('APIC Hostname'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'application_providerid' => array(
       'field_name' => 'application_providerid',
       'label' => t('Provider ID'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'application_environmentid' => array(
       'field_name' => 'application_environmentid',
       'label' => t('Environment ID'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'application_apiid' => array(
       'field_name' => 'application_apiid',
       'label' => t('ID'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'application_description' => array(
       'field_name' => 'application_description',
       'label' => t('Description'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'application_orgid' => array(
       'field_name' => 'application_orgid',
       'label' => t('Organization ID'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'application_enabled' => array(
       'field_name' => 'application_enabled',
       'label' => t('Enabled'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'application_image' => array(
       'field_name' => 'application_image',
       'label' => t('Image'),
       'type' => 'image',
-      'module' => 'image'
+      'module' => 'image',
+      'translatable' => FALSE
     ),
     'application_oauthredirecturi' => array(
       'field_name' => 'application_oauthredirecturi',
       'label' => t('OAuth Redirect URL'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'application_url' => array(
       'field_name' => 'application_url',
       'label' => t('URL'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'application_state' => array(
       'field_name' => 'application_state',
       'label' => t('State'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'application_updated' => array(
       'field_name' => 'application_updated',
       'label' => t('Updated'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'application_data' => array(
       'field_name' => 'application_data',
       'label' => t('Data'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'application_credentials' => array(
       'field_name' => 'application_credentials',
       'label' => t('Credentials'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'application_subscriptions' => array(
       'field_name' => 'application_subscriptions',
       'label' => t('Subscriptions'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'application_etag' => array(
       'field_name' => 'application_etag',
       'label' => t('ETag'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     )
   );
 }
@@ -371,24 +397,25 @@ function _application_delete_node_content($type) {
  * Update code to handle upgrade from earlier version
  */
 function application_update_7400() {
+  $type = 'application';
   $fields = field_info_field_map();
   foreach (_application_installed_fields() as $field) {
     if (!array_key_exists($field['field_name'], $fields)) {
       $field_info = field_info_field($field['field_name']);
       if (!isset($field_info) || empty($field_info)) {
         field_create_field($field);
-        watchdog('application', 'Field %field_name has been successfully added', array(
+        watchdog($type, 'Field %field_name has been successfully added', array(
           '%field_name' => $field['field_name']
         ));
       }
       else {
-        watchdog('application', 'Field %field_name already exists although instance doesnt', array(
+        watchdog($type, 'Field %field_name already exists although instance doesnt', array(
           '%field_name' => $field['field_name']
         ));
       }
     }
     else {
-      watchdog('application', 'Field %field_name already exists', array(
+      watchdog($type, 'Field %field_name already exists', array(
         '%field_name' => $field['field_name']
       ));
     }
@@ -397,15 +424,15 @@ function application_update_7400() {
   foreach (_application_installed_instances() as $fieldinstance) {
     if (!array_key_exists($fieldinstance['field_name'], $fields)) {
       $fieldinstance['entity_type'] = 'node';
-      $fieldinstance['bundle'] = 'application';
+      $fieldinstance['bundle'] = $type;
       field_create_instance($fieldinstance);
-      watchdog('application', 'Instance %instance_name has been successfully added', array(
+      watchdog($type, 'Instance %instance_name has been successfully added', array(
         '%instance_name' => $fieldinstance['field_name']
       ));
     }
     else {
       // Fetch existing instance
-      $instance_info = field_info_instance('node', $fieldinstance['field_name'], 'application');
+      $instance_info = field_info_instance('node', $fieldinstance['field_name'], $type);
       if (isset($instance_info)) {
         // ensure all view modes are set
         foreach ($fieldinstance['display'] as $key => $value) {
@@ -416,7 +443,7 @@ function application_update_7400() {
         // Write the changed instance back.
         field_update_instance($instance_info);
       }
-      watchdog('application', 'Instance %instance_name already exists', array(
+      watchdog($type, 'Instance %instance_name already exists', array(
         '%instance_name' => $fieldinstance['field_name']
       ));
     }
@@ -430,7 +457,7 @@ function application_update_7400() {
         try {
           field_delete_field($field_name);
           field_delete_instance($field_name);
-          watchdog('application', 'Field %field_name has been successfully removed', array(
+          watchdog($type, 'Field %field_name has been successfully removed', array(
             '%field_name' => $field_name
           ));
         } catch (Exception $e) {

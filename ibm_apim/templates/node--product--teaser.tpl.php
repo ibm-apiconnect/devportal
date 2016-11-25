@@ -27,7 +27,8 @@
             </div>
           <?php elseif ($showplaceholders != 0): ?>
             <div class="apimIcon">
-              <div class="field field-name-product-image field-type-image field-label-hidden view-mode-teaser">
+              <div
+                class="field field-name-product-image field-type-image field-label-hidden view-mode-teaser">
                 <div class="field-items">
                   <figure class="clearfix field-item even">
                     <img typeof="foaf:Image" class="image-style-none"
@@ -55,19 +56,13 @@
             </h2>
             <div class="apimDescriptionContainer">
               <div class="apimSummaryDescription markdown">
-
-              <?php
-              if (isset($product_description[0]['safe_value']) && !empty($product_description[0]['safe_value'])) {
-                print '<div class="apimFade" title="' . $product_description[0]['safe_value'] . '">';
-                if (module_exists('markdown')) {
-                  print _filter_markdown($product_description[0]['safe_value'], NULL);
+                <?php
+                if (isset($product_description[0]['safe_value']) && !empty($product_description[0]['safe_value'])) {
+                  print '<div class="apimFade" title="' . $product_description[0]['safe_value'] . '">';
+                  print ibm_apim_markdown_field($product_description[0]['safe_value']);
+                  print '</div>';
                 }
-                else {
-                  print '<p>' . $product_description[0]['safe_value'] . '</p>';
-                }
-                print '</div>';
-              }
-              ?>
+                ?>
               </div>
             </div>
             <div class="extraFields">

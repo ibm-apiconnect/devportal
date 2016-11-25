@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -38,83 +48,99 @@ function _product_installed_fields() {
     'product_apimhostname' => array(
       'field_name' => 'product_apimhostname',
       'label' => t('APIC Hostname'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'product_providerid' => array(
       'field_name' => 'product_providerid',
       'label' => t('Provider ID'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'product_environmentid' => array(
       'field_name' => 'product_environmentid',
       'label' => t('Environment ID'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'product_id' => array(
       'field_name' => 'product_id',
       'label' => t('ID'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'product_ref' => array(
       'field_name' => 'product_ref',
       'label' => t('Reference'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'product_name' => array(
       'field_name' => 'product_name',
       'label' => t('Name'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'product_version' => array(
       'field_name' => 'product_version',
       'label' => t('Version'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'product_image' => array(
       'field_name' => 'product_image',
       'label' => t('Image'),
       'type' => 'image',
-      'module' => 'image'
+      'module' => 'image',
+      'translatable' => FALSE
     ),
     'product_description' => array(
       'field_name' => 'product_description',
       'label' => t('Description'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'product_contact_name' => array(
       'field_name' => 'product_contact_name',
       'label' => t('Contact Name'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'product_contact_email' => array(
       'field_name' => 'product_contact_email',
       'label' => t('Contact Email'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'product_contact_url' => array(
       'field_name' => 'product_contact_url',
       'label' => t('Contact URL'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'product_license_name' => array(
       'field_name' => 'product_license_name',
       'label' => t('License Name'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'product_license_url' => array(
       'field_name' => 'product_license_url',
       'label' => t('License URL'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'product_terms_of_service' => array(
       'field_name' => 'product_terms_of_service',
       'label' => t('Terms of Service'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'product_visibility' => array(
       'field_name' => 'product_visibility',
       'label' => t('Visibility'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'product_view_enabled' => array(
       'field_name' => 'product_view_enabled',
@@ -123,7 +149,8 @@ function _product_installed_fields() {
       'cardinality' => 1,
       'settings' => array(
         'allowed_values' => array(0 => 'Off', 1 => 'On')
-      )
+      ),
+      'translatable' => FALSE
     ),
     'product_subscribe_enabled' => array(
       'field_name' => 'product_subscribe_enabled',
@@ -132,7 +159,8 @@ function _product_installed_fields() {
       'cardinality' => 1,
       'settings' => array(
         'allowed_values' => array(0 => 'Off', 1 => 'On')
-      )
+      ),
+      'translatable' => FALSE
     ),
     'product_visibility_public' => array(
       'field_name' => 'product_visibility_public',
@@ -141,7 +169,8 @@ function _product_installed_fields() {
       'cardinality' => 1,
       'settings' => array(
         'allowed_values' => array(0 => 'Off', 1 => 'On')
-      )
+      ),
+      'translatable' => FALSE
     ),
     'product_visibility_authenticated' => array(
       'field_name' => 'product_visibility_authenticated',
@@ -150,44 +179,52 @@ function _product_installed_fields() {
       'cardinality' => 1,
       'settings' => array(
         'allowed_values' => array(0 => 'Off', 1 => 'On')
-      )
+      ),
+      'translatable' => FALSE
     ),
     'product_visibility_custom_orgs' => array(
       'field_name' => 'product_visibility_custom_orgs',
       'label' => t('Custom visibility orgs'),
       'type' => 'text_long',
       'cardinality' => -1,
+      'translatable' => FALSE
     ),
     'product_visibility_custom_tags' => array(
       'field_name' => 'product_visibility_custom_tags',
       'label' => t('Custom visibility tags'),
       'type' => 'text_long',
       'cardinality' => -1,
+      'translatable' => FALSE
     ),
     'product_apis' => array(
       'field_name' => 'product_apis',
       'label' => t('APIs'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'product_plans' => array(
       'field_name' => 'product_plans',
       'label' => t('Plans'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'product_state' => array(
       'field_name' => 'product_state',
       'label' => t('State'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'product_url' => array(
       'field_name' => 'product_url',
       'label' => t('URL'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'product_data' => array(
       'field_name' => 'product_data',
       'label' => t('Data'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'product_attachments' => array(
       'field_name' => 'product_attachments',
@@ -195,7 +232,8 @@ function _product_installed_fields() {
       'type' => 'file',
       'module' => 'file',
       'cardinality' => 10,
-      'settings' => array('display_field' => 1, 'display_default' => 1)
+      'settings' => array('display_field' => 1, 'display_default' => 1),
+      'translatable' => FALSE
     )
   );
 }
@@ -690,24 +728,25 @@ function _product_delete_node_content($type) {
  * Update code to handle upgrade from earlier version
  */
 function product_update_7400() {
+  $type = 'product';
   $fields = field_info_field_map();
   foreach (_product_installed_fields() as $field) {
     if (!array_key_exists($field['field_name'], $fields)) {
       $field_info = field_info_field($field['field_name']);
       if (!isset($field_info) || empty($field_info)) {
         field_create_field($field);
-        watchdog('product', 'Field %field_name has been successfully added', array(
+        watchdog($type, 'Field %field_name has been successfully added', array(
           '%field_name' => $field['field_name']
         ));
       }
       else {
-        watchdog('product', 'Field %field_name already exists although instance doesnt', array(
+        watchdog($type, 'Field %field_name already exists although instance doesnt', array(
           '%field_name' => $field['field_name']
         ));
       }
     }
     else {
-      watchdog('product', 'Field %field_name already exists', array(
+      watchdog($type, 'Field %field_name already exists', array(
         '%field_name' => $field['field_name']
       ));
     }
@@ -716,15 +755,15 @@ function product_update_7400() {
   foreach (_product_installed_instances() as $fieldinstance) {
     if (!array_key_exists($fieldinstance['field_name'], $fields)) {
       $fieldinstance['entity_type'] = 'node';
-      $fieldinstance['bundle'] = 'product';
+      $fieldinstance['bundle'] = $type;
       field_create_instance($fieldinstance);
-      watchdog('product', 'Instance %instance_name has been successfully added', array(
+      watchdog($type, 'Instance %instance_name has been successfully added', array(
         '%instance_name' => $fieldinstance['field_name']
       ));
     }
     else {
       // Fetch existing instance
-      $instance_info = field_info_instance('node', $fieldinstance['field_name'], 'product');
+      $instance_info = field_info_instance('node', $fieldinstance['field_name'], $type);
       if (isset($instance_info)) {
         // ensure all view modes are set
         foreach ($fieldinstance['display'] as $key => $value) {
@@ -735,7 +774,7 @@ function product_update_7400() {
         // Write the changed instance back.
         field_update_instance($instance_info);
       }
-      watchdog('product', 'Instance %instance_name already exists', array(
+      watchdog($type, 'Instance %instance_name already exists', array(
         '%instance_name' => $fieldinstance['field_name']
       ));
     }

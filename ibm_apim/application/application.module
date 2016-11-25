@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2015, 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * IBM API Connect Integration
@@ -112,7 +122,11 @@ function application_menu() {
     'title' => 'Verify an application secret',
     'description' => 'Form to verify an application secret.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('_application_verify_application_secret_form', 1, 3),
+    'page arguments' => array(
+      '_application_verify_application_secret_form',
+      1,
+      3
+    ),
     'menu_name' => 'ibm_apim',
     'access callback' => 'user_is_logged_in'
   );
@@ -144,7 +158,11 @@ function application_menu() {
     'title' => 'Update application client credentials',
     'description' => 'Update application client credentials.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('application_update_application_clientcreds', 1, 3),
+    'page arguments' => array(
+      'application_update_application_clientcreds',
+      1,
+      3
+    ),
     'menu_name' => 'ibm_apim',
     'access callback' => 'user_is_logged_in'
   );
@@ -152,7 +170,11 @@ function application_menu() {
     'title' => 'Delete application client credentials',
     'description' => 'Delete application client credentials.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('application_delete_application_clientcreds', 1, 3),
+    'page arguments' => array(
+      'application_delete_application_clientcreds',
+      1,
+      3
+    ),
     'menu_name' => 'ibm_apim',
     'access callback' => 'user_is_logged_in'
   );
@@ -197,7 +219,10 @@ function application_menu() {
     'title' => 'Edit application notification settings',
     'description' => 'Form to edit application notification settings.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('_application_update_notification_settings_form', 1),
+    'page arguments' => array(
+      '_application_update_notification_settings_form',
+      1
+    ),
     'menu_name' => 'ibm_apim',
     'access callback' => 'user_is_logged_in'
   );
@@ -320,12 +345,12 @@ function application_preprocess_node(&$variables) {
     $isdev = ibm_apim_check_is_developer();
     $variables['isdev'] = $isdev;
     $variables['titlelink'] = '<span class="apimTitle"> <a href="' . url("application/" . $variables['application_apiid'][0]['safe_value']) . '">' . $variables['title'] . '</a> </span>';
-    $variables['analyticslink'] = ' <a href="' . url("myorg/analytics/" . $variables['application_apiid'][0]['value']) . '" title="' . t('Analytics') . '"><i class="material-icons">equalizer</i></a>';
-    $variables['notificationsettingslink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/notifysettings") . '" title="' . t('Notification settings') . '"><i class="material-icons">notifications</i></a> ';
+    $variables['analyticslink'] = ' <a href="' . url("myorg/analytics/" . $variables['application_apiid'][0]['value']) . '" title="' . t('Analytics') . '"><i class="material-icons">equalizer</i> ' . t('Analytics') . '</a>';
+    $variables['notificationsettingslink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/notifysettings") . '" title="' . t('Notification settings') . '"><i class="material-icons">notifications</i> ' . t('Notification settings') . '</a>';
     if (isset($isdev) && $isdev == TRUE) {
-      $variables['editlink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/edit") . '" title="' . t('Edit') . '"><i class="material-icons">mode_edit</i></a> ';
-      $variables['deletelink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/delete") . '" title="' . t('Delete') . '"><i class="material-icons">delete</i></a> ';
-      $variables['addcredentialslink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/add-clientcreds") . '" title="' . t('Add credentials') . '"><i class="material-icons">add_circle</i></a> ';
+      $variables['editlink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/edit") . '" title="' . t('Edit') . '"><i class="material-icons">mode_edit</i> ' . t('Edit') . '</a>';
+      $variables['deletelink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/delete") . '" title="' . t('Delete') . '"><i class="material-icons">delete</i> ' . t('Delete') . '</a>';
+      $variables['addcredentialslink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/add-clientcreds") . '" title="' . t('Add credentials') . '"><i class="material-icons">add_circle</i> ' . t('Add credentials') . '</a>';
       $variables['uploadimagelink'] = '<span class="uploadlink"><a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/upload") . '" title="' . t('Update') . '">' . t('Update') . ' <i class="material-icons">file_upload</i></a></span>';
       $variables['removeimagelink'] = '<span class="removelink"><a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/removeimage") . '" title="' . t('Delete') . '">' . t('Delete') . ' <i class="material-icons">delete</i></a></span>';
     }
@@ -336,6 +361,15 @@ function application_preprocess_node(&$variables) {
       $variables['removeimagelink'] = '';
     }
     if ($variables['view_mode'] == 'full') {
+      // list of all user's apps
+      $appnids = application_list_applications();
+      $all_apps = array();
+      foreach ($appnids as $appnid) {
+        $appnode = node_load($appnid);
+        $all_apps[] = array('nid' => $appnode->nid, 'title' => $appnode->title);
+      }
+      $variables['all_apps'] = $all_apps;
+
       //build up array of what has been subscribed to
       if (isset($variables['application_subscriptions'][0]['value'])) {
         $subs = unserialize($variables['application_subscriptions'][0]['value']);
@@ -344,14 +378,8 @@ function application_preprocess_node(&$variables) {
           $api_nids = array();
           $planid = $sub['product'] . ':' . $sub['plan'];
           $subsarray[$planid] = array();
-          $query = new EntityFieldQuery();
-          $query->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', 'product')
-            ->fieldCondition('product_ref', 'value', $sub['product']);
-          $results = $query->execute();
-          if (isset($results['node'])) {
-            $first = array_shift($results['node']);
-            $nid = $first->nid;
+          $nid = product_get_nid_from_ref($sub['product']);
+          if (isset($nid)) {
             $productnode = node_load($nid);
             $productplans = unserialize($productnode->product_plans[$productnode->language][0]['value']);
             $product_yaml = yaml_parse($productnode->product_data[$productnode->language][0]['value']);
@@ -451,50 +479,26 @@ function application_collection_callback($appId = NULL) {
   // not after a specific app
   // return all apps owned by current dev org
   if ($appId == NULL) {
-    // user has access to everything
-    if (ibm_apim_explicit_user_access('edit any application content')) {
-      $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'application');
-      $results = $query->execute();
-    }
-    else {
-      if (isset(ibm_apim_get_current_developer_org()['id'])) {
-        $query = new EntityFieldQuery();
-        $query->entityCondition('entity_type', 'node')
-          ->entityCondition('bundle', 'application')
-          ->fieldCondition('application_orgid', 'value', ibm_apim_get_current_developer_org()['id']);
+    $nids = application_list_applications();
 
-        $results = $query->execute();
-      }
-    }
-    if (isset($results['node'])) {
-      $nids = array();
-      foreach ($results['node'] as $item) {
-        $nids[] = $item->nid;
-      }
+    // handle paging
+    $page = pager_find_page();
+    $total = count($nids);
+    $offset = $limit * $page;
+    $chunk = array_slice($nids, $offset, $limit);
+    pager_default_initialize($total, $limit);
 
-      // handle paging
-      $page = pager_find_page();
-      $total = count($nids);
-      $offset = $limit * $page;
-      $chunk = array_slice($nids, $offset, $limit);
-      pager_default_initialize($total, $limit);
-
-      $nodes = node_load_multiple($chunk);
-      if ($nodes) {
-        $build = array(
-          'content' => node_view_multiple($nodes),
-          'pager' => array('#markup' => theme('pager'), '#weight' => $limit)
-        );
-      }
-      else {
-        drupal_set_message(t('No applications have been found.'), 'warning');
-      }
+    $nodes = node_load_multiple($chunk);
+    if ($nodes) {
+      $build = array(
+        'content' => node_view_multiple($nodes),
+        'pager' => array('#markup' => theme('pager'), '#weight' => $limit)
+      );
     }
     else {
       drupal_set_message(t('No applications have been found.'), 'warning');
     }
+
   }
   else {
     // specific app
@@ -511,7 +515,7 @@ function application_collection_callback($appId = NULL) {
       if (isset($results['node'])) {
         $first = array_shift($results['node']);
         $nid = $first->nid;
-        drupal_goto('node/' . $nid, array('query' => array('nocache' => 1)));
+        drupal_goto('node/' . $nid);
       }
       else {
         drupal_set_message(t('The specified application could not be found or you do not have permission to access it.'), 'error');
@@ -526,8 +530,44 @@ function application_collection_callback($appId = NULL) {
   return $build;
 }
 
-//Creates or updates an existing node. Returns true if a new node was
-//created or false if an existing one was updated.
+/**
+ * return list of all the applications the user can access
+ * @return array
+ */
+function application_list_applications() {
+  $nids = array();
+  // user has access to everything
+  if (ibm_apim_explicit_user_access('edit any application content')) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'application');
+    $results = $query->execute();
+  }
+  else {
+    if (isset(ibm_apim_get_current_developer_org()['id'])) {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'application')
+        ->fieldCondition('application_orgid', 'value', ibm_apim_get_current_developer_org()['id']);
+
+      $results = $query->execute();
+    }
+  }
+  if (isset($results['node'])) {
+    foreach ($results['node'] as $item) {
+      $nids[] = $item->nid;
+    }
+  }
+  return $nids;
+}
+
+/**
+ * Creates or updates an existing node. Returns true if a new node was
+ * created or false if an existing one was updated.
+ *
+ * @param $application
+ * @return bool
+ */
 function application_createOrUpdateApplication($application) {
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
@@ -633,8 +673,9 @@ function application_createNewApplicationNode($app) {
   if ($app['enabled'] != TRUE && $app['enabled'] != FALSE) {
     $app['enabled'] = TRUE;
   }
+  $converted_enabled = ($app['enabled']) ? 'true' : 'false';
   $node->application_enabled[$node->language][] = array(
-    'value' => $app['enabled'],
+    'value' => $converted_enabled,
     'format' => 'plain_text'
   );
   if (isset($app['oauth-redirection-uri'])) {
@@ -741,7 +782,8 @@ function application_updateExistingApplicationNode($node, $app) {
   }
   $node->application_description[$node->language][0]['value'] = $app['description'];
   $node->application_orgid[$node->language][0]['value'] = $app['developer-organization']['id'];
-  $node->application_enabled[$node->language][0]['value'] = $app['enabled'];
+  $converted_enabled = ($app['enabled']) ? 'true' : 'false';
+  $node->application_enabled[$node->language][0]['value'] = $converted_enabled;
   $node->application_oauthredirecturi[$node->language][0]['value'] = $app['oauth-redirection-uri'];
   $node->application_url[$node->language][0]['value'] = $app['url'];
   $node->application_state[$node->language][0]['value'] = $app['state'];
@@ -755,9 +797,9 @@ function application_updateExistingApplicationNode($node, $app) {
       if (!isset($app['app-credentials'][$key]['description'])) {
         $app['app-credentials'][$key]['description'] = '';
       }
-      }
-    $node->application_credentials[$node->language][0]['value'] = serialize($app['app-credentials']);
     }
+    $node->application_credentials[$node->language][0]['value'] = serialize($app['app-credentials']);
+  }
   elseif (isset($app['credentials'])) {
     // do not store client secrets
     foreach ($app['credentials'] as $key => $cred) {
@@ -767,9 +809,9 @@ function application_updateExistingApplicationNode($node, $app) {
       if (!isset($app['credentials'][$key]['description'])) {
         $app['credentials'][$key]['description'] = '';
       }
-      }
-    $node->application_credentials[$node->language][0]['value'] = serialize($app['credentials']);
     }
+    $node->application_credentials[$node->language][0]['value'] = serialize($app['credentials']);
+  }
   else {
     $node->application_credentials[$node->language][0]['value'] = serialize(array());
   }
@@ -781,7 +823,6 @@ function application_updateExistingApplicationNode($node, $app) {
  * A function to retrieve the details for a specified application from the public portal API
  *
  * @param $appId
- *          The application id
  *
  * @return array NULL if an error occurs otherwise an array with data for the application
  */
@@ -862,7 +903,10 @@ function application_new_application_clientcreds($form, &$form_state, $appid) {
       '#required' => FALSE,
       '#theme_options' => array('description at top' => t('Optionally specify a description to describe the use of these credentials'))
     );
-    $form['appid'] = array('#type' => 'hidden', '#value' => check_plain($appid));
+    $form['appid'] = array(
+      '#type' => 'hidden',
+      '#value' => check_plain($appid)
+    );
 
     $form['submit'] = array('#type' => 'submit', '#value' => t('Submit'));
     $form['#submit'] = array('application_new_application_clientcreds_submit');
@@ -882,20 +926,22 @@ function application_new_application_clientcreds($form, &$form_state, $appid) {
  * @param $form_state
  */
 function application_new_application_clientcreds_submit($form, &$form_state) {
-  $appId = check_plain($form_state['values']['appid']);
-  $descr = check_plain($form_state['values']['description']);
+  $appId = $form_state['values']['appid'];
+  $descr = $form_state['values']['description'];
   $org = ibm_apim_get_current_developer_org();
   $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appId . '/credentials';
   $data = array("description" => $descr);
   $result = ibm_apim_post($url, json_encode($data));
   if (isset($result) && $result->code >= 200 && $result->code < 300) {
+    $data = $result->data;
+    drupal_alter('ibm_apim_application_new_application_clientcreds', $appId, $data);
     drupal_set_message(t('Application Client ID: !html_start@label!html_end', array(
-      '!html_start' => '<div id="app_id" class="appClientReset"><input class="toggle-password" id="clientID" type="password" readonly value="' . $result->data['clientID'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientID"> <label for="show-clientID">',
+      '!html_start' => '<div id="app_id" class="appClientReset"><input class="toggle-password clientID" id="clientID" type="password" readonly value="' . $data['clientID'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientID" class="show-clientID"> <label for="show-clientID">',
       '@label' => t('Show Client ID'),
       '!html_end' => '</label></div></div>'
     )));
     drupal_set_message(t('Application Client Secret: !html_start@label!html_end', array(
-      '!html_start' => '<div id="app_secret" class="appClientReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $result->data['clientSecret'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
+      '!html_start' => '<div id="app_secret" class="appClientReset"><input class="toggle-password clientSecret" id="clientSecret" type="password" readonly value="' . $data['clientSecret'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret" class="show-clientSecret"> <label for="show-clientSecret">',
       '@label' => t('Show Client Secret'),
       '!html_end' => '</label></div></div>'
     )));
@@ -918,14 +964,14 @@ function application_new_application_clientcreds_submit($form, &$form_state) {
           $existingcreds = array();
         }
         $existingcreds[] = array(
-          'id' => $result->data['id'],
-          'client-id' => $result->data['clientID'],
-          'description' => $result->data['description']
+          'id' => $data['id'],
+          'client-id' => $data['clientID'],
+          'description' => $data['description']
         );
         $node->application_credentials[$node->language][0]['value'] = serialize($existingcreds);
         node_save($node);
         // Calling all modules implementing 'hook_ibm_apim_application_creds_create':
-        module_invoke_all('ibm_apim_application_creds_create', $node, $result->data);
+        module_invoke_all('ibm_apim_application_creds_create', $node, $data);
       }
       else {
         drupal_set_message(t('The specified application could not be found to store the new credentials.'), 'error');
@@ -992,7 +1038,7 @@ function application_update_application_clientcreds($form, &$form_state, $appid,
 function application_update_application_clientcreds_submit($form, &$form_state) {
   $appId = check_plain($form_state['values']['appid']);
   $credId = check_plain($form_state['values']['credid']);
-  $descr = check_plain($form_state['values']['description']);
+  $descr = $form_state['values']['description'];
   $org = ibm_apim_get_current_developer_org();
   $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appId . '/credentials/' . $credId;
   $data = array("description" => $descr);
@@ -1048,8 +1094,14 @@ function application_update_application_clientcreds_submit($form, &$form_state) 
 function application_delete_application_clientcreds($form, &$form_state, $appid, $credid) {
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE) {
-    $confirm_form['appid'] = array('#type' => 'value', '#value' => check_plain($appid));
-    $confirm_form['credid'] = array('#type' => 'value', '#value' => check_plain($credid));
+    $confirm_form['appid'] = array(
+      '#type' => 'value',
+      '#value' => check_plain($appid)
+    );
+    $confirm_form['credid'] = array(
+      '#type' => 'value',
+      '#value' => check_plain($credid)
+    );
 
     return confirm_form($confirm_form, t('Are you sure you want to delete these client credentials?'), 'application/' . check_plain($appid), t('Are you sure you want to delete these client credentials?'), t('Delete'), t('Cancel'));
   }
@@ -1121,8 +1173,14 @@ function application_delete_application_clientcreds_submit($form, &$form_state) 
 function application_reset_application_clientid($form, &$form_state, $appid, $credid) {
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE) {
-    $confirm_form['appid'] = array('#type' => 'value', '#value' => check_plain($appid));
-    $confirm_form['credid'] = array('#type' => 'value', '#value' => check_plain($credid));
+    $confirm_form['appid'] = array(
+      '#type' => 'value',
+      '#value' => check_plain($appid)
+    );
+    $confirm_form['credid'] = array(
+      '#type' => 'value',
+      '#value' => check_plain($credid)
+    );
 
     return confirm_form($confirm_form, t('Are you sure you want to reset your client ID?'), 'application/' . check_plain($appid), t('Are you sure you want to reset your client ID? This action cannot be undone.'), t('Reset'), t('Cancel'));
   }
@@ -1146,8 +1204,10 @@ function application_reset_application_clientid_submit($form, &$form_state) {
   $data = array("clientSecret" => FALSE, "clientID" => TRUE);
   $result = ibm_apim_put($url, json_encode($data));
   if (isset($result) && $result->code >= 200 && $result->code < 300) {
+    $data = $result->data;
+    drupal_alter('ibm_apim_application_reset_application_clientid', $appId, $data);
     drupal_set_message(t('Application Client ID reset: !html_start@label!html_end', array(
-      '!html_start' => '<div id="app_secret" class="appClientReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $result->data['clientID'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
+      '!html_start' => '<div id="app_secret" class="appClientReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $data['clientID'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
       '@label' => t('Show Client ID'),
       '!html_end' => '</label></div></div>'
     )));
@@ -1167,7 +1227,7 @@ function application_reset_application_clientid_submit($form, &$form_state) {
           $existingcreds = unserialize($node->application_credentials[$node->language][0]['value']);
           foreach ($existingcreds as $key => $existingcred) {
             if (isset($existingcred['id']) && $existingcred['id'] == $credId) {
-              $existingcreds[$key]['client-id'] = $result->data['clientID'];
+              $existingcreds[$key]['client-id'] = $data['clientID'];
             }
           }
         }
@@ -1175,7 +1235,7 @@ function application_reset_application_clientid_submit($form, &$form_state) {
           $node->application_credentials[$node->language][0]['value'] = serialize($existingcreds);
           node_save($node);
           // Calling all modules implementing 'hook_ibm_apim_application_clientid_reset':
-          module_invoke_all('ibm_apim_application_clientid_reset', $node, $result->data);
+          module_invoke_all('ibm_apim_application_clientid_reset', $node, $data);
         }
       }
       else {
@@ -1200,8 +1260,14 @@ function application_reset_application_clientid_submit($form, &$form_state) {
 function application_reset_application_secret($form, &$form_state, $appid, $credid) {
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE) {
-    $confirm_form['appid'] = array('#type' => 'value', '#value' => check_plain($appid));
-    $confirm_form['credid'] = array('#type' => 'value', '#value' => check_plain($credid));
+    $confirm_form['appid'] = array(
+      '#type' => 'value',
+      '#value' => check_plain($appid)
+    );
+    $confirm_form['credid'] = array(
+      '#type' => 'value',
+      '#value' => check_plain($credid)
+    );
 
     return confirm_form($confirm_form, t('Are you sure you want to reset your client secret?'), 'application/' . check_plain($appid), t('Are you sure you want to reset your client secret? This action cannot be undone.'), t('Reset'), t('Cancel'));
   }
@@ -1225,8 +1291,10 @@ function application_reset_application_secret_submit($form, &$form_state) {
   $data = array("clientSecret" => TRUE, "clientID" => FALSE);
   $result = ibm_apim_put($url, json_encode($data));
   if (isset($result) && $result->code >= 200 && $result->code < 300) {
+    $data = $result->data;
+    drupal_alter('ibm_apim_application_reset_application_secret', $appId, $data);
     drupal_set_message(t('Application secret reset: !html_start@label!html_end', array(
-      '!html_start' => '<div id="app_secret" class="appSecretReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $result->data['clientSecret'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
+      '!html_start' => '<div id="app_secret" class="appSecretReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $data['clientSecret'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
       '@label' => t('Show Client Secret'),
       '!html_end' => '</label></div></div>'
     )));
@@ -1243,7 +1311,7 @@ function application_reset_application_secret_submit($form, &$form_state) {
     $node = node_load($nid);
   }
   // Calling all modules implementing 'hook_ibm_apim_application_clientsecret_reset':
-  module_invoke_all('ibm_apim_application_clientsecret_reset', $node, $result->data);
+  module_invoke_all('ibm_apim_application_clientsecret_reset', $node, $data);
   $form_state['redirect'] = 'application/' . $appId;
 }
 
@@ -1251,19 +1319,17 @@ function application_reset_application_secret_submit($form, &$form_state) {
  * Form to upload an image to assign to an application
  *
  * @param $form
- *          The form
- *
  * @param $form_state
- *          The form state
- *
  * @param $app_id
- *          The application ID
  * @return array
  */
 function _application_upload_application_image_form($form, &$form_state, $app_id) {
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE) {
-    $form['app_id'] = array('#type' => 'hidden', '#value' => check_plain($app_id));
+    $form['app_id'] = array(
+      '#type' => 'hidden',
+      '#value' => check_plain($app_id)
+    );
     $form['title'] = array('#markup' => '<h1>' . t('Upload application image') . '</h1>');
     $form['image'] = array(
       '#type' => 'file',
@@ -1288,10 +1354,7 @@ function _application_upload_application_image_form($form, &$form_state, $app_id
  * Submit handler to upload an application image
  *
  * @param $form
- *          The form
- *
  * @param $form_state
- *          The form state
  */
 function _application_upload_application_image_form_submit_handler($form, &$form_state) {
   // Get name of my file that was left by form validate function.
@@ -1363,7 +1426,10 @@ function _application_verify_application_secret_form($form, &$form_state, $appId
     '#required' => TRUE
   );
   $form['appid'] = array('#type' => 'hidden', '#value' => check_plain($appId));
-  $form['credid'] = array('#type' => 'hidden', '#value' => check_plain($credId));
+  $form['credid'] = array(
+    '#type' => 'hidden',
+    '#value' => check_plain($credId)
+  );
   $form['submit'] = array('#type' => 'submit', '#value' => t('Submit'));
   $form['#submit'] = array('_application_verify_application_secret_form_submit_handler');
   return $form;
@@ -1373,14 +1439,8 @@ function _application_verify_application_secret_form($form, &$form_state, $appId
  * Form to allow user to edit their application details.
  *
  * @param $form
- *          The form
- *
  * @param $form_state
- *          The form state
- *
  * @param $appId
- *          The application ID to edit
- *
  * @return array The form
  */
 function _application_edit_application_form($form, &$form_state, $appId = NULL) {
@@ -1419,6 +1479,7 @@ function _application_edit_application_form($form, &$form_state, $appId = NULL) 
     if (isset($node)) {
       $form = drupal_get_form('application_node_form', $node);
       $form_state = form_state_defaults();
+
       if (empty($form_state['build_info']['files']) || !in_array('modules/node/node.pages.inc', $form_state['build_info']['files'])) {
         form_load_include($form_state, 'inc', 'node', 'node.pages');
       }
@@ -1479,17 +1540,14 @@ function _application_edit_application_form($form, &$form_state, $appId = NULL) 
  * Submit handler for the application edit form.
  *
  * @param $form
- *          The form
- *
  * @param $form_state
- *          The form state
  */
 function _application_edit_application_form_submit_handler($form, &$form_state) {
-  $name = check_plain($form_state['input']['title']);
-  $description = check_plain($form_state['input']['application_description']['und'][0]['value']);
-  $oauthurl = check_plain($form_state['input']['application_oauthredirecturi']['und'][0]['value']);
-  $developer_org = check_plain($form_state['input']['developerorg']);
-  $app_id = check_plain($form_state['input']['appid']);
+  $name = $form_state['input']['title_field']['und'][0]['value'];
+  $description = $form_state['input']['application_description']['und'][0]['value'];
+  $oauthurl = $form_state['input']['application_oauthredirecturi']['und'][0]['value'];
+  $developer_org = $form_state['input']['developerorg'];
+  $app_id = $form_state['input']['appid'];
   if (!isset($name) || empty($name)) {
     drupal_set_message(t('ERROR: Title is a required field.'), 'error');
     $form_state['redirect'] = 'application/' . $app_id;
@@ -1528,6 +1586,15 @@ function _application_edit_application_form_submit_handler($form, &$form_state) 
         $node->application_oauthredirecturi[$node->language][0]['value'] = $oauthurl;
         $node->application_oauthredirecturi[$node->language][0]['safe_version'] = $oauthurl;
         node_save($node);
+        $customfields = _application_get_custom_fields();
+        foreach ($customfields as $customfield) {
+          if (isset($form_state['input'][$customfield])) {
+            $node->$customfield = $form_state['input'][$customfield];
+          }
+        }
+        if (count($customfields) > 0) {
+          node_save($node);
+        }
       }
       drupal_set_message(t('Application updated successfully.'));
       $form_state['redirect'] = 'application/' . $app_id;
@@ -1544,15 +1611,12 @@ function _application_edit_application_form_submit_handler($form, &$form_state) 
  * Application secret verification form submit handler.
  *
  * @param $form
- *          The form
- *
  * @param $form_state
- *          The form state
  */
 function _application_verify_application_secret_form_submit_handler($form, &$form_state) {
-  $secret = check_plain($form_state['values']['secret']);
-  $appid = check_plain($form_state['values']['appid']);
-  $credid = check_plain($form_state['values']['credid']);
+  $secret = $form_state['values']['secret'];
+  $appid = $form_state['values']['appid'];
+  $credid = $form_state['values']['credid'];
   $org = ibm_apim_get_current_developer_org();
   $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appid . '/credentials/' . $credid . '/verify-secret';
   $data = array("clientSecret" => $secret);
@@ -1567,11 +1631,7 @@ function _application_verify_application_secret_form_submit_handler($form, &$for
  * Form to allow to register a new application
  *
  * @param $form
- *          The form
- *
  * @param $form_state
- *          The form state
- *
  * @return array The form
  */
 function _application_add_application_form($form, &$form_state) {
@@ -1632,16 +1692,13 @@ function _application_add_application_form($form, &$form_state) {
  * Submit handler for the add application form.
  *
  * @param $form
- *          The form
- *
  * @param $form_state
- *          The form state
  */
 function _application_add_application_form_submit_handler($form, &$form_state) {
-  $name = check_plain($form_state['input']['title']);
-  $description = check_plain($form_state['input']['application_description']['und'][0]['value']);
-  $oauth = check_plain($form_state['input']['application_oauthredirecturi']['und'][0]['value']);
-  $developer_org = check_plain($form_state['input']['developerorg']);
+  $name = $form_state['input']['title_field']['und'][0]['value'];
+  $description = $form_state['input']['application_description']['und'][0]['value'];
+  $oauth = $form_state['input']['application_oauthredirecturi']['und'][0]['value'];
+  $developer_org = $form_state['input']['developerorg'];
   if (!isset($name) || empty($name)) {
     drupal_set_message(t('ERROR: Title is a required field.'), 'error');
     $form_state['redirect'] = 'application/new';
@@ -1656,15 +1713,28 @@ function _application_add_application_form_submit_handler($form, &$form_state) {
     );
     $result = ibm_apim_post($url, json_encode($data));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
+      $data = $result->data['credentials'];
+      drupal_alter('ibm_apim_application_add_application', $result->data['id'], $data);
+      $result->data['credentials'] = $data;
+
       drupal_set_message(t('Application created successfully.'));
       drupal_set_message(t('Your client secret is: !html_start@label!html_end', array(
-        '!html_start' => '<div id="app_secret" class="appSecret"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $result->data['credentials']['clientSecret'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
+        '!html_start' => '<div id="app_secret" class="appSecret"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $data['clientSecret'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
         '@label' => t('Show Client Secret'),
         '!html_end' => '</label></div></div>'
       )));
       $app_data = application_details_contents($result->data['id']);
       $nid = application_createNewApplicationNode($app_data);
       $node = node_load($nid);
+      $customfields = _application_get_custom_fields();
+      foreach ($customfields as $customfield) {
+        if (isset($form_state['input'][$customfield])) {
+          $node->$customfield = $form_state['input'][$customfield];
+        }
+      }
+      if (count($customfields) > 0) {
+        node_save($node);
+      }
 
       if (isset($node)) {
         // Calling all modules implementing 'hook_ibm_apim_application_create':
@@ -1689,7 +1759,10 @@ function _application_add_application_form_submit_handler($form, &$form_state) {
 function _application_delete_application($form, &$form_state, $appid) {
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE) {
-    $confirm_form['appid'] = array('#type' => 'value', '#value' => check_plain($appid));
+    $confirm_form['appid'] = array(
+      '#type' => 'value',
+      '#value' => check_plain($appid)
+    );
 
     return confirm_form($confirm_form, t('Are you sure you want to delete this application?'), 'application/' . check_plain($appid), t('Are you sure you want to delete this application? This action cannot be undone.'), t('Delete'), t('Cancel'));
   }
@@ -1708,7 +1781,7 @@ function _application_delete_application_submit($form, &$form_state) {
   $apim_session = &_ibm_apim_get_apim_session();
   $org = ibm_apim_get_current_developer_org();
   $developerOrg = $org['id'];
-  $appId = check_plain($form_state['values']['appid']);
+  $appId = $form_state['values']['appid'];
   $url = '/v1/portal/orgs/' . $developerOrg . '/apps/' . $appId;
   $result = ibm_apim_delete($url);
   if (isset($result) && $result->code >= 200 && $result->code < 300) {
@@ -1744,7 +1817,10 @@ function _application_delete_application_submit($form, &$form_state) {
 function _application_delete_image($form, &$form_state, $appid) {
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE) {
-    $confirm_form['appid'] = array('#type' => 'value', '#value' => check_plain($appid));
+    $confirm_form['appid'] = array(
+      '#type' => 'value',
+      '#value' => check_plain($appid)
+    );
 
     return confirm_form($confirm_form, t('Are you sure you want to delete the application image?'), 'application/' . check_plain($appid), t('Are you sure you want to delete the application image? This action cannot be undone.'), t('Delete'), t('Cancel'));
   }
@@ -1885,7 +1961,13 @@ function application_migrateapp_submit($form, &$form_state) {
   $productname = $parts[0];
   $productversion = $parts[1];
   $planname = $parts[2];
-  $data = array("product" => array('name' => $productname, 'version' => $productversion), 'plan' => $planname);
+  $data = array(
+    "product" => array(
+      'name' => $productname,
+      'version' => $productversion
+    ),
+    'plan' => $planname
+  );
 
   $result = ibm_apim_put($url, json_encode($data));
   if (isset($result) && $result->code >= 200 && $result->code < 300) {
@@ -1898,14 +1980,8 @@ function application_migrateapp_submit($form, &$form_state) {
  * Form to allow user to edit their application notification settings.
  *
  * @param $form
- *          The form
- *
  * @param $form_state
- *          The form state
- *
  * @param $appID
- *          The application ID to edit
- *
  * @return array The form
  */
 function _application_update_notification_settings_form($form, &$form_state, $appID) {
@@ -2035,10 +2111,7 @@ function _application_update_notification_settings_form_alter(&$form, &$form_sta
  * Submit handler for the application notification settings form.
  *
  * @param $form
- *          The form
- *
  * @param $form_state
- *          The form state
  */
 function _application_update_notification_settings_form_submit_handler($form, &$form_state) {
   $enabled = check_plain($form_state['values']['enabled']);
@@ -2049,8 +2122,8 @@ function _application_update_notification_settings_form_submit_handler($form, &$
 
   $settings = array();
   $settings['appURL'] = $appURL;
-  $settings['enabled'] = $enabled;
-  $settings['emailEnabled'] = $emailEnabled;
+  $settings['enabled'] = boolval($enabled);
+  $settings['emailEnabled'] = boolval($emailEnabled);
   $settings['interval'] = $interval;
   $settings['events'] = array();
   switch ($limit) {
@@ -2152,7 +2225,7 @@ function application_subscribeapp_modal_form($form, &$form_state, $planId = NULL
     if (is_array($nodes)) {
       foreach ($nodes as $app) {
         $string = ibm_apim_base64_url_encode($app->application_apiid[$app->language][0]['safe_value']);
-        $options[$string] = $app->title;
+        $options[$string] = check_plain($app->title);
       }
     }
 
@@ -2264,7 +2337,13 @@ function application_subscribeapp_modal_form_submit($form, &$form_state) {
   $productname = $parts[0];
   $productversion = $parts[1];
   $planname = $parts[2];
-  $data = array("product" => array('name' => $productname, 'version' => $productversion), 'plan' => $planname);
+  $data = array(
+    "product" => array(
+      'name' => $productname,
+      'version' => $productversion
+    ),
+    'plan' => $planname
+  );
 
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
@@ -2378,8 +2457,12 @@ function application_create_subscription($appid, $subid, $product, $plan, $activ
   return $createdOrUpdated;
 }
 
-//Creates or updates an existing node. Returns true if a new node was
-//created or false if an existing one was updated.
+/**
+ * Creates or updates an existing node. Returns true if a new node was
+ * created or false if an existing one was updated.
+ * @param $subscription
+ * @return bool|null
+ */
 function application_createOrUpdateSubscription($subscription) {
   if (isset($subscription) && isset($subscription['id']) && isset($subscription['application']['id']) && isset($subscription['plan-registration']['id'])) {
     if (!isset($subscription['active'])) {
@@ -2401,6 +2484,7 @@ function application_createOrUpdateSubscription($subscription) {
 }
 
 /**
+ * Remove an existing subscription by plan name
  * @param $appid
  * @param $product
  * @param $plan
@@ -2439,7 +2523,7 @@ function application_remove_subscription($appid, $product, $plan) {
 }
 
 /**
- *
+ * Remove a subscription by ID
  * @param $appid
  * @param $subid
  * @throws \Exception
@@ -2504,6 +2588,7 @@ function _application_path_param_to_arg($arg) {
 }
 
 /**
+ * returns a list of all our custom fields
  * @return array
  */
 function _application_get_ibm_fields() {
@@ -2527,12 +2612,14 @@ function _application_get_ibm_fields() {
     'application_subscriptions',
     'application_etag',
     'field_applicationrating',
-    'field_applicationtags'
+    'field_applicationtags',
+    'title_field'
   );
   return $ibmfields;
 }
 
 /**
+ * Get the instance info for all our fields
  * @return array
  */
 function _application_get_custom_fields() {
@@ -2545,6 +2632,7 @@ function _application_get_custom_fields() {
 }
 
 /**
+ * wrapper to update an existing application
  * @param $app
  */
 function application_updateApplicationNode($app) {

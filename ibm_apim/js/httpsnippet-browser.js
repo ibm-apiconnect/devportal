@@ -3099,12 +3099,12 @@
                             })
                         })
 
-                        form.pipe(es.map(function (data, cb) {
+                        es.pipe(es.map(function (data, cb) {
                             request.postData.text += data
                         }))
 
-                        request.postData.boundary = form.getBoundary()
-                        request.headersObj['content-type'] = 'multipart/form-data; boundary=' + form.getBoundary()
+                        request.postData.boundary = form._boundary
+                        request.headersObj['content-type'] = 'multipart/form-data; boundary=' + form._boundary
                     }
                     break
 
@@ -4172,7 +4172,7 @@
 
             var includeFS = false
             var code = new CodeBuilder(opts.indent)
-
+            code.push('// Install request by running "npm install --save request"')
             code.push('var request = require("request");')
                 .blank()
 
@@ -4260,9 +4260,9 @@
 
             code.push(util.format('request(options, %s', 'function (error, response, body) {'))
 
-                .push(1, 'if (error) throw new Error(error);')
+                .push(1, 'if (error) return console.error(\'Failed: %s\', error.message);')
                 .blank()
-                .push(1, 'console.log(body);')
+                .push(1, 'console.log(\'Success: \', body);')
                 .push('});')
                 .blank()
 
@@ -12788,3 +12788,4 @@
         }).call(this, require('_process'), typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
     }, {"./support/isBuffer": 113, "_process": 92, "inherits": 89}]
 }, {}, [82]);
+

@@ -74,6 +74,8 @@ a.active {
 h3.apimSummaryTitle,
 .embedded h4.apimSummaryTitle,
 .productTeaser .ui-accordion h3,
+.applicationTeaser .ui-accordion h3,
+.apiTeaser .ui-accordion h3,
 .embedded h4.apimSummaryTitle span.apimTitle a,
 .productAPILink a {
   color: #5aaafa;
@@ -285,7 +287,8 @@ body.not-front #page > header {
   border-bottom: 1px solid #656565;
 }
 
-body.page-home #columns.no-menu-bar {
+body.page-home #columns.no-menu-bar,
+body.frontpage #columns.no-menu-bar {
   background-color: #f0f4f5;
 }
 
@@ -376,7 +379,9 @@ div.credentialTitle .addCredentials {
   border-bottom: 1px solid #dddddd;
 }
 
-.node-product.node-teaser .apimSummary {
+.node-product.node-teaser .apimSummary,
+.node-application.node-teaser .apimSummary,
+.node-api.node-teaser .apimSummary {
   border: 1px solid #dddddd;
 }
 

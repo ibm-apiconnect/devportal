@@ -1,131 +1,135 @@
+.bean-socialblock-block.entity.entity-bean {
+  display: none;
+}
+
 .socialblock.container {
-    margin-top: 0.8rem;
+  margin-top: 0.8rem;
 }
 
 .socialblock.card {
-    text-align: left;
-    background-color: #fff;
-    /*-------------------*/
-    width: 20rem;
-    margin-bottom: 1.25rem;
-    box-sizing: border-box;
-    /*-------------------*/
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-    transition: all 200ms ease-in-out;
+  text-align: left;
+  background-color: #fff;
+  /*-------------------*/
+  width: 20rem;
+  margin-bottom: 1.25rem;
+  box-sizing: border-box;
+  /*-------------------*/
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  transition: all 200ms ease-in-out;
 }
 
 .socialblock.card:hover {
-    box-shadow: 0 6px 5px 0 rgba(0, 0, 0, 0.3);
-    transition: all 100ms ease-in-out;
+  box-shadow: 0 6px 5px 0 rgba(0, 0, 0, 0.3);
+  transition: all 100ms ease-in-out;
 }
 
 .socialblock.title {
-    color: #fff;
-    text-decoration: none !important;
-    /*-----------------------------*/
-    background-color: #007bd1;
-    /*----------------------*/
-    box-sizing: border-box;
-    border: 1.25rem solid #007bd1;
-    border-bottom-width: 1rem;
-    display: block;
-    /*-----------*/
-    transition: all 500ms;
+  color: #fff;
+  text-decoration: none !important;
+  /*-----------------------------*/
+  background-color: #007bd1;
+  /*----------------------*/
+  box-sizing: border-box;
+  border: 1.25rem solid #007bd1;
+  border-bottom-width: 1rem;
+  display: block;
+  /*-----------*/
+  transition: all 500ms;
 }
 
 .socialblock.title:hover {
-    background-color: #0096ff;
-    border-color: #0096ff;
-    transition: all 100ms;
+  background-color: #0096ff;
+  border-color: #0096ff;
+  transition: all 100ms;
 }
 
 .socialblock.info {
-    padding: 0.875rem 1.25rem 1rem; /*top l&r bottom*/
+  padding: 0.875rem 1.25rem 1rem; /*top l&r bottom*/
 }
 
 .socialblock.op {
-    color: #bebebe;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  color: #bebebe;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .socialblock.op_name {
-    color: #007bd1;
+  color: #007bd1;
 }
 
 .socialblock.timestamp {
-    color: #cfcfcf;
+  color: #cfcfcf;
 }
 
 .socialblock.tweet_info {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #eee;
-    margin-left: 1rem;
-    margin-right: 1rem;
-    padding-top: 1rem;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  padding-top: 1rem;
 }
 
 .socialblock.tweet_profile {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    flex-grow: 1;
-    margin-right: 1rem;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  flex-grow: 1;
+  margin-right: 1rem;
 }
 
 .socialblock.profile_image {
-    margin-right: 1rem;
+  margin-right: 1rem;
 }
 
 .socialblock.profile_name.name {
-    color: #0099ff;
-    clear: both;
+  color: #0099ff;
+  clear: both;
 }
 
 .socialblock.twitter_handle {
-    color: #ccc;
-    clear: both;
+  color: #ccc;
+  clear: both;
 }
 
 .socialblock.tweet_meta {
-    text-align: center;
+  text-align: center;
 }
 
 .socialblock.bird {
-    display: inline-block;
-    background: url("../img/twitter_bird.svg") 0 0 no-repeat transparent;
-    width: 1.25rem;
-    height: 1.25rem;
-    clear: both;
+  display: inline-block;
+  background: url("../img/twitter_bird.svg") 0 0 no-repeat transparent;
+  width: 1.25rem;
+  height: 1.25rem;
+  clear: both;
 }
 
 .socialblock.tweet_timestamp {
-    color: #ccc;
-    text-align: center;
+  color: #ccc;
+  text-align: center;
 }
 
 .socialblock.tweet_image {
-    width: 100%;
+  width: 100%;
 }
 
 .socialblock.yt_embed {
-    width: 100%;
+  width: 100%;
 }
 
 .socialblock.tweet_text {
-    padding: 0.7rem 1rem 1rem;
+  padding: 0.7rem 1rem 1rem;
 }
 
 .socialblock.hashtag {
-    color: #0099ff;
+  color: #0099ff;
 }
 
 .socialblock.no_topics {
-    text-align: center;
-    color: #bebebe;
-    margin: 0 auto;
+  text-align: center;
+  color: #bebebe;
+  margin: 0 auto;
 }

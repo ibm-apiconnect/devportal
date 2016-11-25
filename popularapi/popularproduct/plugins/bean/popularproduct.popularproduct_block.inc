@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -66,7 +76,11 @@ class PopularProductBlockBean extends BeanPlugin {
    * @param null $langcode
    * @return array
    */
-  public function view($bean, $content, $view_mode = 'default', $langcode = NULL) {
+  public function view($bean, $content, $view_mode = 'default', $langcode = 'en') {
+    if (!isset($langcode) || empty($langcode)) {
+      global $language;
+      $langcode = $language->language;
+    }
     // Set the bean instance
     $markup = '';
     $this->_bean = $bean;
@@ -85,7 +99,14 @@ class PopularProductBlockBean extends BeanPlugin {
         else {
           $description = $node->product_description[$node->language][0]['value'];
         }
-        $markup = '<div class="popularapiblock product"><a href="' . url('node/' . $nid) . '"><div class="wrapper"><div class="popularapi_image">';
+        $markup = '';
+        if (isset($bean->popprodblocktitle[$langcode][0]['value'])) {
+          $markup .= '<h2 class="pane-title block-title">' . check_plain($bean->popprodblocktitle[$langcode][0]['value']) . '</h2>';
+        }
+        else if (isset($bean->popprodblocktitle['und'][0]['value'])) {
+          $markup .= '<h2 class="pane-title block-title">' . check_plain($bean->popprodblocktitle['und'][0]['value']) . '</h2>';
+        }
+        $markup .= '<div class="popularapiblock product"><a href="' . url('node/' . $nid) . '"><div class="wrapper"><div class="popularapi_image">';
         if (isset($node->product_image) && !empty($node->product_image)) {
           $view = field_view_field('node', $node, 'product_image');
           $markup .= render($view);

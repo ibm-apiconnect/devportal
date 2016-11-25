@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 require_once(libraries_get_path('twitteroauth') . '/autoload.php');
 
@@ -46,6 +56,30 @@ function socialblock_menu() {
 }
 
 /**
+ * Implementation of hook_form_alter()
+ *
+ * @param $form
+ * @param $form_state
+ * @param $form_id
+ */
+function socialblock_form_alter(&$form, &$form_state, $form_id) {
+  switch ($form_id) {
+    case 'bean_form' :
+      $bean = $form['bean']['#value'];
+      if (isset($bean) && isset($bean->type) && $bean->type == 'socialblock_block') {
+        if (isset($form['title'])) {
+          unset($form['title']);
+        }
+        if ($form['view_mode']) {
+          unset($form['view_mode']);
+          $form['view_mode'] = array('#type' => 'hidden', '#value' => 'default');
+        }
+      }
+      break;
+  }
+}
+
+/**
  * Implements hook_cron().
  */
 function socialblock_cron() {
@@ -59,7 +93,7 @@ function socialblock_cron() {
     $credentials = unserialize(openssl_decrypt(substr($data, $iv_size), "AES-256-CBC", $client_id, 0, $iv));
     if (isset($credentials['twitter_consumer_key']) && isset($credentials['twitter_consumer_secret']) && isset($credentials['twitter_access_token']) && isset($credentials['twitter_token_secret'])) {
       foreach ($beans as $bean) {
-        if (isset($bean->delta) && ($bean->delta == 'socialblock') || (isset($bean->type) && $bean->type == 'socialblock_block')) {
+        if ((isset($bean->delta) && ($bean->delta == 'socialblock')) || (isset($bean->type) && $bean->type == 'socialblock_block')) {
           switch ($bean->twitter_api) {
             case 0:
               $api = 'statuses/user_timeline';

@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -66,7 +76,11 @@ class PopularAPIBlockBean extends BeanPlugin {
    * @param null $langcode
    * @return array
    */
-  public function view($bean, $content, $view_mode = 'default', $langcode = NULL) {
+  public function view($bean, $content, $view_mode = 'default', $langcode = 'en') {
+    if (!isset($langcode) || empty($langcode)) {
+      global $language;
+      $langcode = $language->language;
+    }
     // Set the bean instance
     $markup = '';
     $notop = '';
@@ -86,7 +100,14 @@ class PopularAPIBlockBean extends BeanPlugin {
         else {
           $description = $node->api_description[$node->language][0]['value'];
         }
-        $markup = '<div class="popularapiblock api"><a href="' . url('node/' . $nid) . '"><div class="wrapper"><div class="popularapi_image">';
+        $markup = '';
+        if (isset($bean->popapiblocktitle[$langcode][0]['value'])) {
+          $markup .= '<h2 class="pane-title block-title">' . check_plain($bean->popapiblocktitle[$langcode][0]['value']) . '</h2>';
+        }
+        else if (isset($bean->popapiblocktitle['und'][0]['value'])) {
+          $markup .= '<h2 class="pane-title block-title">' . check_plain($bean->popapiblocktitle['und'][0]['value']) . '</h2>';
+        }
+        $markup .= '<div class="popularapiblock api"><a href="' . url('node/' . $nid) . '"><div class="wrapper"><div class="popularapi_image">';
         if (isset($node->api_image) && !empty($node->api_image)) {
           $view = field_view_field('node', $node, 'api_image');
           $markup .= render($view);

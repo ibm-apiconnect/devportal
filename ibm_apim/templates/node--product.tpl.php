@@ -22,18 +22,6 @@ drupal_add_css(drupal_get_path('module', 'ibm_apim') . '/css/googlecode.min.css'
 drupal_add_js(libraries_get_path('waypoints') . '/lib/jquery.waypoints.min.js', array(
   'weight' => 2
 ));
-drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/httpsnippet-browser.js', array(
-  'weight' => 3
-));
-drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/chance.min.js', array(
-  'weight' => 3
-));
-drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/json2xml.js', array(
-  'weight' => 3
-));
-drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/vkBeautify.js', array(
-  'weight' => 3
-));
 drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/Product.js', array(
   'weight' => 4
 ));
@@ -47,26 +35,61 @@ drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/subscribe.js', array(
   'weight' => 8
 ));
 $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
-
+$showversions = variable_get('ibm_apim_show_versions', 1);
+$codesnippets = variable_get('ibm_apim_codesnippets', array(
+  'curl' => 1,
+  'ruby' => 1,
+  'python' => 1,
+  'php' => 1,
+  'java' => 1,
+  'node' => 1,
+  'go' => 1,
+  'swift' => 1,
+  'c' => 0,
+  'csharp' => 0
+));
 ?>
 <script><?php
-  print "window.productJson = " . json_encode($product) . ";";
-  print "window.apiJson = " . json_encode($apis) . ";";
-  print "window.expandedapiJson = " . json_encode($expandedapis) . ";";
+  print "window.productJson = " . json_encode($product, JSON_UNESCAPED_UNICODE) . ";";
+  print "window.apiJson = " . json_encode($apis, JSON_UNESCAPED_UNICODE) . ";";
+  print "window.expandedapiJson = " . json_encode($expandedapis, JSON_UNESCAPED_UNICODE) . ";";
+  print "window.codeSnippets = " . json_encode($codesnippets, JSON_UNESCAPED_UNICODE) . ";";
   ?></script>
 <article id="node-<?php print $node->nid; ?>"
          class="<?php print $classes; ?> clearfix" <?php print $attributes; ?>>
-  <div class="hamburger hidden" id="hamburger"><?php print t('Product navigation'); ?></div>
+  <div class="hamburger hidden"
+       id="hamburger"><?php print t('Product navigation'); ?></div>
   <div class="mesh-portal-product productWrapper">
     <div class="product">
 
       <nav class="toc navigate-toc sticky stickyHeader">
         <ul>
-          <li class="tocItem toc-product"><a onclick="product.navigate('product')"
-                                             href="javascript:;"
-                                             title="<?php print $product['info']['title'] . ' ' . $product['info']['version']; ?>"><?php print $product['info']['title'] . ' ' . $product['info']['version']; ?></a>
+          <?php if ($showversions == 1) {
+            $product_title = $product['info']['title'] . ' ' . $product['info']['version'];
+          }
+          else {
+            $product_title = $product['info']['title'];
+          } ?>
+          <li class="tocItem toc-product"><a
+              onclick="product.navigate('product')"
+              href="javascript:;"
+              title="<?php print $product_title; ?>"><?php print $product_title; ?></a>
           </li>
-          <li class="tocItem toc-apis"><span><?php print t('APIs'); ?></span></li>
+          <?php if (isset($docpages) && !empty($docpages)) : ?>
+            <li
+              class='tocItem productDocumentationHeader toc-product_pages'>
+              <span><?php print t('Documentation'); ?></span>
+            </li>
+            <?php foreach ($docpages as $docpage) : ?>
+              <?php $page = node_load($docpage); ?>
+              <li class='tocItem tocPage toc-pages_<?php print $docpage; ?>'>
+                <a href="<?php print url('node/' . $docpage); ?>"><span
+                    class=""><?php print check_plain($page->title); ?></span></a>
+              </li>
+            <?php endforeach; ?>
+          <?php endif; ?>
+          <li class="tocItem toc-apis"><span><?php print t('APIs'); ?></span>
+          </li>
           <li>
             <?php if (isset($apinodes)) : ?>
             <?php foreach ($apinodes as $apinode) : ?>
@@ -75,16 +98,19 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
             <?php if (isset($apinode->status) && $apinode->status == 1) : ?>
               <a
                 href="<?php print url('productapi/' . $node->nid . '/' . ibm_apim_base64_url_encode($apinode->api_ref[$apinode->language][0]['value'])) ?>"
-                title="<?php print $apinode->title; ?>"><?php print $apinode->title; ?></a>
+                title="<?php print $apinode->title; ?>"><?php print check_plain($apinode->title); ?></a>
             <?php else: ?>
-              <span class="moderatedAPI"><?php print $apinode->title; ?></span>
+              <span
+                class="moderatedAPI"><?php print check_plain($apinode->title); ?></span>
             <?php endif; ?>
           </li>
-          <?php endforeach; ?>
-          <?php if (count($apinodes) == 0): ?>
-            <li><span class="moderatedAPI"><?php print t('No published APIs available');; ?></span></li>
-          <?php endif; ?>
-          <?php endif; ?>
+        <?php endforeach; ?>
+        <?php if (count($apinodes) == 0): ?>
+          <li><span
+              class="moderatedAPI"><?php print t('No published APIs available');; ?></span>
+          </li>
+        <?php endif; ?>
+        <?php endif; ?>
           </li>
         </ul>
       </nav>
@@ -100,7 +126,8 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
                     </div>
                   <?php elseif ($showplaceholders != 0) : ?>
                     <div class="apimIcon">
-                      <div class="field field-name-api-image field-type-image field-label-hidden view-mode-teaser">
+                      <div
+                        class="field field-name-api-image field-type-image field-label-hidden view-mode-teaser">
                         <div class="field-items">
                           <figure class="clearfix field-item even">
                             <img typeof="foaf:Image" class="image-style-none"
@@ -115,7 +142,11 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
                   <?php endif; ?>
                 </div>
                 <h1 class="name">
-                  <?php print $product['info']['title']; ?> <span class="version"><?php print $product['info']['version']; ?></span>
+                  <?php print $product['info']['title']; ?>
+                  <?php if ($showversions == 1): ?>
+                    <span
+                      class="version"><?php print $product['info']['version']; ?></span>
+                  <?php endif; ?>
                 </h1>
                 <?php if (isset($product_state[0]['value']) && strtolower($product_state[0]['value']) == 'deprecated') : ?>
                   <div class="deprecated">
@@ -132,7 +163,8 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
                 </div>
                 <?php if (isset($product['info']['description']) && !empty($product['info']['description'])) : ?>
                   <div>
-                    <label for='product_description'><?php print t('Description'); ?></label>
+                    <label
+                      for='product_description'><?php print t('Description'); ?></label>
                     <div class="markdown"
                          id='product_description'><?php print ibm_apim_markdown_field($product['info']['description']); ?></div>
                   </div>
@@ -156,8 +188,12 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
           </section>
           <?php if (isset($product['info']['contact']) && ((isset($product['info']['contact']['name']) && !empty($product['info']['contact']['name'])) || (isset($product['info']['contact']['email']) && !empty($product['info']['contact']['email'])) || (isset($product['info']['contact']['url']) && !empty($product['info']['contact']['url'])))) : ?>
             <div class="contactContainer">
-              <div class="contactLink"><a onclick='product.togglesection("contact")' href='javascript:;'><span
-                    class="expand_more"><i class="material-icons">expand_more</i></span><span class="expand_less"><i
+              <div class="contactLink"><a
+                  onclick='product.togglesection("contact")'
+                  href='javascript:;'><span
+                    class="expand_more"><i
+                      class="material-icons">expand_more</i></span><span
+                    class="expand_less"><i
                       class="material-icons">expand_less</i></span><span
                     class="contactTitle"><?php print t('Contact information'); ?></span></a>
               </div>
@@ -171,24 +207,31 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
                   </div>
                 <?php endif; ?>
                 <?php if (isset($product['info']['contact']['url']) && !empty($product['info']['contact']['url'])) : ?>
-                  <div><a href='<?php print $product['info']['contact']['url']; ?>'
-                          target='_blank'><?php print $product['info']['contact']['url']; ?></a></div>
+                  <div><a
+                      href='<?php print $product['info']['contact']['url']; ?>'
+                      target='_blank'><?php print $product['info']['contact']['url']; ?></a></div>
                 <?php endif; ?>
               </div>
             </div>
           <?php endif; ?>
           <?php if ((isset($product['info']['license']) && isset($product['info']['license']['url']) && isset($product['info']['license']['name']) && !empty($product['info']['license']['url']) && !empty($product['info']['license']['name'])) || (isset($product['info']['termsOfService']) && !empty($product['info']['termsOfService']))) : ?>
             <div class="licenseContainer">
-              <div class="licenseLink"><a onclick='product.togglesection("license")' href='javascript:;'><span
-                    class="expand_more"><i class="material-icons">expand_more</i></span><span class="expand_less"><i
-                      class="material-icons">expand_less</i></span><span class="contactTitle"><?php print t('License'); ?></span></a>
+              <div class="licenseLink"><a
+                  onclick='product.togglesection("license")'
+                  href='javascript:;'><span
+                    class="expand_more"><i
+                      class="material-icons">expand_more</i></span><span
+                    class="expand_less"><i
+                      class="material-icons">expand_less</i></span><span
+                    class="contactTitle"><?php print t('License'); ?></span></a>
               </div>
               <div class="licenseContent">
                 <?php if (isset($product['info']['license']) && isset($product['info']['license']['url']) && isset($product['info']['license']['name']) && !empty($product['info']['license']['url']) && !empty($product['info']['license']['name'])) : ?>
                   <div>
                     <label><?php print t('License'); ?></label>
-                    <div><a href='<?php print $product['info']['license']['url']; ?>'
-                            target='_blank'><?php print $product['info']['license']['name']; ?></a></div>
+                    <div><a
+                        href='<?php print $product['info']['license']['url']; ?>'
+                        target='_blank'><?php print $product['info']['license']['name']; ?></a></div>
                   </div>
                 <?php endif; ?>
                 <?php if (isset($product['info']['termsOfService']) && !empty($product['info']['termsOfService'])) : ?>
@@ -227,8 +270,12 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
               onclick='product.toggleplanapi("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>")'
               href='javascript:;'>
               <div class="api highlightText">
-                <span class="apiname"><?php print $api['info']['title'] . ' ' . $api['info']['version']; ?></span><span
-                  class="expand_more"><i class="material-icons">expand_more</i></span><span class="expand_less"><i
+                <span
+                  class="apiname"><?php print check_plain($api['info']['title']); ?><?php if ($showversions == 1) {
+                    print ' ' . check_plain($api['info']['version']);
+                  } ?></span><span
+                  class="expand_more"><i class="material-icons">expand_more</i></span><span
+                  class="expand_less"><i
                     class="material-icons">expand_less</i></span>
               </div></a>
             <div
@@ -244,7 +291,8 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
                     'HEAD',
                     'PATCH'
                   ))) : ?>
-                    <div class="apioperation"><?php print strtoupper($verb); ?>&nbsp;<?php print $pathSegment; ?></div>
+                    <div class="apioperation"><?php print strtoupper($verb); ?>
+                      &nbsp;<?php print $pathSegment; ?></div>
                   <?php endif; ?>
                 <?php endforeach; ?>
               <?php endforeach; ?>
@@ -276,7 +324,7 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
             ?>
             <div class="plan">
               <div
-                class="title <?php print $approvalclass; ?>"><?php print $plan['title']; ?><?php print $approvalimage; ?><?php print $deprecatedstr; ?>
+                class="title <?php print $approvalclass; ?>"><?php print check_plain($plan['title']); ?><?php print $approvalimage; ?><?php print $deprecatedstr; ?>
               </div>
               <?php foreach ($planarray[$product['info']['name'] . ':' . $product['info']['version'] . ':' . $planName]['nodes'] as $key => $api) : ?>
                 <div
@@ -300,7 +348,10 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
                         }
 
                         if (($rateLimitCount + $burstLimitCount) > 1) {
-                          $tooltip = array('rates' => array(), 'bursts' => array());
+                          $tooltip = array(
+                            'rates' => array(),
+                            'bursts' => array()
+                          );
                           $tooltip['rateLabel'] = t('Rate limits');
                           $tooltip['burstLabel'] = t('Burst limits');
                           foreach ($plan['rate-limits'] as $ratename => $ratelimit) {
@@ -309,14 +360,16 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
                           foreach ($plan['burst-limits'] as $ratename => $ratelimit) {
                             $tooltip['bursts'][] = product_parse_rate_limit($ratelimit['value']);
                           }
-                          print '<div style="multiRateLimits" data-ratelimits=\'' . json_encode($tooltip) . '\'>' . t('@count rate limits *', array('@count' => $rateLimitCount + $burstLimitCount)) . '</div>';
+                          print '<div style="multiRateLimits" data-ratelimits=\'' . json_encode($tooltip, JSON_UNESCAPED_UNICODE) . '\'>' . t('@count rate limits *', array('@count' => $rateLimitCount + $burstLimitCount)) . '</div>';
                         }
                         else {
                           if ($rateLimitCount > 0) {
-                            print product_parse_rate_limit(array_shift($plan['rate-limits'])['value']);
+                            $lastEl = array_pop($lastEl = (array_slice($plan['rate-limits'], -1)));
+                            print product_parse_rate_limit($lastEl['value']);
                           }
                           else {
-                            print product_parse_rate_limit(array_shift($plan['burst-limits'])['value']);
+                            $lastEl = array_pop($lastEl = (array_slice($plan['burst-limits'], -1)));
+                            print product_parse_rate_limit($lastEl['value']);
                           }
                         }
                       }
@@ -350,10 +403,10 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
                             <?php if (isset($operation['enabled']) && $operation['enabled'] == TRUE) : ?>
                               <?php if (isset($operation['rateLimit']) && isset($operation['rateData'])) : ?>
                                 <div style="multiRateLimits"
-                                     data-ratelimits='<?php print json_encode($operation['rateData']); ?>'><?php print $operation['rateLimit']; ?></div>
+                                     data-ratelimits='<?php print json_encode($operation['rateData'], JSON_UNESCAPED_UNICODE); ?>'><?php print $operation['rateLimit']; ?></div>
                               <?php elseif (isset($operation['rateLimit'])): ?>
                                 <span><?php print $operation['rateLimit']; ?></span>
-                            <?php else: ?>
+                              <?php else: ?>
                                 <i class="material-icons">check</i>
                               <?php endif; ?>
                             <?php else: ?>
@@ -376,16 +429,20 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
               $planid = $product['info']['name'] . ':' . $product['info']['version'] . ':' . $planName; ?>
               <div style="padding: 10px;">
                 <?php if (!user_is_logged_in()) : ?>
-                  <span class="planbutton notuser"><button type="button" class="mesh" disabled>
+                  <span class="planbutton notuser"><button type="button"
+                                                           class="mesh"
+                                                           disabled>
                       <?php print t('Subscribe'); ?></button><?php print t("Login to use this plan"); ?></span>
                 <?php elseif (!ibm_apim_check_is_developer()) : ?>
-                  <span class="planbutton notdev"><button type="button" class="mesh" disabled>
+                  <span class="planbutton notdev"><button type="button"
+                                                          class="mesh" disabled>
                       <?php print t('Subscribe'); ?></button><?php print t("Only developers can subscribe to plans"); ?></span>
                 <?php else: ?>
                   <?php if (product_check_product_subscribe($node)): ?>
                     <button type="button" id="planSignupButton"
                             data-href="<?php print url("application/subscribe/" . ibm_apim_base64_url_encode($planid) . '/' . $approvestr); ?>"
-                            data-title="<?php print t('Subscribe'); ?>" data-name="content"
+                            data-title="<?php print t('Subscribe'); ?>"
+                            data-name="content"
                             data-rel="width:500;resizable:false"
                             class="mesh simple-dialog my-link-class"><?php print t('Subscribe'); ?></button>
                   <?php else: ?>
@@ -397,7 +454,8 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
                       $notsubscribabletext = t("This plan is not subscribable");
                     }
                     ?>
-                    <span class="planbutton notsubscribable"><button type="button" class="mesh" disabled>
+                    <span class="planbutton notsubscribable"><button
+                        type="button" class="mesh" disabled>
                         <?php print t('Subscribe'); ?></button><?php print $notsubscribabletext; ?></span>
                   <?php endif; ?>
                 <?php endif; ?>
@@ -405,7 +463,8 @@ $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
             </div>
           <?php endforeach; ?>
         </div>
-        <div class="plansFooter"><?php print t('* = Mouseover for more information'); ?></div>
+        <div
+          class="plansFooter"><?php print t('* = Mouseover for more information'); ?></div>
       </div>
     </div>
     <div class="comments">

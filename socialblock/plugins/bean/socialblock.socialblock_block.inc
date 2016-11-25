@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -137,10 +147,20 @@ class SocialBlockBean extends BeanPlugin {
    * @param null $langcode
    * @return mixed
    */
-  public function view($bean, $content, $view_mode = 'default', $langcode = NULL) {
+  public function view($bean, $content, $view_mode = 'default', $langcode = 'en') {
+    if (!isset($langcode) || empty($langcode)) {
+      global $language;
+      $langcode = $language->language;
+    }
     $this->_bean = $bean;
-
-    $markup = '<div class="socialblock container">';
+    $markup = '';
+    if (isset($bean->socialblocktitle[$langcode][0]['value'])) {
+      $markup .= '<h2 class="pane-title block-title">' . $bean->socialblocktitle[$langcode][0]['value'] . '</h2>';
+    }
+    else if (isset($bean->socialblocktitle['und'][0]['value'])) {
+      $markup .= '<h2 class="pane-title block-title">' . $bean->socialblocktitle['und'][0]['value'] . '</h2>';
+    }
+    $markup .= '<div class="socialblock container">';
 
     $cronoutput = unserialize(variable_get('socialblock_tweets_' . $bean->bid));
     if (isset($cronoutput) && !empty($cronoutput) && !is_array($cronoutput)) {

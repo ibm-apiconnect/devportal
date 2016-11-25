@@ -21,10 +21,12 @@
 
 body.teaser-mode #block-ibm-apim-app-details-menu {
   padding-bottom: 20px;
+  float: right;
 }
 
 body.full-mode #block-ibm-apim-app-details-menu {
   padding-bottom: 10px;
+  float: right;
 }
 
 #page > footer .block {

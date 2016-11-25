@@ -49,6 +49,7 @@
 .page-api h1#page-title,
 .page-application h1#page-title,
 .page-product h1#page-title,
+.frontpage h1#page-title,
 .page-home h1#page-title {
   display: none;
 }
@@ -62,47 +63,11 @@ body.node-type-api .main-content-header {
   width: 100%;
 }
 
-.portal .section {
-  border-bottom: 1px solid;
-
-  padding-top: 10px; 
-  padding-bottom: 10px;
-}
-
-.apimInfoSection {
-  display: inline-block;
-  width: calc(100% - 170px);
-  float: right;
-}
-
-.apimTitleContainer .apimTitle span.apimAppActions {
-  font-size: 1em;
-  margin-left: 20px;
-  color: #ddd;
-}
-
 .apimImageActions {
   width: 100%;
   display: inline-block;
   text-align: center;
   margin: auto;
-}
-
-.section.apimMainContent.oauthRedirect {
-  margin-bottom: 20px;
-  border-bottom: 0;
-}
-
-.portal .apimInfoSection .section:last-child {
-  border-bottom: 0;
-}
-.portal .section label.sectionHeader{ 
-  display: block; 
-  margin-bottom: 10px;
-}
-.portal .section.apimPlansApis {
-  border-top: 1px solid;
-  padding-top: 20px;
 }
 
 .portal .highlightText {
@@ -221,7 +186,9 @@ h4.apimSummaryTitle {
   height: 70px;
 }
 
-.node-product.node-teaser h2.apimSummaryTitle {
+.node-product.node-teaser h2.apimSummaryTitle,
+.node-api.node-teaser h2.apimSummaryTitle,
+.node-application.node-teaser h2.apimSummaryTitle {
   margin-top: 10px;
 }
 
@@ -239,7 +206,10 @@ h4.apimSummaryTitle {
 .apimIcon .iat-n .field-type-image figure {
   padding: 0;
 }
-.productTeaser .apimInnerContainer{
+
+.productTeaser .apimInnerContainer,
+.applicationTeaser .apimInnerContainer,
+.apiTeaser .apimInnerContainer {
   display: table;
   width: 100%;
 }
@@ -247,26 +217,22 @@ h4.apimSummaryTitle {
   display: block;
   padding: 0;
 }
-.productTeaser .apimIcon {
+
+.productTeaser .apimIcon,
+.applicationTeaser .apimIcon,
+.apiTeaser .apimIcon {
   display: table-cell;
   float: none;
   padding-right: 20px;
   vertical-align: top;
+  min-width: 70px;
 }
-.productTeaser .apimTeaserContainer{
+
+.productTeaser .apimTeaserContainer,
+.applicationTeaser .apimTeaserContainer,
+.apiTeaser .apimTeaserContainer {
   display: inline-block;
   width: 100%;
-}
-
-.apimAPIImage {
-  display: inline-block;
-  margin-right: 20px;
-  width: 140px;
-  vertical-align: top;
-}
-
-.appIcon {
-  float: right;
 }
 
 .appPlanName {
@@ -279,11 +245,13 @@ h4.apimSummaryTitle {
   font-weight: 700;
 }
 
-.appPlanName .planUnsubscribe {
+.appPlanName .planActions {
   padding-right: 10px;
   float: right;
-  padding-top: 2px;
-  font-size: 0.715em;
+}
+
+.apimMainContent .subscriptionsWrapper .planWrapper {
+  margin-bottom: 20px;
 }
 
 .apimDescriptionContainer {
@@ -352,10 +320,6 @@ div.credentialTitle .addCredentials {
 
 .apimMainContent {
   clear: both;
-}
-
-.portal .section.apimMainContent {
-  padding-top: 10px;
 }
 
 .clearBoth {
@@ -827,6 +791,11 @@ span.dropit-icon.ui-icon-triangle-1-s {
   display: inline-block;
 }
 
+ul.dropdown-menu {
+  max-height: 250px;
+  overflow: auto;
+}
+
 .apimTeaser h3.apimSummaryTitle {
   margin-top: inherit;
 }
@@ -862,36 +831,37 @@ label.apiClientID {
   display: inline-block;
 }
 div.credentialTable {
-  display: table;
   border-bottom: 1px solid #ddd;
 }
-div.credentialTable:last-child {
-  border-bottom: 0;
-}
 div.credentialContainer {
-  display: table-row;
+  padding: 10px;
 }
-div.credentialPreSpacer,
-div.credentialPostSpacer {
-  display: table-row;
-  height: 15px;
+
+div.credentialDescriptionRow {
+  border-bottom: 1px solid #ccc;
+  padding: 5px 20px 5px 20px;
 }
-div.credentialSpacer {
-  display: table-cell;
-}
-div.credentialInfoDescription {
-  padding-bottom: 8px;
+
+div.credentialDescription {
+  display: inline-block;
 }
 div.credentialActions {
-  display: table-cell;
+  display: inline-block;
+  float: right;
   vertical-align: middle;
-  border-left: 1px solid #DDD;
-  padding-left: 20px;
-  color: #ddd;
 }
+
+div.appTitleActions span + span,
+div.credentialActions a + a,
+div.apimImageActions span + span,
+div.planActions span + span {
+  border-left: 1px solid #ccc;
+  margin-left: 10px;
+  padding-left: 10px;
+}
+
 div.credentialInfo {
-  display: table-cell;
-  padding-right: 20px;
+  padding: 10px;
 }
 .portalApi.animateMaxHeight {
   max-height: 800px; 
@@ -921,11 +891,12 @@ div.credentialInfo {
   vertical-align: top;
 }
 .requiredDiv .spacerDiv{
-  margin-bottom: 10px;
+  margin-bottom: 0;
   display: inline-block;
 }
 .requiredFieldDiv .form-item {
   display:inline-block;
+  margin-bottom: 0;
 }
 .requiredFieldDiv .form-item .requiredCheckbox {
   margin-left: 20px;
@@ -965,17 +936,20 @@ div.password-indicator div[style="width: 10%;"] {
   padding: 0;
   clear: both;
 }
-.productTeaser .ui-accordion h3 {
+
+.productTeaser .ui-accordion h3,
+.applicationTeaser .ui-accordion h3,
+.apiTeaser .ui-accordion h3 {
   color: #0077d9;
   font-size: 1.4em;
 }
-.productTeaser .ui-accordion .portalApi.animateMaxHeight {
+
+.productTeaser .ui-accordion .portalApi.animateMaxHeight,
+.applicationTeaser .ui-accordion .portalApi.animateMaxHeight,
+.apiTeaser .ui-accordion .portalApi.animateMaxHeight {
   padding-top: 0;
 }
 
-.portal .apiPlanSummary.section.apimMainContent {
-  padding: 20px 0;
-}
 .apiPlanSummary .resourceInfoLine {
   display: inline-block;
 }
@@ -1365,7 +1339,8 @@ button.simple-dialog {
   line-height: normal;
 }
 
-.pane-panels-mini.pane-popular-apis {
+.pane-panels-mini.pane-popular-apis,
+.panel-pane.featured_apis_title {
   background-color: #ffffff;
 }
 
@@ -1501,11 +1476,6 @@ body.admin-menu.adminimal-menu:before {
   line-height: 2em;
 }
 
-.planWrapper {
-  border: 1px solid #f5f5f5;
-  margin: 10px 0;
-}
-
 .planWrapper > .ui-accordion.ui-widget {
   margin: 0 10px;
 }
@@ -1586,7 +1556,9 @@ p.all-apps-subscribed a {
   border-top: 0;
 }
 
-article.node-product.node-teaser {
+article.node-product.node-teaser,
+article.node-application.node-teaser,
+article.node-api.node-teaser {
   margin-left: auto;
   margin-right: auto;
   width: 70%;
@@ -1620,4 +1592,70 @@ article.node-product.node-teaser {
 
 .ratePopup .burstLabel {
   padding-top: 8px;
+}
+
+/* some styling for the openid connect buttons */
+.block-openid-connect form input[name~="generic"],
+.openid-connect.generic {
+  display: block;
+  float: left;
+  width: 48px;
+  height: 48px;
+  opacity: 0.5;
+  border: 0;
+  background: rgba(0, 0, 0, 0) url(../social_login/images/openid.png) 0 0 no-repeat;
+}
+
+.block-openid-connect form input[name~="google"],
+.openid-connect.google  {
+  display: block;
+  float: left;
+  width: 48px;
+  height: 48px;
+  opacity: 0.5;
+  border: 0;
+  background: rgba(0, 0, 0, 0) url(../social_login/images/google.png) 0 0 no-repeat;
+}
+
+/* styling for book pages */
+.node-book .note .notetitle {
+  font-weight: bold;
+}
+
+.node-book .book-navigation .menu {
+  padding: 1em 3em;
+}
+
+.node-book .filepath {
+  font-family: "DejaVu Sans Mono", monospace, sans-serif;
+}
+
+.node-book .uicontrol {
+  font-weight: bold;
+}
+
+.node-book .codeph,
+.node-book .userinput {
+  font-family: "DejaVu Sans Mono", monospace, sans-serif;
+  font-size: 100%;
+}
+
+#block-ibm-apim-app-details-menu .registerApp {
+  padding: 5px 15px;
+  border: 1px solid #5aaafa;
+}
+
+.page-product-select .block-main > h4 {
+  width: 70%;
+  min-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.field-type-file table.sticky-table {
+  table-layout: fixed;
+}
+.field-type-file .sticky-table thead th:last-child,
+.field-type-file .sticky-table tr td:last-child {
+  width: 80px;
 }

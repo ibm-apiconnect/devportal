@@ -192,62 +192,7 @@ class IbmApimApplicationWebTestCase extends SiteWebTestCase {
     debug("finished testEditApplication");
   }
 
-  /**
-   * Test for editing title, description and oAuth URL
-   */
-  public function testEditApplicationWebHooks() {
-    debug("begin testEditApplicationWebHooks");
-    // Login with developer credentials
-    $this->login($this);
 
-    // create initial app
-    $title = $this->randomName(8);
-    $appId = $this->applicationCreateApp($title);
-    $node = $this->drupalGetNodeByTitle($title);
-    $nid = $node->nid;
-
-    // Edit the title
-    $editTitle = $this->randomName(8);
-    $description = $this->randomName(300);
-    $oAuthURL = 'https://' . $this->randomName(50);
-
-    $language = 'und';
-    $edit = array();
-    $edit['title'] = $editTitle;
-    $edit['application_description[' . $language . '][0][value]'] = $description;
-    $edit['application_oauthredirecturi[' . $language . '][0][value]'] = $oAuthURL;
-
-    $this->drupalPost('application/' . $appId . '/edit', $edit, t('Submit'));
-
-    for ($i = 1; $i <= 20; $i++) {
-      usleep(500);
-      $this->drupalGet('application/' . $appId);
-
-      // check we're successfully on the resulting app details page
-      $this->assertTitle($editTitle . ' | API Portal');
-
-      // test the correct values have been saved
-
-      // force clearing of internal node cache to ensure we get latest data
-      $node = node_load($nid, NULL, TRUE);
-      // need these debug lines otherwise get some kind of timing issue getting $node
-      debug($node->application_description[$node->language][0]['value']);
-      debug($node->application_oauthredirecturi[$node->language][0]['value']);
-      $this->assertEqual($node->application_description[$node->language][0]['value'], $description, 'Expected description value ' . $description);
-      $this->assertEqual($node->application_oauthredirecturi[$node->language][0]['value'], $oAuthURL, 'Expected oAuthURL value ' . $oAuthURL);
-
-    }
-
-    // tidy up - delete application
-    $delete = array();
-    $this->drupalPost('application/' . $appId . '/delete', $delete, t('Delete'));
-
-    $this->assertText(t('Application deleted successfully.'), 'Application has been deleted');
-
-    // logout
-    $this->drupalLogout();
-    debug("finished testEditApplicationWebHooks");
-  }
 
   /**
    * Test for updating app icon

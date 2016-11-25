@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -10,6 +20,25 @@
  * Class for updating modules using FileTransfer classes via authorize.php.
  */
 class SiteModuleUpdater extends Updater implements DrupalUpdaterInterface {
+
+  /**
+   * @param string $directory
+   * @return bool
+   */
+  public static function canUpdateDirectory($directory) {
+    if (file_scan_directory($directory, '/.*\.module$/')) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * @param $project_name
+   * @return bool
+   */
+  public static function canUpdate($project_name) {
+    return (bool) drupal_get_path('module', $project_name);
+  }
 
   /**
    * Return the directory where a module should be installed.
@@ -44,12 +73,12 @@ class SiteModuleUpdater extends Updater implements DrupalUpdaterInterface {
       if (isset($urlParts['host']) && !empty($urlParts['host'])) {
         $dir = $urlParts['host'];
       }
-      
+
       //Add on the path it is here as we support paths for sites now
       if (isset($urlParts['path']) && !empty($urlParts['path'])) {
       	$dir = $dir . str_replace('/','.',$urlParts['path']);
       }
-      
+
       $relative_path = 'sites/' . $dir . '/modules';
     }
     return DRUPAL_ROOT . '/' . $relative_path;
@@ -60,25 +89,6 @@ class SiteModuleUpdater extends Updater implements DrupalUpdaterInterface {
    */
   public function isInstalled() {
     return (bool) drupal_get_path('module', $this->name);
-  }
-
-  /**
-   * @param string $directory
-   * @return bool
-   */
-  public static function canUpdateDirectory($directory) {
-    if (file_scan_directory($directory, '/.*\.module$/')) {
-      return TRUE;
-    }
-    return FALSE;
-  }
-
-  /**
-   * @param $project_name
-   * @return bool
-   */
-  public static function canUpdate($project_name) {
-    return (bool) drupal_get_path('module', $project_name);
   }
 
   /**
@@ -133,6 +143,26 @@ class SiteModuleUpdater extends Updater implements DrupalUpdaterInterface {
 class SiteThemeUpdater extends Updater implements DrupalUpdaterInterface {
 
   /**
+   * @param string $directory
+   * @return bool
+   */
+  static function canUpdateDirectory($directory) {
+    // This is a lousy test, but don't know how else to confirm it is a theme.
+    if (file_scan_directory($directory, '/.*\.module$/')) {
+      return FALSE;
+    }
+    return TRUE;
+  }
+
+  /**
+   * @param $project_name
+   * @return bool
+   */
+  public static function canUpdate($project_name) {
+    return (bool) drupal_get_path('theme', $project_name);
+  }
+
+  /**
    * Return the directory where a theme should be installed.
    *
    * If the theme is already installed, drupal_get_path() will return
@@ -170,7 +200,7 @@ class SiteThemeUpdater extends Updater implements DrupalUpdaterInterface {
       if (isset($urlParts['path']) && !empty($urlParts['path'])) {
       	$dir = $dir . str_replace('/','.',$urlParts['path']);
       }
-      
+
       $relative_path = 'sites/' . $dir . '/themes';
     }
     return DRUPAL_ROOT . '/' . $relative_path;
@@ -181,26 +211,6 @@ class SiteThemeUpdater extends Updater implements DrupalUpdaterInterface {
    */
   public function isInstalled() {
     return (bool) drupal_get_path('theme', $this->name);
-  }
-
-  /**
-   * @param string $directory
-   * @return bool
-   */
-  static function canUpdateDirectory($directory) {
-    // This is a lousy test, but don't know how else to confirm it is a theme.
-    if (file_scan_directory($directory, '/.*\.module$/')) {
-      return FALSE;
-    }
-    return TRUE;
-  }
-
-  /**
-   * @param $project_name
-   * @return bool
-   */
-  public static function canUpdate($project_name) {
-    return (bool) drupal_get_path('theme', $project_name);
   }
 
   public function postInstall() {

@@ -108,7 +108,7 @@ samp,
 kbd,
 var {
   font-size: 10pt;
-  font-family: Consolas, "Lucida Console", Menlo, Monaco, "DejaVu Sans Mono", monospace, sans-serif; /* Safari hack */
+  font-family: "DejaVu Sans Mono", monospace, sans-serif; /* Safari hack */
 }
 
 blockquote {

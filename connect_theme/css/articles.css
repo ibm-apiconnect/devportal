@@ -14,6 +14,10 @@ article .submitted {
   position: relative;
 }
 
+article.node-teaser .submitted {
+  padding: 0;
+}
+
 article .node-content {
   padding: 1em 0;
 }
@@ -32,15 +36,12 @@ article .links a:visited {
 .node header.with-picture {
   height: auto !important;
   min-height: 3.5em;
-  padding-left: 60px;
 }
 
 .node header .user-picture {
-  left: 0;
-  top: 3px;
-  height: 45px;
-  position: absolute;
-  width: 45px;
+  display: inline-block;
+  top: 10px;
+  vertical-align: middle;
 }
 
 .node header .user-picture img {
@@ -53,6 +54,11 @@ article .links a:visited {
 .node-content img {
   border: solid 1px #e6e4de;
   padding: 0.5em;
+}
+
+.node header .node-title {
+  display: inline-block;
+  padding-left: 10px;
 }
 
 article .tags,

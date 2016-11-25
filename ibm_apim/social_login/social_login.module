@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * Implementation of hook_menu_local_tasks_alter().
@@ -43,6 +53,8 @@ function social_login_requirements($phase) {
 
 /**
  * Implementation of hook_menu().
+ *
+ * @return array
  */
 function social_login_menu() {
   $items = array();
@@ -52,6 +64,22 @@ function social_login_menu() {
     'page arguments' => array(2),
     'access callback' => TRUE,
     'type' => MENU_CALLBACK
+  );
+  $items['ibm_apim/oidc/generic'] = array(
+    'title' => 'Generic Open ID Connect',
+    'page callback' => 'social_login_oidc_generic_login',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'social_login.openid_connect.inc'
+  );
+  $items['ibm_apim/oidc/google'] = array(
+    'title' => 'Google Open ID Connect',
+    'page callback' => 'social_login_oidc_google_login',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'social_login.openid_connect.inc'
   );
 
   return $items;
@@ -74,6 +102,7 @@ function social_login_menu_alter(&$items) {
 /**
  * Implements hook_admin_menu_output_alter().
  * Hide the 'Add People' link
+ *
  * @param $content
  */
 function social_login_admin_menu_output_alter(&$content) {
@@ -84,6 +113,7 @@ function social_login_admin_menu_output_alter(&$content) {
 
 /**
  * Implementation of hook_admin_paths_alter
+ *
  * @param $paths
  */
 function social_login_admin_paths_alter(&$paths) {
@@ -95,6 +125,9 @@ function social_login_admin_paths_alter(&$paths) {
 /**
  * Implements hook_user_insert().
  *
+ * @param $user_edit
+ * @param $account
+ * @param $category
  */
 function social_login_user_insert(&$user_edit, $account, $category) {
   watchdog('social_login_user_insert', 'account: %token', array(
@@ -112,6 +145,8 @@ function social_login_user_insert(&$user_edit, $account, $category) {
 /**
  * Implements hook_user_login().
  *
+ * @param $edit
+ * @param $account
  */
 function social_login_user_login(&$edit, $account) {
   watchdog('social_login_user_login', 'account: %token', array(
@@ -135,6 +170,7 @@ function social_login_user_login(&$edit, $account) {
 
 /**
  * Implementation of hook_hybridauth_identity_added
+ *
  * @param $account
  * @param $data
  */
@@ -222,6 +258,7 @@ function social_login_hybridauth_identity_added($account, $data) {
 
 /**
  * Implementation of hook_hybridauth_user_login
+ *
  * @param $user
  * @param $data
  */
@@ -291,13 +328,22 @@ function social_login_hybridauth_user_login($user, $data) {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implementation of hook_form_alter()
+ *
  * @param $form
  * @param $form_state
  * @param $form_id
  */
 function social_login_form_alter(&$form, &$form_state, $form_id) {
   switch ($form_id) {
+    case 'openid_connect_login_form' :
+      if (isset($form['openid_connect_client_generic_login']['#value'])) {
+        $form['openid_connect_client_generic_login']['#value'] = '';
+      }
+      if (isset($form['openid_connect_client_google_login']['#value'])) {
+        $form['openid_connect_client_google_login']['#value'] = '';
+      }
+      break;
     case 'hybridauth_admin_settings' :
       // hide all the not available providers
       foreach ($form['vtabs']['fset_providers']['hybridauth_providers']['#options'] as $key => $provider) {
@@ -333,6 +379,18 @@ function social_login_form_alter(&$form, &$form_state, $form_id) {
       );
       $form['vtabs']['fset_fields']['hybridauth_required_fields']['email']['#disabled'] = TRUE;
       $form['#validate'][] = 'social_login_admin_settings_validate';
+      break;
+    case 'password_policy_password_tab' :
+      if (variable_get('no_autocomplete_profile_form', FALSE)) {
+        if (isset($form['pass'])) {
+          if (empty($form['pass']['#attributes'])) {
+            $form['pass']['#attributes'] = array();
+          }
+          $form['pass']['#attributes']['autocomplete'] = 'off';
+        }
+        $form['#attributes']['autocomplete'] = 'off';
+      }
+      $form['#submit'][] = '_social_login_password_policy_password_tab_submit_handler';
       break;
     case 'user_register_form' :
     case 'ibm_apim_activate_create_account_form' :
@@ -373,6 +431,48 @@ function social_login_form_alter(&$form, &$form_state, $form_id) {
           unset($form['hybridauth']);
         }
       }
+      if (module_exists('openid_connect')) {
+        if ($hybridweight < -10 && $hybrid_enabled == TRUE) {
+          $intro_string = t('Or use Open ID Connect ...');
+        }
+        else {
+          $intro_string = t('Use Open ID Connect ...');
+        }
+        // hidden submit form to ensure that hitting enter in the username/password fields submits the actual form and doesnt initiate openid
+        $form['default_submit'] = array(
+          '#markup' => '<input type="submit" class="hiddensubmit" name="op" value="' . t('Log in') . '" style="display: none;" tabindex="-1" />',
+          '#weight' => -2000
+        );
+        $form['openid_intro'] = array(
+          '#markup' => '<h3>' . $intro_string . '</h3>',
+          '#weight' => $hybridweight + 1
+        );
+        $openid_connect_clients_enabled = variable_get('openid_connect_clients_enabled', array());
+        if (array_key_exists('generic', $openid_connect_clients_enabled)) {
+          $form['generic'] = array(
+            '#markup' => '<a class="openid-connect generic" href="' . url('ibm_apim/oidc/generic') . '" title="' . t('Login using Generic Open ID Connect') . '"></a>',
+            '#weight' => $hybridweight + 2
+          );
+        }
+        if (array_key_exists('google', $openid_connect_clients_enabled)) {
+          $form['google'] = array(
+            '#markup' => '<a class="openid-connect google" href="' . url('ibm_apim/oidc/google') . '" title="' . t('Login using Google Open ID Connect') . '"></a>',
+            '#weight' => $hybridweight + 3
+          );
+        }
+        $form['openid_outro'] = array(
+          '#markup' => '<div class="clearBoth"></div>',
+          '#weight' => $hybridweight + 4
+        );
+      }
+      $path = drupal_get_path('module', 'social_login');
+      if (!is_array($form['#attached'])) {
+        $form['#attached'] = array();
+      }
+      if (!is_array($form['#attached']['css'])) {
+        $form['#attached']['css'] = array();
+      }
+      $form['#attached']['css'][] = $path . '/css/social_login.css';
       if (isset($form['notifications_forum'])) {
         unset($form['notifications_forum']);
       }
@@ -386,6 +486,21 @@ function social_login_form_alter(&$form, &$form_state, $form_id) {
       break;
     case 'user_login_block' :
     case 'user_login' :
+      // disable autocomplete in login form if enabled
+      if (variable_get('no_autocomplete_login_form', FALSE)) {
+        if (isset($form['name'])) {
+          if (empty($form['name']['#attributes'])) {
+            $form['name']['#attributes'] = array();
+          }
+          $form['name']['#attributes']['autocomplete'] = 'off';
+        }
+        if (isset($form['pass'])) {
+          if (empty($form['pass']['#attributes'])) {
+            $form['pass']['#attributes'] = array();
+          }
+          $form['pass']['#attributes']['autocomplete'] = 'off';
+        }
+      }
       $hybridweight = variable_get('hybridauth_widget_weight', -100);
       $hybrid_enabled = FALSE;
       if (module_exists('hybridauth')) {
@@ -411,6 +526,48 @@ function social_login_form_alter(&$form, &$form_state, $form_id) {
           unset($form['hybridauth']);
         }
       }
+      if (module_exists('openid_connect')) {
+        if ($hybridweight < -10 && $hybrid_enabled == TRUE) {
+          $intro_string = t('Or use Open ID Connect ...');
+        }
+        else {
+          $intro_string = t('Use Open ID Connect ...');
+        }
+        // hidden submit form to ensure that hitting enter in the username/password fields submits the actual form and doesnt initiate openid
+        $form['default_submit'] = array(
+          '#markup' => '<input type="submit" class="hiddensubmit" name="op" value="' . t('Log in') . '" style="display: none;" tabindex="-1" />',
+          '#weight' => -2000
+        );
+        $form['openid_intro'] = array(
+          '#markup' => '<h3>' . $intro_string . '</h3>',
+          '#weight' => $hybridweight + 1
+        );
+        $openid_connect_clients_enabled = variable_get('openid_connect_clients_enabled', array());
+        if (array_key_exists('generic', $openid_connect_clients_enabled)) {
+          $form['generic'] = array(
+            '#markup' => '<a class="openid-connect generic" href="' . url('ibm_apim/oidc/generic') . '" title="' . t('Login using Generic Open ID Connect') . '"></a>',
+            '#weight' => $hybridweight + 2
+          );
+        }
+        if (array_key_exists('google', $openid_connect_clients_enabled)) {
+          $form['google'] = array(
+            '#markup' => '<a class="openid-connect google" href="' . url('ibm_apim/oidc/google') . '" title="' . t('Login using Google Open ID Connect') . '"></a>',
+            '#weight' => $hybridweight + 3
+          );
+        }
+        $form['openid_outro'] = array(
+          '#markup' => '<div class="clearBoth"></div>',
+          '#weight' => $hybridweight + 4
+        );
+      }
+      $path = drupal_get_path('module', 'social_login');
+      if (!is_array($form['#attached'])) {
+        $form['#attached'] = array();
+      }
+      if (!is_array($form['#attached']['css'])) {
+        $form['#attached']['css'] = array();
+      }
+      $form['#attached']['css'][] = $path . '/css/social_login.css';
       break;
     case 'user_profile_form' :
       global $user;
@@ -476,7 +633,7 @@ function social_login_form_alter(&$form, &$form_state, $form_id) {
         }
 
         if (isset($user->uid) && $user->uid != 1) {
-          if ($form['account']['pass']) {
+          if (isset($form['account']['pass'])) {
             unset($form['account']['current_pass']);
             unset($form['account']['pass']);
           }
@@ -598,6 +755,9 @@ function social_login_form_alter(&$form, &$form_state, $form_id) {
 
 /**
  * Form validation handler for the hybridauth admin settings form.
+ *
+ * @param $form
+ * @param $form_state
  */
 function social_login_admin_settings_validate($form, &$form_state) {
   $values = &$form_state['values'];
@@ -607,14 +767,30 @@ function social_login_admin_settings_validate($form, &$form_state) {
 }
 
 /**
+ * Use a custom submit handler for the password_policy_password_tab form,
+ * so we can display a message about the admin guide.
+ *
+ * @param form
+ * @param form_state
+ */
+function _social_login_password_policy_password_tab_submit_handler($form, &$form_state) {
+  global $user;
+
+  // add extra message about admin guide if the admin user was created in the last 24 hours
+  // no nice way to detect if this is the very first login, so simply checking first 24 hours should cover it
+  if ($user->uid == 1 && module_exists('book')) {
+    if (isset($user->created) && $user->created > (time() - 86400)) {
+      drupal_set_message(t('Welcome to your new Portal site. If you would like help customizing and configuring this site then the Admin Guide can be accessed from the Help menu above.'));
+    }
+  }
+}
+
+/**
  * Use a custom submit handler for the user profile form,
  * so we can update APIC too.
  *
  * @param $form
- *          form
- *
  * @param $form_state
- *          state of the form
  */
 function _social_login_user_profile_form_submit_handler($form, &$form_state) {
   $account = $form_state['user'];
@@ -675,7 +851,13 @@ function _social_login_update_apic_profile($values) {
     unset($data['organization']);
     unset($data['password']);
 
-    $postData = array('firstName' => $data['firstName'], 'lastName' => $data['lastName'], 'username' => $values['name']);
+    $postData = array(
+      'firstName' => $data['firstName'],
+      'lastName' => $data['lastName']
+    );
+    if (isset($data['mail'])) {
+      $postData['mail'] = $data['mail'];
+    }
     $url = '/v1/portal/me';
     $result = ibm_apim_put($url, json_encode($postData));
     if (!(isset($result) && $result->code >= 200 && $result->code < 300)) {
@@ -690,7 +872,6 @@ function _social_login_update_apic_profile($values) {
  * activation link.
  * The URL will include base64 encoded JSON with the username
  * and some temporary credentials allocated by the server to enable us to update apic
- * @param $path
  *
  * @param null $path
  * @return bool
@@ -719,29 +900,37 @@ function social_login_activate_id_callback($path = NULL) {
     }
     $tempUser = $activationObj->{'authentication'}->{'username'};
     $tempPwd = $activationObj->{'authentication'}->{'password'};
-    $userid = $activationObj->{'username'};
+    $userid = ibm_apim_decrypt_data($activationObj->{'username'});
+    if (isset($userid)) {
+      // verify the temp userid and password are valid
+      $url = $activationObj->{'url'};
+      if (!isset($url) || !isset($tempUser) || !isset($tempPwd) || !isset($userid)) {
+        drupal_set_message(t('Token did not contain a valid URL. Contact the system administrator for assistance.'), 'error');
+        watchdog('social_login_activate_id_callback', 'Invalid Token: Token did not contain a valid URL. token: %token', array(
+          '%token' => serialize($activationObj)
+        ), WATCHDOG_NOTICE);
+        drupal_goto();
+      }
 
-    // verify the temp userid and password are valid
-    $url = $activationObj->{'url'};
-    if (!isset($url) || !isset($tempUser) || !isset($tempPwd) || !isset($userid)) {
-      drupal_set_message(t('Token did not contain a valid URL. Contact the system administrator for assistance.'), 'error');
-      watchdog('social_login_activate_id_callback', 'Invalid Token: Token did not contain a valid URL. token: %token', array(
+      $existinguser = user_load_by_name($userid);
+      if (isset($existinguser) && isset($existinguser->uid)) {
+        // user already exists
+        drupal_set_message(t('User already exists. Please use existing credentials to sign in.'), 'error');
+        drupal_goto('user/login');
+      }
+      else {
+        // seems a valid token so save it as a cookie for retrieval after have signed up
+        module_load_include('pages.inc', 'user');
+        user_cookie_save(array('ibmapimacttoken' => $actToken));
+        return drupal_get_form('ibm_apim_activate_create_account_form', $actToken);
+      }
+    }
+    else {
+      drupal_set_message(t('Failed to decrypt userid. Contact the system administrator for assistance.'), 'error');
+      watchdog('social_login_activate_id_callback', 'Invalid Token: Token did not contain a valid userid. token: %token', array(
         '%token' => serialize($activationObj)
       ), WATCHDOG_NOTICE);
       drupal_goto();
-    }
-
-    $existinguser = user_load_by_name($userid);
-    if (isset($existinguser) && isset($existinguser->uid)) {
-      // user already exists
-      drupal_set_message(t('User already exists. Please use existing credentials to sign in.'), 'error');
-      drupal_goto('user/login');
-    }
-    else {
-      // seems a valid token so save it as a cookie for retrieval after have signed up
-      module_load_include('pages.inc', 'user');
-      user_cookie_save(array('ibmapimacttoken' => $actToken));
-      return drupal_get_form('ibm_apim_activate_create_account_form', $actToken);
     }
   }
   else {
@@ -753,6 +942,7 @@ function social_login_activate_id_callback($path = NULL) {
 }
 
 /**
+ * finalise activation of a user
  * @param $account
  * @param null $postData
  * @throws \Exception
@@ -824,6 +1014,11 @@ function _social_login_complete_activation($account, $postData = NULL) {
       "X-IBM-APIManagement-Context: " . $org . '.' . $env,
       'Authorization: Basic ' . base64_encode($tempUser . ':' . $tempPwd)
     );
+    global $language;
+    $lang_name = _ibm_apim_convert_lang_name($language->language);
+    if (isset($lang_name)) {
+      $headers[] = 'Accept-Language: ' . $lang_name;
+    }
     $clientid = variable_get('ibm_apim_client_id');
     $headers[] = 'X-IBM-Client-Id: ' . $clientid;
     if (isset($account->name) && $account->uid != 1) {
@@ -843,9 +1038,11 @@ function _social_login_complete_activation($account, $postData = NULL) {
       // check for what orgs the user is in and create nodes for any that might have just been created by apim
       _ibm_apim_refresh_user_data();
       $orgs = _ibm_apim_load_developer_orgs();
+      $devorgs_array = array();
       if (isset($orgs)) {
         foreach ($orgs as $org) {
           if (isset($org['id'])) {
+            $devorgs_array[] = array('value' => $org['name']);
             $query = new EntityFieldQuery();
             $query->entityCondition('entity_type', 'node')
               ->entityCondition('bundle', 'devorg')
@@ -867,12 +1064,11 @@ function _social_login_complete_activation($account, $postData = NULL) {
           }
         }
       }
-      $orgs = devorg_list_devorg_nodes();
 
       // update uid
       user_save($account, array(
         'field_uid' => array('und' => array(0 => array('value' => isset($output['id']) ? $output['id'] : ''))),
-        'field_developer_organization' => array('und' => array(0 => array('value' => isset($orgs[0]['name']) ? $orgs[0]['name'] : '')))
+        'field_developer_organization' => array('und' => $devorgs_array)
       ));
       drupal_set_message(t('Account successfully activated.'));
     }
@@ -886,6 +1082,11 @@ function _social_login_complete_activation($account, $postData = NULL) {
   }
 }
 
+/**
+ * Custom validation callback for user registration
+ * @param $form
+ * @param $form_state
+ */
 function social_login_user_register_validate($form, &$form_state) {
   $orgname = '';
   if (isset($form_state['values']['field_first_name']['und'][0]['value']) && !empty($form_state['values']['field_first_name']['und'][0]['value'])) {

@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2015, 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * IBM API Connect Integration
@@ -70,8 +80,22 @@ function auth_apic_requirements($phase) {
   if ($phase == 'install') {
     if (module_exists('social_login')) {
       $requirements['auth_apic'] = array(
-        'title' => $t('Auth_apic'),
-        'value' => $t('Auth_APIC is not compatible with Social_login.'),
+        'title' => 'Auth_apic',
+        'value' => $t('Auth_APIC is not compatible with Social_login. Social Login requires the use of the Portal Delegated User Registry in API Manager Catalog Settings.'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+    elseif (module_exists('ldap_authentication') || module_exists('ldap_user') || module_exists('ldap_servers')) {
+      $requirements['auth_apic'] = array(
+        'title' => 'Auth_apic',
+        'value' => $t('Auth_APIC is not compatible with LDAP. LDAP requires the use of the Portal Delegated User Registry in API Manager Catalog Settings.'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+    elseif (module_exists('openid_connect')) {
+      $requirements['auth_apic'] = array(
+        'title' => 'Auth_apic',
+        'value' => $t('Auth_APIC is not compatible with OpenID Connect. OpenID Connect requires the use of the Portal Delegated User Registry in API Manager Catalog Settings.'),
         'severity' => REQUIREMENT_ERROR,
       );
     }
@@ -121,11 +145,8 @@ function auth_apic_admin_menu_output_alter(&$content) {
  * Alter the login form to use a custom validator that authenticates against
  * the IBM API Connect API
  *
- * @param $form
- *          form
- *
- * @param $form_state
- *          state of the form
+ * @param form
+ * @param form_state
  */
 function _auth_apic_user_login_form_alter(&$form, &$form_state) {
   $saveForm = $form;
@@ -267,6 +288,21 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
   $sociallogin = variable_get('ibm_apim_social_login', 0);
   if ($sociallogin == 0) {
     switch ($form_id) {
+      // hide the modules that depend on social login
+      case 'system_modules':
+        if (isset($form['modules']['HybridAuth'])) {
+          unset($form['modules']['HybridAuth']);
+        }
+        if (isset($form['modules']['Lightweight Directory Access Protocol'])) {
+          unset($form['modules']['Lightweight Directory Access Protocol']);
+        }
+        if (isset($form['modules']['OAuth2']['openid_connect'])) {
+          unset($form['modules']['OAuth2']['openid_connect']);
+        }
+        if (isset($form['modules']['IBM API Connect v5']['social_login'])) {
+          unset($form['modules']['IBM API Connect v5']['social_login']);
+        }
+        break;
       case 'password_policy_password_tab' :
         if (variable_get('no_autocomplete_profile_form', FALSE)) {
           if (empty($form['pass']['#attributes'])) {
@@ -327,7 +363,7 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
               '#type' => 'password',
               '#title' => t('Password'),
               '#size' => 60,
-              '#maxlength' => 64,
+              '#maxlength' => 128,
               '#required' => TRUE,
               '#weight' => $weight
             );
@@ -348,6 +384,8 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
         $ibm_apim_email_reqd = variable_get('ibm_apim_email_reqd', TRUE);
         $ibm_apim_readonly_idp = variable_get('ibm_apim_readonly_idp', FALSE);
         $ibm_apim_email_as_username = variable_get('ibm_apim_email_as_username', TRUE);
+        // hide the devorg field
+        $form['field_developer_organization']['#access'] = FALSE;
 
         if ($form['#user']->uid == $user->uid) {
           // editing own profile
@@ -444,8 +482,10 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
             }
             if (isset($user->uid) && $user->uid != 1) {
               if ($form['account']['pass']) {
-                unset($form['account']['current_pass']);
                 unset($form['account']['pass']);
+              }
+              if ($form['account']['current_pass']) {
+                unset($form['account']['current_pass']);
               }
             }
           }
@@ -587,11 +627,8 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
  * Use a custom submit handler for the user profile form,
  * so we can update APIC too.
  *
- * @param $form
- *          form
- *
- * @param $form_state
- *          state of the form
+ * @param form
+ * @param form_state
  */
 function _auth_apic_user_profile_form_submit_handler($form, &$form_state) {
   $account = $form_state['user'];
@@ -637,7 +674,7 @@ function _auth_apic_user_profile_form_submit_handler($form, &$form_state) {
   // Clear the page cache because pages can contain usernames and/or profile information:
   cache_clear_all();
 
-  if (isset($form_state['values']['current_pass']) && ($form_state['values']['pass'] != $form_state['values']['current_pass'])) {
+  if (isset($form_state['values']['current_pass']) && isset($form_state['values']['pass']) && ($form_state['values']['pass'] != $form_state['values']['current_pass'])) {
     _auth_apic_change_user_password($form_state['values']['pass'], $account->name, $account->name, $form_state['values']['current_pass']);
   }
 
@@ -648,11 +685,8 @@ function _auth_apic_user_profile_form_submit_handler($form, &$form_state) {
  * Use a custom submit handler for the password_policy_password_tab form,
  * so we can update APIC too.
  *
- * @param $form
- *          form
- *
- * @param $form_state
- *          state of the form
+ * @param form
+ * @param form_state
  */
 function _auth_apic_password_policy_password_tab_submit_handler($form, &$form_state) {
   global $user;
@@ -671,6 +705,13 @@ function _auth_apic_password_policy_password_tab_submit_handler($form, &$form_st
     user_save($account, array('pass' => $form_state['values']['pass']));
     unset($_SESSION['pass_reset_' . $account->uid]);
     drupal_set_message(t('Password has been changed.'));
+    // add extra message about admin guide if the admin user was created in the last 24 hours
+    // no nice way to detect if this is the very first login, so simply checking first 24 hours should cover it
+    if ($user->uid == 1 && module_exists('book')) {
+      if (isset($user->created) && $user->created > (time() - 86400)) {
+        drupal_set_message(t('Welcome to your new Portal site. If you would like help customizing and configuring this site then the Admin Guide can be accessed from the Help menu above.'));
+      }
+    }
 
     if (variable_get('password_policy_password_tab_redirect', '') && !preg_match('/[?&]destination=/', $form['#action'])) {
       $redirect = drupal_parse_url(strtr(variable_get('password_policy_password_tab_redirect', ''), array('%uid' => $user->uid)));
@@ -847,20 +888,16 @@ function _auth_apic_authenticated_login($name, $pass, $authenticated, $login = T
   // we must set the 'uid' to pass back. this looks up the logged in user and sets the Drupal UID
   $account = user_external_load($name);
   $json_user_info = $authenticated;
-  $devorg = '';
   if ($login == TRUE) {
     $result = ibm_apim_call('/v1/portal/orgs');
     if (isset($result) && isset($result->data) && !isset($result->data['errors'])) {
       $orgs = $result->data;
     }
     $org_ids = array();
-
+    $devorgs_array = array();
     if (isset($orgs)) {
       foreach ($orgs as $org) {
-        if ($devorg != '') {
-          $devorg .= ', ';
-        }
-        $devorg .= $org['name'];
+        $devorgs_array[] = array('value' => $org['name']);
         $org_ids[$org['id']] = array();
         $org_ids[$org['id']] = ($org['owner'] ? 'owner' : 'member');
       }
@@ -886,7 +923,7 @@ function _auth_apic_authenticated_login($name, $pass, $authenticated, $login = T
         )
       )
     ),
-    'field_developer_organization' => array('und' => array(0 => array('value' => $devorg))),
+    'field_developer_organization' => array('und' => $devorgs_array),
     'field_uid' => array('und' => array(0 => array('value' => $json_user_info['id']))),
     'mail' => $json_user_info['email'],
     'data' => array(
@@ -986,11 +1023,9 @@ function auth_apic_authenticate_submit_redirect($form, &$form_state) {
     if (isset($result) && isset($result->data) && !isset($result->data['errors'])) {
       $orgs = $result->data;
       if (is_array($orgs)) {
+        $devorgs_array = array();
         foreach ($orgs as $org) {
-          if ($devorg != '') {
-            $devorg .= ', ';
-          }
-          $devorg .= $org['name'];
+          $devorgs_array[] = array('value' => $org['name']);
         }
       }
       if (!isset($orgs) || count($orgs) < 1) {
@@ -1008,7 +1043,7 @@ function auth_apic_authenticate_submit_redirect($form, &$form_state) {
       }
       else {
         $account = user_load($form_state['uid']);
-        $edit = array('field_developer_organization' => array('und' => array(0 => array('value' => $devorg))));
+        $edit = array('field_developer_organization' => array('und' => $devorgs_array));
         if (isset($apim_session['memberid']) && (!isset($account->field_uid['und'][0]['value']) || empty($account->field_uid['und'][0]['value']))) {
           $edit['field_uid'] = array('und' => array(0 => array('value' => $apim_session['memberid'])));
         }
@@ -1029,11 +1064,7 @@ function auth_apic_authenticate_submit_redirect($form, &$form_state) {
  * Authenticate with the IBM API Connect environment.
  *
  * @param $name
- *        username
- *
  * @param $pass
- *        password
- *
  * @return object session data from apic or NULL
  */
 function auth_apic_authenticate($name, $pass) {
@@ -1055,6 +1086,11 @@ function auth_apic_authenticate($name, $pass) {
     "X-IBM-APIManagement-Context: " . $apim_session['org'] . '.' . $apim_session['env'],
     'Authorization: Basic ' . base64_encode($name . ':' . $pass)
   );
+  global $language;
+  $lang_name = _ibm_apim_convert_lang_name($language->language);
+  if (isset($lang_name)) {
+    $headers[] = 'Accept-Language: ' . $lang_name;
+  }
 
   $result = _ibm_apim_json_http_request($url, 'GET', $headers);
 
@@ -1117,10 +1153,41 @@ function auth_apic_menu() {
  * @param $items
  */
 function auth_apic_menu_alter(&$items) {
-  // disable the user password tab if using a readonly registry
+  if (isset($items['user/password'])) {
+    $items['user/password']['access callback'] = '_auth_apic_not_ro_registry';
+  }
+  if (isset($items['user/%user/password'])) {
+    $items['user/%user/password']['access callback'] = '_auth_apic_user_is_admin';
+  }
+}
+
+/**
+ * Disable the password callbacks if using readonly registry
+ * @return bool
+ */
+function _auth_apic_not_ro_registry() {
   $ibm_apim_readonly_idp = variable_get('ibm_apim_readonly_idp', FALSE);
-  if ($ibm_apim_readonly_idp == TRUE) {
-    $items['user/password']['access callback'] = FALSE;
+  if ($ibm_apim_readonly_idp == FALSE) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Disable the password callbacks if using readonly registry and not admin
+ * @return bool
+ */
+function _auth_apic_user_is_admin() {
+  $ibm_apim_readonly_idp = variable_get('ibm_apim_readonly_idp', FALSE);
+  $admin_role = user_role_load_by_name('administrator');
+  $admin_rid = $admin_role->rid;
+  if ((user_is_logged_in() && ($ibm_apim_readonly_idp == FALSE || user_has_role($admin_rid))) || strpos(current_path(), 'user/1/password') !== false) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
   }
 }
 
@@ -1133,7 +1200,7 @@ function auth_apic_menu_alter(&$items) {
  * @param $hook
  */
 function auth_apic_module_implements_alter(&$implementations, $hook) {
-  if ($hook == 'form_alter' && isset($implementations['auth_apic'])) {
+  if (($hook == 'form_alter' || $hook == 'menu_alter') && isset($implementations['auth_apic'])) {
     $group = $implementations['auth_apic'];
     unset($implementations['auth_apic']);
     $implementations['auth_apic'] = $group;
@@ -1147,10 +1214,8 @@ function auth_apic_module_implements_alter(&$implementations, $hook) {
 
 /**
  * Implementation of hook_form_user_register_form_alter().
- * @param $form
- *
- * @param $form_state
- *
+ * @param form
+ * @param form_state
  */
 function auth_apic_form_user_register_form_alter(&$form, &$form_state) {
   drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/usercreate.js', array(
@@ -1171,11 +1236,8 @@ function auth_apic_form_user_register_form_alter(&$form, &$form_state) {
  * Use a custom submit handler for the register userform, adding extra values
  * from the IBM API Connect account.
  *
- * @param $form
- *          form
- *
- * @param $form_state
- *          state of the form
+ * @param form
+ * @param form_state
  */
 function auth_apic_register_user($form, &$form_state) {
   $name = '';
@@ -1226,6 +1288,11 @@ function auth_apic_register_user($form, &$form_state) {
     "X-IBM-APIManagement-Context: " . $apim_session['org'] . '.' . $apim_session['env'],
     'Accept: application/json'
   );
+  global $language;
+  $lang_name = _ibm_apim_convert_lang_name($language->language);
+  if (isset($lang_name)) {
+    $headers[] = 'Accept-Language: ' . $lang_name;
+  }
   $result = _ibm_apim_json_http_request($url, 'POST', $headers, json_encode($data));
 
   watchdog('auth_apic_register_user', 'Register user %username, return code %code', array(
@@ -1376,7 +1443,10 @@ function auth_apic_block_view($delta = '') {
           user_cookie_save(array('ibmapimnodevorg' => 0));
         }
       }
-      $block = array('subject' => t('No developer organization message'), 'content' => '');
+      $block = array(
+        'subject' => t('No developer organization message'),
+        'content' => ''
+      );
       break;
     case 'activatemessage' :
       if (isset($_COOKIE['Drupal_visitor_logoff']) && isset($_COOKIE['Drupal_visitor_ibmapimactivate'])) {
@@ -1426,6 +1496,11 @@ function _auth_apic_verify_saml_token($samltoken = NULL) {
     "X-IBM-APIManagement-Context: " . $apim_session['org'] . '.' . $apim_session['env'],
     'X-IBM-APIManagement-IBMIDToken: ' . $samltoken
   );
+  global $language;
+  $lang_name = _ibm_apim_convert_lang_name($language->language);
+  if (isset($lang_name)) {
+    $headers[] = 'Accept-Language: ' . $lang_name;
+  }
 
   $result = _ibm_apim_json_http_request($url, 'GET', $headers);
 
@@ -1449,23 +1524,12 @@ function _auth_apic_verify_saml_token($samltoken = NULL) {
 /**
  * Change a user password.
  *
- * @param
- *          string new_password
- *          The new password to set
- *
- * @param
- *          string authuser
- *          The user ID to make the POST as
- *
- * @param
- *          string username
- *          The username for the user
- *
- * @param
- *          string current_pass
- *          The users current password
- *
- * @return boolean
+ * @param $new_password
+ * @param $authuser
+ * @param $username
+ * @param null $current_pass
+ * @return bool
+ * @throws \Exception
  */
 function _auth_apic_change_user_password($new_password, $authuser, $username, $current_pass = NULL) {
   global $user;
@@ -1488,13 +1552,25 @@ function _auth_apic_change_user_password($new_password, $authuser, $username, $c
 
   $url = '/v1/portal/me/password';
   $data = array("newPassword" => $new_password, "oldPassword" => $current_pass);
-  $custom_auth = base64_encode($authuser . ':' . $current_pass);
+
   // if not admin then update apic too
   if (isset($user->uid) && $user->uid == 1) {
     return TRUE;
   }
   else {
-    $result = ibm_apim_put($url, json_encode($data), $custom_auth);
+    $headers = array(
+      'Content-Type: application/json',
+      'Accept: application/json',
+      "X-IBM-APIManagement-Context: " . $apim_session['org'] . '.' . $apim_session['env'],
+      'Authorization: Basic ' . base64_encode($authuser . ':' . $current_pass)
+    );
+    global $language;
+    $lang_name = _ibm_apim_convert_lang_name($language->language);
+    if (isset($lang_name)) {
+      $headers[] = 'Accept-Language: ' . $lang_name;
+    }
+    $result = _ibm_apim_json_http_request($url, 'PUT', $headers, json_encode($data));
+
     if (isset($result) && $result->code == 204) {
       // update drupal database too
       global $user;
@@ -1515,6 +1591,16 @@ function _auth_apic_change_user_password($new_password, $authuser, $username, $c
       _ibm_apim_refresh_user_data();
       return TRUE;
     }
+    else {
+      // catch the rather nasty error from apim and display a slightly nicer one
+      if (isset($result) && $result->code == 400) {
+        if ($result->data && $result->data['errors']) {
+          if (array_key_exists("usermanagement.passwordtooweak", $result->data['errors'][0])) {
+            drupal_set_message(t('Password must contain characters from 3 of the 4 following categories: 1. upper-case, 2. lower-case, 3. numeric, and 4. punctuation (for example, !, $, #, %)'), 'error');
+          }
+        }
+      }
+    }
   }
   return FALSE;
 }
@@ -1524,9 +1610,7 @@ function _auth_apic_change_user_password($new_password, $authuser, $username, $c
  * This generates an e-mail from the IBM APIm
  * system.
  *
- * @param
- *          string email
- *          The email of the user to reset
+ * @param email
  */
 function _auth_apic_reset_user_password($email) {
   $url = '/v1/portal/users/forgot-password';
@@ -1697,48 +1781,62 @@ function auth_apic_activate_id_callback($path = NULL) {
     $tempPwd = $activationObj->{'authentication'}->{'password'};
     $org = $activationObj->{'providerContext'}->{'orgID'};
     $env = $activationObj->{'providerContext'}->{'environmentID'};
-    $userid = $activationObj->{'username'};
+    $userid = ibm_apim_decrypt_data($activationObj->{'username'});
+    if (isset($userid)) {
+      // verify the temp userid and password are valid
+      $url = $activationObj->{'url'};
+      if (!isset($url)) {
+        drupal_set_message(t('Token did not contain a valid URL. Contact the system administrator for assistance.'), 'error');
+        watchdog('auth_apic_activate_id_callback', 'Invalid Token: Token did not contain a valid URL. token: %token', array(
+          '%token' => serialize($activationObj)
+        ), WATCHDOG_NOTICE);
+        drupal_goto();
+      }
+      $headers = array(
+        'Content-Type: application/json',
+        'Accept: application/json',
+        "X-IBM-APIManagement-Context: " . $org . '.' . $env,
+        'Authorization: Basic ' . base64_encode($tempUser . ':' . $tempPwd)
+      );
+      global $language;
+      $lang_name = _ibm_apim_convert_lang_name($language->language);
+      if (isset($lang_name)) {
+        $headers[] = 'Accept-Language: ' . $lang_name;
+      }
 
-    // verify the temp userid and password are valid
-    $url = $activationObj->{'url'};
-    if (!isset($url)) {
-      drupal_set_message(t('Token did not contain a valid URL. Contact the system administrator for assistance.'), 'error');
-      watchdog('auth_apic_activate_id_callback', 'Invalid Token: Token did not contain a valid URL. token: %token', array(
-        '%token' => serialize($activationObj)
-      ), WATCHDOG_NOTICE);
-      drupal_goto();
-    }
-    $headers = array(
-      'Content-Type: application/json',
-      'Accept: application/json',
-      "X-IBM-APIManagement-Context: " . $org . '.' . $env,
-      'Authorization: Basic ' . base64_encode($tempUser . ':' . $tempPwd)
-    );
+      $result = _ibm_apim_json_http_request($url, 'POST', $headers, '{}');
 
-    $result = _ibm_apim_json_http_request($url, 'POST', $headers, '{}');
+      if (isset($result) && $result->code >= 200 && $result->code < 300) {
+        $account = user_load_by_name($userid);
+        // update status via SQL to avoid triggering drupal activation email
+        db_update('users')
+          ->fields(array('status' => 1))
+          ->condition('uid', $account->uid)
+          ->execute();
 
-    if (isset($result) && $result->code >= 200 && $result->code < 300) {
-      $account = user_load_by_name($userid);
-      // update status via SQL to avoid triggering drupal activation email
-      db_update('users')
-        ->fields(array('status' => 1))
-        ->condition('uid', $account->uid)
-        ->execute();
-
-      drupal_set_message(t('Account successfully activated, please login to continue.'));
-      drupal_goto('user/login');
-    }
-    else {
-      if (isset($result) && $result->code == 400) {
-        if ($result->data && $result->data['errors']) {
-          if (array_key_exists("missingFields", $result->data['errors'][0]) || array_key_exists("validation.resource.representation.missingOrEmptyValues", $result->data['errors'][0])) {
-            // user invited by others and so needs to specify required fields to populate account
-            return drupal_get_form('ibm_apim_activate_create_account_form', $actToken);
-          }
-          elseif (array_key_exists("user.exists.in.portal.active", $result->data['errors'][0]) || array_key_exists("user.exists.in.portal.pending", $result->data['errors'][0])) {
-            // user already exists
-            drupal_set_message(t('User already exists. Please use existing credentials to sign in.'), 'error');
-            drupal_goto('user/login');
+        drupal_set_message(t('Account successfully activated, please login to continue.'));
+        drupal_goto('user/login');
+      }
+      else {
+        if (isset($result) && $result->code == 400) {
+          if ($result->data && $result->data['errors']) {
+            if (array_key_exists("missingFields", $result->data['errors'][0]) || array_key_exists("validation.resource.representation.missingOrEmptyValues", $result->data['errors'][0])) {
+              // user invited by others and so needs to specify required fields to populate account
+              return drupal_get_form('ibm_apim_activate_create_account_form', $actToken);
+            }
+            elseif (array_key_exists("user.exists.in.portal.active", $result->data['errors'][0]) || array_key_exists("user.exists.in.portal.pending", $result->data['errors'][0])) {
+              // user already exists
+              drupal_set_message(t('User already exists. Please use existing credentials to sign in.'), 'error');
+              drupal_goto('user/login');
+            }
+            else {
+              // invalid credentials, redirect to login form
+              drupal_set_message(t('Invalid authentication token. Contact the system administrator.'), 'error');
+              watchdog('auth_apic_activate_id_callback', 'Invalid Token: Error from server. response: %response', array(
+                '%response' => serialize($result)
+              ), WATCHDOG_NOTICE);
+              drupal_goto('user/login');
+            }
           }
           else {
             // invalid credentials, redirect to login form
@@ -1758,14 +1856,13 @@ function auth_apic_activate_id_callback($path = NULL) {
           drupal_goto('user/login');
         }
       }
-      else {
-        // invalid credentials, redirect to login form
-        drupal_set_message(t('Invalid authentication token. Contact the system administrator.'), 'error');
-        watchdog('auth_apic_activate_id_callback', 'Invalid Token: Error from server. response: %response', array(
-          '%response' => serialize($result)
-        ), WATCHDOG_NOTICE);
-        drupal_goto('user/login');
-      }
+    }
+    else {
+      drupal_set_message(t('Failed to decrypt userid. Contact the system administrator for assistance.'), 'error');
+      watchdog('auth_apic_activate_id_callback', 'Invalid Token: Token did not contain a valid userid. token: %token', array(
+        '%token' => serialize($activationObj)
+      ), WATCHDOG_NOTICE);
+      drupal_goto();
     }
   }
   else {
@@ -1779,18 +1876,9 @@ function auth_apic_activate_id_callback($path = NULL) {
 /**
  * Form to allow user to reset their password.
  *
- * @param
- *          form
- *          The form
- *
- * @param
- *          form_state
- *          The form state
- *
- * @param
- *          string path
- *          The token path
- *
+ * @param form
+ * @param form_state
+ * @param path
  * @return array The form
  */
 function auth_apic_forgotpwd_form($form, &$form_state, $path = NULL) {
@@ -1873,13 +1961,8 @@ function auth_apic_forgotpwd_form($form, &$form_state, $path = NULL) {
 /**
  * Submit handler for the forgot password form.
  *
- * @param
- *          form
- *          The form
- *
- * @param
- *          form_state
- *          The form state
+ * @param form
+ * @param form_state
  */
 function auth_apic_forgotpwd_form_submit_handler($form, &$form_state) {
   global $user;
@@ -1908,94 +1991,107 @@ function auth_apic_forgotpwd_form_submit_handler($form, &$form_state) {
   $tempPwd = $activationObj->{'authentication'}->{'password'};
   $org = $activationObj->{'providerContext'}->{'orgID'};
   $env = $activationObj->{'providerContext'}->{'environmentID'};
-  $userid = $activationObj->{'username'};
-
-  // When processing the one-time login link, we have to make sure that a user
-  // isn't already logged in.
-  if ($user->uid) {
-    // The existing user is already logged in.
-    if ($user->name == $userid) {
-      drupal_set_message(t('You are logged in as %user. <a href="!user_edit">Change your password.</a>', array(
-        '%user' => $user->name,
-        '!user_edit' => url("user/$user->uid/edit")
-      )));
-    }
-    // A different user is already logged in on the computer.
-    else {
-      $reset_link_account = user_load_by_name($userid);
-      if (!empty($reset_link_account)) {
-        drupal_set_message(t('Another user (%other_user) is already logged into the site on this computer, but you tried to use a one-time link for user %resetting_user. Please <a href="!logout">logout</a> and try using the link again.', array(
-          '%other_user' => $user->name,
-          '%resetting_user' => $reset_link_account->name,
-          '!logout' => url('user/logout')
+  $userid = ibm_apim_decrypt_data($activationObj->{'username'});
+  if (isset($userid)) {
+    // When processing the one-time login link, we have to make sure that a user
+    // isn't already logged in.
+    if ($user->uid) {
+      // The existing user is already logged in.
+      if ($user->name == $userid) {
+        drupal_set_message(t('You are logged in as %user. <a href="!user_edit">Change your password.</a>', array(
+          '%user' => $user->name,
+          '!user_edit' => url("user/$user->uid/edit")
         )));
       }
+      // A different user is already logged in on the computer.
       else {
-        // Invalid one-time link specifies an unknown user.
-        drupal_set_message(t('The one-time login link you clicked is invalid.'), 'error');
-        watchdog('auth_apic_forgotpwd_form_submit_handler', 'Invalid User: Did not reference a valid user. user: %user', array(
-          '%user' => serialize($userid)
-        ), WATCHDOG_NOTICE);
-      }
-    }
-    drupal_goto();
-  }
-
-  // verify the temp userid and password are valid
-  $host_pieces = _ibm_apim_parse_apim_host();
-  $url = $host_pieces['url'] . '/v1/portal/users/' . drupal_encode_path($userid) . '/reset-password';
-  $headers = array(
-    'Content-Type: application/json',
-    'Accept: application/json',
-    "X-IBM-APIManagement-Context: " . $org . '.' . $env,
-    'Authorization: Basic ' . base64_encode($tempUser . ':' . $tempPwd)
-  );
-
-  $data = array("password" => $password);
-
-  $result = _ibm_apim_json_http_request($url, 'POST', $headers, json_encode($data));
-
-  if (isset($result) && $result->code >= 200 && $result->code < 300) {
-    // log the user in
-    global $user;
-    $user = user_load_by_name($userid);
-
-    // update user password
-    $user->password = $password;
-
-    // save user
-    user_save((object) array('uid' => $user->uid), (array) $user);
-
-    // update session auth token
-    $apim_session = &_ibm_apim_get_apim_session();
-    $apim_session['auth'] = base64_encode($userid . ':' . $password);
-
-    $login_array = array('name' => $userid);
-    user_login_finalize($login_array);
-
-    // make sure have updated user data in session
-    auth_apic_authenticate($userid, $password);
-
-    // redirect to the front page
-    drupal_set_message(t('Password successfully updated.'));
-    drupal_goto();
-  }
-  else {
-    // there was problem with the entered passwords, so stay on the same page
-    if (isset($result->data['errors'])) {
-      // show the errors that the server has returned
-      foreach ($result->data['errors'] as $error_struc) {
-        foreach ($error_struc as $key => $error) {
-          drupal_set_message($error, 'error');
+        $reset_link_account = user_load_by_name($userid);
+        if (!empty($reset_link_account)) {
+          drupal_set_message(t('Another user (%other_user) is already logged into the site on this computer, but you tried to use a one-time link for user %resetting_user. Please <a href="!logout">logout</a> and try using the link again.', array(
+            '%other_user' => $user->name,
+            '%resetting_user' => $reset_link_account->name,
+            '!logout' => url('user/logout')
+          )));
+        }
+        else {
+          // Invalid one-time link specifies an unknown user.
+          drupal_set_message(t('The one-time login link you clicked is invalid.'), 'error');
+          watchdog('auth_apic_forgotpwd_form_submit_handler', 'Invalid User: Did not reference a valid user. user: %user', array(
+            '%user' => serialize($userid)
+          ), WATCHDOG_NOTICE);
         }
       }
+      drupal_goto();
+    }
+
+    // verify the temp userid and password are valid
+    $host_pieces = _ibm_apim_parse_apim_host();
+    $url = $host_pieces['url'] . '/v1/portal/users/' . drupal_encode_path($userid) . '/reset-password';
+    $headers = array(
+      'Content-Type: application/json',
+      'Accept: application/json',
+      "X-IBM-APIManagement-Context: " . $org . '.' . $env,
+      'Authorization: Basic ' . base64_encode($tempUser . ':' . $tempPwd)
+    );
+    global $language;
+    $lang_name = _ibm_apim_convert_lang_name($language->language);
+    if (isset($lang_name)) {
+      $headers[] = 'Accept-Language: ' . $lang_name;
+    }
+
+    $data = array("password" => $password);
+
+    $result = _ibm_apim_json_http_request($url, 'POST', $headers, json_encode($data));
+
+    if (isset($result) && $result->code >= 200 && $result->code < 300) {
+      // log the user in
+      global $user;
+      $user = user_load_by_name($userid);
+
+      // update user password
+      $user->password = $password;
+
+      // save user
+      user_save((object) array('uid' => $user->uid), (array) $user);
+
+      // update session auth token
+      $apim_session = &_ibm_apim_get_apim_session();
+      $apim_session['auth'] = base64_encode($userid . ':' . $password);
+
+      $login_array = array('name' => $userid);
+      user_login_finalize($login_array);
+
+      // make sure have updated user data in session
+      auth_apic_authenticate($userid, $password);
+
+      // redirect to the front page
+      drupal_set_message(t('Password successfully updated.'));
+      drupal_goto();
     }
     else {
-      // Assume it is a token error and redirect to the user/password page.
-      drupal_set_message(t('Invalid authentication token2. Contact the system administrator.'), 'error');
-      watchdog('auth_apic_forgotpwd_form_submit_handler', 'Invalid auth token. response: %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
-      drupal_goto('user/password');
+      // there was problem with the entered passwords, so stay on the same page
+      if (isset($result->data['errors'])) {
+        // show the errors that the server has returned
+        foreach ($result->data['errors'] as $error_struc) {
+          foreach ($error_struc as $key => $error) {
+            drupal_set_message($error, 'error');
+          }
+        }
+      }
+      else {
+        // Assume it is a token error and redirect to the user/password page.
+        drupal_set_message(t('Invalid authentication token2. Contact the system administrator.'), 'error');
+        watchdog('auth_apic_forgotpwd_form_submit_handler', 'Invalid auth token. response: %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
+        drupal_goto('user/password');
+      }
     }
+  }
+  else {
+    drupal_set_message(t('Failed to decrypt userid. Contact the system administrator for assistance.'), 'error');
+    watchdog('auth_apic_forgotpwd_form_submit_handler', 'Invalid Token: Token did not contain a valid userid. token: %token', array(
+      '%token' => serialize($activationObj)
+    ), WATCHDOG_NOTICE);
+    drupal_goto();
   }
 }
 
@@ -2030,7 +2126,22 @@ function auth_apic_do_saml_login() {
   global $base_url;
   $endpoint = _auth_apic_get_saml_endpoint();
   $currentpath = str_replace($base_url . '/', '', $_SERVER['HTTP_REFERER']);
-  if (isset($currentpath) && !empty($currentpath) && strpos($currentpath, "http") === FALSE) {
+  $extrapath = explode("saml/login", $_SERVER["REQUEST_URI"])[1];
+  if (isset($_GET['destination']) && !empty($_GET['destination'])) {
+    if (strpos($_GET['destination'], "http") === FALSE) {
+      $endpoint .= '?currentpath=' . $_GET['destination'];
+    }
+    else {
+      $suffix = str_replace($base_url . '/', '', $_GET['destination']);
+      if (isset($suffix) && !empty($suffix)) {
+        $endpoint .= '?currentpath=' . $suffix;
+      }
+    }
+  }
+  elseif (isset($extrapath)) {
+    $endpoint .= '?currentpath=' . $extrapath;
+  }
+  elseif (isset($currentpath) && !empty($currentpath) && strpos($currentpath, "http") === FALSE) {
     $endpoint .= '?currentpath=' . $currentpath;
   }
   drupal_goto($endpoint, array('external' => TRUE));

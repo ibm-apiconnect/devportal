@@ -1,5 +1,16 @@
 <?php
 
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 // hook_install() implementation
 function bannerblock_install() {
 
@@ -38,10 +49,18 @@ function _bannerblock_delete_banner_block_fields() {
 function _bannerblock_banner_block_fields() {
   $t = get_t();
   return array(
+    'bannerblocktitle' => array(
+      'field_name' => 'bannerblocktitle',
+      'label' => t('Title'),
+      'type' => 'text',
+      'translatable' => TRUE
+    ),
     'bannercontent' => array(
       'field_name' => 'bannercontent',
       'label' => t('Content'),
-      'type' => 'text_long'),
+      'type' => 'text_long',
+      'translatable' => TRUE
+    ),
     'bannerbgimage' => array(
       'field_name' => 'bannerbgimage',
       'label' => t('Background Image'),
@@ -52,6 +71,17 @@ function _bannerblock_banner_block_fields() {
 function _bannerblock_banner_block_instances() {
   $t = get_t();
   return array(
+    'bannerblocktitle' => array(
+      'field_name' => 'bannerblocktitle',
+      'type' => 'text',
+      'label' => t('Displayed Title (translatable)'),
+      'widget' => array('type' => 'text_textfield'),
+      'description' => t('The Title of the block. The <em>, <strong>, <i> and <b> HTML tags are allowed, all others will be filtered out.'),
+      'display' => array(
+        'default' => array('label' => 'hidden', 'type' => 'text'),
+        'teaser' => array('label' => 'hidden', 'type' => 'text')
+      )
+    ),
     'bannercontent' => array(
       'field_name' => 'bannercontent',
       'type' => 'text_long',

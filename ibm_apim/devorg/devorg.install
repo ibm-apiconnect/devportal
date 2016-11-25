@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -35,42 +45,50 @@ function _devorg_installed_fields() {
     'devorg_id' => array(
       'field_name' => 'devorg_id',
       'label' => t('Organization ID'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'devorg_name' => array(
       'field_name' => 'devorg_name',
       'label' => t('Organization Name'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'devorg_owner' => array(
       'field_name' => 'devorg_owner',
       'label' => t('Organization Owner'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'devorg_tags' => array(
       'field_name' => 'devorg_tags',
       'label' => t('Organization Tags'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'devorg_members' => array(
       'field_name' => 'devorg_members',
       'label' => t('Members'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'devorg_apimhostname' => array(
       'field_name' => 'devorg_apimhostname',
       'label' => t('APIC Hostname'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'devorg_providerid' => array(
       'field_name' => 'devorg_providerid',
       'label' => t('Provider ID'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'devorg_environmentid' => array(
       'field_name' => 'devorg_environmentid',
       'label' => t('Environment ID'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     )
   );
 }
@@ -209,24 +227,25 @@ function _devorg_delete_node_content($type) {
  * Update code to handle upgrade from earlier version
  */
 function devorg_update_7400() {
+  $type = 'devorg';
   $fields = field_info_field_map();
   foreach (_devorg_installed_fields() as $field) {
     if (!array_key_exists($field['field_name'], $fields)) {
       $field_info = field_info_field($field['field_name']);
       if (!isset($field_info) || empty($field_info)) {
         field_create_field($field);
-        watchdog('devorg', 'Field %field_name has been successfully added', array(
+        watchdog($type, 'Field %field_name has been successfully added', array(
           '%field_name' => $field['field_name']
         ));
       }
       else {
-        watchdog('devorg', 'Field %field_name already exists although instance doesnt', array(
+        watchdog($type, 'Field %field_name already exists although instance doesnt', array(
           '%field_name' => $field['field_name']
         ));
       }
     }
     else {
-      watchdog('devorg', 'Field %field_name already exists', array(
+      watchdog($type, 'Field %field_name already exists', array(
         '%field_name' => $field['field_name']
       ));
     }
@@ -234,15 +253,15 @@ function devorg_update_7400() {
   foreach (_devorg_installed_instances() as $fieldinstance) {
     if (!array_key_exists($fieldinstance['field_name'], $fields)) {
       $fieldinstance['entity_type'] = 'node';
-      $fieldinstance['bundle'] = 'devorg';
+      $fieldinstance['bundle'] = $type;
       field_create_instance($fieldinstance);
-      watchdog('devorg', 'Instance %instance_name has been successfully added', array(
+      watchdog($type, 'Instance %instance_name has been successfully added', array(
         '%instance_name' => $fieldinstance['field_name']
       ));
     }
     else {
       // Fetch existing instance
-      $instance_info = field_info_instance('node', $fieldinstance['field_name'], 'devorg');
+      $instance_info = field_info_instance('node', $fieldinstance['field_name'], $type);
       if (isset($instance_info)) {
         // ensure all view modes are set
         foreach ($fieldinstance['display'] as $key => $value) {
@@ -253,7 +272,7 @@ function devorg_update_7400() {
         // Write the changed instance back.
         field_update_instance($instance_info);
       }
-      watchdog('devorg', 'Instance %instance_name already exists', array(
+      watchdog($type, 'Instance %instance_name already exists', array(
         '%instance_name' => $fieldinstance['field_name']
       ));
     }

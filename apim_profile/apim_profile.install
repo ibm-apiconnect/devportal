@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * Implement hook_install().
@@ -30,10 +40,11 @@ function apim_profile_install() {
     'hs_taxonomy',
     'i18n_redirect',
     'i18n_translation',
-    'i18n_node',
     'i18n_field',
     'i18n_menu',
     'i18n_block',
+    'i18n_panels',
+    'entity_translation_i18n_menu',
     'image_captcha_refresh',
     'messaging_template',
     'messaging_mail',
@@ -57,7 +68,11 @@ function apim_profile_install() {
     'panels_mini',
     'popularproduct',
     'password_policy_password_tab',
-    'account_tabs'
+    'account_tabs',
+    'entity_token',
+    'rules_scheduler',
+    'rules_i18n',
+    'rules_admin'
   );
   module_enable($modules, TRUE);
   variable_set('ibm_apim_enable_password_tab', 1);
@@ -67,7 +82,14 @@ function apim_profile_install() {
   variable_set('ibm_apim_enable_htmlmail', 1);
 
   // Don't need these
-  module_disable(array('shortcut', 'group', 'dblog', 'context', 'toolbar', 'i18n_update'), TRUE);
+  module_disable(array(
+    'shortcut',
+    'group',
+    'dblog',
+    'context',
+    'toolbar',
+    'i18n_update'
+  ), TRUE);
 
   // turn off display of error messages
   variable_set('error_level', '0');
@@ -76,7 +98,7 @@ function apim_profile_install() {
   variable_set('user_register', 1);
 
   // set up to use local translations
-  variable_set('l10n_update_download_store', 'sites/all/translations');
+  variable_set('l10n_update_download_store', conf_path() . '/translations');
   variable_set('l10n_update_check_mode', '2');
   variable_set('ibm_apim_disable_i18n_update', 1);
 
@@ -129,8 +151,16 @@ function apim_profile_install() {
   // hide the language labels from pages and faqs
   $info = array(
     'form' => array(
-      'language' => array('label' => 'Language', 'description' => 'Language selection', 'weight' => 0),
-      'title' => array('label' => 'Title', 'description' => 'Node module element', 'weight' => -5)
+      'language' => array(
+        'label' => 'Language',
+        'description' => 'Language selection',
+        'weight' => 0
+      ),
+      'title' => array(
+        'label' => 'Title',
+        'description' => 'Node module element',
+        'weight' => -5
+      )
     ),
     'display' => array(
       'language' => array(
@@ -200,17 +230,40 @@ function apim_profile_install() {
     'editor' => 'tinymce',
     'settings' => 'a:20:{s:7:"default";i:1;s:11:"user_choose";i:0;s:11:"show_toggle";i:1;s:5:"theme";s:8:"advanced";s:8:"language";s:2:"en";s:7:"buttons";a:20:{s:7:"default";a:36:{s:4:"bold";i:1;s:6:"italic";i:1;s:9:"underline";i:1;s:13:"strikethrough";i:1;s:11:"justifyleft";i:1;s:13:"justifycenter";i:1;s:12:"justifyright";i:1;s:11:"justifyfull";i:1;s:7:"bullist";i:1;s:7:"numlist";i:1;s:7:"outdent";i:1;s:6:"indent";i:1;s:4:"undo";i:1;s:4:"redo";i:1;s:4:"link";i:1;s:6:"unlink";i:1;s:6:"anchor";i:1;s:5:"image";i:1;s:7:"cleanup";i:1;s:12:"formatselect";i:1;s:11:"styleselect";i:1;s:10:"fontselect";i:1;s:14:"fontsizeselect";i:1;s:9:"forecolor";i:1;s:9:"backcolor";i:1;s:3:"sup";i:1;s:3:"sub";i:1;s:10:"blockquote";i:1;s:4:"code";i:1;s:2:"hr";i:1;s:3:"cut";i:1;s:4:"copy";i:1;s:5:"paste";i:1;s:9:"visualaid";i:1;s:12:"removeformat";i:1;s:7:"charmap";i:1;}s:5:"advhr";a:1:{s:5:"advhr";i:1;}s:8:"advimage";a:1:{s:8:"advimage";i:1;}s:7:"advlink";a:1:{s:7:"advlink";i:1;}s:11:"contextmenu";a:1:{s:11:"contextmenu";i:1;}s:14:"directionality";a:2:{s:3:"ltr";i:1;s:3:"rtl";i:1;}s:8:"emotions";a:1:{s:8:"emotions";i:1;}s:10:"fullscreen";a:1:{s:10:"fullscreen";i:1;}s:12:"inlinepopups";a:1:{s:12:"inlinepopups";i:1;}s:14:"insertdatetime";a:2:{s:10:"insertdate";i:1;s:10:"inserttime";i:1;}s:5:"layer";a:4:{s:11:"insertlayer";i:1;s:11:"moveforward";i:1;s:12:"movebackward";i:1;s:8:"absolute";i:1;}s:5:"paste";a:2:{s:9:"pastetext";i:1;s:9:"pasteword";i:1;}s:5:"style";a:1:{s:10:"styleprops";i:1;}s:5:"table";a:1:{s:13:"tablecontrols";i:1;}s:5:"media";a:1:{s:5:"media";i:1;}s:10:"xhtmlxtras";a:1:{s:7:"attribs";i:1;}s:9:"wordcount";a:1:{s:9:"wordcount";i:1;}s:4:"imce";a:1:{s:4:"imce";i:1;}s:6:"linkit";a:1:{s:6:"linkit";i:1;}s:6:"drupal";a:1:{s:5:"break";i:1;}}s:11:"toolbar_loc";s:3:"top";s:13:"toolbar_align";s:4:"left";s:8:"path_loc";s:6:"bottom";s:8:"resizing";i:1;s:11:"verify_html";i:1;s:12:"preformatted";i:0;s:22:"convert_fonts_to_spans";i:0;s:17:"remove_linebreaks";i:0;s:23:"apply_source_formatting";i:0;s:27:"paste_auto_cleanup_on_paste";i:1;s:13:"block_formats";s:32:"p,address,pre,h2,h3,h4,h5,h6,div";s:11:"css_setting";s:5:"theme";s:8:"css_path";s:0:"";s:11:"css_classes";s:0:"";}'
   ))->execute();
-  db_insert('wysiwyg')->fields(array('format' => 'php_code', 'editor' => 'tinymce', 'settings' => NULL))->execute();
-  db_insert('wysiwyg')->fields(array('format' => 'plain_text', 'editor' => 'tinymce', 'settings' => NULL))->execute();
+  db_insert('wysiwyg')->fields(array(
+    'format' => 'php_code',
+    'editor' => 'tinymce',
+    'settings' => NULL
+  ))->execute();
+  db_insert('wysiwyg')->fields(array(
+    'format' => 'plain_text',
+    'editor' => 'tinymce',
+    'settings' => NULL
+  ))->execute();
 
-  db_update('filter')->fields(array(
-    'settings' => 'a:3:{s:12:"allowed_html";s:126:"<a> <em> <strong> <cite> <blockquote> <code> <ul> <ol> <li> <dl> <dt> <dd> <h2> <h3> <h4> <h5> <h6> <p> <div> <address> <span>";s:16:"filter_html_help";i:1;s:20:"filter_html_nofollow";i:0;}',
-    'status' => 1
-  ))->condition('format', 'filtered_html')->condition('module', 'filter')->condition('name', 'filter_html')->execute();
+  db_update('filter')
+    ->fields(array(
+      'settings' => 'a:3:{s:12:"allowed_html";s:137:"<pre> <br> <a> <em> <strong> <cite> <blockquote> <code> <ul> <ol> <li> <dl> <dt> <dd> <h2> <h3> <h4> <h5> <h6> <p> <div> <address> <span>";s:16:"filter_html_help";i:1;s:20:"filter_html_nofollow";i:0;}',
+      'status' => 1
+    ))
+    ->condition('format', 'filtered_html')
+    ->condition('module', 'filter')
+    ->condition('name', 'filter_html')
+    ->execute();
+  variable_set('ibm_apim_updated_filter', 1);
   // Make full_html the default for those who can use it
-  db_update('filter_format')->fields(array('weight' => -10))->condition('format', 'full_html')->execute();
-  db_update('filter_format')->fields(array('weight' => -9))->condition('format', 'filtered_html')->execute();
-  db_update('filter_format')->fields(array('weight' => -8))->condition('format', 'plain_text')->execute();
+  db_update('filter_format')
+    ->fields(array('weight' => -10))
+    ->condition('format', 'full_html')
+    ->execute();
+  db_update('filter_format')
+    ->fields(array('weight' => -9))
+    ->condition('format', 'filtered_html')
+    ->execute();
+  db_update('filter_format')
+    ->fields(array('weight' => -8))
+    ->condition('format', 'plain_text')
+    ->execute();
 
   // configure IMCE
   db_update('variable')->fields(array(
@@ -274,9 +327,10 @@ function apim_profile_install() {
   $add_alias('4', 'privacy');
 
   // set navigation menu to only display on certain pages but hidden by default
-  db_update('block')->fields(array(
-    'region' => '-1',
-    'pages' => '<front>
+  db_update('block')
+    ->fields(array(
+      'region' => '-1',
+      'pages' => '<front>
 api
 api/*
 application
@@ -285,7 +339,10 @@ forum
 forum/*
 product
 product/*'
-  ))->condition('module', 'system')->condition('delta', 'navigation')->execute();
+    ))
+    ->condition('module', 'system')
+    ->condition('delta', 'navigation')
+    ->execute();
 
   // create welcome banner bean
   apim_profile_create_bannerblock();
@@ -303,8 +360,71 @@ product/*'
   variable_set('site_frontpage', 'home');
 
   // create sample content
+  variable_set('title-node-auto-attach-title', 1);
+  variable_set('language_content_type_article', 4);
+  variable_set('language_content_type_page', 4);
+  variable_set('language_content_type_faq', 4);
+  variable_set('language_content_type_blog', 4);
+  variable_set('entity_translation_entity_types', array(
+    'node' => 'node',
+    'bean' => 'bean',
+    'taxonomy_term' => 'taxonomy_term',
+    'comment' => 0,
+    'user' => 0
+  ));
+  variable_set('entity_translation_settings_node__page', array(
+    'default_language' => 'en',
+    'hide_language_selector' => 0,
+    'exclude_language_none' => 0,
+    'lock_language' => 0,
+    'shared_fields_original_only' => 0
+  ));
+  variable_set('entity_translation_settings_node__article', array(
+    'default_language' => 'en',
+    'hide_language_selector' => 0,
+    'exclude_language_none' => 0,
+    'lock_language' => 0,
+    'shared_fields_original_only' => 0
+  ));
+  variable_set('entity_translation_settings_node__blog', array(
+    'default_language' => 'en',
+    'hide_language_selector' => 0,
+    'exclude_language_none' => 0,
+    'lock_language' => 0,
+    'shared_fields_original_only' => 0
+  ));
+  variable_set('entity_translation_settings_node__faq', array(
+    'default_language' => 'en',
+    'hide_language_selector' => 0,
+    'exclude_language_none' => 0,
+    'lock_language' => 0,
+    'shared_fields_original_only' => 0
+  ));
+  variable_set('entity_translation_settings_bean__banner_block', array(
+    'default_language' => 'en',
+    'hide_language_selector' => 0,
+    'exclude_language_none' => 0,
+    'lock_language' => 0,
+    'shared_fields_original_only' => 0
+  ));
+  variable_set('i18n_string_allowed_formats', array(
+    'filtered_html' => 'filtered_html',
+    'plain_text' => 'plain_text',
+    'full_html' => 0
+  ));
+  $body_field_info = field_info_field('body');
+  if (!field_is_translatable('node', $body_field_info)) {
+    $body_field_info['translatable'] = TRUE;
+    field_update_field($body_field_info);
+  }
+
   require_once $path . '/content/nodes.import.inc';
   apim_profile_create_nodes();
+
+  // create admin guide book
+  $path = dirname(__FILE__);
+  require_once $path . '/content/book.import.inc';
+  apim_profile_create_book();
 
   // hide Add Content link from navigation menu
   $mlid = db_query("SELECT mlid FROM {menu_links} WHERE link_title=:link_title AND  link_path=:link_path AND menu_name=:menu_name", array(
@@ -323,10 +443,11 @@ product/*'
     'menu_name' => 'main-menu',
     'link_path' => 'blog',
     'router_path' => 'blog',
-    'link_title' => 'Blogs',
-    'description' => 'Read what we\'re up to',
+    'link_title' => t('Blogs'),
+    'description' => t("Read what we're up to"),
     'weight' => 20,
-    'customized' => 1
+    'customized' => 1,
+    'language' => 'und'
   );
   $bmlid = menu_link_save($blogitem);
 
@@ -334,51 +455,74 @@ product/*'
     'menu_name' => 'main-menu',
     'link_path' => 'forum',
     'router_path' => 'forum',
-    'link_title' => 'Forums',
+    'link_title' => t('Forums'),
     'weight' => 25,
-    'description' => 'Ask our community',
-    'customized' => 1
+    'description' => t('Ask our community'),
+    'customized' => 1,
+    'language' => 'und'
   );
   $fmlid = menu_link_save($forumitem);
 
+  $mainmenu = menu_load('main-menu');
+  if (isset($mainmenu)) {
+    $mainmenu['i18n_mode'] = 5;
+    $mainmenu['language'] = 'en';
+    menu_save($mainmenu);
+  }
+  variable_set('ibm_apim_done_menu_upgrade', 1);
+
   // Create Support menu
-  $supportmenu = array('menu_name' => 'support-menu', 'title' => 'Support', 'description' => 'Support menu');
+  $supportmenu = array(
+    'menu_name' => 'support-menu',
+    'title' => t('Support'),
+    'description' => t('Support menu'),
+    'language' => 'en',
+    'i18n_mode' => 5
+  );
   menu_save($supportmenu);
 
   $forumitem = array(
     'link_path' => 'forum',
-    'link_title' => 'Forum',
+    'link_title' => t('Forum'),
     'menu_name' => 'support-menu',
     'weight' => 0,
     'plid' => 0,
-    'module' => 'menu'
+    'module' => 'menu',
+    'customized' => 1,
+    'language' => 'und'
   );
   menu_link_save($forumitem);
   $faqitem = array(
     'link_path' => 'faq-page',
-    'link_title' => 'Frequently Asked Questions',
+    'link_title' => t('Frequently Asked Questions'),
     'menu_name' => 'support-menu',
     'weight' => 5,
     'plid' => 0,
-    'module' => 'menu'
+    'module' => 'menu',
+    'customized' => 1,
+    'language' => 'und'
   );
   menu_link_save($faqitem);
   $issueitem = array(
     'link_path' => 'support',
-    'link_title' => 'Raise a support ticket',
+    'link_title' => t('Raise a support ticket'),
     'menu_name' => 'support-menu',
     'weight' => 7,
     'plid' => 0,
-    'module' => 'menu'
+    'module' => 'menu',
+    'customized' => 1,
+    'language' => 'und'
   );
   menu_link_save($issueitem);
   $contactitem = array(
     'link_path' => 'contact',
-    'link_title' => 'Contact Us',
+    'link_title' => t('Contact Us'),
     'menu_name' => 'support-menu',
     'weight' => 10,
     'plid' => 0,
-    'module' => 'menu'
+    'module' => 'menu',
+    'customized' => 1,
+    'language' => 'und'
   );
   menu_link_save($contactitem);
 
@@ -395,33 +539,50 @@ product/*'
   ))->execute();
 
   // Create Login menu
-  $supportmenu = array('menu_name' => 'login-menu', 'title' => 'Login', 'description' => 'Login menu');
-  menu_save($supportmenu);
+  $loginmenu = array(
+    'menu_name' => 'login-menu',
+    'title' => t('Login'),
+    'description' => t('Login menu'),
+    'language' => 'en',
+    'i18n_mode' => 5
+  );
+  menu_save($loginmenu);
 
   $loginitem = array(
     'link_path' => 'user/login',
-    'link_title' => 'Login',
+    'link_title' => t('Login'),
     'menu_name' => 'login-menu',
     'weight' => 1,
     'plid' => 0,
-    'module' => 'menu'
+    'module' => 'menu',
+    'customized' => 1,
+    'language' => 'und'
   );
   menu_link_save($loginitem);
   $registeritem = array(
     'link_path' => 'user/register',
-    'link_title' => 'Create an account',
+    'link_title' => t('Create an account'),
     'menu_name' => 'login-menu',
     'weight' => 0,
     'plid' => 0,
-    'module' => 'menu'
+    'module' => 'menu',
+    'customized' => 1,
+    'language' => 'und'
   );
   menu_link_save($registeritem);
+
+  $usermenu = menu_load('user-menu');
+  if (isset($usermenu)) {
+    $usermenu['i18n_mode'] = 5;
+    $usermenu['language'] = 'en';
+    menu_save($usermenu);
+  }
 
   // Create taxonomy menu
   db_insert('block')->fields(array(
     'status' => 1,
     'region' => 'collapsible',
-    'title' => 'Tags',
+    'title' => t('Tags'),
     'module' => 'apic_taxonomy_menu_block',
     'delta' => '1',
     'visibility' => 1,
@@ -495,9 +656,12 @@ application/*',
     'enabled' => 1,
     'policy' => serialize($policy)
   ))->execute();
+  variable_set('ibm_apim_done_password_policy_upgrade', 1);
 
   // enforce password policy for all authenticated users
-  db_insert('password_policy_role')->fields(array('pid' => 1, 'rid' => 2))->execute();
+  db_insert('password_policy_role')
+    ->fields(array('pid' => 1, 'rid' => 2))
+    ->execute();
   // force change of password if using a one-time password reset link
   variable_set('password_policy_force_change_reset', 1);
   variable_set('password_policy_show_restrictions', 1);
@@ -518,7 +682,13 @@ js/admin_menu/cache/*');
   variable_set('ibm_apim_v5_apiinner_fields_upgrade', 1);
 
   // turn on add to any for products
-  variable_set('addtoany_nodetypes', array('api', 'product', 'article', 'page', 'blog'));
+  variable_set('addtoany_nodetypes', array(
+    'api',
+    'product',
+    'article',
+    'page',
+    'blog'
+  ));
   variable_set('addtoany_display_in_teasers', 0);
   variable_set('ibm_apim_addtoany_upgrade', 1);
 
@@ -581,15 +751,29 @@ js/admin_menu/cache/*');
   variable_set('captcha_default_challenge', 'image_captcha/Image');
   variable_set('captcha_persistence', "2");
 
+  _apim_profile_use_title_field();
+
   // disable captcha on login forms & password change
   db_insert('captcha_points')
-    ->fields(array('captcha_type' => NULL, 'module' => NULL, 'form_id' => 'user_login'))
+    ->fields(array(
+      'captcha_type' => NULL,
+      'module' => NULL,
+      'form_id' => 'user_login'
+    ))
     ->execute();
   db_insert('captcha_points')
-    ->fields(array('captcha_type' => NULL, 'module' => NULL, 'form_id' => 'user_login_block'))
+    ->fields(array(
+      'captcha_type' => NULL,
+      'module' => NULL,
+      'form_id' => 'user_login_block'
+    ))
     ->execute();
   db_insert('captcha_points')
-    ->fields(array('captcha_type' => NULL, 'module' => NULL, 'form_id' => 'user_pass'))
+    ->fields(array(
+      'captcha_type' => NULL,
+      'module' => NULL,
+      'form_id' => 'user_pass'
+    ))
     ->execute();
 
   // set up permissions
@@ -635,7 +819,10 @@ js/admin_menu/cache/*');
     'search api content'
   );
   user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, $anonpermissions);
-  user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array('search all content', 'search all excluded entities'));
+  user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array(
+    'search all content',
+    'search all excluded entities'
+  ));
   $authpermissions = array(
     'access site-wide contact form',
     'view faq page',
@@ -672,7 +859,10 @@ js/admin_menu/cache/*');
     'search api content'
   );
   user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, $authpermissions);
-  user_role_revoke_permissions(DRUPAL_AUTHENTICATED_RID, array('search all content', 'search all excluded entities'));
+  user_role_revoke_permissions(DRUPAL_AUTHENTICATED_RID, array(
+    'search all content',
+    'search all excluded entities'
+  ));
   // Find the correct vid for the tags vocab. The vid cannot be determined in a cluster as auto incremented
   // fields have gaps in their sequence when using galera due some some cleverness in its auto increment protocol
   $vid = db_query("SELECT vid FROM taxonomy_vocabulary WHERE machine_name=:machine_name", array(':machine_name' => 'tags'))->fetchField();
@@ -799,7 +989,11 @@ js/admin_menu/cache/*');
 
   // make the developer_org_select block only show for logged in users
   db_insert('block_role')
-    ->fields(array('module' => 'ibm_apim', 'delta' => 'developer_org_select', 'rid' => $admin_rid))
+    ->fields(array(
+      'module' => 'ibm_apim',
+      'delta' => 'developer_org_select',
+      'rid' => $admin_rid
+    ))
     ->execute();
   db_insert('block_role')->fields(array(
     'module' => 'ibm_apim',
@@ -812,14 +1006,26 @@ js/admin_menu/cache/*');
     'rid' => $editor_rid
   ))->execute();
   db_insert('block_role')
-    ->fields(array('module' => 'ibm_apim', 'delta' => 'developer_org_select', 'rid' => $mod_rid))
+    ->fields(array(
+      'module' => 'ibm_apim',
+      'delta' => 'developer_org_select',
+      'rid' => $mod_rid
+    ))
     ->execute();
 
   // turn on bookmark flag for our content types
-  db_insert('flag_types')->fields(array('fid' => 1, 'type' => 'api'))->execute();
-  db_insert('flag_types')->fields(array('fid' => 1, 'type' => 'application'))->execute();
-  db_insert('flag_types')->fields(array('fid' => 1, 'type' => 'product'))->execute();
-  db_insert('flag_types')->fields(array('fid' => 1, 'type' => 'support_ticket'))->execute();
+  db_insert('flag_types')
+    ->fields(array('fid' => 1, 'type' => 'api'))
+    ->execute();
+  db_insert('flag_types')
+    ->fields(array('fid' => 1, 'type' => 'application'))
+    ->execute();
+  db_insert('flag_types')
+    ->fields(array('fid' => 1, 'type' => 'product'))
+    ->execute();
+  db_insert('flag_types')
+    ->fields(array('fid' => 1, 'type' => 'support_ticket'))
+    ->execute();
 
   // configure FAQs
   variable_set('faq_display', 'hide_answer');
@@ -846,6 +1052,7 @@ js/admin_menu/cache/*');
     'faq' => 0,
     'forum' => 0,
     'poll' => 0,
+    'book' => 'book',
     'support_ticket' => 0
   ));
 
@@ -857,10 +1064,14 @@ js/admin_menu/cache/*');
   security_questions_add_question('In what town or city did you meet your spouse/partner?');
   security_questions_add_question('What time of the day were you born? (hh:mm)');
   module_disable(array('security_questions'), TRUE);
+  variable_set('ibm_apim_done_securityquestions_upgrade', 1);
 
   // configure cron
   variable_set('ultimate_cron_plugin_logger_default', 'cache');
-  variable_set('ultimate_cron_plugin_logger_cache_settings', array('bin' => 'cache_ultimate_cron', 'timeout' => '-1'));
+  variable_set('ultimate_cron_plugin_logger_cache_settings', array(
+    'bin' => 'cache_ultimate_cron',
+    'timeout' => '-1'
+  ));
 
   // Always set this as we have changed poorman_keepalive from 0 to 1
   variable_set('ultimate_cron_plugin_launcher_serial_settings', array(
@@ -902,8 +1113,15 @@ js/admin_menu/cache/*');
   ));
   variable_set('ibm_apim_done_frameprevention_upgrade', 1);
   variable_set('seckit_csrf', array('origin' => 1, 'origin_whitelist' => ""));
-  variable_set('seckit_ssl', array('hsts' => 1, 'hsts_max_age' => "1000", 'hsts_subdomains' => 1));
-  variable_set('seckit_various', array('from_origin' => 0, 'from_origin_destination' => "same"));
+  variable_set('seckit_ssl', array(
+    'hsts' => 1,
+    'hsts_max_age' => "1000",
+    'hsts_subdomains' => 1
+  ));
+  variable_set('seckit_various', array(
+    'from_origin' => 0,
+    'from_origin_destination' => "same"
+  ));
   variable_set('seckit_xss', array(
     'csp' => array(
       'checkbox' => 0,
@@ -952,9 +1170,18 @@ js/admin_menu/cache/*');
   variable_set('ibm_apim_done_no_autocomplete_upgrade', 1);
 
   // Configure Search
-  variable_set('search_active_modules', array('ibm_apim' => 'ibm_apim', 'user' => 'user', 'node' => 0, 'support' => 0));
+  variable_set('search_active_modules', array(
+    'ibm_apim' => 'ibm_apim',
+    'user' => 'user',
+    'node' => 0,
+    'support' => 0
+  ));
   variable_set('search_default_module', 'ibm_apim');
   variable_set('ibm_apim_default_search_done', 1);
+
+  // configure support ticket node type
+  variable_set('node_options_support_ticket', array(0 => 'status'));
+  variable_set('ibm_apim_support_ticket_promote_done', 1);
 
   // search config
   variable_set('search_config', array(
@@ -966,10 +1193,22 @@ js/admin_menu/cache/*');
       'advanced_expand' => 'default'
     ),
     'fields' => array(
-      'containing_any' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
-      'containing_phrase' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
-      'containing_none' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
-      'types' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+      'containing_any' => array(
+        'remove' => 0,
+        'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)
+      ),
+      'containing_phrase' => array(
+        'remove' => 0,
+        'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)
+      ),
+      'containing_none' => array(
+        'remove' => 0,
+        'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)
+      ),
+      'types' => array(
+        'remove' => 0,
+        'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)
+      ),
       'filter' => array(
         'application' => 'application',
         'devorg' => 'devorg',
@@ -985,8 +1224,14 @@ js/admin_menu/cache/*');
       ),
       'groupings' => array()
     ),
-    'category' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
-    'language' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+    'category' => array(
+      'remove' => 0,
+      'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)
+    ),
+    'language' => array(
+      'remove' => 0,
+      'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)
+    ),
     'results' => array('limit' => '10'),
     'restrictions' => array('admin_bypass' => 1)
   ));
@@ -1006,6 +1251,9 @@ js/admin_menu/cache/*');
   // Also clear all caches for good measure. What is the difference between
   // flushing and clearing. Who knows.
   cache_clear_all();
+
+  // reset all static variables too - avoids any ctools issues in ultimate_cron
+  drupal_static_reset();
 }
 
 /**
@@ -1017,7 +1265,10 @@ function apim_profile_configure_connection_form() {
   drupal_set_title(st('Configure API Management'));
   global $base_url;
 
-  $form['apim_config'] = array('#type' => 'fieldset', '#title' => st('Configure API Mangement'));
+  $form['apim_config'] = array(
+    '#type' => 'fieldset',
+    '#title' => st('Configure API Mangement')
+  );
   $form['apim_config']['apim_hostname'] = array(
     '#title' => t('API Manager Hostname'),
     '#description' => t('To configure this Developer Portal to work with the API Manager host you must also go to /apim on the API Manager host, select the environment for this Developer Portal and ensure that the "Custom Developer Portal URL" is set to: @baseurl', array(
@@ -1038,7 +1289,11 @@ function apim_profile_configure_connection_form() {
     '#default_value' => 1
   );
   $form['actions'] = array('#type' => 'actions');
-  $form['actions']['submit'] = array('#type' => 'submit', '#value' => st('Finish'), '#weight' => 15);
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => st('Finish'),
+    '#weight' => 15
+  );
 
   return $form;
 }
@@ -1076,7 +1331,10 @@ function apim_profile_install_tasks() {
   );
 
   // Add batch process installing selected additional languages.
-  $tasks['apim_profile_import_translations'] = array('display_name' => st('Import translations'), 'type' => 'batch');
+  $tasks['apim_profile_import_translations'] = array(
+    'display_name' => st('Import translations'),
+    'type' => 'batch'
+  );
 
   $tasks['apim_profile_configure_connection_form'] = array(
     'display_name' => st('Configure API Management'),
@@ -1131,7 +1389,10 @@ function apim_profile_configure_translations_form() {
     '#size' => 11
   );
 
-  $form['submit'] = array('#type' => 'submit', '#value' => st('Install selected languages'));
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => st('Install selected languages')
+  );
 
   return $form;
 }
@@ -1294,7 +1555,13 @@ function apim_profile_enable_connect_theme() {
   ))->fetchField();
   if (isset($followid) && is_numeric($followid)) {
     db_update('block')
-      ->fields(array('visibility' => 1, 'cache' => 2, 'pages' => "user/*", 'css_class' => '', 'region' => 'sidebar_second'))
+      ->fields(array(
+        'visibility' => 1,
+        'cache' => 2,
+        'pages' => "user/*",
+        'css_class' => '',
+        'region' => 'sidebar_second'
+      ))
       ->condition('module', 'follow')
       ->condition('delta', 'user')
       ->condition('theme', 'connect_theme')
@@ -1323,7 +1590,12 @@ function apim_profile_enable_connect_theme() {
   ))->fetchField();
   if (isset($mainmenuid) && is_numeric($mainmenuid)) {
     db_update('block')
-      ->fields(array('weight' => -12, 'cache' => -1, 'css_class' => '', 'region' => 'menu_bar'))
+      ->fields(array(
+        'weight' => -12,
+        'cache' => -1,
+        'css_class' => '',
+        'region' => 'menu_bar'
+      ))
       ->condition('module', 'system')
       ->condition('delta', 'main-menu')
       ->condition('theme', 'connect_theme')
@@ -1352,7 +1624,11 @@ function apim_profile_enable_connect_theme() {
   ))->fetchField();
   if (isset($searchid) && is_numeric($searchid)) {
     db_update('block')
-      ->fields(array('weight' => -11, 'css_class' => '', 'region' => 'menu_bar'))
+      ->fields(array(
+        'weight' => -11,
+        'css_class' => '',
+        'region' => 'menu_bar'
+      ))
       ->condition('module', 'search')
       ->condition('delta', 'form')
       ->condition('theme', 'connect_theme')
@@ -1409,7 +1685,12 @@ function apim_profile_enable_connect_theme() {
   ))->fetchField();
   if (isset($usermenuid) && is_numeric($usermenuid)) {
     db_update('block')
-      ->fields(array('weight' => 10, 'cache' => -1, 'css_class' => '', 'region' => 'header'))
+      ->fields(array(
+        'weight' => 10,
+        'cache' => -1,
+        'css_class' => '',
+        'region' => 'header'
+      ))
       ->condition('module', 'system')
       ->condition('delta', 'user-menu')
       ->condition('theme', 'connect_theme')
@@ -1436,7 +1717,12 @@ function apim_profile_enable_connect_theme() {
   ))->fetchField();
   if (isset($orgselectid) && is_numeric($orgselectid)) {
     db_update('block')
-      ->fields(array('weight' => 5, 'cache' => -1, 'css_class' => '', 'region' => 'header'))
+      ->fields(array(
+        'weight' => 5,
+        'cache' => -1,
+        'css_class' => '',
+        'region' => 'header'
+      ))
       ->condition('module', 'ibm_apim')
       ->condition('delta', 'developer_org_select')
       ->condition('theme', 'connect_theme')
@@ -1463,7 +1749,12 @@ function apim_profile_enable_connect_theme() {
   ))->fetchField();
   if (isset($notificationid) && is_numeric($notificationid)) {
     db_update('block')
-      ->fields(array('weight' => 15, 'cache' => -1, 'css_class' => '', 'region' => 'header'))
+      ->fields(array(
+        'weight' => 15,
+        'cache' => -1,
+        'css_class' => '',
+        'region' => 'header'
+      ))
       ->condition('module', 'ibm_apim')
       ->condition('delta', 'apim_notification_count')
       ->condition('theme', 'connect_theme')
@@ -1491,9 +1782,9 @@ function apim_profile_enable_connect_theme() {
   if (!isset($blockid) || !is_numeric($blockid)) {
     // Create a custom footer block
     db_insert('block_custom')->fields(array(
-      'body' => '<div class="footer"><span class="centered_link"><a href="terms">Terms of use</a></span><span class="centered_link"><a href="privacy">Privacy policy</a></span></p>',
+      'body' => t('<div class="footer"><span class="centered_link"><a href="terms">Terms of use</a></span><span class="centered_link"><a href="privacy">Privacy policy</a></span></p>'),
       'info' => 'Developer portal footer',
-      'format' => 'full_html'
+      'format' => 'filtered_html'
     ))->execute();
     $blockid = db_query("SELECT bid FROM {block_custom} WHERE info=:info", array(
       ':info' => 'Developer portal footer'
@@ -1509,18 +1800,47 @@ function apim_profile_enable_connect_theme() {
     ->execute();
 
   if (isset($blockid)) {
-    // Place it in the footer region
-    db_insert('block')->fields(array(
-      'region' => 'footer',
-      'module' => 'block',
-      'delta' => $blockid,
-      'status' => 1,
-      'cache' => -1,
-      'pages' => "",
-      'title' => "<none>",
-      'css_class' => "",
-      'theme' => 'connect_theme'
-    ))->execute();
+    $new_blockid = db_query("SELECT bid FROM {block} WHERE theme=:theme AND module=:module AND delta=:delta", array(
+      ':theme' => 'connect_theme',
+      ':module' => 'block',
+      'delta' => $blockid
+    ))->fetchField();
+
+    if (!isset($new_blockid) || !is_numeric($new_blockid)) {
+      // Place it in the footer region
+      db_insert('block')->fields(array(
+        'region' => 'footer',
+        'module' => 'block',
+        'delta' => $blockid,
+        'status' => 1,
+        'cache' => -1,
+        'pages' => "",
+        'title' => "<none>",
+        'css_class' => "",
+        'i18n_mode' => 1,
+        'theme' => 'connect_theme'
+      ))->execute();
+    }
+    // Update block languages
+    db_delete('i18n_block_language')
+      ->condition('module', 'block')
+      ->condition('delta', $blockid)
+      ->execute();
+    $query = db_insert('i18n_block_language')->fields(array(
+      'language',
+      'module',
+      'delta'
+    ));
+    $langs = array_keys(_apim_profile_locale_get_predefined_list());
+    $langs[] = 'en';
+    foreach ($langs as $language) {
+      $query->values(array(
+        'language' => $language,
+        'module' => 'block',
+        'delta' => $blockid,
+      ));
+    }
+    $query->execute();
   }
 
   // set theme settings for logos
@@ -1701,10 +2021,26 @@ function _apim_profile_add_ratings() {
         'not null' => TRUE,
         'description' => 'The sequence number for this data item, used for multi-value fields'
       ),
-      'field_apirating_rating' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'description' => ''),
-      'field_apirating_target' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'description' => '')
+      'field_apirating_rating' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => ''
+      ),
+      'field_apirating_target' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => ''
+      )
     ),
-    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+      'deleted',
+      'delta',
+      'language'
+    ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'bundle' => array('bundle'),
@@ -1764,10 +2100,26 @@ function _apim_profile_add_ratings() {
         'not null' => TRUE,
         'description' => 'The sequence number for this data item, used for multi-value fields'
       ),
-      'field_apirating_rating' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'description' => ''),
-      'field_apirating_target' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'description' => '')
+      'field_apirating_rating' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => ''
+      ),
+      'field_apirating_target' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => ''
+      )
     ),
-    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+      'deleted',
+      'delta',
+      'language'
+    ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'bundle' => array('bundle'),
@@ -1867,7 +2219,13 @@ function _apim_profile_add_ratings() {
         'description' => ''
       )
     ),
-    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+      'deleted',
+      'delta',
+      'language'
+    ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'bundle' => array('bundle'),
@@ -1940,7 +2298,13 @@ function _apim_profile_add_ratings() {
         'description' => ''
       )
     ),
-    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+      'deleted',
+      'delta',
+      'language'
+    ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'bundle' => array('bundle'),
@@ -2068,7 +2432,13 @@ function _apim_profile_add_tags() {
         'description' => ''
       )
     ),
-    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+      'deleted',
+      'delta',
+      'language'
+    ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'bundle' => array('bundle'),
@@ -2136,7 +2506,13 @@ function _apim_profile_add_tags() {
         'description' => ''
       )
     ),
-    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+      'deleted',
+      'delta',
+      'language'
+    ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'bundle' => array('bundle'),
@@ -2236,7 +2612,13 @@ function _apim_profile_add_tags() {
         'description' => ''
       )
     ),
-    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+      'deleted',
+      'delta',
+      'language'
+    ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'bundle' => array('bundle'),
@@ -2304,7 +2686,13 @@ function _apim_profile_add_tags() {
         'description' => ''
       )
     ),
-    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+      'deleted',
+      'delta',
+      'language'
+    ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'bundle' => array('bundle'),
@@ -2422,7 +2810,13 @@ function apim_profile_add_product_tags_field() {
         'description' => ''
       )
     ),
-    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+      'deleted',
+      'delta',
+      'language'
+    ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'bundle' => array('bundle'),
@@ -2490,7 +2884,13 @@ function apim_profile_add_product_tags_field() {
         'description' => ''
       )
     ),
-    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+      'deleted',
+      'delta',
+      'language'
+    ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'bundle' => array('bundle'),
@@ -2605,7 +3005,13 @@ function apim_profile_add_product_ratings_field() {
         'description' => ''
       )
     ),
-    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+      'deleted',
+      'delta',
+      'language'
+    ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'bundle' => array('bundle'),
@@ -2678,7 +3084,13 @@ function apim_profile_add_product_ratings_field() {
         'description' => ''
       )
     ),
-    'primary key' => array('entity_type', 'entity_id', 'deleted', 'delta', 'language'),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+      'deleted',
+      'delta',
+      'language'
+    ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'bundle' => array('bundle'),
@@ -2701,8 +3113,8 @@ function apim_profile_create_bannerblock() {
   $bean->bannercontent = array(
     'und' => array(
       array(
-        'value' => '<h1 style="text-align: center; padding-top: 120px; margin-top: 0;"><span style="font-size: 1.5em; color: #ffffff;">Innovate with our APIs</span></h1><p style="text-align: center;"><span style="color: #ffffff;">Welcome to our API portal where you will find a great selection of APIs for your awesome innovative apps</span></p><p style="text-align: center;">&nbsp;</p>',
-        'format' => 'full_html'
+        'value' => t('<h1 style="text-align: center; padding-top: 120px; margin-top: 0;"><span style="font-size: 1.5em; color: #ffffff;">Innovate with our APIs</span></h1><p style="text-align: center;"><span style="color: #ffffff;">Welcome to our API portal where you will find a great selection of APIs for your awesome innovative apps</span></p><p style="text-align: center;">&nbsp;</p>'),
+        'format' => 'filtered_html'
       )
     )
   );
@@ -2713,6 +3125,8 @@ function apim_profile_create_bannerblock() {
  * Update code to handle upgrade from earlier version
  */
 function apim_profile_update_7400() {
+  // reset all static variables too - avoids any ctools issues in ultimate_cron
+  drupal_static_reset();
   // enable cron
   $modules = array(
     'clone',
@@ -2750,7 +3164,19 @@ function apim_profile_update_7400() {
     'adminimal_admin_menu',
     'underscore',
     'hide_submit',
-    'user_pwreset_timeout'
+    'user_pwreset_timeout',
+    'entity_translation',
+    'title',
+    'i18n_panels',
+    'entity_translation_i18n_menu',
+    'entity_token',
+    'rules_scheduler',
+    'rules_i18n',
+    'rules_admin',
+    'linkchecker',
+    'entityreference',
+    'rules_http_client',
+    'field_group'
   );
   module_enable($modules, TRUE);
 
@@ -2759,6 +3185,11 @@ function apim_profile_update_7400() {
   variable_set('user_email_verification', FALSE);
   variable_set('comment_preview_product', "0");
   variable_set('comment_preview_api', "0");
+  variable_set('l10n_update_download_store', conf_path() . '/translations');
+
+  $path = dirname(__FILE__);
+  require_once $path . '/content/book.import.inc';
+  apim_profile_create_book();
 
   // configure cron
   if (variable_get('ultimate_cron_plugin_logger_default', NULL) == NULL) {
@@ -2770,6 +3201,19 @@ function apim_profile_update_7400() {
       'bin' => 'cache_ultimate_cron',
       'timeout' => '-1'
     ));
+  }
+
+  if (variable_get('ibm_apim_updated_filter', NULL) == NULL) {
+    db_update('filter')
+      ->fields(array(
+        'settings' => 'a:3:{s:12:"allowed_html";s:137:"<pre> <br> <a> <em> <strong> <cite> <blockquote> <code> <ul> <ol> <li> <dl> <dt> <dd> <h2> <h3> <h4> <h5> <h6> <p> <div> <address> <span>";s:16:"filter_html_help";i:1;s:20:"filter_html_nofollow";i:0;}',
+        'status' => 1
+      ))
+      ->condition('format', 'filtered_html')
+      ->condition('module', 'filter')
+      ->condition('name', 'filter_html')
+      ->execute();
+    variable_set('ibm_apim_updated_filter', 1);
   }
 
   if (variable_get('ibm_apim_done_password_policy_path_upgd', NULL) == NULL) {
@@ -2878,6 +3322,7 @@ js/admin_menu/cache/*';
   if (variable_get('ibm_apim_enable_connect_theme', NULL) == NULL) {
     $theme_default = variable_get('theme_default');
     if (isset($theme_default) && $theme_default == 'ibm_apim_theme') {
+      theme_enable(array('connect_theme'));
       variable_set('theme_default', 'connect_theme');
       apim_profile_enable_connect_theme();
       $path = dirname(__FILE__);
@@ -2906,7 +3351,7 @@ js/admin_menu/cache/*';
                 'und' => array(
                   array(
                     'value' => '<h1 style="text-align: center; padding-top: 120px; margin-top: 0;"><span style="font-size: 1.5em; color: #ffffff;">Innovate with our APIs</span></h1><p style="text-align: center;"><span style="color: #ffffff;">Welcome to our API portal where you will find a great selection of APIs for your awesome innovative apps</span></p><p style="text-align: center;">&nbsp;</p>',
-                    'format' => 'full_html'
+                    'format' => 'filtered_html'
                   )
                 )
               );
@@ -2987,10 +3432,173 @@ js/admin_menu/cache/*';
     _apim_profile_enable_htmlmail();
     variable_set('ibm_apim_enable_htmlmail', 1);
   }
+  if (variable_get('ibm_apim_support_ticket_promote_done', NULL) == NULL) {
+    variable_set('node_options_support_ticket', array(0 => 'status'));
+    variable_set('ibm_apim_support_ticket_promote_done', 1);
+  }
+
+  if (variable_get('ibm_apim_done_menu_upgrade', NULL) == NULL) {
+    module_disable(array(
+      'i18n_node',
+      'translation_helpers',
+      'translation'
+    ), TRUE);
+    variable_set('language_content_type_article', 4);
+    variable_set('language_content_type_page', 4);
+    variable_set('language_content_type_faq', 4);
+    variable_set('language_content_type_blog', 4);
+    variable_set('title-node-auto-attach-title', 1);
+    variable_set('i18n_string_allowed_formats', array(
+      'filtered_html' => 'filtered_html',
+      'plain_text' => 'plain_text',
+      'full_html' => 0
+    ));
+    variable_set('entity_translation_entity_types', array(
+      'node' => 'node',
+      'bean' => 'bean',
+      'taxonomy_term' => 'taxonomy_term',
+      'comment' => 0,
+      'user' => 0
+    ));
+    variable_set('entity_translation_settings_node__page', array(
+      'default_language' => 'en',
+      'hide_language_selector' => 0,
+      'exclude_language_none' => 0,
+      'lock_language' => 0,
+      'shared_fields_original_only' => 0
+    ));
+    variable_set('entity_translation_settings_node__article', array(
+      'default_language' => 'en',
+      'hide_language_selector' => 0,
+      'exclude_language_none' => 0,
+      'lock_language' => 0,
+      'shared_fields_original_only' => 0
+    ));
+    variable_set('entity_translation_settings_node__blog', array(
+      'default_language' => 'en',
+      'hide_language_selector' => 0,
+      'exclude_language_none' => 0,
+      'lock_language' => 0,
+      'shared_fields_original_only' => 0
+    ));
+    variable_set('entity_translation_settings_node__faq', array(
+      'default_language' => 'en',
+      'hide_language_selector' => 0,
+      'exclude_language_none' => 0,
+      'lock_language' => 0,
+      'shared_fields_original_only' => 0
+    ));
+    variable_set('entity_translation_settings_bean__banner_block', array(
+      'default_language' => 'en',
+      'hide_language_selector' => 0,
+      'exclude_language_none' => 0,
+      'lock_language' => 0,
+      'shared_fields_original_only' => 0
+    ));
+    $body_field_info = field_info_field('body');
+    if (!field_is_translatable('node', $body_field_info)) {
+      $body_field_info['translatable'] = TRUE;
+      field_update_field($body_field_info);
+    }
+    $banner_field_info = field_info_field('bannercontent');
+    if (!field_is_translatable('bean', $banner_field_info)) {
+      $banner_field_info['translatable'] = TRUE;
+      field_update_field($banner_field_info);
+    }
+    // update banner block to use filtered html so its translatable
+    $beans = bean_get_all_beans();
+    if (isset($beans)) {
+      foreach ($beans as $bean) {
+        if ((isset($bean->delta) && ($bean->delta == 'banner_block')) || (isset($bean->type) && $bean->type == 'banner_block')) {
+          if (isset($bean->bannercontent['und'][0]['format'])) {
+            $bean->bannercontent['und'][0]['format'] = 'filtered_html';
+          }
+          if (isset($bean->bannercontent['und'][0]) && !isset($bean->bannercontent['en'][0]['value'])) {
+            if (!isset($bean->bannercontent['en'])) {
+              $bean->bannercontent['en'] = array();
+            }
+            $bean->bannercontent['en'][0] = $bean->bannercontent['und'][0];
+          }
+          if (isset($bean->bannercontent['en'][0]['format'])) {
+            $bean->bannercontent['en'][0]['format'] = 'filtered_html';
+          }
+          $bean->save();
+        }
+      }
+    }
+
+    $mainmenu = menu_load('main-menu');
+    if (isset($mainmenu)) {
+      $mainmenu['i18n_mode'] = 5;
+      $mainmenu['language'] = 'en';
+      menu_save($mainmenu);
+    }
+    $supportmenu = menu_load('support-menu');
+    if (isset($supportmenu)) {
+      $supportmenu['i18n_mode'] = 5;
+      $supportmenu['language'] = 'en';
+      menu_save($supportmenu);
+    }
+    $loginmenu = menu_load('login-menu');
+    if (isset($loginmenu)) {
+      $loginmenu['i18n_mode'] = 5;
+      $loginmenu['language'] = 'en';
+      menu_save($loginmenu);
+    }
+    $usermenu = menu_load('user-menu');
+    if (isset($usermenu)) {
+      $usermenu['i18n_mode'] = 5;
+      $usermenu['language'] = 'en';
+      menu_save($usermenu);
+    }
+    // update footer block to be filtered_html
+    db_update('block_custom')->fields(array(
+      'format' => 'filtered_html'
+    ))->condition('info', 'Developer portal footer')->execute();
+    $blockid = db_query("SELECT bid FROM {block_custom} WHERE info=:info", array(
+      ':info' => 'Developer portal footer'
+    ))->fetchField();
+    if (isset($blockid)) {
+      db_update('block')->fields(array(
+        'i18n_mode' => 1
+      ))->condition('delta', $blockid)->execute();
+      // Update block languages
+      db_delete('i18n_block_language')
+        ->condition('module', 'block')
+        ->condition('delta', $blockid)
+        ->execute();
+      $query = db_insert('i18n_block_language')->fields(array(
+        'language',
+        'module',
+        'delta'
+      ));
+      foreach (array_keys(_apim_profile_locale_get_predefined_list()) as $language) {
+        $query->values(array(
+          'language' => $language,
+          'module' => 'block',
+          'delta' => $blockid,
+        ));
+      }
+      $query->execute();
+    }
+    $path = dirname(__FILE__);
+    require_once $path . '/content/welcome.page.inc';
+    apim_profile_update_frontpage_i18n();
+
+    variable_set('ibm_apim_done_menu_upgrade', 1);
+  }
+
+  _apim_profile_use_title_field();
 
   if (variable_get('ibm_apim_addtoany_upgrade', NULL) == NULL) {
     // turn on add to any for products
-    variable_set('addtoany_nodetypes', array('api', 'product', 'article', 'page', 'blog'));
+    variable_set('addtoany_nodetypes', array(
+      'api',
+      'product',
+      'article',
+      'page',
+      'blog'
+    ));
     variable_set('ibm_apim_addtoany_upgrade', 1);
   }
 
@@ -3149,27 +3757,34 @@ application/*',
     'faq' => 0,
     'forum' => 0,
     'poll' => 0,
+    'book' => 'book',
     'support_ticket' => 0
   ));
 
-  // setup some example security questions
-  $modules = array('security_questions');
-  module_enable($modules, TRUE);
-  drupal_load('module', 'security_questions');
-  $questions = security_questions_question_load_multiple();
-  if (!isset($questions) || empty($questions) || count($questions) == 0) {
-    security_questions_add_question('What is the name of the place your wedding reception was held?');
-    security_questions_add_question('In what city or town does your nearest sibling live?');
-    security_questions_add_question('What was the name of your elementary / primary school?');
-    security_questions_add_question('In what town or city did you meet your spouse/partner?');
-    security_questions_add_question('What time of the day were you born? (hh:mm)');
+  if (variable_get('ibm_apim_done_securityquestions_upgrade', NULL) == NULL) {
+    // setup some example security questions
+    $modules = array('security_questions');
+    module_enable($modules, TRUE);
+    drupal_load('module', 'security_questions');
+    $questions = security_questions_question_load_multiple();
+    if (!isset($questions) || empty($questions) || count($questions) == 0) {
+      security_questions_add_question('What is the name of the place your wedding reception was held?');
+      security_questions_add_question('In what city or town does your nearest sibling live?');
+      security_questions_add_question('What was the name of your elementary / primary school?');
+      security_questions_add_question('In what town or city did you meet your spouse/partner?');
+      security_questions_add_question('What time of the day were you born? (hh:mm)');
+    }
+    module_disable(array('security_questions'), TRUE);
+    variable_set('ibm_apim_done_securityquestions_upgrade', 1);
   }
-  module_disable(array('security_questions'), TRUE);
 
   if (variable_get('ibm_apim_done_autologout_upgrade', NULL) == NULL) {
     module_load_include('inc', 'autologout', 'autologout.admin');
     $form_state = form_state_defaults();
-    $form_state['values'] = array('autologout_padding' => '0', 'autologout_no_dialog' => 1);
+    $form_state['values'] = array(
+      'autologout_padding' => '0',
+      'autologout_no_dialog' => 1
+    );
     drupal_form_submit('autologout_settings', $form_state);
     variable_set('ibm_apim_done_autologout_upgrade', 1);
   }
@@ -3183,7 +3798,10 @@ application/*',
                'field_applicationtags',
                'field_producttags'
              ) as $fieldname) {
-      db_update('field_config')->fields(array('locked' => 0))->condition('field_name', $fieldname)->execute();
+      db_update('field_config')
+        ->fields(array('locked' => 0))
+        ->condition('field_name', $fieldname)
+        ->execute();
     }
     variable_set('ibm_apim_done_unlock_fields_upgrade', 1);
   }
@@ -3272,7 +3890,9 @@ application/*',
   if (!module_exists('product')) {
     $modules = array('product');
     module_enable($modules, TRUE);
-    db_insert('flag_types')->fields(array('fid' => 1, 'type' => 'product'))->execute();
+    db_insert('flag_types')
+      ->fields(array('fid' => 1, 'type' => 'product'))
+      ->execute();
   }
   // enable auth_apic module if not already present
   if (!module_exists('auth_apic')) {
@@ -3294,12 +3914,15 @@ application/*',
   }
 
   // fix password policy
-  $policy = array("character_types" => "3", "length" => "8");
-  db_update('password_policy')
-    ->fields(array('policy' => serialize($policy)))
-    ->condition('pid', 1)
-    ->condition('name', 'password-strength')
-    ->execute();
+  if (variable_get('ibm_apim_done_password_policy_upgrade', NULL) == NULL) {
+    $policy = array("character_types" => "3", "length" => "8");
+    db_update('password_policy')
+      ->fields(array('policy' => serialize($policy)))
+      ->condition('pid', 1)
+      ->condition('name', 'password-strength')
+      ->execute();
+    variable_set('ibm_apim_done_password_policy_upgrade', 1);
+  }
 
   if (variable_get('ibm_apim_done_csspreprocess_upgrade', NULL) == NULL) {
     variable_set('preprocess_css', 1);
@@ -3324,19 +3947,33 @@ application/*',
 
   if (variable_get('ibm_apim_done_seckit_upgrade', NULL) == NULL) {
     if (variable_get('seckit_csrf', NULL) == NULL) {
-      variable_set('seckit_csrf', array('origin' => 1, 'origin_whitelist' => ""));
+      variable_set('seckit_csrf', array(
+        'origin' => 1,
+        'origin_whitelist' => ""
+      ));
     }
     if (variable_get('seckit_ssl', NULL) == NULL) {
-      variable_set('seckit_ssl', array('hsts' => 0, 'hsts_max_age' => "1000", 'hsts_subdomains' => 1));
+      variable_set('seckit_ssl', array(
+        'hsts' => 0,
+        'hsts_max_age' => "1000",
+        'hsts_subdomains' => 1
+      ));
     }
     else {
       $hsts = variable_get('seckit_ssl');
       if ($hsts['hsts'] != 0) {
-        variable_set('seckit_ssl', array('hsts' => 0, 'hsts_max_age' => "1000", 'hsts_subdomains' => 1));
+        variable_set('seckit_ssl', array(
+          'hsts' => 0,
+          'hsts_max_age' => "1000",
+          'hsts_subdomains' => 1
+        ));
       }
     }
     if (variable_get('seckit_various', NULL) == NULL) {
-      variable_set('seckit_various', array('from_origin' => 0, 'from_origin_destination' => "same"));
+      variable_set('seckit_various', array(
+        'from_origin' => 0,
+        'from_origin_destination' => "same"
+      ));
     }
     if (variable_get('seckit_xss', NULL) == NULL) {
       variable_set('seckit_xss', array(
@@ -3397,7 +4034,10 @@ application/*',
       $modules = array('popularapi', 'popularproduct');
       module_enable($modules, TRUE);
     }
-    $perms = array('view any popularapi_block bean', 'view any popularproduct_block bean');
+    $perms = array(
+      'view any popularapi_block bean',
+      'view any popularproduct_block bean'
+    );
     user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, $perms);
     user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, $perms);
     $adminperms = array(
@@ -3473,8 +4113,14 @@ application/*',
 
   // configure search_config
   if (variable_get('ibm_apim_search_config_done', NULL) == NULL) {
-    user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array('search all content', 'search all excluded entities'));
-    user_role_revoke_permissions(DRUPAL_AUTHENTICATED_RID, array('search all content', 'search all excluded entities'));
+    user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array(
+      'search all content',
+      'search all excluded entities'
+    ));
+    user_role_revoke_permissions(DRUPAL_AUTHENTICATED_RID, array(
+      'search all content',
+      'search all excluded entities'
+    ));
     $perms = array(
       'search api content',
       'search blog content',
@@ -3498,10 +4144,22 @@ application/*',
         'advanced_expand' => 'default'
       ),
       'fields' => array(
-        'containing_any' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
-        'containing_phrase' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
-        'containing_none' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
-        'types' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+        'containing_any' => array(
+          'remove' => 0,
+          'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)
+        ),
+        'containing_phrase' => array(
+          'remove' => 0,
+          'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)
+        ),
+        'containing_none' => array(
+          'remove' => 0,
+          'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)
+        ),
+        'types' => array(
+          'remove' => 0,
+          'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)
+        ),
         'filter' => array(
           'application' => 'application',
           'devorg' => 'devorg',
@@ -3517,16 +4175,30 @@ application/*',
         ),
         'groupings' => array()
       ),
-      'category' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
-      'language' => array('remove' => 0, 'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)),
+      'category' => array(
+        'remove' => 0,
+        'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)
+      ),
+      'language' => array(
+        'remove' => 0,
+        'roles' => array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0)
+      ),
       'results' => array('limit' => '10'),
       'restrictions' => array('admin_bypass' => 1)
     ));
     variable_set('ibm_apim_search_config_done', 1);
   }
 
-  // no longer need the plan module
-  module_disable(array('plan'), TRUE);
+  if (variable_get('ibm_apim_frontpage_styling_update', NULL) == NULL) {
+    require_once $path . '/content/welcome.page.inc';
+    apim_profile_update_frontpage_styling();
+    variable_set('ibm_apim_frontpage_styling_update', 1);
+  }
+
+  if (module_exists('plan')) {
+    // no longer need the plan module
+    module_disable(array('plan'), TRUE);
+  }
 
   // force a menu rebuild
   menu_rebuild();
@@ -3870,14 +4542,17 @@ function _apim_profile_phase_tag() {
 }
 
 function _apim_profile_enable_htmlmail() {
-  variable_set('mail_system', array('default-system' => "HTMLMailSystem", 'htmlmail' => "HTMLMailSystem"));
+  variable_set('mail_system', array(
+    'default-system' => "HTMLMailSystem",
+    'htmlmail' => "HTMLMailSystem"
+  ));
 
   variable_set('user_mail_cancel_confirm_body', '<p  style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
 <p  style="font-family: Arial, Helvetica, Sans-Serif">A request to cancel your account has been made at [site:name].</p>
 <p  style="font-family: Arial, Helvetica, Sans-Serif">You may now cancel your account on <a href="[site:url-brief]">[site:url-brief]</a> by clicking this link or copying and pasting it into your browser:<br/><br/>
 <a href="[user:cancel-url]">[user:cancel-url]</a></p>
 <p  style="font-family: Arial, Helvetica, Sans-Serif"><b>NOTE</b>: The cancellation of your account is not reversible.</p>
-<p  style="font-family: Arial, Helvetica, Sans-Serif">This link expires in one day and nothing will happen if it is not used.</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">This link expires in [user:password_reset_timeout] and nothing will happen if it is not used.</p>
 <p  style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
   variable_set('user_mail_cancel_confirm_subject', 'Account cancellation request for [user:name] at [site:name]');
 
@@ -3885,7 +4560,7 @@ function _apim_profile_enable_htmlmail() {
 <p  style="font-family: Arial, Helvetica, Sans-Serif">A request to reset the password for your account has been made at [site:name].</p>
 <p  style="font-family: Arial, Helvetica, Sans-Serif">You may now log in by clicking this link or copying and pasting it to your browser:<br/><br/>
 <a href="[user:one-time-login-url]">[user:one-time-login-url]</a></p>
-<p  style="font-family: Arial, Helvetica, Sans-Serif">This link can only be used once to log in and will lead you to a page where you can set your password. It expires after one day and nothing will happen if it\'s not used.</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">This link can only be used once to log in and will lead you to a page where you can set your password. It expires in [user:password_reset_timeout] and nothing will happen if it\'s not used.</p>
 <p  style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
   variable_set('user_mail_password_reset_subject', 'Replacement login information for [user:name] at [site:name]');
 
@@ -3943,4 +4618,53 @@ function _apim_profile_endswith($string, $test) {
     return FALSE;
   }
   return substr_compare($string, $test, $strlen - $testlen, $testlen) === 0;
+}
+
+/**
+ * Upgrade all title fields to be translated fields
+ */
+function _apim_profile_use_title_field() {
+  if (variable_get('ibm_apim_done_title_field_upgrade', NULL) == NULL) {
+    if (!module_exists('title') || !module_exists('entity_translation')) {
+      module_enable(array('title', 'entity_translation'), TRUE);
+    }
+    foreach (array(
+               'page',
+               'article',
+               'application',
+               'api',
+               'product',
+               'blog',
+               'devorg',
+               'book',
+               'faq',
+               'forum',
+               'poll',
+               'support_ticket'
+             ) as $nodetype) {
+      $info = title_field_replacement_info('node', 'title');
+      if (!$info) {
+        return;
+      }
+
+      $field_name = $info['field']['field_name'];
+      $instance = field_info_instance('node', $field_name, $nodetype);
+
+      if (empty($instance)) {
+        $options = variable_get('title_' . 'node', array());
+        $field = field_info_field($field_name);
+        if (empty($field)) {
+          field_create_field($info['field']);
+        }
+        $info['instance']['entity_type'] = 'node';
+        $info['instance']['bundle'] = $nodetype;
+        $info['instance']['settings']['hide_label']['page'] = isset($options['hide_label']['page']) ? $options['hide_label']['page'] : FALSE;
+        $info['instance']['settings']['hide_label']['entity'] = isset($options['hide_label']['entity']) ? $options['hide_label']['entity'] : FALSE;
+        field_create_instance($info['instance']);
+
+        title_field_replacement_batch_set('node', $nodetype, 'title');
+      }
+    }
+    variable_set('ibm_apim_done_title_field_upgrade', 1);
+  }
 }

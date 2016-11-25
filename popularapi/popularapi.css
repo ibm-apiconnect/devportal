@@ -1,3 +1,8 @@
+.bean-popularproduct-block.entity.entity-bean,
+.bean-popularapi-block.entity.entity-bean {
+  display: none;
+}
+
 .popularapiblock {
   text-align: center;
   margin: auto;

@@ -32,6 +32,8 @@ class IbmApimOrgsWebTestCase extends SiteWebTestCase {
    * Test Case - Testing the organisational aspects of APIC Portal
    */
   public function testOrganisations() {
+    debug('Begin testOrganisations tests');
+
     $this->login($this);
     $orgNameBanner = ($this->findElementByCss('div.elipsis-names')[0]);
     $emailBanner = ($this->findElementByCss('div.elipsis-names')[1]);
@@ -56,7 +58,9 @@ class IbmApimOrgsWebTestCase extends SiteWebTestCase {
     //debug($apimSession);
 
     // What's in the hostVariable
+
     $hostVariable = variable_get('ibm_apim_host');
+
     //debug($hostVariable);
 
     $this->drupalGet('/myorg/edit');
@@ -69,10 +73,16 @@ class IbmApimOrgsWebTestCase extends SiteWebTestCase {
     $edit['name'] = $this->randomName(10);
     $this->drupalPost('/myorg/edit', $edit, t('Submit'));
 
+    $this->assertText(t('Organization name updated.'), 'Organization name updated');
+
     // Check on the changes
     $this->assertText($edit['name'], 'The name of the organisation has been successfully updated to: ' . $edit['name']);
-    $this->assertTitle($edit['name'] . ' | API Portal');
+
+    // Be tidy - change name of org back to original
+    $edit['name'] = $orgNameBanner;
+    $this->drupalPost('/myorg/edit', $edit, t('Submit'));
 
     $this->drupalLogout();
+    debug('Finished testOrganisations tests');
   }
 }

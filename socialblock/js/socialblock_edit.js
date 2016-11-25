@@ -1,3 +1,14 @@
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 window.onload = function () {
     var forums = document.getElementsByClassName('sticky-table')[0].children[1].children;
     document.getElementById('edit-display-all-forums').addEventListener('click', checkAllForums);

@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2015, 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * IBM API Connect Integration
@@ -285,16 +295,23 @@ function api_preprocess_node(&$variables) {
         if (!empty($forumID)) {
           reset($forumID);
           $first_key = key($forumID);
-          $variables['apiforumlink'] = '<a href="' . url('forum/' . $forumID[$first_key]->tid) . '">' . t('Discuss this API in the forum') . '</a>';
+          $variables['apiforumlink'] = '<a href="' . url('forum/' . $forumID[$first_key]->tid) . '"><i class="material-icons">forum</i> ' . t('Discuss this API in the forum') . '</a>';
         }
       }
       if (module_exists('product')) {
         $apim_session = &_ibm_apim_get_apim_session();
         if (isset($apim_session['productid'])) {
           $productnid = check_plain($apim_session['productid']);
+          // check this api is in the referenced product
+          $apis = product_get_apis($productnid);
+          if (!in_array($variables['node']->nid,$apis)) {
+            unset($apim_session['productid']);
+            unset($productnid);
+          }
         }
         if (!isset($productnid) || !is_numeric($productnid)) {
           $prod_nids = array();
+          $allowed_products = product_list_products();
           $query = new EntityFieldQuery();
           $query->entityCondition('entity_type', 'node')
             ->entityCondition('bundle', 'product')
@@ -302,19 +319,31 @@ function api_preprocess_node(&$variables) {
           $results = $query->execute();
           if (isset($results['node'])) {
             foreach ($results['node'] as $item) {
-              $prod_nids[] = $item->nid;
+              if (in_array($item->nid, $allowed_products)) {
+                $prod_nids[] = $item->nid;
+              }
             }
           }
-          if (is_array($prod_nids) && count($prod_nids) > 0) {
-            // TODO handle API being in more than one product for now just grab first one
-            $productnid = $prod_nids[0];
-            $apim_session['productid'] = $productnid;
+          $productnid = null;
+          $apim_session['productid'] = null;
+          if (is_array($prod_nids)) {
+            if (count($prod_nids) == 1) {
+              $productnid = $prod_nids[0];
+              $apim_session['productid'] = $productnid;
+            }
+            else {
+              // API is in more than one product so redirect to a list to allow them to select one
+              drupal_goto('product/select/' . $variables['node']->nid);
+            }
           }
         }
         if (isset($productnid)) {
           $productnode = node_load($productnid);
           $variables['productnode'] = $productnode;
           $variables['productnid'] = $productnid;
+        } else {
+          $variables['productnode'] = null;
+          $variables['productnid'] = null;
         }
 
         $variables['plans'] = unserialize($productnode->product_plans[$productnode->language][0]['value']);
@@ -353,11 +382,18 @@ function api_preprocess_node(&$variables) {
             $swagger = unserialize($api->api_resources[$api->language][0]['value']);
             $variables['apis'][] = $swagger;
           }
+          $docpages = api_get_linked_pages($variables['node']->nid);
+          $variables['docpages'] = $docpages;
+          if (isset($productnid)) {
+            $product_docpages = product_get_linked_pages($productnid);
+            $variables['product_docpages'] = $product_docpages;
+          }
         }
       }
       if (module_exists('application')) {
         $apps = array();
         $creds = array();
+        $redirect_uris = array();
         $query = new EntityFieldQuery();
         $query->entityCondition('entity_type', 'node')
           ->entityCondition('bundle', 'application')
@@ -380,11 +416,15 @@ function api_preprocess_node(&$variables) {
                 $name .= ' : ' . check_plain($cred['description']);
               }
               $creds[] = array('id' => $cred['client-id'], 'name' => $name);
+              if (isset($node->application_oauthredirecturi[$node->language][0]['value'])) {
+                $redirect_uris[$cred['client-id']] = $node->application_oauthredirecturi[$node->language][0]['value'];
+              }
             }
           }
         }
         $variables['apps'] = $apps;
         $variables['creds'] = $creds;
+        $variables['redirect_uris'] = $redirect_uris;
       }
       else {
         $variables['apps'] = array();
@@ -448,60 +488,22 @@ function api_collection_callback($apiref = NULL) {
   }
 
   if ($ref == NULL) {
-    // user has access to everything
-    if (ibm_apim_explicit_user_access('edit any api content')) {
-      $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type', 'node')
-        ->propertyCondition('status', 1)
-        ->entityCondition('bundle', 'api');
-      $results = $query->execute();
-    }
-    else {
-      $productnids = product_list_products();
-      $productnodes = node_load_multiple($productnids);
-      $refarray = array();
-      foreach ($productnodes as $productnode) {
-        if (isset($productnode->product_apis[$productnode->language][0]['value'])) {
-          $prodrefs = unserialize($productnode->product_apis[$productnode->language][0]['value']);
-          foreach ($prodrefs as $prodref) {
-            $refarray[] = $prodref['name'];
-          }
-        }
-      }
 
-      if (isset($refarray) && is_array($refarray) && count($refarray) > 0) {
-        $query = new EntityFieldQuery();
-        $query->entityCondition('entity_type', 'node')
-          ->entityCondition('bundle', 'api')
-          ->propertyCondition('status', 1)
-          ->fieldCondition('api_ref', 'value', $refarray);
-        $results = $query->execute();
-      }
-    }
-    if (isset($results) && isset($results['node'])) {
-      $finalnids = array();
-      foreach ($results['node'] as $item) {
-        $finalnids[] = $item->nid;
-      }
+    $nids = api_list_apis();
+    // handle paging
+    $page = pager_find_page();
+    $total = count($nids);
+    $offset = $limit * $page;
+    $chunk = array_slice($nids, $offset, $limit);
+    pager_default_initialize($total, $limit);
 
-      // handle paging
-      $page = pager_find_page();
-      $total = count($finalnids);
-      $offset = $limit * $page;
-      $chunk = array_slice($finalnids, $offset, $limit);
-      pager_default_initialize($total, $limit);
+    $finalnodes = node_load_multiple($chunk);
 
-      $finalnodes = node_load_multiple($chunk);
-
-      if ($finalnodes) {
-        $build = array(
-          'content' => node_view_multiple($finalnodes),
-          'pager' => array('#markup' => theme('pager'), '#weight' => $limit)
-        );
-      }
-      else {
-        drupal_set_message(t('No apis have been found.'), 'warning');
-      }
+    if ($finalnodes) {
+      $build = array(
+        'content' => node_view_multiple($finalnodes),
+        'pager' => array('#markup' => theme('pager'), '#weight' => $limit)
+      );
     }
     else {
       drupal_set_message(t('No apis have been found.'), 'warning');
@@ -546,8 +548,87 @@ function api_collection_callback($apiref = NULL) {
   return $build;
 }
 
-//Creates or updates an existing node. Returns true if a new node was
-//created or false if an existing one was updated.
+/**
+ * Return list of NIDs for all APIs the current user can access
+ * @return array
+ */
+function api_list_apis() {
+  $finalnids = array();
+  // user has access to everything
+  if (ibm_apim_explicit_user_access('edit any api content')) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->propertyCondition('status', 1)
+      ->entityCondition('bundle', 'api');
+    $results = $query->execute();
+  }
+  else {
+    $productnids = product_list_products();
+    $productnodes = node_load_multiple($productnids);
+    $refarray = array();
+    foreach ($productnodes as $productnode) {
+      if (isset($productnode->product_apis[$productnode->language][0]['value'])) {
+        $prodrefs = unserialize($productnode->product_apis[$productnode->language][0]['value']);
+        foreach ($prodrefs as $prodref) {
+          $refarray[] = $prodref['name'];
+        }
+      }
+    }
+
+    if (isset($refarray) && is_array($refarray) && count($refarray) > 0) {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'api')
+        ->propertyCondition('status', 1)
+        ->fieldCondition('api_ref', 'value', $refarray);
+      $results = $query->execute();
+    }
+  }
+  if (isset($results) && isset($results['node'])) {
+    foreach ($results['node'] as $item) {
+      $finalnids[] = $item->nid;
+    }
+  }
+  return $finalnids;
+}
+
+/**
+ * Get all the doc pages that are listed as being linked to a given API NID
+ * @param $apinid
+ * @return array
+ */
+function api_get_linked_pages($apinid) {
+  $finalnids = array();
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'page')
+    ->fieldCondition('field_all_apis', 'value', 1);
+  $results = $query->execute();
+  if (isset($results) && isset($results['node'])) {
+    foreach ($results['node'] as $item) {
+      $finalnids[] = $item->nid;
+    }
+  }
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'page')
+    ->fieldCondition('field_apis', 'target_id', $apinid);
+  $results = $query->execute();
+  if (isset($results) && isset($results['node'])) {
+    foreach ($results['node'] as $item) {
+      $finalnids[] = $item->nid;
+    }
+  }
+  return array_unique($finalnids, SORT_NUMERIC);
+}
+
+/**
+ * Creates or updates an existing node. Returns true if a new node was
+ * created or false if an existing one was updated.
+ *
+ * @param $api
+ * @return bool
+ */
 function api_createOrUpdateAPI($api) {
   $ref = $api['document']['info']['x-ibm-name'] . ':' . $api['document']['info']['version'];
   $query = new EntityFieldQuery();
@@ -827,7 +908,10 @@ function api_createNewAPINode($api) {
       $serialized = filter_xss(serialize($data));
       if ((isset($data) && !empty($data)) && (!isset($node->api_wsdl[$node->language][0]['value']) || $node->api_wsdl[$node->language][0]['value'] != $serialized)) {
         try {
-          $node->api_wsdl[$node->language][] = array('value' => $serialized, 'format' => 'plain_text');
+          $node->api_wsdl[$node->language][] = array(
+            'value' => $serialized,
+            'format' => 'plain_text'
+          );
           $node = node_submit($node); // Prepare node for saving
           node_save($node);
         } catch (Exception $e) {
@@ -1070,7 +1154,10 @@ function api_updateExistingAPINode($node, $api) {
       $serialized = filter_xss(serialize($data));
       if ((isset($data) && !empty($data)) && (!isset($node->api_wsdl[$node->language][0]['value']) || $node->api_wsdl[$node->language][0]['value'] != $serialized)) {
         try {
-          $node->api_wsdl[$node->language][] = array('value' => $serialized, 'format' => 'plain_text');
+          $node->api_wsdl[$node->language][] = array(
+            'value' => $serialized,
+            'format' => 'plain_text'
+          );
           $node = node_submit($node); // Prepare node for saving
           node_save($node);
         } catch (Exception $e) {
@@ -1780,6 +1867,7 @@ function _api_deletedir($dir) {
 }
 
 /**
+ * returns a list of all our custom fields
  * @return array
  */
 function _api_get_ibm_fields() {
@@ -1806,12 +1894,14 @@ function _api_get_ibm_fields() {
     'api_attachments',
     'api_swaggertags',
     'field_apirating',
-    'field_apitags'
+    'field_apitags',
+    'title_field'
   );
   return $ibmfields;
 }
 
 /**
+ * Get the instance info for all our fields
  * @return array
  */
 function _api_get_custom_fields() {
@@ -1858,6 +1948,7 @@ function api_random_image($apiName) {
 }
 
 /**
+ * wrapper function for updating an existing API node
  * @param $api
  */
 function api_updateAPINode($api) {
@@ -1880,6 +1971,7 @@ function api_updateAPINode($api) {
 }
 
 /**
+ * Delete the specified API by NID
  * @param $nid
  */
 function api_deleteAPINode($nid) {

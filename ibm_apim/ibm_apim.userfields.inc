@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2015, 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 function _ibm_apim_add_user_first_name_field() {
   // create first name
@@ -79,6 +89,7 @@ function _ibm_apim_add_user_developerorg_field() {
     $field = array(
       'field_name' => 'field_developer_organization',
       'type' => 'text',
+      'cardinality' => -1,
       'settings' => array('required' => FALSE, 'max_length' => '255')
     );
     field_create_field($field);
@@ -105,6 +116,17 @@ function _ibm_apim_add_user_developerorg_field() {
       'settings' => array('user_register_form' => 1, 'weight' => -7)
     );
     field_create_instance($instance);
+  }
+  else {
+    _ibm_apim_change_devorg_cardinality();
+  }
+}
+
+function _ibm_apim_change_devorg_cardinality() {
+  $existingfield = field_info_field('field_developer_organization');
+  if (isset($existingfield)) {
+    $existingfield['cardinality'] = -1;
+    field_update_field($existingfield);
   }
 }
 
@@ -260,6 +282,66 @@ function _ibm_apim_add_user_uid_field() {
         )
       ),
       'description' => 'Enter your uid.',
+      'settings' => array('user_register_form' => 0, 'weight' => -6)
+    );
+    field_create_instance($instance);
+  }
+}
+
+function _ibm_apim_add_user_codesnippet_field() {
+  // create codesnippet field
+  $existingfield = field_info_field('field_codesnippet');
+  if (!isset($existingfield)) {
+    $field = array(
+      'field_name' => 'field_codesnippet',
+      'type' => 'list_text',
+      'module' => 'list',
+      'settings' => array(
+        'required' => FALSE,
+        'max_length' => '191',
+        'allowed_values' => array(
+          'curl' => 'cURL',
+          'ruby' => 'Ruby',
+          'python' => 'Python',
+          'php' => 'PHP',
+          'java' => 'Java',
+          'node' => 'Node',
+          'go' => 'Go',
+          'swift' => 'Swift',
+          'c' => 'C',
+          'csharp' => 'C#',
+        ),
+        'allowed_values_function' => ''
+      )
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => 'field_codesnippet',
+      'entity_type' => 'user',
+      'label' => 'Code Snippet Language',
+      'bundle' => 'user',
+      'required' => 0,
+      'default_value' =>
+        array(
+          0 =>
+            array(
+              'value' => 'curl',
+            ),
+        ),
+      'widget' => array(
+        'active' => 1,
+        'weight' => '-4',
+        'type' => 'options_select',
+        'module' => 'options'
+      ),
+      'display' => array(
+        'default' => array(
+          'type' => 'list_default',
+          'module' => 'list'
+        )
+      ),
+      'description' => 'Enter your preferred programming language to use as the default for API code snippets.',
       'settings' => array('user_register_form' => 0, 'weight' => -6)
     );
     field_create_instance($instance);

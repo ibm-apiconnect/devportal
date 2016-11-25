@@ -3,6 +3,9 @@ description = Provides modules to access the content in an API Manager node and 
 core = 7.x
 distribution_name = IBM API Management Developer Portal
 
+files[] = content/nodes.import.inc
+files[] = content/welcome.page.inc
+
 ;Force our installation profile to be the default and only profile
 exclusive = TRUE
 
@@ -78,7 +81,6 @@ dependencies[] = tfa_basic
 dependencies[] = legal
 dependencies[] = variable
 dependencies[] = i18n
-dependencies[] = translation_helpers
 dependencies[] = addressfield
 dependencies[] = statsd
 dependencies[] = syslog_advanced
@@ -120,6 +122,14 @@ dependencies[] = htmlmail
 dependencies[] = underscore
 dependencies[] = hide_submit
 dependencies[] = user_pwreset_timeout
+dependencies[] = entity_translation
+dependencies[] = title
+dependencies[] = rules
+dependencies[] = linkchecker
+dependencies[] = entityreference
+dependencies[] = rules_http_client
+dependencies[] = field_group
+
 
 ;Enable our modules
 dependencies[] = ibm_apim

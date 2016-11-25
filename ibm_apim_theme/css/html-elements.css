@@ -72,7 +72,7 @@ tt,
 samp,
 kbd,
 var {
-  font-family: Monaco, "DejaVu Sans Mono", monospace, sans-serif; /* Safari hack */
+  font-family: "DejaVu Sans Mono", monospace, sans-serif; /* Safari hack */
 }
 
 blockquote,

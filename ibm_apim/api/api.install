@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2015, 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -38,103 +48,123 @@ function _api_installed_fields() {
     'api_apimhostname' => array(
       'field_name' => 'api_apimhostname',
       'label' => t('APIC Hostname'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'api_providerid' => array(
       'field_name' => 'api_providerid',
       'label' => t('Provider ID'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'api_environmentid' => array(
       'field_name' => 'api_environmentid',
       'label' => t('Environment ID'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'api_xibmname' => array(
       'field_name' => 'api_xibmname',
       'label' => t('X-IBM-Name'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'api_ref' => array(
       'field_name' => 'api_ref',
       'label' => t('Reference ID'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'api_apiid' => array(
       'field_name' => 'api_apiid',
       'label' => t('ID'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'api_version' => array(
       'field_name' => 'api_version',
       'label' => t('Version'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'api_image' => array(
       'field_name' => 'api_image',
       'label' => t('Image'),
       'type' => 'image',
-      'module' => 'image'
+      'module' => 'image',
+      'translatable' => FALSE
     ),
     'api_description' => array(
       'field_name' => 'api_description',
       'label' => t('Description'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'api_context' => array(
       'field_name' => 'api_context',
       'label' => t('Context'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'api_protocol' => array(
       'field_name' => 'api_protocol',
       'label' => t('Protocol'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'api_security' => array(
       'field_name' => 'api_security',
       'label' => t('Security'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'api_url' => array(
       'field_name' => 'api_url',
       'label' => t('URL'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'api_soapversion' => array(
       'field_name' => 'api_soapversion',
       'label' => t('SOAP Version'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'api_resources' => array(
       'field_name' => 'api_resources',
       'label' => t('Operations'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'api_expandedschema' => array(
       'field_name' => 'api_expandedschema',
       'label' => t('Expanded Schema'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'api_wsdl' => array(
       'field_name' => 'api_wsdl',
       'label' => t('WSDL'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'api_updated' => array(
       'field_name' => 'api_updated',
       'label' => t('Updated'),
-      'type' => 'text'
+      'type' => 'text',
+      'translatable' => FALSE
     ),
     'api_ibmconfiguration' => array(
       'field_name' => 'api_ibmconfiguration',
       'label' => t('IBM Configuration'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'api_swaggertags' => array(
       'field_name' => 'api_swaggertags',
       'label' => t('Swagger Tags'),
-      'type' => 'text_long'
+      'type' => 'text_long',
+      'translatable' => FALSE
     ),
     'api_attachments' => array(
       'field_name' => 'api_attachments',
@@ -142,7 +172,8 @@ function _api_installed_fields() {
       'type' => 'file',
       'module' => 'file',
       'cardinality' => 10,
-      'settings' => array('display_field' => 1, 'display_default' => 1)
+      'settings' => array('display_field' => 1, 'display_default' => 1),
+      'translatable' => FALSE
     )
   );
 }
@@ -545,6 +576,7 @@ function _api_delete_node_content($type) {
  * Update code to handle upgrade from earlier version
  */
 function api_update_7400() {
+  $type = 'api';
   $fields = field_info_field_map();
 
   foreach (_api_installed_fields() as $field) {
@@ -552,31 +584,31 @@ function api_update_7400() {
       $field_info = field_info_field($field['field_name']);
       if (!isset($field_info) || empty($field_info)) {
         field_create_field($field);
-        watchdog('api', 'Field %field_name has been successfully added', array(
+        watchdog($type, 'Field %field_name has been successfully added', array(
           '%field_name' => $field['field_name']
         ));
       }
       else {
-        watchdog('api', 'Field %field_name already exists although instance doesnt', array(
+        watchdog($type, 'Field %field_name already exists although instance doesnt', array(
           '%field_name' => $field['field_name']
         ));
       }
     }
     else {
-      watchdog('api', 'Field %field_name already exists', array('%field_name' => $field['field_name']));
+      watchdog($type, 'Field %field_name already exists', array('%field_name' => $field['field_name']));
     }
   }
 
   foreach (_api_installed_instances() as $fieldinstance) {
     if (!array_key_exists($fieldinstance['field_name'], $fields)) {
       $fieldinstance['entity_type'] = 'node';
-      $fieldinstance['bundle'] = 'api';
+      $fieldinstance['bundle'] = $type;
       field_create_instance($fieldinstance);
-      watchdog('api', 'Instance %instance_name has been successfully added', array('%instance_name' => $fieldinstance['field_name']));
+      watchdog($type, 'Instance %instance_name has been successfully added', array('%instance_name' => $fieldinstance['field_name']));
     }
     else {
       // Fetch existing instance
-      $instance_info = field_info_instance('node', $fieldinstance['field_name'], 'api');
+      $instance_info = field_info_instance('node', $fieldinstance['field_name'], $type);
       if (isset($instance_info)) {
         // ensure all view modes are set
         foreach ($fieldinstance['display'] as $key => $value) {
@@ -587,7 +619,7 @@ function api_update_7400() {
         // Write the changed instance back.
         field_update_instance($instance_info);
       }
-      watchdog('api', 'Instance %instance_name already exists', array('%instance_name' => $fieldinstance['field_name']));
+      watchdog($type, 'Instance %instance_name already exists', array('%instance_name' => $fieldinstance['field_name']));
     }
   }
   // remove obsolete fields
@@ -605,7 +637,7 @@ function api_update_7400() {
         try {
           field_delete_field($field_name);
           field_delete_instance($field_name);
-          watchdog('application', 'Field %field_name has been successfully removed', array(
+          watchdog($type, 'Field %field_name has been successfully removed', array(
             '%field_name' => $field_name
           ));
         } catch (Exception $e) {

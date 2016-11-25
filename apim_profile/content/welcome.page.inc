@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * Create the welcome page
@@ -7,6 +17,33 @@
  * @throws \Exception
  */
 function apim_profile_create_welcome_page($name = 'welcome') {
+  // create title block for featured apis mini-panel
+  db_insert('block_custom')->fields(array(
+    'body' => t('<h2 class="pane-title block-title">Featured APIs</h2>'),
+    'info' => 'featured_apis_title',
+    'format' => 'filtered_html'
+  ))->execute();
+  $blockid = db_query("SELECT bid FROM {block_custom} WHERE info=:info", array(
+    ':info' => 'featured_apis_title'
+  ))->fetchField();
+  if (isset($blockid)) {
+    // Update block languages
+    db_delete('i18n_block_language')
+      ->condition('module', 'block')
+      ->condition('delta', $blockid)
+      ->execute();
+    $query = db_insert('i18n_block_language')->fields(array('language', 'module', 'delta'));
+    $langs = array_keys(_apim_profile_locale_get_predefined_list());
+    $langs[] = 'en';
+    foreach ($langs as $language) {
+      $query->values(array(
+        'language' => $language,
+        'module' => 'block',
+        'delta' => $blockid,
+      ));
+    }
+    $query->execute();
+  }
 
   // create mini panel
   db_insert('panels_display')->fields(array(
@@ -56,7 +93,7 @@ function apim_profile_create_welcome_page($name = 'welcome') {
     'name' => 'page_' . $name . '__panel',
     'task' => 'page',
     'subtask' => $name,
-    'conf' => 'a:11:{s:5:"title";s:5:"Panel";s:9:"no_blocks";i:0;s:8:"pipeline";s:8:"standard";s:22:"body_classes_to_remove";s:0:"";s:19:"body_classes_to_add";s:0:"";s:6:"css_id";s:0:"";s:3:"css";s:0:"";s:8:"contexts";a:0:{}s:13:"relationships";a:0:{}s:4:"name";s:5:"panel";s:3:"did";s:1:"7";}',
+    'conf' => 'a:11:{s:5:"title";s:5:"Panel";s:9:"no_blocks";i:0;s:8:"pipeline";s:8:"standard";s:22:"body_classes_to_remove";s:0:"";s:19:"body_classes_to_add";s:9:"frontpage";s:6:"css_id";s:0:"";s:3:"css";s:0:"";s:8:"contexts";a:0:{}s:13:"relationships";a:0:{}s:4:"name";s:5:"panel";s:3:"did";s:1:"2";}',
     'handler' => 'panel_context'
   ))->execute();
   $page_handler_id = db_query("SELECT did FROM {page_manager_handlers} WHERE subtask=:subtask AND name=:name", array(
@@ -76,7 +113,7 @@ function apim_profile_create_welcome_page($name = 'welcome') {
     ':uuid' => '8cd3c70d-730a-432a-9fe6-96a8e03cb85f'
   ))->fetchField();
   db_update('page_manager_handlers')
-    ->fields(array('conf' => 'a:11:{s:5:"title";s:5:"Panel";s:9:"no_blocks";i:0;s:8:"pipeline";s:8:"standard";s:22:"body_classes_to_remove";s:0:"";s:19:"body_classes_to_add";s:0:"";s:6:"css_id";s:0:"";s:3:"css";s:0:"";s:8:"contexts";a:0:{}s:13:"relationships";a:0:{}s:4:"name";s:5:"panel";s:3:"did";s:' . strlen((string) $panelid) . ':"' . $panelid . '";}'))
+    ->fields(array('conf' => 'a:11:{s:5:"title";s:5:"Panel";s:9:"no_blocks";i:0;s:8:"pipeline";s:8:"standard";s:22:"body_classes_to_remove";s:0:"";s:19:"body_classes_to_add";s:9:"frontpage";s:6:"css_id";s:0:"";s:3:"css";s:0:"";s:8:"contexts";a:0:{}s:13:"relationships";a:0:{}s:4:"name";s:5:"panel";s:3:"did";s:' . strlen((string) $panelid) . ':"' . $panelid . '";}'))
     ->condition('did', $page_handler_id)
     ->execute();
 
@@ -101,16 +138,38 @@ function apim_profile_create_welcome_page($name = 'welcome') {
   apim_profile_create_socialblock();
 
   $insert_welcome_block(6, $panelid, 'two_brick_top', 'block', 'bean-banner_block', '150ca0df-53fe-44db-9266-5a9d1b62ff28', 1);
-  $insert_welcome_block($minipanelid, $panelid, 'two_brick_middle', 'panels_mini', 'popular_apis', '64b194f9-81bb-46f8-ad61-f7ce0a2e2fab', 0);
-  $insert_welcome_block(8, $panelid, 'two_brick_bottom', 'block', 'bean-socialblock', 'cf9bf3b0-f01c-4631-8c27-773bd13ade3e', 0);
+  $insert_welcome_block($minipanelid, $panelid, 'two_brick_middle', 'panels_mini', 'popular_apis', '64b194f9-81bb-46f8-ad61-f7ce0a2e2fab', 1);
+  $insert_welcome_block(8, $panelid, 'two_brick_bottom', 'block', 'bean-socialblock', 'cf9bf3b0-f01c-4631-8c27-773bd13ade3e', 1);
+  // add custom block
+  db_insert('panels_pane')->fields(array(
+    'did' => $panelid,
+    'panel' => 'two_brick_middle',
+    'type' => 'block',
+    'subtype' => 'block-' . $blockid,
+    'shown' => 1,
+    'access' => 'a:0:{}',
+    'configuration' => 'a:2:{s:14:"override_title";i:' . 1 . ';s:19:"override_title_text";s:0:"";}',
+    'cache' => 'a:0:{}',
+    'style' => 'a:1:{s:8:"settings";N;}',
+    'css' => 'a:2:{s:6:"css_id";s:0:"";s:9:"css_class";s:19:"featured_apis_title";}',
+    'extras' => 'a:0:{}',
+    'locks' => 'a:0:{}',
+    'uuid' => '2d598e8e-e128-4c64-8191-6092051b29ae'
+  ))->execute();
+  db_update('panels_pane')
+    ->fields(array('position' => 1))
+    ->condition('subtype', 'popular_apis')
+    ->execute();
 
+  variable_set('ibm_apim_frontpage_styling_update', 1);
 }
 
 function apim_profile_create_socialblock() {
   if (module_exists('socialblock')) {
     $bean = bean_create(array('type' => 'socialblock'));
     $bean->label = 'socialblock';
-    $bean->title = 'Latest forum posts and tweets';
+    $bean->title = '';
+    $bean->socialblocktitle['en'] = array(array('value' => t('Latest forum posts and tweets'), 'format' => 'plain_text'));
     $bean->delta = 'socialblock';
     $bean->type = 'socialblock_block';
     $bean->view_mode = 'default';
@@ -137,4 +196,100 @@ function apim_profile_migrate_frontpage() {
       ->condition('path', 'v5home')
       ->execute();
   }
+}
+
+function apim_profile_update_frontpage_i18n() {
+  // create title block for featured apis mini-panel
+  $blockid = db_query("SELECT bid FROM {block_custom} WHERE info=:info", array(
+    ':info' => 'featured_apis_title'
+  ))->fetchField();
+  if (isset($blockid)) {
+    db_update('block_custom')
+      ->fields(array('body' => t('<h2 class="pane-title block-title">Featured APIs</h2>'), 'format' => 'filtered_html'))
+      ->condition('info', 'featured_apis_title')
+      ->execute();
+  }
+  else {
+    db_insert('block_custom')->fields(array(
+      'body' => t('<h2 class="pane-title block-title">Featured APIs</h2>'),
+      'info' => 'featured_apis_title',
+      'format' => 'filtered_html'
+    ))->execute();
+  }
+
+  $blockid = db_query("SELECT bid FROM {block_custom} WHERE info=:info", array(
+    ':info' => 'featured_apis_title'
+  ))->fetchField();
+  if (isset($blockid)) {
+    // Update block languages
+    db_delete('i18n_block_language')
+      ->condition('module', 'block')
+      ->condition('delta', $blockid)
+      ->execute();
+    $query = db_insert('i18n_block_language')->fields(array('language', 'module', 'delta'));
+    $langs = array_keys(_apim_profile_locale_get_predefined_list());
+    $langs[] = 'en';
+    foreach ($langs as $language) {
+      $query->values(array(
+        'language' => $language,
+        'module' => 'block',
+        'delta' => $blockid,
+      ));
+    }
+    $query->execute();
+
+    // add custom block
+    $panelid = db_query("SELECT did FROM {panels_display} WHERE uuid=:uuid", array(
+      ':uuid' => '8cd3c70d-730a-432a-9fe6-96a8e03cb85f'
+    ))->fetchField();
+    $paneid = db_query("SELECT did FROM {panels_pane} WHERE did=:did AND subtype=:subtype", array(
+      ':did' => $panelid,
+      ':subtype' => 'block-' . $blockid
+    ))->fetchField();
+    if (isset($paneid)) {
+      db_update('panels_pane')
+        ->fields(array(
+          'css' => 'a:2:{s:6:"css_id";s:0:"";s:9:"css_class";s:19:"featured_apis_title";}',
+          'configuration' => 'a:2:{s:14:"override_title";i:' . 1 . ';s:19:"override_title_text";s:0:"";}'
+        ))
+        ->condition('did', $panelid)
+        ->condition('subtype', 'block-' . $blockid)
+        ->execute();
+    }
+    else {
+      db_insert('panels_pane')->fields(array(
+        'did' => $panelid,
+        'panel' => 'two_brick_middle',
+        'type' => 'block',
+        'subtype' => 'block-' . $blockid,
+        'shown' => 1,
+        'access' => 'a:0:{}',
+        'configuration' => 'a:2:{s:14:"override_title";i:' . 1 . ';s:19:"override_title_text";s:0:"";}',
+        'cache' => 'a:0:{}',
+        'style' => 'a:1:{s:8:"settings";N;}',
+        'css' => 'a:2:{s:6:"css_id";s:0:"";s:9:"css_class";s:19:"featured_apis_title";}',
+        'extras' => 'a:0:{}',
+        'locks' => 'a:0:{}',
+        'uuid' => '2d598e8e-e128-4c64-8191-6092051b29ae'
+      ))->execute();
+    }
+  }
+
+  db_update('panels_pane')
+    ->fields(array('position' => 1, 'configuration' => 'a:2:{s:14:"override_title";i:' . 1 . ';s:19:"override_title_text";s:0:"";}'))
+    ->condition('subtype', 'popular_apis')
+    ->execute();
+  db_update('panels_pane')
+    ->fields(array('configuration' => 'a:2:{s:14:"override_title";i:' . 1 . ';s:19:"override_title_text";s:0:"";}'))
+    ->condition('subtype', 'bean-socialblock')
+    ->execute();
+}
+
+function apim_profile_update_frontpage_styling() {
+  db_update('page_manager_handlers')
+    ->fields(array('conf' => 'a:11:{s:5:"title";s:5:"Panel";s:9:"no_blocks";i:0;s:8:"pipeline";s:8:"standard";s:22:"body_classes_to_remove";s:0:"";s:19:"body_classes_to_add";s:9:"frontpage";s:6:"css_id";s:0:"";s:3:"css";s:0:"";s:8:"contexts";a:0:{}s:13:"relationships";a:0:{}s:4:"name";s:5:"panel";s:3:"did";s:1:"2";}'))
+    ->condition('name', 'page_welcome__panel')
+    ->condition('task', 'page')
+    ->condition('subtask', 'welcome')
+    ->execute();
 }

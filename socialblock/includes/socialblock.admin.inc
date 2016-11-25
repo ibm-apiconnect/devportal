@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @param $form
@@ -24,7 +34,7 @@ function socialblock_admin($form, &$form_state) {
     $settings['twitter_token_secret'] = '';
   }
   $form['intro'] = array(
-    '#markup' => '<p>' . t('You must register a Twitter App in order to configure the social block. For information on creating Twitter Apps, see <a href="https://apps.twitter.com">https://apps.twitter.com</a>. Then enter the Twitter application information below.') . '</p>'
+    '#markup' => '<p>' . t('You must register a Twitter App in order to configure the social block. For information on creating Twitter Apps, see <a href="https://apps.twitter.com" target="_blank">https://apps.twitter.com</a>. Then enter the Twitter application information below.') . '</p>'
   );
   $form['twitter_consumer_key'] = array(
     '#type' => 'textfield',

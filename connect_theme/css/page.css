@@ -19,8 +19,21 @@ div.messages {
   margin: 0;
 }
 
+body.not-front .columns {
+  padding-top: 10px;
+}
+
 body.not-front .columns-inner {
   padding: 20px;
+}
+
+body.not-front.node-type-application .columns-inner {
+  padding: 20px 0 20px 0;
+}
+
+body.not-front.node-type-application .columns-inner .portal {
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 body.not-front.node-type-product .columns-inner,
@@ -44,6 +57,10 @@ body.not-front.page-blog .columns-inner,
 body.not-front.node-type-page .columns-inner {
   max-width: 960px;
   margin: auto;
+}
+body.frontpage .columns-inner,
+body.not-front.frontpage .columns-inner {
+  padding: 0;
 }
 
 .panel-pane {
@@ -367,11 +384,13 @@ div.messages {
   background-position: 0 -396px;
 }
 
-body.page-home .region-two-50-top {
+body.page-home .region-two-50-top,
+body.frontpage .region-two-50-top {
   padding-bottom: 20px;
 }
 
-body.page-home .region-two-50-top .block-inner {
+body.page-home .region-two-50-top .block-inner,
+body.frontpage .region-two-50-top .block-inner{
   margin-left: 0;
   margin-right: 0;
 }
@@ -475,7 +494,8 @@ ul.tabs li a.active:visited {
   margin-right: 20px;
 }
 
-body.page-home .block-region-content.block-main {
+body.page-home .block-region-content.block-main,
+body.frontpage .block-region-content.block-main{
   padding: 0;
 }
 
@@ -543,14 +563,16 @@ header#header {
 
 .role-administrator header#header,
 .role-content_author header#header,
-.role-forum_moderator header#header {
+.role-forum_moderator header#header,
+.admin-menu header#header {
   top: 28px;
 }
 
 @media screen and (max-width: 1024px) {
   .role-administrator header#header,
   .role-content_author header#header,
-  .role-forum_moderator header#header {
+  .role-forum_moderator header#header,
+  .admin-menu header#header {
     top: 47px;
   }
 }
@@ -593,7 +615,8 @@ header#header {
 
   .role-administrator #columns,
   .role-content_author #columns,
-  .role-forum_moderator #columns {
+  .role-forum_moderator #columns,
+  .admin-menu #columns {
     margin-top: 140px;
   }
 }
@@ -625,7 +648,8 @@ header#header {
 
   .role-administrator #columns,
   .role-content_author #columns,
-  .role-forum_moderator #columns {
+  .role-forum_moderator #columns,
+  .admin-menu #columns {
     margin-top: 100px;
   }
 }
@@ -837,7 +861,8 @@ header#header {
 
   .role-administrator #columns,
   .role-content_author #columns,
-  .role-forum_moderator #columns {
+  .role-forum_moderator #columns,
+  .admin-menu #columns {
     margin-top: 132px;
   }
 }

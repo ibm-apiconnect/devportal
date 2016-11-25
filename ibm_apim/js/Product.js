@@ -1,3 +1,14 @@
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 (function ($) {
     'use strict';
 
@@ -51,19 +62,21 @@
 
         function checkWidth() {
             var headerdiv = $("#header");
-            var headertop = headerdiv.offset().top;
-            var scrolltop = $(document).scrollTop();
-            var headerbottom = headertop - scrolltop + headerdiv.outerHeight(true);
-            $("#columns").css({'margin-top': ((headerbottom) + 'px')});
-            if ($("body").hasClass("page-comment-reply")) {
-                // move entire page over to allow comment content to appear at the top
-                $('#page').css({'margin-left': '180px'});
-            } else {
-                // set toc top to height of header
-                $(".navigate-toc").css({
-                    'top': ((headerbottom) + 'px'),
-                    'height': ('calc(100% - ' + (headerbottom) + 'px)')
-                });
+            if (headerdiv) {
+                var headertop = headerdiv.offset().top;
+                var scrolltop = $(document).scrollTop();
+                var headerbottom = headertop - scrolltop + headerdiv.outerHeight(true);
+                $("#columns").css({'margin-top': ((headerbottom) + 'px')});
+                if ($("body").hasClass("page-comment-reply")) {
+                    // move entire page over to allow comment content to appear at the top
+                    $('#page').css({'margin-left': '180px'});
+                } else {
+                    // set toc top to height of header
+                    $(".navigate-toc").css({
+                        'top': ((headerbottom) + 'px'),
+                        'height': ('calc(100% - ' + (headerbottom) + 'px)')
+                    });
+                }
             }
 
             var windowsize = $window.width();
@@ -80,9 +93,11 @@
             var plansdiv = $(".plansSection .plans .plansinner");
             var apisdiv = $(".plansSection .apiList");
             var titlediv = $(".plansSection .plansectiontitle");
-            var left = apisdiv.width();
-            var width = titlediv.width();
-            plansdiv.css({'max-width': ((width - left) + 'px')});
+            if (plansdiv && apisdiv && titlediv) {
+                var left = apisdiv.width();
+                var width = titlediv.width();
+                plansdiv.css({'max-width': ((width - left) + 'px')});
+            }
         }
 
         // Execute on load
@@ -125,9 +140,6 @@
             // (http://www.w3.org/TR/CSS21/syndata.html#characters), so we strip those two
             // characters as well.
             input = input.replace(/[^A-Za-z0-9\-_]+/gi, '', input);
-
-            // Removing multiple consecutive hyphens.
-            input = input.replace(/\-+/gi, '-', input);
 
             return input;
         }

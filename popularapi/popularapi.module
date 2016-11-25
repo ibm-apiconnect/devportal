@@ -1,4 +1,14 @@
 <?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2016
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * * Implements hook_bean_types_api_info().
@@ -42,4 +52,26 @@ function popularapi_bean_types() {
   return $plugins;
 }
 
-?>
+/**
+ * Implementation of hook_form_alter()
+ *
+ * @param $form
+ * @param $form_state
+ * @param $form_id
+ */
+function popularapi_form_alter(&$form, &$form_state, $form_id) {
+  switch ($form_id) {
+    case 'bean_form' :
+      $bean = $form['bean']['#value'];
+      if (isset($bean) && isset($bean->type) && $bean->type == 'popularapi_block') {
+        if (isset($form['title'])) {
+          unset($form['title']);
+        }
+        if ($form['view_mode']) {
+          unset($form['view_mode']);
+          $form['view_mode'] = array('#type' => 'hidden', '#value' => 'default');
+        }
+      }
+      break;
+  }
+}

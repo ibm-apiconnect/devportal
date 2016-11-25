@@ -1,5 +1,5 @@
 ;----------// Theme info
-name = IBM API Connect
+name = IBM API Connect Theme
 description = Designed for IBM API Connect but otherwise it is a minimal, re-colorable theme for Drupal 7 that uses HTML5 and <a href="http://drupal.org/project/adaptivetheme">Adaptivetheme 7.x-3.x</a> base theme.
 core        = 7.x
 release     = 7.x-3.x
