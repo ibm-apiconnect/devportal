@@ -631,6 +631,7 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
  * @param form_state
  */
 function _auth_apic_user_profile_form_submit_handler($form, &$form_state) {
+  global $user;
   $account = $form_state['user'];
   $category = $form['#user_category'];
 
@@ -657,13 +658,15 @@ function _auth_apic_user_profile_form_submit_handler($form, &$form_state) {
   if (!isset($edit['data'])) {
     $edit['data'] = array();
   }
-
+  if ($account->uid != 1) {
+    // dont save password for non-admin
+    unset($edit['pass']);
+  }
   user_save($account_unchanged, $edit, $category);
   $form_state['values']['uid'] = $account->uid;
 
   // update APIC with profile changes unless admin
-  global $user;
-  if ($user->uid != 1) {
+  if ($account->uid != 1) {
     _auth_apic_update_apic_profile($form_state['values']);
   }
 
@@ -702,7 +705,10 @@ function _auth_apic_password_policy_password_tab_submit_handler($form, &$form_st
   $rc = _auth_apic_change_user_password($form_state['values']['pass'], $account->name, $account->name, $current_pass);
   if ($rc == TRUE) {
     user_module_invoke('submit', $form_state['values'], $account, 'account');
-    user_save($account, array('pass' => $form_state['values']['pass']));
+    // Do not save non-admin passwords locally
+    if (isset($account->uid) && $account->uid == 1) {
+      user_save($account, array('pass' => $form_state['values']['pass']));
+    }
     unset($_SESSION['pass_reset_' . $account->uid]);
     drupal_set_message(t('Password has been changed.'));
     // add extra message about admin guide if the admin user was created in the last 24 hours
@@ -882,7 +888,7 @@ function _auth_apic_authenticated_login($name, $pass, $authenticated, $login = T
   // this sets up the external user with Drupal by creating a local entry. If they don't exist they are added
   ibm_apim_external_login_register($name, array(
     'status' => 1,
-    'pass' => $pass
+    'pass' => ''
   ), $login);
 
   // we must set the 'uid' to pass back. this looks up the logged in user and sets the Drupal UID
@@ -1183,7 +1189,7 @@ function _auth_apic_user_is_admin() {
   $ibm_apim_readonly_idp = variable_get('ibm_apim_readonly_idp', FALSE);
   $admin_role = user_role_load_by_name('administrator');
   $admin_rid = $admin_role->rid;
-  if ((user_is_logged_in() && ($ibm_apim_readonly_idp == FALSE || user_has_role($admin_rid))) || strpos(current_path(), 'user/1/password') !== false) {
+  if ((user_is_logged_in() && ($ibm_apim_readonly_idp == FALSE || user_has_role($admin_rid))) || strpos(current_path(), 'user/1/password') !== FALSE) {
     return TRUE;
   }
   else {
@@ -1533,19 +1539,6 @@ function _auth_apic_verify_saml_token($samltoken = NULL) {
  */
 function _auth_apic_change_user_password($new_password, $authuser, $username, $current_pass = NULL) {
   global $user;
-  // update drupal database
-  if (isset($user->uid)) {
-    // update user password
-    $edit['pass'] = $new_password;
-    user_save($user, $edit);
-  }
-  else {
-    $acccount = user_load_by_name($username);
-    // update user password
-    $acccount->password = $new_password;
-    // save user
-    user_save((object) array('uid' => $acccount->uid), (array) $acccount);
-  }
   // Make sure we have the session variables set
   $apim_session = &_ibm_apim_get_apim_session();
   $apim_session['auth'] = base64_encode($username . ':' . $new_password);
@@ -1555,6 +1548,9 @@ function _auth_apic_change_user_password($new_password, $authuser, $username, $c
 
   // if not admin then update apic too
   if (isset($user->uid) && $user->uid == 1) {
+    // update drupal database
+    $edit['pass'] = $new_password;
+    user_save($user, $edit);
     return TRUE;
   }
   else {
@@ -1572,20 +1568,6 @@ function _auth_apic_change_user_password($new_password, $authuser, $username, $c
     $result = _ibm_apim_json_http_request($url, 'PUT', $headers, json_encode($data));
 
     if (isset($result) && $result->code == 204) {
-      // update drupal database too
-      global $user;
-      if (isset($user->uid)) {
-        // update user password
-        $edit['pass'] = $new_password;
-        user_save($user, $edit);
-      }
-      else {
-        $account = user_load_by_name($username);
-        // update user password
-        $account->password = $new_password;
-        // save user
-        user_save((object) array('uid' => $account->uid), (array) $account);
-      }
       $apim_session = &_ibm_apim_get_apim_session();
       $apim_session['auth'] = base64_encode($username . ':' . $new_password);
       _ibm_apim_refresh_user_data();
@@ -1686,7 +1668,33 @@ function auth_apic_form_user_pass_alter(&$form, &$form_state) {
     }
   }
   else {
+    $form['#validate'] = array('auth_apic_user_pass_validate');
     $form['#submit'] = array('auth_apic_user_pass_submit');
+  }
+}
+
+/**
+ * Form validation handler for user_pass().
+ *
+ * @see user_pass_submit()
+ */
+function auth_apic_user_pass_validate($form, &$form_state) {
+  $name = trim($form_state['values']['name']);
+  // Try to load by email.
+  $users = user_load_multiple(array(), array('mail' => $name, 'status' => '1'));
+  $account = reset($users);
+  if (!$account) {
+    // No success, try to load by name.
+    $users = user_load_multiple(array(), array(
+      'name' => $name,
+      'status' => '1'
+    ));
+    $account = reset($users);
+  }
+  // if using social login or its for admin ID then add account
+  // otherwise this method is basically a no-op and we'll let apim handle it
+  if (isset($account)) {
+    form_set_value(array('#parents' => array('account')), $account, $form_state);
   }
 }
 
@@ -1699,10 +1707,10 @@ function auth_apic_user_pass_submit(&$form, &$form_state) {
   $secure_pass_form = variable_get('security_questions_password_reset', FALSE);
   // do not send admin password resets to apic
   $account = $form_state['values']['account'];
-  if ($account->uid == 1) {
+  if (isset($account) && isset($account->uid) && $account->uid == 1) {
     user_pass_submit($form, $form_state);
   }
-  else {
+  elseif (isset($account) && $account != FALSE) {
     if (((module_exists('security_questions') && $secure_pass_form == TRUE) && (security_questions_bypass_challenge($account) || (!empty($form_state['security_questions']['passed_challenge']) && $form_state['security_questions']['passed_challenge'] == TRUE))) || !module_exists('security_questions') || $secure_pass_form == FALSE) {
       // if the security questions module is active and set for password resets then need to be on the second pass through this code (after submitting the answers) to actually do something since the security questions module will rebuild the form
       _auth_apic_reset_user_password($account->name);
@@ -1712,6 +1720,11 @@ function auth_apic_user_pass_submit(&$form, &$form_state) {
       $form_state['security_questions']['uid'] = $account->uid;
       $form_state['rebuild'] = TRUE;
     }
+  }
+  else {
+    // account not set so likely doesnt exist in the portal database
+    $name = trim($form_state['values']['name']);
+    _auth_apic_reset_user_password($name);
   }
 }
 
@@ -2047,9 +2060,6 @@ function auth_apic_forgotpwd_form_submit_handler($form, &$form_state) {
       // log the user in
       global $user;
       $user = user_load_by_name($userid);
-
-      // update user password
-      $user->password = $password;
 
       // save user
       user_save((object) array('uid' => $user->uid), (array) $user);

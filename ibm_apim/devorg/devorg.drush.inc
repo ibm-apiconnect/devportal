@@ -21,6 +21,7 @@ function devorg_drush_command() {
     'description' => 'Updates a devorg',
     'aliases' => array('uorg'),
     'arguments' => array(
+      'event' => 'The event type',
       'product' => 'The JSON devorg payload'
     )
   );
@@ -28,6 +29,7 @@ function devorg_drush_command() {
     'description' => 'Creates a devorg',
     'aliases' => array('corg'),
     'arguments' => array(
+      'event' => 'The event type',
       'product' => 'The JSON devorg payload'
     )
   );
@@ -35,6 +37,7 @@ function devorg_drush_command() {
     'description' => 'Deletes a devorg',
     'aliases' => array('dorg'),
     'arguments' => array(
+      'event' => 'The event type',
       'id' => 'The devorg ID'
     )
   );
@@ -55,11 +58,11 @@ function drush_devorg_cleanse_drush_command() {
   drupal_set_message(t('All Developer Organization entries deleted.'), 'success');
 }
 
-function drush_devorg_createOrUpdateOrg($func,$devorg) {
+function drush_devorg_createOrUpdateOrg($func, $event, $devorg) {
 	if (isset($devorg)) {
 		$devorg = json_decode($devorg, TRUE);
 		$ref = $devorg['id'];
-		$createdOrUpdated = devorg_createOrUpdateDevorg($devorg);
+      $createdOrUpdated = devorg_createOrUpdateDevorg($devorg, $event);
 		if ($createdOrUpdated) {
 			drupal_set_message(t('Drush @func created Org @org', array( '@func' => $func, '@org' => $ref)), 'success');
 		} else {
@@ -71,15 +74,15 @@ function drush_devorg_createOrUpdateOrg($func,$devorg) {
 	}
 }
 
-function drush_devorg_createorg($devorg) {
-  drush_devorg_createOrUpdateOrg("createOrg",$devorg);
+function drush_devorg_createorg($event, $devorg) {
+  drush_devorg_createOrUpdateOrg("createOrg", $event, $devorg);
 }
 
-function drush_devorg_updateorg($devorg) {
-  drush_devorg_createOrUpdateOrg("updateOrg",$devorg);
+function drush_devorg_updateorg($event, $devorg) {
+  drush_devorg_createOrUpdateOrg("updateOrg", $event, $devorg);
 }
 
-function drush_devorg_deleteorg($id) {
+function drush_devorg_deleteorg($event, $id) {
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'devorg')

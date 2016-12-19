@@ -461,6 +461,121 @@ function application_preprocess_search_result(&$variables) {
 }
 
 /**
+ * Implements hook_token_info().
+ *
+ * @return array
+ */
+function application_token_info() {
+  $type = array(
+    'name' => t('Application tokens'),
+    'description' => t('Application tokens'),
+    'needs-data' => 'application',
+  );
+  $application['application_id'] = array(
+    'name' => t("Application ID"),
+    'description' => t("The ID of the application."),
+  );
+  $application['application_nid'] = array(
+    'name' => t("Application node ID"),
+    'description' => t('The node ID of the application.'),
+  );
+  $application['application_name'] = array(
+    'name' => t("Application name"),
+    'description' => t('The name of the application.'),
+  );
+  $application['application_description'] = array(
+    'name' => t("Application description"),
+    'description' => t('The description of the application.'),
+  );
+  $application['application_oauth_redirect_uri'] = array(
+    'name' => t("Application OAuth redirect URI"),
+    'description' => t('The OAuth redirect URI of the application.'),
+  );
+  $application['application_credentials'] = array(
+    'name' => t("Application credentials"),
+    'description' => t('The credentials of the application (as JSON).'),
+  );
+  $application['application_new_credentials'] = array(
+    'name' => t("Application new credentials"),
+    'description' => t('The new or updated credentials of the application (as JSON).'),
+  );
+  $application['application_devorg_id'] = array(
+    'name' => t("Developer organization ID"),
+    'description' => t('The ID of the developer organization owning the application.'),
+  );
+  $application['application_devorg_name'] = array(
+    'name' => t("Developer organization name"),
+    'description' => t('The name of the developer organization owning the application.'),
+  );
+  $application['application_devorg_owner'] = array(
+    'name' => t("Developer organization owner"),
+    'description' => t('The username of the owner of the developer organization owning the application.'),
+  );
+  $application['application_devorg_members'] = array(
+    'name' => t("Developer organization members"),
+    'description' => t('The email addresses of the members of the developer organization owning the application (\',\' separated).'),
+  );
+  $application['plan_ref'] = array(
+    'name' => t("Plan reference"),
+    'description' => t('The plan reference of the subscription.'),
+  );
+  $application['product_name'] = array(
+    'name' => t("Product name"),
+    'description' => t('The product name of the subscription.'),
+  );
+  $application['product_version'] = array(
+    'name' => t("Product version"),
+    'description' => t('The product version of the subscription.'),
+  );
+  $application['plan_name'] = array(
+    'name' => t("Plan name"),
+    'description' => t('The plan name of the subscription.'),
+  );
+  $application['plan_requires_approval'] = array(
+    'name' => t("Plan requires approval"),
+    'description' => t('Whether the subscription request requires approval'),
+  );
+
+  return array(
+    'types' => array('application' => $type),
+    'tokens' => array('application' => $application),
+  );
+}
+
+/**
+ * Implements hook_tokens().
+ *
+ * @param $type
+ * @param null $object
+ * @param array $options
+ * @return array
+ */
+function application_tokens($type, $object = NULL, $options = array()) {
+  $tokens = array();
+  if ($type == 'application' || $type == 'all') {
+    $tokens = array(
+      'application_id' => $object['application_id'],
+      'application_nid' => $object['application_nid'],
+      'application_name' => $object['application_name'],
+      'application_description' => $object['application_description'],
+      'application_oauth_redirect_uri' => $object['application_oauth_redirect_uri'],
+      'application_credentials' => $object['application_credentials'],
+      'application_new_credentials' => $object['application_new_credentials'],
+      'application_devorg_id' => $object['application_devorg_id'],
+      'application_devorg_name' => $object['application_devorg_name'],
+      'application_devorg_owner' => $object['application_devorg_owner'],
+      'application_devorg_members' => $object['application_devorg_members'],
+      'plan_ref' => $object['plan_ref'],
+      'product_name' => $object['product_name'],
+      'product_version' => $object['product_version'],
+      'plan_name' => $object['plan_name'],
+      'plan_requires_approval' => $object['plan_requires_approval']
+    );
+    return $tokens;
+  }
+}
+
+/**
  * Menu callback;
  * if a specific app has been requested will display that as full viewmode,
  * else it will show teaser viewmode for all available applications
@@ -566,9 +681,10 @@ function application_list_applications() {
  * created or false if an existing one was updated.
  *
  * @param $application
+ * @param $event
  * @return bool
  */
-function application_createOrUpdateApplication($application) {
+function application_createOrUpdateApplication($application, $event) {
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'application')
@@ -581,7 +697,7 @@ function application_createOrUpdateApplication($application) {
     $nid = $first->nid;
     $node = node_load($nid);
     if (!isset($application['timestamp']) || (isset($node->changed) && ($node->changed < $application['timestamp']))) {
-      application_updateExistingApplicationNode($node, $application);
+      application_updateExistingApplicationNode($node, $application, $event);
     }
     else {
       watchdog('application_updateExistingApplicationNode', 'ETag not set skipping update for %nid.', array(
@@ -592,7 +708,7 @@ function application_createOrUpdateApplication($application) {
   }
   else {
     // no existing node for this App so create one
-    application_createNewApplicationNode($application);
+    application_createNewApplicationNode($application, $event);
     $createdOrUpdated = TRUE;
   }
   return $createdOrUpdated;
@@ -755,8 +871,9 @@ function application_createNewApplicationNode($app) {
  * Used to update the placeholder node for any new Application details returned by APIm
  * @param $node
  * @param $app
+ * @param $event
  */
-function application_updateExistingApplicationNode($node, $app) {
+function application_updateExistingApplicationNode($node, $app, $event) {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
   if (isset($app['title'])) {
@@ -936,12 +1053,12 @@ function application_new_application_clientcreds_submit($form, &$form_state) {
     $data = $result->data;
     drupal_alter('ibm_apim_application_new_application_clientcreds', $appId, $data);
     drupal_set_message(t('Application Client ID: !html_start@label!html_end', array(
-      '!html_start' => '<div id="app_id" class="appClientReset"><input class="toggle-password clientID" id="clientID" type="password" readonly value="' . $data['clientID'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientID" class="show-clientID"> <label for="show-clientID">',
+      '!html_start' => '<div id="app_id" class="appClientReset"><input class="toggle-password" id="clientID" type="password" readonly value="' . $data['clientID'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientID"> <label for="show-clientID">',
       '@label' => t('Show Client ID'),
       '!html_end' => '</label></div></div>'
     )));
     drupal_set_message(t('Application Client Secret: !html_start@label!html_end', array(
-      '!html_start' => '<div id="app_secret" class="appClientReset"><input class="toggle-password clientSecret" id="clientSecret" type="password" readonly value="' . $data['clientSecret'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret" class="show-clientSecret"> <label for="show-clientSecret">',
+      '!html_start' => '<div id="app_secret" class="appClientReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $data['clientSecret'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
       '@label' => t('Show Client Secret'),
       '!html_end' => '</label></div></div>'
     )));
@@ -970,8 +1087,82 @@ function application_new_application_clientcreds_submit($form, &$form_state) {
         );
         $node->application_credentials[$node->language][0]['value'] = serialize($existingcreds);
         node_save($node);
-        // Calling all modules implementing 'hook_ibm_apim_application_creds_create':
-        module_invoke_all('ibm_apim_application_creds_create', $node, $data);
+
+        if (isset($node)) {
+          // Calling all modules implementing 'ibm_apim_application_creds_create':
+          module_invoke_all('ibm_apim_application_creds_create', $node, $result->data);
+
+          // invoke rules
+          if (module_exists('rules')) {
+            if (isset($node->application_orgid[$node->language][0]['value'])) {
+              $query = new EntityFieldQuery();
+              $query->entityCondition('entity_type', 'node')
+                ->entityCondition('bundle', 'devorg')
+                ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
+              $results = $query->execute();
+
+              if (isset($results['node'])) {
+                $first = array_shift($results['node']);
+                $nid = $first->nid;
+                $devorg = node_load($nid);
+                $devorg_name = $devorg->title;
+                $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
+                $org_recipients = array();
+                if (isset($devorg->devorg_members[0]['value'])) {
+                  $members = unserialize($devorg->devorg_members[0]['value']);
+                  foreach ($members as $member) {
+                    if (isset($member['email'])) {
+                      $org_recipients[] = $member['email'];
+                    }
+                  }
+                }
+              }
+            }
+            if (!isset($devorg_name)) {
+              $devorg_name = '';
+            }
+            if (!isset($devorg_owner)) {
+              $devorg_owner = '';
+            }
+            if (!isset($org_recipients)) {
+              $org_recipients = array();
+            }
+            $rules_payload = array(
+              'application_id' => $node->application_apiid[$node->language][0]['value'],
+              'application_nid' => $node->nid,
+              'application_name' => $node->title,
+              'application_description' => $node->application_description[$node->language][0]['value'],
+              'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
+              'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
+              'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
+              'application_devorg_name' => $devorg_name,
+              'application_devorg_owner' => $devorg_owner,
+              'application_devorg_members' => implode(',', $org_recipients),
+              'application_new_credentials' => json_encode($data)
+            );
+
+            // Make sure we do not provide NULL values, as Rules module doesn't like them.
+            // @see http://drupal.org/node/1497534
+            foreach ($rules_payload as $key => $value) {
+              if (is_null($value)) {
+                $rules_payload[$key] = '';
+              }
+            }
+            rules_invoke_event('application_cred_create',
+              $rules_payload['application_id'],
+              $rules_payload['application_nid'],
+              $rules_payload['application_name'],
+              $rules_payload['application_description'],
+              $rules_payload['application_credentials'],
+              $rules_payload['application_oauth_redirect_uri'],
+              $rules_payload['application_devorg_id'],
+              $rules_payload['application_devorg_name'],
+              $rules_payload['application_devorg_owner'],
+              $rules_payload['application_devorg_members'],
+              $rules_payload['application_new_credentials']
+            );
+          }
+        }
       }
       else {
         drupal_set_message(t('The specified application could not be found to store the new credentials.'), 'error');
@@ -1068,8 +1259,82 @@ function application_update_application_clientcreds_submit($form, &$form_state) 
         if (isset($existingcreds)) {
           $node->application_credentials[$node->language][0]['value'] = serialize($existingcreds);
           node_save($node);
-          // Calling all modules implementing 'hook_ibm_apim_application_creds_update':
-          module_invoke_all('ibm_apim_application_creds_update', $node, $result->data);
+
+          if (isset($node)) {
+            // Calling all modules implementing 'ibm_apim_application_creds_update':
+            module_invoke_all('ibm_apim_application_creds_update', $node, $result->data);
+
+            // invoke rules
+            if (module_exists('rules')) {
+              if (isset($node->application_orgid[$node->language][0]['value'])) {
+                $query = new EntityFieldQuery();
+                $query->entityCondition('entity_type', 'node')
+                  ->entityCondition('bundle', 'devorg')
+                  ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
+                $results = $query->execute();
+
+                if (isset($results['node'])) {
+                  $first = array_shift($results['node']);
+                  $nid = $first->nid;
+                  $devorg = node_load($nid);
+                  $devorg_name = $devorg->title;
+                  $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
+                  $org_recipients = array();
+                  if (isset($devorg->devorg_members[0]['value'])) {
+                    $members = unserialize($devorg->devorg_members[0]['value']);
+                    foreach ($members as $member) {
+                      if (isset($member['email'])) {
+                        $org_recipients[] = $member['email'];
+                      }
+                    }
+                  }
+                }
+              }
+              if (!isset($devorg_name)) {
+                $devorg_name = '';
+              }
+              if (!isset($devorg_owner)) {
+                $devorg_owner = '';
+              }
+              if (!isset($org_recipients)) {
+                $org_recipients = array();
+              }
+              $rules_payload = array(
+                'application_id' => $node->application_apiid[$node->language][0]['value'],
+                'application_nid' => $node->nid,
+                'application_name' => $node->title,
+                'application_description' => $node->application_description[$node->language][0]['value'],
+                'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
+                'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
+                'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
+                'application_devorg_name' => $devorg_name,
+                'application_devorg_owner' => $devorg_owner,
+                'application_devorg_members' => implode(',', $org_recipients),
+                'application_new_credentials' => json_encode($data)
+              );
+
+              // Make sure we do not provide NULL values, as Rules module doesn't like them.
+              // @see http://drupal.org/node/1497534
+              foreach ($rules_payload as $key => $value) {
+                if (is_null($value)) {
+                  $rules_payload[$key] = '';
+                }
+              }
+              rules_invoke_event('application_cred_update',
+                $rules_payload['application_id'],
+                $rules_payload['application_nid'],
+                $rules_payload['application_name'],
+                $rules_payload['application_description'],
+                $rules_payload['application_credentials'],
+                $rules_payload['application_oauth_redirect_uri'],
+                $rules_payload['application_devorg_id'],
+                $rules_payload['application_devorg_name'],
+                $rules_payload['application_devorg_owner'],
+                $rules_payload['application_devorg_members'],
+                $rules_payload['application_new_credentials']
+              );
+            }
+          }
         }
       }
       else {
@@ -1148,8 +1413,80 @@ function application_delete_application_clientcreds_submit($form, &$form_state) 
         }
         $node->application_credentials[$node->language][0]['value'] = serialize($newcreds);
         node_save($node);
-        // Calling all modules implementing 'hook_ibm_apim_application_creds_delete':
-        module_invoke_all('ibm_apim_application_creds_delete', $node, $result->data);
+
+        if (isset($node)) {
+          // Calling all modules implementing 'ibm_apim_application_creds_delete':
+          module_invoke_all('ibm_apim_application_creds_delete', $node, $result->data);
+
+          // invoke rules
+          if (module_exists('rules')) {
+            if (isset($node->application_orgid[$node->language][0]['value'])) {
+              $query = new EntityFieldQuery();
+              $query->entityCondition('entity_type', 'node')
+                ->entityCondition('bundle', 'devorg')
+                ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
+              $results = $query->execute();
+
+              if (isset($results['node'])) {
+                $first = array_shift($results['node']);
+                $nid = $first->nid;
+                $devorg = node_load($nid);
+                $devorg_name = $devorg->title;
+                $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
+                $org_recipients = array();
+                if (isset($devorg->devorg_members[0]['value'])) {
+                  $members = unserialize($devorg->devorg_members[0]['value']);
+                  foreach ($members as $member) {
+                    if (isset($member['email'])) {
+                      $org_recipients[] = $member['email'];
+                    }
+                  }
+                }
+              }
+            }
+            if (!isset($devorg_name)) {
+              $devorg_name = '';
+            }
+            if (!isset($devorg_owner)) {
+              $devorg_owner = '';
+            }
+            if (!isset($org_recipients)) {
+              $org_recipients = array();
+            }
+            $rules_payload = array(
+              'application_id' => $node->application_apiid[$node->language][0]['value'],
+              'application_nid' => $node->nid,
+              'application_name' => $node->title,
+              'application_description' => $node->application_description[$node->language][0]['value'],
+              'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
+              'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
+              'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
+              'application_devorg_name' => $devorg_name,
+              'application_devorg_owner' => $devorg_owner,
+              'application_devorg_members' => implode(',', $org_recipients)
+            );
+
+            // Make sure we do not provide NULL values, as Rules module doesn't like them.
+            // @see http://drupal.org/node/1497534
+            foreach ($rules_payload as $key => $value) {
+              if (is_null($value)) {
+                $rules_payload[$key] = '';
+              }
+            }
+            rules_invoke_event('application_cred_delete',
+              $rules_payload['application_id'],
+              $rules_payload['application_nid'],
+              $rules_payload['application_name'],
+              $rules_payload['application_description'],
+              $rules_payload['application_credentials'],
+              $rules_payload['application_oauth_redirect_uri'],
+              $rules_payload['application_devorg_id'],
+              $rules_payload['application_devorg_name'],
+              $rules_payload['application_devorg_owner'],
+              $rules_payload['application_devorg_members']
+            );
+          }
+        }
       }
       else {
         drupal_set_message(t('The specified application could not be found to update the credentials.'), 'error');
@@ -1236,6 +1573,80 @@ function application_reset_application_clientid_submit($form, &$form_state) {
           node_save($node);
           // Calling all modules implementing 'hook_ibm_apim_application_clientid_reset':
           module_invoke_all('ibm_apim_application_clientid_reset', $node, $data);
+          if (isset($node)) {
+            // Calling all modules implementing 'hook_ibm_apim_application_create':
+            module_invoke_all('ibm_apim_application_create', $node, $result->data);
+            // invoke rules
+            if (module_exists('rules')) {
+              if (isset($node->application_orgid[$node->language][0]['value'])) {
+                $query = new EntityFieldQuery();
+                $query->entityCondition('entity_type', 'node')
+                  ->entityCondition('bundle', 'devorg')
+                  ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
+                $results = $query->execute();
+
+                if (isset($results['node'])) {
+                  $first = array_shift($results['node']);
+                  $nid = $first->nid;
+                  $devorg = node_load($nid);
+                  $devorg_name = $devorg->title;
+                  $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
+                  $org_recipients = array();
+                  if (isset($devorg->devorg_members[0]['value'])) {
+                    $members = unserialize($devorg->devorg_members[0]['value']);
+                    foreach ($members as $member) {
+                      if (isset($member['email'])) {
+                        $org_recipients[] = $member['email'];
+                      }
+                    }
+                  }
+                }
+              }
+              if (!isset($devorg_name)) {
+                $devorg_name = '';
+              }
+              if (!isset($devorg_owner)) {
+                $devorg_owner = '';
+              }
+              if (!isset($org_recipients)) {
+                $org_recipients = array();
+              }
+              $rules_payload = array(
+                'application_id' => $node->application_apiid[$node->language][0]['value'],
+                'application_nid' => $node->nid,
+                'application_name' => $node->title,
+                'application_description' => $node->application_description[$node->language][0]['value'],
+                'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
+                'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
+                'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
+                'application_devorg_name' => $devorg_name,
+                'application_devorg_owner' => $devorg_owner,
+                'application_devorg_members' => implode(',', $org_recipients),
+                'application_new_credentials' => json_encode($data)
+              );
+
+              // Make sure we do not provide NULL values, as Rules module doesn't like them.
+              // @see http://drupal.org/node/1497534
+              foreach ($rules_payload as $key => $value) {
+                if (is_null($value)) {
+                  $rules_payload[$key] = '';
+                }
+              }
+              rules_invoke_event('application_clientid_reset',
+                $rules_payload['application_id'],
+                $rules_payload['application_nid'],
+                $rules_payload['application_name'],
+                $rules_payload['application_description'],
+                $rules_payload['application_credentials'],
+                $rules_payload['application_oauth_redirect_uri'],
+                $rules_payload['application_devorg_id'],
+                $rules_payload['application_devorg_name'],
+                $rules_payload['application_devorg_owner'],
+                $rules_payload['application_devorg_members'],
+                $rules_payload['application_new_credentials']
+              );
+            }
+          }
         }
       }
       else {
@@ -1309,9 +1720,82 @@ function application_reset_application_secret_submit($form, &$form_state) {
     $first = array_shift($results['node']);
     $nid = $first->nid;
     $node = node_load($nid);
+
+    // Calling all modules implementing 'hook_ibm_apim_application_clientsecret_reset':
+    module_invoke_all('ibm_apim_application_clientsecret_reset', $node, $data);
+
+    // invoke rules
+    if (module_exists('rules')) {
+      if (isset($node->application_orgid[$node->language][0]['value'])) {
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'devorg')
+          ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
+        $results = $query->execute();
+
+        if (isset($results['node'])) {
+          $first = array_shift($results['node']);
+          $nid = $first->nid;
+          $devorg = node_load($nid);
+          $devorg_name = $devorg->title;
+          $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
+          $org_recipients = array();
+          if (isset($devorg->devorg_members[0]['value'])) {
+            $members = unserialize($devorg->devorg_members[0]['value']);
+            foreach ($members as $member) {
+              if (isset($member['email'])) {
+                $org_recipients[] = $member['email'];
+              }
+            }
+          }
+        }
+      }
+      if (!isset($devorg_name)) {
+        $devorg_name = '';
+      }
+      if (!isset($devorg_owner)) {
+        $devorg_owner = '';
+      }
+      if (!isset($org_recipients)) {
+        $org_recipients = array();
+      }
+      $rules_payload = array(
+        'application_id' => $node->application_apiid[$node->language][0]['value'],
+        'application_nid' => $node->nid,
+        'application_name' => $node->title,
+        'application_description' => $node->application_description[$node->language][0]['value'],
+        'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
+        'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
+        'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
+        'application_devorg_name' => $devorg_name,
+        'application_devorg_owner' => $devorg_owner,
+        'application_devorg_members' => implode(',', $org_recipients),
+        'application_new_credentials' => json_encode($data)
+      );
+
+      // Make sure we do not provide NULL values, as Rules module doesn't like them.
+      // @see http://drupal.org/node/1497534
+      foreach ($rules_payload as $key => $value) {
+        if (is_null($value)) {
+          $rules_payload[$key] = '';
+        }
+      }
+      rules_invoke_event('application_clientsecret_reset',
+        $rules_payload['application_id'],
+        $rules_payload['application_nid'],
+        $rules_payload['application_name'],
+        $rules_payload['application_description'],
+        $rules_payload['application_credentials'],
+        $rules_payload['application_oauth_redirect_uri'],
+        $rules_payload['application_devorg_id'],
+        $rules_payload['application_devorg_name'],
+        $rules_payload['application_devorg_owner'],
+        $rules_payload['application_devorg_members'],
+        $rules_payload['application_new_credentials']
+      );
+    }
   }
-  // Calling all modules implementing 'hook_ibm_apim_application_clientsecret_reset':
-  module_invoke_all('ibm_apim_application_clientsecret_reset', $node, $data);
+
   $form_state['redirect'] = 'application/' . $appId;
 }
 
@@ -1598,8 +2082,79 @@ function _application_edit_application_form_submit_handler($form, &$form_state) 
       }
       drupal_set_message(t('Application updated successfully.'));
       $form_state['redirect'] = 'application/' . $app_id;
-      // Calling all modules implementing 'hook_ibm_apim_application_update':
-      module_invoke_all('ibm_apim_application_update', $node, $result->data);
+      if (isset($node)) {
+        // Calling all modules implementing 'ibm_apim_application_update':
+        module_invoke_all('ibm_apim_application_update', $node, $result->data);
+
+        // invoke rules
+        if (module_exists('rules')) {
+          if (isset($node->application_orgid[$node->language][0]['value'])) {
+            $query = new EntityFieldQuery();
+            $query->entityCondition('entity_type', 'node')
+              ->entityCondition('bundle', 'devorg')
+              ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
+            $results = $query->execute();
+
+            if (isset($results['node'])) {
+              $first = array_shift($results['node']);
+              $nid = $first->nid;
+              $devorg = node_load($nid);
+              $devorg_name = $devorg->title;
+              $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
+              $org_recipients = array();
+              if (isset($devorg->devorg_members[0]['value'])) {
+                $members = unserialize($devorg->devorg_members[0]['value']);
+                foreach ($members as $member) {
+                  if (isset($member['email'])) {
+                    $org_recipients[] = $member['email'];
+                  }
+                }
+              }
+            }
+          }
+          if (!isset($devorg_name)) {
+            $devorg_name = '';
+          }
+          if (!isset($devorg_owner)) {
+            $devorg_owner = '';
+          }
+          if (!isset($org_recipients)) {
+            $org_recipients = array();
+          }
+          $rules_payload = array(
+            'application_id' => $node->application_apiid[$node->language][0]['value'],
+            'application_nid' => $node->nid,
+            'application_name' => $node->title,
+            'application_description' => $node->application_description[$node->language][0]['value'],
+            'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
+            'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
+            'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
+            'application_devorg_name' => $devorg_name,
+            'application_devorg_owner' => $devorg_owner,
+            'application_devorg_members' => implode(',', $org_recipients)
+          );
+
+          // Make sure we do not provide NULL values, as Rules module doesn't like them.
+          // @see http://drupal.org/node/1497534
+          foreach ($rules_payload as $key => $value) {
+            if (is_null($value)) {
+              $rules_payload[$key] = '';
+            }
+          }
+          rules_invoke_event('application_update',
+            $rules_payload['application_id'],
+            $rules_payload['application_nid'],
+            $rules_payload['application_name'],
+            $rules_payload['application_description'],
+            $rules_payload['application_credentials'],
+            $rules_payload['application_oauth_redirect_uri'],
+            $rules_payload['application_devorg_id'],
+            $rules_payload['application_devorg_name'],
+            $rules_payload['application_devorg_owner'],
+            $rules_payload['application_devorg_members']
+          );
+        }
+      }
     }
     else {
       $form_state['redirect'] = 'application';
@@ -1723,6 +2278,9 @@ function _application_add_application_form_submit_handler($form, &$form_state) {
         '@label' => t('Show Client Secret'),
         '!html_end' => '</label></div></div>'
       )));
+      drupal_set_message('<p>' . t('Now that you’ve registered your app, you can browse the <a href="@link">available APIs</a> and subscribe.', array('@link' => array(url('product')))) . '</p>' .
+        '<p>' . t('Make a note of your client ID and client secret. These may be needed for your application to access the API.') . '</p>' .
+        '<p>' . t('Your client secret will only be displayed once. If you forget or lose it, you can verify the secret to see if it’s correct or reset it to get a new one.' . '</p>'), 'info');
       $app_data = application_details_contents($result->data['id']);
       $nid = application_createNewApplicationNode($app_data);
       $node = node_load($nid);
@@ -1739,6 +2297,74 @@ function _application_add_application_form_submit_handler($form, &$form_state) {
       if (isset($node)) {
         // Calling all modules implementing 'hook_ibm_apim_application_create':
         module_invoke_all('ibm_apim_application_create', $node, $result->data);
+        // invoke rules
+        if (module_exists('rules')) {
+          if (isset($developer_org)) {
+            $query = new EntityFieldQuery();
+            $query->entityCondition('entity_type', 'node')
+              ->entityCondition('bundle', 'devorg')
+              ->fieldCondition('devorg_id', 'value', $developer_org);
+            $results = $query->execute();
+
+            if (isset($results['node'])) {
+              $first = array_shift($results['node']);
+              $nid = $first->nid;
+              $devorg = node_load($nid);
+              $devorg_name = $devorg->title;
+              $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
+              $org_recipients = array();
+              if (isset($devorg->devorg_members[0]['value'])) {
+                $members = unserialize($devorg->devorg_members[0]['value']);
+                foreach ($members as $member) {
+                  if (isset($member['email'])) {
+                    $org_recipients[] = $member['email'];
+                  }
+                }
+              }
+            }
+          }
+          if (!isset($devorg_name)) {
+            $devorg_name = '';
+          }
+          if (!isset($devorg_owner)) {
+            $devorg_owner = '';
+          }
+          if (!isset($org_recipients)) {
+            $org_recipients = array();
+          }
+          $rules_payload = array(
+            'application_id' => $node->application_apiid[$node->language][0]['value'],
+            'application_nid' => $node->nid,
+            'application_name' => $node->title,
+            'application_description' => $node->application_description[$node->language][0]['value'],
+            'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
+            'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
+            'application_devorg_name' => $devorg_name,
+            'application_devorg_owner' => $devorg_owner,
+            'application_devorg_members' => implode(',', $org_recipients),
+            'application_credentials' => json_encode($result->data['credentials'])
+          );
+
+          // Make sure we do not provide NULL values, as Rules module doesn't like them.
+          // @see http://drupal.org/node/1497534
+          foreach ($rules_payload as $key => $value) {
+            if (is_null($value)) {
+              $rules_payload[$key] = '';
+            }
+          }
+          rules_invoke_event('application_create',
+            $rules_payload['application_id'],
+            $rules_payload['application_nid'],
+            $rules_payload['application_name'],
+            $rules_payload['application_description'],
+            $rules_payload['application_credentials'],
+            $rules_payload['application_oauth_redirect_uri'],
+            $rules_payload['application_devorg_id'],
+            $rules_payload['application_devorg_name'],
+            $rules_payload['application_devorg_owner'],
+            $rules_payload['application_devorg_members']
+          );
+        }
       }
 
       $form_state['redirect'] = 'application/' . $result->data['id'];
@@ -1795,14 +2421,89 @@ function _application_delete_application_submit($form, &$form_state) {
       $first = array_shift($dbresults['node']);
       $nid = $first->nid;
       $node = node_load($nid);
+      $devorgid = $node->application_orgid[$node->language][0]['value'];
+      $rules_payload = array(
+        'application_nid' => $node->nid,
+        'application_name' => $node->title,
+        'application_description' => $node->application_description[$node->language][0]['value'],
+        'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
+        'application_devorg_id' => $devorgid,
+        'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value']))
+      );
       node_delete($nid);
     }
     // clear session app cache
     unset($apim_session['apps']);
     $apim_session['apps'] = array();
     drupal_set_message(t('Application deleted successfully.'));
-    // Calling all modules implementing 'hook_ibm_apim_application_delete':
-    module_invoke_all('ibm_apim_application_delete', $node, $result->data);
+    if (isset($node)) {
+      // Calling all modules implementing 'hook_ibm_apim_application_delete':
+      module_invoke_all('ibm_apim_application_delete', $node, $result->data);
+
+      // invoke rules
+      if (module_exists('rules')) {
+        if (isset($devorgid)) {
+          $query = new EntityFieldQuery();
+          $query->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'devorg')
+            ->fieldCondition('devorg_id', 'value', $devorgid);
+          $results = $query->execute();
+
+          if (isset($results['node'])) {
+            $first = array_shift($results['node']);
+            $nid = $first->nid;
+            $devorg = node_load($nid);
+            $devorg_name = $devorg->title;
+            $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
+            $org_recipients = array();
+            if (isset($devorg->devorg_members[0]['value'])) {
+              $members = unserialize($devorg->devorg_members[0]['value']);
+              foreach ($members as $member) {
+                if (isset($member['email'])) {
+                  $org_recipients[] = $member['email'];
+                }
+              }
+            }
+          }
+        }
+        if (!isset($devorg_name)) {
+          $devorg_name = '';
+        }
+        if (!isset($devorg_owner)) {
+          $devorg_owner = '';
+        }
+        if (!isset($rules_payload)) {
+          $rules_payload = array();
+        }
+        if (!isset($org_recipients)) {
+          $org_recipients = array();
+        }
+        $rules_payload['application_id'] = $appId;
+        $rules_payload['application_devorg_name'] = $devorg_name;
+        $rules_payload['application_devorg_owner'] = $devorg_owner;
+        $rules_payload['application_devorg_members'] = implode(',', $org_recipients);
+
+        // Make sure we do not provide NULL values, as Rules module doesn't like them.
+        // @see http://drupal.org/node/1497534
+        foreach ($rules_payload as $key => $value) {
+          if (is_null($value)) {
+            $rules_payload[$key] = '';
+          }
+        }
+        rules_invoke_event('application_delete',
+          $rules_payload['application_id'],
+          $rules_payload['application_nid'],
+          $rules_payload['application_name'],
+          $rules_payload['application_description'],
+          $rules_payload['application_credentials'],
+          $rules_payload['application_oauth_redirect_uri'],
+          $rules_payload['application_devorg_id'],
+          $rules_payload['application_devorg_name'],
+          $rules_payload['application_devorg_owner'],
+          $rules_payload['application_devorg_members']
+        );
+      }
+    }
   }
   $form_state['redirect'] = 'application';
 }
@@ -1902,8 +2603,7 @@ function application_unsubscribeapp_submit($form, &$form_state) {
   $url = '/v1/portal/orgs/' . $developerOrg . '/apps/' . $appId . '/subscriptions/' . $subId;
   $result = ibm_apim_delete($url);
   if (isset($result) && $result->code >= 200 && $result->code < 300) {
-    application_remove_subscription_id($appId, $subId);
-    drupal_set_message(t('Application unsubscribed successfully.'));
+
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'application')
@@ -1913,8 +2613,118 @@ function application_unsubscribeapp_submit($form, &$form_state) {
       $first = array_shift($dbresults['node']);
       $nid = $first->nid;
       $node = node_load($nid);
+
+      // get details of the subscription before removing it
+      if (isset($node->application_subscriptions[$node->language][0]) && is_array($node->application_subscriptions[$node->language][0])) {
+        $existingsubs = unserialize($node->application_subscriptions[$node->language][0]['value']);
+        if (is_array($existingsubs)) {
+          foreach ($existingsubs as $sub) {
+            if (isset($sub['id']) && $sub['id'] == $subId) {
+              // found the one we want
+              $product = $sub['product'];
+              $parts = explode(':', $product);
+              $productname = $parts[0];
+              $productversion = $parts[1];
+              $planname = $sub['plan'];
+            }
+          }
+        }
+      }
+
+      application_remove_subscription_id($appId, $subId);
+      drupal_set_message(t('Application unsubscribed successfully.'));
+      // reload the node
+      $node = node_load($nid);
+
       // Calling all modules implementing 'hook_ibm_apim_application_unsubscribe':
       module_invoke_all('ibm_apim_application_unsubscribe', $node, $result->data);
+
+      // invoke rules
+      if (module_exists('rules')) {
+        if (isset($node->application_orgid[$node->language][0]['value'])) {
+          $query = new EntityFieldQuery();
+          $query->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'devorg')
+            ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
+          $results = $query->execute();
+
+          if (isset($results['node'])) {
+            $first = array_shift($results['node']);
+            $nid = $first->nid;
+            $devorg = node_load($nid);
+            $devorg_name = $devorg->title;
+            $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
+            $org_recipients = array();
+            if (isset($devorg->devorg_members[0]['value'])) {
+              $members = unserialize($devorg->devorg_members[0]['value']);
+              foreach ($members as $member) {
+                if (isset($member['email'])) {
+                  $org_recipients[] = $member['email'];
+                }
+              }
+            }
+          }
+        }
+        if (!isset($devorg_name)) {
+          $devorg_name = '';
+        }
+        if (!isset($devorg_owner)) {
+          $devorg_owner = '';
+        }
+        if (!isset($org_recipients)) {
+          $org_recipients = array();
+        }
+        if (!isset($productname)) {
+          $productname = '';
+        }
+        if (!isset($productversion)) {
+          $productversion = '';
+        }
+        if (!isset($planname)) {
+          $planname = '';
+        }
+        $planref = $productname . ':' . $productversion . ':' . $planname;
+        $rules_payload = array(
+          'application_id' => $node->application_apiid[$node->language][0]['value'],
+          'application_nid' => $node->nid,
+          'application_name' => $node->title,
+          'application_description' => $node->application_description[$node->language][0]['value'],
+          'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
+          'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
+          'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
+          'application_devorg_name' => $devorg_name,
+          'application_devorg_owner' => $devorg_owner,
+          'application_devorg_members' => implode(',', $org_recipients),
+          'plan_ref' => $planref,
+          'product_name' => $productname,
+          'product_version' => $productversion,
+          'plan_name' => $planname
+        );
+
+        // Make sure we do not provide NULL values, as Rules module doesn't like them.
+        // @see http://drupal.org/node/1497534
+        foreach ($rules_payload as $key => $value) {
+          if (is_null($value)) {
+            $rules_payload[$key] = '';
+          }
+        }
+        rules_invoke_event('application_unsubscribe',
+          $rules_payload['application_id'],
+          $rules_payload['application_nid'],
+          $rules_payload['application_name'],
+          $rules_payload['application_description'],
+          $rules_payload['application_credentials'],
+          $rules_payload['application_oauth_redirect_uri'],
+          $rules_payload['application_devorg_id'],
+          $rules_payload['application_devorg_name'],
+          $rules_payload['application_devorg_owner'],
+          $rules_payload['application_devorg_members'],
+          $rules_payload['plan_ref'],
+          $rules_payload['product_name'],
+          $rules_payload['product_version'],
+          $rules_payload['plan_name']
+        );
+      }
     }
   }
   $form_state['redirect'] = 'application/' . $appId;
@@ -1951,7 +2761,7 @@ function application_migrateapp($form, &$form_state, $appid = NULL, $subid = NUL
 function application_migrateapp_submit($form, &$form_state) {
   $appId = check_plain($form_state['values']['appid']);
   $subId = check_plain($form_state['values']['subid']);
-  $origplanref = $form_state['values']['planurl'];
+  $origplanref = $form_state['values']['planref'];
   $planref = check_plain(ibm_apim_base64_url_decode($origplanref));
   $org = ibm_apim_get_current_developer_org();
   $developerOrg = $org['id'];
@@ -2363,6 +3173,98 @@ function application_subscribeapp_modal_form_submit($form, &$form_state) {
   // dismiss the popup
   $form_state['application_subscribeapp'][] = ctools_modal_command_dismiss();
   if (isset($result) && $result->code >= 200 && $result->code < 300 && (!isset($result->data) || (isset($result->data) && !isset($result->data['errors'])))) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'application')
+      ->fieldCondition('application_apiid', 'value', $appid);
+    $dbresults = $query->execute();
+    if (isset($dbresults['node'])) {
+      $first = array_shift($dbresults['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
+      // Calling all modules implementing 'hook_ibm_apim_application_subscribe':
+      module_invoke_all('ibm_apim_application_subscribe', $node, $result->data);
+
+      // invoke rules
+      if (module_exists('rules')) {
+        if (isset($node->application_orgid[$node->language][0]['value'])) {
+          $query = new EntityFieldQuery();
+          $query->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'devorg')
+            ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
+          $results = $query->execute();
+
+          if (isset($results['node'])) {
+            $first = array_shift($results['node']);
+            $nid = $first->nid;
+            $devorg = node_load($nid);
+            $devorg_name = $devorg->title;
+            $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
+            $org_recipients = array();
+            if (isset($devorg->devorg_members[0]['value'])) {
+              $members = unserialize($devorg->devorg_members[0]['value']);
+              foreach ($members as $member) {
+                if (isset($member['email'])) {
+                  $org_recipients[] = $member['email'];
+                }
+              }
+            }
+          }
+        }
+        if (!isset($devorg_name)) {
+          $devorg_name = '';
+        }
+        if (!isset($devorg_owner)) {
+          $devorg_owner = '';
+        }
+        if (!isset($org_recipients)) {
+          $org_recipients = array();
+        }
+        $rules_payload = array(
+          'application_id' => $node->application_apiid[$node->language][0]['value'],
+          'application_nid' => $node->nid,
+          'application_name' => $node->title,
+          'application_description' => $node->application_description[$node->language][0]['value'],
+          'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
+          'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
+          'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
+          'application_devorg_name' => $devorg_name,
+          'application_devorg_owner' => $devorg_owner,
+          'application_devorg_members' => implode(',', $org_recipients),
+          'plan_ref' => $decodedplanid,
+          'product_name' => $productname,
+          'product_version' => $productversion,
+          'plan_name' => $planname,
+          'plan_requires_approval' => boolval($requiresapproval)
+        );
+
+        // Make sure we do not provide NULL values, as Rules module doesn't like them.
+        // @see http://drupal.org/node/1497534
+        foreach ($rules_payload as $key => $value) {
+          if (is_null($value)) {
+            $rules_payload[$key] = '';
+          }
+        }
+        rules_invoke_event('application_subscribe',
+          $rules_payload['application_id'],
+          $rules_payload['application_nid'],
+          $rules_payload['application_name'],
+          $rules_payload['application_description'],
+          $rules_payload['application_credentials'],
+          $rules_payload['application_oauth_redirect_uri'],
+          $rules_payload['application_devorg_id'],
+          $rules_payload['application_devorg_name'],
+          $rules_payload['application_devorg_owner'],
+          $rules_payload['application_devorg_members'],
+          $rules_payload['plan_ref'],
+          $rules_payload['product_name'],
+          $rules_payload['product_version'],
+          $rules_payload['plan_name'],
+          $rules_payload['plan_requires_approval']
+        );
+      }
+    }
+
     // only print success message if it actually was successful
     // error messages will be automatically displayed if there are any
     if (mb_strtolower($requiresapproval) == 'true') {
@@ -2382,18 +3284,6 @@ function application_subscribeapp_modal_form_submit($form, &$form_state) {
         }
       }
       drupal_set_message(t("Successfully subscribed to this plan."));
-      $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'application')
-        ->fieldCondition('application_apiid', 'value', $appid);
-      $dbresults = $query->execute();
-      if (isset($dbresults['node'])) {
-        $first = array_shift($dbresults['node']);
-        $nid = $first->nid;
-        $node = node_load($nid);
-        // Calling all modules implementing 'hook_ibm_apim_application_subscribe':
-        module_invoke_all('ibm_apim_application_subscribe', $node, $result->data);
-      }
     }
   }
   $form_state['redirect'] = $redirect;
@@ -2648,7 +3538,7 @@ function application_updateApplicationNode($app) {
       $first = array_shift($results['node']);
       $nid = $first->nid;
       $node = node_load($nid);
-      application_updateExistingApplicationNode($node, $app);
+      application_updateExistingApplicationNode($node, $app, 'update');
     }
   }
 }

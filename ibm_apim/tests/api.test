@@ -93,20 +93,20 @@ class IbmApimApiWebTestCase extends SiteWebTestCase {
       // Check the presence and link of the swagger download button
       $downloadButton = $this->findElementByCss('.downloadButton a');
       if (isset($downloadButton[0])) {
-        $this->pass('The swagger download button is present on the page');
+        $this->pass('The Open API download button is present on the page');
         $linkRefArray = explode('/', $downloadButton[0]['href']);
         $apiRef = ibm_apim_base64_url_decode(urldecode($linkRefArray[(count($linkRefArray) - 1)]));
         if ($apiRef == ($apiResources['info']['x-ibm-name'] . ':' . $apiResources['info']['version'])) {
-          $this->pass('The link to download this API\'s swagger document correctly resolves to the title:version of the API');
+          $this->pass('The link to download this API\'s Open API document correctly resolves to the title:version of the API');
         }
         else {
           debug($apiRef);
           debug(($apiResources['info']['x-ibm-name'] . ':' . $apiResources['info']['version']));
-          $this->fail('The link to download this API\'s swagger document does not correctly resolve to the title:version of the API');
+          $this->fail('The link to download this API\'s Open API document does not correctly resolve to the title:version of the API');
         }
       }
       else {
-        $this->fail('The swagger download button is missing from the page');
+        $this->fail('The Open API download button is missing from the page');
       }
 
       // Check whether the API is set to testable

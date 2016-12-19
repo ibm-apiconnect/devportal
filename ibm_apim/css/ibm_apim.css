@@ -1367,6 +1367,27 @@ button.simple-dialog {
   color: #ccc;
 }
 
+.node-product .node-content,
+.node-api .node-content,
+.node-application .node-content {
+  padding: 1em;
+}
+
+.node-product .node-content .field-type-taxonomy-term-reference h2.field-label,
+.node-api .node-content .field-type-taxonomy-term-reference h2.field-label,
+.node-application .node-content .field-type-taxonomy-term-reference h2.field-label {
+  display: none;
+}
+
+.node-product .node-content .field-type-taxonomy-term-reference ul,
+.node-api .node-content .field-type-taxonomy-term-reference ul,
+.node-application .node-content .field-type-taxonomy-term-reference ul,
+.node-product .node-content .field-type-taxonomy-term-reference ul li,
+.node-api .node-content .field-type-taxonomy-term-reference ul li,
+.node-application .node-content .field-type-taxonomy-term-reference ul li {
+  display: block;
+}
+
 .apimMainContent.apimPlansApis .appPlanName {
   background: #f5f5f5;
 }
@@ -1655,6 +1676,7 @@ article.node-api.node-teaser {
 .field-type-file table.sticky-table {
   table-layout: fixed;
 }
+
 .field-type-file .sticky-table thead th:last-child,
 .field-type-file .sticky-table tr td:last-child {
   width: 80px;

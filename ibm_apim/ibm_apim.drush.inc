@@ -148,24 +148,25 @@ function drush_ibm_apim_listen() {
     _drush_log_drupal_messages();
     $pieces = explode(" ", $cmdline);
     $cmd = $pieces[0];
-    $id = $pieces[1];
-    $subid = $pieces[2];
+    $event = $pieces[1];
+    $id = $pieces[2];
+    $subid = $pieces[3];
 
     try {
       if ($cmd == "dapi") {
-        drush_api_deleteapi($id);
+        drush_api_deleteapi($event, $id);
       }
       elseif ($cmd == "dprod") {
-        drush_product_deleteproduct($id);
+        drush_product_deleteproduct($event, $id);
       }
       elseif ($cmd == "dapp") {
-        drush_application_deleteapp($id);
+        drush_application_deleteapp($event, $id);
       }
       elseif ($cmd == "dsub") {
-        drush_application_deletesub($id, $subid);
+        drush_application_deletesub($event, $id, $subid);
       }
       elseif ($cmd == "dorg") {
-        drush_devorg_deleteorg($id);
+        drush_devorg_deleteorg($event, $id);
       }
       elseif ($cmd == "bgsync") {
         drush_ibm_apim_bgsync();
@@ -176,34 +177,34 @@ function drush_ibm_apim_listen() {
           $json = trim(fgets(STDIN));
         }
         if ($cmd == "capi") {
-          drush_api_createapi($json);
+          drush_api_createapi($event, $json);
         }
         elseif ($cmd == "uapi") {
-          drush_api_updateapi($json);
+          drush_api_updateapi($event, $json);
         }
         elseif ($cmd == "cprod") {
-          drush_product_createproduct($json);
+          drush_product_createproduct($event, $json);
         }
         elseif ($cmd == "uprod") {
-          drush_product_updateproduct($json);
+          drush_product_updateproduct($event, $json);
         }
         elseif ($cmd == "capp") {
-          drush_application_createapp($json);
+          drush_application_createapp($event, $json);
         }
         elseif ($cmd == "uapp") {
-          drush_application_updateapp($json);
+          drush_application_updateapp($event, $json);
         }
         elseif ($cmd == "csub") {
-          drush_application_createsub($json);
+          drush_application_createsub($event, $json);
         }
         elseif ($cmd == "usub") {
-          drush_application_updatesub($json);
+          drush_application_updatesub($event, $json);
         }
         elseif ($cmd == "corg") {
-          drush_devorg_createorg($json);
+          drush_devorg_createorg($event, $json);
         }
         elseif ($cmd == "uorg") {
-          drush_devorg_updateorg($json);
+          drush_devorg_updateorg($event, $json);
         }
       }
 

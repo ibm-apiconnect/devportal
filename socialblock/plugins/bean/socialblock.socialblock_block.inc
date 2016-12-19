@@ -167,7 +167,7 @@ class SocialBlockBean extends BeanPlugin {
       $markup .= $cronoutput;
     }
     else {
-      $markup .= '<div class="socialblock no_topics">There are no posts to display.</div>';
+      $markup .= '<div class="socialblock no_topics">' . t('There are no posts to display.') . '</div>';
     }
 
     $markup .= '</div>';

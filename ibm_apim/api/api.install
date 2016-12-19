@@ -162,7 +162,7 @@ function _api_installed_fields() {
     ),
     'api_swaggertags' => array(
       'field_name' => 'api_swaggertags',
-      'label' => t('Swagger Tags'),
+      'label' => t('Open API Tags'),
       'type' => 'text_long',
       'translatable' => FALSE
     ),
@@ -481,19 +481,19 @@ function _api_installed_instances() {
     'api_swaggertags' => array(
       'field_name' => 'api_swaggertags',
       'type' => 'text',
-      'label' => t('Swagger Tags'),
+      'label' => t('Open API Tags'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
         'default' => array(
-          'label' => t('Swagger Tags'),
+          'label' => t('Open API Tags'),
           'type' => 'text_long'
         ),
         'teaser' => array(
-          'label' => t('Swagger Tags'),
+          'label' => t('Open API Tags'),
           'type' => 'text_long'
         ),
         'inner' => array(
-          'label' => t('Swagger Tags'),
+          'label' => t('Open API Tags'),
           'type' => 'text_long'
         )
       )
@@ -514,7 +514,7 @@ function _api_installed_instances() {
       ),
       'settings' => array(
         'file_directory' => '',
-        'file_extensions' => 'txt doc pdf xls ppt pptx docx xslx rtf odt ods odp md json yaml tgz tar zip',
+        'file_extensions' => 'txt doc pdf xls ppt pptx docx xlsx rtf odt ods odp md json yaml tgz tar zip',
         'max_filesize' => '10 MB',
         'description_field' => 1,
         'user_register_form' => FALSE

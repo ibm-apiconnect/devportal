@@ -77,8 +77,14 @@ function comprehensive_uninstaller_form_alter(&$form, &$form_state, $form_id) {
     $base_root = preg_replace('/^https?:\/\//i', '', $GLOBALS['base_root']);
     $base_path = preg_replace('/\/$/i', '', preg_replace('/^\//i', '', $GLOBALS['base_path']));
     $base_path = str_replace('/', '.', $base_path);
-    $site_path = $base_path . '.' . $base_root;
+    if (isset($base_path) && !empty($base_path)) {
+      $site_path = $base_path . '.' . $base_root;
+    }
+    else {
+      $site_path = $base_root;
+    }
     $site_path_pattern = str_replace('.', '\.', $site_path);
+    $site_path_pattern = 'sites\/' . $site_path_pattern;
     foreach ($all_modules as $name => $module) {
       if (empty($module->status) && $module->schema_version >= SCHEMA_UNINSTALLED && preg_match("/$site_path_pattern/i", $module->uri)) {
         $disabled_modules[$name] = $module;
@@ -114,7 +120,7 @@ function comprehensive_uninstaller_form_alter(&$form, &$form_state, $form_id) {
       $form['actions'] = array();
     }
   }
-  if (isset($form['#confirmed'])) { //If we're on the delete confirm page
+  if ($form_id == 'system_modules_uninstall' && isset($form['#confirmed'])) { //If we're on the delete confirm page
     $form['#submit'] = array('_comprehensive_uninstaller_module_uninstall_helper');
   }
 }

@@ -26,7 +26,10 @@ function bannerblock_uninstall() {
 function _bannerblock_add_banner_block_fields() {
   // Banner block
   foreach (_bannerblock_banner_block_fields() as $field) {
-    field_create_field($field);
+    $existingfield = field_info_field($field['field_name']);
+    if (!isset($existingfield)) {
+      field_create_field($field);
+    }
   }
   foreach (_bannerblock_banner_block_instances() as $fieldinstance) {
     $fieldinstance['entity_type'] = 'bean';

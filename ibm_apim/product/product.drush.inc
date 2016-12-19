@@ -21,6 +21,7 @@ function product_drush_command() {
     'description' => 'Updates a product',
     'aliases' => array('uprod'),
     'arguments' => array(
+      'event' => 'The event type',
       'product' => 'The JSON product payload'
     )
   );
@@ -28,6 +29,7 @@ function product_drush_command() {
     'description' => 'Creates a product',
     'aliases' => array('cprod'),
     'arguments' => array(
+      'event' => 'The event type',
       'product' => 'The JSON product payload'
     )
   );
@@ -35,6 +37,7 @@ function product_drush_command() {
     'description' => 'Deletes a product',
     'aliases' => array('dprod'),
     'arguments' => array(
+      'event' => 'The event type',
       'name' => 'The product name:version'
     )
   );
@@ -55,15 +58,15 @@ function drush_product_cleanse_drush_command() {
   drupal_set_message(t('All Product entries deleted.'), 'success');
 }
 
-function drush_product_createOrUpdateProduct($func,$product) {
+function drush_product_createOrUpdateProduct($func, $event, $product) {
 	if (isset($product)) {
 		$product = json_decode($product, TRUE);
 		$ref = $product['document']['info']['name'] . ':' . $product['document']['info']['version'];
 		
 		if (strtolower($product['state']) == "retired") {
-			drush_product_deleteproduct($ref);
+          drush_product_deleteproduct('retired', $ref);
 		} else {
-			$createdOrUpdated = product_createOrUpdateProduct($product);
+          $createdOrUpdated = product_createOrUpdateProduct($product, $event);
 		
 			if ($createdOrUpdated) {
 				drupal_set_message(t('Drush @func created Product @prod', array( '@func' => $func, '@prod' => $ref)), 'success');
@@ -76,15 +79,16 @@ function drush_product_createOrUpdateProduct($func,$product) {
 		drupal_set_message(t('Drush @func No Product provided', array( '@func' => $func)), 'error');
 	}
 }
-function drush_product_createproduct($product) {
-  drush_product_createOrUpdateProduct('CreateProduct',$product);
+
+function drush_product_createproduct($event, $product) {
+  drush_product_createOrUpdateProduct('CreateProduct', $event, $product);
 }
 
-function drush_product_updateproduct($product) {
-  drush_product_createOrUpdateProduct('UpdateProduct',$product);
+function drush_product_updateproduct($event, $product) {
+  drush_product_createOrUpdateProduct('UpdateProduct', $event, $product);
 }
 
-function drush_product_deleteproduct($ref) {
+function drush_product_deleteproduct($event, $ref) {
   if (isset($ref)) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
@@ -94,7 +98,7 @@ function drush_product_deleteproduct($ref) {
     if (isset($results['node'])) {
       $first = array_shift($results['node']);
       $nid = $first->nid;
-      product_deleteProductNode($nid);
+      product_deleteProductNode($nid, $event);
       drupal_set_message(t('Drush DeleteProduct deleted Product @prod', array( '@prod' => $ref)), 'success');
     } else {
       drupal_set_message(t('Drush DeleteProduct could not find Product @prod', array( '@prod' => $ref)), 'warning');

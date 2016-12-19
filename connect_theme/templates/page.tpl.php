@@ -166,10 +166,3 @@
     <?php print $collapsible; ?>
   </section>
 <?php endif; ?>
-<?php if (empty($content)) {
-  global $_GET;
-  if (!isset($_GET['reload'])) {
-    drupal_theme_rebuild();
-    drupal_goto(current_path(), array('query' => array('reload' => 'true')));
-  }
-} ?>

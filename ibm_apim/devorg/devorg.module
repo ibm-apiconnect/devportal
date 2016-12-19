@@ -173,6 +173,66 @@ function devorg_preprocess_search_result(&$variables) {
 }
 
 /**
+ * Implements hook_token_info().
+ *
+ * @return array
+ */
+function devorg_token_info() {
+  $type = array(
+    'name' => t('Developer organization tokens'),
+    'description' => t('Developer organization tokens'),
+    'needs-data' => 'devorg',
+  );
+  $devorg['devorg_id'] = array(
+    'name' => t("Developer organization ID"),
+    'description' => t("The ID of the developer organization."),
+  );
+  $devorg['devorg_nid'] = array(
+    'name' => t("Developer organization node ID"),
+    'description' => t('The node ID of the developer organization.'),
+  );
+  $devorg['devorg_name'] = array(
+    'name' => t("Developer organization name"),
+    'description' => t('The name of the developer organization.'),
+  );
+  $devorg['devorg_owner_email'] = array(
+    'name' => t("Developer organization owner email address"),
+    'description' => t('The developer organization owner email address.'),
+  );
+  $devorg['devorg_member_emails'] = array(
+    'name' => t("Developer organization member email addresses"),
+    'description' => t('The email addresses of the members of the developer organization. (comma separated)'),
+  );
+
+  return array(
+    'types' => array('devorg' => $type),
+    'tokens' => array('devorg' => $devorg),
+  );
+}
+
+/**
+ * Implements hook_tokens().
+ *
+ * @param $type
+ * @param null $object
+ * @param array $options
+ * @return array
+ */
+function devorg_tokens($type, $object = NULL, $options = array()) {
+  $tokens = array();
+  if ($type == 'devorg' || $type == 'all') {
+    $tokens = array(
+      'devorg_id' => $object['devorg_id'],
+      'devorg_nid' => $object['devorg_nid'],
+      'devorg_name' => $object['devorg_name'],
+      'devorg_owner_email' => $object['devorg_owner_email'],
+      'devorg_member_emails' => $object['devorg_member_emails'],
+    );
+    return $tokens;
+  }
+}
+
+/**
  * returns a list of all our custom fields
  * @return array
  */
@@ -185,8 +245,7 @@ function _devorg_get_ibm_fields() {
     'devorg_providerid',
     'devorg_environmentid',
     'devorg_owner',
-    'devorg_tags',
-    'title_field'
+    'devorg_tags'
   );
   return $ibmfields;
 }
@@ -208,9 +267,10 @@ function _devorg_get_custom_fields() {
  * Creates or updates an existing node. Returns true if a new node was
  * created or false if an existing one was updated.
  * @param $devorg
+ * @param $event
  * @return bool
  */
-function devorg_createOrUpdateDevorg($devorg) {
+function devorg_createOrUpdateDevorg($devorg, $event) {
   $createdOrUpdated = FALSE;
   $ref = $devorg['id'];
   $query = new EntityFieldQuery();
@@ -223,12 +283,12 @@ function devorg_createOrUpdateDevorg($devorg) {
     $first = array_shift($results['node']);
     $nid = $first->nid;
     $node = node_load($nid);
-    devorg_updateExistingDevorgNode($node, $devorg);
+    devorg_updateExistingDevorgNode($node, $devorg, $event);
     $createdOrUpdated = FALSE;
   }
   else {
     // no existing node for this devorg so create one
-    devorg_createNewDevorgNode($devorg);
+    devorg_createNewDevorgNode($devorg, $event);
     $createdOrUpdated = TRUE;
   }
 
@@ -238,9 +298,10 @@ function devorg_createOrUpdateDevorg($devorg) {
 /**
  * Create a new devorg node
  * @param $consumer
+ * @param $event
  * @throws \Exception
  */
-function devorg_createNewDevorgNode($consumer) {
+function devorg_createNewDevorgNode($consumer, $event) {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
   if (isset($consumer) && isset($consumer['id'])) {
@@ -258,7 +319,7 @@ function devorg_createNewDevorgNode($consumer) {
       $nid = $first->nid;
       $node = node_load($nid);
       if (isset($node)) {
-        devorg_updateExistingDevorgNode($node, $consumer);
+        devorg_updateExistingDevorgNode($node, $consumer, $event);
       }
     }
     else {
@@ -312,6 +373,49 @@ function devorg_createNewDevorgNode($consumer) {
       );
       $node = node_submit($node); // Prepare node for saving
       node_save($node);
+
+      if (isset($node)) {
+        // Calling all modules implementing 'hook_ibm_apim_devorg_create':
+        module_invoke_all('ibm_apim_devorg_create', $node, $consumer);
+
+        // invoke rules
+        if (module_exists('rules')) {
+          $rules_payload = array(
+            'devorg_id' => $node->devorg_id[$node->language][0]['value'],
+            'devorg_nid' => $node->nid,
+            'devorg_name' => $node->title,
+            'devorg_owner_email' => $node->devorg_owner[$node->language][0]['value']
+          );
+
+          $member_emails = array();
+          if(isset($node->devorg_members[$node->language][0]['value'])) {
+            $members = unserialize($node->devorg_members[$node->language][0]['value']);
+            foreach ($members as $member) {
+              if (isset($member['email'])) {
+                $member_emails[] = $member['email'];
+              } else {
+                $member_emails[] = $member['username'];
+              }
+            }
+          }
+          $rules_payload['devorg_member_emails'] = implode(',', $member_emails);
+
+          // Make sure we do not provide NULL values, as Rules module doesn't like them.
+          // @see http://drupal.org/node/1497534
+          foreach ($rules_payload as $key => $value) {
+            if (is_null($value)) {
+              $rules_payload[$key] = '';
+            }
+          }
+          rules_invoke_event('devorg_create',
+            $rules_payload['devorg_id'],
+            $rules_payload['devorg_nid'],
+            $rules_payload['devorg_name'],
+            $rules_payload['devorg_owner_email'],
+            $rules_payload['devorg_member_emails']
+          );
+        }
+      }
     }
   }
 }
@@ -320,9 +424,10 @@ function devorg_createNewDevorgNode($consumer) {
  * Update existing devorg node
  * @param $node
  * @param $consumer
+ * @param $event
  * @throws \Exception
  */
-function devorg_updateExistingDevorgNode($node, $consumer) {
+function devorg_updateExistingDevorgNode($node, $consumer, $event) {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
   $node->title = ibm_apim_truncate_string($consumer['title']);
@@ -342,6 +447,10 @@ function devorg_updateExistingDevorgNode($node, $consumer) {
   }
   $node->devorg_members[$node->language][0]['value'] = serialize($consumer['members']);
   node_save($node);
+  if (isset($node)) {
+    // Calling all modules implementing 'hook_ibm_apim_devorg_update':
+    module_invoke_all('ibm_apim_devorg_update', $node, $consumer);
+  }
 }
 
 /**
@@ -360,7 +469,7 @@ function devorg_updateDevorgNode($consumer) {
       $first = array_shift($results['node']);
       $nid = $first->nid;
       $node = node_load($nid);
-      devorg_updateExistingDevorgNode($node, $consumer);
+      devorg_updateExistingDevorgNode($node, $consumer, 'update');
     }
   }
 }

@@ -327,10 +327,11 @@ else {
               </ul>
             <?php endif; ?>
             <?php if (isset($productnid)) {
-              $subscribeurl = url('node/'. $productnid, array(), 'plans');
-            } else {
+              $subscribeurl = url('node/' . $productnid, array(), 'plans');
+            }
+            else {
               $subscribeurl = url('product/select/' . $node->nid);
-            }?>
+            } ?>
             <div class="subscribeButton"><div class="subscribeButtonInner"><a
                   style="font-weight: 500;"
                   href="<?php print $subscribeurl; ?>"><?php print t('Subscribe'); ?></a></div></div>
@@ -379,6 +380,7 @@ else {
         <div
           class='pathDetails navigate-apis_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>_paths'>
           <?php foreach ($path as $verb => $operation) : ?>
+            <?php $unexpanded_operation = $api['paths'][$pathSegment][$verb]; ?>
             <?php if (in_array(strtoupper($verb), array(
               'PUT',
               'POST',
@@ -607,15 +609,16 @@ else {
                                 </div>
                               <?php endforeach; ?>
                             <?php endif; ?>
-                            <?php if (isset($operation['parameters']) && is_array($operation['parameters'])): ?>
-                              <?php foreach ($operation['parameters'] as $key => $parameter) : ?>
+                            <?php if (isset($unexpanded_operation['parameters']) && is_array($unexpanded_operation['parameters'])): ?>
+                              <?php foreach ($unexpanded_operation['parameters'] as $key => $parameter) : ?>
                                 <?php if (isset($parameter['$ref'])) {
                                   // handle parameter references
                                   $parameter = api_get_ref_param($expandedapi, $parameter['$ref']);
                                 }
                                 else {
-                                  $parameter = $expandedapi['paths'][$pathSegment][$verb]['parameters'][$key];
+                                  $parameter = $api['paths'][$pathSegment][$verb]['parameters'][$key];
                                 } ?>
+                                <?php $expanded_parameter = $expandedapi['paths'][$pathSegment][$verb]['parameters'][$key]; ?>
 
                                 <div class='parametersSection listContent'>
                                   <div class='name'><div
@@ -641,11 +644,11 @@ else {
                                         <a
                                           onclick='API.navigatedefs("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>", "<?php print drupal_html_class(preg_replace("/\W/", "", _ibm_apim_ref_to_objectname($parameter['schema']['items']['$ref']))); ?>")'
                                           href='javascript:;'><?php print ibm_apim_return_schema($parameter); ?></a>
-                                      <?php elseif (isset($parameter) && (isset($parameter['schema']['type']) && !empty($parameter['schema']['type'])) || (isset($parameter['type']) && !empty($parameter['type']))) : ?>
+                                      <?php elseif (isset($expanded_parameter) && (isset($expanded_parameter['schema']['type']) && !empty($expanded_parameter['schema']['type'])) || (isset($expanded_parameter['type']) && !empty($expanded_parameter['type']))) : ?>
                                         <pre
                                           class="inlineSchema"><code><?php print json_encode(ibm_apim_return_inline_schema($parameter), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE); ?></code></pre>
                                       <?php else: ?>
-                                        <?php print ibm_apim_return_schema($parameter); ?>
+                                        <?php print ibm_apim_return_schema($expanded_parameter); ?>
                                       <?php endif; ?>
                                     </div>
                                   </div>
@@ -747,7 +750,8 @@ else {
                       <?php if (isset($operation['responses']) && $protocol != 'wsdl') : ?>
                         <div class="responses">
                           <label><?php print t('Responses'); ?></label>
-                          <?php foreach ($operation['responses'] as $code => $response) : ?>
+                          <?php foreach ($unexpanded_operation['responses'] as $code => $response) : ?>
+                            <?php $expanded_response = $operation['responses'][$code]; ?>
                             <div class='responsesSection listContent'>
                               <div class='code'><?php print $code; ?>
                               </div><div class="responseContent"><div
@@ -760,14 +764,14 @@ else {
                                   ?>
                                   <?php if (isset($response) && isset($response['schema']) && isset($response['schema']['$ref'])) : ?>
                                     <a
-                                      onclick='API.navigatedefs("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>", "<?php print preg_replace("/\W/", "", _ibm_apim_ref_to_objectname($response['schema']['$ref'])); ?>")'
+                                      onclick='API.navigatedefs("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>", "<?php print drupal_html_class(preg_replace("/\W/", "", _ibm_apim_ref_to_objectname($response['schema']['$ref']))); ?>")'
                                       href='javascript:;'><?php print ibm_apim_return_schema($response); ?></a>
                                   <?php elseif (isset($response) && isset($response['schema']['type']) && $response['schema']['type'] == "array" && isset($response['schema']['items']) && isset($response['schema']['items']['$ref'])) : ?>
                                     <a
-                                      onclick='API.navigatedefs("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>", "<?php print preg_replace("/\W/", "", _ibm_apim_ref_to_objectname($response['schema']['items']['$ref'])); ?>")'
+                                      onclick='API.navigatedefs("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>", "<?php print drupal_html_class(preg_replace("/\W/", "", _ibm_apim_ref_to_objectname($response['schema']['items']['$ref']))); ?>")'
                                       href='javascript:;'><?php print ibm_apim_return_schema($response); ?></a>
-                                  <?php elseif (isset($response) && isset($response['schema']['type']) && !empty($response['schema']['type'])) : ?>
-                                    <?php $response_json = json_encode(ibm_apim_return_inline_schema($response), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE); ?>
+                                  <?php elseif (isset($expanded_response) && isset($expanded_response['schema']['type']) && !empty($expanded_response['schema']['type'])) : ?>
+                                    <?php $response_json = json_encode(ibm_apim_return_inline_schema($expanded_response), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE); ?>
                                     <?php if (strlen($response_json) > 1000) : ?>
                                       <?php $truncated = mb_substr($response_json, 0, 1000); ?>
                                       <pre
@@ -1343,8 +1347,8 @@ else {
                         <?php endif; ?>
                       <?php endforeach; ?>
                     <?php endif; ?>
-                    <?php if (isset($operation['parameters']) && is_array($operation['parameters'])) : ?>
-                      <?php foreach ($operation['parameters'] as $parameter)  : ?>
+                    <?php if (isset($unexpanded_operation['parameters']) && is_array($unexpanded_operation['parameters'])) : ?>
+                      <?php foreach ($unexpanded_operation['parameters'] as $parameter)  : ?>
                         <?php if (isset($parameter['$ref'])) {
                           // handle parameter references
                           $parameter = api_get_ref_param($api, $parameter['$ref']);

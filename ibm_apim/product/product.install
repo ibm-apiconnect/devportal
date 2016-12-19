@@ -667,7 +667,7 @@ function _product_installed_instances() {
       ),
       'settings' => array(
         'file_directory' => '',
-        'file_extensions' => 'txt doc pdf xls ppt pptx docx xslx rtf odt ods odp md json yaml tgz tar zip',
+        'file_extensions' => 'txt doc pdf xls ppt pptx docx xlsx rtf odt ods odp md json yaml tgz tar zip',
         'max_filesize' => '10 MB',
         'description_field' => 1,
         'user_register_form' => FALSE

@@ -959,6 +959,7 @@
   display: inline-block;
   padding-left: 10px;
 }
+
 .mesh-portal-product .interact .refreshDone.hidden {
   display: none;
 }
@@ -1056,6 +1057,7 @@
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  float: left;
 }
 
 .mesh-portal-product .plansSection .api a,
@@ -1706,4 +1708,9 @@
   .node-type-product #page > #columns {
     margin-left: 0;
   }
+}
+
+.messages .messages.info {
+  border: 1px solid #ccc;
+  background-color: #f2f2f2;
 }

@@ -24,7 +24,10 @@ function socialblock_uninstall() {
 
 function _socialblock_add_fields() {
   foreach (_socialblock_fields() as $field) {
-    field_create_field($field);
+    $existingfield = field_info_field($field['field_name']);
+    if (!isset($existingfield)) {
+      field_create_field($field);
+    }
   }
   foreach (_socialblock_instances() as $fieldinstance) {
     $fieldinstance['entity_type'] = 'bean';

@@ -23,7 +23,10 @@ function popularapi_uninstall() {
 
 function _popularapi_add_fields() {
   foreach (_popularapi_fields() as $field) {
-    field_create_field($field);
+    $existingfield = field_info_field($field['field_name']);
+    if (!isset($existingfield)) {
+      field_create_field($field);
+    }
   }
   foreach (_popularapi_instances() as $fieldinstance) {
     $fieldinstance['entity_type'] = 'bean';

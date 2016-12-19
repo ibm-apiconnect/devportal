@@ -59,7 +59,7 @@
                 <?php
                 if (isset($product_description[0]['safe_value']) && !empty($product_description[0]['safe_value'])) {
                   print '<div class="apimFade" title="' . $product_description[0]['safe_value'] . '">';
-                  print ibm_apim_markdown_field($product_description[0]['safe_value']);
+                  print ibm_apim_markdown_field($product_description[0]['value']);
                   print '</div>';
                 }
                 ?>

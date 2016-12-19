@@ -23,7 +23,10 @@ function popularproduct_uninstall() {
 
 function _popularproduct_add_fields() {
   foreach (_popularproduct_fields() as $field) {
-    field_create_field($field);
+    $existingfield = field_info_field($field['field_name']);
+    if (!isset($existingfield)) {
+      field_create_field($field);
+    }
   }
   foreach (_popularproduct_instances() as $fieldinstance) {
     $fieldinstance['entity_type'] = 'bean';

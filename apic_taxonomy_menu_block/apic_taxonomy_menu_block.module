@@ -489,7 +489,9 @@ function apic_taxonomy_menu_block_find_active_tid($tree, $vid) {
           // multiple values. It doesn't make sense to have more than one
           // active trail/items in a menu.
           $tid = end($term_reference_field[LANGUAGE_NONE]);
-          $tid = $tid['tid'];
+          if (isset($tid['tid'])) {
+            $tid = $tid['tid'];
+          }
           // Check if the term actually belongs to the vocabulary we need to
           // display (node can have more than one term reference field).
           if (isset($tree[$tid])) {
@@ -559,7 +561,8 @@ function apic_taxonomy_menu_block_nodes($tree, $config) {
 
   // Add the aggregation node count.
   if ($config['nodes_aggregation']) {
-    foreach ($tree as $tid => $term) {
+    krsort($tree);
+    foreach ($tree as $tid => &$term) {
       // Only aggregate if we have a parent and if the term is present in the
       // current tree.
       $parent_tid = $term['parents'][0];
@@ -567,6 +570,7 @@ function apic_taxonomy_menu_block_nodes($tree, $config) {
         $tree[$parent_tid]['nodes'] = $tree[$parent_tid]['nodes'] + $term['nodes'];
       }
     }
+    ksort($tree);
   }
 
   return $tree;

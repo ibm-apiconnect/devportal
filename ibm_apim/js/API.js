@@ -1269,8 +1269,8 @@
             headers["SOAPAction"] = this.config.soapAction;
         }
         // is this SOAP? if so, ditch the operationId from the end...
-        if (this.config.soapAction !== undefined && this.operation.operationId && targetUrl.endsWith("/" + this.operation.operationId)) {
-            targetUrl = targetUrl.substring(0, targetUrl.length - (this.operation.operationId.length + 1));
+        if (this.operation.definition['x-ibm-soap'] && this.operation.definition && this.operation.definition.operationId && targetUrl.endsWith("/" + this.operation.definition.operationId)) {
+            targetUrl = targetUrl.substring(0, targetUrl.length - (this.operation.definition.operationId.length + 1));
         }
 
         var parameters = [];
@@ -1351,10 +1351,10 @@
             var formDataArray = [];
             formDataParameters.forEach(function (parameter) {
                 if (requestForm[parameter.name]) {
-                    formDataArray.push(parameter.name + ': ' + requestForm[parameter.name]);
+                    formDataArray.push(encodeURIComponent(parameter.name).replace(/%20/g, '+') + '=' + encodeURIComponent(requestForm[parameter.name]).replace(/%20/g, '+'));
                 }
             });
-            body = formDataArray.join('\n');
+            body = formDataArray.join('&');
         }
 
         var self = this;

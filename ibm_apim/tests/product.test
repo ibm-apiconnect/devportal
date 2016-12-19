@@ -56,13 +56,13 @@ class IbmApimProductWebTestCase extends SiteWebTestCase {
       $products = $this->findElementByCss('.apimTitle a');
       for ($i = 0; $i < (count($products)); $i++) {
         $productNode = $this->getProductPage($this, $i, FALSE);
-        if ($productNode->title . ' (v' . ($productNode->product_version[$productNode->language][0]['value']) . ')' == ($products[$i][0])) {
+        if ($productNode->title . ' (' . ($productNode->product_version[$productNode->language][0]['value']) . ')' == ($products[$i][0])) {
           $this->pass('The value for product ' . $products[$i][0] . ' is correctly found in the product page HTML');
           $this->assertLinkByHref(($productNode->product_id[$productNode->language][0]['value']), 0, ' The product page link for ' . ($productNode->product_id[$productNode->language][0]['value']) . ' is correctly found on the products page');
         }
         else {
           $this->fail('The product name found in the database does not match the value found in the page HTML, see debug below:');
-          debug('From DB: ' . $productNode->title . ' (v' . ($productNode->product_version[$productNode->language][0]['value']) . ')');
+          debug('From DB: ' . $productNode->title . ' (' . ($productNode->product_version[$productNode->language][0]['value']) . ')');
           debug('From HTML: ' . $products[$i][0]);
         }
       }

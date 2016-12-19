@@ -21,6 +21,7 @@ function application_drush_command() {
     'description' => 'Updates an application',
     'aliases' => array('uapp'),
     'arguments' => array(
+      'event' => 'The event type',
       'app' => 'The JSON application payload'
     )
   );
@@ -28,6 +29,7 @@ function application_drush_command() {
     'description' => 'Creates an application',
     'aliases' => array('capp'),
     'arguments' => array(
+      'event' => 'The event type',
       'app' => 'The JSON application payload'
     )
   );
@@ -35,6 +37,7 @@ function application_drush_command() {
     'description' => 'Deletes an application',
     'aliases' => array('dapp'),
     'arguments' => array(
+      'event' => 'The event type',
       'id' => 'The application id'
     )
   );
@@ -42,6 +45,7 @@ function application_drush_command() {
     'description' => 'Creates a subscription',
     'aliases' => array('csub'),
     'arguments' => array(
+      'event' => 'The event type',
       'app' => 'The JSON subscription payload'
     )
   );
@@ -49,6 +53,7 @@ function application_drush_command() {
     'description' => 'Updates a subscription',
     'aliases' => array('usub'),
     'arguments' => array(
+      'event' => 'The event type',
       'app' => 'The JSON subscription payload'
     )
   );
@@ -56,6 +61,7 @@ function application_drush_command() {
     'description' => 'Deletes a subscription',
     'aliases' => array('dsub'),
     'arguments' => array(
+      'event' => 'The event type',
       'id' => 'The subscription id'
     )
   );
@@ -76,11 +82,11 @@ function drush_application_cleanse_drush_command() {
   drupal_set_message(t('All Application entries deleted.'), 'success');
 }
 
-function drush_application_createOrUpdateapp($func, $app) {
+function drush_application_createOrUpdateapp($func, $event, $app) {
   if (isset($app)) {
     $app = json_decode($app, TRUE);
     $ref = $app['id'];
-    $createdOrUpdated = application_createOrUpdateApplication($app);
+    $createdOrUpdated = application_createOrUpdateApplication($app, $event);
     if ($createdOrUpdated) {
       drupal_set_message(t('Drush @func created Application @app', array('@func' => $func, '@app' => $ref)), 'success');
     }
@@ -96,15 +102,15 @@ function drush_application_createOrUpdateapp($func, $app) {
   }
 }
 
-function drush_application_createapp($app) {
-  drush_application_createOrUpdateapp('CreateApplication', $app);
+function drush_application_createapp($event, $app) {
+  drush_application_createOrUpdateapp('CreateApplication', $event, $app);
 }
 
-function drush_application_updateapp($app) {
-  drush_application_createOrUpdateapp('UpdateApplication', $app);
+function drush_application_updateapp($event, $app) {
+  drush_application_createOrUpdateapp('UpdateApplication', $event, $app);
 }
 
-function drush_application_deleteapp($id) {
+function drush_application_deleteapp($event, $id) {
   if (isset($id)) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
@@ -128,7 +134,7 @@ function drush_application_deleteapp($id) {
   }
 }
 
-function drush_application_createOrUpdatesub($func, $subinput) {
+function drush_application_createOrUpdatesub($func, $event, $subinput) {
   if (isset($subinput)) {
     $subinput = json_decode($subinput, TRUE);
     $ref = $subinput['id'];
@@ -151,15 +157,15 @@ function drush_application_createOrUpdatesub($func, $subinput) {
   }
 }
 
-function drush_application_createsub($subinput) {
-  drush_application_createOrUpdatesub('CreateSubscription', $subinput);
+function drush_application_createsub($event, $subinput) {
+  drush_application_createOrUpdatesub('CreateSubscription', $event, $subinput);
 }
 
-function drush_application_updatesub($subinput) {
-  drush_application_createOrUpdatesub('UpdateSubscription', $subinput);
+function drush_application_updatesub($event, $subinput) {
+  drush_application_createOrUpdatesub('UpdateSubscription', $event, $subinput);
 }
 
-function drush_application_deletesub($appid, $subid) {
+function drush_application_deletesub($event, $appid, $subid) {
   if (isset($appid) && isset($subid)) {
     application_remove_subscription_id($appid, $subid);
     drupal_set_message(t('Subscription deleted.'), 'success');

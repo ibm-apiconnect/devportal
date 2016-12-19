@@ -131,7 +131,6 @@ drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/App.js', array(
                      class="app_oauth_redirecturi"><?php print $application_oauthredirecturi[0]['safe_value']; ?></div>
               </div>
             <?php endif; ?>
-
             <?php if (isset($customfields) && is_array($customfields) && count($customfields) > 0) : ?>
               <div class="customFields application">
                 <?php foreach ($customfields as $customfield) : ?>
@@ -246,7 +245,7 @@ drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/App.js', array(
                   $showversion = variable_get('ibm_apim_show_versions', 1);
                   $versiontext = '';
                   if ($showversion == 1) {
-                    $versiontext = ' (v' . $productversion . ')';
+                    $versiontext = ' (' . $productversion . ')';
                   }
                   $moreinfolink = '<a href="' . url('node/' . $sub['productnid']) . '" title="' . t('View Details') . '"><i class="material-icons">info</i> ' . t('View Details') . '</a>';
                   ?>

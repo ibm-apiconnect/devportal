@@ -49,7 +49,7 @@ function api_help($path, $arg) {
       $output .= '<dd>' . t("This content type is used to represent APIs in IBM API Connect in Drupal.") . '</dd>';
       $output .= '<dt>' . t('Search APIs') . '</dt>';
       $output .= '<dd>' . t("Summary information about the APIs in IBM API Connect is used to create these nodes in Drupal which enables the use of drupal search to index IBM API Connect content.") . '</dd>';
-      $output .= '<dt>' . t('Swagger UI') . '</dt>';
+      $output .= '<dt>' . t('Open API UI') . '</dt>';
       $output .= '<dd>' . t("It is possible to browse the methods of an API and test them from within this site.") . '</dd>';
       $output .= '</dl>';
       return $output;
@@ -179,7 +179,7 @@ function api_menu() {
     'type' => MENU_CALLBACK
   );
   $items['api/swaggerdownload/%'] = array(
-    'title' => 'API Swagger Proxy',
+    'title' => 'Open API Proxy',
     'page callback' => '_api_swagger_proxy_callback',
     'page arguments' => array(2),
     'access callback' => TRUE,
@@ -270,7 +270,7 @@ function api_preprocess_node(&$variables) {
     $showversion = variable_get('ibm_apim_show_versions', 1);
     $versiontext = '';
     if ($showversion == 1) {
-      $versiontext = '(v' . $variables['api_version'][0]['safe_value'] . ')';
+      $versiontext = '(' . $variables['api_version'][0]['safe_value'] . ')';
     }
     $variables['titlelink'] = '<span class="apimTitle"> <a href="' . url('node/' . $variables['node']->nid) . '">' . $variables['title'] . '</a> <span class="versionText">' . $versiontext . '</span></span>';
     if ($variables['view_mode'] == 'full' || $variables['view_mode'] == 'inner') {
@@ -304,7 +304,7 @@ function api_preprocess_node(&$variables) {
           $productnid = check_plain($apim_session['productid']);
           // check this api is in the referenced product
           $apis = product_get_apis($productnid);
-          if (!in_array($variables['node']->nid,$apis)) {
+          if (!in_array($variables['node']->nid, $apis)) {
             unset($apim_session['productid']);
             unset($productnid);
           }
@@ -324,8 +324,8 @@ function api_preprocess_node(&$variables) {
               }
             }
           }
-          $productnid = null;
-          $apim_session['productid'] = null;
+          $productnid = NULL;
+          $apim_session['productid'] = NULL;
           if (is_array($prod_nids)) {
             if (count($prod_nids) == 1) {
               $productnid = $prod_nids[0];
@@ -341,9 +341,10 @@ function api_preprocess_node(&$variables) {
           $productnode = node_load($productnid);
           $variables['productnode'] = $productnode;
           $variables['productnid'] = $productnid;
-        } else {
-          $variables['productnode'] = null;
-          $variables['productnid'] = null;
+        }
+        else {
+          $variables['productnode'] = NULL;
+          $variables['productnid'] = NULL;
         }
 
         $variables['plans'] = unserialize($productnode->product_plans[$productnode->language][0]['value']);
@@ -627,9 +628,10 @@ function api_get_linked_pages($apinid) {
  * created or false if an existing one was updated.
  *
  * @param $api
+ * @param $event
  * @return bool
  */
-function api_createOrUpdateAPI($api) {
+function api_createOrUpdateAPI($api, $event) {
   $ref = $api['document']['info']['x-ibm-name'] . ':' . $api['document']['info']['version'];
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
@@ -642,12 +644,12 @@ function api_createOrUpdateAPI($api) {
     $first = array_shift($results['node']);
     $nid = $first->nid;
     $node = node_load($nid);
-    api_updateExistingAPINode($node, $api);
+    api_updateExistingAPINode($node, $api, $event);
     $createdOrUpdated = FALSE;
   }
   else {
     // no existing node for this API so create one
-    api_createNewAPINode($api);
+    api_createNewAPINode($api, $event);
     $createdOrUpdated = TRUE;
   }
   return $createdOrUpdated;
@@ -658,10 +660,11 @@ function api_createOrUpdateAPI($api) {
  * Used to create the new placeholder nodes for any new APIs returned by APIm
  *
  * @param $api
+ * @param $event
  * @return mixed
  * @throws \Exception
  */
-function api_createNewAPINode($api) {
+function api_createNewAPINode($api, $event) {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
   $oldtags = array();
@@ -874,7 +877,7 @@ function api_createNewAPINode($api) {
     $node = node_submit($node); // Prepare node for saving
     node_save($node);
   } catch (Exception $e) {
-    watchdog('_api_createNewAPINode', 'Save of Swagger to database failed with: %data', array('%data' => $e->getMessage()), WATCHDOG_NOTICE);
+    watchdog('_api_createNewAPINode', 'Save of Open API document to database failed with: %data', array('%data' => $e->getMessage()), WATCHDOG_NOTICE);
   }
   // if SOAP API then go get the wsdl too
   if (isset($api['document']['x-ibm-configuration']['type']) && (mb_strtolower($api['document']['x-ibm-configuration']['type']) == 'wsdl')) {
@@ -935,6 +938,12 @@ function api_createNewAPINode($api) {
           if (!isset($node->api_attachments[$node->language])) {
             $node->api_attachments[$node->language] = array();
           }
+          // check for existing description
+          foreach ($node->api_attachments[$node->language] as $existing_attachment) {
+            if (isset($existing_attachment->fid) && $existing_attachment->uri == $file_temp->uri) {
+              $attachment['description'] = $existing_attachment->description;
+            }
+          }
           $node->api_attachments[$node->language][] = array(
             'fid' => $file_temp->fid,
             'filename' => $file_temp->filename,
@@ -976,12 +985,45 @@ function api_createNewAPINode($api) {
     $node->field_apitags[$node->language] = $currenttags;
     node_save($node);
   }
+  // API Categories
+  $categories_enabled = variable_get('ibm_apim_allow_categories', 1);
+  if (isset($api['document']['x-ibm-configuration']['categories']) && $categories_enabled == 1) {
+    $categories = $api['document']['x-ibm-configuration']['categories'];
+    $tids = api_get_taxonomies_from_categories($categories);
+    if (isset($node->field_apitags[$node->language])) {
+      $currenttags = $node->field_apitags[$node->language];
+    }
+    else {
+      $currenttags = array();
+    }
+    if (is_array($tids) && !empty($tids)) {
+      foreach ($tids as $tid) {
+        if (isset($tid) && is_numeric($tid)) {
+          $found = FALSE;
+          foreach ($currenttags as $currentvalue) {
+            if (isset($currentvalue['tid']) && $currentvalue['tid'] == $tid) {
+              $found = TRUE;
+            }
+          }
+          if ($found == FALSE) {
+            $currenttags[] = array('tid' => $tid);
+          }
+        }
+      }
+      $node->field_apitags[$node->language] = $currenttags;
+      node_save($node);
+    }
+  }
 
   $phase_tagging = variable_get('ibm_apim_autotag_with_phase', 1);
   if ($phase_tagging == 1) {
     if (isset($api['document']['x-ibm-configuration']['phase'])) {
       _api_phase_tag($node, $api['document']['x-ibm-configuration']['phase']);
     }
+  }
+  if (isset($node)) {
+    // Calling all modules implementing 'hook_ibm_apim_api_create':
+    module_invoke_all('ibm_apim_api_create', $node, $api);
   }
 
   return $node->nid;
@@ -993,9 +1035,10 @@ function api_createNewAPINode($api) {
  *
  * @param $node
  * @param $api
+ * @param $event
  * @throws \Exception
  */
-function api_updateExistingAPINode($node, $api) {
+function api_updateExistingAPINode($node, $api, $event) {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
   $node->title = ibm_apim_truncate_string($api['document']['info']['title']);
@@ -1098,7 +1141,7 @@ function api_updateExistingAPINode($node, $api) {
     }
     node_save($node);
   } catch (Exception $e) {
-    watchdog('api_updateExistingAPINode', 'Save of Swagger to database failed with: %data', array('%data' => $e->getMessage()), WATCHDOG_NOTICE);
+    watchdog('api_updateExistingAPINode', 'Save of Open API document to database failed with: %data', array('%data' => $e->getMessage()), WATCHDOG_NOTICE);
   }
   // if SOAP API then go get the wsdl too
   if (isset($api['document']['x-ibm-configuration']['type']) && (mb_strtolower($api['document']['x-ibm-configuration']['type']) == 'wsdl')) {
@@ -1119,6 +1162,12 @@ function api_updateExistingAPINode($node, $api) {
             if (isset($existingdoc['uri'])) {
               $parts = explode('/', $existingdoc['uri']);
               if (in_array($api['id'], $parts) && in_array('apiwsdl', $parts)) {
+                if (isset($node->api_attachments[$node->language][$key]->description)) {
+                  $description = $node->api_attachments[$node->language][$key]->description;
+                }
+                else {
+                  $description = '';
+                }
                 $node->api_attachments[$node->language][$key] = array(
                   'fid' => $file_temp->fid,
                   'filename' => $file_temp->filename,
@@ -1126,7 +1175,8 @@ function api_updateExistingAPINode($node, $api) {
                   'uid' => 1,
                   'uri' => $file_temp->uri,
                   'status' => 1,
-                  'display' => 1
+                  'display' => 1,
+                  'description' => $description
                 );
                 $updated = TRUE;
               }
@@ -1180,15 +1230,21 @@ function api_updateExistingAPINode($node, $api) {
       if (isset($docresult) && isset($docresult->data) && !isset($docresult->data['errors'])) {
         $file_temp = api_save_legacydoc($api['id'], $attachment['id'], $docresult);
         if (isset($file_temp)) {
-          if (!isset($attachment['description'])) {
-            $attachment['description'] = '';
-          }
           $updated = FALSE;
           if (isset($node->api_attachments[$node->language])) {
             foreach ($node->api_attachments[$node->language] as $key => $existingdoc) {
               if (isset($existingdoc['uri'])) {
                 $parts = explode('/', $existingdoc['uri']);
                 if (in_array($api['id'], $parts) && in_array('apidoc', $parts) && in_array($attachment['id'], $parts)) {
+                  if (isset($node->api_attachments[$node->language][$key]->description)) {
+                    $description = $node->api_attachments[$node->language][$key]->description;
+                  }
+                  else if (isset($attachment['description'])) {
+                    $description = $attachment['description'];
+                  }
+                  else {
+                    $description = '';
+                  }
                   $node->api_attachments[$node->language][$key] = array(
                     'fid' => $file_temp->fid,
                     'filename' => $file_temp->filename,
@@ -1197,7 +1253,7 @@ function api_updateExistingAPINode($node, $api) {
                     'uri' => $file_temp->uri,
                     'status' => 1,
                     'display' => 1,
-                    'description' => $attachment['description']
+                    'description' => $description
                   );
                   $updated = TRUE;
                 }
@@ -1238,11 +1294,40 @@ function api_updateExistingAPINode($node, $api) {
     }
   }
 
+  // API Categories
+  $categories_enabled = variable_get('ibm_apim_allow_categories', 1);
+  if (isset($api['document']['x-ibm-configuration']['categories']) && $categories_enabled == 1) {
+    $categories = $api['document']['x-ibm-configuration']['categories'];
+    $tids = api_get_taxonomies_from_categories($categories);
+    $currenttags = $node->field_apitags[$node->language];
+    if (is_array($tids) && !empty($tids)) {
+      foreach ($tids as $tid) {
+        if (isset($tid) && is_numeric($tid)) {
+          $found = FALSE;
+          foreach ($currenttags as $currentvalue) {
+            if (isset($currentvalue['tid']) && $currentvalue['tid'] == $tid) {
+              $found = TRUE;
+            }
+          }
+          if ($found == FALSE) {
+            $currenttags[] = array('tid' => $tid);
+          }
+        }
+      }
+      $node->field_apitags[$node->language] = $currenttags;
+      node_save($node);
+    }
+  }
+
   $phase_tagging = variable_get('ibm_apim_autotag_with_phase', 1);
   if ($phase_tagging == 1) {
     if (isset($api['document']['x-ibm-configuration']['phase'])) {
       _api_phase_tag($node, $api['document']['x-ibm-configuration']['phase']);
     }
+  }
+  if (isset($node)) {
+    // Calling all modules implementing 'hook_ibm_apim_api_update':
+    module_invoke_all('ibm_apim_api_update', $node, $api);
   }
 }
 
@@ -1965,7 +2050,7 @@ function api_updateAPINode($api) {
       $first = array_shift($results['node']);
       $nid = $first->nid;
       $node = node_load($nid);
-      api_updateExistingAPINode($node, $api);
+      api_updateExistingAPINode($node, $api, 'update');
     }
   }
 }
@@ -1974,7 +2059,7 @@ function api_updateAPINode($api) {
  * Delete the specified API by NID
  * @param $nid
  */
-function api_deleteAPINode($nid) {
+function api_deleteAPINode($nid, $event) {
   _ibm_apim_delete_popular_block($nid);
   node_delete($nid);
   watchdog('api_deleteAPINode', 'delete API nid=@prod', array('@prod' => $nid), WATCHDOG_NOTICE);
@@ -2002,4 +2087,228 @@ function api_get_ref_param($api, $ref) {
     }
   }
   return NULL;
+}
+
+function api_create_taxonomy_from_path($path) {
+  // only do create if its enabled
+  $create_enabled = variable_get('ibm_apim_create_taxonomies_from_categories', 0);
+  if ($create_enabled) {
+    module_load_include('inc', 'ibm_apim', 'ibm_apim.taxonomy');
+    $taxonomy = array();
+    // trim leading and trailing slashes
+    $path = trim($path, "/");
+    // trim enclosing quotes
+    $path = preg_replace('/^([\'"])(.*)\\1$/', '\\2', $path);
+    // replace any double slashes with single
+    $path = preg_replace('#/+#', '/', $path);
+    $pathParts = explode('/', $path);
+    // only create taxonomy trees less than 20 levels deep
+    if (count($pathParts) < 20) {
+      $current = &$taxonomy;
+      foreach ($pathParts as $key => $value) {
+        $value = trim($value);
+        if (strlen($value) > 0) {
+          if ($key != (count($pathParts) - 1)) {
+            if (!is_array($current)) {
+              $current = array();
+            }
+            $current = &$current[$value];
+          }
+          else {
+            $current[] = $value;
+          }
+        }
+      }
+      ibm_apim_generate_tree(array('tags' => $taxonomy));
+    }
+  }
+}
+
+/**
+ * Get the target taxonomy ID for a given taxonomy path
+ * This will return the TID of the end term in the path
+ *
+ * @param $path
+ * @return mixed
+ */
+function api_get_taxonomy_id_from_path($path) {
+  $vocabulary = 'tags';
+  // trim leading and trailing slashes
+  $path = trim($path, "/");
+  // trim enclosing quotes
+  $path = preg_replace('/^([\'"])(.*)\\1$/', '\\2', $path);
+  // replace any double slashes with single
+  $path = preg_replace('#/+#', '/', $path);
+  $pathParts = explode('/', $path);
+  $answer = array();
+  if (isset($pathParts[0])) {
+    $root_tids = taxonomy_get_term_by_name(trim($pathParts[0]), $vocabulary);
+    $vid = taxonomy_vocabulary_machine_name_load($vocabulary)->vid;
+    foreach ($root_tids as $root_tid) {
+      // only want root level tags so ignore ones with parents
+      if (empty(taxonomy_get_parents($root_tid->tid))) {
+        $tree = taxonomy_get_tree($vid, $root_tid->tid);
+        if (empty($tree)) {
+          // root level tag, no children
+          $answer[] = $root_tid->tid;
+        }
+        else {
+          $found = FALSE;
+          $parent_tid = $root_tid->tid;
+          foreach ($pathParts as $key => $value) {
+            if ($key != 0) {
+              // skip root level element
+              $value = trim($value);
+              foreach ($tree as $tag) {
+                // check has right name and the right parent (case insensitive)
+                if (strtolower($tag->name) == strtolower($value) && isset($tag->parents) && in_array($parent_tid, $tag->parents)) {
+                  $parent_tid = $tag->tid;
+                  if ($key == (count($pathParts) - 1)) {
+                    // if we've got the last part of the path then we've found the right bit
+                    $found = TRUE;
+                  }
+                }
+              }
+            }
+          }
+          if ($found == TRUE) {
+            $answer[] = $parent_tid;
+          }
+        }
+      }
+    }
+  }
+  if (isset($answer[0])) {
+    return $answer[0];
+  }
+  else {
+    return NULL;
+  }
+}
+
+/**
+ * Loop over the categories and get all the tids
+ *
+ * @param array $categories
+ * @return array
+ */
+function api_get_taxonomies_from_categories($categories = array()) {
+  $create_enabled = variable_get('ibm_apim_create_taxonomies_from_categories', 0);
+  $tids = array();
+  if (is_array($categories) && !empty($categories)) {
+    foreach ($categories as $category) {
+      if ($create_enabled) {
+        api_create_taxonomy_from_path($category);
+      }
+      $tid = api_get_taxonomy_id_from_path($category);
+      if (isset($tid) && is_numeric($tid)) {
+        $tids[] = $tid;
+      }
+    }
+  }
+  return array_unique($tids);
+}
+
+/**
+ * Get subscription owners for a given API NID
+ *
+ * @param $apinid
+ * @return array
+ */
+function api_get_subscribing_owners($apinid) {
+  return api_get_subscribers($apinid, 'owners');
+}
+
+/**
+ * Get all developer organization members subscribed to a given API NID
+ *
+ * @param $apinid
+ * @return array
+ */
+function api_get_subscribing_members($apinid) {
+  return api_get_subscribers($apinid, 'members');
+}
+
+/**
+ * Get subscribers for a given API NID
+ *
+ * @param $apinid
+ * @param string $type
+ * @return array
+ */
+function api_get_subscribers($apinid, $type = 'members') {
+  $orgs = array();
+  // get products containing this api
+  if (isset($apinid)) {
+    $api = node_load($apinid);
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'product')
+      ->fieldCondition('product_apis', 'value', $api->api_ref[$api->language][0]['value'], 'CONTAINS');
+    $results = $query->execute();
+    if (isset($results['node'])) {
+      $prod_nids = array_keys($results['node']);
+
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'application');
+      $appresults = $query->execute();
+      if (isset($appresults['node'])) {
+        $appnids = array_keys($appresults['node']);
+        $appnodes = node_load_multiple($appnids);
+      }
+      // get subscribed apps to those products
+      foreach ($prod_nids as $prod_nid) {
+        $product = node_load($prod_nid);
+        if (isset($product)) {
+          if (isset($appnodes)) {
+            foreach ($appnodes as $app) {
+              $subs = unserialize($app->application_subscriptions[$app->language][0]['value']);
+              if (is_array($subs)) {
+                foreach ($subs as $sub) {
+                  if (isset($sub['product']) && $sub['product'] == $product->product_ref[$product->language][0]['value']) {
+                    $orgs[] = $app->application_orgid[$app->language][0]['value'];
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  $recipients = array();
+  // get users in those orgs
+  if (isset($orgs) && is_array($orgs)) {
+    foreach ($orgs as $org) {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'devorg')
+        ->fieldCondition('devorg_id', 'value', $org);
+      $results = $query->execute();
+      if (isset($results['node'])) {
+        $nids = array_keys($results['node']);
+        $nodes = node_load_multiple($nids);
+        if (isset($nodes) && is_array($nodes)) {
+          foreach ($nodes as $node) {
+            $org_recipients = array();
+            if ($type == 'members') {
+              if (isset($node->devorg_members[$node->language][0]['value'])) {
+                $members = unserialize($node->devorg_members[$node->language][0]['value']);
+                foreach ($members as $member) {
+                  if (isset($member['email'])) {
+                    $org_recipients[] = $member['email'];
+                  }
+                }
+              }
+            }
+            $org_recipients[] = $node->devorg_owner[$node->language][0]['value'];
+            $recipients[] = implode(',', $org_recipients);
+          }
+        }
+      }
+    }
+  }
+  return $recipients;
 }

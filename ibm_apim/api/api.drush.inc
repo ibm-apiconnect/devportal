@@ -21,6 +21,7 @@ function api_drush_command() {
     'description' => 'Updates an API',
     'aliases' => array('uapi'),
     'arguments' => array(
+      'event' => 'The event type',
       'api' => 'The JSON API payload'
     )
   );
@@ -28,6 +29,7 @@ function api_drush_command() {
     'description' => 'Creates an API',
     'aliases' => array('capi'),
     'arguments' => array(
+      'event' => 'The event type',
       'api' => 'The JSON API payload'
     )
   );
@@ -35,6 +37,7 @@ function api_drush_command() {
     'description' => 'Deletes an API',
     'aliases' => array('dapi'),
     'arguments' => array(
+      'event' => 'The event type',
       'id' => 'The API ID'
     )
   );
@@ -55,14 +58,14 @@ function drush_api_cleanse_drush_command() {
   drupal_set_message(t('All API entries deleted.'), 'success');
 }
 
-function drush_api_createOrUpdateApi($func, $api) {
+function drush_api_createOrUpdateApi($func, $event, $api) {
   if (isset($api)) {
     $api = json_decode($api, TRUE);
     if (isset($api['document']['definitions']) && empty($api['document']['definitions'])) {
       unset($api['document']['definitions']);
     }
     $ref = $api['document']['info']['x-ibm-name'] . ':' . $api['document']['info']['version'];
-    $createdOrUpdated = api_createOrUpdateAPI($api);
+    $createdOrUpdated = api_createOrUpdateAPI($api, $event);
     if ($createdOrUpdated) {
       drupal_set_message(t('Drush @func created API @api', array('@func' => $func, '@api' => $ref)), 'success');
     }
@@ -75,15 +78,15 @@ function drush_api_createOrUpdateApi($func, $api) {
   }
 }
 
-function drush_api_createapi($api) {
-  drush_api_createOrUpdateApi('CreateAPI', $api);
+function drush_api_createapi($event, $api) {
+  drush_api_createOrUpdateApi('CreateAPI', $event, $api);
 }
 
-function drush_api_updateapi($api) {
-  drush_api_createOrUpdateApi('UpdateAPI', $api);
+function drush_api_updateapi($event, $api) {
+  drush_api_createOrUpdateApi('UpdateAPI', $event, $api);
 }
 
-function drush_api_deleteapi($id) {
+function drush_api_deleteapi($event, $id) {
   if (isset($id)) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
@@ -124,7 +127,7 @@ function drush_api_deleteapi($id) {
         )), 'warning');
       }
       else {
-        api_deleteAPINode($nid);
+        api_deleteAPINode($nid, $event);
         drupal_set_message(t('Drush DeleteAPI deleted API @api', array('@api' => $id)), 'success');
       }
     }

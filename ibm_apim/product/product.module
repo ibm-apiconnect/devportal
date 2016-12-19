@@ -187,6 +187,86 @@ function product_menu() {
 }
 
 /**
+ * Implements hook_token_info().
+ *
+ * @return array
+ */
+function product_token_info() {
+  $type = array(
+    'name' => t('Product tokens'),
+    'description' => t('Product tokens'),
+    'needs-data' => 'product',
+  );
+  $product['product_id'] = array(
+    'name' => t("Product ID"),
+    'description' => t("The ID of the product."),
+  );
+  $product['product_nid'] = array(
+    'name' => t("Product node ID"),
+    'description' => t('The node ID of the product.'),
+  );
+  $product['product_name'] = array(
+    'name' => t("Product name"),
+    'description' => t('The name of the product.'),
+  );
+  $product['product_version'] = array(
+    'name' => t("Product version"),
+    'description' => t('The product version.'),
+  );
+  $product['product_ref'] = array(
+    'name' => t("Product reference"),
+    'description' => t('The product reference (name:version).'),
+  );
+  $product['product_description'] = array(
+    'name' => t("Product description"),
+    'description' => t('The product description.'),
+  );
+  $product['product_contact_name'] = array(
+    'name' => t("Product contact name"),
+    'description' => t('The contact name for the product.'),
+  );
+  $product['product_contact_email'] = array(
+    'name' => t("Product contact email address"),
+    'description' => t('The contact email address for the product.'),
+  );
+  $product['product_contact_url'] = array(
+    'name' => t("Product contact URL"),
+    'description' => t('The contact URL for the product.'),
+  );
+
+  return array(
+    'types' => array('product' => $type),
+    'tokens' => array('product' => $product),
+  );
+}
+
+/**
+ * Implements hook_tokens().
+ *
+ * @param $type
+ * @param null $object
+ * @param array $options
+ * @return array
+ */
+function product_tokens($type, $object = NULL, $options = array()) {
+  $tokens = array();
+  if ($type == 'product' || $type == 'all') {
+    $tokens = array(
+      'product_id' => $object['product_id'],
+      'product_nid' => $object['product_nid'],
+      'product_name' => $object['product_name'],
+      'product_version' => $object['product_version'],
+      'product_ref' => $object['product_ref'],
+      'product_description' => $object['product_description'],
+      'product_contact_name' => $object['product_contact_name'],
+      'product_contact_email' => $object['product_contact_email'],
+      'product_contact_url' => $object['product_contact_url'],
+    );
+    return $tokens;
+  }
+}
+
+/**
  * Menu callback;
  * if a specific product has been requested will display that as full viewmode,
  * else it will show teaser viewmode for all available products
@@ -386,9 +466,10 @@ function product_multiple_select_api($apinid) {
  * Creates or updates an existing node. Returns true if a new node was
  * created or false if an existing one was updated.
  * @param $product
+ * @param $event
  * @return bool
  */
-function product_createOrUpdateProduct($product) {
+function product_createOrUpdateProduct($product, $event) {
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'product')
@@ -400,12 +481,12 @@ function product_createOrUpdateProduct($product) {
     $first = array_shift($results['node']);
     $nid = $first->nid;
     $node = node_load($nid);
-    _product_updateExistingProductNode($node, $product);
+    _product_updateExistingProductNode($node, $product, $event);
     $createdOrUpdated = FALSE;
   }
   else {
     // no existing node for this Product so create one
-    _product_createNewProductNode($product);
+    _product_createNewProductNode($product, $event);
     $createdOrUpdated = TRUE;
   }
   return $createdOrUpdated;
@@ -417,7 +498,7 @@ function product_createOrUpdateProduct($product) {
  * @return mixed
  * @throws \Exception
  */
-function _product_createNewProductNode($product) {
+function _product_createNewProductNode($product, $event = 'publish') {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
   $oldtags = NULL;
@@ -700,6 +781,73 @@ function _product_createNewProductNode($product) {
     node_save($node);
   }
 
+  // Product Categories
+  $categories_enabled = variable_get('ibm_apim_allow_categories', 1);
+  if (isset($product['document']['info']['categories']) && $categories_enabled == 1) {
+    $categories = $product['document']['info']['categories'];
+    $tids = api_get_taxonomies_from_categories($categories);
+    if (isset($node->field_producttags[$node->language])) {
+      $currenttags = $node->field_producttags[$node->language];
+    }
+    else {
+      $currenttags = array();
+    }
+    if (is_array($tids) && !empty($tids)) {
+      foreach ($tids as $tid) {
+        if (isset($tid) && is_numeric($tid)) {
+          $found = FALSE;
+          foreach ($currenttags as $currentvalue) {
+            if (isset($currentvalue['tid']) && $currentvalue['tid'] == $tid) {
+              $found = TRUE;
+            }
+          }
+          if ($found == FALSE) {
+            $currenttags[] = array('tid' => $tid);
+          }
+        }
+      }
+      $node->field_producttags[$node->language] = $currenttags;
+      node_save($node);
+    }
+  }
+
+  if (isset($node)) {
+    // Calling all modules implementing 'hook_ibm_apim_product_create':
+    module_invoke_all('ibm_apim_product_create', $node, $product);
+    // invoke rules
+    if (module_exists('rules')) {
+      $rules_payload = array(
+        'product_id' => $node->product_id[$node->language][0]['value'],
+        'product_nid' => $node->nid,
+        'product_name' => $node->title,
+        'product_version' => $node->product_version[$node->language][0]['value'],
+        'product_ref' => $node->product_ref[$node->language][0]['value'],
+        'product_description' => $node->product_description[$node->language][0]['value'],
+        'product_contact_name' => $node->product_contact_name[$node->language][0]['value'],
+        'product_contact_email' => $node->product_contact_email[$node->language][0]['value'],
+        'product_contact_url' => $node->product_contact_url[$node->language][0]['value']
+      );
+      // Make sure we do not provide NULL values, as Rules module doesn't like them.
+      // @see http://drupal.org/node/1497534
+      foreach ($rules_payload as $key => $value) {
+        if (is_null($value)) {
+          $rules_payload[$key] = '';
+        }
+      }
+      rules_invoke_event('product_publish',
+        $rules_payload['product_id'],
+        $rules_payload['product_nid'],
+        $rules_payload['product_name'],
+        $rules_payload['product_version'],
+        $rules_payload['product_ref'],
+        $rules_payload['product_description'],
+        $rules_payload['product_contact_name'],
+        $rules_payload['product_contact_email'],
+        $rules_payload['product_contact_url']
+      );
+    }
+  }
+
   return $node->nid;
 }
 
@@ -709,9 +857,10 @@ function _product_createNewProductNode($product) {
  *
  * @param $node
  * @param $product
+ * @param $event
  * @throws \Exception
  */
-function _product_updateExistingProductNode($node, $product) {
+function _product_updateExistingProductNode($node, $product, $event = 'bgsync') {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
   $node->title = ibm_apim_truncate_string($product['document']['info']['title']);
@@ -830,6 +979,122 @@ function _product_updateExistingProductNode($node, $product) {
   }
   $node->product_data[$node->language][0]['value'] = yaml_emit($product['document'], YAML_UTF8_ENCODING);
   node_save($node);
+
+  // Product Categories
+  $categories_enabled = variable_get('ibm_apim_allow_categories', 1);
+  if (isset($product['document']['info']['categories']) && $categories_enabled == 1) {
+    $categories = $product['document']['info']['categories'];
+    $tids = api_get_taxonomies_from_categories($categories);
+    $currenttags = $node->field_producttags[$node->language];
+    if (is_array($tids) && !empty($tids)) {
+      foreach ($tids as $tid) {
+        if (isset($tid) && is_numeric($tid)) {
+          $found = FALSE;
+          foreach ($currenttags as $currentvalue) {
+            if (isset($currentvalue['tid']) && $currentvalue['tid'] == $tid) {
+              $found = TRUE;
+            }
+          }
+          if ($found == FALSE) {
+            $currenttags[] = array('tid' => $tid);
+          }
+        }
+      }
+      $node->field_producttags[$node->language] = $currenttags;
+      node_save($node);
+    }
+  }
+
+  if (isset($node)) {
+    // Calling all modules implementing 'hook_ibm_apim_product_update':
+    module_invoke_all('ibm_apim_product_update', $node, $product);
+    // invoke rules
+    if (module_exists('rules')) {
+      $rules_payload = array(
+        'product_id' => $node->product_id[$node->language][0]['value'],
+        'product_nid' => $node->nid,
+        'product_name' => $node->title,
+        'product_version' => $node->product_version[$node->language][0]['value'],
+        'product_ref' => $node->product_ref[$node->language][0]['value'],
+        'product_description' => $node->product_description[$node->language][0]['value'],
+        'product_contact_name' => $node->product_contact_name[$node->language][0]['value'],
+        'product_contact_email' => $node->product_contact_email[$node->language][0]['value'],
+        'product_contact_url' => $node->product_contact_url[$node->language][0]['value']
+      );
+      // Make sure we do not provide NULL values, as Rules module doesn't like them.
+      // @see http://drupal.org/node/1497534
+      foreach ($rules_payload as $key => $value) {
+        if (is_null($value)) {
+          $rules_payload[$key] = '';
+        }
+      }
+      if (isset($event) && _ibm_apim_endsWith($event, 'replace')) {
+        rules_invoke_event('product_replace',
+          $rules_payload['product_id'],
+          $rules_payload['product_nid'],
+          $rules_payload['product_name'],
+          $rules_payload['product_version'],
+          $rules_payload['product_ref'],
+          $rules_payload['product_description'],
+          $rules_payload['product_contact_name'],
+          $rules_payload['product_contact_email'],
+          $rules_payload['product_contact_url']
+        );
+      }
+      else if (isset($event) && _ibm_apim_endsWith($event, 'supersede')) {
+        rules_invoke_event('product_supersede',
+          $rules_payload['product_id'],
+          $rules_payload['product_nid'],
+          $rules_payload['product_name'],
+          $rules_payload['product_version'],
+          $rules_payload['product_ref'],
+          $rules_payload['product_description'],
+          $rules_payload['product_contact_name'],
+          $rules_payload['product_contact_email'],
+          $rules_payload['product_contact_url']
+        );
+      }
+      else if (isset($event) && _ibm_apim_endsWith($event, 'restageFromDraft')) {
+        rules_invoke_event('product_restage',
+          $rules_payload['product_id'],
+          $rules_payload['product_nid'],
+          $rules_payload['product_name'],
+          $rules_payload['product_version'],
+          $rules_payload['product_ref'],
+          $rules_payload['product_description'],
+          $rules_payload['product_contact_name'],
+          $rules_payload['product_contact_email'],
+          $rules_payload['product_contact_url']
+        );
+      }
+      else if (isset($event) && _ibm_apim_endsWith($event, 'deprecate')) {
+        rules_invoke_event('product_deprecate',
+          $rules_payload['product_id'],
+          $rules_payload['product_nid'],
+          $rules_payload['product_name'],
+          $rules_payload['product_version'],
+          $rules_payload['product_ref'],
+          $rules_payload['product_description'],
+          $rules_payload['product_contact_name'],
+          $rules_payload['product_contact_email'],
+          $rules_payload['product_contact_url']
+        );
+      }
+      else if (!isset($event) || _ibm_apim_endsWith($event, 'update')) {
+        rules_invoke_event('product_update',
+          $rules_payload['product_id'],
+          $rules_payload['product_nid'],
+          $rules_payload['product_name'],
+          $rules_payload['product_version'],
+          $rules_payload['product_ref'],
+          $rules_payload['product_description'],
+          $rules_payload['product_contact_name'],
+          $rules_payload['product_contact_email'],
+          $rules_payload['product_contact_url']
+        );
+      }
+    }
+  }
 }
 
 /**
@@ -858,7 +1123,6 @@ function product_get_apis($productnid) {
   }
   return $api_nids;
 }
-
 
 /**
  * Implements hook_preprocess_node().
@@ -911,7 +1175,7 @@ function product_preprocess_node(&$variables) {
     $showversion = variable_get('ibm_apim_show_versions', 1);
     $versiontext = '';
     if ($showversion == 1) {
-      $versiontext = '(v' . $variables['product_version'][0]['safe_value'] . ')';
+      $versiontext = '(' . $variables['product_version'][0]['safe_value'] . ')';
     }
     $variables['titlelink'] = '<span class="apimTitle"> <a href="' . url('product/' . $variables['product_id'][0]['safe_value']) . '">' . $variables['title'] . ' ' . $versiontext . '</a></span>' . $apicount;
 
@@ -921,9 +1185,11 @@ function product_preprocess_node(&$variables) {
       foreach ($variables['apinodes'] as $key => $api) {
         $swagger = unserialize($api->api_resources[$api->language][0]['value']);
         $variables['apis'][] = $swagger;
-        $expandedswagger = unserialize($api->api_expandedschema[$api->language][0]['value']);
-        if (isset($expandedswagger)) {
-          $variables['expandedapis'][] = $expandedswagger;
+        if (isset($api->api_expandedschema[$api->language][0]['value'])) {
+          $expandedswagger = unserialize($api->api_expandedschema[$api->language][0]['value']);
+          if (isset($expandedswagger)) {
+            $variables['expandedapis'][] = $expandedswagger;
+          }
         }
       }
       $variables['plans'] = unserialize($variables['product_plans'][0]['value']);
@@ -1791,10 +2057,61 @@ function product_updateProductNode($product) {
 /**
  * Delete the specified product node
  * @param $nid
+ * @param $event
  */
-function product_deleteProductNode($nid) {
+function product_deleteProductNode($nid, $event) {
   _ibm_apim_delete_popular_block($nid);
+  $node = node_load($nid);
+  $rules_payload = array(
+    'product_id' => $node->product_id[$node->language][0]['value'],
+    'product_nid' => $node->nid,
+    'product_name' => $node->title,
+    'product_version' => $node->product_version[$node->language][0]['value'],
+    'product_ref' => $node->product_ref[$node->language][0]['value'],
+    'product_description' => $node->product_description[$node->language][0]['value'],
+    'product_contact_name' => $node->product_contact_name[$node->language][0]['value'],
+    'product_contact_email' => $node->product_contact_email[$node->language][0]['value'],
+    'product_contact_url' => $node->product_contact_url[$node->language][0]['value']
+  );
+  unset($node);
   node_delete($nid);
+  // invoke rules
+  if (module_exists('rules')) {
+    // Make sure we do not provide NULL values, as Rules module doesn't like them.
+    // @see http://drupal.org/node/1497534
+    foreach ($rules_payload as $key => $value) {
+      if (is_null($value)) {
+        $rules_payload[$key] = '';
+      }
+    }
+    if (isset($event) && _ibm_apim_endsWith($event, 'retire')) {
+      rules_invoke_event('product_retire',
+        $rules_payload['product_id'],
+        $rules_payload['product_nid'],
+        $rules_payload['product_name'],
+        $rules_payload['product_version'],
+        $rules_payload['product_ref'],
+        $rules_payload['product_description'],
+        $rules_payload['product_contact_name'],
+        $rules_payload['product_contact_email'],
+        $rules_payload['product_contact_url']
+      );
+    }
+    else if (!isset($event) || _ibm_apim_endsWith($event, 'remove')) {
+      rules_invoke_event('product_remove',
+        $rules_payload['product_id'],
+        $rules_payload['product_nid'],
+        $rules_payload['product_name'],
+        $rules_payload['product_version'],
+        $rules_payload['product_ref'],
+        $rules_payload['product_description'],
+        $rules_payload['product_contact_name'],
+        $rules_payload['product_contact_email'],
+        $rules_payload['product_contact_url']
+      );
+    }
+  }
+
   watchdog('product_deleteProductNode', 'delete product nid=@prod', array('@prod' => $nid), WATCHDOG_NOTICE);
   // clear caches to ensure people don't get stale data
   $nodeurl = url('node/' . $nid, array('absolute' => TRUE));
@@ -1821,4 +2138,99 @@ function product_random_image($apiName) {
   $num = str_pad($digit, 2, 0, STR_PAD_LEFT);
 
   return "product_" . $num . ".png";
+}
+
+/**
+ * Get subscription owners for a given plan reference ('product:version:plan')
+ * To include all plans for a given product then simply specify 'product:version'
+ *
+ * @param $plan
+ * @return array
+ */
+function product_get_subscribing_owners($plan) {
+  return product_get_subscribers($plan, 'owners');
+}
+
+/**
+ * Get all developer organization members subscribed to a given plan reference ('product:version:plan')
+ * To include all plans for a given product then simply specify 'product:version'
+ *
+ * @param $plan
+ * @return array
+ */
+function product_get_subscribing_members($plan) {
+  return product_get_subscribers($plan, 'members');
+}
+
+/**
+ * Get subscribers for a given plan reference ('product:version:plan')
+ * To include all plans for a given product then simply specify 'product:version'
+ *
+ * @param $plan
+ * @param string $type
+ * @return array
+ */
+function product_get_subscribers($plan, $type = 'members') {
+  $orgs = array();
+  // get subscribed apps
+  if (isset($plan)) {
+    $parts = explode(':', $plan);
+    $product = $parts[0];
+    $version = $parts[1];
+    $planname = $parts[2];
+
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'application');
+    $results = $query->execute();
+    if (isset($results['node'])) {
+      $nids = array_keys($results['node']);
+      $nodes = node_load_multiple($nids);
+      if (isset($nodes)) {
+        foreach ($nodes as $node) {
+          $subs = unserialize($node->application_subscriptions[$node->language][0]['value']);
+          if (is_array($subs)) {
+            foreach ($subs as $sub) {
+              if (isset($sub['product']) && $sub['product'] == $product . ':' . $version && (!isset($planname) || (isset($planname) && isset($sub['plan']) && $sub['plan'] == $planname))) {
+                $orgs[] = $node->application_orgid[$node->language][0]['value'];
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  $recipients = array();
+  // get users in those orgs
+  if (isset($orgs) && is_array($orgs)) {
+    foreach ($orgs as $org) {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'devorg')
+        ->fieldCondition('devorg_id', 'value', $org);
+      $results = $query->execute();
+      if (isset($results['node'])) {
+        $nids = array_keys($results['node']);
+        $nodes = node_load_multiple($nids);
+        if (isset($nodes) && is_array($nodes)) {
+          foreach ($nodes as $node) {
+            $org_recipients = array();
+            if ($type == 'members') {
+              if (isset($node->devorg_members[$node->language][0]['value'])) {
+                $members = unserialize($node->devorg_members[$node->language][0]['value']);
+                foreach ($members as $member) {
+                  if (isset($member['email'])) {
+                    $org_recipients[] = $member['email'];
+                  }
+                }
+              }
+            }
+            $org_recipients[] = $node->devorg_owner[$node->language][0]['value'];
+            $recipients[] = implode(',', $org_recipients);
+          }
+        }
+      }
+    }
+  }
+  return $recipients;
 }
