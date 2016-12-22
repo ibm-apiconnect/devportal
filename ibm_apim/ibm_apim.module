@@ -4941,6 +4941,9 @@ function ibm_apim_return_inline_schema($object) {
   if (isset($result['description'])) {
     unset($result['description']);
   }
+  if (isset($result['expanded'])) {
+    unset($result['expanded']);
+  }
   return $result;
 }
 

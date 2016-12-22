@@ -564,61 +564,43 @@ else {
                         <?php if ($protocol != 'wsdl') : ?>
                           <div class="parameters">
                             <label><?php print t('Parameters'); ?></label>
-                            <?php if (isset($path['parameters']) && is_array($path['parameters'])): ?>
-                              <?php foreach ($path['parameters'] as $key => $parameter) : ?>
-                                <?php if (isset($parameter['$ref'])) {
+                            <?php
+                            // build up parameters list
+                            $operation_parameters = array();
+                            if (isset($path['parameters']) && is_array($path['parameters'])) {
+                              foreach ($path['parameters'] as $key => $parameter) {
+                                if (isset($parameter['$ref'])) {
                                   // handle parameter references
                                   $parameter = api_get_ref_param($expandedapi, $parameter['$ref']);
                                 }
                                 else {
                                   $parameter = $expandedapi['paths'][$pathSegment]['parameters'][$key];
-                                } ?>
+                                }
 
-                                <div class='parametersSection listContent'>
-                                  <div class='name'><div
-                                      class="title"><?php print $parameter['name']; ?></div>
-                                    <div class='located-in'><?php
-                                      if (isset($parameter['required']) && $parameter['required'] == TRUE) {
-                                        print t('<span class="required">Required</span> in %1', array('%1' => $parameter['in']));
-                                      }
-                                      else {
-                                        print t('Optional in %1', array('%1' => $parameter['in']));
-                                      }; ?>
-                                    </div></div><div class="schemawrapper">
-                                    <?php if (isset($parameter['description'])): ?>
-                                      <div
-                                        class='description markdown'><?php print ibm_apim_markdown_field($parameter['description']); ?></div>
-                                    <?php endif; ?>
-                                    <div
-                                      class='schema'>
-                                      <?php if (isset($parameter) && isset($parameter['schema']) && isset($parameter['schema']['$ref'])) : ?>
-                                        <a
-                                          onclick='API.navigatedefs("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>", "<?php print drupal_html_class(preg_replace("/\W/", "", _ibm_apim_ref_to_objectname($parameter['schema']['$ref']))); ?>")'
-                                          href='javascript:;'><?php print ibm_apim_return_schema($parameter); ?></a>
-                                      <?php elseif (isset($parameter) && isset($parameter['schema']['type']) && $parameter['schema']['type'] == "array" && isset($parameter['schema']['items']) && isset($parameter['schema']['items']['$ref'])) : ?>
-                                        <a
-                                          onclick='API.navigatedefs("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>", "<?php print drupal_html_class(preg_replace("/\W/", "", _ibm_apim_ref_to_objectname($parameter['schema']['items']['$ref']))); ?>")'
-                                          href='javascript:;'><?php print ibm_apim_return_schema($parameter); ?></a>
-                                      <?php elseif (isset($parameter) && (isset($parameter['schema']['type']) && !empty($parameter['schema']['type'])) || (isset($parameter['type']) && !empty($parameter['type']))) : ?>
-                                        <pre
-                                          class="inlineSchema"><code><?php print json_encode(ibm_apim_return_inline_schema($parameter), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE); ?></code></pre>
-                                      <?php else: ?>
-                                        <?php print ibm_apim_return_schema($parameter); ?>
-                                      <?php endif; ?>
-                                    </div></div>
-                                </div>
-                              <?php endforeach; ?>
-                            <?php endif; ?>
-                            <?php if (isset($unexpanded_operation['parameters']) && is_array($unexpanded_operation['parameters'])): ?>
-                              <?php foreach ($unexpanded_operation['parameters'] as $key => $parameter) : ?>
-                                <?php if (isset($parameter['$ref'])) {
+                                $operation_parameters[$parameter['name']] = $parameter;
+                              }
+                            }
+                            if (isset($unexpanded_operation['parameters']) && is_array($unexpanded_operation['parameters'])) {
+                              foreach ($unexpanded_operation['parameters'] as $key => $parameter) {
+                                if (isset($parameter['$ref'])) {
                                   // handle parameter references
                                   $parameter = api_get_ref_param($expandedapi, $parameter['$ref']);
                                 }
                                 else {
                                   $parameter = $api['paths'][$pathSegment][$verb]['parameters'][$key];
+                                }
+                                // need to keep the expanded variant of the parameter around too
+                                $parameter['expanded'] = $expandedapi['paths'][$pathSegment][$verb]['parameters'][$key];
+                                $operation_parameters[$parameter['name']] = $parameter;
+                              }
+                            }
+                            ?>
+
+                            <?php if (isset($operation_parameters) && is_array($operation_parameters)): ?>
+                              <?php foreach ($operation_parameters as $key => $parameter) : ?>
+                                <?php if (isset($parameter['expanded'])) {
+                                  $expanded_parameter = $parameter['expanded'];
                                 } ?>
-                                <?php $expanded_parameter = $expandedapi['paths'][$pathSegment][$verb]['parameters'][$key]; ?>
 
                                 <div class='parametersSection listContent'>
                                   <div class='name'><div
@@ -647,8 +629,13 @@ else {
                                       <?php elseif (isset($expanded_parameter) && (isset($expanded_parameter['schema']['type']) && !empty($expanded_parameter['schema']['type'])) || (isset($expanded_parameter['type']) && !empty($expanded_parameter['type']))) : ?>
                                         <pre
                                           class="inlineSchema"><code><?php print json_encode(ibm_apim_return_inline_schema($parameter), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE); ?></code></pre>
-                                      <?php else: ?>
+                                      <?php elseif (isset($parameter) && (isset($parameter['schema']['type']) && !empty($parameter['schema']['type'])) || (isset($parameter['type']) && !empty($parameter['type']))) : ?>
+                                        <pre
+                                          class="inlineSchema"><code><?php print json_encode(ibm_apim_return_inline_schema($parameter), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE); ?></code></pre>
+                                      <?php elseif (isset($expanded_parameter)): ?>
                                         <?php print ibm_apim_return_schema($expanded_parameter); ?>
+                                      <?php else: ?>
+                                        <?php print ibm_apim_return_schema($parameter); ?>
                                       <?php endif; ?>
                                     </div>
                                   </div>
@@ -1334,44 +1321,66 @@ else {
                         </div>
                     </div>
                     <?php $bodypresent = FALSE;
+                    $paramspresent = FALSE;
                     unset($bodyparam); ?>
-                    <?php if (isset($path['parameters']) && is_array($path['parameters'])) : ?>
-                      <?php foreach ($path['parameters'] as $parameter)  : ?>
-                        <?php if (isset($parameter['$ref'])) {
+                    <?php
+                    // build up parameters list
+                    $operation_parameters = array();
+                    if (isset($path['parameters']) && is_array($path['parameters'])) {
+                      foreach ($path['parameters'] as $key => $parameter) {
+                        if (isset($parameter['$ref'])) {
                           // handle parameter references
                           $parameter = api_get_ref_param($api, $parameter['$ref']);
-                        } ?>
-                        <?php if (isset($parameter['in']) && $parameter['in'] == "body")  : ?>
-                          <?php $bodypresent = TRUE;
-                          $bodyparam = $parameter; ?>
-                        <?php endif; ?>
-                      <?php endforeach; ?>
-                    <?php endif; ?>
-                    <?php if (isset($unexpanded_operation['parameters']) && is_array($unexpanded_operation['parameters'])) : ?>
-                      <?php foreach ($unexpanded_operation['parameters'] as $parameter)  : ?>
-                        <?php if (isset($parameter['$ref'])) {
+                        }
+                        else {
+                          $parameter = $expandedapi['paths'][$pathSegment]['parameters'][$key];
+                        }
+
+                        $operation_parameters[$parameter['name']] = $parameter;
+                        if (isset($parameter['in']) && $parameter['in'] == "body") {
+                          $bodypresent = TRUE;
+                          $bodyparam = $parameter;
+                        }
+                        if (isset($parameter['in']) && ($parameter['in'] == "path" || $parameter['in'] == "query" || $parameter['in'] == "formData")) {
+                          $paramspresent = TRUE;
+                        }
+                      }
+                    }
+                    if (isset($unexpanded_operation['parameters']) && is_array($unexpanded_operation['parameters'])) {
+                      foreach ($unexpanded_operation['parameters'] as $key => $parameter) {
+                        if (isset($parameter['$ref'])) {
                           // handle parameter references
                           $parameter = api_get_ref_param($api, $parameter['$ref']);
-                        } ?>
-                        <?php if (isset($parameter['in']) && $parameter['in'] == "body")  : ?>
-                          <?php $bodypresent = TRUE;
-                          $bodyparam = $parameter; ?>
-                        <?php endif; ?>
-                      <?php endforeach; ?>
-                    <?php endif; ?>
+                        }
+                        else {
+                          $parameter = $api['paths'][$pathSegment][$verb]['parameters'][$key];
+                        }
+                        // need to keep the expanded variant of the parameter around too
+                        $parameter['expanded'] = $expandedapi['paths'][$pathSegment][$verb]['parameters'][$key];
+                        $operation_parameters[$parameter['name']] = $parameter;
+                        if (isset($parameter['in']) && $parameter['in'] == "body") {
+                          $bodypresent = TRUE;
+                          $bodyparam = $parameter;
+                        }
+                        if (isset($parameter['in']) && ($parameter['in'] == "path" || $parameter['in'] == "query" || $parameter['in'] == "formData")) {
+                          $paramspresent = TRUE;
+                        }
+                      }
+                    }
+                    ?>
                     <?php if ($bodypresent == TRUE)  : ?>
                       <label><?php print t('Body'); ?></label>
                       <div class="contrast">
                         <div class='parameter'
                              id='body_apis_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>_paths_<?php print preg_replace("/\W/", "", $pathSegment) . '_' . $verb; ?>'>
-                    <textarea name="<?php print $bodyparam['name']; ?>"
+                    <textarea name="param<?php print $bodyparam['name']; ?>"
                               class='parameterValue'></textarea>
                         </div>
                       </div>
                     <?php endif; ?>
                     <label><?php print t('Headers'); ?></label>
                     <div class="contrast">
-                      <?php if (isset($bodypresent)) : ?>
+                      <?php if ($bodypresent == TRUE || isset($operation['consumes']) || isset($api['consumes'])) : ?>
                         <div class='parameter'>
                           <div class='parameterName'>content-type</div>
                           <?php if (isset($operation['consumes']) || isset($api['consumes'])): ?>
@@ -1433,118 +1442,109 @@ else {
                                  value='application/json'/>
                         <?php endif; ?>
                       </div>
+
+                      <?php // Header params ?>
+                      <?php if (isset($operation_parameters) && is_array($operation_parameters))  : ?>
+                        <?php foreach ($operation_parameters as $parameter)  : ?>
+                          <?php if (isset($parameter['in']) && $parameter['in'] == "header")  : ?>
+                            <div class='parameter'>
+                              <div
+                                class='parameterName'><?php print $parameter['name']; ?></div>
+                              <?php if (isset($parameter['enum']) && count($parameter['enum']) > 0) : ?>
+                                <select
+                                  name="param<?php print $parameter['name']; ?>"
+                                  class='parameterValue'>
+                                  <?php
+                                  if (!$parameter['required']) {
+                                    print '<option
+                                          value=" "> --- </option>';
+                                  }
+                                  foreach ($parameter['enum'] as $option) {
+                                    if (isset($parameter['default']) && $option == $parameter['default']) {
+                                      print '<option
+                                          value="' . $option . '"
+                                          selected>' . $option . '</option>';
+                                    }
+                                    else {
+                                      print '<option
+                                          value="' . $option . '">' . $option . '</option>';
+                                    }
+                                  }
+                                  ?>
+                                </select>
+                              <?php else: ?>
+                                <input <?php if ($parameter['required']) {
+                                  print 'required';
+                                } ?>
+                                  name="param<?php print $parameter['name']; ?>"
+                                  <?php if (isset($parameter['type']) && $parameter['type'] == "integer")  : ?>
+                                    type="number"
+                                  <?php endif; ?>
+                                  <?php if (isset($parameter['maxLength']))  : ?>
+                                    <?php if (isset($parameter['exclusiveMaximum']))  : ?>
+                                      maxlength="<?php print ($parameter['maxLength'] - 1); ?>"
+                                    <?php else: ?>
+                                      maxlength="<?php print $parameter['maxLength']; ?>"
+                                    <?php endif; ?>
+                                  <?php endif; ?>
+                                  class='parameterValue'
+                                  value="<?php print $parameter['default']; ?>"/>
+                              <?php endif; ?>
+                            </div>
+                          <?php endif; ?>
+                        <?php endforeach; ?>
+                      <?php endif; ?>
                     </div>
-                    <?php if (isset($path['parameters']) && is_array($path['parameters']))  : ?>
-                      <?php foreach ($path['parameters'] as $parameter)  : ?>
-                        <?php if (isset($parameter['$ref'])) {
-                          // handle parameter references
-                          $parameter = api_get_ref_param($api, $parameter['$ref']);
-                        } ?>
-                        <?php if (isset($parameter['in']) && $parameter['in'] == "header")  : ?>
-                          <div class='parameter'>
-                            <div
-                              class='parameterName'><?php print $parameter['name']; ?></div>
-                            <input <?php if ($parameter['required']) {
-                              print 'required';
-                            } ?> name="<?php print $parameter['name']; ?>"
-                              <?php if (isset($parameter['type']) && $parameter['type'] == "integer")  : ?>
-                                type="number"
-                              <?php endif; ?>
-                                 class='parameterValue'
-                                 value="<?php print $parameter['default']; ?>"/>
-                          </div>
-                        <?php endif; ?>
-                      <?php endforeach; ?>
-                    <?php endif; ?>
-                    <?php if (isset($operation['parameters']) && is_array($operation['parameters']))  : ?>
-                      <?php foreach ($operation['parameters'] as $parameter)  : ?>
-                        <?php if (isset($parameter['$ref'])) {
-                          // handle parameter references
-                          $parameter = api_get_ref_param($api, $parameter['$ref']);
-                        } ?>
-                        <?php if (isset($parameter['in']) && $parameter['in'] == "header")  : ?>
-                          <div class='parameter'>
-                            <div
-                              class='parameterName'><?php print $parameter['name']; ?></div>
-                            <input <?php if ($parameter['required']) {
-                              print 'required';
-                            } ?> name="<?php print $parameter['name']; ?>"
-                              <?php if (isset($parameter['type']) && $parameter['type'] == "integer")  : ?>
-                                type="number"
-                              <?php endif; ?>
-                                 class='parameterValue'
-                                 value="<?php print $parameter['default']; ?>"/>
-                          </div>
-                        <?php endif; ?>
-                      <?php endforeach; ?>
-                    <?php endif; ?>
-                    <?php $paramspresent = FALSE;
-                    if (isset($path['parameters']) && is_array($path['parameters'])) {
-                      foreach ($path['parameters'] as $parameter) {
-                        if (isset($parameter['$ref'])) {
-                          // handle parameter references
-                          $parameter = api_get_ref_param($api, $parameter['$ref']);
-                        }
-                        if (isset($parameter['in']) && ($parameter['in'] == "path" || $parameter['in'] == "query" || $parameter['in'] == "formData")) {
-                          $paramspresent = TRUE;
-                        }
-                      }
-                    }
-                    if (isset($operation['parameters']) && is_array($operation['parameters'])) {
-                      foreach ($operation['parameters'] as $parameter) {
-                        if (isset($parameter['$ref'])) {
-                          // handle parameter references
-                          $parameter = api_get_ref_param($api, $parameter['$ref']);
-                        }
-                        if (isset($parameter['in']) && ($parameter['in'] == "path" || $parameter['in'] == "query" || $parameter['in'] == "formData")) {
-                          $paramspresent = TRUE;
-                        }
-                      }
-                    }
-                    ?>
+                    <?php // Other params ?>
                     <?php if (isset($paramspresent) && $paramspresent == TRUE): ?>
                       <label><?php print t('Parameters'); ?></label>
                       <div class="contrast">
-                        <?php if (isset($path['parameters']) && is_array($path['parameters'])) : ?>
-                          <?php foreach ($path['parameters'] as $parameter)  : ?>
-                            <?php if (isset($parameter['$ref'])) {
-                              // handle parameter references
-                              $parameter = api_get_ref_param($api, $parameter['$ref']);
-                            } ?>
+                        <?php if (isset($operation_parameters) && is_array($operation_parameters)) : ?>
+                          <?php foreach ($operation_parameters as $parameter)  : ?>
                             <?php if (isset($parameter['in']) && ($parameter['in'] == "path" || $parameter['in'] == "query" || $parameter['in'] == "formData"))  : ?>
                               <div class='parameter'>
                                 <div
                                   class='parameterName'><?php print $parameter['name']; ?></div>
-                                <input <?php if (isset($parameter['required'])) {
-                                  print 'required';
-                                } ?> name="<?php print $parameter['name']; ?>"
-                                     class='parameterValue'
-                                  <?php if (isset($parameter['type']) && $parameter['type'] == "integer")  : ?>
-                                    type="number"
-                                  <?php endif; ?>
-                                     value="<?php print $parameter['default']; ?>"/>
-                              </div>
-                            <?php endif; ?>
-                          <?php endforeach; ?>
-                        <?php endif; ?>
-                        <?php if (isset($operation['parameters']) && is_array($operation['parameters'])) : ?>
-                          <?php foreach ($operation['parameters'] as $parameter)  : ?>
-                            <?php if (isset($parameter['$ref'])) {
-                              // handle parameter references
-                              $parameter = api_get_ref_param($api, $parameter['$ref']);
-                            } ?>
-                            <?php if (isset($parameter['in']) && ($parameter['in'] == "path" || $parameter['in'] == "query" || $parameter['in'] == "formData"))  : ?>
-                              <div class='parameter'>
-                                <div
-                                  class='parameterName'><?php print $parameter['name']; ?></div>
-                                <input <?php if (isset($parameter['required'])) {
-                                  print 'required';
-                                } ?> name="<?php print $parameter['name']; ?>"
-                                     class='parameterValue'
-                                  <?php if (isset($parameter['type']) && $parameter['type'] == "integer")  : ?>
-                                    type="number"
-                                  <?php endif; ?>
-                                     value="<?php print $parameter['default']; ?>"/>
+                                <?php if (isset($parameter['enum']) && count($parameter['enum']) > 0) : ?>
+                                  <select
+                                    name="param<?php print $parameter['name']; ?>"
+                                    class='parameterValue'>
+                                    <?php
+                                    if (!$parameter['required']) {
+                                      print '<option
+                                          value=" "> --- </option>';
+                                    }
+                                    foreach ($parameter['enum'] as $option) {
+                                      if (isset($parameter['default']) && $option == $parameter['default']) {
+                                        print '<option
+                                          value="' . $option . '"
+                                          selected>' . $option . '</option>';
+                                      }
+                                      else {
+                                        print '<option
+                                          value="' . $option . '">' . $option . '</option>';
+                                      }
+                                    }
+                                    ?>
+                                  </select>
+                                <?php else: ?>
+                                  <input <?php if (isset($parameter['required'])) {
+                                    print 'required';
+                                  } ?>
+                                    name="param<?php print $parameter['name']; ?>"
+                                    class='parameterValue'
+                                    <?php if (isset($parameter['type']) && $parameter['type'] == "integer")  : ?>
+                                      type="number"
+                                    <?php endif; ?>
+                                    <?php if (isset($parameter['maxLength']))  : ?>
+                                      <?php if (isset($parameter['exclusiveMaximum']))  : ?>
+                                        maxlength="<?php print ($parameter['maxLength'] - 1); ?>"
+                                      <?php else: ?>
+                                        maxlength="<?php print $parameter['maxLength']; ?>"
+                                      <?php endif; ?>
+                                    <?php endif; ?>
+                                    value="<?php print $parameter['default']; ?>"/>
+                                <?php endif; ?>
                               </div>
                             <?php endif; ?>
                           <?php endforeach; ?>

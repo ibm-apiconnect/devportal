@@ -1287,19 +1287,19 @@
         });
         if (pathParameters.length > 0) {
             pathParameters.forEach(function (parameter) {
-                targetUrl = targetUrl.replace("{" + parameter.name + "}", requestForm[parameter.name]);
+                targetUrl = targetUrl.replace("{" + parameter.name + "}", requestForm['param' + parameter.name]);
             });
         }
         // query parameters
         var queryParameters = parameters.filter(function (parameter) {
-            return (parameter.in == "query" && requestForm[parameter.name] !== undefined);
+            return (parameter.in == "query" && requestForm['param' + parameter.name] !== undefined);
         });
         var queryParametersAdded = (targetUrl.indexOf('?') >= 0);
         if (queryParameters.length > 0) {
             targetUrl += (queryParametersAdded) ? "&" : "?";
             queryParameters.forEach(function (parameter) {
-                if (parameter.name && requestForm[parameter.name]) {
-                    targetUrl += parameter.name + "=" + requestForm[parameter.name] + "&";
+                if (parameter.name && requestForm['param' + parameter.name]) {
+                    targetUrl += parameter.name + "=" + requestForm['param' + parameter.name] + "&";
                     queryParametersAdded = true;
                 }
             });
@@ -1330,8 +1330,8 @@
         });
         if (headerParameters.length > 0) {
             headerParameters.forEach(function (parameter) {
-                if (requestForm[parameter.name]) {
-                    headers[parameter.name] = requestForm[parameter.name];
+                if (requestForm['param' + parameter.name]) {
+                    headers[parameter.name] = requestForm['param' + parameter.name];
                 }
             });
         }
@@ -1346,12 +1346,12 @@
         });
         if (bodyParameters.length > 0) {
             // use the first one only
-            body = requestForm[bodyParameters[0].name];
+            body = requestForm['param' + bodyParameters[0].name];
         } else if (formDataParameters.length > 0) {
             var formDataArray = [];
             formDataParameters.forEach(function (parameter) {
-                if (requestForm[parameter.name]) {
-                    formDataArray.push(encodeURIComponent(parameter.name).replace(/%20/g, '+') + '=' + encodeURIComponent(requestForm[parameter.name]).replace(/%20/g, '+'));
+                if (requestForm['param' + parameter.name]) {
+                    formDataArray.push(encodeURIComponent(parameter.name).replace(/%20/g, '+') + '=' + encodeURIComponent(requestForm['param' + parameter.name]).replace(/%20/g, '+'));
                 }
             });
             body = formDataArray.join('&');
