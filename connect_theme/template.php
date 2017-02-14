@@ -198,3 +198,12 @@ function connect_theme_node_add_list($content) {
   }
   return $output;
 }
+
+/**
+ * Display full usernames not truncated ones
+ * @param $vars
+ */
+function connect_theme_preprocess_username(&$vars) {
+  // putting back what drupal core messed with
+  $vars['name'] = check_plain($vars['name_raw']);
+}

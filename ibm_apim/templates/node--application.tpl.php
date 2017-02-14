@@ -210,13 +210,6 @@ drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/App.js', array(
               </div>
             <?php endif; ?>
 
-            <div>
-              <?php if (is_array($customfields) && count($customfields) > 0) {
-                foreach ($customfields as $customfield) {
-                  print render($content[$customfield]);
-                }
-              } ?>
-            </div>
           </div>
         </div>
         <?php if (module_exists('product')) : ?>

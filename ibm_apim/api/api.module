@@ -266,6 +266,20 @@ function api_preprocess_node(&$variables) {
     $variables['theme_hook_suggestions'][] = 'node__api__inner';
   }
   if ($variables['node']->type == 'api') {
+    if (isset($variables['api_resources']['und'])) {
+      $variables['api'] = unserialize($variables['api_resources']['und'][0]['value']);
+      $expanded = unserialize($variables['api_expandedschema']['und'][0]['value']);
+    }
+    else {
+      $variables['api'] = unserialize($variables['api_resources'][0]['value']);
+      $expanded = unserialize($variables['api_expandedschema'][0]['value']);
+    }
+    if (isset($expanded) && !empty($expanded)) {
+      $variables['expandedapi'] = $expanded;
+    }
+    else {
+      $variables['expandedapi'] = $variables['api'];
+    }
     $variables['customfields'] = _api_get_custom_fields();
     $showversion = variable_get('ibm_apim_show_versions', 1);
     $versiontext = '';
@@ -274,21 +288,6 @@ function api_preprocess_node(&$variables) {
     }
     $variables['titlelink'] = '<span class="apimTitle"> <a href="' . url('node/' . $variables['node']->nid) . '">' . $variables['title'] . '</a> <span class="versionText">' . $versiontext . '</span></span>';
     if ($variables['view_mode'] == 'full' || $variables['view_mode'] == 'inner') {
-      if (isset($variables['api_resources']['und'])) {
-        $variables['api'] = unserialize($variables['api_resources']['und'][0]['value']);
-        $expanded = unserialize($variables['api_expandedschema']['und'][0]['value']);
-      }
-      else {
-        $variables['api'] = unserialize($variables['api_resources'][0]['value']);
-        $expanded = unserialize($variables['api_expandedschema'][0]['value']);
-      }
-
-      if (isset($expanded) && !empty($expanded)) {
-        $variables['expandedapi'] = $expanded;
-      }
-      else {
-        $variables['expandedapi'] = $variables['api'];
-      }
       $variables['allow_api_testing'] = variable_get('ibm_apim_enable_api_test', 1);
       if (module_exists('forum')) {
         $forumID = taxonomy_get_term_by_name(_api_sanitise_apiname(html_entity_decode($variables['title'], ENT_QUOTES)));

@@ -125,7 +125,7 @@ function apim_profile_create_faqs() {
   _apim_profile_create_node($content);
   $content = array(
     'type' => 'faq',
-    'title' => t("How cat I test an API?"),
+    'title' => t("How can I test an API?"),
     'summary' => '',
     'body' => t("<p>It is possible to test an API from this Developer Portal.</p><p>When looking at the details of an API you will see a table of the operations contained in the API. This will show what method they are (GET, POST, PUT, DELETE, PATCH, HEAD or OPTIONS) and what path the Resource uses.</p><p>If you click on the Resource you will see more information about it, what parameters it might take, what it returns, what possible return codes it might use and what they mean.</p><p>There is also a 'Try' button which enables you to try the Resource out direct from the Developer Portal.</p><p>If the API requires a client ID or a client secret for identification then you can specify these at the top of the 'Try' section.</p>"),
     'description' => '',
@@ -133,6 +133,7 @@ function apim_profile_create_faqs() {
     'question' => t('<p>Is it possible to test an API before signing up to a plan?</p>')
   );
   _apim_profile_create_node($content);
+  variable_set('ibm_apim_fix_faq_typo', 1);
 }
 
 /**

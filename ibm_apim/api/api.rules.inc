@@ -15,7 +15,7 @@ function api_rules_action_info() {
       'group' => t('API'),
       'parameter' => array(
         'api_nid' => array(
-          'type' => 'text',
+          'type' => 'integer',
           'label' => t('API NID'),
           'description' => t('Enter the node ID of the API'),
         ),
@@ -54,7 +54,7 @@ function api_rules_action_info() {
       'group' => t('API'),
       'parameter' => array(
         'api_nid' => array(
-          'type' => 'text',
+          'type' => 'integer',
           'label' => t('API NID'),
           'description' => t('Enter the node ID of the API'),
         ),

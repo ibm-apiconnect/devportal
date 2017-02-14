@@ -1179,6 +1179,7 @@ js/admin_menu/cache/*');
   variable_set('ibm_apim_done_flag_bookmark_upgrade', 1);
 
   variable_set('ibm_apim_disable_jqmulti', 1);
+  variable_set('ibm_apim_disable_usersearchtoadmin', 1);
 
   // set frontpage page title
   if (module_exists('metatag')) {
@@ -3191,7 +3192,6 @@ function apim_profile_update_7400() {
     'panels_mini',
     'popularapi',
     'popularproduct',
-    'socialblock',
     'admin_menu',
     'adminimal_admin_menu',
     'underscore',
@@ -3211,6 +3211,12 @@ function apim_profile_update_7400() {
     'field_group'
   );
   module_enable($modules, TRUE);
+
+  if (module_exists('forum')) {
+    // only enable modules that depend on forum if its already enabled
+    $forum_modules = array('socialblock');
+    module_enable($forum_modules, TRUE);
+  }
 
   // ensure user registration options haven't been played with
   variable_set('user_register', 1);
@@ -3676,6 +3682,10 @@ js/admin_menu/cache/*';
     module_disable(array('i18n_update'), TRUE);
     variable_set('ibm_apim_disable_i18n_update', 1);
   }
+  if (variable_get('ibm_apim_disable_usersearchtoadmin', NULL) == NULL) {
+    module_disable(array('usersearchtoadmin'), TRUE);
+    variable_set('ibm_apim_disable_usersearchtoadmin', 1);
+  }
 
   if (variable_get('ibm_apim_taxonomy_menu_upgrade', NULL) == NULL) {
     // delete old taxonomy menu
@@ -3737,20 +3747,24 @@ taxonomy/*'
       ->condition('module', 'apic_taxonomy_menu_block')
       ->condition('region', 'collapsible')
       ->execute();
+    $deltas = variable_get('apic_taxonomy_menu_block_ids', array(0 => 1));
+    $max_key = max(array_keys($deltas));
+    $max_value = max(array_values($deltas));
+    $next = $max_value + 1;
     db_insert('block')->fields(array(
       'status' => 1,
       'region' => 'sidebar_first',
       'title' => t('Tags'),
       'module' => 'apic_taxonomy_menu_block',
-      'delta' => '2',
+      'delta' => $next,
       'visibility' => 1,
       'pages' => 'taxonomy/*',
       'theme' => 'connect_theme'
     ))->execute();
-    variable_set('apic_taxonomy_menu_block_2', array(
-      'delta' => 2,
+    variable_set('apic_taxonomy_menu_block_' . $next, array(
+      'delta' => $next,
       'admin_title' => 'Tags',
-      'vid' => '2',
+      'vid' => $next,
       'parent' => '0',
       'parent_fixed' => '3',
       'parent_dynamic' => '1',
@@ -3761,7 +3775,8 @@ taxonomy/*'
       'hide_empty' => 0,
       'ctype' => array()
     ));
-    variable_set('apic_taxonomy_menu_block_ids', array(0 => 1, 1 => 2));
+    $deltas[$max_key + 1] = $next;
+    variable_set('apic_taxonomy_menu_block_ids', $deltas);
     variable_set('ibm_apim_update_taxonomy_block', 1);
   }
 
@@ -4032,6 +4047,24 @@ taxonomy/*'
       "noscript_message" => "Sorry, you need to enable JavaScript to visit this website."
     ));
     variable_set('ibm_apim_done_frameprevention_upgrade', 1);
+  }
+
+  if (variable_get('ibm_apim_fix_faq_typo', NULL) == NULL) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'faq')
+      ->propertyCondition('title', 'How cat I test an API?');
+    $results = $query->execute();
+    if (isset($results['node'])) {
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
+      if (isset($node)) {
+        $node->title = 'How can I test an API?';
+        node_save($node);
+      }
+    }
+    variable_set('ibm_apim_fix_faq_typo', 1);
   }
 
   if (variable_get('ibm_apim_done_seckit_upgrade', NULL) == NULL) {

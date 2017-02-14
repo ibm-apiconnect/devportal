@@ -130,7 +130,6 @@ dependencies[] = entityreference
 dependencies[] = rules_http_client
 dependencies[] = field_group
 dependencies[] = views_data_export
-dependencies[] = usersearchtoadmin
 
 
 ;Enable our modules

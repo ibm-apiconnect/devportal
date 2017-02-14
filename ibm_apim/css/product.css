@@ -46,6 +46,13 @@
   margin-bottom: 0 !important;
   margin-left: 180px !important;
 }
+@media screen and (max-width: 800px) {
+  .node-type-product footer,
+  .node-type-application footer,
+  .node-type-api footer {
+    margin-left: 0 !important;
+  }
+}
 
 .node-type-product .columns-inner,
 .node-type-application .columns-inner,
@@ -686,6 +693,20 @@
   color: #bd530b;
 }
 
+.mesh-portal-product .interact .parameter.required {
+  padding-left: 2px;
+}
+
+.mesh-portal-product .interact .parameter.required .parameterName:before {
+  content: "* ";
+}
+
+.mesh-portal-product .parametersSection .parameterType {
+  font-size: 0.9em;
+  color: #647076;
+  font-family: "DejaVu Sans Mono", monospace, sans-serif;
+}
+
 .mesh-portal-product .parametersSection .schemawrapper {
   width: 70%;
 }
@@ -1286,7 +1307,6 @@
 
 .mesh-portal-product .pathTitle h3 {
   color: #444849;
-  font-weight: 300;
   font-size: 1.3em;
   padding-left: 14px;
 }
@@ -1326,7 +1346,6 @@
 
 .mesh-portal-product .definitionsContent > a > label {
   font-size: 1.3em;
-  font-weight: 300;
 }
 
 .apiTags a,
@@ -1506,7 +1525,6 @@
 
 .mesh-portal-product .rightSectionHeading {
   font-size: 1.2em;
-  font-weight: 300;
 }
 
 .mesh-portal-product .productRight .links .comment_forbidden {
@@ -1713,4 +1731,9 @@
 .messages .messages.info {
   border: 1px solid #ccc;
   background-color: #f2f2f2;
+}
+
+/* override special italics for tags */
+article .apiTag.tags {
+  font-style: normal;
 }

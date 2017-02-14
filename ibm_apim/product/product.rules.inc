@@ -19,7 +19,7 @@ function product_rules_event_info() {
       'label' => t('The product ID'),
     ),
     'product_nid' => array(
-      'type' => 'text',
+      'type' => 'integer',
       'label' => t('The product ID'),
     ),
     'product_name' => array(
@@ -115,7 +115,7 @@ function product_rules_action_info() {
       'group' => t('Product'),
       'parameter' => array(
         'product_nid' => array(
-          'type' => 'text',
+          'type' => 'integer',
           'label' => t('Product NID'),
           'description' => t('Enter the node ID of the product'),
         ),
@@ -160,7 +160,7 @@ function product_rules_action_info() {
       'group' => t('Product'),
       'parameter' => array(
         'product_nid' => array(
-          'type' => 'text',
+          'type' => 'integer',
           'label' => t('Product NID'),
           'description' => t('Enter the node ID of the product'),
         ),

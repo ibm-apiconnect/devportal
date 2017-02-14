@@ -607,6 +607,7 @@ input.clientSecretInput {
   min-width: 18px;
   position: relative;
   color: #222;
+  line-height: 14px;
 }
 .notificationBox.greyBox {
   background: none repeat scroll 0 0 #dddee0;
@@ -789,6 +790,10 @@ body.page-myorg .columns-inner #breadcrumb {
 
 span.dropit-icon.ui-icon-triangle-1-s {
   display: inline-block;
+}
+
+span.dropit-icon {
+  margin-top: 2px;
 }
 
 ul.dropdown-menu {
@@ -1680,4 +1685,17 @@ article.node-api.node-teaser {
 .field-type-file .sticky-table thead th:last-child,
 .field-type-file .sticky-table tr td:last-child {
   width: 80px;
+}
+
+/* ensure notification dialog is on top */
+.ui-front {
+  z-index: 1000;
+}
+.ui-dialog {
+  z-index: 2000;
+}
+
+/* no outline on dialog close button */
+.ui-dialog-titlebar.ui-widget-header button:focus {
+  outline: none;
 }

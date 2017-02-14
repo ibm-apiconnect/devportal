@@ -188,6 +188,7 @@ a.feed-icon {
 /* Feed icons */
 .feed-icon img {
   padding: 0 10px;
+  box-sizing: initial;
 }
 
 /* Search results list. */
@@ -263,7 +264,7 @@ div.messages {
 }
 
 .js .section-collapsible {
-  top: 120px;
+  top: 140px;
   height: auto !important;
   max-height: 50%;
   position: fixed;
@@ -301,7 +302,7 @@ div.messages {
 }
 
 .collapsible-toggle .togglebg {
-  top: 120px;
+  top: 140px;
   background: #fff;
   display: inline-block;
   height: 45px;
@@ -341,7 +342,7 @@ div.messages {
   width: 40px;
   position: fixed;
   right: 0;
-  top: 120px;
+  top: 140px;
   transition: none;
 }
 
@@ -504,7 +505,6 @@ body.frontpage .block-region-content.block-main{
   text-align: center;
   border-bottom: 0;
   font-size: 30px;
-  font-weight: 300;
 }
 
 .front #main-content-header {
@@ -866,4 +866,12 @@ header#header {
   .admin-menu #columns {
     margin-top: 132px;
   }
+}
+
+article.user-profile .field .field-label {
+  font-weight: bold;
+}
+
+article.user-profile dt {
+  font-size: 1em;
 }

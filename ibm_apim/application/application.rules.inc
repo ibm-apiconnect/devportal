@@ -19,7 +19,7 @@ function application_rules_event_info() {
       'label' => t('The application ID'),
     ),
     'application_nid' => array(
-      'type' => 'text',
+      'type' => 'integer',
       'label' => t('The application node ID'),
     ),
     'application_name' => array(

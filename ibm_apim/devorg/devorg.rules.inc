@@ -19,7 +19,7 @@ function devorg_rules_event_info() {
       'label' => t('The developer organization ID'),
     ),
     'devorg_nid' => array(
-      'type' => 'text',
+      'type' => 'integer',
       'label' => t('The developer organization node ID'),
     ),
     'devorg_name' => array(

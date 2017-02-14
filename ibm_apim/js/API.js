@@ -179,14 +179,6 @@
                 parameters = parameters.concat(api.paths[path].parameters);
             }
 
-            // headers
-            var contenttype = null;
-            if (operation.consumes) {
-                contenttype = operation.consumes[0];
-            } else if (api.consumes) {
-                contenttype = api.consumes[0];
-            }
-
             // body
             var bodyParameters = parameters.filter(function (parameter) {
                 return (parameter.in == "body");
@@ -195,7 +187,7 @@
                 // use the first one only
                 // should be inline schema by now
                 try {
-                    var example = window.exampleGenerator.generateExampleParameter(api, path, verb, bodyParameters[0], contenttype, false);
+                    var example = window.exampleGenerator.generateExampleParameter(api, path, verb, bodyParameters[0], null, false);
                     $("#body_" + id + " textarea").val(example).height(150);
                 } catch (e) {
 
@@ -1292,15 +1284,22 @@
         }
         // query parameters
         var queryParameters = parameters.filter(function (parameter) {
-            return (parameter.in == "query" && requestForm['param' + parameter.name] !== undefined);
+            return (parameter.in == "query");
         });
         var queryParametersAdded = (targetUrl.indexOf('?') >= 0);
         if (queryParameters.length > 0) {
             targetUrl += (queryParametersAdded) ? "&" : "?";
             queryParameters.forEach(function (parameter) {
-                if (parameter.name && requestForm['param' + parameter.name]) {
-                    targetUrl += parameter.name + "=" + requestForm['param' + parameter.name] + "&";
-                    queryParametersAdded = true;
+                if (parameter.name) {
+                    // if boolean then must be set to true or false
+                    if ((requestForm['param' + parameter.name] !== undefined && (!parameter.type || (parameter.type != "boolean" && !parameter.enum && requestForm['param' + parameter.name]))) || (parameter.type && parameter.type == "boolean" && (requestForm['param' + parameter.name] == "true" || requestForm['param' + parameter.name] == "false")) || (parameter.enum && parameter.enum.indexOf(requestForm['param' + parameter.name]) != -1)) {
+                        targetUrl += parameter.name + "=" + requestForm['param' + parameter.name] + "&";
+                        queryParametersAdded = true;
+                    } else if (parameter.type && parameter.type == "boolean" && parameter.required) {
+                        // purely here to catch required boolean fields that are set to false
+                        targetUrl += parameter.name + "=false&";
+                        queryParametersAdded = true;
+                    }
                 }
             });
             targetUrl = targetUrl.substring(0, targetUrl.length - 1);
@@ -1323,15 +1322,20 @@
         }
 
         // headers
-        headers['content-type'] = requestForm['content-type'];
+        if (requestForm['content-type']) {
+            headers['content-type'] = requestForm['content-type'];
+        }
         headers['accept'] = requestForm['accept'];
         var headerParameters = parameters.filter(function (parameter) {
             return (parameter.in == "header");
         });
         if (headerParameters.length > 0) {
             headerParameters.forEach(function (parameter) {
-                if (requestForm['param' + parameter.name]) {
+                if ((requestForm['param' + parameter.name] !== undefined && (!parameter.type || (parameter.type != "boolean" && !parameter.enum))) || (parameter.type && parameter.type == "boolean" && (requestForm['param' + parameter.name] == "true" || requestForm['param' + parameter.name] == "false")) || (parameter.enum && parameter.enum.indexOf(requestForm['param' + parameter.name]) != -1)) {
                     headers[parameter.name] = requestForm['param' + parameter.name];
+                } else if (parameter.type && parameter.type == "boolean" && parameter.required) {
+                    // purely here to catch required boolean fields that are set to false
+                    headers[parameter.name] = "false";
                 }
             });
         }
@@ -1350,8 +1354,11 @@
         } else if (formDataParameters.length > 0) {
             var formDataArray = [];
             formDataParameters.forEach(function (parameter) {
-                if (requestForm['param' + parameter.name]) {
+                if ((requestForm['param' + parameter.name] !== undefined && (!parameter.type || (parameter.type != "boolean" && !parameter.enum))) || (parameter.type && parameter.type == "boolean" && (requestForm['param' + parameter.name] == "true" || requestForm['param' + parameter.name] == "false")) || (parameter.enum && parameter.enum.indexOf(requestForm['param' + parameter.name]) != -1)) {
                     formDataArray.push(encodeURIComponent(parameter.name).replace(/%20/g, '+') + '=' + encodeURIComponent(requestForm['param' + parameter.name]).replace(/%20/g, '+'));
+                } else if (parameter.type && parameter.type == "boolean" && parameter.required) {
+                    // purely here to catch required boolean fields that are set to false
+                    formDataArray.push(encodeURIComponent(parameter.name).replace(/%20/g, '+') + "=" + encodeURIComponent("false"));
                 }
             });
             body = formDataArray.join('&');

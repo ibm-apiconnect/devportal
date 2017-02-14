@@ -1443,6 +1443,39 @@ function ibm_apim_module_implements_alter(&$implementations, $hook) {
 }
 
 /**
+ * Implements hook_menu_alter().
+ *
+ * Move user search tab from overall search to People administration.
+ */
+function ibm_apim_menu_alter(&$items) {
+  $module = 'user';
+  $new_base_path = 'admin/people';
+  $new_title = t("Search");
+  // Below could move any set of menu items by defining inputs above.
+  $item_indexes = array(
+    'search/' . $module => $new_base_path . '/search',
+    'search/' . $module . '/%menu_tail' => $new_base_path . '/search/%menu_tail',
+  );
+  foreach ($item_indexes as $item_index => $new_item_index) {
+    if (isset($items[$item_index])) {
+      $item = $items[$item_index];
+      unset($items[$item_index]);
+      $item['title'] = $new_title;
+      $item['weight'] = -10;
+      if (substr($item_index, -11) == '/%menu_tail') {
+        $item['page arguments'] = array('user', 3);
+        // These tabs are not subtabs.
+        $item['tab_root'] = $new_base_path;
+        // These tabs need to display at the same level.
+        $item['tab_parent'] = $new_base_path . '/search';
+      }
+      $items[$new_item_index] = $item;
+    }
+  }
+}
+
+
+/**
  * Implementation of hook_menu_local_tasks_alter().
  * Hide the tabs for the pages of our admin guide book
  * @param $data
@@ -4943,6 +4976,12 @@ function ibm_apim_return_inline_schema($object) {
   }
   if (isset($result['expanded'])) {
     unset($result['expanded']);
+  }
+  if (isset($result['type'])) {
+    unset($result['type']);
+  }
+  if (isset($result['format'])) {
+    unset($result['format']);
   }
   return $result;
 }
