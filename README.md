@@ -119,7 +119,7 @@ javascript libraries and theme) can be downloaded from the <a href="https://gith
 <p>This is provided 'as-is' with no guarantee of official support but we will endeavour to respond to all Issues raised as best we can.</p>
 
 <h2>Requirements</h2>
-<p>You will require IBM API Connect v5.0.5.x to use this code.</p>
+<p>You will require IBM API Connect v5.0.7.x to use this code.</p>
 
 <h2>API Management v4</h2>
 <p>The v4 version of the portal can be found on github here: <a href="https://github.com/apimanagement/drupalportal/">apimanagement/drupalportal</a></p>
