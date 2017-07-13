@@ -356,6 +356,10 @@ product/*'
     variable_set('ibm_apim_create_v5_frontpage', 1);
   }
 
+  // disable default views
+  _apim_profile_disable_frontpage();
+  variable_set('ibm_apim_disable_frontpage', 1);
+
   // Set the page as the site home
   variable_set('site_frontpage', 'home');
 
@@ -682,7 +686,7 @@ taxonomy/*',
     'name' => 'password-strength',
     'description' => 'Policy to enforce APIC password strength',
     'enabled' => 1,
-    'policy' => serialize($policy)
+    'constraints' => serialize($policy)
   ))->execute();
   variable_set('ibm_apim_done_password_policy_upgrade', 1);
 
@@ -1268,6 +1272,11 @@ js/admin_menu/cache/*');
     'restrictions' => array('admin_bypass' => 1)
   ));
   variable_set('ibm_apim_search_config_done', 1);
+
+  _apim_profile_enable_description_translation();
+
+  // For a freshly installed site, this fix doesn't need to be applied so set variable to skip applying it
+  variable_set('ibm_apim_fix_authmap', 1);
 
   // Update the menu router information.
   menu_rebuild();
@@ -3208,7 +3217,8 @@ function apim_profile_update_7400() {
     'linkchecker',
     'entityreference',
     'rules_http_client',
-    'field_group'
+    'field_group',
+    'termcase'
   );
   module_enable($modules, TRUE);
 
@@ -3356,6 +3366,11 @@ js/admin_menu/cache/*';
       apim_profile_create_welcome_page('v5welcome');
     }
     variable_set('ibm_apim_create_v5_frontpage', 1);
+  }
+
+  if(variable_get('ibm_apim_disable_frontpage', NULL) == NULL) {
+    _apim_profile_disable_frontpage();
+    variable_set('ibm_apim_disable_frontpage', 1);
   }
   if (variable_get('ibm_apim_enable_connect_theme', NULL) == NULL) {
     $theme_default = variable_get('theme_default');
@@ -4021,7 +4036,7 @@ taxonomy/*'
   if (variable_get('ibm_apim_done_password_policy_upgrade', NULL) == NULL) {
     $policy = array("character_types" => "3", "length" => "8");
     db_update('password_policy')
-      ->fields(array('policy' => serialize($policy)))
+      ->fields(array('constraints' => serialize($policy)))
       ->condition('pid', 1)
       ->condition('name', 'password-strength')
       ->execute();
@@ -4328,6 +4343,24 @@ taxonomy/*'
     variable_set('ibm_apim_frontpage_styling_update', 1);
   }
 
+  if (variable_get('ibm_apim_created_no_link_email', NULL) == NULL) {
+    variable_set('user_mail_register_no_approval_required_no_link_body', '<p  style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">Thank you for registering at [site:name]. You may now log in at <a href="[site:login-url]">[site:login-url]</a> using:<br/><br/>
+username: [user:name]<br/>
+password: Your password</p>
+<p style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
+    variable_set('user_mail_register_no_approval_required_no_link_subject', 'Account details for [user:name] at [site:name]');
+
+    variable_set('user_mail_status_activated_body', '<p  style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">Your account at [site:name] has been activated.</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">You may now log in at <a href="[site:login-url]">[site:login-url]</a> using:<br/><br/>
+username: [user:name]<br/>
+password: Your password</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
+    variable_set('user_mail_status_activated_subject', 'Account details for [user:name] at [site:name] (approved)');
+    variable_set('ibm_apim_created_no_link_email', 1);
+  }
+
   if (variable_get('ibm_apim_apitags_update', NULL) == NULL) {
     db_update('field_config_instance')
       ->fields(array('data' => 'a:7:{s:5:"label";s:4:"Tags";s:6:"widget";a:5:{s:6:"weight";s:1:"8";s:4:"type";s:11:"taxonomy_hs";s:6:"module";s:11:"hs_taxonomy";s:6:"active";i:0;s:8:"settings";a:2:{s:4:"size";i:60;s:17:"autocomplete_path";s:21:"taxonomy/autocomplete";}}s:8:"settings";a:2:{s:18:"user_register_form";b:0;s:23:"entity_translation_sync";b:0;}s:7:"display";a:3:{s:7:"default";a:5:{s:5:"label";s:5:"above";s:4:"type";s:54:"hs_taxonomy_term_reference_hierarchical_text_last_link";s:6:"weight";s:2:"12";s:8:"settings";a:0:{}s:6:"module";s:11:"hs_taxonomy";}s:6:"teaser";a:4:{s:5:"label";s:5:"above";s:4:"type";s:6:"hidden";s:6:"weight";s:1:"0";s:8:"settings";a:0:{}}s:5:"inner";a:5:{s:5:"label";s:5:"above";s:4:"type";s:54:"hs_taxonomy_term_reference_hierarchical_text_last_link";s:6:"weight";s:1:"0";s:8:"settings";a:0:{}s:6:"module";s:11:"hs_taxonomy";}}s:8:"required";i:0;s:11:"description";s:0:"";s:13:"default_value";N;}'))
@@ -4342,17 +4375,96 @@ taxonomy/*'
     module_disable(array('plan'), TRUE);
   }
 
+  if (variable_get('ibm_apim_remove_promoted_nodes', NULL) == NULL) {
+    // Get all api, application, devorg and product nodes and stop them from displaying on the front page
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+          ->propertyCondition('type', array('api', 'application', 'devorg', 'product'));
+
+    $result = $query->execute();
+    $nodes = $result['node'];
+
+    // If the node is promoted, set it to not promoted and save the change
+    foreach($nodes as $next_node) {
+      $node = node_load($next_node->nid);
+      if($node->promote == NODE_PROMOTED) {
+        $node->promote = 0;
+        $node = node_submit($node);
+        node_save($node);
+      }
+    }
+
+    variable_set('ibm_apim_remove_promoted_nodes', 1);
+  }
+
+  if (variable_get('ibm_apim_description_upgrade', NULL) == NULL) {
+    _apim_profile_enable_description_translation();
+  }
+  
+  if(variable_get('ibm_apim_fix_authmap', NULL) == NULL) {
+  
+    // Need to update the auth_map table in the database to change any
+    // instances of 'module=auth_apic' to 'module=ibm_apim'
+    $rowsToChange = db_query('SELECT count(*) FROM authmap WHERE module = :module', array(':module' => 'auth_apic'));
+
+    if(count($rowsToChange) === 0) {
+      watchdog('auth_apic', 'Modifying auth_map table : there are no updates to be made');
+    }
+    else {
+      watchdog('auth_apic', 'Modifying auth_map table : there are ' . count($rowsToChange) . ' rows that need updating');
+
+      $numberOfUpdatesMade = db_update('authmap')
+        ->fields(array('module' => 'ibm_apim'))
+        ->condition('module', 'auth_apic')
+        ->execute();
+  
+      if(sizeof($rowsToChange) === $numberOfUpdatesMade) {
+        watchdog('auth_apic', 'Modifying auth_map table : all rows updated as expected');
+      }
+      else {
+        watchdog('auth_apic', 'Modifying auth_map table : expected ' . count($rowsToChange) . ' but ' . $numberOfUpdatesMade . ' were made', NULL, WATCHDOG_ERROR);
+      }    
+    }
+  
+    variable_set('ibm_apim_fix_authmap', 1);
+  }
+
+  //DO NOT Do the following three things as otherwise the views module blows up
+  //with an out of memory error when you have approx 2500 apis. The CLI site
+  //upgrade code will do a cache clear once the site has finished upgrading
+  //and that cache clear execuits without an error.
+
   // force a menu rebuild
-  menu_rebuild();
+  //menu_rebuild();
 
   // Flush all caches to ensure that any full bootstraps during the installer
   // do not leave stale cached data, and that any content types or other items
   // registered by the install profile are registered correctly.
-  drupal_flush_all_caches();
+  //drupal_flush_all_caches();
 
   // Also clear all caches for good measure. What is the difference between
   // flushing and clearing. Who knows.
-  cache_clear_all();
+  //cache_clear_all();
+}
+
+function _apim_profile_disable_frontpage() {
+  $viewnames = array('frontpage', 'notifications_content_node_list');
+
+  // grab list of views that are already disabled
+  $views_status = variable_get('views_defaults', array());
+
+  // add our views to be disabled to the list
+  foreach ($viewnames as $key => $viewname) {
+    $views_status[$viewname] = TRUE;
+  }
+
+  // reset the variable with the new list
+  variable_set('views_defaults', $views_status);
+
+  // empty cache now
+  if (function_exists('views_invalidate_cache')) {
+    views_invalidate_cache();
+  }
 }
 
 /**
@@ -4718,10 +4830,7 @@ function _apim_profile_enable_htmlmail() {
 
   variable_set('user_mail_status_activated_body', '<p  style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
 <p  style="font-family: Arial, Helvetica, Sans-Serif">Your account at [site:name] has been activated.</p>
-<p  style="font-family: Arial, Helvetica, Sans-Serif">You may now log in by clicking this link or copying and pasting it into your browser:<br/><br/>
-<a href="[user:one-time-login-url]">[user:one-time-login-url]</a></p>
-<p  style="font-family: Arial, Helvetica, Sans-Serif">This link can only be used once to log in and will lead you to a page where you can set your password.</p>
-<p  style="font-family: Arial, Helvetica, Sans-Serif">After setting your password, you will be able to log in at <a href="[site:login-url]">[site:login-url]</a> in the future using:<br/><br/>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">You may now log in at <a href="[site:login-url]">[site:login-url]</a> using:<br/><br/>
 username: [user:name]<br/>
 password: Your password</p>
 <p  style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
@@ -4736,6 +4845,14 @@ username: [user:name]<br/>
 password: Your password</p>
 <p style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
   variable_set('user_mail_register_no_approval_required_subject', 'Account details for [user:name] at [site:name]');
+
+  variable_set('user_mail_register_no_approval_required_no_link_body', '<p  style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
+<p  style="font-family: Arial, Helvetica, Sans-Serif">Thank you for registering at [site:name]. You may now log in at <a href="[site:login-url]">[site:login-url]</a> using:<br/><br/>
+username: [user:name]<br/>
+password: Your password</p>
+<p style="font-family: Arial, Helvetica, Sans-Serif">--  [site:name] team</p>');
+  variable_set('user_mail_register_no_approval_required_no_link_subject', 'Account details for [user:name] at [site:name]');
+  variable_set('ibm_apim_created_no_link_email', 1);
 
   variable_set('user_mail_register_pending_approval_body', '<p style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
 <p style="font-family: Arial, Helvetica, Sans-Serif">Thank you for registering at [site:name]. Your application for an account is currently pending approval. Once it has been approved, you will receive another e-mail containing information about how to log in, set your password, and other details.</p>
@@ -4809,4 +4926,31 @@ function _apim_profile_use_title_field() {
     }
     variable_set('ibm_apim_done_title_field_upgrade', 1);
   }
+}
+
+function _apim_profile_enable_description_translation() {
+  if (module_exists('entity_translation')) {
+    // enable translation for description fields
+    // code copied from entity_translation_translatable_form_submit
+    foreach (array('api_description', 'product_description') as $field_name) {
+      $operations = array(
+        array('entity_translation_translatable_batch', array(TRUE, $field_name, TRUE)),
+        array('entity_translation_translatable_switch', array(TRUE, $field_name)),
+      );
+      $operations = array_reverse($operations);
+
+      $t_args = array('%field' => $field_name);
+      $title = t('Enabling translation for the %field field', $t_args);
+
+      $batch = array(
+        'title' => $title,
+        'operations' => $operations,
+        'finished' => 'entity_translation_translatable_batch_done',
+        'file' => drupal_get_path('module', 'entity_translation') . '/entity_translation.admin.inc',
+      );
+
+      batch_set($batch);
+    }
+  }
+  variable_set('ibm_apim_description_upgrade', 1);
 }

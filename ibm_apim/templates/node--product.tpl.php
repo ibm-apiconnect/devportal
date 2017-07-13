@@ -65,10 +65,10 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
       <nav class="toc navigate-toc sticky stickyHeader">
         <ul>
           <?php if ($showversions == 1) {
-            $product_title = $product['info']['title'] . ' ' . $product['info']['version'];
+            $product_title = ibm_apim_get_translated_string($product, ['info'], 'title') . ' ' . $product['info']['version'];
           }
           else {
-            $product_title = $product['info']['title'];
+            $product_title = ibm_apim_get_translated_string($product, ['info'], 'title');
           } ?>
           <li class="tocItem toc-product"><a
               onclick="product.navigate('product')"
@@ -142,7 +142,7 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
                   <?php endif; ?>
                 </div>
                 <h1 class="name">
-                  <?php print $product['info']['title']; ?>
+                  <?php print ibm_apim_get_translated_string($product, ['info'], 'title'); ?>
                   <?php if ($showversions == 1): ?>
                     <span
                       class="version"><?php print $product['info']['version']; ?></span>
@@ -166,7 +166,7 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
                     <label
                       for='product_description'><?php print t('Description'); ?></label>
                     <div class="markdown"
-                         id='product_description'><?php print ibm_apim_markdown_field($product['info']['description']); ?></div>
+                         id='product_description'><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($product, ['info'], 'description')); ?></div>
                   </div>
                 <?php endif; ?>
                 <?php $docs = render($content['product_attachments']); ?>
@@ -231,13 +231,13 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
                     <label><?php print t('License'); ?></label>
                     <div><a
                         href='<?php print $product['info']['license']['url']; ?>'
-                        target='_blank'><?php print $product['info']['license']['name']; ?></a></div>
+                        target='_blank'><?php print ibm_apim_get_translated_string($product['info']['license'], array(), 'name'); ?></a></div>
                   </div>
                 <?php endif; ?>
                 <?php if (isset($product['info']['termsOfService']) && !empty($product['info']['termsOfService'])) : ?>
                   <div>
                     <label><?php print t('Terms of service'); ?></label>
-                    <div><?php print $product['info']['termsOfService']; ?></div>
+                    <div><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($product, ['info'], 'termsOfService')); ?></div>
                   </div>
                 <?php endif; ?>
               </div>
@@ -271,7 +271,7 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
               href='javascript:;'>
               <div class="api highlightText">
                 <span
-                  class="apiname"><?php print check_plain($api['info']['title']); ?><?php if ($showversions == 1) {
+                  class="apiname"><?php print check_plain(ibm_apim_get_translated_string($api, ['info'], 'title')); ?><?php if ($showversions == 1) {
                     print ' ' . check_plain($api['info']['version']);
                   } ?></span><span
                   class="expand_more"><i class="material-icons">expand_more</i></span><span
@@ -299,6 +299,20 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
             </div>
           </div>
         <?php endforeach; ?>
+        <?php
+        // add billing section if any plans contain billing info
+        $billing = false;
+        $ibm_apim_billing_enabled = variable_get('ibm_apim_billing_enabled', 0);
+        if ($ibm_apim_billing_enabled == 1) {
+          foreach ($product['plans'] as $planName => $plan) {
+            if (isset($plan['billing-model'])) {
+              $billing = true;
+            }
+          }
+        } ?>
+        <?php if (isset($billing)) :?>
+          <div class="api empty top"><?php print t('Pricing');?></div>
+        <?php endif; ?>
         <div class="api empty bottom">&nbsp;</div>
       </div>
       <div class="plans">
@@ -324,7 +338,7 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
             ?>
             <div class="plan">
               <div
-                class="title <?php print $approvalclass; ?>"><?php print check_plain($plan['title']); ?><?php print $approvalimage; ?><?php print $deprecatedstr; ?>
+                class="title <?php print $approvalclass; ?>"><?php print check_plain(ibm_apim_get_translated_string($plan, array(), 'title')); ?><?php print $approvalimage; ?><?php print $deprecatedstr; ?>
               </div>
               <?php foreach ($planarray[$product['info']['name'] . ':' . $product['info']['version'] . ':' . $planName]['nodes'] as $key => $api) : ?>
                 <div
@@ -419,6 +433,12 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
                   </div>
                 </div>
               <?php endforeach; ?>
+              <?php if (isset($billing)) :?>
+                <?php if (!isset($plan['billing-model'])) {
+                  $plan['billing-model'] = array();
+                }?>
+                <div class="api empty top"><?php print product_parse_billing($plan['billing-model']);?></div>
+              <?php endif; ?>
               <?php
               if (isset($plan['approval']) && $plan['approval'] == TRUE) {
                 $approvestr = 'true';

@@ -388,12 +388,13 @@ function devorg_createNewDevorgNode($consumer, $event) {
           );
 
           $member_emails = array();
-          if(isset($node->devorg_members[$node->language][0]['value'])) {
+          if (isset($node->devorg_members[$node->language][0]['value'])) {
             $members = unserialize($node->devorg_members[$node->language][0]['value']);
             foreach ($members as $member) {
               if (isset($member['email'])) {
                 $member_emails[] = $member['email'];
-              } else {
+              }
+              else {
                 $member_emails[] = $member['username'];
               }
             }

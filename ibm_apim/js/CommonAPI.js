@@ -547,8 +547,10 @@
         // check security requirements
         config.requiresClientId = false;
         delete config.clientIdLocation;
+        delete config.clientIdName;
         config.requiresClientSecret = false;
         delete config.clientSecretLocation;
+        delete config.clientSecretName;
         config.requiresBasicAuth = false;
         config.requiresOauth = false;
         config.securityFlows = [];
@@ -559,6 +561,7 @@
         config.requiresRefreshToken = false;
         config.requiresUserCredentials = false;
         config.requiresRedirectUri = false;
+        config.externalApiKeys = {};
 
         delete config.oauthFlow;
         delete config.oauthAuthUrl;
@@ -583,13 +586,23 @@
                         var thisDef = api.securityDefinitions[securityDef];
                         if (!thisDef) return;
                         security[securityDef] = thisDef;
-                        if (thisDef.type == "apiKey" && (thisDef.name == "client_id" || thisDef.name == "X-IBM-Client-Id")) {
-                            config.requiresClientId = true;
-                            config.clientIdLocation = thisDef.in;
-                        }
-                        if (thisDef.type == "apiKey" && (thisDef.name == "client_secret" || thisDef.name == "X-IBM-Client-Secret")) {
-                            config.requiresClientSecret = true;
-                            config.clientSecretLocation = thisDef.in;
+                        if (thisDef.type === "apiKey") {
+                            if (thisDef.name === "client_id" ||
+                                thisDef.name === "X-IBM-Client-Id" ||
+                                (thisDef['x-key-type'] && thisDef['x-key-type'] === "clientId")) {
+                                config.requiresClientId = true;
+                                config.clientIdLocation = thisDef["in"];
+                                config.clientIdName = thisDef["name"];
+                            } else if (thisDef.name === "client_secret" ||
+                                thisDef.name === "X-IBM-Client-Secret" ||
+                                (thisDef['x-key-type'] && thisDef['x-key-type'] === "clientSecret")) {
+                                config.requiresClientSecret = true;
+                                config.clientSecretLocation = thisDef["in"];
+                                config.clientSecretName = thisDef["name"];
+                            } else {
+                                // it's an external api key
+                                config.externalApiKeys[securityDef] = thisDef;
+                            }
                         }
                         if (thisDef.type == "basic") {
                             config.requiresBasicAuth = true;

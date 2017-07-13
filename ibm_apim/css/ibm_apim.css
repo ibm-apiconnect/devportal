@@ -1691,6 +1691,7 @@ article.node-api.node-teaser {
 .ui-front {
   z-index: 1000;
 }
+
 .ui-dialog {
   z-index: 2000;
 }

@@ -138,7 +138,7 @@ function drush_application_createOrUpdatesub($func, $event, $subinput) {
   if (isset($subinput)) {
     $subinput = json_decode($subinput, TRUE);
     $ref = $subinput['id'];
-    $createdOrUpdated = application_createOrUpdateSubscription($subinput);
+    $createdOrUpdated = application_createOrUpdateSubscription($subinput, $event);
     if ($createdOrUpdated) {
       drupal_set_message(t('Drush @func created Subscription @sub', array(
         '@func' => $func,

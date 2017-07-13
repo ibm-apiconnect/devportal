@@ -487,8 +487,11 @@ function apim_profile_create_book_parent($bid = NULL) {
 
   if ($bid != NULL) {
     $node = node_load($bid);
+    if (!isset($node->type) || $node->type!= 'book' ||!isset($node->book) || !isset($node->book['bid'])|| $node->book['bid'] != $node->nid) {
+      unset($node);
+    }
   }
-  else {
+  if (!isset($node) || !isset($node->type) || $node->type != 'book') {
     $node = new stdClass();
     $node->nid = NULL;
     $node->type = 'book';

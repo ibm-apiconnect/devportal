@@ -86,10 +86,10 @@ else {
   <nav class="toc navigate-toc sticky stickyHeader">
     <ul>
       <?php if ($showversions == 1) {
-        $product_title = $product['info']['title'] . ' ' . $product['info']['version'];
+        $product_title = ibm_apim_get_translated_string($product, ['info'], 'title') . ' ' . $product['info']['version'];
       }
       else {
-        $product_title = $product['info']['title'];
+        $product_title = ibm_apim_get_translated_string($product, ['info'], 'title');
       } ?>
       <li class="tocItem toc-product"><a
           href="<?php print url('node/' . $productnid); ?>"
@@ -114,10 +114,10 @@ else {
         <?php if (isset($apis)) : ?>
         <?php foreach ($apis as $api) : ?>
         <?php if ($showversions == 1) {
-          $api_title = $api['info']['title'] . ' ' . $api['info']['version'];
+          $api_title = ibm_apim_get_translated_string($api, ['info'], 'title') . ' ' . $api['info']['version'];
         }
         else {
-          $api_title = $api['info']['title'];
+          $api_title = ibm_apim_get_translated_string($api, ['info'], 'title');
         } ?>
       <li
         class='tocItem tocApi toc-apis_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>'>

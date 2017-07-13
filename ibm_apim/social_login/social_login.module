@@ -466,13 +466,13 @@ function social_login_form_alter(&$form, &$form_state, $form_id) {
         );
       }
       $path = drupal_get_path('module', 'social_login');
-      if (!is_array($form['#attached'])) {
-        $form['#attached'] = array();
-      }
-      if (!is_array($form['#attached']['css'])) {
-        $form['#attached']['css'] = array();
-      }
-      $form['#attached']['css'][] = $path . '/css/social_login.css';
+    if (!is_array($form['#attached'])) {
+      $form['#attached'] = array();
+    }
+    if (!is_array($form['#attached']['css'])) {
+      $form['#attached']['css'] = array();
+    }
+    $form['#attached']['css'][] = $path . '/css/social_login.css';
       if (isset($form['notifications_forum'])) {
         unset($form['notifications_forum']);
       }
@@ -1066,7 +1066,8 @@ function _social_login_complete_activation($account, $postData = NULL) {
       }
 
       // update uid
-      user_save($account, array(
+      user_save((object) array('uid' => $account->uid), array(
+        'is_new' => 0,
         'field_uid' => array('und' => array(0 => array('value' => isset($output['id']) ? $output['id'] : ''))),
         'field_developer_organization' => array('und' => $devorgs_array)
       ));

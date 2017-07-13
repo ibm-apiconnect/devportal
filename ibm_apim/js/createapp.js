@@ -12,7 +12,7 @@
 jQuery(document).ready(function () {
     setTimeout(function () {
 
-        var appName = jQuery("#edit-title-field-und-0-value", ".node-application-form");
+        var appName = jQuery("#edit-title-field input.form-text", ".node-application-form");
 
         var checkValue = function (appName) {
             var value = appName.val();

@@ -667,6 +667,7 @@ function api_createNewAPINode($api, $event) {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
   $oldtags = array();
+  $language_list = array_keys(locale_language_list('name', TRUE));
 
   if (isset($api['document']['info']) && isset($api['document']['info']['x-ibm-name'])) {
     $xibmname = $api['document']['info']['x-ibm-name'];
@@ -714,7 +715,8 @@ function api_createNewAPINode($api, $event) {
     unset($node->api_xibmname[$node->language]);
     unset($node->api_ref[$node->language]);
     unset($node->api_version[$node->language]);
-    unset($node->api_description[$node->language]);
+    // this one is multi-language so set to empty array
+    $node->api_description = array();
     unset($node->api_context[$node->language]);
     unset($node->api_protocol[$node->language]);
     unset($node->api_security[$node->language]);
@@ -731,12 +733,42 @@ function api_createNewAPINode($api, $event) {
     $node->type = "api";
     node_object_prepare($node); // Sets some defaults. Invokes hook_prepare() and hook_node_prepare().
   }
+  if (isset($api['document']['info']['x-ibm-languages']['title']) && !empty($api['document']['info']['x-ibm-languages']['title'])) {
+    foreach ($api['document']['info']['x-ibm-languages']['title'] as $lang => $lang_array) {
+      $lang = _ibm_apim_convert_lang_name_to_drupal($lang);
+      // if its one of our locales or the root of one of our locales
+      foreach ($language_list as $lang_list_key=>$lang_list_value) {
+        if ($lang == $lang_list_key || $lang == substr($lang_list_key, 0, count($lang))) {
+          $node->title_field[$lang][] = array(
+            'value' => ibm_apim_truncate_string($api['document']['info']['x-ibm-languages']['title'][$lang]),
+            'format' => 'plain_text'
+          );
+        }
+      }
+    }
+  }
   $node->title = ibm_apim_truncate_string($api['document']['info']['title']);
+  // if en wasn't in the x-ibm-languages list then assume it was the root level one
+  if (isset($api['document']['info']['x-ibm-languages']['title']) && !in_array('en', array_keys($api['document']['info']['x-ibm-languages']['title']))) {
+    if (!isset($node->title_field['en'])) {
+      $node->title_field['en'] = array();
+    }
+    $node->title_field['en'][] = array(
+      'value' => ibm_apim_truncate_string($api['document']['info']['title']),
+      'format' => 'plain_text'
+    );
+    $node->title_field['und'][] = array(
+      'value' => ibm_apim_truncate_string($api['document']['info']['title']),
+      'format' => 'plain_text'
+    );
+  }
+
   if (!module_exists('workbench_moderation')) {
     $node->status = 1;
   }
   $node->uid = 1;
   $node->language = LANGUAGE_NONE;
+  $node->promote = 0;
 
   $node->api_apimhostname[$node->language][] = array(
     'value' => $hostvariable,
@@ -762,10 +794,47 @@ function api_createNewAPINode($api, $event) {
   if (!isset($api['document']['info']['description']) || empty($api['document']['info']['description'])) {
     $api['document']['info']['description'] = '';
   }
-  $node->api_description[$node->language][] = array(
-    'value' => $api['document']['info']['description'],
-    'format' => 'plain_text'
-  );
+
+  if (isset($api['document']['info']['x-ibm-languages']['description']) && !empty($api['document']['info']['x-ibm-languages']['description'])) {
+    foreach ($api['document']['info']['x-ibm-languages']['description'] as $lang => $lang_array) {
+      $lang = _ibm_apim_convert_lang_name_to_drupal($lang);
+      // if its one of our locales or the root of one of our locales
+      foreach ($language_list as $lang_list_key=>$lang_list_value) {
+        if ($lang == $lang_list_key || $lang == substr($lang_list_key, 0, count($lang))) {
+          if (!isset($api['document']['info']['x-ibm-languages']['description'][$lang]) || empty($api['document']['info']['x-ibm-languages']['description'][$lang])) {
+            $api['document']['info']['x-ibm-languages']['description'][$lang] = '';
+          }
+          if (!isset($node->api_description[$lang])) {
+            $node->api_description[$lang] = array();
+          }
+          $node->api_description[$lang][] = array(
+            'value' => $api['document']['info']['x-ibm-languages']['description'][$lang],
+            'format' => 'plain_text'
+          );
+        }
+      }
+    }
+    // if en wasn't in the x-ibm-languages list then assume it was the root level one
+    if (!in_array('en', array_keys($api['document']['info']['x-ibm-languages']['description']))) {
+      if (!isset($node->api_description['en'])) {
+        $node->api_description['en'] = array();
+      }
+      $node->api_description['en'][] = array(
+        'value' => $api['document']['info']['description'],
+        'format' => 'plain_text'
+      );
+      $node->api_description['und'][] = array(
+        'value' => $api['document']['info']['description'],
+        'format' => 'plain_text'
+      );
+    }
+  }
+  else {
+    $node->api_description[$node->language][] = array(
+      'value' => $api['document']['info']['description'],
+      'format' => 'plain_text'
+    );
+  }
   $node->api_context[$node->language][] = array(
     'value' => $api['document']['basePath'],
     'format' => 'plain_text'
@@ -901,6 +970,7 @@ function api_createNewAPINode($api, $event) {
             )
           )
         );
+        node_save($node);
       }
 
       $blob = mb_substr($data, 0, 5);
@@ -1039,8 +1109,26 @@ function api_createNewAPINode($api, $event) {
  */
 function api_updateExistingAPINode($node, $api, $event) {
   $hostvariable = variable_get('ibm_apim_host');
+  $language_list = array_keys(locale_language_list('name', TRUE));
   $apim_session = &_ibm_apim_get_apim_session();
+  if (isset($api['document']['info']['x-ibm-languages']['title']) && !empty($api['document']['info']['x-ibm-languages']['title'])) {
+    foreach ($api['document']['info']['x-ibm-languages']['title'] as $lang => $lang_array) {
+      $lang = _ibm_apim_convert_lang_name_to_drupal($lang);
+      // if its one of our locales or the root of one of our locales
+      foreach ($language_list as $lang_list_key=>$lang_list_value) {
+        if ($lang == $lang_list_key || $lang == substr($lang_list_key, 0, count($lang))) {
+          $node->title_field[$lang][0]['value'] = ibm_apim_truncate_string($api['document']['info']['x-ibm-languages']['title'][$lang]);
+        }
+      }
+    }
+  }
   $node->title = ibm_apim_truncate_string($api['document']['info']['title']);
+  // if en wasn't in the x-ibm-languages list then assume it was the root level one
+  if (isset($api['document']['info']['x-ibm-languages']['title']) && !in_array('en', array_keys($api['document']['info']['x-ibm-languages']['title']))) {
+    $node->title_field['en'][0]['value'] = ibm_apim_truncate_string($api['document']['info']['title']);
+    $node->title_field['und'][0]['value'] = ibm_apim_truncate_string($api['document']['info']['title']);
+  }
+
   $node->api_apimhostname[$node->language][0]['value'] = $hostvariable;
   $node->api_providerid[$node->language][0]['value'] = $apim_session['org'];
   $node->api_environmentid[$node->language][0]['value'] = $apim_session['env'];
@@ -1055,7 +1143,29 @@ function api_updateExistingAPINode($node, $api, $event) {
   if (!isset($api['document']['info']['description']) || empty($api['document']['info']['description'])) {
     $api['document']['info']['description'] = '';
   }
-  $node->api_description[$node->language][0]['value'] = $api['document']['info']['description'];
+  if (isset($api['document']['info']['x-ibm-languages']['description']) && !empty($api['document']['info']['x-ibm-languages']['description'])) {
+    foreach ($api['document']['info']['x-ibm-languages']['description'] as $lang => $lang_array) {
+      $lang = _ibm_apim_convert_lang_name_to_drupal($lang);
+      // if its one of our locales or the root of one of our locales
+      foreach ($language_list as $lang_list_key=>$lang_list_value) {
+        if ($lang == $lang_list_key || $lang == substr($lang_list_key, 0, count($lang))) {
+          if (!isset($api['document']['info']['x-ibm-languages']['description'][$lang]) || empty($api['document']['info']['x-ibm-languages']['description'][$lang])) {
+            $api['document']['info']['x-ibm-languages']['description'][$lang] = '';
+          }
+          $node->api_description[$lang][0]['value'] = $api['document']['info']['x-ibm-languages']['description'][$lang];
+        }
+      }
+    }
+    // if en wasn't in the x-ibm-languages list then assume it was the root level one
+    if (!in_array('en', array_keys($api['document']['info']['x-ibm-languages']['description']))) {
+      $node->api_description['en'][0]['value'] = $api['document']['info']['description'];
+      $node->api_description['und'][0]['value'] = $api['document']['info']['description'];
+    }
+  }
+  else {
+    $node->api_description[$node->language][0]['value'] = $api['document']['info']['description'];
+  }
+
   $node->api_context[$node->language][0]['value'] = $api['document']['basePath'];
   $apitype = 'rest';
   if (isset($api['document']['x-ibm-configuration']['type'])) {
@@ -1193,7 +1303,7 @@ function api_updateExistingAPINode($node, $api, $event) {
             'display' => 1
           );
         }
-
+        node_save($node);
       }
 
       $blob = mb_substr($data, 0, 5);
@@ -1474,8 +1584,8 @@ function _api_phase_tag($node, $origphase) {
       $newtags = array();
       if (isset($node->field_apitags[$node->language]) && is_array($node->field_apitags[$node->language])) {
         foreach ($node->field_apitags[$node->language] as $existingtagarray) {
-          if (isset($existingtagarray) && isset($existingtagarray->tid)) {
-            $existingtag = taxonomy_term_load($existingtagarray->tid);
+          if (isset($existingtagarray) && isset($existingtagarray['tid'])) {
+            $existingtag = taxonomy_term_load($existingtagarray['tid']);
             if (isset($existingtag) && (!isset($existingtag->parent) || $existingtag->parent != $phaseparenttid)) {
               $newtags[] = array('tid' => $existingtag->tid);
             }

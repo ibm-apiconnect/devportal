@@ -74,9 +74,9 @@ class SiteModuleUpdater extends Updater implements DrupalUpdaterInterface {
         $dir = $urlParts['host'];
       }
 
-      //Add on the path it is here as we support paths for sites now
-      if (isset($urlParts['path']) && !empty($urlParts['path'])) {
-      	$dir = $dir . str_replace('/','.',$urlParts['path']);
+      //Add on the path to the start of the URL it is here as we support paths for sites now
+      if (isset($urlParts['path']) && !empty($urlParts['path']) && strlen($urlParts['path']) > 1) {
+        $dir = str_replace('/','.',substr($urlParts['path'],1)) . '.' . $dir;
       }
 
       $relative_path = 'sites/' . $dir . '/modules';
@@ -196,9 +196,9 @@ class SiteThemeUpdater extends Updater implements DrupalUpdaterInterface {
         $dir = $urlParts['host'];
       }
 
-      //Add on the path it is here as we support paths for sites now
-      if (isset($urlParts['path']) && !empty($urlParts['path'])) {
-      	$dir = $dir . str_replace('/','.',$urlParts['path']);
+      //Add on the path to the start of the URL it is here as we support paths for sites now
+      if (isset($urlParts['path']) && !empty($urlParts['path']) && strlen($urlParts['path']) > 1) {
+        $dir = str_replace('/','.',substr($urlParts['path'],1)) . '.' . $dir;
       }
 
       $relative_path = 'sites/' . $dir . '/themes';

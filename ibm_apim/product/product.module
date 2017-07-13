@@ -502,6 +502,7 @@ function _product_createNewProductNode($product, $event = 'publish') {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
   $oldtags = NULL;
+  $language_list = array_keys(locale_language_list('name', TRUE));
 
   if (isset($product) && isset($product['document']['info']) && isset($product['document']['info']['name']) && isset($product['document']['info']['version'])) {
     $xname = $product['document']['info']['name'];
@@ -572,9 +573,36 @@ function _product_createNewProductNode($product, $event = 'publish') {
     node_object_prepare($node); // Sets some defaults. Invokes hook_prepare() and hook_node_prepare().
   }
 
+  if (isset($product['document']['info']['x-ibm-languages']['title']) && !empty($product['document']['info']['x-ibm-languages']['title'])) {
+    foreach ($product['document']['info']['x-ibm-languages']['title'] as $lang => $lang_array) {
+      $lang = _ibm_apim_convert_lang_name_to_drupal($lang);
+      // if its one of our locales or the root of one of our locales
+      foreach ($language_list as $lang_list_key=>$lang_list_value){
+        if($lang == $lang_list_key || $lang == substr($lang_list_key, 0, count($lang))){
+          $node->title_field[$lang][] = array(
+            'value' => ibm_apim_truncate_string($product['document']['info']['x-ibm-languages']['title'][$lang]),
+            'format' => 'plain_text'
+          );
+        }
+      }
+    }
+  }
   $node->title = ibm_apim_truncate_string($product['document']['info']['title']);
+  // if en wasn't in the x-ibm-languages list then assume it was the root level one
+  if (!isset($product['document']['info']['x-ibm-languages']['title']) || !in_array('en', array_keys($product['document']['info']['x-ibm-languages']['title']))) {
+    $node->title_field['en'][] = array(
+      'value' => ibm_apim_truncate_string($product['document']['info']['title']),
+      'format' => 'plain_text'
+    );
+    $node->title_field['und'][] = array(
+      'value' => ibm_apim_truncate_string($product['document']['info']['title']),
+      'format' => 'plain_text'
+    );
+  }
+
   $node->language = LANGUAGE_NONE;
   $node->uid = 1;
+  $node->promote = 0;
   if (!module_exists('workbench_moderation')) {
     $node->status = 1;
   }
@@ -615,10 +643,36 @@ function _product_createNewProductNode($product, $event = 'publish') {
   if (!isset($product['document']['info']['description']) || empty($product['document']['info']['description'])) {
     $product['document']['info']['description'] = '';
   }
-  $node->product_description[$node->language][] = array(
-    'value' => $product['document']['info']['description'],
-    'format' => 'plain_text'
-  );
+  if (isset($product['document']['info']['x-ibm-languages']['description']) && !empty($product['document']['info']['x-ibm-languages']['description'])) {
+    foreach ($product['document']['info']['x-ibm-languages']['description'] as $lang => $lang_array) {
+      $lang = _ibm_apim_convert_lang_name_to_drupal($lang);
+      // if its one of our locales or the root of one of our locales
+      foreach ($language_list as $lang_list_key=>$lang_list_value) {
+        if ($lang == $lang_list_key || $lang == substr($lang_list_key, 0, count($lang))) {
+          if (!isset($product['document']['info']['x-ibm-languages']['description'][$lang]) || empty($product['document']['info']['x-ibm-languages']['description'][$lang])) {
+            $product['document']['info']['x-ibm-languages']['description'][$lang] = '';
+          }
+          $node->product_description[$lang][] = array(
+            'value' => $product['document']['info']['x-ibm-languages']['description'][$lang],
+            'format' => 'plain_text'
+          );
+        }
+      }
+    }
+    // if en wasn't in the x-ibm-languages list then assume it was the root level one
+    if (!in_array('en', array_keys($product['document']['info']['x-ibm-languages']['description']))) {
+      $node->product_description['en'][] = array(
+        'value' => $product['document']['info']['description'],
+        'format' => 'plain_text'
+      );
+    }
+  }
+  else {
+    $node->product_description[$node->language][] = array(
+      'value' => $product['document']['info']['description'],
+      'format' => 'plain_text'
+    );
+  }
   if (!isset($product['document']['info']['contact'])) {
     $product['document']['info']['contact'] = array(
       'name' => "",
@@ -863,7 +917,24 @@ function _product_createNewProductNode($product, $event = 'publish') {
 function _product_updateExistingProductNode($node, $product, $event = 'bgsync') {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
+  $language_list = array_keys(locale_language_list('name', TRUE));
+  if (isset($product['document']['info']['x-ibm-languages']['title']) && !empty($product['document']['info']['x-ibm-languages']['title'])) {
+    foreach ($product['document']['info']['x-ibm-languages']['title'] as $lang => $lang_array) {
+      $lang = _ibm_apim_convert_lang_name_to_drupal($lang);
+      // if its one of our locales or the root of one of our locales
+      foreach ($language_list as $lang_list_key=>$lang_list_value) {
+        if ($lang == $lang_list_key || $lang == substr($lang_list_key, 0, count($lang))) {
+          $node->title_field[$lang][0]['value'] = ibm_apim_truncate_string($product['document']['info']['x-ibm-languages']['title'][$lang]);
+        }
+      }
+    }
+  }
   $node->title = ibm_apim_truncate_string($product['document']['info']['title']);
+  // if en wasn't in the x-ibm-languages list then assume it was the root level one
+  if (!isset($product['document']['info']['x-ibm-languages']['title']) || !in_array('en', array_keys($product['document']['info']['x-ibm-languages']['title']))) {
+    $node->title_field['en'][0]['value'] = ibm_apim_truncate_string($product['document']['info']['title']);
+    $node->title_field['und'][0]['value'] = ibm_apim_truncate_string($product['document']['info']['title']);
+  }
   $node->product_apimhostname[$node->language][0]['value'] = $hostvariable;
   $node->product_providerid[$node->language][0]['value'] = $apim_session['org'];
   $node->product_environmentid[$node->language][0]['value'] = $apim_session['env'];
@@ -876,7 +947,28 @@ function _product_updateExistingProductNode($node, $product, $event = 'bgsync') 
   if (!isset($product['document']['info']['description']) || empty($product['document']['info']['description'])) {
     $product['document']['info']['description'] = '';
   }
-  $node->product_description[$node->language][0]['value'] = $product['document']['info']['description'];
+  if (isset($product['document']['info']['x-ibm-languages']['description']) && !empty($product['document']['info']['x-ibm-languages']['description'])) {
+    foreach ($product['document']['info']['x-ibm-languages']['description'] as $lang => $lang_array) {
+      $lang = _ibm_apim_convert_lang_name_to_drupal($lang);
+      // if its one of our locales or the root of one of our locales
+      foreach ($language_list as $lang_list_key=>$lang_list_value) {
+        if ($lang == $lang_list_key || $lang == substr($lang_list_key, 0, count($lang))) {
+          if (!isset($product['document']['info']['x-ibm-languages']['description'][$lang]) || empty($product['document']['info']['x-ibm-languages']['description'][$lang])) {
+            $product['document']['info']['x-ibm-languages']['description'][$lang] = '';
+          }
+          $node->product_description[$lang][0]['value'] = $product['document']['info']['x-ibm-languages']['description'][$lang];
+        }
+      }
+    }
+    // if en wasn't in the x-ibm-languages list then assume it was the root level one
+    if (!in_array('en', array_keys($product['document']['info']['x-ibm-languages']['description']))) {
+      $node->product_description['en'][0]['value'] = $product['document']['info']['description'];
+      $node->product_description['und'][0]['value'] = $product['document']['info']['description'];
+    }
+  }
+  else {
+    $node->product_description[$node->language][0]['value'] = $product['document']['info']['description'];
+  }
   if (!isset($product['document']['info']['contact'])) {
     $product['document']['info']['contact'] = array(
       'name' => "",
@@ -1318,6 +1410,44 @@ function product_parse_rate_limit($value) {
   }
 
   return NULL;
+}
+
+/**
+ * Given a billing object it returns a display string for that price plan
+ *
+ * @param array $billing
+ * @return string
+ */
+function product_parse_billing($billing = array()) {
+  $text = t("Free");
+  if (isset($billing['model'])) {
+    if (isset($billing['currency']) && $billing['currency'] != 'JPY') {
+      $billing['amount'] = $billing['amount'] / 100;
+    }
+
+    if ($billing['model'] === 'flat-fee') {
+      $text = $billing['amount'] . ' ' . strtoupper($billing['currency']);
+    }
+    else if ($billing['model'] === 'stripe_monthly_fixed') {
+      $text = t('%length per month', array('%length' => $billing['amount'] . ' ' . strtoupper($billing['currency'])));
+      if ($billing['trial-period-days']) {
+        $text .= ' ' . format_plural($billing['trial-period-days'], '(%length day trial period)', '(%length days trial period)', array('%length' => $billing['trial-period-days']));
+      }
+    }
+    else if ($billing['model'] === 'flat-calls') {
+      $text = t('%length per API call per month', array('%length' => $billing['amount'] . ' ' . strtoupper($billing['currency'])));
+      if ($billing['freemium'] && $billing['freeCalls']) {
+        $text .= ' ' . format_plural($billing['freeCalls'], '(%length call free per month)', '(%length calls free per month)', array('%length' => $billing['freeCalls']));
+      }
+    }
+    else if ($billing['model'] === 'credits') {
+      $text .= format_plural($billing['credits'], '%price for %quantity API Call Credit', '%price for %quantity API Call Credits', array(
+        '%price' => $billing['amount'] . ' ' . strtoupper($billing['currency']),
+        '%quantity' => $billing['credits']
+      ));
+    }
+  }
+  return $text;
 }
 
 /**
@@ -1857,14 +1987,14 @@ function product_check_product_access($node) {
       elseif (isset($node->product_visibility_authenticated[$node->language][0]['value']) && $node->product_visibility_authenticated[$node->language][0]['value'] == 1 && user_is_logged_in()) {
         $found = TRUE;
       }
-      elseif (isset($node->product_visibility_custom_orgs[$node->language]) && isset($myorg['id'])) {
+      if (isset($node->product_visibility_custom_orgs[$node->language]) && isset($myorg['id'])) {
         foreach ($node->product_visibility_custom_orgs[$node->language] as $customorg) {
           if (isset($customorg['value']) && $customorg['value'] == $myorg['id']) {
             $found = TRUE;
           }
         }
       }
-      elseif (isset($node->product_visibility_custom_tags[$node->language]) && isset($myorg['id'])) {
+      if (isset($node->product_visibility_custom_tags[$node->language]) && isset($myorg['id'])) {
         $query = new EntityFieldQuery();
         $query->entityCondition('entity_type', 'node')
           ->entityCondition('bundle', 'devorg')

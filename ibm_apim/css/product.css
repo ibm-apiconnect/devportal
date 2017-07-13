@@ -46,6 +46,7 @@
   margin-bottom: 0 !important;
   margin-left: 180px !important;
 }
+
 @media screen and (max-width: 800px) {
   .node-type-product footer,
   .node-type-application footer,
@@ -918,6 +919,7 @@
 }
 
 .mesh-portal-product .interact .parameter:last-child,
+.mesh-portal-product .interact .identificationSection .contrast .parameter:last-child,
 .mesh-portal-product .interact .parameter.accesstoken {
   border: 0;
 }
@@ -946,7 +948,8 @@
   flex-grow: 7;
 }
 
-.mesh-portal-product .interact .parameterValue {
+.mesh-portal-product .interact .parameterValue,
+.mesh-portal-product .interact .endpointSelect {
   color: #FFF;
   background: #353b4c;
   border-width: 0 0 1px 0;
@@ -958,7 +961,8 @@
 }
 
 .mesh-portal-product .interact select.parameterValue,
-.mesh-portal-product .interact textarea.parameterValue {
+.mesh-portal-product .interact textarea.parameterValue,
+.mesh-portal-product .interact select.endpointSelect {
   border: 0;
 }
 
@@ -1556,6 +1560,10 @@
   width: 100%;
 }
 
+.mesh-portal-product .application .apimAPIImage {
+  margin: 0 0 0 10px;
+}
+
 .mesh-portal-product .appTitleBar {
   width: 100%;
   padding: 11px 30px;
@@ -1564,6 +1572,7 @@
 
 .mesh-portal-product .appTitleBar .appTitle {
   display: inline-block;
+  margin-right: 20px;
 }
 
 .mesh-portal-product .appTitleBar .appTitleActions,
@@ -1736,4 +1745,87 @@
 /* override special italics for tags */
 article .apiTag.tags {
   font-style: normal;
+}
+
+.mesh-portal-product .apiEndpointContainer {
+  padding: 0 25px 15px 25px;
+}
+
+.mesh-portal-product .endpointSelect {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.mesh-portal-product .apiEndpoints {
+  border: 1px solid #e4e4e4;
+}
+
+.mesh-portal-product .apiEndpoints .apiEndpoint {
+  border-bottom: 1px solid #e4e4e4;
+  padding: 5px;
+  clear: both;
+  min-height: 40px;
+}
+
+.mesh-portal-product .apiEndpoints .apiEndpoint:last-child {
+  border-bottom: none;
+}
+
+.mesh-portal-product .apiEndpoints .apiEndpoint .apiEndpointTypes {
+  float: right;
+}
+
+.mesh-portal-product .apiEndpoints .apiEndpoint .apiEndpointTypes .apiEndpointType {
+  border-radius: 15px;
+  background-color: #ff8500;
+  padding: 5px 10px;
+  margin-right: 10px;
+  margin-bottom: 7px;
+  display: inline-block;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.mesh-portal-product .apiEndpoints .apiEndpoint .apiEndpointTypes .apiEndpointType.production {
+  background-color: #80b723;
+}
+
+.mesh-portal-product .apiEndpoints .apiEndpoint .apiEndpointDescr {
+  color: #666;
+  clear: both;
+}
+.mesh-portal-product .apiEndpoints .apiEndpoint .apiEndpointDescr p:last-child {
+  margin-bottom: 0;
+}
+
+.mesh-portal-product .application .appTitleBar .applicationType {
+  border-radius: 15px;
+  background-color: #ff8500;
+  padding: 5px 10px;
+  margin-right: 10px;
+  margin-bottom: 7px;
+  display: inline-block;
+  color: #fff;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.mesh-portal-product .application .appTitleBar .applicationType.production {
+  background-color: #80b723;
+}
+
+.mesh-portal-product .application .appTitleBar .promotionLink {
+  display: inline-block;
+  margin-left: 20px;
+  margin-bottom: 7px;
+  padding: 5px 10px;
+  background-color: #5aaafa;
+  color: #fff;
+  vertical-align: middle;
+}
+
+.mesh-portal-product .application .appTitleBar .promotionLink a,
+.mesh-portal-product .application .appTitleBar .promotionLink a:active,
+.mesh-portal-product .application .appTitleBar .promotionLink a:visited {
+  color: #fff;
 }

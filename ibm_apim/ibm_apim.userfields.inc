@@ -29,7 +29,7 @@ function _ibm_apim_add_user_first_name_field() {
       'default_value' => NULL,
       'widget' => array(
         'active' => 1,
-        'weight' => '-9',
+        'weight' => '-50',
         'module' => 'text',
         'type' => 'text_textfield'
       ),
@@ -65,7 +65,7 @@ function _ibm_apim_add_user_last_name_field() {
       'default_value' => NULL,
       'widget' => array(
         'active' => 1,
-        'weight' => '-8',
+        'weight' => '-45',
         'module' => 'text',
         'type' => 'text_textfield'
       ),
@@ -102,7 +102,7 @@ function _ibm_apim_add_user_developerorg_field() {
       'default_value' => NULL,
       'widget' => array(
         'active' => 1,
-        'weight' => '-7',
+        'weight' => '-40',
         'module' => 'text',
         'type' => 'text_textfield'
       ),
@@ -149,7 +149,7 @@ function _ibm_apim_add_user_company_field() {
       'default_value' => NULL,
       'widget' => array(
         'active' => 1,
-        'weight' => '-6',
+        'weight' => '-35',
         'module' => 'text',
         'type' => 'text_textfield'
       ),
@@ -185,7 +185,7 @@ function _ibm_apim_add_user_address_field() {
       'required' => 0,
       'default_value' => NULL,
       'widget' => array(
-        'weight' => '-4',
+        'weight' => '-25',
         'active' => 1,
         'module' => 'addressfield',
         'type' => 'addressfield_standard',
@@ -234,7 +234,7 @@ function _ibm_apim_add_user_phone_field() {
       'default_value' => NULL,
       'widget' => array(
         'active' => 1,
-        'weight' => '-5',
+        'weight' => '-20',
         'module' => 'text',
         'type' => 'text_textfield'
       ),
@@ -271,7 +271,7 @@ function _ibm_apim_add_user_uid_field() {
       'default_value' => NULL,
       'widget' => array(
         'active' => 1,
-        'weight' => '-6',
+        'weight' => '-42',
         'module' => 'text',
         'type' => 'text_textfield'
       ),
@@ -331,7 +331,7 @@ function _ibm_apim_add_user_codesnippet_field() {
         ),
       'widget' => array(
         'active' => 1,
-        'weight' => '-4',
+        'weight' => '-10',
         'type' => 'options_select',
         'module' => 'options'
       ),

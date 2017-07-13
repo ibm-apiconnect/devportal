@@ -49,8 +49,20 @@ drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/App.js', array(
 
       <?php print render($title_prefix); ?>
       <?php $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1); ?>
+      <?php $applifecycle_enabled = variable_get('ibm_apim_applifecycle_enabled', 0); ?>
 
       <div class="appTitleBar"><h1 class="appTitle"><?php print $title; ?></h1>
+        <?php if ($applifecycle_enabled == 1) : ?>
+          <div
+            class="applicationType <?php print drupal_html_class($application_type[0]['safe_value']); ?>"><?php print $application_type[0]['safe_value']; ?></div>
+          <?php if (strtoupper($application_type[0]['safe_value']) == 'DEVELOPMENT') : ?>
+            <?php if (!isset($application_promoteto[0]['safe_value'])) : ?>
+              <div class="promotionLink"><?php print $promotelink; ?></div>
+            <?php else: ?>
+              <div class="promotionLink"><?php print t('Pending Upgrade') ?></div>
+            <?php endif; ?>
+          <?php endif; ?>
+        <?php endif; ?>
         <div
           class="appTitleActions">
           <?php $analytics_enabled = variable_get('ibm_apim_show_analytics', 1);

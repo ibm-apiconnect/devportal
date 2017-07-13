@@ -168,7 +168,9 @@
                 config = window.CommonAPI.getConfigurationForOperation(operation, api.paths[path], api);
             }
 
-            var content = window.exampleGenerator.generateCodeSnippets(api, path, verb, operation, config, 'REPLACE_THIS_KEY', 'REPLACE_THIS_KEY');
+            var languages = ["curl", "ruby", "python", "php", "java", "node", "go", "swift", "c", "csharp"];
+            var endpoint = self.getEndpoint(api);
+            var content = window.exampleGenerator.generateCodeSnippets(api, path, verb, operation, config, 'REPLACE_THIS_KEY', 'REPLACE_THIS_KEY', languages, null, endpoint);
 
             var body = null;
             var parameters = [];
@@ -489,7 +491,8 @@
                                     verb: verb,
                                     definition: pathObject[verb]
                                 },
-                                api);
+                                api,
+                                self);
                         }
                     });
                 });
@@ -497,6 +500,43 @@
         }
 
         createTesters();
+
+        function watchEndpoint() {
+            $(".endpointSelect").change(function (event) {
+                event.preventDefault();
+                var endpoint = this.value;
+                if (endpoint) {
+                    self.setEndpoint(endpoint);
+                    var apistring = this.dataset.api;
+                    self.expandedapis.forEach(function (expanded) {
+                        var cleanedapiname = cleanUpClassName(expanded.info["x-ibm-name"] + expanded.info["version"]);
+                        if (cleanedapiname == apistring) {
+                            Object.keys(expanded.paths).forEach(function (path) {
+                                Object.keys(expanded.paths[path]).forEach(function (verb) {
+                                    if (["PUT", "POST", "GET", "DELETE", "OPTIONS", "HEAD", "PATCH"].indexOf(verb.toUpperCase()) != -1) {
+                                        if (!expanded.basePath) {
+                                            expanded.basePath = '';
+                                        }
+                                        populateCodeSnippetsTimeout(expanded, path, verb);
+                                        var exampleid = cleanUpClassName(expanded.info["x-ibm-name"] + expanded.info["version"]) + "_paths_" + cleanUpKey(path) + "_" + verb;
+                                        var tryid = cleanUpClassName(expanded.info["x-ibm-name"] + expanded.info["version"]) + "_" + cleanUpKey(path) + "_" + verb;
+                                        $("#tab-content_example_" + exampleid + " .exampleDefinition").text(verb.toUpperCase() + " " + endpoint + expanded['basePath'] + path);
+                                        $("#tab-content_try_" + tryid + " .apiURL").text(endpoint + expanded['basePath'] + path);
+                                    }
+                                });
+                            });
+                        }
+                    });
+                    setTimeout(function () {
+                        $('.langtab pre').each(function (i, block) {
+                            hljs.highlightBlock(block);
+                        });
+                    }, 0);
+                }
+            });
+        }
+
+        watchEndpoint();
 
         $('.definitionsSection pre code').each(function (i, block) {
             hljs.highlightBlock(block);
@@ -656,6 +696,28 @@
         }
     };
 
+    API.prototype.getEndpoint = function (api) {
+        if (this.endpoint) {
+            return this.endpoint;
+        } else if (api && api['x-ibm-endpoints'] && api['x-ibm-endpoints'][0] && api['x-ibm-endpoints'][0].endpointUrl) {
+            return api['x-ibm-endpoints'][0].endpointUrl;
+        } else if (api && api.host){
+            var endpoint = "://" + api.host;
+            if (api.schemes) {
+                endpoint = api.schemes[0] + endpoint;
+            } else {
+                endpoint = "https" + endpoint;
+            }
+            return endpoint;
+        } else {
+            return "";
+        }
+    };
+
+    API.prototype.setEndpoint = function (string) {
+        this.endpoint = string;
+    };
+
     window.API = API;
 
     $(document).ready(function () {
@@ -688,12 +750,14 @@
         });
     });
 
-    function Test(operation, api) {
+    function Test(operation, api, apiObj) {
 
         var self = this;
 
         self.operation = operation;
         self.api = api;
+        // the API instance
+        self.apiObj = apiObj;
 
         function cleanUpKey(key) {
             return key.replace(/\W/g, '');
@@ -716,7 +780,7 @@
 
         function parseSecurityConfig() {
             // any requirement for identification?
-            if (self.config.requiresClientId || self.config.requiresClientSecret) {
+            if (self.config.requiresClientId || self.config.requiresClientSecret || !$.isEmptyObject(self.config.externalApiKeys)) {
                 $(".identificationSection", self.requestForm).removeClass("hidden");
             }
             // any requirement for client ID?
@@ -726,6 +790,29 @@
             // any requirement for client secret?
             if (self.config.requiresClientSecret) {
                 $(".identificationSection .clientSecret", self.requestForm).removeClass("hidden");
+            }
+            // any external apiKey security
+            if (!$.isEmptyObject(self.config.externalApiKeys)) {
+                $.each(self.config.externalApiKeys, function (key, value) {
+                    var keydiv = document.createElement('div');
+                    keydiv.className = "parameter externalSecurity";
+                    var labeldiv = document.createElement('div');
+                    labeldiv.className = 'parameterName';
+                    var labelText = document.createTextNode(value.name);
+                    labeldiv.appendChild(labelText);
+                    var input = document.createElement('input');
+                    input.setAttribute('type', 'password');
+                    input.setAttribute('name', value.name);
+                    input.setAttribute('id', key);
+                    input.className = 'parameterValue';
+                    keydiv.appendChild(labeldiv);
+                    keydiv.appendChild(input);
+                    $(".identificationSection .contrast", self.requestForm).append(keydiv);
+                });
+                if (!self.config.requiresClientId && !self.config.requiresClientSecret) {
+                    // hide the message to login if not using clientID or clientSecret
+                    $(".identificationSection .loginMessage", self.requestForm).addClass("hidden");
+                }
             }
             // any requirement for authorization?
             if (self.config.requiresBasicAuth || self.config.requiresOauth) {
@@ -757,6 +844,15 @@
                         $(".apimScopes .oauthscopes", self.requestForm).append(inputdiv);
                     });
                 }
+                // before filling out any OAuth URLs, replace any $(catalog.host) instances
+                var endpoint = self.apiObj.getEndpoint(self.api);
+                if (self.config.oauthAuthUrl) {
+                    self.config.oauthAuthUrl = self.config.oauthAuthUrl.replace('$(catalog.url)', endpoint);
+                }
+                if (self.config.oauthTokenUrl) {
+                    self.config.oauthTokenUrl = self.config.oauthTokenUrl.replace('$(catalog.url)', endpoint);
+                }
+
                 // any requirement for token refresh?
                 if (self.config.oauthFlow == "accessCode") {
                     $(".authorizationSection .apimAuthUrl .authurl", self.requestForm).text(self.config.oauthAuthUrl);
@@ -1240,7 +1336,11 @@
         if (requestForm.scheme) {
             scheme = requestForm.scheme;
         }
-        var targetUrl = scheme + "://" + this.api.host + this.api.basePath + this.operation.path;
+        var targetUrl = window.API.getEndpoint(this.api);
+        if (!targetUrl) {
+            targetUrl = scheme + "://" + this.api.host;
+        }
+        targetUrl = targetUrl + this.api.basePath + this.operation.path;
 
         // set up headers
         var headers = {};
@@ -1251,10 +1351,18 @@
             headers["Authorization"] = "Bearer " + requestForm.authToken;
         }
         if (this.config.requiresClientId && this.config.clientIdLocation == "header" && requestForm.apimClientId) {
-            headers["X-IBM-Client-Id"] = requestForm.apimClientId;
+            if (this.config.clientIdName) {
+                headers[this.config.clientIdName] = requestForm.apimClientId;
+            } else {
+                headers["X-IBM-Client-Id"] = requestForm.apimClientId;
+            }
         }
         if (this.config.requiresClientSecret && this.config.clientSecretLocation == "header" && requestForm.apimClientSecret) {
-            headers["X-IBM-Client-Secret"] = requestForm.apimClientSecret;
+            if (this.config.clientSecretName) {
+                headers[this.config.clientSecretName] = requestForm.apimClientSecret;
+            } else {
+                headers["X-IBM-Client-Secret"] = requestForm.apimClientSecret;
+            }
         }
 
         if (this.config.soapAction !== undefined) {
@@ -1282,6 +1390,9 @@
                 targetUrl = targetUrl.replace("{" + parameter.name + "}", requestForm['param' + parameter.name]);
             });
         }
+        // remove double //
+        targetUrl = targetUrl.replace(/(https?:\/\/)|(\/)+/g, "$1$2");
+
         // query parameters
         var queryParameters = parameters.filter(function (parameter) {
             return (parameter.in == "query");
@@ -1305,18 +1416,26 @@
             targetUrl = targetUrl.substring(0, targetUrl.length - 1);
         }
         if (this.config.requiresClientId && this.config.clientIdLocation == "query" && requestForm.apimClientId) {
+            var clientIdName = 'client_id';
+            if (this.config.clientIdName) {
+                clientIdName = this.config.clientIdName;
+            }
             if (queryParametersAdded) {
-                targetUrl += "&client_id=" + requestForm.apimClientId;
+                targetUrl += "&" + clientIdName + "=" + requestForm.apimClientId;
             } else {
-                targetUrl += "?client_id=" + requestForm.apimClientId;
+                targetUrl += "?" + clientIdName + "=" + requestForm.apimClientId;
                 queryParametersAdded = true;
             }
         }
         if (this.config.requiresClientSecret && this.config.clientSecretLocation == "query" && requestForm.apimClientSecret) {
+            var clientSecretName = 'client_secret';
+            if (this.config.clientSecretName) {
+                clientSecretName = this.config.clientSecretName;
+            }
             if (queryParametersAdded) {
-                targetUrl += "&client_secret=" + requestForm.apimClientSecret;
+                targetUrl += "&" + clientSecretName + "=" + requestForm.apimClientSecret;
             } else {
-                targetUrl += "?client_secret=" + requestForm.apimClientSecret;
+                targetUrl += "?" + clientSecretName + "=" + requestForm.apimClientSecret;
                 queryParametersAdded = true;
             }
         }
@@ -1336,6 +1455,22 @@
                 } else if (parameter.type && parameter.type == "boolean" && parameter.required) {
                     // purely here to catch required boolean fields that are set to false
                     headers[parameter.name] = "false";
+                }
+            });
+        }
+
+        // handle external security
+        if (!$.isEmptyObject(this.config.externalApiKeys)) {
+            $.each(this.config.externalApiKeys, function (key, value) {
+                if (value.in == 'query') {
+                    if (queryParametersAdded) {
+                        targetUrl += "&" + value.name + "=" + requestForm[key];
+                    } else {
+                        targetUrl += "?" + value.name + "=" + requestForm[key];
+                        queryParametersAdded = true;
+                    }
+                } else if (value.in == 'header') {
+                    headers[value.name] = requestForm[key];
                 }
             });
         }
@@ -1380,7 +1515,7 @@
             var requestHeaders = "";
             if (self.xhrOpts && self.xhrOpts.headers) {
                 Object.keys(self.xhrOpts.headers).forEach(function (headerName) {
-                    if (headerName == 'X-IBM-Client-Secret') {
+                    if (headerName == 'X-IBM-Client-Secret' || (self.config.clientSecretName && headerName == self.config.clientSecretName)) {
                         requestHeaders += headerName + ": ∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙\n";
                     } else if (headerName == 'Authorization') {
                         if (self.xhrOpts.headers[headerName].toLowerCase().indexOf("bearer") >= 0) {

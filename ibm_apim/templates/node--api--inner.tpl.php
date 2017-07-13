@@ -56,7 +56,20 @@ if (isset($protocol_lower) && $protocol_lower == 'wsdl') {
 }
 else {
   $protocol = 'rest';
-} ?>
+}
+if (isset($api['x-ibm-endpoints'][0]['endpointUrl'])) {
+  $default_endpoint = $api['x-ibm-endpoints'][0]['endpointUrl'];
+}
+else {
+  if (isset($api['schemes'][0])) {
+    $scheme = $api['schemes'][0];
+  }
+  else {
+    $scheme = 'https';
+  }
+  $default_endpoint = $scheme . '://' . $api['host'];
+}
+?>
 <article id="node-<?php print $node->nid; ?>"
          class="mesh-portal-api <?php print $classes . ' ' . $content['api_apiid'][0]['#markup'] . ' ' . $protocol; ?> apis_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?> inner clearfix" <?php print $attributes; ?>>
   <div class="navigate-apis">
@@ -89,7 +102,7 @@ else {
               <?php endif; ?>
             </div>
             <h1 class="name">
-              <span><?php print check_plain($api['info']['title']); ?> <?php if ($showversions == 1): ?>
+              <span><?php print check_plain(ibm_apim_get_translated_string($api, ['info'], 'title')); ?> <?php if ($showversions == 1): ?>
                   <span
                     class="version"><?php print check_plain($api['info']['version']); ?></span><?php endif; ?></span>
             </h1>
@@ -124,9 +137,9 @@ else {
             </div>
             <div class="apiTags">
               <?php if (isset($api['tags']) && is_array($api['tags'])) : ?>
-                <?php foreach ($api['tags'] as $tag): ?>
+                <?php foreach ($api['tags'] as $key=>$tag): ?>
                   <?php if (isset($tag['description'])) {
-                    $tagdescr = 'title="' . $tag['description'] . '"';
+                    $tagdescr = 'title="' . ibm_apim_get_translated_string($api, ['tags'][$key], 'description') . '"';
                   }
                   else {
                     $tagdescr = '';
@@ -136,9 +149,9 @@ else {
                     class='apiTag <?php print api_tag_to_class($tag['name']); ?> <?php print drupal_html_class($tag['name']); ?>' <?php print $tagdescr; ?>>
                     <a
                       onclick='API.selecttag("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>", "<?php print drupal_html_class($tag['name']); ?>")'
-                      title="<?php print t('Filter operations by @tag', array('@tag' => $tag['name'])); ?>"
+                      title="<?php print t('Filter operations by @tag', array('@tag' => ibm_apim_get_translated_string($tag, array(), 'name'))); ?>"
                       href='javascript:;'><span
-                        class="apiName"><?php print $tag['name']; ?></span></a> <a
+                        class="apiName"><?php print ibm_apim_get_translated_string($tag, array(), 'name'); ?></span></a> <a
                       onclick='API.unselecttag("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>")'
                       title="<?php print t('Clear filter'); ?>"
                       href='javascript:;' class='unselect hidden'><span>x</span></a></span>
@@ -149,7 +162,7 @@ else {
               <div>
                 <label><?php print t('Description'); ?></label>
                 <div
-                  class="markdown"><?php print ibm_apim_markdown_field($api['info']['description']); ?></div>
+                  class="markdown"><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($api, ['info'], 'description')); ?></div>
               </div>
             <?php endif; ?>
             <?php $docs = render($content['api_attachments']); ?>
@@ -159,7 +172,7 @@ else {
                 <?php if (isset($api['externalDocs'])) : ?>
                   <div><a href="<?php print $api['externalDocs']['url']; ?>">
                       <?php if (isset($api['externalDocs']['description'])) {
-                        print $api['externalDocs']['description'];
+                        print ibm_apim_get_translated_string($api, ['externalDocs'], 'description');
                       }
                       else {
                         print $api['externalDocs']['url'];
@@ -167,10 +180,10 @@ else {
                     </a></div>
                 <?php endif; ?>
                 <?php if (isset($api['x-ibm-configuration']['externalDocs'])) : ?>
-                  <?php foreach ($api['x-ibm-configuration']['externalDocs'] as $doc) : ?>
+                  <?php foreach ($api['x-ibm-configuration']['externalDocs'] as $key=>$doc) : ?>
                     <div><a href="<?php print $doc['url']; ?>">
                         <?php if (isset($doc['description'])) {
-                          print $doc['description'];
+                          print ibm_apim_get_translated_string($api, ['x-ibm-configuration']['externalDocs'][$key], 'description');
                         }
                         else {
                           print $doc['url'];
@@ -240,7 +253,7 @@ else {
                 <?php if (isset($api['info']['termsOfService']) && !empty($api['info']['termsOfService'])) : ?>
                   <div>
                     <label><?php print t('Terms of service'); ?></label>
-                    <div><?php print $api['info']['termsOfService']; ?></div>
+                    <div><?php print ibm_apim_get_translated_string($api, ['info'], 'termsOfService'); ?></div>
                   </div>
                 <?php endif; ?>
               </div>
@@ -357,9 +370,47 @@ else {
           }
         }
         ?>
-
       </section>
     </div>
+    <?php if (isset($api['x-ibm-endpoints'])) : ?>
+      <div class="readAndInteract endpoints">
+        <section class="documentation">
+          <div class="apiEndpointContainer">
+            <label><?php print t('Endpoints'); ?></label>
+            <div class='apiEndpoints'>
+              <?php foreach ($api['x-ibm-endpoints'] as $key => $endpoint) : ?>
+                <div class='apiEndpoint'>
+                  <div class='apiEndpointTypes'>
+                    <?php foreach ($endpoint['type'] as $type) : ?>
+                      <div
+                        class='apiEndpointType <?php print drupal_html_class($type); ?>'><?php print $type; ?></div>
+                    <?php endforeach; ?>
+                  </div>
+                  <div
+                    class='apiEndpointUrl'><?php print $endpoint['endpointUrl']; ?></div>
+                  <?php if (isset($endpoint['description'])) : ?>
+                    <div
+                      class='apiEndpointDescr'><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($api, ['x-ibm-endpoints'][$key], 'description')); ?></div>
+                  <?php endif; ?>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        </section>
+        <section class="interact">
+          <div class="contrast endpointSelect">
+            <select name="endpoints"
+                    data-api="<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>"
+                    class="endpointSelect navigate-apis_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>_endpoints">
+              <?php foreach ($api['x-ibm-endpoints'] as $endpoint)  : ?>
+                <option
+                  value="<?php print $endpoint['endpointUrl']; ?>"><?php print $endpoint['endpointUrl']; ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+        </section>
+      </div>
+    <?php endif; ?>
     <div class="pathHeading">
       <div class='left'>
         <?php if ($protocol == 'wsdl') : ?>
@@ -424,12 +475,18 @@ else {
                           <?php foreach ($operation['tags'] as $tagname): ?>
                             <?php $tagfound = FALSE; ?>
                             <?php if (isset($api['tags']) && is_array($api['tags'])) {
-                              foreach ($api['tags'] as $tag) {
+                              foreach ($api['tags'] as $tagkey => $tag) {
+                                $tag_title = ibm_apim_get_translated_string($api, ['tags'][$tagkey], 'name');
                                 if (isset($tag['description']) && isset($tag['name']) && $tag['name'] == $tagname) {
-                                  $description = $tag['description'];
+                                  $description = ibm_apim_get_translated_string($api, ['tags'][$tagkey], 'description');
                                   $tagfound = TRUE;
                                 }
                               }
+                              if ($tagfound != TRUE) {
+                                $tag_title = $tagname;
+                              }
+                            } else {
+                              $tag_title = $tagname;
                             } ?>
                             <?php if ($tagfound == TRUE && isset($description)) {
                               $tagdescr = 'title="' . $description . '"';
@@ -438,7 +495,7 @@ else {
                               $tagdescr = '';
                             } ?>
                             <span
-                              class='apiTag <?php print api_tag_to_class($tagname); ?>' <?php print $tagdescr; ?>><?php print $tagname; ?> </span>
+                              class='apiTag <?php print api_tag_to_class($tagname); ?>' <?php print $tagdescr; ?>><?php print $tag_title; ?> </span>
                           <?php endforeach; ?>
                         <?php endif; ?>
                       </div>
@@ -446,14 +503,14 @@ else {
                         <div>
                           <label><?php print t('Summary'); ?></label>
                           <div
-                            class="markdown"><?php print ibm_apim_markdown_field($operation['summary']); ?></div>
+                            class="markdown"><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($operation, array(), 'summary')); ?></div>
                         </div>
                       <?php endif; ?>
                       <?php if (isset($operation['description']) && !empty($operation['description'])) : ?>
                         <div>
                           <label><?php print t('Description'); ?></label>
                           <div
-                            class="markdown"><?php print ibm_apim_markdown_field($operation['description']); ?></div>
+                            class="markdown"><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($operation, array(), 'description')); ?></div>
                         </div>
                       <?php endif; ?>
                       <?php if (isset($operation['externalDocs']) && !empty($operation['externalDocs']) && isset($operation['externalDocs']['url'])) : ?>
@@ -461,9 +518,9 @@ else {
                           <label><?php print t('Documentation'); ?></label>
                           <div><a
                               href="<?php print $operation['externalDocs']['url']; ?>"
-                              target='_new'>
+                              target='_blank'>
                               <?php if (isset($operation['externalDocs']['description'])) {
-                                print $operation['externalDocs']['description'];
+                                print ibm_apim_get_translated_string($expandedapi, ['paths'][$pathSegment][$verb]['externalDocs'], 'description');
                               }
                               else {
                                 print $operation['externalDocs']['url'];
@@ -563,192 +620,194 @@ else {
                       </div>
 
                       <?php if ($protocol != 'wsdl') : ?>
-                        <div class="parameters">
-                          <label><?php print t('Parameters'); ?></label>
-                          <?php
-                          // build up parameters list
-                          $operation_parameters = array();
-                          $bodypresent = FALSE;
-                          if (isset($path['parameters']) && is_array($path['parameters'])) {
-                            foreach ($path['parameters'] as $key => $parameter) {
-                              if (isset($parameter['$ref'])) {
-                                // handle parameter references
-                                $parameter = api_get_ref_param($expandedapi, $parameter['$ref']);
-                              }
-                              else {
-                                $parameter = $expandedapi['paths'][$pathSegment]['parameters'][$key];
-                              }
-                              // check for a body parameter
-                              if (isset($parameter['in']) && $parameter['in'] == "body") {
-                                $bodypresent = TRUE;
-                              }
-                              $operation_parameters[$parameter['name']] = $parameter;
+                        <?php
+                        // build up parameters list
+                        $operation_parameters = array();
+                        $bodypresent = FALSE;
+                        if (isset($path['parameters']) && is_array($path['parameters'])) {
+                          foreach ($path['parameters'] as $key => $parameter) {
+                            if (isset($parameter['$ref'])) {
+                              // handle parameter references
+                              $parameter = api_get_ref_param($expandedapi, $parameter['$ref']);
+                            }
+                            else {
+                              $parameter = $expandedapi['paths'][$pathSegment]['parameters'][$key];
+                            }
+                            // check for a body parameter
+                            if (isset($parameter['in']) && $parameter['in'] == "body") {
+                              $bodypresent = TRUE;
+                            }
+                            $operation_parameters[$parameter['name']] = $parameter;
+                          }
+                        }
+                        if (isset($unexpanded_operation['parameters']) && is_array($unexpanded_operation['parameters'])) {
+                          foreach ($unexpanded_operation['parameters'] as $key => $parameter) {
+                            if (isset($parameter['$ref'])) {
+                              // handle parameter references
+                              $parameter = api_get_ref_param($expandedapi, $parameter['$ref']);
+                            }
+                            else {
+                              $parameter = $api['paths'][$pathSegment][$verb]['parameters'][$key];
+                            }
+                            // need to keep the expanded variant of the parameter around too
+                            $parameter['expanded'] = $expandedapi['paths'][$pathSegment][$verb]['parameters'][$key];
+                            $operation_parameters[$parameter['name']] = $parameter;
+                            // check for a body parameter
+                            if (isset($parameter['in']) && $parameter['in'] == "body") {
+                              $bodypresent = TRUE;
                             }
                           }
-                          if (isset($unexpanded_operation['parameters']) && is_array($unexpanded_operation['parameters'])) {
-                            foreach ($unexpanded_operation['parameters'] as $key => $parameter) {
-                              if (isset($parameter['$ref'])) {
-                                // handle parameter references
-                                $parameter = api_get_ref_param($expandedapi, $parameter['$ref']);
-                              }
-                              else {
-                                $parameter = $api['paths'][$pathSegment][$verb]['parameters'][$key];
-                              }
-                              // need to keep the expanded variant of the parameter around too
-                              $parameter['expanded'] = $expandedapi['paths'][$pathSegment][$verb]['parameters'][$key];
-                              $operation_parameters[$parameter['name']] = $parameter;
-                              // check for a body parameter
-                              if (isset($parameter['in']) && $parameter['in'] == "body") {
-                                $bodypresent = TRUE;
-                              }
-                            }
-                          }
-                          $operation_parameters_lower = array_change_key_case($operation_parameters, CASE_LOWER);
-                          ?>
+                        }
+                        $operation_parameters_lower = array_change_key_case($operation_parameters, CASE_LOWER);
+                        ?>
+                        <?php if ((isset($operation_parameters) && is_array($operation_parameters) && !empty($operation_parameters)) || (isset($operation['consumes']) || isset($api['consumes'])) && $bodypresent == TRUE && !isset($operation_parameters_lower['content-type']) || (isset($operation['produces']) || isset($api['produces'])) && !isset($operation_parameters_lower['accept'])): ?>
+                          <div class="parameters">
+                            <label><?php print t('Parameters'); ?></label>
 
-                          <?php if (isset($operation_parameters) && is_array($operation_parameters)): ?>
-                            <?php foreach ($operation_parameters as $key => $parameter) : ?>
-                              <?php if (isset($parameter['expanded'])) {
-                                $expanded_parameter = $parameter['expanded'];
-                              } ?>
-                              <?php if (isset($parameter['in']) && ($parameter['in'] == "path")) {
-                                // path parameters are always required
-                                $parameter['required'] = "true";
-                              } ?>
+                            <?php if (isset($operation_parameters) && is_array($operation_parameters)): ?>
+                              <?php foreach ($operation_parameters as $key => $parameter) : ?>
+                                <?php if (isset($parameter['expanded'])) {
+                                  $expanded_parameter = $parameter['expanded'];
+                                } ?>
+                                <?php if (isset($parameter['in']) && ($parameter['in'] == "path")) {
+                                  // path parameters are always required
+                                  $parameter['required'] = "true";
+                                } ?>
 
-                              <div class='parametersSection listContent'>
-                                <div class='name'><div
-                                    class="title"><?php print $parameter['name']; ?></div>
-                                  <div class='located-in'><?php
-                                    if (isset($parameter['required']) && $parameter['required'] == TRUE) {
-                                      print t('<span class="required">Required</span> in %1', array('%1' => $parameter['in']));
-                                    }
-                                    else {
-                                      print t('Optional in %1', array('%1' => $parameter['in']));
-                                    } ?>
-                                    <?php
-                                    $type = 'object';
-                                    unset($format);
-                                    if (isset($expanded_parameter['schema']['type']) && !empty($expanded_parameter['schema']['type'])) {
-                                      $type = $expanded_parameter['schema']['type'];
-                                    }
-                                    elseif (isset($expanded_parameter['type']) && !empty($expanded_parameter['type'])) {
-                                      $type = $expanded_parameter['type'];
-                                    }
-                                    elseif (isset($parameter) && (isset($parameter['schema']['type']) && !empty($parameter['schema']['type']))) {
-                                      $type = $expanded_parameter['schema']['type'];
-                                    }
-                                    elseif (isset($parameter['type']) && !empty($parameter['type'])) {
-                                      $type = $parameter['type'];
-                                    }
-                                    if (isset($expanded_parameter['schema']['format']) && !empty($expanded_parameter['schema']['format'])) {
-                                      $format = $expanded_parameter['schema']['format'];
-                                    }
-                                    elseif (isset($expanded_parameter['format']) && !empty($expanded_parameter['format'])) {
-                                      $format = $expanded_parameter['format'];
-                                    }
-                                    elseif (isset($parameter) && (isset($parameter['schema']['format']) && !empty($parameter['schema']['format']))) {
-                                      $format = $expanded_parameter['schema']['format'];
-                                    }
-                                    elseif (isset($parameter['format']) && !empty($parameter['format'])) {
-                                      $format = $parameter['format'];
-                                    }
-                                    if (isset($type)) {
-                                      print "<div class='parameterType'>" . $type;
-                                      if (isset($format)) {
-                                        print " / " . $format;
+                                <div class='parametersSection listContent'>
+                                  <div class='name'><div
+                                      class="title"><?php print $parameter['name']; ?></div>
+                                    <div class='located-in'><?php
+                                      if (isset($parameter['required']) && $parameter['required'] == TRUE) {
+                                        print t('<span class="required">Required</span> in %1', array('%1' => $parameter['in']));
                                       }
-                                      print "</div>";
-                                    }
-                                    ?>
-                                  </div></div><div class="schemawrapper">
-                                  <?php if (isset($parameter['description'])): ?>
-                                    <div
-                                      class='description markdown'><?php print ibm_apim_markdown_field($parameter['description']); ?></div>
-                                  <?php endif; ?><div
-                                    class='schema'>
-                                    <?php if (isset($parameter) && isset($parameter['schema']) && isset($parameter['schema']['$ref'])) : ?>
-                                      <a
-                                        onclick='API.navigatedefs("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>", "<?php print drupal_html_class(preg_replace("/\W/", "", _ibm_apim_ref_to_objectname($parameter['schema']['$ref']))); ?>")'
-                                        href='javascript:;'><?php print ibm_apim_return_schema($parameter); ?></a>
-                                    <?php elseif (isset($parameter) && isset($parameter['schema']['type']) && $parameter['schema']['type'] == "array" && isset($parameter['schema']['items']) && isset($parameter['schema']['items']['$ref'])) : ?>
-                                      <a
-                                        onclick='API.navigatedefs("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>", "<?php print drupal_html_class(preg_replace("/\W/", "", _ibm_apim_ref_to_objectname($parameter['schema']['items']['$ref']))); ?>")'
-                                        href='javascript:;'><?php print ibm_apim_return_schema($parameter); ?></a>
-                                    <?php elseif (isset($expanded_parameter) && (isset($expanded_parameter['schema']['type']) && !empty($expanded_parameter['schema']['type'])) || (isset($expanded_parameter['type']) && !empty($expanded_parameter['type']))) : ?>
+                                      else {
+                                        print t('Optional in %1', array('%1' => $parameter['in']));
+                                      } ?>
                                       <?php
-                                      $inline_schema = ibm_apim_return_inline_schema($parameter);
-                                      if (isset($inline_schema) && !empty($inline_schema)) {
-                                        print "<pre
-                                          class='inlineSchema'><code>" . json_encode($inline_schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "</code></pre>";
+                                      $type = 'object';
+                                      unset($format);
+                                      if (isset($expanded_parameter['schema']['type']) && !empty($expanded_parameter['schema']['type'])) {
+                                        $type = $expanded_parameter['schema']['type'];
+                                      }
+                                      elseif (isset($expanded_parameter['type']) && !empty($expanded_parameter['type'])) {
+                                        $type = $expanded_parameter['type'];
+                                      }
+                                      elseif (isset($parameter) && (isset($parameter['schema']['type']) && !empty($parameter['schema']['type']))) {
+                                        $type = $expanded_parameter['schema']['type'];
+                                      }
+                                      elseif (isset($parameter['type']) && !empty($parameter['type'])) {
+                                        $type = $parameter['type'];
+                                      }
+                                      if (isset($expanded_parameter['schema']['format']) && !empty($expanded_parameter['schema']['format'])) {
+                                        $format = $expanded_parameter['schema']['format'];
+                                      }
+                                      elseif (isset($expanded_parameter['format']) && !empty($expanded_parameter['format'])) {
+                                        $format = $expanded_parameter['format'];
+                                      }
+                                      elseif (isset($parameter) && (isset($parameter['schema']['format']) && !empty($parameter['schema']['format']))) {
+                                        $format = $expanded_parameter['schema']['format'];
+                                      }
+                                      elseif (isset($parameter['format']) && !empty($parameter['format'])) {
+                                        $format = $parameter['format'];
+                                      }
+                                      if (isset($type)) {
+                                        print "<div class='parameterType'>" . $type;
+                                        if (isset($format)) {
+                                          print " / " . $format;
+                                        }
+                                        print "</div>";
                                       }
                                       ?>
-                                    <?php elseif (isset($parameter) && (isset($parameter['schema']['type']) && !empty($parameter['schema']['type'])) || (isset($parameter['type']) && !empty($parameter['type']))) : ?>
-                                      <?php $inline_schema = ibm_apim_return_inline_schema($parameter);
-                                      if (isset($inline_schema) && !empty($inline_schema)) {
-                                        print "<pre
+                                    </div></div><div class="schemawrapper">
+                                    <?php if (isset($parameter['description'])): ?>
+                                      <div
+                                        class='description markdown'><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($operation_parameters, [$key], 'description')); ?></div>
+                                    <?php endif; ?><div
+                                      class='schema'>
+                                      <?php if (isset($parameter) && isset($parameter['schema']) && isset($parameter['schema']['$ref'])) : ?>
+                                        <a
+                                          onclick='API.navigatedefs("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>", "<?php print drupal_html_class(preg_replace("/\W/", "", _ibm_apim_ref_to_objectname($parameter['schema']['$ref']))); ?>")'
+                                          href='javascript:;'><?php print ibm_apim_return_schema($parameter); ?></a>
+                                      <?php elseif (isset($parameter) && isset($parameter['schema']['type']) && $parameter['schema']['type'] == "array" && isset($parameter['schema']['items']) && isset($parameter['schema']['items']['$ref'])) : ?>
+                                        <a
+                                          onclick='API.navigatedefs("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>", "<?php print drupal_html_class(preg_replace("/\W/", "", _ibm_apim_ref_to_objectname($parameter['schema']['items']['$ref']))); ?>")'
+                                          href='javascript:;'><?php print ibm_apim_return_schema($parameter); ?></a>
+                                      <?php elseif (isset($expanded_parameter) && (isset($expanded_parameter['schema']['type']) && !empty($expanded_parameter['schema']['type'])) || (isset($expanded_parameter['type']) && !empty($expanded_parameter['type']))) : ?>
+                                        <?php
+                                        $inline_schema = ibm_apim_return_inline_schema($parameter);
+                                        if (isset($inline_schema) && !empty($inline_schema)) {
+                                          print "<pre
                                           class='inlineSchema'><code>" . json_encode($inline_schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "</code></pre>";
-                                      }
-                                      ?>
-                                    <?php elseif (isset($expanded_parameter)): ?>
-                                      <?php print ibm_apim_return_schema($expanded_parameter); ?>
-                                    <?php else: ?>
-                                      <?php print ibm_apim_return_schema($parameter); ?>
-                                    <?php endif; ?>
+                                        }
+                                        ?>
+                                      <?php elseif (isset($parameter) && (isset($parameter['schema']['type']) && !empty($parameter['schema']['type'])) || (isset($parameter['type']) && !empty($parameter['type']))) : ?>
+                                        <?php $inline_schema = ibm_apim_return_inline_schema($parameter);
+                                        if (isset($inline_schema) && !empty($inline_schema)) {
+                                          print "<pre
+                                          class='inlineSchema'><code>" . json_encode($inline_schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "</code></pre>";
+                                        }
+                                        ?>
+                                      <?php elseif (isset($expanded_parameter)): ?>
+                                        <?php print ibm_apim_return_schema($expanded_parameter); ?>
+                                      <?php else: ?>
+                                        <?php print ibm_apim_return_schema($parameter); ?>
+                                      <?php endif; ?>
+                                    </div>
                                   </div>
                                 </div>
+                              <?php endforeach; ?>
+                            <?php endif; ?>
+                            <?php if ((isset($operation['consumes']) || isset($api['consumes'])) && $bodypresent == TRUE && !isset($operation_parameters_lower['content-type'])) : ?>
+                              <div class='parametersSection listContent'>
+                                <div class='name'><div
+                                    class="title">Content-Type</div>
+                                  <div
+                                    class='located-in'><?php print t('Optional in %1', array('%1' => 'header')); ?>
+                                  </div>
+                                  <div
+                                    class="parameterType">string</div></div><div
+                                  class="schemawrapper"><div
+                                    class='description'></div><div
+                                    class='schema'>
+                                    <?php if (isset($operation['consumes'])) : ?>
+                                      <?php foreach ($operation['consumes'] as $contenttype) : ?>
+                                        <?php print $contenttype; ?><br/>
+                                      <?php endforeach; ?>
+                                    <?php elseif (isset($api['consumes'])) : ?>
+                                      <?php foreach ($api['consumes'] as $contenttype) : ?>
+                                        <?php print $contenttype; ?><br/>
+                                      <?php endforeach; ?>
+                                    <?php endif; ?>
+                                  </div></div>
                               </div>
-                            <?php endforeach; ?>
-                          <?php endif; ?>
-                          <?php if ((isset($operation['consumes']) || isset($api['consumes'])) && $bodypresent == TRUE && !isset($operation_parameters_lower['content-type'])) : ?>
-                            <div class='parametersSection listContent'>
-                              <div class='name'><div
-                                  class="title">Content-Type</div>
-                                <div
-                                  class='located-in'><?php print t('Optional in %1', array('%1' => 'header')); ?>
-                                </div>
-                                <div
-                                  class="parameterType">string</div></div><div
-                                class="schemawrapper"><div
-                                  class='description'></div><div
-                                  class='schema'>
-                                  <?php if (isset($operation['consumes'])) : ?>
-                                    <?php foreach ($operation['consumes'] as $contenttype) : ?>
-                                      <?php print $contenttype; ?><br/>
-                                    <?php endforeach; ?>
-                                  <?php elseif (isset($api['consumes'])) : ?>
-                                    <?php foreach ($api['consumes'] as $contenttype) : ?>
-                                      <?php print $contenttype; ?><br/>
-                                    <?php endforeach; ?>
-                                  <?php endif; ?>
-                                </div></div>
-                            </div>
-                          <?php endif; ?>
-                          <?php if ((isset($operation['produces']) || isset($api['produces'])) && !isset($operation_parameters_lower['accept'])) : ?>
-                            <div class='parametersSection listContent'>
-                              <div class='name'><div
-                                  class="title">Accept</div>
-                                <div
-                                  class='located-in'><?php print t('Optional in %1', array('%1' => 'header')); ?>
-                                </div>
-                                <div
-                                  class="parameterType">string</div></div><div
-                                class="schemawrapper"><div
-                                  class='description'></div><div
-                                  class='schema'>
-                                  <?php if (isset($operation['produces'])) : ?>
-                                    <?php foreach ($operation['produces'] as $contenttype) : ?>
-                                      <?php print $contenttype; ?><br/>
-                                    <?php endforeach; ?>
-                                  <?php elseif (isset($api['produces'])) : ?>
-                                    <?php foreach ($api['produces'] as $contenttype) : ?>
-                                      <?php print $contenttype; ?><br/>
-                                    <?php endforeach; ?>
-                                  <?php endif; ?>
-                                </div></div>
-                            </div>
-                          <?php endif; ?>
-                        </div>
+                            <?php endif; ?>
+                            <?php if ((isset($operation['produces']) || isset($api['produces'])) && !isset($operation_parameters_lower['accept'])) : ?>
+                              <div class='parametersSection listContent'>
+                                <div class='name'><div
+                                    class="title">Accept</div>
+                                  <div
+                                    class='located-in'><?php print t('Optional in %1', array('%1' => 'header')); ?>
+                                  </div>
+                                  <div
+                                    class="parameterType">string</div></div><div
+                                  class="schemawrapper"><div
+                                    class='description'></div><div
+                                    class='schema'>
+                                    <?php if (isset($operation['produces'])) : ?>
+                                      <?php foreach ($operation['produces'] as $contenttype) : ?>
+                                        <?php print $contenttype; ?><br/>
+                                      <?php endforeach; ?>
+                                    <?php elseif (isset($api['produces'])) : ?>
+                                      <?php foreach ($api['produces'] as $contenttype) : ?>
+                                        <?php print $contenttype; ?><br/>
+                                      <?php endforeach; ?>
+                                    <?php endif; ?>
+                                  </div></div>
+                              </div>
+                            <?php endif; ?>
+                          </div>
+                        <?php endif; ?>
                       <?php else: ?>
                         <div><label><?php print t('Request'); ?></label></div>
                         <?php if (isset($operation['parameters']) && is_array($operation['parameters'])): ?>
@@ -805,7 +864,7 @@ else {
                             <div class='responsesSection listContent'>
                               <div class='code'><?php print $code; ?>
                               </div><div class="responseContent"><div
-                                  class='description markdown'><?php print ibm_apim_markdown_field($response['description']); ?></div><div
+                                  class='description markdown'><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($response, array(), 'description')); ?></div><div
                                   class='schema'>
                                   <?php if (isset($response) && isset($response['$ref'])) {
                                     $ref = _ibm_apim_ref_to_objectname($response['$ref']);
@@ -1167,7 +1226,7 @@ else {
                       <?php if ($protocol != 'wsdl') : ?>
                         <label><?php print t('Definition'); ?></label>
                         <div
-                          class="exampleDefinition"><?php print strtoupper($verb) . ' '; ?><?php print $api['schemes'][0] . '://' . $api['host'] . $api['basePath'] . $pathSegment; ?></div>
+                          class="exampleDefinition"><?php print strtoupper($verb) . ' '; ?><?php print $default_endpoint . $api['basePath'] . $pathSegment; ?></div>
                       <?php endif; ?>
                       <label><?php print t('Response'); ?></label>
                       <div class="exampleResponse">
@@ -1214,7 +1273,7 @@ else {
                         <input type="submit" style="display: none;"
                                tabindex="-1"/>
                         <div class='contrast'>
-                          <?php if (count($api['schemes']) > 1) : ?>
+                          <?php if (count($api['schemes']) > 1 && !isset($api['x-ibm-endpoints'])) : ?>
                             <select name="scheme">
                               <?php foreach ($api['schemes'] as $scheme)  : ?>
                                 <option
@@ -1222,21 +1281,34 @@ else {
                               <?php endforeach; ?>
                             </select>
                             <?php if ($protocol != 'wsdl') : ?>
-                              <span>://<?php print $api['host'] . $api['basePath'] . $pathSegment; ?></span>
+                              <?php $url = $api['host'] . $api['basePath'] . $pathSegment;
+                              $url_escaped = preg_replace('/(\/)+/', '$1', $url); // remove double slashes?>
+                              <span
+                                class="apiURL">://<?php print $url_escaped; ?></span>
                             <?php else : ?> 
                               <?php $parts = explode('/', $pathSegment);
-                              $end = array_pop($parts); ?>
-                              <span>://<?php print $api['host'] . $api['basePath'] . join('/', $parts); ?></span>
+                              $end = array_pop($parts);
+                              $url = $api['host'] . $api['basePath'] . join('/', $parts);
+                              $url_escaped = preg_replace('/(\/)+/', '$1', $url); // remove double slashes?>
+                              <span
+                                class="apiURL">://<?php print $url_escaped; ?></span>
                             <?php endif; ?>
                           <?php else: ?>
                             <input type="hidden" name="scheme"
                                    value="<?php print $api['schemes'][0]; ?>"/>
                             <?php if ($protocol != 'wsdl') : ?>
-                              <span><?php print $api['schemes'][0] . '://' . $api['host'] . $api['basePath'] . $pathSegment; ?></span>
+                              <?php $url = $default_endpoint . $api['basePath'] . $pathSegment;
+                              $url_escaped = preg_replace('/(https?:\/\/)|(\/)+/', '$1$2', $url); // remove double slashes?>
+                              <span
+                                class="apiURL"><?php print $url_escaped; ?></span>
                             <?php else : ?> 
                               <?php $parts = explode('/', $pathSegment);
-                              $end = array_pop($parts); ?>
-                              <span><?php print $api['schemes'][0] . '://' . $api['host'] . $api['basePath'] . join('/', $parts); ?></span>
+                              $end = array_pop($parts);
+                              $url = $default_endpoint . $api['basePath'] . join('/', $parts);
+                              $url_escaped = preg_replace('/(https?:\/\/)|(\/)+/', '$1$2', $url); // remove double slashes
+                              ?>
+                              <span
+                                class="apiURL"><?php print $url_escaped; ?></span>
                             <?php endif; ?>
                           <?php endif; ?>
                         </div>
@@ -1280,7 +1352,8 @@ else {
                                   <div><?php print l(t('Register an application to test this API.'), 'application/new'); ?></div>
                                 <?php endif; ?>
                               <?php else: ?>
-                                <div><?php print l(t('Login to test this API.'), 'user/login'); ?></div>
+                                <div
+                                  class="loginMessage"><?php print l(t('Login to test this API.'), 'user/login'); ?></div>
                               <?php endif; ?>
                             </div>
                           </div>
@@ -1444,7 +1517,7 @@ else {
                     <?php endif; ?>
                     <label><?php print t('Headers'); ?></label>
                     <div class="contrast">
-                      <?php if ($bodypresent == TRUE && (isset($api['consumes']) || isset($operation['consumes']))) : ?>
+                      <?php if ($bodypresent == TRUE) : ?>
                         <div class='parameter'>
                           <div class='parameterName'>content-type</div>
                           <?php if (isset($operation['consumes']) || isset($api['consumes'])): ?>
@@ -1786,7 +1859,7 @@ else {
                   class="navigate-apis_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>_definitions_<?php print drupal_html_class(preg_replace("/\W/", "", $definitionName)); ?>"><?php print $definitionName; ?></label>
                 <?php if (isset($definition['description'])) : ?>
                   <div
-                    class="markdown"><?php print ibm_apim_markdown_field($definition['description']); ?></div>
+                    class="markdown"><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($api, ['definitions'][$definitionName], 'description')); ?></div>
                   <?php unset($definition['description']); ?>
                 <?php endif; ?>
                 <?php if (isset($definition['externalDocs']) && !empty($definition['externalDocs']) && isset($definition['externalDocs']['url'])) : ?>
@@ -1794,9 +1867,9 @@ else {
                     <label><?php print t('Documentation'); ?></label>
                     <div><a
                         href="<?php print $definition['externalDocs']['url']; ?>"
-                        target='_new'>
+                        target='_blank'>
                         <?php if (isset($definition['externalDocs']['description'])) {
-                          print $definition['externalDocs']['description'];
+                          print ibm_apim_get_translated_string($api, ['definitions'][$definitionName]['externalDocs'], 'description');
                           unset($definition['externalDocs']);
                         }
                         else {

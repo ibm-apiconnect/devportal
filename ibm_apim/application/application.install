@@ -139,6 +139,18 @@ function _application_installed_fields() {
       'label' => t('ETag'),
       'type' => 'text',
       'translatable' => FALSE
+    ),
+    'application_type' => array(
+      'field_name' => 'application_type',
+      'label' => t('Type'),
+      'type' => 'text',
+      'translatable' => FALSE
+    ),
+    'application_promoteto' => array(
+      'field_name' => 'application_promoteto',
+      'label' => t('Promote to'),
+      'type' => 'text',
+      'translatable' => FALSE
     )
   );
 }
@@ -348,6 +360,30 @@ function _application_installed_instances() {
       'display' => array(
         'default' => array(
           'label' => t('ETag'),
+          'type' => 'text'
+        )
+      )
+    ),
+    'application_type' => array(
+      'field_name' => 'application_type',
+      'type' => 'text',
+      'label' => t('Type'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array(
+          'label' => t('Type'),
+          'type' => 'text'
+        )
+      )
+    ),
+    'application_promoteto' => array(
+      'field_name' => 'application_promoteto',
+      'type' => 'text',
+      'label' => t('Promote to'),
+      'widget' => array('type' => 'text_textfield'),
+      'display' => array(
+        'default' => array(
+          'label' => t('Promote to'),
           'type' => 'text'
         )
       )

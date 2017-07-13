@@ -892,15 +892,22 @@ function _auth_apic_authenticated_login($name, $pass, $authenticated, $login = T
   ), $login);
 
   // we must set the 'uid' to pass back. this looks up the logged in user and sets the Drupal UID
-  $account = user_external_load($name);
+  $account = user_load_by_name($name);
+  $authmaps = user_get_authmaps($name);
+  if (!isset($authmaps) || empty($authmaps)) {
+    $authmaps = 0;
+  }
+  if ($authmaps >= 0) {
+    user_set_authmaps($account, array("authname_ibm_apim" => $name));
+  }
   $json_user_info = $authenticated;
+  $devorgs_array = array();
   if ($login == TRUE) {
     $result = ibm_apim_call('/v1/portal/orgs');
     if (isset($result) && isset($result->data) && !isset($result->data['errors'])) {
       $orgs = $result->data;
     }
     $org_ids = array();
-    $devorgs_array = array();
     if (isset($orgs)) {
       foreach ($orgs as $org) {
         $devorgs_array[] = array('value' => $org['name']);
@@ -1028,8 +1035,8 @@ function auth_apic_authenticate_submit_redirect($form, &$form_state) {
     $result = ibm_apim_call('/v1/portal/orgs');
     if (isset($result) && isset($result->data) && !isset($result->data['errors'])) {
       $orgs = $result->data;
+      $devorgs_array = array();
       if (is_array($orgs)) {
-        $devorgs_array = array();
         foreach ($orgs as $org) {
           $devorgs_array[] = array('value' => $org['name']);
         }
@@ -1548,10 +1555,20 @@ function _auth_apic_change_user_password($new_password, $authuser, $username, $c
 
   // if not admin then update apic too
   if (isset($user->uid) && $user->uid == 1) {
-    // update drupal database
-    $edit['pass'] = $new_password;
-    user_save($user, $edit);
-    return TRUE;
+
+    require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
+    // $current_pass is NULL if we come in via a one-time link
+    // otherwise we need to check it
+    if ($current_pass === NULL || user_check_password($current_pass, $user)) {
+      // update drupal database
+      $edit['pass'] = $new_password;
+      user_save($user, $edit);
+      return TRUE;
+    }
+    else {
+      drupal_set_message(t('Current password is incorrect.'), 'error');
+      return FALSE;
+    }
   }
   else {
     $headers = array(
@@ -1792,8 +1809,8 @@ function auth_apic_activate_id_callback($path = NULL) {
     }
     $tempUser = $activationObj->{'authentication'}->{'username'};
     $tempPwd = $activationObj->{'authentication'}->{'password'};
-    $org = $activationObj->{'providerContext'}->{'orgID'};
-    $env = $activationObj->{'providerContext'}->{'environmentID'};
+    $org = check_plain($activationObj->{'providerContext'}->{'orgID'});
+    $env = check_plain($activationObj->{'providerContext'}->{'environmentID'});
     $userid = ibm_apim_decrypt_data($activationObj->{'username'});
     if (isset($userid)) {
       // verify the temp userid and password are valid
