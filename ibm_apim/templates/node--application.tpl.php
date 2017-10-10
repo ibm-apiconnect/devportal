@@ -188,7 +188,7 @@ drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/App.js', array(
                     </div>
                     <div class="credentialContainer">
                       <div class="credentialInfo">
-                        <label for="clientID"
+                        <label for="clientID<?php print $index; ?>"
                                class="label apimField apiClientID"><?php print t('Client ID'); ?></label>
                         <div id="app_client_id" class="app_client_id">
                           <input class="toggle-password"
@@ -200,19 +200,25 @@ drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/App.js', array(
                                    id="show-clientID<?php print $index; ?>"/>
                             <label
                               for="show-clientID<?php print $index; ?>"><?php print t('Show'); ?></label>
+                            <?php $ibm_apim_allow_clientidreset = variable_get('ibm_apim_allow_clientidreset', TRUE); ?>
+                            <?php if ($ibm_apim_allow_clientidreset == 1): ?>
                             &nbsp;&nbsp;&nbsp;&nbsp; <a class="buttonLink"
                                                         href="<?php print url("application/" . $application_apiid[0]['value'] . "/reset-clientid/" . $cred['id']); ?>"><?php print t('Reset'); ?></a>
+                            <?php endif; ?>
                           </div>
                         </div>
-                        <label for="clientSecret"
+                        <label for="clientSecret<?php print $index; ?>"
                                class="label apimField apiClientSecret"><?php print t('Client Secret'); ?></label>
                         <div class="client_secret">
                           <input id="clientSecret<?php print $index; ?>"
                                  class="clientSecretInput" disabled readonly/>
+                          <?php $ibm_apim_allow_clientsecretreset = variable_get('ibm_apim_allow_clientsecretreset', TRUE); ?>
+                          <?php if ($ibm_apim_allow_clientsecretreset == 1): ?>
                           <a class="buttonLink"
                              href="<?php print url("application/" . $application_apiid[0]['value'] . "/verify/" . $cred['id']); ?>"><?php print t('Verify'); ?></a>
                           &nbsp;&nbsp;&nbsp;&nbsp; <a class="buttonLink"
                                                       href="<?php print url("application/" . $application_apiid[0]['value'] . "/reset-secret/" . $cred['id']); ?>"><?php print t('Reset'); ?></a>
+                          <?php endif; ?>
                         </div>
                       </div>
                     </div>

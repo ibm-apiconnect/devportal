@@ -41,11 +41,32 @@ function api_drush_command() {
       'id' => 'The API ID'
     )
   );
+  $items['api-massupdate'] = array(
+    'description' => 'Mass updates a list of APIs',
+    'aliases' => array('mapi'),
+    'arguments' => array(
+      'apis' => 'The JSON array of APIs',
+      'event' => 'The event type'
+    )
+  );
+  $items['api-tidy'] = array(
+    'description' => 'Tidies the list of APIs to ensure consistent with APIm',
+    'aliases' => array('tapi'),
+    'arguments' => array(
+      'apirefs' => 'The JSON array of API references'
+    )
+  );
 
   return $items;
 }
 
 function drush_api_cleanse_drush_command() {
+  global $user;
+  // in case moderation is on we need cron to run as admin
+  // save the current user so we can switch back at the end
+  $original_user = $user;
+  drupal_save_session(FALSE);
+  $user = user_load(1);
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'api');
@@ -55,27 +76,50 @@ function drush_api_cleanse_drush_command() {
       node_delete($item->nid);
     }
   }
+  // switch back to original user
+  $user = $original_user;
+  drupal_save_session(TRUE);
   drupal_set_message(t('All API entries deleted.'), 'success');
 }
 
 function drush_api_createOrUpdateApi($func, $event, $api) {
+  global $user;
+  // in case moderation is on we need cron to run as admin
+  // save the current user so we can switch back at the end
+  $original_user = $user;
+  drupal_save_session(FALSE);
+  $user = user_load(1);
   if (isset($api)) {
-    $api = json_decode($api, TRUE);
+    if (is_string($api)) {
+      $api = json_decode($api, TRUE);
+    }
     if (isset($api['document']['definitions']) && empty($api['document']['definitions'])) {
       unset($api['document']['definitions']);
     }
     $ref = $api['document']['info']['x-ibm-name'] . ':' . $api['document']['info']['version'];
     $createdOrUpdated = api_createOrUpdateAPI($api, $event);
     if ($createdOrUpdated) {
-      drupal_set_message(t('Drush @func created API @api', array('@func' => $func, '@api' => $ref)), 'success');
+      drupal_set_message(t('Drush @func created API @api', array(
+        '@func' => $func,
+        '@api' => $ref
+      )), 'success');
     }
     else {
-      drupal_set_message(t('Drush @func updated existing API @api', array('@func' => $func, '@api' => $ref)), 'success');
+      drupal_set_message(t('Drush @func updated existing API @api', array(
+        '@func' => $func,
+        '@api' => $ref
+      )), 'success');
+    }
+    if (module_exists('views')) {
+      views_invalidate_cache();
     }
   }
   else {
     drupal_set_message(t('Drush @func No API provided', array('@func' => $func)), 'error');
   }
+  // switch back to original user
+  $user = $original_user;
+  drupal_save_session(TRUE);
 }
 
 function drush_api_createapi($event, $api) {
@@ -87,6 +131,12 @@ function drush_api_updateapi($event, $api) {
 }
 
 function drush_api_deleteapi($event, $id) {
+  global $user;
+  // in case moderation is on we need cron to run as admin
+  // save the current user so we can switch back at the end
+  $original_user = $user;
+  drupal_save_session(FALSE);
+  $user = user_load(1);
   if (isset($id)) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
@@ -138,5 +188,32 @@ function drush_api_deleteapi($event, $id) {
   else {
     drupal_set_message(t('Drush DeleteAPI No API provided'), 'error');
   }
+  // switch back to original user
+  $user = $original_user;
+  drupal_save_session(TRUE);
 }
 
+function drush_api_massupdate($apis, $event = 'bgsync') {
+  if (!empty($apis)) {
+    $apis = json_decode($apis, TRUE);
+    foreach ($apis as $api) {
+      drush_api_createOrUpdateApi('MassUpdate', $event, $api);
+    }
+  }
+}
+
+function drush_api_tidy($apirefs) {
+  $apirefs = json_decode($apirefs, TRUE);
+  if (!empty($apirefs)) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'api')
+    ->fieldCondition('api_ref', 'value', $apirefs, 'NOT IN');
+    $results = $query->execute();
+    if (isset($results['node'])) {
+      foreach ($results['node'] as $item) {
+        node_delete($item->nid);
+      }
+    }
+  }
+}

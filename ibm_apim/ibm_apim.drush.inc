@@ -50,6 +50,11 @@ function ibm_apim_drush_command() {
       'langcode' => 'The language code'
     )
   );
+  $items['ibm_apim-set_admin_timestamps']=array(
+    'description' => 'On creation of a site from template, set admin timestamps to current time',
+    'aliases' => array('admintime'),
+    'hidden' => TRUE
+  );
 
   return $items;
 }
@@ -137,6 +142,12 @@ function drush_ibm_apim_send_welcome_email($client_email) {
  * Used by webhooks
  */
 function drush_ibm_apim_listen() {
+  global $user;
+  // in case moderation is on we need cron to run as admin
+  // save the current user so we can switch back at the end
+  $original_user = $user;
+  drupal_save_session(FALSE);
+  $user = user_load(1);
   drupal_set_message(t('Drush ibm_apim_listen listening to stdin'), 'success');
   _drush_log_drupal_messages();
 
@@ -144,13 +155,13 @@ function drush_ibm_apim_listen() {
   $attempt = 0;
   $json = "";
   while ($cmdline) {
-    drupal_set_message(t('Got command: %cmd', array('%cmd' => $cmdline)), 'success');
-    _drush_log_drupal_messages();
     $pieces = explode(" ", $cmdline);
     $cmd = $pieces[0];
     $event = $pieces[1];
     $id = $pieces[2];
     $subid = $pieces[3];
+    drupal_set_message(t('Got command: %cmd', array('%cmd' => $cmd)), 'success');
+    _drush_log_drupal_messages();
 
     try {
       if ($cmd == "dapi") {
@@ -206,6 +217,36 @@ function drush_ibm_apim_listen() {
         elseif ($cmd == "uorg") {
           drush_devorg_updateorg($event, $json);
         }
+        elseif ($cmd == "mapi") {
+          drush_api_massupdate($json, $event);
+        }
+        elseif ($cmd == "mprod") {
+          drush_product_massupdate($json, $event);
+        }
+        elseif ($cmd == "morg") {
+          drush_devorg_massupdate($json, $event);
+        }
+        elseif ($cmd == "mapp") {
+          drush_application_massupdate($json, $event);
+        }
+        elseif ($cmd == "msub") {
+          drush_application_sub_massupdate($json, $event);
+        }
+        elseif ($cmd == "tprod") {
+          drush_product_tidy($json);
+        }
+        elseif ($cmd == "tapi") {
+          drush_api_tidy($json);
+        }
+        elseif ($cmd == "tapp") {
+          drush_application_tidy($json);
+        }
+        elseif ($cmd == "torg") {
+          drush_devorg_tidy($json);
+        }
+        elseif ($cmd == "tsub") {
+          drush_application_sub_tidy($json);
+        }
       }
 
       $attempt = 0;
@@ -231,11 +272,23 @@ function drush_ibm_apim_listen() {
     _drush_log_drupal_messages();
   }
 
+  // switch back to original user
+  $user = $original_user;
+  drupal_save_session(TRUE);
   drupal_set_message(t('Drush ibm_apim_listen exiting'), 'success');
 }
 
 function drush_ibm_apim_bgsync() {
+  global $user;
+  // in case moderation is on we need cron to run as admin
+  // save the current user so we can switch back at the end
+  $original_user = $user;
+  drupal_save_session(FALSE);
+  $user = user_load(1);
   ibm_apim_cron();
+  // switch back to original user
+  $user = $original_user;
+  drupal_save_session(TRUE);
   drupal_set_message(t('Background sync run.'), 'success');
 }
 
@@ -331,6 +384,12 @@ function drush_ibm_apim_translate_sample_content($langcode) {
  * @throws \Exception
  */
 function _drush_ibm_apim_translate_node($content = array(), $langcode) {
+  global $user;
+  // in case moderation is on we need cron to run as admin
+  // save the current user so we can switch back at the end
+  $original_user = $user;
+  drupal_save_session(FALSE);
+  $user = user_load(1);
   $title = $content['title'];
   $menu = $content['menu'];
 
@@ -417,6 +476,9 @@ function _drush_ibm_apim_translate_node($content = array(), $langcode) {
       }
     }
   }
+  // switch back to original user
+  $user = $original_user;
+  drupal_save_session(TRUE);
 }
 
 /**
@@ -647,4 +709,12 @@ function _drush_ibm_apim_translate_book($langcode) {
   }
   require_once DRUPAL_ROOT . '/profiles/apim_profile/content/book.import.inc';
   apim_profile_update_page_links($langcode);
+}
+
+function drush_ibm_apim_set_admin_timestamps(){
+  $time = \Drupal::time()->getCurrentTime();
+  db_update('users_field_data')->fields(array('created'=>$time,
+    'login'=>$time))
+    ->condition('uid',1)
+    ->execute();
 }

@@ -70,7 +70,7 @@ else {
   $default_endpoint = $scheme . '://' . $api['host'];
 }
 ?>
-<article id="node-<?php print $node->nid; ?>"
+<article id="node-inner-<?php print $node->nid; ?>"
          class="mesh-portal-api <?php print $classes . ' ' . $content['api_apiid'][0]['#markup'] . ' ' . $protocol; ?> apis_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?> inner clearfix" <?php print $attributes; ?>>
   <div class="navigate-apis">
     <div class="readAndInteract">
@@ -390,7 +390,7 @@ else {
                     class='apiEndpointUrl'><?php print $endpoint['endpointUrl']; ?></div>
                   <?php if (isset($endpoint['description'])) : ?>
                     <div
-                      class='apiEndpointDescr'><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($api, ['x-ibm-endpoints'][$key], 'description')); ?></div>
+                      class='apiEndpointDescr'><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($endpoint, array(), 'description')); ?></div>
                   <?php endif; ?>
                 </div>
               <?php endforeach; ?>
@@ -476,9 +476,9 @@ else {
                             <?php $tagfound = FALSE; ?>
                             <?php if (isset($api['tags']) && is_array($api['tags'])) {
                               foreach ($api['tags'] as $tagkey => $tag) {
-                                $tag_title = ibm_apim_get_translated_string($api, ['tags'][$tagkey], 'name');
+                                $tag_title = ibm_apim_get_translated_string($tag, array(), 'name');
                                 if (isset($tag['description']) && isset($tag['name']) && $tag['name'] == $tagname) {
-                                  $description = ibm_apim_get_translated_string($api, ['tags'][$tagkey], 'description');
+                                  $description = ibm_apim_get_translated_string($tag, array(), 'description');
                                   $tagfound = TRUE;
                                 }
                               }
@@ -573,8 +573,22 @@ else {
                                     } ?>)
                                   </div><div
                                     class='description markdown'><?php print ibm_apim_markdown_field($api['securityDefinitions'][$securityDefName]['description']); ?>
-                                    <?php if (isset($operation['security'][$securityDefName]['scopes'])) {
-                                      $scope_array = $operation['security'][$securityDefName]['scopes'];
+                                    <?php if (isset($operation['security'])) {
+                                      $operation_array_length = count($operation['security']);
+                                      if (isset($api['securityDefinitions'][$securityDefName]['scopes'])) {
+                                        $api_scopes_array = $api['securityDefinitions'][$securityDefName]['scopes'];
+                                        if (isset($api_scopes_array) && ($operation_array_length > 0) ){
+                                          $scope_array = array();
+                                          for($x = 0; $x < $operation_array_length; $x++) {
+                                            if (isset($operation['security'][$x][$securityDefName])){
+                                              $scope = $operation['security'][$x][$securityDefName];
+                                              for($y = 0; $y < count($scope); $y++) {
+                                                $scope_array[$scope[$y]] = $api_scopes_array[$scope[$y]];
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
                                     }
                                     else if (isset($api['securityDefinitions'][$securityDefName]['scopes'])) {
                                       $scope_array = $api['securityDefinitions'][$securityDefName]['scopes'];
@@ -1268,7 +1282,7 @@ else {
                         class="rightSectionHeading"><?php print t('Try this operation'); ?></div>
                       <form class="testForm"
                             name="request_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']) . "_" . preg_replace("/\W/", "", $pathSegment) . '_' . $verb; ?>"
-                            onsubmit="API.test('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print $pathSegment ?>');">
+                            onsubmit="API.test('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print str_replace("'","%27",$pathSegment); ?>');">
                         <input type="password" style="display:none;"/>
                         <input type="submit" style="display: none;"
                                tabindex="-1"/>
@@ -1285,7 +1299,7 @@ else {
                               $url_escaped = preg_replace('/(\/)+/', '$1', $url); // remove double slashes?>
                               <span
                                 class="apiURL">://<?php print $url_escaped; ?></span>
-                            <?php else : ?> 
+                            <?php else : ?>
                               <?php $parts = explode('/', $pathSegment);
                               $end = array_pop($parts);
                               $url = $api['host'] . $api['basePath'] . join('/', $parts);
@@ -1301,7 +1315,7 @@ else {
                               $url_escaped = preg_replace('/(https?:\/\/)|(\/)+/', '$1$2', $url); // remove double slashes?>
                               <span
                                 class="apiURL"><?php print $url_escaped; ?></span>
-                            <?php else : ?> 
+                            <?php else : ?>
                               <?php $parts = explode('/', $pathSegment);
                               $end = array_pop($parts);
                               $url = $default_endpoint . $api['basePath'] . join('/', $parts);
@@ -1405,7 +1419,7 @@ else {
                                 <div
                                   class="authoriseButton accessCodeFlow hidden accesscode">
                                   <button type="button"
-                                          onclick="API.authorize('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print $pathSegment ?>')"
+                                          onclick="API.authorize('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print str_replace("'","%27",$pathSegment); ?>')"
                                           title="<?php print t('Authorize'); ?>"><?php print t('Authorize'); ?></button>
                                   <div
                                     class='parameterName'><?php print t('Access Code'); ?></div>
@@ -1416,11 +1430,11 @@ else {
                                   class="getTokenButton accesstoken">
                                   <button type="button"
                                           class="accessCodeFlow hidden"
-                                          onclick="API.getToken('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print $pathSegment ?>')"
+                                          onclick="API.getToken('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print str_replace("'","%27",$pathSegment); ?>')"
                                           title="<?php print t('Get token'); ?>"><?php print t('Get token'); ?></button>
                                   <button type="button"
                                           class="notAccessCodeFlow"
-                                          onclick="API.authorize('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print $pathSegment ?>')"
+                                          onclick="API.authorize('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print str_replace("'","%27",$pathSegment); ?>')"
                                           title="<?php print t('Authorize'); ?>"><?php print t('Authorize'); ?></button>
                                   <div
                                     class='parameterName'><?php print t('Access Token'); ?></div>
@@ -1430,7 +1444,7 @@ else {
                                 <div
                                   class="refreshButton hidden">
                                   <button type="button"
-                                          onclick="API.refreshToken('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print $pathSegment ?>')"
+                                          onclick="API.refreshToken('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print str_replace("'","%27",$pathSegment); ?>')"
                                           title="<?php print t('Refresh token'); ?>"><?php print t('Refresh token'); ?></button>
                                   <div class="refreshDone hidden"><i
                                       class="material-icons">done</i></div>
@@ -1790,7 +1804,7 @@ else {
                     </form>
                     <button style="margin: 0px 15px 15px 0px;"
                             class='mesh floatRight'
-                            onclick="API.test('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print $pathSegment ?>');"><?php print t('Call operation'); ?></button>
+                            onclick="API.test('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print str_replace("'","%27",$pathSegment); ?>');"><?php print t('Call operation'); ?></button>
                     <div class='clearBoth'></div>
                     <div class="responseSection hidden"
                          id="response_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']) . '_' . preg_replace("/\W/", "", $pathSegment) . '_' . $verb; ?>">
@@ -1821,7 +1835,7 @@ else {
                       class='tab-content'>
                       <form class="testForm"
                             name="request_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']) . "_" . preg_replace("/\W/", "", $pathSegment) . '_' . $verb; ?>"
-                            onsubmit="API.test('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print $pathSegment ?>');">
+                            onsubmit="API.test('<?php print $api['info']['x-ibm-name'] . $api['info']['version']; ?>', '<?php print $verb ?>', '<?php print str_replace("'","%27",$pathSegment); ?>');">
                         <div class="securitySection hidden">
                           <div class="securitySelectionSection hidden">
                             <label><?php print t('Security'); ?></label>
@@ -1859,7 +1873,7 @@ else {
                   class="navigate-apis_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>_definitions_<?php print drupal_html_class(preg_replace("/\W/", "", $definitionName)); ?>"><?php print $definitionName; ?></label>
                 <?php if (isset($definition['description'])) : ?>
                   <div
-                    class="markdown"><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($api, ['definitions'][$definitionName], 'description')); ?></div>
+                    class="markdown"><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($definition, array(), 'description')); ?></div>
                   <?php unset($definition['description']); ?>
                 <?php endif; ?>
                 <?php if (isset($definition['externalDocs']) && !empty($definition['externalDocs']) && isset($definition['externalDocs']['url'])) : ?>
@@ -1869,7 +1883,7 @@ else {
                         href="<?php print $definition['externalDocs']['url']; ?>"
                         target='_blank'>
                         <?php if (isset($definition['externalDocs']['description'])) {
-                          print ibm_apim_get_translated_string($api, ['definitions'][$definitionName]['externalDocs'], 'description');
+                          print ibm_apim_get_translated_string($definition, ['externalDocs'], 'description');
                           unset($definition['externalDocs']);
                         }
                         else {

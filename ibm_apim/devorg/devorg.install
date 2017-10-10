@@ -64,6 +64,7 @@ function _devorg_installed_fields() {
       'field_name' => 'devorg_tags',
       'label' => t('Organization Tags'),
       'type' => 'text',
+      'cardinality' => -1,
       'translatable' => FALSE
     ),
     'devorg_members' => array(
@@ -122,7 +123,7 @@ function _devorg_installed_instances() {
     'devorg_owner' => array(
       'field_name' => 'devorg_owner',
       'type' => 'text',
-      'label' => t('Organization Name'),
+      'label' => t('Organization Owner'),
       'widget' => array('type' => 'text_textfield'),
       'display' => array(
         'default' => array('label' => t('Organization Owner'), 'type' => 'text'),
@@ -132,7 +133,7 @@ function _devorg_installed_instances() {
     'devorg_tags' => array(
       'field_name' => 'devorg_tags',
       'type' => 'text',
-      'label' => t('Organization Name'),
+      'label' => t('Organization Tags'),
       'widget' => array('type' => 'text_textfield'),
       'display' => array(
         'default' => array('label' => t('Organization Tags'), 'type' => 'text'),
@@ -248,6 +249,10 @@ function devorg_update_7400() {
       watchdog($type, 'Field %field_name already exists', array(
         '%field_name' => $field['field_name']
       ));
+    }
+    if ($field['field_name'] == 'devorg_tags') {
+      $field['cardinality'] = -1;
+      field_update_field($field);
     }
   }
   foreach (_devorg_installed_instances() as $fieldinstance) {

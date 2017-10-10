@@ -41,11 +41,32 @@ function product_drush_command() {
       'name' => 'The product name:version'
     )
   );
+  $items['product-massupdate'] = array(
+    'description' => 'Mass updates a list of Products',
+    'aliases' => array('mprod'),
+    'arguments' => array(
+      'products' => 'The JSON array of Products',
+      'event' => 'The event type'
+    )
+  );
+  $items['product-tidy'] = array(
+    'description' => 'Tidies the list of Products to ensure consistent with APIm',
+    'aliases' => array('tprod'),
+    'arguments' => array(
+      'prodrefs' => 'The JSON array of Product references'
+    )
+  );
 
   return $items;
 }
 
 function drush_product_cleanse_drush_command() {
+  global $user;
+  // in case moderation is on we need cron to run as admin
+  // save the current user so we can switch back at the end
+  $original_user = $user;
+  drupal_save_session(FALSE);
+  $user = user_load(1);
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'product');
@@ -55,29 +76,54 @@ function drush_product_cleanse_drush_command() {
       node_delete($item->nid);
     }
   }
+  // switch back to original user
+  $user = $original_user;
+  drupal_save_session(TRUE);
   drupal_set_message(t('All Product entries deleted.'), 'success');
 }
 
 function drush_product_createOrUpdateProduct($func, $event, $product) {
-	if (isset($product)) {
-		$product = json_decode($product, TRUE);
-		$ref = $product['document']['info']['name'] . ':' . $product['document']['info']['version'];
-		
-		if (strtolower($product['state']) == "retired") {
-          drush_product_deleteproduct('retired', $ref);
-		} else {
-          $createdOrUpdated = product_createOrUpdateProduct($product, $event);
-		
-			if ($createdOrUpdated) {
-				drupal_set_message(t('Drush @func created Product @prod', array( '@func' => $func, '@prod' => $ref)), 'success');
-			} else {
-				drupal_set_message(t('Drush @func updated existing Product @prod', array( '@func' => $func, '@prod' => $ref)), 'success');
-			}
-		}
-	}
-	else {
-		drupal_set_message(t('Drush @func No Product provided', array( '@func' => $func)), 'error');
-	}
+  global $user;
+  // in case moderation is on we need cron to run as admin
+  // save the current user so we can switch back at the end
+  $original_user = $user;
+  drupal_save_session(FALSE);
+  $user = user_load(1);
+  if (isset($product)) {
+    if (is_string($product)) {
+      $product = json_decode($product, TRUE);
+    }
+    $ref = $product['document']['info']['name'] . ':' . $product['document']['info']['version'];
+
+    if (strtolower($product['state']) == "retired") {
+      drush_product_deleteproduct('retired', $ref);
+    }
+    else {
+      $createdOrUpdated = product_createOrUpdateProduct($product, $event);
+
+      if ($createdOrUpdated) {
+        drupal_set_message(t('Drush @func created Product @prod', array(
+          '@func' => $func,
+          '@prod' => $ref
+        )), 'success');
+      }
+      else {
+        drupal_set_message(t('Drush @func updated existing Product @prod', array(
+          '@func' => $func,
+          '@prod' => $ref
+        )), 'success');
+      }
+    }
+    if (module_exists('views')) {
+      views_invalidate_cache();
+    }
+  }
+  else {
+    drupal_set_message(t('Drush @func No Product provided', array('@func' => $func)), 'error');
+  }
+  // switch back to original user
+  $user = $original_user;
+  drupal_save_session(TRUE);
 }
 
 function drush_product_createproduct($event, $product) {
@@ -89,6 +135,12 @@ function drush_product_updateproduct($event, $product) {
 }
 
 function drush_product_deleteproduct($event, $ref) {
+  global $user;
+  // in case moderation is on we need cron to run as admin
+  // save the current user so we can switch back at the end
+  $original_user = $user;
+  drupal_save_session(FALSE);
+  $user = user_load(1);
   if (isset($ref)) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
@@ -99,12 +151,41 @@ function drush_product_deleteproduct($event, $ref) {
       $first = array_shift($results['node']);
       $nid = $first->nid;
       product_deleteProductNode($nid, $event);
-      drupal_set_message(t('Drush DeleteProduct deleted Product @prod', array( '@prod' => $ref)), 'success');
-    } else {
-      drupal_set_message(t('Drush DeleteProduct could not find Product @prod', array( '@prod' => $ref)), 'warning');
+      drupal_set_message(t('Drush DeleteProduct deleted Product @prod', array('@prod' => $ref)), 'success');
+    }
+    else {
+      drupal_set_message(t('Drush DeleteProduct could not find Product @prod', array('@prod' => $ref)), 'warning');
     }
   }
   else {
     drupal_set_message(t('Drush DeleteProduct No Product provided.'), 'error');
+  }
+  // switch back to original user
+  $user = $original_user;
+  drupal_save_session(TRUE);
+}
+
+function drush_product_massupdate($products, $event = 'bgsync') {
+  if (!empty($products)) {
+    $products = json_decode($products, TRUE);
+    foreach ($products as $product) {
+      drush_product_createOrUpdateProduct('MassUpdate', $event, $product);
+    }
+  }
+}
+
+function drush_product_tidy($prodrefs) {
+  $prodrefs = json_decode($prodrefs, TRUE);
+  if (!empty($prodrefs)) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'product')
+      ->fieldCondition('product_ref', 'value', $prodrefs, 'NOT IN');
+    $results = $query->execute();
+    if (isset($results['node'])) {
+      foreach ($results['node'] as $item) {
+        node_delete($item->nid);
+      }
+    }
   }
 }

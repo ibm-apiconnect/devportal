@@ -640,6 +640,7 @@ taxonomy/*',
   ));
   variable_set('apic_taxonomy_menu_block_ids', array(0 => 1, 1 => 2));
   variable_set('ibm_apim_taxonomy_menu_upgrade', 1);
+  variable_set('ibm_apim_taxonomy_menu_nodecount_upgrade', 2);
   variable_set('ibm_apim_update_taxonomy_block', 1);
   variable_set('ibm_apim_v5_menu_upgrade', 1);
 
@@ -1184,6 +1185,15 @@ js/admin_menu/cache/*');
 
   variable_set('ibm_apim_disable_jqmulti', 1);
   variable_set('ibm_apim_disable_usersearchtoadmin', 1);
+
+  _apim_profile_enable_honeypot();
+  variable_set('ibm_apim_enable_honeypot', 1);
+
+  variable_set('ibm_apim_allow_clientidreset', 1);
+  variable_set('ibm_apim_allow_clientsecretreset', 1);
+  variable_set('ibm_apim_allow_newcreds', 1);
+  variable_set('ibm_apim_allow_devorg_creation', 1);
+  variable_set('ibm_apim_allow_devorg_rename', 1);
 
   // set frontpage page title
   if (module_exists('metatag')) {
@@ -3712,14 +3722,37 @@ js/admin_menu/cache/*';
     if (module_exists('taxonomy_menu')) {
       module_disable(array('taxonomy_menu'), TRUE);
     }
-    db_insert('block')->fields(array(
-      'status' => 1,
-      'region' => 'collapsible',
-      'title' => 'Tags',
-      'module' => 'apic_taxonomy_menu_block',
-      'delta' => '1',
-      'visibility' => 1,
-      'pages' => 'node/*
+    $bid = db_query("SELECT bid FROM {block} WHERE module=:module AND region=:region AND theme=:theme", array(
+      ':module' => 'apic_taxonomy_menu_block',
+      ':theme' => 'connect_theme',
+      ':region' => 'collapsible'
+    ))->fetchField();
+    if (isset($bid)) {
+      db_update('block')
+        ->fields(array(
+          'visibility' => 1,
+          'pages' => 'node/*
+api
+api/*
+product
+product/*
+application
+application/*
+taxonomy/*'
+        ))
+        ->condition('module', 'apic_taxonomy_menu_block')
+        ->condition('region', 'collapsible')
+        ->condition('theme', 'connect_theme')
+        ->execute();
+    } else {
+      db_insert('block')->fields(array(
+        'status' => 1,
+        'region' => 'collapsible',
+        'title' => 'Tags',
+        'module' => 'apic_taxonomy_menu_block',
+        'delta' => '1',
+        'visibility' => 1,
+        'pages' => 'node/*
 api
 api/*
 product
@@ -3727,8 +3760,9 @@ product/*
 application
 application/*
 taxonomy/*',
-      'theme' => 'connect_theme'
-    ))->execute();
+        'theme' => 'connect_theme'
+      ))->execute();
+    }
     variable_set('apic_taxonomy_menu_block_1', array(
       'delta' => 1,
       'admin_title' => 'Tags',
@@ -3793,6 +3827,21 @@ taxonomy/*'
     $deltas[$max_key + 1] = $next;
     variable_set('apic_taxonomy_menu_block_ids', $deltas);
     variable_set('ibm_apim_update_taxonomy_block', 1);
+  }
+
+  // re-enable taxonomy block node counts that were disabled for performance reasons
+  if (variable_get('ibm_apim_taxonomy_menu_nodecount_upgrade', NULL) == 1) {
+    $deltas = variable_get('apic_taxonomy_menu_block_ids', array(0 => 1));
+    foreach(array_values($deltas) as $delta) {
+      $current = variable_get('apic_taxonomy_menu_block_' . $delta);
+      if (isset($current)) {
+        $current['nodes'] = 1;
+        $current['nodes_aggregation'] = 1;
+        variable_set('apic_taxonomy_menu_block_' . $delta, $current);
+      }
+    }
+
+    variable_set('ibm_apim_taxonomy_menu_nodecount_upgrade', 2);
   }
 
   // update the default filesize quota
@@ -4052,6 +4101,12 @@ taxonomy/*'
   if (variable_get('ibm_apim_done_flag_bookmark_upgrade', NULL) == NULL) {
     _apim_profile_create_bookmark_view();
     variable_set('ibm_apim_done_flag_bookmark_upgrade', 1);
+  }
+
+  // enable honeypot for spam protection
+  if (variable_get('ibm_apim_enable_honeypot', NULL) == NULL) {
+    _apim_profile_enable_honeypot();
+    variable_set('ibm_apim_enable_honeypot', 1);
   }
 
   if (variable_get('ibm_apim_done_frameprevention_upgrade', NULL) == NULL) {
@@ -4953,4 +5008,28 @@ function _apim_profile_enable_description_translation() {
     }
   }
   variable_set('ibm_apim_description_upgrade', 1);
+}
+
+/**
+ * default honeypot configuration
+ */
+function _apim_profile_enable_honeypot() {
+  variable_set('honeypot_log', 1);
+  variable_set('honeypot_element_name', 'url');
+  variable_set('honeypot_time_limit', 5);
+  variable_set('honeypot_form_user_register_form', 1);
+  variable_set('honeypot_form_user_pass', 1);
+  variable_set('honeypot_form_contact_site_form', 1);
+  variable_set('honeypot_form_contact_personal_form', 1);
+  variable_set('honeypot_form_comment_node_api', 1);
+  variable_set('honeypot_form_comment_node_application', 1);
+  variable_set('honeypot_form_comment_node_article', 1);
+  variable_set('honeypot_form_comment_node_forum', 1);
+  variable_set('honeypot_form_comment_node_poll', 1);
+  variable_set('honeypot_form_comment_node_devorg', 1);
+  variable_set('honeypot_form_comment_node_product', 1);
+  variable_set('honeypot_form_comment_node_blog', 1);
+  variable_set('honeypot_form_comment_node_support_ticket', 1);
+  variable_set('honeypot_form_comment_node_book', 1);
+  variable_set('honeypot_form_comment_node_page', 1);
 }

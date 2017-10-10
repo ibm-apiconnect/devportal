@@ -195,6 +195,200 @@ function api_menu() {
   return $items;
 }
 
+/* Permissions that can be granted
+ * Note that we also use permissions defined in product.module
+ */
+define('API_GRANT', 1);
+define('EDIT_ANY_API_CONTENT_GRANT', 1);
+
+/**
+ * Implements hook_node_access_records().
+ *
+ * For API nodes, create a list of grants for the node based on the
+ * products to which the API belongs
+ *
+ * @param $node
+ * @return array
+ *
+ * Note: hook is called when rebuilding permissions
+ */
+function api_node_access_records($node)
+{
+    acl_log('Enter: api_node_access_records');
+
+    $type = is_string($node) ? $node : $node->type;
+    $grants = array();
+    $uniquegrants = array();
+
+    // Only build permissions for API nodes
+    if ($type == 'api') {
+
+        // Create a grant for 'edit any api content'
+        $grants[] = array(
+            'realm' => 'api',
+            'gid' => EDIT_ANY_API_CONTENT_GRANT,
+            'grant_view' => 1,
+            'grant_update' => 0,
+            'grant_delete' => 0,
+            'priority' => 0,
+        );
+
+        // find the list of products to which this api belongs
+        // apiref will be a string like: 'maths:1.0.0'
+        // product_apis_value will be json like: 'a:1:{s:5:"maths";a:1:{s:4:"name";s:11:"maths:1.0.0";}}'
+        // we therefore use SQL LIKE to search
+        $apiref = $node->api_ref[$node->language][0]['value'];
+        $query = db_query("SELECT entity_id FROM {field_data_product_apis} WHERE product_apis_value LIKE '%" . $apiref . "%'");
+        $prods = $query->fetchAll();
+
+        // Now go through and create grants based on each of the products, using the
+        // same scheme as in product_node_access_records (the logic is that if a user
+        // can access any of the products which contain this API, they can view the API)
+        foreach ($prods as $prod) {
+            // Pick up all of the data we need.  Left Joins are used for tables where
+            // there may not be an entry (e.g. if tags or orgs are not defined)
+            $query = db_query("SELECT pub.product_visibility_public_value AS product_visibility_public_value, auth.product_visibility_authenticated_value AS product_visibility_authenticated_value
+, org.product_visibility_custom_orgs_value AS product_visibility_custom_orgs_value, tags.product_visibility_custom_tags_value AS product_visibility_custom_tags_value, view.product_view_enabled_value AS product_view_enabled_value, prref.product_ref_value AS product_ref_value
+FROM 
+field_data_product_visibility_public pub
+INNER JOIN field_data_product_visibility_authenticated auth ON pub.entity_id = auth.entity_id
+LEFT JOIN field_data_product_visibility_custom_orgs org ON pub.entity_id = org.entity_id
+LEFT JOIN field_data_product_visibility_custom_tags tags ON pub.entity_id = tags.entity_id
+LEFT JOIN field_data_product_ref prref ON pub.entity_id = prref.entity_id
+INNER JOIN field_data_product_view_enabled view ON pub.entity_id = view.entity_id
+WHERE  (pub.entity_id = ". $prod->entity_id .")");
+            $results = $query->fetchAll();
+
+            acl_log('DB Search for product '.$prod->entity_id.': '.var_export($results,TRUE));
+
+            // The query will return multiple rows if there are multiple orgs or tags
+            // or if there are multiple products with the same API
+            // This causes duplication of the grants, which we will tidy up after
+            foreach ($results as $row) {
+                // Only create grants if the product is enabled
+                if ($row->product_view_enabled_value == 1) {
+                    // Create a grant for 'edit any product content'
+                    $grants[] = array(
+                        'realm' => 'product',
+                        'gid' => EDIT_ANY_PRODUCT_CONTENT_GRANT,
+                        'grant_view' => 1,
+                        'grant_update' => 0,
+                        'grant_delete' => 0,
+                        'priority' => 0,
+                    );
+                    // Create a grant for public access if public is set
+                    if ($row->product_visibility_public_value == 1) {
+                        $grants[] = array(
+                            'realm' => 'product',
+                            'gid' => PUBLIC_PRODUCT_GRANT,
+                            'grant_view' => 1,
+                            'grant_update' => 0,
+                            'grant_delete' => 0,
+                            'priority' => 0,
+                        );
+                    }
+                    // Create a grant for authenticated access if authenticated is set
+                    if ($row->product_visibility_authenticated_value == 1) {
+                        $grants[] = array(
+                            'realm' => 'product',
+                            'gid' => AUTHENTICATED_PRODUCT_GRANT,
+                            'grant_view' => 1,
+                            'grant_update' => 0,
+                            'grant_delete' => 0,
+                            'priority' => 0,
+                        );
+                    }
+                    // Create a grant for subscription based on product reference
+                    if (isset($row->product_ref_value)) {
+                        $grants[] = array(
+                            'realm' => 'product_ref_' . $row->product_ref_value,
+                            'gid' => SUBSCRIBED_TO_PRODUCT_GRANT,
+                            'grant_view' => 1,
+                            'grant_update' => 0,
+                            'grant_delete' => 0,
+                            'priority' => 0,
+                        );
+                    }
+                    // Create a grant for organisations, as a separate realm based on the
+                    // org uuid.  If there are multiple orgs, then multiple grants each
+                    // with their own realm will be created
+                    if (isset($row->product_visibility_custom_orgs_value)) {
+                        $grants[] = array(
+                            'realm' => 'product_org_' . $row->product_visibility_custom_orgs_value,
+                            'gid' => ORG_PRODUCT_GRANT,
+                            'grant_view' => 1,
+                            'grant_update' => 0,
+                            'grant_delete' => 0,
+                            'priority' => 0,
+                        );
+                    }
+                    // Create a grant for tags, as a separate realm based on the
+                    // tag string.  If there are multiple tags, then multiple grants each
+                    // with their own realm will be created
+                    if (isset($row->product_visibility_custom_tags_value)) {
+                        $grants[] = array(
+                            'realm' => 'product_tag_' . $row->product_visibility_custom_tags_value,
+                            'gid' => TAG_PRODUCT_GRANT,
+                            'grant_view' => 1,
+                            'grant_update' => 0,
+                            'grant_delete' => 0,
+                            'priority' => 0,
+                        );
+                    }
+                }
+            }
+        }
+        // Since multiple grants may have been created (due to the way the db_select
+        // call returns multiple rows), we need to remove any that are duplicated
+        // The code below does this by serialising each member of the grants array
+        // and then using array_unique (which only works on strings) to ensure that
+        // there are no duplicates
+        $uniquegrants = array_map("unserialize", array_unique(array_map("serialize", $grants)));
+        acl_log('Grants:' . var_export($uniquegrants, TRUE));
+    }
+
+    acl_log('Exit: api_node_access_records');
+    return $uniquegrants;
+}
+
+/**
+ * Implements hook_node_grants().
+ *
+ * Note that the vast majority of permissions for APIs are granted to the
+ * user in the product.module, by design; access to APIs is based on access
+ * to the products which use that API
+ *
+ * @param $account
+ * @param $op
+ * @return array
+ *
+ * Note: hook is not called at all when admin logged in
+ * Note: hook is called on every login, logout and page load
+ */
+function api_node_grants($account, $op) {
+
+  acl_log('Enter: api_node_grants');
+
+  if (isset($account) && isset($account->name)) {
+    acl_log('Account: ' . $account->name);
+  }
+  else {
+    acl_log('Account: anonymous');
+  }
+
+  $grants = array();
+
+  // If 'edit any api content' is set, grant EDIT_ANY_API_CONTENT_GRANT
+  if (ibm_apim_explicit_user_access('edit any api content')) {
+    $grants['api'] = array(EDIT_ANY_API_CONTENT_GRANT);
+  }
+
+  acl_log('Grants: ' . var_export($grants, TRUE));
+
+  acl_log('Exit: api_node_grants');
+  return $grants;
+}
+
 /**
  * Implements hook_node_access().
  * This is checking if the specified api is returned from apim, if not it blocks access.
@@ -253,6 +447,7 @@ function api_check_api_access($node) {
  * @param $variables
  */
 function api_preprocess_node(&$variables) {
+  global $user;
   if ($variables['node']->type == 'api' && $variables['view_mode'] == 'teaser') {
     $variables['theme_hook_suggestions'][] = 'node__api__teaser';
   }
@@ -390,7 +585,7 @@ function api_preprocess_node(&$variables) {
           }
         }
       }
-      if (module_exists('application')) {
+      if (module_exists('application') && user_is_logged_in() && $user->uid != 1) {
         $apps = array();
         $creds = array();
         $redirect_uris = array();
@@ -429,6 +624,7 @@ function api_preprocess_node(&$variables) {
       else {
         $variables['apps'] = array();
         $variables['creds'] = array();
+        $variables['redirect_uris'] = array();
       }
     }
   }
@@ -598,25 +794,27 @@ function api_list_apis() {
  * @return array
  */
 function api_get_linked_pages($apinid) {
-  $finalnids = array();
-  $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'page')
-    ->fieldCondition('field_all_apis', 'value', 1);
-  $results = $query->execute();
-  if (isset($results) && isset($results['node'])) {
-    foreach ($results['node'] as $item) {
-      $finalnids[] = $item->nid;
+  if (node_type_load('page') != FALSE) {
+    $finalnids = array();
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'page')
+      ->fieldCondition('field_all_apis', 'value', 1);
+    $results = $query->execute();
+    if (isset($results) && isset($results['node'])) {
+      foreach ($results['node'] as $item) {
+        $finalnids[] = $item->nid;
+      }
     }
-  }
-  $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'page')
-    ->fieldCondition('field_apis', 'target_id', $apinid);
-  $results = $query->execute();
-  if (isset($results) && isset($results['node'])) {
-    foreach ($results['node'] as $item) {
-      $finalnids[] = $item->nid;
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'page')
+      ->fieldCondition('field_apis', 'target_id', $apinid);
+    $results = $query->execute();
+    if (isset($results) && isset($results['node'])) {
+      foreach ($results['node'] as $item) {
+        $finalnids[] = $item->nid;
+      }
     }
   }
   return array_unique($finalnids, SORT_NUMERIC);
@@ -1084,6 +1282,11 @@ function api_createNewAPINode($api, $event) {
     }
   }
 
+  // enable application certificates if we find an API that uses it
+  if (isset($api['document']['x-ibm-configuration']['application-authentication']['certificate']) && $api['document']['x-ibm-configuration']['application-authentication']['certificate'] == true) {
+    variable_set('ibm_apim_application_certificates', 1);
+  }
+
   $phase_tagging = variable_get('ibm_apim_autotag_with_phase', 1);
   if ($phase_tagging == 1) {
     if (isset($api['document']['x-ibm-configuration']['phase'])) {
@@ -1428,6 +1631,11 @@ function api_updateExistingAPINode($node, $api, $event) {
     }
   }
 
+  // enable application certificates if we find an API that uses it
+  if (isset($api['document']['x-ibm-configuration']['application-authentication']['certificate']) && $api['document']['x-ibm-configuration']['application-authentication']['certificate'] == true) {
+    variable_set('ibm_apim_application_certificates', 1);
+  }
+
   $phase_tagging = variable_get('ibm_apim_autotag_with_phase', 1);
   if ($phase_tagging == 1) {
     if (isset($api['document']['x-ibm-configuration']['phase'])) {
@@ -1733,7 +1941,8 @@ function _api_create_forum($apiname = NULL, $apidescription = NULL) {
     $type_to_severity = array(
       'status' => WATCHDOG_NOTICE,
       'warning' => WATCHDOG_WARNING,
-      'error' => WATCHDOG_ERROR
+      'error' => WATCHDOG_ERROR,
+      'success' => WATCHDOG_NOTICE
     );
     if (is_array($messages)) {
       foreach ($messages as $type => $type_messages) {

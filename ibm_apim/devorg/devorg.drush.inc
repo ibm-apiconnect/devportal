@@ -22,7 +22,7 @@ function devorg_drush_command() {
     'aliases' => array('uorg'),
     'arguments' => array(
       'event' => 'The event type',
-      'product' => 'The JSON devorg payload'
+      'devorg' => 'The JSON devorg payload'
     )
   );
   $items['devorg-createorg'] = array(
@@ -30,7 +30,7 @@ function devorg_drush_command() {
     'aliases' => array('corg'),
     'arguments' => array(
       'event' => 'The event type',
-      'product' => 'The JSON devorg payload'
+      'devorg' => 'The JSON devorg payload'
     )
   );
   $items['devorg-deleteorg'] = array(
@@ -41,11 +41,32 @@ function devorg_drush_command() {
       'id' => 'The devorg ID'
     )
   );
+  $items['devorg-massupdate'] = array(
+    'description' => 'Mass updates a list of Devorgs',
+    'aliases' => array('morg'),
+    'arguments' => array(
+      'devorgs' => 'The JSON array of Devorgs',
+      'event' => 'The event type'
+    )
+  );
+  $items['devorg-tidy'] = array(
+    'description' => 'Tidies the list of Devorgs to ensure consistent with APIm',
+    'aliases' => array('torg'),
+    'arguments' => array(
+      'devorgids' => 'The JSON array of devorg IDs'
+    )
+  );
 
   return $items;
 }
 
 function drush_devorg_cleanse_drush_command() {
+  global $user;
+  // in case moderation is on we need cron to run as admin
+  // save the current user so we can switch back at the end
+  $original_user = $user;
+  drupal_save_session(FALSE);
+  $user = user_load(1);
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'devorg');
@@ -55,23 +76,47 @@ function drush_devorg_cleanse_drush_command() {
       node_delete($item->nid);
     }
   }
+  // switch back to original user
+  $user = $original_user;
+  drupal_save_session(TRUE);
   drupal_set_message(t('All Developer Organization entries deleted.'), 'success');
 }
 
 function drush_devorg_createOrUpdateOrg($func, $event, $devorg) {
-	if (isset($devorg)) {
-		$devorg = json_decode($devorg, TRUE);
-		$ref = $devorg['id'];
-      $createdOrUpdated = devorg_createOrUpdateDevorg($devorg, $event);
-		if ($createdOrUpdated) {
-			drupal_set_message(t('Drush @func created Org @org', array( '@func' => $func, '@org' => $ref)), 'success');
-		} else {
-			drupal_set_message(t('Drush @func updated existing Org @org', array( '@func' => $func, '@org' => $ref)), 'success');
-		}
-	}
-	else {
-		drupal_set_message(t('Drush @func No Org provided', array( '@func' => $func)), 'error');
-	}
+  global $user;
+  // in case moderation is on we need cron to run as admin
+  // save the current user so we can switch back at the end
+  $original_user = $user;
+  drupal_save_session(FALSE);
+  $user = user_load(1);
+  if (isset($devorg)) {
+    if (is_string($devorg)) {
+      $devorg = json_decode($devorg, TRUE);
+    }
+    $ref = $devorg['id'];
+    $createdOrUpdated = devorg_createOrUpdateDevorg($devorg, $event);
+    if ($createdOrUpdated) {
+      drupal_set_message(t('Drush @func created Org @org', array(
+        '@func' => $func,
+        '@org' => $ref
+      )), 'success');
+    }
+    else {
+      drupal_set_message(t('Drush @func updated existing Org @org', array(
+        '@func' => $func,
+        '@org' => $ref
+      )), 'success');
+    }
+    if (module_exists('views')) {
+      views_invalidate_cache();
+    }
+  }
+  else {
+    drupal_set_message(t('Drush @func No Org provided', array('@func' => $func)), 'error');
+  }
+  // switch back to original user
+  $user = $original_user;
+  drupal_save_session(TRUE);
 }
 
 function drush_devorg_createorg($event, $devorg) {
@@ -83,6 +128,12 @@ function drush_devorg_updateorg($event, $devorg) {
 }
 
 function drush_devorg_deleteorg($event, $id) {
+  global $user;
+  // in case moderation is on we need cron to run as admin
+  // save the current user so we can switch back at the end
+  $original_user = $user;
+  drupal_save_session(FALSE);
+  $user = user_load(1);
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'node')
     ->entityCondition('bundle', 'devorg')
@@ -93,7 +144,36 @@ function drush_devorg_deleteorg($event, $id) {
     $nid = $first->nid;
     node_delete($nid);
     drupal_set_message(t('Drush DeleteOrg deleted Org @org', array('@org' => $id)), 'success');
-  } else {
-      drupal_set_message(t('Drush DeleteOrg could not find Org @org', array('@org' => $id)), 'warning');
+  }
+  else {
+    drupal_set_message(t('Drush DeleteOrg could not find Org @org', array('@org' => $id)), 'warning');
+  }
+  // switch back to original user
+  $user = $original_user;
+  drupal_save_session(TRUE);
+}
+
+function drush_devorg_massupdate($devorgs, $event = 'bgsync') {
+  $devorgs = json_decode($devorgs, TRUE);
+  if (!empty($devorgs)) {
+    foreach ($devorgs as $devorg) {
+      drush_devorg_createOrUpdateOrg('MassUpdate', $event, $devorg);
+    }
+  }
+}
+
+function drush_devorg_tidy($devorgids) {
+  $devorgids = json_decode($devorgids, TRUE);
+  if (!empty($devorgids)) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'devorg')
+      ->fieldCondition('devorg_id', 'value', $devorgids, 'NOT IN');
+    $results = $query->execute();
+    if (isset($results['node'])) {
+      foreach ($results['node'] as $item) {
+        node_delete($item->nid);
+      }
+    }
   }
 }

@@ -16,6 +16,9 @@
  * Adds the Application node content type to Drupal for representing Applications from IBM APIC
  */
 
+/* Define a single permission to be granted */
+define('APPLICATION_GRANT', 1);
+
 /**
  * Implements hook_node_info().
  * @return array
@@ -257,6 +260,58 @@ function application_menu_alter(&$items) {
 }
 
 /**
+ * Implements hook_node_access_records().
+ *
+ * For application nodes, create a realm named after the orgid for that node,
+ * and require a permission of APPLICATION_GRANT to view that node
+ *
+ * @param $node
+ * @return array
+ *
+ * Note: hook is called when rebuilding permissions
+ */
+function application_node_access_records($node) {
+  $type = is_string($node) ? $node : $node->type;
+  $grants = array();
+  if ($type == 'application') {
+    $org = $node->application_orgid[$node->language][0]['value'];
+    $grants[] = array(
+      'realm' => 'application_' . $org,
+      'gid' => APPLICATION_GRANT,
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
+      'priority' => 0,
+    );
+  }
+  return $grants;
+}
+
+/**
+ * Implements hook_node_grants().
+ *
+ * For the view operation, allow APPLICATION_GRANT permission to the
+ * application realm named after the orgid of the user
+ *
+ * @param $account
+ * @param $op
+ * @return array
+ *
+ * Note: hook is not called at all when admin logged in
+ * Note: hook is called on every login, logout and page load
+ */
+function application_node_grants($account, $op) {
+  $grants = array();
+  if ($op == 'view' && user_is_logged_in()) {
+    $org = ibm_apim_get_current_developer_org();
+    if (isset($org['id'])) {
+      $grants['application_' . $org['id']] = array(APPLICATION_GRANT);
+    }
+  }
+  return $grants;
+}
+
+/**
  * Implements hook_node_access().
  * This is checking if the specified application is returned from apim, if not it blocks access.
  * @param $node
@@ -344,6 +399,7 @@ function application_form_application_node_form_alter(&$form, &$form_state) {
  */
 function application_preprocess_node(&$variables) {
   drupal_page_is_cacheable(FALSE);
+  global $user;
   if ($variables['node']->type == 'application' && $variables['view_mode'] == 'teaser') {
     $variables['theme_hook_suggestions'][] = 'node__application__teaser';
   }
@@ -355,13 +411,18 @@ function application_preprocess_node(&$variables) {
     $isdev = ibm_apim_check_is_developer();
     $variables['isdev'] = $isdev;
     $variables['titlelink'] = '<span class="apimTitle"> <a href="' . url("application/" . $variables['application_apiid'][0]['safe_value']) . '">' . $variables['title'] . '</a> </span>';
-    $variables['analyticslink'] = ' <a href="' . url("myorg/analytics/" . $variables['application_apiid'][0]['value']) . '" title="' . t('Analytics') . '"><i class="material-icons">equalizer</i> ' . t('Analytics') . '</a>';
-    $variables['notificationsettingslink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/notifysettings") . '" title="' . t('Notification settings') . '"><i class="material-icons">notifications</i> ' . t('Notification settings') . '</a>';
+    if (user_is_logged_in() && $user->uid != 1) {
+      $variables['analyticslink'] = ' <a href="' . url("myorg/analytics/" . $variables['application_apiid'][0]['value']) . '" title="' . t('Analytics') . '"><i class="material-icons">equalizer</i> ' . t('Analytics') . '</a>';
+      $variables['notificationsettingslink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/notifysettings") . '" title="' . t('Notification settings') . '"><i class="material-icons">notifications</i> ' . t('Notification settings') . '</a>';
+    }
     if (isset($isdev) && $isdev == TRUE) {
       $variables['promotelink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/promote") . '" title="' . t('Upgrade to production') . '"> ' . t('Upgrade to production') . '</a>';
       $variables['editlink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/edit") . '" title="' . t('Edit') . '"><i class="material-icons">mode_edit</i> ' . t('Edit') . '</a>';
       $variables['deletelink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/delete") . '" title="' . t('Delete') . '"><i class="material-icons">delete</i> ' . t('Delete') . '</a>';
-      $variables['addcredentialslink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/add-clientcreds") . '" title="' . t('Add credentials') . '"><i class="material-icons">add_circle</i> ' . t('Add credentials') . '</a>';
+      $ibm_apim_allow_newcreds = variable_get('ibm_apim_allow_newcreds', TRUE);
+      if ($ibm_apim_allow_newcreds == 1) {
+        $variables['addcredentialslink'] = ' <a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/add-clientcreds") . '" title="' . t('Add credentials') . '"><i class="material-icons">add_circle</i> ' . t('Add credentials') . '</a>';
+      }
       $variables['uploadimagelink'] = '<span class="uploadlink"><a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/upload") . '" title="' . t('Update') . '">' . t('Update') . ' <i class="material-icons">file_upload</i></a></span>';
       $variables['removeimagelink'] = '<span class="removelink"><a href="' . url("application/" . $variables['application_apiid'][0]['value'] . "/removeimage") . '" title="' . t('Delete') . '">' . t('Delete') . ' <i class="material-icons">delete</i></a></span>';
     }
@@ -932,7 +993,8 @@ function application_updateExistingApplicationNode($node, $app, $event) {
   $node->application_type[$node->language][0]['value'] = strtoupper($app['type']);
   if (isset($app['promoteTo'])) {
     $node->application_promoteto[$node->language][0]['value'] = $app['promoteTo'];
-  } else {
+  }
+  else {
     $node->application_promoteto[$node->language] = array();
   }
 
@@ -1024,6 +1086,7 @@ function application_details_contents($appId) {
     $returnValue['type'] = $app_data['type'];
     $returnValue['promoteto'] = $app_data['promoteTo'];
     $returnValue['oauthRedirectURI'] = $app_data['oauthRedirectURI'];
+    $returnValue['certificate'] = $app_data['certificate'];
     $returnValue['url'] = $app_data['url'];
     $returnValue['secret_verify_url'] = '/v1/portal/orgs/' . $developerOrg . '/apps/' . $appId . '/credentials/verify-secret';
     $returnValue['secret_reset_url'] = '/v1/portal/orgs/' . $developerOrg . '/apps/' . $appId . '/credentials/reset-secret';
@@ -1044,27 +1107,34 @@ function application_details_contents($appId) {
  */
 function application_new_application_clientcreds($form, &$form_state, $appid) {
   $isdev = ibm_apim_check_is_developer();
+  $ibm_apim_allow_newcreds = variable_get('ibm_apim_allow_newcreds', TRUE);
   if (isset($isdev) && $isdev == TRUE) {
-    $form = array();
-    $form['title'] = array('#markup' => '<h1>' . t('Request additional client credentials') . '</h1>');
-    $form['intro'] = array(
-      '#markup' => '<p>' . t('It is possible to have multiple sets of credentials per Application. For example this could enable the revocation of one set of credentials and migration to a new set in a managed fashion.') . '</p>'
-    );
-    $form['description'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Description'),
-      '#required' => FALSE,
-      '#theme_options' => array('description at top' => t('Optionally specify a description to describe the use of these credentials'))
-    );
-    $form['appid'] = array(
-      '#type' => 'hidden',
-      '#value' => check_plain($appid)
-    );
+    if ($ibm_apim_allow_newcreds == 1) {
+      $form = array();
+      $form['title'] = array('#markup' => '<h1>' . t('Request additional client credentials') . '</h1>');
+      $form['intro'] = array(
+        '#markup' => '<p>' . t('It is possible to have multiple sets of credentials per Application. For example this could enable the revocation of one set of credentials and migration to a new set in a managed fashion.') . '</p>'
+      );
+      $form['description'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Description'),
+        '#required' => FALSE,
+        '#theme_options' => array('description at top' => t('Optionally specify a description to describe the use of these credentials'))
+      );
+      $form['appid'] = array(
+        '#type' => 'hidden',
+        '#value' => check_plain($appid)
+      );
 
-    $form['submit'] = array('#type' => 'submit', '#value' => t('Submit'));
-    $form['#submit'] = array('application_new_application_clientcreds_submit');
-    $form['#attributes']['class'] = 'reg-form';
-    return $form;
+      $form['submit'] = array('#type' => 'submit', '#value' => t('Submit'));
+      $form['#submit'] = array('application_new_application_clientcreds_submit');
+      $form['#attributes']['class'] = 'reg-form';
+      return $form;
+    }
+    else {
+      drupal_set_message(t('Access Denied.'), 'error');
+      return array();
+    }
   }
   else {
     drupal_set_message(t('Developer access required.'), 'error');
@@ -1079,144 +1149,135 @@ function application_new_application_clientcreds($form, &$form_state, $appid) {
  * @param $form_state
  */
 function application_new_application_clientcreds_submit($form, &$form_state) {
-  $appId = $form_state['values']['appid'];
-  $descr = $form_state['values']['description'];
-  $org = ibm_apim_get_current_developer_org();
-  $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appId . '/credentials';
-  $data = array("description" => $descr);
-  $result = ibm_apim_post($url, json_encode($data));
-  if (isset($result) && $result->code >= 200 && $result->code < 300) {
-    $data = $result->data;
-    drupal_alter('ibm_apim_application_new_application_clientcreds', $appId, $data);
-    drupal_set_message(t('Application Client ID: !html_start@label!html_end', array(
-      '!html_start' => '<div id="app_id" class="appClientReset"><input class="toggle-password" id="clientID" type="password" readonly value="' . $data['clientID'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientID"> <label for="show-clientID">',
-      '@label' => t('Show Client ID'),
-      '!html_end' => '</label></div></div>'
-    )));
-    drupal_set_message(t('Application Client Secret: !html_start@label!html_end', array(
-      '!html_start' => '<div id="app_secret" class="appClientReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $data['clientSecret'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
-      '@label' => t('Show Client Secret'),
-      '!html_end' => '</label></div></div>'
-    )));
-    // update the stored app with the additional creds
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', 'application')
-      ->fieldCondition('application_apiid', 'value', $appId);
-    $results = $query->execute();
+  $ibm_apim_allow_newcreds = variable_get('ibm_apim_allow_newcreds', TRUE);
+  if ($ibm_apim_allow_newcreds == 1) {
+    $appId = $form_state['values']['appid'];
+    $descr = $form_state['values']['description'];
+    $org = ibm_apim_get_current_developer_org();
+    $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appId . '/credentials';
+    $data = array("description" => $descr);
+    $result = ibm_apim_post($url, json_encode($data));
+    if (isset($result) && $result->code >= 200 && $result->code < 300) {
+      $data = $result->data;
+      drupal_alter('ibm_apim_application_new_application_clientcreds', $appId, $data);
+      drupal_set_message(t('Application Client ID: !html_start@label!html_end', array(
+        '!html_start' => '<div id="app_id" class="appClientReset"><input class="toggle-password" id="clientID" type="password" readonly value="' . $data['clientID'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientID"> <label for="show-clientID">',
+        '@label' => t('Show Client ID'),
+        '!html_end' => '</label></div></div>'
+      )));
+      drupal_set_message(t('Application Client Secret: !html_start@label!html_end', array(
+        '!html_start' => '<div id="app_secret" class="appClientReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $data['clientSecret'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
+        '@label' => t('Show Client Secret'),
+        '!html_end' => '</label></div></div>'
+      )));
+      // update the stored app with the additional creds
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'application')
+        ->fieldCondition('application_apiid', 'value', $appId);
+      $results = $query->execute();
 
-    if (isset($results['node'])) {
-      $first = array_shift($results['node']);
-      $nid = $first->nid;
-      $node = node_load($nid);
-      if (isset($node)) {
-        if (isset($node->application_credentials[$node->language][0]['value'])) {
-          $existingcreds = unserialize($node->application_credentials[$node->language][0]['value']);
-        }
-        else {
-          $existingcreds = array();
-        }
-        $existingcreds[] = array(
-          'id' => $data['id'],
-          'client-id' => $data['clientID'],
-          'description' => $data['description']
-        );
-        $node->application_credentials[$node->language][0]['value'] = serialize($existingcreds);
-        node_save($node);
-
+      if (isset($results['node'])) {
+        $first = array_shift($results['node']);
+        $nid = $first->nid;
+        $node = node_load($nid);
         if (isset($node)) {
-          // Calling all modules implementing 'ibm_apim_application_creds_create':
-          module_invoke_all('ibm_apim_application_creds_create', $node, $result->data);
+          if (isset($node->application_credentials[$node->language][0]['value'])) {
+            $existingcreds = unserialize($node->application_credentials[$node->language][0]['value']);
+          }
+          else {
+            $existingcreds = array();
+          }
+          $existingcreds[] = array(
+            'id' => $data['id'],
+            'client-id' => $data['clientID'],
+            'description' => $data['description']
+          );
+          $node->application_credentials[$node->language][0]['value'] = serialize($existingcreds);
+          node_save($node);
 
-          // invoke rules
-          if (module_exists('rules')) {
-            if (isset($node->application_orgid[$node->language][0]['value'])) {
-              $query = new EntityFieldQuery();
-              $query->entityCondition('entity_type', 'node')
-                ->entityCondition('bundle', 'devorg')
-                ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
-              $results = $query->execute();
+          if (isset($node)) {
+            // Calling all modules implementing 'ibm_apim_application_creds_create':
+            module_invoke_all('ibm_apim_application_creds_create', $node, $result->data);
 
-              if (isset($results['node'])) {
-                $first = array_shift($results['node']);
-                $nid = $first->nid;
-                $devorg = node_load($nid);
-                $devorg_name = $devorg->title;
-                $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
-                if (!valid_email_address($devorg_owner)) {
-                  $account = user_load_by_name($devorg_owner);
-                  if ($account) {
-                    $devorg_owner = $account->mail;
+            // invoke rules
+            if (module_exists('rules')) {
+              if (isset($node->application_orgid[$node->language][0]['value'])) {
+                $query = new EntityFieldQuery();
+                $query->entityCondition('entity_type', 'node')
+                  ->entityCondition('bundle', 'devorg')
+                  ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
+                $results = $query->execute();
+
+                if (isset($results['node'])) {
+                  $first = array_shift($results['node']);
+                  $nid = $first->nid;
+                  $devorg = node_load($nid);
+                  $devorg_name = $devorg->title;
+                  $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
+                  if (!valid_email_address($devorg_owner)) {
+                    $account = user_load_by_name($devorg_owner);
+                    if ($account) {
+                      $devorg_owner = $account->mail;
+                    }
                   }
-                }
-                $org_recipients = array();
-                if (isset($devorg->devorg_members[0]['value'])) {
-                  $members = unserialize($devorg->devorg_members[0]['value']);
-                  foreach ($members as $member) {
-                    if (isset($member['email'])) {
-                      $org_recipients[] = $member['email'];
+                  $org_recipients = array($devorg_owner);
+                  if (isset($devorg->devorg_members[0]['value'])) {
+                    $members = unserialize($devorg->devorg_members[0]['value']);
+                    foreach ($members as $member) {
+                      if (isset($member['email'])) {
+                        $org_recipients[] = $member['email'];
+                      }
                     }
                   }
                 }
               }
-            }
-            if (!isset($devorg_name)) {
-              $devorg_name = '';
-            }
-            if (!isset($devorg_owner)) {
-              $devorg_owner = '';
-            }
-            if (!isset($org_recipients)) {
-              $org_recipients = array();
-            }
-            $rules_payload = array(
-              'application_id' => $node->application_apiid[$node->language][0]['value'],
-              'application_nid' => $node->nid,
-              'application_name' => $node->title,
-              'application_description' => $node->application_description[$node->language][0]['value'],
-              'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
-              'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
-              'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
-              'application_devorg_name' => $devorg_name,
-              'application_devorg_owner' => $devorg_owner,
-              'application_devorg_members' => implode(',', $org_recipients),
-              'application_new_credentials' => json_encode($data)
-            );
-
-            // Make sure we do not provide NULL values, as Rules module doesn't like them.
-            // @see http://drupal.org/node/1497534
-            foreach ($rules_payload as $key => $value) {
-              if (is_null($value)) {
-                $rules_payload[$key] = '';
+              if (!isset($devorg_name)) {
+                $devorg_name = '';
               }
+              if (!isset($devorg_owner)) {
+                $devorg_owner = '';
+              }
+              if (!isset($org_recipients)) {
+                $org_recipients = array();
+              }
+              $rules_payload = array(
+                'application_id' => $node->application_apiid[$node->language][0]['value'],
+                'application_nid' => $node->nid,
+                'application_name' => $node->title,
+                'application_description' => $node->application_description[$node->language][0]['value'],
+                'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
+                'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
+                'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
+                'application_devorg_name' => $devorg_name,
+                'application_devorg_owner' => $devorg_owner,
+                'application_devorg_members' => implode(',', $org_recipients),
+                'application_new_credentials' => json_encode($data)
+              );
+
+              // Make sure we do not provide NULL values, as Rules module doesn't like them.
+              // @see http://drupal.org/node/1497534
+              foreach ($rules_payload as $key => $value) {
+                if (is_null($value)) {
+                  $rules_payload[$key] = '';
+                }
+              }
+              rules_invoke_event('application_cred_create', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_new_credentials']);
             }
-            rules_invoke_event('application_cred_create',
-              $rules_payload['application_id'],
-              $rules_payload['application_nid'],
-              $rules_payload['application_name'],
-              $rules_payload['application_description'],
-              $rules_payload['application_credentials'],
-              $rules_payload['application_oauth_redirect_uri'],
-              $rules_payload['application_devorg_id'],
-              $rules_payload['application_devorg_name'],
-              $rules_payload['application_devorg_owner'],
-              $rules_payload['application_devorg_members'],
-              $rules_payload['application_new_credentials']
-            );
           }
+        }
+        else {
+          drupal_set_message(t('The specified application could not be found to store the new credentials.'), 'error');
         }
       }
       else {
         drupal_set_message(t('The specified application could not be found to store the new credentials.'), 'error');
       }
-    }
-    else {
-      drupal_set_message(t('The specified application could not be found to store the new credentials.'), 'error');
+
     }
 
+    $form_state['redirect'] = 'application/' . $appId;
   }
-
-  $form_state['redirect'] = 'application/' . $appId;
 }
 
 /**
@@ -1327,7 +1388,7 @@ function application_update_application_clientcreds_submit($form, &$form_state) 
                       $devorg_owner = $account->mail;
                     }
                   }
-                  $org_recipients = array();
+                  $org_recipients = array($devorg_owner);
                   if (isset($devorg->devorg_members[0]['value'])) {
                     $members = unserialize($devorg->devorg_members[0]['value']);
                     foreach ($members as $member) {
@@ -1368,19 +1429,7 @@ function application_update_application_clientcreds_submit($form, &$form_state) 
                   $rules_payload[$key] = '';
                 }
               }
-              rules_invoke_event('application_cred_update',
-                $rules_payload['application_id'],
-                $rules_payload['application_nid'],
-                $rules_payload['application_name'],
-                $rules_payload['application_description'],
-                $rules_payload['application_credentials'],
-                $rules_payload['application_oauth_redirect_uri'],
-                $rules_payload['application_devorg_id'],
-                $rules_payload['application_devorg_name'],
-                $rules_payload['application_devorg_owner'],
-                $rules_payload['application_devorg_members'],
-                $rules_payload['application_new_credentials']
-              );
+              rules_invoke_event('application_cred_update', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_new_credentials']);
             }
           }
         }
@@ -1487,7 +1536,7 @@ function application_delete_application_clientcreds_submit($form, &$form_state) 
                     $devorg_owner = $account->mail;
                   }
                 }
-                $org_recipients = array();
+                $org_recipients = array($devorg_owner);
                 if (isset($devorg->devorg_members[0]['value'])) {
                   $members = unserialize($devorg->devorg_members[0]['value']);
                   foreach ($members as $member) {
@@ -1527,18 +1576,7 @@ function application_delete_application_clientcreds_submit($form, &$form_state) 
                 $rules_payload[$key] = '';
               }
             }
-            rules_invoke_event('application_cred_delete',
-              $rules_payload['application_id'],
-              $rules_payload['application_nid'],
-              $rules_payload['application_name'],
-              $rules_payload['application_description'],
-              $rules_payload['application_credentials'],
-              $rules_payload['application_oauth_redirect_uri'],
-              $rules_payload['application_devorg_id'],
-              $rules_payload['application_devorg_name'],
-              $rules_payload['application_devorg_owner'],
-              $rules_payload['application_devorg_members']
-            );
+            rules_invoke_event('application_cred_delete', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members']);
           }
         }
       }
@@ -1563,17 +1601,24 @@ function application_delete_application_clientcreds_submit($form, &$form_state) 
  */
 function application_reset_application_clientid($form, &$form_state, $appid, $credid) {
   $isdev = ibm_apim_check_is_developer();
+  $ibm_apim_allow_clientidreset = variable_get('ibm_apim_allow_clientidreset', TRUE);
   if (isset($isdev) && $isdev == TRUE) {
-    $confirm_form['appid'] = array(
-      '#type' => 'value',
-      '#value' => check_plain($appid)
-    );
-    $confirm_form['credid'] = array(
-      '#type' => 'value',
-      '#value' => check_plain($credid)
-    );
+    if ($ibm_apim_allow_clientidreset == 1) {
+      $confirm_form['appid'] = array(
+        '#type' => 'value',
+        '#value' => check_plain($appid)
+      );
+      $confirm_form['credid'] = array(
+        '#type' => 'value',
+        '#value' => check_plain($credid)
+      );
 
-    return confirm_form($confirm_form, t('Are you sure you want to reset your client ID?'), 'application/' . check_plain($appid), t('Are you sure you want to reset your client ID? This action cannot be undone.'), t('Reset'), t('Cancel'));
+      return confirm_form($confirm_form, t('Are you sure you want to reset your client ID?'), 'application/' . check_plain($appid), t('Are you sure you want to reset your client ID? This action cannot be undone.'), t('Reset'), t('Cancel'));
+    }
+    else {
+      drupal_set_message(t('Access Denied.'), 'error');
+      return array();
+    }
   }
   else {
     drupal_set_message(t('Developer access required.'), 'error');
@@ -1588,134 +1633,125 @@ function application_reset_application_clientid($form, &$form_state, $appid, $cr
  * @param $form_state
  * */
 function application_reset_application_clientid_submit($form, &$form_state) {
-  $appId = check_plain($form_state['values']['appid']);
-  $credId = check_plain($form_state['values']['credid']);
-  $org = ibm_apim_get_current_developer_org();
-  $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appId . '/credentials/' . $credId . '/reset';
-  $data = array("clientSecret" => FALSE, "clientID" => TRUE);
-  $result = ibm_apim_put($url, json_encode($data));
-  if (isset($result) && $result->code >= 200 && $result->code < 300) {
-    $data = $result->data;
-    drupal_alter('ibm_apim_application_reset_application_clientid', $appId, $data);
-    drupal_set_message(t('Application Client ID reset: !html_start@label!html_end', array(
-      '!html_start' => '<div id="app_secret" class="appClientReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $data['clientID'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
-      '@label' => t('Show Client ID'),
-      '!html_end' => '</label></div></div>'
-    )));
-    // update the stored app with the new creds
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', 'application')
-      ->fieldCondition('application_apiid', 'value', $appId);
-    $results = $query->execute();
+  $ibm_apim_allow_clientidreset = variable_get('ibm_apim_allow_clientidreset', TRUE);
+  if ($ibm_apim_allow_clientidreset == 1) {
+    $appId = check_plain($form_state['values']['appid']);
+    $credId = check_plain($form_state['values']['credid']);
+    $org = ibm_apim_get_current_developer_org();
+    $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appId . '/credentials/' . $credId . '/reset';
+    $data = array("clientSecret" => FALSE, "clientID" => TRUE);
+    $result = ibm_apim_put($url, json_encode($data));
+    if (isset($result) && $result->code >= 200 && $result->code < 300) {
+      $data = $result->data;
+      drupal_alter('ibm_apim_application_reset_application_clientid', $appId, $data);
+      drupal_set_message(t('Application Client ID reset: !html_start@label!html_end', array(
+        '!html_start' => '<div id="app_secret" class="appClientReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $data['clientID'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
+        '@label' => t('Show Client ID'),
+        '!html_end' => '</label></div></div>'
+      )));
+      // update the stored app with the new creds
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'application')
+        ->fieldCondition('application_apiid', 'value', $appId);
+      $results = $query->execute();
 
-    if (isset($results['node'])) {
-      $first = array_shift($results['node']);
-      $nid = $first->nid;
-      $node = node_load($nid);
-      if (isset($node)) {
-        if (isset($node->application_credentials[$node->language][0]['value'])) {
-          $existingcreds = unserialize($node->application_credentials[$node->language][0]['value']);
-          foreach ($existingcreds as $key => $existingcred) {
-            if (isset($existingcred['id']) && $existingcred['id'] == $credId) {
-              $existingcreds[$key]['client-id'] = $data['clientID'];
+      if (isset($results['node'])) {
+        $first = array_shift($results['node']);
+        $nid = $first->nid;
+        $node = node_load($nid);
+        if (isset($node)) {
+          if (isset($node->application_credentials[$node->language][0]['value'])) {
+            $existingcreds = unserialize($node->application_credentials[$node->language][0]['value']);
+            foreach ($existingcreds as $key => $existingcred) {
+              if (isset($existingcred['id']) && $existingcred['id'] == $credId) {
+                $existingcreds[$key]['client-id'] = $data['clientID'];
+              }
             }
           }
-        }
-        if (isset($existingcreds)) {
-          $node->application_credentials[$node->language][0]['value'] = serialize($existingcreds);
-          node_save($node);
-          if (isset($node)) {
-            // Calling all modules implementing 'hook_ibm_apim_application_clientid_reset':
-            module_invoke_all('ibm_apim_application_clientid_reset', $node, $data);
-            // invoke rules
-            if (module_exists('rules')) {
-              if (isset($node->application_orgid[$node->language][0]['value'])) {
-                $query = new EntityFieldQuery();
-                $query->entityCondition('entity_type', 'node')
-                  ->entityCondition('bundle', 'devorg')
-                  ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
-                $results = $query->execute();
+          if (isset($existingcreds)) {
+            $node->application_credentials[$node->language][0]['value'] = serialize($existingcreds);
+            node_save($node);
+            if (isset($node)) {
+              // Calling all modules implementing 'hook_ibm_apim_application_clientid_reset':
+              module_invoke_all('ibm_apim_application_clientid_reset', $node, $data);
+              // invoke rules
+              if (module_exists('rules')) {
+                if (isset($node->application_orgid[$node->language][0]['value'])) {
+                  $query = new EntityFieldQuery();
+                  $query->entityCondition('entity_type', 'node')
+                    ->entityCondition('bundle', 'devorg')
+                    ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
+                  $results = $query->execute();
 
-                if (isset($results['node'])) {
-                  $first = array_shift($results['node']);
-                  $nid = $first->nid;
-                  $devorg = node_load($nid);
-                  $devorg_name = $devorg->title;
-                  $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
-                  if (!valid_email_address($devorg_owner)) {
-                    $account = user_load_by_name($devorg_owner);
-                    if ($account) {
-                      $devorg_owner = $account->mail;
+                  if (isset($results['node'])) {
+                    $first = array_shift($results['node']);
+                    $nid = $first->nid;
+                    $devorg = node_load($nid);
+                    $devorg_name = $devorg->title;
+                    $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
+                    if (!valid_email_address($devorg_owner)) {
+                      $account = user_load_by_name($devorg_owner);
+                      if ($account) {
+                        $devorg_owner = $account->mail;
+                      }
                     }
-                  }
-                  $org_recipients = array();
-                  if (isset($devorg->devorg_members[0]['value'])) {
-                    $members = unserialize($devorg->devorg_members[0]['value']);
-                    foreach ($members as $member) {
-                      if (isset($member['email'])) {
-                        $org_recipients[] = $member['email'];
+                    $org_recipients = array($devorg_owner);
+                    if (isset($devorg->devorg_members[0]['value'])) {
+                      $members = unserialize($devorg->devorg_members[0]['value']);
+                      foreach ($members as $member) {
+                        if (isset($member['email'])) {
+                          $org_recipients[] = $member['email'];
+                        }
                       }
                     }
                   }
                 }
-              }
-              if (!isset($devorg_name)) {
-                $devorg_name = '';
-              }
-              if (!isset($devorg_owner)) {
-                $devorg_owner = '';
-              }
-              if (!isset($org_recipients)) {
-                $org_recipients = array();
-              }
-              $rules_payload = array(
-                'application_id' => $node->application_apiid[$node->language][0]['value'],
-                'application_nid' => $node->nid,
-                'application_name' => $node->title,
-                'application_description' => $node->application_description[$node->language][0]['value'],
-                'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
-                'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
-                'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
-                'application_devorg_name' => $devorg_name,
-                'application_devorg_owner' => $devorg_owner,
-                'application_devorg_members' => implode(',', $org_recipients),
-                'application_new_credentials' => json_encode($data)
-              );
-
-              // Make sure we do not provide NULL values, as Rules module doesn't like them.
-              // @see http://drupal.org/node/1497534
-              foreach ($rules_payload as $key => $value) {
-                if (is_null($value)) {
-                  $rules_payload[$key] = '';
+                if (!isset($devorg_name)) {
+                  $devorg_name = '';
                 }
+                if (!isset($devorg_owner)) {
+                  $devorg_owner = '';
+                }
+                if (!isset($org_recipients)) {
+                  $org_recipients = array();
+                }
+                $rules_payload = array(
+                  'application_id' => $node->application_apiid[$node->language][0]['value'],
+                  'application_nid' => $node->nid,
+                  'application_name' => $node->title,
+                  'application_description' => $node->application_description[$node->language][0]['value'],
+                  'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
+                  'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
+                  'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
+                  'application_devorg_name' => $devorg_name,
+                  'application_devorg_owner' => $devorg_owner,
+                  'application_devorg_members' => implode(',', $org_recipients),
+                  'application_new_credentials' => json_encode($data)
+                );
+
+                // Make sure we do not provide NULL values, as Rules module doesn't like them.
+                // @see http://drupal.org/node/1497534
+                foreach ($rules_payload as $key => $value) {
+                  if (is_null($value)) {
+                    $rules_payload[$key] = '';
+                  }
+                }
+                rules_invoke_event('application_clientid_reset', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_new_credentials']);
               }
-              rules_invoke_event('application_clientid_reset',
-                $rules_payload['application_id'],
-                $rules_payload['application_nid'],
-                $rules_payload['application_name'],
-                $rules_payload['application_description'],
-                $rules_payload['application_credentials'],
-                $rules_payload['application_oauth_redirect_uri'],
-                $rules_payload['application_devorg_id'],
-                $rules_payload['application_devorg_name'],
-                $rules_payload['application_devorg_owner'],
-                $rules_payload['application_devorg_members'],
-                $rules_payload['application_new_credentials']
-              );
             }
           }
+        }
+        else {
+          drupal_set_message(t('The specified application could not be found to store the new credentials.'), 'error');
         }
       }
       else {
         drupal_set_message(t('The specified application could not be found to store the new credentials.'), 'error');
       }
     }
-    else {
-      drupal_set_message(t('The specified application could not be found to store the new credentials.'), 'error');
-    }
+    $form_state['redirect'] = 'application/' . $appId;
   }
-  $form_state['redirect'] = 'application/' . $appId;
 }
 
 /**
@@ -1727,18 +1763,25 @@ function application_reset_application_clientid_submit($form, &$form_state) {
  * @return array
  */
 function application_reset_application_secret($form, &$form_state, $appid, $credid) {
+  $ibm_apim_allow_clientsecretreset = variable_get('ibm_apim_allow_clientsecretreset', TRUE);
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE) {
-    $confirm_form['appid'] = array(
-      '#type' => 'value',
-      '#value' => check_plain($appid)
-    );
-    $confirm_form['credid'] = array(
-      '#type' => 'value',
-      '#value' => check_plain($credid)
-    );
+    if ($ibm_apim_allow_clientsecretreset == 1) {
+      $confirm_form['appid'] = array(
+        '#type' => 'value',
+        '#value' => check_plain($appid)
+      );
+      $confirm_form['credid'] = array(
+        '#type' => 'value',
+        '#value' => check_plain($credid)
+      );
 
-    return confirm_form($confirm_form, t('Are you sure you want to reset your client secret?'), 'application/' . check_plain($appid), t('Are you sure you want to reset your client secret? This action cannot be undone.'), t('Reset'), t('Cancel'));
+      return confirm_form($confirm_form, t('Are you sure you want to reset your client secret?'), 'application/' . check_plain($appid), t('Are you sure you want to reset your client secret? This action cannot be undone.'), t('Reset'), t('Cancel'));
+    }
+    else {
+      drupal_set_message(t('Access Denied.'), 'error');
+      return array();
+    }
   }
   else {
     drupal_set_message(t('Developer access required.'), 'error');
@@ -1753,114 +1796,105 @@ function application_reset_application_secret($form, &$form_state, $appid, $cred
  * @param $form_state
  */
 function application_reset_application_secret_submit($form, &$form_state) {
-  $appId = check_plain($form_state['values']['appid']);
-  $credId = check_plain($form_state['values']['credid']);
-  $org = ibm_apim_get_current_developer_org();
-  $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appId . '/credentials/' . $credId . '/reset';
-  $data = array("clientSecret" => TRUE, "clientID" => FALSE);
-  $result = ibm_apim_put($url, json_encode($data));
-  if (isset($result) && $result->code >= 200 && $result->code < 300) {
-    $data = $result->data;
-    drupal_alter('ibm_apim_application_reset_application_secret', $appId, $data);
-    drupal_set_message(t('Application secret reset: !html_start@label!html_end', array(
-      '!html_start' => '<div id="app_secret" class="appSecretReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $data['clientSecret'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
-      '@label' => t('Show Client Secret'),
-      '!html_end' => '</label></div></div>'
-    )));
-  }
-  $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'application')
-    ->fieldCondition('application_apiid', 'value', $appId);
-  $results = $query->execute();
+  $ibm_apim_allow_clientidreset = variable_get('ibm_apim_allow_clientidreset', TRUE);
+  if ($ibm_apim_allow_clientidreset == 1) {
+    $appId = check_plain($form_state['values']['appid']);
+    $credId = check_plain($form_state['values']['credid']);
+    $org = ibm_apim_get_current_developer_org();
+    $url = '/v1/portal/orgs/' . $org['id'] . '/apps/' . $appId . '/credentials/' . $credId . '/reset';
+    $data = array("clientSecret" => TRUE, "clientID" => FALSE);
+    $result = ibm_apim_put($url, json_encode($data));
+    if (isset($result) && $result->code >= 200 && $result->code < 300) {
+      $data = $result->data;
+      drupal_alter('ibm_apim_application_reset_application_secret', $appId, $data);
+      drupal_set_message(t('Application secret reset: !html_start@label!html_end', array(
+        '!html_start' => '<div id="app_secret" class="appSecretReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $data['clientSecret'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
+        '@label' => t('Show Client Secret'),
+        '!html_end' => '</label></div></div>'
+      )));
+    }
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'application')
+      ->fieldCondition('application_apiid', 'value', $appId);
+    $results = $query->execute();
 
-  if (isset($results['node'])) {
-    $first = array_shift($results['node']);
-    $nid = $first->nid;
-    $node = node_load($nid);
+    if (isset($results['node'])) {
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
 
-    // Calling all modules implementing 'hook_ibm_apim_application_clientsecret_reset':
-    module_invoke_all('ibm_apim_application_clientsecret_reset', $node, $data);
+      // Calling all modules implementing 'hook_ibm_apim_application_clientsecret_reset':
+      module_invoke_all('ibm_apim_application_clientsecret_reset', $node, $data);
 
-    // invoke rules
-    if (module_exists('rules')) {
-      if (isset($node->application_orgid[$node->language][0]['value'])) {
-        $query = new EntityFieldQuery();
-        $query->entityCondition('entity_type', 'node')
-          ->entityCondition('bundle', 'devorg')
-          ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
-        $results = $query->execute();
+      // invoke rules
+      if (module_exists('rules')) {
+        if (isset($node->application_orgid[$node->language][0]['value'])) {
+          $query = new EntityFieldQuery();
+          $query->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'devorg')
+            ->fieldCondition('devorg_id', 'value', $node->application_orgid[$node->language][0]['value']);
+          $results = $query->execute();
 
-        if (isset($results['node'])) {
-          $first = array_shift($results['node']);
-          $nid = $first->nid;
-          $devorg = node_load($nid);
-          $devorg_name = $devorg->title;
-          $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
-          if (!valid_email_address($devorg_owner)) {
-            $account = user_load_by_name($devorg_owner);
-            if ($account) {
-              $devorg_owner = $account->mail;
+          if (isset($results['node'])) {
+            $first = array_shift($results['node']);
+            $nid = $first->nid;
+            $devorg = node_load($nid);
+            $devorg_name = $devorg->title;
+            $devorg_owner = $devorg->devorg_owner[$devorg->language][0]['value'];
+            if (!valid_email_address($devorg_owner)) {
+              $account = user_load_by_name($devorg_owner);
+              if ($account) {
+                $devorg_owner = $account->mail;
+              }
             }
-          }
-          $org_recipients = array();
-          if (isset($devorg->devorg_members[0]['value'])) {
-            $members = unserialize($devorg->devorg_members[0]['value']);
-            foreach ($members as $member) {
-              if (isset($member['email'])) {
-                $org_recipients[] = $member['email'];
+            $org_recipients = array($devorg_owner);
+            if (isset($devorg->devorg_members[0]['value'])) {
+              $members = unserialize($devorg->devorg_members[0]['value']);
+              foreach ($members as $member) {
+                if (isset($member['email'])) {
+                  $org_recipients[] = $member['email'];
+                }
               }
             }
           }
         }
-      }
-      if (!isset($devorg_name)) {
-        $devorg_name = '';
-      }
-      if (!isset($devorg_owner)) {
-        $devorg_owner = '';
-      }
-      if (!isset($org_recipients)) {
-        $org_recipients = array();
-      }
-      $rules_payload = array(
-        'application_id' => $node->application_apiid[$node->language][0]['value'],
-        'application_nid' => $node->nid,
-        'application_name' => $node->title,
-        'application_description' => $node->application_description[$node->language][0]['value'],
-        'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
-        'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
-        'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
-        'application_devorg_name' => $devorg_name,
-        'application_devorg_owner' => $devorg_owner,
-        'application_devorg_members' => implode(',', $org_recipients),
-        'application_new_credentials' => json_encode($data)
-      );
-
-      // Make sure we do not provide NULL values, as Rules module doesn't like them.
-      // @see http://drupal.org/node/1497534
-      foreach ($rules_payload as $key => $value) {
-        if (is_null($value)) {
-          $rules_payload[$key] = '';
+        if (!isset($devorg_name)) {
+          $devorg_name = '';
         }
-      }
-      rules_invoke_event('application_clientsecret_reset',
-        $rules_payload['application_id'],
-        $rules_payload['application_nid'],
-        $rules_payload['application_name'],
-        $rules_payload['application_description'],
-        $rules_payload['application_credentials'],
-        $rules_payload['application_oauth_redirect_uri'],
-        $rules_payload['application_devorg_id'],
-        $rules_payload['application_devorg_name'],
-        $rules_payload['application_devorg_owner'],
-        $rules_payload['application_devorg_members'],
-        $rules_payload['application_new_credentials']
-      );
-    }
-  }
+        if (!isset($devorg_owner)) {
+          $devorg_owner = '';
+        }
+        if (!isset($org_recipients)) {
+          $org_recipients = array();
+        }
+        $rules_payload = array(
+          'application_id' => $node->application_apiid[$node->language][0]['value'],
+          'application_nid' => $node->nid,
+          'application_name' => $node->title,
+          'application_description' => $node->application_description[$node->language][0]['value'],
+          'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
+          'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
+          'application_devorg_id' => $node->application_orgid[$node->language][0]['value'],
+          'application_devorg_name' => $devorg_name,
+          'application_devorg_owner' => $devorg_owner,
+          'application_devorg_members' => implode(',', $org_recipients),
+          'application_new_credentials' => json_encode($data)
+        );
 
-  $form_state['redirect'] = 'application/' . $appId;
+        // Make sure we do not provide NULL values, as Rules module doesn't like them.
+        // @see http://drupal.org/node/1497534
+        foreach ($rules_payload as $key => $value) {
+          if (is_null($value)) {
+            $rules_payload[$key] = '';
+          }
+        }
+        rules_invoke_event('application_clientsecret_reset', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_new_credentials']);
+      }
+    }
+
+    $form_state['redirect'] = 'application/' . $appId;
+  }
 }
 
 /**
@@ -1930,12 +1964,13 @@ function _application_upload_application_image_form_submit_handler($form, &$form
       // Make it a permanent file so it doesn't get deleted by cron.
       $file_temp->status = 1;
       $file_temp = file_save($file_temp);
+      $appId = $form_state['values']['app_id'];
 
       // update local db
       $query = new EntityFieldQuery();
       $query->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', 'application')
-        ->fieldCondition('application_apiid', 'value', check_plain($form_state['values']['app_id']));
+        ->fieldCondition('application_apiid', 'value', check_plain($appId));
       $results = $query->execute();
 
       if (isset($results['node'])) {
@@ -1956,6 +1991,19 @@ function _application_upload_application_image_form_submit_handler($form, &$form
           )
         );
         node_save($node);
+
+        $org = ibm_apim_get_current_developer_org();
+        $developerOrg = $org['id'];
+        // tell apim the image url
+        $url = '/v1/portal/orgs/' . $developerOrg . '/apps/' . $appId;
+        $imageURL = file_create_url($file_temp->uri);
+        $data = array(
+          "appImageURL" => $imageURL
+        );
+        $result = ibm_apim_put($url, json_encode($data));
+        if (isset($result) && $result->code >= 200 && $result->code < 300) {
+
+        }
       }
 
       drupal_set_message(t('Application image updated.'));
@@ -1978,23 +2026,37 @@ function _application_upload_application_image_form_submit_handler($form, &$form
  * @return array
  */
 function _application_verify_application_secret_form($form, &$form_state, $appId, $credId) {
-  $form = array();
-  $form['title'] = array('#markup' => '<h1>' . t('Verify application secret') . '</h1>');
-  $form['secret'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Secret'),
-    '#size' => 50,
-    '#maxlength' => 50,
-    '#required' => TRUE
-  );
-  $form['appid'] = array('#type' => 'hidden', '#value' => check_plain($appId));
-  $form['credid'] = array(
-    '#type' => 'hidden',
-    '#value' => check_plain($credId)
-  );
-  $form['submit'] = array('#type' => 'submit', '#value' => t('Submit'));
-  $form['#submit'] = array('_application_verify_application_secret_form_submit_handler');
-  return $form;
+  if ($appId == NULL) {
+    if (isset($form_state) && isset($form_state['input']) && isset($form_state['input']['appid'])) {
+      $appId = check_plain($form_state['input']['appid']);
+    }
+  }
+  else {
+    $appId = check_plain($appId);
+  }
+  $isdev = ibm_apim_check_is_developer();
+  if (isset($isdev) && $isdev == TRUE && isset($appId)) {
+    $form = array();
+    $form['title'] = array('#markup' => '<h1>' . t('Verify application secret') . '</h1>');
+    $form['secret'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Secret'),
+      '#size' => 50,
+      '#maxlength' => 50,
+      '#required' => TRUE
+    );
+    $form['appid'] = array('#type' => 'hidden', '#value' => $appId);
+    $form['credid'] = array(
+      '#type' => 'hidden',
+      '#value' => check_plain($credId)
+    );
+    $form['submit'] = array('#type' => 'submit', '#value' => t('Submit'));
+    $form['#submit'] = array('_application_verify_application_secret_form_submit_handler');
+    return $form;
+  } else {
+    drupal_set_message(t('Developer access required.'), 'error');
+    return array();
+  }
 }
 
 /**
@@ -2016,10 +2078,6 @@ function _application_edit_application_form($form, &$form_state, $appId = NULL) 
   }
   $isdev = ibm_apim_check_is_developer();
   if (isset($isdev) && $isdev == TRUE && isset($appId)) {
-    $app_data = array();
-    $app_data['name'] = '';
-    $app_data['description'] = '';
-    $app_data['oauthRedirectURI'] = '';
     $org = ibm_apim_get_current_developer_org();
     $developerOrg = $org['id'];
 
@@ -2057,6 +2115,25 @@ function _application_edit_application_form($form, &$form_state, $appId = NULL) 
         '#type' => 'hidden',
         '#value' => $org['id']
       );
+
+      $ibm_apim_application_certificates = variable_get('ibm_apim_application_certificates', 0);
+      if ($ibm_apim_application_certificates == 1) {
+
+        // we do not store certificate so need to retrieve it
+        $app_data = application_details_contents($appId);
+
+        $form['certificate'] = array(
+          '#type' => 'textarea',
+          '#title' => t('Certificate'),
+          '#description' => t('Paste the content of your application\'s x509 certificate.'),
+          '#weight' => '60',
+          '#required' => FALSE,
+          '#wysiwyg' => FALSE,
+        );
+        if (isset($app_data['certificate'])) {
+          $form['certificate']['#default_value'] = $app_data['certificate'];
+        }
+      }
 
       // use our submission handler
       unset($form['#submit']);
@@ -2140,30 +2217,50 @@ function _application_edit_application_form_submit_handler($form, &$form_state) 
     if (empty($description)) {
       $description = '';
     }
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'application')
+      ->fieldCondition('application_apiid', 'value', $app_id);
 
-    // update APIm
-    $url = '/v1/portal/orgs/' . $developer_org . '/apps/' . $app_id;
-    $data = array(
-      "name" => $name,
-      "description" => $description
-    );
-    if (isset($oauthurl) && !empty($oauthurl)) {
-      $data['oauthRedirectURI'] = $oauthurl;
-    }
-    $result = ibm_apim_put($url, json_encode($data));
-    if (isset($result) && $result->code >= 200 && $result->code < 300) {
-      // update local db
-      $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'application')
-        ->fieldCondition('application_apiid', 'value', $app_id);
+    $results = $query->execute();
+    if (isset($results['node'])) {
+      $first = array_shift($results['node']);
+      $nid = $first->nid;
+      $node = node_load($nid);
+      if (isset($node->application_image[$node->language][0]['fid'])) {
+        $file = file_load($node->application_image[$node->language][0]['fid']);
+        $imageURL = file_create_url($file->uri);
+      } else {
+        $imageURL = file_create_url(drupal_get_path('module', 'ibm_apim') . '/images/icons/app/' . application_random_image($name));
+      }
 
-      $results = $query->execute();
+      // update APIm
+      $url = '/v1/portal/orgs/' . $developer_org . '/apps/' . $app_id;
+      $data = array(
+        "name" => $name,
+        "description" => $description,
+        "appImageURL" => $imageURL
+      );
+      if (isset($oauthurl) && !empty($oauthurl)) {
+        $data['oauthRedirectURI'] = $oauthurl;
+      }
+      $ibm_apim_application_certificates = variable_get('ibm_apim_application_certificates', 0);
+      if ($ibm_apim_application_certificates == 1) {
+        $certificate = trim($form_state['input']['certificate']);
+        if (isset($certificate) && !empty($certificate)) {
+          $data['certificate'] = $certificate;
+        }
+      }
+      $result = ibm_apim_put($url, json_encode($data));
+      if (isset($result) && $result->code >= 200 && $result->code < 300) {
+        // update local db
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'application')
+          ->fieldCondition('application_apiid', 'value', $app_id);
 
-      if (isset($results['node'])) {
-        $first = array_shift($results['node']);
-        $nid = $first->nid;
-        $node = node_load($nid);
+        $results = $query->execute();
+
         $node->title = ibm_apim_truncate_string($name);
         $node->application_description[$node->language][0]['value'] = $description;
         $node->application_description[$node->language][0]['safe_version'] = $description;
@@ -2215,7 +2312,7 @@ function _application_edit_application_form_submit_handler($form, &$form_state) 
                   $devorg_owner = $account->mail;
                 }
               }
-              $org_recipients = array();
+              $org_recipients = array($devorg_owner);
               if (isset($devorg->devorg_members[0]['value'])) {
                 $members = unserialize($devorg->devorg_members[0]['value']);
                 foreach ($members as $member) {
@@ -2255,18 +2352,7 @@ function _application_edit_application_form_submit_handler($form, &$form_state) 
               $rules_payload[$key] = '';
             }
           }
-          rules_invoke_event('application_update',
-            $rules_payload['application_id'],
-            $rules_payload['application_nid'],
-            $rules_payload['application_name'],
-            $rules_payload['application_description'],
-            $rules_payload['application_credentials'],
-            $rules_payload['application_oauth_redirect_uri'],
-            $rules_payload['application_devorg_id'],
-            $rules_payload['application_devorg_name'],
-            $rules_payload['application_devorg_owner'],
-            $rules_payload['application_devorg_members']
-          );
+          rules_invoke_event('application_update', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members']);
         }
       }
     }
@@ -2330,6 +2416,18 @@ function _application_add_application_form($form, &$form_state) {
     $form['developerorg'] = array('#type' => 'hidden', '#value' => $org['id']);
     $form['title']['#required'] = TRUE;
 
+    $ibm_apim_application_certificates = variable_get('ibm_apim_application_certificates', 0);
+    if ($ibm_apim_application_certificates == 1) {
+      $form['certificate'] = array(
+        '#type' => 'textarea',
+        '#title' => t('Certificate'),
+        '#description' => t('Paste the content of your application\'s x509 certificate.'),
+        '#weight' => '60',
+        '#required' => FALSE,
+        '#wysiwyg' => FALSE,
+      );
+    }
+
     // use our submission handler
     $form['#submit'] = array('_application_add_application_form_submit_handler');
     $form['actions']['submit']['#submit'] = array('_application_add_application_form_submit_handler');
@@ -2377,11 +2475,20 @@ function _application_add_application_form_submit_handler($form, &$form_state) {
   else {
 
     $url = '/v1/portal/orgs/' . $developer_org . '/apps';
+    $imageURL = file_create_url(drupal_get_path('module', 'ibm_apim') . '/images/icons/app/' . application_random_image($name));
     $data = array(
       "name" => $name,
       "description" => $description,
-      "oauthRedirectURI" => $oauth
+      "oauthRedirectURI" => $oauth,
+      "appImageURL" => $imageURL
     );
+    $ibm_apim_application_certificates = variable_get('ibm_apim_application_certificates', 0);
+    if ($ibm_apim_application_certificates == 1) {
+      $certificate = trim($form_state['input']['certificate']);
+      if (isset($certificate) && !empty($certificate)) {
+        $data['certificate'] = $certificate;
+      }
+    }
     $result = ibm_apim_post($url, json_encode($data));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       $data = $result->data['credentials'];
@@ -2394,9 +2501,7 @@ function _application_add_application_form_submit_handler($form, &$form_state) {
         '@label' => t('Show Client Secret'),
         '!html_end' => '</label></div></div>'
       )));
-      drupal_set_message('<p>' . t('Now that you’ve registered your app, you can browse the <a href="@link">available APIs</a> and subscribe.', array('@link' => url('product'))) . '</p>' .
-        '<p>' . t('Make a note of your client ID and client secret. These may be needed for your application to access the API.') . '</p>' .
-        '<p>' . t('Your client secret will only be displayed once. If you forget or lose it, you can verify the secret to see if it’s correct or reset it to get a new one.' . '</p>'), 'info');
+      drupal_set_message('<p>' . t('Now that you’ve registered your app, you can browse the <a href="@link">available APIs</a> and subscribe.', array('@link' => url('product'))) . '</p>' . '<p>' . t('Make a note of your client ID and client secret. These may be needed for your application to access the API.') . '</p>' . '<p>' . t('Your client secret will only be displayed once. If you forget or lose it, you can verify the secret to see if it’s correct or reset it to get a new one.' . '</p>'), 'info');
       $app_data = application_details_contents($result->data['id']);
       $nid = application_createNewApplicationNode($app_data);
       $node = node_load($nid);
@@ -2442,7 +2547,7 @@ function _application_add_application_form_submit_handler($form, &$form_state) {
                   $devorg_owner = $account->mail;
                 }
               }
-              $org_recipients = array();
+              $org_recipients = array($devorg_owner);
               if (isset($devorg->devorg_members[0]['value'])) {
                 $members = unserialize($devorg->devorg_members[0]['value']);
                 foreach ($members as $member) {
@@ -2482,18 +2587,7 @@ function _application_add_application_form_submit_handler($form, &$form_state) {
               $rules_payload[$key] = '';
             }
           }
-          rules_invoke_event('application_create',
-            $rules_payload['application_id'],
-            $rules_payload['application_nid'],
-            $rules_payload['application_name'],
-            $rules_payload['application_description'],
-            $rules_payload['application_credentials'],
-            $rules_payload['application_oauth_redirect_uri'],
-            $rules_payload['application_devorg_id'],
-            $rules_payload['application_devorg_name'],
-            $rules_payload['application_devorg_owner'],
-            $rules_payload['application_devorg_members']
-          );
+          rules_invoke_event('application_create', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members']);
         }
       }
 
@@ -2591,7 +2685,7 @@ function _application_delete_application_submit($form, &$form_state) {
                 $devorg_owner = $account->mail;
               }
             }
-            $org_recipients = array();
+            $org_recipients = array($devorg_owner);
             if (isset($devorg->devorg_members[0]['value'])) {
               $members = unserialize($devorg->devorg_members[0]['value']);
               foreach ($members as $member) {
@@ -2626,18 +2720,7 @@ function _application_delete_application_submit($form, &$form_state) {
             $rules_payload[$key] = '';
           }
         }
-        rules_invoke_event('application_delete',
-          $rules_payload['application_id'],
-          $rules_payload['application_nid'],
-          $rules_payload['application_name'],
-          $rules_payload['application_description'],
-          $rules_payload['application_credentials'],
-          $rules_payload['application_oauth_redirect_uri'],
-          $rules_payload['application_devorg_id'],
-          $rules_payload['application_devorg_name'],
-          $rules_payload['application_devorg_owner'],
-          $rules_payload['application_devorg_members']
-        );
+        rules_invoke_event('application_delete', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members']);
       }
     }
   }
@@ -2753,11 +2836,22 @@ function _application_delete_image_submit($form, &$form_state) {
     if (isset($file)) {
       file_delete($file, TRUE);
     }
+
+    // tell apim the placeholder url
+    $url = '/v1/portal/orgs/' . $developerOrg . '/apps/' . $appId;
+    $imageURL = file_create_url(drupal_get_path('module', 'ibm_apim') . '/images/icons/app/' . application_random_image($node->title));
+    $data = array(
+      "appImageURL" => $imageURL
+    );
+    $result = ibm_apim_put($url, json_encode($data));
+    if (isset($result) && $result->code >= 200 && $result->code < 300) {
+
+    }
   }
 
   // tell apim to remove it too
-  $url = '/v1/portal/orgs/' . $developerOrg . '/apps/' . $appId . '/image';
-  $result = ibm_apim_delete($url);
+  $delete_url = '/v1/portal/orgs/' . $developerOrg . '/apps/' . $appId . '/image';
+  $result = ibm_apim_delete($delete_url);
   if (isset($result) && $result->code >= 200 && $result->code < 300) {
     drupal_set_message(t('Application image removed.'));
   }
@@ -2799,9 +2893,9 @@ function application_unsubscribeapp_submit($form, &$form_state) {
   $url = '/v1/portal/orgs/' . $developerOrg . '/apps/' . $appId . '/subscriptions/' . $subId;
   $result = ibm_apim_delete($url);
   if (isset($result) && $result->code >= 200 && $result->code < 300) {
-    $productname = null;
-    $productversion = null;
-    $planname = null;
+    $productname = NULL;
+    $productversion = NULL;
+    $planname = NULL;
 
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
@@ -2836,10 +2930,12 @@ function application_unsubscribeapp_submit($form, &$form_state) {
       $node = node_load($nid);
       $planref = $productname . ':' . $productversion . ':' . $planname;
 
-      $data = array('plan_ref' => $planref,
+      $data = array(
+        'plan_ref' => $planref,
         'product_name' => $productname,
         'product_version' => $productversion,
-        'plan_name' => $planname);
+        'plan_name' => $planname
+      );
 
       // Calling all modules implementing 'hook_ibm_apim_application_unsubscribe':
       module_invoke_all('ibm_apim_application_unsubscribe', $node, $data);
@@ -2865,7 +2961,7 @@ function application_unsubscribeapp_submit($form, &$form_state) {
                 $devorg_owner = $account->mail;
               }
             }
-            $org_recipients = array();
+            $org_recipients = array($devorg_owner);
             if (isset($devorg->devorg_members[0]['value'])) {
               $members = unserialize($devorg->devorg_members[0]['value']);
               foreach ($members as $member) {
@@ -2919,22 +3015,7 @@ function application_unsubscribeapp_submit($form, &$form_state) {
             $rules_payload[$key] = '';
           }
         }
-        rules_invoke_event('application_unsubscribe',
-          $rules_payload['application_id'],
-          $rules_payload['application_nid'],
-          $rules_payload['application_name'],
-          $rules_payload['application_description'],
-          $rules_payload['application_credentials'],
-          $rules_payload['application_oauth_redirect_uri'],
-          $rules_payload['application_devorg_id'],
-          $rules_payload['application_devorg_name'],
-          $rules_payload['application_devorg_owner'],
-          $rules_payload['application_devorg_members'],
-          $rules_payload['plan_ref'],
-          $rules_payload['product_name'],
-          $rules_payload['product_version'],
-          $rules_payload['plan_name']
-        );
+        rules_invoke_event('application_unsubscribe', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['plan_ref'], $rules_payload['product_name'], $rules_payload['product_version'], $rules_payload['plan_name']);
       }
     }
   }
@@ -3319,7 +3400,8 @@ function application_subscribeapp_modal_form($form, &$form_state, $planId = NULL
           $form['newapp'] = array(
             '#markup' => '<p class="all-apps-subscribed">' . t('There are no available applications to subscribe to this plan.') . ' ' . l(t('Register a new application'), 'application/new') . '</p>'
           );
-        } else {
+        }
+        else {
           $form['newapp'] = array(
             '#markup' => '<p class="all-apps-subscribed">' . t('There are no available applications to subscribe to this plan.') . '</p>'
           );
@@ -3424,7 +3506,7 @@ function application_subscribeapp_modal_form_submit($form, &$form_state) {
                 $devorg_owner = $account->mail;
               }
             }
-            $org_recipients = array();
+            $org_recipients = array($devorg_owner);
             if (isset($devorg->devorg_members[0]['value'])) {
               $members = unserialize($devorg->devorg_members[0]['value']);
               foreach ($members as $member) {
@@ -3469,23 +3551,7 @@ function application_subscribeapp_modal_form_submit($form, &$form_state) {
             $rules_payload[$key] = '';
           }
         }
-        rules_invoke_event('application_subscribe',
-          $rules_payload['application_id'],
-          $rules_payload['application_nid'],
-          $rules_payload['application_name'],
-          $rules_payload['application_description'],
-          $rules_payload['application_credentials'],
-          $rules_payload['application_oauth_redirect_uri'],
-          $rules_payload['application_devorg_id'],
-          $rules_payload['application_devorg_name'],
-          $rules_payload['application_devorg_owner'],
-          $rules_payload['application_devorg_members'],
-          $rules_payload['plan_ref'],
-          $rules_payload['product_name'],
-          $rules_payload['product_version'],
-          $rules_payload['plan_name'],
-          $rules_payload['plan_requires_approval']
-        );
+        rules_invoke_event('application_subscribe', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['plan_ref'], $rules_payload['product_name'], $rules_payload['product_version'], $rules_payload['plan_name'], $rules_payload['plan_requires_approval']);
       }
     }
 
@@ -3546,9 +3612,7 @@ function application_create_subscription($appid, $subid, $product, $plan, $activ
         $newsubs = array();
         $existingsubs = unserialize($node->application_subscriptions[$node->language][0]['value']);
         foreach ($existingsubs as $existingsub) {
-          if ((isset($existingsub['product']) && $existingsub['product'] == $product)
-            || (isset($existingsub['id']) && $existingsub['id'] == $subid)
-          ) {
+          if ((isset($existingsub['product']) && $existingsub['product'] == $product) || (isset($existingsub['id']) && $existingsub['id'] == $subid)) {
             // remove old subscriptions to this product or sub id
             $createdOrUpdated = FALSE;
           }
@@ -3569,7 +3633,8 @@ function application_create_subscription($appid, $subid, $product, $plan, $activ
       node_save($node);
       if ($event == 'create') {
         module_invoke_all('ibm_apim_subscription_create', $node, serialize($newsubs));
-      } else {
+      }
+      else {
         module_invoke_all('ibm_apim_subscription_update', $node, serialize($newsubs));
       }
     }

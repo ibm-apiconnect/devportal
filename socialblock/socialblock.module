@@ -86,78 +86,92 @@ function socialblock_cron() {
   // could be multiple socialblocks so need a variable for each one
   $beans = bean_get_all_beans();
   if (isset($beans)) {
-    $client_id = variable_get('ibm_apim_client_id');
-    $data = variable_get('twitter_oauth_settings');
+    $client_id = variable_get('ibm_apim_client_id', NULL);
+    $data = variable_get('twitter_oauth_settings', NULL);
     $iv_size = mcrypt_get_iv_size(MCRYPT_CAST_256, MCRYPT_MODE_CBC);
-    $iv = substr($data, 0, $iv_size);
-    $credentials = unserialize(openssl_decrypt(substr($data, $iv_size), "AES-256-CBC", $client_id, 0, $iv));
-    if (isset($credentials['twitter_consumer_key']) && isset($credentials['twitter_consumer_secret']) && isset($credentials['twitter_access_token']) && isset($credentials['twitter_token_secret'])) {
-      foreach ($beans as $bean) {
-        if ((isset($bean->delta) && ($bean->delta == 'socialblock')) || (isset($bean->type) && $bean->type == 'socialblock_block')) {
-          switch ($bean->twitter_api) {
-            case 0:
-              $api = 'statuses/user_timeline';
-              $api_param = 'screen_name';
-              break;
-            case 1:
-              $api = 'search/tweets';
-              $api_param = 'q';
-              break;
-            default:
-              $api = '';
-              $api_param = '';
-          }
-          if (isset($bean->twitter_param)) {
-            $tweets = array();
-            switch ($bean->tweet_filter) {
+    if (isset($data) && !empty($data) && isset($client_id) && isset($iv_size)) {
+      $credentials = array();
+      $iv = substr($data, 0, $iv_size);
+      if (strlen($client_id) < 32) {
+        $char = 32 - strlen($client_id);
+        $client_id = str_pad($client_id, 32, $char);
+      }
+      $client_id = (strlen($client_id) > 32) ? substr($client_id,0,32) : $client_id;
+      if (isset($iv)) {
+        //watchdog('socialblock', 'DEBUG: %debug', array('%debug'=>serialize(array('iv_size'=>$iv_size, 'iv'=>$iv, 'client_id'=>$client_id, 'data'=>$data))), WATCHDOG_INFO);
+        $credentials = unserialize(openssl_decrypt(substr($data, $iv_size), "AES-256-CBC", $client_id, 0, $iv));
+      }
+      if (isset($credentials['twitter_consumer_key']) && isset($credentials['twitter_consumer_secret']) && isset($credentials['twitter_access_token']) && isset($credentials['twitter_token_secret'])) {
+        foreach ($beans as $bean) {
+          if ((isset($bean->delta) && ($bean->delta == 'socialblock')) || (isset($bean->type) && $bean->type == 'socialblock_block')) {
+            switch ($bean->twitter_api) {
               case 0:
-                $remaining_calls = socialblock_not_rate_limited($credentials);
-                if ($remaining_calls > 0) {
-                  $temp = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles));
-                  $temp2 = $temp;
-                  $remaining_calls--;
-                  $all_tweets = FALSE;
-                  while (!$all_tweets) {
-                    if ($remaining_calls > 0 && !empty($temp)) {
-                      $max_id = end($temp)->id;
-                      for ($i = 0; $i < sizeof($temp); $i++) {
-                        if (is_null($temp[$i]->in_reply_to_status_id)) {
-                          array_push($tweets, $temp[$i]);
-                        }
-                      }
-                      $all_tweets = sizeof($tweets) == $bean->tiles;
-                      if (!$all_tweets) {
-                        $temp = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles - sizeof($tweets), 'max_id' => $max_id - 1));
-                        $remaining_calls--;
-                        $temp2 = empty($temp) ? $temp2 : $temp;
-                      }
-                    } else {
-                      $tweets = $temp2;
-                      $all_tweets = TRUE;
-                    }
-                  }
-                } else {
-                  watchdog('socialblock', 'Social Block: Twitter API rate limit hit!', array(), WATCHDOG_INFO);
-                }
+                $api = 'statuses/user_timeline';
+                $api_param = 'screen_name';
                 break;
               case 1:
-                $remaining_calls = socialblock_not_rate_limited($credentials);
-                if ($remaining_calls > 0) {
-                  $tweets = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles));
-                } else {
-                  watchdog('socialblock', 'Social Block: Twitter API rate limit hit!', array(), WATCHDOG_INFO);
-                }
+                $api = 'search/tweets';
+                $api_param = 'q';
                 break;
               default:
-                $tweets = array();
+                $api = '';
+                $api_param = '';
             }
-            $markup = socialblock_render_posts($bean, $tweets);
-            variable_set('socialblock_tweets_' . $bean->bid, serialize($markup));
-          } else {
-            $markup = socialblock_render_posts($bean, array());
-            variable_set('socialblock_tweets_' . $bean->bid, serialize($markup));
+            if (isset($bean->twitter_param)) {
+              $tweets = array();
+              switch ($bean->tweet_filter) {
+                case 0:
+                  $remaining_calls = socialblock_not_rate_limited($credentials);
+                  if ($remaining_calls > 0) {
+                    $temp = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles));
+                    $temp2 = $temp;
+                    $remaining_calls--;
+                    $all_tweets = FALSE;
+                    while (!$all_tweets) {
+                      if ($remaining_calls > 0 && !empty($temp)) {
+                        $max_id = end($temp)->id;
+                        for ($i = 0; $i < sizeof($temp); $i++) {
+                          if (is_null($temp[$i]->in_reply_to_status_id)) {
+                            array_push($tweets, $temp[$i]);
+                          }
+                        }
+                        $all_tweets = sizeof($tweets) == $bean->tiles;
+                        if (!$all_tweets) {
+                          $temp = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles - sizeof($tweets), 'max_id' => $max_id - 1));
+                          $remaining_calls--;
+                          $temp2 = empty($temp) ? $temp2 : $temp;
+                        }
+                      } else {
+                        $tweets = $temp2;
+                        $all_tweets = TRUE;
+                      }
+                    }
+                  } else {
+                    watchdog('socialblock', 'Social Block: Twitter API rate limit hit!', array(), WATCHDOG_INFO);
+                  }
+                  break;
+                case 1:
+                  $remaining_calls = socialblock_not_rate_limited($credentials);
+                  if ($remaining_calls > 0) {
+                    $tweets = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles));
+                  } else {
+                    watchdog('socialblock', 'Social Block: Twitter API rate limit hit!', array(), WATCHDOG_INFO);
+                  }
+                  break;
+                default:
+                  $tweets = array();
+              }
+              $markup = socialblock_render_posts($bean, $tweets);
+              variable_set('socialblock_tweets_' . $bean->bid, serialize($markup));
+            } else {
+              $markup = socialblock_render_posts($bean, array());
+              variable_set('socialblock_tweets_' . $bean->bid, serialize($markup));
+            }
           }
         }
+      }
+      else {
+        watchdog('socialblock', 'Social Block: No Twitter credentials found, skipping tweets...', array(), WATCHDOG_INFO);
       }
     }
     else {

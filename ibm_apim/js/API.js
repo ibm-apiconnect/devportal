@@ -544,6 +544,7 @@
     }
 
     API.prototype.test = function (apiname, verb, path) {
+        path = path.replace(/%27/g, "\'");
         var tester = this.testers[apiname + "_" + verb + "_" + path];
         if (tester) {
             tester.test();
@@ -558,6 +559,7 @@
     };
 
     API.prototype.authorize = function (apiname, verb, path) {
+        path = path.replace(/%27/g, "\'");
         var tester = this.testers[apiname + "_" + verb + "_" + path];
         if (tester) {
             tester.authorize();
@@ -572,6 +574,7 @@
     };
 
     API.prototype.getToken = function (apiname, verb, path) {
+        path = path.replace(/%27/g, "\'");
         var tester = this.testers[apiname + "_" + verb + "_" + path];
         if (tester) {
             tester.getToken();
@@ -586,6 +589,7 @@
     };
 
     API.prototype.refreshToken = function (apiname, verb, path) {
+        path = path.replace(/%27/g, "\'");
         var tester = this.testers[apiname + "_" + verb + "_" + path];
         if (tester) {
             tester.refreshToken();
@@ -830,21 +834,59 @@
 
                 if (self.config.oauthScopes) {
                     $(".apimScopes .oauthscopes", self.requestForm).empty();
-                    $.each(self.config.oauthScopes, function (key, value) {
+
+                    var scopesList = [];
+                    // If there are no operation level scopes defined, then just use the API ones
+                    if (!self.operation.definition["security"]){
+                        $.each(self.config.oauthScopes, function (key, value) {
+                            scopesList.push(value);
+                        });
+                    } else {
+                        // check if an oauth flow has been selected - we only want to show the scopes from that flow
+                        var flowName = null;
+                        if ($('.securityType', self.requestForm).is(":visible")){
+                           flowName = $('.securityType option:selected', self.requestForm).val();
+                           if (!flowName){
+                              // if not set by user, then just use the first one.
+                              flowName = $('.securityType option:first-child', self.requestForm).val();
+                           }
+                        }
+                        // loop through the security operations and add all those that are of type oauth and match the
+                        // selected (or first if none selected) flow name.
+                        for (var i=0; i<self.operation.definition.security.length; i++){
+                            $.each(self.operation.definition.security[i], function (key, value) {
+                                // check if key exists in api.securityDefinitions and check if it is type oauth
+                                if (api.securityDefinitions[key]){
+                                    if (api.securityDefinitions[key].type == "oauth2"){
+                                        // if flowname is not set then it means .securityType was not visible - so just
+                                        // show scopes, otherwise only show scopes for selected flow.
+                                        if (!flowName || (key == flowName)){
+                                            for (var x=0; x<value.length; x++){
+                                                scopesList.push(value[x]);
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                    for (var i=0; i<scopesList.length; i++){
                         var inputdiv = document.createElement('div');
                         var input = document.createElement('input');
                         input.setAttribute('type', 'checkbox');
                         input.setAttribute('name', 'scope[]');
-                        input.setAttribute('value', value);
+                        input.setAttribute('value', scopesList[i]);
                         input.setAttribute('checked', 'checked');
-                        input.value = value;
-                        var inputText = document.createTextNode(value);
+                        input.value = scopesList[i];
+                        var inputText = document.createTextNode(scopesList[i]);
                         inputdiv.appendChild(input);
                         inputdiv.appendChild(inputText);
                         $(".apimScopes .oauthscopes", self.requestForm).append(inputdiv);
-                    });
+                    }
+
                 }
-                // before filling out any OAuth URLs, replace any $(catalog.host) instances
+                // before filling out any OAuth URLs, replace any $(catalog.url) instances
                 var endpoint = self.apiObj.getEndpoint(self.api);
                 if (self.config.oauthAuthUrl) {
                     self.config.oauthAuthUrl = self.config.oauthAuthUrl.replace('$(catalog.url)', endpoint);
@@ -945,6 +987,7 @@
                 option.appendChild(optiontext);
                 $(".securitySelectionSection .apimSecurityType .securityType", self.requestForm).append(option);
             });
+
             // set to first option by default
             self.config = window.CommonAPI.getConfigurationForOperation(operation.definition, api.paths[operation.path], api, self.config.securityFlows[0]);
             parseSecurityConfig();

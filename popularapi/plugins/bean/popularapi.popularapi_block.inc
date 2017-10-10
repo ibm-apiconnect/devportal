@@ -93,21 +93,24 @@ class PopularAPIBlockBean extends BeanPlugin {
 
         $title = isset($node->title) ? $node->title : '';
         $version = isset($node->api_version[$node->language][0]['value']) ? $node->api_version[$node->language][0]['value'] : '';
-        if (!isset($node->api_description[$node->language][0]['value']) || empty($node->api_description[$node->language][0]['value'])) {
+        if (isset($bean->popapiblocktitle[$langcode][0]['value'])) {
+          $blocktitle = $bean->popapiblocktitle[$langcode][0]['value'];
+        } else {
+          $blocktitle = $bean->popapiblocktitle['und'][0]['value'];
+        }
+        if (isset($node->api_description[$langcode][0]['value']) && !empty($node->api_description[$langcode][0]['value'])) {
+          $description = $node->api_description[$langcode][0]['value'];
+        } elseif (isset($node->api_description[$node->language][0]['value']) && !empty($node->api_description[$node->language][0]['value'])) {
+          $description = $node->api_description[$node->language][0]['value'];
+        } else {
           $description = '';
           $notop = 'notop';
         }
-        else {
-          $description = $node->api_description[$node->language][0]['value'];
-        }
+
         $markup = '';
-        if (isset($bean->popapiblocktitle[$langcode][0]['value'])) {
-          $markup .= '<h2 class="pane-title block-title">' . check_plain($bean->popapiblocktitle[$langcode][0]['value']) . '</h2>';
-        }
-        else if (isset($bean->popapiblocktitle['und'][0]['value'])) {
-          $markup .= '<h2 class="pane-title block-title">' . check_plain($bean->popapiblocktitle['und'][0]['value']) . '</h2>';
-        }
-        $markup .= '<div class="popularapiblock api"><a href="' . url('node/' . $nid) . '"><div class="wrapper"><div class="popularapi_image">';
+
+        $markup .= '<h2 class="pane-title block-title">' . check_plain($blocktitle) . '</h2>';
+        $markup .= '<div class="popularapiblock api"><a href="' . url('node/' . $nid) . '" title="' . check_plain($blocktitle) . '"><div class="wrapper"><div class="popularapi_image">';
         if (isset($node->api_image) && !empty($node->api_image)) {
           $view = field_view_field('node', $node, 'api_image');
           $markup .= render($view);
@@ -126,7 +129,7 @@ class PopularAPIBlockBean extends BeanPlugin {
         $markup .= '</div>'; // api image
         $markup .= '<div class="popularapi_title">' . popularapi_truncate_string($title, 50) . '<span class="version">' . $version . '</span></div>';
         $markup .= '<div class="popularapi_description ' . $notop . '">' . ibm_apim_markdown_field($description) . '</div>';
-        $markup .= '<div class="popularapi_detaillink"><span>' . t('Detail') . '</span></div>';
+        $markup .= '<div class="popularapi_detaillink"><a href="' . url('node/' . $nid) . '" title="' . check_plain($blocktitle) . '"><span>' . t('Detail') . '</span></a></div>';
         $markup .= '</div></a></div>';
       }
     }

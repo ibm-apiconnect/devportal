@@ -104,7 +104,7 @@ function apic_taxonomy_menu_block_block_info() {
   foreach ($deltas as $delta) {
     $name = apic_taxonomy_menu_block_get_name($delta);
     $blocks[$delta]['info'] = $name;
-    $blocks[$delta]['cache'] = DRUPAL_CACHE_PER_PAGE;
+    $blocks[$delta]['cache'] = DRUPAL_CACHE_PER_PAGE | DRUPAL_CACHE_PER_USER;
   }
 
   return $blocks;
@@ -368,12 +368,18 @@ function apic_taxonomy_menu_block_get_name($delta) {
  * Get taxonomy tree & name, taking into account i18n.
  */
 function apic_taxonomy_menu_block_get_taxonomy($vid) {
+  global $user;
+  if (user_is_logged_in()) {
+    $uid = '-' . $user->uid;
+  } else {
+    $uid = '';
+  }
   if (module_exists('i18n_taxonomy')) {
     global $language;
     $lang = $language->language;
 
-    // Get cache. Format of cache id: module_name-vid-language.
-    $cache = cache_get('apic_taxonomy_menu_block-' . $vid . '-' . $lang);
+    // Get cache. Format of cache id: module_name-vid-language-uid.
+    $cache = cache_get('apic_taxonomy_menu_block-' . $vid . '-' . $lang . $uid);
 
     if ($cache) {
       $taxonomy = $cache->data;
@@ -394,7 +400,7 @@ function apic_taxonomy_menu_block_get_taxonomy($vid) {
       }
       $taxonomy['tree'] = apic_taxonomy_menu_block_structure_tree($tree, $vid, $lang);
 
-      $cache = cache_set('apic_taxonomy_menu_block-' . $vid . '-' . $lang, $taxonomy);
+      $cache = cache_set('apic_taxonomy_menu_block-' . $vid . '-' . $lang . $uid, $taxonomy);
     }
   }
   else {
@@ -408,7 +414,7 @@ function apic_taxonomy_menu_block_get_taxonomy($vid) {
       $tree = taxonomy_get_tree($vid);
       $taxonomy['tree'] = apic_taxonomy_menu_block_structure_tree($tree, $vid);
 
-      $cache = cache_set('apic_taxonomy_menu_block-' . $vid, $taxonomy);
+      $cache = cache_set('apic_taxonomy_menu_block-' . $vid . $uid, $taxonomy);
     }
     else {
       $taxonomy = $cache->data;
@@ -689,79 +695,107 @@ function apic_taxonomy_menu_block_get_nodes($tids, $vid, $ctype) {
   if (!empty($ctype)) {
     $ctypestring = implode('-', $ctype);
   }
-
   global $user;
-  if (!empty($ctype)) {
-    $cache_identifier = 'apic_taxonomy_menu_block-' . $vid . '-nodes' . '-' . $ctypestring . '-' . $user->uid;
-  }
-  else {
-    $cache_identifier = 'apic_taxonomy_menu_block-' . $vid . '-nodes' . '-' . $user->uid;
-  }
-
-  // First check if we have the result in cache already.
-  $cache = cache_get($cache_identifier);
-  if (module_exists('ibm_apim')) {
-    $myorg = ibm_apim_get_current_developer_org();
+  if (user_is_logged_in()) {
+    $uid = '-' . $user->uid;
+  } else {
+    $uid = '';
   }
 
-  if ($cache) {
-    $nodes = $cache->data;
-  }
-  else {
-    // build array of terms and count for each but honour the ACL
-    $terms = taxonomy_get_tree($vid);
-    foreach ($terms as $term) {
-      $nids = taxonomy_select_nodes($term->tid, FALSE);
-      $count = 0;
-      foreach ($nids as $nid) {
-        $node = node_load($nid);
-        if ($node->type == 'product' && (empty($ctype) || in_array('product', $ctype))) {
-          if (module_exists('product')) {
-            if (product_check_product_access($node)) {
-              $count++;
-            }
-          }
-          else {
-            $count++;
-          }
+  // First check if our vocabulary is set to localize. If this is the case
+  // nodes in different languages will be attached to the same tid.
+  if (module_exists('i18n_taxonomy') && i18n_taxonomy_vocabulary_mode($vid) == 1) {
+    global $language;
+    $lang = $language->language;
+
+    if (!empty($ctype)) {
+      $cache_identifier = 'apic_taxonomy_menu_block-' . $vid . '-nodes-' . $lang . '-' . $ctypestring . $uid;
+    }
+    else {
+      $cache_identifier = 'apic_taxonomy_menu_block-' . $vid . '-nodes-' . $lang . $uid;
+    }
+
+    // First check if we have the result in cache already.
+    $cache = cache_get($cache_identifier);
+
+    if ($cache) {
+      $nodes = $cache->data;
+    }
+    else {
+      // Query for nodes attached to every term of the tree.
+      // Later we'll sift out the node counts we need from this global result.
+      $query = db_select('taxonomy_index', 'ti');
+      $query->fields('ti', array('tid', 'nid'));
+      $query->join('node', 'n', 'ti.nid = n.nid');
+      $query->join('taxonomy_term_data', 'ttd', 'ti.tid = ttd.tid');
+      $query->condition('ttd.vid', $vid, '=');
+      $query->condition('n.language', $lang, '=');
+      $query->groupBy('ti.tid');
+
+      if (!empty($ctype)) {
+        $or = db_or();
+        foreach ($ctype as $type) {
+          $or->condition('n.type', $type, '=');
         }
-        elseif ($node->type == 'api' && (empty($ctype) || in_array('api', $ctype))) {
-          if (module_exists('api')) {
-            if (api_check_api_access($node)) {
-              $count++;
-            }
+        $query->condition($or);
+      }
+
+      $results = $query->execute()->fetchAll();
+      $valid_nodes = array();
+      if (!empty($results)) {
+        foreach($results as $result) {
+          if (node_access("view", $result->nid) === TRUE) {
+            $valid_nodes[$result->tid]++;
           }
-          else {
-            $count++;
-          }
-        }
-        elseif ($node->type == 'application' && (empty($ctype) || in_array('application', $ctype))) {
-          if (module_exists('application')) {
-            if (user_is_logged_in() && isset($myorg['id']) && isset($node->application_orgid[$node->language][0]['value']) && $node->application_orgid[$node->language][0]['value'] == $myorg['id']) {
-              $count++;
-            }
-          }
-          else {
-            $count++;
-          }
-        }
-        elseif ($node->type == 'devorg' && (empty($ctype) || in_array('devorg', $ctype))) {
-          if (module_exists('devorg')) {
-            if (user_is_logged_in() && isset($myorg['id']) && isset($node->devorg_id[$node->language][0]['value']) && $node->devorg_id[$node->language][0]['value'] == $myorg['id']) {
-              $count++;
-            }
-          }
-          else {
-            $count++;
-          }
-        }
-        else if (empty($ctype) || in_array($node->type, $ctype)) {
-          $count++;
         }
       }
-      $nodes[$term->tid] = $count;
+
+      $cache = cache_set($cache_identifier, $valid_nodes);
     }
-    $cache = cache_set($cache_identifier, $nodes);
+  }
+  else {
+    if (!empty($ctype)) {
+      $cache_identifier = 'apic_taxonomy_menu_block-' . $vid . '-nodes' . '-' . $ctypestring . $uid;
+    }
+    else {
+      $cache_identifier = 'apic_taxonomy_menu_block-' . $vid . '-nodes' . $uid;
+    }
+
+    $cache = cache_get($cache_identifier);
+
+    if ($cache) {
+      $nodes = $cache->data;
+    }
+    else {
+      // Here we don't need to take language in account. Every term has its own
+      // tid.
+      $query = db_select('taxonomy_index', 'ti');
+      $query->fields('ti', array('tid', 'nid'));
+      $query->join('taxonomy_term_data', 'ttd', 'ti.tid = ttd.tid');
+      $query->condition('ttd.vid', $vid, '=');
+      $query->groupBy('ti.tid');
+
+      if (!empty($ctype)) {
+        $query->join('node', 'n', 'ti.nid = n.nid');
+        $or = db_or();
+        foreach ($ctype as $type) {
+          $or->condition('n.type', $type, '=');
+        }
+        $query->condition($or);
+      }
+
+      $results = $query->execute()->fetchAll();
+      $valid_nodes = array();
+      if (!empty($results)) {
+        foreach($results as $result) {
+          if (node_access("view", $result->nid) === TRUE) {
+            $valid_nodes[$result->tid]++;
+          }
+        }
+      }
+
+      $cache = cache_set($cache_identifier, $valid_nodes);
+    }
   }
 
   // Find the same values of our two arrays

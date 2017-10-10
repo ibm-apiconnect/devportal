@@ -912,6 +912,7 @@ function social_login_activate_id_callback($path = NULL) {
         drupal_goto();
       }
 
+      // try loading by username
       $existinguser = user_load_by_name($userid);
       if (isset($existinguser) && isset($existinguser->uid)) {
         // user already exists
@@ -919,10 +920,18 @@ function social_login_activate_id_callback($path = NULL) {
         drupal_goto('user/login');
       }
       else {
-        // seems a valid token so save it as a cookie for retrieval after have signed up
-        module_load_include('pages.inc', 'user');
-        user_cookie_save(array('ibmapimacttoken' => $actToken));
-        return drupal_get_form('ibm_apim_activate_create_account_form', $actToken);
+        // then try loading by mail
+        $existinguser = user_load_by_mail($userid);
+        if (isset($existinguser) && isset($existinguser->uid)) {
+          // user already exists
+          drupal_set_message(t('User already exists. Please use existing credentials to sign in.'), 'error');
+          drupal_goto('user/login');
+        } else {
+          // seems a valid token so save it as a cookie for retrieval after have signed up
+          module_load_include('pages.inc', 'user');
+          user_cookie_save(array('ibmapimacttoken' => $actToken));
+          return drupal_get_form('ibm_apim_activate_create_account_form', $actToken);
+        }
       }
     }
     else {

@@ -120,6 +120,228 @@ function product_view($node, $view_mode) {
 function product_node_view($node, $view_mode) {
 }
 
+function acl_log($data) {
+    // Enable the next line to log grants as they are created and used
+    // file_put_contents('/tmp/acl.log', $data. PHP_EOL. PHP_EOL, FILE_APPEND);
+}
+
+/* Permissions that can be granted */
+define('EDIT_ANY_PRODUCT_CONTENT_GRANT', 1);
+define('PUBLIC_PRODUCT_GRANT', 2);
+define('AUTHENTICATED_PRODUCT_GRANT', 3);
+define('SUBSCRIBED_TO_PRODUCT_GRANT', 4);
+define('ORG_PRODUCT_GRANT', 5);
+define('TAG_PRODUCT_GRANT', 6);
+
+/**
+ * Implements hook_node_access_records().
+ *
+ * For product nodes, create a list of grants for the node based on available
+ * capabilities within the node configuration; where the capabilities are
+ * specific to individual products, organisations or tags then use realm named
+ * after product id, organisation or tag
+ *
+ * @param $node
+ * @return array
+ *
+ * Note: hook is called when rebuilding permissions
+ */
+function product_node_access_records($node) {
+
+    acl_log('Enter: product_node_access_records');
+    $type = is_string($node) ? $node : $node->type;
+    $grants = array();
+    // Only build permissions for product nodes
+    if ($type == 'product') {
+        acl_log('Node: ' . $node->title);
+        // Only issue grants if product_view is enabled
+        if (isset($node->product_view_enabled[$node->language][0]) && $node->product_view_enabled[$node->language][0]['value'] == 1) {
+            // Create a grant for 'edit any product content' (will be set in hook_node_grants())
+            $grants[] = array(
+                'realm' => 'product',
+                'gid' => EDIT_ANY_PRODUCT_CONTENT_GRANT,
+                'grant_view' => 1,
+                'grant_update' => 0,
+                'grant_delete' => 0,
+                'priority' => 0,
+            );
+            // Create a grant for public access if public is set
+            if (isset($node->product_visibility_public[$node->language][0]['value']) && $node->product_visibility_public[$node->language][0]['value'] == 1) {
+                $grants[] = array(
+                    'realm' => 'product',
+                    'gid' => PUBLIC_PRODUCT_GRANT,
+                    'grant_view' => 1,
+                    'grant_update' => 0,
+                    'grant_delete' => 0,
+                    'priority' => 0,
+                );
+            }
+            // Create a grant for authenticated access if authenticated is set
+            if (isset($node->product_visibility_authenticated[$node->language][0]['value']) && $node->product_visibility_authenticated[$node->language][0]['value'] == 1 && user_is_logged_in()) {
+                $grants[] = array(
+                    'realm' => 'product',
+                    'gid' => AUTHENTICATED_PRODUCT_GRANT,
+                    'grant_view' => 1,
+                    'grant_update' => 0,
+                    'grant_delete' => 0,
+                    'priority' => 0,
+                );
+            }
+            // Create a grant for subscription to this node based on product reference
+            $pref = $node->product_ref[$node->language][0]['value'];
+            $grants[] = array(
+                'realm' => 'product_ref_' . $pref,
+                'gid' => SUBSCRIBED_TO_PRODUCT_GRANT,
+                'grant_view' => 1,
+                'grant_update' => 0,
+                'grant_delete' => 0,
+                'priority' => 0,
+            );
+            // Create a grant for all organisations (as separate realms) if org visibility is set
+            if (isset($node->product_visibility_custom_orgs[$node->language])) {
+                foreach ($node->product_visibility_custom_orgs[$node->language] as $customorg) {
+                    if (isset($customorg['value'])) {
+                        $grants[] = array(
+                            'realm' => 'product_org_' . $customorg['value'],
+                            'gid' => ORG_PRODUCT_GRANT,
+                            'grant_view' => 1,
+                            'grant_update' => 0,
+                            'grant_delete' => 0,
+                            'priority' => 0,
+                        );
+                    }
+                }
+            }
+            // Create a grant for all tags (as separate realms) if tag visibility is set
+            if (isset($node->product_visibility_custom_tags[$node->language])) {
+                foreach ($node->product_visibility_custom_tags[$node->language] as $customtag) {
+                    if (isset($customtag['value'])) {
+                        $grants[] = array(
+                            'realm' => 'product_tag_' . $customtag['value'],
+                            'gid' => TAG_PRODUCT_GRANT,
+                            'grant_view' => 1,
+                            'grant_update' => 0,
+                            'grant_delete' => 0,
+                            'priority' => 0,
+                        );
+                    }
+                }
+            }
+        }
+        acl_log('Grants: '.var_export($grants,TRUE));
+    }
+    acl_log('Exit: product_node_access_records');
+    return $grants;
+}
+
+/**
+ * Implements hook_node_grants().
+ *
+ * @param $account
+ * @param $op
+ * @return array
+ *
+ * Note: hook is not called at all when admin logged in
+ * Note: hook is called on every login, logout and page load
+ */
+function product_node_grants($account, $op) {
+
+    acl_log('Enter: product_node_grants');
+    if (isset($account->name)) {
+        acl_log('Account: ' . $account->name);
+    } else {
+        acl_log('Account: anonymous');
+    }
+
+    $grants = array();
+    $grants['product']=array();
+
+    // Grant everyone PUBLIC_PRODUCT_GRANT
+    array_push($grants['product'], PUBLIC_PRODUCT_GRANT);
+
+    // If logged in, grant AUTHENTICATED_PRODUCT_GRANT
+    if(user_is_logged_in()) {
+        array_push($grants['product'], AUTHENTICATED_PRODUCT_GRANT);
+    }
+
+    // If 'edit any product content' is set, grant EDIT_ANY_PRODUCT_CONTENT_GRANT
+    if (ibm_apim_explicit_user_access('edit any product content')) {
+        array_push($grants['product'], EDIT_ANY_PRODUCT_CONTENT_GRANT);
+    }
+
+    // Subscriptions and tags are only set for orgs, so only run that code
+    // if the user is in a development organisation
+    $myorg = ibm_apim_get_current_developer_org();
+    if (isset($myorg['id'])) {
+
+        // Grant ORG_PRODUCT_GRANT for a realm representing the user's org
+        $orgid = $myorg['id'];
+        $grants['product_org_'.$orgid] = array(ORG_PRODUCT_GRANT);
+
+        // Check for subscriptions, if they exist add a SUBSCRIBED_TO_PRODUCT_GRANT
+        // for each subscription to a product-specific realm
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'application')
+            ->fieldCondition('application_orgid', 'value', $orgid);
+        // Must use the DANGEROUS_ACCESS_CHECK_OPT_OUT to avoid recursion
+        // (node access system is invoked when executing an EntityFieldQuery)
+        $appresults = $query->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT')->execute();
+        if (isset($appresults['node'])) {
+            $nids = array();
+            foreach ($appresults['node'] as $item) {
+                $nids[] = $item->nid;
+                $query = db_query("SELECT application_subscriptions_value FROM {field_data_application_subscriptions} WHERE entity_id = $item->nid");
+                $subresults = $query->fetchAll();
+                foreach ($subresults as $sub) {
+                    $subs = unserialize($subresults[0]->application_subscriptions_value);
+                    if (is_array($subs)) {
+                        foreach ($subs as $sub) {
+                            if (isset($sub['product'])) {
+                                $pref = $sub['product'];
+                                $grants['product_ref_'.$pref] = array(SUBSCRIBED_TO_PRODUCT_GRANT);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check for custom tags, if they exist add a TAG_PRODUCT_GRANT for
+        // each tag in a tag-specific realm
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'devorg')
+            ->fieldCondition('devorg_id', 'value', $orgid);
+        // Must use the DANGEROUS_ACCESS_CHECK_OPT_OUT to avoid recursion
+        // (node access system is invoked when executing an EntityFieldQuery)
+        $devorgresults = $query->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT')->execute();
+        if (isset($devorgresults['node'])) {
+            $first = array_shift($devorgresults['node']);
+            $devorgnid = $first->nid;
+            if (!empty($devorgnid)) {
+                $query = db_query("SELECT devorg_tags_value FROM {field_data_devorg_tags} WHERE entity_id = $devorgnid");
+                $doresults = $query->fetchAll();
+                foreach($doresults as $devorg_tag) {
+                  $tags[] = $devorg_tag->devorg_tags_value;
+                }
+                if (isset($tags) && is_array($tags) && count($tags) > 0) {
+                    foreach ($tags as $customtag) {
+                        if (isset($customtag)) {
+                            $grants['product_tag_'.$customtag] = array(TAG_PRODUCT_GRANT);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (isset($account->name)) {
+        acl_log('Grants: ' . var_export($grants, TRUE));
+    }
+    acl_log('Exit: product_node_grants');
+    return $grants;
+}
 
 /**
  * Implements hook_node_access().
@@ -813,6 +1035,24 @@ function _product_createNewProductNode($product, $event = 'publish') {
   $node = node_submit($node); // Prepare node for saving
   node_save($node);
 
+  // need to trigger save of all apis in order to build up ACL
+  if (isset($product['document']['apis']) && !empty($product['document']['apis'])) {
+    foreach($product['document']['apis'] as $prodref) {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'api')
+        ->propertyCondition('status', 1)
+        ->fieldCondition('api_ref', 'value', $prodref['name']);
+      $results = $query->execute();
+      if (isset($results['node'])) {
+        $first = array_shift($results['node']);
+        $nid = $first->nid;
+        $api = node_load($nid);
+        node_save($api);
+      }
+    }
+  }
+
   if (isset($oldtags)) {
     $currenttags = $node->field_producttags[$node->language];
     if (!is_array($currenttags)) {
@@ -1072,12 +1312,34 @@ function _product_updateExistingProductNode($node, $product, $event = 'bgsync') 
   $node->product_data[$node->language][0]['value'] = yaml_emit($product['document'], YAML_UTF8_ENCODING);
   node_save($node);
 
+  // need to trigger save of all apis in order to build up ACL
+  if (isset($product['document']['apis']) && !empty($product['document']['apis'])) {
+    foreach($product['document']['apis'] as $prodref) {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'api')
+        ->propertyCondition('status', 1)
+        ->fieldCondition('api_ref', 'value', $prodref['name']);
+      $results = $query->execute();
+      if (isset($results['node'])) {
+        $first = array_shift($results['node']);
+        $nid = $first->nid;
+        $api = node_load($nid);
+        node_save($api);
+      }
+    }
+  }
+
   // Product Categories
   $categories_enabled = variable_get('ibm_apim_allow_categories', 1);
   if (isset($product['document']['info']['categories']) && $categories_enabled == 1) {
     $categories = $product['document']['info']['categories'];
     $tids = api_get_taxonomies_from_categories($categories);
-    $currenttags = $node->field_producttags[$node->language];
+    if (isset($node->field_producttags[$node->language])) {
+      $currenttags = $node->field_producttags[$node->language];
+    } else {
+      $currenttags = array();
+    }
     if (is_array($tids) && !empty($tids)) {
       foreach ($tids as $tid) {
         if (isset($tid) && is_numeric($tid)) {
@@ -1813,7 +2075,9 @@ function product_list_products() {
           $devorgnid = $first->nid;
           if (!empty($devorgnid)) {
             $devorg = node_load($devorgnid);
-            $tags = unserialize($devorg->devorg_tags[$devorg->language][0]['value']);
+            foreach($devorg->devorg_tags[$devorg->language] as $devorg_tag) {
+              $tags[] = $devorg_tag['value'];
+            }
             if (isset($tags) && is_array($tags) && count($tags) > 0) {
               $query = new EntityFieldQuery();
               $query->entityCondition('entity_type', 'node')
@@ -1888,27 +2152,30 @@ function product_list_products() {
  * @return array
  */
 function product_get_linked_pages($apinid) {
-  $finalnids = array();
-  $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'page')
-    ->fieldCondition('field_all_products', 'value', 1);
-  $results = $query->execute();
-  if (isset($results) && isset($results['node'])) {
-    foreach ($results['node'] as $item) {
-      $finalnids[] = $item->nid;
+  if (node_type_load('page') != FALSE) {
+    $finalnids = array();
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'page')
+      ->fieldCondition('field_all_products', 'value', 1);
+    $results = $query->execute();
+    if (isset($results) && isset($results['node'])) {
+      foreach ($results['node'] as $item) {
+        $finalnids[] = $item->nid;
+      }
+    }
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'page')
+      ->fieldCondition('field_products', 'target_id', $apinid);
+    $results = $query->execute();
+    if (isset($results) && isset($results['node'])) {
+      foreach ($results['node'] as $item) {
+        $finalnids[] = $item->nid;
+      }
     }
   }
-  $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'page')
-    ->fieldCondition('field_products', 'target_id', $apinid);
-  $results = $query->execute();
-  if (isset($results) && isset($results['node'])) {
-    foreach ($results['node'] as $item) {
-      $finalnids[] = $item->nid;
-    }
-  }
+
   return array_unique($finalnids, SORT_NUMERIC);
 }
 
@@ -2005,7 +2272,9 @@ function product_check_product_access($node) {
           $devorgnid = $first->nid;
           if (!empty($devorgnid)) {
             $devorg = node_load($devorgnid);
-            $tags = unserialize($devorg->devorg_tags[$devorg->language][0]['value']);
+            foreach($devorg->devorg_tags[$devorg->language] as $devorg_tag) {
+              $tags[] = $devorg_tag['value'];
+            }
             if (isset($tags) && is_array($tags) && count($tags) > 0) {
               foreach ($node->product_visibility_custom_tags[$node->language] as $customtag) {
                 if (isset($customtag['value']) && in_array($customtag['value'], $tags)) {
@@ -2069,7 +2338,9 @@ function product_check_product_subscribe($node) {
           $devorgnid = $first->nid;
           if (!empty($devorgnid)) {
             $devorg = node_load($devorgnid);
-            $tags = unserialize($devorg->devorg_tags[$devorg->language][0]['value']);
+            foreach($devorg->devorg_tags[$devorg->language] as $devorg_tag) {
+              $tags[] = $devorg_tag['value'];
+            }
             if (isset($tags) && is_array($tags) && count($tags) > 0) {
               foreach ($visibility['subscribe']['tags'] as $customtag) {
                 if (isset($customtag) && in_array($customtag, $tags)) {

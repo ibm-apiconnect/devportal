@@ -131,6 +131,7 @@ dependencies[] = rules_http_client
 dependencies[] = field_group
 dependencies[] = views_data_export
 dependencies[] = termcase
+dependencies[] = honeypot
 
 
 ;Enable our modules

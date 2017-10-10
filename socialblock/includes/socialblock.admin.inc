@@ -20,7 +20,16 @@ function socialblock_admin($form, &$form_state) {
   $data = variable_get('twitter_oauth_settings');
   $iv_size = mcrypt_get_iv_size(MCRYPT_CAST_256, MCRYPT_MODE_CBC);
   $iv = substr($data, 0, $iv_size);
-  $settings = unserialize(openssl_decrypt(substr($data, $iv_size), "AES-256-CBC", $client_id, 0, $iv));
+  if (strlen($client_id) < 32) {
+    $char = 32 - strlen($client_id);
+    $client_id = str_pad($client_id, 32, $char);
+  }
+  $client_id = (strlen($client_id) > 32) ? substr($client_id,0,32) : $client_id;
+  if (isset($data) && !empty($data) && isset($client_id) && isset($iv_size)) {
+    $settings = unserialize(openssl_decrypt(substr($data, $iv_size), "AES-256-CBC", $client_id, 0, $iv));
+  } else {
+    $settings = array();
+  }
   if (!isset($settings['twitter_consumer_key'])) {
     $settings['twitter_consumer_key'] = '';
   }
@@ -117,6 +126,11 @@ function socialblock_admin_variable_settings_form_submit($form, &$form_state) {
   $client_id = variable_get('ibm_apim_client_id');
   $iv_size = mcrypt_get_iv_size(MCRYPT_CAST_256, MCRYPT_MODE_CBC);
   $iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
+  if (strlen($client_id) < 32) {
+    $char = 32 - strlen($client_id);
+    $client_id = str_pad($client_id, 32, $char);
+  }
+  $client_id = (strlen($client_id) > 32) ? substr($client_id,0,32) : $client_id;
   $value = openssl_encrypt(serialize($credentials), "AES-256-CBC", $client_id, 0, $iv);
   variable_set('twitter_oauth_settings', $iv . $value);
   drupal_set_message(t('The configuration options have been saved.'));

@@ -272,10 +272,15 @@ function _auth_apic_user_login_form_alter(&$form, &$form_state) {
         }
       }
     }
-
     // use our submission handler not theirs to avoid conflicts
     $form['#submit'] = array_diff($form['#submit'], array("security_questions_user_login_submit"));
   }
+
+  if (in_array('tfa_login_submit', $form['#submit'],true)) {
+    unset($form['#submit']['tfa_login_submit']);
+  }
+
+
 }
 
 /**
@@ -347,6 +352,14 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
         $ibm_apim_readonly_idp = variable_get('ibm_apim_readonly_idp', FALSE);
         $ibm_apim_saml_idp = variable_get('ibm_apim_saml_idp', 0);
         $emailasuser = variable_get('ibm_apim_email_as_username', 1);
+        $debug_trace = variable_get('ibm_apim_debug_trace', FALSE);
+        if ($debug_trace == TRUE){
+          watchdog('auth_apic_authenticate', 'Read only IDP: %readonly, SAML IDP: %saml, EmailAsUser: %emailasuser', array(
+                   '%readonly' => $ibm_apim_readonly_idp,
+                   '%saml' => $ibm_apim_saml_idp,
+                   '%emailasuser' => $emailasuser
+                   ), WATCHDOG_NOTICE);
+        }
         if ($ibm_apim_readonly_idp == TRUE) {
           if ($emailasuser == 1 || $ibm_apim_saml_idp == 1) {
             $form['account']['mail']['#required'] = FALSE;
@@ -1014,6 +1027,63 @@ function auth_apic_authenticate_submit($form, &$form_state) {
       }
     }
   }
+  elseif (module_exists('tfa')) {
+    if (variable_get('tfa_enabled', 0) == 1) {
+      $account = isset($form_state['uid']) ? user_load($form_state['uid']) : user_load_by_name($form_state['values']['name']);
+      // Return early if user has successfully gone through TFA process or if
+      // a login plugin specifically allows it.
+      if (tfa_login_allowed($account)) {
+        // Authentication can continue
+        auth_apic_authenticate_submit_redirect($form, $form_state);
+      }
+      else {
+        $tfa = tfa_get_process($account);
+        // Check if TFA has been set up by the account.
+        if (!$tfa->ready() && !$tfa->isFallback()) {
+          // Allow other modules to act on login when account is not set up for TFA.
+          $require_tfa = array_filter(module_invoke_all('tfa_ready_require', $account));
+          if (!empty($require_tfa)) {
+            $form_state['redirect'] = !empty($form_state['redirect']) ? $form_state['redirect'] : 'user';
+            return;
+          }
+          else {
+            // Not required so continue with log in.
+            auth_apic_authenticate_submit_redirect($form, $form_state);
+          }
+        } else  {
+          // Restart session context, and TFA process.
+          tfa_start_context($account);
+          $tfa = tfa_get_process($account);
+
+          $query = drupal_get_query_parameters();
+          unset($_GET['destination']);
+
+          // Begin TFA and set process context.
+          $tfa->begin();
+          $context = $tfa->getContext();
+          // Support form set redirect. Will be used on completion of TFA form
+          // process.
+          $context['redirect'] = array(
+            '',
+            array('query' => $query),
+          );
+
+          tfa_set_context($account, $context);
+
+          $login_hash = tfa_login_hash($account);
+
+          $form_state['tfa_redirect'] = array(
+            'system/tfa/' . $account->uid . '/' . $login_hash,
+            array('query' => $query),
+          );
+
+        }
+      }
+    }
+    else {
+      auth_apic_authenticate_submit_redirect($form, $form_state);
+    }
+  }
   else {
     auth_apic_authenticate_submit_redirect($form, $form_state);
   }
@@ -1104,22 +1174,33 @@ function auth_apic_authenticate($name, $pass) {
   if (isset($lang_name)) {
     $headers[] = 'Accept-Language: ' . $lang_name;
   }
-
-  $result = _ibm_apim_json_http_request($url, 'GET', $headers);
-
-  // Must get the session again now as it may have changed when we logged in
-  $apim_session = &_ibm_apim_get_apim_session();
-  watchdog('auth_apic_authenticate', '%user login return code %data', array(
-    '%data' => $result->code,
+  watchdog('auth_apic_authenticate', '%user login calling %data', array(
+    '%data' => $url,
     '%user' => $name
   ), WATCHDOG_NOTICE);
+  $result = _ibm_apim_json_http_request($url, 'GET', $headers);
+  $debug_trace = variable_get('ibm_apim_debug_trace', FALSE);
+  if ($debug_trace == TRUE){
+    watchdog('auth_apic_authenticate', 'User login result: %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
+  }
+  // Must get the session again now as it may have changed when we logged in
+  $apim_session = &_ibm_apim_get_apim_session();
   if (isset($result) && ($result->code == 200) && $result->data != '') {
+    watchdog('auth_apic_authenticate', '%user login return code %data', array(
+       '%data' => $result->code,
+       '%user' => $name
+    ), WATCHDOG_NOTICE);
     $apim_session['auth'] = base64_encode($name . ':' . $pass);
     $apim_session['userdata'] = $result->data;
     if (isset($result->data['id'])) {
       $apim_session['memberid'] = $result->data['id'];
     }
     return $result->data;
+  } else {
+    watchdog('auth_apic_authenticate', '%user login return code %data, check management server logs for more information', array(
+      '%data' => $result->code,
+      '%user' => $name
+    ), WATCHDOG_NOTICE);
   }
   return NULL;
 }
@@ -1221,6 +1302,15 @@ function auth_apic_module_implements_alter(&$implementations, $hook) {
       $group = $implementations['legal'];
       unset($implementations['legal']);
       $implementations['legal'] = $group;
+    }
+  }
+
+  if (module_exists('tfa')) {
+    $site_tfa_enabled = variable_get('tfa_enabled', 0);
+    if ($site_tfa_enabled == 1) {
+      if ($hook == 'user_login' && isset($implementations['tfa'])) {
+        unset($implementations['tfa']);
+      }
     }
   }
 }
@@ -1548,7 +1638,7 @@ function _auth_apic_change_user_password($new_password, $authuser, $username, $c
   global $user;
   // Make sure we have the session variables set
   $apim_session = &_ibm_apim_get_apim_session();
-  $apim_session['auth'] = base64_encode($username . ':' . $new_password);
+  $apim_session['auth'] = base64_encode($username . ':' . $current_pass);
 
   $url = '/v1/portal/me/password';
   $data = array("newPassword" => $new_password, "oldPassword" => $current_pass);
@@ -1596,6 +1686,10 @@ function _auth_apic_change_user_password($new_password, $authuser, $username, $c
         if ($result->data && $result->data['errors']) {
           if (array_key_exists("usermanagement.passwordtooweak", $result->data['errors'][0])) {
             drupal_set_message(t('Password must contain characters from 3 of the 4 following categories: 1. upper-case, 2. lower-case, 3. numeric, and 4. punctuation (for example, !, $, #, %)'), 'error');
+          } else if (array_key_exists("usermanagement.incorrectPassword", $result->data['errors'][0])) {
+            drupal_set_message(t('The current password is incorrect.'), 'error');
+          } else {
+            drupal_set_message(t('An error occurred: %data', array('%data'=>serialize($result->data['errors']))), 'error');
           }
         }
       }
@@ -1787,15 +1881,19 @@ function auth_apic_saml_callback($samltoken = NULL) {
  */
 function auth_apic_activate_id_callback($path = NULL) {
   global $_GET;
+  watchdog('auth_apic_activate_id_callback', 'Entered auth_apic_activate_id_callback', NULL, WATCHDOG_NOTICE);
   if (isset($_GET['activationToken'])) {
     $actToken = $_GET['activationToken'];
   }
 
   // ACTIVATE USER LINK
   if (isset($actToken)) {
-
     // decode the base64 encoded JSON in the incoming URL
     $activationObj = json_decode(base64_decode($actToken));
+    $debug_trace = variable_get('ibm_apim_debug_trace', FALSE);
+    if ($debug_trace == TRUE){
+      watchdog('auth_apic_activate_id_callback', 'Decoded token %token ', array('%token' => serialize($activationObj)), WATCHDOG_NOTICE);
+    }
     // set global variables with the temp auth credentials from the incoming URL payload
     global $tempUser;
     global $tempPwd;
@@ -1803,8 +1901,7 @@ function auth_apic_activate_id_callback($path = NULL) {
       // essential info missing from token
       drupal_set_message(t('Invalid Token: missing required fields. Contact the system administrator for assistance.'), 'error');
       watchdog('auth_apic_activate_id_callback', 'Invalid Token: missing required fields. token: %token', array(
-        '%token' => serialize($activationObj)
-      ), WATCHDOG_NOTICE);
+        '%token' => serialize($activationObj)), WATCHDOG_NOTICE);
       drupal_goto();
     }
     $tempUser = $activationObj->{'authentication'}->{'username'};
@@ -1812,6 +1909,9 @@ function auth_apic_activate_id_callback($path = NULL) {
     $org = check_plain($activationObj->{'providerContext'}->{'orgID'});
     $env = check_plain($activationObj->{'providerContext'}->{'environmentID'});
     $userid = ibm_apim_decrypt_data($activationObj->{'username'});
+    if ($debug_trace == TRUE){
+      watchdog('auth_apic_activate_id_callback', 'userid %userid ', array('%userid' => $userid), WATCHDOG_NOTICE);
+    }
     if (isset($userid)) {
       // verify the temp userid and password are valid
       $url = $activationObj->{'url'};
@@ -1833,9 +1933,13 @@ function auth_apic_activate_id_callback($path = NULL) {
       if (isset($lang_name)) {
         $headers[] = 'Accept-Language: ' . $lang_name;
       }
-
+      if ($debug_trace == TRUE){
+        watchdog('auth_apic_activate_id_callback', 'Posting headers: %headers', array('%headers' => serialize($headers)), WATCHDOG_NOTICE);
+      }
       $result = _ibm_apim_json_http_request($url, 'POST', $headers, '{}');
-
+      if ($debug_trace == TRUE){
+        watchdog('auth_apic_activate_id_callback', 'Got back: %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
+      }
       if (isset($result) && $result->code >= 200 && $result->code < 300) {
         $account = user_load_by_name($userid);
         // update status via SQL to avoid triggering drupal activation email

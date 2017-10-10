@@ -48,10 +48,10 @@ jQuery(document).ready(function () {
             locale: "auto",
             panelLabel: billing_label,
             token: function(token) {
-                jQuery("#card_ending").val(token.card.last4);
-                jQuery("#card_expiring").val(token.card.exp_month + "/" + token.card.exp_year);
-                jQuery("#billing_name").val(token.card.name);
-                jQuery("#billing_email").val(token.email);
+                jQuery("#card_ending").text(' ' + token.card.last4);
+                jQuery("#card_expiring").text(' ' + token.card.exp_month + "/" + token.card.exp_year);
+                jQuery("#billing_name").text(' ' + token.card.name);
+                jQuery("#billing_email").text(' ' + token.email);
                 jQuery("#billing_button").text('Submitted');
                 jQuery("#billing_button").prop('disabled', true);
                 function errorHandler(xhrObj, textStatus, error) {

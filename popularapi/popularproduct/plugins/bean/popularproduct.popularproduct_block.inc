@@ -92,21 +92,22 @@ class PopularProductBlockBean extends BeanPlugin {
         $notop = '';
         $title = isset($node->title) ? $node->title : '';
         $version = isset($node->product_version[$node->language][0]['value']) ? $node->product_version[$node->language][0]['value'] : '';
-        if (!isset($node->product_description[$node->language][0]['value']) || empty($node->product_description[$node->language][0]['value'])) {
+        if (isset($bean->popprodblocktitle[$langcode][0]['value'])) {
+          $blocktitle = $bean->popprodblocktitle[$langcode][0]['value'];
+        } else {
+          $blocktitle = $bean->popprodblocktitle['und'][0]['value'];
+        }
+        if (isset($node->product_description[$langcode][0]['value']) && !empty($node->product_description[$langcode][0]['value'])) {
+          $description = $node->product_description[$langcode][0]['value'];
+        } elseif (isset($node->product_description[$node->language][0]['value']) && !empty($node->product_description[$node->language][0]['value'])) {
+          $description = $node->product_description[$node->language][0]['value'];
+        } else {
           $description = '';
           $notop = 'notop';
         }
-        else {
-          $description = $node->product_description[$node->language][0]['value'];
-        }
         $markup = '';
-        if (isset($bean->popprodblocktitle[$langcode][0]['value'])) {
-          $markup .= '<h2 class="pane-title block-title">' . check_plain($bean->popprodblocktitle[$langcode][0]['value']) . '</h2>';
-        }
-        else if (isset($bean->popprodblocktitle['und'][0]['value'])) {
-          $markup .= '<h2 class="pane-title block-title">' . check_plain($bean->popprodblocktitle['und'][0]['value']) . '</h2>';
-        }
-        $markup .= '<div class="popularapiblock product"><a href="' . url('node/' . $nid) . '"><div class="wrapper"><div class="popularapi_image">';
+        $markup .= '<h2 class="pane-title block-title">' . check_plain($blocktitle) . '</h2>';
+        $markup .= '<div class="popularapiblock product"><a href="' . url('node/' . $nid) . '" title="' . check_plain($blocktitle) . '"><div class="wrapper"><div class="popularapi_image">';
         if (isset($node->product_image) && !empty($node->product_image)) {
           $view = field_view_field('node', $node, 'product_image');
           $markup .= render($view);
@@ -125,7 +126,7 @@ class PopularProductBlockBean extends BeanPlugin {
         $markup .= '</div>'; // product image
         $markup .= '<div class="popularapi_title">' . popularproduct_truncate_string($title, 50) . '<span class="version">' . $version . '</span></div>';
         $markup .= '<div class="popularapi_description ' . $notop . '">' . ibm_apim_markdown_field($description) . '</div>';
-        $markup .= '<div class="popularapi_detaillink"><span>' . t('Detail') . '</span></div>';
+        $markup .= '<div class="popularapi_detaillink"><a href="' . url('node/' . $nid) . '" title="' . check_plain($blocktitle) . '"><span>' . t('Detail') . '</span></a></div>';
         $markup .= '</div></a></div>';
       }
     }

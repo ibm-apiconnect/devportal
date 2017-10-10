@@ -244,6 +244,18 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
             </div>
           <?php endif; ?>
 
+          <?php foreach ($product as $childname => $child) : ?>
+            <?php if (_ibm_apim_startsWith(strtolower($childname), 'x-') && !_ibm_apim_startsWith(strtolower($childname), 'x-ibm-')) : ?>
+              <div class="vendorExtension">
+                <label><?php print substr($childname, 2); ?></label>
+                <div>
+                  <div
+                    class="vendorExtension"><?php print ibm_apim_render_extension($child); ?></div>
+                </div>
+              </div>
+            <?php endif; ?>
+          <?php endforeach; ?>
+
           <div "<?php print $content_attributes; ?>">
 
           <?php hide($content['comments']);
@@ -310,7 +322,7 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
             }
           }
         } ?>
-        <?php if (isset($billing)) :?>
+        <?php if (isset($billing) && $billing == true) :?>
           <div class="api empty top"><?php print t('Pricing');?></div>
         <?php endif; ?>
         <div class="api empty bottom">&nbsp;</div>
