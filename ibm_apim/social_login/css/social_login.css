@@ -20,6 +20,17 @@
   background: rgba(0, 0, 0, 0) url(../images/google.png) 0 0 no-repeat;
 }
 
+#edit-openid-connect-client-windows_aad-login,
+.openid-connect.windows_aad {
+  display: block;
+  float: left;
+  width: 48px;
+  height: 48px;
+  opacity: 0.5;
+  border: 0;
+  background: rgba(0, 0, 0, 0) url(../images/windows_aad.png) 0 0 no-repeat;
+}
+
 #edit-openid-subform {
   overflow: auto;
 }

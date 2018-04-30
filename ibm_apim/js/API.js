@@ -354,7 +354,9 @@
                     setTimeout(function () {
                         populateCodeSnippets(expanded, path, verb);
                         $('.langtab pre').each(function (i, block) {
-                            hljs.highlightBlock(block);
+                            if (!window.disable_highlightjs) {
+                                hljs.highlightBlock(block);
+                            }
                         });
                     }, 0);
                 }
@@ -427,17 +429,25 @@
         /* On timeout so it runs after the code snippets and examples have been generated */
         setTimeout(function () {
             $('.langtab pre').each(function (i, block) {
-                hljs.highlightBlock(block);
+                if (!window.disable_highlightjs) {
+                    hljs.highlightBlock(block);
+                }
             });
             $('.exampleRespData pre').each(function (i, block) {
-                hljs.highlightBlock(block);
+                if (!window.disable_highlightjs) {
+                    hljs.highlightBlock(block);
+                }
             });
             $('pre.inlineSchema').each(function (i, block) {
-                hljs.highlightBlock(block);
+                if (!window.disable_highlightjs) {
+                    hljs.highlightBlock(block);
+                }
             });
             $('.markdown pre').each(function (i, block) {
                 $(this).addClass('inlineSchema');
-                hljs.highlightBlock(block);
+                if (!window.disable_highlightjs) {
+                    hljs.highlightBlock(block);
+                }
             });
         }, 0);
 
@@ -529,7 +539,9 @@
                     });
                     setTimeout(function () {
                         $('.langtab pre').each(function (i, block) {
-                            hljs.highlightBlock(block);
+                            if (!window.disable_highlightjs) {
+                                hljs.highlightBlock(block);
+                            }
                         });
                     }, 0);
                 }
@@ -539,7 +551,9 @@
         watchEndpoint();
 
         $('.definitionsSection pre code').each(function (i, block) {
-            hljs.highlightBlock(block);
+            if (!window.disable_highlightjs) {
+                hljs.highlightBlock(block);
+            }
         });
     }
 
@@ -725,33 +739,39 @@
     window.API = API;
 
     $(document).ready(function () {
-        window.API = new API(window.apiJson, window.expandedapiJson);
-        // Handle the popups for large requests and responses
-        //----- OPEN
-        $('[data-popup-open]').on('click', function () {
-            var targeted_popup_class = jQuery(this).attr('data-popup-open');
-            $('[data-popup="' + targeted_popup_class + '"]').fadeIn(350);
 
-            if (event.preventDefault) {
-                event.preventDefault();
-            } else {
-                event.returnValue = false; // for IE as doesn't support preventDefault;
-            }
-            return false;
+        window.refResolver.resolveReferences(window.apiJson[0]).then(function(expandedapiJson) {
+
+            let expandedApis = [expandedapiJson];
+            window.API = new API(window.apiJson, expandedApis);
+            // Handle the popups for large requests and responses
+            //----- OPEN
+            $('[data-popup-open]').on('click', function () {
+                var targeted_popup_class = jQuery(this).attr('data-popup-open');
+                $('[data-popup="' + targeted_popup_class + '"]').fadeIn(350);
+
+                if (event.preventDefault) {
+                    event.preventDefault();
+                } else {
+                    event.returnValue = false; // for IE as doesn't support preventDefault;
+                }
+                return false;
+            });
+
+            //----- CLOSE
+            $('[data-popup-close]').on('click', function () {
+                var targeted_popup_class = jQuery(this).attr('data-popup-close');
+                $('[data-popup="' + targeted_popup_class + '"]').fadeOut(350);
+
+                if (event.preventDefault) {
+                    event.preventDefault();
+                } else {
+                    event.returnValue = false; // for IE as doesn't support preventDefault;
+                }
+                return false;
+            });
         });
 
-        //----- CLOSE
-        $('[data-popup-close]').on('click', function () {
-            var targeted_popup_class = jQuery(this).attr('data-popup-close');
-            $('[data-popup="' + targeted_popup_class + '"]').fadeOut(350);
-
-            if (event.preventDefault) {
-                event.preventDefault();
-            } else {
-                event.returnValue = false; // for IE as doesn't support preventDefault;
-            }
-            return false;
-        });
     });
 
     function Test(operation, api, apiObj) {
@@ -1628,7 +1648,9 @@
                 }
             }
             $('pre code', self.responseSection).each(function (i, block) {
-                hljs.highlightBlock(block);
+                if (!window.disable_highlightjs) {
+                    hljs.highlightBlock(block);
+                }
             });
         }
 

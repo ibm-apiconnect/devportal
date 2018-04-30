@@ -103,6 +103,10 @@ function application_rules_event_info() {
             'type' => 'text',
             'label' => t('The new credentials'),
           ),
+          'application_credential_id' => array(
+            'type' => 'text',
+            'label' => t('The credential ID'),
+          )
         ),
     ),
     'application_clientsecret_reset' => array(
@@ -114,6 +118,10 @@ function application_rules_event_info() {
             'type' => 'text',
             'label' => t('The new credentials'),
           ),
+          'application_credential_id' => array(
+            'type' => 'text',
+            'label' => t('The credential ID'),
+          )
         ),
     ),
     'application_subscribe' => array(
@@ -142,6 +150,10 @@ function application_rules_event_info() {
             'type' => 'text',
             'label' => t('The new credentials'),
           ),
+          'application_credential_id' => array(
+            'type' => 'text',
+            'label' => t('The credential ID'),
+          )
         ),
     ),
     'application_cred_update' => array(
@@ -153,13 +165,22 @@ function application_rules_event_info() {
             'type' => 'text',
             'label' => t('The new credentials'),
           ),
+          'application_credential_id' => array(
+            'type' => 'text',
+            'label' => t('The credential ID'),
+          )
         ),
     ),
     'application_cred_delete' => array(
       'label' => t('After deleting application credentials'),
       'group' => t('Application'),
       'module' => 'application',
-      'variables' => $variables,
+      'variables' => $variables + array(
+          'application_credential_id' => array(
+            'type' => 'text',
+            'label' => t('The credential ID'),
+          )
+        ),
     ),
   );
   return $items;

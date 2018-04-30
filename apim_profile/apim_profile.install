@@ -72,7 +72,8 @@ function apim_profile_install() {
     'entity_token',
     'rules_scheduler',
     'rules_i18n',
-    'rules_admin'
+    'rules_admin',
+    'node_page_disable'
   );
   module_enable($modules, TRUE);
   variable_set('ibm_apim_enable_password_tab', 1);
@@ -1217,13 +1218,12 @@ js/admin_menu/cache/*');
 
   // Configure Search
   variable_set('search_active_modules', array(
-    'ibm_apim' => 'ibm_apim',
-    'user' => 'user',
-    'node' => 0,
+    'user' => 0,
+    'node' => 'node',
     'support' => 0
   ));
-  variable_set('search_default_module', 'ibm_apim');
-  variable_set('ibm_apim_default_search_done', 1);
+  variable_set('search_default_module', 'node');
+  variable_set('ibm_apim_default_search_node_done', 1);
 
   // configure support ticket node type
   variable_set('node_options_support_ticket', array(0 => 'status'));
@@ -1287,6 +1287,9 @@ js/admin_menu/cache/*');
 
   // For a freshly installed site, this fix doesn't need to be applied so set variable to skip applying it
   variable_set('ibm_apim_fix_authmap', 1);
+
+  // For fresh installed site, we don't need to run upgrade to remove expandedschema field
+  variable_set('ibm_apim_api_expanded_schema_upgrade', 1);
 
   // Update the menu router information.
   menu_rebuild();
@@ -3228,7 +3231,8 @@ function apim_profile_update_7400() {
     'entityreference',
     'rules_http_client',
     'field_group',
-    'termcase'
+    'termcase',
+    'node_page_disable'
   );
   module_enable($modules, TRUE);
 
@@ -4210,15 +4214,14 @@ taxonomy/*'
   }
 
   // Configure Default Search
-  if (variable_get('ibm_apim_default_search_done', NULL) == NULL) {
+  if (variable_get('ibm_apim_default_search_node_done', NULL) == NULL) {
     variable_set('search_active_modules', array(
-      'ibm_apim' => 'ibm_apim',
-      'user' => 'user',
-      'node' => 0,
+      'user' => 0,
+      'node' => 'node',
       'support' => 0
     ));
-    variable_set('search_default_module', 'ibm_apim');
-    variable_set('ibm_apim_default_search_done', 1);
+    variable_set('search_default_module', 'node');
+    variable_set('ibm_apim_default_search_node_done', 1);
   }
 
   if (variable_get('ibm_apim_admin_menu_perms_done', NULL) == NULL) {
@@ -4430,6 +4433,14 @@ password: Your password</p>
     module_disable(array('plan'), TRUE);
   }
 
+  // remove api_expandedSchema field (per devportal/issues/2291)
+  if(variable_get('ibm_apim_api_expanded_schema_upgrade', NULL) === NULL){
+    // this delete call will remove the field and all data from the database
+    field_delete_field('api_expandedschema');
+
+    variable_set('ibm_apim_api_expanded_schema_upgrade', 1);
+  }
+
   if (variable_get('ibm_apim_remove_promoted_nodes', NULL) == NULL) {
     // Get all api, application, devorg and product nodes and stop them from displaying on the front page
     $query = new EntityFieldQuery();
@@ -4455,9 +4466,9 @@ password: Your password</p>
   if (variable_get('ibm_apim_description_upgrade', NULL) == NULL) {
     _apim_profile_enable_description_translation();
   }
-  
+
   if(variable_get('ibm_apim_fix_authmap', NULL) == NULL) {
-  
+
     // Need to update the auth_map table in the database to change any
     // instances of 'module=auth_apic' to 'module=ibm_apim'
     $rowsToChange = db_query('SELECT count(*) FROM authmap WHERE module = :module', array(':module' => 'auth_apic'));
@@ -4472,15 +4483,15 @@ password: Your password</p>
         ->fields(array('module' => 'ibm_apim'))
         ->condition('module', 'auth_apic')
         ->execute();
-  
+
       if(sizeof($rowsToChange) === $numberOfUpdatesMade) {
         watchdog('auth_apic', 'Modifying auth_map table : all rows updated as expected');
       }
       else {
         watchdog('auth_apic', 'Modifying auth_map table : expected ' . count($rowsToChange) . ' but ' . $numberOfUpdatesMade . ' were made', NULL, WATCHDOG_ERROR);
-      }    
+      }
     }
-  
+
     variable_set('ibm_apim_fix_authmap', 1);
   }
 

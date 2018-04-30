@@ -607,6 +607,10 @@ function application_token_info() {
     'name' => t("Plan requires approval"),
     'description' => t('Whether the subscription request requires approval'),
   );
+  $application['application_credential_id'] = array(
+    'name' => t("Credential ID"),
+    'description' => t('The ID of the credentials for this event.'),
+  );
 
   return array(
     'types' => array('application' => $type),
@@ -637,6 +641,7 @@ function application_tokens($type, $object = NULL, $options = array()) {
       'application_devorg_name' => $object['application_devorg_name'],
       'application_devorg_owner' => $object['application_devorg_owner'],
       'application_devorg_members' => $object['application_devorg_members'],
+      'application_credential_id' => $object['application_credential_id'],
       'plan_ref' => $object['plan_ref'],
       'product_name' => $object['product_name'],
       'product_version' => $object['product_version'],
@@ -1245,6 +1250,7 @@ function application_new_application_clientcreds_submit($form, &$form_state) {
                 'application_id' => $node->application_apiid[$node->language][0]['value'],
                 'application_nid' => $node->nid,
                 'application_name' => $node->title,
+                'application_credential_id' => $data['id'],
                 'application_description' => $node->application_description[$node->language][0]['value'],
                 'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
                 'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
@@ -1262,7 +1268,7 @@ function application_new_application_clientcreds_submit($form, &$form_state) {
                   $rules_payload[$key] = '';
                 }
               }
-              rules_invoke_event('application_cred_create', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_new_credentials']);
+              rules_invoke_event('application_cred_create', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_new_credentials'], $rules_payload['application_credential_id']);
             }
           }
         }
@@ -1412,6 +1418,7 @@ function application_update_application_clientcreds_submit($form, &$form_state) 
                 'application_id' => $node->application_apiid[$node->language][0]['value'],
                 'application_nid' => $node->nid,
                 'application_name' => $node->title,
+                'application_credential_id' => $credId,
                 'application_description' => $node->application_description[$node->language][0]['value'],
                 'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
                 'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
@@ -1429,7 +1436,7 @@ function application_update_application_clientcreds_submit($form, &$form_state) 
                   $rules_payload[$key] = '';
                 }
               }
-              rules_invoke_event('application_cred_update', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_new_credentials']);
+              rules_invoke_event('application_cred_update', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_new_credentials'], $rules_payload['application_credential_id']);
             }
           }
         }
@@ -1560,6 +1567,7 @@ function application_delete_application_clientcreds_submit($form, &$form_state) 
               'application_id' => $node->application_apiid[$node->language][0]['value'],
               'application_nid' => $node->nid,
               'application_name' => $node->title,
+              'application_credential_id' => $credId,
               'application_description' => $node->application_description[$node->language][0]['value'],
               'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
               'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
@@ -1576,7 +1584,7 @@ function application_delete_application_clientcreds_submit($form, &$form_state) 
                 $rules_payload[$key] = '';
               }
             }
-            rules_invoke_event('application_cred_delete', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members']);
+            rules_invoke_event('application_cred_delete', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_credential_id']);
           }
         }
       }
@@ -1720,6 +1728,7 @@ function application_reset_application_clientid_submit($form, &$form_state) {
                   'application_id' => $node->application_apiid[$node->language][0]['value'],
                   'application_nid' => $node->nid,
                   'application_name' => $node->title,
+                  'application_credential_id' => $credId,
                   'application_description' => $node->application_description[$node->language][0]['value'],
                   'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
                   'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
@@ -1737,7 +1746,7 @@ function application_reset_application_clientid_submit($form, &$form_state) {
                     $rules_payload[$key] = '';
                   }
                 }
-                rules_invoke_event('application_clientid_reset', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_new_credentials']);
+                rules_invoke_event('application_clientid_reset', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_new_credentials'], $rules_payload['application_credential_id']);
               }
             }
           }
@@ -1796,8 +1805,8 @@ function application_reset_application_secret($form, &$form_state, $appid, $cred
  * @param $form_state
  */
 function application_reset_application_secret_submit($form, &$form_state) {
-  $ibm_apim_allow_clientidreset = variable_get('ibm_apim_allow_clientidreset', TRUE);
-  if ($ibm_apim_allow_clientidreset == 1) {
+  $ibm_apim_allow_clientsecretreset = variable_get('ibm_apim_allow_clientsecretreset', TRUE);
+  if ($ibm_apim_allow_clientsecretreset == 1) {
     $appId = check_plain($form_state['values']['appid']);
     $credId = check_plain($form_state['values']['credid']);
     $org = ibm_apim_get_current_developer_org();
@@ -1872,6 +1881,7 @@ function application_reset_application_secret_submit($form, &$form_state) {
           'application_id' => $node->application_apiid[$node->language][0]['value'],
           'application_nid' => $node->nid,
           'application_name' => $node->title,
+          'application_credential_id' => $credId,
           'application_description' => $node->application_description[$node->language][0]['value'],
           'application_oauth_redirect_uri' => $node->application_oauthredirecturi[$node->language][0]['value'],
           'application_credentials' => json_encode(unserialize($node->application_credentials[$node->language][0]['value'])),
@@ -1889,7 +1899,7 @@ function application_reset_application_secret_submit($form, &$form_state) {
             $rules_payload[$key] = '';
           }
         }
-        rules_invoke_event('application_clientsecret_reset', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_new_credentials']);
+        rules_invoke_event('application_clientsecret_reset', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_new_credentials'], $rules_payload['application_credential_id']);
       }
     }
 
@@ -2039,7 +2049,7 @@ function _application_verify_application_secret_form($form, &$form_state, $appId
     $form = array();
     $form['title'] = array('#markup' => '<h1>' . t('Verify application secret') . '</h1>');
     $form['secret'] = array(
-      '#type' => 'textfield',
+      '#type' => 'password',
       '#title' => t('Secret'),
       '#size' => 50,
       '#maxlength' => 50,
@@ -2247,9 +2257,10 @@ function _application_edit_application_form_submit_handler($form, &$form_state) 
       $ibm_apim_application_certificates = variable_get('ibm_apim_application_certificates', 0);
       if ($ibm_apim_application_certificates == 1) {
         $certificate = trim($form_state['input']['certificate']);
-        if (isset($certificate) && !empty($certificate)) {
-          $data['certificate'] = $certificate;
+        if (!isset($certificate)) {
+          $certificate = '';
         }
+        $data['certificate'] = $certificate;
       }
       $result = ibm_apim_put($url, json_encode($data));
       if (isset($result) && $result->code >= 200 && $result->code < 300) {
@@ -2567,6 +2578,9 @@ function _application_add_application_form_submit_handler($form, &$form_state) {
           if (!isset($org_recipients)) {
             $org_recipients = array();
           }
+          // need a mix of the creds from the database and the client secret we just got back
+          $creds = unserialize($node->application_credentials[$node->language][0]['value'])[0];
+          $creds['client-secret'] = $result->data['credentials']['clientSecret'];
           $rules_payload = array(
             'application_id' => $node->application_apiid[$node->language][0]['value'],
             'application_nid' => $node->nid,
@@ -2577,7 +2591,7 @@ function _application_add_application_form_submit_handler($form, &$form_state) {
             'application_devorg_name' => $devorg_name,
             'application_devorg_owner' => $devorg_owner,
             'application_devorg_members' => implode(',', $org_recipients),
-            'application_credentials' => json_encode($result->data['credentials'])
+            'application_credentials' => json_encode($creds)
           );
 
           // Make sure we do not provide NULL values, as Rules module doesn't like them.
@@ -3349,11 +3363,6 @@ function application_subscribeapp_modal_form($form, &$form_state, $planId = NULL
       $form['planId'] = array('#type' => 'hidden', '#value' => $planId);
       $form['approval'] = array('#type' => 'hidden', '#value' => $approval);
       $form['orgId'] = array('#type' => 'hidden', '#value' => $org['id']);
-      $host_pieces = _ibm_apim_parse_apim_host();
-      $form['host'] = array(
-        '#type' => 'hidden',
-        '#value' => $host_pieces['url']
-      );
 
       $form['app'] = array(
         '#type' => 'radios',

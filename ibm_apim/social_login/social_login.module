@@ -81,6 +81,14 @@ function social_login_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'social_login.openid_connect.inc'
   );
+  $items['ibm_apim/oidc/windows_aad'] = array(
+    'title' => 'Windows AD Open ID Connect',
+    'page callback' => 'social_login_oidc_windows_aad_login',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'social_login.openid_connect.inc'
+  );
 
   return $items;
 }
@@ -203,14 +211,20 @@ function social_login_hybridauth_identity_added($account, $data) {
   }
   // create orgname based on whatever fields happen to be set
   $orgname = '';
-  if (isset($firstname) && !empty($firstname)) {
-    $orgname = $firstname;
+  if (isset($account->field_developer_organization['und'][0]['value']) &&
+      !empty($account->field_developer_organization['und'][0]['value']) ){
+    $orgname = $account->field_developer_organization['und'][0]['value'];
   }
-  if (isset($lastname) && !empty($lastname)) {
-    if (!empty($orgname)) {
-      $orgname .= ' ';
+  else {
+    if (isset($firstname) && !empty($firstname)) {
+      $orgname = $firstname;
     }
-    $orgname .= $lastname;
+    if (isset($lastname) && !empty($lastname)) {
+      if (!empty($orgname)) {
+        $orgname .= ' ';
+      }
+      $orgname .= $lastname;
+    }
   }
   if (empty($orgname)) {
     $orgname = $account->name;
@@ -343,6 +357,9 @@ function social_login_form_alter(&$form, &$form_state, $form_id) {
       if (isset($form['openid_connect_client_google_login']['#value'])) {
         $form['openid_connect_client_google_login']['#value'] = '';
       }
+      if (isset($form['openid_connect_client_windows_aad_login']['#value'])) {
+        $form['openid_connect_client_windows_aad_login']['#value'] = '';
+      }
       break;
     case 'hybridauth_admin_settings' :
       // hide all the not available providers
@@ -460,6 +477,12 @@ function social_login_form_alter(&$form, &$form_state, $form_id) {
             '#weight' => $hybridweight + 3
           );
         }
+        if (array_key_exists('windows_aad', $openid_connect_clients_enabled)) {
+          $form['windows_aad'] = array(
+            '#markup' => '<a class="openid-connect windows_aad" href="' . url('ibm_apim/oidc/windows_aad') . '" title="' . t('Login using Windows AAD Open ID Connect') . '"></a>',
+            '#weight' => $hybridweight + 3
+          );
+        }
         $form['openid_outro'] = array(
           '#markup' => '<div class="clearBoth"></div>',
           '#weight' => $hybridweight + 4
@@ -552,6 +575,12 @@ function social_login_form_alter(&$form, &$form_state, $form_id) {
         if (array_key_exists('google', $openid_connect_clients_enabled)) {
           $form['google'] = array(
             '#markup' => '<a class="openid-connect google" href="' . url('ibm_apim/oidc/google') . '" title="' . t('Login using Google Open ID Connect') . '"></a>',
+            '#weight' => $hybridweight + 3
+          );
+        }
+        if (array_key_exists('windows_aad', $openid_connect_clients_enabled)) {
+          $form['windows_aad'] = array(
+            '#markup' => '<a class="openid-connect windows_aad" href="' . url('ibm_apim/oidc/windows_aad') . '" title="' . t('Login using Windows AAD Open ID Connect') . '"></a>',
             '#weight' => $hybridweight + 3
           );
         }

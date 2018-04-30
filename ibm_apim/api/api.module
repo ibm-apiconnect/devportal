@@ -143,7 +143,6 @@ function api_form_api_node_form_alter(&$form, &$form_state) {
   $form['api_updated']['#access'] = 0;
   $form['api_soapversion']['#access'] = 0;
   $form['api_resources']['#access'] = 0;
-  $form['api_expandedschema']['#access'] = 0;
   $form['api_ibmconfiguration']['#access'] = 0;
   $form['api_swaggertags']['#access'] = 0;
   $form['api_wsdl']['#access'] = 0;
@@ -214,7 +213,7 @@ define('EDIT_ANY_API_CONTENT_GRANT', 1);
  */
 function api_node_access_records($node)
 {
-    acl_log('Enter: api_node_access_records');
+    //acl_log('Enter: api_node_access_records');
 
     $type = is_string($node) ? $node : $node->type;
     $grants = array();
@@ -249,7 +248,7 @@ function api_node_access_records($node)
             // there may not be an entry (e.g. if tags or orgs are not defined)
             $query = db_query("SELECT pub.product_visibility_public_value AS product_visibility_public_value, auth.product_visibility_authenticated_value AS product_visibility_authenticated_value
 , org.product_visibility_custom_orgs_value AS product_visibility_custom_orgs_value, tags.product_visibility_custom_tags_value AS product_visibility_custom_tags_value, view.product_view_enabled_value AS product_view_enabled_value, prref.product_ref_value AS product_ref_value
-FROM 
+FROM
 field_data_product_visibility_public pub
 INNER JOIN field_data_product_visibility_authenticated auth ON pub.entity_id = auth.entity_id
 LEFT JOIN field_data_product_visibility_custom_orgs org ON pub.entity_id = org.entity_id
@@ -259,7 +258,7 @@ INNER JOIN field_data_product_view_enabled view ON pub.entity_id = view.entity_i
 WHERE  (pub.entity_id = ". $prod->entity_id .")");
             $results = $query->fetchAll();
 
-            acl_log('DB Search for product '.$prod->entity_id.': '.var_export($results,TRUE));
+            //acl_log('DB Search for product '.$prod->entity_id.': '.var_export($results,TRUE));
 
             // The query will return multiple rows if there are multiple orgs or tags
             // or if there are multiple products with the same API
@@ -344,10 +343,10 @@ WHERE  (pub.entity_id = ". $prod->entity_id .")");
         // and then using array_unique (which only works on strings) to ensure that
         // there are no duplicates
         $uniquegrants = array_map("unserialize", array_unique(array_map("serialize", $grants)));
-        acl_log('Grants:' . var_export($uniquegrants, TRUE));
+        //acl_log('Grants:' . var_export($uniquegrants, TRUE));
     }
 
-    acl_log('Exit: api_node_access_records');
+    //acl_log('Exit: api_node_access_records');
     return $uniquegrants;
 }
 
@@ -367,14 +366,14 @@ WHERE  (pub.entity_id = ". $prod->entity_id .")");
  */
 function api_node_grants($account, $op) {
 
-  acl_log('Enter: api_node_grants');
+  //acl_log('Enter: api_node_grants');
 
-  if (isset($account) && isset($account->name)) {
+  /*if (isset($account) && isset($account->name)) {
     acl_log('Account: ' . $account->name);
   }
   else {
     acl_log('Account: anonymous');
-  }
+  }*/
 
   $grants = array();
 
@@ -383,9 +382,9 @@ function api_node_grants($account, $op) {
     $grants['api'] = array(EDIT_ANY_API_CONTENT_GRANT);
   }
 
-  acl_log('Grants: ' . var_export($grants, TRUE));
+  //acl_log('Grants: ' . var_export($grants, TRUE));
 
-  acl_log('Exit: api_node_grants');
+  //acl_log('Exit: api_node_grants');
   return $grants;
 }
 
@@ -463,17 +462,9 @@ function api_preprocess_node(&$variables) {
   if ($variables['node']->type == 'api') {
     if (isset($variables['api_resources']['und'])) {
       $variables['api'] = unserialize($variables['api_resources']['und'][0]['value']);
-      $expanded = unserialize($variables['api_expandedschema']['und'][0]['value']);
     }
     else {
       $variables['api'] = unserialize($variables['api_resources'][0]['value']);
-      $expanded = unserialize($variables['api_expandedschema'][0]['value']);
-    }
-    if (isset($expanded) && !empty($expanded)) {
-      $variables['expandedapi'] = $expanded;
-    }
-    else {
-      $variables['expandedapi'] = $variables['api'];
     }
     $variables['customfields'] = _api_get_custom_fields();
     $showversion = variable_get('ibm_apim_show_versions', 1);
@@ -484,6 +475,7 @@ function api_preprocess_node(&$variables) {
     $variables['titlelink'] = '<span class="apimTitle"> <a href="' . url('node/' . $variables['node']->nid) . '">' . $variables['title'] . '</a> <span class="versionText">' . $versiontext . '</span></span>';
     if ($variables['view_mode'] == 'full' || $variables['view_mode'] == 'inner') {
       $variables['allow_api_testing'] = variable_get('ibm_apim_enable_api_test', 1);
+      $variables['disable_highlightjs'] = variable_get('ibm_apim_disable_highlightjs', FALSE);
       if (module_exists('forum')) {
         $forumID = taxonomy_get_term_by_name(_api_sanitise_apiname(html_entity_decode($variables['title'], ENT_QUOTES)));
         if (!empty($forumID)) {
@@ -572,7 +564,6 @@ function api_preprocess_node(&$variables) {
             $variables['apinodes'] = array();
           }
           $variables['apis'] = array();
-          $variables['expandedapis'] = array();
           foreach ($variables['apinodes'] as $key => $api) {
             $swagger = unserialize($api->api_resources[$api->language][0]['value']);
             $variables['apis'][] = $swagger;
@@ -923,7 +914,6 @@ function api_createNewAPINode($api, $event) {
     unset($node->api_ibmconfiguration[$node->language]);
     unset($node->api_wsdl[$node->language]);
     unset($node->api_resources[$node->language]);
-    unset($node->api_expandedschema[$node->language]);
     unset($node->api_swaggertags[$node->language]);
   }
   else {
@@ -1082,12 +1072,6 @@ function api_createNewAPINode($api, $event) {
       'value' => serialize($api['document']),
       'format' => 'plain_text'
     );
-    if (isset($api['expanded'])) {
-      $node->api_expandedschema[$node->language][] = array(
-        'value' => serialize($api['expanded']),
-        'format' => 'plain_text'
-      );
-    }
     $node->api_swaggertags[$node->language] = array();
     if (isset($api['document']['tags'])) {
       $tags = array();
@@ -1395,12 +1379,6 @@ function api_updateExistingAPINode($node, $api, $event) {
       'value' => serialize($api['document']),
       'format' => 'plain_text'
     );
-    if (isset($api['expanded'])) {
-      $node->api_expandedschema[$node->language][0] = array(
-        'value' => serialize($api['expanded']),
-        'format' => 'plain_text'
-      );
-    }
     $node->api_swaggertags[$node->language] = array();
     if (isset($api['document']['tags'])) {
       $tags = array();
@@ -1473,24 +1451,36 @@ function api_updateExistingAPINode($node, $api, $event) {
           foreach ($node->api_attachments[$node->language] as $key => $existingdoc) {
             if (isset($existingdoc['uri'])) {
               $parts = explode('/', $existingdoc['uri']);
-              if (in_array($api['id'], $parts) && in_array('apiwsdl', $parts)) {
+              if (in_array($file_temp->filename, $parts) && in_array('apiwsdl', $parts)) {
                 if (isset($node->api_attachments[$node->language][$key]->description)) {
                   $description = $node->api_attachments[$node->language][$key]->description;
+                }
+                else if (isset($node->api_attachments[$node->language][$key][description])) {
+                  $description = $node->api_attachments[$node->language][$key][description];
                 }
                 else {
                   $description = '';
                 }
-                $node->api_attachments[$node->language][$key] = array(
-                  'fid' => $file_temp->fid,
-                  'filename' => $file_temp->filename,
-                  'filemime' => $file_temp->filemime,
-                  'uid' => 1,
-                  'uri' => $file_temp->uri,
-                  'status' => 1,
-                  'display' => 1,
-                  'description' => $description
-                );
+                if ($updated == FALSE) {
+                  $node->api_attachments[$node->language][$key] = array(
+                    'fid' => $file_temp->fid,
+                    'filename' => $file_temp->filename,
+                    'filemime' => $file_temp->filemime,
+                    'uid' => 1,
+                    'uri' => $file_temp->uri,
+                    'status' => 1,
+                    'display' => 1,
+                    'description' => $description
+                  );
+                } else {
+                  //duplicate entries in the database, so remove them to prevent updating all matching records
+                  unset($node->api_attachments[$node->language][$key]);
+                }
                 $updated = TRUE;
+                //if there are existing wsdl documents attached to the document, but do not have the same name
+                //meaning that the name+version of the api has changed, so remove old references
+              } else if (in_array('apiwsdl',$parts)){
+                unset($node->api_attachments[$node->language][$key]);
               }
             }
           }
@@ -2290,7 +2280,6 @@ function _api_get_ibm_fields() {
     'api_url',
     'api_soapversion',
     'api_resources',
-    'api_expandedschema',
     'api_wsdl',
     'api_updated',
     'api_ibmconfiguration',
@@ -2400,7 +2389,34 @@ function api_get_ref_param($api, $ref) {
     if (isset($parts)) {
       $target = $parts[2];
       if (isset($target) && isset($api['parameters'][$target])) {
-        return $api['parameters'][$target];
+        $resolved = $api['parameters'][$target];
+        if(isset($resolved['schema']) && isset($resolved['schema']['$ref'])) {
+          $resolved['schema'] = api_get_ref_definition($api, $resolved['schema']['$ref']);
+        }
+        return $resolved;
+      }
+    }
+  }
+  return NULL;
+}
+
+/**
+ * Utility method to resolve a definition reference and return the target definition object
+ * @param $api
+ * @param $ref
+ * @return mixed
+ */
+function api_get_ref_definition($api, $ref){
+  if (isset($ref) && isset($api)) {
+    // remove leading # if present
+    if(strpos($ref, '#') === 0){
+      $ref = substr($ref, 1);
+    }
+    $parts = explode('/', $ref);
+    if (isset($parts)) {
+      $target = $parts[2];
+      if (isset($target) && isset($api['definitions'][$target])) {
+        return $api['definitions'][$target];
       }
     }
   }
@@ -2621,12 +2637,20 @@ function api_get_subscribers($apinid, $type = 'members') {
                 }
               }
             }
-            $org_recipients[] = $node->devorg_owner[$node->language][0]['value'];
+            $devorg_owner = $node->devorg_owner[$node->language][0]['value'];
+            if (!valid_email_address($devorg_owner)) {
+              $account = user_load_by_name($devorg_owner);
+              if ($account) {
+                $devorg_owner = $account->mail;
+              }
+            }
+            $org_recipients[] = $devorg_owner;
             $recipients[] = implode(',', $org_recipients);
           }
         }
       }
     }
   }
+  $recipients = array_unique($recipients);
   return $recipients;
 }

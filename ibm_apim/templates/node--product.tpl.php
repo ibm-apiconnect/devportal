@@ -390,11 +390,13 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
                         }
                         else {
                           if ($rateLimitCount > 0) {
-                            $lastEl = array_pop($lastEl = (array_slice($plan['rate-limits'], -1)));
+                            $lastEl = array_slice($plan['rate-limits'], -1);
+                            $lastEl = array_pop($lastEl);
                             print product_parse_rate_limit($lastEl['value']);
                           }
                           else {
-                            $lastEl = array_pop($lastEl = (array_slice($plan['burst-limits'], -1)));
+                            $lastEl = array_slice($plan['burst-limits'], -1);
+                            $lastEl = array_pop($lastEl);
                             print product_parse_rate_limit($lastEl['value']);
                           }
                         }

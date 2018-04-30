@@ -293,6 +293,28 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
   $sociallogin = variable_get('ibm_apim_social_login', 0);
   if ($sociallogin == 0) {
     switch ($form_id) {
+      case 'password_policy_admin_settings':
+        if (isset($form['force_change'])) {
+          unset($form['force_change']);
+        }
+        if (isset($form['expiration'])) {
+          unset($form['expiration']);
+        }
+        break;
+      case 'password_policy_admin_form':
+        if (isset($form['force_change'])) {
+          unset($form['force_change']);
+        }
+        if (isset($form['expiration'])) {
+          unset($form['expiration']);
+        }
+        if (isset($form['constraints']['constraint_constraint_delay'])) {
+          unset($form['constraints']['constraint_constraint_delay']);
+        }
+        if (isset($form['constraints']['constraint_delay'])) {
+          unset($form['constraints']['constraint_delay']);
+        }
+        break;
       // hide the modules that depend on social login
       case 'system_modules':
         if (isset($form['modules']['HybridAuth'])) {
@@ -587,6 +609,42 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
             $form['field_developer_organization']['und'][0]['#required'] = FALSE;
             $form['field_developer_organization']['und'][0]['value']['#required'] = FALSE;
           }
+          if (isset($form['field_codesnippet'])) {
+            $form['field_codesnippet']['#disabled'] = TRUE;
+            $form['field_codesnippet']['#required'] = FALSE;
+          }
+          if (isset($form['password_policy']['force_password_change'])) {
+            unset($form['password_policy']);
+          }
+          if (isset($form['metatags'])) {
+            $form['metatags']['#disabled'] = TRUE;
+            $form['metatags']['#required'] = FALSE;
+          }
+          if (isset($form['picture']['picture_upload'])) {
+            unset($form['picture']);
+          }
+          if (isset($form['locale'])) {
+            $form['locale']['#disabled'] = TRUE;
+            $form['locale']['#required'] = FALSE;
+          }
+          if (isset($form['timezone'])) {
+            $form['timezone']['#disabled'] = TRUE;
+            $form['timezone']['#required'] = FALSE;
+          }
+          if (isset($form['autologout_user_15'])) {
+            unset($form['autologout_user_15']);
+          }
+          if (isset($form['contact'])) {
+            $form['contact']['#disabled'] = TRUE;
+            $form['contact']['#required'] = FALSE;
+          }
+          if (isset($form['rip']['restrict_by_ip_address'])) {
+            $form['rip']['#disabled'] = TRUE;
+            $form['rip']['#required'] = FALSE;
+          } 
+          if (isset($form['rip']['restrict_by_ip_address'])) {
+            unset($form['rip']);
+          }         
         }
 
         $form['account']['#weight'] = -10;
@@ -679,7 +737,7 @@ function _auth_apic_user_profile_form_submit_handler($form, &$form_state) {
   $form_state['values']['uid'] = $account->uid;
 
   // update APIC with profile changes unless admin
-  if ($account->uid != 1) {
+  if ($user->uid != 1) {
     _auth_apic_update_apic_profile($form_state['values']);
   }
 
@@ -1178,7 +1236,9 @@ function auth_apic_authenticate($name, $pass) {
     '%data' => $url,
     '%user' => $name
   ), WATCHDOG_NOTICE);
+
   $result = _ibm_apim_json_http_request($url, 'GET', $headers);
+
   $debug_trace = variable_get('ibm_apim_debug_trace', FALSE);
   if ($debug_trace == TRUE){
     watchdog('auth_apic_authenticate', 'User login result: %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
@@ -1352,6 +1412,7 @@ function auth_apic_register_user($form, &$form_state) {
   drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/usercreate.js', array(
     'weight' => 3
   ));
+  $orig_values = $form_state['values'];
   if (isset($form_state['values']['name'])) {
     $name = $form_state['values']['name'];
   }
@@ -1396,7 +1457,21 @@ function auth_apic_register_user($form, &$form_state) {
   if (isset($lang_name)) {
     $headers[] = 'Accept-Language: ' . $lang_name;
   }
+
+  $debug_trace = variable_get('ibm_apim_debug_trace', FALSE);
+
+  if ($debug_trace == TRUE){
+    watchdog('auth_apic_register_user', 'Posting headers: %headers, URL: %url', array(
+                 '%headers' => serialize($headers),
+                 '%url' => $url
+            ), WATCHDOG_NOTICE);
+  }
+
   $result = _ibm_apim_json_http_request($url, 'POST', $headers, json_encode($data));
+
+  if ($debug_trace == TRUE){
+    watchdog('auth_apic_register_user', 'Got back: %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
+  }
 
   watchdog('auth_apic_register_user', 'Register user %username, return code %code', array(
     '%username' => $username,
@@ -1406,7 +1481,6 @@ function auth_apic_register_user($form, &$form_state) {
   if (isset($result) && in_array($result->code, array(201)) && $result->data != '') {
     drupal_set_message(t('Your account was created successfully.'));
 
-    global $user;
     $fields = array(
       'status' => 0,
       'field_first_name' => $data['firstName'],
@@ -1427,7 +1501,20 @@ function auth_apic_register_user($form, &$form_state) {
     if ($ibm_apim_readonly_idp == TRUE) {
       $fields['status'] = 1;
     }
+    $keys = array_keys($orig_values);
+    foreach ($keys as $key) {
+      if (_ibm_apim_startsWith($key, 'field_')) {
+        $fields[$key] = $orig_values[$key];
+      }
+    }
     ibm_apim_external_login_register($username, $fields, TRUE);
+    global $user;
+    $edit = array_intersect_key((array) $user, $orig_values);
+
+    if (isset($result->data['id'])) {
+      $edit['field_uid'] = array('und' => array(0 => array('value' => $result->data['id'])));
+    }
+    $user = user_save($user, $edit);
 
     if (module_exists('security_questions')) {
       $account = user_external_load($username);
@@ -1672,7 +1759,20 @@ function _auth_apic_change_user_password($new_password, $authuser, $username, $c
     if (isset($lang_name)) {
       $headers[] = 'Accept-Language: ' . $lang_name;
     }
+
+    $debug_trace = variable_get('ibm_apim_debug_trace', FALSE); 
+    if ($debug_trace == TRUE){
+      watchdog('_auth_apic_change_user_password', 'Putting headers: %headers, URL: %url', array(
+                '%headers' => serialize($headers),
+                '%url' => $url
+                ), WATCHDOG_NOTICE);
+    }
+
     $result = _ibm_apim_json_http_request($url, 'PUT', $headers, json_encode($data));
+
+    if ($debug_trace == TRUE){
+      watchdog('_auth_apic_change_user_password', 'Got back %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
+    }
 
     if (isset($result) && $result->code == 204) {
       $apim_session = &_ibm_apim_get_apim_session();
@@ -1681,7 +1781,14 @@ function _auth_apic_change_user_password($new_password, $authuser, $username, $c
       return TRUE;
     }
     else {
+      // NOTE: mgmt server currently (8th Jan 2017) won't return a 400 for incorrect password, it returns 401, so adding below check
+      // Swagger doc is open to interpretation on what code should be returned - issue raised with mgmt server squad.
+      if (isset($result) && $result->code == 401) {
+        drupal_set_message(t('The current password is incorrect.'), 'error');
+        watchdog('_auth_apic_change_user_password', 'Portal failed to authenticate with management server', NULL, WATCHDOG_NOTICE);
+      }
       // catch the rather nasty error from apim and display a slightly nicer one
+      //  NOTE: this IF statement currently won't run, consider removing if it's decided 401 code will always be used for bad payload password.
       if (isset($result) && $result->code == 400) {
         if ($result->data && $result->data['errors']) {
           if (array_key_exists("usermanagement.passwordtooweak", $result->data['errors'][0])) {
@@ -1780,6 +1887,9 @@ function auth_apic_form_user_pass_alter(&$form, &$form_state) {
   }
   else {
     $form['#validate'] = array('auth_apic_user_pass_validate');
+    if (module_exists('password_policy')) {
+      $form['#validate'][] = 'password_policy_password_validate';
+    }
     $form['#submit'] = array('auth_apic_user_pass_submit');
   }
 }
@@ -1912,7 +2022,7 @@ function auth_apic_activate_id_callback($path = NULL) {
     if ($debug_trace == TRUE){
       watchdog('auth_apic_activate_id_callback', 'userid %userid ', array('%userid' => $userid), WATCHDOG_NOTICE);
     }
-    if (isset($userid)) {
+    if (!empty($userid)) {
       // verify the temp userid and password are valid
       $url = $activationObj->{'url'};
       if (!isset($url)) {
@@ -1936,7 +2046,9 @@ function auth_apic_activate_id_callback($path = NULL) {
       if ($debug_trace == TRUE){
         watchdog('auth_apic_activate_id_callback', 'Posting headers: %headers', array('%headers' => serialize($headers)), WATCHDOG_NOTICE);
       }
+
       $result = _ibm_apim_json_http_request($url, 'POST', $headers, '{}');
+
       if ($debug_trace == TRUE){
         watchdog('auth_apic_activate_id_callback', 'Got back: %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
       }
@@ -2028,17 +2140,18 @@ function auth_apic_forgotpwd_form($form, &$form_state, $path = NULL) {
   }
 
   $form = array();
-  $form['pass'] = array(
+  $form['account'] = array();
+  $form['account']['pass'] = array(
     '#type' => 'password_confirm',
     '#title' => t('Password'),
     '#size' => 25,
     '#required' => TRUE
   );
   if (variable_get('no_autocomplete_login_form', FALSE)) {
-    if (empty($form['pass']['#attributes'])) {
-      $form['pass']['#attributes'] = array();
+    if (empty($form['account']['pass']['#attributes'])) {
+      $form['account']['pass']['#attributes'] = array();
     }
-    $form['pass']['#attributes']['autocomplete'] = 'off';
+    $form['account']['pass']['#attributes']['autocomplete'] = 'off';
     $form['#attributes']['autocomplete'] = 'off';
   }
   $form['token'] = array('#type' => 'hidden', '#value' => $resetPasswordToken);
@@ -2055,7 +2168,7 @@ function auth_apic_forgotpwd_form($form, &$form_state, $path = NULL) {
       $account = user_load_by_name($userid);
     }
     $roles = (isset($account) && isset($account->roles)) ? array_keys($account->roles) : array(DRUPAL_AUTHENTICATED_RID);
-    $policy = _password_policy_load_active_policy($roles);
+    $policy = _password_policy_load_active_policy($roles, $account);
 
     $translate = array();
     if (!empty($policy['policy']) && isset($account)) {
@@ -2069,7 +2182,7 @@ function auth_apic_forgotpwd_form($form, &$form_state, $path = NULL) {
     }
 
     // Printing out the restrictions.
-    if (variable_get('password_policy_show_restrictions', 1) && isset($translate) && (isset($form['pass-pass1']))) {
+    if (variable_get('password_policy_show_restrictions', 1) && isset($translate) && (isset($form['pass']) || isset($form['account']['pass']))) {
       $restriction_html = '<div id="account-pass-restrictions">' . theme('item_list', array(
           'items' => array_values($translate),
           'title' => t('Password Requirements')
@@ -2081,6 +2194,7 @@ function auth_apic_forgotpwd_form($form, &$form_state, $path = NULL) {
         $form['pass-pass1']['#prefix'] = $restriction_html;
       }
     }
+    $form['#validate'][] = 'password_policy_password_validate';
   }
   else {
     // add user module JS to evaluate password strength
@@ -2126,7 +2240,7 @@ function auth_apic_forgotpwd_form_submit_handler($form, &$form_state) {
   $org = $activationObj->{'providerContext'}->{'orgID'};
   $env = $activationObj->{'providerContext'}->{'environmentID'};
   $userid = ibm_apim_decrypt_data($activationObj->{'username'});
-  if (isset($userid)) {
+  if (!empty($userid)) {
     // When processing the one-time login link, we have to make sure that a user
     // isn't already logged in.
     if ($user->uid) {
@@ -2175,7 +2289,20 @@ function auth_apic_forgotpwd_form_submit_handler($form, &$form_state) {
 
     $data = array("password" => $password);
 
+    $debug_trace = variable_get('ibm_apim_debug_trace', FALSE);
+
+    if ($debug_trace == TRUE){
+      watchdog('auth_apic_forgotpwd_form_submit_handler', 'Posting headers: %headers, URL: %url', array(
+               '%headers' => serialize($headers),
+               '%url' => $url
+               ), WATCHDOG_NOTICE);
+    }
+
     $result = _ibm_apim_json_http_request($url, 'POST', $headers, json_encode($data));
+
+    if ($debug_trace == TRUE){
+      watchdog('auth_apic_forgotpwd_form_submit_handler', 'Got back: %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
+    }
 
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       // log the user in

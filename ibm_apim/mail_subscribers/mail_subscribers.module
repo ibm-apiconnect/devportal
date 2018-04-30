@@ -794,5 +794,6 @@ function mail_subscribers_get_recipients($plan) {
       }
     }
   }
+  $recipients = array_unique($recipients);
   return $recipients;
 }

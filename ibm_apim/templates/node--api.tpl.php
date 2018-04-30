@@ -43,6 +43,9 @@ drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/x2js.js', array(
 drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/apiconnect-example-generator.js', array(
   'weight' => 3
 ));
+drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/reference-resolver.js', array(
+  'weight' => 3
+));
 drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/CommonAPI.js', array(
   'weight' => 4
 ));
@@ -54,6 +57,7 @@ drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/API.js', array(
 ));
 $showplaceholders = variable_get('ibm_apim_show_placeholder_images', 1);
 $showversions = variable_get('ibm_apim_show_versions', 1);
+$disable_highlightjs = variable_get('ibm_apim_disable_highlightjs', FALSE);
 $codesnippets = variable_get('ibm_apim_codesnippets', array(
   'curl' => 1,
   'ruby' => 1,
@@ -76,9 +80,9 @@ else {
   $protocol = 'rest';
 } ?>
 <script><?php
+  print "window.disable_highlightjs = " . json_encode(array($disable_highlightjs), JSON_UNESCAPED_UNICODE) . ";";
   print "window.apiJson = " . json_encode(array($api), JSON_UNESCAPED_UNICODE) . ";";
   print "window.appJson = " . json_encode(array($redirect_uris), JSON_UNESCAPED_UNICODE) . ";";
-  print "window.expandedapiJson = " . json_encode(array($expandedapi), JSON_UNESCAPED_UNICODE) . ";";
   print "window.codeSnippets = " . json_encode($codesnippets, JSON_UNESCAPED_UNICODE) . ";";
   ?></script>
 <article id="node-<?php print $node->nid; ?>"

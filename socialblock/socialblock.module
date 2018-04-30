@@ -365,16 +365,60 @@ function socialblock_call_twitter_api($cred, $api, $params) {
     $cred['twitter_access_token'],
     $cred['twitter_token_secret']
   );
+  $params['tweet_mode']='extended';
   $connection->host = "https://api.twitter.com/1.1/";
   $response = $connection->get(
     $api,
     $params
   );
-  if (isset($response->errors)) {
+  if ($connection->getLastHttpCode() == 200) {
+    if (isset($response->errors)) {
+      /* Note: at some point we may want to look into this further.  I'm not sure that this
+         is actually needed any more; I've not been able to find a case where we get a HTTP
+         200 and also an error block.  Twitter errors seem to vary, sometimes there is an
+        'errors' blob in the response, e.g. on a 401 I saw:
+            [O:8:"stdClass":1:{s:6:"errors";a:1:{i:0;O:8:"stdClass":2:{s:4:"code";i:34;s:7:"message";s:32:"Sorry, that page does not exist.";}}}]
+         but sometimes there isn't, e.g. on a 404 I saw:
+            [O:8:"stdClass":2:{s:7:"request";s:32:"/1.1/statuses/user_timeline.json";s:5:"error";s:15:"Not authorized.";}]
+         Perhaps there's no actual use case where a 200 will return 'errors', in which case
+         we can delete this if statement, but I'll leave it in for now.  In any case, for
+         now it seems fine to just base our error handling on the HTTP error codes.
+        */
+      watchdog('socialblock', 'Social Block Error: %myerr', array('%myerr'=>serialize($response->errors)), WATCHDOG_INFO);
+      $response = NULL;
+    } else if ($api == 'search/tweets') {
+      $response = $response->statuses;
+    }
+  } else if ($connection->getLastHttpCode() == 401) {
+    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code 401 '.
+      '(the twitter account specified cannot be accessed with the configured credentials)', array(), WATCHDOG_INFO);
     $response = NULL;
-  } else if ($api == 'search/tweets') {
-    $response = $response->statuses;
+  } else if ($connection->getLastHttpCode() == 404) {
+    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code 404 '.
+      '(the twitter account specified does not appear to exist)', array(), WATCHDOG_INFO);
+    $response = NULL;
+  } else if ($connection->getLastHttpCode() == 410) {
+    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code 410 '.
+      '(the twitter account specified has been deleted)', array(), WATCHDOG_INFO);
+    $response = NULL;
+  } else if ($connection->getLastHttpCode() == 420) {
+    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code 420 '.
+      '(the application represented by the configured credentials has been rate limited)', array(), WATCHDOG_INFO);
+    $response = NULL;
+  } else if ($connection->getLastHttpCode() == 500) {
+    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code 500 '.
+      '(twitter is down, this is likely a temporary situation)', array(), WATCHDOG_INFO);
+    $response = NULL;
+  } else if ($connection->getLastHttpCode() == 503) {
+    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code 503 '.
+      '(twitter servers are up but overloaded, this is likely a temporary situation)', array(), WATCHDOG_INFO);
+    $response = NULL;
+  } else {
+    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code: %mycode , response message: %myerr',
+      array('%mycode'=>$connection->getLastHttpCode(), '%myerr'=>serialize($response)), WATCHDOG_INFO);
+    $response = NULL;
   }
+
   return $response;
 }
 

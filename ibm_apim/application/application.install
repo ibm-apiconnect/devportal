@@ -95,7 +95,7 @@ function _application_installed_fields() {
     'application_oauthredirecturi' => array(
       'field_name' => 'application_oauthredirecturi',
       'label' => t('OAuth Redirect URL'),
-      'type' => 'text',
+      'type' => 'text_long',
       'translatable' => FALSE
     ),
     'application_url' => array(
@@ -278,10 +278,10 @@ function _application_installed_instances() {
       'field_name' => 'application_oauthredirecturi',
       'type' => 'text',
       'label' => t('OAuth Redirect URI'),
-      'widget' => array('type' => 'text_textfield'),
+      'widget' => array('type' => 'text_textarea'),
       'description' => t('The URL authenticated OAuth flows for this application should be redirected to.'),
       'display' => array(
-        'default' => array('label' => t('OAuth Redirect URI'), 'type' => 'text')
+        'default' => array('label' => t('OAuth Redirect URI'), 'type' => 'text_long')
       )
     ),
     'application_url' => array(
@@ -502,4 +502,20 @@ function application_update_7400() {
       }
     }
   }
+
+  // update redirectauthuri field to text_long, if needed
+  $result = db_query("SELECT type from {field_config} where field_name = 'application_oauthredirecturi' and type = 'text'");
+  if ($result) {
+    db_query("UPDATE {field_config} SET type = 'text_long' WHERE field_name = 'application_oauthredirecturi'");
+    db_change_field('field_data_application_oauthredirecturi', 'application_oauthredirecturi_value', 'application_oauthredirecturi_value', array(
+      'type' => 'varchar',
+      'length' => '4000',
+    ));
+    db_change_field('field_revision_application_oauthredirecturi', 'application_oauthredirecturi_value', 'application_oauthredirecturi_value', array(
+      'type' => 'varchar',
+      'length' => '4000',
+    ));
+    // Clear caches.
+    field_cache_clear(TRUE);
+ }
 }

@@ -63,7 +63,7 @@ function _devorg_installed_fields() {
     'devorg_tags' => array(
       'field_name' => 'devorg_tags',
       'label' => t('Organization Tags'),
-      'type' => 'text',
+      'type' => 'text_long',
       'cardinality' => -1,
       'translatable' => FALSE
     ),
@@ -134,15 +134,15 @@ function _devorg_installed_instances() {
       'field_name' => 'devorg_tags',
       'type' => 'text',
       'label' => t('Organization Tags'),
-      'widget' => array('type' => 'text_textfield'),
+      'widget' => array('type' => 'text_textarea'),
       'display' => array(
-        'default' => array('label' => t('Organization Tags'), 'type' => 'text'),
-        'teaser' => array('label' => t('Organization Tags'), 'type' => 'text')
+        'default' => array('label' => t('Organization Tags'), 'type' => 'text_long'),
+        'teaser' => array('label' => t('Organization Tags'), 'type' => 'text_long')
       )
     ),
     'devorg_members' => array(
       'field_name' => 'devorg_members',
-      'type' => 'text_long',
+      'type' => 'text',
       'label' => t('Members'),
       'widget' => array('type' => 'text_textarea'),
       'display' => array(
@@ -249,10 +249,11 @@ function devorg_update_7400() {
       watchdog($type, 'Field %field_name already exists', array(
         '%field_name' => $field['field_name']
       ));
-    }
-    if ($field['field_name'] == 'devorg_tags') {
-      $field['cardinality'] = -1;
-      field_update_field($field);
+      if ($field['field_name'] == 'devorg_tags') {
+        $field_info = field_info_field($field['field_name']);
+        $field_info['cardinality'] = -1;
+        field_update_field($field_info);
+      }
     }
   }
   foreach (_devorg_installed_instances() as $fieldinstance) {
@@ -281,5 +282,21 @@ function devorg_update_7400() {
         '%instance_name' => $fieldinstance['field_name']
       ));
     }
+  }
+
+  // update devorg_tags field to text_long, if needed
+  $result = db_query("SELECT type from {field_config} where field_name = 'devorg_tags' and type = 'text'");
+  if ($result) {
+    db_query("UPDATE {field_config} SET type = 'text_long' WHERE field_name = 'devorg_tags'");
+    db_change_field('field_data_devorg_tags', 'devorg_tags_value', 'devorg_tags_value', array(
+      'type' => 'varchar',
+      'length' => '4000',
+    ));
+    db_change_field('field_revision_devorg_tags', 'devorg_tags_value', 'devorg_tags_value', array(
+      'type' => 'varchar',
+      'length' => '4000',
+    ));
+    // Clear caches.
+    field_cache_clear(TRUE);
   }
 }

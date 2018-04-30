@@ -139,7 +139,7 @@ else {
               <?php if (isset($api['tags']) && is_array($api['tags'])) : ?>
                 <?php foreach ($api['tags'] as $key=>$tag): ?>
                   <?php if (isset($tag['description'])) {
-                    $tagdescr = 'title="' . ibm_apim_get_translated_string($api, ['tags'][$key], 'description') . '"';
+                    $tagdescr = 'title="' . ibm_apim_get_translated_string($api, ['tags', $key], 'description') . '"';
                   }
                   else {
                     $tagdescr = '';
@@ -170,7 +170,7 @@ else {
               <div>
                 <label><?php print t('Documentation'); ?></label>
                 <?php if (isset($api['externalDocs'])) : ?>
-                  <div><a href="<?php print $api['externalDocs']['url']; ?>">
+                  <div><a href="<?php print $api['externalDocs']['url']; ?>" target='_blank'>
                       <?php if (isset($api['externalDocs']['description'])) {
                         print ibm_apim_get_translated_string($api, ['externalDocs'], 'description');
                       }
@@ -181,9 +181,9 @@ else {
                 <?php endif; ?>
                 <?php if (isset($api['x-ibm-configuration']['externalDocs'])) : ?>
                   <?php foreach ($api['x-ibm-configuration']['externalDocs'] as $key=>$doc) : ?>
-                    <div><a href="<?php print $doc['url']; ?>">
+                    <div><a href="<?php print $doc['url']; ?>" target='_blank'>
                         <?php if (isset($doc['description'])) {
-                          print ibm_apim_get_translated_string($api, ['x-ibm-configuration']['externalDocs'][$key], 'description');
+                          print ibm_apim_get_translated_string($api, ['x-ibm-configuration', 'externalDocs' ,$key], 'description');
                         }
                         else {
                           print $doc['url'];
@@ -422,7 +422,7 @@ else {
         class='right'></div>
     </div>
 
-    <?php foreach ($expandedapi['paths'] as $pathSegment => $path) : ?>
+    <?php foreach ($api['paths'] as $pathSegment => $path) : ?>
       <div class='pathWrapper'>
         <?php if ($protocol != 'wsdl') : ?>
           <div class='pathTitleWrapper'><div class='pathTitle left'>
@@ -433,7 +433,6 @@ else {
         <div
           class='pathDetails navigate-apis_<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>_paths'>
           <?php foreach ($path as $verb => $operation) : ?>
-            <?php $unexpanded_operation = $api['paths'][$pathSegment][$verb]; ?>
             <?php if (in_array(strtoupper($verb), array(
               'PUT',
               'POST',
@@ -473,13 +472,17 @@ else {
                       <div class="apiTags">
                         <?php if (isset($operation['tags']) && is_array($operation['tags'])) : ?>
                           <?php foreach ($operation['tags'] as $tagname): ?>
-                            <?php $tagfound = FALSE; ?>
+                            <?php $tagfound = FALSE;
+                            $description = null;
+                            $tag_title = null; ?>
                             <?php if (isset($api['tags']) && is_array($api['tags'])) {
                               foreach ($api['tags'] as $tagkey => $tag) {
-                                $tag_title = ibm_apim_get_translated_string($tag, array(), 'name');
-                                if (isset($tag['description']) && isset($tag['name']) && $tag['name'] == $tagname) {
-                                  $description = ibm_apim_get_translated_string($tag, array(), 'description');
+                                if (isset($tag['name']) && $tag['name'] == $tagname) {
                                   $tagfound = TRUE;
+                                  $tag_title = ibm_apim_get_translated_string($tag, array(), 'name');
+                                  if (isset($tag['description'])) {
+                                    $description = ibm_apim_get_translated_string($tag, array(), 'description');
+                                  }
                                 }
                               }
                               if ($tagfound != TRUE) {
@@ -520,7 +523,7 @@ else {
                               href="<?php print $operation['externalDocs']['url']; ?>"
                               target='_blank'>
                               <?php if (isset($operation['externalDocs']['description'])) {
-                                print ibm_apim_get_translated_string($expandedapi, ['paths'][$pathSegment][$verb]['externalDocs'], 'description');
+                                print ibm_apim_get_translated_string($api, ['paths', $pathSegment, $verb, 'externalDocs'], 'description');
                               }
                               else {
                                 print $operation['externalDocs']['url'];
@@ -571,8 +574,12 @@ else {
                                         print " " . $api['securityDefinitions'][$securityDefName]['flow'];
                                       }
                                     } ?>)
-                                  </div><div
-                                    class='description markdown'><?php print ibm_apim_markdown_field($api['securityDefinitions'][$securityDefName]['description']); ?>
+                                  </div><div class='description markdown'>
+                                    <?php
+                                      if(isset($api['securityDefinitions'][$securityDefName]['description'])) {
+                                        print ibm_apim_markdown_field($api['securityDefinitions'][$securityDefName]['description']);
+                                      }
+                                    ?>
                                     <?php if (isset($operation['security'])) {
                                       $operation_array_length = count($operation['security']);
                                       if (isset($api['securityDefinitions'][$securityDefName]['scopes'])) {
@@ -642,10 +649,7 @@ else {
                           foreach ($path['parameters'] as $key => $parameter) {
                             if (isset($parameter['$ref'])) {
                               // handle parameter references
-                              $parameter = api_get_ref_param($expandedapi, $parameter['$ref']);
-                            }
-                            else {
-                              $parameter = $expandedapi['paths'][$pathSegment]['parameters'][$key];
+                              $parameter = api_get_ref_param($api, $parameter['$ref']);
                             }
                             // check for a body parameter
                             if (isset($parameter['in']) && $parameter['in'] == "body") {
@@ -654,17 +658,12 @@ else {
                             $operation_parameters[$parameter['name']] = $parameter;
                           }
                         }
-                        if (isset($unexpanded_operation['parameters']) && is_array($unexpanded_operation['parameters'])) {
-                          foreach ($unexpanded_operation['parameters'] as $key => $parameter) {
+                        if (isset($operation['parameters']) && is_array($operation['parameters'])) {
+                          foreach ($operation['parameters'] as $key => $parameter) {
                             if (isset($parameter['$ref'])) {
                               // handle parameter references
-                              $parameter = api_get_ref_param($expandedapi, $parameter['$ref']);
+                              $parameter = api_get_ref_param($api, $parameter['$ref']);
                             }
-                            else {
-                              $parameter = $api['paths'][$pathSegment][$verb]['parameters'][$key];
-                            }
-                            // need to keep the expanded variant of the parameter around too
-                            $parameter['expanded'] = $expandedapi['paths'][$pathSegment][$verb]['parameters'][$key];
                             $operation_parameters[$parameter['name']] = $parameter;
                             // check for a body parameter
                             if (isset($parameter['in']) && $parameter['in'] == "body") {
@@ -680,9 +679,6 @@ else {
 
                             <?php if (isset($operation_parameters) && is_array($operation_parameters)): ?>
                               <?php foreach ($operation_parameters as $key => $parameter) : ?>
-                                <?php if (isset($parameter['expanded'])) {
-                                  $expanded_parameter = $parameter['expanded'];
-                                } ?>
                                 <?php if (isset($parameter['in']) && ($parameter['in'] == "path")) {
                                   // path parameters are always required
                                   $parameter['required'] = "true";
@@ -701,26 +697,26 @@ else {
                                       <?php
                                       $type = 'object';
                                       unset($format);
-                                      if (isset($expanded_parameter['schema']['type']) && !empty($expanded_parameter['schema']['type'])) {
-                                        $type = $expanded_parameter['schema']['type'];
-                                      }
-                                      elseif (isset($expanded_parameter['type']) && !empty($expanded_parameter['type'])) {
-                                        $type = $expanded_parameter['type'];
-                                      }
-                                      elseif (isset($parameter) && (isset($parameter['schema']['type']) && !empty($parameter['schema']['type']))) {
-                                        $type = $expanded_parameter['schema']['type'];
+                                      if (isset($parameter['schema']['type']) && !empty($parameter['schema']['type'])) {
+                                        $type = $parameter['schema']['type'];
                                       }
                                       elseif (isset($parameter['type']) && !empty($parameter['type'])) {
                                         $type = $parameter['type'];
                                       }
-                                      if (isset($expanded_parameter['schema']['format']) && !empty($expanded_parameter['schema']['format'])) {
-                                        $format = $expanded_parameter['schema']['format'];
+                                      elseif (isset($parameter) && (isset($parameter['schema']['type']) && !empty($parameter['schema']['type']))) {
+                                        $type = $parameter['schema']['type'];
                                       }
-                                      elseif (isset($expanded_parameter['format']) && !empty($expanded_parameter['format'])) {
-                                        $format = $expanded_parameter['format'];
+                                      elseif (isset($parameter['type']) && !empty($parameter['type'])) {
+                                        $type = $parameter['type'];
+                                      }
+                                      if (isset($parameter['schema']['format']) && !empty($parameter['schema']['format'])) {
+                                        $format = $parameter['schema']['format'];
+                                      }
+                                      elseif (isset($parameter['format']) && !empty($parameter['format'])) {
+                                        $format = $parameter['format'];
                                       }
                                       elseif (isset($parameter) && (isset($parameter['schema']['format']) && !empty($parameter['schema']['format']))) {
-                                        $format = $expanded_parameter['schema']['format'];
+                                        $format = $parameter['schema']['format'];
                                       }
                                       elseif (isset($parameter['format']) && !empty($parameter['format'])) {
                                         $format = $parameter['format'];
@@ -747,7 +743,7 @@ else {
                                         <a
                                           onclick='API.navigatedefs("<?php print drupal_html_class($api['info']['x-ibm-name'] . $api['info']['version']); ?>", "<?php print drupal_html_class(preg_replace("/\W/", "", _ibm_apim_ref_to_objectname($parameter['schema']['items']['$ref']))); ?>")'
                                           href='javascript:;'><?php print ibm_apim_return_schema($parameter); ?></a>
-                                      <?php elseif (isset($expanded_parameter) && (isset($expanded_parameter['schema']['type']) && !empty($expanded_parameter['schema']['type'])) || (isset($expanded_parameter['type']) && !empty($expanded_parameter['type']))) : ?>
+                                      <?php elseif (isset($parameter) && (isset($parameter['schema']['type']) && !empty($parameter['schema']['type'])) || (isset($parameter['type']) && !empty($parameter['type']))) : ?>
                                         <?php
                                         $inline_schema = ibm_apim_return_inline_schema($parameter);
                                         if (isset($inline_schema) && !empty($inline_schema)) {
@@ -762,8 +758,6 @@ else {
                                           class='inlineSchema'><code>" . json_encode($inline_schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "</code></pre>";
                                         }
                                         ?>
-                                      <?php elseif (isset($expanded_parameter)): ?>
-                                        <?php print ibm_apim_return_schema($expanded_parameter); ?>
                                       <?php else: ?>
                                         <?php print ibm_apim_return_schema($parameter); ?>
                                       <?php endif; ?>
@@ -833,7 +827,13 @@ else {
                                 }
                                 else {
                                   $schema_example = $parameter['schema'];
-                                } ?>
+                                }
+                                // could be a $ref that needs resolving
+                                if(!empty($schema_example['$ref'])) {
+                                  $schema_example = api_get_ref_definition($api, $schema_example['$ref']);
+                                  $schema_example = $schema_example['example'];
+                                }
+                                ?>
                                 <?php if (strlen($schema_example) > 1000) : ?>
                                   <?php $truncated = mb_substr($schema_example, 0, 1000); ?>
                                   <pre
@@ -873,7 +873,7 @@ else {
                       <?php if (isset($operation['responses']) && $protocol != 'wsdl') : ?>
                         <div class="responses">
                           <label><?php print t('Responses'); ?></label>
-                          <?php foreach ($unexpanded_operation['responses'] as $code => $response) : ?>
+                          <?php foreach ($operation['responses'] as $code => $response) : ?>
                             <?php $expanded_response = $operation['responses'][$code]; ?>
                             <div class='responsesSection listContent'>
                               <div class='code'><?php print $code; ?>
@@ -1482,10 +1482,6 @@ else {
                           // handle parameter references
                           $parameter = api_get_ref_param($api, $parameter['$ref']);
                         }
-                        else {
-                          $parameter = $expandedapi['paths'][$pathSegment]['parameters'][$key];
-                        }
-
                         $operation_parameters[$parameter['name']] = $parameter;
                         if (isset($parameter['in']) && $parameter['in'] == "body") {
                           $bodypresent = TRUE;
@@ -1496,17 +1492,12 @@ else {
                         }
                       }
                     }
-                    if (isset($unexpanded_operation['parameters']) && is_array($unexpanded_operation['parameters'])) {
-                      foreach ($unexpanded_operation['parameters'] as $key => $parameter) {
+                    if (isset($operation['parameters']) && is_array($operation['parameters'])) {
+                      foreach ($operation['parameters'] as $key => $parameter) {
                         if (isset($parameter['$ref'])) {
                           // handle parameter references
                           $parameter = api_get_ref_param($api, $parameter['$ref']);
                         }
-                        else {
-                          $parameter = $api['paths'][$pathSegment][$verb]['parameters'][$key];
-                        }
-                        // need to keep the expanded variant of the parameter around too
-                        $parameter['expanded'] = $expandedapi['paths'][$pathSegment][$verb]['parameters'][$key];
                         $operation_parameters[$parameter['name']] = $parameter;
                         if (isset($parameter['in']) && $parameter['in'] == "body") {
                           $bodypresent = TRUE;

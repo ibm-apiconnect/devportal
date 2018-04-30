@@ -79,7 +79,7 @@ jQuery(document).ready(function () {
                 if (recentJQuery == false) {
                     xhrOpts.type = 'GET';
                 }
-                var encoded_token = btoa(JSON.stringify(token));
+                var encoded_token = btoa(unescape(encodeURIComponent(JSON.stringify(token))));
                 encoded_token.replace(/\+/g, "=");
                 encoded_token.replace(/-/g, "_");
 

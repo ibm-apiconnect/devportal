@@ -136,12 +136,6 @@ function _api_installed_fields() {
       'type' => 'text_long',
       'translatable' => FALSE
     ),
-    'api_expandedschema' => array(
-      'field_name' => 'api_expandedschema',
-      'label' => t('Expanded Schema'),
-      'type' => 'text_long',
-      'translatable' => FALSE
-    ),
     'api_wsdl' => array(
       'field_name' => 'api_wsdl',
       'label' => t('WSDL'),
@@ -415,22 +409,6 @@ function _api_installed_instances() {
         ),
         'inner' => array(
           'label' => t('Operations'),
-          'type' => 'text_long'
-        )
-      )
-    ),
-    'api_expandedschema' => array(
-      'field_name' => 'api_expandedschema',
-      'type' => 'text',
-      'label' => t('Expanded Schema'),
-      'widget' => array('type' => 'text_textarea'),
-      'display' => array(
-        'default' => array(
-          'label' => t('Expanded Schema'),
-          'type' => 'text_long'
-        ),
-        'inner' => array(
-          'label' => t('Expanded Schema'),
           'type' => 'text_long'
         )
       )

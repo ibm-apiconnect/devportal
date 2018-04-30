@@ -778,9 +778,12 @@ body.page-myorg .columns-inner #breadcrumb {
 .myorgAddUserLink {
 
 }
-.myorgEditLink {
+.myorgEditLink,
+.myorgDeleteLink,
+.myorgOwnerChangeLink {
   float: left;
   font-weight: bold;
+  margin-right: 15px;
 }
 
 .myorgLinks .form-item-role .description {

@@ -33,7 +33,7 @@ class SocialBlockBean extends BeanPlugin {
       'forums' => array(),
       'display_all_forums' => 1,
       'twitter_api' => 0,
-      'twitter_param' => 'ibmapiconnect',
+      'twitter_param' => 'ibmintegration',
       'tweet_filter' => 0
     );
   }

@@ -442,13 +442,32 @@ function devorg_createNewDevorgNode($consumer, $event) {
         // Calling all modules implementing 'hook_ibm_apim_devorg_create':
         module_invoke_all('ibm_apim_devorg_create', $node, $consumer);
 
+        $devorg_owner_email = $node->devorg_owner[$node->language][0]['value'];
+        if (!valid_email_address($devorg_owner_email)) {
+           $account = user_load_by_name($devorg_owner_email);
+           if ($account) {
+              $devorg_owner_email = $account->mail;
+           } 
+           else {
+              // get the owner email from the members list
+              if (isset($node->devorg_members[$node->language][0]['value'])) {
+                $members = unserialize($node->devorg_members[$node->language][0]['value']);
+                foreach ($members as $member) {
+                  if (in_array("owner", $member['roles']) && isset($member['email'])){
+                     $devorg_owner_email = $member['email'];
+                  }
+                }
+              }
+           }
+        }
+
         // invoke rules
         if (module_exists('rules')) {
           $rules_payload = array(
             'devorg_id' => $node->devorg_id[$node->language][0]['value'],
             'devorg_nid' => $node->nid,
             'devorg_name' => $node->title,
-            'devorg_owner_email' => $node->devorg_owner[$node->language][0]['value']
+            'devorg_owner_email' => $devorg_owner_email
           );
 
           $member_emails = array();
