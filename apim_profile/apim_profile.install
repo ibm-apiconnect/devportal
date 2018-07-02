@@ -36,6 +36,7 @@ function apim_profile_install() {
     'product',
     'devorg',
     'application',
+    'pdurusers_export',
     'image_captcha',
     'hs_taxonomy',
     'i18n_redirect',
@@ -3232,7 +3233,9 @@ function apim_profile_update_7400() {
     'rules_http_client',
     'field_group',
     'termcase',
-    'node_page_disable'
+    'node_page_disable',
+    'flood_control',
+    'pdurusers_export'
   );
   module_enable($modules, TRUE);
 
@@ -3243,7 +3246,10 @@ function apim_profile_update_7400() {
   }
 
   // ensure user registration options haven't been played with
-  variable_set('user_register', 1);
+  $ibm_apim_social_login = variable_get('ibm_apim_social_login', 0);
+  if ($ibm_apim_social_login == 0) {
+    variable_set('user_register', 1);
+  }
   variable_set('user_email_verification', FALSE);
   variable_set('comment_preview_product', "0");
   variable_set('comment_preview_api', "0");
@@ -4095,6 +4101,16 @@ taxonomy/*'
       ->execute();
     variable_set('ibm_apim_done_password_policy_upgrade', 1);
   }
+
+  // remove password expiry and force change settings
+  if (variable_get('ibm_apim_done_password_force_change_upgrade', NULL) == NULL) {
+    db_update('password_policy_force_change')
+      ->fields(array('force_change' => '0'))
+      ->execute();
+    db_delete('password_policy_expiration')
+      ->execute(); 
+    variable_set('ibm_apim_done_password_force_change_upgrade', 1);
+  } 
 
   if (variable_get('ibm_apim_done_csspreprocess_upgrade', NULL) == NULL) {
     variable_set('preprocess_css', 1);

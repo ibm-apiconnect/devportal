@@ -170,6 +170,9 @@
 
             var languages = ["curl", "ruby", "python", "php", "java", "node", "go", "swift", "c", "csharp"];
             var endpoint = self.getEndpoint(api);
+            if (api.basePath) {
+                endpoint = endpoint + api.basePath;
+            }
             var content = window.exampleGenerator.generateCodeSnippets(api, path, verb, operation, config, 'REPLACE_THIS_KEY', 'REPLACE_THIS_KEY', languages, null, endpoint);
 
             var body = null;
@@ -354,7 +357,7 @@
                     setTimeout(function () {
                         populateCodeSnippets(expanded, path, verb);
                         $('.langtab pre').each(function (i, block) {
-                            if (!window.disable_highlightjs) {
+                            if (window.disable_highlightjs != 1) {
                                 hljs.highlightBlock(block);
                             }
                         });
@@ -418,7 +421,7 @@
                     if (api.definitions) {
                         Object.keys(api.definitions).forEach(function (definition) {
                             waypoints.push({
-                                path: "apis_" + cleanedapiname + "_definitions_" + cleanUpClassName(definition),
+                                path: "apis_" + cleanedapiname + "_definitions_" + definition.replace(/[^A-Za-z0-9_]+/gi, '').replace(/_/g, '-').toLowerCase(),
                                 expand: "apis_" + cleanedapiname
                             });
                         });
@@ -429,23 +432,23 @@
         /* On timeout so it runs after the code snippets and examples have been generated */
         setTimeout(function () {
             $('.langtab pre').each(function (i, block) {
-                if (!window.disable_highlightjs) {
+                if (window.disable_highlightjs != 1) {
                     hljs.highlightBlock(block);
                 }
             });
             $('.exampleRespData pre').each(function (i, block) {
-                if (!window.disable_highlightjs) {
+                if (window.disable_highlightjs != 1) {
                     hljs.highlightBlock(block);
                 }
             });
             $('pre.inlineSchema').each(function (i, block) {
-                if (!window.disable_highlightjs) {
+                if (window.disable_highlightjs != 1) {
                     hljs.highlightBlock(block);
                 }
             });
             $('.markdown pre').each(function (i, block) {
                 $(this).addClass('inlineSchema');
-                if (!window.disable_highlightjs) {
+                if (window.disable_highlightjs != 1) {
                     hljs.highlightBlock(block);
                 }
             });
@@ -539,7 +542,7 @@
                     });
                     setTimeout(function () {
                         $('.langtab pre').each(function (i, block) {
-                            if (!window.disable_highlightjs) {
+                            if (window.disable_highlightjs != 1) {
                                 hljs.highlightBlock(block);
                             }
                         });
@@ -551,7 +554,7 @@
         watchEndpoint();
 
         $('.definitionsSection pre code').each(function (i, block) {
-            if (!window.disable_highlightjs) {
+            if (window.disable_highlightjs != 1) {
                 hljs.highlightBlock(block);
             }
         });
@@ -1648,7 +1651,7 @@
                 }
             }
             $('pre code', self.responseSection).each(function (i, block) {
-                if (!window.disable_highlightjs) {
+                if (window.disable_highlightjs != 1) {
                     hljs.highlightBlock(block);
                 }
             });

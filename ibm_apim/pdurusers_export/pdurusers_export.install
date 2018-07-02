@@ -1,0 +1,37 @@
+<?php
+/**
+ * @file
+ * Handles installation steps for users_export
+ *
+ * @ingroup users_export
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function pdurusers_export_uninstall() {
+  $vars = db_select('variable', 'v')
+    ->fields('v', array('name'))
+    ->condition('name', 'pdurusers_export%', 'LIKE')
+    ->execute()->fetchCol();
+  foreach ($vars as $var) {
+    variable_del($var);
+  }
+
+  $tables = array('block', 'block_role');
+  foreach ($tables as $table) {
+    if (db_table_exists($table)) {
+      db_delete($table)
+        ->condition('module', 'pdurusers_export')
+        ->execute();
+    }
+  }
+}
+
+/**
+ * Implements hook_enable().
+ */
+function pdurusers_export_enable() {
+  drupal_set_message(t('You may export users by visiting <a href="@url">@url</a>.', array('@url' => url('admin/people/export'))));
+}
+

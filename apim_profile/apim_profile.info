@@ -133,6 +133,7 @@ dependencies[] = views_data_export
 dependencies[] = termcase
 dependencies[] = honeypot
 dependencies[] = node_page_disable
+dependencies[] = flood_control
 
 
 ;Enable our modules

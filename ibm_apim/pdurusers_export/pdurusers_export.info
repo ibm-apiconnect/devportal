@@ -1,0 +1,8 @@
+name = PDUR Users Export
+description = Export your Portal Delegated User Registry users to a flat file of various types.
+package = IBM API Connect v5
+core = 7.x
+version = VERSION
+
+project = "pdurusers_export"
+

@@ -645,6 +645,7 @@ else {
                         // build up parameters list
                         $operation_parameters = array();
                         $bodypresent = FALSE;
+                        $formDataPresent = FALSE;
                         if (isset($path['parameters']) && is_array($path['parameters'])) {
                           foreach ($path['parameters'] as $key => $parameter) {
                             if (isset($parameter['$ref'])) {
@@ -654,6 +655,9 @@ else {
                             // check for a body parameter
                             if (isset($parameter['in']) && $parameter['in'] == "body") {
                               $bodypresent = TRUE;
+                            }
+                            if (isset($parameter['in']) && $parameter['in'] == "formData") {
+                              $formDataPresent = TRUE;
                             }
                             $operation_parameters[$parameter['name']] = $parameter;
                           }
@@ -668,6 +672,9 @@ else {
                             // check for a body parameter
                             if (isset($parameter['in']) && $parameter['in'] == "body") {
                               $bodypresent = TRUE;
+                            }
+                            if (isset($parameter['in']) && $parameter['in'] == "formData") {
+                              $formDataPresent = TRUE;
                             }
                           }
                         }
@@ -766,7 +773,7 @@ else {
                                 </div>
                               <?php endforeach; ?>
                             <?php endif; ?>
-                            <?php if ((isset($operation['consumes']) || isset($api['consumes'])) && $bodypresent == TRUE && !isset($operation_parameters_lower['content-type'])) : ?>
+                            <?php if ((isset($operation['consumes']) || isset($api['consumes'])) && ($bodypresent == TRUE || $formDataPresent == TRUE) && !isset($operation_parameters_lower['content-type'])) : ?>
                               <div class='parametersSection listContent'>
                                 <div class='name'><div
                                     class="title">Content-Type</div>
@@ -1239,8 +1246,10 @@ else {
                         class="rightSectionHeading"><?php print t('Example Response'); ?></div>
                       <?php if ($protocol != 'wsdl') : ?>
                         <label><?php print t('Definition'); ?></label>
+                        <?php $url = $default_endpoint . $api['basePath'] . $pathSegment;
+                        $url_escaped = preg_replace('/(https?:\/\/)|(\/)+/', '$1$2', $url); // remove double slashes ?>
                         <div
-                          class="exampleDefinition"><?php print strtoupper($verb) . ' '; ?><?php print $default_endpoint . $api['basePath'] . $pathSegment; ?></div>
+                          class="exampleDefinition"><?php print strtoupper($verb) . ' '; ?><?php print $url_escaped; ?></div>
                       <?php endif; ?>
                       <label><?php print t('Response'); ?></label>
                       <div class="exampleResponse">
@@ -1471,6 +1480,7 @@ else {
                         </div>
                     </div>
                     <?php $bodypresent = FALSE;
+                    $formDataPresent = FALSE;
                     $paramspresent = FALSE;
                     unset($bodyparam); ?>
                     <?php
@@ -1489,6 +1499,9 @@ else {
                         }
                         if (isset($parameter['in']) && ($parameter['in'] == "path" || $parameter['in'] == "query" || $parameter['in'] == "formData")) {
                           $paramspresent = TRUE;
+                          if ($parameter['in'] == "formData") {
+                            $formDataPresent = TRUE;
+                          }
                         }
                       }
                     }
@@ -1505,6 +1518,9 @@ else {
                         }
                         if (isset($parameter['in']) && ($parameter['in'] == "path" || $parameter['in'] == "query" || $parameter['in'] == "formData")) {
                           $paramspresent = TRUE;
+                          if ($parameter['in'] == "formData") {
+                            $formDataPresent = TRUE;
+                          }
                         }
                       }
                     }
@@ -1522,7 +1538,7 @@ else {
                     <?php endif; ?>
                     <label><?php print t('Headers'); ?></label>
                     <div class="contrast">
-                      <?php if ($bodypresent == TRUE) : ?>
+                      <?php if ($bodypresent == TRUE || $formDataPresent == TRUE) : ?>
                         <div class='parameter'>
                           <div class='parameterName'>content-type</div>
                           <?php if (isset($operation['consumes']) || isset($api['consumes'])): ?>

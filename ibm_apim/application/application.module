@@ -728,23 +728,11 @@ function application_collection_callback($appId = NULL) {
  */
 function application_list_applications() {
   $nids = array();
-  // user has access to everything
-  if (ibm_apim_explicit_user_access('edit any application content')) {
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', 'application');
-    $results = $query->execute();
-  }
-  else {
-    if (isset(ibm_apim_get_current_developer_org()['id'])) {
-      $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'application')
-        ->fieldCondition('application_orgid', 'value', ibm_apim_get_current_developer_org()['id']);
+  // rely on DB ACL code to limit access
 
-      $results = $query->execute();
-    }
-  }
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')->entityCondition('bundle', 'application')->addTag('node_access');
+  $results = $query->execute();
   if (isset($results['node'])) {
     foreach ($results['node'] as $item) {
       $nids[] = $item->nid;
@@ -1759,8 +1747,8 @@ function application_reset_application_clientid_submit($form, &$form_state) {
         drupal_set_message(t('The specified application could not be found to store the new credentials.'), 'error');
       }
     }
-    $form_state['redirect'] = 'application/' . $appId;
   }
+  $form_state['redirect'] = 'application/' . $appId;
 }
 
 /**
@@ -1902,9 +1890,8 @@ function application_reset_application_secret_submit($form, &$form_state) {
         rules_invoke_event('application_clientsecret_reset', $rules_payload['application_id'], $rules_payload['application_nid'], $rules_payload['application_name'], $rules_payload['application_description'], $rules_payload['application_credentials'], $rules_payload['application_oauth_redirect_uri'], $rules_payload['application_devorg_id'], $rules_payload['application_devorg_name'], $rules_payload['application_devorg_owner'], $rules_payload['application_devorg_members'], $rules_payload['application_new_credentials'], $rules_payload['application_credential_id']);
       }
     }
-
-    $form_state['redirect'] = 'application/' . $appId;
   }
+  $form_state['redirect'] = 'application/' . $appId;
 }
 
 /**
