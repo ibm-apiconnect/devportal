@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.apic_description
+    - node.type.api
+  module:
+    - text
+id: node.api.apic_description
+field_name: apic_description
+entity_type: node
+bundle: api
+label: Description
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: text_long

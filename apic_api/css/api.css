@@ -1,0 +1,123 @@
+.api-view .masonry-layout .masonry-item {
+  width: auto;
+  border: 0;
+  background: none;
+}
+
+.apicApiTeaser {
+  display: flex;
+}
+
+.apicApiTeaserMain {
+  flex: 1;
+}
+
+.apicApiTeaserMain h2 {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.apicApiTeaserMain h2 a {
+  display: flex;
+  padding-right: 10px;
+}
+
+.apicApiTeaserMain h2 a span:first-of-type {
+  padding-right: 4px;
+  margin-bottom: 0;
+}
+
+.apicApiTeaserMain .field {
+  margin-bottom: 0;
+}
+
+.apicApiTeaserVersion .field__item:before {
+  content: '(';
+}
+
+.apicApiTeaserVersion .field__item:after {
+  content: ')';
+}
+
+.apicApiName {
+  max-width: 500px;
+}
+
+.apicApiRating {
+  flex: 0.05 0 auto;
+  -ms-flex: 0.05 0 100px;
+  min-width: 100px;
+}
+
+.apicApiRating .field,
+.apicApiRating form,
+.apicApiRating .form-item {
+  margin-bottom: 0;
+}
+
+.explorerWrapper {
+  position: relative;
+  min-height: calc(100vh - 148px);
+  margin-top: 1rem;
+}
+body.adminimal-admin-toolbar .explorerWrapper{
+  min-height: calc(100vh - 228px);
+}
+
+apiconnect-explorer h1 .apiImage {
+  border: 0;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  margin: 10px 10px 12px 0;
+}
+
+apiconnect-explorer .description {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+apiconnect-explorer .signInMessage {
+  padding-top: 0.5rem;
+}
+
+.page-node-type-api footer,
+.route-productapi footer {
+  display: none;
+}
+
+@media screen and (max-width: 1024px) {
+  .apicApiName {
+    max-width: 300px;
+  }
+}
+
+@media screen and (max-width: 640px) {
+  .apicApiTeaser {
+    flex-direction: column;
+  }
+
+  .apicApiTeaserMain {
+    -ms-flex: 1 0 auto;
+  }
+
+  .apicApiRating {
+    -ms-flex: 0.05 0 24px;
+  }
+
+  .apicApiTeaserMain h2 {
+    flex-direction: column;
+  }
+
+  .apicApiTeaserMain h2 a {
+    flex-direction: column;
+  }
+
+  .node .apicApiTeaser .apicApiDesc {
+    margin-bottom: 10px;
+  }
+
+  .apicApiName {
+    max-width: 500px;
+  }
+}

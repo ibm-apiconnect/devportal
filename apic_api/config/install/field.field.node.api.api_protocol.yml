@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.api_protocol
+    - node.type.api
+  module:
+    - options
+id: node.api.api_protocol
+field_name: api_protocol
+entity_type: node
+bundle: api
+label: Protocol
+description: ''
+required: true
+translatable: false
+default_value:
+  -
+    value: rest
+default_value_callback: ''
+settings: {  }
+field_type: list_string

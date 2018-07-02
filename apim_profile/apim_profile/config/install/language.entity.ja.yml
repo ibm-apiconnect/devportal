@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+id: ja
+label: Japanese
+direction: ltr
+weight: 6
+locked: false

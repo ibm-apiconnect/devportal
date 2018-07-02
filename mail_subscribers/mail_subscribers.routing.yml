@@ -1,0 +1,125 @@
+mail_subscribers.settings:
+  path: '/admin/config/system/mail_subscribers'
+  defaults:
+    _form: 'Drupal\mail_subscribers\Form\AdminForm'
+    _title: 'Configure the Mail Subscribers wizards'
+  requirements:
+    _permission: 'administer mail subscribers'
+  options:
+    _admin_route: TRUE
+
+mail_subscribers.startWizard:
+  path: '/subscribers/wizard'
+  defaults:
+    _form: '\Drupal\mail_subscribers\Form\StartWizardForm'
+    _title: 'Email subscribers'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _mail_subscribers_access_check: 'TRUE'
+  options:
+    _admin_route: TRUE
+
+mail_subscribers.product_wizard:
+  path: '/subscribers/product'
+  defaults:
+    _wizard: '\Drupal\mail_subscribers\Wizard\ProductSubscribersWizard'
+    _title: 'Email subscribers'
+    tempstore_id: 'mail_subscribers.wizard'
+    machine_name: 'MailSubscribersWizard'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _mail_subscribers_access_check: 'TRUE'
+  options:
+    _admin_route: TRUE
+
+
+mail_subscribers.product_wizard.step:
+  path: '/subscribers/product/{step}'
+  defaults:
+    _wizard: '\Drupal\mail_subscribers\Wizard\ProductSubscribersWizard'
+    _title: 'Email subscribers'
+    tempstore_id: 'mail_subscribers.wizard'
+    machine_name: 'MailSubscribersWizard'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _mail_subscribers_access_check: 'TRUE'
+  options:
+      _admin_route: TRUE
+
+mail_subscribers.api_wizard:
+  path: '/subscribers/api'
+  defaults:
+    _wizard: '\Drupal\mail_subscribers\Wizard\ApiSubscribersWizard'
+    _title: 'Email subscribers'
+    tempstore_id: 'mail_subscribers.wizard'
+    machine_name: 'MailSubscribersWizard'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _mail_subscribers_access_check: 'TRUE'
+  options:
+      _admin_route: TRUE
+
+mail_subscribers.api_wizard.step:
+  path: '/subscribers/api/{step}'
+  defaults:
+    _wizard: '\Drupal\mail_subscribers\Wizard\ApiSubscribersWizard'
+    _title: 'Email subscribers'
+    tempstore_id: 'mail_subscribers.wizard'
+    machine_name: 'MailSubscribersWizard'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _mail_subscribers_access_check: 'TRUE'
+  options:
+      _admin_route: TRUE
+
+mail_subscribers.plan_wizard:
+  path: '/subscribers/plan'
+  defaults:
+    _wizard: '\Drupal\mail_subscribers\Wizard\PlanSubscribersWizard'
+    _title: 'Email subscribers'
+    tempstore_id: 'mail_subscribers.wizard'
+    machine_name: 'MailSubscribersWizard'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _mail_subscribers_access_check: 'TRUE'
+  options:
+      _admin_route: TRUE
+
+mail_subscribers.plan_wizard.step:
+  path: '/subscribers/plan/{step}'
+  defaults:
+    _wizard: '\Drupal\mail_subscribers\Wizard\PlanSubscribersWizard'
+    _title: 'Email subscribers'
+    tempstore_id: 'mail_subscribers.wizard'
+    machine_name: 'MailSubscribersWizard'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _mail_subscribers_access_check: 'TRUE'
+  options:
+      _admin_route: TRUE
+
+mail_subscribers.all_wizard:
+  path: '/subscribers/all'
+  defaults:
+    _wizard: '\Drupal\mail_subscribers\Wizard\AllSubscribersWizard'
+    _title: 'Email subscribers'
+    tempstore_id: 'mail_subscribers.wizard'
+    machine_name: 'MailSubscribersWizard'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _mail_subscribers_access_check: 'TRUE'
+  options:
+      _admin_route: TRUE
+
+mail_subscribers.all_wizard.step:
+  path: '/subscribers/all/{step}'
+  defaults:
+    _wizard: '\Drupal\mail_subscribers\Wizard\AllSubscribersWizard'
+    _title: 'Email subscribers'
+    tempstore_id: 'mail_subscribers.wizard'
+    machine_name: 'MailSubscribersWizard'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _mail_subscribers_access_check: 'TRUE'
+  options:
+      _admin_route: TRUE

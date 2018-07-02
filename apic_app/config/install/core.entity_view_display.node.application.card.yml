@@ -1,0 +1,82 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.card
+    - field.field.node.application.apic_catalog_id
+    - field.field.node.application.apic_hostname
+    - field.field.node.application.apic_provider_id
+    - field.field.node.application.apic_summary
+    - field.field.node.application.apic_url
+    - field.field.node.application.application_image
+    - field.field.node.application.apic_state
+    - field.field.node.application.application_credentials
+    - field.field.node.application.application_data
+    - field.field.node.application.application_enabled
+    - field.field.node.application.application_name
+    - field.field.node.application.application_id
+    - field.field.node.application.application_redirect_endpoints
+    - field.field.node.application.application_consumer_org_url
+    - field.field.node.application.application_lifecycle_pending
+    - field.field.node.application.application_subscriptions
+    - field.field.node.application.application_lifecycle_state
+    - field.field.node.application.application_client_type
+    - node.type.application
+  module:
+    - image
+    - options
+    - text
+    - user
+id: node.application.card
+targetEntityType: node
+bundle: application
+mode: card
+content:
+  apic_summary:
+    type: basic_string
+    weight: 0
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+  application_image:
+    type: image
+    weight: 1
+    label: hidden
+    settings:
+      image_style: ''
+      image_link: ''
+    third_party_settings: {  }
+  application_lifecycle_state:
+    type: list_default
+    weight: 2
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+  apic_state:
+    weight: 111
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+  links:
+    weight: 3
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  addtoany: true
+  apic_catalog_id: true
+  apic_hostname: true
+  apic_provider_id: true
+  apic_url: true
+  application_credentials: true
+  application_data: true
+  application_enabled: true
+  application_name: true
+  application_id: true
+  application_redirect_endpoints: true
+  application_consumer_org_url: true
+  application_lifecycle_pending: true
+  application_subscriptions: true
+  application_client_type: true
+  langcode: true

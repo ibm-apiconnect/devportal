@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.consumer_organization
+  module:
+    - user
+  enforced:
+    module:
+      - ibm_apim
+id: user.user.consumer_organization
+field_name: consumer_organization
+entity_type: user
+bundle: user
+label: 'Consumer organization'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

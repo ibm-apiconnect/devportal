@@ -1,0 +1,76 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.subscribewizard
+    - field.field.node.application.apic_catalog_id
+    - field.field.node.application.apic_hostname
+    - field.field.node.application.apic_provider_id
+    - field.field.node.application.apic_summary
+    - field.field.node.application.apic_url
+    - field.field.node.application.application_image
+    - field.field.node.application.apic_state
+    - field.field.node.application.application_credentials
+    - field.field.node.application.application_data
+    - field.field.node.application.application_enabled
+    - field.field.node.application.application_name
+    - field.field.node.application.application_id
+    - field.field.node.application.application_redirect_endpoints
+    - field.field.node.application.application_consumer_org_url
+    - field.field.node.application.application_lifecycle_pending
+    - field.field.node.application.application_subscriptions
+    - field.field.node.application.application_lifecycle_state
+    - field.field.node.application.application_client_type
+    - image.style.icon
+    - node.type.application
+  module:
+    - image
+    - options
+    - user
+id: node.application.subscribewizard
+targetEntityType: node
+bundle: application
+mode: subscribewizard
+content:
+  apic_summary:
+    weight: 0
+    label: above
+    type: basic_string
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  application_image:
+    weight: 1
+    label: hidden
+    settings:
+      image_style: icon
+      image_link: ''
+    third_party_settings: {  }
+    type: image
+    region: content
+  application_lifecycle_state:
+    weight: 2
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: list_default
+    region: content
+hidden:
+  addtoany: true
+  apic_catalog_id: true
+  apic_hostname: true
+  apic_provider_id: true
+  apic_url: true
+  apic_state: true
+  application_credentials: true
+  application_data: true
+  application_enabled: true
+  application_name: true
+  application_id: true
+  application_redirect_endpoints: true
+  application_consumer_org_url: true
+  application_lifecycle_pending: true
+  application_subscriptions: true
+  application_client_type: true
+  langcode: true
+  links: true

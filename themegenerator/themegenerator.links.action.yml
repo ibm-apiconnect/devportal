@@ -1,0 +1,6 @@
+themegenerator.theme_generate:
+  route_name: themegenerator.theme_generate
+  title: 'Generate sub-theme'
+  weight: 5
+  appears_on:
+    - system.themes_page

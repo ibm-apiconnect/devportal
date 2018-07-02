@@ -1,0 +1,48 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: default
+label: Default
+description: ''
+attributes:
+  title:
+    id: title
+    weight: 0
+    settings:
+      automatic_title: true
+  id:
+    id: id
+    weight: 2
+    settings: {  }
+  target:
+    id: target
+    weight: 1
+    settings:
+      widget_type: simple_checkbox
+  relationship:
+    id: relationship
+    weight: 3
+    settings: {  }
+  accesskey:
+    id: accesskey
+    weight: 4
+    settings: {  }
+matchers:
+  abae16cc-699a-400d-b650-7c4d86d3f63a:
+    uuid: abae16cc-699a-400d-b650-7c4d86d3f63a
+    id: 'entity:node'
+    weight: 0
+    settings:
+      result_description: ''
+      bundles:
+        api: api
+        article: article
+        blog_post: blog_post
+        book: book
+        forum: forum
+        page: page
+        product: product
+      group_by_bundle: true
+      include_unpublished: false

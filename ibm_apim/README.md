@@ -1,3 +1,4 @@
-## API Connect Developer Portal
+# devportal-ibm-apim
+ibm_apim Drupal module for the APIC Developer Portal
 
-The API Connect look and feel for the developer portal.
+License: GPL v2

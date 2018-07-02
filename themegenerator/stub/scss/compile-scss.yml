@@ -1,0 +1,4 @@
+import-paths:
+  - scss
+input-scss: scss/overrides.scss
+output-css: css/style.css

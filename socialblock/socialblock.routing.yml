@@ -1,0 +1,7 @@
+socialblock.form:
+  path: '/admin/config/development/socialblock'
+  defaults:
+    _form: 'Drupal\socialblock\Form\SocialBlockForm'
+    _title: 'IBM Social Block Settings'
+  requirements:
+    _permission: 'administer site configuration'

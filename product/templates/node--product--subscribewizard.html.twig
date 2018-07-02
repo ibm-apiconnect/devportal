@@ -1,0 +1,233 @@
+{#
+/**
+ * @file
+ * Default teaser theme implementation for products.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+  'node',
+  'node--id-' ~ node.id,
+  ('node--type-' ~ node.bundle)|clean_class,
+  view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
+  ('productNodeID-' ~ node.id)|clean_class,
+  ('productTitle-' ~ node.title[0].value)|clean_class,
+  ('productVersion-' ~ content.apic_version['#items'][0].value)|clean_class
+] -%}
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  <div class="apicProduct">
+    <header class="node__header--has-meta node__header apicProductHeader">
+      <div class="apicProductTitle">
+        {% if content.apic_image is defined and content.apic_image|render|trim is not empty %}
+          <div class="apicProductIcon">
+            {{ content.apic_image }}
+          </div>
+        {% elseif showPlaceholders %}
+          <div class="apicProductIcon">
+            <img src="{{- placeholderUrl -}}" alt=""/>
+          </div>
+        {% endif %}
+        <h1 class="node__title">
+        <span
+          class="field field-name-title field-formatter-string field-type-string field-label-hidden">{{- label -}}</span>
+        </h1>
+        {% if showVersions %}
+          <span class="apicProductVersion">{{- content.apic_version -}}</span>
+        {% endif %}
+      </div>
+    </header>
+    <div class="node__content apicProductBody">
+      <div class="apicProductTags">
+        {{ content.apic_tags }}
+      </div>
+      <div class="apicProductDesc">
+        {{ content.apic_description }}
+      </div>
+      {% set multipleRates = false %}
+      {% set requireApproval = false %}
+      <div class="field plans">
+        <h3 class="field__label label">{{ 'Plans'|t }}</h3>
+        <div class="subHeading">
+        </div>
+
+        <div class="planComparisonTable">
+          <div class="apicPlansTable">
+            <div class="apicTableFixedContainer">
+              <div class="apicTableFixedColumn">
+                <table>
+                  <thead>
+                  <tr>
+                    <th class="apicFixedColumn tlcorner hidden">
+                      <div class="apicTableStandardCell title"><span class="planName">{{ "APIs"|t }}</span></div>
+                    </th>
+                    {% for planid, plan in planList %}
+                      <th class="planTitle">
+                        <div class="apicTableStandardCell title">
+                          <span class="planName">
+                          {{ plan.data.title }}
+                          </span>
+                          {% if plan.requiresApproval %}
+                            {% set requireApproval = true %}
+                            {{ key_svg|raw }}
+                          {% endif %}
+                          <div class="planSubscribe">
+                            {% if billing %}
+                              <div class="apicBillingInfo">
+                                {{ plan.billing-info }}
+                              </div>
+                            {% endif %}
+                            <button type="submit" name="selectedPlan" value="{{ plan.data.title }}:{{ planid }}">
+                              {{ 'Select this Plan'|t }}
+                            </button>
+                          </div>
+                          {% if content.product_state[0].value is defined and content.product_state[0].value == 'deprecated' %}
+                            <span class="apicDeprecated">{{ 'Deprecated'|t }}</span>
+                          {% endif %}
+                        </div>
+                      </th>
+                    {% endfor %}
+                  </tr>
+                  </thead>
+                  <tbody class="apicPlansTableBody hidden">
+                  {% for api in apiList %}
+                    <tr class="api-{% if loop.index is divisibleby(2) %}even{% else %}odd{% endif %}">
+                      <th class="apicFixedColumn">
+                        <div class="apicApiCell">
+                          <div class="apicTwistieTitle">
+                            <a onclick="Drupal.settings.product.toggleTwistieRow(event)" href="javascript:">
+                              <span class="apicTwistieIcon"><i class="fa fa-angle-right"></i></span>
+                              <span
+                                class="apiName">{{ api.node.title[0].value }}{% if showVersions %} {{ api.node.apic_version[0].value }} {% endif %}</span>
+                            </a>
+                          </div>
+                        </div>
+                      </th>
+                      {% for planid, plan in planList %}
+                        <td>
+                          <div class="apicTableStandardCell">
+                            {% if plan.data.apiList is empty or api.node.api_xibmname[0].value in plan.data.apiList %}
+                              {% if plan.rateData is defined %}
+                                {% set multipleRates = true %}
+                                <span class="multiRateLimits"
+                                      data-ratelimits="{{ plan.rateData }}">{{ plan.rateLimit }}</span>
+                              {% else %}
+                                {{ plan.rateLimit }}
+                              {% endif %}
+                            {% else %}
+                              &#x2014;
+                            {% endif %}
+                          </div>
+                        </td>
+                      {% endfor %}
+                    </tr>
+                    <tr class="apicTwistieRow api-{% if loop.index is divisibleby(2) %}even{% else %}odd{% endif %}">
+                      <th class="apicFixedColumn">
+                        {% for pathSegment, path in api.swagger.paths %}
+                          {% for verb, operation in path %}
+                            {% if verb|upper in ['PUT', 'POST', 'GET', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH'] %}
+                              <div class="apicApiOperation apicTruncate apicSecondaryRow"
+                                   title="{{ verb|upper }} {{ pathSegment }}">{{ verb|upper }} {{ pathSegment }}</div>
+                            {% endif %}
+                          {% endfor %}
+                        {% endfor %}
+                      </th>
+                      {% for planid, plan in planList %}
+                        <td>
+                          <div class="apicTableStandardCell">
+                            {% for apiName, apiData in plan.nodes %}
+                              {% if apiName == api.node.apic_ref[0].value|clean_class %}
+                                {% for path, verbs in apiData.resources %}
+                                  {% for verb, verbData in verbs %}
+                                    <div class="apicSecondaryRow">
+                                      {% if verbData.enabled %}
+                                        {% if verbData.rateData is defined %}
+                                          {% set multipleRates = true %}
+                                          <span class="multiRateLimits"
+                                                data-ratelimits="{{ verbData.rateData }}">{{ verbData.rateLimit }}</span>
+                                        {% else %}
+                                          {{ verbData.rateLimit }}
+                                        {% endif %}
+                                      {% else %}
+                                        <i class="fa fa-times"></i>
+                                      {% endif %}
+                                    </div>
+                                  {% endfor %}
+                                {% endfor %}
+                              {% endif %}
+                            {% endfor %}
+                          </div>
+                        </td>
+                      {% endfor %}
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+                  <tfoot>
+
+                  </tfoot>
+                </table>
+                <div class="planTableSelector">
+                   <span class="hideDetails">
+                  <a class="showComparisonTable" title="{{ 'Show a table comparing the available plans'|t }}"
+                     onclick="Drupal.settings.product.showTable(event)" href="javascript:">
+                    <span class="linkLabel">{{ 'View details'|t }}</span>
+                    <span class="apicTwistieIcon"><i class="fa fa-angle-down"></i></span>
+                  </a>
+
+                    <a class="showPlans hidden" title="Show the available plans" onclick="Drupal.settings.product.showPlans(event)" href="javascript:">
+                    <span class="linkLabel">Hide details</span>
+                    <span class="apicTwistieIcon"><i class="fa fa-angle-up"></i></span>
+                    </a>
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <div class="tableKey">
+            {% if multipleRates %}
+              <div class="multipleRateLimitsMessage hidden">
+                {{ '* burst limit exists; hover to view limits'|t }}
+              </div>
+            {% endif %}
+            {%  if requireApproval %}
+              <div class="planRequiresSubKey">
+                <p>
+                  {{ key_svg|raw }}
+                  {{ 'Requires subscription approval'|t}}
+                </p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if userLoggedIn and not userHasSubManage %}
+          <div class="productLoginMessage">
+            <div class="alert short alert-info" role="alert">
+              <div class="alert-details">
+                <span class="icon icon-info" aria-hidden="true">
+                  <svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                       xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd">
+                    <path
+                      d="M8,0 C3.6,0 0,3.6 0,8 C0,12.4 3.6,16 8,16 C12.4,16 16,12.4 16,8 C16,3.6 12.4,0 8,0 L8,0 Z M8,4 C8.6,4 9,4.4 9,5 C9,5.6 8.6,6 8,6 C7.4,6 7,5.6 7,5 C7,4.4 7.4,4 8,4 L8,4 Z M10,12 L6,12 L6,11 L7,11 L7,8 L6,8 L6,7 L9,7 L9,11 L10,11 L10,12 L10,12 Z"
+                      id="Shape"></path>
+                  </svg>
+                </span>
+                <div class="alert-text-wrapper">
+                  <h4 class="sr-only">{{ 'Informative message'|t }}</h4>
+                  <ul class="item-list item-list--messages">
+                    <li class="item item--message">
+                      {{ 'Only users with the required permissions can subscribe to plans'|t }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+      <div class="addToAny">{{ content.addtoany }}</div>
+    </div>
+
+  </div>
+</article>

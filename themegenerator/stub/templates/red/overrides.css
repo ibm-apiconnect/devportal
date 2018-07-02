@@ -1,0 +1,1399 @@
+body
+{
+  color: #000;
+  background-color: #fff;
+}
+
+a
+{
+  color: #e62325;
+}
+
+a:hover, a:focus
+{
+  color: #aa231f;
+}
+
+.text-primary
+{
+  color: #e62325;
+}
+
+a.text-primary:hover, a.text-primary:focus
+{
+  color: #c01618;
+}
+
+.bg-primary
+{
+  color: #fff;
+}
+
+.bg-primary
+{
+  background-color: #e62325;
+}
+
+a.bg-primary:hover, a.bg-primary:focus
+{
+  background-color: #c01618;
+}
+
+.table .table
+{
+  background-color: #fff;
+}
+
+output
+{
+  color: #000;
+}
+
+.form-control
+{
+  color: #000;
+  background-color: #eaeaea;
+  border: 1px solid #eaeaea;
+}
+
+.form-control::-moz-placeholder
+{
+  color: #949394;
+}
+
+.form-control:-ms-input-placeholder
+{
+  color: #949394;
+}
+
+.form-control::-webkit-input-placeholder
+{
+  color: #949394;
+}
+
+.help-block
+{
+  color: #404040;
+}
+
+.btn:hover, .btn:focus, .btn.focus
+{
+  color: #e62325;
+}
+
+.btn-default
+{
+  color: #e62325;
+  background-color: #fff;
+  border-color: #e62325;
+}
+
+.btn-default:focus, .btn-default.focus
+{
+  color: #e62325;
+  background-color: #e6e6e6;
+  border-color: #7b0e0f;
+}
+
+.btn-default:hover
+{
+  color: #e62325;
+  background-color: #e6e6e6;
+  border-color: #b71516;
+}
+
+.btn-default:active, .btn-default.active, .open > .btn-default.dropdown-toggle
+{
+  color: #e62325;
+  background-color: #e6e6e6;
+  border-color: #b71516;
+}
+
+.btn-default:active:hover, .btn-default.active:hover, .open > .btn-default.dropdown-toggle:hover, .btn-default:active:focus, .btn-default.active:focus, .open > .btn-default.dropdown-toggle:focus, .btn-default:active.focus, .btn-default.active.focus, .open > .btn-default.dropdown-toggle.focus
+{
+  color: #e62325;
+  background-color: #d4d4d4;
+  border-color: #7b0e0f;
+}
+
+
+.btn-default.disabled:hover, .btn-default[disabled]:hover, fieldset[disabled] .btn-default:hover, .btn-default.disabled:focus, .btn-default[disabled]:focus, fieldset[disabled] .btn-default:focus, .btn-default.disabled.focus, .btn-default[disabled].focus, fieldset[disabled] .btn-default.focus
+{
+  background-color: #fff;
+  border-color: #e62325;
+}
+
+.btn-default .badge
+{
+  color: #fff;
+  background-color: #e62325;
+}
+
+.btn-primary
+{
+  color: #fff;
+  background-color: #e62325;
+  border-color: transparent;
+}
+
+.btn-primary:focus, .btn-primary.focus
+{
+  color: #fff;
+  background-color: #c01618;
+  border-color: rgba(0, 0, 0, 0);
+}
+
+.btn-primary:hover
+{
+  color: #fff;
+  background-color: #c01618;
+  border-color: rgba(0, 0, 0, 0);
+}
+
+.btn-primary:active, .btn-primary.active, .open > .btn-primary.dropdown-toggle
+{
+  color: #fff;
+  background-color: #c01618;
+  border-color: rgba(0, 0, 0, 0);
+}
+
+.btn-primary:active:hover, .btn-primary.active:hover, .open > .btn-primary.dropdown-toggle:hover, .btn-primary:active:focus, .btn-primary.active:focus, .open > .btn-primary.dropdown-toggle:focus, .btn-primary:active.focus, .btn-primary.active.focus, .open > .btn-primary.dropdown-toggle.focus
+{
+  color: #fff;
+  background-color: #a01214;
+  border-color: rgba(0, 0, 0, 0);
+}
+
+.btn-primary.disabled:hover, .btn-primary[disabled]:hover, fieldset[disabled] .btn-primary:hover, .btn-primary.disabled:focus, .btn-primary[disabled]:focus, fieldset[disabled] .btn-primary:focus, .btn-primary.disabled.focus, .btn-primary[disabled].focus, fieldset[disabled] .btn-primary.focus
+{
+  background-color: #e62325;
+  border-color: transparent;
+}
+
+.btn-primary .badge
+{
+  color: #e62325;
+  background-color: #fff;
+}
+
+.btn-success
+{
+  color: #fff;
+  background-color: #e62325;
+  border-color: transparent;
+}
+
+.btn-success:focus, .btn-success.focus
+{
+  color: #fff;
+  background-color: #c01618;
+  border-color: rgba(0, 0, 0, 0);
+}
+
+.btn-success:hover
+{
+  color: #fff;
+  background-color: #c01618;
+  border-color: rgba(0, 0, 0, 0);
+}
+
+.btn-success:active, .btn-success.active, .open > .btn-success.dropdown-toggle
+{
+  color: #fff;
+  background-color: #c01618;
+  border-color: rgba(0, 0, 0, 0);
+}
+
+.btn-success:active:hover, .btn-success.active:hover, .open > .btn-success.dropdown-toggle:hover, .btn-success:active:focus, .btn-success.active:focus, .open > .btn-success.dropdown-toggle:focus, .btn-success:active.focus, .btn-success.active.focus, .open > .btn-success.dropdown-toggle.focus
+{
+  color: #fff;
+  background-color: #a01214;
+  border-color: rgba(0, 0, 0, 0);
+}
+
+.btn-success.disabled:hover, .btn-success[disabled]:hover, fieldset[disabled] .btn-success:hover, .btn-success.disabled:focus, .btn-success[disabled]:focus, fieldset[disabled] .btn-success:focus, .btn-success.disabled.focus, .btn-success[disabled].focus, fieldset[disabled] .btn-success.focus
+{
+  background-color: #e62325;
+  border-color: transparent;
+}
+
+.btn-success .badge
+{
+  color: #e62325;
+  background-color: #fff;
+}
+
+.btn-link
+{
+  color: #e62325;
+}
+
+.btn-link:hover, .btn-link:focus
+{
+  color: #aa231f;
+  background-color: transparent;
+}
+
+.btn-link[disabled]:hover, fieldset[disabled] .btn-link:hover, .btn-link[disabled]:focus, fieldset[disabled] .btn-link:focus
+{
+  color: #e62325;
+}
+
+.dropdown-menu
+{
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, .15);
+}
+
+.dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus
+{
+  color: #262626;
+  background-color: #f5f5f5;
+}
+
+.dropdown-menu > .active > a, .dropdown-menu > .active > a:hover, .dropdown-menu > .active > a:focus
+{
+  color: #fff;
+  background-color: #e62325;
+}
+
+.input-group-addon
+{
+  color: #000;
+  background-color: #eee;
+  border: 1px solid #eaeaea;
+}
+.nav > li.disabled > a
+{
+  color: #777;
+}
+
+.nav > li.disabled > a:hover, .nav > li.disabled > a:focus
+{
+  color: #777;
+  background-color: transparent;
+}
+
+.nav .open > a, .nav .open > a:hover, .nav .open > a:focus
+{
+  border-color: #e62325;
+}
+
+.nav .nav-divider
+{
+  background-color: #e5e5e5;
+}
+
+.nav-tabs
+{
+  border-bottom: 1px solid #ddd;
+}
+
+.nav-tabs > li > a
+{
+  border: 1px solid transparent;
+}
+
+.nav-tabs > li > a:hover
+{
+  border-color: #eee #eee #ddd;
+}
+
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus
+{
+  color: #555;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-bottom-color: transparent;
+}
+
+
+
+.nav-pills > li.active > a, .nav-pills > li.active > a:hover, .nav-pills > li.active > a:focus
+{
+  color: #fff;
+  background-color: #e62325;
+}
+
+.nav-tabs-justified > .active > a, .nav-tabs.nav-justified > .active > a, .nav-tabs-justified > .active > a:hover, .nav-tabs.nav-justified > .active > a:hover, .nav-tabs-justified > .active > a:focus, .nav-tabs.nav-justified > .active > a:focus
+{
+  border: 1px solid #ddd;
+}
+
+@media (min-width: 768px)
+{
+  .nav-tabs-justified > li > a, .nav-tabs.nav-justified > li > a
+  {
+    border-bottom: 1px solid #ddd;
+    border-radius: 0 0 0 0;
+  }
+
+  .nav-tabs-justified > .active > a, .nav-tabs.nav-justified > .active > a, .nav-tabs-justified > .active > a:hover, .nav-tabs.nav-justified > .active > a:hover, .nav-tabs-justified > .active > a:focus, .nav-tabs.nav-justified > .active > a:focus
+  {
+    border-bottom-color: #fff;
+  }
+}
+
+.navbar-default
+{
+  background-color: #e62325;
+  border-color: #d0181a;
+}
+
+.navbar-default .navbar-brand
+{
+  color: #fff;
+}
+
+.navbar-default .navbar-brand:hover, .navbar-default .navbar-brand:focus
+{
+  color: #e6e6e6;
+  background-color: transparent;
+}
+
+.navbar-default .navbar-text
+{
+  color: #fff;
+}
+
+.navbar-default .navbar-nav > li > a
+{
+  color: #fff;
+}
+
+.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus
+{
+  color: #e62325;
+  background-color: transparent;
+}
+
+.navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:hover, .navbar-default .navbar-nav > .active > a:focus
+{
+  color: #fff;
+  background-color: #e62325;
+}
+
+.navbar-default .navbar-nav > .disabled > a, .navbar-default .navbar-nav > .disabled > a:hover, .navbar-default .navbar-nav > .disabled > a:focus
+{
+  color: #ccc;
+  background-color: transparent;
+}
+
+.navbar-default .navbar-toggle .icon-bar
+{
+  background-color: #e62325;
+}
+
+.navbar-default .navbar-collapse, .navbar-default .navbar-form
+{
+  border-color: #d0181a;
+}
+
+.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:hover, .navbar-default .navbar-nav > .open > a:focus
+{
+  background-color: #e62325;
+  color: #fff;
+}
+
+@media (max-width: 767px)
+{
+  .navbar-default .navbar-nav .open .dropdown-menu > li > a
+  {
+    color: #fff;
+  }
+
+  .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover, .navbar-default .navbar-nav .open .dropdown-menu > li > a:focus
+  {
+    color: #e62325;
+    background-color: transparent;
+  }
+
+  .navbar-default .navbar-nav .open .dropdown-menu > .active > a, .navbar-default .navbar-nav .open .dropdown-menu > .active > a:hover, .navbar-default .navbar-nav .open .dropdown-menu > .active > a:focus
+  {
+    color: #fff;
+    background-color: #e62325;
+  }
+
+  .navbar-default .navbar-nav .open .dropdown-menu > .disabled > a, .navbar-default .navbar-nav .open .dropdown-menu > .disabled > a:hover, .navbar-default .navbar-nav .open .dropdown-menu > .disabled > a:focus
+  {
+    color: #ccc;
+    background-color: transparent;
+  }
+}
+
+.navbar-default .navbar-link
+{
+  color: #fff;
+}
+
+.navbar-default .navbar-link:hover
+{
+  color: #e62325;
+}
+
+.navbar-default .btn-link
+{
+  color: #fff;
+}
+
+.navbar-inverse .navbar-text
+{
+  color: #9d9d9d;
+}
+
+.pagination > li > a, .pagination > li > span
+{
+  color: #e62325;
+  background-color: #fff;
+  border: 1px solid #ddd;
+}
+
+.pagination > li > a:hover, .pagination > li > span:hover, .pagination > li > a:focus, .pagination > li > span:focus
+{
+  color: #aa231f;
+  background-color: #eee;
+  border-color: #ddd;
+}
+
+.pagination > .active > a, .pagination > .active > span, .pagination > .active > a:hover, .pagination > .active > span:hover, .pagination > .active > a:focus, .pagination > .active > span:focus
+{
+  color: #fff;
+  background-color: #e62325;
+  border-color: #e62325;
+}
+
+.label
+{
+  color: #000;
+}
+
+.label-primary
+{
+  background-color: #e62325;
+}
+
+.list-group-item.active > .badge, .nav-pills > .active > a > .badge
+{
+  color: #e62325;
+  background-color: #fff;
+}
+
+.thumbnail
+{
+  background-color: #fff;
+  border: 1px solid #ddd;
+}
+
+.thumbnail .caption
+{
+  color: #000;
+}
+
+a.thumbnail:hover, a.thumbnail:focus, a.thumbnail.active
+{
+  border-color: #e62325;
+}
+
+.progress-bar
+{
+  color: #fff;
+  background-color: #e62325;
+}
+
+.list-group-item.active, .list-group-item.active:hover, .list-group-item.active:focus
+{
+  color: #fff;
+  background-color: #e62325;
+  border-color: #e62325;
+}
+
+.list-group-item.active .list-group-item-text, .list-group-item.active:hover .list-group-item-text, .list-group-item.active:focus .list-group-item-text
+{
+  color: #fbdadb;
+}
+
+.panel-primary
+{
+  border-color: #e62325;
+}
+
+.panel-primary > .panel-heading
+{
+  color: #fff;
+  background-color: #e62325;
+  border-color: #e62325;
+}
+
+.panel-primary > .panel-heading + .panel-collapse > .panel-body
+{
+  border-top-color: #e62325;
+}
+
+.panel-primary > .panel-heading .badge
+{
+  color: #e62325;
+  background-color: #fff;
+}
+
+.panel-primary > .panel-footer + .panel-collapse > .panel-body
+{
+  border-bottom-color: #e62325;
+}
+
+.modal-content
+{
+  background-color: #fff;
+  border: 1px solid #e62325;
+}
+
+.modal-backdrop
+{
+  background-color: #fff;
+}
+
+.tooltip-inner
+{
+  color: #fff;
+  background-color: #464646;
+}
+
+.tooltip.top .tooltip-arrow
+{
+  border-top-color: #464646;
+}
+
+.tooltip.top-left .tooltip-arrow
+{
+  border-top-color: #464646;
+}
+
+.tooltip.top-right .tooltip-arrow
+{
+  border-top-color: #464646;
+}
+
+.tooltip.right .tooltip-arrow
+{
+  border-right-color: #464646;
+}
+
+.tooltip.left .tooltip-arrow
+{
+  border-left-color: #464646;
+}
+
+.tooltip.bottom .tooltip-arrow
+{
+  border-bottom-color: #464646;
+}
+
+.tooltip.bottom-left .tooltip-arrow
+{
+  border-bottom-color: #464646;
+}
+
+.tooltip.bottom-right .tooltip-arrow
+{
+  border-bottom-color: #464646;
+}
+
+html.js .form-item .input-group-addon .glyphicon.glyphicon-spin
+{
+  color: #e62325;
+}
+
+html.js .form-item .input-group-addon .input-group-addon
+{
+  background-color: #fff;
+}
+
+.bx--card
+{
+  background-color: #eaeaea;
+  border: 1px solid #949394;
+}
+
+.bx--card-footer
+{
+  background-color: #c0bfc0;
+}
+
+.apicAppStatus.suspended:before
+{
+  background-color: #464646;
+}
+
+.bx--about__icon, .bx--about__icon img
+{
+  background-color: #eaeaea;
+  border: 1px solid #949394;
+}
+
+.bx--app-actions__button:hover .bx--app-actions__button--icon, .bx--app-actions__button:focus .bx--app-actions__button--icon
+{
+  fill: #e62325;
+}
+
+.bx--card .apicApiCount
+{
+  border-top: 1px solid #949394;
+}
+
+.collapsible-toggle .btn
+{
+  background-color: #fff;
+}
+
+.collapsible-toggle .btn svg
+{
+  fill: #e62325;
+}
+
+.file > span
+{
+  background: #fff;
+  color: #e62325;
+  border-bottom: 1px solid #eaeaea;
+  border-top: 1px solid #eaeaea;
+}
+
+.file > span:first-child
+{
+  border-left: 1px solid #eaeaea;
+}
+
+.file > span:last-child
+{
+  border-right: 1px solid #eaeaea;
+}
+
+/**
+ * Filter styles.
+ */
+.filter-wrapper
+{
+  background-color: #fff;
+  border: 1px solid #ddd;
+}
+
+.select-wrapper:after
+{
+  color: #e62325;
+}
+
+.bx--global-light-ui .form-actions .button, .bx--global-light-ui .form-actions .btn
+{
+  background-color: #fff;
+  color: #e62325;
+  border: 2px solid #e62325;
+}
+
+.bx--global-light-ui .form-actions .button:hover, .bx--global-light-ui .form-actions .btn:hover
+{
+  background-color: #e62325;
+  color: #fff;
+  border: 2px solid #e62325;
+}
+
+.bx--global-light-ui .form-actions .button.button--primary, .bx--global-light-ui .form-actions .btn.button--primary, .bx--global-light-ui .form-actions .button.btn-primary, .bx--global-light-ui .form-actions .btn.btn-primary, .bx--global-light-ui .form-actions .button.btn-success, .bx--global-light-ui .form-actions .btn.btn-success
+{
+  background-color: #e62325;
+  color: #fff;
+  border: 2px solid transparent;
+}
+
+.bx--global-light-ui .form-actions .button.button--primary:hover, .bx--global-light-ui .form-actions .btn.button--primary:hover, .bx--global-light-ui .form-actions .button.btn-primary:hover, .bx--global-light-ui .form-actions .btn.btn-primary:hover, .bx--global-light-ui .form-actions .button.btn-success:hover, .bx--global-light-ui .form-actions .btn.btn-success:hover
+{
+  background-color: #aa231f;
+}
+
+.bx--global-light-ui .form-actions ul.dropdown-menu > li > a
+{
+  color: #000;
+}
+
+.bx--global-light-ui .form-actions ul.dropdown-menu > li > a:hover, .bx--global-light-ui .form-actions ul.dropdown-menu > li > a:focus
+{
+  background-color: #e62325;
+  color: #fff;
+}
+
+body.bx--global-light-ui
+{
+  color: #000;
+  background-color: #fff;
+}
+
+input::-webkit-input-placeholder
+{
+  color: #949394;
+}
+
+input::-moz-placeholder
+{
+  color: #949394;
+}
+
+input:-ms-input-placeholder
+{
+  color: #949394;
+}
+
+input::placeholder
+{
+  color: #949394;
+}
+
+textarea, .bx--global-light-ui .block-main-content .form-item textarea
+{
+  color: #000;
+  background-color: #eaeaea;
+}
+
+.bx--global-light-ui .form-item label, .bx--global-light-ui .form-item .label, .bx--global-light-ui .label, .bx--label
+{
+  color: #000;
+}
+
+.bx--global-light-ui .form-item input, .bx--global-light-ui .form-item input:hover, .bx--global-light-ui .form-item input:focus
+{
+  color: #000;
+  background-color: #eaeaea;
+}
+
+.bx--global-light-ui .views-exposed-form .btn.view-filter-button svg
+{
+  fill: #e62325;
+}
+
+select, .bx--form-item select, .apiconnect-explorer .bx--select__input, select:hover
+{
+  color: #000;
+  background-color: #eaeaea;
+}
+
+.bx--select-optgroup, .bx--select-option
+{
+  color: #000;
+}
+
+.bx--global-light-ui .bx--radio-button__appearance
+{
+  background-color: #fff;
+  border: 2px solid #464646;
+}
+
+.bx--global-light-ui .bx--radio-button:checked + .bx--radio-button__appearance:before
+{
+  background-color: #e62325;
+}
+
+.bx--global-light-ui .bx--radio-button:checked + .bx--radio-button__appearance
+{
+  border-color: #e62325;
+}
+
+.bx--global-light-ui .bx--checkbox-appearance
+{
+  background-color: #fff;
+  border: 2px solid #464646;
+}
+
+.bx--global-light-ui .bx--checkbox:checked + .bx--checkbox-appearance, .bx--global-light-ui .bx--checkbox:checked + .bx--checkbox-label .bx--checkbox-appearance
+{
+  background-color: #e62325;
+  border-color: #e62325;
+}
+
+.bx--global-light-ui .bx--checkbox-checkmark
+{
+  fill: #fff;
+}
+
+.bx--global-light-ui .block-main-content .form-item input, .bx--global-light-ui .block-main-content .form-item input:hover, .bx--global-light-ui .block-main-content .form-item input:focus
+{
+  color: #000;
+  background-color: #eaeaea;
+}
+
+.bx--global-light-ui .button, .bx--global-light-ui button, .bx--global-light-ui .btn
+{
+  background-color: #e62325;
+  color: #fff;
+}
+
+.bx--global-light-ui .button:hover, .bx--global-light-ui button:hover, .bx--global-light-ui .button:focus, .bx--global-light-ui button:focus, .bx--global-light-ui .button:active, .bx--global-light-ui button:active, .bx--global-light-ui .btn-default:active:hover
+{
+  background-color: #aa231f;
+  border-color: #aa231f;
+  color: #fff;
+}
+
+.bx--global-light-ui .button.apicSecondary, .bx--global-light-ui button.apicSecondary, .bx--global-light-ui button.link-edit-summary
+{
+  border: 2px solid #e62325;
+  color: #e62325;
+  background-color: #fff;
+}
+
+
+.bx--global-light-ui .button.apicSecondary:focus, .bx--global-light-ui button.apicSecondary:focus, .bx--global-light-ui button.link-edit-summary:focus, .bx--global-light-ui .button.apicSecondary:hover, .bx--global-light-ui button.apicSecondary:hover, .bx--global-light-ui button.link-edit-summary:hover
+{
+  color: #fff;
+  background-color: #e62325;
+}
+
+.bx--global-light-ui .view-filters.form-group .form-actions button
+{
+  color: #fff;
+  background-color: #e62325;
+}
+
+.bx--global-light-ui .view-filters.form-group .form-actions button:hover
+{
+  background-color: #aa231f;
+}
+
+/**
+ * Colors for the various user forms
+ **/
+.route-apic-appcreate .main-container .row, .route-apic-appcreate-step-two .main-container .row, .route-applicationcreate .main-container .row, .route-applicationcreate-step-two .main-container .row, .route-apic-appverify-clientsecret .main-container .row, .route-apic-appcredentials-create .main-container .row, .route-apic-appreset-clientid .main-container .row, .route-apic-appreset-clientsecret .main-container .row, .route-apic-appcredentials-update .main-container .row, .route-apic-appcredentials-delete .main-container .row, .route-apic-appupdate .main-container .row, .route-apic-appdelete .main-container .row, .route-apic-apppromote .main-container .row, .route-apic-appimage-upload .main-container .row, .route-apic-appimage-delete .main-container .row, .route-consumerorgcreate .main-container .row, .route-consumerorgupdate .main-container .row, .route-consumerorgdelete .main-container .row, .route-consumerorgchangeowner .main-container .row, .route-consumerorginvite .main-container .row, .route-consumerorgremove-user .main-container .row, .route-consumerorgresend-invite .main-container .row, form.user-pass-reset, .apicForm, .apic-user-form
+{
+  background-color: #fbf8f8;
+  border: 1px solid #c0bfc0;
+}
+
+.route-apic-appcreate .main-container .row, .route-apic-appcreate-step-two .main-container .row, .route-applicationcreate .main-container .row, .route-applicationcreate-step-two .main-container .row, .route-apic-appverify-clientsecret .main-container .row, .route-apic-appcredentials-create .main-container .row, .route-apic-appreset-clientid .main-container .row, .route-apic-appreset-clientsecret .main-container .row, .route-apic-appcredentials-update .main-container .row, .route-apic-appcredentials-delete .main-container .row, .route-apic-appupdate .main-container .row, .route-apic-appdelete .main-container .row, .route-apic-apppromote .main-container .row, .route-apic-appimage-upload .main-container .row, .route-apic-appimage-delete .main-container .row, .route-consumerorgcreate .main-container .row, .route-consumerorgupdate .main-container .row, .route-consumerorgdelete .main-container .row, .route-consumerorgchangeowner .main-container .row, .route-consumerorginvite .main-container .row, .route-consumerorgremove-user .main-container .row, .route-consumerorgresend-invite .main-container .row, .apicForm
+{
+  background-color: #fbf8f8;
+  border: 1px solid #c0bfc0;
+}
+
+.apicFormHeader, .apic-user-form-header
+{
+  color: #464646;
+}
+
+.apicFormLine, .apic-user-form-line
+{
+  background-color: #464646;
+}
+
+.apicFormOr, .apic-user-form-or
+{
+  color: #464646;
+}
+
+
+.route-forumindex table thead, .route-forumpage table thead, .route-forumindex .table thead th, .route-forumpage .table thead th
+{
+  border-bottom: 2px solid #e62325;
+}
+
+.route-forumindex tbody tr, .route-forumpage tbody tr
+{
+  border-bottom: 1px solid #949394;
+}
+
+.route-forumindex tbody tr:hover, .route-forumpage tbody tr:hover
+{
+  background-color: rgba(192, 191, 192, 0.1);
+}
+
+.page-node-type-forum article.js-comment
+{
+  border-top: 1px solid #949394;
+}
+
+footer.footer
+{
+  color: #464646;
+  background-color: #fff;
+  border-top: 2px solid #e62325;
+}
+
+footer.footer ul.nav > li > a, footer.footer ul.nav > li > a:visited
+{
+  color: #e62325;
+}
+
+footer.footer ul.nav > li > a:hover
+{
+  color: #e62325;
+}
+
+footer.footer ul.nav li + li:before
+{
+  color: #949394;
+}
+
+.navbar-default .navbar-toggle
+{
+  background-color: #e62325;
+}
+
+.navbar .ibmapimNotificationBlock
+{
+  border-left: 1px solid #fff;
+}
+
+.navbar .dropitmenu .dropit-icon
+{
+  color: #ff5c49;
+}
+
+.navbar .dropitmenu ul.dropit-submenu
+{
+  background-color: #e62325;
+  border-color: #fff;
+}
+
+.navbar .dropitmenu ul.dropit-submenu .selectorg
+{
+  color: #fff;
+  border-top: 1px solid #fff;
+}
+
+.navbar .dropitmenu ul.dropit-submenu a
+{
+  color: #fff;
+}
+
+.navbar .dropitmenu ul.dropit-submenu a:hover
+{
+  background-color: #ff5c49;
+}
+
+.consumerorgSelectBlock .orgHeading
+{
+  color: #fff;
+}
+
+.consumerorgSelectBlock .orgHeading .subTitle
+{
+  color: #fff;
+}
+
+nav.block-menu ul.nav > li > a:focus, nav.block-menu ul.nav > li > a:hover, nav.block-menu ul.nav > li.active > a
+{
+  border-bottom: 4px solid #ff5c49;
+}
+
+nav.block-login ul.nav > li > a, nav.block-login ul.nav > li > a:visited
+{
+  color: #fff;
+}
+
+nav.block-login ul.nav > li > a:focus, nav.block-login ul.nav > li > a:hover
+{
+  color: #e62325;
+}
+
+
+.overflow-menu .dropit-icon svg:hover
+{
+  fill: #e62325;
+}
+
+.overflow-menu ul.dropit-submenu:before
+{
+  background-color: #fbf8f8;
+  border-top: 1px solid #c0bfc0;
+  border-left: 1px solid #c0bfc0;
+}
+
+
+.overflow-menu ul.dropit-submenu a, .overflow-menu ul.dropit-submenu a:visited
+{
+  background-color: #fbf8f8;
+  color: #000;
+}
+
+.overflow-menu ul.dropit-submenu a:hover, .overflow-menu ul.dropit-submenu a:visited:hover
+{
+  background-color: #e62325;
+  color: #fff;
+}
+
+
+.tabledrag-handle:hover, .tabledrag-handle:focus
+{
+  color: #e62325;
+}
+
+
+
+
+
+.tabs ul.tabs--primary li
+{
+  border: 1px solid #e62325;
+  color: #e62325;
+}
+
+.tabs ul.tabs--primary li.active
+{
+  background-color: #e62325;
+  color: #fff;
+}
+
+/**
+ * Toolbar module styling.
+ */
+
+.route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail, .route-ibm-apimsubscription-wizardstep .apicMainContent .wizard-trail, .route-ibm-apimsubscription-wizardnoplan .apicMainContent .wizard-trail, .route-ibm-apimsubscription-wizardnoplanstep .apicMainContent .wizard-trail, .route-mail-subscribersproduct-wizard .apicMainContent .wizard-trail, .route-mail-subscribersproduct-wizardstep .apicMainContent .wizard-trail, .route-mail-subscribersplan-wizard .apicMainContent .wizard-trail, .route-mail-subscribersplan-wizardstep .apicMainContent .wizard-trail, .route-mail-subscribersapi-wizard .apicMainContent .wizard-trail, .route-mail-subscribersapi-wizardstep .apicMainContent .wizard-trail, .route-mail-subscribersall-wizard .apicMainContent .wizard-trail, .route-mail-subscribersall-wizardstep .apicMainContent .wizard-trail
+{
+  background-color: #fbf8f8;
+  border-bottom: 1px solid #c0bfc0;
+}
+
+.route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail .bx--progress-step--current circle:first-child, .route-ibm-apimsubscription-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current circle:first-child, .route-ibm-apimsubscription-wizardnoplan .apicMainContent .wizard-trail .bx--progress-step--current circle:first-child, .route-ibm-apimsubscription-wizardnoplanstep .apicMainContent .wizard-trail .bx--progress-step--current circle:first-child, .route-mail-subscribersproduct-wizard .apicMainContent .wizard-trail .bx--progress-step--current circle:first-child, .route-mail-subscribersproduct-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current circle:first-child, .route-mail-subscribersplan-wizard .apicMainContent .wizard-trail .bx--progress-step--current circle:first-child, .route-mail-subscribersplan-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current circle:first-child, .route-mail-subscribersapi-wizard .apicMainContent .wizard-trail .bx--progress-step--current circle:first-child, .route-mail-subscribersapi-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current circle:first-child, .route-mail-subscribersall-wizard .apicMainContent .wizard-trail .bx--progress-step--current circle:first-child, .route-mail-subscribersall-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current circle:first-child
+{
+  stroke: #e62325;
+}
+
+.route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail .bx--progress-step--current circle:last-child, .route-ibm-apimsubscription-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current circle:last-child, .route-ibm-apimsubscription-wizardnoplan .apicMainContent .wizard-trail .bx--progress-step--current circle:last-child, .route-ibm-apimsubscription-wizardnoplanstep .apicMainContent .wizard-trail .bx--progress-step--current circle:last-child, .route-mail-subscribersproduct-wizard .apicMainContent .wizard-trail .bx--progress-step--current circle:last-child, .route-mail-subscribersproduct-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current circle:last-child, .route-mail-subscribersplan-wizard .apicMainContent .wizard-trail .bx--progress-step--current circle:last-child, .route-mail-subscribersplan-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current circle:last-child, .route-mail-subscribersapi-wizard .apicMainContent .wizard-trail .bx--progress-step--current circle:last-child, .route-mail-subscribersapi-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current circle:last-child, .route-mail-subscribersall-wizard .apicMainContent .wizard-trail .bx--progress-step--current circle:last-child, .route-mail-subscribersall-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current circle:last-child
+{
+  fill: #e62325;
+}
+
+.route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-label, .route-ibm-apimsubscription-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-label, .route-ibm-apimsubscription-wizardnoplan .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-label, .route-ibm-apimsubscription-wizardnoplanstep .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-label, .route-mail-subscribersproduct-wizard .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-label, .route-mail-subscribersproduct-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-label, .route-mail-subscribersplan-wizard .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-label, .route-mail-subscribersplan-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-label, .route-mail-subscribersapi-wizard .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-label, .route-mail-subscribersapi-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-label, .route-mail-subscribersall-wizard .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-label, .route-mail-subscribersall-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-label
+{
+  color: #e62325;
+}
+
+.route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-line, .route-ibm-apimsubscription-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-line, .route-ibm-apimsubscription-wizardnoplan .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-line, .route-ibm-apimsubscription-wizardnoplanstep .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-line, .route-mail-subscribersproduct-wizard .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-line, .route-mail-subscribersproduct-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-line, .route-mail-subscribersplan-wizard .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-line, .route-mail-subscribersplan-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-line, .route-mail-subscribersapi-wizard .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-line, .route-mail-subscribersapi-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-line, .route-mail-subscribersall-wizard .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-line, .route-mail-subscribersall-wizardstep .apicMainContent .wizard-trail .bx--progress-step--current .bx--progress-line
+{
+  background-color: #e62325;
+}
+
+.route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete circle, .route-ibm-apimsubscription-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete circle, .route-ibm-apimsubscription-wizardnoplan .apicMainContent .wizard-trail .bx--progress-step--incomplete circle, .route-ibm-apimsubscription-wizardnoplanstep .apicMainContent .wizard-trail .bx--progress-step--incomplete circle, .route-mail-subscribersproduct-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete circle, .route-mail-subscribersproduct-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete circle, .route-mail-subscribersplan-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete circle, .route-mail-subscribersplan-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete circle, .route-mail-subscribersapi-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete circle, .route-mail-subscribersapi-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete circle, .route-mail-subscribersall-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete circle, .route-mail-subscribersall-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete circle
+{
+  stroke: #464646;
+}
+
+.route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-label, .route-ibm-apimsubscription-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-label, .route-ibm-apimsubscription-wizardnoplan .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-label, .route-ibm-apimsubscription-wizardnoplanstep .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-label, .route-mail-subscribersproduct-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-label, .route-mail-subscribersproduct-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-label, .route-mail-subscribersplan-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-label, .route-mail-subscribersplan-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-label, .route-mail-subscribersapi-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-label, .route-mail-subscribersapi-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-label, .route-mail-subscribersall-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-label, .route-mail-subscribersall-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-label
+{
+  color: #464646;
+}
+
+.route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-line, .route-ibm-apimsubscription-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-line, .route-ibm-apimsubscription-wizardnoplan .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-line, .route-ibm-apimsubscription-wizardnoplanstep .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-line, .route-mail-subscribersproduct-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-line, .route-mail-subscribersproduct-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-line, .route-mail-subscribersplan-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-line, .route-mail-subscribersplan-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-line, .route-mail-subscribersapi-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-line, .route-mail-subscribersapi-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-line, .route-mail-subscribersall-wizard .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-line, .route-mail-subscribersall-wizardstep .apicMainContent .wizard-trail .bx--progress-step--incomplete .bx--progress-line
+{
+  background-color: #464646;
+}
+
+.route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail .bx--progress-step--complete circle, .route-ibm-apimsubscription-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete circle, .route-ibm-apimsubscription-wizardnoplan .apicMainContent .wizard-trail .bx--progress-step--complete circle, .route-ibm-apimsubscription-wizardnoplanstep .apicMainContent .wizard-trail .bx--progress-step--complete circle, .route-mail-subscribersproduct-wizard .apicMainContent .wizard-trail .bx--progress-step--complete circle, .route-mail-subscribersproduct-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete circle, .route-mail-subscribersplan-wizard .apicMainContent .wizard-trail .bx--progress-step--complete circle, .route-mail-subscribersplan-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete circle, .route-mail-subscribersapi-wizard .apicMainContent .wizard-trail .bx--progress-step--complete circle, .route-mail-subscribersapi-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete circle, .route-mail-subscribersall-wizard .apicMainContent .wizard-trail .bx--progress-step--complete circle, .route-mail-subscribersall-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete circle
+{
+  stroke: #e62325;
+}
+
+.route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail .bx--progress-step--complete polygon, .route-ibm-apimsubscription-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete polygon, .route-ibm-apimsubscription-wizardnoplan .apicMainContent .wizard-trail .bx--progress-step--complete polygon, .route-ibm-apimsubscription-wizardnoplanstep .apicMainContent .wizard-trail .bx--progress-step--complete polygon, .route-mail-subscribersproduct-wizard .apicMainContent .wizard-trail .bx--progress-step--complete polygon, .route-mail-subscribersproduct-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete polygon, .route-mail-subscribersplan-wizard .apicMainContent .wizard-trail .bx--progress-step--complete polygon, .route-mail-subscribersplan-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete polygon, .route-mail-subscribersapi-wizard .apicMainContent .wizard-trail .bx--progress-step--complete polygon, .route-mail-subscribersapi-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete polygon, .route-mail-subscribersall-wizard .apicMainContent .wizard-trail .bx--progress-step--complete polygon, .route-mail-subscribersall-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete polygon
+{
+  fill: #e62325;
+}
+
+.route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-label, .route-ibm-apimsubscription-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-label, .route-ibm-apimsubscription-wizardnoplan .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-label, .route-ibm-apimsubscription-wizardnoplanstep .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-label, .route-mail-subscribersproduct-wizard .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-label, .route-mail-subscribersproduct-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-label, .route-mail-subscribersplan-wizard .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-label, .route-mail-subscribersplan-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-label, .route-mail-subscribersapi-wizard .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-label, .route-mail-subscribersapi-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-label, .route-mail-subscribersall-wizard .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-label, .route-mail-subscribersall-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-label
+{
+  color: #e62325;
+}
+
+.route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-line, .route-ibm-apimsubscription-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-line, .route-ibm-apimsubscription-wizardnoplan .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-line, .route-ibm-apimsubscription-wizardnoplanstep .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-line, .route-mail-subscribersproduct-wizard .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-line, .route-mail-subscribersproduct-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-line, .route-mail-subscribersplan-wizard .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-line, .route-mail-subscribersplan-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-line, .route-mail-subscribersapi-wizard .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-line, .route-mail-subscribersapi-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-line, .route-mail-subscribersall-wizard .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-line, .route-mail-subscribersall-wizardstep .apicMainContent .wizard-trail .bx--progress-step--complete .bx--progress-line
+{
+  background-color: #e62325;
+}
+
+.route-ibm-apimsubscription-wizard .apicMainContent .apicWizardHeader, .route-ibm-apimsubscription-wizardstep .apicMainContent .apicWizardHeader, .route-ibm-apimsubscription-wizardnoplan .apicMainContent .apicWizardHeader, .route-ibm-apimsubscription-wizardnoplanstep .apicMainContent .apicWizardHeader, .route-mail-subscribersproduct-wizard .apicMainContent .apicWizardHeader, .route-mail-subscribersproduct-wizardstep .apicMainContent .apicWizardHeader, .route-mail-subscribersplan-wizard .apicMainContent .apicWizardHeader, .route-mail-subscribersplan-wizardstep .apicMainContent .apicWizardHeader, .route-mail-subscribersapi-wizard .apicMainContent .apicWizardHeader, .route-mail-subscribersapi-wizardstep .apicMainContent .apicWizardHeader, .route-mail-subscribersall-wizard .apicMainContent .apicWizardHeader, .route-mail-subscribersall-wizardstep .apicMainContent .apicWizardHeader
+{
+  color: #5a6872;
+  border-bottom: 2px solid #e62325;
+}
+
+
+.ui-autocomplete .ui-menu-item.ui-state-active, .ui-autocomplete .ui-menu-item.ui-state-focus
+{
+  background: #e62325;
+  color: #fff;
+}
+
+.page-header, .node__title
+{
+  color: #464646;
+}
+
+a
+{
+  color: #e62325;
+}
+
+.page-header
+{
+  border-bottom: 2px solid #e62325;
+}
+
+.bx--global-light-ui .modal-header .close, .bx--global-light-ui .bx--modal-header .bx--modal-close
+{
+  background-color: #fff;
+  color: #464646;
+}
+
+.modal-content
+{
+  border-top: 5px solid #e62325;
+}
+
+.modal-footer
+{
+  background-color: #949394;
+}
+
+.featuredcontent h3, .featuredcontent a, .goahead h3
+{
+  color: #e62325;
+}
+/* rhs menu icons */
+.imageContainer svg
+{
+  fill: #fff;
+  background: transparent;
+}
+
+.imageContainer:hover svg
+{
+  fill: #e62325;
+}
+
+.node__submitted, .comment__submitted
+{
+  color: #949394;
+}
+
+.applicationWrapper header.titleSection .breadcrumb a, .apiWrapper header.titleSection .breadcrumb a, .ibmapimGetStarted header .homepageLink.breadcrumb a, .apicProduct .breadcrumb a, .productApiWrapper .breadcrumb a, .breadcrumb a
+{
+  color: #e62325;
+}
+
+.applicationWrapper header.titleSection .breadcrumb a svg, .apiWrapper header.titleSection .breadcrumb a svg, .ibmapimGetStarted header .homepageLink.breadcrumb a svg, .apicProduct .breadcrumb a svg, .productApiWrapper .breadcrumb a svg, .breadcrumb a svg
+{
+  fill: #e62325;
+}
+
+.applicationWrapper a.addCredential svg
+{
+  fill: #464646;
+}
+
+.applicationWrapper a.addCredential svg:hover
+{
+  fill: #e62325;
+}
+
+.apicMyOrg .memberIcon svg, .plans svg.key
+{
+  fill: #e62325;
+}
+
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent table tbody tr:nth-child(even)
+{
+  background-color: #d8d8d8;
+}
+
+.applicationCredentials .credentialsTable, .applicationSubscriptions .subscriptionsTable
+{
+  background-color: #eaeaea;
+  border: 1px solid #949394;
+}
+
+.applicationCredentials .credentialsTable .credentialsHeader, .applicationSubscriptions .subscriptionsTable .subscriptionsHeader
+{
+  border-bottom: 1px solid #e62325;
+}
+
+.applicationWrapper .titleSection .applicationTabs li.selected a, .applicationWrapper .titleSection .applicationTabs li:hover a, .applicationWrapper .titleSection .applicationTabs li:focus a, .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li.selected a, .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:hover a, .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:focus a, .apicMyOrg .titleSection .organizationTabs li.selected a, .apicMyOrg .titleSection .organizationTabs li:hover a, .apicMyOrg .titleSection .organizationTabs li:focus a
+{
+  color: #e62325;
+  border-bottom: 2px solid #e62325;
+}
+
+.applicationWrapper .titleSection .applicationTabs li.selected, .applicationWrapper .titleSection .applicationTabs li:hover, .applicationWrapper .titleSection .applicationTabs li:focus, .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li.selected, .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:hover, .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:focus, .apicMyOrg .titleSection .organizationTabs li.selected, .apicMyOrg .titleSection .organizationTabs li:hover, .apicMyOrg .titleSection .organizationTabs li:focus
+{
+  color: #e62325;
+}
+
+.applicationWrapper .titleSection .applicationTabs li a, .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li a, .applicationWrapper .titleSection .applicationTabs li, .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li .apicMyOrg .titleSection .organizationTabs li a, .apicMyOrg .titleSection .organizationTabs li
+{
+  color: #000;
+}
+
+.apicMyOrg .apicMyOrgMembers polygon
+{
+  fill: #e62325;
+}
+
+.apicMyOrg .apicMyOrgMembers .apicMyOrgNoMembers
+{
+  background: #eaeaea;
+}
+
+.apiWrapper header.titleSection
+{
+  border-bottom: 2px solid #e62325;
+}
+
+header h1, .ibmapimGetStarted header h1
+{
+  color: #000;
+}
+
+.ibmapimGetStarted header .homepageLink svg
+{
+  fill: #3d70b2;
+}
+
+.ibmapimGetStarted .getStartedContentWrapper .exploreDiv, .ibmapimGetStarted .getStartedContentWrapper .createAppDiv
+{
+  background-color: #fbf8f8;
+  border: 1px solid #c0bfc0;
+}
+
+.apicMainContent .supportContentWrapper .views-element-container .view
+{
+  background: #fbf8f8;
+  border: 1px solid #c0bfc0;
+}
+
+.views-element-container .view.view-faqs .ui-state-default, .views-element-container .view.view-faqs .ui-widget-content .ui-state-default, .views-element-container .view.view-faqs .ui-widget-header .ui-state-default
+{
+  color: #e62325;
+}
+
+.views-element-container .view.view-faqs .ui-state-active, .views-element-container .view.view-faqs .ui-widget-content .ui-state-active, .views-element-container .view.view-faqs .ui-widget-header .ui-state-active
+{
+  color: #e62325;
+}
+/* socialblock */
+.socialblock.card
+{
+  border: 1px solid #5aaafa;
+  border-left: 6px solid #5aaafa;
+  background-color: #fbf8f8;
+  color: #e62325;
+}
+
+.socialblock.card:hover
+{
+  box-shadow: 0 6px 5px 0 rgba(0, 0, 0, 0.3);
+}
+
+.socialblock .title
+{
+  color: #fff;
+  background-color: #e62325;
+  border: 1.25rem solid #e62325;
+}
+
+.socialblock .title:hover
+{
+  background-color: #e62325;
+  border-color: #e62325;
+}
+
+.socialblock .op
+{
+  color: #5a6872;
+}
+
+.socialblock .timestamp
+{
+  color: #5a6872;
+}
+
+.socialblock .profile_name.name
+{
+  color: #e62325;
+}
+
+.socialblock .twitter_handle
+{
+  color: #5a6872;
+}
+
+.socialblock .tweet_timestamp
+{
+  color: #5a6872;
+}
+
+.socialblock .hashtag
+{
+  color: #e62325;
+}
+/* EU Cookie banner styling */
+.bx--global-light-ui .eu-cookie-compliance-banner
+{
+  background-color: #969cec;
+}
+
+/* Explorer styling overrides */
+.apiconnect-explorer-menu .explorer-toc a
+{
+  color: #000;
+}
+
+.bx--global-light-ui .apiconnect-explorer .explorer-toc a.selected
+{
+  color: #e62325;
+}
+
+section.block-getting-started, section.block-socialblock, section.block-go-ahead
+{
+  background: #fbf8f8;
+}
+
+.gsstep h3, .gsstep a
+{
+  color: #e62325;
+}
+
+.block-get-help
+{
+  color: #fff;
+  background-color: #e62325;
+}
+
+.get_help h4, .get_help a, .get_help a:hover
+{
+  color: #ff5c49;
+  fill: #ff5c49;
+}
+
+.ibmapimGetStarted header h1
+{
+  color: #464646;
+}
+
+.ibmapimGetStarted .getStartedContentWrapper .exploreDiv, .ibmapimGetStarted .getStartedContentWrapper .createAppDiv
+{
+  background-color: #fbf8f8;
+  border: 1px solid #c0bfc0;
+}
+
+.gsstep h3, .gsstep a, .ibmapimNoPermissions .mainContent, .ibmapimNoPermissions .contactLink a
+{
+  color: #e62325;
+}
+
+.ibmapimNoPermissions .iconDiv svg
+{
+  fill: #464646;
+}
+
+.welcomebanner
+{
+  background-image: none;
+  background-color: #95c4f3;
+}
+
+.get_help h4, .get_help a, .get_help a:hover
+{
+  color: #fff;
+  fill: #fff;
+}

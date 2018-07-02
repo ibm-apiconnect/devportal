@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.product_license_name
+    - node.type.product
+id: node.product.product_license_name
+field_name: product_license_name
+entity_type: node
+bundle: product
+label: 'License Name'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

@@ -1,0 +1,6 @@
+themegenerator.theme_generate:
+  title: 'Generate sub-theme'
+  description: 'Create a new APIC sub-theme.'
+  route_name: themegenerator.theme_generate
+  parent: system.themes_page
+  weight: 0

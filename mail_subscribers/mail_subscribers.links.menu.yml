@@ -1,0 +1,13 @@
+mail_subscribers.settings:
+  title: 'Email subscriber settings'
+  route_name: mail_subscribers.settings
+  parent: user.admin_index
+  description: 'Configuration for the subscriber email wizards.'
+  weight: -11
+
+mail_subscribers.startWizard:
+  title: 'Email subscribers'
+  description: 'Email subscribers of a product, plan or API.'
+  route_name: mail_subscribers.startWizard
+  parent: entity.user.collection
+  weight: 20

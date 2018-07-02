@@ -1,0 +1,31 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.login
+  module:
+    - system
+    - user
+  theme:
+    - connect_theme
+id: login
+theme: connect_theme
+region: navigation_right
+weight: 3
+provider: null
+plugin: 'system_menu_block:login'
+settings:
+  id: 'system_menu_block:login'
+  label: 'Log in'
+  provider: system
+  label_display: '0'
+  level: 1
+  depth: 0
+visibility:
+  user_role:
+    id: user_role
+    roles:
+      anonymous: anonymous
+    negate: false
+    context_mapping:
+      user: '@user.current_user_context:current_user'

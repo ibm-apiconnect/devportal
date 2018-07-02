@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.apic_hostname
+    - node.type.api
+id: node.api.apic_hostname
+field_name: apic_hostname
+entity_type: node
+bundle: api
+label: 'APIC Hostname'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

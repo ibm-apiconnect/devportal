@@ -1,0 +1,69 @@
+{#
+/**
+ * @file
+ * Default teaser theme implementation for applications.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+'node',
+'node--id-' ~ node.id,
+('node--type-' ~ node.bundle)|clean_class,
+apic_state ? ('application-state-' ~ apic_state)|clean_class,
+view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
+'bx--card'
+] -%}
+{{ attach_library('ibm_apim/core') }}
+{{ attach_library('apic_app/basic') }}
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  <div class="apicAppCard">
+    {% if content.application_image is defined and content.application_image|render|trim is not empty %}
+      <div class="apicCardIcon bx--about__icon">
+        {{ content.application_image }}
+      </div>
+    {% elseif showPlaceholders %}
+      <div class="apicCardIcon">
+        <img class="bx--about__icon" src="{{- placeholderUrl -}}" alt=""/>
+      </div>
+    {% endif %}
+    <div class="apicAppCardMain">
+      <div class="bx--about__title--name">
+        <a href="{{- path('entity.node.canonical', {'node': node.id}) -}}" rel="bookmark">
+          <span class="apicAppName apicTruncate" title="{{- label -}}">{{- label -}}</span>
+        </a>
+      </div>
+      {% if applifecycleEnabled %}
+        <div
+          class="applicationType {{ content.application_lifecycle_state['#items'][0].value|clean_class }}">{% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %} {{ 'Development'|t }} {% else %} {{ 'Production'|t }} {% endif %}</div>
+      {% endif %}
+      <div class="apicAppDesc apicFade"
+           title="{{- content.apic_summary['#items'][0].value -}}">{{ content.apic_summary }}</div>
+      {% if custom_fields is defined and custom_fields is not empty %}
+        <div class="customFields">
+          {% for custom_field in custom_fields %}
+            <div class="{{ custom_field|clean_class }}">
+              {{ content[custom_field] }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="bx--card-footer apicAppFooter">
+    <div class="bx--card-footer__app-status">
+      {% set my_attribute = create_attribute() %}
+      {%
+        set status_classes = [
+        'apicAppStatus',
+        apic_state|clean_class
+        ]
+      %}
+      <div {{ my_attribute.addClass(status_classes) }}>
+        <div class="apicStatusText">{% if apic_state|lower|clean_class == 'enabled' %}
+            {{ 'Active'|t }} {% else %} {{ 'Suspended'|t }} {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</article>

@@ -1,0 +1,6 @@
+services:
+  auth_apic.usermanager:
+    class: Drupal\auth_apic\Service\Mocks\MockUserManager
+    arguments: ['@externalauth.externalauth', '@externalauth.authmap', '@tempstore.private', '@ibm_apim.mgmtserver', '@state']
+    tags:
+      - { name: auth_apic }

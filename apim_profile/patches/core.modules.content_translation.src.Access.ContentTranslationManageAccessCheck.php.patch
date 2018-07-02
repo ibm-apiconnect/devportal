@@ -1,0 +1,12 @@
+--- core/modules/content_translation/src/Access/ContentTranslationManageAccessCheck.php	2018-02-28 11:35:51.000000000 +0000
++++ core/modules/content_translation/src/Access/ContentTranslationManageAccessCheck.php	2018-02-28 11:36:29.000000000 +0000
+@@ -82,7 +82,8 @@
+         // access already grants them an equal or greater access level.
+         $templates = ['update' => 'edit-form', 'delete' => 'delete-form'];
+         if ($entity->access($operation) && $entity_type->hasLinkTemplate($templates[$operation])) {
+-          return AccessResult::forbidden()->cachePerPermissions();
++// comment out as this blocks admin from editing translations
++//          return AccessResult::forbidden()->cachePerPermissions();
+         }
+       }
+ 

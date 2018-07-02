@@ -1,0 +1,22 @@
+--- core/modules/book/book.module	2018-04-27 11:37:55.000000000 +0100
++++ core/modules/book/book.module	2018-04-27 11:47:02.000000000 +0100
+@@ -137,11 +137,14 @@
+ function book_form_node_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+   $node = $form_state->getFormObject()->getEntity();
+   $account = \Drupal::currentUser();
+-  $access = $account->hasPermission('administer book outlines');
+-  if (!$access) {
+-    if ($account->hasPermission('add content to books') && ((!empty($node->book['bid']) && !$node->isNew()) || book_type_is_allowed($node->getType()))) {
+-      // Already in the book hierarchy, or this node type is allowed.
+-      $access = TRUE;
++  $access = FALSE;
++  if (book_type_is_allowed($node->getType())) {
++    $access = $account->hasPermission('administer book outlines');
++    if (!$access) {
++      if ($account->hasPermission('add content to books') && ((!empty($node->book['bid']) && !$node->isNew()) || book_type_is_allowed($node->getType()))) {
++        // Already in the book hierarchy, or this node type is allowed.
++        $access = TRUE;
++      }
+     }
+   }
+ 

@@ -1,0 +1,55 @@
+consumerorg.create:
+  path: '/myorg/create'
+  defaults:
+    _form: '\Drupal\consumerorg\Form\OrgCreateForm'
+    _title: 'Create new consumer organization'
+  requirements:
+    _consumerorg_create_org_access_check: 'TRUE'
+
+consumerorg.update:
+  path: '/myorg/edit'
+  defaults:
+    _form: '\Drupal\consumerorg\Form\OrgEditForm'
+    _title: 'Update the consumer organization name'
+  requirements:
+    _consumerorg_rename_org_access_check: 'TRUE'
+
+consumerorg.delete:
+  path: '/myorg/delete'
+  defaults:
+    _form: '\Drupal\consumerorg\Form\OrgDeleteForm'
+    _title: 'Delete the consumer organization'
+  requirements:
+    _consumerorg_delete_org_access_check: 'TRUE'
+
+consumerorg.changeowner:
+  path: '/myorg/owner'
+  defaults:
+    _form: '\Drupal\consumerorg\Form\ChangeOrgOwnerForm'
+    _title: 'Update the consumer organization owner'
+  requirements:
+    _consumerorg_change_org_owner_access_check: 'TRUE'
+
+consumerorg.invite:
+  path: '/myorg/invite'
+  defaults:
+    _form: '\Drupal\consumerorg\Form\InviteUserForm'
+    _title: 'Invite a user to join your consumer organization'
+  requirements:
+    _consumerorg_edit_org_access_check: 'TRUE'
+
+consumerorg.remove_user:
+  path: '/myorg/remove/{memberId}'
+  defaults:
+    _form: '\Drupal\consumerorg\Form\RemoveUserForm'
+    _title: 'Remove a user from your consumer organization'
+  requirements:
+    _consumerorg_edit_org_access_check: 'TRUE'
+
+consumerorg.resend_invite:
+  path: '/myorg/resend/{inviteId}'
+  defaults:
+    _form: '\Drupal\consumerorg\Form\ResendInviteForm'
+    _title: 'Resend an invitation to a user in your consumer organization'
+  requirements:
+    _consumerorg_edit_org_access_check: 'TRUE'

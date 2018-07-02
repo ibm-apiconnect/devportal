@@ -1,0 +1,25 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.codesnippet
+  enforced:
+    module:
+      - ibm_apim
+  module:
+    - options
+    - user
+id: user.user.codesnippet
+field_name: codesnippet
+entity_type: user
+bundle: user
+label: 'Code Snippet Language'
+description: 'If you have a preferred programming language then you can set it here and it will be used as the default language for all API code snippets.'
+required: false
+translatable: false
+default_value:
+  -
+    value: curl
+default_value_callback: ''
+settings: {  }
+field_type: list_string

@@ -1,0 +1,147 @@
+{#
+/**
+ * @file
+ * Full view for appplications
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+'node',
+'node--id-' ~ node.id,
+('node--type-' ~ node.bundle)|clean_class,
+apic_state ? ('application-state-' ~ apic_state)|clean_class,
+view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
+] -%}
+{{ attach_library('ibm_apim/core') }}
+{{ attach_library('apic_app/basic') }}
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  <div class="applicationWrapper">
+    <header class="titleSection">
+      <div class="titleInnerWrapper">
+        <div class="leftTitle">
+          <div class="breadcrumb">
+            <a href="{{- path('view.applications.page_1') }}">
+              {{ 'Applications'|t }}
+            </a>
+          </div>
+          <div class="applicationTitle">
+            <div class="applicationLogo">
+              {% if content.application_image is defined and content.application_image|render|trim is not empty %}
+                <div class="apicAppIcon">
+                  {{ content.application_image }}
+                </div>
+              {% elseif showPlaceholders %}
+                <div class="apicAppIcon">
+                  <img src="{{- placeholderUrl -}}" alt=""/>
+                </div>
+              {% endif %}</div>
+            <h1 class="applicationName">{{- label -}}</h1>
+            {% if applifecycleEnabled %}
+              <div
+                  class="applicationType {{ content.application_lifecycle_state['#items'][0].value|clean_class }}">{% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %} {{ 'Development'|t }} {% else %} {{ 'Production'|t }} {% endif %}</div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="rightTitle">
+          {% if applifecycleEnabled and userHasAppManage %}
+            <div class="apicAppLifecycle apicAppActions">
+              {% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %}
+                {% if content.application_lifecycle_pending['#items'][0].value is not defined or content.application_lifecycle_pending['#items'][0].value is empty %}
+                  <a href="{{- path('apic_app.promote', {'appId': content.application_id['#items'][0].value}) -}}"
+                     class="button apicUpgradeApp"
+                     title="{{ 'Upgrade to production'|t }}">{{ 'Upgrade to production'|t }}</a>
+                {% else %}
+                  <span>{{ 'Pending Upgrade'|t }}</span>
+                {% endif %}
+              {% endif %}
+            </div>
+          {% endif %}
+          {% if userHasAppManage %}
+            <div class="extraMenu">
+              <ul class="overflow-menu applicationMenu dropitmenu">
+                <li title="{{ 'Manage application'|t }}"><a href="#" class="trigger">
+                <span class="dropit-icon">
+                <svg width="4px" height="20px" viewBox="0 0 4 20" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                     xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd">
+                  <circle id="Oval" cx="2" cy="2" r="2"></circle>
+                  <circle id="Oval" cx="2" cy="10" r="2"></circle>
+                  <circle id="Oval" cx="2" cy="18" r="2"></circle>
+                </svg></span></a>
+                  <ul class="dropitmenu-submenu">
+                    <li class="editApplication"><a
+                          href="{{ path('apic_app.update', {'appId': content.application_id['#items'][0].value}) }}"
+                          title="{{ 'Edit App'|t }}">{{ 'Edit'|t }}</a>
+                    </li>
+                    <li class="uploadImage"><a
+                          href="{{ path('apic_app.image_upload', {'appId': content.application_id['#items'][0].value}) }}"
+                          title="{{ 'Upload image'|t }}">{{ 'Upload image'|t }}</a>
+                    </li>
+                    <li class="deleteApplication"><a
+                          href="{{ path('apic_app.delete', {'appId': content.application_id['#items'][0].value}) }}"
+                          title="{{ 'Delete App'|t }}">{{ 'Delete'|t }}</a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+        {% if analytics_access %}
+          <div class="applicationTabs">
+            <ul>
+              <li class="selected"><a href="#">{{ 'Dashboard'|t }}</a></li>
+              {#<li><a class="analyticsApplication"#}
+                     {#href="{{- path('apic_app.activity', {'node': node.id}) -}}">{{ 'Activity'|t }}</a></li>#}
+              <li><a class="subscriptionsApplication"
+                     href="{{- path('apic_app.subscriptions', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
+            </ul>
+          </div>
+        {% else %}
+        {% endif %}
+      </div>
+    </header>
+    <div class="contentInnerWrapper">
+      <div class="applicationContent">
+        {% if apic_state|lower|clean_class == 'suspended' %}
+          <div class="alert alert-warning" role="alert">
+            <div class="alert-details">
+              {{ 'Warning: This application is suspended. '|t }} <a
+                  href="{{ path('contact.site_page') }}"> {{ 'Contact us for more information'|t }} </a>
+            </div>
+          </div>
+        {% endif %}
+        <div class="applicationDescription">
+          {{ content.apic_summary }}
+        </div>
+        <div class="applicationOAuthRedirect">
+          {{ content.application_redirect_endpoints }}
+        </div>
+        {% if custom_fields is defined and custom_fields is not empty %}
+          <div class="customFields">
+            {% for custom_field in custom_fields %}
+              <div class="{{ custom_field|clean_class }}">
+                {{ content[custom_field] }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+      {% if analytics_access %}
+        <div class="analyticsWidgetContainer">
+          {{ drupal_block('app_analytics_summary', wrapper=false) }}
+          {{ drupal_block('app_totals', wrapper=false) }}
+          {{ drupal_block('app_api_call_history', wrapper=false) }}
+          {% if userHasSubView %}
+            <div class="apicAppSubscriptionsSummary" id="subscriptionsWidget"></div>
+          {% endif %}
+        </div>
+      {% else %}
+        {% if userHasAppManage %}
+          {{ drupal_block('app_credentials', wrapper=false) }}
+          {{ drupal_block('app_subscriptions', wrapper=false) }}
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</article>

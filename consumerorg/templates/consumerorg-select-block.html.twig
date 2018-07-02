@@ -1,0 +1,40 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a consumer organization selector block
+ *
+ * Variables available:
+ * - selected_name: The name of the currently selected consumer organization.
+ * - orgs: The array of consumerorgs this user is in.
+ *   each org = array('title'=>'My Org', 'link_object'=>'/foo/123')
+ *
+ * @ingroup themeable
+ */
+#}
+
+<div class="consumerorgSelectBlock">
+  <ul class="dropitmenu orgmenu">
+    <li><a href="#" title="{{ 'Current organization:'|t }} {{ selected_name }}">
+        <div class="orgHeading">
+          <div class="subTitle">
+          {{ 'Organization'|t }}
+          </div>
+          <div class="currentOrg">
+            {{ selected_name }}
+          </div>
+        </div>
+        <span class="dropit-icon">&#9660;</span></a>
+      <ul class="dropitmenu-submenu">
+        <li class="elipsis-names myorg" title="{{ 'My organization'|t }}"><a href="{{ path('ibm_apim.myorg') }}" class="elipsis-names">{{ 'My organization'| t }}</a></li>
+        {%  if create_allowed == true %}
+        <li class="elipsis-names createorg" title="{{ 'Create organization'|t }}"><a href="{{ path('consumerorg.create') }}" class="elipsis-names">{{ 'Create organization'| t }}</a></li>
+        {% endif %}
+        <li class="selectorg" disabled>{{ 'Select organization'|t }}</li>
+        {% for org in orgs %}
+          <li class="elipsis-names consumerorg" {% if org.title == selected_name %}selected=true{% endif %}
+              title="{{ org.title }}">{{ org.link_object }}</li>
+        {% endfor %}
+      </ul>
+    </li>
+  </ul>
+</div>

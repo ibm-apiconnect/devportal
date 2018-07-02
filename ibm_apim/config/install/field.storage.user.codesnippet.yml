@@ -1,0 +1,53 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - options
+    - user
+  enforced:
+    module:
+      - ibm_apim
+id: user.codesnippet
+field_name: codesnippet
+entity_type: user
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: curl
+      label: cURL
+    -
+      value: ruby
+      label: Ruby
+    -
+      value: python
+      label: Python
+    -
+      value: php
+      label: PHP
+    -
+      value: java
+      label: Java
+    -
+      value: node
+      label: NodeJS
+    -
+      value: go
+      label: Go
+    -
+      value: swift
+      label: Swift
+    -
+      value: c
+      label: C
+    -
+      value: csharp
+      label: 'C#'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

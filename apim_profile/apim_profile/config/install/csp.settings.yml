@@ -1,0 +1,3 @@
+enforce: false
+report:
+  handler: csp-module

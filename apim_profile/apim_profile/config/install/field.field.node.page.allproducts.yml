@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.allproducts
+    - node.type.page
+id: node.page.allproducts
+field_name: allproducts
+entity_type: node
+bundle: page
+label: 'Link to all Products'
+description: 'Link this documentation page to all Products.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

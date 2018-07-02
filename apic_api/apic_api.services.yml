@@ -1,0 +1,12 @@
+services:
+  apic_api.ref:
+    class: Drupal\apic_api\ParamConverter\ApiRefParamConverter
+    tags:
+      - { name: paramconverter }
+  apic_api.nidorpath:
+    class: Drupal\apic_api\ParamConverter\ApiNidOrPathParamConverter
+    tags:
+      - { name: paramconverter }
+  apic_api.taxonomy:
+    class: Drupal\apic_api\Service\ApiTaxonomy
+    arguments: ['@ibm_apim.taxonomy']

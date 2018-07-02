@@ -1,0 +1,118 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ * Installation and upgrade logic for the apic_app module.
+ */
+
+use Drupal\node\Entity\Node;
+
+/**
+ * Changes from 8.x-1.0 to 8.x-1.1 :
+ *  - remove apic_image from application
+ *  - add application_image to application
+ */
+function apic_app_update_8101() {
+
+  // check if new field exists, skip if it does
+  // it shouldn't, but better safe than sorry
+  $new_field_config = \Drupal\field\Entity\FieldConfig::loadByName('node', 'application', 'application_image');
+  if (!isset($new_field_config) || empty($new_field_config)) {
+    /**
+     * 1. Gather all apic_image values for applications and store for later
+     * 2. Create 'application_image' storage
+     * 3. Create 'application_image' field
+     * 4. Get current settings for 'apic_image' from entity form display for 'application'
+     * 5. Add 'application_image' to 'application' entity form display using settings for 'apic_image'
+     * 6. Repeat 4. and 5. for entity display
+     * 7. Remove apic_image field from 'application'
+     * 8. Set values for new 'application_image' field based on 'apic_image' of 'application'
+     **/
+
+    // Collect all values for apic_image associated with applications
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', 'application');
+    $results = $query->execute();
+
+    $existing_application_images = array();
+    if (isset($results)) {
+      foreach ($results as $result) {
+        $application = Node::load($result);
+        $existing_application_images[$result] = $application->get('apic_image')->getValue();
+      }
+    }
+
+    // Create a new field storage 'application_image'
+    $field_storage_config = \Drupal\field\Entity\FieldStorageConfig::create(array(
+      'field_name' => 'application_image',
+      'entity_type' => 'node',
+      'type' => 'image',
+      'required' => FALSE,
+      'cardinality' => 1,
+    ));
+    $field_storage_config->save();
+
+    // Create a new field for the application module
+    $field_config = \Drupal\field\Entity\FieldConfig::create([
+      'field_name' => 'application_image',
+      'entity_type' => 'node',
+      'bundle' => 'application',
+      'label' => t('Image')
+    ]);
+    $field_config->save();
+
+    // Modify entity form display modes to show application_image field
+    $form_display = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('node.application.default');
+    $form_display->setComponent('application_image', $form_display->getComponent('apic_image')); // copy all existing settings across from old field
+    $form_display->save();
+
+    // Do the same for the view display modes
+    $display_modes = ['default', 'card', 'content_browser', 'subscribewizard', 'teaser'];
+    foreach ($display_modes as $display_mode) {
+      $view_display = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.application.' . $display_mode);
+      $view_display->setComponent('application_image', $view_display->getComponent('apic_image')); // copy all existing settings across from old field
+      $view_display->save();
+    }
+
+    // Put the values we stored from apic_image back in to application_image
+    foreach ($existing_application_images as $node_id => $image) {
+      $application = Node::load($node_id);
+      $application->set('application_image', $image);
+      $application->save();
+    }
+
+    // Remove the old apic_image field from application
+    $field_config = \Drupal\field\Entity\FieldConfig::loadByName('node', 'application', 'apic_image');
+    $field_config->delete();
+  }
+}
+
+/**
+ * Changes from 8.x-1.1 to 8.x-1.2 :
+ *  - change field length for application_redirect_endpoints
+ */
+function apic_app_update_8102() {
+  $field_storage_config = \Drupal\field\Entity\FieldStorageConfig::loadByName('node', 'application_redirect_endpoints');
+  $length = $field_storage_config->getSetting('max_length');
+  if (!isset($length) || !is_int($length) || $length < 999) {
+    $length = 999;
+  }
+  $field_storage_config->setSetting('max_length', $length);
+  $is_ascii = $field_storage_config->getSetting('is_ascii');
+  if (!isset($is_ascii)) {
+    $is_ascii = false;
+  }
+  $field_storage_config->setSetting('is_ascii', $is_ascii);
+  $field_storage_config->save();
+}

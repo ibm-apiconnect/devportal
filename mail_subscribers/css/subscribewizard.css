@@ -1,0 +1,120 @@
+/**
+ * progress indicator styling
+ */
+.wizard-trail {
+  height: 100px;
+  background-color: #fff;
+  border-bottom: 1px solid #dfe3e6;
+  display: flex;
+  justify-content: center;
+  align-items: center; }
+
+.wizard-trail .bx--progress {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  list-style: none;
+  width: 60%; }
+
+@media (max-width: 480px) {
+  .wizard-trail .bx--progress
+  {   width: 100%; }
+}
+
+
+.wizard-trail .bx--progress-step {
+  position: relative;
+  display: -webkit-inline-box;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-box-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  min-width: 7rem;
+  transition: 250ms all cubic-bezier(0.5, 0, 0.1, 1);
+  overflow: visible;
+}
+
+
+@media (max-width: 480px) {
+  .wizard-trail .bx--progress-step {
+    min-width: 6rem; } }
+
+
+.wizard-trail .bx--progress-line {
+  position: absolute;
+  top: 0.625rem;
+  right: 100%;
+  height: 1px;
+  width: calc(100% - 24px);
+  border: 1px inset transparent; }
+
+.wizard-trail .bx--progress-step:first-child .bx--progress-line {
+  display: none; }
+
+.wizard-trail .bx--progress-step svg {
+  position: relative;
+  z-index: 1;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  margin-bottom: 0.5rem; }
+
+.wizard-trail .bx--progress-label {
+  line-height: 1;
+  width: 75%; }
+
+.wizard-trail .bx--progress-step--current circle:first-child {
+  stroke: #3d70b2;
+  stroke-width: 5;
+  fill: transparent; }
+
+.wizard-trail .bx--progress-step--current circle:last-child {
+  fill: #3d70b2; }
+
+
+.wizard-trail .bx--progress-step--current .bx--progress-label {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #3d70b2;
+  font-weight: 600; }
+
+ .wizard-trail .bx--progress-step--current .bx--progress-line {
+  background-color: #3d70b2; }
+
+.wizard-trail .bx--progress-step--incomplete circle {
+  stroke: #8c9ba5;
+  stroke-width: 5;
+  fill: transparent; }
+
+.wizard-trail .bx--progress-step--incomplete .bx--progress-label {
+  color: #5a6872;
+}
+
+ .wizard-trail .bx--progress-step--incomplete .bx--progress-line {
+  background-color: #8c9ba5;
+}
+
+.wizard-trail .bx--progress-step--complete circle {
+  stroke: #3d70b2;
+  stroke-width: 5;
+  fill: transparent; }
+
+.wizard-trail .bx--progress-step--complete polygon {
+  fill: #3d70b2;
+}
+
+ .wizard-trail .bx--progress-step--complete .bx--progress-label {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #3d70b2;
+  font-weight: 600;
+}
+
+.wizard-trail .bx--progress-step--complete .bx--progress-line {
+  background-color: #3d70b2;
+}

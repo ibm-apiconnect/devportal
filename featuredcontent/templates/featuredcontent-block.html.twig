@@ -1,0 +1,59 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the featuredcontent
+ *
+ * @ingroup themeable
+ */
+#}
+
+<div class="featuredcontent featuredcontentBlockWrapper">
+  {%  if nodes|length > 0%}
+  <div class="featuredcontentBlockHeader">
+    <h3>{{ 'API Products'|t }}</h3>
+    <a href="product">{{ 'See all products'|t }}</a>
+  </div>
+  {% endif %}
+  <div
+    class="featuredcontentNodeContainer featuredcontentNodeType-{{ nodeType|clean_class }} featuredcontentAlgorithm-{{ algorithm|clean_class }}">
+    {% for node in nodes %}
+      <div class="featuredcontentNode featuredcontentNodeID-{{ node.nid|clean_class }}">
+        <div class="featuredcontentNodeInner">
+          <div class="featuredcontentNodeHeader">
+            {% if node.image %}
+              <div class="featuredcontentNodeImage">
+                <img src="{{- node.image -}}" alt=""/>
+              </div>
+            {% endif %}
+            <div class="featuredcontentNodeTitle">
+              {% if nodeType == 'api' %}
+                <a href="{{- path('apic_api.view', {'apiNode': node.nid}) -}}"
+                   rel="bookmark">{{ node.title }}
+                  {% if showVersions %}
+                    <span class="featuredcontentNodeVersion">{{ node.version }}</span>
+                  {% endif %}</a>
+              {% else %}
+                <a href="{{- path('product.view', {'prodNode': node.nid}) -}}"
+                   rel="bookmark">{{ node.title }}
+                  {% if showVersions %}
+                    <span class="featuredcontentNodeVersion">{{ node.version }}</span>
+                  {% endif %}</a>
+              {% endif %}
+            </div>
+          </div>
+          <div class="featuredcontentNodeInfo">
+            {% if node.summary is defined and node.summary is not empty %}
+              <div class="featuredcontentNodeSummary">
+                {{ node.summary }}
+              </div>
+            {% else %}
+              <div class="featuredcontentNodeDescription">
+                {{ node.description|raw }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>

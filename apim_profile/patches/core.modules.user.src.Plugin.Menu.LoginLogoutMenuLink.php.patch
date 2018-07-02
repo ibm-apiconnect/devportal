@@ -1,0 +1,15 @@
+--- core/modules/user/src/Plugin/Menu/LoginLogoutMenuLink.php	2017-08-23 19:33:09.000000000 +0100
++++ core/modules/user/src/Plugin/Menu/LoginLogoutMenuLink.php	2017-08-23 19:33:54.000000000 +0100
+@@ -57,10 +57,10 @@
+    */
+   public function getTitle() {
+     if ($this->currentUser->isAuthenticated()) {
+-      return $this->t('Log out');
++      return $this->t('Sign out');
+     }
+     else {
+-      return $this->t('Log in');
++      return $this->t('Sign in');
+     }
+   }
+ 

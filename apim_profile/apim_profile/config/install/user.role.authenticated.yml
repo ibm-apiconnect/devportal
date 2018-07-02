@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies: {  }
+id: authenticated
+label: 'Authenticated user'
+weight: -9
+is_admin: false
+permissions:
+  0: 'access content'
+  1: 'access comments'
+  2: 'post comments'
+  3: 'skip comment approval'
+  4: 'access site-wide contact form'
+  5: 'access shortcuts'
+  6: 'search content'
+  9: 'use text format basic_html'
+  10: 'use advanced search'

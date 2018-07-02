@@ -1,0 +1,36 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ * Install, update and uninstall functions for the auth_apic module.
+ */
+
+use Drupal\user\Entity\User;
+use Drupal\user\RoleInterface;
+use Drupal\menu_link_content\Entity\MenuLinkContent;
+
+/**
+ * Implements hook_install().
+ *
+ * @see system_install()
+ */
+function auth_apic_install() {
+
+  // disable drupal email verification
+  \Drupal::service('config.factory')->getEditable('user.settings')->set('verify_mail', FALSE)->save();
+
+  // High module weight allows our form_alter calls to be run after every other module ensuring that we win
+  module_set_weight('auth_apic', 999);
+
+}

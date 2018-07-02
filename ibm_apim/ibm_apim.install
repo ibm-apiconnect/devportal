@@ -1,414 +1,91 @@
 <?php
+
 /********************************************************* {COPYRIGHT-TOP} ***
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2016
+ * (C) Copyright IBM Corporation 2018
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
-// hook_install() implementation
+/**
+ * @file
+ * Install, update and uninstall functions for the auth_apic module.
+ */
+
+use Drupal\user\Entity\User;
+use Drupal\user\RoleInterface;
+use Drupal\menu_link_content\Entity\MenuLinkContent;
+
+/**
+ * Implements hook_install().
+ *
+ * @see system_install()
+ */
 function ibm_apim_install() {
-  // disable user email verification as this module doesn't currently work with it enabled
-  variable_set('user_email_verification', FALSE);
 
-  // create default fields
-  module_load_include('inc', 'ibm_apim', 'ibm_apim.userfields');
-  _ibm_apim_add_user_first_name_field();
-  _ibm_apim_add_user_last_name_field();
-  _ibm_apim_add_user_developerorg_field();
-  _ibm_apim_add_user_company_field();
-  _ibm_apim_add_user_phone_field();
-  _ibm_apim_add_user_uid_field();
-  if (module_exists('addressfield')) {
-    _ibm_apim_add_user_address_field();
-  }
-  _ibm_apim_add_user_codesnippet_field();
+  // High module weight allows our form_alter calls to be run after every other module ensuring that we win
+  module_set_weight('ibm_apim', 998);
 
-  // page
-  foreach (_ibm_apim_page_fields() as $field) {
-    $existingfield = field_info_field($field['field_name']);
-    if (!isset($existingfield)) {
-      field_create_field($field);
-    }
-  }
-  foreach (_ibm_apim_page_instances() as $fieldinstance) {
-    $fieldinstance['entity_type'] = 'node';
-    $fieldinstance['bundle'] = 'page';
-    field_create_instance($fieldinstance);
-  }
-  if (!module_exists('field_group')) {
-    module_enable(array('field_group'), TRUE);
-  }
-  _ibm_apim_create_field_group();
-}
-
-/**
- * Implementation of hook_requirements
- *
- * Check to see if php has curl support enabled. If it does not then this module will
- * not work so flag this as an error in the requirements. We do this both at install time
- * and at runtime, in case php-curl has been disabled after the module was installed.
- *
- * @param $phase
- * @return array
- */
-function ibm_apim_requirements($phase) {
-  $reqs = array();
-  $t = get_t();
-  if ($phase == "install" || $phase == "runtime") {
-    if (!function_exists("curl_init")) {
-      $reqs['ibm_apim_curl'] = array(
-        'title' => $t('IBM API Connect Module'),
-        'value' => FALSE,
-        'description' => t('The IBM API Connect module requires that PHP must have curl support enabled. This may require installation of a system package (e.g. php5-curl) or editing the curl.ini file located in the php config directory to enable curl support.'),
-        'severity' => REQUIREMENT_ERROR
-      );
-    }
-  }
-  if ($phase == 'runtime') {
-    $path = drupal_get_path('module', 'ibm_apim') . '/ibm_apim.info';
-    $info = drupal_parse_info_file($path);
-    $reqs['ibm_apim'] = array(
-      'title' => $t('IBM API Connect'),
-      'severity' => REQUIREMENT_OK,
-      'value' => t('IBM API Connect Developer Portal version %ver', array(
-        '%ver' => $info['version']
-      ))
-    );
-  }
-  return $reqs;
-}
-
-function _ibm_apim_create_field_group() {
-  $field_group = new stdClass;
-  $field_group->api_version = 1;
-  $field_group->identifier = 'group_linkto|node|page|form';
-  $field_group->group_name = 'group_linkto';
-  $field_group->entity_type = 'node';
-  $field_group->bundle = 'page';
-  $field_group->mode = 'form';
-  $field_group->parent_name = '';
-  $field_group->label = 'Link to Content';
-  $field_group->weight = '44';
-  $field_group->children = array(
-    'field_apis',
-    'field_all_apis',
-    'field_products',
-    'field_all_products'
+  $module_dependencies = array(
+    'externalauth',
+    'telephone',
   );
-  $field_group->format_type = 'fieldset';
-  $field_group->format_settings = array(
-    'formatter' => 'collapsible',
-    'instance_settings' => array(
-      'classes' => 'group-linkto field-group-fieldset',
-      'required_fields' => 1,
-    ),
-  );
-  field_group_group_save($field_group);
-}
 
-function _ibm_apim_page_fields() {
-  $t = get_t();
-  return array(
-    'field_apis' => array(
-      'field_name' => 'field_apis',
-      'label' => t('Link to specific APIs'),
-      'type' => 'entityreference',
-      'module' => 'entityreference',
-      'cardinality' => 10,
-      'settings' =>
-        array(
-          'target_type' => 'node',
-          'handler' => 'base',
-          'handler_settings' =>
-            array(
-              'target_bundles' =>
-                array(
-                  'api' => 'api',
-                ),
-              'sort' =>
-                array(
-                  'type' => 'none',
-                ),
-              'behaviors' =>
-                array(
-                  'views-select-list' =>
-                    array(
-                      'status' => 0,
-                    ),
-                ),
-            ),
-          'entity_translation_sync' => FALSE,
-        ),
-      'translatable' => FALSE
-    ),
-    'field_all_apis' => array(
-      'field_name' => 'field_all_apis',
-      'label' => t('Link to all APIs'),
-      'type' => 'list_boolean',
-      'cardinality' => 1,
-      'settings' => array(
-        'allowed_values' => array(0 => 'Off', 1 => 'On')
-      ),
-      'translatable' => FALSE
-    ),
-    'field_products' => array(
-      'field_name' => 'field_products',
-      'label' => t('Link to specific Products'),
-      'type' => 'entityreference',
-      'module' => 'entityreference',
-      'cardinality' => 10,
-      'settings' =>
-        array(
-          'target_type' => 'node',
-          'handler' => 'base',
-          'handler_settings' =>
-            array(
-              'target_bundles' =>
-                array(
-                  'product' => 'product',
-                ),
-              'sort' =>
-                array(
-                  'type' => 'none',
-                ),
-              'behaviors' =>
-                array(
-                  'views-select-list' =>
-                    array(
-                      'status' => 0,
-                    ),
-                ),
-            ),
-          'entity_translation_sync' => FALSE,
-        ),
-      'translatable' => FALSE
-    ),
-    'field_all_products' => array(
-      'field_name' => 'field_all_products',
-      'label' => t('Link to all Products'),
-      'type' => 'list_boolean',
-      'cardinality' => 1,
-      'settings' => array(
-        'allowed_values' => array(0 => 'Off', 1 => 'On')
-      ),
-      'translatable' => FALSE
-    )
-  );
-}
-
-function _ibm_apim_page_instances() {
-  $t = get_t();
-  return array(
-    'field_apis' => array(
-      'field_name' => 'field_apis',
-      'label' => t('Link to specific APIs'),
-      'required' => 0,
-      'default_value' => NULL,
-      'widget' => array(
-        'type' => 'options_select',
-        'module' => 'options',
-        'settings' => array('display_label' => 1),
-        'weight' => 9,
-      ),
-      'settings' => array(
-        'user_register_form' => FALSE,
-        'entity_translation_sync' => FALSE,
-      ),
-      'display' => array(
-        'default' => array(
-          'label' => 'above',
-          'type' => 'hidden',
-          'weight' => '1',
-          'settings' => array(),
-        ),
-      )
-    ),
-    'field_all_apis' => array(
-      'field_name' => 'field_all_apis',
-      'label' => t('Link to all APIs'),
-      'widget' => array(
-        'type' => 'options_onoff',
-        'module' => 'options',
-        'settings' => array('display_label' => 1),
-        'weight' => 8,
-      ),
-      'settings' => array(
-        'user_register_form' => FALSE,
-        'entity_translation_sync' => FALSE,
-      ),
-      'display' => array(
-        'default' => array(
-          'label' => 'above',
-          'type' => 'hidden',
-          'weight' => '1',
-          'settings' => array(),
-        ),
-      )
-    ),
-    'field_products' => array(
-      'field_name' => 'field_products',
-      'label' => t('Link to specific Products'),
-      'required' => 0,
-      'default_value' => NULL,
-      'widget' => array(
-        'type' => 'options_select',
-        'module' => 'options',
-        'settings' => array('display_label' => 1),
-        'weight' => 6,
-      ),
-      'settings' => array(
-        'user_register_form' => FALSE,
-        'entity_translation_sync' => FALSE,
-      ),
-      'display' => array(
-        'default' => array(
-          'label' => 'above',
-          'type' => 'hidden',
-          'weight' => '1',
-          'settings' => array(),
-        ),
-      )
-    ),
-    'field_all_products' => array(
-      'field_name' => 'field_all_products',
-      'label' => t('Link to all Products'),
-      'widget' => array(
-        'type' => 'options_onoff',
-        'module' => 'options',
-        'settings' => array('display_label' => 1),
-        'weight' => 5,
-      ),
-      'settings' => array(
-        'user_register_form' => FALSE,
-        'entity_translation_sync' => FALSE,
-      ),
-      'display' => array(
-        'default' => array(
-          'label' => 'above',
-          'type' => 'hidden',
-          'weight' => '1',
-          'settings' => array(),
-        ),
-      )
-    )
-  );
-}
-
-// hook_uninstall() implementation
-function ibm_apim_uninstall() {
-  // page
-  foreach (array_keys(_ibm_apim_page_fields()) as $field) {
-    field_delete_field($field);
-  }
-  foreach (_ibm_apim_page_instances() as $fieldinstance) {
-    $instance_info = field_info_instance('node', $fieldinstance['field_name'], 'page');
-    if (isset($instance_info)) {
-      field_delete_instance($instance_info);
-    }
-  }
-}
-
-/**
- * Update code to handle upgrade from earlier version
- */
-function ibm_apim_update_7400() {
-  module_load_include('inc', 'ibm_apim', 'ibm_apim.userfields');
-  // Make sure the entityreference module is enabled
-  module_enable(array('entityreference'), TRUE);
-
-  // Change SAML Login link
-  $endpoint = variable_get('ibm_apim_saml_endpoint', NULL);
-  $saml = variable_get('ibm_apim_saml_idp', 0);
-  if (isset($endpoint) && !empty($endpoint) && $saml == 1) {
-    $mlid = db_query("SELECT mlid FROM {menu_links} WHERE link_path=:link_path", array(
-      ':link_path' => $endpoint
-    ))->fetchField();
-    if (isset($mlid)) {
-      $link = menu_link_load($mlid);
-      if (isset($link)) {
-        $link['link_path'] = 'ibm_apim/saml/login';
-        $link['customized'] = 1;
-        $link['external'] = 0;
-        menu_link_save($link);
-        menu_cache_clear_all();
-      }
-    }
-  }
-  // create uid field if doesn't already exist
-  $field_info = field_info_field('field_uid');
-  if (!isset($field_info) || empty($field_info)) {
-    _ibm_apim_add_user_uid_field();
-  }
-  // create code snippet field if it doesn't exist
-  $field_info = field_info_field('field_codesnippet');
-  if (!isset($field_info) || empty($field_info)) {
-    _ibm_apim_add_user_codesnippet_field();
+  // Enable modules.
+  $module_installer = \Drupal::service('module_installer');
+  foreach ($module_dependencies as $module) {
+    $module_installer->install([$module]);
   }
 
-  $type = 'page';
-  $fields = field_info_field_map();
-  foreach (_ibm_apim_page_fields() as $field) {
-    if (!array_key_exists($field['field_name'], $fields)) {
-      $field_info = field_info_field($field['field_name']);
-      if (!isset($field_info) || empty($field_info)) {
-        field_create_field($field);
-        watchdog($type, 'Field %field_name has been successfully added', array(
-          '%field_name' => $field['field_name']
-        ));
-      }
-      else {
-        watchdog($type, 'Field %field_name already exists although instance doesnt', array(
-          '%field_name' => $field['field_name']
-        ));
-      }
-    }
-    else {
-      watchdog($type, 'Field %field_name already exists', array(
-        '%field_name' => $field['field_name']
-      ));
-    }
+  // Customize the default user entity display form.
+  $entityFormStorage = \Drupal::entityTypeManager()->getStorage('entity_form_display');
+  $userFormDisplay = $entityFormStorage->load('user.user.default');
+
+  if (!$userFormDisplay) {
+    $userFormDisplay = $entityFormStorage->create([
+      'targetEntityType' => 'user',
+      'bundle' => 'user',
+      'mode' => 'default',
+      'status' => TRUE,
+    ]);
   }
 
-  foreach (_ibm_apim_page_instances() as $fieldinstance) {
-    if (!array_key_exists($fieldinstance['field_name'], $fields)) {
-      $fieldinstance['entity_type'] = 'node';
-      $fieldinstance['bundle'] = $type;
-      field_create_instance($fieldinstance);
-      watchdog($type, 'Instance %instance_name has been successfully added', array(
-        '%instance_name' => $fieldinstance['field_name']
-      ));
-    }
-    else {
-      // Fetch existing instance
-      $instance_info = field_info_instance('node', $fieldinstance['field_name'], $type);
-      if (isset($instance_info)) {
-        // ensure all view modes are set
-        foreach ($fieldinstance['display'] as $key => $value) {
-          if (!isset($instance_info['display'][$key])) {
-            $instance_info['display'][$key] = $value;
-          }
-        }
-        // Write the changed instance back.
-        field_update_instance($instance_info);
-      }
-      watchdog($type, 'Instance %instance_name already exists', array(
-        '%instance_name' => $fieldinstance['field_name']
-      ));
-    }
-  }
-  if (!module_exists('field_group')) {
-    module_enable(array('field_group'), TRUE);
-  }
-  $field_group = field_group_load_field_group_by_identifier('group_linkto|node|page|form');
-  if (!isset($field_group)) {
-    _ibm_apim_create_field_group();
-  }
-
-  // update devorg cardinality
-  _ibm_apim_change_devorg_cardinality();
+  $userFormDisplay->setComponent('first_name', [
+      'type' => 'string_textfield',
+      'weight' => -50,
+      'settings' => [],
+    ])
+    ->setComponent('last_name', [
+      'type' => 'string_textfield',
+      'weight' => -45,
+      'settings' => [],
+    ])
+    ->setComponent('user_picture', [
+      'type' => 'string_textfield',
+      'weight' => -40,
+      'settings' => [],
+    ])
+    ->setComponent('codesnippet', [
+      'type' => 'options_select',
+      'weight' => -30,
+      'settings' => [],
+    ])
+    ->setComponent('timezone', [
+      'weight' => -20,
+      'settings' => [],
+    ])
+    ->setComponent('language', [
+      'weight' => -10,
+      'settings' => [],
+    ])
+    ->removeComponent('consumer_organization')
+    ->removeComponent('contact')
+    ->removeComponent('langcode')
+    ->removeComponent('consumerorg_url')
+    ->removeComponent('field_last_password_reset')
+    ->save();
 }

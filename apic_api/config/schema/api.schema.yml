@@ -1,0 +1,96 @@
+field.field.node.api.api_ibmconfiguration:
+  type: config_object
+  label: 'IBM Configuration'
+
+field.field.node.api.api_id:
+  type: config_object
+  label: 'ID'
+
+field.field.node.api.api_oaiversion:
+  type: config_object
+  label: 'OAI Version'
+
+field.field.node.api.api_protocol:
+  type: config_object
+  label: 'Protocol'
+
+field.field.node.api.api_soapversion:
+  type: config_object
+  label: 'SOAP Version'
+
+field.field.node.api.api_state:
+  type: config_object
+  label: 'State'
+
+field.field.node.api.api_swagger:
+  type: config_object
+  label: 'Open API Document'
+
+field.field.node.api.api_swaggertags:
+  type: config_object
+  label: 'Open API Tags'
+
+field.field.node.api.api_wsdl:
+  type: config_object
+  label: 'WSDL Content'
+
+field.field.node.api.api_xibmname:
+  type: config_object
+  label: 'X-IBM-Name'
+
+field.field.node.api.apic_attachments:
+  type: config_object
+  label: 'Documentation'
+
+field.field.node.api.apic_catalog_id:
+  type: config_object
+  label: 'APIC Catalog ID'
+
+field.field.node.api.apic_description:
+  type: config_object
+  label: 'Description'
+
+field.field.node.api.apic_hostname:
+  type: config_object
+  label: 'APIC Hostname'
+
+field.field.node.api.apic_image:
+  type: config_object
+  label: 'Image'
+
+field.field.node.api.apic_pathalias:
+  type: config_object
+  label: 'Path Alias'
+
+field.field.node.api.apic_provider_id:
+  type: config_object
+  label: 'APIC Provider ID'
+
+field.field.node.api.apic_rating:
+  type: config_object
+  label: 'Rating'
+
+field.field.node.api.apic_ref:
+  type: config_object
+  label: 'Reference'
+
+field.field.node.api.apic_summary:
+  type: config_object
+  label: 'Summary'
+
+field.field.node.api.apic_tags:
+  type: config_object
+  label: 'Tags'
+
+field.field.node.api.apic_url:
+  type: config_object
+  label: 'URL'
+
+field.field.node.api.apic_version:
+  type: config_object
+  label: 'Version'
+
+field.field.node.api.comment:
+  type: config_object
+  label: 'Comments'
+

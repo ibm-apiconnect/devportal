@@ -1,0 +1,111 @@
+application_create:
+  label: 'After creating an application'
+  category: 'Application'
+  context:
+    application:
+      type: 'entity:node'
+      label: 'Application'
+
+application_update:
+  label: 'After updating an application'
+  category: 'Application'
+  context:
+    application:
+      type: 'entity:node'
+      label: 'Application'
+
+application_delete:
+  label: 'After deleting an application'
+  category: 'Application'
+  context:
+    application:
+      type: 'entity:node'
+      label: 'Application'
+
+subscription_create:
+  label: 'After creating a subscription'
+  category: 'Subscription'
+  context:
+    application:
+      type: 'entity:node'
+      label: 'Application'
+    product:
+      type: 'entity:node'
+      label: 'Product'
+    planName:
+      type: 'string'
+      label: 'Plan name'
+    state:
+      type: 'string'
+      label: 'Subscription state'
+
+subscription_update:
+  label: 'After updating a subscription'
+  category: 'Subscription'
+  context:
+    application:
+      type: 'entity:node'
+      label: 'Application'
+    product:
+      type: 'entity:node'
+      label: 'Product'
+    planName:
+      type: 'string'
+      label: 'Plan name'
+    state:
+      type: 'string'
+      label: 'Subscription state'
+
+subscription_delete:
+  label: 'After deleting a subscription'
+  category: 'Subscription'
+  context:
+    application:
+      type: 'entity:node'
+      label: 'Application'
+    product:
+      type: 'entity:node'
+      label: 'Product'
+    planName:
+      type: 'string'
+      label: 'Plan name'
+
+credential_create:
+  label: 'After creating application credentials'
+  category: 'Application'
+  context:
+    application:
+      type: 'entity:node'
+      label: 'Application'
+
+credential_update:
+  label: 'After updating application credentials'
+  category: 'Application'
+  context:
+    application:
+      type: 'entity:node'
+      label: 'Application'
+
+credential_delete:
+  label: 'After deleting application credentials'
+  category: 'Application'
+  context:
+    application:
+      type: 'entity:node'
+      label: 'Application'
+
+credential_clientid_reset:
+  label: 'After resetting an application client ID'
+  category: 'Application'
+  context:
+    application:
+      type: 'entity:node'
+      label: 'Application'
+
+credential_clientsecret_reset:
+  label: 'After resetting an application client secret'
+  category: 'Application'
+  context:
+    application:
+      type: 'entity:node'
+      label: 'Application'

@@ -1,0 +1,37 @@
+langcode: en
+status: true
+dependencies: {  }
+id: content_author
+label: 'Content Author'
+weight: -7
+is_admin: null
+permissions:
+  - 'administer comments'
+  - 'edit own comments'
+  - 'use text format full_html'
+  - 'administer nodes'
+  - 'view all revisions'
+  - 'view own unpublished content'
+  - 'create article content'
+  - 'delete any article content'
+  - 'delete own article content'
+  - 'delete article revisions'
+  - 'edit any article content'
+  - 'edit own article content'
+  - 'revert article revisions'
+  - 'view article revisions'
+  - 'create page content'
+  - 'delete any page content'
+  - 'delete own page content'
+  - 'delete page revisions'
+  - 'edit any page content'
+  - 'edit own page content'
+  - 'revert page revisions'
+  - 'view page revisions'
+  - 'edit any product content'
+  - 'edit own product content'
+  - 'edit any api content'
+  - 'edit own api content'
+  - 'view api revisions'
+  - 'view the administration theme'
+  - 'access toolbar'

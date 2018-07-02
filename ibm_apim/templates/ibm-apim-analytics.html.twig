@@ -1,0 +1,76 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the consumer organization analytics
+ *
+ * Variables available:
+ * - consumerorgId: the consumer organization id
+ * - catalogId: the catalog ID
+ * - catalogName: urlencoded catalog name
+ * - porgId: provider organization ID
+ * - consumerorgTitle
+ * @ingroup themeable
+ */
+#}
+<article class="node">
+  <div class="apicMyOrg">
+    <header class="titleSection apicMyOrgHeader">
+      <div class="titleInnerWrapper">
+        <div class="leftTitle">
+          <h1 class="orgName">{{- consumerorgTitle -}}</h1>
+        </div>
+        <div class="rightTitle">
+          <div class="extraMenu apicMyOrgActions">
+            <ul class="overflow-menu organizationMenu dropitmenu">
+              <li title="{{ 'Manage organization'|t }}"><a href="#" class="trigger">
+                <span class="dropit-icon">
+                <svg width="4px" height="20px" viewBox="0 0 4 20" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                     xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd">
+                  <circle id="Oval" cx="2" cy="2" r="2"></circle>
+                  <circle id="Oval" cx="2" cy="10" r="2"></circle>
+                  <circle id="Oval" cx="2" cy="18" r="2"></circle>
+                </svg></span></a>
+                <ul class="dropitmenu-submenu">
+                  <li class="editOrganizationName">
+                    <a href="{{ url('consumerorg.update') }}" title="{{ 'Edit organization name'|t }}">
+                      {{ 'Edit organization name'|t }}
+                    </a>
+                  </li>
+                  {% if myorg_members|length > 1 %}
+                    <li class="changeOrganizationOwner">
+                      <a href="{{ url('consumerorg.changeowner') }}" title="{{ 'Change organization owner'|t }}">
+                        {{ 'Change organization owner'|t }}</a>
+                    </li>
+                  {% endif %}
+
+                  <li class="deleteOrganization">
+                    <a href="{{ url('consumerorg.delete') }}" title="{{ 'Delete organization'|t }}">
+                      {{ 'Delete organization'|t }}</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        {% if analytics_access %}
+          <div class="organizationTabs">
+            <ul>
+              <li class="orgManage"><a href="{{- path('ibm_apim.myorg') -}}">{{ 'Manage'|t }}</a></li>
+              <li class="selected orgAnalytics">
+                <a href="#">{{ 'Analytics'|t }}</a>
+              </li>
+            </ul>
+          </div>
+        {% else %}
+        {% endif %}
+      </div>
+    </header>
+    <div class="ibmapimAnalytics ibmapimOrgAnalytics">
+      <div class="analyticsWidgetContainer">
+        {{ drupal_block('app_analytics_summary', wrapper=false) }}
+        {{ drupal_block('app_totals', wrapper=false) }}
+        {{ drupal_block('app_api_call_summary', wrapper=false) }}
+      </div>
+    </div>
+  </div>
+</article>

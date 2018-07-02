@@ -1,0 +1,785 @@
+.product-view .masonry-layout .masonry-item {
+  width: auto;
+  border: 0;
+  background: none;
+}
+
+.apicProduct .apicProductBody .field {
+  margin: 20px 0;
+}
+
+.apicProduct .apicProductHeader .vote-form .form-item,
+.productApiWrapper header.titleSection .vote-form .form-item{
+  margin: 0;
+}
+
+.apicProduct .label,
+.apicProduct .apicProductSummary .field--label,
+.apicProduct .apicAttachments .field--label,
+.apicProduct .customFields .field--label,
+.apicProduct .apicProductDesc .field--label,
+.apicProduct .customDocPages .field--label {
+  font-weight: 300;
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.apicProductCard .apicProductDesc .field--label {
+  display: none;
+}
+
+
+.apicProduct .field.field--name-product-version {
+  margin: 0;
+}
+
+.productApiWrapper .productName .field--name-apic-rating {
+  display: inline-block;
+}
+.productApiWrapper .apicProductTitleText .field--name-apic-rating .field--label {
+  display: none;
+}
+
+.apicProductTeaser {
+  display: flex;
+}
+
+.apicApiIcon {
+  display: inline-block;
+}
+
+.apicProductIcon img,
+.apicApiIcon img {
+  border: 0;
+  width: 48px;
+  height: 48px;
+}
+
+.apicProductIcon,
+.apicApiIcon {
+  margin-right: 16px;
+}
+
+.route-productview .apicMainContent,
+.route-productapi .apicMainContent {
+  margin-top: 48px;
+  width: 100%;
+}
+
+.route-productview .container,
+.route-productview .container section,
+.route-productapi .container,
+.route-productapi .container section,
+.route-ibm-apimsubscription-wizardstep .apicMainContent .region form.subscription-wizard-choose-plan{
+  padding:0;
+}
+
+.apicProduct .apicProductHeader,
+.productApiWrapper header.titleSection {
+  border-bottom: 1px solid #dfe3e6;
+  background: white;
+  padding: 0.625rem 3rem;
+}
+
+.apicProduct .apicProductBody,
+.productApiWrapper #innerWrapper {
+  padding: 0 3rem;
+}
+
+.apicProduct .apicProductHeader .breadcrumb,
+.productApiWrapper header.titleSection .breadcrumb {
+  margin-bottom: unset;
+  background-color: inherit;
+  padding: 8px 0;
+}
+
+.apicProductTitle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 1rem 0;
+}
+
+.apicProductTitleText {
+  display:flex;
+  align-items:baseline;
+}
+
+.productName,
+.apiName {
+  font-weight: 300;
+}
+
+.apicProductVersion {
+  margin: 0 0.75rem;
+  font-size: 0.875rem;
+}
+
+.apicProductTeaserMain {
+  flex: 1;
+}
+
+.apicProductTeaserMain h2 {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.apicProductTeaserMain h2 a {
+  display: flex;
+  padding-right: 10px;
+}
+
+.apicProductTeaserMain h2 a span:first-of-type {
+  padding-right: 4px;
+  margin-bottom: 0;
+}
+
+.apicProductTeaserMain .field {
+  margin-bottom: 0;
+}
+
+.apicProductTeaserVersion .field__item:before {
+  content: '(';
+}
+
+.apicProductTeaserVersion .field__item:after {
+  content: ')';
+}
+
+.apicProductRating {
+  flex: 0.05 0 auto;
+  -ms-flex: 0.05 0 100px;
+  min-width: 100px;
+}
+
+.apicProductRating .field,
+.apicProductRating form,
+.apicProductRating .form-item {
+  margin-bottom: 0;
+}
+
+.apicApiCount {
+  font-size: 1.1rem;
+  line-height: 1.4rem;
+  margin-top: 0.5rem;
+}
+
+.apicProductName {
+  max-width: 500px;
+}
+
+ul.apicProductApiList {
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  background: inherit;
+}
+
+.apicProductApiList li {
+  list-style-type: none;
+  padding: 20px;
+  margin: 0 0 10px 10px;
+  display: inline-block;
+  min-width: 300px;
+  height: 64px;
+  outline: 1px solid #dfe3e6;
+}
+.main-container .apicProductApiList li {
+  margin-top: 0;
+}
+
+.apicProductApiList li:hover {
+  background-color: white;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.apicProductApiList .apicProductIcon img {
+  width: 24px;
+  height: 24px;
+}
+h3.field__label.label
+{
+  font-weight: 300;
+  font-size: 24px;
+}
+
+.apicProductContactInformation {
+  display:flex;
+  flex-direction: row;
+
+}
+
+.apicProductContactInformation div {
+  padding-right: 1rem;
+}
+
+.apicProductTermsOfService .tosContainer{
+  display:flex;
+}
+
+
+.apicProductTermsOfService  .termsOfService .field--name-product-terms-of-service {
+  margin: 0;
+}
+
+.apicProductTermsOfService div.collapse[aria-expanded="false"] {
+  display:block;
+  height:3rem !important;
+  overflow:hidden;
+}
+
+.apicProductTermsOfService div.collapsing[aria-expanded="false"] {
+  height:3rem !important;
+}
+
+.apicProductTermsOfService a {
+  align-self: flex-end;
+  font-weight: bold;
+}
+
+.apicProductTermsOfService a.collapsed:after {
+  content: "\f107";
+}
+
+.apicProductTermsOfService a:not(.collapsed):after {
+  content: "\f106";
+}
+
+.apicApiTeaser {
+  display: flex;
+}
+
+.apicApiTeaser h4 {
+  margin-bottom: 0;
+}
+
+.apicProductApiVersion {
+  margin-left: 10px;
+  line-height: 1.3125rem;
+}
+
+.apicApiCell {
+  display: flex;
+}
+
+.apicApiCell div:first-of-type {
+  flex: 1;
+}
+
+.apicApiCell .apicTwistieTitle {
+  width: 16px;
+  flex: .2;
+}
+
+.apicTwistieContent div {
+  margin: 5px 0;
+}
+
+.apicApiOperation {
+  font-weight: normal;
+  margin-left: 16px;
+}
+
+.apicSubscribeMsg {
+  margin-top: 8px;
+}
+
+.apicSecondaryRow {
+  line-height: 22px;
+  padding: 0.25rem;
+}
+
+[class*="apicSecondaryRow"]:not(:last-of-type) {
+  border-bottom: 0.5px solid #e2e2e2;
+}
+
+.productLoginMessage {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.apicProduct h3 {
+  font-weight: 300;
+}
+
+.field.plans .subHeading p {
+  font-size:0.875rem;
+}
+
+.field.plans .tableKey {
+  padding: 0.625rem;
+  align-self: flex-end;
+  display: flex;
+  align-items: baseline;
+}
+
+.field.plans .planRequiresSubKey p,
+.multipleRateLimitsMessage {
+  font-size:0.875rem;
+  font-style:italic;
+  padding: 0 1rem;
+}
+
+/* hover tooltip for multi rate limits */
+.path-product .ui-tooltip {
+  opacity: 1;
+}
+
+.ratePopup {
+  padding: 0.5rem;
+  font-size: 0.875rem !important;
+}
+
+.rateLabel,
+.burstLabel {
+  padding-bottom: 0.625rem;
+}
+
+.route-productapi .page-header,
+.route-productview .page-header {
+  display: none;
+}
+
+.titleSection .productTitle .productName {
+  display: inline-block;
+  font-weight: lighter;
+  vertical-align: top;
+}
+
+.productApiWrapper .titleInnerWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.productApiWrapper .titleInnerWrapper .rightTitle {
+  padding-top: 32px;
+}
+
+@media screen and (max-width: 1024px) {
+  .apicProductName {
+    max-width: 300px;
+  }
+}
+
+.apicTwistieContent {
+  display: none;
+}
+
+.apicTwistieOpen .apicTwistieContent {
+  display: inherit;
+}
+
+.apicTwistieIcon {
+  display: inline-block;
+  transition: 0.2s ease-in-out;
+}
+
+.apicTwistieIcon .fa {
+  font-weight: bold;
+}
+
+.apicTwistieOpen .apicTwistieIcon {
+  transform: rotate(90deg);
+}
+
+.apicTwistieContent {
+  padding: 4px 0 4px 16px;
+}
+
+.apicTwistieRow {
+  display: none;
+}
+
+.apicTwistieRow.visible {
+  display: table-row;
+}
+
+.apicTableFixedContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.apicTableFixedColumn {
+  overflow-x: auto;
+}
+
+.apicTableFixedColumn table {
+  margin-bottom: 0;
+}
+
+.apicTableFixedColumn table thead {
+  background-color: white;
+}
+
+.apicFixedColumn {
+  min-width: 250px;
+  left: 0;
+  top: auto;
+  white-space: nowrap;
+}
+
+.apicTableFixedColumn tr {
+  border: none;
+}
+
+.apicTableFixedColumn td,
+.apicTableFixedColumn th {
+  border-right: 1px solid #dfe3e6;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+.apicTableFixedColumn tfoot {
+  border-bottom: 1px solid #dfe3e6;
+}
+
+.apicFixedColumn.tlcorner {
+  border-top: 1px solid #dfe3e6;
+  border-left: 1px solid #dfe3e6;
+}
+
+.apicFixedColumn.blcorner {
+  border-bottom: 1px solid #dfe3e6;
+  border-left: 1px solid #dfe3e6;
+  padding: 20px 0 21px 0;
+}
+
+.apicTableFixedColumn th.apicFixedColumn {
+  text-align: inherit;
+  background-color: inherit;
+  border-left: 1px solid #dfe3e6;
+  /* border-right: none; */
+}
+
+th .apicDeprecated {
+  font-weight: normal;
+  font-size: 0.8rem;
+}
+
+tbody .apicFixedColumn {
+  border-bottom: none;
+}
+
+tfoot .apicFixedColumn {
+  border-bottom: none;
+}
+
+.apicTableFixedColumn th {
+  min-width: 250px;
+  font-weight: normal;
+}
+
+.apicTableFixedColumn thead th {
+  border-top: 1px solid #dfe3e6;
+  border-left: 1px solid #dfe3e6;
+}
+
+.apicTableFixedColumn thead th .fa {
+  font-size: 1.4rem;
+}
+
+.apicTableFixedColumn tr {
+  line-height: 2.5rem;
+}
+
+.apicTableFixedColumn tfoot td {
+  border-bottom: none;
+  padding: 20px 0;
+}
+
+.apicTableFixedColumn tbody tr.api-odd {
+  background-color: #f0f3f6;
+}
+
+.apicTableFixedColumn tbody tr.api-even {
+  background-color: #ffffff;
+}
+
+.apicFixedColumn .apicApiCell .apicTwistieTitle {
+  padding-left: 20px;
+}
+
+.apicTableStandardCell {
+  min-width: 250px;
+}
+
+th .apicTableStandardCell {
+  min-width: 250px;
+  padding: 0.75rem 1.25rem;
+}
+
+.subHeading {
+  display: flex;
+  padding: 10px 0 20px 0;
+}
+
+.planTableSelector {
+  display:flex;
+  justify-content: center;
+  background-color: #dfe3e6;
+}
+
+.planTableSelector .viewDetails,
+.planTableSelector .hideDetails {
+  padding: 0.75rem;
+  font-size:0.875rem;
+}
+
+.planTableSelector a.selected {
+  color: #152935;
+}
+
+.planComparisonTable {
+  display: flex;
+  flex-direction: column;
+}
+
+.apicPlansList.hidden,
+.planComparisonTable.hidden {
+  display: none;
+}
+
+.planTable-cell {
+  box-sizing: border-box;
+  -webkit-box-flex: 1;
+  -ms-flex-positive: 1;
+  padding: 0.75rem 1.2rem;
+  overflow: hidden;
+  list-style: none;
+  min-height: 59px;
+  min-width: 200px;
+  background-color: white;
+}
+
+.apicTwistieContent .planTable-cell {
+  margin: 0;
+}
+
+.planColumn {
+  width: 400px;
+  min-width: 300px;
+  border: 1px solid #dfe3e6;
+}
+
+div[class*="planColumn"]:not(:last-of-type)
+{
+  border-right:none;
+}
+
+.planTable .planDatabox {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: center;
+}
+
+.planTable .title {
+  min-height: 70px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  text-align: center;
+}
+
+.apicPlansTable .title .planName,
+.planTable .title .planName {
+  font-size: 1.75rem;
+  font-weight: 300;
+  line-height: 1.2;
+}
+
+.planTable .title .apicTwistieTitle {
+  margin-top: 10px;
+}
+
+.planTable .title>.planSubscribe {
+  display: block;
+  margin-top: 15px;
+}
+
+.planTable-cell .multiRateLimits {
+  display: block;
+}
+
+.planTable-cell table {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.planTable-cell table td,
+.planTable-cell table th {
+  padding: 5px;
+  border: 1px solid #dfe3e6;
+  font-size: 0.8rem;
+  max-width: 300px;
+}
+.planTable-cell table td.rateLimit,
+.planTable-cell table th.rateLimit {
+  width: 110px;
+}
+
+.planTable-cell .planApiName {
+  font-size: 1.2rem;
+}
+
+.get .verb{
+  color: #4178be;
+}
+.put .verb {
+  color: #d74108;
+}
+.post .verb {
+  color: #4b8400;
+}
+.delete .verb {
+  color: #ad1625;
+}
+.patch .verb {
+  color: #a36400;
+}
+.head .verb {
+  color: #008571;
+}
+.options .verb {
+  color: #734098;
+}
+@media screen and (max-width: 500px) {
+  .planTableSelector {
+    display: none;
+  }
+  .subHeading {
+    flex-direction: row;
+  }
+  .planComparisonTable {
+    display: none;
+  }
+  .apicPlansList.hidden {
+    display: block;
+  }
+}
+
+@media screen and (max-width: 640px) {
+  .apicProductTeaser {
+    flex-direction: column;
+  }
+
+  .apicProductTeaserMain {
+    -ms-flex: 1 0 auto;
+  }
+
+  .apicProductRating {
+    -ms-flex: 0.05 0 24px;
+  }
+
+  .apicProductTeaserMain h2 {
+    flex-direction: column;
+  }
+
+  .apicProductTeaserMain h2 a {
+    flex-direction: column;
+  }
+
+  .node .apicProductTeaser .apicProductDesc {
+    margin-bottom: 10px;
+  }
+
+  .apicProductName {
+    max-width: 500px;
+  }
+}
+
+/* cards */
+node--type-product.bx--card {
+  height: 19rem;
+  border: none;
+  box-shadow: none;
+}
+
+node--type-product.bx--card {
+  border: none;
+  box-shadow: none;
+}
+
+
+.bx--card .apicProductCard{
+  padding-left: 1rem;
+  padding-top: 1rem;
+  padding-right: 1rem;
+  display: -ms-grid;
+  display: grid;
+  -ms-grid-columns: 50px auto;
+  grid-template-columns: 50px auto;
+}
+
+.bx--card .apicProductIcon {
+  -ms-grid-column: 1;
+}
+
+.bx--card .apicProductCardMain {
+  margin-left: 10px;
+  -ms-grid-column: 2;
+  grid-column-start: 2;
+  -ms-grid-column-span: end;
+  grid-column-end: span end;
+}
+
+.bx--card .apicProductCardMain .bx--about__title--name {
+  width: 13rem;
+  line-height: 2rem;
+  padding-bottom: 0;
+}
+
+.bx--card .apicProductCardMain .bx--about__title--name a{
+  display: inline-flex;
+}
+
+.bx--card .apicProductCardMain .apicProductName {
+  padding-right: 0.625rem;
+  max-width: 10rem;
+}
+
+.bx--card .apicProductDesc,
+.bx--card .apicProductDesc p,
+.bx--card .apicProductDesc h1,
+.bx--card .apicProductDesc h2,
+.bx--card .apicProductDesc h3,
+.bx--card .apicProductDesc h4{
+  font-size: 75%;
+  line-height: 0.85rem;
+  -ms-grid-column: 1;
+  grid-column-start: 1;
+  -ms-grid-column-span: end;
+  grid-column-end: span end;
+}
+
+.bx--card .apicProductDesc {
+  height: 2.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bx--card .apicProductAPIs {
+  margin-top: 1rem;
+}
+
+.bx--card .apicProductCardApi {
+  font-size: 0.875rem;
+  font-weight: normal;
+  line-height: normal;
+}
+
+.bx--card .apicProductSeeAll {
+  font-weight: 600;
+  font-size:0.875rem;
+}
+
+.apicProductState {
+  text-transform: capitalize;
+  border: 1px solid #dfe3e6;
+  padding: 8px;
+  margin-left: 30px;
+}

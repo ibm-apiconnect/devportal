@@ -1,0 +1,46 @@
+services:
+  consumerorg.create_org_access_checker:
+    class: Drupal\consumerorg\Access\CreateOrgAccessCheck
+    tags:
+      - { name: access_check, applies_to: _consumerorg_create_org_access_check }
+  consumerorg.rename_org_access_checker:
+    class: Drupal\consumerorg\Access\RenameOrgAccessCheck
+    tags:
+      - { name: access_check, applies_to: _consumerorg_rename_org_access_check }
+  consumerorg.change_org_owner_access_checker:
+    class: Drupal\consumerorg\Access\ChangeOrgOwnerAccessCheck
+    tags:
+      - { name: access_check, applies_to: _consumerorg_change_org_owner_access_check }
+  consumerorg.edit_org_access_checker:
+    class: Drupal\consumerorg\Access\EditOrgAccessCheck
+    tags:
+      - { name: access_check, applies_to: _consumerorg_edit_org_access_check }
+  consumerorg.delete_org_access_checker:
+    class: Drupal\consumerorg\Access\DeleteOrgAccessCheck
+    tags:
+      - { name: access_check, applies_to: _consumerorg_delete_org_access_check }
+  logger.channel.consumerorg:
+    parent: logger.channel_base
+    arguments: ['consumerorg']
+  consumerorg.role:
+    class: Drupal\consumerorg\Service\RoleService
+  consumerorg.member:
+    class: Drupal\consumerorg\Service\MemberService
+    arguments: ['@ibm_apim.apicuser']
+  ibm_apim.consumerorg:
+    class: Drupal\consumerorg\Service\ConsumerOrgService
+    arguments: ['@logger.channel.consumerorg',
+                '@state',
+                '@ibm_apim.site_config',
+                '@ibm_apim.permissions',
+                '@event_dispatcher',
+                '@current_user',
+                '@entity.query',
+                '@module_handler',
+                '@ibm_apim.mgmtserver',
+                '@tempstore.private',
+                '@ibm_apim.user_utils',
+                '@cache_tags.invalidator',
+                '@consumerorg.member',
+                '@consumerorg.role'
+               ]

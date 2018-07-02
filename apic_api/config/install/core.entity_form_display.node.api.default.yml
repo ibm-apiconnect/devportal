@@ -1,0 +1,127 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.api.api_ibmconfiguration
+    - field.field.node.api.api_id
+    - field.field.node.api.api_oaiversion
+    - field.field.node.api.api_protocol
+    - field.field.node.api.api_soapversion
+    - field.field.node.api.api_swagger
+    - field.field.node.api.api_swaggertags
+    - field.field.node.api.api_wsdl
+    - field.field.node.api.api_xibmname
+    - field.field.node.api.apic_catalog_id
+    - field.field.node.api.apic_description
+    - field.field.node.api.apic_hostname
+    - field.field.node.api.apic_provider_id
+    - field.field.node.api.apic_rating
+    - field.field.node.api.apic_tags
+    - field.field.node.api.apic_pathalias
+    - field.field.node.api.apic_summary
+    - field.field.node.api.apic_url
+    - field.field.node.api.apic_ref
+    - field.field.node.api.apic_version
+    - field.field.node.api.apic_image
+    - field.field.node.api.apic_attachments
+    - field.field.node.api.comment
+    - image.style.icon
+    - node.type.api
+  module:
+    - comment
+    - cshs
+    - file
+    - image
+    - path
+    - votingapi_widgets
+id: node.api.default
+targetEntityType: node
+bundle: api
+mode: default
+content:
+  apic_attachments:
+    weight: 3
+    settings:
+      progress_indicator: throbber
+    third_party_settings: {  }
+    type: file_generic
+    region: content
+  apic_image:
+    weight: 0
+    settings:
+      progress_indicator: throbber
+      preview_image_style: icon
+    third_party_settings: {  }
+    type: image_image
+    region: content
+  apic_rating:
+    weight: 2
+    settings: {  }
+    third_party_settings: {  }
+    type: voting_api_widget
+    region: content
+  apic_tags:
+    weight: 1
+    settings:
+      parent: 0
+      level_labels: ''
+      force_deepest: false
+    third_party_settings: {  }
+    type: cshs
+    region: content
+  apic_pathalias:
+    weight: 4
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+    region: content
+  comment:
+    weight: 26
+    settings: {  }
+    third_party_settings: {  }
+    type: comment_default
+    region: content
+  langcode:
+    type: language_select
+    weight: 7
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  promote:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 5
+    third_party_settings: {  }
+    region: content
+  sticky:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 6
+    third_party_settings: {  }
+    region: content
+hidden:
+  api_ibmconfiguration: true
+  api_id: true
+  api_oaiversion: true
+  api_protocol: true
+  api_soapversion: true
+  api_swagger: true
+  api_swaggertags: true
+  api_wsdl: true
+  api_xibmname: true
+  apic_catalog_id: true
+  apic_description: true
+  apic_hostname: true
+  apic_provider_id: true
+  apic_summary: true
+  apic_url: true
+  apic_ref: true
+  apic_version: true
+  created: true
+  title: true
+  uid: true
+  path: true

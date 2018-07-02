@@ -1,0 +1,18 @@
+# CSS and JS for APIC API Explorer
+# the main.js file will be added via a hook_library_info_alter since the filename changes
+explorer:
+  version: 8.x-2.0
+  js:
+    js/explorer-callback.js: { weight: -2 }
+  dependencies:
+    - core/jquery.once
+    - core/drupalSettings
+  css:
+    component:
+      explorer/app/css/explorer.css: {weight: -20}
+
+basic:
+  version: 1.x
+  css:
+    component:
+      css/api.css: {}

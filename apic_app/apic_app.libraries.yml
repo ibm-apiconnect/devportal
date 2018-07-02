@@ -1,0 +1,68 @@
+subscribe:
+  version: 1.x
+  js:
+    js/subscribe.js: {}
+
+basic:
+  version: 1.x
+  css:
+    component:
+      css/application.css: {}
+  js:
+    js/application.js: {}
+
+app_analytics_dashboard:
+  version: 1.x
+  dependencies:
+    - ibm_apim/analytics
+  js:
+    js/app_analytics_dashboard.js: {}
+
+app_analytics_apicalls:
+  version: 1.x
+  dependencies:
+    - ibm_apim/analytics
+  js:
+    js/app_analytics_apis.js: {}
+
+app_analytics_subscriptions:
+  version: 1.x
+  dependencies:
+    - ibm_apim/analytics
+  js:
+    js/app_analytics_subs.js: {}
+
+app_api_call_summary:
+  version: 1.x
+  js:
+    js/app_api_call_summary.js: {}
+
+app_totals:
+  version: 1.x
+  js:
+    js/app_totals.js: {}
+
+app_analytics_summary:
+  version: 1.x
+  js:
+    js/app_analytics_summary.js: {}
+
+app_data_filter:
+  version: 1.x
+  js:
+    js/app_data_filter.js: {}
+
+app_analytics_detail:
+  version: 1.x
+  js:
+    js/app_analytics_detail.js: {}
+
+app_api_call_history:
+  version: 1.x
+  js:
+    js/app_api_call_history.js: {}
+
+app_cost:
+  version: 1.x
+  js:
+    js/app_cost.js: {}

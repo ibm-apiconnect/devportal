@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.product_visibility_public
+    - node.type.product
+id: node.product.product_visibility_public
+field_name: product_visibility_public
+entity_type: node
+bundle: product
+label: 'Public visibility'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

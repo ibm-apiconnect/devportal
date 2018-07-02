@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.application_client_type
+    - node.type.application
+  module:
+    - options
+id: node.application.application_client_type
+field_name: application_client_type
+entity_type: node
+bundle: application
+label: 'Client type'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: confidential
+default_value_callback: ''
+settings: {  }
+field_type: list_string

@@ -1,0 +1,7 @@
+administer mail subscribers:
+  title: 'Administer mail subscribers'
+  description: 'Configure administrative settings for subscriber emails.'
+  restrict access: true
+mail subscribers:
+  title: 'Email subscribers'
+  description: 'Send email to subscribers of specific products, plans and APIs.'

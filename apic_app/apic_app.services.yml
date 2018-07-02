@@ -1,0 +1,43 @@
+services:
+  apic_app.appid_converter:
+    class: Drupal\apic_app\ParamConverter\AppIdParamConverter
+    tags:
+      - { name: paramconverter }
+  apic_app.access_checker:
+    class: Drupal\apic_app\Access\ApplicationAccessCheck
+    arguments: ['@apic_app.appid_converter']
+    tags:
+      - { name: access_check, applies_to: _application_access_check }
+  apic_app.subscriptions_access_checker:
+    class: Drupal\apic_app\Access\SubscriptionsAccessCheck
+    arguments: ['@apic_app.appid_converter']
+    tags:
+      - { name: access_check, applies_to: _application_subscriptions_access_check }
+  apic_app.analytics_access_checker:
+    class: Drupal\apic_app\Access\AnalyticsAccessCheck
+    arguments: ['@apic_app.appid_converter']
+    tags:
+      - { name: access_check, applies_to: _application_analytics_access_check }
+  apic_app.developer_access_checker:
+    class: Drupal\apic_app\Access\DeveloperAccessCheck
+    arguments: ['@apic_app.appid_converter']
+    tags:
+      - { name: access_check, applies_to: _application_developer_check }
+  apic_app.allow_image_upload:
+    class: Drupal\apic_app\Access\UploadImageCheck
+    tags:
+      - { name: access_check, applies_to: _application_upload_image }
+  apic_app.allow_new_credentials:
+    class: Drupal\apic_app\Access\NewCredentialsCheck
+    tags:
+      - { name: access_check, applies_to: _application_new_credentials }
+  apic_app.allow_clientid_reset:
+    class: Drupal\apic_app\Access\ClientIDResetCheck
+    tags:
+      - { name: access_check, applies_to: _application_reset_clientid}
+  apic_app.allow_clientsecret_reset:
+    class: Drupal\apic_app\Access\ClientSecretResetCheck
+    tags:
+      - { name: access_check, applies_to: _application_reset_clientsecret }
+  apic_app.rest_service:
+    class: Drupal\apic_app\Service\ApplicationRestService

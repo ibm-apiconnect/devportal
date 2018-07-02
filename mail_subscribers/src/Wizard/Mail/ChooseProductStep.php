@@ -1,0 +1,90 @@
+<?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+namespace Drupal\mail_subscribers\Wizard\Mail;
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\FormBase;
+
+use Symfony\Component\HttpFoundation\RedirectResponse;
+
+class ChooseProductStep extends FormBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId() {
+    return 'mail_subscribers_wizard_choose_product';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state) {
+    $cached_values = $form_state->getTemporaryValue('wizard');
+    if ($cached_values['objectType'] == 'plan') {
+      $form['intro'] = array(
+        '#markup' => '<p>' . t('This wizard will email all subscribers of a specific plan for a specific Product. Each subscriber will be sent an individual email.') . '</p>'
+          . '<p>' . t('Select the Product below and then select one of its Plans on the next page.') . '</p>',
+        '#weight' => 0
+      );
+    }
+    else {
+      $form['intro'] = array(
+        '#markup' => '<p>' . t('This wizard will email all subscribers of any plan for a specific Product. Each subscriber will be sent an individual email.') . '</p>'
+          . '<p>' . t('Enter the name of the Product:') . '</p>',
+        '#weight' => 0
+      );
+    }
+
+    $form['product'] = array(
+      '#type' => 'entity_autocomplete',
+      '#target_type' => 'node',
+      '#selection_handler' => 'default',
+      // Optional. The default selection handler is pre-populated to 'default'.
+      '#selection_settings' => array(
+        'target_bundles' => array('product'),
+      ),
+      '#title' => t('Type the first few characters of the Product you would like to select. You can then select from the available search results. Please note the search results are affected by which Products you can access.')
+    );
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+
+    if (empty($form_state->getUserInput()['product'])) {
+      $form_state->setErrorByName('product', t('You must select a Product.'));
+      return FALSE;
+    }
+
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    $cached_values = $form_state->getTemporaryValue('wizard');
+
+    $product = $form_state->getValue('product');
+
+    $cached_values['objectType'] = 'product';
+    $cached_values['product'] = $product;
+
+    $form_state->setTemporaryValue('wizard', $cached_values);
+
+  }
+
+}

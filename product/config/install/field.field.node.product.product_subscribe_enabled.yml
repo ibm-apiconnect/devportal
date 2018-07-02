@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.product_subscribe_enabled
+    - node.type.product
+id: node.product.product_subscribe_enabled
+field_name: product_subscribe_enabled
+entity_type: node
+bundle: product
+label: Subscribable
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

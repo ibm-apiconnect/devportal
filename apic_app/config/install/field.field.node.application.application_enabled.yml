@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.application_enabled
+    - node.type.application
+id: node.application.application_enabled
+field_name: application_enabled
+entity_type: node
+bundle: application
+label: Enabled
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

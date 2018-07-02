@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.product_terms_of_service
+    - node.type.product
+id: node.product.product_terms_of_service
+field_name: product_terms_of_service
+entity_type: node
+bundle: product
+label: 'Terms of Service'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

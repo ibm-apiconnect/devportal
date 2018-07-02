@@ -1,0 +1,50 @@
+<?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ *
+ * (C) Copyright IBM Corporation 2018
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+namespace Drupal\apic_app\Plugin\Condition;
+
+use Drupal\node\NodeInterface;
+use Drupal\rules\Core\RulesConditionBase;
+
+/**
+ * Provides an 'Application is approved for production' condition.
+ *
+ * @Condition(
+ *   id = "rules_application_is_production",
+ *   label = @Translation("Application is approved for production"),
+ *   category = @Translation("Application"),
+ *   context = {
+ *     "node" = @ContextDefinition("entity:node",
+ *       label = @Translation("Application")
+ *     )
+ *   }
+ * )
+ */
+class ApplicationIsProduction extends RulesConditionBase {
+
+  /**
+   * Check if the given Application is approved for production.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to check.
+   *
+   * @return bool
+   *   TRUE if the Application is approved for production.
+   */
+  protected function doEvaluate(NodeInterface $node) {
+    if ($node->application_lifecycle_state->value == 'PRODUCTION') {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+}

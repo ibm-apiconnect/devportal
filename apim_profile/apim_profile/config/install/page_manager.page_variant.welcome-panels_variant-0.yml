@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - page_manager.page.welcome
+  module:
+    - panels
+id: welcome-panels_variant-0
+label: Panels
+variant: panels_variant
+variant_settings:
+  blocks: {  }
+  id: panels_variant
+  label: null
+  weight: 0
+  layout: bs_1col
+  layout_settings: {  }
+  page_title: ''
+  storage_type: page_manager
+  storage_id: welcome-panels_variant-0
+  builder: standard
+page: welcome
+weight: 0
+selection_criteria: {  }
+selection_logic: and
+static_context: {  }

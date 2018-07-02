@@ -1,0 +1,86 @@
+/**
+ * Alert styling.
+ */
+.alert-sm {
+  padding: 5px 10px;
+}
+
+.alert {
+  display: flex;
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem 0;
+  &:first-of-type {
+    margin-top: 0.75rem;
+  }
+
+  // Treat all links inside alert as .alert-link
+  a {
+    font-weight: $alert-link-font-weight;
+  }
+
+  .item-list--messages {
+    margin-bottom: 4px;
+  }
+}
+
+.alert-details {
+  flex: 80;
+  display: flex;
+}
+
+.alert.alert-success {
+  border-left: 5px solid $alert-success-border;
+
+  .icon svg {
+    fill: $alert-success-border;
+  }
+}
+
+.alert.alert-info {
+  border-left: 5px solid $alert-info-border;
+
+  .icon svg {
+    fill: $alert-info-border;
+  }
+}
+
+.alert.alert-warning {
+  border-left: 5px solid $alert-warning-border;
+  .icon svg {
+    fill: $alert-warning-border;
+  }
+}
+
+.alert.alert-danger {
+  border-left: 5px solid $alert-danger-border;
+  .icon svg {
+    fill: $alert-danger-border;
+  }
+}
+
+.alert .close {
+  font-size: inherit;
+  top: 2px;
+  right: inherit;
+}
+
+.alert-text-wrapper {
+  padding: 1px 0;
+  margin: 0 1rem;
+}
+
+.alert.short,
+.alert.short .alert-details,
+.alert.short .alert-text-wrapper {
+  display: inline-flex;
+}
+
+.alert.short li.item {
+  list-style: none;
+}
+.form-item--error-message {
+  color: $alert-danger-border;
+  padding: 5px 10px 5px 10px;
+  border: 1px solid $alert-danger-border;
+  border-left-width: 3px;
+}

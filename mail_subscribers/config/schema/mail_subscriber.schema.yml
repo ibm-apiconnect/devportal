@@ -1,0 +1,13 @@
+mail_subscribers.settings:
+  type: mapping
+  label: 'Mail Subscriber Settings'
+  mapping:
+    throttle:
+      type: integer
+      label: 'Number of messages sent per cron run'
+    spool_expire:
+      type: integer
+      label: 'How many days messages are retained in the spool after successfull sending'
+    debug:
+      type: boolean
+      label: 'Log all outgoing mesages in the system log'

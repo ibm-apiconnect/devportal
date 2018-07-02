@@ -1,0 +1,26 @@
+.bx--global-light-ui {
+  .modal-header {
+    padding: 1rem 0 0.5rem 3rem;
+  }
+
+  header .close {
+    height: unset;
+    line-height: 1rem;
+  }
+
+  .modal-title {
+    padding-top: 1.75rem;
+    padding-right: 3rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem 3rem 3rem 3rem;
+  }
+
+  .modal-footer {
+    padding: 1.5rem 3rem;
+    text-align: right;
+    border-top: none;
+    background-color: unset;
+  }
+}

@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - ghmarkdown
+name: 'Github Markdown'
+format: ghmarkdown
+weight: 5
+filters:
+  ghmarkdown:
+    id: ghmarkdown
+    provider: ghmarkdown
+    status: true
+    weight: 0
+    settings: {  }

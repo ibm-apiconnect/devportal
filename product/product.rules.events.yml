@@ -1,0 +1,56 @@
+product_publish:
+  label: 'After publishing a product'
+  category: 'Product'
+  context:
+    product:
+      type: 'entity:node'
+      label: 'Product'
+
+product_update:
+  label: 'After updating a product'
+  category: 'Product'
+  context:
+    product:
+      type: 'entity:node'
+      label: 'Product'
+
+product_replace:
+  label: 'After replacing a product'
+  category: 'Product'
+  context:
+    product:
+      type: 'entity:node'
+      label: 'Product'
+
+product_supersede:
+  label: 'After superseding a product'
+  category: 'Product'
+  context:
+    product:
+      type: 'entity:node'
+      label: 'Product'
+
+product_deprecate:
+  label: 'After deprecating a product'
+  category: 'Product'
+  context:
+    product:
+      type: 'entity:node'
+      label: 'Product'
+
+
+product_restage:
+  label: 'After restaging a product'
+  category: 'Product'
+  context:
+    product:
+      type: 'entity:node'
+      label: 'Product'
+
+product_delete:
+  label: 'After deleting a product'
+  category: 'Product'
+  context:
+    product:
+      type: 'entity:node'
+      label: 'Product'

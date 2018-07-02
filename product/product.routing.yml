@@ -1,0 +1,37 @@
+product.view:
+  path: '/product/{prodNode}'
+  defaults:
+    _controller: '\Drupal\product\Controller\ProductController::productView'
+    _title_callback: '\Drupal\product\Controller\ProductController::productTitle'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      prodNode:
+        type: 'product.nidorpath'
+
+product.api:
+  path: '/product/{prodNode}/api/{apiNode}'
+  defaults:
+    _controller: '\Drupal\product\Controller\ProductController::productApi'
+    _title_callback: '\Drupal\product\Controller\ProductController::productApiTitle'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      prodNode:
+        type: 'product.nidorpath'
+      apiNode:
+        type: 'apic_api.nidorpath'
+
+product.select:
+  path: '/productselect/{apiNode}'
+  defaults:
+    _controller: '\Drupal\product\Controller\ProductController::select'
+    _title: 'Select a product to view an API'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      apiNode:
+        type: 'entity:node'

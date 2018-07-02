@@ -1,0 +1,20 @@
+ibm_apim.settings:
+  title: 'IBM API Connect'
+  route_name: ibm_apim.settings
+  parent: system.admin_config_system
+  description: 'IBM API Connect Developer Portal configuration.'
+  weight: -25
+
+ibm_apim.devel:
+  title: 'IBM Development'
+  route_name: ibm_apim.devel
+  parent: system.admin_config_development
+  description: 'IBM Development settings'
+  weight: 30
+
+ibm_apim.support:
+  title: 'Support'
+  description: 'How to get help'
+  route_name: ibm_apim.support
+  weight: 30
+  menu_name: main

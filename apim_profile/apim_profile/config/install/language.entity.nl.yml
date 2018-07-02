@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+id: nl
+label: Dutch
+direction: ltr
+weight: 10
+locked: false

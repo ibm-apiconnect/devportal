@@ -1,0 +1,9 @@
+featuredcontent:
+  version: 1.x
+  css:
+    base:
+      css/featuredcontent.css: {}
+  js:
+    js/featuredcontent.js: {}
+  dependencies:
+    - masonry/layout

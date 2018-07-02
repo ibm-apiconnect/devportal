@@ -1,0 +1,27 @@
+/**
+ * Fields added by Display Suite
+ ============================================================================ */
+.field-node--node-link {
+  clear: both;
+}
+
+.field-node--node-link:before, .field-node--node-link:after {
+  content: " ";
+  display: table;
+}
+
+.field-node--node-link:after {
+  clear: both;
+}
+
+@media screen and (min-width: 60.0625em) {
+  .field-node--node-link {
+    float: right;
+  }
+  .field-node--node-link .field__item {
+    margin: 0 0 0 16px;
+  }
+  [dir="rtl"] .field-node--node-link .field__item {
+    margin: 0 16px 0 0;
+  }
+}

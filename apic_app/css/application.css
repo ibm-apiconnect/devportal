@@ -1,0 +1,485 @@
+.page-node-type-application h1.page-header {
+  display: none;
+}
+
+.application-view .masonry-layout .masonry-item {
+  width: auto;
+  border: 0;
+  background: none;
+}
+.apicNewAppWrapper {
+  display: flex;
+  flex-direction: row-reverse;
+}
+.apicNewAppWrapper .button {
+  margin-top: 1rem;
+  margin-left: 0.5rem;
+}
+.apicAppTeaser {
+  display: flex;
+}
+.apicAppTeaserMain {
+  flex: 1;
+}
+.apicAppTeaserMain h2 {
+  display: flex;
+  margin-bottom: 10px;
+}
+.apicAppTeaserMain h2 a {
+  display: flex;
+  padding-right: 10px;
+}
+.apicAppTeaserMain h2 a span:first-of-type {
+  padding-right: 4px;
+  margin-bottom: 0;
+}
+.apicAppTeaserMain .field {
+  margin-bottom: 0;
+}
+.apicAppName {
+  max-width: 500px;
+}
+.apicAppIcon {
+  margin-right: 16px;
+}
+.apicAppIcon img {
+  border: 0;
+  width: 36px;
+  height: 36px;
+}
+.applicationType {
+  margin-left: 1rem;
+  background-color: #80b723;
+  color: #fff;
+  margin-left: 10px;
+  padding: .5rem;
+  text-transform: uppercase;
+  vertical-align: middle;
+  font-size: 0.75rem;
+  display: inline-flex;
+  height: 1.25rem;
+  border-radius: 1rem;
+  -webkit-box-align: center;
+  align-items: center;
+}
+.applicationType.development {
+  background-color: #ff8500;
+}
+.apicAppHeader {
+  display: flex;
+  margin-bottom: 10px;
+}
+.apicAppHeader div:nth-of-type(2) {
+  flex: 1;
+}
+.apicAppHeader h1 {
+  margin-bottom: 6px;
+}
+.apicAppType {
+  background-color: #fe8500;
+  color: white;
+  border-radius: 14px;
+  padding: 2px 6px;
+  margin-right: 6px;
+  text-transform: uppercase;
+}
+.apicAppType.production {
+  background-color: #81b532;
+}
+.apicAppActions a {
+  padding: 0 4px 0 8px;
+}
+.apicAppActions a + a,
+.apicAppActions span + a {
+  border-left: 1px solid #ccc;
+}
+.apicAppActions a i,
+.apicAppCredAdd a i {
+  margin-right: 4px;
+}
+.apicAppCredAdd {
+  padding-left: 8px;
+  border-left: 1px solid #ccc;
+}
+.apicAppCredList {
+  padding: 0;
+}
+.apicAppCredList li {
+  box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.1);
+  list-style-type: none;
+  padding: 8px 16px;
+  margin-bottom: 8px;
+}
+.apicAppCredential h4 {
+  font-size: 16px;
+  font-weight: bold;
+  flex: 1;
+  margin-bottom: 0;
+}
+.apicAppCredHeading {
+  display: flex;
+}
+.apicAppCredHeading {
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #ddd;
+}
+.apicAppCredential .field__label {
+  font-weight: normal;
+}
+.apicAppInputRow {
+  display: flex;
+}
+.apicAppInputRow div:first-of-type {
+  padding-right: 20px;
+  width: 35em;
+}
+.apicAppInputRow div:first-of-type.password-toggle {
+  width: auto;
+  padding-right: 10px;
+}
+.bx--global-light-ui .bx--form-item.form-type-checkbox label {
+  margin-bottom: 0;
+  padding-top: 3px;
+}
+.apicAppInputRow div:first-of-type input {
+  width: 35em;
+}
+.apicAppInputRow div:first-of-type input[type="checkbox"] {
+  width: inherit;
+}
+
+.password-toggle .children {
+  padding-top: 2px;
+}
+
+.alert .password-toggle .children,
+.applicationWrapper .password-toggle .children {
+  padding-left: 1.625rem;
+}
+.apicAppCheckButton {
+  flex: 0.1;
+  align-self: center;
+  margin-right: 10px;
+  display: inline-block;
+  vertical-align: -moz-middle-with-baseline;
+}
+.alert .toggleParent,
+#application-create-form-two .toggleParent {
+  margin-top: 10px;
+}
+
+.alert .toggleParent .form-type-password,
+.alert .toggleParent .form-type-checkbox,
+#application-create-form-two .toggleParent .form-type-password,
+#application-create-form-two .toggleParent .form-type-checkbox,
+.clientIDContainer.toggleParent .form-type-password,
+.clientIDContainer.toggleParent .form-type-checkbox,
+.clientSecretContainer.toggleParent .form-type-password {
+  display: inline-block;
+  margin-bottom: 0;
+  vertical-align: -moz-middle-with-baseline;
+}
+
+.alert .toggleParent .form-type-password,
+.clientIDContainer .bx--form-item.form-item.form-group,
+.clientSecretContainer .bx--form-item.form-item.form-group
+{
+  margin-right: 1rem;
+  width: 25rem;
+}
+
+.alert .toggleParent .form-type-password input,
+.alert .toggleParent .form-type-password input:hover,
+.clientIDContainer .bx--form-item.form-item.form-group input,
+.clientSecretContainer .bx--form-item.form-item.form-group input {
+  width:100%;
+}
+
+.apicAppCheckButton label {
+  font-weight: normal;
+  display: inline-block;
+}
+.apicAppSubList {
+  padding: 0;
+}
+.apicAppSubList li {
+  box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.1);
+  list-style-type: none;
+  padding: 8px 16px;
+  margin-bottom: 8px;
+}
+.apicAppSubName {
+  font-weight: bold;
+}
+.apicAppSubscription {
+  display: flex;
+}
+.apicAppSubscription .apicAppSubName {
+  flex: 1;
+}
+.applicationWrapper header.titleSection {
+  background-color: #fff;
+}
+
+.applicationWrapper header.titleSection .leftTitle {
+  padding: 0.625rem 0;
+}
+
+.applicationWrapper header.titleSection .breadcrumb {
+  margin-bottom: 16px;
+  background-color: #fff;
+  padding: 8px 0;
+}
+.titleSection .applicationTitle .applicationLogo,
+.titleSection .applicationTitle .applicationName {
+  display: inline-block;
+  font-weight: lighter;
+}
+.applicationWrapper .titleInnerWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.applicationWrapper .titleInnerWrapper .rightTitle {
+  padding-top: 48px;
+  display: flex;
+  align-items: center;
+}
+.applicationWrapper .rightTitle .applicationMenu {
+  margin-left: 16px;
+}
+.applicationWrapper .applicationTitle {
+  display: flex;
+  align-items: center;
+}
+.applicationWrapper .contentInnerWrapper {
+  padding-top: 20px;
+}
+/* tabs in application details view */
+.applicationWrapper .titleSection .applicationTabs {
+  background-color: #fff;
+  flex-basis: 100%;
+  margin-top: 15px;
+}
+.applicationWrapper .titleSection .applicationTabs ul {
+  margin-bottom: unset;
+}
+.applicationWrapper .titleSection .applicationTabs ul,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs ul {
+  display: flex;
+  flex-direction: row;
+  padding-left: 0;
+}
+.applicationWrapper .titleSection .applicationTabs li,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li {
+  list-style: none;
+  padding: 0.725rem 0 0.625rem;
+  color: #000;
+  padding-right: 30px;
+  padding-bottom: 0;
+  font-size: 0.875rem;
+}
+.applicationWrapper .titleSection .applicationTabs li a,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li a {
+  color: #000;
+}
+.applicationWrapper .titleSection .applicationTabs li.selected,
+.applicationWrapper .titleSection .applicationTabs li:hover,
+.applicationWrapper .titleSection .applicationTabs li:focus,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li.selected,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:hover,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:focus {
+  color: #3d70b2;
+}
+.applicationWrapper .titleSection .applicationTabs li.selected a,
+.applicationWrapper .titleSection .applicationTabs li:hover a,
+.applicationWrapper .titleSection .applicationTabs li:focus a,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li.selected a,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:hover a,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:focus a {
+  color: #3d70b2;
+  border-bottom: 2px solid #3d70b2;
+}
+.applicationCredentials .credentialsTable,
+.applicationSubscriptions .subscriptionsTable {
+  background-color: #fff;
+  border: 1px solid #ddd;
+}
+.applicationCredentials .credentialsTable .credentialsHeader,
+.applicationSubscriptions .subscriptionsTable .subscriptionsHeader {
+  border-bottom: 1px solid #ddd;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+}
+.applicationCredentials .credentialsTable .credentialsHeader .credentialsTitle,
+.applicationSubscriptions .subscriptionsTable .subscriptionsHeader .subscriptionsTitle {
+  line-height: 26px;
+  font-weight: bold;
+  font-size: 0.875rem;
+}
+.applicationCredentials .credentialsTable .credentialsHeader .credentialsActions .credentialsActionsAdd,
+.applicationCredentials .credentialsTable .credentialsHeader .credentialsActions .credentialsActionsManage {
+  display: inline-block;
+  padding-left: 18px;
+}
+.applicationCredentials .credentialsTable .credentialsHeader .credentialsActions .credentialsActionsAdd svg {
+  vertical-align: middle;
+}
+.applicationCredentials .credentialsTable .credentialsContent {
+  padding: 0 1rem 1rem;
+}
+.clientIDContainer .field__label,
+.clientSecretContainer .field__label,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsData .field__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.625rem;
+  color: #152935;
+}
+.applicationCredentials .credentialsTable .credentialsContent .apicAppCheckButton {
+  display: inline-block;
+  margin-left: 20px;
+}
+.applicationCredentials .credentialsTable .credentialsContent .apicAppCheckButton.verifyButton {
+  margin-left: 0;
+}
+.applicationCredentials .credentialsTable .credentialsContent .credentialsData .clientSecretContainer .form-item {
+  display: inline-block;
+}
+.applicationCredentials .credentialsTable .credentialsContent .credentialsData .credentialSummary {
+  padding: 10px 0;
+}
+
+.applicationSubscriptions {
+  margin-top: 30px;
+}
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent table {
+  width: 100%;
+}
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent table thead tr th {
+  padding: 1rem;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+}
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent table tbody tr td {
+  padding: 1rem;
+  font-size: 0.875rem;
+}
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent .product {
+  display: inline-flex;
+  align-items: center;
+}
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent table tbody tr:nth-child(even) {
+  background-color: #f0f3f6;
+}
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent table thead tr {
+  border-bottom: 1px solid #5aaafa;
+}
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent .subscriptionMenu {
+  text-align: end;
+}
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent .subscriptionMenu .dropitmenu-submenu {
+  text-align: start;
+}
+.miniApplicationLogo img {
+  width: 2rem;
+  height: 2rem;
+  margin-right: 1rem;
+}
+.applicationContent .applicationDescription,
+.applicationContent .customFields {
+  margin-bottom: 1.25rem;
+}
+.applicationContent .applicationDescription .field--label,
+.applicationContent .customFields .field--label {
+  padding-bottom: 6px;
+}
+.application-notification-settings-form p.intro {
+  margin-bottom: 20px;
+}
+.field--name-application-redirect-endpoints table.field-multiple-table .form-item input,
+.field--name-application-redirect-endpoints table.field-multiple-table .form-item input:hover,
+.field--name-application-redirect-endpoints table.field-multiple-table .form-item input:focus {
+  width: inherit;
+}
+.field--name-application-redirect-endpoints table.field-multiple-table {
+  margin-bottom: 0;
+}
+.field--name-application-redirect-endpoints .field-multiple-table tbody {
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+  border-top: 1px solid #ddd;
+  display: block;
+}
+.field--name-application-redirect-endpoints .field-multiple-table tbody tr:first-child td {
+  padding-top: 10px;
+}
+
+.field--name-application-redirect-endpoints .field-multiple-table th {
+  display: none;
+}
+.field--name-application-redirect-endpoints .field-multiple-table th.field-label {
+  display: table-cell;
+  color: #152935;
+  line-height: normal;
+  border-bottom: 0;
+  font-size: 14px;
+  font-weight: 600;
+  padding-left: 0;
+}
+.field--name-application-redirect-endpoints .field-multiple-table tr.odd,
+.field--name-application-redirect-endpoints .field-multiple-table tr.even,
+.field--name-application-redirect-endpoints .field-multiple-table tr {
+  background: none;
+}
+.field--name-application-redirect-endpoints .field-multiple-table tr td {
+  border-top: none;
+  padding: 0;
+}
+.field--name-application-redirect-endpoints .field-multiple-table div.form-type-textfield {
+  display: inline-block;
+  width: 393px;
+  margin-bottom: 0.7rem;
+  margin-right: 4px;
+  margin-left: 10px;
+}
+.field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button {
+  display: inline-block;
+  vertical-align: top;
+}
+.field--name-application-redirect-endpoints .form-item .clearfix {
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  padding-left: 10px;
+  padding-bottom: 10px;
+  padding-right: 10px;
+}
+
+@media screen and (max-width: 1024px) {
+  .apicAppName {
+    max-width: 300px;
+  }
+}
+@media screen and (max-width: 640px) {
+  .apicAppTeaser {
+    flex-direction: column;
+  }
+  .apicAppTeaserMain {
+    -ms-flex: 1 0 auto;
+  }
+  .apicAppTeaserMain h2 {
+    flex-direction: column;
+  }
+  .apicAppTeaserMain h2 a {
+    flex-direction: column;
+  }
+  .node .apicAppTeaser .apicAppDesc {
+    margin-bottom: 10px;
+  }
+  .apicAppName {
+    max-width: 500px;
+  }
+}

@@ -1,0 +1,82 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.application.apic_catalog_id
+    - field.field.node.application.apic_hostname
+    - field.field.node.application.apic_provider_id
+    - field.field.node.application.apic_summary
+    - field.field.node.application.apic_url
+    - field.field.node.application.application_image
+    - field.field.node.application.apic_state
+    - field.field.node.application.application_credentials
+    - field.field.node.application.application_data
+    - field.field.node.application.application_enabled
+    - field.field.node.application.application_name
+    - field.field.node.application.application_id
+    - field.field.node.application.application_redirect_endpoints
+    - field.field.node.application.application_consumer_org_url
+    - field.field.node.application.application_lifecycle_pending
+    - field.field.node.application.application_subscriptions
+    - field.field.node.application.application_lifecycle_state
+    - field.field.node.application.application_client_type
+    - image.style.icon
+    - node.type.application
+  module:
+    - image
+    - text
+id: node.application.default
+targetEntityType: node
+bundle: application
+mode: default
+content:
+  apic_summary:
+    weight: 1
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textarea
+  application_image:
+    weight: 2
+    settings:
+      progress_indicator: throbber
+      preview_image_style: icon
+    third_party_settings: {  }
+    type: image_image
+  application_redirect_endpoints:
+    weight: 3
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+  title:
+    type: string_textfield
+    weight: 0
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  apic_catalog_id: true
+  apic_hostname: true
+  apic_provider_id: true
+  apic_url: true
+  apic_state: true
+  application_credentials: true
+  application_data: true
+  application_enabled: true
+  application_name: true
+  application_id: true
+  application_consumer_org_url: true
+  application_lifecycle_pending: true
+  application_subscriptions: true
+  application_lifecycle_state: true
+  application_client_type: true
+  created: true
+  langcode: true
+  path: true
+  promote: true
+  sticky: true
+  uid: true

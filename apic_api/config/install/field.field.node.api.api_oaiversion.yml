@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.api_oaiversion
+    - node.type.api
+  module:
+    - options
+id: node.api.api_oaiversion
+field_name: api_oaiversion
+entity_type: node
+bundle: api
+label: 'OAI Version'
+description: ''
+required: true
+translatable: false
+default_value:
+  -
+    value: 2
+default_value_callback: ''
+settings: {  }
+field_type: list_string

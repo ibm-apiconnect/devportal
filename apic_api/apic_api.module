@@ -1,0 +1,687 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ *
+ * IBM API Connect Integration
+ *
+ * Adds the API node content type to Drupal for representing APIs from IBM APIC
+ */
+
+use Drupal\apic_api\Api;
+use Drupal\apic_app\Application;
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Access\AccessResultAllowed;
+use Drupal\Core\Access\AccessResultForbidden;
+use Drupal\Core\Access\AccessResultNeutral;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
+use Drupal\product\Product;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+
+/* Permissions that can be granted
+ * Note that we also use permissions defined in product.module
+ */
+define('EDIT_ANY_API_CONTENT_GRANT', 1);
+
+/**
+ * Implements hook_node_access_records().
+ *
+ * For API nodes, create a list of grants for the node based on the
+ * products to which the API belongs
+ *
+ * @param $node
+ * @return array
+ *
+ * Note: hook is called when rebuilding permissions
+ */
+function apic_api_node_access_records($node) {
+  $config = \Drupal::config('ibm_apim.settings');
+  $acl_debug = $config->get('acl_debug');
+
+  if (isset($acl_debug) && $acl_debug == TRUE) {
+    \Drupal::logger('apic_api')->debug('Enter: apic_api_node_access_records');
+  }
+
+  $type = is_string($node) ? $node : $node->getType();
+  if (isset($acl_debug) && $acl_debug == TRUE) {
+    \Drupal::logger('apic_api')->debug('Node type is: %type', array("%type" => var_export($type, TRUE)));
+  }
+
+  $grants = array();
+  $uniquegrants = array();
+
+  // Only build permissions for API nodes
+  if ($type == 'api') {
+
+    if (isset($acl_debug) && $acl_debug == TRUE) {
+      \Drupal::logger('apic_api')->debug('Node Title: %title', array("%title" => var_export($node->getTitle(), TRUE)));
+    }
+
+    // Create a grant for 'edit any api content'
+    $grants[] = array(
+      'realm' => 'api',
+      'gid' => EDIT_ANY_API_CONTENT_GRANT,
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
+      'priority' => 0,
+    );
+
+    // find the list of products to which this api belongs
+    // apiref will be a string like: 'maths:1.0.0'
+    // product_apis_value will be the same string
+    $apiref = $node->apic_ref->value;
+    $query = db_query("SELECT entity_id FROM {node__product_apis} WHERE product_apis_value LIKE '%" . $apiref . "%'");
+    $prods = $query->fetchAll();
+
+    // Now go through and create grants based on each of the products, using the
+    // same scheme as in product_node_access_records (the logic is that if a user
+    // can access any of the products which contain this API, they can view the API)
+    foreach ($prods as $prod) {
+      // Pick up all of the data we need.  Left Joins are used for tables where
+      // there may not be an entry (e.g. if tags or orgs are not defined)
+      $query = db_query("SELECT pub.product_visibility_public_value AS product_visibility_public_value, auth.product_visibility_authenticated_value AS product_visibility_authenticated_value
+, org.product_visibility_custom_orgs_value AS product_visibility_custom_orgs_value, tags.product_visibility_custom_tags_value AS product_visibility_custom_tags_value, view.product_view_enabled_value AS product_view_enabled_value, prref.apic_ref_value AS apic_ref_value
+FROM
+node__product_visibility_public pub
+INNER JOIN node__product_visibility_authenticated auth ON pub.entity_id = auth.entity_id
+LEFT JOIN node__product_visibility_custom_orgs org ON pub.entity_id = org.entity_id
+LEFT JOIN node__product_visibility_custom_tags tags ON pub.entity_id = tags.entity_id
+LEFT JOIN node__apic_ref prref ON pub.entity_id = prref.entity_id
+INNER JOIN node__product_view_enabled view ON pub.entity_id = view.entity_id
+WHERE  (pub.entity_id = " . $prod->entity_id . ")");
+      $results = $query->fetchAll();
+
+      if (isset($acl_debug) && $acl_debug == TRUE) {
+        \Drupal::logger('apic_api')->debug('DB Search for product %id: %results', array(
+          "%id" => $prod->entity_id,
+          "%results" => var_export($results, TRUE)
+        ));
+      }
+
+      // The query will return multiple rows if there are multiple orgs or tags
+      // or if there are multiple products with the same API
+      // This causes duplication of the grants, which we will tidy up after
+      foreach ($results as $row) {
+        // Only create grants if the product is enabled
+        if ($row->product_view_enabled_value == 1) {
+          // Create a grant for 'edit any product content'
+          $grants[] = array(
+            'realm' => 'product',
+            'gid' => EDIT_ANY_PRODUCT_CONTENT_GRANT,
+            'grant_view' => 1,
+            'grant_update' => 0,
+            'grant_delete' => 0,
+            'priority' => 0,
+          );
+          // Create a grant for public access if public is set
+          if ($row->product_visibility_public_value == 1) {
+            $grants[] = array(
+              'realm' => 'product',
+              'gid' => PUBLIC_PRODUCT_GRANT,
+              'grant_view' => 1,
+              'grant_update' => 0,
+              'grant_delete' => 0,
+              'priority' => 0,
+            );
+          }
+          // Create a grant for authenticated access if authenticated is set
+          if ($row->product_visibility_authenticated_value == 1) {
+            $grants[] = array(
+              'realm' => 'product',
+              'gid' => AUTHENTICATED_PRODUCT_GRANT,
+              'grant_view' => 1,
+              'grant_update' => 0,
+              'grant_delete' => 0,
+              'priority' => 0,
+            );
+          }
+          // Create a grant for subscription based on product reference
+          if (isset($row->apic_ref_value)) {
+            $grants[] = array(
+              'realm' => 'product_ref_' . $row->apic_ref_value,
+              'gid' => SUBSCRIBED_TO_PRODUCT_GRANT,
+              'grant_view' => 1,
+              'grant_update' => 0,
+              'grant_delete' => 0,
+              'priority' => 0,
+            );
+          }
+          // Create a grant for organisations, as a separate realm based on the
+          // org uuid.  If there are multiple orgs, then multiple grants each
+          // with their own realm will be created
+          if (isset($row->product_visibility_custom_orgs_value)) {
+            $grants[] = array(
+              'realm' => 'product_org_' . $row->product_visibility_custom_orgs_value,
+              'gid' => ORG_PRODUCT_GRANT,
+              'grant_view' => 1,
+              'grant_update' => 0,
+              'grant_delete' => 0,
+              'priority' => 0,
+            );
+          }
+          // Create a grant for tags, as a separate realm based on the
+          // tag string.  If there are multiple tags, then multiple grants each
+          // with their own realm will be created
+          if (isset($row->product_visibility_custom_tags_value)) {
+            $grants[] = array(
+              'realm' => 'product_tag_' . $row->product_visibility_custom_tags_value,
+              'gid' => TAG_PRODUCT_GRANT,
+              'grant_view' => 1,
+              'grant_update' => 0,
+              'grant_delete' => 0,
+              'priority' => 0,
+            );
+          }
+        }
+      }
+    }
+    // Since multiple grants may have been created (due to the way the db_select
+    // call returns multiple rows), we need to remove any that are duplicated
+    // The code below does this by serialising each member of the grants array
+    // and then using array_unique (which only works on strings) to ensure that
+    // there are no duplicates
+    $uniquegrants = array_map("unserialize", array_unique(array_map("serialize", $grants)));
+    if (isset($acl_debug) && $acl_debug == TRUE) {
+      \Drupal::logger('apic_api')->debug('Grants: %uniquegrants', array("%uniquegrants" => var_export($uniquegrants, TRUE)));
+    }
+  }
+
+  if (isset($acl_debug) && $acl_debug == TRUE) {
+    \Drupal::logger('apic_api')->debug('Exit: apic_api_node_access_records');
+  }
+  return $uniquegrants;
+}
+
+/**
+ * Implements hook_node_grants().
+ *
+ * Note that the vast majority of permissions for APIs are granted to the
+ * user in the product.module, by design; access to APIs is based on access
+ * to the products which use that API
+ *
+ * @param $account
+ * @param $op
+ * @return array
+ *
+ * Note: hook is not called at all when admin logged in
+ * Note: hook is called on every login, logout and page load
+ */
+function apic_api_node_grants($account, $op) {
+
+  $config = \Drupal::config('ibm_apim.settings');
+  $acl_debug = $config->get('acl_debug');
+
+  if (isset($acl_debug) && $acl_debug == TRUE) {
+    \Drupal::logger('apic_api')->debug('Enter: apic_api_node_grants');
+  }
+
+  if (\Drupal::currentUser()->isAuthenticated()) {
+    if (isset($acl_debug) && $acl_debug == TRUE) {
+      \Drupal::logger('apic_api')->debug('Account: %name', array("%name" => $account->getDisplayName()));
+    }
+  }
+  else {
+    if (isset($acl_debug) && $acl_debug == TRUE) {
+      \Drupal::logger('apic_api')->debug('Account: anonymous');
+    }
+  }
+
+  $grants = array();
+
+  $userUtils = \Drupal::service('ibm_apim.user_utils');
+  // If 'edit any api content' is set, grant EDIT_ANY_API_CONTENT_GRANT
+  if ($userUtils->explicitUserAccess('edit any api content')) {
+    $grants['api'] = array(EDIT_ANY_API_CONTENT_GRANT);
+    if (isset($acl_debug) && $acl_debug == TRUE) {
+      \Drupal::logger('apic_api')->debug('Grants: %grants', array("%grants" => var_export($grants, TRUE)));
+    }
+  }
+
+  if (isset($acl_debug) && $acl_debug == TRUE) {
+    \Drupal::logger('apic_api')->debug('Exit: apic_api_node_grants');
+  }
+  return $grants;
+}
+
+/**
+ * Implements hook_node_access().
+ * This is checking if the specified api is returned from apim, if not it blocks access.
+ *
+ * @param \Drupal\node\NodeInterface $node
+ * @param $operation
+ * @param \Drupal\Core\Session\AccountInterface $account
+ * @return \Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultForbidden|\Drupal\Core\Access\AccessResultNeutral
+ */
+function apic_api_node_access(NodeInterface $node, $operation, AccountInterface $account) {
+  $type = is_string($node) ? $node : $node->type;
+  if ($type == 'api' && $operation == 'view') {
+    $found = Api::checkAccess($node);
+    // found so we're allowed to access this API
+    if ($found == TRUE) {
+      $access = new AccessResultAllowed();
+    }
+    else {
+      $access = new AccessResultForbidden();
+    }
+  }
+  else {
+    $access = new AccessResultNeutral();
+  }
+  return $access;
+}
+
+/**
+ * Need to use our custom content type templates
+ *
+ * @param $variables
+ * @param $hook
+ * @param $info
+ */
+function apic_api_preprocess(&$variables, $hook, &$info) {
+  if ($hook == 'node') {
+    $contentTypeToShow = $variables['node']->bundle();
+    if ($contentTypeToShow == 'api') {
+      ibm_apim_entry_trace(__FUNCTION__, NULL);
+      //Load the view mode names.
+      $allViewModes = \Drupal::service('entity_display.repository')->getViewModes('node');
+      //View mode for this request.
+      $viewModeToUse = $variables['view_mode'];
+      //Is the view mode defined for nodes?
+      if (key_exists($viewModeToUse, $allViewModes)) {
+        //Is there a template file for the view modes in the module?
+        if ($viewModeToUse == 'full') {
+          $templateFileName = 'node--' . $contentTypeToShow;
+        }
+        else {
+          $templateFileName = 'node--' . $contentTypeToShow . '--' . $viewModeToUse;
+        }
+        $templateFilePath = drupal_get_path('module', 'apic_api') . '/templates/' . $templateFileName . '.html.twig';
+        if (file_exists($templateFilePath)) {
+          $info['theme path'] = drupal_get_path('module', 'apic_api');
+          $info['path'] = drupal_get_path('module', 'apic_api') . '/templates';
+          $info['template'] = $templateFileName;
+        }
+      }
+      ibm_apim_exit_trace(__FUNCTION__, NULL);
+    }
+  }
+}
+
+/**
+ * @param $variables
+ */
+function apic_api_preprocess_node(&$variables) {
+  if ($variables['node']->getType() == 'api') {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    // get global settings first
+    $config = \Drupal::config('ibm_apim.settings');
+    $ibm_apim_show_placeholder_images = $config->get('show_placeholder_images');
+    $render_api_schema_view = $config->get('render_api_schema_view');
+    if ($ibm_apim_show_placeholder_images === NULL) {
+      $ibm_apim_show_placeholder_images = 1;
+    }
+    $variables['showPlaceholders'] = $ibm_apim_show_placeholder_images;
+    if ($ibm_apim_show_placeholder_images) {
+      $rawImage = Api::getRandomImageName($variables['node']->getTitle());
+      $variables['placeholderUrl'] = base_path() . drupal_get_path('module', 'apic_api') . '/images/' . $rawImage;
+    }
+    else {
+      $variables['placeholderUrl'] = NULL;
+    }
+    $ibm_apim_show_versions = $config->get('show_versions');
+    if ($ibm_apim_show_versions === NULL) {
+      $ibm_apim_show_versions = 1;
+    }
+    $variables['showVersions'] = $ibm_apim_show_versions;
+
+    // custom fields
+    $view_mode = $variables['view_mode'];
+    if ($view_mode == 'full') {
+      $view_mode = 'default';
+    }
+    $entity_view = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.' . $view_mode);
+    $components = $entity_view->getComponents();
+    $field_list = array_keys($components);
+    $core_fields = array(
+      'title',
+      'vid',
+      'status',
+      'nid',
+      'revision_log',
+      'created',
+      'links',
+      'addtoany',
+      'uid',
+      'comment'
+    );
+    $ibmfields = Api::getIBMFields();
+    $merged = array_merge($core_fields, $ibmfields);
+    $diff = array_diff($field_list, $merged);
+    $variables['custom_fields'] = $diff;
+
+    if ($variables['view_mode'] == 'full') {
+      $show_cors_warnings = $config->get('show_cors_warnings');
+      $soap_swagger_download = $config->get('soap_swagger_download');
+      $soap_codesnippets = $config->get('soap_codesnippets');
+      $codesnippet_langs = array();
+      $codesnippets = $config->get('codesnippets');
+      $first_enabled = NULL;
+      foreach ($codesnippets as $lang => $enabled) {
+        if ($enabled) {
+          $codesnippet_langs[] = $lang;
+          if ($first_enabled === NULL) {
+            $first_enabled = $lang;
+          }
+        }
+      }
+      $enable_api_test = $config->get('enable_api_test');
+      $applications = array();
+      $current_user = \Drupal::currentUser();
+      if ($current_user->isAuthenticated() && array_key_exists("codesnippet", $current_user)) {
+        $default_codesnippet_lang = $current_user->codesnippet->value;
+      }
+
+      $current_route = \Drupal::routeMatch()->getRouteName();
+      if (isset($current_route) && !empty($current_route)) {
+        if ($current_route == 'entity.node.canonical') {
+          $prod_nids = Product::getProductsContainingAPI($variables['node']->apic_ref->value);
+          $apiNid = $variables['node']->id();
+          if (isset($prod_nids) && count($prod_nids) == 1) {
+            $prodNid = reset($prod_nids);
+            $path = Url::fromRoute('product.api', array('prodNode' => $prodNid, 'apiNode' => $apiNid))
+              ->setAbsolute()
+              ->toString();
+            $response = new RedirectResponse($path);
+            $response->send();
+            return NULL;
+          }
+          else {
+            $path = Url::fromRoute('product.select', array('apiNode' => $apiNid))->setAbsolute()->toString();
+            $response = new RedirectResponse($path);
+            $response->send();
+            return NULL;
+          }
+        }
+      }
+
+      // if user's default lang not set or is not one of the enabled ones then default to first enabled
+      if (!isset($default_codesnippet_lang) || !empty($default_codesnippet_lang) || !in_array($default_codesnippet_lang, $codesnippet_langs)) {
+        $default_codesnippet_lang = $first_enabled;
+      }
+      if (!$current_user->isAnonymous() && $current_user->id() != 1) {
+        if (\Drupal::service('module_handler')->moduleExists('apic_app')) {
+          $apps = Application::listApplications();
+          foreach ($apps as $app) {
+            $application = Node::load($app);
+            $credentials = array();
+            // add credentials in unserialized form too as easier to parse in JS
+            $appCredentials = array();
+            foreach($application->application_credentials->getValue() as $arrayValue) {
+              $appCredentials[] = unserialize($arrayValue['value']);
+            }
+            if (isset($appCredentials) && !empty($appCredentials)) {
+              foreach ($appCredentials as $cred) {
+                $credentials[] = array(
+                  'client_id' => $cred['client_id'],
+                  'description' => $cred['summary']
+                );
+              }
+              $redirectUris = array();
+              foreach($application->application_redirect_endpoints->getValue() as $arrayValue) {
+                $redirectUris[] = $arrayValue['value'];
+              }
+              $applications[] = array(
+                'name' => $application->getTitle(),
+                'summary' => $application->application_summary->value,
+                'redirectUri' => $redirectUris,
+                'credentials' => $credentials,
+              );
+            }
+          }
+        }
+      }
+      $custom_image = $variables['node']->apic_image;
+      if (isset($custom_image) && !empty($custom_image)) {
+        $entity = $variables['node']->apic_image->entity;
+        if (isset($entity)) {
+          $custom_image_string = $entity->getFileUri();
+        }
+      }
+      if (isset($custom_image_string) && !empty($custom_image_string)) {
+        $apiImageUrl = $custom_image_string;
+      }
+      else if ($ibm_apim_show_placeholder_images) {
+        $apiImageUrl = Api::getPlaceholderImageURL($variables['node']->getTitle());
+      }
+      else {
+        $apiImageUrl = NULL;
+      }
+      // get all of the custom fields and render them as per their view settings
+      $infoSectionEntries = array();
+      $renderer = \Drupal::service('renderer');
+      $viewBuilder = \Drupal::entityTypeManager()->getViewBuilder('node');
+      if (isset($variables['custom_fields']) && !empty($variables['custom_fields'])) {
+        foreach ($variables['custom_fields'] as $custom_field) {
+          if (isset($custom_field) && !empty($custom_field)) {
+            $component = $entity_view->getComponent($custom_field);
+            if (isset($variables['node']->{$custom_field}) && isset($variables['node']->{$custom_field}->value) && !empty($variables['node']->{$custom_field}->value) && $field = $variables['node']->{$custom_field}) {
+              $fieldRenderable = $viewBuilder->viewField($field, $component);
+              if (count($fieldRenderable) && !empty($fieldRenderable)) {
+                $html = $renderer->renderPlain($fieldRenderable);
+                $field_config = \Drupal::entityTypeManager()
+                  ->getStorage('field_config')
+                  ->load('node.api.' . $custom_field);
+                $infoSectionEntries[] = array(
+                  'class' => $field_config->get('label'),
+                  'html' => $html,
+                  'location' => 'OVERVIEW'
+                );
+              }
+            }
+          }
+        }
+      }
+      // add tags and other core drupal fields
+      foreach (array(
+                 'apic_attachments',
+                 'apic_tags',
+                 'links',
+                 'addtoany'
+               ) as $field_name) {
+        $apic_component = $entity_view->getComponent($field_name);
+        if (isset($variables['node']->{$field_name}) && $field = $variables['node']->{$field_name}) {
+          $fieldRenderable = $viewBuilder->viewField($field, $apic_component);
+          if (count($fieldRenderable) && !empty($fieldRenderable)) {
+            $html = $renderer->renderPlain($fieldRenderable);
+            $field_config = \Drupal::entityTypeManager()->getStorage('field_config')->load('node.api.' . $field_name);
+            $location = 'OVERVIEW';
+            $infoSectionEntries[] = array(
+              'class' => $field_config->get('label'),
+              'html' => $html,
+              'location' => $location
+            );
+          }
+        }
+      }
+      // forum link
+      $moduleHandler = \Drupal::service('module_handler');
+      if ($moduleHandler->moduleExists('forum')) {
+        $config = \Drupal::config('ibm_apim.settings');
+        $forum_links_enabled = $config->get('autocreate_apiforum');
+        if ($forum_links_enabled == 1) {
+          $clean_forum_name = \Drupal::service('apic_api.taxonomy')
+            ->sanitise_api_name(html_entity_decode($variables['node']->getTitle(), ENT_QUOTES));
+          $forumID = taxonomy_term_load_multiple_by_name($clean_forum_name, 'forums');
+          if (!empty($forumID)) {
+            reset($forumID);
+            $first_key = key($forumID);
+            $link = Link::fromTextAndUrl(t('Discuss this API in the forum'), Url::fromRoute('forum.page', array('taxonomy_term' => $forumID[$first_key]->tid->value)));
+            $html = '<label class="forumLabel">' . t('Support') . '</label><div class="forumLink">' . $link->toString() . '</div>';
+            $infoSectionEntries[] = array(
+              'class' => 'forum',
+              'html' => $html,
+              'location' => 'OVERVIEW'
+            );
+          }
+        }
+      }
+
+      $docpages = Api::getLinkedPages($variables['node']->id());
+      $variables['docpages'] = $docpages;
+
+      $utils = \Drupal::service('ibm_apim.utils');
+
+      //$perf_config = \Drupal::config('system.performance');
+      //$js_aggregate = $perf_config->get('js.preprocess');
+      $variables['#attached']['library'][] = 'apic_api/explorer';
+      $variables['#attached']['drupalSettings']['api']['explorer']['apis'] = array(unserialize($variables['node']->api_swagger->value));
+      $variables['#attached']['drupalSettings']['api']['explorer']['apps'] = $applications;
+      $variables['#attached']['drupalSettings']['api']['explorer']['options'] = array(
+        'showApiVersion' => $ibm_apim_show_versions,
+        'showCorsWarnings' => $show_cors_warnings,
+        'showSoapSwaggerDownload' => $soap_swagger_download,
+        'showSoapCodeSnippets' => $soap_codesnippets,
+        'languages' => $codesnippet_langs,
+        'defaultLanguage' => $default_codesnippet_lang,
+        'tryIt' => $enable_api_test,
+        'onReady' => 'portalExplorerReady',
+        'explorerDir' => base_path() . drupal_get_path('module', 'apic_api') . '/explorer/app/',
+        'locale' => $utils->convert_lang_name(\Drupal::languageManager()->getCurrentLanguage()->getId()),
+        'loggedIn' => !$current_user->isAnonymous(),
+        'loginLink' => Url::fromRoute('user.login', array('redirectTo' => Url::fromRoute('<current>')->getInternalPath()))->toString(),
+        'isApicPortal' => TRUE,
+        'apicPortalUserId' => $current_user->id(),
+        'apicPortalNewAppLink' => Url::fromRoute('apic_app.create', array('redirectTo' => Url::fromRoute('<current>')->getInternalPath()))->toString()
+      );
+      if (isset($infoSectionEntries) && !empty($infoSectionEntries)) {
+        $variables['#attached']['drupalSettings']['api']['explorer']['options']['infoSectionEntries'] = array($infoSectionEntries);
+      }
+      if (isset($docpages) && !empty($docpages)) {
+        $variables['#attached']['drupalSettings']['api']['explorer']['options']['documentationEntries'] = $docpages;
+      }
+      if (isset($apiImageUrl) && !empty($apiImageUrl)) {
+        $variables['#attached']['drupalSettings']['api']['explorer']['options']['apiImageUrl'] = $apiImageUrl;
+      }
+      if ($render_api_schema_view == TRUE) {
+        $variables['#attached']['drupalSettings']['api']['explorer']['options']['renderSchemaView'] = TRUE;
+      }
+    }
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * @param array $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ * @param $form_id
+ */
+function apic_api_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  switch ($form_id) {
+    // remove link to delete our content type
+    case 'node_type_edit_form' :
+      if (isset($form['type']['#default_value']) && $form['type']['#default_value'] == 'api') {
+        if (isset($form['actions']['delete'])) {
+          unset($form['actions']['delete']);
+        }
+      }
+      break;
+  }
+}
+
+/**
+ * We need our module to run last for the user register form so we can remove any other fields
+ * other modules might have added - such as the forum notifications.
+ *
+ * @param $implementations
+ * @param $hook
+ */
+function apic_api_module_implements_alter(&$implementations, $hook) {
+  if (($hook == 'form_alter' || $hook == 'menu_links_discovered_alter' || $hook == 'library_info_alter') && isset($implementations['api'])) {
+    $group = $implementations['api'];
+    unset($implementations['api']);
+    $implementations['api'] = $group;
+  }
+}
+
+/**
+ *  Implements hook_menu_links_discovered_alter().
+ *
+ * @param $links
+ */
+function apic_api_menu_links_discovered_alter(&$links) {
+  // remove link to delete our content type
+  if (isset($links['entity.node_type.delete_form.api'])) {
+    unset($links['entity.node_type.delete_form.api']);
+  }
+  // remove link to create content of our content type
+  if (isset($links['node.add.api'])) {
+    unset($links['node.add.api']);
+  }
+}
+
+/**
+ * Dynamically add to the api/explorer library since the name of the explorer main.js changes every build
+ *
+ * @param $libraries
+ * @param $extension
+ */
+function apic_api_library_info_alter(&$libraries, $extension) {
+  if (in_array('explorer', array_keys($libraries))) {
+    if (file_exists(drupal_get_path('module', 'apic_api') . '/explorer/app/asset-manifest.json')) {
+      $string = file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app/asset-manifest.json');
+      $json = json_decode($string, TRUE);
+      if (isset($json['main.js']) && file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app/' . $json['main.js'])) {
+        $libraries['explorer']['js']['explorer/app/' . $json['main.js']] = array(
+          'weight' => -1,
+          'minified' => TRUE,
+          'preprocess' => FALSE
+        );
+      }
+    }
+  }
+  // modify the load order for the voting_widgets/fivestar library as it needs to be loaded before our explorer libraries
+  if (in_array('fivestar', array_keys($libraries))) {
+    $libraries['fivestar']['js']['js/fivestars.js']['weight'] = -3;
+  }
+}
+
+/**
+ * @param array $build
+ * @param \Drupal\node\NodeInterface $node
+ * @param $display
+ * @param $view_mode
+ */
+function apic_api_node_view(array &$build, NodeInterface $node, $display, $view_mode) {
+  if ($node->getType() == 'api' && $view_mode == 'full') {
+    $current_user = \Drupal::currentUser();
+    if (!$current_user->isAnonymous() && $current_user->id() != 1) {
+      // cache this api per devorg
+      $user_utils = \Drupal::service('ibm_apim.user_utils');
+      $org = $user_utils->getCurrentConsumerOrg();
+      $tags = ['consumerorg:' . Html::cleanCssIdentifier($org['url'])];
+      $build['#cache']['tags'] = array_merge($build['#cache']['tags'], $tags);
+
+      // disable all caching for this node type
+      //$build['#cache']['max-age'] = 0;
+    }
+  }
+}

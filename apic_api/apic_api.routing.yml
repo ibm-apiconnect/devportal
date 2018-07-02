@@ -1,0 +1,11 @@
+apic_api.view:
+  path: '/api/{apiNode}'
+  defaults:
+    _controller: '\Drupal\apic_api\Controller\ApiController::apiView'
+    _title_callback: '\Drupal\apic_api\Controller\ApiController::apiTitle'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  options:
+    parameters:
+      apiNode:
+        type: 'apic_api.nidorpath'

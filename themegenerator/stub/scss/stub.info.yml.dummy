@@ -1,0 +1,28 @@
+core: 8.x
+type: theme
+base theme: connect_theme
+
+name: 'stub'
+description: 'Sub-theme of connect_theme.'
+package: 'Bootstrap'
+
+regions:
+  navigation: 'Navigation'
+  navigation_right: 'Navigation Right'
+  topbar: 'Top Bar'
+  highlighted: 'Highlighted'
+  help: 'Help'
+  content: 'Content'
+  sidebar_first: 'Primary'
+  sidebar_second: 'Secondary'
+  footer: 'Footer'
+  page_top: 'Page top'
+  page_bottom: 'Page bottom'
+  collapse_left: 'Collapse Left'
+  collapse_right: 'Collapse Right'
+  disabled: 'Disabled'
+
+auto_build_scss: 1
+
+libraries:
+  - 'stub/global-styling'

@@ -1,0 +1,72 @@
+field.field.node.application.apic_catalog_id:
+  type: config_object
+  label: 'APIC Catalog ID'
+
+field.field.node.application.apic_hostname:
+  type: config_object
+  label: 'APIC Hostname'
+
+field.field.node.application.apic_provider_id:
+  type: config_object
+  label: 'APIC Provider ID'
+
+field.field.node.application.apic_state:
+  type: config_object
+  label: 'State'
+
+field.field.node.application.apic_summary:
+  type: config_object
+  label: 'Description'
+
+field.field.node.application.apic_url:
+  type: config_object
+  label: 'URL'
+
+field.field.node.application.application_client_type:
+  type: config_object
+  label: 'Client type'
+
+field.field.node.application.application_consumer_org_url:
+  type: config_object
+  label: 'Consumer organization URL'
+
+field.field.node.application.application_credentials:
+  type: config_object
+  label: 'Credentials'
+
+field.field.node.application.application_data:
+  type: config_object
+  label: 'Application Data'
+
+field.field.node.application.application_enabled:
+  type: config_object
+  label: 'Enabled'
+
+field.field.node.application.application_id:
+  type: config_object
+  label: 'Application ID'
+
+field.field.node.application.application_image:
+  type: config_object
+  label: 'Image'
+
+field.field.node.application.application_lifecycle_pending:
+  type: config_object
+  label: 'Pending Lifecycle State'
+
+field.field.node.application.application_lifecycle_state:
+  type: config_object
+  label: 'Lifecycle State'
+
+field.field.node.application.application_name:
+  type: config_object
+  label: 'Name'
+
+field.field.node.application.application_redirect_endpoints:
+  type: config_object
+  label: 'Application OAuth Redirect URL(s)'
+
+field.field.node.application.application_subscriptions:
+  type: config_object
+  label: 'Subscriptions'
+

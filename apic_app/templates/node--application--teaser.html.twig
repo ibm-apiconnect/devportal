@@ -1,0 +1,48 @@
+{#
+/**
+ * @file
+ * Default teaser theme implementation for products.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+'node',
+'node--id-' ~ node.id,
+('node--type-' ~ node.bundle)|clean_class,
+apic_state ? ('application-state-' ~ apic_state)|clean_class,
+view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
+] -%}
+{{ attach_library('ibm_apim/core') }}
+{{ attach_library('apic_app/basic') }}
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  <div class="apicAppTeaser">
+    {% if content.application_image is defined and content.application_image|render|trim is not empty %}
+      <div class="apicTeaserIcon">
+        {{ content.application_image }}
+      </div>
+    {% elseif showPlaceholders %}
+      <div class="apicTeaserIcon">
+        <img src="{{- placeholderUrl -}}" alt=""/>
+      </div>
+    {% endif %}
+    <div class="apicAppTeaserMain">
+      <h2>
+        <a href="{{- path('entity.node.canonical', {'node': node.id}) -}}" rel="bookmark">
+          <span class="apicAppName apicTruncate" title="{{- label -}}">{{- label -}}</span>
+        </a>
+      </h2>
+      <div class="apicAppDesc apicFade"
+           title="{{- content.apic_summary['#items'][0].value -}}">{{ content.apic_summary }}</div>
+      {% if custom_fields is defined and custom_fields is not empty %}
+        <div class="customFields">
+          {% for custom_field in custom_fields %}
+            <div class="{{ custom_field|clean_class }}">
+              {{ content[custom_field] }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</article>

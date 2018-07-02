@@ -1,0 +1,71 @@
+{#
+/**
+ * @file
+ * Default teaser theme implementation for products.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+'node',
+'node--id-' ~ node.id,
+('node--type-' ~ node.bundle)|clean_class,
+view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
+('productNodeID-' ~ node.id)|clean_class,
+('productTitle-' ~ node.title[0].value)|clean_class,
+('productVersion-' ~ content.apic_version['#items'][0].value)|clean_class
+] -%}
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  {% if content.apic_pathalias['#items'][0].value is defined and content.apic_pathalias['#items'][0].value is not empty %}
+    {% set prodNode = content.apic_pathalias['#items'][0].value %}
+  {% else %}
+    {% set prodNode = node.id %}
+  {% endif %}
+  <div class="apicProductTeaser">
+    {% if content.apic_image is defined and content.apic_image|render|trim is not empty %}
+      <div class="apicTeaserIcon">
+        {{ content.apic_image }}
+      </div>
+    {% elseif showPlaceholders %}
+      <div class="apicTeaserIcon">
+        <img src="{{- placeholderUrl -}}" alt=""/>
+      </div>
+    {% endif %}
+    <div class="apicProductTeaserMain">
+      <h2>
+        <a href="{{- path('product.view', {'prodNode': prodNode}) -}}" rel="bookmark">
+          <span class="apicProductName apicTruncate">{{- label -}}</span>
+          {% if showVersions %}
+            <span class="apicProductTeaserVersion">{{- content.apic_version -}}</span>
+          {% endif %}
+        </a>
+	    <span class="apicApiCount">
+	      {% trans %}
+        ({{ count }} API included)
+        {% plural apiCount %}
+        ({{ count }} APIs included)
+        {% endtrans %}
+	    </span>
+      </h2>
+      {% if content.apic_summary['#items'][0].value is defined and content.apic_summary['#items'][0].value is not empty %}
+        <div class="apicProductDesc summary"
+            title="{{- content.apic_summary['#items'][0].value -}}">{{ content.apic_summary }}</div>
+      {% else %}
+        <div class="apicProductDesc"
+             title="{{- content.apic_description['#items'][0].value -}}">{{ content.apic_description }}</div>
+      {% endif %}
+      {% if custom_fields is defined and custom_fields is not empty %}
+        <div class="customFields">
+          {% for custom_field in custom_fields %}
+            <div class="{{ custom_field|clean_class }}">
+              {{ content[custom_field] }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+    <div class="apicProductRating">
+      {{ content.apic_rating }}
+    </div>
+  </div>
+</article>

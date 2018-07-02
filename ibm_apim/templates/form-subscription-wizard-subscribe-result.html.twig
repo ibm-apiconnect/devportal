@@ -1,0 +1,65 @@
+{#
+/**
+ * @file
+ *
+ * Template for the subscribe status page of the wizard (the final results page)
+ *
+ * @ingroup templates
+ */
+#}
+<div class="apicForm">
+    <div class="apicFormHeader">{{ 'Subscription Complete'|t }}</div>
+    <div class="apicFormText">{{ element['#messages'].statusText }}</div>
+    {% if element['#subscriptionDetails'] %}
+        <div class="apicSubscribeSummary">
+            <div class="apicSubscribedProduct">
+                <div class="apicCardIcon">
+                    <a href="{{ path('product.view', {'prodNode': element['#subscriptionDetails'].productNodeId}) }}">
+                        <img class="bx--about__icon"
+                             src="{{ element['#subscriptionDetails'].productIcon }}"/>
+                    </a>
+                </div>
+                <div class="apicSubProductCard">
+                    <div class="bx--about__title--name apic-subscribe-summary-product">
+                        <a href="{{ path('product.view', {'prodNode': element['#subscriptionDetails'].productNodeId}) }}">
+                            {{ element['#subscriptionDetails'].productName }}
+                        </a>
+                    </div>
+                    <div class="apic-subscribe-summary-plan">
+                        <a href="{{ path('product.view', {'prodNode': element['#subscriptionDetails'].productNodeId}) }}">
+                            {{ element['#subscriptionDetails'].planName }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="apicSubscribedApp">
+                <div class="apicCardIcon">
+                    <a href="{{ path('entity.node.canonical', {'node' : element['#subscriptionDetails'].applicationNodeId}) }}">
+                        <img class="bx--about__icon"
+                             src="{{ element['#subscriptionDetails'].applicationIcon }}"/>
+                    </a>
+                </div>
+
+                <div class="bx--about__title--name apic-subscribe-summary-application">
+                    <a href="{{ path('entity.node.canonical', {'node' : element['#subscriptionDetails'].applicationNodeId}) }}">
+                        {{ element['#subscriptionDetails'].applicationName }}
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="apicSubscribeResultFollowup">
+            <a class="button"
+               href="{{ path('view.products.page_1') }}">{{ 'Explore more products'|t }}</a>
+            {% if element['#subscriptionDetails'].referer is defined %}
+                <a class="button"
+                   href="{{ element['#subscriptionDetails'].referer}}">{{ 'Done'|t }}</a>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="apic-user-form-wrapper">
+            <form {{ attributes }}>
+                {{ children }}
+            </form>
+        </div>
+    {% endif %}
+</div>

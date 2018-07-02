@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.application_lifecycle_pending
+    - node.type.application
+id: node.application.application_lifecycle_pending
+field_name: application_lifecycle_pending
+entity_type: node
+bundle: application
+label: 'Pending Lifecycle State'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

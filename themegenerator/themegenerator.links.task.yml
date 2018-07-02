@@ -1,0 +1,5 @@
+themegenerator.theme_generate:
+  route_name: themegenerator.theme_generate
+  base_route: system.themes_page
+  title: Generate
+  weight: 9

@@ -1,0 +1,10 @@
+--- modules/multiple_fields_remove_button/multiple_fields_remove_button.module	2018-03-09 15:51:40.000000000 +0000
++++ modules/multiple_fields_remove_button/multiple_fields_remove_button.module	2018-03-09 15:51:55.000000000 +0000
+@@ -109,6 +109,7 @@
+       '#attributes' => [
+         'class' => [
+           'multiple-fields-remove-button',
++          'apicSecondary',
+         ],
+       ],
+       '#submit' => ['multiple_fields_remove_button_submit_handler'],

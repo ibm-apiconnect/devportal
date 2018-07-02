@@ -1,0 +1,28 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.tags
+  module:
+    - system
+  theme:
+    - connect_theme
+id: tags
+theme: connect_theme
+region: '-1'
+weight: 0
+provider: null
+plugin: 'system_menu_block:tags'
+settings:
+  id: 'system_menu_block:tags'
+  label: Categories
+  provider: system
+  label_display: visible
+  level: 1
+  depth: 0
+visibility:
+  request_path:
+    id: request_path
+    pages: "/product\r\n/api"
+    negate: false
+    context_mapping: {  }

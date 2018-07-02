@@ -1,0 +1,240 @@
+apic_app.view:
+  path: '/application/{appId}'
+  defaults:
+    _controller: '\Drupal\apic_app\Controller\ApplicationController::applicationView'
+    _title: 'View an application'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_access_check: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.activity:
+  path: '/node/{node}/activity'
+  defaults:
+    _controller: '\Drupal\apic_app\Controller\ApplicationController::analytics'
+    _title: 'Activity'
+  requirements:
+    _role: 'authenticated'
+    _application_analytics_access_check: 'TRUE'
+    _ibm_apim_analytics_access_check: 'TRUE'
+  options:
+    parameters:
+      node:
+        type: 'entity:node'
+
+apic_app.subscriptions:
+  path: '/node/{node}/subscriptions'
+  defaults:
+    _controller: '\Drupal\apic_app\Controller\ApplicationController::subscriptions'
+    _title: 'Subscriptions'
+  requirements:
+    _role: 'authenticated'
+    _application_subscriptions_access_check: 'TRUE'
+    _ibm_apim_analytics_access_check: 'TRUE'
+  options:
+    parameters:
+      node:
+        type: 'entity:node'
+
+apic_app.create:
+  path: '/application/new'
+  defaults:
+    _form: '\Drupal\apic_app\Form\Multistep\ApplicationCreateStep1Form'
+    _title: 'Create a new application'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+
+apic_app.create_modal:
+  path: '/application/new/modal'
+  defaults:
+    _controller: '\Drupal\apic_app\Controller\ApplicationController::createApplicationModal'
+    _title: 'Create a new application'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+
+apic_app.create_step_two:
+  path: '/application/new/summary'
+  defaults:
+    _form: '\Drupal\apic_app\Form\Multistep\ApplicationCreateStep2Form'
+    _title: 'API Key and Secret'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+
+apic_app.update:
+  path: '/application/{appId}/edit'
+  defaults:
+    _form: '\Drupal\apic_app\Form\ApplicationUpdateForm'
+    _title: 'Update an application'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.delete:
+  path: '/application/{appId}/delete'
+  defaults:
+    _form: '\Drupal\apic_app\Form\ApplicationDeleteForm'
+    _title: 'Delete an application'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.promote:
+  path: '/application/{appId}/promote'
+  defaults:
+    _form: '\Drupal\apic_app\Form\ApplicationPromotionForm'
+    _title: 'Promote an application'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.credentials_create:
+  path: '/application/{appId}/add-clientcreds'
+  defaults:
+    _form: '\Drupal\apic_app\Form\CredentialsCreateForm'
+    _title: 'Add new application credentials'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+    _application_new_credentials: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.credentials_update:
+  path: '/application/{appId}/update-clientcreds/{credId}'
+  defaults:
+    _form: '\Drupal\apic_app\Form\CredentialsUpdateForm'
+    _title: 'Update application credentials'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.credentials_delete:
+  path: '/application/{appId}/delete-clientcreds/{credId}'
+  defaults:
+    _form: '\Drupal\apic_app\Form\CredentialsDeleteForm'
+    _title: 'Delete application credentials'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.image_upload:
+  path: '/application/{appId}/upload'
+  defaults:
+    _form: '\Drupal\apic_app\Form\UploadImageForm'
+    _title: 'Upload application image'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+    _application_upload_image: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.image_delete:
+  path: '/application/{appId}/removeimage'
+  defaults:
+    _form: '\Drupal\apic_app\Form\RemoveImageForm'
+    _title: 'Delete application image'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.reset_clientid:
+  path: '/application/{appId}/reset-clientid/{credId}'
+  defaults:
+    _form: '\Drupal\apic_app\Form\ResetClientIDForm'
+    _title: 'Reset an application Client ID'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+    _application_reset_clientid: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.reset_clientsecret:
+  path: '/application/{appId}/reset-clientsecret/{credId}'
+  defaults:
+    _form: '\Drupal\apic_app\Form\ResetClientSecretForm'
+    _title: 'Reset an application Client Secret'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+    _application_reset_clientsecret: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.verify_clientsecret:
+  path: '/application/{appId}/verify/{credId}'
+  defaults:
+    _form: '\Drupal\apic_app\Form\VerifyClientSecretForm'
+    _title: 'Verify an application Client Secret'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.unsubscribe:
+  path: '/application/{appId}/unsubscribe/{subId}'
+  defaults:
+    _form: '\Drupal\apic_app\Form\UnsubscribeForm'
+    _title: 'Unsubscribe an application from a product plan'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.migrate_subscription:
+  path: '/application/{appId}/migrate/{subId}/{planRef}'
+  defaults:
+    _form: '\Drupal\apic_app\Form\MigrateSubscriptionForm'
+    _title: 'Migrate a subscription to a product plan'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'

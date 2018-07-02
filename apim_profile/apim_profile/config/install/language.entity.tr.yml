@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+id: tr
+label: Turkish
+direction: ltr
+weight: 11
+locked: false

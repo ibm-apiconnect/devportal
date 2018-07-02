@@ -1,0 +1,196 @@
+ibm_apim.settings:
+  type: config_object
+  label: 'IBM API Connect configuration settings'
+  mapping:
+    autocreate_apiforum:
+      type: boolean
+      label: 'Automatically create a forum for each API'
+    show_placeholder_images:
+      type: boolean
+      label: 'Show placeholder images'
+    show_register_app:
+      type: boolean
+      label: 'Show register app links'
+    show_versions:
+      type: boolean
+      label: 'Show versions'
+    enable_api_test:
+      type: boolean
+      label: 'Allow testing of APIs'
+    autotag_with_phase:
+      type: boolean
+      label: 'Automatically tag each API with its phase'
+    show_cors_warnings:
+      type: boolean
+      label: 'Show CORS warnings'
+    render_api_schema_view:
+      type: boolean
+      label: 'Render API Schema objects'
+    show_analytics:
+      type: boolean
+      label: 'Display API consumer analytics'
+    soap_swagger_download:
+      type: boolean
+      label: 'Allow download of SOAP Open API documents'
+    email_as_username:
+      type: boolean
+      label: 'Usernames are email addresses'
+    acl_debug:
+      type: boolean
+      label: 'Enable debug information for ACL node access checks (enabling will cause a performance impact)'
+    webhook_debug:
+      type: boolean
+      label: 'Enable webhook payload storage for debug purposes (enabling will cause a performance impact)'
+    entry_exit_trace:
+      type: boolean
+      label: 'Enable method entry / exit trace (enabling will cause a performance impact)'
+    apim_rest_trace:
+      type: boolean
+      label: 'Enable API Manager REST interface debug (enabling will cause a performance impact)'
+    allow_consumerorg_rename:
+      type: boolean
+      label: 'Allow consumer organization owners to rename their organization'
+    allow_consumerorg_creation:
+      type: boolean
+      label: 'Allow users to create additional consumer organizations (requires self service onboarding to also be enabled)'
+    allow_consumerorg_delete:
+      type: boolean
+      label: 'Allow users to delete their consumer organizations'
+    allow_user_delete:
+      type: boolean
+      label: 'Allow users to delete their accounts'
+    allow_new_credentials:
+      type: boolean
+      label: 'Allow consumer organization members to create additional application credentials'
+    allow_clientid_reset:
+      type: boolean
+      label: 'Allow consumer organization members to reset their application client ID'
+    allow_clientsecret_reset:
+      type: boolean
+      label: 'Allow consumer organization members to reset their application client secret'
+    application_image_upload:
+      type: boolean
+      label: 'Allow API consumers to upload custom images for their applications'
+    categories:
+      type: mapping
+      label: 'Categories'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Tag APIs and Products using provided categories'
+        create_taxonomies_from_categories:
+          type: boolean
+          label: 'Create taxonomies for categories if they do not already exist'
+    soap_codesnippets:
+      type: boolean
+      label: 'Code snippets are displayed for REST APIs, if this field is checked then they will also be displayed for SOAP APIs. The code snippets will use raw HTTP and not a client SOAP library.'
+    codesnippets:
+      type: mapping
+      label: 'API Code Snippets'
+      mapping:
+        ruby:
+          type: boolean
+          label: 'Ruby'
+        python:
+          type: boolean
+          label: 'Python'
+        curl:
+          type: boolean
+          label: 'cURL'
+        php:
+          type: boolean
+          label: 'PHP'
+        java:
+          type: boolean
+          label: 'Java'
+        node:
+          type: boolean
+          label: 'nodeJS'
+        go:
+          type: boolean
+          label: 'go'
+        swift:
+          type: boolean
+          label: 'swift'
+        c:
+          type: boolean
+          label: 'C'
+        csharp:
+          type: boolean
+          label: 'C#'
+    bgsync:
+      type: mapping
+      label: 'Background Sync Options'
+      mapping:
+        email_enabled:
+          type: boolean
+          label: 'Send emails to administrator users when background sync process fails'
+        email_subject:
+          type: string
+          label: 'The subject line of the email sent to administrators'
+        email_body:
+          type: string
+          label: 'The body of the email sent to administrators'
+        email_format:
+          type: string
+          label: 'The format of the email sent to administrators'
+
+comment.type.comment:
+  type: config_object
+  label: 'Default comments'
+  description: 'Allows commenting on content'
+
+core.entity_view_mode.node.card:
+  type: config_object
+  label: 'Card'
+
+core.entity_view_mode.node.subscribewizard:
+  type: config_object
+  label: 'Subscription Wizard'
+
+image.style.icon:
+  type: config_object
+  label: 'Icon (48x48)'
+
+field.field.user.user.apic_realm:
+  type: config_object
+  label: 'Realm'
+
+field.field.user.user.apic_state:
+  type: config_object
+  label: 'State'
+
+field.field.user.user.apic_url:
+  type: config_object
+  label: 'URL'
+
+field.field.user.user.apic_user_registry_url:
+  type: config_object
+  label: 'APIC user registry URL'
+
+field.field.user.user.codesnippet:
+  type: config_object
+  label: 'Code Snippet Language'
+  description: 'If you have a preferred programming language then you can set it here and it will be used as the default language for all API code snippets.'
+
+field.field.user.user.consumer_organization:
+  type: config_object
+  label: 'Consumer organization'
+
+field.field.user.user.first_name:
+  type: config_object
+  label: 'First Name'
+
+field.field.user.user.first_time_login:
+  type: config_object
+  label: 'First time login'
+  description: 'Set to 1 when accounts are first created, and then changed to 0 after first login.'
+
+field.field.user.user.last_name:
+  type: config_object
+  label: 'Last Name'
+
+field.field.user.user.user_picture:
+  type: config_object
+  label: 'Picture'
+  description: 'Your virtual face or picture.'

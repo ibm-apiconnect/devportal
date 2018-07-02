@@ -1,0 +1,23 @@
+apic_api_create:
+  label: 'After creating an API'
+  category: 'API'
+  context:
+    api:
+      type: 'entity:node'
+      label: 'API'
+
+apic_api_update:
+  label: 'After updating an API'
+  category: 'API'
+  context:
+    api:
+      type: 'entity:node'
+      label: 'API'
+
+apic_api_delete:
+  label: 'After deleting an API'
+  category: 'API'
+  context:
+    api:
+      type: 'entity:node'
+      label: 'API'

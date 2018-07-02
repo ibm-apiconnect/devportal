@@ -1,0 +1,24 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a screen to select one of multiple products when somehow get direct to an api
+ * that happens to be in multiple products but didn't specify one
+ *
+ * Variables available:
+ * - apiNid: the request api node id
+ * - products: array of information about the matching products
+ *
+ * @ingroup themeable
+ */
+#}
+
+<div class="productMultiSelect">
+  <div id="innerWrapper">
+    <p>{{ 'This API is in more than one Product. Select a Product from the list below.'|t }}</p>
+    <div class="productCards">
+      {% for product in products %}
+        {{ drupal_entity('node', product.nid, 'card') }}
+      {% endfor %}
+    </div>
+  </div>
+</div>

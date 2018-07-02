@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.apic_summary
+    - node.type.api
+id: node.api.apic_summary
+field_name: apic_summary
+entity_type: node
+bundle: api
+label: 'Summary'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

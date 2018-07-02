@@ -1,9 +1,0 @@
-name = IBM API Connect Developer Organization
-description = IBM API Connect Developer Organization Node Content Type
-package = IBM API Connect v5
-core = 7.x
-dependencies[] = field
-dependencies[] = node
-dependencies[] = ibm_apim
-
-version = VERSION

@@ -1,0 +1,68 @@
+.analyticsWidgetContainer {
+  display: grid;
+  grid-row-gap: 2rem;
+  grid-column-gap: 2rem;
+  grid-template-columns: minmax(22%, 300px) minmax(22%, 300px) minmax(22%, 300px) minmax(22%, 300px);
+  grid-template-rows: minmax(50%, auto) minmax(50%, 400px);
+  grid-template-areas:
+      'apistats apistats apistats numbers'
+      'apicalls apicalls subscriptions subscriptions';
+}
+
+.ibmapimOrgAnalytics .analyticsWidgetContainer {
+  padding: 2rem 2rem 0;
+}
+
+.analyticsWidgetContainer #apistats {
+  grid-area: apistats;
+  background-color: white;
+  border: 1px solid #eee;
+  padding: 14px;
+}
+
+.analyticsWidgetContainer #appAnalyticsSummary {
+  grid-area: apistats;
+  background-color: white;
+  border: 1px solid #eee;
+  padding: 14px;
+}
+
+.analyticsWidgetContainer .apicAppTotals {
+  grid-area: numbers;
+  background-color: white;
+  border: 1px solid #eee;
+}
+.analyticsWidgetContainer .apicAppTotals .apicAppTotalCalls,
+.analyticsWidgetContainer .apicAppTotals .apicAppTotalErrors {
+  border-bottom: 1px solid #eee;
+  padding: 14px;
+}
+.analyticsWidgetContainer .apicAppTotals .apicAppAverageResponseTime {
+  padding: 14px;
+}
+
+.analyticsWidgetContainer #apicalls {
+  grid-area: apicalls;
+  background-color: white;
+  border: 1px solid #eee;
+  padding: 14px;
+}
+
+.analyticsWidgetContainer #apicallhistory {
+  grid-area: apicalls;
+  background-color: white;
+  border: 1px solid #eee;
+  padding: 14px;
+}
+
+.analyticsWidgetContainer .apicAppSubscriptionsSummary {
+  grid-area: subscriptions;
+  background-color: white;
+  border: 1px solid #eee;
+  padding: 14px;
+}
+
+.analyticsWidgetContainer .apicAppAPICallHistory .bx--apim-list-container,
+.analyticsWidgetContainer .apicAppSubscriptionsSummary .bx--apim-list-container {
+  max-height: 100%;
+}

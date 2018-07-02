@@ -1,0 +1,134 @@
+// import connect variables
+@import "connect-variables";
+
+// Blue color palette
+$blue-01: #5392ff;
+$blue-02: #2d74da;
+$blue-03: #79a6f6;
+
+$light-blue-01: #E1EBF7;
+$light-blue-02: #C8DAF4;
+$light-blue-03: #A8C0F3;
+
+$white-01: #fff;
+$gray-01: #f4f7f7;
+$gray-02: #e3ecec;
+$gray-03: #d0dada;
+$gray-04: #8c9696;
+$gray-05: #535a5a;
+
+$dark-gray-01: #1D3458;
+$black-01: #19273C;
+
+$navbar-blue: #1f57a4;
+
+// theme variables
+// these are the variables to override for custom theme creation
+// Global body
+$body-bg:            $light-blue-01;
+
+
+// Global text color
+$text-color:                       $black-01; 
+$label-color:                      $black-01; 
+//** Global textual link color.
+$link-color:                       $blue-01;
+//** Link hover color
+$link-hover-color:                 $blue-02;
+
+$brand-primary:         $blue-01;
+$brand-primary-light:   $blue-03;
+$brand-primary-dark:    $blue-02;
+
+// Placeholder text color
+$input-color-placeholder:        $gray-05;
+
+// Navbar variable overrides
+$navbar-default-color:             rgba($white-01,0.6);
+$navbar-default-bg:                $navbar-blue;
+
+$navbar-default-link-color:        rgba($white-01,0.6);
+$navbar-default-link-hover-color:  rgba($white-01,1);
+$navbar-default-link-active-color: rgba($white-01,1);
+$navbar-default-link-active-bg:    $navbar-blue;
+
+$navbar-default-toggle-icon-bar-bg: $white-01;
+
+// footer variable overrides
+$footer-default-bg:                $white-01;
+$footer-default-color:             $navbar-blue;
+$footer-default-bordercolor:       $brand-primary;
+
+$footer-link-color:                 $brand-primary;
+
+// tabs
+$tab-primary-background: $brand-primary;
+$tab-primary-text: $white-01;
+
+// forms
+$default-header: $gray-05;
+$default-bg-light: $white-01;
+$default-border: $gray-03;
+$default-line: $gray-05;
+$default-submitted: $gray-04;
+$default-inverse: $white-01;
+
+$input-border-radius: 0;
+$input-bg: $gray-01;
+$input-border: $gray-01;
+$input-color: $black-01;
+
+// buttons
+$btn-border-radius-base:  0;
+$btn-border-radius-large: 0;
+$btn-border-radius-small: 0;
+$btn-default-color: $blue-01;
+$btn-default-bg:    $white-01;
+$btn-default-border: $blue-01;
+$btn-primary-color:  $white-01;
+$btn-primary-bg:     $blue-01;
+$btn-primary-border: transparent;
+$btn-success-color: $white-01;
+$btn-success-bg:     $blue-01;
+$btn-success-border: transparent;
+$btn-link-disabled-color: $brand-primary;
+
+// checkboxes and radio buttons
+$check-radio-bg: $white-01;
+$check-radio-border: $gray-05;
+$check-radio-bg-checked: $brand-primary;
+$check-radio-border-checked: $brand-primary;
+$check-radio-color-checked: $white-01;
+
+// tooltips
+$tooltip-color:       $white-01;
+$tooltip-bg:          $navbar-blue;
+
+// modals
+$modal-content-bg:                             $gray-01;
+$modal-content-border-color:                   $brand-primary;
+$modal-backdrop-bg:           	$gray-03;
+$modal-backdrop-opacity:        .5;
+$modal-header-border-color:   		transparent;
+$modal-content-color: $gray-04;
+//** Modal footer border color
+$modal-footer-border-color:   $gray-04;
+
+//** card settings
+$card-bg: $gray-01;
+$card-border-color: $gray-04;
+$card-footer-bg: $gray-03;
+$disabled-bg: $gray-05;
+
+//** table settings
+$table-header-border: $brand-primary;
+$table-row-border: $gray-04;
+$table-row-hover: $light-blue-03;
+$table-row-bg-light: $gray-01;
+$table-row-bg-gray: $gray-02;
+$table-zebra-stripe: $gray-02;
+
+// import everything from connect_theme as a starting point
+@import "connect-styles";
+
+// place further styling overrides here

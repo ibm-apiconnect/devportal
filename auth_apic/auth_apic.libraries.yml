@@ -1,0 +1,4 @@
+generate-consumerorg-name:
+  version: 1.x
+  js:
+    js/generate-consumerorg-name.js: {}

@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.allapis
+    - node.type.page
+id: node.page.allapis
+field_name: allapis
+entity_type: node
+bundle: page
+label: 'Link to all APIs'
+description: 'Link this documentation page to all APIs.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

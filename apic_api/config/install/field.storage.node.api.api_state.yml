@@ -1,0 +1,35 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+id: node.api_state
+field_name: api_state
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: online
+      label: Online
+    -
+      value: offline
+      label: Offline
+    -
+      value: archived
+      label: Archived
+    -
+      value: staged
+      label: Staged
+    -
+      value: retired
+      label: Retired
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

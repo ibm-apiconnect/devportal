@@ -1,0 +1,71 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_form_mode.user.register
+    - field.field.user.user.codesnippet
+    - field.field.user.user.consumer_organization
+    - field.field.user.user.first_name
+    - field.field.user.user.last_name
+    - field.field.user.user.user_picture
+    - field.field.user.user.first_time_login
+  module:
+    - user
+  enforced:
+    module:
+      - ibm_apim
+id: user.user.register
+targetEntityType: user
+bundle: user
+mode: register
+content:
+  account:
+    weight: -70
+    settings: {  }
+    third_party_settings: {  }
+  consumer_organization:
+    weight: 4
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+  first_name:
+    weight: 2
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+  last_name:
+    weight: 3
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+  mail:
+    weight: 1
+    settings: {  }
+    third_party_settings: {  }
+  name:
+    weight: 0
+    settings: {  }
+    third_party_settings: {  }
+  pass:
+    weight: 5
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  contact: true
+  codesnippet: true
+  langcode: true
+  language: true
+  timezone: true
+  apic_url: true
+  apic_realm: true
+  apic_user_registry_url: true
+  user_picture: true
+  consumerorg_url: true
+  first_time_login: true

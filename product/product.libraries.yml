@@ -1,0 +1,7 @@
+basic:
+  version: 1.x
+  css:
+    component:
+      css/product.css: {}
+  js:
+    js/product.js: {}

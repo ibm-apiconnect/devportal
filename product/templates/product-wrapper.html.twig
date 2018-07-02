@@ -1,0 +1,63 @@
+{#
+/**
+ * @file
+ * Default theme implementation to render an API in the context of a product
+ *
+ * Variables available:
+ * - api: array of information about the API
+ * - product: array of information about the product
+ *
+ * @ingroup themeable
+ */
+#}
+
+<div class="productApiWrapper">
+  <header class="titleSection">
+    <div class="titleInnerWrapper">
+      <div class="leftTitle">
+        {% if product.nid is defined %}
+          {% if product.pathalias is defined and product.pathalias is not empty %}
+            {% set prodNode = product.pathalias %}
+          {% else %}
+            {% set prodNode = product.nid %}
+          {% endif %}
+          <div class="breadcrumb"><a href="{{ path('view.products.page_1') }}">
+              {{ 'All Products'|t }}</a> / <a href="{{- path('product.view', {'prodNode': prodNode}) }}">{{- product.title -}}</a></div>
+        {% endif %}
+        <div class="apicProductTitle apicApiTitle">
+          {% if api.image_url is defined and api.image_url is not empty %}
+            <div class="apicApiIcon">
+              <img src="{{ api.image_url }}" alt=""/>
+            </div>
+          {% endif %}
+          <div class="apicProductTitleText">
+            <h1 class="productName apiName">
+              {{- api.title -}}
+            </h1>
+            {% if showVersions %}
+              <span class="apicProductVersion apiVersion">{{- api.version -}}</span>
+            {% endif %}
+            {{ drupal_field('apic_rating', 'node', api.nid) }}
+          </div>
+        </div>
+      </div>
+      <div class="rightTitle">
+        {% if product.nid is defined %}
+          {% if product.pathalias is defined and product.pathalias is not empty %}
+            {% set prodNode = product.pathalias %}
+          {% else %}
+            {% set prodNode = product.nid %}
+          {% endif %}
+          <div class="subscribeButton"><a href="{{- path('ibm_apim.subscription_wizard', {'productId': prodNode}) }}"
+                                          title="{{ 'Subscribe to this API'|t }}"
+                                          class="subscribeButton button">{{ 'Subscribe'|t }}</a></div>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+  <div id="innerWrapper">
+    {% if api.nid is defined %}
+      {{ drupal_entity('node', api.nid, 'full') }}
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,821 @@
+/**
+ * Form styles.
+ */
+
+// Make form groups behave like rows
+// remove negative margins
+.form-group {
+  margin-left:  0;
+  margin-right: 0;
+}
+
+// Checkboxes / radio buttons.
+.checkbox, .radio {
+  // Remove top/bottom margins when in table context, because this is most
+  // likely a tableselect checkbox element.
+  table &.form-no-label {
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+}
+
+// Browsers do not recognize pseudo :after selectors, we must create a wrapper
+// around the select element to style it properly.
+// $see http://stackoverflow.com/q/21103542
+.select-wrapper {
+  display: inline-block;
+  position: relative;
+  width: 100%;
+  .form-inline & {
+    width: auto;
+  }
+  .input-group & {
+    display: table-cell;
+    // Reset rounded corners
+    &:first-child .form-control:first-child {
+      @include border-left-radius($border-radius-base);
+    }
+    &:last-child .form-control:first-child {
+      @include border-right-radius($border-radius-base);
+    }
+  }
+  select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    line-height: 1.5;
+    padding-right: 2em;
+    &::-ms-expand {
+      opacity: 0;
+    }
+  }
+  &:after {
+    color: $brand-primary;
+    content: '▼';
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    margin-top: -.5em;
+    padding-right: .5em;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    z-index: 10;
+
+    // Use a more stylish icon if the theme uses glyphicons.
+    .has-glyphicons & {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      content: '\e252'; // .glyphicon-chevron-down
+      display: inline-block;
+      font-family: 'Glyphicons Halflings';
+      font-size: 0.625rem;
+    }
+    .has-error & {
+      color: $state-danger-text;
+    }
+    .has-success & {
+      color: $state-success-text;
+    }
+    .has-warning & {
+      color: $state-warning-text;
+    }
+  }
+}
+
+// Form action buttons.
+.bx--global-light-ui .form-actions {
+  display: flex;
+  flex-direction: row-reverse;
+  .button,.btn {
+    margin: 1rem;
+    background-color: $btn-default-bg;
+    color: $btn-default-color;
+    border: 2px solid $btn-default-border;
+    &:first-child {
+      margin-right: 0;
+    }
+    &:hover{
+      background-color: $btn-default-color;
+      color: $btn-default-bg;
+      border: 2px solid $btn-default-border;
+    }
+    &.button--primary, &.btn-primary, &.btn-success{
+      background-color: $btn-primary-bg;
+      color: $btn-primary-color;
+      border: 2px solid $btn-primary-border;
+      &:hover{
+        background-color: $brand-primary-dark;
+      }
+    }
+    &.dropdown-toggle {
+      margin-left: 0;
+    }
+  }
+
+  ul.dropdown-menu
+  {
+    right: 1rem;
+    left: unset;
+    top: 75%;
+    padding: 0;
+
+    > li > a {
+      color: $text-color;
+      font-size: 0.875rem;
+      &:hover, &:focus {
+        background-color: $btn-primary-bg;
+        color: $btn-primary-color;
+      }
+    }
+  }
+}
+
+
+.form--inline div.form-item,
+.form-inline div.form-item {
+  display: inline-block;
+}
+
+body.bx--global-light-ui {
+  color: $text-color;
+  background-color: $body-bg;
+}
+
+input::-webkit-input-placeholder {
+  color: $input-color-placeholder;
+  font-style: italic;
+}
+input::-moz-placeholder {
+  color: $input-color-placeholder;
+  font-style: italic;
+}
+input:-ms-input-placeholder {
+  color: $input-color-placeholder;
+  font-style: italic;
+}
+input::placeholder {
+  color: $input-color-placeholder;
+  font-style: italic;
+}
+
+input[type="checkbox"],
+.bx--global-light-ui .block-main-content .form-item input[type="checkbox"] {
+  vertical-align: baseline;
+  height: 1.125rem;
+  width: 1.125rem;
+  margin: 0 .75rem 0 0;
+  background-color: $field-01;
+  border-radius: 2px;
+  border: 2px solid $ui-05;
+  overflow: hidden;
+  cursor: pointer;
+}
+input[type="checkbox"].bx--checkbox,
+input[type="radio"].bx--checkbox {
+  position: absolute;
+}
+
+textarea,
+.bx--global-light-ui .block-main-content .form-item textarea {
+  border: 0;
+  vertical-align: baseline;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 9.375rem;
+  min-width: 9.375rem;
+  padding: .5rem 0 .5rem 1rem;
+  margin: .25rem 0;
+  color: $input-color;
+  background-color: $input-bg;
+  font-weight: 400;
+}
+
+/* form */
+
+.bx--global-light-ui .form-item {
+  margin: 0 0 1.5rem 0;
+  &:last-child{
+    margin: 0;
+  }
+}
+.votingapi-widgets .bx--global-light-ui .form-item {
+  margin-bottom: 0;
+}
+
+.bx--global-light-ui .form-item label,
+.bx--global-light-ui .form-item .label,
+.bx--global-light-ui .label,
+.bx--label {
+  @include font-size('14');
+  font-weight: 600;
+  display: inline-block;
+  vertical-align: baseline;
+  margin-bottom: .625rem;
+  color: $text-color;
+  padding: 0;
+}
+
+.form-required:after {
+  color: $alert-danger-text;
+  content: "*";
+  background-image: none;
+  padding-left: 0.25rem;
+}
+
+.bx--global-light-ui .form-item label.option {
+  display: inline;
+}
+
+.bx--global-light-ui .form-item input,
+.bx--global-light-ui .form-item input:hover,
+.bx--global-light-ui .form-item input:focus {
+  color:                $input-color;
+  background-color: 	$input-bg;
+  @include font-size('14');
+  border-radius: 0;
+  border: none;
+  height: 2.5rem;
+  width: 33rem;
+  @media (max-width: $screen-xs-min) {
+    width: 100%;
+  }
+}
+
+.bx--global-light-ui .form-item input:read-only,
+.bx--global-light-ui .form-control[disabled],
+.bx--global-light-ui .form-control[readonly],
+.bx--global-light-ui fieldset[disabled] .form-control{
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.bx--global-light-ui .apicAppCredList input:read-only {
+  opacity: 1;
+}
+
+.bx--global-light-ui .views-exposed-form {
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.bx--global-light-ui .views-exposed-form .btn.view-filter-button{
+  margin: 1rem 0 1.5rem 1rem;
+  padding: 6px;
+  line-height: initial;
+  background-color: $btn-default-bg;
+  svg {
+    fill: $btn-default-color;
+  }
+}
+
+.bx--global-light-ui .views-exposed-form .form-item label{
+  margin-bottom: 0.5rem;
+}
+
+.bx--global-light-ui .views-exposed-form .form-item input,
+.bx--global-light-ui .views-exposed-form .form-item input:hover,
+.bx--global-light-ui .views-exposed-form .form-item input:focus {
+  max-width: 25em;
+}
+
+.bx--global-light-ui .views-exposed-form .form-item {
+  margin-left: 0.5rem;
+}
+
+select,
+.bx--form-item select,
+.apiconnect-explorer .bx--select__input,
+select:hover {
+  display: block;
+  padding: .35rem 2.75rem .35rem 1rem;;
+  border: none;
+  border-radius: 0;
+  height: 2.5rem;
+  cursor: pointer;
+  color: $input-color;
+  background-color: $input-border;
+  font-size:0.875rem;
+}
+
+.votingapi-widgets .bx--form-item .select-wrapper:after {
+  content: "";
+  display: none;
+}
+
+.bx--select-optgroup,
+.bx--select-option {
+  color: $input-color; }
+
+.bx--global-light-ui .form-type-radio label,
+.bx--global-light-ui .form-type-checkbox label {
+  font-weight: normal;
+
+}
+
+.bx--global-light-ui .form-type-radio label.option,
+.bx--global-light-ui .form-type-checkbox label.option {
+  border: none;
+  background-color: inherit;
+}
+
+input[type="radio"].bx--radio-button,
+input[type="radio"].bx--radio-button,
+input[type="checkbox"].bx--checkbox,
+input[type="checkbox"].bx--checkbox {
+  position: absolute;
+  margin: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  visibility: visible;
+  white-space: nowrap;
+}
+
+.bx--global-light-ui .bx--radio-button__appearance {
+  background-color: $check-radio-bg;
+  border-radius: 50%;
+  border: 2px solid $check-radio-border;
+  height: 1.125rem;
+  width: 1.125rem;
+  margin-right: 0.625rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+}
+
+.bx--global-light-ui .bx--radio-button:checked + .bx--radio-button__appearance:before {
+  content: '';
+  display: inline-block;
+  position: relative;
+  width: .5rem;
+  height: .5rem;
+  border-radius: 50%;
+  background-color: $check-radio-bg-checked;
+}
+
+.bx--global-light-ui .bx--radio-button:checked + .bx--radio-button__appearance {
+  border-color: $check-radio-bg-checked;
+}
+
+.bx--global-light-ui .bx--radio-button:disabled ~*,
+.bx--global-light-ui .bx--checkbox:disabled ~* {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.bx--global-light-ui .bx--checkbox {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  visibility: visible;
+  white-space: nowrap;
+}
+
+.bx--global-light-ui .bx--checkbox-appearance {
+  display: inline-block;
+  height: 1.125rem;
+  width: 1.125rem;
+  margin-right: .5rem;
+  background-color: $check-radio-bg;
+  border-radius: 2px;
+  border: 2px solid $check-radio-border;
+}
+.bx--global-light-ui .bx--checkbox-appearance svg {
+  display: none;
+}
+.bx--global-light-ui .bx--checkbox:checked + .bx--checkbox-appearance svg {
+  display: inline;
+}
+.bx--global-light-ui .bx--checkbox:checked + .bx--checkbox-appearance,
+.bx--global-light-ui .bx--checkbox:checked + .bx--checkbox-label .bx--checkbox-appearance {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: baseline;
+  -ms-flex-align: baseline;
+  align-items: baseline;
+  background-color: $check-radio-bg-checked;
+  border-color: $check-radio-border-checked;
+}
+
+.bx--global-light-ui .bx--checkbox-checkmark {
+  display: none;
+  fill: $check-radio-color-checked;
+  width: 0.9375rem;
+  height: 0.9375rem;
+}
+
+.bx--global-light-ui .bx--form-item.form-type-checkbox label,
+.bx--global-light-ui .bx--form-item.form-type-radio label
+{
+  display: inline-flex;
+  cursor: pointer;
+  position: relative;
+}
+
+.bx--global-light-ui .bx--form-item.form-type-checkbox label
+{
+  padding-left: 0px;
+}
+
+.bx--global-light-ui .bx--form-item.form-type-radio label,
+.bx--global-light-ui .bx--form-item.form-type-radio label.option
+{
+  padding-left: 25px;
+  display: flex;
+  align-items: center;
+}
+
+.bx--global-light-ui .form-item .description {
+  font-size: 0.6875rem;
+  margin: .75rem 0 0;
+  max-height: 0;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1.5rem;
+}
+
+.bx--global-light-ui .block-main-content .form-item input,
+.bx--global-light-ui .block-main-content .form-item input:hover,
+.bx--global-light-ui .block-main-content .form-item input:focus {
+  color: $input-color;
+  background-color: $input-bg;
+  border-radius: 0;
+  border: none;
+  height: 2.5rem;
+  width: 33rem;
+}
+
+.bx--global-light-ui .block-main-content .views-exposed-form .form-item input,
+.bx--global-light-ui .block-main-content .views-exposed-form .form-item input:hover,
+.bx--global-light-ui .block-main-content .views-exposed-form .form-item input:focus {
+  max-width: 25em;
+}
+
+.bx--global-light-ui .block-main-content .form-item input.form-checkbox,
+.bx--global-light-ui .block-main-content .form-item input.form-checkbox:hover,
+.bx--global-light-ui .block-main-content .form-item input.form-checkbox:focus,
+.bx--global-light-ui .block-main-content .form-item input.form-radio,
+.bx--global-light-ui .block-main-content .form-item input.form-radio:hover,
+.bx--global-light-ui .block-main-content .form-item input.form-radio:focus{
+  width: auto;
+  height: auto;
+}
+
+.bx--global-light-ui .block-main-content .form-item  input:focus {
+  outline: 1px dotted;
+  outline: auto 5px -webkit-focus-ring-color;
+  outline: auto 2px -webkit-focus-ring-color;
+}
+
+.bx--global-light-ui .button,
+.bx--global-light-ui button,
+.bx--global-light-ui .btn {
+  opacity: 1;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: $button-font-weight;
+  font-size: $button-font-size;
+  height: $button-height;
+  padding: $button-padding;
+  text-align: center;
+  text-decoration: none;
+  transition-duration: 250ms;
+  transition-timing-function: ease-in;
+  white-space: nowrap;
+  background-color: $btn-primary-bg;
+  color: $btn-primary-color;
+  border: $button-border-width solid $btn-primary-border;
+  box-shadow: none;
+  &.btn-sm {
+    padding: $button-padding-sm;
+    height: 2rem;
+  }
+  &.btn-xs {
+     padding: $button-padding-sm;
+     height: 1.5rem;
+   }
+
+}
+
+.bx--global-light-ui .button:disabled,
+.bx--global-light-ui button:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
+.bx--global-light-ui .apiconnect-explorer button {
+  height: auto;
+}
+
+.bx--global-light-ui a.button {
+  padding: 0.5rem 1rem;
+  display: inline-flex;
+
+}
+
+.bx--global-light-ui input.button {
+  vertical-align: inherit;
+}
+
+.bx--global-light-ui .button:hover,
+.bx--global-light-ui button:hover,
+.bx--global-light-ui .button:focus,
+.bx--global-light-ui button:focus,
+.bx--global-light-ui .button:active,
+.bx--global-light-ui button:active,
+.bx--global-light-ui .btn-default:active:hover{
+  background-color:$brand-primary-dark ;
+  border-color: $brand-primary-dark;
+  color: $btn-primary-color;
+}
+
+.bx--global-light-ui .button.apicSecondary,
+.bx--global-light-ui button.apicSecondary,
+.bx--global-light-ui button.link-edit-summary {
+  border: 2px solid $btn-default-border;
+  color: $btn-default-color;
+  background-color: $btn-default-bg;
+}
+.bx--global-light-ui .button.apicSecondary:disabled,
+.bx--global-light-ui button.apicSecondary:disabled,
+.bx--global-light-ui button.link-edit-summary:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
+.bx--global-light-ui .button.apicSecondary:focus,
+.bx--global-light-ui button.apicSecondary:focus,
+.bx--global-light-ui button.link-edit-summary:focus,
+.bx--global-light-ui .button.apicSecondary:hover,
+.bx--global-light-ui button.apicSecondary:hover,
+.bx--global-light-ui button.link-edit-summary:hover {
+  color: $btn-primary-color;
+  background-color: $btn-primary-bg;
+  border: 2px solid $btn-primary-border;
+}
+
+.bx--global-light-ui button.link-edit-summary {
+  display: inline-block;
+  height: 2rem;
+  padding: 0 1rem;
+  margin: 0 0 5px 1rem;
+}
+
+.bx--global-light-ui  button.bx--toast-notification__close-button,
+.bx--global-light-ui  button.bx--toast-notification__close-button:hover,
+.bx--global-light-ui  button.bx--toast-notification__close-button:active,
+.bx--global-light-ui  button.bx--toast-notification__close-button:focus {
+  background:unset;
+  height: 0.875rem;
+  padding:0;
+  border:0;
+}
+
+/* view form controls */
+.bx--global-light-ui .view-filters.form-group {
+  padding: 0 0.5rem;
+}
+.bx--global-light-ui .view-filters.form-group input.form-text,
+.bx--global-light-ui .view-filters.form-group .select-wrapper{
+  display: block;
+  margin-right: 0;
+}
+.bx--global-light-ui .view-filters.form-group input.form-text {
+  width: 20rem;
+  height: 2rem;
+}
+
+.bx--global-light-ui .view-filters.form-group .select-wrapper select {
+  height: 2rem;
+}
+
+.bx--global-light-ui .view-filters.form-group .form-actions {
+  margin-top: 1.4rem;
+  display: inline-block;
+  button {
+    color: $btn-primary-color;
+    background-color: $btn-primary-bg;
+    border: 2px solid $btn-primary-border;
+    height: 2rem;
+    margin: 0 0 0 0.5rem;
+    &:hover {
+      background-color: $brand-primary-dark;
+    }
+  }
+}
+
+.bx--global-light-ui .views-exposed-form .form-item label {
+  display: block;
+}
+
+.bx--global-light-ui form.confirmation {
+  padding-top: 1rem;
+}
+
+
+.bx--global-light-ui .field--type-text-with-summary .form-textarea-wrapper {
+  clear: both;
+}
+
+
+/**
+ * Colors for the various user forms
+ **/
+.route-apic-appcreate .main-container .row,
+.route-apic-appcreate-step-two .main-container .row,
+.route-applicationcreate .main-container .row,
+.route-applicationcreate-step-two .main-container .row,
+.route-apic-appverify-clientsecret .main-container .row,
+.route-apic-appcredentials-create .main-container .row,
+.route-apic-appreset-clientid .main-container .row,
+.route-apic-appreset-clientsecret .main-container .row,
+.route-apic-appcredentials-update .main-container .row,
+.route-apic-appcredentials-delete .main-container .row,
+.route-apic-appupdate .main-container .row,
+.route-apic-appdelete .main-container .row,
+.route-apic-apppromote .main-container .row,
+.route-apic-appimage-upload .main-container .row,
+.route-apic-appimage-delete .main-container .row,
+.route-consumerorgcreate .main-container .row,
+.route-consumerorgupdate .main-container .row,
+.route-consumerorgdelete .main-container .row,
+.route-consumerorgchangeowner .main-container .row,
+.route-consumerorginvite .main-container .row,
+.route-consumerorgremove-user .main-container .row,
+.route-consumerorgresend-invite .main-container .row,
+form.user-pass-reset,
+.apicForm,
+.apic-user-form {
+  background-color: $default-bg-light;
+  border: 1px solid $default-border;
+}
+
+.route-apic-appcreate .main-container .row,
+.route-apic-appcreate-step-two .main-container .row,
+.route-applicationcreate .main-container .row,
+.route-applicationcreate-step-two .main-container .row,
+.route-apic-appverify-clientsecret .main-container .row,
+.route-apic-appcredentials-create .main-container .row,
+.route-apic-appreset-clientid .main-container .row,
+.route-apic-appreset-clientsecret .main-container .row,
+.route-apic-appcredentials-update .main-container .row,
+.route-apic-appcredentials-delete .main-container .row,
+.route-apic-appupdate .main-container .row,
+.route-apic-appdelete .main-container .row,
+.route-apic-apppromote .main-container .row,
+.route-apic-appimage-upload .main-container .row,
+.route-apic-appimage-delete .main-container .row,
+.route-consumerorgcreate .main-container .row,
+.route-consumerorgupdate .main-container .row,
+.route-consumerorgdelete .main-container .row,
+.route-consumerorgchangeowner .main-container .row,
+.route-consumerorginvite .main-container .row,
+.route-consumerorgremove-user .main-container .row,
+.route-consumerorgresend-invite .main-container .row,
+.apicForm {
+  margin: auto;
+  margin-top: 5rem;
+  padding: 2rem;
+  background-color: $default-bg-light;
+  border: 1px solid $default-border;
+  max-width: 39rem;
+  .form-item input,
+  .form-item input:hover
+  {
+    width: 100%;
+  }
+
+  .page-header {
+    border: none;
+  }
+}
+
+.context-user-register .apicForm {
+  max-width: 50rem;
+}
+
+.apicFormHeader,
+.apic-user-form-header {
+  color: $default-header;
+}
+
+.apicFormHeader {
+  font-size: 1.75rem;
+  padding-left: 1.5rem;
+  font-weight: lighter;
+}
+
+.apicFormText {
+  padding: 1.5rem;
+}
+
+.apicFormWrapper {
+  margin: auto;
+  width: 90%;
+  max-width: 40rem;
+}
+
+.apicFormInnerWrapper {
+  margin: auto;
+  width: 100%;
+  max-width: 25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.apicFormSubheader {
+  margin: auto;
+  width: 50%;
+  text-align: center;
+  font-weight: 600;
+  padding-top: 1rem;
+}
+
+.apicFormContainer {
+  display: flex;
+}
+
+.apicFormOrContainer {
+  padding: 1em;
+}
+
+.apicFormLine,
+.apic-user-form-line {
+  width: 1px;
+  background-color: $default-line;
+}
+
+.apicFormLine {
+  width: 1px;
+  height: 40%;
+  margin: auto;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.apicFormOr,
+.apic-user-form-or {
+  color: $default-line;
+}
+
+.apicFormOr
+{
+  margin: auto;
+  text-align: center;
+}
+
+.is-weak {
+  background-color: $brand-danger;
+}
+
+.is-fair,
+.is-good {
+  background-color: $brand-warning;
+}
+
+.is-strong {
+  background-color: $brand-success;
+}
+
+button.registry-button,
+a.registry-button {
+  fill: white;
+}
+
+button.google-button,
+button.google-button:hover {
+  background-color: lightgray;
+  color: black;
+}
+
+button.github-button,
+button.github-button:hover {
+  background-color: #565656;
+  color: white;
+}
+
+/* deal FF cutting off buttons in input field */
+input[type="file"] {
+  -moz-box-sizing: content-box;
+}

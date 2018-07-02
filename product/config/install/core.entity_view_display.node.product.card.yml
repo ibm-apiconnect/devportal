@@ -1,0 +1,158 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.card
+    - field.field.node.product.apic_attachments
+    - field.field.node.product.apic_catalog_id
+    - field.field.node.product.apic_description
+    - field.field.node.product.apic_hostname
+    - field.field.node.product.apic_image
+    - field.field.node.product.apic_pathalias
+    - field.field.node.product.apic_provider_id
+    - field.field.node.product.apic_rating
+    - field.field.node.product.apic_ref
+    - field.field.node.product.apic_summary
+    - field.field.node.product.apic_tags
+    - field.field.node.product.apic_url
+    - field.field.node.product.apic_version
+    - field.field.node.product.comment
+    - field.field.node.product.product_apis
+    - field.field.node.product.product_billing_url
+    - field.field.node.product.product_contact_email
+    - field.field.node.product.product_contact_name
+    - field.field.node.product.product_contact_url
+    - field.field.node.product.product_data
+    - field.field.node.product.product_id
+    - field.field.node.product.product_license_name
+    - field.field.node.product.product_license_url
+    - field.field.node.product.product_name
+    - field.field.node.product.product_plans
+    - field.field.node.product.product_state
+    - field.field.node.product.product_subscribe_enabled
+    - field.field.node.product.product_terms_of_service
+    - field.field.node.product.product_view_enabled
+    - field.field.node.product.product_visibility
+    - field.field.node.product.product_visibility_authenticated
+    - field.field.node.product.product_visibility_custom_orgs
+    - field.field.node.product.product_visibility_custom_tags
+    - field.field.node.product.product_visibility_public
+    - image.style.icon
+    - node.type.product
+  module:
+    - image
+    - text
+    - user
+    - votingapi_widgets
+id: node.product.card
+targetEntityType: node
+bundle: product
+mode: card
+content:
+  apic_description:
+    type: text_trimmed
+    weight: 4
+    label: hidden
+    settings:
+      trim_length: 600
+    third_party_settings: {  }
+    region: content
+  apic_image:
+    type: image
+    weight: 3
+    label: hidden
+    settings:
+      image_style: icon
+      image_link: ''
+    third_party_settings: {  }
+    region: content
+  apic_rating:
+    type: voting_api_formatter
+    weight: 8
+    label: hidden
+    settings:
+      style: bootstrap-stars
+      readonly: '1'
+      show_results: 0
+      values: {  }
+      show_own_vote: false
+    third_party_settings: {  }
+    region: content
+  apic_summary:
+    weight: 7
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  apic_version:
+    type: string
+    weight: 2
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    region: content
+  links:
+    weight: 6
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  product_apis:
+    type: basic_string
+    weight: 0
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  product_id:
+    weight: 5
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  product_name:
+    type: basic_string
+    weight: 1
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  product_state:
+    type: string
+    weight: 9
+    region: content
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+hidden:
+  addtoany: true
+  apic_attachments: true
+  apic_catalog_id: true
+  apic_hostname: true
+  apic_pathalias: true
+  apic_provider_id: true
+  apic_ref: true
+  apic_tags: true
+  apic_url: true
+  comment: true
+  langcode: true
+  product_billing_url: true
+  product_contact_email: true
+  product_contact_name: true
+  product_contact_url: true
+  product_data: true
+  product_license_name: true
+  product_license_url: true
+  product_plans: true
+  product_subscribe_enabled: true
+  product_terms_of_service: true
+  product_view_enabled: true
+  product_visibility: true
+  product_visibility_authenticated: true
+  product_visibility_custom_orgs: true
+  product_visibility_custom_tags: true
+  product_visibility_public: true

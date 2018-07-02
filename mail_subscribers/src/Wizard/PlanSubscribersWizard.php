@@ -1,0 +1,90 @@
+<?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+namespace Drupal\mail_subscribers\Wizard;
+
+use Drupal\ctools\Event\WizardEvent;
+use Drupal\ctools\Wizard\FormWizardBase;
+use Drupal\ctools\Wizard\FormWizardInterface;
+
+class PlanSubscribersWizard extends FormWizardBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getWizardLabel() {
+    return t('Mail Plan Subscribers Wizard');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMachineLabel() {
+    return $this->t('mail_plan_subscribers_wizard');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRouteName() {
+    return 'mail_subscribers.plan_wizard.step';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  function getOperations($cached_values) {
+    $steps = array();
+
+    $steps['chooseitem'] = array(
+      'title' => t('Select a product'),
+      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChooseProductStep'
+    );
+
+    $steps['chooseplan'] = array(
+      'title' => t('Select a plan'),
+      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChoosePlanStep'
+    );
+
+    $steps['choosesubs'] = array(
+      'title' => t('Select Subscribers'),
+      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChooseRoleStep'
+    );
+
+    $steps['entercontent'] = array(
+      'title' => t('Enter content'),
+      'form' => 'Drupal\mail_subscribers\Wizard\Mail\EnterContentStep'
+    );
+
+    $steps['confirm'] = array(
+      'title' => t('Confirm'),
+      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ConfirmSend'
+    );
+
+    $steps['summary'] = array(
+      'title' => t('Summary'),
+      'form' => 'Drupal\mail_subscribers\Wizard\Mail\MailSummary'
+    );
+
+    return $steps;
+  }
+
+  public function initValues() {
+    $values = [];
+    $event = new WizardEvent($this, $values);
+    $this->dispatcher->dispatch(FormWizardInterface::LOAD_VALUES, $event);
+    $tempvalues = $event->getValues();
+    $tempvalues['objectType'] = 'plan';
+    $event->setValues($tempvalues);
+    return $event->getValues();
+  }
+}

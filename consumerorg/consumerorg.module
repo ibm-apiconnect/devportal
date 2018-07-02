@@ -1,0 +1,255 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ * IBM API Connect Integration
+ *
+ * Adds the Consumer organization node content type to Drupal for representing consumer organizations from IBM APIC
+ */
+
+use Drupal\Core\Access\AccessResultAllowed;
+use Drupal\Core\Access\AccessResultForbidden;
+use Drupal\Core\Access\AccessResultNeutral;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\node\NodeInterface;
+use Drupal\user\Entity\User;
+
+/* Define a single permission to be granted */
+define('CONSUMERORG_GRANT', 1);
+
+/**
+ * Implements hook_node_access_records().
+ *
+ * For consumerorg nodes, create a realm named after the orgid for that node,
+ * and require a permission of CONSUMERORG_GRANT to view that node
+ *
+ * @param $node
+ * @return array
+ *
+ * Note: hook is called when rebuilding permissions
+ */
+function consumerorg_node_access_records($node) {
+
+  $config = \Drupal::config('ibm_apim.settings');
+  $acl_debug = $config->get('acl_debug');
+
+  if (isset($acl_debug) && $acl_debug == TRUE) {
+    \Drupal::logger('consumerorg')->debug('Enter: consumerorg_node_access_records');
+  }
+  $type = is_string($node) ? $node : $node->getType();
+  if (isset($acl_debug) && $acl_debug == TRUE) {
+    \Drupal::logger('consumerorg')->debug('Node type is: %type', array("%type" => var_export($type, TRUE)));
+  }
+  $grants = array();
+  if ($type == 'consumerorg') {
+    $orgurl = $node->consumerorg_url->value;
+    $escaped_orgurl = str_replace("/", "_", $orgurl);
+    $grants[] = array(
+      'realm' => 'consumerorg_' . $escaped_orgurl,
+      'gid' => CONSUMERORG_GRANT,
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
+      'priority' => 0,
+    );
+    if (isset($acl_debug) && $acl_debug == TRUE) {
+      \Drupal::logger('consumerorg')->debug('Grants: %grants', array("%grants" => var_export($grants, TRUE)));
+    }
+  }
+  if (isset($acl_debug) && $acl_debug == TRUE) {
+    \Drupal::logger('consumerorg')->debug('Exit: consumerorg_node_access_records');
+  }
+  return $grants;
+}
+
+/**
+ * Implements hook_node_grants().
+ *
+ * For the view operation, allow CONSUMERORG_GRANT permission to the
+ * consumerorg realm named after the orgid of the user
+ *
+ * @param $account
+ * @param $op
+ * @return array
+ *
+ * Note: hook is not called at all when admin logged in
+ * Note: hook is called on every login, logout and page load
+ */
+function consumerorg_node_grants($account, $op) {
+
+  $config = \Drupal::config('ibm_apim.settings');
+  $acl_debug = $config->get('acl_debug');
+
+  if (isset($acl_debug) && $acl_debug == TRUE) {
+    \Drupal::logger('consumerorg')->debug('Enter: consumerorg_node_grants');
+  }
+  $grants = array();
+  if ($op == 'view' && \Drupal::currentUser()->isAuthenticated()) {
+
+    $user = User::load(\Drupal::currentUser()->id());
+    $user_orgs = $user->consumerorg_url->getValue();
+
+    foreach ($user_orgs as $index => $values) {
+      $user_org_url = $values['value'];
+      $escaped_orgurl = str_replace("/", "_", $user_org_url);
+      $grants['consumerorg_' . $escaped_orgurl] = array(CONSUMERORG_GRANT);
+    }
+
+    if (isset($acl_debug) && $acl_debug == TRUE) {
+      \Drupal::logger('consumerorg')->debug('Grants: %grants', array("%grants" => var_export($grants, TRUE)));
+    }
+
+  }
+  if (isset($acl_debug) && $acl_debug == TRUE) {
+    \Drupal::logger('consumerorg')->debug('Exit: consumerorg_node_grants');
+  }
+  return $grants;
+}
+
+/**
+ * Implements hook_node_access().
+ * This is checking if the specified consumerorg is returned from apic, if not it blocks access.
+ *
+ * @param \Drupal\node\NodeInterface $node
+ * @param $operation
+ * @param \Drupal\Core\Session\AccountInterface $account
+ * @return \Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultForbidden|\Drupal\Core\Access\AccessResultNeutral
+ */
+function consumerorg_node_access(NodeInterface $node, $operation, AccountInterface $account) {
+  $type = is_string($node) ? $node : $node->type;
+  if ($type == 'consumerorg' && $operation == 'view') {
+    $userUtils = \Drupal::service('ibm_apim.user_utils');
+    $org = $userUtils->getCurrentConsumerorg();
+    if ($node->consumerorg_url->value == $org['url']) {
+      $access = new AccessResultAllowed();
+    }
+    else {
+      $access = new AccessResultForbidden();
+    }
+  }
+  else {
+    $access = new AccessResultNeutral();
+  }
+  return $access;
+}
+
+/**
+ * Need to use our custom content type templates
+ *
+ * @param $variables
+ * @param $hook
+ * @param $info
+ */
+function consumerorg_preprocess(&$variables, $hook, &$info) {
+  if ($hook == 'node') {
+    $contentTypeToShow = $variables['node']->bundle();
+    if ($contentTypeToShow == 'consumerorg') {
+      ibm_apim_entry_trace(__FUNCTION__, NULL);
+      //Load the view mode names.
+      $allViewModes = \Drupal::service('entity_display.repository')->getViewModes('node');
+      //View mode for this request.
+      $viewModeToUse = $variables['view_mode'];
+      //Is the view mode defined for nodes?
+      if (key_exists($viewModeToUse, $allViewModes)) {
+        //Is there a template file for the view modes in the module?
+        if ($viewModeToUse == 'full') {
+          $templateFileName = 'node--' . $contentTypeToShow;
+        }
+        else {
+          $templateFileName = 'node--' . $contentTypeToShow . '--' . $viewModeToUse;
+        }
+        $templateFilePath = drupal_get_path('module', 'consumerorg') . '/templates/' . $templateFileName . '.html.twig';
+        if (file_exists($templateFilePath)) {
+          $info['theme path'] = drupal_get_path('module', 'consumerorg');
+          $info['path'] = drupal_get_path('module', 'consumerorg') . '/templates';
+          $info['template'] = $templateFileName;
+        }
+      }
+      ibm_apim_exit_trace(__FUNCTION__, NULL);
+    }
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * @param array $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ * @param $form_id
+ */
+function consumerorg_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  switch ($form_id) {
+    // remove link to delete our content type
+    case 'node_type_edit_form' :
+      if (isset($form['type']['#default_value']) && $form['type']['#default_value'] == 'consumerorg') {
+        if (isset($form['actions']['delete'])) {
+          unset($form['actions']['delete']);
+        }
+      }
+      break;
+  }
+}
+
+/**
+ * We need our module to run last for the user register form so we can remove any other fields
+ * other modules might have added - such as the forum notifications.
+ *
+ * @param $implementations
+ * @param $hook
+ */
+function consumerorg_module_implements_alter(&$implementations, $hook) {
+  if (($hook == 'form_alter' || $hook == 'menu_links_discovered_alter') && isset($implementations['consumerorg'])) {
+    $group = $implementations['consumerorg'];
+    unset($implementations['consumerorg']);
+    $implementations['consumerorg'] = $group;
+  }
+}
+
+/**
+ *  Implements hook_menu_links_discovered_alter().
+ *
+ * @param $links
+ */
+function consumerorg_menu_links_discovered_alter(&$links) {
+  // remove link to delete our content type
+  if (isset($links['entity.node_type.delete_form.consumerorg'])) {
+    unset($links['entity.node_type.delete_form.consumerorg']);
+  }
+  // remove link to create content of our content type
+  if (isset($links['node.add.consumerorg'])) {
+    unset($links['node.add.consumerorg']);
+  }
+}
+
+/**
+ * Add twig template for My Organization page
+ *
+ * @param $existing
+ * @param $type
+ * @param $theme
+ * @param $path
+ * @return array
+ */
+function consumerorg_theme($existing, $type, $theme, $path) {
+  return array(
+    'consumerorg_select_block' => array(
+      'variables' => array(
+        'orgs' => array(),
+        'selected_name' => NULL,
+        'create_allowed' => FALSE
+      ),
+    ),
+  );
+}

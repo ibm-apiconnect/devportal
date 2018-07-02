@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.first_time_login
+  module:
+    - user
+id: user.user.first_time_login
+field_name: first_time_login
+entity_type: user
+bundle: user
+label: 'First time login'
+description: 'Set to 1 when accounts are first created, and then changed to 0 after first login.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: '1'
+  off_label: '0'
+field_type: boolean

@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+id: node.application_lifecycle_state
+field_name: application_lifecycle_state
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: PRODUCTION
+      label: Production
+    -
+      value: DEVELOPMENT
+      label: Development
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

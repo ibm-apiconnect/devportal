@@ -1,0 +1,62 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.user.user.codesnippet
+    - field.field.user.user.consumer_organization
+    - field.field.user.user.consumerorg_url
+    - field.field.user.user.first_name
+    - field.field.user.user.last_name
+    - field.field.user.user.user_picture
+    - field.field.user.user.first_time_login
+    - image.style.thumbnail
+  enforced:
+    module:
+      - ibm_apim
+  module:
+    - image
+    - user
+id: user.user.default
+targetEntityType: user
+bundle: user
+mode: default
+content:
+  first_name:
+    type: string
+    weight: 0
+    region: content
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+  last_name:
+    type: string
+    weight: 1
+    region: content
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+  member_for:
+    weight: 4
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  user_picture:
+    weight: 5
+    label: above
+    settings:
+      image_style: ''
+      image_link: ''
+    third_party_settings: {  }
+    type: image
+    region: content
+hidden:
+  apic_url: true
+  apic_realm: true
+  apic_user_registry_url: true
+  codesnippet: true
+  consumer_organization: true
+  consumerorg_url: true
+  langcode: true
+  first_time_login: true

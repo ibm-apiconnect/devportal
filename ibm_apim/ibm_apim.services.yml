@@ -1,0 +1,125 @@
+services:
+  ibm_apim.route_subscriber:
+    class: Drupal\ibm_apim\Routing\IbmApimRouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  ibm_apim.module_installer:
+    class: Drupal\ibm_apim\Service\ModuleBlacklistModuleInstaller
+    arguments: ['@app.root', '@module_handler', '@kernel', '@router.builder']
+  ibm_apim.loggedin_not_admin_access_checker:
+    class: Drupal\ibm_apim\Access\AuthenticatedNotAdminAccessCheck
+    arguments: ['@current_user']
+    tags:
+      - { name: access_check, applies_to: _ibm_apim_loggedin_not_admin_access_check }
+  ibm_apim.analytics_access_checker:
+    class: Drupal\ibm_apim\Access\AnalyticsAccessCheck
+    arguments: ['@current_user']
+    tags:
+      - { name: access_check, applies_to: _ibm_apim_analytics_access_check }
+  ibm_apim.billing_access_checker:
+    class: Drupal\ibm_apim\Access\BillingAccessCheck
+    arguments: ['@current_user']
+    tags:
+      - { name: access_check, applies_to: _ibm_apim_billing_access_check }
+  logger.channel.ibm_apim:
+    parent: logger.channel_base
+    arguments: ['ibm_apim']
+  ibm_apim.user_utils:
+    class: Drupal\ibm_apim\Service\UserUtils
+    arguments: ['@current_user', '@tempstore.private', '@state', '@logger.channel.ibm_apim']
+  ibm_apim.taxonomy:
+    class: Drupal\ibm_apim\Service\ApicTaxonomy
+  remove_x_generator_subscriber:
+    class: Drupal\ibm_apim\EventSubscriber\RemoveXGeneratorSubscriber
+    tags:
+      - { name: event_subscriber }
+  ibm_apim.vendor_extension:
+    class: Drupal\ibm_apim\Service\VendorExtension
+    arguments: ['@state', '@logger.channel.ibm_apim']
+  ibm_apim.group:
+    class: Drupal\ibm_apim\Service\Group
+    arguments: ['@state', '@logger.channel.ibm_apim']
+  ibm_apim.apicuser:
+    class: Drupal\ibm_apim\Service\ApicUserService
+    arguments: ['@logger.channel.ibm_apim',
+                '@state',
+                '@ibm_apim.user_registry'
+               ]
+  ibm_apim.user_registry:
+    class: Drupal\ibm_apim\Service\UserRegistryService
+    arguments: ['@state', '@logger.channel.ibm_apim']
+  ibm_apim.analytics:
+    class: Drupal\ibm_apim\Service\AnalyticsService
+    arguments: ['@state', '@logger.channel.ibm_apim']
+  ibm_apim.tls_client_profiles:
+    class: Drupal\ibm_apim\Service\TlsClientProfilesService
+    arguments: ['@state', '@logger.channel.ibm_apim']
+  ibm_apim.billing:
+    class: Drupal\ibm_apim\Service\Billing
+    arguments: ['@state', '@logger.channel.ibm_apim']
+  ibm_apim.permissions:
+    class: Drupal\ibm_apim\Service\PermissionsService
+    arguments: ['@state', '@logger.channel.ibm_apim']
+  ibm_apim.site_config:
+    class: Drupal\ibm_apim\Service\SiteConfig
+    arguments: ['@state', '@config.factory', '@module_installer', '@logger.channel.ibm_apim', '@ibm_apim.user_registry', '@ibm_apim.billing', '@ibm_apim.permissions']
+  ibm_apim.node_type_checker:
+    class: Drupal\ibm_apim\Access\IbmNodeTypeCheck
+    tags:
+      - { name: access_check, applies_to: _ibm_node_type_check }
+  ibm_apim.field_type_checker:
+    class: Drupal\ibm_apim\Access\IbmFieldTypeCheck
+    tags:
+      - { name: access_check, applies_to: _ibm_field_type_check }
+  ibm_apim.view_mode_checker:
+    class: Drupal\ibm_apim\Access\IbmViewModeCheck
+    tags:
+      - { name: access_check, applies_to: _ibm_view_mode_check }
+  ibm_apim.form_mode_checker:
+    class: Drupal\ibm_apim\Access\IbmFormModeCheck
+    tags:
+      - { name: access_check, applies_to: _ibm_form_mode_check }
+  ibm_apim.view_checker:
+    class: Drupal\ibm_apim\Access\IbmViewCheck
+    tags:
+      - { name: access_check, applies_to: _ibm_view_check }
+  ibm_apim.taxonomy_checker:
+    class: Drupal\ibm_apim\Access\IbmTaxonomyCheck
+    tags:
+      - { name: access_check, applies_to: _ibm_taxonomy_check }
+  ibm_apim.user_field_checker:
+    class: Drupal\ibm_apim\Access\IbmUserFieldCheck
+    tags:
+      - { name: access_check, applies_to: _ibm_user_field_check }
+  ibm_apim.language_delete_checker:
+    class: Drupal\ibm_apim\Access\IbmLanguageDeleteCheck
+    tags:
+      - { name: access_check, applies_to: _ibm_langauge_delete_check }
+  ibm_apim.status_messages:
+    class: Drupal\ibm_apim\Service\StatusMessages
+    tags:
+      - { name: ibm_apim }
+  ibm_apim.delete_user_access_checker:
+    class: Drupal\ibm_apim\Access\DeleteUserAccessCheck
+    tags:
+      - { name: access_check, applies_to: _ibm_apim_delete_user_access_check }
+  ibm_apim.mgmtserver:
+    class:  Drupal\ibm_apim\Service\APIMServer
+    arguments: ['@tempstore.private',
+                '@ibm_apim.site_config',
+                '@logger.channel.ibm_apim',
+                '@ibm_apim.apicuser',
+                '@ibm_apim.user_registry'
+               ]
+    tags:
+      - { name: ibm_apim }
+  ibm_apim.apim_utils:
+    class: Drupal\ibm_apim\Service\ApimUtils
+    arguments: [ '@logger.channel.ibm_apim',
+                 '@ibm_apim.site_config']
+    tags:
+      - { name: ibm_apim }
+  ibm_apim.utils:
+    class: Drupal\ibm_apim\Service\Utils
+    tags:
+      - { name: ibm_apim }

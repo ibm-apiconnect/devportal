@@ -1,0 +1,34 @@
+services:
+  logger.channel.auth_apic:
+    parent: logger.channel_base
+    arguments: ['auth_apic']
+  auth_apic.writableregistry_access_checker:
+    class: Drupal\auth_apic\Access\WritableUserRegistryAccessCheck
+    arguments: ['@current_user']
+    tags:
+      - { name: access_check, applies_to: _auth_apic_writableregistry_access_check }
+  auth_apic.currentuserprofile_access_checker:
+    class: Drupal\auth_apic\Access\CurrentUserProfileAccessCheck
+    arguments: ['@current_user']
+    tags:
+      - { name: access_check, applies_to: _auth_apic_currentuserprofile_access_check }
+  auth_apic.jwtparser:
+    class: Drupal\auth_apic\Service\JWTParser
+    arguments: ['@logger.channel.auth_apic',
+                '@ibm_apim.utils']
+  auth_apic.usermanager:
+    class: Drupal\auth_apic\Service\ApicUserManager
+    arguments: ['@logger.channel.auth_apic',
+                '@database',
+                '@externalauth.externalauth',
+                '@ibm_apim.mgmtserver',
+                '@ibm_apim.consumerorg',
+                '@state',
+                '@ibm_apim.site_config',
+                '@ibm_apim.user_registry',
+                '@ibm_apim.apicuser',
+                '@ibm_apim.user_utils',
+                '@module_handler'
+                ]
+    tags:
+      - { name: auth_apic }

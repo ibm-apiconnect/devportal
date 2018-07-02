@@ -1,0 +1,65 @@
+user.register:
+  path: '/user/register'
+  # Routing for register form done in auth_apic_entity_type_alter hook
+  defaults:
+    _entity_form: 'user.register'
+    _title: 'Create new account'
+  requirements:
+    _access: 'TRUE'
+
+user.login:
+  path: '/user/login'
+  defaults:
+    _form: '\Drupal\auth_apic\Form\ApicUserLoginForm'
+    _title: 'Login'
+  requirements:
+    _user_is_logged_in: 'FALSE'
+
+user.pass:
+  path: '/user/password'
+  defaults:
+    _form: '\Drupal\auth_apic\Form\ApicUserPasswordForm'
+    _title: 'Reset your password'
+  requirements:
+    _access: 'TRUE'
+  options:
+    _maintenance_access: TRUE
+
+apic.resetpw:
+  path: '/user/forgot-password'
+  defaults:
+    _form: '\Drupal\auth_apic\Form\ApicUserPasswordResetForm'
+    _title: 'Reset password'
+  requirements:
+    _access: 'TRUE'
+  options:
+    _maintenance_access: TRUE
+    no_cache: TRUE
+
+change_pwd_page.change_password_form:
+  path: '/user/{user}/change-password'
+  defaults:
+    _form: '\Drupal\auth_apic\Form\ApicUserChangePasswordForm'
+    _title: 'Change Password'
+  requirements:
+    _role: 'authenticated'
+    _auth_apic_currentuserprofile_access_check: 'TRUE'
+    _auth_apic_writableregistry_access_check: 'TRUE'
+    _entity_access: 'user.update'
+    user: \d+
+
+auth_apic.invitation:
+  path: '/user/invitation'
+  defaults:
+    _controller: '\Drupal\auth_apic\Controller\ApicUserInvitationController::process'
+    _title: 'Process Invitation'
+  requirements:
+    _user_is_logged_in: 'FALSE'
+
+auth_apic.activation:
+  path: '/user/activation'
+  defaults:
+    _controller: '\Drupal\auth_apic\Controller\ApicUserActivationController::activate'
+    _title: 'Activation'
+  requirements:
+    _user_is_logged_in: 'FALSE'

@@ -1,0 +1,16 @@
+{
+  "name": "drupal/stub",
+  "description": "Custom Sub-theme",
+  "type": "drupal-theme",
+  "homepage": "https://github.com/ibm-apiconnect/devportal",
+  "support": {
+    "issues": "https://github.com/ibm-apiconnect/devportal",
+    "source": "https://github.com/ibm-apiconnect/devportal"
+  },
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
+  "require": {
+    "drupal/bootstrap": "*",
+    "drupal/connect_theme": "*"
+  }
+}

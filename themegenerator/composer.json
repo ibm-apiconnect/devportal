@@ -1,0 +1,17 @@
+{
+  "name": "drupal/themegenerator",
+  "description": "APIC Sub-theme Generator",
+  "type": "drupal-module",
+  "homepage": "https://github.com/ibm-apiconnect/devportal",
+  "support": {
+    "issues": "https://github.com/ibm-apiconnect/devportal",
+    "source": "https://github.com/ibm-apiconnect/devportal"
+  },
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
+  "autoload": {
+    "psr-4": {
+      "": "src/"
+    }
+  }
+}

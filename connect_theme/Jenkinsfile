@@ -1,0 +1,79 @@
+#!groovy
+
+// Load shared pipeline library
+@Library('velox') _
+artifactory = library('bmxNative').jenkinsLibs.ArtifactoryHelper.new()
+
+// Clean up builds older than 14 days and set LOAD_TRANSLATIONS build param
+properties([ durabilityHint('PERFORMANCE_OPTIMIZED'),
+	[$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', daysToKeepStr: '14'] ],
+	parameters([string(defaultValue: 'false', description: '', name: 'LOAD_TRANSLATIONS')]) ])
+
+def pipelineOpts = [
+    slackChannel: '',
+    labels: 'apic-build-fast',
+    nodeVersion: null,
+]
+
+veloxPipeline(pipelineOpts) { p ->
+
+  def COMPOSER_REGISTRY = 'apic-dev-portal-composer-local'
+  def MODULE_NAME = 'connect_theme'
+  def REPOSITORY_NAME = 'devportal-connect-theme'
+
+  env.DOCKER_REGISTRY = 'apic-dev-docker-local.artifactory.swg-devops.com'
+  env.mainBranch = 'master'
+
+  def commitLog = sh(returnStdout: true, script: "git log -n 1 ${GIT_COMMIT}");
+
+  p.common {
+
+  }
+
+  p.branch(~/master|\d+\.\d+/) {
+
+    stage('Checkout Source') {
+      checkout scm
+    }
+
+    stage('Remove infrastructure files') {
+      sh "rm -rf travis-ci .travis.yml Jenkinsfile"
+    }
+
+    // Extract module version from the info.yml file but just the 1.0 part e.g. 8.x-[1.0]
+    MODULE_VERSION = sh (
+        script: "cat ${MODULE_NAME}.info.yml | grep version | sed 's/version: //g' | sed \"s/'//g\"",
+        returnStdout: true
+    ).trim()
+
+    COMPOSER_MODULE_VERSION = sh (
+        script: "echo ${MODULE_VERSION} | sed 's/8.x-//g'",
+        returnStdout: true
+    ).trim()
+
+    stage('Create composer package') {
+
+      // insert module version in to composer.json file
+      sh "cat composer.json | jq '. + {\"version\": \"$COMPOSER_MODULE_VERSION\"}' > modified-composer.json"
+      sh "mv modified-composer.json composer.json"
+
+      // a composer package is basically just a zip that includes a composer.json file
+      sh "mkdir ${MODULE_NAME}"
+      sh "mv * ${MODULE_NAME} || true"
+      sh "tar -cvzf ${MODULE_NAME}-${MODULE_VERSION}.tar.gz ${MODULE_NAME}"
+    }
+
+    stage('Upload composer package') {
+      // unlike docker, composer only downloads packages. it can't upload (ala 'docker push').
+      // we have to use the Artifactory API to upload instead
+
+      def artifactZip = findFiles(glob: "${MODULE_NAME}-${MODULE_VERSION}.tar.gz")[0]
+      def artifactPath = "${COMPOSER_REGISTRY}/${MODULE_NAME}/${artifactZip.name}"
+
+      // Do the upload
+      def uploadSpec = "{ \"files\": [ { \"pattern\": \"./${artifactZip}\", \"target\": \"${artifactPath}\" } ] }"
+      artifactory.getArtifactoryServer().upload(uploadSpec)
+    }
+
+  } // end master only code - composer package
+}

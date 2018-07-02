@@ -1,0 +1,19 @@
+
+{#
+/**
+ * @file
+ *
+ * Template for the subscribe confirmation page of the subscription wizard
+ *
+ * @ingroup templates
+ */
+#}
+<div class="apicForm">
+  <div class="apicFormHeader">{{ 'Confirm Subscription'|t }}</div>
+  <div class="apicFormText">{{ 'A subscription will be created for the product, plan and application you selected.'|t }}</div>
+  <div class="apicFormWrapper">
+    <form {{ attributes }}>
+      {{ children }}
+    </form>
+  </div>
+</div>

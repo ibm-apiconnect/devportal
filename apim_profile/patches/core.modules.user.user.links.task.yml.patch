@@ -1,0 +1,11 @@
+--- core/modules/user/user.links.task.yml	2017-08-23 20:55:49.000000000 +0100
++++ core/modules/user/user.links.task.yml	2017-08-23 20:56:16.000000000 +0100
+@@ -22,7 +22,7 @@
+ user.login:
+   route_name: user.login
+   base_route: user.page
+-  title: 'Log in'
++  title: 'Sign in'
+   weight: -10
+ 
+ entity.user.canonical:

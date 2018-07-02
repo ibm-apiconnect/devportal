@@ -1,422 +1,309 @@
 <?php
+
 /********************************************************* {COPYRIGHT-TOP} ***
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2016
+ * (C) Copyright IBM Corporation 2018
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
-require_once(libraries_get_path('twitteroauth') . '/autoload.php');
-
 /**
- * Implements hook_bean_types_api_info().
+ * @file
+ * Provides a Social block.
  */
-function socialblock_bean_types_api_info() {
-  return array('api' => 4);
-}
+
+use Abraham\TwitterOAuth\TwitterOAuth;
+use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\encrypt\Entity\EncryptionProfile;
 
 /**
- * Implements hook_bean_types().
- * @return array
- */
-function socialblock_bean_types() {
-  $plugins = array();
-  $plugins['socialblock_block'] = array(
-    'label' => t('Social Block'),
-    'description' => t('Displays latest forum topics and tweets'),
-    'handler' => array(
-      'class' => 'SocialBlockBean',
-      'parent' => 'bean',
-      'path' => drupal_get_path('module', 'socialblock') . '/plugins/bean',
-      'file' => 'socialblock.socialblock_block.inc',
-    ),
-  );
-  return $plugins;
-}
-
-/**
- * Implements hook_menu().
- */
-function socialblock_menu() {
-  $items = array();
-  $items['admin/config/system/socialblock'] = array(
-    'title' => 'Social Block Twitter OAuth',
-    'description' => 'Configure Twitter OAuth for Social Block module',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('socialblock_admin'),
-    'file' => 'includes/socialblock.admin.inc',
-    'access arguments' => array('access administration pages'),
-    'type' => MENU_NORMAL_ITEM
-  );
-  return $items;
-}
-
-/**
- * Implementation of hook_form_alter()
+ * Add twig template
  *
- * @param $form
- * @param $form_state
- * @param $form_id
+ * @param $existing
+ * @param $type
+ * @param $theme
+ * @param $path
+ * @return array
  */
-function socialblock_form_alter(&$form, &$form_state, $form_id) {
-  switch ($form_id) {
-    case 'bean_form' :
-      $bean = $form['bean']['#value'];
-      if (isset($bean) && isset($bean->type) && $bean->type == 'socialblock_block') {
-        if (isset($form['title'])) {
-          unset($form['title']);
-        }
-        if ($form['view_mode']) {
-          unset($form['view_mode']);
-          $form['view_mode'] = array('#type' => 'hidden', '#value' => 'default');
-        }
-      }
-      break;
-  }
-}
-
-/**
- * Implements hook_cron().
- */
-function socialblock_cron() {
-  // could be multiple socialblocks so need a variable for each one
-  $beans = bean_get_all_beans();
-  if (isset($beans)) {
-    $client_id = variable_get('ibm_apim_client_id', NULL);
-    $data = variable_get('twitter_oauth_settings', NULL);
-    $iv_size = mcrypt_get_iv_size(MCRYPT_CAST_256, MCRYPT_MODE_CBC);
-    if (isset($data) && !empty($data) && isset($client_id) && isset($iv_size)) {
-      $credentials = array();
-      $iv = substr($data, 0, $iv_size);
-      if (strlen($client_id) < 32) {
-        $char = 32 - strlen($client_id);
-        $client_id = str_pad($client_id, 32, $char);
-      }
-      $client_id = (strlen($client_id) > 32) ? substr($client_id,0,32) : $client_id;
-      if (isset($iv)) {
-        //watchdog('socialblock', 'DEBUG: %debug', array('%debug'=>serialize(array('iv_size'=>$iv_size, 'iv'=>$iv, 'client_id'=>$client_id, 'data'=>$data))), WATCHDOG_INFO);
-        $credentials = unserialize(openssl_decrypt(substr($data, $iv_size), "AES-256-CBC", $client_id, 0, $iv));
-      }
-      if (isset($credentials['twitter_consumer_key']) && isset($credentials['twitter_consumer_secret']) && isset($credentials['twitter_access_token']) && isset($credentials['twitter_token_secret'])) {
-        foreach ($beans as $bean) {
-          if ((isset($bean->delta) && ($bean->delta == 'socialblock')) || (isset($bean->type) && $bean->type == 'socialblock_block')) {
-            switch ($bean->twitter_api) {
-              case 0:
-                $api = 'statuses/user_timeline';
-                $api_param = 'screen_name';
-                break;
-              case 1:
-                $api = 'search/tweets';
-                $api_param = 'q';
-                break;
-              default:
-                $api = '';
-                $api_param = '';
-            }
-            if (isset($bean->twitter_param)) {
-              $tweets = array();
-              switch ($bean->tweet_filter) {
-                case 0:
-                  $remaining_calls = socialblock_not_rate_limited($credentials);
-                  if ($remaining_calls > 0) {
-                    $temp = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles));
-                    $temp2 = $temp;
-                    $remaining_calls--;
-                    $all_tweets = FALSE;
-                    while (!$all_tweets) {
-                      if ($remaining_calls > 0 && !empty($temp)) {
-                        $max_id = end($temp)->id;
-                        for ($i = 0; $i < sizeof($temp); $i++) {
-                          if (is_null($temp[$i]->in_reply_to_status_id)) {
-                            array_push($tweets, $temp[$i]);
-                          }
-                        }
-                        $all_tweets = sizeof($tweets) == $bean->tiles;
-                        if (!$all_tweets) {
-                          $temp = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles - sizeof($tweets), 'max_id' => $max_id - 1));
-                          $remaining_calls--;
-                          $temp2 = empty($temp) ? $temp2 : $temp;
-                        }
-                      } else {
-                        $tweets = $temp2;
-                        $all_tweets = TRUE;
-                      }
-                    }
-                  } else {
-                    watchdog('socialblock', 'Social Block: Twitter API rate limit hit!', array(), WATCHDOG_INFO);
-                  }
-                  break;
-                case 1:
-                  $remaining_calls = socialblock_not_rate_limited($credentials);
-                  if ($remaining_calls > 0) {
-                    $tweets = socialblock_call_twitter_api($credentials, $api, array($api_param => $bean->twitter_param, 'count' => $bean->tiles));
-                  } else {
-                    watchdog('socialblock', 'Social Block: Twitter API rate limit hit!', array(), WATCHDOG_INFO);
-                  }
-                  break;
-                default:
-                  $tweets = array();
-              }
-              $markup = socialblock_render_posts($bean, $tweets);
-              variable_set('socialblock_tweets_' . $bean->bid, serialize($markup));
-            } else {
-              $markup = socialblock_render_posts($bean, array());
-              variable_set('socialblock_tweets_' . $bean->bid, serialize($markup));
-            }
-          }
-        }
-      }
-      else {
-        watchdog('socialblock', 'Social Block: No Twitter credentials found, skipping tweets...', array(), WATCHDOG_INFO);
-      }
-    }
-    else {
-      watchdog('socialblock', 'Social Block: No Twitter credentials found, skipping tweets...', array(), WATCHDOG_INFO);
-    }
-  }
-}
-
-/**
- * @param $bean
- * @param $tweets
- * @return string
- */
-function socialblock_render_posts(&$bean, $tweets) {
-  $markup = '';
-  $tiles = $bean->tiles;
-  $forums = $bean->forums;
-  $posts = array();
-  if (isset($bean->display_all_forums) && $bean->display_all_forums == 1) {
-    $forums = socialblock_get_forum_tids();
-    $bean->forums = $forums;
-    $bean->data['forums'] = $forums;
-  }
-  // Any forums?
-  if (isset($forums) && !empty($forums)) {
-    foreach ($forums as $forum_tid) {
-      if ($forum_tid != 0 && !empty(forum_get_topics($forum_tid, 1, $tiles))) {
-        foreach (forum_get_topics($forum_tid, 1, $tiles) as $topic) {
-          $topic->tweet = FALSE;
-          array_push($posts, $topic);
-        }
-      }
-    }
-  }
-  // Any tweets?
-  if (isset($tweets) && !empty($tweets)) {
-    foreach ($tweets as $tweet) {
-      $tweet->tweet = TRUE;
-      array_push($posts, $tweet);
-    }
-  }
-  // Any forum posts or tweets?
-  if (isset($posts) && !empty($posts)) {
-    uasort($posts, 'socialblock_sort_by_created');
-    $posts = array_slice($posts, 0, $tiles);
-    foreach ($posts as $post) {
-      // This is a tweet
-      if ($post->tweet) {
-        // This is a retweet
-        if (isset($post->retweeted_status)) {
-          $post = $post->retweeted_status;
-        }
-        $tweet_id = $post->id_str;
-        $profile_img = $post->user->profile_image_url_https;
-        $name = $post->user->name;
-        $handle = $post->user->screen_name;
-        $timestamp = date_diff(date_create('@' . strtotime($post->created_at)), date_create('@' . time()));
-        $raw_content = $post->text;
-        $hashtags = $post->entities->hashtags;
-        $user_mentions = $post->entities->user_mentions;
-        $hashtags_replace = array();
-        foreach ($hashtags as $hashtag) {
-          $hashtag_replace = mb_substr($raw_content, $hashtag->indices[0], $hashtag->indices[1] - $hashtag->indices[0]);
-          array_push($hashtags_replace, $hashtag_replace);
-        }
-        $user_mentions_replace = array();
-        foreach ($user_mentions as $user_mention) {
-          $user_mention_replace = mb_substr($raw_content, $user_mention->indices[0], $user_mention->indices[1] - $user_mention->indices[0]);
-          array_push($user_mentions_replace, $user_mention_replace);
-        }
-        foreach ($hashtags_replace as $hashtag_replace) {
-          $raw_content = str_replace($hashtag_replace, '<a href="https://twitter.com/hashtag/' . ltrim($hashtag_replace, '#') . '" target="_blank" class="socialblock hashtag">' . $hashtag_replace . '</a>', $raw_content);
-        }
-        foreach ($user_mentions_replace as $user_mention_replace) {
-          $raw_content = str_replace($user_mention_replace, '<a href="https://twitter.com/' . ltrim($user_mention_replace, '@') . '" target="_blank" class="socialblock user_mention">' . $user_mention_replace . '</a>', $raw_content);
-        }
-        $media = isset($post->entities->media) ? $post->entities->media : array();
-        $photos = array();
-        $urls = isset($post->entities->urls) ? $post->entities->urls : array();
-        $video_ids = array();
-        foreach ($media as $medium) {
-          if ($medium->type == 'photo') {
-            array_push($photos, $medium);
-          }
-        }
-        foreach ($urls as $url) {
-          $short_url = $url->url;
-          $expanded_url = $url->expanded_url;
-          $true_url = socialblock_expand_url($expanded_url);
-          if (isset($true_url)) {
-            if (preg_match('/^(https?:\/\/)?(www\.)?youtube\.com\/.*/i', $true_url)) { //A wild YouTube video url appears!
-              array_push($video_ids, preg_replace('/^(https?:\/\/)?(www\.)?youtube\.com\/watch\?v=/i', '', $true_url));
-            }
-            else if (preg_match('/^(https?:\/\/)?(youtu\.be)\//i', $true_url)) {
-              array_push($video_ids, preg_replace('/^(https?:\/\/)?(youtu\.be)\//i', '', $true_url));
-            }
-          }
-          if (isset($short_url)) {
-            if (strpos($raw_content, $short_url) != FALSE) {
-              $raw_content = str_replace($short_url, '<a href="' . $expanded_url . '" target="_blank" class="socialblock url">' . $expanded_url . '</a>', $raw_content);
-            }
-            else {
-              $raw_content = str_replace($short_url, '', $raw_content);
-            }
-          }
-        }
-        $markup .= '<div class="socialblock card tweet">
-                        <div class="socialblock tweet_info">
-                          <div class="socialblock tweet_profile">
-                            <img class="socialblock profile_image" src="' . $profile_img . '">
-                            <div class="socialblock profile_name">
-                              <a href="https://twitter.com/' . $handle . '" target="_blank" class="socialblock profile_name name">' . $name . '</a>
-                              <div class="socialblock twitter_handle">@' . $handle . '</div>
-                            </div>
-                          </div>
-                          <div class="socialblock tweet_meta">
-                            <a href="https://twitter.com/statuses/' . $tweet_id . '" target="_blank" class="socialblock bird"></a>
-                            <div class="socialblock tweet_timestamp">' . socialblock_get_tweet_timediff($timestamp) . '</div>
-                          </div>
-                        </div>';
-        if (!empty($photos)) {
-          foreach ($photos as $photo) {
-            $markup .= '<img class="socialblock tweet_image" src="' . $photo->media_url_https . '">';
-          }
-        }
-        $markup .= !empty($video_ids) ? '<iframe class="socialblock yt_embed" src="https://www.youtube.com/embed/' . $video_ids[0] . '?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>' : '';
-        $markup .= '<div class="socialblock tweet_text">' . $raw_content . '</div>
-                      </div>';
-      }
-      else { //This is a forum topic
-        $topic_node = node_load($post->nid);
-        $timestamp = date_diff(date_create('@' . $topic_node->created), date_create('@' . time()));
-        $op = user_load_by_name($topic_node->name);
-        $op_name = isset($op->field_first_name['und'][0]['value']) || isset($op->field_last_name['und'][0]['value']) ? $op->field_first_name['und'][0]['value'] . ' ' . $op->field_last_name['und'][0]['value'] : 'Admin';
-        $markup .= '<div class="socialblock card forum_topic">
-                          <a href="' . url('node/' . $post->nid) . '" class="socialblock title">' . $topic_node->title . '</a>
-                          <div class="socialblock info">
-                            <div class="socialblock op">' . t('Posted by') . ' <span class="socialblock op_name">' . $op_name . '</span></div>
-                            <div class="socialblock timestamp">' . socialblock_get_timediff($timestamp) . '</div>
-                          </div>
-                        </div>';
-      }
-    }
-  }
-  else {
-    $markup .= '<div class="socialblock no_topics">There are no posts to display.</div>';
-  }
-  return $markup;
+function socialblock_theme($existing, $type, $theme, $path) {
+  return array(
+    'socialblock_block' => array(
+      'variables' => array(
+        'posts' => NULL
+      )
+    )
+  );
 }
 
 /**
  * @return array
  */
-function socialblock_get_forum_vocabs() {
+function socialblock_get_forum_vocabularies() {
+
   $vocabs = array();
-  $systemvocabs = taxonomy_get_vocabularies();
+
+  $systemvocabs = Vocabulary::loadMultiple();
+
   if (isset($systemvocabs)) {
     foreach ($systemvocabs as $vocab) {
-      if ($vocab->machine_name == 'forums') {
-        $vocabs = taxonomy_get_tree($vocab->vid);
+      if ($vocab->label() == 'Forums') {
+        $vocabs = \Drupal::getContainer()
+          ->get('entity.manager')
+          ->getStorage('taxonomy_term')
+          ->loadTree($vocab->id());
       }
     }
   }
+
   return $vocabs;
 }
 
 /**
  * @return array
  */
-function socialblock_get_forum_tids() {
-  $vocabs = socialblock_get_forum_vocabs();
+function socialblock_get_forum_term_ids() {
+
+  $vocabs = socialblock_get_forum_vocabularies();
+
   $tids = array();
   if (isset($vocabs)) {
     foreach ($vocabs as $vocab) {
       $tids[$vocab->tid] = intval($vocab->tid);
     }
   }
+
   return $tids;
 }
 
 /**
- * @param $cred
+ * @param DateInterval $di
+ * @return string
+ */
+function socialblock_get_timediff(DateInterval $di) {
+
+  $translate = \Drupal::translation();
+
+  $years = $di->y;
+  $months = $di->m;
+  $days = $di->d;
+  $hours = $di->h;
+  $minutes = $di->i;
+  $seconds = $di->s;
+
+  $secondsString = \Drupal::translation()
+    ->formatPlural($seconds, '1 second ago', '@count seconds ago');
+  $minutesString = \Drupal::translation()
+    ->formatPlural($minutes, '1 minute ago', '@count minutes ago');
+  $hoursString = \Drupal::translation()
+    ->formatPlural($hours, '1 hour ago', '@count hours ago');
+  $daysString = \Drupal::translation()
+    ->formatPlural($days, '1 day ago', '@count days ago');
+  $monthsString = \Drupal::translation()
+    ->formatPlural($months, '1 month ago', '@count months ago');
+  $yearsString = \Drupal::translation()
+    ->formatPlural($minutes, '1 year ago', '@count years ago');
+
+  $diff = $years == 0 ? ($months == 0 ? ($days == 0 ? ($hours == 0 ? ($minutes == 0 ? ($seconds == 0 ? t('Just now') : $secondsString) : $minutesString) : $hoursString) : $daysString) : $monthsString) : $yearsString;
+
+  return $diff;
+}
+
+/**
+ * @param DateInterval $di
+ * @return null|string
+ */
+function socialblock_get_tweet_timediff(DateInterval $di) {
+
+  $years = $di->y;
+  $months = $di->m;
+  $days = $di->d;
+  $hours = $di->h;
+  $minutes = $di->i;
+  $seconds = $di->s;
+  $diff = $years == 0 ? ($months == 0 ? ($days == 0 ? ($hours == 0 ? ($minutes == 0 ? ($seconds == 0 ? t('now') : $seconds . t('s')) : $minutes . t('m')) : $hours . t('h')) : $days . t('d')) : $months . t('M')) : $years . t('y');
+
+  return $diff;
+}
+
+/**
+ * Implements hook_cron().
+ */
+function socialblock_cron() {
+
+  $config_instances = \Drupal::state()->get('socialblock.config');
+  if (isset($config_instances) && !empty($config_instances)) {
+    foreach ($config_instances as $block_uuid => $settings) {
+
+      $numberOfTiles = $settings['numberOfTiles'];
+      $forumsList = $settings['forumsList'];                // In the form of array(forumId => [0|1])
+      $twitterSearchBy = $settings['twitterSearchBy'];      // In the form of 0 = userid, 1 = search;
+      $twitterSearchParameter = $settings['twitterSearchParameter'];
+      $twitterTweetTypes = $settings['twitterTweetTypes'];  // In the form of 0 = tweets, 1 = tweets and replies
+
+      // These are the settings for the twitter oauth
+      $config = \Drupal::config('socialblock.settings');
+      $data = $config->get('credentials');
+      if (isset($data) && !empty($data)) {
+        $encryption_profile = EncryptionProfile::load('socialblock');
+        if (isset($encryption_profile)) {
+          $settings = unserialize(\Drupal::service('encryption')->decrypt($data, $encryption_profile));
+        }
+        else {
+          \Drupal::logger('socialblock')->info('Social Block : The "socialblock" encryption profile is missing.');
+          $settings = array();
+        }
+      }
+      else {
+        $settings = array();
+      }
+      if (!isset($settings['consumerKey'])) {
+        $settings['consumerKey'] = '';
+      }
+      if (!isset($settings['consumerSecret'])) {
+        $settings['consumerSecret'] = '';
+      }
+      if (!isset($settings['accessToken'])) {
+        $settings['accessToken'] = '';
+      }
+      if (!isset($settings['accessTokenSecret'])) {
+        $settings['accessTokenSecret'] = '';
+      }
+
+      if (isset($settings['consumerKey']) && !empty($settings['consumerKey']) && isset($settings['consumerSecret']) && !empty($settings['consumerSecret']) && isset($settings['accessToken']) && !empty($settings['accessToken']) && isset($settings['accessTokenSecret']) && !empty($settings['accessTokenSecret'])) {
+        $api = "";
+        $api_param = "";
+
+        switch ($twitterSearchBy) {
+
+          // Show tweets for a given user id
+          case 0;
+            $api = 'statuses/user_timeline';
+            $api_param = 'screen_name';
+            break;
+
+          // Show tweets mactching a search term
+          case 1;
+            $api = 'search/tweets';
+            $api_param = 'q';
+            break;
+        }
+
+        $tweets = array();
+
+        switch ($twitterTweetTypes) {
+
+          // Displaying just tweets
+          case 0:
+            $remaining_calls = socialblock_not_rate_limited($settings);
+
+            if ($remaining_calls > 0) {
+              $temp = socialblock_call_twitter_api($settings, $api, array(
+                $api_param => $twitterSearchParameter,
+                'count' => $numberOfTiles
+              ));
+              $temp2 = $temp;
+              $remaining_calls--;
+              $all_tweets = FALSE;
+
+              while (!$all_tweets) {
+                if ($remaining_calls > 0 && !empty($temp)) {
+                  $max_id = end($temp)->id;
+                  for ($i = 0; $i < sizeof($temp); $i++) {
+                    if (is_null($temp[$i]->in_reply_to_status_id)) {
+                      array_push($tweets, $temp[$i]);
+                    }
+                  }
+                  $all_tweets = sizeof($tweets) == $numberOfTiles;
+                  if (!$all_tweets) {
+                    $temp = socialblock_call_twitter_api($settings, $api, array(
+                      $api_param => $twitterSearchParameter,
+                      'count' => $numberOfTiles - sizeof($tweets),
+                      'max_id' => $max_id - 1
+                    ));
+                    $remaining_calls--;
+                    $temp2 = empty($temp) ? $temp2 : $temp;
+                  }
+                }
+                else {
+                  $tweets = $temp2;
+                  $all_tweets = TRUE;
+                }
+              }
+            }
+            else {
+              \Drupal::logger('socialblock')
+                ->info('Social Block : Twitter API rate limit hit!');
+            }
+            break;
+
+          // Tweets and replies
+          case 1:
+            $remaining_calls = socialblock_not_rate_limited($settings);
+            if ($remaining_calls > 0) {
+              $tweets = socialblock_call_twitter_api($settings, $api, array(
+                $api_param => $twitterSearchParameter,
+                'count' => $numberOfTiles
+              ));
+            }
+            else {
+              \Drupal::logger('socialblock')
+                ->info('Social Block : Twitter API rate limit hit!');
+            }
+            break;
+          default:
+            $tweets = array();
+        }
+
+        // Store tweets as state config so that we can use it when rendering the socialblock
+        $data_instances = \Drupal::state()->get('socialblock.data');
+        if (!isset($data_instances)) {
+          $data_instances = array();
+        }
+        $data_instances[$block_uuid] = $tweets;
+
+        \Drupal::state()->set('socialblock.data', $data_instances);
+
+        \Drupal::logger('socialblock')
+          ->info('Social Block : Retrieved %num_tweets tweets for block with uuid [%uuid]', array(
+            "%num_tweets" => sizeof($tweets),
+            "%uuid" => $block_uuid
+          ));
+
+      } // we had complete twitter credentials
+
+    } // foreach($blocks as $blockid)
+  }
+}
+
+
+/**
+ * @param $credentials
  * @param $api
  * @param $params
  * @return array|null|object
  */
-function socialblock_call_twitter_api($cred, $api, $params) {
-  $connection = new Abraham\TwitterOAuth\TwitterOAuth(
-    $cred['twitter_consumer_key'],
-    $cred['twitter_consumer_secret'],
-    $cred['twitter_access_token'],
-    $cred['twitter_token_secret']
-  );
-  $params['tweet_mode']='extended';
-  $connection->host = "https://api.twitter.com/1.1/";
-  $response = $connection->get(
-    $api,
-    $params
-  );
-  if ($connection->getLastHttpCode() == 200) {
-    if (isset($response->errors)) {
-      /* Note: at some point we may want to look into this further.  I'm not sure that this
-         is actually needed any more; I've not been able to find a case where we get a HTTP
-         200 and also an error block.  Twitter errors seem to vary, sometimes there is an
-        'errors' blob in the response, e.g. on a 401 I saw:
-            [O:8:"stdClass":1:{s:6:"errors";a:1:{i:0;O:8:"stdClass":2:{s:4:"code";i:34;s:7:"message";s:32:"Sorry, that page does not exist.";}}}]
-         but sometimes there isn't, e.g. on a 404 I saw:
-            [O:8:"stdClass":2:{s:7:"request";s:32:"/1.1/statuses/user_timeline.json";s:5:"error";s:15:"Not authorized.";}]
-         Perhaps there's no actual use case where a 200 will return 'errors', in which case
-         we can delete this if statement, but I'll leave it in for now.  In any case, for
-         now it seems fine to just base our error handling on the HTTP error codes.
-        */
-      watchdog('socialblock', 'Social Block Error: %myerr', array('%myerr'=>serialize($response->errors)), WATCHDOG_INFO);
-      $response = NULL;
-    } else if ($api == 'search/tweets') {
+function socialblock_call_twitter_api($credentials, $api, $params) {
+
+  $consumerKey = $credentials['consumerKey'];
+  $consumerSecret = $credentials['consumerSecret'];
+  $accessToken = $credentials['accessToken'];
+  $accessTokenSecret = $credentials['accessTokenSecret'];
+
+  $connection = new TwitterOAuth($consumerKey, $consumerSecret, $accessToken, $accessTokenSecret);
+  $connection->host = "https://api.twitter.com/1.1";
+  $response = $connection->get($api, $params);
+
+  if (isset($response->errors)) {
+    $response = NULL;
+  }
+  else {
+    if ($api == 'search/tweets') {
       $response = $response->statuses;
     }
-  } else if ($connection->getLastHttpCode() == 401) {
-    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code 401 '.
-      '(the twitter account specified cannot be accessed with the configured credentials)', array(), WATCHDOG_INFO);
-    $response = NULL;
-  } else if ($connection->getLastHttpCode() == 404) {
-    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code 404 '.
-      '(the twitter account specified does not appear to exist)', array(), WATCHDOG_INFO);
-    $response = NULL;
-  } else if ($connection->getLastHttpCode() == 410) {
-    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code 410 '.
-      '(the twitter account specified has been deleted)', array(), WATCHDOG_INFO);
-    $response = NULL;
-  } else if ($connection->getLastHttpCode() == 420) {
-    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code 420 '.
-      '(the application represented by the configured credentials has been rate limited)', array(), WATCHDOG_INFO);
-    $response = NULL;
-  } else if ($connection->getLastHttpCode() == 500) {
-    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code 500 '.
-      '(twitter is down, this is likely a temporary situation)', array(), WATCHDOG_INFO);
-    $response = NULL;
-  } else if ($connection->getLastHttpCode() == 503) {
-    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code 503 '.
-      '(twitter servers are up but overloaded, this is likely a temporary situation)', array(), WATCHDOG_INFO);
-    $response = NULL;
-  } else {
-    watchdog('socialblock', 'Social Block Error: Failed to call twitter, HTTP error code: %mycode , response message: %myerr',
-      array('%mycode'=>$connection->getLastHttpCode(), '%myerr'=>serialize($response)), WATCHDOG_INFO);
-    $response = NULL;
   }
 
   return $response;
@@ -428,81 +315,28 @@ function socialblock_call_twitter_api($cred, $api, $params) {
  */
 function socialblock_not_rate_limited($cred) {
   $result = socialblock_call_twitter_api($cred, 'application/rate_limit_status', array('resources' => 'statuses'));
-  return $result->resources->statuses->{'/statuses/user_timeline'}->remaining > 0;
-}
-
-/**
- * @param $id
- * @return array
- */
-function socialblock_get_approx_yt_embed_dimensions($id) {
-  $id = preg_replace('/&.*$/i', '', $id);
-  watchdog('socialblock.module', 'Video id: %id', array('%id' => json_encode($id)), WATCHDOG_INFO);
-  $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, 'https://i.ytimg.com/vi/' . $id . '/maxresdefault.jpg');
-  curl_setopt($ch, CURLOPT_HEADER, FALSE);
-  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, FALSE);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-  curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-  curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-  $s = curl_exec($ch);
-  curl_close($ch);
-  $img = imagecreatefromstring($s);
-  $width = imagesx($img);
-  $height = imagesy($img);
-  watchdog('socialblock.module', 'Video dimensions: %s', array('%s' => json_encode($width) . '|' . json_encode($height)), WATCHDOG_INFO);
-  return array('width' => $width, 'height' => $height);
-}
-
-/**
- * @param DateInterval $di
- * @return string
- */
-function socialblock_get_timediff(DateInterval $di) {
-  $years = $di->y;
-  $months = $di->m;
-  $days = $di->d;
-  $hours = $di->h;
-  $minutes = $di->i;
-  $seconds = $di->s;
-  $diff = $years == 0 ? ($months == 0 ? ($days == 0 ? ($hours == 0 ? ($minutes == 0 ? ($seconds == 0 ? t('Just now') : format_plural($seconds, '1 second ago', '@count seconds ago')) : format_plural($minutes, '1 minute ago', '@count minutes ago')) : format_plural($hours, '1 hour ago', '@count hours ago')) : format_plural($days, '1 day ago', '@count days ago')) : format_plural($months, '1 month ago', '@count months ago')) : format_plural($years, '1 year ago', '@count years ago');
-  return $diff;
-}
-
-/**
- * @param DateInterval $di
- * @return null|string
- */
-function socialblock_get_tweet_timediff(DateInterval $di) {
-  $years = $di->y;
-  $months = $di->m;
-  $days = $di->d;
-  $hours = $di->h;
-  $minutes = $di->i;
-  $seconds = $di->s;
-  $diff = $years == 0 ? ($months == 0 ? ($days == 0 ? ($hours == 0 ? ($minutes == 0 ? ($seconds == 0 ? t('now') : $seconds . t('s')) : $minutes . t('m')) : $hours . t('h')) : $days . t('d')) : $months . t('M')) : $years . t('y');
-  return $diff;
-}
-
-/**
- * @param $bean
- * @return mixed
- */
-function socialblock_get_tweets(&$bean) {
-  $tweets = unserialize(variable_get('socialblock_tweets_' . $bean->bid));
-  if (isset($tweets) && !empty($tweets)) {
-    return $tweets;
+  if (isset($result->resources->statuses->{'/statuses/user_timeline'}->remaining) && $result->resources->statuses->{'/statuses/user_timeline'}->remaining > 0) {
+    return TRUE;
   }
   else {
-    return NULL;
+    return FALSE;
   }
 }
 
 /**
- * @param $url
- * @return string
+ * @param $a
+ * @param $b
+ * @return int
  */
+function socialblock_sort_by_created($a, $b) {
+  $at = intval($a->tweet ? strtotime($a->created_at) : $a->created->getValue()[0]['value']);
+  $bt = intval($b->tweet ? strtotime($b->created_at) : $b->created->getValue()[0]['value']);
+  if ($at == $bt) {
+    return 0;
+  }
+  return $at < $bt ? 1 : -1;
+}
+
 function socialblock_expand_url($url) {
   $ch = curl_init();
   curl_setopt($ch, CURLOPT_URL, $url);
@@ -522,18 +356,4 @@ function socialblock_expand_url($url) {
   else {
     return $url;
   }
-}
-
-/**
- * @param $a
- * @param $b
- * @return int
- */
-function socialblock_sort_by_created($a, $b) {
-  $at = intval($a->tweet ? strtotime($a->created_at) : $a->created);
-  $bt = intval($b->tweet ? strtotime($b->created_at) : $b->created);
-  if ($at == $bt) {
-    return 0;
-  }
-  return $at < $bt ? 1 : -1;
 }

@@ -1,0 +1,43 @@
+autocreate_apiforum: true
+show_placeholder_images: true
+show_register_app: true
+show_versions: true
+enable_api_test: true
+autotag_with_phase: false
+show_cors_warnings: true
+show_analytics: true
+soap_swagger_download: false
+email_as_username: true
+application_image_upload: true
+acl_debug: false
+webhook_debug: false
+entry_exit_trace: false
+apim_rest_trace: false
+render_api_schema_view: true
+allow_consumerorg_creation: true
+allow_consumerorg_rename: true
+allow_consumerorg_delete: true
+allow_user_delete: true
+allow_new_credentials: true
+allow_clientid_reset: true
+allow_clientsecret_reset: true
+categories:
+  enabled: true
+  create_taxonomies_from_categories: false
+soap_codesnippets: false
+codesnippets:
+  ruby: true
+  python: true
+  curl: true
+  php: true
+  java: true
+  node: true
+  go: true
+  swift: true
+  c: false
+  csharp: false
+bgsync:
+  email_enabled: true
+  email_subject: '[site:name] - Background sync has failed'
+  email_body: "<p>The background sync process has failed for your site [site:name].</p>\r\n\r\n<p>&nbsp;</p>\r\n\r\n<p>A short summary of the status of background sync is below. You can find more information in the logs for your site and on the management appliance.</p>\r\n\r\n<p>&nbsp;</p>\r\n\r\n<p>Number of failures : [ibmapim:bgsync_failures]<br />\r\nLast Success : [ibmapim:bgsync_lastsuccess]<br />\r\nGet Config : [ibmapim:bgsync_config]<br />\r\nGet Catalog : [ibmapim:bgsync_catalog]<br />\r\nGet APIs : [ibmapim:bgsync_api]<br />\r\nGet Products : [ibmapim:bgsync_product]<br />\r\nGet Consumerorgs : [ibmapim:bgsync_consumerorg]<br />\r\nGet Applications : [ibmapim:bgsync_app]<br />\r\nGet Subscriptions : [ibmapim:bgsync_sub]<br />\r\nMode : [ibmapim:bgsync_mode]</p>\r\n"
+  email_format: full_html

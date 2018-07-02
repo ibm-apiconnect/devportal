@@ -3,15 +3,23 @@
 <p>This repository contains the components necessary to create a developer portal for IBM API Connect 
 using the Drupal content management system.</p>
 
+<h2>Branches</h2>
+<p><code>master</code> - Drupal v8 based portal for use with APIC v2018 (https://github.com/ibm-apiconnect/devportal)</p>
+<p><code>APIC_v5</code> - Drupal v7 based portal for use with APIC v5 (https://github.com/ibm-apiconnect/devportal/tree/APIC_v5)</p>
+
+<h2>Modules</h2>
 <p><code>ibm_apim</code> = a drupal module containing the IBM API Connect integration<br/>
+<code>apic_api</code> = a content type corresponding to APIs in APIC<br/>
+<code>apic_app</code> = a content type corresponding to Applications in APIC<br/>
+<code>consumerorg</code> = a content type corresponding to Consumer Organizations in APIC<br/>
+<code>product</code> = a content type corresponding to Products in APIC<br/>
 <code>connect_theme</code> = a configurable drupal theme<br/>
-<code>ibm_apim_theme</code> = the drupal theme used in APIm v4<br/>
-<code>apic_taxonomy_menu_block</code> = a block to browse a hierarchical taxonomy<br/>
-<code>bannerblock</code> = front page welcome banner block<br/>
-<code>clone</code> = fork of the node_clone module to fix some incompatibilities in it_<br/>
-<code>forum_approval</code> = module to allow the approval of forum posts<br/>
-<code>popularapi</code> = block to feature specific products or APIs (for example on the front page)<br/>
+<code>auth_apic</code> = APIC based authentication module<br/>
+<code>featuredcontent</code> = block to feature specific products or APIs (for example on the front page)<br/>
 <code>socialblock</code> = block to display recent Twitter tweets and forum posts<br/>
+<code>ghmarkdown</code> = a GitHub Markdown input filter<br/>
+<code>mail_subscribers</code> = a wizard to enable email engagement with developer organizations and their members<br/>
+<code>themegenerator</code> = an APIC sub-theme generator based on different colour palettes<br/>
 <code>apim_profile</code> = a drupal installation profile to create a dev portal zip containing everything you need.</p>
 
 <h2>Video / Demo</h2>
@@ -80,10 +88,6 @@ javascript libraries and theme) can be downloaded from the <a href="https://gith
 <h3>Page not found (404) error handler</h3>
 <ul><li>rather than report errors it automatically searches for what you were looking for</li></ul>
 
-<h3>Support Ticket Management</h3>
-<ul><li>Configurable helpline type support ticketing system</li>
-<li>Can be expanded to have catagorization of tickets, dashboard, allow raising by email, etc..</li></ul>
-
 <h3>Customizable page layouts</h3>
 <ul><li>different pages can have different layouts</li>
 <li>different numbers of columns, etc..</li>
@@ -95,7 +99,7 @@ javascript libraries and theme) can be downloaded from the <a href="https://gith
 <li>List APIs available to currently logged in user</li>
 <li>APIs then stored in drupal database so the data is available for search (drupaldb content automatically updated every time it is accessed)</li>
 <li>Can only access items in the drupal DB if can access the equivalent in APIm</li>
-<li>Integrated SwaggerUI interface for browsing API resources and live testing those resources</li>
+<li>Integrated API explorer interface for browsing API resources and live testing those resources</li>
 <li>Register, Edit & Delete applications</li>
 <li>Upload & Remove images for those applications</li>
 <li>Browse available plans per API</li>
@@ -103,8 +107,6 @@ javascript libraries and theme) can be downloaded from the <a href="https://gith
 <li>Subscribe to a plan</li>
 <li>Unsubscribe from a plan</li>
 <li>See what plans an app is subscribed to</li>
-<li>Configure notifications per application</li>
-<li>See APIm notification messages</li></ul>
 
 <h3>Security</h3>
 <ul><li>Password policy</li>
@@ -119,7 +121,7 @@ javascript libraries and theme) can be downloaded from the <a href="https://gith
 <p>This is provided 'as-is' with no guarantee of official support but we will endeavour to respond to all Issues raised as best we can.</p>
 
 <h2>Requirements</h2>
-<p>You will require IBM API Connect v5.0.7.x to use this code.</p>
+<p>You will require IBM API Connect v2018.x to use this code.</p>
 
 <h2>API Management v4</h2>
 <p>The v4 version of the portal can be found on github here: <a href="https://github.com/apimanagement/drupalportal/">apimanagement/drupalportal</a></p>

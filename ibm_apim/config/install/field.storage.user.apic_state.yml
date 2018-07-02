@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - user
+    - options
+id: user.apic_state
+field_name: apic_state
+entity_type: user
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: enabled
+      label: Enabled
+    -
+      value: disabled
+      label: Disabled
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.apic_rating
+    - node.type.consumerorg
+  module:
+    - votingapi_widgets
+id: node.consumerorg.apic_rating
+field_name: apic_rating
+entity_type: node
+bundle: consumerorg
+label: Rating
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    status: '1'
+default_value_callback: ''
+settings:
+  anonymous_window: '-1'
+  user_window: '-1'
+  result_function: vote_average
+  widget_format: fivestar
+field_type: voting_api_field

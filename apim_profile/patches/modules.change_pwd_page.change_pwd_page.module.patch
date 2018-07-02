@@ -1,0 +1,17 @@
+--- modules/change_pwd_page/change_pwd_page.module	2018-03-15 15:45:30.951596333 +0000
++++ modules/change_pwd_page/change_pwd_page.module	2018-03-15 15:44:54.335399513 +0000
+@@ -28,11 +28,11 @@
+ function change_pwd_page_form_alter(&$form, &$form_state, $form_id) {
+   if ($form_id == 'user_form') {
+     $url = Url::fromRoute('user.pass');
+-    $form['account']['current_pass']['#description'] = t('Required if you want to change the %mail below. <a href=":request_new_url" title="Send password reset instructions via email.">Reset your password</a>.', array(
+-      '%mail' => $form['account']['mail']['#title'],
++    $form['current_pass']['#description'] = t('Required if you want to change the %mail below. <a href=":request_new_url" title="Send password reset instructions via email.">Reset your password</a>.', array(
++      '%mail' => $form['mail']['#title'],
+       ':request_new_url' => $url->toString(),
+     ));
+     // Hide the new password fields.
+-    $form['account']['pass']['#access'] = FALSE;
++    $form['pass']['#access'] = FALSE;
+   }
+ }

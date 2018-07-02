@@ -1,8 +1,0 @@
-name = IBM API Connect Site Uploader
-description = A module to override the drupal core theme and module uploaders to allow site specific modules and themes.
-package = IBM API Connect v5
-core = 7.x
-files[] = site_uploader.updater.inc
-dependencies[] = ibm_apim
-
-version = VERSION

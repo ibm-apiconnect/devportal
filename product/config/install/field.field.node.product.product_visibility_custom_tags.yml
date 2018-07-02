@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.product_visibility_custom_tags
+    - node.type.product
+id: node.product.product_visibility_custom_tags
+field_name: product_visibility_custom_tags
+entity_type: node
+bundle: product
+label: 'Custom tags visibility'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

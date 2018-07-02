@@ -1,0 +1,336 @@
+.welcomebanner {
+  display: flex;
+  justify-content: center;
+  height: 300px;
+  width: 100%;
+  transition: 0.5s;
+  background-color: #5aaafa;
+  background-image: url(../images/hero-background.png);
+  background-size: cover;
+}
+
+.welcomebanner .welcomeimage {
+  height: 300px;
+  width: 300px;
+  margin-right: 2rem;
+}
+
+.welcomebanner .welcomeimage.bee svg {
+  fill-opacity: 0.5;
+  fill: #fff;
+}
+
+.welcomebannertext {
+  z-index: 2;
+  padding: 4rem 1rem 0 1rem;
+  max-width: 80%;
+  color: #ffffff;
+}
+
+@media (max-width: 992px) {
+
+  .welcomebannertext {
+    padding: 2rem 1rem 0 1rem;
+    max-width: 80%;
+  }
+}
+
+@media (max-width: 768px){
+  .welcomebanner .bee {
+    display:none;
+  }
+  .welcomebannertext {
+    padding: 2rem 1rem 0 1rem;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px){
+  .welcomebannertext {
+    padding: 1rem 1rem 0 1rem;
+    max-width: 100%;
+  }
+
+}
+
+.welcomebannertext h1 {
+  margin-top: 1em;
+}
+
+.welcomebannertext h2 {
+  padding-bottom: 1rem;
+  max-width: 75%;
+  font-weight:bold;
+}
+
+.welcomebanner .bannerButtonRow {
+  margin-top: 1rem;
+}
+
+.goahead {
+  text-align: center;
+  margin: 40px 0;
+}
+
+.goahead h3 {
+  font-weight: normal;
+  margin-bottom: 20px;
+}
+
+.path-frontpage .apicMainContent h2.block-title {
+  font-weight: 300;
+  padding-top: 1rem;
+  padding-bottom: .5rem
+}
+
+.featured {
+  display: flex;
+}
+
+.featuredapi {
+  display: flex;
+  text-align: center;
+  align-items: center;
+  width: calc(100% / 2 - 38px);
+  padding-bottom: 10px;
+  margin: 0 12px 0 12px;
+}
+
+.fatext {
+  text-align: left;
+  margin: 0 10px;
+}
+
+.fatext h3 {
+  font-size: 1.25rem;
+  padding: .75em 0;
+  font-weight: 300;
+  line-height: 1.25;
+}
+
+section.block-getting-started,
+section.block-socialblock,
+secgtion.block-go-ahead {
+  background: #ffffff;
+}
+
+.startguide {
+  display: flex;
+}
+
+.startguide .gsstep.signup div.placeholder {
+  background: transparent url(../images/api.svg) center left no-repeat;
+  height: 90px;
+  width: 90px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.startguide .gsstep.explore div.placeholder {
+  background: transparent url(../images/globe.svg) center left no-repeat;
+  height: 90px;
+  width: 90px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.startguide .gsstep.subscribe div.placeholder {
+  background: transparent url(../images/create.svg) center left no-repeat;
+  height: 90px;
+  width: 90px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.gsstep {
+  text-align: center;
+  width: calc(100% / 3 - 38px);
+  padding: 3rem 1rem;
+  margin: 0 0.75rem;
+}
+
+.gsstep h3
+{
+  font-size: 1.5rem;
+  padding: .75em 0;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #5A60B8;
+}
+
+.gsstep a {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #5A60B8;
+  text-decoration: underline;
+}
+
+.gsstep p {
+  text-align: center;
+  padding: 0 2rem;
+}
+
+.get_help h3 {
+  font-size: 1.25rem;
+  padding: .75em 0;
+  font-weight: 300;
+  line-height: 1.25;
+}
+
+.get_help h4 {
+  font-size: 1rem;
+  padding: .75em 0;
+  font-weight: 300;
+}
+
+
+
+@media screen and (max-width: 768px) {
+  .startguide {
+    flex-flow: column wrap;
+  }
+
+  .gsstep {
+    width: calc(100% - 38px);
+  }
+
+  .featured {
+    flex-flow: column wrap;
+  }
+
+  .featuredapi {
+    width: calc(100% - 38px);
+    flex-flow: column wrap;
+  }
+}
+
+.block-get-help {
+  padding: 1rem;
+  color: #fff;
+  background-color: #152935;
+}
+
+.get_help {
+  display: flex;
+}
+
+.get_help .column {
+  margin: 0;
+  width: 25%;
+  min-width: 200px;
+  font-weight: lighter;
+  font-size: 0.875rem;
+  padding: 0 2rem;
+}
+
+.get_help h4 {
+  font-size: 1rem;
+  padding: .75em 0;
+  font-weight: 300;
+  color: #969CEC;
+}
+
+.get_help div {
+  margin-bottom: 1rem;
+}
+
+.get_help a,
+.get_help a:hover {
+  color: #969CEC;
+  fill: #969CEC;
+  display: inline-flex;
+  align-self: center;
+  line-height: 1.5rem;
+  padding: 4px 0 4px 0;
+}
+
+.get_help a svg {
+  margin-right: 0.5rem;
+}
+
+.ibmapimGetStarted header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.ibmapimGetStarted header h1 {
+  margin: 0;
+  padding: 11px 0;
+  border: none;
+  color: #5a6872;
+  font-size: 1.75rem;
+  font-weight: lighter;
+}
+
+.ibmapimGetStarted header .homepageLink {
+  padding-top: 20px;
+}
+
+.ibmapimGetStarted .getStartedContentWrapper {
+  display: flex;
+  margin-top: 50px;
+  justify-content: space-evenly;
+}
+.ibmapimGetStarted .getStartedContentWrapper .exploreDiv ,
+.ibmapimGetStarted .getStartedContentWrapper .createAppDiv {
+  max-width: 300px;
+  background-color: white;
+  padding: 40px 20px;
+  border: 1px solid #f0f3f6;
+}
+.ibmapimGetStarted .getStartedContentWrapper .gsstep {
+  text-align: center;
+  width: auto;
+  padding-bottom: 40px;
+  margin: auto;
+}
+.ibmapimGetStarted .getStartedContentWrapper .getStartedText {
+  width: 100%;
+  text-align: center;
+}
+.ibmapimGetStarted .getStartedContentWrapper .linkWrap {
+  margin-top: 2rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* no permissions page */
+.route-ibm-apimnoperms .main-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.route-ibm-apimnoperms .page-header,
+.route-ibm-apimnoperms footer {
+  display: none;
+}
+
+.ibmapimNoPermissions .noPermsContentWrapper {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+}
+
+.ibmapimNoPermissions .iconDiv {
+  height: 120px;
+  width: 120px;
+  margin: 2rem;
+}
+
+.ibmapimNoPermissions .iconDiv svg {
+  fill: #D9DAE3
+}
+
+.ibmapimNoPermissions .mainContent {
+  font-weight: lighter;
+  font-size: 1.875rem;
+  color: #5A60B8;
+  margin: 2rem;
+}
+
+.ibmapimNoPermissions .contactLink a {
+  color: #5A60B8;
+  font-weight: bold;
+}

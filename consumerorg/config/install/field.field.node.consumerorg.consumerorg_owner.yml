@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.consumerorg_owner
+    - node.type.consumerorg
+id: node.consumerorg.consumerorg_owner
+field_name: consumerorg_owner
+entity_type: node
+bundle: consumerorg
+label: 'Organization Owner'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

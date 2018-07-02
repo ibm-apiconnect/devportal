@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.apic_url
+  module:
+    - user
+  enforced:
+    module:
+      - ibm_apim
+id: user.user.apic_url
+field_name: apic_url
+entity_type: user
+bundle: user
+label: URL
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

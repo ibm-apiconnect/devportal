@@ -1,0 +1,83 @@
+/* Styles for account menu drop-down */
+.dropit {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dropit li a.trigger,
+.dropit li a.trigger:focus,
+.dropit li a.trigger:active,
+.dropit li a.trigger:hover {
+  text-decoration: none;
+}
+
+.dropit .ellipsis-names {
+  display: inline-block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 64em;
+}
+
+.dropit .dropit-trigger {
+  position: relative;
+}
+
+.dropit .dropit-submenu {
+  position: absolute;
+  top: 100%;
+  right: 0; /* dropdown left or right */
+  z-index: 1000;
+  display: none;
+  min-width: 150px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dropit .dropit-open .dropit-submenu {
+  display: block;
+}
+
+.dropitmenu ul {
+  display: none;
+}
+
+.dropitmenu ul.dropit-submenu {
+  background-color: #fff;
+  border: 1px solid #b2b2b2;
+  padding: 6px 0;
+  margin: 3px 0 0 1px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.dropitmenu ul.dropit-submenu a,
+.dropitmenu ul.dropit-submenu a:visited {
+  display: block;
+  font-size: 0.85em;
+  line-height: 25px;
+  color: #7a868e;
+  padding: 0 18px;
+}
+
+.dropitmenu ul.dropit-submenu a:hover {
+  background: #248fc1;
+  color: #fff;
+  text-decoration: none;
+}
+
+.dropitmenu ul.dropit-submenu li {
+  list-style: none none;
+}
+
+.dropit-icon {
+  font-size: 0.7em;
+  display: inline-block;
+  vertical-align: top;
+}

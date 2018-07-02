@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.apic_state
+    - node.type.application
+  module:
+    - options
+id: node.application.apic_state
+field_name: apic_state
+entity_type: node
+bundle: application
+label: State
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: enabled
+default_value_callback: ''
+settings: {  }
+field_type: list_string

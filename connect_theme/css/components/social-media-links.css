@@ -1,0 +1,127 @@
+/**
+ * Social media
+ *  - styles for the Social Media Links module.
+ *  - https://www.drupal.org/project/social_media_links
+ ============================================================================ */
+.block-social-media-links .platforms,
+.pane-social-media-link-widget .platforms {
+  padding-left: 0;
+  overflow: hidden;
+}
+
+.block-social-media-links .platform__link,
+.pane-social-media-link-widget .platform__link {
+  padding: 0.3125rem 0.375rem;
+}
+
+.block-social-media-links .platform__link:hover, .block-social-media-links .platform__link:focus,
+.pane-social-media-link-widget .platform__link:hover,
+.pane-social-media-link-widget .platform__link:focus {
+  text-decoration: none;
+}
+
+.block-social-media-links .is-horizontal,
+.pane-social-media-link-widget .is-horizontal {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: row;
+      -ms-flex-direction: row;
+          flex-direction: row;
+}
+
+.block-social-media-links .is-horizontal .platform,
+.pane-social-media-link-widget .is-horizontal .platform {
+  margin: 0.625rem 0.0625rem 0.625rem 0.0625rem;
+  list-style: none;
+}
+
+[dir="rtl"] .block-social-media-links .is-horizontal .platform, [dir="rtl"]
+.pane-social-media-link-widget .is-horizontal .platform {
+  margin-right: 1px;
+  margin-left: 1px;
+}
+
+.block-social-media-links .is-horizontal .platform,
+.pane-social-media-link-widget .is-horizontal .platform {
+  text-align: center;
+}
+
+.block-social-media-links .is-horizontal .platform__link,
+.pane-social-media-link-widget .is-horizontal .platform__link {
+  vertical-align: sub;
+}
+
+.block-social-media-links .is-vertical .platform,
+.pane-social-media-link-widget .is-vertical .platform {
+  list-style: none;
+  margin: 0 0 0.5rem 0;
+}
+
+.block-social-media-links .is-vertical .platform__name,
+.pane-social-media-link-widget .is-vertical .platform__name {
+  vertical-align: middle;
+}
+
+.block-social-media-links .is-vertical .platform .fa,
+.pane-social-media-link-widget .is-vertical .platform .fa {
+  text-align: center;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+.block-social-media-links .is-vertical .platform .fa-lg,
+.pane-social-media-link-widget .is-vertical .platform .fa-lg {
+  width: 1.25rem;
+}
+
+.block-social-media-links .is-vertical .platform .fa-2x,
+.pane-social-media-link-widget .is-vertical .platform .fa-2x {
+  width: 2rem;
+}
+
+.block-social-media-links .is-vertical .platform .fa-3x,
+.pane-social-media-link-widget .is-vertical .platform .fa-3x {
+  width: 3rem;
+}
+
+.block-social-media-links .is-vertical .platform .fa-4x,
+.pane-social-media-link-widget .is-vertical .platform .fa-4x {
+  width: 4rem;
+}
+
+.block-social-media-links .is-vertical .platform .fa-5x,
+.pane-social-media-link-widget .is-vertical .platform .fa-5x {
+  width: 5rem;
+}
+
+.block-social-media-links .is-vertical .platform img,
+.pane-social-media-link-widget .is-vertical .platform img {
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+.block-social-media-links .fa-lg + .platform__name,
+.pane-social-media-link-widget .fa-lg + .platform__name {
+  font-size: 1rem;
+}
+
+.block-social-media-links .fa-2x + .platform__name,
+.pane-social-media-link-widget .fa-2x + .platform__name {
+  font-size: 1.25rem;
+}
+
+.block-social-media-links .fa-3x + .platform__name,
+.pane-social-media-link-widget .fa-3x + .platform__name {
+  font-size: 1.625rem;
+}
+
+.block-social-media-links .fa-4x + .platform__name,
+.pane-social-media-link-widget .fa-4x + .platform__name {
+  font-size: 2rem;
+}
+
+.block-social-media-links .fa-5x + .platform__name,
+.pane-social-media-link-widget .fa-5x + .platform__name {
+  font-size: 2.625rem;
+}

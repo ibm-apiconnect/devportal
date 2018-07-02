@@ -1,0 +1,298 @@
+uuid: 465051e1-d522-4610-8f5b-30aae18a3e09
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_tags
+    - field.storage.node.product_contact_url
+    - field.storage.node.product_contact_name
+    - field.storage.node.product_contact_email
+    - field.storage.node.apic_description
+    - field.storage.node.api_swaggertags
+    - field.storage.node.api_wsdl
+    - field.storage.node.product_data
+    - field.storage.node.api_swagger
+    - search_api.server.default_server
+    - core.entity_view_mode.node.search_index
+    - core.entity_view_mode.node.teaser
+  module:
+    - user
+    - search_api
+    - node
+    - file
+id: default_index
+name: 'Default content index'
+description: 'Default content index'
+read_only: false
+field_settings:
+  rendered_item:
+    label: 'Rendered item'
+    property_path: rendered_item
+    type: text
+    configuration:
+      roles:
+        anonymous: anonymous
+      view_mode:
+        'entity:node':
+          api: teaser
+          application: teaser
+          article: search_index
+          blog_post: teaser
+          book: teaser
+          consumerorg: teaser
+          faq: teaser
+          forum: teaser
+          page: search_index
+          product: teaser
+        'entity:file':
+          file: default
+  node_grants:
+    label: 'Node access information'
+    property_path: search_api_node_grants
+    type: string
+    indexed_locked: true
+    type_locked: true
+    hidden: true
+  title:
+    label: Title
+    datasource_id: 'entity:node'
+    property_path: title
+    type: text
+    boost: !!float 8
+  created:
+    label: 'Authored on'
+    datasource_id: 'entity:node'
+    property_path: created
+    type: date
+  changed:
+    label: Changed
+    datasource_id: 'entity:node'
+    property_path: changed
+    type: date
+  status:
+    label: 'Publishing status'
+    datasource_id: 'entity:node'
+    property_path: status
+    type: boolean
+    indexed_locked: true
+    type_locked: true
+  sticky:
+    label: 'Sticky at top of lists'
+    datasource_id: 'entity:node'
+    property_path: sticky
+    type: boolean
+  field_tags:
+    label: Tags
+    datasource_id: 'entity:node'
+    property_path: field_tags
+    type: integer
+    dependencies:
+      config:
+        - field.storage.node.field_tags
+  author:
+    label: 'Author name'
+    datasource_id: 'entity:node'
+    property_path: 'uid:entity:name'
+    type: string
+    dependencies:
+      module:
+        - user
+  uid:
+    label: 'Author ID'
+    datasource_id: 'entity:node'
+    property_path: uid
+    type: integer
+    indexed_locked: true
+    type_locked: true
+  type:
+    label: 'Content type'
+    datasource_id: 'entity:node'
+    property_path: type
+    type: string
+  product_contact_url:
+    label: 'Contact URL'
+    datasource_id: 'entity:node'
+    property_path: product_contact_url
+    type: text
+    dependencies:
+      config:
+        - field.storage.node.product_contact_url
+  product_contact_name:
+    label: 'Contact Name'
+    datasource_id: 'entity:node'
+    property_path: product_contact_name
+    type: text
+    dependencies:
+      config:
+        - field.storage.node.product_contact_name
+  product_contact_email:
+    label: 'Contact Email'
+    datasource_id: 'entity:node'
+    property_path: product_contact_email
+    type: text
+    dependencies:
+      config:
+        - field.storage.node.product_contact_email
+  apic_description:
+    label: Description
+    datasource_id: 'entity:node'
+    property_path: apic_description
+    type: text
+    dependencies:
+      config:
+        - field.storage.node.apic_description
+  api_swaggertags:
+    label: 'Open API Tags'
+    datasource_id: 'entity:node'
+    property_path: api_swaggertags
+    type: text
+    dependencies:
+      config:
+        - field.storage.node.api_swaggertags
+  api_wsdl:
+    label: 'WSDL Content'
+    datasource_id: 'entity:node'
+    property_path: api_wsdl
+    type: text
+    dependencies:
+      config:
+        - field.storage.node.api_wsdl
+  product_data:
+    label: 'Product document'
+    datasource_id: 'entity:node'
+    property_path: product_data
+    type: text
+    dependencies:
+      config:
+        - field.storage.node.product_data
+  api_swagger:
+    label: 'Open API Document'
+    datasource_id: 'entity:node'
+    property_path: api_swagger
+    type: text
+    dependencies:
+      config:
+        - field.storage.node.api_swagger
+  filename:
+    label: Filename
+    datasource_id: 'entity:file'
+    property_path: filename
+    type: string
+datasource_settings:
+  'entity:node':
+    bundles:
+      default: true
+      selected: {  }
+    languages:
+      default: true
+      selected: {  }
+  'entity:file': {  }
+processor_settings:
+  content_access:
+    weights:
+      preprocess_index: -6
+      preprocess_query: -4
+  add_url:
+    weights:
+      preprocess_index: -30
+  rendered_item:
+    weights:
+      add_properties: 0
+      pre_index_save: -10
+  entity_status:
+    weights:
+      preprocess_index: -10
+  ignorecase:
+    all_fields: true
+    fields:
+      - rendered_item
+      - title
+      - author
+      - type
+      - product_contact_url
+      - product_contact_name
+      - product_contact_email
+      - apic_description
+      - api_swaggertags
+      - api_wsdl
+      - product_data
+      - api_swagger
+      - filename
+    weights:
+      preprocess_index: -5
+      preprocess_query: -8
+  html_filter:
+    all_fields: true
+    fields:
+      - rendered_item
+      - title
+      - author
+      - type
+      - product_contact_url
+      - product_contact_name
+      - product_contact_email
+      - apic_description
+      - api_swaggertags
+      - api_wsdl
+      - product_data
+      - api_swagger
+      - filename
+    title: true
+    alt: true
+    tags:
+      h1: 5
+      h2: 3
+      h3: 2
+      string: 2
+      b: 2
+    weights:
+      preprocess_index: -3
+      preprocess_query: -6
+  transliteration:
+    all_fields: true
+    fields:
+      - rendered_item
+      - title
+      - author
+      - type
+      - product_contact_url
+      - product_contact_name
+      - product_contact_email
+      - apic_description
+      - api_swaggertags
+      - api_wsdl
+      - product_data
+      - api_swagger
+      - filename
+    weights:
+      preprocess_index: -4
+      preprocess_query: -7
+  tokenizer:
+    all_fields: true
+    fields:
+      - rendered_item
+      - title
+      - product_contact_url
+      - product_contact_name
+      - product_contact_email
+      - apic_description
+      - api_swaggertags
+      - api_wsdl
+      - product_data
+      - api_swagger
+    spaces: ''
+    overlap_cjk: 1
+    minimum_word_size: '3'
+    weights:
+      preprocess_index: -2
+      preprocess_query: -5
+  aggregated_field:
+    weights:
+      add_properties: 20
+tracker_settings:
+  default:
+    indexing_order: fifo
+options:
+  index_directly: true
+  cron_limit: 50
+server: default_server

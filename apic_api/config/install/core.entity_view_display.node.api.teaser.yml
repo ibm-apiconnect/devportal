@@ -1,0 +1,119 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.api.api_ibmconfiguration
+    - field.field.node.api.api_id
+    - field.field.node.api.api_oaiversion
+    - field.field.node.api.api_protocol
+    - field.field.node.api.api_soapversion
+    - field.field.node.api.api_swagger
+    - field.field.node.api.api_swaggertags
+    - field.field.node.api.api_wsdl
+    - field.field.node.api.api_xibmname
+    - field.field.node.api.apic_catalog_id
+    - field.field.node.api.apic_description
+    - field.field.node.api.apic_hostname
+    - field.field.node.api.apic_provider_id
+    - field.field.node.api.apic_rating
+    - field.field.node.api.apic_tags
+    - field.field.node.api.apic_pathalias
+    - field.field.node.api.apic_summary
+    - field.field.node.api.apic_url
+    - field.field.node.api.apic_ref
+    - field.field.node.api.apic_version
+    - field.field.node.api.apic_image
+    - field.field.node.api.apic_attachments
+    - node.type.api
+  module:
+    - image
+    - options
+    - text
+    - user
+    - votingapi_widgets
+id: node.api.teaser
+targetEntityType: node
+bundle: api
+mode: teaser
+content:
+  apic_description:
+    type: text_trimmed
+    weight: 0
+    label: hidden
+    settings:
+      trim_length: 600
+    third_party_settings: {  }
+    region: content
+  apic_image:
+    type: image
+    weight: 0
+    label: hidden
+    settings:
+      image_style: ''
+      image_link: ''
+    third_party_settings: {  }
+    region: content
+  apic_summary:
+    weight: 15
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  api_oaiversion:
+    type: list_default
+    weight: 0
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  api_protocol:
+    type: list_default
+    weight: 0
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  apic_version:
+    type: string
+    weight: 0
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    region: content
+  apic_rating:
+    type: voting_api_formatter
+    weight: 20
+    label: hidden
+    settings:
+      style: bootstrap-stars
+      readonly: '1'
+      show_results: 0
+      values: {  }
+    third_party_settings: {  }
+    region: content
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  addtoany: true
+  api_ibmconfiguration: true
+  api_id: true
+  api_soapversion: true
+  api_swagger: true
+  api_swaggertags: true
+  api_wsdl: true
+  api_xibmname: true
+  apic_catalog_id: true
+  apic_hostname: true
+  apic_provider_id: true
+  apic_tags: true
+  apic_pathalias: true
+  apic_url: true
+  apic_ref: true
+  apic_attachments: true
+  langcode: true

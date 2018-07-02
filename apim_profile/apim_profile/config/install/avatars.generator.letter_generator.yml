@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - letter_avatar
+id: letter_generator
+label: 'Letter Generator'
+weight: 0
+plugin: letter_avatar
+provider: null
+settings: {  }

@@ -1,0 +1,876 @@
+.apicTruncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apicFade {
+  position: relative;
+  overflow: hidden;
+  max-height: 3.9rem;
+}
+
+.apicFade p {
+  line-height: 1.3rem;
+}
+
+.apicFade:after {
+  content: '';
+  text-align: right;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 15%;
+  height: 1.3rem;
+  background: linear-gradient(to right, rgba(255,255,255,0), #fff 70%);
+}
+
+.apicTeaserIcon {
+  flex: 0.05 0 auto;
+  -ms-flex: 0.05 0 64px;
+  width: 64px;
+}
+
+.apicTeaserIcon img {
+  border: 0;
+  width: 48px;
+  height: 48px;
+}
+
+
+/* apicMyOrg page*/
+.route-ibm-apimmyorg .container,
+.route-ibm-apimmyorg .container section,
+.route-ibm-apimanalytics .container,
+.route-ibm-apimanalytics .container section {
+  padding:0;
+}
+
+.route-ibm-apimmyorg .apicMainContent,
+.route-ibm-apimanalytics .apicMainContent {
+  margin-top: 48px;
+}
+
+.route-ibm-apimmyorg .page-header,
+.route-ibm-apimanalytics .page-header {
+  display: none;
+}
+
+.route-ibm-apimmyorg header.apicMyOrgHeader,
+.route-ibm-apimanalytics header.apicMyOrgHeader {
+  background-color: white;
+  padding: 2rem 3rem 0;
+}
+
+.route-ibm-apimmyorg nav.tabs,
+.route-ibm-apimanalytics nav.tabs {
+  border-bottom: 1px solid #dfe3e6;
+}
+.route-ibm-apimmyorg nav.tabs ul.tabs--primary li,
+.route-ibm-apimanalytics nav.tabs ul.tabs--primary li {
+  font-weight: bold;
+  border: none;
+  border-radius: 0;
+  color: #152935;
+}
+
+.route-ibm-apimmyorg nav.tabs ul.tabs--primary li.active,
+.route-ibm-apimanalytics nav.tabs ul.tabs--primary li.active {
+  border-bottom: 2px solid #5a60b8;
+  color: #5a60b8;
+  background-color: unset;
+}
+
+.apicMyOrg header.titleSection .leftTitle {
+  padding: 0.625rem 0;
+}
+
+.apicMyOrg header.titleSection .orgName {
+  display: inline-block;
+  font-weight: lighter;
+}
+
+.apicMyOrg .titleInnerWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.apicMyOrg .titleInnerWrapper .rightTitle {
+  display: flex;
+  align-items: center;
+}
+
+.apicMyOrg .rightTitle .organizationMenu {
+  margin-left: 16px;
+}
+
+.apicMyOrg .organizationTitle {
+  display: flex;
+  align-items: center;
+}
+
+.apicMyOrg .contentInnerWrapper {
+  padding-top: 20px;
+}
+/* tabs in organization details view */
+.apicMyOrg .titleSection .organizationTabs {
+  background-color: #fff;
+  flex-basis: 100%;
+  margin-top: 15px;
+}
+
+.apicMyOrg .titleSection .organizationTabs ul {
+  margin-bottom: unset;
+}
+
+.apicMyOrg .titleSection .organizationTabs ul {
+  display: flex;
+  flex-direction: row;
+  padding-left: 0;
+}
+
+.apicMyOrg .titleSection .organizationTabs li {
+  list-style: none;
+  padding: 0.725rem 0 0.625rem;
+  color: #000;
+  padding-right: 30px;
+  font-size: 0.875rem;
+  margin-bottom: 4px;
+  padding-bottom: 10px;
+}
+
+.apicMyOrg .titleSection .organizationTabs li a {
+  color: #000;
+}
+.apicMyOrg .titleSection .organizationTabs li.selected,
+.apicMyOrg .titleSection .organizationTabs li:hover,
+.apicMyOrg .titleSection .organizationTabs li:focus
+ {
+  color: #3d70b2;
+}
+.apicMyOrg .titleSection .organizationTabs li.selected a,
+.apicMyOrg .titleSection .organizationTabs li:hover a,
+.apicMyOrg .titleSection .organizationTabs li:focus a {
+  color: #3d70b2;
+  margin-bottom: 4px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #3d70b2;
+}
+
+
+
+
+/* myorg manage*/
+
+.apicMyOrg .field.organizationMembers {
+  padding: 2rem 3rem 0;
+}
+
+.apicMyOrg .field.organizationMembers .memberHeader{
+  display:flex;
+  justify-content: space-between;
+  margin:1rem 0;
+}
+
+
+.apicMyOrgMembers {
+  padding: 0;
+}
+
+.apicMyOrgMemberDetails {
+  display: flex;
+  flex: 1;
+}
+
+.apicMyOrgMemberDetails .orgApicUser{
+  padding-left:1rem;
+  font-size: 0.875rem;
+}
+
+.apicMyOrg .apicMyOrgMember .memberIcon img{
+  width: 2rem;
+}
+
+.apicMyOrg .overflow-menu ul.dropit-submenu {
+  width: fit-content;
+  white-space: nowrap;
+}
+
+.apicMyOrg .apicMyOrgActions {
+  display: inline-block;
+}
+
+.apicUserMail {
+ opacity: 0.5;
+}
+
+.apicMyOrgOwner {
+  background: white;
+  padding: 0.625rem 1rem;
+  border: 1px solid #dfe3e6;
+  margin: 0.8rem 0;
+}
+
+.apicMyOrgOwner .ownerTag {
+  background-color: #dfe3e6;
+  color: #394b54;
+  margin-left: 10px;
+  padding: .5rem;
+  vertical-align: middle;
+  font-size: 0.75rem;
+  display: inline-flex;
+  height: 1.25rem;
+  border-radius: 1rem;
+  -webkit-box-align: center;
+  align-items: center;
+}
+
+.apicMyOrg .memberHeader h3 {
+  font-weight: lighter;
+}
+
+.apicMyOrg .apicMyOrgMembers table {
+  border: 1px solid #dfe3e6;
+  width: 100%;
+}
+
+.apicMyOrg .apicMyOrgMembers table thead {
+  border-bottom: 2px solid #3d70b2;
+  background: #fff;
+}
+
+.apicMyOrg .apicMyOrgMembers th {
+  padding: 1rem;
+  display: table-cell;
+  font-size: 0.75rem;
+  font-weight: 600;
+  height: 2.5rem;
+  letter-spacing: 1px;
+  text-align: center;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.apicMyOrg .apicMyOrgMembers th:first-child,
+.apicMyOrg .apicMyOrgMembers tbody td:first-child {
+  text-align:left;
+  padding-left: 1rem;
+}
+
+.apicMyOrg .apicMyOrgMembers tbody tr {
+  border-bottom: 1px solid #dfe3e6;
+}
+
+.apicMyOrg .apicMyOrgMembers tbody td {
+  padding: 0.5rem;
+  line-height:1.25;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.apicMyOrg .apicMyOrgMembers tbody tr.member-odd {
+  background-color: #f0f3f6;
+}
+
+.apicMyOrg .apicMyOrgMembers tbody tr.member-even {
+  background-color: #ffffff;
+}
+
+.apicMyOrg .apicMyOrgMembers .apicMyOrgNoMembers {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 50px 20px;
+}
+
+.apicMyOrg .apicMyOrgMembers .apicMyOrgNoMembers span {
+  padding-bottom: 7px;
+}
+
+.apicMyOrgProp {
+  font-weight: bold;
+}
+
+.apicMyOrgMember {
+  display: flex;
+  align-items: center;
+}
+
+iframe#analytics-iframe {
+  border: 1px solid #ddd;
+}
+
+ul.analyticsAppSelector {
+  width: 100%;
+  list-style-type: none;
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin: 0;
+  border-bottom: 0;
+}
+
+ul.analyticsAppSelector li {
+  display: inline-block;
+  padding: 10px;
+  margin: 0 10px;
+  text-align: center;
+  height: 97px;
+  vertical-align: top;
+  border: 1px solid #ddd;
+}
+
+ul.analyticsAppSelector li.all .icon {
+  font-size: 3em;
+}
+
+ul.analyticsAppSelector li.app .field {
+  padding: 0;
+}
+
+ul.analyticsAppSelector li.app .field-type-image figure {
+  margin: 13px 0 5px 0;
+}
+
+ul.analyticsAppSelector li.app img {
+  margin: auto;
+  width: 48px;
+  height: 48px;
+}
+
+ul.analyticsAppSelector li.selected {
+  background: #ddd;
+}
+
+.field--name-field-apiref .tabledrag-toggle-weight,
+.field--name-field-productref .tabledrag-toggle-weight{
+  display: none;
+}
+
+.ui-dialog {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 95%;
+  z-index: 10000;
+}
+
+.context-subscription #edit-submit,
+.context-subscription-noplan #edit-submit,
+.context-subscription-chooseplan #edit-submit,
+.context-subscription-chooseapp #edit-submit,
+.context-subscription-noplan-chooseapp #edit-submit {
+  display: none;
+}
+
+.context-subscription-summary #edit-previous {
+  display: none;
+}
+
+.supportContentWrapper {
+  display: flex;
+  padding-top: 20px;
+}
+
+.supportContentWrapper .faqDiv {
+  flex: 2;
+  padding-right: 20px;
+}
+
+.supportContentWrapper .contactDiv {
+  flex: 1;
+  padding-left: 20px;
+}
+
+.supportContentWrapper .contactDiv .forumDiv,
+.supportContentWrapper .contactDiv .contactFormDiv {
+  margin-bottom: 20px;
+}
+
+.supportContentWrapper .views-element-container {
+  padding-top: 0;
+}
+
+.supportContentWrapper .contactFormDiv h2
+{
+  margin-bottom: 1.2rem;
+}
+
+.supportContentWrapper .feedbackCollapse
+{
+  margin-top: 1.2rem;
+}
+
+.apicMainContent .supportContentWrapper .views-element-container .view {
+  background: white;
+  border: 1px solid #dfe3e6;
+  padding: 10px;
+}
+.apicMainContent .supportContentWrapper .views-element-container .view .view-filters.form-group input.form-text {
+  width: 10rem;
+}
+
+@media (max-width:62em) {
+  .apicMainContent .supportContentWrapper{
+    flex-direction: column;
+  }
+}
+
+.bx--global-light-ui .view-faqs .views-exposed-form {
+  justify-content: space-between;
+  flex-direction: row;
+}
+.bx--global-light-ui .view-search-content .views-exposed-form {
+  flex-direction: row;
+}
+.bx--global-light-ui .view-search-content .view-filters.form-group {
+  margin: 20px 0;
+  padding: 0;
+}
+
+.bx--global-light-ui .view-faqs .views-exposed-form h2.viewTitle {
+  margin-top: 1.5rem;
+}
+
+.views-exposed-form .form-inline #edit-items-per-page.form-control {
+  width: 100%;
+}
+
+.views-element-container .view .view-footer {
+  margin-top: 30px;
+}
+
+.views-element-container .view.view-faqs .ui-state-default,
+.views-element-container .view.view-faqs .ui-widget-content .ui-state-default,
+.views-element-container .view.view-faqs .ui-widget-header .ui-state-default {
+  border: 0;
+  background: none;
+  color: #3d70b2;
+}
+
+.views-element-container .view.view-faqs .ui-state-active,
+.views-element-container .view.view-faqs .ui-widget-content .ui-state-active,
+.views-element-container .view.view-faqs .ui-widget-header .ui-state-active {
+  border: 0;
+  background: none;
+  color: #3d70b2;
+}
+.supportContentWrapper .views-element-container .view .ui-widget-content {
+  border: 0;
+  background: none;
+  padding-left: 3.2em;
+  padding-top: 0;
+}
+
+/**
+ * Styles for the user forms
+ */
+
+.apic-user-form {
+  margin: auto;
+  margin-top: 5rem;
+  padding: 2rem;
+  max-width: 50rem;
+}
+
+.apic-user-form .form-item input,
+.apic-user-form .form-item input:hover
+{
+  width: 100%;
+}
+
+.apic-user-form .page-header {
+  border: none;
+}
+
+.apic-user-form.apic-user-form-login.ur-count-1,
+.apic-user-form.apic-user-form-register.ur-count-1,
+.pass-change .apic-user-form.apic-user-form-change-pwd
+{
+  max-width: 30rem;
+}
+
+
+.apic-user-form .apic-portal-title {
+  font-size: 0.875rem;
+  padding-left: 1.5rem;
+  padding-bottom: .75rem;
+}
+
+.apic-user-form-header
+{
+  font-size: 1.75rem;
+  padding-left: 1.5rem;
+  font-weight: lighter;
+}
+
+.apic-user-form-text {
+  padding: 1.5rem;
+}
+
+.apic-user-form-footer .apic-user-form-text,
+.apic-user-forgot-password {
+  text-align: center;
+}
+
+.apic-user-form-wrapper {
+  margin: auto;
+  width: 90%;
+  max-width: 40rem;
+}
+
+.apic-user-form-inner-wrapper {
+  margin: auto;
+  width: 100%;
+  max-width: 25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.apic-user-form-wrapper .form-actions button.form-submit,
+.apic-user-form-reset-pwd .apic-user-form-wrapper button.form-submit,
+.apic-user-form-inner-wrapper .form-actions button.form-submit{
+  width: 100%;
+}
+
+.apic-user-form-inner-wrapper.apic-user-form-registries {
+  margin-top:1.5rem;
+}
+
+.apic-user-form-subheader {
+  margin: auto;
+  width: 50%;
+  text-align: center;
+  font-weight: 600;
+  padding-top: 1rem;
+  word-wrap: break-word;
+}
+
+.apic-user-form-container {
+  display: flex;
+}
+
+.apic-user-form-or-container {
+  padding: 1em;
+}
+
+.apic-user-form-line {
+  width: 1px;
+  height: 36%;
+  margin: auto;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.apic-user-form-or {
+  margin: auto;
+  text-align: center;
+}
+
+.context-user-login.bx--global-light-ui .form-item,
+.context-user-password.bx--global-light-ui .form-item,
+.context-ibm-apim-activate-x.bx--global-light-ui .form-item,
+.context-user-register.bx--global-light-ui .form-item,
+.context-user-register .form-item {
+  width: 100%;
+  margin: auto;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.context-user-login.bx--global-light-ui .form-item input,
+.context-user-login.bx--global-light-ui .form-item input:hover,
+.context-user-login.bx--global-light-ui .form-item input:focus,
+.context-user-password.bx--global-light-ui .form-item input,
+.context-user-password.bx--global-light-ui .form-item input:hover,
+.context-user-password.bx--global-light-ui .form-item input:focus,
+.context-ibm-apim-activate-x.bx--global-light-ui .form-item input,
+.context-ibm-apim-activate-x.bx--global-light-ui .form-item input:hover,
+.context-ibm-apim-activate-x.bx--global-light-ui .form-item input:focus,
+.context-user-register.bx--global-light-ui .form-item input,
+.context-user-register.bx--global-light-ui .form-item input:hover,
+.context-user-register.bx--global-light-ui .form-item input:focus,
+form[class*='change-pwd-form'] .form-item input,
+form[class*='change-pwd-form'] .form-item input:hover,
+form[class*='change-pwd-form'] .form-item input:focus,
+form[class*='apic-resetpw'] .form-item input,
+form[class*='apic-resetpw'] .form-item input:hover,
+form[class*='apic-resetpw'] .form-item input:focus {
+  width: 100%;
+}
+
+.context-user-login .tabs,
+.context-user-password .tabs,
+.context-user-register .tabs {
+  display: none;
+}
+
+.context-user-login .form-submit,
+.context-user-password .form-submit,
+.context-ibm-apim-activate-x .form-submit,
+form[class='apic-change-pwd-form'] .form-submit,
+.context-ibm-apim-forgotpwd-x .form-submit,
+.context-user-register .form-submit {
+  margin: auto;
+  margin-top: 1.5rem;
+}
+
+.context-user-login .form-actions,
+.context-user-password .form-actions,
+.context-ibm-apim-activate-x .form-actions,
+.pass-reset form[class*='change-pwd-form'] .form-actions,
+.context-ibm-apim-forgotpwd-x .form-actions,
+.context-user-register .form-actions {
+  margin: auto;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  width: 100%;
+  max-width: 35rem;
+}
+
+.password-strength__meter {
+  margin-bottom: 0.5em;
+}
+
+.context-ibm-apim-activate-x #edit-pass {
+  padding: 0;
+}
+
+.context-ibm-apim-activate-x .input-group-addon,
+form[class*='change-pwd-form'] .input-group-addon,
+.context-user-register .input-group-addon,
+.context-ibm-apim-forgotpwd-x .input-group-addon,
+.context-support .input-group-addon,
+.context-user-forgot-password .input-group-addon
+{
+  display: none;
+}
+
+.context-ibm-apim-activate-x .password-parent,
+form[class*='change-pwd-form'] .password-parent,
+.context-user-register .password-parent,
+.context-ibm-apim-forgotpwd-x .password-parent,
+.context-user-forgot-password .password-parent {
+  display: flex;
+  flex-direction: column;
+}
+
+.context-ibm-apim-activate-x h1,
+.context-ibm-apim-forgotpwd-x h1,
+.context-user-forgot-password h1 {
+  display: none;
+}
+
+/* password reset as admin/anonymous */
+
+.pass-reset .region-content .page-header,
+.pass-reset .region-content nav.tabs {
+  display: none;
+}
+
+/* logged in user forms */
+.route-entityusercanonical .region-content,
+.route-entityuseredit-form .region-content,
+.route-change-pwd-pagechange-password-form:not(.pass-reset) .region-content {
+  display: -ms-grid;
+  display: grid;
+  -ms-grid-columns: 260px auto;
+  grid-template-columns: 260px auto;
+  -ms-grid-rows: 53px auto;
+  grid-template-rows: 53px auto;
+  grid-gap: 1rem 1rem;
+}
+
+.route-entityusercanonical .page-header,
+.route-entityuseredit-form .page-header,
+.route-change-pwd-pagechange-password-form:not(.pass-reset) .page-header {
+  -ms-grid-column: 1;
+  -ms-grid-column-span: 2;
+  -ms-grid-row: 1;
+  grid-column: 1 / span 2;
+}
+
+.route-entityusercanonical .region-content > div:first-of-type,
+.route-entityuseredit-form .region-content > div:first-of-type,
+.route-change-pwd-pagechange-password-form:not(.pass-reset) .region-content > div:first-of-type {
+  grid-row: 2;
+}
+
+.route-entityusercanonical .region-content article,
+.route-entityuseredit-form .region-content form.user-form,
+.route-change-pwd-pagechange-password-form:not(.pass-reset) form.apic-change-pwd-form {
+  grid-row: 2;
+  grid-column: 2;
+  padding: 1rem;
+  max-width: 35rem;
+}
+/* the tabs on user profile forms */
+
+.path-user.route-entityusercanonical .region-content nav.tabs ul.tabs--primary,
+.path-user.route-entityuseredit-form .region-content nav.tabs ul.tabs--primary,
+.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) .region-content nav.tabs ul.tabs--primary {
+
+  display: inline-flex;
+  flex-direction: column-reverse;
+}
+
+.path-user.route-entityusercanonical .region-content nav.tabs ul.tabs--primary li,
+.path-user.route-entityuseredit-form .region-content nav.tabs ul.tabs--primary li,
+.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) .region-content nav.tabs ul.tabs--primary li {
+  border: none;
+  border-radius: 0;
+  width: auto;
+}
+
+.route-entityuseredit-form select,
+.route-entityuseredit-form .bx--form-item select,
+.route-change-pwd-pagechange-password-form .bx--form-item select,
+.route-change-pwd-pagechange-password-form selector{
+  width: 100%;
+}
+
+.route-entityuseredit-form .select-wrapper,
+.route-change-pwd-pagechange-password-form .select-wrapper {
+  width: 100%;
+}
+
+.route-entityuseredit-form.bx--global-light-ui .form-item label,
+.route-entityuseredit-form.bx--global-light-ui .form-item .label,
+.route-entityuseredit-form.bx--global-light-ui .label,
+.route-entityuseredit-form .bx--label {
+  display: block;
+}
+
+.route-entityuseredit-form #edit-timezone,
+.route-entityuseredit-form #edit-language,
+.route-entityuseredit-form #edit-field-last-password-reset-wrapper,
+.route-entityuseredit-form #edit-avatars-avatar-generator-wrapper,
+.route-entityuseredit-form #edit-rip {
+  width: 33em;
+}
+
+/* contact and system modules always add these elements to every user form. we don't want that so hide them.*/
+.context-ibm-apim-activate-x [data-drupal-selector='edit-contact'],
+.context-ibm-apim-activate-x [data-drupal-selector='edit-timezone'],
+.context-user-register [data-drupal-selector='edit-contact'],
+.context-user-register [data-drupal-selector='edit-timezone'] {
+  display: none;
+}
+
+/* Styles for the one-time log in link form */
+
+form.user-pass-reset {
+  margin: auto;
+  margin-top: 5rem;
+  padding: 2rem;
+  max-width: 40rem;
+}
+
+form.user-pass-reset p {
+  padding-bottom: 0.25rem;
+}
+
+form.user-pass-reset div {
+  padding-top: 1rem;
+}
+
+form.user-pass-reset button {
+  width: 100%;
+  max-width: 15rem;
+}
+
+body[class*='change-password'] .apicForm,
+body[class*='change-password'] .apic-user-form,
+body[class*='forgot-password'] .apic-user-form
+{
+  margin-top: 2rem;
+  max-width: 30rem;
+}
+
+/* styles for the user registration form */
+
+.context-user-register .table-responsive .btn,
+.context-user-register .table-responsive .field-multiple-drag,
+.context-user-register .form-item .button {
+  display: none;
+}
+
+/* styles for user registry buttons (e.g. google, github, ldap)*/
+/* styles for user registry buttons (e.g. google, github, ldap)*/
+.apic-user-form-registries button.registry-button,
+.apic-user-form-registries a.registry-button {
+  display: flex;
+  justify-contenser-t: start;
+  margin: 0.5rem;
+  min-height:40px;
+  white-space:  normal;
+  height:unset;
+  text-align:left;
+  word-wrap:  break-word;
+}
+
+span.registry-name {
+  padding-left: 3rem;
+  max-width: 14.5rem;
+}
+
+/* styling for local tabs */
+.tabs ul.tabs--primary {
+  border-bottom: none;
+}
+
+.tabs ul.tabs--primary li {
+  padding: .75rem 2rem;
+  align-items: center;
+  text-decoration: none;
+}
+
+.tabs ul.tabs--primary li.active {
+  font-weight: 400;
+}
+
+.tabs ul.tabs--primary li:first-of-type {
+  border-bottom-left-radius: 8px;
+  border-top-left-radius: 8px;
+}
+
+.tabs ul.tabs--primary li:not(:last-of-type) {
+  border-right: none;
+}
+
+.tabs ul.tabs--primary li:last-of-type {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.tabs ul.tabs--primary a,
+.tabs ul.tabs--primary a:hover,
+.tabs ul.tabs--primary a:active,
+.tabs ul.tabs--primary a:focus {
+  border: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  transition: none;
+@include font-size('14');
+  line-height: 1;
+}
+
+.apicNewAppWrapper {
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.apicNewAppWrapper .button {
+  margin-top: 1rem;
+  margin-left: 0.5rem;
+}
+
+/* ensure all placeholders are truncated to fit - handles some translations being long */
+[placeholder] {
+  text-overflow: ellipsis;
+}
+
+/* TVT run cron button overlap */
+span.cron-description__run-cron a {
+  margin-top: 100px;
+}

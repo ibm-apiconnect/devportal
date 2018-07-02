@@ -1,0 +1,22 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the no permissions page
+ *
+ * @ingroup themeable
+ */
+#}
+
+<div class="ibmapimNoPermissions">
+  <div id="noperms-wrapper">
+    <div class="noPermsContentWrapper">
+      <div class="iconDiv">
+        {% include images_path ~ '/images/bee.svg' %}
+      </div>
+      <div class="mainContent">{{ 'Oops. Looks like you don\'t have access to the Portal.'|t }}</div>
+      <div class="contactLink">{% set contact_path = path('ibm_apim.support') %}{% trans %}
+        Please contact your <a href="{{ contact_path }}">system administrator</a> for assistance.
+        {% endtrans %}</div>
+    </div>
+  </div>
+</div>

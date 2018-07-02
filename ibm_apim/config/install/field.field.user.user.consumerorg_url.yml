@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.consumerorg_url
+  module:
+    - user
+  enforced:
+    module:
+      - ibm_apim
+id: user.user.consumerorg_url
+field_name: consumerorg_url
+entity_type: user
+bundle: user
+label: 'Consumer organization URL'
+description: 'Consumer organization URL retrieved from the APIC management server'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

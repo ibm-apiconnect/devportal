@@ -1,0 +1,4 @@
+services:
+  apic_app.rest_service:
+    class: Drupal\apic_app\Service\Mocks\MockApplicationRestService
+  

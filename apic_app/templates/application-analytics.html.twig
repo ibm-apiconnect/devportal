@@ -1,0 +1,94 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the application analytics
+ *
+ * Variables available:
+ * - catalogId: the catalog ID
+ * - catalogName: urlencoded catalog name
+ * - porgId: provider organization ID
+ *
+ * @ingroup themeable
+ */
+#}
+
+<div class="applicationWrapper ibmapimAnalytics ibmapimAppAnalytics">
+  <header class="titleSection">
+    <div class="titleInnerWrapper">
+      <div class="leftTitle">
+        <div class="breadcrumb"><a href="{{- path('view.applications.page_1') }}">
+            {{ 'Applications'|t }}</a></div>
+        <div class="applicationTitle">
+          <div class="applicationLogo">
+            {% if node.image is defined and node.image|trim is not empty %}
+              <div class="apicAppIcon">
+                <img src="{{- node.image -}}" alt=""/>
+              </div>
+            {% endif %}</div>
+          <h1 class="applicationName">{{- node.title -}}</h1>
+
+        </div>
+      </div>
+      <div class="rightTitle">
+        {% if applifecycleEnabled and userHasAppManage %}
+          <div class="apicAppLifecycle apicAppActions">
+            {% if node.application_lifecycle_state|upper == 'DEVELOPMENT' %}
+              {% if node.application_lifecycle_pending is not defined or node.application_lifecycle_pending is empty %}
+                <a href="{{- path('apic_app.promote', {'appId': node.application_id}) -}}"
+                   class="button apicUpgradeApp"
+                   title="{{ 'Upgrade to production'|t }}">{{ 'Upgrade to production'|t }}</a>
+              {% else %}
+                <span>{{ 'Pending Upgrade'|t }}</span>
+              {% endif %}
+            {% endif %}
+          </div>
+        {% endif %}
+        {% if userHasAppManage %}
+          <div class="extraMenu">
+            <ul class="overflow-menu applicationMenu dropitmenu">
+              <li title="{{ 'Manage application'|t }}"><a href="#" class="trigger">
+                <span class="dropit-icon">
+                <svg width="4px" height="20px" viewBox="0 0 4 20" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                     xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd">
+                  <circle id="Oval" cx="2" cy="2" r="2"></circle>
+                  <circle id="Oval" cx="2" cy="10" r="2"></circle>
+                  <circle id="Oval" cx="2" cy="18" r="2"></circle>
+                </svg></span></a>
+                <ul class="dropitmenu-submenu">
+                  <li class="editApplication"><a
+                        href="{{ path('apic_app.update', {'appId': node.application_id}) }}"
+                        title="{{ 'Edit App'|t }}">{{ 'Edit'|t }}</a>
+                  </li>
+                  <li class="uploadImage"><a
+                        href="{{ path('apic_app.image_upload', {'appId': node.application_id}) }}"
+                        title="{{ 'Upload image'|t }}">{{ 'Upload image'|t }}</a>
+                  </li>
+                  <li class="deleteApplication"><a
+                        href="{{ path('apic_app.delete', {'appId': node.application_id}) }}"
+                        title="{{ 'Delete App'|t }}">{{ 'Delete'|t }}</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+      <div class="applicationTabs">
+        <ul>
+          <li><a class="analyticsApplication"
+                 href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Dashboard'|t }}</a></li>
+          <li class="selected"><a href="#">{{ 'Analytics'|t }}</a></li>
+          <li><a class="subscriptionsApplication"
+                 href="{{- path('apic_app.subscriptions', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
+        </ul>
+      </div>
+    </div>
+  </header>
+  <div class="contentInnerWrapper" id="contentWrapper">
+    <div class="analyticsWidgetContainer">
+      {{ drupal_block('app_data_filter', wrapper=false) }}
+      {{ drupal_block('app_analytics_detail', wrapper=false) }}
+      {{ drupal_block('app_api_call_history', wrapper=false) }}
+    </div>
+  </div>
+</div>

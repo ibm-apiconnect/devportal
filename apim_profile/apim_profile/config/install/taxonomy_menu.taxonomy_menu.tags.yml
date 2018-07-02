@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.tags
+    - taxonomy.vocabulary.tags
+id: tags
+label: Tags
+vocabulary: tags
+menu: tags
+expanded: false
+depth: 0
+menu_parent: 'admin:'

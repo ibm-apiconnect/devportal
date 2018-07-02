@@ -1,0 +1,46 @@
+fivestar:
+  version: VERSION
+  js:
+    js/fivestars.js : {}
+    js/jquery.barrating.min.js: { minified: true }
+  css:
+    theme:
+      css/fivestar.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - votingapi_widgets/fontawesome
+    - votingapi_widgets/barrating
+
+fontawesome:
+  css:
+    theme:
+      css/font-awesome.min.css: {}
+
+barrating:
+  js:
+    js/jquery.barrating.min.js: { minified: true }
+  css:
+    theme:
+      css/css-stars.min.css: {}
+      css/bars-square.min.css: {}
+      css/bars-pill.min.css: {}
+      css/bars-movie.min.css: {}
+      css/bars-horizontal.min.css: {}
+      css/fontawesome-stars.min.css: {}
+      css/fontawesome-stars-o.min.css: {}
+      css/bars-reversed.min.css: {}
+      css/bootstrap-stars.min.css: {}
+
+ 
+useful:
+  version: VERSION
+  js:
+    js/useful.js : {}
+  css:
+    theme:
+      css/useful.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - votingapi_widgets/fontawesome

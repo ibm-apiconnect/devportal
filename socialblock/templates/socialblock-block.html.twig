@@ -1,0 +1,71 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the socialblock
+ *
+ * @ingroup themeable
+ */
+#}
+
+<div class="socialblockWrapper">
+  {% if posts is defined and posts is not empty %}
+    <div class="socialblock container">
+      {% for post in posts %}
+        {% if post.type == 'tweet' %}
+          <div class="socialblock card tweet">
+            <div class="tweet_info">
+              <div class="tweet_profile">
+                <img class="profile_image" src="{{ post.profile_img }}" alt>
+                <div class="profile_name">
+                  <a href="https://twitter.com/{{ post.handle }}" target="_blank" rel="noopener"
+                     class="profile_name name">{{ post.name }}</a>
+                  <div class="twitter_handle">@{{ post.handle }}</div>
+                </div>
+              </div>
+              <div class="tweet_meta">
+                <a href="https://twitter.com/statuses/{{ post.tweet_id }}" target="_blank" rel="noopener"
+                   class="bird" title="{{ 'Open this tweet'|t }}"></a>
+                <div class="tweet_timestamp">{{ post.timestamp }}</div>
+              </div>
+            </div>
+            {% if post.photos is defined and post.photos is not empty %}
+              {% for photo in post.photos %}
+                <div class="centerContainer"><img class="tweet_image" src="{{ photo.url }}" alt/></div>
+              {% endfor %}
+            {% endif %}
+            <div class="tweet_text">{{ post.content|raw }}</div>
+          </div>
+        {% else %}
+          <div class="socialblock card forum_topic">
+            <div class="forum_info">
+              <div class="forum_title"><a href="{{ post.url }}" class="title"
+                                          title="{{ post.title }}">{{ post.title }}</a></div>
+              <div class="forum_icon"><a href="{{ post.url }}" class="speechbubble" title="{{ 'Open this post'|t }}">
+                  <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                       xml:space="preserve">
+<g>
+  <path d="M20.363,3.578C18.735,1.985,16.485,1,14,1S9.265,1.985,7.637,3.578C6.008,5.17,5,7.57,5,10c0,0.372,0.031,0.73,0.077,1.082
+		c-1.021,0.171-1.938,0.638-2.639,1.324C1.55,13.274,1,14.584,1,15.909c0,1.403,0.55,2.565,1.438,3.485L6,23v-2.4
+		c1.356,0,2.492-0.537,3.38-1.406c0.369-0.361,0.662-0.77,0.899-1.208C11.414,18.597,12.671,19,14,19v4l6.363-6.611
+		C21.992,14.703,23,12.572,23,10C23,7.57,21.992,5.17,20.363,3.578z M18.922,15.002L16,18.038V17h-2
+		c-1.131,0-2.231-0.26-3.218-0.746c0.009-0.116,0.036-0.224,0.036-0.345c0-1.325-0.55-2.635-1.438-3.503
+		c-0.618-0.605-1.407-1.034-2.284-1.249C7.036,10.769,7,10.381,7,10c0-1.852,0.78-3.765,2.035-4.992C10.359,3.713,12.122,3,14,3
+		s3.641,0.713,4.965,2.008C20.22,6.235,21,8.148,21,10C21,11.892,20.302,13.574,18.922,15.002z"/>
+</g>
+</svg>
+                </a>
+                <div class="timestamp">{{ post.timestamp }}</div>
+              </div>
+            </div>
+            <div class="info">
+              <div class="op">{% trans %}Posted in <span class="forum_name"><a href="{{ post.forum_url }}"
+                                                                               title="{{ post.forum }}">{{ post.forum }}</a></span>
+                by <span class="op_name">{{ post.handle }}</span>{% endtrans %}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

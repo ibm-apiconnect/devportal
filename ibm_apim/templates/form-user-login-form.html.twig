@@ -1,0 +1,48 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a 'form' element.
+ *
+ * Available variables
+ * - attributes: A list of HTML attributes for the wrapper element.
+ * - children: The child elements of the form.
+ *
+ * @see template_preprocess_form()
+ *
+ * @ingroup themeable
+ */
+#}
+{% set ur_count_class = user_registry_count ? 'ur-count-' ~ user_registry_count %}
+{% set ur_managed_class = user_managed_registry_present ? 'ur-managed-true' : 'ur-managed-false' %}
+{% set registry_url = element['#registry_url']['registry_url'] %}
+<div class='apic-user-form apic-user-form-login {{ ur_count_class }} {{ ur_managed_class }}'>
+  <div class='apic-portal-title'>{{ site_name }}</div>
+  <div class='apic-user-form-header'>{{ 'Sign in'|t }}</div>
+  {% if element['#message'] and element['#message']['message'] %}
+    <div class='apic-user-form-text'>{{ element['#message']['message'] }}</div>
+  {% endif %}
+  <form{{ attributes }}>
+    <div class='apic-user-form-wrapper'>
+      {{ children }}
+    </div>
+  </form>
+  <div class='apic-user-form-footer'>
+    <div class='apic-user-forgot-password'>
+      <a href=" {{ path('user.pass', {'registry_url':registry_url} ) }} ">
+          {% if user_managed_registry_present %}
+              {{ 'Forgot password?'|t }}
+          {% else %}
+              {{ 'Forgot your \'admin\' password?'|t }}
+          {% endif %}
+      </a>
+    </div>
+    {% if user_managed_registry_present and enable_signup_link %}
+      <div class='apic-user-form-text'>
+          {{ 'Don\'t have an account?'|t }}
+        <a href=" {{ path('user.register') }} ">
+            {{ 'Sign up'|t }}
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>

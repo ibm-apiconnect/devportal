@@ -1,0 +1,13 @@
+theme: current
+defaults:
+  sender: swiftmailer
+  formatter: swiftmailer
+modules:
+  swiftmailer:
+    none:
+      formatter: swiftmailer
+      sender: swiftmailer
+  mail_subscribers:
+    none:
+      formatter: swiftmailer
+      sender: swiftmailer

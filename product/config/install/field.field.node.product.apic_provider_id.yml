@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.apic_provider_id
+    - node.type.product
+id: node.product.apic_provider_id
+field_name: apic_provider_id
+entity_type: node
+bundle: product
+label: 'APIC Provider ID'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

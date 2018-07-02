@@ -1,7 +1,0 @@
-name = IBM API Connect Authentication
-description = A module to allow user authentication against IBM API Connect.
-package = IBM API Connect v5
-core = 7.x
-dependencies[] = ibm_apim
-
-version = VERSION

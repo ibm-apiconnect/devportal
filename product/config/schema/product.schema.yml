@@ -1,0 +1,136 @@
+field.field.node.product.apic_attachments:
+  type: config_object
+  label: 'Documentation'
+
+field.field.node.product.apic_catalog_id:
+  type: config_object
+  label: 'APIC Catalog ID'
+
+field.field.node.product.apic_description:
+  type: config_object
+  label: 'Description'
+
+field.field.node.product.apic_hostname:
+  type: config_object
+  label: 'APIC Hostname'
+
+field.field.node.product.apic_image:
+  type: config_object
+  label: 'Image'
+
+field.field.node.product.apic_pathalias:
+  type: config_object
+  label: 'Path Alias'
+
+field.field.node.product.apic_provider_id:
+  type: config_object
+  label: 'APIC Provider ID'
+
+field.field.node.product.apic_rating:
+  type: config_object
+  label: 'Rating'
+
+field.field.node.product.apic_ref:
+  type: config_object
+  label: 'Reference'
+
+field.field.node.product.apic_summary:
+  type: config_object
+  label: 'Summary'
+
+field.field.node.product.apic_tags:
+  type: config_object
+  label: 'Tags'
+
+field.field.node.product.apic_url:
+  type: config_object
+  label: 'URL'
+
+field.field.node.product.apic_version:
+  type: config_object
+  label: 'Version'
+
+field.field.node.product.comment:
+  type: config_object
+  label: 'Comments'
+
+field.field.node.product.product_apis:
+  type: config_object
+  label: 'APIs'
+
+field.field.node.product.product_billing_url:
+  type: config_object
+  label: 'URL'
+
+field.field.node.product.product_contact_email:
+  type: config_object
+  label: 'Contact Email'
+
+field.field.node.product.product_contact_name:
+  type: config_object
+  label: 'Contact Name'
+
+field.field.node.product.product_contact_url:
+  type: config_object
+  label: 'Contact URL'
+
+field.field.node.product.product_data:
+  type: config_object
+  label: 'Product document'
+
+field.field.node.product.product_id:
+  type: config_object
+  label: 'Product ID'
+
+field.field.node.product.product_license_name:
+  type: config_object
+  label: 'License Name'
+
+field.field.node.product.product_license_url:
+  type: config_object
+  label: 'License URL'
+
+field.field.node.product.product_name:
+  type: config_object
+  label: 'Name'
+
+field.field.node.product.product_plans:
+  type: config_object
+  label: 'Plans'
+
+field.field.node.product.product_state:
+  type: config_object
+  label: 'State'
+
+field.field.node.product.product_subscribe_enabled:
+  type: config_object
+  label: 'Subscribable'
+
+field.field.node.product.product_terms_of_service:
+  type: config_object
+  label: 'Terms of Service'
+
+field.field.node.product.product_view_enabled:
+  type: config_object
+  label: 'Visible'
+
+field.field.node.product.product_visibility:
+  type: config_object
+  label: 'Visibility data'
+
+field.field.node.product.product_visibility_authenticated:
+  type: config_object
+  label: 'Visible only to authenticated users'
+
+field.field.node.product.product_visibility_custom_orgs:
+  type: config_object
+  label: 'Custom Organization Visibility'
+
+field.field.node.product.product_visibility_custom_tags:
+  type: config_object
+  label: 'Custom tags visibility'
+
+field.field.node.product.product_visibility_public:
+  type: config_object
+  label: 'Public visibility'
+

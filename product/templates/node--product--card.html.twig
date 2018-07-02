@@ -1,0 +1,95 @@
+{#
+/**
+ * @file
+ * Default card theme implementation for products.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+'node',
+'node--id-' ~ node.id,
+('node--type-' ~ node.bundle)|clean_class,
+view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
+'bx--card',
+('productNodeID-' ~ node.id)|clean_class,
+('productTitle-' ~ node.title[0].value)|clean_class,
+('productVersion-' ~ content.apic_version['#items'][0].value)|clean_class
+] -%}
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  {% if content.apic_pathalias['#items'][0].value is defined and content.apic_pathalias['#items'][0].value is not empty %}
+    {% set prodNode = content.apic_pathalias['#items'][0].value %}
+  {% else %}
+    {% set prodNode = node.id %}
+  {% endif %}
+  <div class="apicProductCard">
+    {% if content.apic_image is defined and content.apic_image|render|trim is not empty %}
+      <div class="apicCardIcon bx--about__icon">
+        {{ content.apic_image }}
+      </div>
+    {% elseif showPlaceholders %}
+      <div class="apicCardIcon">
+        <img class="bx--about__icon" src="{{- placeholderUrl -}}" alt=""/>
+      </div>
+    {% endif %}
+    <div class="apicProductCardMain">
+      <div class="bx--about__title--name">
+        <a href="{{- path('product.view', {'prodNode': prodNode}) -}}" rel="bookmark">
+          <span class="apicProductName apicTruncate">{{- label -}}</span>
+          {% if showVersions %}
+            <span class="apicProductCardVersion">{{- content.apic_version -}}</span>
+          {% endif %}
+        </a>
+      </div>
+      <div class="apicProductRating">
+        {{ content.apic_rating }}
+      </div>
+      {% if content.product_state['#items'][0].value is defined and content.product_state['#items'][0].value is not empty and content.product_state['#items'][0].value != 'published' %}
+        <div class="apicProductState">
+          {{ content.product_state['#items'][0].value }}
+        </div>
+      {% endif %}
+    </div>
+    {% if content.apic_summary['#items'][0].value is defined and content.apic_summary['#items'][0].value is not empty %}
+      <div class="apicProductDesc summary"
+           title="{{- content.apic_summary['#items'][0].value -}}">{{ content.apic_summary }}</div>
+    {% else %}
+      <div class="apicProductDesc"
+           title="{{- content.apic_description['#items'][0].value -}}">{{ content.apic_description }}</div>
+    {% endif %}
+    {% if custom_fields is defined and custom_fields is not empty %}
+      <div class="customFields">
+        {% for custom_field in custom_fields %}
+          <div class="{{ custom_field|clean_class }}">
+            {{ content[custom_field] }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+  <div class="apicProductAPIs">
+    <div class="apicApiCount">
+      {% for api in apiList %}
+        {% if loop.index < 6 %}
+          {% if api.node.apic_pathalias['#items'][0].value is defined and api.node.apic_pathalias['#items'][0].value is not empty %}
+            {% set apiNode = api.node.apic_pathalias['#items'][0].value %}
+          {% else %}
+            {% set apiNode = api.node.id %}
+          {% endif %}
+          <div class="apicProductCardApi apicTruncate">
+            <a href="{{- path('product.api', {'prodNode': prodNode, 'apiNode': apiNode}) -}}" rel="bookmark">
+              {{ api.node.title[0].value }}
+              {% if showVersions %}
+                <span class="apicProductApiVersion">{{ api.node.apic_version[0].value }}</span>
+              {% endif %}
+            </a>
+          </div>
+        {% endif %}
+      {% endfor %}
+      {% if apiCount > 6 %}
+        <div class="apicProductSeeAll"><a href="{{- path('product.view', {'prodNode': prodNode}) -}}"
+                                          rel="bookmark">...</a></div>
+      {% endif %}
+    </div>
+  </div>
+</article>

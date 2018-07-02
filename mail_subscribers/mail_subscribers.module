@@ -1,0 +1,226 @@
+<?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+use Drupal\Core\Url;
+use Drupal\mail_subscribers\Event\MailAddedEvent;
+use Drupal\mail_subscribers\Event\MailSentEvent;
+use Drupal\Core\Render\Markup;
+
+/**
+ * Implements hook_cron().
+ */
+function mail_subscribers_cron() {
+  ibm_apim_entry_trace(__FUNCTION__, NULL);
+
+  // Load cron functions.
+  module_load_include('cron.inc', 'mail_subscribers');
+
+  // Send pending messages from spool.
+  mail_subscribers_send_from_spool();
+
+  // Clear successful sent messages.
+  mail_subscribers_clear_spool();
+
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
+
+/**
+ * Implements hook_mail().
+ *
+ * @param $key
+ * @param $message
+ * @param $params
+ */
+function mail_subscribers_mail($key, &$message, $params) {
+
+  // This is a simple message send. User inputs the content directly.
+  if ($key == 'direct') {
+
+    // Set the subject.
+    $message['subject'] = $params['subject'];
+
+    // Set the body.
+    $message['body'][0] = Markup::create($params['body']);
+
+    // Add additional headers.
+    $message['headers'] += $params['headers'];
+  }
+
+}
+
+/**
+ * Theme the replacement tokens.
+ *
+ * @param $fields
+ *   Keyed array with tokens as keys and description as values.
+ *
+ * @return
+ *   A themed table with all tokens.
+ *
+ * @todo: Add help for other tokens
+ */
+function mail_subscribers_token_help($fields) {
+  $header = array(t('Token'), t('Replacement value'));
+  $rows = array();
+  foreach ($fields as $field => $title) {
+    $rows[] = array('[' . sprintf('mail-subscribers:%s', $field) . ']', $title);
+  }
+  $table = array(
+    '#type' => 'table',
+    '#header' => $header,
+    '#rows' => $rows
+  );
+  $output = drupal_render($table);
+  return $output;
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function mail_subscribers_token_info() {
+  module_load_include('helpers.inc', 'mail_subscribers');
+  $data = array();
+  foreach (_mail_subscribers_email_message_property_info() as $key => $info) {
+    $data[$key] = array(
+      'name' => $info['label'],
+      'description' => ''
+    );
+  }
+  $type = array(
+    'name' => t('Mail Subscribers e-mail message'),
+    'description' => t('Tokens for Mail Subscribers e-mail message.'),
+    'needs-data' => 'mail_subscribers_email_message',
+  );
+  return array(
+    'types' => array('mail_subscribers_email_message' => $type),
+    'tokens' => array('mail_subscribers_email_message' => $data),
+  );
+}
+
+/**
+ * Implementation hook_tokens().
+ *
+ * These token replacements are used by Rules.
+ *
+ * @param $type
+ * @param $tokens
+ * @param array $data
+ * @param array $options
+ * @return array
+ */
+function mail_subscribers_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $replacements = array();
+  if ($type == 'mail_subscribers_email_message' && !empty($data['mail_subscribers_email_message'])) {
+    foreach ($tokens as $name => $original) {
+      $replacements[$original] = $data['mail_subscribers_email_message']->{$name};
+    }
+  }
+  return $replacements;
+}
+
+/**
+ * Implements hook_preprocess_breadcrumb().
+ */
+function mail_subscribers_preprocess_breadcrumb(&$variables) {
+  if (\Drupal::routeMatch()->getRouteName() == 'mail_subscribers.startWizard') {
+    $variables['breadcrumb']['admin'] = [
+      'text' => t('Administration'),
+      'url' => Url::fromRoute('system.admin')->toString()
+    ];
+    $variables['breadcrumb']['people'] = [
+      'text' => t('People'),
+      'url' => Url::fromRoute('entity.user.collection')->toString()
+    ];
+    $variables['#cache']['contexts'][] = 'url.path';
+  }
+}
+
+/**
+ * Preparing and sending a message (coming from a batch job).
+ */
+function mail_subscribers_batch_deliver($message, &$context) {
+  module_load_include('helpers.inc', 'mail_subscribers');
+  _mail_subscribers_prepare_mail($message);
+  $result = mail_subscribers_deliver($message);
+
+  if ($result['result'] == TRUE) {
+    if (\Drupal::config('mail_subscribers.settings')->get('debug')) {
+      \Drupal::logger('mail_subscribers')->notice('Message sent to %mail.', array('%mail' => $message['to_mail']));
+    }
+    if (\Drupal::moduleHandler()->moduleExists('rules')) {
+      $event = new MailSentEvent($message);
+      $event_dispatcher = \Drupal::service('event_dispatcher');
+      $event_dispatcher->dispatch(MailSentEvent::EVENT_NAME, $event);
+    }
+  }
+  else {
+    $context['results'][] = t('Failed sending message to %mail - spooling it.',
+      array('%mail' => $message['to_mail']));
+    // Queue the message to the spool table.
+    db_insert('mail_subscribers_spool')->fields($message)->execute();
+    if (\Drupal::moduleHandler()->moduleExists('rules')) {
+      $event = new MailAddedEvent($message);
+      $event_dispatcher = \Drupal::service('event_dispatcher');
+      $event_dispatcher->dispatch(MailAddedEvent::EVENT_NAME, $event);
+    }
+  }
+}
+
+/**
+ * Displays status after sending messages as a batch job.
+ */
+function mail_subscribers_batch_deliver_finished($success, $results, $operations) {
+  if ($success) {
+    foreach ($results as $result) {
+      drupal_set_message($result);
+    }
+
+    // Redirect to summary page of wizard
+    return new \Symfony\Component\HttpFoundation\RedirectResponse(
+      Url::fromRoute('mail_subscribers.product_wizard.step', array('step' => 'summary'))->toString());
+  }
+}
+
+/**
+ * Need to use our custom content type templates for FAQ
+ *
+ * @param $variables
+ * @param $hook
+ * @param $info
+ */
+function mail_subscribers_preprocess(&$variables, $hook, &$info) {
+
+  if ($hook == 'form') {
+
+    if(strpos($variables['element']['#form_id'], 'mail_subscribers') === 0 ) {
+      $templateFileName = 'form-' . str_replace('_', '-', $variables['element']['#form_id']);
+    }
+
+    if (isset($templateFileName)) {
+      ibm_apim_entry_trace(__FUNCTION__, 'form');
+
+      $templateFilePath = drupal_get_path('module', 'mail_subscribers') . '/templates/' . $templateFileName . '.html.twig';
+
+      if (file_exists($templateFilePath)) {
+        $info['theme path'] = drupal_get_path('module', 'mail_subscribers');
+        $info['path'] = drupal_get_path('module', 'mail_subscribers') . '/templates';
+        $info['template'] = $templateFileName;
+      }
+
+      ibm_apim_exit_trace(__FUNCTION__, 'form');
+    }
+  }
+}
+
+function mail_subscribers_theme_registry_alter(&$theme_registry) {
+  $theme_registry['ctools_wizard_trail']['path'] = drupal_get_path('module', 'mail_subscribers') . '/templates';
+}

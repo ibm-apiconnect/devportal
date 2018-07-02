@@ -1,8 +1,0 @@
-name = IBM API Connect Account Tabs
-description = A module to make the user profile pages use tabs.
-package = IBM API Connect v5
-core = 7.x
-dependencies[] = ibm_apim
-dependencies[] = password_policy_password_tab
-
-version = VERSION

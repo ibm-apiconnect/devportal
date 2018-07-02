@@ -1,0 +1,53 @@
+{#
+/**
+ * @file
+ * Default teaser theme implementation for products.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+'node',
+'node--id-' ~ node.id,
+('node--type-' ~ node.bundle)|clean_class,
+apic_state ? ('application-state-' ~ apic_state)|clean_class,
+view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
+'bx--card'
+] -%}
+{{ attach_library('ibm_apim/core') }}
+{{ attach_library('apic_app/basic') }}
+<div class="apicSubAppCard">
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  <div class="apicAppCard">
+    {% if content.application_image is defined and content.application_image|render|trim is not empty %}
+      <div class="apicCardIcon bx--about__icon">
+        {{ content.application_image }}
+      </div>
+    {% elseif showPlaceholders %}
+      <div class="apicCardIcon">
+        <img class="bx--about__icon" src="{{- placeholderUrl -}}" alt=""/>
+      </div>
+    {% endif %}
+    <div class="apicAppCardMain">
+      <div class="bx--about__title--name">
+          <span class="apicAppName apicTruncate" title="{{- label -}}">{{- label -}}</span>
+      </div>
+      <div class="apicAppDesc apicFade"
+           title="{{- content.apic_summary['#items'][0].value -}}">{{ content.apic_summary }}</div>
+      {% if custom_fields is defined and custom_fields is not empty %}
+        <div class="customFields">
+          {% for custom_field in custom_fields %}
+            <div class="{{ custom_field|clean_class }}">
+              {{ content[custom_field] }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+  <div class="bx--card-footer apicAppFooter">
+    <button class="btn-sm btn btn-default" type="submit" name="selectedApplication" value="{{ node.id }}">{{ 'Select App'|t }}</button>
+  </div>
+</article>
+</div>

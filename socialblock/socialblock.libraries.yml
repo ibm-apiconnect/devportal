@@ -1,0 +1,9 @@
+socialblock:
+  version: 1.x
+  css:
+    base:
+      css/socialblock.module.css: {}
+  js:
+    js/socialblock.js: {}
+  dependencies:
+    - masonry/layout

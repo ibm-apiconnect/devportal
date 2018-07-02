@@ -1,0 +1,37 @@
+session:
+  parameter: language
+url:
+  source: path_prefix
+  prefixes:
+    en: ''
+    fr: fr
+    de: de
+    it: it
+    zh-hans: zh-hans
+    zh-hant: zh-hant
+    ja: ja
+    pt-br: pt-br
+    es: es
+    ko: ko
+    nl: nl
+    tr: tr
+    cs: cs
+    pl: pl
+    ru: ru
+  domains:
+    en: ''
+    fr: ''
+    de: ''
+    it: ''
+    zh-hans: ''
+    zh-hant: ''
+    ja: ''
+    pt-br: ''
+    es: ''
+    ko: ''
+    nl: ''
+    tr: ''
+    cs: ''
+    pl: ''
+    ru: ''
+selected_langcode: site_default

@@ -1,0 +1,274 @@
+/**
+ * APIC Wizard styles.
+ */
+.route-ibm-apimsubscription-wizard,
+.route-ibm-apimsubscription-wizardstep,
+.route-ibm-apimsubscription-wizardnoplan,
+.route-ibm-apimsubscription-wizardnoplanstep,
+.route-mail-subscribersproduct-wizard,
+.route-mail-subscribersproduct-wizardstep,
+.route-mail-subscribersplan-wizard,
+.route-mail-subscribersplan-wizardstep,
+.route-mail-subscribersapi-wizard,
+.route-mail-subscribersapi-wizardstep,
+.route-mail-subscribersall-wizard,
+.route-mail-subscribersall-wizardstep{
+  .apicMainContent {
+    margin-top: 48px;
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    padding: 0;
+
+    .row .col-sm-12 {
+      padding: 0;
+    }
+    .page-header {
+      display: none;
+    }
+
+    .wizard-trail {
+      height: 100px;
+      background-color: $default-bg-light;
+      border-bottom: 1px solid $default-border;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      .bx--progress {
+        font-family: 'ibm-plex-sans', Helvetica Neue, Arial, sans-serif;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        list-style: none;
+        width: 60%;
+        @media (max-width: $screen-xs-min) {
+          width: 100%;
+        }
+      }
+
+      .bx--progress-step {
+        position: relative;
+        display: -webkit-inline-box;
+        display: -ms-inline-flexbox;
+        display: inline-flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-box-flex: 1;
+        -ms-flex: 1;
+        flex: 1;
+        min-width: 7rem;
+        transition: 250ms all cubic-bezier(0.5, 0, 0.1, 1);
+        overflow: visible;
+        @media (max-width: $screen-xs-min) {
+          min-width: 6rem;
+        }
+      }
+
+      .bx--progress-line {
+        position: absolute;
+        top: 0.625rem;
+        right: 100%;
+        height: 1px;
+        width: calc(100% - 24px);
+        border: 1px inset transparent; }
+      .bx--progress-step:first-child .bx--progress-line {
+        display: none; }
+
+      .bx--progress-step svg {
+        position: relative;
+        z-index: 1;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        margin-bottom: 0.5rem; }
+
+      .bx--progress-label {
+        line-height: 1;
+        width: 75%; }
+
+      .bx--progress-step--current circle:first-child {
+        stroke: $brand-primary;
+        stroke-width: 5;
+        fill: transparent; }
+
+      .bx--progress-step--current circle:last-child {
+        fill: $brand-primary; }
+
+      .bx--progress-step--current .bx--progress-label {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        color: $brand-primary;
+        font-weight: 600; }
+
+      .bx--progress-step--current .bx--progress-line {
+        background-color: $brand-primary; }
+
+      .bx--progress-step--incomplete circle {
+        stroke: $default-line;
+        stroke-width: 5;
+        fill: transparent; }
+
+      .bx--progress-step--incomplete .bx--progress-label {
+        color: $default-line; }
+
+      .bx--progress-step--incomplete .bx--progress-line {
+        background-color: $default-line; }
+
+      .bx--progress-step--complete circle {
+        stroke: $brand-primary;
+        stroke-width: 5;
+        fill: transparent; }
+
+      .bx--progress-step--complete polygon {
+        fill: $brand-primary; }
+
+      .bx--progress-step--complete .bx--progress-label {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        color: $brand-primary;
+        font-weight: 600; }
+
+      .bx--progress-step--complete .bx--progress-line {
+        background-color: $brand-primary; }
+    }
+
+    .region form {
+      padding: 0 15px;
+    }
+
+    .apicWizardHeader {
+      color: $text-02;
+      font-size: 1.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 2px solid $brand-primary;
+      font-weight: lighter;
+    }
+  }
+
+  footer {
+    display: none;
+  }
+}
+// specific styling for mail wizards
+.route-mail-subscribersproduct-wizard,
+.route-mail-subscribersproduct-wizardstep,
+.route-mail-subscribersplan-wizard,
+.route-mail-subscribersplan-wizardstep,
+.route-mail-subscribersapi-wizard,
+.route-mail-subscribersapi-wizardstep,
+.route-mail-subscribersall-wizard,
+.route-mail-subscribersall-wizardstep {
+  fieldset.form-item,
+  .form-item-subject {
+    margin-top: 30px;
+  }
+  #edit-previous {
+    margin-right: 10px;
+  }
+  pre {
+    font-size: inherit;
+  }
+  .form-item .description {
+    max-height: none;
+  }
+  .apicMainContent {
+    .apicWizardMain {
+      padding: 0 2rem;
+    }
+  }
+}
+// specific styling for APIC subscribe wizard
+.route-ibm-apimsubscription-wizardnoplan,
+.route-ibm-apimsubscription-wizardnoplanstep,
+.route-ibm-apimsubscription-wizardstep {
+  .apicMainContent {
+
+    .apicWizardMain.apicSubscribeChooseApp {
+      padding: 0 2rem;
+    }
+
+    .apicSubscribeInfotext {
+      padding: 0.5rem 0;
+    }
+
+    .apicNewAppWrapper {
+      display: flex;
+      flex-direction: row-reverse;
+      .button {
+        margin-top: 1rem;
+        margin-left: 0.5rem;
+      }
+    }
+
+    .apicSubscribeAppsList .apicSubAppCard {
+      margin: 0.5%;
+      padding: 0.7%;
+    }
+
+    .apicSubscribeAppForm .apicNewAppWrapper > div {
+      width: 50%;
+    }
+
+    .form-control[disabled] {
+      opacity: 0.9;
+    }
+
+    .apicSubscribedProduct,
+    .apicSubscribedApp {
+      padding: 1rem 1.5rem;
+      display: flex;
+    }
+
+    .apic-subscribe-summary-product {
+      padding-top: 5px;
+    }
+    .apicSubProductCard,
+    .apic-subscribe-summary-application {
+      margin-left: 10px;
+    }
+
+    .apicSubscribeResultFollowup {
+      display: flex;
+      flex-direction: column;
+      .button {
+        margin: 0.5rem;
+        width: 13rem;
+        align-self: flex-end;
+      }
+    }
+
+    .apic-wizard-navigation {
+      display: flex;
+      justify-content: space-between;
+    }
+
+  }
+}
+
+.modal-content {
+  .clientIDContainer,
+  .clientSecretContainer {
+    margin-top: 10px;
+
+    .bx--form-item.form-item.form-group {
+      display: inline-block;
+      margin-bottom: 0;
+      margin-right: 20px;
+      width: 27rem;
+      input {
+        width: 100%;
+        opacity:0.9;
+      }
+    }
+
+    .apicAppCheckButton {
+      flex: 0.1;
+      align-self: center;
+      margin-right: 10px;
+      display: inline-block;
+    }
+  }
+}

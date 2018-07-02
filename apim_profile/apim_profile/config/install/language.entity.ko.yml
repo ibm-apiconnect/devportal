@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+id: ko
+label: Korean
+direction: ltr
+weight: 9
+locked: false

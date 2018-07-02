@@ -1,0 +1,236 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_display.comment.comment.default
+    - field.field.node.api.api_ibmconfiguration
+    - field.field.node.api.api_id
+    - field.field.node.api.api_oaiversion
+    - field.field.node.api.api_protocol
+    - field.field.node.api.api_soapversion
+    - field.field.node.api.api_swagger
+    - field.field.node.api.api_swaggertags
+    - field.field.node.api.api_wsdl
+    - field.field.node.api.api_xibmname
+    - field.field.node.api.apic_catalog_id
+    - field.field.node.api.apic_description
+    - field.field.node.api.apic_hostname
+    - field.field.node.api.apic_provider_id
+    - field.field.node.api.apic_rating
+    - field.field.node.api.apic_tags
+    - field.field.node.api.apic_pathalias
+    - field.field.node.api.apic_summary
+    - field.field.node.api.apic_url
+    - field.field.node.api.apic_ref
+    - field.field.node.api.apic_version
+    - field.field.node.api.apic_image
+    - field.field.node.api.apic_attachments
+    - field.field.node.api.comment
+    - image.style.icon
+    - node.type.api
+  module:
+    - comment
+    - cshs
+    - file
+    - image
+    - options
+    - text
+    - user
+    - votingapi_widgets
+id: node.api.default
+targetEntityType: node
+bundle: api
+mode: default
+content:
+  addtoany:
+    weight: 19
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  apic_attachments:
+    weight: 17
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: file_table
+    region: content
+  apic_description:
+    weight: 8
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+    region: content
+  apic_summary:
+    weight: 15
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  api_ibmconfiguration:
+    weight: 15
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  api_id:
+    weight: 6
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  apic_image:
+    weight: 18
+    label: above
+    settings:
+      image_style: icon
+      image_link: ''
+    third_party_settings: {  }
+    type: image
+    region: content
+  api_oaiversion:
+    weight: 9
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: list_default
+    region: content
+  api_protocol:
+    weight: 9
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: list_default
+    region: content
+  apic_ref:
+    weight: 5
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  api_soapversion:
+    weight: 11
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  api_swagger:
+    weight: 12
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  api_swaggertags:
+    weight: 16
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  apic_url:
+    weight: 10
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  apic_version:
+    weight: 7
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  api_wsdl:
+    weight: 14
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  api_xibmname:
+    weight: 4
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  apic_catalog_id:
+    weight: 1
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  apic_hostname:
+    weight: 2
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  apic_pathalias:
+    weight: 2
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  apic_provider_id:
+    weight: 3
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  apic_rating:
+    type: voting_api_formatter
+    weight: 20
+    label: above
+    settings:
+      readonly: false
+      style: bootstrap-stars
+      show_results: false
+      values: {  }
+    third_party_settings: {  }
+    region: content
+  apic_tags:
+    weight: 111
+    label: above
+    settings:
+      linked: '1'
+      separator: ' » '
+      reverse: false
+    third_party_settings: {  }
+    type: cshs_full_hierarchy
+    region: content
+  comment:
+    weight: 112
+    label: above
+    settings:
+      view_mode: default
+      pager_id: 0
+    third_party_settings: {  }
+    type: comment_default
+    region: content
+  links:
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  langcode: true

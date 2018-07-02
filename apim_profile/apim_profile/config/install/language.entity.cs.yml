@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+id: cs
+label: Czech
+direction: ltr
+weight: 12
+locked: false

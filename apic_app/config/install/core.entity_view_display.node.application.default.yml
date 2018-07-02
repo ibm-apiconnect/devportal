@@ -1,0 +1,178 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.application.apic_catalog_id
+    - field.field.node.application.apic_hostname
+    - field.field.node.application.application_image
+    - field.field.node.application.apic_provider_id
+    - field.field.node.application.apic_state
+    - field.field.node.application.apic_summary
+    - field.field.node.application.apic_url
+    - field.field.node.application.application_client_type
+    - field.field.node.application.application_consumer_org_url
+    - field.field.node.application.application_credentials
+    - field.field.node.application.application_data
+    - field.field.node.application.application_enabled
+    - field.field.node.application.application_id
+    - field.field.node.application.application_lifecycle_pending
+    - field.field.node.application.application_lifecycle_state
+    - field.field.node.application.application_name
+    - field.field.node.application.application_redirect_endpoints
+    - field.field.node.application.application_subscriptions
+    - image.style.icon
+    - node.type.application
+  module:
+    - image
+    - options
+    - user
+id: node.application.default
+targetEntityType: node
+bundle: application
+mode: default
+content:
+  addtoany:
+    weight: 0
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  apic_catalog_id:
+    weight: 101
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  apic_hostname:
+    weight: 102
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  application_image:
+    weight: 108
+    label: hidden
+    settings:
+      image_style: icon
+      image_link: ''
+    third_party_settings: {  }
+    type: image
+    region: content
+  apic_provider_id:
+    weight: 103
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  apic_state:
+    weight: 111
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  apic_summary:
+    weight: 105
+    label: above
+    type: basic_string
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  apic_url:
+    weight: 110
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  application_consumer_org_url:
+    weight: 106
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  application_credentials:
+    weight: 113
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  application_data:
+    weight: 112
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  application_enabled:
+    weight: 107
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  application_id:
+    weight: 104
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  application_lifecycle_pending:
+    weight: 117
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  application_lifecycle_state:
+    weight: 116
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: list_default
+    region: content
+  application_name:
+    weight: 115
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  application_redirect_endpoints:
+    weight: 109
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  application_subscriptions:
+    weight: 114
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  application_client_type: true
+  langcode: true

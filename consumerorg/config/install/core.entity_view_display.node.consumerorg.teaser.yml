@@ -1,0 +1,67 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.consumerorg.apic_catalog_id
+    - field.field.node.consumerorg.apic_hostname
+    - field.field.node.consumerorg.apic_provider_id
+    - field.field.node.consumerorg.apic_rating
+    - field.field.node.consumerorg.apic_tags
+    - field.field.node.consumerorg.apic_pathalias
+    - field.field.node.consumerorg.consumerorg_id
+    - field.field.node.consumerorg.consumerorg_url
+    - field.field.node.consumerorg.consumerorg_members
+    - field.field.node.consumerorg.consumerorg_invites
+    - field.field.node.consumerorg.consumerorg_name
+    - field.field.node.consumerorg.consumerorg_owner
+    - field.field.node.consumerorg.consumerorg_tags
+    - field.field.node.consumerorg.consumerorg_memberlist
+    - field.field.node.consumerorg.consumerorg_roles
+    - node.type.consumerorg
+  module:
+    - user
+    - votingapi_widgets
+    - cshs
+id: node.consumerorg.teaser
+targetEntityType: node
+bundle: consumerorg
+mode: teaser
+content:
+  apic_rating:
+    type: voting_api_formatter
+    weight: 0
+    label: above
+    settings:
+      readonly: false
+      style: default
+      show_results: false
+      values: {  }
+    third_party_settings: {  }
+  consumerorg_name:
+    type: string
+    weight: 2
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+  links:
+    weight: 1
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  addtoany: true
+  apic_catalog_id: true
+  apic_hostname: true
+  apic_provider_id: true
+  apic_tags: true
+  apic_pathalias: true
+  consumerorg_id: true
+  consumerorg_url: true
+  consumerorg_members: true
+  consumerorg_owner: true
+  consumerorg_tags: true
+  consumerorg_memberlist: true
+  consumerorg_roles: true
+  consumerorg_invites: true
+  langcode: true

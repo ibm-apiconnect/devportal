@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.api_swagger
+    - node.type.api
+id: node.api.api_swagger
+field_name: api_swagger
+entity_type: node
+bundle: api
+label: 'Open API Document'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

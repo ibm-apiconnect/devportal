@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.first_name
+  module:
+    - user
+  enforced:
+    module:
+      - ibm_apim
+id: user.user.first_name
+field_name: first_name
+entity_type: user
+bundle: user
+label: 'First Name'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

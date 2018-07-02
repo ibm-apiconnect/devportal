@@ -1,0 +1,14 @@
+--- modules/check_dns/check_dns.module	2018-04-11 19:10:31.000000000 +0100
++++ modules/check_dns/check_dns.module	2018-04-11 19:11:22.000000000 +0100
+@@ -50,9 +50,9 @@
+     $mail = SafeMarkup::checkPlain($mail);
+     $mail = explode('@', $mail);
+     // Fetch DNS Resource Records associated with a hostname.
+-    $result = dns_get_record(end($mail), DNS_ALL);
++    $result = checkdnsrr(end($mail));
+ 
+-    if (empty($result)) {
++    if (empty($result) || $result != true) {
+       // If no record is found.
+       $form_state->setErrorByName('mail', t('Your email domain is not recognised. Please enter a valid email id.'));
+     }

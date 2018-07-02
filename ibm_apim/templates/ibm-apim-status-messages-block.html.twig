@@ -1,0 +1,31 @@
+{% extends "block.html.twig" %}
+{#
+/**
+ * @file
+ *
+ * Template for the admin status messages block (ibm_apim/Plugin/Block/AdminMessagesBlock)
+ *
+ * @ingroup templates
+ */
+#}
+{% block content %}
+{% if messages|length > 0 %}
+  <div class="adminstatusmessages">
+    <div class="alert alert-danger">
+      <div display="flex" flex-drection="column">
+        <h3>{{ header }}</h3>
+        {% for component, messagelist in messages %}
+        <div margin-top="4px">
+          {# <h4>{{ component }}</h4> #}
+          <ul>
+            {% for submessage in messagelist %}
+              <li>{{ submessage }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

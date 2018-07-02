@@ -1,0 +1,14 @@
+langcode: en
+status: true
+dependencies: {  }
+name: icon
+label: 'Icon (48x48)'
+effects:
+  cab795c4-413b-4fff-8549-6b554013c41f:
+    uuid: cab795c4-413b-4fff-8549-6b554013c41f
+    id: image_scale
+    weight: 0
+    data:
+      width: 48
+      height: 48
+      upscale: true

@@ -1,0 +1,46 @@
+{#
+/**
+ * @file
+ * Twig template for the reset password form
+ *
+ * Available variables
+ * - attributes: A list of HTML attributes for the wrapper element.
+ * - children: The child elements of the form.
+ *
+ * @see template_preprocess_form()
+ *
+ * @ingroup themeable
+ */
+#}
+{% set ur_count_class = user_registry_count ? 'ur-count-' ~ user_registry_count %}
+{% set ur_managed_class = user_managed_registry_present ? 'ur-managed-true' : 'ur-managed-false' %}
+<div class='apic-user-form apic-user-form-reset-pwd {{ ur_count_class }} {{ ur_managed_class }}'>
+  <div class='apic-portal-title'>{{ site_name }}</div>
+  <div class='apic-user-form-header'>{% if user_managed_registry_present %}{{ 'Reset password'|t }}{% else %}{{ 'Reset \'admin\' password'|t }}{% endif %}</div>
+  <div class='apic-user-form-text'>
+      {% set registry_title = element['#selected_registry']['selected_registry'] %}
+      {% set admin_only = element['admin_only'] %}
+      {% if admin_only %}
+          {% trans %}
+            If you have forgotten your 'admin' password, you can reset it here.
+          {% endtrans %}
+          {% trans %}
+            Your <strong>{{ registry_title }}</strong> account is managed externally and you must contact your user registry administrator.
+          {% endtrans %}
+      {% else %}
+          {% trans %}
+              If you have forgotten the password for your <strong>{{ registry_title }}</strong> account or 'admin', you can reset it here.
+          {% endtrans %}
+      {% endif %}
+  </div>
+  <form{{ attributes }}>
+    <div class='apic-user-form-wrapper'>
+      {{ children }}
+    </div>
+  </form>
+    <div class='apic-user-form-footer'>
+        <div class='apic-user-form-text'>
+            <a href=" {{ path('user.login') }} ">{{ 'Back to Sign in'|t }}</a>
+        </div>
+    </div>
+</div>
