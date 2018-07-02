@@ -1,0 +1,63 @@
+<?php
+/**
+ * @file
+ * Base module file for users_export
+ *
+ * @defgroup pdurusers_export Users Export
+ */
+define('PDURUSERS_EXPORT_DEFAULT_DATE_FORMAT', 'Y-m-d H:i:s');
+
+/**
+ * Implements hook_menu().
+ */
+function pdurusers_export_menu() {
+  $items = array();
+  $items['admin/people/export'] = array(
+    'title'            => 'Export',
+    'description'      => 'Export users in various formats.',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('pdurusers_export_form'),
+    'file'             => 'includes/pdurusers_export.admin.inc',
+    'access callback' => 'pdurusers_export_access_admin_pdur',
+    'type'             => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Check if the current user has access and PDUR is enabled
+ * @return bool
+ */
+function pdurusers_export_access_admin_pdur() {
+  global $user;
+  $admin_role = user_role_load_by_name('administrator');
+  $admin_rid = $admin_role->rid;
+  $ibm_apim_social_login = variable_get('ibm_apim_social_login', 0);
+  if (((isset($user->uid) && $user->uid == 1) || user_has_role($admin_rid)) && $ibm_apim_social_login == 1) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Implements hook_theme
+ */
+function pdurusers_export_theme($existing, $type, $theme, $path) {
+  return array(
+    'pdurusers_export_flatfile' => array(
+      'variables' => array(
+        'header' => NULL,
+        'rows'   => NULL,
+        'type'   => NULL,
+        'html'   => FALSE,
+        'prefix' => '',
+        'suffix' => '',
+      ),
+      'file'      => 'includes/pdurusers_export.admin.inc',
+    ),
+  );
+}
+

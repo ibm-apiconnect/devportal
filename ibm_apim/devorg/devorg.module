@@ -325,7 +325,7 @@ function _devorg_get_custom_fields() {
  * @param $event
  * @return bool
  */
-function devorg_createOrUpdateDevorg($devorg, $event) {
+function devorg_createOrUpdateDevorg($devorg, $event = 'internal') {
   $createdOrUpdated = FALSE;
   $ref = $devorg['id'];
   $query = new EntityFieldQuery();
@@ -356,7 +356,7 @@ function devorg_createOrUpdateDevorg($devorg, $event) {
  * @param $event
  * @throws \Exception
  */
-function devorg_createNewDevorgNode($consumer, $event) {
+function devorg_createNewDevorgNode($consumer, $event = 'internal') {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
   if (isset($consumer) && isset($consumer['id'])) {
@@ -511,7 +511,7 @@ function devorg_createNewDevorgNode($consumer, $event) {
  * @param $event
  * @throws \Exception
  */
-function devorg_updateExistingDevorgNode($node, $consumer, $event) {
+function devorg_updateExistingDevorgNode($node, $consumer, $event = 'internal') {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
   $node->title = ibm_apim_truncate_string($consumer['title']);
@@ -576,7 +576,8 @@ function devorg_list_devorgs() {
     global $user;
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', 'devorg');
+      ->entityCondition('bundle', 'devorg')
+      ->addTag('node_access');
     $results = $query->execute();
     if (isset($results['node'])) {
       $nids = array();

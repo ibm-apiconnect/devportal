@@ -741,36 +741,10 @@ function api_collection_callback($apiref = NULL) {
  */
 function api_list_apis() {
   $finalnids = array();
-  // user has access to everything
-  if (ibm_apim_explicit_user_access('edit any api content')) {
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-      ->propertyCondition('status', 1)
-      ->entityCondition('bundle', 'api');
-    $results = $query->execute();
-  }
-  else {
-    $productnids = product_list_products();
-    $productnodes = node_load_multiple($productnids);
-    $refarray = array();
-    foreach ($productnodes as $productnode) {
-      if (isset($productnode->product_apis[$productnode->language][0]['value'])) {
-        $prodrefs = unserialize($productnode->product_apis[$productnode->language][0]['value']);
-        foreach ($prodrefs as $prodref) {
-          $refarray[] = $prodref['name'];
-        }
-      }
-    }
-
-    if (isset($refarray) && is_array($refarray) && count($refarray) > 0) {
-      $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'api')
-        ->propertyCondition('status', 1)
-        ->fieldCondition('api_ref', 'value', $refarray);
-      $results = $query->execute();
-    }
-  }
+  // rely on DB ACL code
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')->propertyCondition('status', 1)->entityCondition('bundle', 'api')->addTag('node_access');
+  $results = $query->execute();
   if (isset($results) && isset($results['node'])) {
     foreach ($results['node'] as $item) {
       $finalnids[] = $item->nid;

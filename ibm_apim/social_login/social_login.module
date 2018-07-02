@@ -1061,6 +1061,7 @@ function _social_login_complete_activation($account, $postData = NULL) {
     $headers[] = 'X-IBM-Client-Id: ' . $clientid;
     if (isset($account->name) && $account->uid != 1) {
       $headers[] = 'X-IBM-APIManagement-Principal: ' . $account->name;
+      $headers[] = 'X-IBM-APIManagement-Principal-Base64: ' . base64_encode($account->name);
     }
 
     $result = _ibm_apim_json_http_request($url, 'POST', $headers, json_encode($postData));

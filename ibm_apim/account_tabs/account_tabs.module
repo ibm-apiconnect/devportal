@@ -99,7 +99,7 @@ function _account_tabs_update_user_edit_path(&$path) {
   if (count($args) > 2 && $args[2] == 'edit') {
     $path = str_replace('edit', 'account/edit', $path);
   }
-  elseif (count($args) > 3 && $args[2] == 'security' && $args[3] == 'tfa' && module_exists('tfa_basic') && (!isset($args[4]) || $args[4] != 'app-setup')) {
+  elseif (count($args) > 3 && $args[2] == 'security' && $args[3] == 'tfa' && module_exists('tfa_basic') && (!isset($args[4]) || ($args[4] != 'app-setup' && $args[4] != 'disable'))) {
     $path = str_replace('security/tfa', 'account/security/tfa', $path);
   }
   elseif (count($args) > 2 && $args[2] == 'session-limit' && module_exists('session_limit')) {

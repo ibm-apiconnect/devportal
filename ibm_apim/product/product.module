@@ -522,7 +522,15 @@ function product_collection_callback($productid = NULL) {
       $chunk = array_slice($nids, $offset, $limit);
       pager_default_initialize($total, $limit);
 
-      $finalnodes = node_load_multiple($chunk);
+      // Only include nodes that are set as published
+      $finalnodes = array();
+      $allnodes = node_load_multiple($chunk);
+      foreach ($allnodes as $node) {
+        if ($node->product_state[$node->language][0]['value'] == "published") {
+          array_push($finalnodes,$node);
+        }
+      }
+
       if ($finalnodes) {
         $build = array(
           'content' => node_view_multiple($finalnodes),
@@ -635,6 +643,7 @@ function product_multiple_select_api($apinid) {
   drupal_page_is_cacheable(FALSE);
 
   if (in_array($apinid, api_list_apis())) {
+
     $api = node_load($apinid);
     if (isset($api)) {
       $allowed_products = product_list_products();
@@ -660,7 +669,14 @@ function product_multiple_select_api($apinid) {
       $chunk = array_slice($prod_nids, $offset, $limit);
       pager_default_initialize($total, $limit);
 
-      $finalnodes = node_load_multiple($chunk);
+      // Only include nodes that are set as published
+      $finalnodes = array();
+      $allnodes = node_load_multiple($chunk);
+      foreach ($allnodes as $node) {
+        if ($node->product_state[$node->language][0]['value'] == "published") {
+          array_push($finalnodes,$node);
+        }
+      }
 
       if ($finalnodes) {
         $build = array(
@@ -706,7 +722,55 @@ function product_createOrUpdateProduct($product, $event) {
     $first = array_shift($results['node']);
     $nid = $first->nid;
     $node = node_load($nid);
+    //retrieve currently associated apis
+    $apis = product_get_apis($nid);
     _product_updateExistingProductNode($node, $product, $event);
+    //retrieve new set of currently associated apic_ssh_key_status
+    $napis=product_get_apis($nid);
+    //check whether any of the apis in $apis is no longer associated
+    foreach ($apis as $apinid){
+      $found = FALSE;
+      foreach($napis as $napinid){
+        if($apinid == $napinid){
+          $found = TRUE;
+        }
+      }
+      //if not found API is potentially orphaned, so check if it is assoicated with any other products
+      if(!$found){
+        $api = node_load($apinid,null,TRUE);
+        //Check this api is not still referenced by a product
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+          ->entityCondition('bundle', 'product')
+          ->fieldCondition('product_apis', 'value', $api->api_ref[$api->language][0]['value'], 'CONTAINS');
+        $results = $query->execute();
+        if (isset($results['node'])) {
+          $prod_nids = array_keys($results['node']);
+          $product_ids = array();
+          if (is_array($prod_nids) && count($prod_nids) > 0) {
+            foreach ($prod_nids as $prod_nid) {
+              $product = node_load($prod_nid);
+              $product_id = $product->product_ref[$product->language][0]['value'];
+              array_push($product_ids, $product_id);
+            }
+          }
+          if (is_array($product_ids) && count($product_ids) > 0) {
+            $prodids = implode(" ", $product_ids);
+          }
+          else {
+            $prodids = implode(" ", $prod_nids);
+          }
+          drupal_set_message(t('Drush DeleteAPI NOT deleting API @api as it is referenced by the following product(s) @prods', array(
+            '@api' => $api->api_ref[$api->language][0]['value'],
+            '@prods' => $prodids
+          )), 'warning');
+        }
+        else {
+          api_deleteAPINode($nid, $event);
+          drupal_set_message(t('Drush DeleteAPI deleted API @api', array('@api'=>$api->api_ref[$api->language][0]['value'])), 'success');
+        }
+      }
+    }
     $createdOrUpdated = FALSE;
   }
   else {
@@ -1935,157 +1999,20 @@ function product_preprocess_search_result(&$variables) {
  */
 function product_list_products() {
   $returnnids = array();
-  // users with right perms get to see all
-  if (ibm_apim_explicit_user_access('edit any product content')) {
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', 'product')
-      ->propertyCondition('status', 1)
-      ->fieldCondition('product_state', 'value', 'published');
-    $results = $query->execute();
-    if (isset($results['node'])) {
-      $nids = array();
-      foreach ($results['node'] as $item) {
-        $nids[] = $item->nid;
-      }
-      if (!empty($nids)) {
-        $returnnids = array_merge($returnnids, $nids);
-      }
+  // rely on DB ACL checks to only return valid nodes
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'product')
+    ->propertyCondition('status', 1)
+    ->addTag('node_access');
+  $results = $query->execute();
+  if (isset($results['node'])) {
+    $nids = array();
+    foreach ($results['node'] as $item) {
+      $nids[] = $item->nid;
     }
-  }
-  else {
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', 'product')
-      ->propertyCondition('status', 1)
-      ->fieldCondition('product_state', 'value', 'published')
-      ->fieldCondition('product_view_enabled', 'value', 1)
-      ->fieldCondition('product_visibility_public', 'value', 1);
-    $results = $query->execute();
-    if (isset($results['node'])) {
-      $nids = array();
-      foreach ($results['node'] as $item) {
-        $nids[] = $item->nid;
-      }
-      if (!empty($nids)) {
-        $returnnids = array_merge($returnnids, $nids);
-      }
-    }
-    if (user_is_logged_in()) {
-      $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'product')
-        ->propertyCondition('status', 1)
-        ->fieldCondition('product_state', 'value', 'published')
-        ->fieldCondition('product_view_enabled', 'value', 1)
-        ->fieldCondition('product_visibility_authenticated', 'value', 1);
-      $results = $query->execute();
-      if (isset($results['node'])) {
-        $nids = array();
-        foreach ($results['node'] as $item) {
-          $nids[] = $item->nid;
-        }
-        if (!empty($nids)) {
-          $returnnids = array_merge($returnnids, $nids);
-        }
-      }
-      $myorg = ibm_apim_get_current_developer_org();
-      if (isset($myorg['id'])) {
-        $query = new EntityFieldQuery();
-        $query->entityCondition('entity_type', 'node')
-          ->entityCondition('bundle', 'product')
-          ->propertyCondition('status', 1)
-          ->fieldCondition('product_state', 'value', 'published')
-          ->fieldCondition('product_view_enabled', 'value', 1)
-          ->fieldCondition('product_visibility_custom_orgs', 'value', $myorg['id'], 'CONTAINS');
-        $results = $query->execute();
-        if (isset($results['node'])) {
-          $nids = array();
-          foreach ($results['node'] as $item) {
-            $nids[] = $item->nid;
-          }
-          if (!empty($nids)) {
-            $returnnids = array_merge($returnnids, $nids);
-          }
-        }
-
-        $query = new EntityFieldQuery();
-        $query->entityCondition('entity_type', 'node')
-          ->entityCondition('bundle', 'devorg')
-          ->fieldCondition('devorg_id', 'value', $myorg['id']);
-        $devorgresults = $query->execute();
-        if (isset($devorgresults['node'])) {
-          $first = array_shift($devorgresults['node']);
-          $devorgnid = $first->nid;
-          if (!empty($devorgnid)) {
-            $devorg = node_load($devorgnid);
-            if (isset($devorg->devorg_tags[$devorg->language]) && !empty($devorg->devorg_tags[$devorg->language])) {
-              foreach ($devorg->devorg_tags[$devorg->language] as $devorg_tag) {
-                $tags[] = $devorg_tag['value'];
-              }
-            }
-            if (isset($tags) && is_array($tags) && count($tags) > 0) {
-              $query = new EntityFieldQuery();
-              $query->entityCondition('entity_type', 'node')
-                ->entityCondition('bundle', 'product')
-                ->propertyCondition('status', 1)
-                ->fieldCondition('product_state', 'value', 'published')
-                ->fieldCondition('product_view_enabled', 'value', 1)
-                ->fieldCondition('product_visibility_custom_tags', 'value', $tags, 'IN');
-              $results = $query->execute();
-              if (isset($results['node'])) {
-                $nids = array();
-                foreach ($results['node'] as $item) {
-                  $nids[] = $item->nid;
-                }
-                if (!empty($nids)) {
-                  $returnnids = array_merge($returnnids, $nids);
-                }
-              }
-            }
-          }
-        }
-
-        // also grab any products we're subscribed to in order to include deprecated products
-        $query = new EntityFieldQuery();
-        $query->entityCondition('entity_type', 'node')
-          ->entityCondition('bundle', 'application')
-          ->fieldCondition('application_orgid', 'value', $myorg['id']);
-        $appresults = $query->execute();
-        if (isset($appresults['node'])) {
-          $nids = array();
-          foreach ($appresults['node'] as $item) {
-            $nids[] = $item->nid;
-          }
-          $nodes = node_load_multiple($nids);
-          if ($nodes) {
-            foreach ($nodes as $app) {
-              if (isset($app->application_subscriptions[$app->language][0]['value'])) {
-                $subs = unserialize($app->application_subscriptions[$app->language][0]['value']);
-                if (is_array($subs)) {
-                  foreach ($subs as $sub) {
-                    if (isset($sub['product'])) {
-                      $query = new EntityFieldQuery();
-                      $query->entityCondition('entity_type', 'node')
-                        ->entityCondition('bundle', 'product')
-                        ->propertyCondition('status', 1)
-                        ->fieldCondition('product_ref', 'value', $sub['product']);
-                      $results = $query->execute();
-                      if (isset($results['node'])) {
-                        $nids = array();
-                        foreach ($results['node'] as $item) {
-                          $nids[] = $item->nid;
-                        }
-                        $returnnids = array_merge($returnnids, $nids);
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+    if (!empty($nids)) {
+      $returnnids = array_merge($returnnids, $nids);
     }
   }
 

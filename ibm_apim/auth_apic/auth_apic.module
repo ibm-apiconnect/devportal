@@ -331,12 +331,23 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
         }
         break;
       case 'password_policy_password_tab' :
+        global $user;
         if (variable_get('no_autocomplete_profile_form', FALSE)) {
           if (empty($form['pass']['#attributes'])) {
             $form['pass']['#attributes'] = array();
           }
           $form['pass']['#attributes']['autocomplete'] = 'off';
           $form['#attributes']['autocomplete'] = 'off';
+        }
+        if ($form['#user']->uid != $user->uid) {
+          // admin editing another user
+          if (isset($form['account']['current_pass'])) {
+            $form['account']['current_pass']['#disabled'] = TRUE;
+          }
+          if (isset($form['account']['pass'])) {
+            $form['account']['pass']['#disabled'] = TRUE;
+          }
+          $form['actions']['submit']['#disabled'] = TRUE;
         }
         $form['#validate'] = array_diff($form['#validate'], array(
           'user_account_form_validate',
@@ -2032,6 +2043,19 @@ function auth_apic_activate_id_callback($path = NULL) {
         ), WATCHDOG_NOTICE);
         drupal_goto();
       }
+      $apimserver = _ibm_apim_parse_apim_host();
+      if ($apimserver['port'] == '443') {
+        $apimurl = $apimserver['scheme'] . "://" . $apimserver['host'] . "/";
+      } else {
+        $apimurl = $apimserver['scheme'] . "://" . $apimserver['host'] . ":" . $apimserver['port'] . "/";
+      }
+      if(substr($url,0,strlen($apimurl)) != $apimurl) {
+        drupal_set_message(t('URL provided in token does not match APIM server. Contact the system administrator for assistance.'), 'error');
+        watchdog('auth_apic_activate_id_callback', 'Invalid Token: Token contains a invalid URL. token: %token', array(
+          '%token' => serialize($activationObj)
+        ), WATCHDOG_NOTICE);
+        drupal_goto();
+      }
       $headers = array(
         'Content-Type: application/json',
         'Accept: application/json',
@@ -2171,10 +2195,10 @@ function auth_apic_forgotpwd_form($form, &$form_state, $path = NULL) {
     $policy = _password_policy_load_active_policy($roles, $account);
 
     $translate = array();
-    if (!empty($policy['policy']) && isset($account)) {
+    if (!empty($policy['constraints']) && isset($account)) {
       // Some policy constraints are active.
       password_policy_add_policy_js($policy, $account, $form);
-      foreach ($policy['policy'] as $key => $value) {
+      foreach ($policy['constraints'] as $key => $value) {
         if ($value) {
           $translate['constraint_' . $key] = _password_policy_constraint_error($key, $value);
         }
@@ -2305,7 +2329,19 @@ function auth_apic_forgotpwd_form_submit_handler($form, &$form_state) {
     }
 
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
-      // log the user in
+      // log the user in, unless TFA is enabled.
+
+      if (module_exists('tfa')) {
+        if (variable_get('tfa_enabled', 0) == 1) {
+          $account = user_load_by_name($userid);
+          $tfa = tfa_get_process($account);
+          if ($tfa->ready()) {
+            // TFA is enabled for this user, so do not proceed with login.
+            drupal_goto();
+          }
+        }
+      }
+
       global $user;
       $user = user_load_by_name($userid);
 

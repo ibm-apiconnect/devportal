@@ -1829,3 +1829,7 @@ article .apiTag.tags {
 .mesh-portal-product .application .appTitleBar .promotionLink a:visited {
   color: #fff;
 }
+
+.mesh-portal-api .responseSection code {
+  display: block;
+}

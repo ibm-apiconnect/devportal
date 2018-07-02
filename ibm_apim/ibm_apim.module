@@ -403,6 +403,12 @@ function ibm_apim_config_form($form, &$form_state) {
     '#description' => t('Display API Consumer analytics in the portal. If unchecked then all analytics links will be removed.')
   );
 
+  $ibm_apim_social_login = variable_get('ibm_apim_social_login', 0);
+  if ($ibm_apim_social_login == 1) {
+    $form['config']['ibm_apim_show_analytics']['#default_value'] = 0;
+    $form['config']['ibm_apim_show_analytics']['#disabled'] = TRUE;
+  }
+
   $form['config']['ibm_apim_soap_swagger_download'] = array(
     '#type' => 'checkbox',
     '#title' => t('Allow Download of Open API documents for SOAP APIs'),
@@ -1688,6 +1694,14 @@ function ibm_apim_menu_alter(&$items) {
       $items[$new_item_index] = $item;
     }
   }
+  // block access to password_policy force password change restore tab
+  if (isset($items['admin/config/people/password_policy/password_change'])) {
+    $items['admin/config/people/password_policy/password_change']['access callback'] = FALSE;
+  }
+  // block access to backup_migrate restore tab
+  if (isset($items['admin/config/system/backup_migrate/restore'])) {
+    $items['admin/config/system/backup_migrate/restore']['access callback'] = FALSE;
+  }
 }
 
 /**
@@ -2418,12 +2432,14 @@ function _ibm_apim_call_base($url, $verb, $auth = 'user', $data = NULL, $message
     $headers[] = 'X-IBM-Client-Id: ' . $clientid;
     if (isset($user->name) && $user->uid != 1) {
       $headers[] = 'X-IBM-APIManagement-Principal: ' . $user->name;
+      $headers[] = 'X-IBM-APIManagement-Principal-Base64: ' . base64_encode($user->name);
     }
     else if (isset($data)) {
       // For writable LDAP
       $decoded = json_decode($data);
       if (isset($decoded->username)) {
         $headers[] = 'X-IBM-APIManagement-Principal: ' . $decoded->username;
+        $headers[] = 'X-IBM-APIManagement-Principal-Base64: ' . base64_encode($decoded->username);
       }
     }
   }
@@ -3301,7 +3317,8 @@ function _ibm_apim_user_is_not_admin() {
 function _ibm_apim_user_is_not_admin_analytics() {
   global $user;
   $analytics_enabled = variable_get('ibm_apim_show_analytics', 1);
-  if ($analytics_enabled == 1 && user_is_logged_in() && isset($user) && $user->uid != 1) {
+  $ibm_apim_social_login = variable_get('ibm_apim_social_login', 0);
+  if ($analytics_enabled == 1 && $ibm_apim_social_login == 0 && user_is_logged_in() && isset($user) && $user->uid != 1) {
     return TRUE;
   }
   else {
@@ -3738,7 +3755,7 @@ function _ibm_apim_delete_myorg($form, &$form_state) {
  * @param $form_state
  */
 function _ibm_apim_delete_myorg_submit($form, &$form_state) {
-  
+
   $ibm_apim_allow_devorg_deletion = variable_get('ibm_apim_allow_devorg_deletion', TRUE);
   if ($ibm_apim_allow_devorg_deletion == 1) {
     $org = ibm_apim_get_current_developer_org();
@@ -4117,11 +4134,31 @@ function ibm_apim_update_org_name($orgid = NULL, $orgname = NULL) {
 function ibm_apim_form_alter(&$form, &$form_state, $form_id) {
   global $user;
   switch ($form_id) {
-    case 'user_cancel_confirm_form':
+    case 'flood_control_settings_form' :
       $form['apic_intro'] = array(
-        '#markup' => t('Note: Cancelling an account in the portal will NOT delete the account from IBM API Connect.'),
-        '#weight' => -20
+              '#markup' => '<br/><br/><p>' . t('Note: These settings control the login security provided by the Flood Control module.  Users blocked by these settings can be unblocked via the reset_locked_user CLI command.  These settings are independent of the Login Security settings managed in Configuration->People') . '</p>',
+            '#weight' => -10
+            );
+      break;      
+    case 'login_security_admin_settings' :
+      $form['apic_intro'] = array(
+            '#markup' => '<br/><br/><p>' . t('Note: These settings control the login security that the portal site administrator manages (unblocking users by applying the \'Unblock the selected users\' operation from the People menu).  These settings are independent of those set for Flood Control - accessed from the Configuration->System menu') . '</p>',
+            '#weight' => -10
       );
+      break;
+    case 'user_multiple_cancel_confirm':
+      $ibm_apim_social_login = variable_get('ibm_apim_social_login', 0);
+      if ($ibm_apim_social_login == 1) {
+        $form['apic_intro'] = array(
+          '#markup' => '<br/><br/><p>' . t('Note: Cancelling another user\'s account in the portal will NOT delete their account from IBM API Connect. Users must delete their own accounts from their \'Edit Profile\' page for them to be completely deleted from IBM API Connect.') . '</p>',
+          '#weight' => 20
+        );
+      } else {
+        $form['apic_intro'] = array(
+          '#markup' => '<br/><br/><p>' . t('Note: Cancelling another user\'s account in the portal will NOT delete their account from IBM API Connect, the information in the Portal database will simply be recreated when they next login. Users must delete their own accounts from their \'Edit Profile\' page for them to be completely deleted from IBM API Connect.') . '</p>',
+          '#weight' => 20
+        );
+      }
       break;
     case 'system_modules' :
       // hide the Core openid module
@@ -4134,7 +4171,7 @@ function ibm_apim_form_alter(&$form, &$form_state, $form_id) {
       if (isset($form['constraints']['constraint_history'])) {
          unset($form['constraints']['constraint_history']);
       }
-      break;  
+      break;
     case 'field_ui_field_overview_form' :
       // do not allow deletion of our custom fields
       $reservedfields = NULL;
@@ -4190,10 +4227,14 @@ function ibm_apim_form_alter(&$form, &$form_state, $form_id) {
       $form['field_developer_organization']['#access'] = FALSE;
       $ibm_apim_allow_user_deletion = variable_get('ibm_apim_allow_user_deletion', TRUE);
       if ($ibm_apim_allow_user_deletion == TRUE && $user->uid != 1) {
-        $form['delete'] = array(
-          '#weight' => 500,
-          '#markup' => '<div class="deleteAccountWrapper"><div class="deleteAccountLink">' . l(t('Delete account'), 'user/delete') . '</div></div>'
-        );
+        global $user;
+        // only if editing own account
+        if ($form['#user']->uid == $user->uid) {
+          $form['delete'] = array(
+            '#weight' => 500,
+            '#markup' => '<div class="deleteAccountWrapper"><div class="deleteAccountLink">' . l(t('Delete account'), 'user/delete') . '</div></div>'
+          );
+        }
       }
       break;
     case 'seckit_admin_form':
@@ -4937,6 +4978,7 @@ function _ibm_apim_download_proxy($url, $verb = 'GET', $node = NULL, $filter = F
     $headers[] = 'X-IBM-Client-Id: ' . $clientid;
     if (isset($user->name) && $user->uid != 1) {
       $headers[] = 'X-IBM-APIManagement-Principal: ' . $user->name;
+      $headers[] = 'X-IBM-APIManagement-Principal-Base64: ' . base64_encode($user->name);
     }
   }
   elseif (isset($apim_session['auth'])) {
@@ -5512,9 +5554,9 @@ function ibm_apim_cron($customurl = NULL) {
           $results = $query->execute();
           $nids = array();
 
-          if (isset($results)) {
+          if (isset($results['node'])) {
             $nids = array();
-            foreach ($results as $item) {
+            foreach ($results['node'] as $item) {
               $nids[] = $item->nid;
             }
 
@@ -6414,14 +6456,15 @@ function ibm_apim_activate_create_account_form($token = NULL) {
 
     $form['#validate'][] = 'user_register_validate';
     if (module_exists('password_policy')) {
+
       $account = $form['#user'];
-      $policy = _password_policy_load_active_policy(array(DRUPAL_AUTHENTICATED_RID));
+      $policy = _password_policy_load_active_policy(array(DRUPAL_AUTHENTICATED_RID), $account);
 
       $translate = array();
-      if (!empty($policy['policy'])) {
+      if (!empty($policy['constraints'])) {
         // Some policy constraints are active.
         password_policy_add_policy_js($policy, $account, $form);
-        foreach ($policy['policy'] as $key => $value) {
+        foreach ($policy['constraints'] as $key => $value) {
           if ($value) {
             $translate['constraint_' . $key] = _password_policy_constraint_error($key, $value);
           }
@@ -6429,7 +6472,7 @@ function ibm_apim_activate_create_account_form($token = NULL) {
       }
 
       // Printing out the restrictions.
-      if (variable_get('password_policy_show_restrictions', 0) && isset($translate) && (isset($form['pass']) || isset($form['account']['pass']))) {
+      if (variable_get('password_policy_show_restrictions', 1) && isset($translate) && (isset($form['pass']) || isset($form['account']['pass']))) {
         $restriction_html = '<div id="account-pass-restrictions">' . theme('item_list', array(
             'items' => array_values($translate),
             'title' => t('Password Requirements')
@@ -6438,7 +6481,7 @@ function ibm_apim_activate_create_account_form($token = NULL) {
           $form['account']['pass']['#prefix'] = $restriction_html;
         }
         else {
-          $form['pass']['#prefix'] = $restriction_html;
+          $form['pass-pass1']['#prefix'] = $restriction_html;
         }
       }
       $form['#validate'][] = 'password_policy_password_validate';
@@ -6511,6 +6554,19 @@ function ibm_apim_activate_create_account_form_submit_handler($form, &$form_stat
     if (!isset($url)) {
       drupal_set_message(t('Token did not contain a valid URL. Contact the system administrator for assistance.'), 'error');
       watchdog('ibm_apim_activate_create_account_form_submit_handler', 'Invalid Token: Token did not contain a valid URL. token: %token', array(
+        '%token' => serialize($activationObj)
+      ), WATCHDOG_NOTICE);
+      drupal_goto();
+    }
+    $apimserver = _ibm_apim_parse_apim_host();
+    if ($apimserver['port'] == '443') {
+      $apimurl = $apimserver['scheme'] . "://" . $apimserver['host'] . "/";
+    } else {
+      $apimurl = $apimserver['scheme'] . "://" . $apimserver['host'] . ":" . $apimserver['port'] . "/";
+    }
+    if(substr($url,0,strlen($apimurl)) != $apimurl) {
+      drupal_set_message(t('URL provided in token does not match APIM server. Contact the system administrator for assistance.'), 'error');
+      watchdog('auth_apic_activate_id_callback', 'Invalid Token: Token contains a invalid URL. token: %token', array(
         '%token' => serialize($activationObj)
       ), WATCHDOG_NOTICE);
       drupal_goto();
