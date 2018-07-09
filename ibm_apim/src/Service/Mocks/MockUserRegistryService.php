@@ -13,40 +13,19 @@
 namespace Drupal\ibm_apim\Service\Mocks;
 
 use Drupal\Core\State\StateInterface;
-use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
+
+use Drupal\ibm_apim\Service\UserRegistryService;
 use Psr\Log\LoggerInterface;
 use Drupal\ibm_apim\ApicType\UserRegistry;
 
 /**
  * Mock functionality for handling user registries
  */
-class MockUserRegistryService implements UserRegistryServiceInterface {
-
-  private $state;
-  private $logger;
-
-  private $userRegistries = array();
+class MockUserRegistryService extends UserRegistryService {
 
   public function __construct(StateInterface $state, LoggerInterface $logger) {
-    $this->state = $state;
-    $this->logger = $logger;
-    $this->logger->debug("MockUserRegistryService::__construct() loading mock data from /src/Service/Mocks/MockData/userregistries.json");
-    $this->updateAll(json_decode(file_get_contents(drupal_get_path('module', 'ibm_apim') . '/src/Service/Mocks/MockData/userregistries.json'), TRUE));
-  }
 
-  /**
-   * get all the user_registries
-   *
-   * @return NULL if an error occurs otherwise an array of the registries.
-   */
-  public function getAll() {
-    $registries = $this->userRegistries;
-
-    if (empty($registries)) {
-      $this->logger->warning('Found no user registries in the catalog config. Potentially missing data from APIM.');
-    }
-
-    return $registries;
+    parent::__construct($state, $logger);
   }
 
   /**
@@ -57,117 +36,39 @@ class MockUserRegistryService implements UserRegistryServiceInterface {
    */
   public function get($key) {
 
-    $all_registries = $this->getAll();
-    $registry = array_shift($all_registries);
+    $registry = parent::get($key);
+
+    if (!$registry) {
+      $registry = $this->createMockRegistry();
+    }
 
     $this->logger->debug("MockUserRegistryService::get($key) returning " . $registry->getName());
 
     return $registry;
   }
 
-  /**
-   * Update all user_registries
-   *
-   * @param $data array of user_registries keyed on url
-   */
   public function updateAll($data) {
-    if (isset($data)) {
-      $user_registries = array();
-      foreach ($data as $ur) {
-        $registry_object = new UserRegistry();
-        $registry_object->setValues($ur);
-        $user_registries[$ur['url']] = $registry_object;
-      }
-      $this->userRegistries = $user_registries;
-    }
+    $this->logger->debug("MockUserRegistryService::updateAll() with " . serialize($data));
+    parent::updateAll($data);
   }
 
   /**
-   * Update a specific user_registry
-   *
-   * @param $key
-   * @param $data
+   * @return \Drupal\ibm_apim\ApicType\UserRegistry
    */
-  public function update($key, $data) {
-    if (isset($key) && isset($data)) {
-      $registry_object = new UserRegistry();
-      $registry_object->setValues($data);
-      $this->userRegistries[$key] = $registry_object;
-    }
+  private function createMockRegistry(): \Drupal\ibm_apim\ApicType\UserRegistry {
+    $registry = new UserRegistry();
+    $registry->setTitle("Mock user registry");
+    $registry->setName("Mock user registry");
+    $registry->setUserManaged(TRUE);
+    $registry->setRegistryType('lur');
+    $registry->setUserRegistryManaged(FALSE);
+    $registry->setUrl('/mock/user/registry');
+    $registry->setIdentityProviders([]);
+    $registry->setOnboarding(TRUE);
+    $registry->setCaseSensitive(TRUE);
+    return $registry;
   }
 
-  /**
-   * Delete a specific user_registry
-   *
-   * @param $key (user_registries url)
-   */
-  public function delete($key) {
-    if (isset($key)) {
-      $new_data = [];
-      foreach ($this->getAll() as $url => $value) {
-        if ($url != $key) {
-          $new_data[$url] = $value;
-        }
-      }
-      $this->userRegistries = $new_data;
-    }
-  }
-
-  /**
-   * Delete all current user registries
-   */
-  public function deleteAll() {
-    $this->userRegistries = array();
-  }
-
-  /**
-   * @param $identityProviderName
-   * @return null
-   */
-  public function getRegistryContainingIdentityProvider($identityProviderName){
-    $result = NULL;
-    $all_registries = $this->getAll();
-    foreach ($all_registries as $registry) {
-      if($registry->hasIdentityProviderNamed($identityProviderName)) {
-        $result = $registry;
-        break;
-      }
-    }
-
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $result);
-
-    return $result;
-  }
-
-  /**
-   * @inheritdoc
-   */
-  public function getDefaultRegistry() {
-
-    $all = $this->getAll();
-
-    if (isset($all) && !empty($all)) {
-      $defaults = array_filter($all, function($reg) { return $reg->isUserManaged(); } );
-      // 0 is possible based on current implementation, but more than 1 is a problem.
-      if (sizeof($defaults) > 1) {
-        throw new \Exception('Unexpected number of default registries.');
-      }
-      elseif (sizeof($defaults) === 1) {
-        return array_pop($defaults);
-      }
-      else {
-        // no managed user registries so return first non-managed registry if there is one
-        return array_pop($all);
-      }
-    }
-    else {
-      return NULL;
-    }
-  }
-
-  public function setDefaultRegistry($url) {
-    // TODO: Implement setDefaultRegistry() method.
-  }
 
 
 }

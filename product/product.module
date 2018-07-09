@@ -71,60 +71,74 @@ function product_node_access_records($node) {
     }
     // Only issue grants if product_view is enabled
     if (isset($node->product_view_enabled->value) && $node->product_view_enabled->value == 1) {
-      // Create a grant for 'edit any product content'
-      $grants[] = array(
-        'realm' => 'product',
-        'gid' => EDIT_ANY_PRODUCT_CONTENT_GRANT,
-        'grant_view' => 1,
-        'grant_update' => 0,
-        'grant_delete' => 0,
-        'priority' => 0,
-      );
-      // Create a grant for public access if public is set
-      if (isset($node->product_visibility_public->value) && $node->product_visibility_public->value == 1) {
+      // If the product is deprecated, only allow subscribers
+      $state = $node->product_state->value;
+      if (!isset($state) || empty($state) || mb_strtolower($state) == 'deprecated') {
+        $pref = str_replace("/", "_", $node->apic_url->value);
         $grants[] = array(
-          'realm' => 'product',
-          'gid' => PUBLIC_PRODUCT_GRANT,
+          'realm' => 'product_ref_' . $pref,
+          'gid' => SUBSCRIBED_TO_PRODUCT_GRANT,
           'grant_view' => 1,
           'grant_update' => 0,
           'grant_delete' => 0,
           'priority' => 0,
         );
-      }
-      // Create a grant for authenticated access if authenticated is set
-      if (isset($node->product_visibility_authenticated->value) && $node->product_visibility_authenticated->value == 1) {
-        $grants[] = array(
+      } else {
+        // Create a grant for 'edit any product content'
+        $grants[] = [
           'realm' => 'product',
-          'gid' => AUTHENTICATED_PRODUCT_GRANT,
+          'gid' => EDIT_ANY_PRODUCT_CONTENT_GRANT,
           'grant_view' => 1,
           'grant_update' => 0,
           'grant_delete' => 0,
           'priority' => 0,
-        );
-      }
-      // Create a grant for subscription to this node based on product reference
-      $pref = str_replace("/", "_", $node->apic_url->value);
-      $grants[] = array(
-        'realm' => 'product_ref_' . $pref,
-        'gid' => SUBSCRIBED_TO_PRODUCT_GRANT,
-        'grant_view' => 1,
-        'grant_update' => 0,
-        'grant_delete' => 0,
-        'priority' => 0,
-      );
-      // Create a grant for all organisations (as separate realms) if org visibility is set
-      if (isset($node->product_visibility_custom_orgs)) {
-        foreach ($node->product_visibility_custom_orgs->getValue() as $customorg) {
-          if (isset($customorg['value'])) {
-            $url = str_replace("/", "_", $customorg['value']);
-            $grants[] = array(
-              'realm' => 'product_org_' . $url,
-              'gid' => ORG_PRODUCT_GRANT,
-              'grant_view' => 1,
-              'grant_update' => 0,
-              'grant_delete' => 0,
-              'priority' => 0,
-            );
+        ];
+        // Create a grant for public access if public is set
+        if (isset($node->product_visibility_public->value) && $node->product_visibility_public->value == 1) {
+          $grants[] = [
+            'realm' => 'product',
+            'gid' => PUBLIC_PRODUCT_GRANT,
+            'grant_view' => 1,
+            'grant_update' => 0,
+            'grant_delete' => 0,
+            'priority' => 0,
+          ];
+        }
+        // Create a grant for authenticated access if authenticated is set
+        if (isset($node->product_visibility_authenticated->value) && $node->product_visibility_authenticated->value == 1) {
+          $grants[] = [
+            'realm' => 'product',
+            'gid' => AUTHENTICATED_PRODUCT_GRANT,
+            'grant_view' => 1,
+            'grant_update' => 0,
+            'grant_delete' => 0,
+            'priority' => 0,
+          ];
+        }
+        // Create a grant for subscription to this node based on product reference
+        $pref = str_replace("/", "_", $node->apic_url->value);
+        $grants[] = [
+          'realm' => 'product_ref_' . $pref,
+          'gid' => SUBSCRIBED_TO_PRODUCT_GRANT,
+          'grant_view' => 1,
+          'grant_update' => 0,
+          'grant_delete' => 0,
+          'priority' => 0,
+        ];
+        // Create a grant for all organisations (as separate realms) if org visibility is set
+        if (isset($node->product_visibility_custom_orgs)) {
+          foreach ($node->product_visibility_custom_orgs->getValue() as $customorg) {
+            if (isset($customorg['value'])) {
+              $url = str_replace("/", "_", $customorg['value']);
+              $grants[] = [
+                'realm' => 'product_org_' . $url,
+                'gid' => ORG_PRODUCT_GRANT,
+                'grant_view' => 1,
+                'grant_update' => 0,
+                'grant_delete' => 0,
+                'priority' => 0,
+              ];
+            }
           }
         }
       }

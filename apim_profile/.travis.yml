@@ -1,0 +1,110 @@
+# @file
+# .travis.yml - Drupal 8 Travis CI Integration
+
+language: php
+
+# needed for npm CI access
+group: bluezone
+
+cache:
+  bundler: true
+  directories:
+    - $HOME/.composer/cache
+    - $HOME/.drush/cache
+
+sudo: false
+
+dist: trusty
+
+php:
+  - 7.1
+
+matrix:
+  fast_finish: true
+
+# Set up environment variables.
+env:
+  global:
+    - DRUPAL_TI_CORE_BRANCH="8.5.x"
+    # add composer's global bin directory to the path
+    # see: https://github.com/drush-ops/drush#install---composer
+    - PATH="$PATH:$HOME/.composer/vendor/bin"
+
+    # Not sure what simpletest group we are using yet.
+    - DRUPAL_TI_SIMPLETEST_GROUP="apim_profile"
+
+    # The environment to use, supported are: drupal-7, drupal-8
+    - DRUPAL_TI_ENVIRONMENT="drupal-8"
+
+    # This module name
+    - DRUPAL_TI_MODULE_NAME="apim_profile"
+
+    # The installation propfile to use:
+    - DRUPAL_TI_INSTALL_PROFILE="apim_profile"
+
+    # Drupal specific variables.
+    - DRUPAL_TI_DB="drupal_travis_db"
+    - DRUPAL_TI_DB_URL="mysql://root:@127.0.0.1/drupal_travis_db"
+    # Note: Do not add a trailing slash here.
+    - DRUPAL_TI_WEBSERVER_URL="http://127.0.0.1"
+    - DRUPAL_TI_WEBSERVER_PORT="8080"
+
+    # Simpletest specific commandline arguments, the DRUPAL_TI_SIMPLETEST_GROUP is appended at the end.
+    - DRUPAL_TI_SIMPLETEST_ARGS="--verbose --color --concurrency 4 --url $DRUPAL_TI_WEBSERVER_URL:$DRUPAL_TI_WEBSERVER_PORT --module user"
+
+    # PHPUnit specific commandline arguments.
+    - DRUPAL_TI_PHPUNIT_ARGS="--group apim_profile"
+    # Specifying the phpunit-core src/ directory is useful when e.g. a vendor/
+    # directory is present in the module directory, which phpunit would then
+    # try to find tests in. This option is relative to $TRAVIS_BUILD_DIR.
+    - DRUPAL_TI_PHPUNIT_CORE_SRC_DIRECTORY="./apim_profile/tests/src"
+
+    # Composer project name
+    - SITE_NAME="my_site_name"
+
+    # Code coverage via coveralls.io
+    #- DRUPAL_TI_COVERAGE="satooshi/php-coveralls"
+    # This needs to match your .coveralls.yml file.
+    #- DRUPAL_TI_COVERAGE_FILE="tests/_output/coverage.xml"
+  matrix:
+    #- DRUPAL_TI_RUNNERS="phpunit simpletest behat"
+    #- We run phpunit manually in ./travis-ci/travis-script.sh
+    - DRUPAL_TI_RUNNERS="phpunit"
+
+
+mysql:
+  database: drupal_travis_db
+  username: root
+  encoding: utf8
+
+before_install:
+  - composer self-update
+
+  # update node to LTS
+  - . $HOME/.nvm/nvm.sh
+  - nvm install 6
+  - nvm use 6
+
+  # Install Drush
+  - composer global require drush/drush:8.x
+  - phpenv rehash
+
+  - composer global require "lionsad/drupal_ti:1.*"
+  - drupal-ti before_install
+
+install:
+  - composer create-project drupal/drupal my_site_name 8.5.* --no-dev
+
+before_script:
+  - travis_wait drupal-ti --include "./travis-ci/travis-before-script.sh"
+  - drupal-ti before_script
+
+script:
+  - drupal-ti --include "./travis-ci/travis-linting.sh"
+  - drupal-ti --include "./travis-ci/travis-script.sh"
+
+after_script:
+  - drupal-ti after_script
+
+after_failure:
+  - cat /tmp/travis-logs/webserver.log

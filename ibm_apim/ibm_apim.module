@@ -382,6 +382,23 @@ function template_preprocess_status_report_general_info(&$variables) {
     $variables['explorer'] = array('value' => 'undefined', 'description' => t('Could not detect Explorer version'));
   }
 
+  $custom_modules = array();
+  $custom_themes = array();
+  $site_path = \Drupal::service('site.path');
+  $dir = new DirectoryIterator($site_path . '/modules');
+  foreach ($dir as $fileinfo) {
+    if ($fileinfo->isDir() && !$fileinfo->isDot()) {
+      $custom_modules[] = $fileinfo->getFilename();
+    }
+  }
+  $dir = new DirectoryIterator($site_path . '/themes');
+  foreach ($dir as $fileinfo) {
+    if ($fileinfo->isDir() && !$fileinfo->isDot()) {
+      $custom_themes[] = $fileinfo->getFilename();
+    }
+  }
+  $variables['custom_modules'] = $custom_modules;
+  $variables['custom_themes'] = $custom_themes;
 }
 
 /**

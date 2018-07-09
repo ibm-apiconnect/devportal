@@ -111,12 +111,7 @@ class ApicUserRegisterForm extends RegisterForm {
     if(!empty($_SESSION['auth_apic'])) {
       $jwt = $_SESSION['auth_apic']['invitation_object'];
       if (!empty($jwt)) {
-        if(sizeof($all_registries) > 1) {
-          $form['#message']['message'] = t("To complete your invitation, choose an identity provider and fill out any required fields below.");
-        }
-        else if(sizeof($all_registries) === 1) {
-          $form['#message']['message'] = t("To complete your invitation, fill out any required fields below.");
-        }
+        $form['#message']['message'] = t("To complete your invitation, fill out any required fields below.");
       }
     }
 

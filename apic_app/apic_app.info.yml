@@ -3,7 +3,7 @@ type: module
 description: 'Provides the Application node content type'
 package: 'IBM API Connect'
 core: 8.x
-version: '8.x-1.3.1'
+version: '8.x-1.3.2'
 project: 'apic_app'
 dependencies:
   - path

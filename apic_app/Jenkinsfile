@@ -44,7 +44,7 @@ veloxPipeline(pipelineOpts) { p ->
         }
 
         stage('Get modules') {
-          portal.prepareModulesForTests(MODULE_NAME, BUILD_DIR, BRANCH_NAME)
+          portal.prepareModulesForTests(MODULE_NAME, BUILD_DIR, BRANCH_NAME, MAIN_BRANCH)
         }
 
         stage("Checkout scripts") {

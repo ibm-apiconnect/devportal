@@ -39,6 +39,7 @@ class ProductDeprecateEvent extends Event {
    */
   public function __construct(NodeInterface $product) {
     $this->product = $product;
+    node_access_rebuild(TRUE);
   }
 
 }

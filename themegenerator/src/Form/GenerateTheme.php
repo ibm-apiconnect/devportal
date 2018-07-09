@@ -33,9 +33,9 @@ class GenerateTheme extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $intro_text = '<p>' . t('The first step in customizing the branding of your Developer Portal is to create a custom sub-theme.') . '</p>';
+    $intro_text = '<p>' . t('The first step in customizing the branding of your Developer Portal is to create a custom sub-theme. ') . '</br>';
+    $intro_text .= t('The sub-theme inherits all of the resources of the parent theme, and you can then override specific resources in the overrides.css file to configure your customizations. For more information, see:') . ' <a href="https://www.ibm.com/support/knowledgecenter/en/SSMNED_2018/com.ibm.apic.devportal.doc/tutorial_portal_customizing_css.html" target="_new">' . t('Knowledge Center') . '</a></p>';
     $intro_text .= '<p>' . t('Complete the form below and you will be presented with a custom sub-theme to download.') . '</p>';
-    $intro_text .= '<p>' . t("Your custom sub-theme will inherit all styling from the APIC 'connect_theme' unless overridden in your overrides.css file. Add custom CSS, JS, or Drupal hooks as explained in the documentation:") . ' <a href="https://www.ibm.com/support/knowledgecenter/en/SSMNED_2018/com.ibm.apic.devportal.doc/tapic_portal_using_subtheme_drupal8.html" target="_new">' . t('Knowledge Center') . '</a></p>';
 
     $form['intro'] = [
       '#markup' => $intro_text
@@ -64,7 +64,7 @@ class GenerateTheme extends FormBase {
     );
 
     $template_options = array(
-      'connect_theme' => t('Default'),
+      'connect_theme' => t('Default Connect Theme'),
       'mono' => t('Business Mono'),
       'blue' => t('Sapphire Blue'),
       'green' => t('Emerald Green'),
@@ -76,7 +76,7 @@ class GenerateTheme extends FormBase {
       '#type' => 'radios',
       '#title' => t('Template'),
       '#options' => $template_options,
-      '#description' => t('Your sub-theme can use one of several different base templates, either the default connect_theme, or one of several different colour variants.'),
+      '#description' => t('Your sub-theme can use one of several different base templates, either the default connect_theme, or one of several different color variants.'),
       '#default_value' => 'connect_theme',
     );
 
@@ -85,6 +85,9 @@ class GenerateTheme extends FormBase {
       '#type' => 'submit',
       '#value' => t('Generate'),
     ];
+    $form['#attached']['library'][] = 'themegenerator/adminform';
+    $form['#attached']['drupalSettings']['themegenerator']['adminform']['module_path'] = base_path() . drupal_get_path('module', 'themegenerator');
+    $form['#attached']['drupalSettings']['themegenerator']['adminform']['connect_theme_path'] = base_path() . drupal_get_path('theme', 'connect_theme');
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $form;

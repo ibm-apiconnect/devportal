@@ -115,5 +115,35 @@
         {% endif %}
       </div>
     </div>
+    <div class="system-status-general-info__item">
+      <span class="system-status-general-info__item-icon system-status-general-info__item-icon--modules"></span>
+      <div class="system-status-general-info__item-details">
+        <h3 class="system-status-general-info__item-title">{{ 'Custom Modules'|t }}</h3>
+        {% if custom_modules|length > 0 %}
+          <div class="description">
+            {% for custom_module in custom_modules %}
+              {{ custom_module }}<br/>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="description">{{ 'None installed'|t }}</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="system-status-general-info__item">
+      <span class="system-status-general-info__item-icon system-status-general-info__item-icon--themes"></span>
+      <div class="system-status-general-info__item-details">
+        <h3 class="system-status-general-info__item-title">{{ 'Custom Themes'|t }}</h3>
+        {% if custom_themes|length > 0 %}
+          <div class="description">
+            {% for custom_theme in custom_themes %}
+              {{ custom_theme }}<br/>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="description">{{ 'None installed'|t }}</div>
+        {% endif %}
+      </div>
+    </div>
   </div>
 </div>

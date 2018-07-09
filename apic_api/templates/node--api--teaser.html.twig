@@ -1,0 +1,66 @@
+{#
+/**
+ * @file
+ * Default teaser theme implementation for apis.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+'node',
+'node--id-' ~ node.id,
+('node--type-' ~ node.bundle)|clean_class,
+view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
+('apitNodeID-' ~ node.id)|clean_class,
+('apiTitle-' ~ node.title[0].value)|clean_class,
+('apiVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
+] -%}
+{{ attach_library('ibm_apim/core') }}
+{{ attach_library('apic_api/basic') }}
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  {% if content.apic_pathalias['#items'][0].value is defined and content.apic_pathalias['#items'][0].value is not empty %}
+    {% set apiNode = content.apic_pathalias['#items'][0].value %}
+  {% else %}
+    {% set apiNode = node.id %}
+  {% endif %}
+  <div class="apicApiTeaser">
+    {% if content.apic_image is defined and content.apic_image|render|trim is not empty %}
+      <div class="apicTeaserIcon">
+        {{ content.apic_image }}
+      </div>
+    {% elseif showPlaceholders %}
+      <div class="apicTeaserIcon">
+        <img src="{{- placeholderUrl -}}" alt=""/>
+      </div>
+    {% endif %}
+    <div class="apicApiTeaserMain">
+      <h2>
+        <a href="{{- path('apic_api.view', {'apiNode': apiNode}) -}}" rel="bookmark">
+          <span class="apicApiName apicTruncate">{{- label -}}</span>
+          {% if showVersions %}
+            <span class="apicApiTeaserVersion">{{- content.apic_version -}}</span>
+          {% endif %}
+        </a>
+      </h2>
+      {% if content.apic_summary['#items'][0].value is defined and content.apic_summary['#items'][0].value is not empty %}
+        <div class="apicApiDesc apicFade summary"
+            title="{{- content.apic_summary['#items'][0].value -}}">{{ content.apic_summary }}</div>
+      {% else %}
+        <div class="apicApiDesc apicFade"
+             title="{{- content.apic_description['#items'][0].value -}}">{{ content.apic_description }}</div>
+      {% endif %}
+      {% if custom_fields is defined and custom_fields is not empty %}
+        <div class="customFields">
+          {% for custom_field in custom_fields %}
+            <div class="{{ custom_field|clean_class }}">
+              {{ content[custom_field] }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+    <div class="apicApiRating">
+      {{ content.apic_rating }}
+    </div>
+  </div>
+</article>

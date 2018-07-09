@@ -1,0 +1,27 @@
+{#
+/**
+ * @file
+ * Default full view theme implementation for APIs.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+'node--id-' ~ node.id,
+('node--type-' ~ node.bundle)|clean_class,
+'bx--global-light-ui',
+'apiWrapper',
+view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
+('apitNodeID-' ~ node.id)|clean_class,
+('apiTitle-' ~ node.title[0].value)|clean_class,
+('apiVersion-' ~ content.apic_version['#items'][0].value)|clean_class
+] -%}
+
+{{ attach_library('apic_api/basic') }}
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  <div class="explorerWrapper">
+    <apiconnect-explorer>
+      <div class="spinner"></div>
+    </apiconnect-explorer>
+  </div>
+</article>

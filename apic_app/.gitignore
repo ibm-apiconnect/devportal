@@ -1,0 +1,3 @@
+run_tests/ibm_apim_devportal-8.x-*
+run_tests/module_name.txt
+run_tests/module_under_test/

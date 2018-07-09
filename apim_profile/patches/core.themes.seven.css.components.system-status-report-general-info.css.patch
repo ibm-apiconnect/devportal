@@ -11,7 +11,7 @@
  .system-status-general-info__item-icon--clock:before {
    background-image: url(../../images/icons/cccccc/clock.svg);
  }
-@@ -103,13 +107,10 @@
+@@ -103,13 +107,11 @@
      flex-basis: 33%;
      width: 33%;
    }
@@ -24,7 +24,8 @@
 -  .system-status-general-info__item:nth-child(5) {
 +  .system-status-general-info__item:nth-child(3),
 +  .system-status-general-info__item:nth-child(5),
-+  .system-status-general-info__item:nth-child(6) {
++  .system-status-general-info__item:nth-child(6),
++  .system-status-general-info__item:nth-child(8) {
      border-left: 1px solid #ccc; /* LTR */
    }
    [dir="rtl"] .system-status-general-info__item:nth-child(1),

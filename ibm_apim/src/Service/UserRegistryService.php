@@ -22,8 +22,8 @@ use Drupal\ibm_apim\ApicType\UserRegistry;
  */
 class UserRegistryService implements UserRegistryServiceInterface {
 
-  private $state;
-  private $logger;
+  protected $state;
+  protected $logger;
 
   public function __construct(StateInterface $state, LoggerInterface $logger) {
     $this->state = $state;

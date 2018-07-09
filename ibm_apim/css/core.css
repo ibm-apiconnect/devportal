@@ -702,6 +702,7 @@ form[class*='change-pwd-form'] .password-parent,
   grid-column: 2;
   padding: 1rem;
   max-width: 35rem;
+  background: white;
 }
 /* the tabs on user profile forms */
 

@@ -36,7 +36,6 @@ Feature: Self Sign-up
   Scenario: Trying to sign up with the same email address twice
     Given I am not logged in
     And I am at "/user/register"
-    Then print current URL
     Given I enter "Andre" for "First Name"
     And I enter "Andreson_@now" for "Last Name"
     And I enter "andre_org_@now" for "Consumer organization"
@@ -67,3 +66,44 @@ Feature: Self Sign-up
     And there are no messages
     And I should not see the text "Your account was created successfully"
     And I should see the text "A problem occurred while attempting to create your account. If you already have an account then please use that to login."
+
+  Scenario: View the sign up form with multiple registries
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+    When I am at "/user/register"
+    Then I should see the text "Sign up with @data(user_registries[0].title)"
+    And I should see "or" in the ".apic-user-form-or" element
+    And I should see the text "or"
+    And I should see the text "Select a different registry"
+    And I should see the link "@data(user_registries[2].title)"
+    And I should see the text "Already have an account?"
+    And I should see the link "Sign in"
+
+
+  @api
+  Scenario: Self signup form changes user registry via link
+    Given the cache has been cleared
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+    When I am at "/user/register"
+    Then I should see the text "Sign up with @data(user_registries[0].title)"
+    And I should see the link "@data(user_registries[2].title)"
+    When I click "@data(user_registries[2].title)"
+    And I should see the text "Sign up with @data(user_registries[2].title)"
+    And I should see the link "@data(user_registries[0].title)"
+
+  @api
+  Scenario: Self signup form handles invalid user registry url query parameter by using default registry
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+    When I am at "/user/register?registry_url=thisisnotvalid"
+    Then I should see the text "Sign up with @data(user_registries[0].title)"

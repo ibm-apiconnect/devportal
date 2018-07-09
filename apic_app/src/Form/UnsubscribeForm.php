@@ -149,7 +149,9 @@ class UnsubscribeForm extends ConfirmFormBase {
       $query->condition('type', 'product');
       $query->condition('apic_url.value', $product_url);
       $nids = $query->execute();
-
+      if (isset($nids) && !empty($nids)) {
+        $nids = array_values($nids);
+      }
       if(count($nids) < 1){
         \Drupal::logger('apic_app')->warning('Unable to find product name and version for @producturl. Found @size matches in db.',
           array('@producturl' => $product_url, '@size' => count($nids)));

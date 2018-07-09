@@ -1,0 +1,58 @@
+default:
+  suites:
+    default:
+      paths:
+        - PLATFORMDIR/modules/auth_apic/features
+        - PLATFORMDIR/modules/consumerorg/features
+        - PLATFORMDIR/modules/apic_api/features
+        - PLATFORMDIR/modules/apic_app/features
+        - PLATFORMDIR/modules/product/features
+      contexts:
+        - Drupal\apictest\Context\IBMPortalContext :
+            siteDirectory: "SITEDIR"
+            modulesDirectory: "modules"
+            useMockServices: FALSE
+            dumpHtmlToScreen: FALSE
+            debugDumpDir: "DEBUGDUMPDIR"
+            testDataScenario: mocked
+            userRegistry: lur
+            mockSiteConfig: FALSE
+        - Drupal\apictest\Context\ApplicationContext
+        - Drupal\apictest\Context\ProductContext
+        - Drupal\apictest\Context\ApiContext
+        - Drupal\apictest\Context\ConsumerOrgContext
+        - Drupal\apictest\Context\UserRegistryContext
+        - Drupal\DrupalExtension\Context\MinkContext
+        - Drupal\DrupalExtension\Context\MessageContext
+        - Drupal\DrupalExtension\Context\DrushContext
+  extensions:
+    Behat\MinkExtension:
+      goutte:
+        guzzle_parameters:
+          verify: false
+      zombie:
+        node_modules_path: "PLATFORMDIR/vendor/drupal/drupal-extension/node_modules/"
+      base_url: "SITEURL"
+      default_session: goutte
+      javascript_session: zombie
+    Drupal\DrupalExtension:
+      api_driver: "drupal"
+      drupal:
+        drupal_root: "PLATFORMDIR"
+ldap:
+  suites:
+    default:
+      paths:
+        - PLATFORMDIR/modules/auth_apic/ldap_features
+      contexts:
+        - Drupal\apictest\Context\IBMPortalContext :
+            siteDirectory: "SITEDIR"
+            modulesDirectory: "modules"
+            useMockServices: FALSE
+            dumpHtmlToScreen: FALSE
+            debugDumpDir: "DEBUGDUMPDIR"
+            testDataScenario: mocked
+            userRegistry: ldap
+        - Drupal\DrupalExtension\Context\MinkContext
+        - Drupal\DrupalExtension\Context\MessageContext
+        - Drupal\DrupalExtension\Context\DrushContext
