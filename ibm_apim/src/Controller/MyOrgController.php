@@ -77,7 +77,7 @@ class MyOrgController extends ControllerBase {
           $member['name'] = $orgmember->getUser()->getFirstName() . ' ' . $orgmember->getUser()->getLastName();
           $member['mail'] = $orgmember->getUser()->getMail();
           $member['state'] = $orgmember->getUser()->getState();
-          $member['id'] = $orgmember->getUser()->getId();
+          $member['id'] = $orgmember->getId();
           $member['role_urls'] = $orgmember->getRoleUrls();
           $entity = $orgmember->getUser()->getDrupalUser();
           if (!empty($entity->user_picture) && $entity->user_picture->isEmpty() === FALSE) {

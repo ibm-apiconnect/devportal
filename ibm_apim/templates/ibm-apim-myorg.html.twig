@@ -199,6 +199,12 @@
                           </a>
                           <ul class="dropitmenu-submenu">
                             {% if member.state != 'Pending' %}
+                              <li class="changeMemberRole">
+                                <a href="{{ url('consumerorg.change_member_role', {'memberId': member.id}) }}"
+                                   title="{{ 'Change role'|t }}">
+                                  {{ 'Change role'|t }}
+                                </a>
+                              </li>
                               <li class="removeOrganizationUser">
                                 <a href="{{ url('consumerorg.remove_user', {'memberId': member.id}) }}"
                                    title="{{ 'Delete member'|t }}">

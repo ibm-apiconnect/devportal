@@ -115,6 +115,7 @@ class SubscribeSummary extends IbmWizardStepBase {
       else {
         // Failed to subscribe for some reason
         $form['#messages']['statusText'] = t("There was a problem with your subscription request. Review any error messages, correct the problem and try again.");
+        $form['#error'] = true;
       }
 
       // blank out the form state - we've finished now

@@ -13,7 +13,8 @@
 view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
 ('productNodeID-' ~ node.id)|clean_class,
 ('productTitle-' ~ node.title[0].value)|clean_class,
-('productVersion-' ~ content.apic_version['#items'][0].value)|clean_class
+('productVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
+('productState-' ~ content.product_state['#items'][0].value)|clean_class
 ] -%}
 <article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
   {% if content.apic_pathalias['#items'][0].value is defined and content.apic_pathalias['#items'][0].value is not empty %}

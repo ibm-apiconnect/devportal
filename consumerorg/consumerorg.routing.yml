@@ -46,6 +46,14 @@ consumerorg.remove_user:
   requirements:
     _consumerorg_edit_org_access_check: 'TRUE'
 
+consumerorg.change_member_role:
+  path: '/myorg/changerole/{memberId}'
+  defaults:
+    _form: '\Drupal\consumerorg\Form\ChangeMemberRoleForm'
+    _title: 'Change the role of a member of your consumer organization'
+  requirements:
+    _consumerorg_edit_org_access_check: 'TRUE'
+
 consumerorg.resend_invite:
   path: '/myorg/resend/{inviteId}'
   defaults:

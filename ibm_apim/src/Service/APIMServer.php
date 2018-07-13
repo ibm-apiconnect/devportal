@@ -15,6 +15,7 @@ namespace Drupal\ibm_apim\Service;
 
 use Drupal\auth_apic\JWTToken;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
+use Drupal\consumerorg\ApicType\Member;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\auth_apic\Rest\Payload\TokenResponseReader;
 use Drupal\ibm_apim\Rest\Exception\RestResponseParseException;
@@ -401,5 +402,17 @@ class APIMServer implements ManagementServerInterface {
     return $reader->read($response);
   }
 
+  /**
+   * @inheritDoc
+   */
+  public function patchMember(Member $member, array $data) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $response = ApicRest::patch($member->getUrl(), json_encode($data));
+    $reader = new RestResponseReader();
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $reader->read($response);
+  }
 
 }

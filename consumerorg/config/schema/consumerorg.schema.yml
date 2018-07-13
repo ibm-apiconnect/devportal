@@ -1,61 +1,61 @@
 field.field.node.consumerorg.consumerorg_id:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'Organization ID'
 
 field.field.node.consumerorg.consumerorg_invites:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'Invites'
 
 field.field.node.consumerorg.consumerorg_memberlist:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'List of members'
 
 field.field.node.consumerorg.consumerorg_members:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'Members'
 
 field.field.node.consumerorg.consumerorg_name:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'Organization Name'
 
 field.field.node.consumerorg.consumerorg_owner:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'Organization Owner'
 
 field.field.node.consumerorg.consumerorg_roles:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'Roles'
 
 field.field.node.consumerorg.consumerorg_tags:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'Organization Communities'
 
 field.field.node.consumerorg.consumerorg_url:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'Organization URL'
 
 field.field.node.consumerorg.apic_catalog_id:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'APIC Catalog ID'
 
 field.field.node.consumerorg.apic_hostname:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'APIC Hostname'
 
 field.field.node.consumerorg.apic_pathalias:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'Path Alias'
 
 field.field.node.consumerorg.apic_provider_id:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'APIC Provider ID'
 
 field.field.node.consumerorg.apic_rating:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'Rating'
 
 field.field.node.consumerorg.apic_tags:
-  type: config_object
+  type: ibm_apim_config_object
   label: 'Tags'
 
 

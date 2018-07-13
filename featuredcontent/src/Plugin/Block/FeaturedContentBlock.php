@@ -114,7 +114,7 @@ class FeaturedContentBlock extends BlockBase {
       ],
       '#title' => $this->t('Node type'),
       '#description' => $this->t('Feature APIs or Products?'),
-      '#default_value' => $this->configuration['selectionType'],
+      '#default_value' => $this->configuration['nodeType'],
       '#required' => TRUE,
       '#weight' => 30
     );
@@ -277,6 +277,10 @@ class FeaturedContentBlock extends BlockBase {
       $query->condition('type', $nodeType);
       $query->condition('status', 1);
       $query->range(0, $count);
+      // only include published products
+      if ($nodeType == static::TYPE_PRODUCT) {
+        $query->condition('product_state.value', 'published');
+      }
       switch (strtoupper($this->configuration['selectionType'])) {
         case static::CONST_UPDATED:
           $query->sort('updated', 'ASC');

@@ -66,7 +66,7 @@ class Member {
   /**
    * Set the roles for this member. Role definitions are stored on a consumer org.
    *
-   * @param array $roles
+   * @param array $role_urls
    */
   public function setRoleUrls($role_urls) {
     $this->role_urls = $role_urls;
@@ -86,6 +86,12 @@ class Member {
     $this->url = $url;
   }
 
+  /**
+   * @return mixed
+   */
+  public function getId() {
+    return basename($this->url);
+  }
 
   /**
    * @return mixed

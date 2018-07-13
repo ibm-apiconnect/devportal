@@ -15,6 +15,7 @@ namespace Drupal\ibm_apim\Service\Interfaces;
 
 use Drupal\auth_apic\JWTToken;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
+use Drupal\consumerorg\ApicType\Member;
 use Drupal\ibm_apim\ApicType\ApicUser;
 
 interface ManagementServerInterface {
@@ -187,5 +188,15 @@ interface ManagementServerInterface {
    * @return mixed
    */
   public function deleteConsumerOrg(ConsumerOrg $org);
+
+  /**
+   * Edit a consumer org member.
+   *
+   * @param \Drupal\consumerorg\ApicType\Member $member
+   * @param array $data
+   *
+   * @return mixed
+   */
+  public function patchMember(Member $member, array $data);
 
 }

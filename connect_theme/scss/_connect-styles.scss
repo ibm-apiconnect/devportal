@@ -125,14 +125,16 @@ a {
   min-height: calc(100vh - 168px);
 }
 // make front page full width
-// and app pages too
+// and app, myorg pages too
 .path-frontpage .apicMainContent.container,
-.page-node-type-application .apicMainContent.container {
+.page-node-type-application .apicMainContent.container,
+.route-ibm-apimmyorg .apicMainContent,
+.route-ibm-apimanalytics .apicMainContent {
   padding-left: 0;
   padding-right: 0;
   margin-left: 0;
   margin-right: 0;
-  width: 100%
+  width: 100%;
 }
 
 // title and content wrappers for applications need to honor the media page widths
@@ -643,8 +645,8 @@ header h1,
 }
 
 .apiconnect-explorer-menu .explorer-toc .tocItem {
-  margin-top: 0px;
-  margin-bottom: 0px;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .bx--global-light-ui .apiconnect-explorer .explorer-toc a.selected {

@@ -23,7 +23,7 @@ use Drupal\mail_subscribers\Service\MailService;
  *     ),
  *     "plan" = @ContextDefinition("string",
  *       label = @Translation("Plan name"),
- *       description = @Translation("The plan name, leave black for all plans in this product")
+ *       description = @Translation("The plan name, leave blank for all plans in this product")
  *     ),
  *     "members" = @ContextDefinition("boolean",
  *       label = @Translation("Send to all developer organization members"),

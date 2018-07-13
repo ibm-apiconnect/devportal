@@ -145,7 +145,8 @@
     "drupal/account_field_split": "^1.0@alpha",
     "enyo/dropzone": "^5.1",
     "antennaio/jquery-bar-rating": "^1.2",
-    "drupal/rules_http_client": "^1.0"
+    "drupal/rules_http_client": "^1.0",
+    "drupal/graphql_twig": "^1.0@beta"
   },
   "replace": {},
   "minimum-stability": "dev",

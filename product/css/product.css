@@ -783,3 +783,7 @@ node--type-product.bx--card {
   padding: 8px;
   margin-left: 30px;
 }
+.apicProductCard .apicProductState {
+  margin-left: 0;
+  display: inline-block;
+}

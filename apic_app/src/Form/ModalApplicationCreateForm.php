@@ -15,17 +15,17 @@ namespace Drupal\apic_app\Form;
 
 use Drupal\apic_app\Application;
 use Drupal\apic_app\Service\ApplicationRestInterface;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\InsertCommand;
+use Drupal\Core\Ajax\OpenModalDialogCommand;
+use Drupal\Core\Ajax\RedirectCommand;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\Entity\Node;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\OpenModalDialogCommand;
-use Drupal\Core\Ajax\RedirectCommand;
-use Drupal\Core\Ajax\InsertCommand;
-use Drupal\Core\Ajax\ReplaceCommand;
 
 /**
  * Form to create an application.
@@ -41,8 +41,8 @@ class ModalApplicationCreateForm extends FormBase {
    * @param UserUtils $userUtils
    */
   public function __construct(
-                              ApplicationRestInterface $restService,
-                              UserUtils $userUtils) {
+    ApplicationRestInterface $restService,
+    UserUtils $userUtils) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
   }
@@ -176,7 +176,8 @@ class ModalApplicationCreateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {}
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+  }
 
   /**
    * {@inheritdoc}
@@ -196,8 +197,8 @@ class ModalApplicationCreateForm extends FormBase {
     }
     $oauth_endpoints = array();
     $oauth = $form_state->getValue('application_redirect_endpoints');
-    foreach($oauth as $oauth_value) {
-      if(is_array($oauth_value) && !empty($oauth_value['value'])) {
+    foreach ($oauth as $oauth_value) {
+      if (is_array($oauth_value) && !empty($oauth_value['value'])) {
         $oauth_endpoints[] = trim($oauth_value['value']);
       }
     }
@@ -212,8 +213,9 @@ class ModalApplicationCreateForm extends FormBase {
 
     // Response is a set of Ajax commands to update the DOM or reload the page etc
     $response = new AjaxResponse();
-    if(isset($result->data['errors'])) {
-      $response->addCommand(new RedirectCommand(Url::fromRoute('ibm_apim.subscription_wizard.step', array('step' => 'chooseapp'))->toString()));
+    if (isset($result->data['errors'])) {
+      $response->addCommand(new RedirectCommand(Url::fromRoute('ibm_apim.subscription_wizard.step', array('step' => 'chooseapp'))
+        ->toString()));
     }
     else {
 
@@ -235,27 +237,34 @@ class ModalApplicationCreateForm extends FormBase {
 
       // Need to update message area on underlying form - re-check if we have suspended or subscribed apps
       $product_id = \Drupal::request()->query->get('productId');
-      if(isset($product_id)) {
+      if (isset($product_id)) {
         $product_node = Node::load($product_id);
         $productName = $product_node->getTitle();
+        $product_url = $product_node->apic_url->value;
+      }
+      else {
+        $productName = 'undefined';
+        $product_url = 'undefined';
       }
       $allApps = Application::listApplications();
       $allApps = Node::loadMultiple($allApps);
       $suspendedApps = array();
       $subscribedApps = array();
 
-      foreach($allApps as $nid => $nextApp) {
+      foreach ($allApps as $nid => $nextApp) {
         if (isset($nextApp->apic_state->value) && mb_strtoupper($nextApp->apic_state->value) == 'SUSPENDED') {
           array_push($suspendedApps, $nextApp);
         }
-        else if (isset($nextApp->application_subscriptions->value)) {
-          $subs = unserialize($nextApp->application_subscriptions->value);
-          if (is_array($subs)) {
-            foreach ($subs as $sub) {
-              if (isset($sub['product_url']) && $sub['product_url'] == $product_url) {
-                array_push($subscribedApps, $nextApp);
-                $appSubscribedToProduct = TRUE;
-                break;
+        else {
+          if (isset($nextApp->application_subscriptions->value)) {
+            $subs = unserialize($nextApp->application_subscriptions->value);
+            if (is_array($subs)) {
+              foreach ($subs as $sub) {
+                if (isset($sub['product_url']) && $sub['product_url'] == $product_url) {
+                  array_push($subscribedApps, $nextApp);
+                  $appSubscribedToProduct = TRUE;
+                  break;
+                }
               }
             }
           }
@@ -265,11 +274,11 @@ class ModalApplicationCreateForm extends FormBase {
       // Generate the appropriate messages div and replace the div that is already there
       $suspendedAppMsg = t('There are %number suspended applications not displayed in this list.', array('%number' => sizeof($suspendedApps)));
       $subscribedAppMsg = t('There are %number applications that are already subscribed to the %product product. They are not displayed in this list.',
-                  array('%number' => sizeof($subscribedApps), '%product' => $productName));
-      $messagesHtml = '<div class="apicSubscribeInfotext">'.
-                  (!empty($suspendedApps) ? $suspendedAppMsg : "").
-                  (!empty($subscribedApps) ? $subscribedAppMsg : "").
-                  '</div>';
+        array('%number' => sizeof($subscribedApps), '%product' => $productName));
+      $messagesHtml = '<div class="apicSubscribeInfotext">' .
+        (!empty($suspendedApps) ? $suspendedAppMsg : "") .
+        (!empty($subscribedApps) ? $subscribedAppMsg : "") .
+        '</div>';
       $response->addCommand(new ReplaceCommand('div.apicSubscribeInfotext', $messagesHtml));
 
       // Pop up a new modal dialog to display the client id and secret
@@ -280,7 +289,7 @@ class ModalApplicationCreateForm extends FormBase {
       ];
 
       $credsform['client_id'] = [
-        '#markup' => \Drupal\Core\Render\Markup::create('<div class="clientIDContainer toggleParent"><p class="field__label">' . $this->t('Key') . '</p><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_id" type="password" readonly value="'. $clientId . '"></div><div class="apicAppCheckButton">
+        '#markup' => \Drupal\Core\Render\Markup::create('<div class="clientIDContainer toggleParent"><p class="field__label">' . $this->t('Key') . '</p><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_id" type="password" readonly value="' . $clientId . '"></div><div class="apicAppCheckButton">
         <div class="password-toggle bx--form-item js-form-item form-item js-form-type-checkbox form-type-checkbox checkbox"><label title="" data-toggle="tooltip" class="bx--label option" data-original-title=""><input class="form-checkbox bx--checkbox" type="checkbox"><span class="bx--checkbox-appearance"><svg class="bx--checkbox-checkmark" width="12" height="9" viewBox="0 0 12 9" fill-rule="evenodd"><path d="M4.1 6.1L1.4 3.4 0 4.9 4.1 9l7.6-7.6L10.3 0z"></path></svg></span><span class="children"> ' . t('Show') . '</span></label></div></div></div>'),
         '#weight' => 10,
       ];

@@ -194,9 +194,13 @@ class IbmApimThemeInstallController extends ThemeController {
         $item_path = drupal_get_path('theme', $theme);
         if (isset($item_path)) {
           $this->file_delete_recursive($item_path);
+          // clear all caches otherwise reinstalling the same theme will fail
+          drupal_flush_all_caches();
+
           drupal_set_message($this->t('The %theme theme has been uninstalled.', ['%theme' => $theme]));
         }
       }
+
 
       return $this->redirect('system.themes_page');
     }

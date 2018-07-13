@@ -235,12 +235,18 @@
       flex-direction: column;
       .button {
         margin: 0.5rem;
-        width: 13rem;
+        min-width: 13rem;
         align-self: flex-end;
       }
     }
 
     .apic-wizard-navigation {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    // only needed for error conditions
+    .apicForm.form-error form.subscription-wizard-subscribe-result {
       display: flex;
       justify-content: space-between;
     }

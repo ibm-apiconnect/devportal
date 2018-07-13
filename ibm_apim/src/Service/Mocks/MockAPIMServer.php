@@ -14,6 +14,7 @@
 namespace Drupal\ibm_apim\Service\Mocks;
 
 use Drupal\consumerorg\ApicType\ConsumerOrg;
+use Drupal\consumerorg\ApicType\Member;
 use Drupal\ibm_apim\Rest\Payload\RestResponseReader;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
@@ -184,5 +185,11 @@ class MockAPIMServer implements ManagementServerInterface {
     return NULL;
   }
 
-
+  /**
+   * @inheritDoc
+   */
+  public function patchMember(Member $member, array $data) {
+    \Drupal::logger("apictest")->error("Implementation of MockUserManager::patchMember() is missing!");
+    return NULL;
+  }
 }

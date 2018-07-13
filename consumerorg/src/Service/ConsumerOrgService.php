@@ -15,6 +15,7 @@ namespace Drupal\consumerorg\Service;
 
 use Drupal\auth_apic\UserManagerResponse;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
+use Drupal\consumerorg\ApicType\Member;
 use Drupal\consumerorg\Event\ConsumerorgCreateEvent;
 use Drupal\consumerorg\Event\ConsumerorgUpdateEvent;
 use Drupal\consumerorg\Event\ConsumerorgDeleteEvent;
@@ -30,7 +31,7 @@ use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
 use Drupal\node\NodeInterface;
-use \Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -64,13 +65,13 @@ class ConsumerOrgService {
    * @param \Drupal\core\State\State $state
    *   State service.
    * @param \Drupal\ibm_apim\Service\SiteConfig $site_config
-   * @param \Drupal\ibm_apim\Service\Permissions $permissions
+   * @param \Drupal\ibm_apim\Service\Interfaces\PermissionsServiceInterface $permissions
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    * @param \Drupal\Core\Entity\Query\QueryFactory $entityQuery
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   * @param \Drupal\ibm_apim\Service\ManagementServerInterface $apim
-   * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
+   * @param \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface $apim
+   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
    * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
    *
    * @internal param \Drupal\consumerorg\Service\UserRegistryService $user_registry_service User registry service.*   User registry service.
@@ -661,7 +662,11 @@ class ConsumerOrgService {
       if (isset($nids) && !empty($nids)) {
         $nid = array_shift($nids);
         $node = Node::load($nid);
-        $returnValue = $node->consumerorg_roles->value;
+        $members = array();
+        foreach ($node->consumerorg_roles->getValue() as $arrayValue) {
+          $members[] = unserialize($arrayValue['value']);
+        }
+        $returnValue = $members;
       }
     }
     ibm_apim_exit_trace(__FUNCTION__, $returnValue);
@@ -816,6 +821,31 @@ class ConsumerOrgService {
   }
 
   /**
+   * @param \Drupal\consumerorg\ApicType\Member $member
+   * @param string|NULL $role
+   * @return \Drupal\auth_apic\UserManagerResponse
+   */
+  public function changeMemberRole(Member $member, string $role = NULL) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    // update APIm
+    $newdata = array('role_urls' => array($role));
+
+    $response = new UserManagerResponse();
+    $apim_response = $this->apimServer->patchMember($member, $newdata);
+    if (isset($apim_response) && $apim_response->getCode() === 200) {
+      $response->setSuccess(TRUE);
+      $this->logger->notice('Member @member assigned new role @role by @username', array('@role'=>$role, '@member' => $member->getUser()->getUsername(), '@username' => $this->currentUser->getAccountName()));
+    }
+    else {
+      $response->setSuccess(FALSE);
+      $this->logger->error('Unable to assign new role @role to @member by @username', array('@role'=>$role, '@member' => $member->getUser()->getUsername(), '@username' => $this->currentUser->getAccountName()));
+    }
+
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    return $response;
+  }
+
+  /**
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
    * @param string $title
    *
@@ -945,6 +975,12 @@ class ConsumerOrgService {
           $members[] = $this->memberService->createFromJSON($member);
         }
         $org->setMembers($members);
+      }
+
+      if(isset($json['memberInvitations'])) {
+        $org->setInvites($json['memberInvitations']);
+      } else {
+        $org->setInvites(array());
       }
     }
 

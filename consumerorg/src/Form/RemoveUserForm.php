@@ -84,7 +84,7 @@ class RemoveUserForm extends ConfirmFormBase {
       $found = FALSE;
       foreach ($this->org->consumerorg_members->getValue() as $arrayValue) {
         $member = unserialize($arrayValue['value']);
-        if ($member->getUser()->getId() == $this->memberId) {
+        if ($member->getId() == $this->memberId) {
           if ($current_user->getAccountName() == $member->getUser()->getUsername()) {
             // return error as cannot remove yourself
             throw new BadRequestHttpException(t('Cannot remove yourself from a consumer organization.'));
@@ -146,7 +146,7 @@ class RemoveUserForm extends ConfirmFormBase {
       $new_member_list = array();
       foreach ($this->org->consumerorg_members->getValue() as $arrayValue) {
         $member = unserialize($arrayValue['value']);
-        if ($member->getUser()->getId() != $this->memberId) {
+        if ($member->getId() != $this->memberId) {
           $new_member_list[] = serialize($member);
         }
       }

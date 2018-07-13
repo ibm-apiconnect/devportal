@@ -7,7 +7,8 @@
  * @ingroup templates
  */
 #}
-<div class="apicForm">
+{%- set errorClass = element['#error'] ? 'form-error' : '' -%}
+<div class="apicForm {{ errorClass }}">
     <div class="apicFormHeader">{{ 'Subscription Complete'|t }}</div>
     <div class="apicFormText">{{ element['#messages'].statusText }}</div>
     {% if element['#subscriptionDetails'] %}
