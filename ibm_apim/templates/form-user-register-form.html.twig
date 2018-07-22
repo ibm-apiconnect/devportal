@@ -38,16 +38,16 @@
         <div class='apic-user-form-inner-wrapper apic-user-form-registries'>
         {{ children }}
         </div>
-          {% if element['#otherRegistries'] and element['#otherRegistries']['otherRegistries'] %}
-      <div class='apic-user-form-or-container'>
-        <div class='apic-user-form-line'></div>
-        <div class='apic-user-form-or'>{{ 'or'|t }}</div>
-        <div class='apic-user-form-line'></div>
-      </div>
-      <div class='apic-user-form-inner-wrapper apic-user-form-registries'>
-        {{ element['#otherRegistries']['otherRegistries'] }}
-      </div>
-    {% endif %}
+        {% if element['#otherRegistries'] and element['#otherRegistries']['otherRegistries'] %}
+          <div class='apic-user-form-or-container'>
+            <div class='apic-user-form-line'></div>
+            <div class='apic-user-form-or'>{{ 'or'|t }}</div>
+            <div class='apic-user-form-line'></div>
+          </div>
+          <div class='apic-user-form-inner-wrapper apic-user-form-registries'>
+            {{ element['#otherRegistries']['otherRegistries'] }}
+          </div>
+        {% endif %}
       </div>
     </div>
   </form>

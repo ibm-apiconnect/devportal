@@ -109,9 +109,10 @@ class CredentialsDeleteForm extends ConfirmFormBase {
    */
   public function getCancelUrl() {
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
-    if(isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
+    if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
       return Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
-    } else {
+    }
+    else {
       return Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
     }
   }
@@ -138,7 +139,11 @@ class CredentialsDeleteForm extends ConfirmFormBase {
       if ($moduleHandler->moduleExists('rules')) {
         // Set the args twice on the event: as the main subject but also in the
         // list of arguments.
-        $event = new CredentialDeleteEvent($this->node, ['application' => $this->node]);
+        $event = new CredentialDeleteEvent($this->node, $result->data, $this->credId, [
+          'application' => $this->node,
+          'data' => $result->data,
+          'credId' => $this->credId
+        ]);
         $event_dispatcher = \Drupal::service('event_dispatcher');
         $event_dispatcher->dispatch(CredentialDeleteEvent::EVENT_NAME, $event);
       }

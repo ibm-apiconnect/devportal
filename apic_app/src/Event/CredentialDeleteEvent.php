@@ -11,7 +11,7 @@
  ********************************************************** {COPYRIGHT-END} **/
 namespace Drupal\apic_app\Event;
 
-use Drupal\core\Entity\EntityInterface;
+use Drupal\node\NodeInterface;
 use Symfony\Component\EventDispatcher\Event;
 
 /**
@@ -26,18 +26,38 @@ class CredentialDeleteEvent extends Event {
   /**
    * The application.
    *
-   * @var \Drupal\core\Entity\EntityInterface
+   * @var \Drupal\node\NodeInterface
    */
   public $application;
 
   /**
+   * The credential ID.
+   *
+   * @var string
+   */
+  public $credId;
+
+  /**
+   * The data returned from the APIM consumer API
+   *
+   * @var array
+   */
+  public $data;
+
+  /**
    * Constructs the object.
    *
-   * @param \Drupal\core\Entity\EntityInterface $application
+   * @param \Drupal\node\NodeInterface $application
    *   The application whose credentials were deleted.
+   * @param $data
+   *   The data returned from the APIM consumer API
+   * @param $credId
+   *   The credential ID
    */
-  public function __construct(EntityInterface $application) {
+  public function __construct(NodeInterface $application, $data, $credId) {
     $this->application = $application;
+    $this->credId = $credId;
+    $this->data = $data;
   }
 
 }

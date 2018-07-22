@@ -79,6 +79,14 @@ class DevelForm extends ConfigFormBase {
       '#weight' => 20,
       '#description' => t('WARNING: Not to be used on production servers. It greatly increases the amount of debug information in the logs.')
     );
+    $insecure = \Drupal::state()->get('ibm_apim.insecure');
+    $form['debug']['insecure'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Insecure mode (disable Consumer API certificate validation)'),
+      '#default_value' => $insecure,
+      '#weight' => 20,
+      '#description' => t('WARNING: Not to be used on production servers. It disables certificate validation when calling the APIM Consumer API, this leaves you vulnerable to \'Man in the middle\' attacks.')
+    );
     return parent::buildForm($form, $form_state);
   }
 
@@ -93,6 +101,7 @@ class DevelForm extends ConfigFormBase {
       ->set('webhook_debug', (bool) $form_state->getValue('webhook_debug'))
       ->set('acl_debug', (bool) $form_state->getValue('acl_debug'))
       ->save();
+    \Drupal::state()->set('ibm_apim.insecure', (bool) $form_state->getValue('insecure'));
 
     parent::submitForm($form, $form_state);
   }

@@ -106,9 +106,10 @@ class CredentialsCreateForm extends FormBase {
    */
   public function getCancelUrl() {
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
-    if(isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
+    if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
       return Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
-    } else {
+    }
+    else {
       return Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
     }
   }
@@ -154,7 +155,7 @@ class CredentialsCreateForm extends FormBase {
       // update the stored app with the additional creds
       $existingcreds = [];
       if (!empty($this->node->application_credentials->getValue())) {
-        foreach($this->node->application_credentials->getValue() as $arrayValue){
+        foreach ($this->node->application_credentials->getValue() as $arrayValue) {
           $unserialized = unserialize($arrayValue['value']);
           if (!isset($unserialized['id']) || !isset($data['id']) || $unserialized['id'] != $data['id']) {
             $existingcreds[] = $unserialized;
@@ -175,11 +176,12 @@ class CredentialsCreateForm extends FormBase {
         $newcred['app_url'] = \Drupal::service('ibm_apim.apim_utils')->removeFullyQualifiedUrl($data['app_url']);
       }
       if (isset($data['consumer_org_url'])) {
-        $newcred['consumer_org_url'] = \Drupal::service('ibm_apim.apim_utils')->removeFullyQualifiedUrl($data['consumer_org_url']);
+        $newcred['consumer_org_url'] = \Drupal::service('ibm_apim.apim_utils')
+          ->removeFullyQualifiedUrl($data['consumer_org_url']);
       }
       $existingcreds[] = $newcred;
       $newcreds = [];
-      foreach($existingcreds as $nextCred){
+      foreach ($existingcreds as $nextCred) {
         $newcreds[] = serialize($nextCred);
       }
       $this->node->set('application_credentials', $newcreds);
@@ -195,7 +197,11 @@ class CredentialsCreateForm extends FormBase {
       if ($moduleHandler->moduleExists('rules')) {
         // Set the args twice on the event: as the main subject but also in the
         // list of arguments.
-        $event = new CredentialCreateEvent($this->node, ['application' => $this->node]);
+        $event = new CredentialCreateEvent($this->node, $result->data, $data['id'], [
+          'application' => $this->node,
+          'data' => $result->data,
+          'credId' => $data['id']
+        ]);
         $event_dispatcher = \Drupal::service('event_dispatcher');
         $event_dispatcher->dispatch(CredentialCreateEvent::EVENT_NAME, $event);
       }

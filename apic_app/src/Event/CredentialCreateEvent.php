@@ -31,13 +31,33 @@ class CredentialCreateEvent extends Event {
   public $application;
 
   /**
+   * The credential ID.
+   *
+   * @var string
+   */
+  public $credId;
+
+  /**
+   * The data returned from the APIM consumer API
+   *
+   * @var array
+   */
+  public $data;
+
+  /**
    * Constructs the object.
    *
    * @param \Drupal\node\NodeInterface $application
-   *   The application the credentials were created in.
+   *   The application where new credentials were created.
+   * @param $data
+   *   The data returned from the APIM consumer API
+   * @param $credId
+   *   The credential ID
    */
-  public function __construct(NodeInterface $application) {
+  public function __construct(NodeInterface $application, $data, $credId) {
     $this->application = $application;
+    $this->credId = $credId;
+    $this->data = $data;
   }
 
 }

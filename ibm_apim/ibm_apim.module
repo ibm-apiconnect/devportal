@@ -19,6 +19,7 @@
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\Component\Utility\Html;
 use Drupal\ibm_apim\Exception\ModuleInstallationBlocked;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -410,25 +411,31 @@ function ibm_apim_preprocess_html(&$variables) {
   }
 
   $current_path = \Drupal::service('path.current')->getPath();
-  $variables['current_path'] = \Drupal::service('path.alias_manager')->getAliasByPath($current_path);
+  $current_path_alias = \Drupal::service('path.alias_manager')->getAliasByPath($current_path);
+  $variables['current_path'] = $current_path_alias;
+  $variables['attributes']['class'][] = 'context-' . Html::cleanCssIdentifier($current_path_alias);
   // add user registry type to body
   $default_registry = \Drupal::service('ibm_apim.user_registry')->getDefaultRegistry();
   if (isset($default_registry)) {
     $variables['idpType'] = $default_registry->getRegistryType();
+    $variables['attributes']['class'][] = 'user-registry-' . Html::cleanCssIdentifier($default_registry->getRegistryType());
   }
   $route_name = \Drupal::routeMatch()->getRouteName();
   if (isset($route_name)) {
     $variables['route_name'] = $route_name;
+    $variables['attributes']['class'][] = 'route-' . Html::cleanCssIdentifier($route_name);
   }
 
   // add variable with the user registry count - useful for the user management forms
   $urs = \Drupal::service('ibm_apim.user_registry')->getAll();
   $ur_count = count($urs);
   $variables['user_registry_count'] = $ur_count;
+  $variables['attributes']['class'][] = 'ur-count-' . Html::cleanCssIdentifier($ur_count);
 
   $pass_reset_token = \Drupal::request()->get('pass-reset-token');
   if (isset($pass_reset_token) && !empty($pass_reset_token)) {
     $variables['pass_reset_token'] = true;
+    $variables['attributes']['class'][] = 'pass-reset';
   }
 
   if (function_exists('ibm_apim_exit_trace')) {

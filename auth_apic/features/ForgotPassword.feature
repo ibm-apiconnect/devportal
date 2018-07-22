@@ -54,3 +54,48 @@ Feature: Forgot Password
     # This is odd but this is the only string that both travis and full site installs have in common!
     Then I should see the text "been sent"
     And I am at "/user/login"
+
+  @api
+  Scenario: Forgot password form loads with multiple user registries
+    Given the cache has been cleared
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+    When I am at "/user/password"
+    Then I should see the text "Reset Password"
+    And I should see the text "@data(user_registries[0].title)"
+    And I should see the text "If you have forgotten the password for your @data(user_registries[0].title) account or 'admin', you can reset it here."
+    And I should see "or" in the ".apic-user-form-or" element
+    And I should see the text "or"
+    And I should see the text "Select a different registry"
+    And I should see the link "@data(user_registries[2].title)"
+    And I should see the link "Back to Sign in"
+
+  @api
+  Scenario: Forgot password for !user_managed registry
+    Given the cache has been cleared
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | yes     |
+    When I am at "/user/password"
+    And I should see the text "@data(user_registries[2].title)"
+    And I should see the text "If you have forgotten your 'admin' password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your user registry administrator."
+
+  @api
+  Scenario: Forgot password changes user registry via link
+    Given the cache has been cleared
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+    When I am at "/user/password"
+    Then I should see the text "@data(user_registries[0].title)"
+    And I should see the link "@data(user_registries[2].title)"
+    When I click "@data(user_registries[2].title)"
+    And I should see the text "@data(user_registries[2].title)"
+    And I should see the text "If you have forgotten your 'admin' password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your user registry administrator."
+    And I should see the link "@data(user_registries[0].title)"

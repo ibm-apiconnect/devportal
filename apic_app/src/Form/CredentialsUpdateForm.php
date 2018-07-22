@@ -84,7 +84,7 @@ class CredentialsUpdateForm extends FormBase {
 
     $description = '';
     $creds = array();
-    foreach($this->node->application_credentials->getValue() as $arrayValue){
+    foreach ($this->node->application_credentials->getValue() as $arrayValue) {
       $creds[] = unserialize($arrayValue['value']);
     }
     foreach ($creds as $key => $existingcred) {
@@ -129,9 +129,10 @@ class CredentialsUpdateForm extends FormBase {
    */
   public function getCancelUrl() {
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
-    if(isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
+    if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
       return Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
-    } else {
+    }
+    else {
       return Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
     }
   }
@@ -145,15 +146,15 @@ class CredentialsUpdateForm extends FormBase {
     $appUrl = $this->node->apic_url->value;
     $title = $form_state->getValue('title');
     $summary = $form_state->getValue('summary');
-    $url = $appUrl. '/credentials/' . $this->credId;
-    $data = ["title"=> $title, "summary" => $summary];
+    $url = $appUrl . '/credentials/' . $this->credId;
+    $data = ["title" => $title, "summary" => $summary];
     $result = $this->restService->patchCredentials($url, json_encode($data));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       drupal_set_message(t('Application credentials updated.'));
       // update the stored app with the new creds
       if (!empty($this->node->application_credentials->getValue())) {
         $existingcreds = array();
-        foreach($this->node->application_credentials->getValue() as $arrayValue){
+        foreach ($this->node->application_credentials->getValue() as $arrayValue) {
           $existingcreds[] = unserialize($arrayValue['value']);
         }
         $this->node->set('application_credentials', array());
@@ -185,7 +186,11 @@ class CredentialsUpdateForm extends FormBase {
       if ($moduleHandler->moduleExists('rules')) {
         // Set the args twice on the event: as the main subject but also in the
         // list of arguments.
-        $event = new CredentialUpdateEvent($this->node, ['application' => $this->node]);
+        $event = new CredentialUpdateEvent($this->node, $result->data, $this->credId, [
+          'application' => $this->node,
+          'data' => $result->data,
+          'credId' => $this->credId
+        ]);
         $event_dispatcher = \Drupal::service('event_dispatcher');
         $event_dispatcher->dispatch(CredentialUpdateEvent::EVENT_NAME, $event);
       }
