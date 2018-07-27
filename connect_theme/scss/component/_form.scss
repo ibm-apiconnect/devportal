@@ -523,8 +523,21 @@ input[type="checkbox"].bx--checkbox {
   opacity: .5;
 }
 
-.bx--global-light-ui .apiconnect-explorer button {
-  height: auto;
+.bx--global-light-ui .apiconnect-explorer button.bx--accordion__heading {
+  color: #152935;
+  display: flex;
+  justify-content: flex-start;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  font-weight: unset;
+}
+
+.bx--global-light-ui .apiconnect-explorer button.bx--accordion__heading:focus,
+.bx--global-light-ui .apiconnect-explorer button.bx--accordion__heading:hover,
+.bx--global-light-ui .apiconnect-explorer button.bx--accordion__heading:active {
+  background: $color__gray-3;
+  border: 1px solid $default-border;
+  border-top: none;
 }
 
 .bx--global-light-ui a.button {

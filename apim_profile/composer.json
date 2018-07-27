@@ -146,7 +146,11 @@
     "enyo/dropzone": "^5.1",
     "antennaio/jquery-bar-rating": "^1.2",
     "drupal/rules_http_client": "^1.0",
-    "drupal/graphql_twig": "^1.0@beta"
+    "drupal/graphql_twig": "^1.0@beta",
+    "drupal/views_slideshow": "^4.6",
+    "drupal/r4032login": "^1.0",
+    "drupal/bootstrap_site_alert": "^1.2",
+    "drupal/media_entity_twitter": "^2.0"
   },
   "replace": {},
   "minimum-stability": "dev",

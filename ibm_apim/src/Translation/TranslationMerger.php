@@ -50,8 +50,13 @@ class TranslationMerger {
       $this->projects[] = $projectpath;
     };
 
+    // Single file project processing:
+//    $this->projects[] = '/tmp/translation_files/dev2tc/account_field_split-8.x-1.0-alpha2';
+
     $this->output_location = $output_location;
 
+    //        // single language:
+    //        $this->languages = array('cs');
     $this->languages = $languages ? $languages : $this->getAllLanguages();
 
   }
@@ -76,6 +81,7 @@ class TranslationMerger {
       else {
         $project_output_dir = $this->output_location . '/' . $project;
         $this->checkDir($project_output_dir);
+
         foreach ($this->languages as $language) {
           echo "  vvvvv " . $language . " vvvvv\n";
           $memory_items = $this->getMemoryItems($project, $language);
@@ -166,6 +172,7 @@ class TranslationMerger {
     // e.g. acl-8.x-1.0-alpha1-memories.de.po
     $filename = $this->export_files_location . '/' . $projectName . '/' . $projectName . '-memories.' . $language . '.po';
     return $this->getTranslationFileItems($filename);
+
   }
 
   /**
@@ -179,9 +186,26 @@ class TranslationMerger {
    *   PoItem array
    */
   private function getNewTranslationItems(string $projectName, string $language) {
-    // e.g. acl-8.x-1.0-alpha1-ibmtranslations-de.po
-    $filename = $this->new_translation_files_location . '/' . $projectName . '/' . $projectName . '.' . $language . '.po';
-    return $this->getTranslationFileItems($filename);
+
+    // versions might have changed so we need to search wildcards for the version.
+    $projectNameVersion = $this->splitProjectNameVersion($projectName);
+
+    $list = glob($this->new_translation_files_location . '/' . $projectNameVersion['name'] . '-*/' . $projectNameVersion['name'] . '-*.' . $language . '.po');
+
+    if(\sizeof($list) > 1) {
+      echo "Multiple new translation files found for " . $projectNameVersion['name'] . ":";
+      \var_dump($list);
+      echo "Using the first one from the list";
+    }
+
+    if (\sizeof($list) === 0){
+      echo "No new translation files found for " . $projectNameVersion['name'];
+      return NULL;
+    }
+    else {
+      $filename = \array_shift($list);
+      return $this->getTranslationFileItems($filename);
+    }
   }
 
   private function buildCompleteTranslationFile(string $pot_file, $memory_items, $newtranslation_items) {
@@ -242,6 +266,22 @@ class TranslationMerger {
     $filename = $dir . '/' . $project . '.' . $language . '.po';
     new TranslationFileWriter($complete_items, $filename);
     echo 'Written: ' . basename($filename) . "\n";
+  }
+
+  /**
+   * Split a project into name-version. Version is optional.
+   * @param $proj
+   */
+  private function splitProjectNameVersion($proj): array {
+    $split = explode('-', $proj, 2);
+
+    $project = array();
+
+    $project['name'] = $split[0];
+    if (sizeof($split) > 1) {
+      $project['version'] = $split[1];
+    }
+    return $project;
   }
 
 
