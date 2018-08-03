@@ -22,13 +22,6 @@ using the Drupal content management system.</p>
 <code>themegenerator</code> = an APIC sub-theme generator based on different colour palettes<br/>
 <code>apim_profile</code> = a drupal installation profile to create a dev portal zip containing everything you need.</p>
 
-<h2>Video / Demo</h2>
-<p><a href="https://www.youtube.com/watch?v=rWM8wH_odGg">You can see a video of this portal in action on Youtube.</a> (Video now slightly out of date, we'll update it soon, honest!)</p>
-
-<h2>Download</h2>
-<p>The latest release of the code, in the form of a fully functional drupal distribution (containing the drupal core, all required modules, 
-javascript libraries and theme) can be downloaded from the <a href="https://github.com/ibm-apiconnect/devportal/releases/latest">Latest Release</a> page.</p>
-
 <h2>Defects / Feature Requests / Issues</h2>
 <p>Please raise any defects, feature requests or general issues here on github using the Issues link to the right.</p>
 
