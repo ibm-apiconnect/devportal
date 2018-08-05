@@ -1,6 +1,12 @@
 .bx--global-light-ui {
   .modal-header {
     padding: 1rem 0 0.5rem 3rem;
+    .close {
+      background-color: 		$modal-content-bg;
+      color: 	                $modal-content-color;
+      border:       none;
+      font-size: 24px;
+    }
   }
 
   header .close {
@@ -11,10 +17,39 @@
   .modal-title {
     padding-top: 1.75rem;
     padding-right: 3rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
   }
 
   .modal-body {
     padding: 1.5rem 3rem 3rem 3rem;
+
+    input[type="radio"].bx--radio-button,
+    input[type="checkbox"].bx--checkbox {
+      display: none;
+    }
+
+    .form-item input,
+    .form-item input:hover,
+    .form-item textarea,
+    .form-item select {
+      background-color: $default-input-bg;
+      border-color: $default-input-border;
+    }
+
+    .bx--form-item.form-item:last-child {
+      margin-bottom: 1.5rem;
+    }
+
+    legend {
+      border: none;
+    }
+  }
+
+  .modal-content {
+    border-radius: 0;
+    border-top: 5px solid $modal-content-border-color;
   }
 
   .modal-footer {
@@ -23,4 +58,17 @@
     border-top: none;
     background-color: unset;
   }
+
+}
+
+@media (min-width: $screen-sm-min) {
+  // Automatically set modal's width for larger viewports
+  .modal-dialog {
+    min-width: $modal-md;
+    max-width: 95%;
+    margin: 30px auto;
+  }
+
+  // Modal sizes
+  .modal-sm { width: $modal-sm; }
 }

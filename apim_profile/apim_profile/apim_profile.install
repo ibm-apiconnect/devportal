@@ -84,7 +84,8 @@ function apim_profile_install() {
     'locale',
     'user',
     'inline_form_errors',
-    'big_pipe'
+    'big_pipe',
+    'media'
   );
 
   $module_dependencies = array(
@@ -188,7 +189,9 @@ function apim_profile_install() {
     'account_field_split',
     'eu_cookie_compliance',
     'serialization',
-    'rules_http_client'
+    'rules_http_client',
+    'smart_trim',
+    'r4032login'
   );
 
   $our_modules = array(

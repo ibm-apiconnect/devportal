@@ -111,10 +111,6 @@ class ChangeMemberRoleForm extends FormBase {
         $productnid = array_shift($nids);
         $this->orgNode = Node::load($productnid);
       }
-      foreach ($this->orgNode->consumerorg_members->getValue() as $arrayValue) {
-        $orgmember = unserialize($arrayValue['value']);
-        dpm($orgmember);
-      }
       $members = $this->consumerOrgService->getMembers($this->orgNode->consumerorg_url->value);
       if ($members) {
         $values = array();

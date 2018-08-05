@@ -4,7 +4,7 @@
   "type": "project",
   "license": "GPL-2.0-or-later",
   "require": {
-    "drupal/core": "^8.5.5",
+    "drupal/core": "^8.5.6",
     "composer/installers": "^1.0.24",
     "wikimedia/composer-merge-plugin": "^1.4",
     "drupal/acl": "^1.0@alpha",
@@ -150,7 +150,10 @@
     "drupal/views_slideshow": "^4.6",
     "drupal/r4032login": "^1.0",
     "drupal/bootstrap_site_alert": "^1.2",
-    "drupal/media_entity_twitter": "^2.0"
+    "drupal/media_entity_twitter": "^2.0",
+    "drupal/social_post": "^2.0@beta",
+    "drupal/social_post_twitter": "^2.0",
+    "drupal/smart_trim": "^1.1"
   },
   "replace": {},
   "minimum-stability": "dev",

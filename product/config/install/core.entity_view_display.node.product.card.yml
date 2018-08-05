@@ -41,7 +41,7 @@ dependencies:
     - node.type.product
   module:
     - image
-    - text
+    - smart_trim
     - user
     - votingapi_widgets
 id: node.product.card
@@ -50,11 +50,22 @@ bundle: product
 mode: card
 content:
   apic_description:
-    type: text_trimmed
+    type: smart_trim
     weight: 4
     label: hidden
     settings:
       trim_length: 600
+      trim_type: chars
+      trim_suffix: ''
+      wrap_class: trimmed
+      more_text: More
+      more_class: more-link
+      wrap_output: false
+      more_link: false
+      trim_options:
+        text: false
+        trim_zero: false
+      summary_handler: full
     third_party_settings: {  }
     region: content
   apic_image:

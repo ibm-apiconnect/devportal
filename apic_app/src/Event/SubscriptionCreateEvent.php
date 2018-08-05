@@ -45,7 +45,7 @@ class SubscriptionCreateEvent extends Event {
   public $planName;
 
   /**
-   * Subscription state: enabled or still pending approval
+   * The state.
    * @var string
    */
   public $state;
@@ -60,7 +60,7 @@ class SubscriptionCreateEvent extends Event {
    * @param $planName
    *   The plan name
    * @param $state
-   *   Whether the subscription is active or not (inactive would be pending approval)
+   *   The subscription state, e.g. enabled
    */
   public function __construct(EntityInterface $application, EntityInterface $product, $planName, $state) {
     $this->application = $application;

@@ -14,17 +14,6 @@
   line-height: 1.3rem;
 }
 
-.apicFade:after {
-  content: '';
-  text-align: right;
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 15%;
-  height: 1.3rem;
-  background: linear-gradient(to right, rgba(255,255,255,0), #fff 70%);
-}
-
 .apicTeaserIcon {
   flex: 0.05 0 auto;
   -ms-flex: 0.05 0 64px;

@@ -760,11 +760,11 @@ function drush_ibm_apim_content_refresh() {
                 $subList[$content['app_url']] = array();
               }
               if (!isset($content['state'])) {
-                $sub['state'] = "active";
+                $sub['state'] = "enabled";
               }
               $subList[$content['app_url']][] = array(
                 'id' => $content['id'],
-                'product' => $content['product_url'],
+                'product_url' => $content['product_url'],
                 'plan' => $content['plan'],
                 'state' => $content['state']
               );
@@ -981,7 +981,12 @@ function drush_ibm_apim_clearup() {
       $nid = reset($nids);
       $node = Node::load($nid);
       if (isset($node)) {
-        $node->set("application_subscriptions", serialize($appsub));
+        $subs = array();
+        foreach ($appsub as $nextSub) {
+          $subs[] = serialize($nextSub);
+        }
+
+        $node->set("application_subscriptions", $subs);
         $node->save();
       }
     }

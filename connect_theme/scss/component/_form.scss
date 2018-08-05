@@ -201,6 +201,11 @@ textarea,
     margin: 0;
   }
 }
+
+.container-inline .bx--form-item.form-item:last-child {
+    margin-bottom: 1.5rem;
+}
+
 .votingapi-widgets .bx--global-light-ui .form-item {
   margin-bottom: 0;
 }
@@ -219,7 +224,7 @@ textarea,
 }
 
 .form-required:after {
-  color: $alert-danger-text;
+  color: $alert-danger-border;
   content: "*";
   background-image: none;
   padding-left: 0.25rem;
@@ -662,6 +667,7 @@ input[type="checkbox"].bx--checkbox {
 .route-apic-appcredentials-create .main-container .row,
 .route-apic-appreset-clientid .main-container .row,
 .route-apic-appreset-clientsecret .main-container .row,
+.route-apic-appsubscriptions .main-container .row,
 .route-apic-appcredentials-update .main-container .row,
 .route-apic-appcredentials-delete .main-container .row,
 .route-apic-appupdate .main-container .row,
@@ -676,11 +682,22 @@ input[type="checkbox"].bx--checkbox {
 .route-consumerorginvite .main-container .row,
 .route-consumerorgremove-user .main-container .row,
 .route-consumerorgresend-invite .main-container .row,
+.route-change-pwd-pagechange-password-form .main-container .row .apic-change-pwd-form,
+.route-entityuseredit-form .main-container .row .user-form,
 form.user-pass-reset,
 .apicForm,
 .apic-user-form {
   background-color: $default-bg-light;
   border: 1px solid $default-border;
+
+  .form-item input,
+  .form-item input:hover,
+  .form-item textarea,
+  .form-item select {
+    background-color: $default-input-bg;
+    border-color: $default-input-border;
+  }
+
 }
 
 .route-apic-appcreate .main-container .row,
@@ -709,8 +726,6 @@ form.user-pass-reset,
   margin: auto;
   margin-top: 5rem;
   padding: 2rem;
-  background-color: $default-bg-light;
-  border: 1px solid $default-border;
   max-width: 39rem;
   .form-item input,
   .form-item input:hover

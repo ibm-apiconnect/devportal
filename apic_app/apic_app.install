@@ -116,3 +116,19 @@ function apic_app_update_8102() {
   $field_storage_config->setSetting('is_ascii', $is_ascii);
   $field_storage_config->save();
 }
+
+/**
+ * Changes from 8.x-1.3 to 8.x-1.4 :
+ *  - hide scheduler fields
+ */
+function apic_app_update_8103() {
+  // Modify entity form display modes to hide the scheduler and moderation fields by default
+  $form_display = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('node.application.default');
+  foreach(array('publish_on', 'unpublish_on', 'moderation_state') as $field_name) {
+    $component = $form_display->getComponent($field_name);
+    if (isset($component)) {
+      $form_display->removeComponent($field_name);
+    }
+  }
+  $form_display->save();
+}

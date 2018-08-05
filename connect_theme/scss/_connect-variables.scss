@@ -128,7 +128,7 @@ $alert-success-text: 	$text-02;
 $tab-primary-background: $brand-primary;
 $tab-primary-text: $inverse-01;
 
-// forms
+// apic & modal forms
 $default-header: $ui-05;
 $default-bg-light: $ui-01;
 $default-border: $ui-03;
@@ -136,9 +136,13 @@ $default-line: $ui-05;
 $default-submitted: $ui-04;
 $default-inverse: $inverse-01;
 
+$default-input-bg: $field-01;
+$default-input-border: $field-01;
+
+// bootstrap form variable overrides
 $input-border-radius: 0;
-$input-bg: $field-01;
-$input-border: $field-01;
+$input-bg: $field-02;
+$input-border: $field-02;
 $input-color: $black-01;
 
 // buttons

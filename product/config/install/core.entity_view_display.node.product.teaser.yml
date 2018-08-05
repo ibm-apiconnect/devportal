@@ -3,19 +3,20 @@ status: true
 dependencies:
   config:
     - core.entity_view_mode.node.teaser
+    - field.field.node.product.apic_attachments
     - field.field.node.product.apic_catalog_id
     - field.field.node.product.apic_description
     - field.field.node.product.apic_hostname
+    - field.field.node.product.apic_image
+    - field.field.node.product.apic_pathalias
     - field.field.node.product.apic_provider_id
     - field.field.node.product.apic_rating
-    - field.field.node.product.apic_tags
-    - field.field.node.product.apic_pathalias
+    - field.field.node.product.apic_ref
     - field.field.node.product.apic_summary
+    - field.field.node.product.apic_tags
     - field.field.node.product.apic_url
     - field.field.node.product.apic_version
-    - field.field.node.product.apic_ref
-    - field.field.node.product.apic_image
-    - field.field.node.product.apic_attachments
+    - field.field.node.product.comment
     - field.field.node.product.product_apis
     - field.field.node.product.product_billing_url
     - field.field.node.product.product_contact_email
@@ -40,7 +41,7 @@ dependencies:
     - node.type.product
   module:
     - image
-    - text
+    - smart_trim
     - user
     - votingapi_widgets
 id: node.product.teaser
@@ -48,35 +49,21 @@ targetEntityType: node
 bundle: product
 mode: teaser
 content:
-  apic_rating:
-    type: voting_api_formatter
-    weight: 20
-    label: hidden
-    settings:
-      style: bootstrap-stars
-      readonly: '1'
-      show_results: 0
-      values: {  }
-    third_party_settings: {  }
-    region: content
-  links:
-    weight: 4
-    settings: {  }
-    third_party_settings: {  }
-    region: content
-  product_apis:
-    type: basic_string
-    weight: 0
-    label: hidden
-    settings: {  }
-    third_party_settings: {  }
-    region: content
   apic_description:
-    type: text_trimmed
+    type: smart_trim
     weight: 3
     label: hidden
     settings:
       trim_length: 600
+      trim_type: chars
+      trim_suffix: ''
+      wrap_output: false
+      wrap_class: trimmed
+      more_link: false
+      more_class: more-link
+      more_text: More
+      summary_handler: full
+      trim_options: {  }
     third_party_settings: {  }
     region: content
   apic_image:
@@ -88,12 +75,24 @@ content:
       image_link: ''
     third_party_settings: {  }
     region: content
-  product_name:
-    type: basic_string
-    weight: 0
+  apic_rating:
+    type: voting_api_formatter
+    weight: 20
     label: hidden
+    settings:
+      style: bootstrap-stars
+      readonly: '1'
+      show_results: 0
+      values: {  }
+      show_own_vote: false
+    third_party_settings: {  }
+    region: content
+  apic_summary:
+    weight: 15
+    label: above
     settings: {  }
     third_party_settings: {  }
+    type: basic_string
     region: content
   apic_version:
     type: string
@@ -101,6 +100,18 @@ content:
     label: hidden
     settings:
       link_to_entity: false
+    third_party_settings: {  }
+    region: content
+  links:
+    weight: 4
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  product_apis:
+    type: basic_string
+    weight: 0
+    label: hidden
+    settings: {  }
     third_party_settings: {  }
     region: content
   product_id:
@@ -111,23 +122,24 @@ content:
     third_party_settings: {  }
     type: string
     region: content
-  apic_summary:
-    weight: 15
-    label: above
+  product_name:
+    type: basic_string
+    weight: 0
+    label: hidden
     settings: {  }
     third_party_settings: {  }
-    type: basic_string
     region: content
 hidden:
   addtoany: true
+  apic_attachments: true
   apic_catalog_id: true
   apic_hostname: true
-  apic_provider_id: true
-  apic_tags: true
   apic_pathalias: true
-  apic_url: true
+  apic_provider_id: true
   apic_ref: true
-  apic_attachments: true
+  apic_tags: true
+  apic_url: true
+  comment: true
   langcode: true
   product_billing_url: true
   product_contact_email: true

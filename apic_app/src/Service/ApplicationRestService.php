@@ -244,10 +244,11 @@ class ApplicationRestService implements ApplicationRestInterface {
       $result = $this->postApplication($url, json_encode($data));
 
       if (isset($result) && $result->code >= 200 && $result->code < 300) {
-        $data = $result->data['credentials'];
+        $data = array('client_id' => $result->data['client_id'], 'client_secret' => $result->data['client_secret']);
         // alter hook (pre-invoke)
         \Drupal::moduleHandler()->alter('apic_app_create', $result->data['id'], $data);
-        $result->data['credentials'] = $data;
+        $result->data['client_id'] = $data['client_id'];
+        $result->data['client_secret'] = $data['client_secret'];
 
         drupal_set_message(t('Application created successfully.'));
         $current_user = \Drupal::currentUser();
@@ -309,90 +310,99 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param $planId
    * @return mixed
    */
-  public function subscribeToPlan($appUrl, $planId) {
+  public function subscribeToPlan($appUrl = NULL, $planId = NULL) {
 
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, array('appUrl' => $appUrl, 'planId' => $planId));
+    if (isset($appUrl) && isset($planId)) {
 
-    $url = $appUrl . '/subscriptions';
+      $url = $appUrl . '/subscriptions';
 
-    $parts = explode(':', $planId);
-    $product_url = $parts[0];
-    $planname = $parts[1];
+      $parts = explode(':', $planId);
+      $product_url = $parts[0];
+      $planname = $parts[1];
 
-    // 'adjust' the product url if it isn't in the format that the consumer-api expects
-    $full_product_url = \Drupal::service('ibm_apim.apim_utils')->createFullyQualifiedUrl($product_url);
+      // 'adjust' the product url if it isn't in the format that the consumer-api expects
+      $full_product_url = \Drupal::service('ibm_apim.apim_utils')->createFullyQualifiedUrl($product_url);
 
-    $data = array(
-      "product_url" => $full_product_url,
-      'plan' => $planname
-    );
+      $data = array(
+        "product_url" => $full_product_url,
+        'plan' => $planname
+      );
 
-    $query = \Drupal::entityQuery('node');
-    $query->condition('type', 'product');
-    $query->condition('apic_url.value', $product_url);
-
-    $nids = $query->execute();
-    $productnid = NULL;
-    $productnode = NULL;
-    $node = NULL;
-
-    if (isset($nids) && !empty($nids)) {
-      $productnid = array_shift($nids);
-      $productnode = Node::load($productnid);
-    }
-
-    $result = $this->postSubscription($url, json_encode($data));
-
-    if (isset($result) && $result->code >= 200 && $result->code < 300 && (!isset($result->data) || (isset($result->data) && !isset($result->data['errors'])))) {
       $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'application');
-      $query->condition('apic_url.value', $appUrl);
-      $dbnids = $query->execute();
-      if (isset($dbnids) && !empty($dbnids)) {
-        $appnid = array_shift($dbnids);
-        $node = Node::load($appnid);
+      $query->condition('type', 'product');
+      $query->condition('apic_url.value', $product_url);
 
-        $current_user = \Drupal::currentUser();
-        \Drupal::logger('apic_app')->notice('Application @appname requested subscription to @plan by @username', array(
-          '@appname' => $node->getTitle(),
-          '@plan' => $product_url . ':' . $planname,
-          '@username' => $current_user->getAccountName()
-        ));
+      $nids = $query->execute();
+      $productnid = NULL;
+      $productnode = NULL;
+      $node = NULL;
 
-        // Calling all modules implementing 'hook_apic_app_subscribe':
-        \Drupal::moduleHandler()->invokeAll('apic_app_subscribe', array(
-          'node' => $node,
-          'data' => $result->data,
-          'appId' => $appUrl,
-          'planId' => $product_url . ':' . $planname
-        ));
+      if (isset($nids) && !empty($nids)) {
+        $productnid = array_shift($nids);
+        $productnode = Node::load($productnid);
       }
 
-      // Create subscription in our database if no approval was required
-      if (isset($result->data)) {
-        $sub = $result->data;
-        $state = 'enabled';
-        if (isset($sub['state'])) {
-          $state = $sub['state'];
+      $result = $this->postSubscription($url, json_encode($data));
+
+      if (isset($result) && $result->code >= 200 && $result->code < 300 && (!isset($result->data) || (isset($result->data) && !isset($result->data['errors'])))) {
+        $query = \Drupal::entityQuery('node');
+        $query->condition('type', 'application');
+        $query->condition('apic_url.value', $appUrl);
+        $dbnids = $query->execute();
+        if (isset($dbnids) && !empty($dbnids)) {
+          $appnid = array_shift($dbnids);
+          $node = Node::load($appnid);
+
+          $current_user = \Drupal::currentUser();
+          \Drupal::logger('apic_app')->notice('Application @appname requested subscription to @plan by @username', array(
+            '@appname' => $node->getTitle(),
+            '@plan' => $product_url . ':' . $planname,
+            '@username' => $current_user->getAccountName()
+          ));
+
+          // Calling all modules implementing 'hook_apic_app_subscribe':
+          \Drupal::moduleHandler()->invokeAll('apic_app_subscribe', array(
+            'node' => $node,
+            'data' => $result->data,
+            'appId' => $appUrl,
+            'planId' => $product_url . ':' . $planname
+          ));
         }
-        try {
-          // Rules
-          $moduleHandler = \Drupal::service('module_handler');
-          if ($moduleHandler->moduleExists('rules')) {
-            // Set the args twice on the event: as the main subject but also in the
-            // list of arguments.
-            $event = new SubscriptionCreateEvent($node, $productnode, $planname, $state, ['application' => $node, 'product' => $productnode, 'planName' => $planname, 'state' => $state]);
-            $event_dispatcher = \Drupal::service('event_dispatcher');
-            $event_dispatcher->dispatch(SubscriptionCreateEvent::EVENT_NAME, $event);
+
+        // Create subscription in our database if no approval was required
+        if (isset($result->data)) {
+          $sub = $result->data;
+          $state = 'enabled';
+          if (isset($sub['state'])) {
+            $state = $sub['state'];
           }
+          try {
+            // Rules
+            $moduleHandler = \Drupal::service('module_handler');
+            if ($moduleHandler->moduleExists('rules')) {
+              // Set the args twice on the event: as the main subject but also in the
+              // list of arguments.
+              $event = new SubscriptionCreateEvent($node, $productnode, $planname, $state, [
+                'application' => $node,
+                'product' => $productnode,
+                'planName' => $planname,
+                'state' => $state
+              ]);
+              $event_dispatcher = \Drupal::service('event_dispatcher');
+              $event_dispatcher->dispatch(SubscriptionCreateEvent::EVENT_NAME, $event);
+            }
 
-          // TODO set billing_url correctly
-          $billing_url = NULL;
-          Subscription::create($appUrl, $sub['id'], $product_url, $sub['plan'], $state, $billing_url);
-        } catch (\Exception $e) {
+            // TODO set billing_url correctly
+            $billing_url = NULL;
+            Subscription::create($appUrl, $sub['id'], $product_url, $sub['plan'], $state, $billing_url);
+          } catch (\Exception $e) {
 
+          }
         }
       }
+    } else {
+      drupal_set_message(t('ERROR: Both the application URL and plan ID must be specified.'), 'error');
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

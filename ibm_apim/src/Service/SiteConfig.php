@@ -444,7 +444,8 @@ class SiteConfig {
         try {
           $isCloud = trim(file_get_contents($cloud_file));
           if (isset($isCloud) && !empty($isCloud)) {
-            $returnValue = $isCloud;
+            // cast to boolean
+            $returnValue = ($isCloud === 'true' || $isCloud === true);
           }
           else {
             $this->logger->error('/web/config/ibm_cloud not set correctly, value: %data.', array(

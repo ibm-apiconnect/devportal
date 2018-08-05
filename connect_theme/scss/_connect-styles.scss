@@ -279,47 +279,7 @@ p:last-child,
   box-shadow: 4px 4px 8px 4px rgba(0,0,0,0.10);
 }
 
-// modals
 
-.bx--global-light-ui .modal-header .close,
-.bx--global-light-ui .bx--modal-header .bx--modal-close {
-  background-color: 		$modal-content-bg;
-  color: 	                $modal-content-color;
-  border:       none;
-  font-size: 24px;
-}
-
-.modal-content {
-  border-radius: 0;
-  border-top: 5px solid $modal-content-border-color;
-}
-
-.modal-body legend {
-  border: none;
-}
-
-// treating this as carbon label
-.modal-title {
-  font-size: 0.75rem;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-.modal-footer{
-  background-color: 	$modal-footer-border-color;
-}
-
-@media (min-width: $screen-sm-min) {
-  // Automatically set modal's width for larger viewports
-  .modal-dialog {
-    min-width: $modal-md;
-    max-width: 95%;
-    margin: 30px auto;
-  }
-
-  // Modal sizes
-  .modal-sm { width: $modal-sm; }
-}
 
 
 // API Explorer
@@ -664,7 +624,6 @@ section.block-go-ahead {
   background: $default-bg-light;
 }
 
-
 .gsstep h3,
 .gsstep a {
   color: $brand-primary;
@@ -701,6 +660,7 @@ section.block-go-ahead {
 .ibmapimNoPermissions .contactLink a {
   color: $brand-primary;
 }
+
 .ibmapimNoPermissions .iconDiv svg {
   fill: $modal-content-color;
 }

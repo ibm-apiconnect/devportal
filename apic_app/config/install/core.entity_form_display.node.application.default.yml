@@ -62,21 +62,24 @@ hidden:
   apic_catalog_id: true
   apic_hostname: true
   apic_provider_id: true
-  apic_url: true
   apic_state: true
+  apic_url: true
+  application_client_type: true
+  application_consumer_org_url: true
   application_credentials: true
   application_data: true
   application_enabled: true
-  application_name: true
   application_id: true
-  application_consumer_org_url: true
   application_lifecycle_pending: true
-  application_subscriptions: true
   application_lifecycle_state: true
-  application_client_type: true
+  application_name: true
+  application_subscriptions: true
   created: true
   langcode: true
+  moderation_state: true
   path: true
   promote: true
+  publish_on: true
   sticky: true
   uid: true
+  unpublish_on: true

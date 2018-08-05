@@ -592,6 +592,34 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       if (isset($form['modules']['IBM API Connect']['apictest'])) {
         unset($form['modules']['IBM API Connect']['apictest']);
       }
+      // hide the migration modules
+      if (isset($form['modules']['Migration']['migrate_upgrade'])) {
+        unset($form['modules']['Migration']['migrate_upgrade']);
+      }
+      if (isset($form['modules']['Migration']['migrate'])) {
+        unset($form['modules']['Migration']['migrate']);
+      }
+      if (isset($form['modules']['Migration']['migrate_plus'])) {
+        unset($form['modules']['Migration']['migrate_plus']);
+      }
+      if (isset($form['modules']['Migration']['migrate_tools'])) {
+        unset($form['modules']['Migration']['migrate_tools']);
+      }
+      if (isset($form['modules']['Migrate']['field_group_migrate'])) {
+        unset($form['modules']['Migrate']['field_group_migrate']);
+      }
+      if (isset($form['modules']['Examples']['migrate_example_advanced'])) {
+        unset($form['modules']['Examples']['migrate_example_advanced']);
+      }
+      if (isset($form['modules']['Examples']['migrate_example'])) {
+        unset($form['modules']['Examples']['migrate_example']);
+      }
+      if (isset($form['modules']['Core (Experimental)']['migrate_drupal'])) {
+        unset($form['modules']['Core (Experimental)']['migrate_drupal']);
+      }
+      if (isset($form['modules']['Core (Experimental)']['migrate_drupal_ui'])) {
+        unset($form['modules']['Core (Experimental)']['migrate_drupal_ui']);
+      }
       // blacklist some modules
       $module_blacklist = \Drupal::config('ibm_apim.settings')->get('module_blacklist');
       if (isset($module_blacklist) && !empty($module_blacklist)) {
