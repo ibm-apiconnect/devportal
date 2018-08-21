@@ -18,3 +18,11 @@ ibm_apim.support:
   route_name: ibm_apim.support
   weight: 30
   menu_name: main
+
+# override link from from admin_toolbar module
+system.modules_uninstall:
+  title: 'Disable module'
+  route_name: system.modules_uninstall
+  menu_name: admin
+  parent: system.modules_list
+  weight: 100

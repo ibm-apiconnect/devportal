@@ -87,7 +87,7 @@
     "drupal/views_ajax_history": "1.x-dev",
     "drupal/editor_advanced_link": "^1.4",
     "drupal/dropzonejs": "^2.0@alpha",
-    "drupal/video_embed_field": "^1.5",
+    "drupal/video_embed_field": "^2.0",
     "drupal/video_embed_html5": "^1.0",
     "drupal/entity_browser": "^2.0@alpha",
     "drupal/file_browser": "^1.1",
@@ -153,7 +153,8 @@
     "drupal/media_entity_twitter": "^2.0",
     "drupal/social_post": "^2.0@beta",
     "drupal/social_post_twitter": "^2.0",
-    "drupal/smart_trim": "^1.1"
+    "drupal/smart_trim": "^1.1",
+    "drupal/lightning_media": "^2.3"
   },
   "replace": {},
   "minimum-stability": "dev",
@@ -237,6 +238,10 @@
           "url": "https://github.com/antennaio/jquery-bar-rating/archive/v1.2.2.zip"
         }
       }
+    },
+    "assets": {
+      "type": "composer",
+      "url": "https://asset-packagist.org"
     }
   }
 }

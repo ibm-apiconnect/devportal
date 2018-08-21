@@ -25,4 +25,5 @@ dependencies:
   - masonry_views
   - masonry
   - better_exposed_filters
+  - smart_trim
 'interface translation project': apic_api

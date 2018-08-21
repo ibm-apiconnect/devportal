@@ -3,11 +3,8 @@
 }
 
 .socialblock.container {
-  margin-top: 0.8rem;
+  margin: 1.5rem auto;
   display: flex;
-  max-width: 75em;
-  margin-left: auto;
-  margin-right: auto;
   flex-wrap: wrap;
   justify-content: space-around;
 }
@@ -20,7 +17,7 @@
   background-color: #fff;
   color: #3d70b2;
   text-align: center;
-  max-width: 340px;
+  max-width: 21rem;
 }
 
 .socialblock.card.noposts {
@@ -34,21 +31,7 @@
 }
 
 .socialblock .title {
-  color: #fff;
-  text-decoration: none !important;
-  background-color: #3d70b2;
-  box-sizing: border-box;
-  border: 1.25rem solid #3d70b2;
-  border-bottom-width: 1rem;
-  display: block;
-  transition: all 500ms;
   width: 100%;
-}
-
-.socialblock .title:hover {
-  background-color: #3d70b2;
-  border-color: #3d70b2;
-  transition: all 100ms;
 }
 
 .socialblock .info {

@@ -33,6 +33,10 @@
   font-size: 1.5rem;
 }
 
+.featuredcontent .featuredcontentBlockHeader a {
+  text-decoration: underline;
+}
+
 .featuredcontentBlockHeader {
   display: flex;
   align-items: baseline;
@@ -46,8 +50,8 @@
 }
 
 .featuredcontentNodeImage img {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
 }
 
 .featuredcontentNodeImage {
@@ -57,9 +61,10 @@
 }
 
 .featuredcontentNodeHeader .featuredcontentNodeTitle {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
+  line-height: 2rem;
   font-weight: bold;
-  word-break: break-word
+  word-break: break-word;
 }
 
 .featuredcontentNodeInfo {
@@ -70,4 +75,7 @@
 .featuredcontentNodeInfo .featuredcontentNodeDescription {
   font-size: 0.75rem;
   line-height: 1.2;
+  height: 2.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

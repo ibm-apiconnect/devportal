@@ -290,9 +290,14 @@ function _drush_ibm_apim_send_welcome_mail($url, $account, $language, $client_em
     // Mail one time login URL and instructions.
     $from = $config->get('mail');
     $site_name = $config->get('name');
+
     if (!isset($from) || empty($from)) {
       $from = ini_get('sendmail_from');
+      drush_log(dt('Setting FROM address using PHP config file: @email', array('@email' => $from)), 'success');
+    } else {
+      drush_log(dt('Setting FROM address using site config: @email', array('@email' => $from)), 'success');
     }
+
     $login_url = Url::fromRoute('user.login', array('absolute' => TRUE))->toString();
     $edit_url = Url::fromRoute('user.page', array('absolute' => TRUE))->toString();
 

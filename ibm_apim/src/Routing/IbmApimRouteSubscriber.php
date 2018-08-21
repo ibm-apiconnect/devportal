@@ -120,6 +120,9 @@ class IbmApimRouteSubscriber extends RouteSubscriberBase {
     if($route = $collection->get('entity.configurable_language.delete_form')) {
       $route->addRequirements(array('_ibm_langauge_delete_check' => 'TRUE'));
     }
+    if($route = $collection->get('system.modules_uninstall')) {
+      $route->setDefault('_title', 'Disable');
+    }
 
   }
 

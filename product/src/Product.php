@@ -55,6 +55,15 @@ class Product {
 
     if (isset($product) && isset($product['catalog_product']['info']) && isset($product['catalog_product']['info']['name']) && isset($product['catalog_product']['info']['version'])) {
       $xname = $product['catalog_product']['info']['name'];
+      if (strlen($product['catalog_product']['info']['name'] . ':' . $product['catalog_product']['info']['version']) > 254) {
+        // if product reference is too long then bomb out
+        \Drupal::logger('product')
+          ->error('ERROR: Cannot create product. The "name:version" for this product is greater than 254 characters: %name %version', array(
+            '%name' => $product['catalog_product']['info']['name'],
+            '%version' => $product['catalog_product']['info']['version']
+          ));
+        return NULL;
+      }
     }
 
     if (isset($xname)) {
@@ -191,6 +200,18 @@ class Product {
       $hostvariable = $siteconfig->getApimHost();
       $config = \Drupal::config('ibm_apim.settings');
       $language_list = array_keys(\Drupal::languageManager()->getLanguages(LanguageInterface::STATE_ALL));
+
+      if (isset($product) && isset($product['catalog_product']['info']) && isset($product['catalog_product']['info']['name']) && isset($product['catalog_product']['info']['version'])) {
+        if (strlen($product['catalog_product']['info']['name'] . ':' . $product['catalog_product']['info']['version']) > 254) {
+          // if product reference is too long then bomb out
+          \Drupal::logger('product')
+            ->error('ERROR: Cannot update product. The "name:version" for this product is greater than 254 characters: %name %version', array(
+              '%name' => $product['catalog_product']['info']['name'],
+              '%version' => $product['catalog_product']['info']['version']
+            ));
+          return NULL;
+        }
+      }
 
       $node->setTitle($utils->truncate_string($product['catalog_product']['info']['title']));
       if (isset($product['catalog_product']['info']['x-ibm-languages']['title']) && !empty($product['catalog_product']['info']['x-ibm-languages']['title'])) {
@@ -370,9 +391,10 @@ class Product {
       if (isset($product['catalog_product']['plans'])) {
         // merge in the supersedes / superseded-by info which is outside the product doc
         if (isset($product['supersedes'])) {
-          foreach($product['supersedes'] as $supersedes_array)
-          $prod_url = $supersedes_array['product_url'];
-          foreach($supersedes_array['plans'] as $supersede_plan) {
+          foreach ($product['supersedes'] as $supersedes_array) {
+            $prod_url = $supersedes_array['product_url'];
+          }
+          foreach ($supersedes_array['plans'] as $supersede_plan) {
             $source_plan = $supersede_plan['source'];
             $target_plan = $supersede_plan['target'];
             if (isset($product['catalog_product']['plans'][$target_plan])) {
@@ -388,7 +410,7 @@ class Product {
         }
         if (isset($product['superseded_by'])) {
           $prod_url = $product['superseded_by']['product_url'];
-          foreach($product['superseded_by']['plans'] as $supersede_plan) {
+          foreach ($product['superseded_by']['plans'] as $supersede_plan) {
             $source_plan = $supersede_plan['source'];
             $target_plan = $supersede_plan['target'];
             if (isset($product['catalog_product']['plans'][$source_plan])) {
@@ -1080,7 +1102,7 @@ class Product {
    */
   public function getProductAsJson($url) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, array('url' => $url));
-    $output = null;
+    $output = NULL;
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'product');
     $query->condition('apic_url.value', $url);
@@ -1094,7 +1116,8 @@ class Product {
       if ($moduleHandler->moduleExists('serialization')) {
         $serializer = \Drupal::service('serializer');
         $output = $serializer->serialize($node, 'json', ['plugin_id' => 'entity']);
-      } else {
+      }
+      else {
         \Drupal::logger('product')->notice('getProductAsJson: serialization module not enabled', array());
       }
     }

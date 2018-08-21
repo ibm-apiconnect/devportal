@@ -530,17 +530,6 @@ header h1,
   box-shadow: 0 6px 5px 0 rgba(0, 0, 0, 0.3);
 }
 
-.socialblock .title {
-  color: $default-inverse;
-  background-color: $brand-primary;
-  border: 1.25rem solid $brand-primary;
-}
-
-.socialblock .title:hover {
-  background-color: $brand-primary;
-  border-color: $brand-primary;
-}
-
 .socialblock .op {
   color: $alert-info-text;
 }
@@ -619,7 +608,6 @@ header h1,
 
 //** Home page colour settings
 section.block-getting-started,
-section.block-socialblock,
 section.block-go-ahead {
   background: $default-bg-light;
 }
@@ -631,7 +619,7 @@ section.block-go-ahead {
 
 
 .block-get-help {
-  color: $navbar-default-color;
+  color: $default-inverse;
   background-color: $navbar-default-bg;
 }
 

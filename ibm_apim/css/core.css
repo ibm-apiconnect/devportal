@@ -864,3 +864,18 @@ span.registry-name {
 span.cron-description__run-cron a {
   margin-top: 100px;
 }
+
+
+/* styling for content edit including products, apis etc. */
+.path-node .tabs,
+.path-node form {
+  padding-top: 1rem;
+}
+
+.path-node .vertical-tabs-list > li > a {
+  padding-left: 1rem;
+}
+
+.form-type-cshs .select-wrapper {
+  width: unset;
+}

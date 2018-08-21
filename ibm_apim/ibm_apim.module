@@ -791,6 +791,8 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
  */
 function ibm_apim_local_tasks_alter(&$local_tasks) {
   unset($local_tasks['system.theme_settings_global']);
+
+  $local_tasks['system.modules_uninstall']['title'] = 'Disable';
 }
 
 /**

@@ -1,4 +1,15 @@
 .bx--global-light-ui {
+
+  .modal {
+    text-align: center;
+  }
+
+  .modal-dialog {
+    display: inline-block;
+    text-align: left;
+    width:auto;
+  }
+
   .modal-header {
     padding: 1rem 0 0.5rem 3rem;
     .close {
@@ -50,6 +61,7 @@
   .modal-content {
     border-radius: 0;
     border-top: 5px solid $modal-content-border-color;
+    overflow-y: auto;
   }
 
   .modal-footer {

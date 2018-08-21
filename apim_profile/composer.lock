@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b3485fa6db04015077e143e2ce3c79bd",
+    "content-hash": "fa78f7a84c99446126e60ab4a5f06cc5",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -771,6 +771,41 @@
             "time": "2018-07-23T05:05:36+00:00"
         },
         {
+            "name": "bower-asset/cropper",
+            "version": "v2.3.4",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:fengyuanchen/cropper.git",
+                "reference": "30c58b29ee21010e17e58ebab165fbd84285c685"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/fengyuanchen/cropper/zipball/30c58b29ee21010e17e58ebab165fbd84285c685",
+                "reference": "30c58b29ee21010e17e58ebab165fbd84285c685",
+                "shasum": null
+            },
+            "type": "bower-asset",
+            "license": [
+                "MIT"
+            ]
+        },
+        {
+            "name": "bower-asset/dropzone",
+            "version": "v5.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/enyo/dropzone.git",
+                "reference": "7d0792d1346d83a8b0c0d2919121bdd2b8e7fee4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/enyo/dropzone/zipball/7d0792d1346d83a8b0c0d2919121bdd2b8e7fee4",
+                "reference": "7d0792d1346d83a8b0c0d2919121bdd2b8e7fee4",
+                "shasum": null
+            },
+            "type": "bower-asset"
+        },
+        {
             "name": "caxy/php-htmldiff",
             "version": "v0.1.7",
             "source": {
@@ -1097,6 +1132,50 @@
             "description": "Promoting the interoperability of container objects (DIC, SL, etc.)",
             "homepage": "https://github.com/container-interop/container-interop",
             "time": "2017-02-14T19:40:03+00:00"
+        },
+        {
+            "name": "cweagans/composer-patches",
+            "version": "1.6.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/cweagans/composer-patches.git",
+                "reference": "2ec4f00ff5fb64de584c8c4aea53bf9053ecb0b3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/cweagans/composer-patches/zipball/2ec4f00ff5fb64de584c8c4aea53bf9053ecb0b3",
+                "reference": "2ec4f00ff5fb64de584c8c4aea53bf9053ecb0b3",
+                "shasum": ""
+            },
+            "require": {
+                "composer-plugin-api": "^1.0",
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "composer/composer": "~1.0",
+                "phpunit/phpunit": "~4.6"
+            },
+            "type": "composer-plugin",
+            "extra": {
+                "class": "cweagans\\Composer\\Patches"
+            },
+            "autoload": {
+                "psr-4": {
+                    "cweagans\\Composer\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Cameron Eagans",
+                    "email": "me@cweagans.net"
+                }
+            ],
+            "description": "Provides a way to patch Composer packages.",
+            "time": "2018-05-11T18:00:16+00:00"
         },
         {
             "name": "defuse/php-encryption",
@@ -2060,6 +2139,50 @@
             "time": "2018-06-14T14:45:07+00:00"
         },
         {
+            "name": "drupal-composer/drupal-scaffold",
+            "version": "2.5.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/drupal-composer/drupal-scaffold.git",
+                "reference": "fc6bf4ceecb5d47327f54d48d4d4f67b17da956d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/drupal-composer/drupal-scaffold/zipball/fc6bf4ceecb5d47327f54d48d4d4f67b17da956d",
+                "reference": "fc6bf4ceecb5d47327f54d48d4d4f67b17da956d",
+                "shasum": ""
+            },
+            "require": {
+                "composer-plugin-api": "^1.0.0",
+                "composer/semver": "^1.4",
+                "php": ">=5.4.5"
+            },
+            "require-dev": {
+                "composer/composer": "dev-master",
+                "g1a/composer-test-scenarios": "^2.1.0",
+                "phpunit/phpunit": "^6",
+                "squizlabs/php_codesniffer": "^2.8"
+            },
+            "type": "composer-plugin",
+            "extra": {
+                "class": "DrupalComposer\\DrupalScaffold\\Plugin",
+                "branch-alias": {
+                    "dev-master": "2.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "DrupalComposer\\DrupalScaffold\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "Composer Plugin for updating the Drupal scaffold files when using drupal/core",
+            "time": "2018-07-27T10:07:07+00:00"
+        },
+        {
             "name": "drupal/account_field_split",
             "version": "1.0.0-alpha2",
             "source": {
@@ -2155,6 +2278,100 @@
             "homepage": "https://www.drupal.org/project/acl",
             "support": {
                 "source": "http://cgit.drupalcode.org/acl"
+            }
+        },
+        {
+            "name": "drupal/acquia_connector",
+            "version": "1.14.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupal.org/project/acquia_connector",
+                "reference": "8.x-1.14"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/acquia_connector-8.x-1.14.zip",
+                "reference": "8.x-1.14",
+                "shasum": "cb9020388624a74cc0fb6516c6c96987f328392e"
+            },
+            "require": {
+                "drupal/core": "~8.0"
+            },
+            "require-dev": {
+                "drupal/search_api_solr": "*"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "branch-alias": {
+                    "dev-1.x": "1.x-dev"
+                },
+                "drupal": {
+                    "version": "8.x-1.14",
+                    "datestamp": "1511982786",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Dries",
+                    "homepage": "https://www.drupal.org/user/1"
+                },
+                {
+                    "name": "Gábor Hojtsy",
+                    "homepage": "https://www.drupal.org/user/4166"
+                },
+                {
+                    "name": "Mark Trapp",
+                    "homepage": "https://www.drupal.org/user/212019"
+                },
+                {
+                    "name": "Stanislav Mixnovich",
+                    "homepage": "https://www.drupal.org/user/2859977"
+                },
+                {
+                    "name": "SteveEdwardsAcquia",
+                    "homepage": "https://www.drupal.org/user/3556170"
+                },
+                {
+                    "name": "ayang",
+                    "homepage": "https://www.drupal.org/user/1777884"
+                },
+                {
+                    "name": "dmitrii",
+                    "homepage": "https://www.drupal.org/user/411965"
+                },
+                {
+                    "name": "irek02",
+                    "homepage": "https://www.drupal.org/user/736644"
+                },
+                {
+                    "name": "kolafson",
+                    "homepage": "https://www.drupal.org/user/822402"
+                },
+                {
+                    "name": "mundanity",
+                    "homepage": "https://www.drupal.org/user/373605"
+                },
+                {
+                    "name": "paul.lovvik",
+                    "homepage": "https://www.drupal.org/user/289213"
+                },
+                {
+                    "name": "vlad.pavlovic",
+                    "homepage": "https://www.drupal.org/user/92673"
+                }
+            ],
+            "description": "Allows Drupal to securely communicate with the Acquia Subscription, and checks for updates to Acquia Drupal.",
+            "homepage": "https://www.drupal.org/project/acquia_connector",
+            "support": {
+                "source": "http://cgit.drupalcode.org/acquia_connector"
             }
         },
         {
@@ -3553,6 +3770,70 @@
             }
         },
         {
+            "name": "drupal/contact_storage",
+            "version": "1.0.0-beta9",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupal.org/project/contact_storage",
+                "reference": "8.x-1.0-beta9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/contact_storage-8.x-1.0-beta9.zip",
+                "reference": "8.x-1.0-beta9",
+                "shasum": "42b12d6f755485617e949aaf1b2c9aae09eb0e3e"
+            },
+            "require": {
+                "drupal/core": "*",
+                "drupal/token": "*"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "branch-alias": {
+                    "dev-1.x": "1.x-dev"
+                },
+                "drupal": {
+                    "version": "8.x-1.0-beta9",
+                    "datestamp": "1497478742",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Beta releases are not covered by Drupal security advisories."
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Arla",
+                    "homepage": "https://www.drupal.org/user/226712"
+                },
+                {
+                    "name": "Berdir",
+                    "homepage": "https://www.drupal.org/user/214652"
+                },
+                {
+                    "name": "andypost",
+                    "homepage": "https://www.drupal.org/user/118908"
+                },
+                {
+                    "name": "jibran",
+                    "homepage": "https://www.drupal.org/user/1198144"
+                },
+                {
+                    "name": "larowlan",
+                    "homepage": "https://www.drupal.org/user/395439"
+                }
+            ],
+            "description": "Provides storage and edit capability for contact messages.",
+            "homepage": "https://www.drupal.org/project/contact_storage",
+            "support": {
+                "source": "http://cgit.drupalcode.org/contact_storage"
+            }
+        },
+        {
             "name": "drupal/content_browser",
             "version": "1.0.0-alpha4",
             "source": {
@@ -4891,17 +5172,17 @@
         },
         {
             "name": "drupal/entity_browser",
-            "version": "2.0.0-alpha3",
+            "version": "2.0.0-alpha2",
             "source": {
                 "type": "git",
                 "url": "https://git.drupal.org/project/entity_browser",
-                "reference": "8.x-2.0-alpha3"
+                "reference": "8.x-2.0-alpha2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/entity_browser-8.x-2.0-alpha3.zip",
-                "reference": "8.x-2.0-alpha3",
-                "shasum": "bd8537cda5f287ecca273a5c5a9c36b020c522fe"
+                "url": "https://ftp.drupal.org/files/projects/entity_browser-8.x-2.0-alpha2.zip",
+                "reference": "8.x-2.0-alpha2",
+                "shasum": "f31ad069e5c5e95db9b9410a4d71038ac0c5b370"
             },
             "require": {
                 "drupal/core": "~8.0"
@@ -4919,7 +5200,7 @@
                     "dev-8.x-1.x": "8.1.x-dev"
                 },
                 "drupal": {
-                    "version": "8.x-2.0-alpha3",
+                    "version": "8.x-2.0-alpha2",
                     "datestamp": "1528141081",
                     "security-coverage": {
                         "status": "not-covered",
@@ -6224,6 +6505,148 @@
             }
         },
         {
+            "name": "drupal/image_widget_crop",
+            "version": "2.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupal.org/project/image_widget_crop",
+                "reference": "8.x-2.2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/image_widget_crop-8.x-2.2.zip",
+                "reference": "8.x-2.2",
+                "shasum": "0a61cfedc409c5ef448174f26060cd6c291d6a11"
+            },
+            "require": {
+                "drupal/core": "*",
+                "drupal/crop": "^1.0 || ^2.0"
+            },
+            "require-dev": {
+                "drupal/crop": "*",
+                "drupal/ctools": "3.x-dev",
+                "drupal/entity_browser": "1.x-dev",
+                "drupal/file_entity": "*",
+                "drupal/inline_entity_form": "*",
+                "drupal/media": "*"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "branch-alias": {
+                    "dev-2.x": "2.x-dev"
+                },
+                "drupal": {
+                    "version": "8.x-2.2",
+                    "datestamp": "1530698921",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0+"
+            ],
+            "authors": [
+                {
+                    "name": "Alexandre Mallet",
+                    "homepage": "https://github.com/woprrr",
+                    "role": "Maintainer"
+                },
+                {
+                    "name": "Drupal media CI",
+                    "homepage": "https://www.drupal.org/user/3057985"
+                },
+                {
+                    "name": "slashrsm",
+                    "homepage": "https://www.drupal.org/user/744628"
+                },
+                {
+                    "name": "woprrr",
+                    "homepage": "https://www.drupal.org/user/858604"
+                }
+            ],
+            "description": "Provides an interface for using the features of the Crop API.",
+            "homepage": "https://www.drupal.org/project/image_widget_crop",
+            "keywords": [
+                "Crop",
+                "Drupal",
+                "Drupal Media"
+            ],
+            "support": {
+                "source": "https://www.drupal.org/project/image_widget_crop",
+                "issues": "https://www.drupal.org/project/issues/image_widget_crop",
+                "irc": "irc://irc.freenode.org/drupal-contribute"
+            }
+        },
+        {
+            "name": "drupal/inline_entity_form",
+            "version": "1.0.0-rc1",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupal.org/project/inline_entity_form",
+                "reference": "8.x-1.0-rc1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/inline_entity_form-8.x-1.0-rc1.zip",
+                "reference": "8.x-1.0-rc1",
+                "shasum": "898789fb6a0662fc2572b87f8d0654a0241473f9"
+            },
+            "require": {
+                "drupal/core": "~8.0"
+            },
+            "require-dev": {
+                "drupal/entity_reference_revisions": "*"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "branch-alias": {
+                    "dev-1.x": "1.x-dev"
+                },
+                "drupal": {
+                    "version": "8.x-1.0-rc1",
+                    "datestamp": "1527030784",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "RC releases are not covered by Drupal security advisories."
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0+"
+            ],
+            "authors": [
+                {
+                    "name": "bojanz",
+                    "homepage": "https://www.drupal.org/user/86106"
+                },
+                {
+                    "name": "dawehner",
+                    "homepage": "https://www.drupal.org/user/99340"
+                },
+                {
+                    "name": "rszrama",
+                    "homepage": "https://www.drupal.org/user/49344"
+                },
+                {
+                    "name": "slashrsm",
+                    "homepage": "https://www.drupal.org/user/744628"
+                },
+                {
+                    "name": "webflo",
+                    "homepage": "https://www.drupal.org/user/254778"
+                }
+            ],
+            "description": "Provides a widget for inline management (creation, modification, removal) of referenced entities.",
+            "homepage": "https://www.drupal.org/project/inline_entity_form",
+            "support": {
+                "source": "http://cgit.drupalcode.org/inline_entity_form"
+            }
+        },
+        {
             "name": "drupal/jsonapi",
             "version": "1.23.0",
             "source": {
@@ -6529,6 +6952,280 @@
             }
         },
         {
+            "name": "drupal/lightning_core",
+            "version": "2.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupal.org/project/lightning_core",
+                "reference": "8.x-2.8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/lightning_core-8.x-2.8.zip",
+                "reference": "8.x-2.8",
+                "shasum": "99376e26341fc81f497469695929948196f45ccb"
+            },
+            "require": {
+                "cweagans/composer-patches": "^1.6.4",
+                "drupal-composer/drupal-scaffold": "^2.0.0",
+                "drupal/acquia_connector": "^1.1",
+                "drupal/contact_storage": "^1.0",
+                "drupal/core": "~8.5.6",
+                "drupal/metatag": "^1.0",
+                "drupal/pathauto": "^1.0",
+                "drupal/search_api": "^1.0",
+                "drupal/token": "^1.0",
+                "oomphinc/composer-installers-extender": "^1.1",
+                "phpdocumentor/reflection-docblock": "^3.0|^4.0"
+            },
+            "conflict": {
+                "drupal/drupal-extension": "<3.4.0"
+            },
+            "require-dev": {
+                "acquia/lightning_dev": "dev-8.x-1.x",
+                "drupal/console": "^1.6",
+                "drupal/contact_storage": "*",
+                "drupal/search_api": "*"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "branch-alias": {
+                    "dev-2.x": "2.x-dev"
+                },
+                "drupal": {
+                    "version": "8.x-2.8",
+                    "datestamp": "1533159180",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                },
+                "installer-types": [
+                    "bower-asset",
+                    "npm-asset"
+                ],
+                "installer-paths": {
+                    "docroot/core": [
+                        "type:drupal-core"
+                    ],
+                    "docroot/libraries/{$name}": [
+                        "type:drupal-library",
+                        "type:bower-asset",
+                        "type:npm-asset"
+                    ],
+                    "docroot/modules/contrib/{$name}": [
+                        "type:drupal-module"
+                    ],
+                    "docroot/profiles/contrib/{$name}": [
+                        "type:drupal-profile"
+                    ],
+                    "docroot/themes/contrib/{$name}": [
+                        "type:drupal-theme"
+                    ]
+                },
+                "patches": {
+                    "drupal/core": {
+                        "1356276 - Allow profiles to provide a base/parent profile and load them in the correct order": "https://www.drupal.org/files/issues/1356278-408--8.5.x-real.patch",
+                        "2880374 - Experimental modules should not have warnings after being installed": "https://www.drupal.org/files/issues/2880374-remove-experimental-warnings-6.patch",
+                        "2869592 - Disabled update module shouldn't produce a status report warning": "https://www.drupal.org/files/issues/2869592-remove-update-warning-7.patch",
+                        "2885441 - EntityReferenceAutocompleteWidget should define its size setting as an integer": "https://www.drupal.org/files/issues/2885441-2.patch",
+                        "2815221 - Add quickedit to the latest-revision route": "https://www.drupal.org/files/issues/2018-06-07/2815221-102.patch",
+                        "2921661 (follow-up): Add support to migrate multilingual revisions": "https://www.drupal.org/files/issues/2018-07-04/2921661-86-8.6.x.patch"
+                    }
+                },
+                "drush": {
+                    "services": {
+                        "drush.services.yml": "^9"
+                    }
+                },
+                "enable-patching": true
+            },
+            "autoload": {
+                "classmap": [
+                    "tests/contexts/AwaitTrait.inc"
+                ]
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "scripts": {
+                "post-install-cmd": [
+                    "@push",
+                    "@drupal-scaffold"
+                ],
+                "post-update-cmd": [
+                    "@push",
+                    "@drupal-scaffold"
+                ],
+                "drupal-scaffold": [
+                    "DrupalComposer\\DrupalScaffold\\Plugin::scaffold"
+                ],
+                "nuke": [
+                    "rm -r -f docroot vendor"
+                ],
+                "pull": [
+                    "Acquia\\Lightning\\Commands\\FileCommands::pull"
+                ],
+                "push": [
+                    "Acquia\\Lightning\\Commands\\FileCommands::push"
+                ]
+            },
+            "license": [
+                "GPL-2.0+"
+            ],
+            "authors": [
+                {
+                    "name": "balsama",
+                    "homepage": "https://www.drupal.org/user/223087"
+                },
+                {
+                    "name": "phenaproxima",
+                    "homepage": "https://www.drupal.org/user/205645"
+                }
+            ],
+            "description": "Shared functionality for the Lightning distribution.",
+            "homepage": "https://www.drupal.org/project/lightning_core",
+            "support": {
+                "source": "http://cgit.drupalcode.org/lightning_core"
+            }
+        },
+        {
+            "name": "drupal/lightning_media",
+            "version": "2.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupal.org/project/lightning_media",
+                "reference": "8.x-2.3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/lightning_media-8.x-2.3.zip",
+                "reference": "8.x-2.3",
+                "shasum": "983932131a67e68acf72e97462e0b47af45182bf"
+            },
+            "require": {
+                "bower-asset/cropper": "^2.3",
+                "bower-asset/dropzone": "^5.1",
+                "cweagans/composer-patches": "^1.6.4",
+                "drupal-composer/drupal-scaffold": "^2.0.0",
+                "drupal/core": "*",
+                "drupal/crop": "^2.0.0-rc1",
+                "drupal/dropzonejs": "2.0.0-alpha3",
+                "drupal/embed": "^1.0",
+                "drupal/entity_browser": "2.0.0-alpha2",
+                "drupal/entity_embed": "1.0.0-beta2",
+                "drupal/image_widget_crop": "^2.1",
+                "drupal/inline_entity_form": "^1.0",
+                "drupal/lightning_core": "^2.5",
+                "drupal/media": "*",
+                "drupal/media_entity_instagram": "2.0.0-alpha1",
+                "drupal/media_entity_twitter": "2.0.0-alpha2",
+                "drupal/video_embed_field": "^2.0",
+                "drupal/views_infinite_scroll": "^1.1",
+                "oomphinc/composer-installers-extender": "^1.1"
+            },
+            "require-dev": {
+                "acquia/lightning_dev": "dev-8.x-1.x",
+                "drupal/dropzonejs": "*",
+                "drupal/media_entity_instagram": "*",
+                "drupal/media_entity_twitter": "*",
+                "drupal/video_embed_media": "*"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "branch-alias": {
+                    "dev-2.x": "2.x-dev"
+                },
+                "drupal": {
+                    "version": "8.x-2.3",
+                    "datestamp": "1525814580",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                },
+                "installer-types": [
+                    "bower-asset",
+                    "npm-asset"
+                ],
+                "installer-paths": {
+                    "docroot/core": [
+                        "type:drupal-core"
+                    ],
+                    "docroot/libraries/{$name}": [
+                        "type:drupal-library",
+                        "type:bower-asset",
+                        "type:npm-asset"
+                    ],
+                    "docroot/modules/contrib/{$name}": [
+                        "type:drupal-module"
+                    ],
+                    "docroot/profiles/contrib/{$name}": [
+                        "type:drupal-profile"
+                    ],
+                    "docroot/themes/contrib/{$name}": [
+                        "type:drupal-theme"
+                    ]
+                },
+                "patches": {
+                    "drupal/core": {
+                        "2877383 - Add action support to Media module": "https://www.drupal.org/files/issues/2877383-56.patch",
+                        "2670730 - Provide a delete action for each content entity type": "https://www.drupal.org/files/issues/2670730-81-89-8.5.0-rc1.patch"
+                    },
+                    "drupal/entity_embed": {
+                        "2832504 - Send the CKEditor instance ID to the embed.preview route": "https://www.drupal.org/files/issues/2832504-2.patch"
+                    },
+                    "drupal/entity_browser": {
+                        "2865928 - The View widget should filter based on field settings": "https://www.drupal.org/files/issues/entity-browser-view-context-2865928-14.patch",
+                        "2877751 - Inform users how many items they can add to a field that uses an entity browser": "https://www.drupal.org/files/issues/2877751-27-8.x-2.x.patch"
+                    },
+                    "drupal/media_entity_instagram": {
+                        "2917454 - Field formatter test is broken": "https://www.drupal.org/files/issues/2917454-2.patch"
+                    }
+                },
+                "enable-patching": true
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "scripts": {
+                "post-install-cmd": [
+                    "@push",
+                    "@drupal-scaffold"
+                ],
+                "post-update-cmd": [
+                    "@push",
+                    "@drupal-scaffold"
+                ],
+                "drupal-scaffold": [
+                    "DrupalComposer\\DrupalScaffold\\Plugin::scaffold"
+                ],
+                "nuke": [
+                    "rm -r -f docroot vendor"
+                ],
+                "pull": [
+                    "Acquia\\Lightning\\Commands\\FileCommands::pull"
+                ],
+                "push": [
+                    "Acquia\\Lightning\\Commands\\FileCommands::push"
+                ]
+            },
+            "license": [
+                "GPL-2.0+"
+            ],
+            "authors": [
+                {
+                    "name": "balsama",
+                    "homepage": "https://www.drupal.org/user/223087"
+                },
+                {
+                    "name": "phenaproxima",
+                    "homepage": "https://www.drupal.org/user/205645"
+                }
+            ],
+            "description": "Slick media handling for Lightning. So cool you'll make the A/C jealous.",
+            "homepage": "https://www.drupal.org/project/lightning_media",
+            "support": {
+                "source": "http://cgit.drupalcode.org/lightning_media"
+            }
+        },
+        {
             "name": "drupal/linkit",
             "version": "5.0.0-beta7",
             "source": {
@@ -6809,6 +7506,69 @@
             "homepage": "https://www.drupal.org/project/masonry_views",
             "support": {
                 "source": "http://cgit.drupalcode.org/masonry_views"
+            }
+        },
+        {
+            "name": "drupal/media_entity_instagram",
+            "version": "2.0.0-alpha1",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupal.org/project/media_entity_instagram",
+                "reference": "8.x-2.0-alpha1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/media_entity_instagram-8.x-2.0-alpha1.zip",
+                "reference": "8.x-2.0-alpha1",
+                "shasum": "602d84d2e385ce2f3b0562f7cf50d1e084f92658"
+            },
+            "require": {
+                "drupal/core": "^8.4.0"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "branch-alias": {
+                    "dev-2.x": "2.x-dev"
+                },
+                "drupal": {
+                    "version": "8.x-2.0-alpha1",
+                    "datestamp": "1506671645",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Alpha releases are not covered by Drupal security advisories."
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Drupal Media Team",
+                    "homepage": "https://www.drupal.org/user/3260690"
+                },
+                {
+                    "name": "Primsi",
+                    "homepage": "https://www.drupal.org/user/282629"
+                },
+                {
+                    "name": "chr.fritsch",
+                    "homepage": "https://www.drupal.org/user/2103716"
+                },
+                {
+                    "name": "designesse",
+                    "homepage": "https://www.drupal.org/user/854012"
+                },
+                {
+                    "name": "slashrsm",
+                    "homepage": "https://www.drupal.org/user/744628"
+                }
+            ],
+            "description": "Media entity Instagram provider.",
+            "homepage": "https://www.drupal.org/project/media_entity_instagram",
+            "support": {
+                "source": "http://cgit.drupalcode.org/media_entity_instagram"
             }
         },
         {
@@ -10360,17 +11120,17 @@
         },
         {
             "name": "drupal/video_embed_field",
-            "version": "1.5.0",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupal.org/project/video_embed_field",
-                "reference": "8.x-1.5"
+                "reference": "8.x-2.0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/video_embed_field-8.x-1.5.zip",
-                "reference": "8.x-1.5",
-                "shasum": "f54d470ef7f863604e51e6ae98cd40ef25de5f79"
+                "url": "https://ftp.drupal.org/files/projects/video_embed_field-8.x-2.0.zip",
+                "reference": "8.x-2.0",
+                "shasum": "e864f090b3cb9405376ca324d81ace83613e2019"
             },
             "require": {
                 "drupal/core": "*"
@@ -10383,11 +11143,11 @@
             "type": "drupal-module",
             "extra": {
                 "branch-alias": {
-                    "dev-1.x": "1.x-dev"
+                    "dev-2.x": "2.x-dev"
                 },
                 "drupal": {
                     "version": "8.x-1.x",
-                    "datestamp": "1510132373",
+                    "datestamp": "1523338084",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -12123,6 +12883,48 @@
                 "php"
             ],
             "time": "2018-07-15T17:25:16+00:00"
+        },
+        {
+            "name": "oomphinc/composer-installers-extender",
+            "version": "v1.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/oomphinc/composer-installers-extender.git",
+                "reference": "ca1c4b16b0905c81d1e77e608f36a2eff1a56f56"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/oomphinc/composer-installers-extender/zipball/ca1c4b16b0905c81d1e77e608f36a2eff1a56f56",
+                "reference": "ca1c4b16b0905c81d1e77e608f36a2eff1a56f56",
+                "shasum": ""
+            },
+            "require": {
+                "composer-plugin-api": "^1.0",
+                "composer/installers": "^1.0"
+            },
+            "type": "composer-plugin",
+            "extra": {
+                "class": "OomphInc\\ComposerInstallersExtender\\Plugin"
+            },
+            "autoload": {
+                "psr-4": {
+                    "OomphInc\\ComposerInstallersExtender\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Stephen Beemsterboer",
+                    "email": "stephen@oomphinc.com",
+                    "homepage": "https://github.com/balbuf"
+                }
+            ],
+            "description": "Extend the composer/installers plugin to accept any arbitrary package type.",
+            "homepage": "http://www.oomphinc.com/",
+            "time": "2017-03-31T16:57:39+00:00"
         },
         {
             "name": "paragonie/random_compat",
@@ -16681,7 +17483,6 @@
         "drupal/focal_point": 10,
         "drupal/views_ajax_history": 20,
         "drupal/dropzonejs": 15,
-        "drupal/entity_browser": 15,
         "drupal/entity_embed": 10,
         "drupal/content_browser": 15,
         "drupal/entity_browser_enhanced": 5,

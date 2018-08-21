@@ -5,4 +5,16 @@ id: forum_moderator
 label: 'Forum Moderator'
 weight: -8
 is_admin: null
-permissions: {  }
+permissions:
+  - 'access taxonomy overview'
+  - 'administer forums'
+  - 'create terms in forums'
+  - 'delete any forum content'
+  - 'delete forum revisions'
+  - 'delete own forum content'
+  - 'delete terms in forums'
+  - 'display eu cookie compliance popup'
+  - 'edit any forum content'
+  - 'edit terms in forums'
+  - 'revert forum revisions'
+  - 'view forum revisions'
