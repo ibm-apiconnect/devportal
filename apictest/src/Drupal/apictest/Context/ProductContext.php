@@ -40,9 +40,9 @@ class ProductContext extends RawDrupalContext {
     $object['state'] = 'published';
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';
-    $object['visibility']['view']['enabled'] = TRUE;
-    $object['visibility']['subscribe']['enabled'] = TRUE;
-    $object['visibility']['view']['type'] = 'public';
+    $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
+    $object['catalog_product']['visibility']['subscribe']['enabled'] = TRUE;
+    $object['catalog_product']['visibility']['view']['type'] = 'public';
 
     if (!\Drupal::config('ibm_apim.settings')->get('categories')['create_taxonomies_from_categories']) {
       print("Setting 'create_taxonomies_from_categories' config to true. ");
@@ -135,9 +135,9 @@ class ProductContext extends RawDrupalContext {
     $object['state'] = 'published';
     $object['id'] = "12345678";
     $object['url'] = 'https://localhost.com';
-    $object['visibility']['view']['enabled'] = TRUE;
-    $object['visibility']['subscribe']['enabled'] = TRUE;
-    $object['visibility']['view']['type'] = 'public';
+    $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
+    $object['catalog_product']['visibility']['subscribe']['enabled'] = TRUE;
+    $object['catalog_product']['visibility']['view']['type'] = 'public';
 
     if (\Drupal::config('ibm_apim.settings')->get('categories')['create_taxonomies_from_categories']) {
       print("Setting 'create_taxonomies_from_categories' config to false. ");
@@ -210,25 +210,25 @@ class ProductContext extends RawDrupalContext {
     $object['state'] = 'published';
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';
-    $object['visibility']['view']['enabled'] = TRUE;
+    $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
     switch ($visi) {
       case 'pub':
         // public; anyone can view
-        $object['visibility']['view']['type'] = 'public';
+        $object['catalog_product']['visibility']['view']['type'] = 'public';
         break;
       case 'auth':
         // authenticated: any authenticated user can view
-        $object['visibility']['view']['type'] = 'authenticated';
+        $object['catalog_product']['visibility']['view']['type'] = 'authenticated';
         break;
       case 'org_urls':
         // organization: only people in the given orgs can view
-        $object['visibility']['view']['type'] = 'custom';
-        $object['visibility']['view']['org_urls'] = array($data);
+        $object['catalog_product']['visibility']['view']['type'] = 'custom';
+        $object['catalog_product']['visibility']['view']['org_urls'] = array($data);
         break;
       case 'tags':
         // category: only people in an org with the right community string can view
-        $object['visibility']['view']['type'] = 'custom';
-        $object['visibility']['view']['tags'] = array($data);
+        $object['catalog_product']['visibility']['view']['type'] = 'custom';
+        $object['catalog_product']['visibility']['view']['tags'] = array($data);
         break;
       case 'subs':
         // subscription: only people with an app that is subscribed to the portal can view
@@ -324,9 +324,9 @@ class ProductContext extends RawDrupalContext {
     $object['state'] = 'published';
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';
-    $object['visibility']['view']['enabled'] = TRUE;
-    $object['visibility']['view']['type'] = 'custom';
-    $object['visibility']['view']['orgs'] = array($org);
+    $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
+    $object['catalog_product']['visibility']['view']['type'] = 'custom';
+    $object['catalog_product']['visibility']['view']['orgs'] = array($org);
     $object['catalog_product']['apis'] = array($api => array('name' => $api));
 
     $product = new Product();

@@ -1,0 +1,5 @@
+ibm_apim.modules_uninstall:
+  route_name: ibm_apim.custommodules_delete
+  base_route: system.modules_list
+  title: 'Delete'
+  weight: 50

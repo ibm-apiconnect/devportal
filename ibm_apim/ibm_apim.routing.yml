@@ -157,3 +157,19 @@ ibm_apim.theme_delete:
     _csrf_token: 'TRUE'
   options:
     _admin_route: TRUE
+
+ibm_apim.custommodules_delete:
+  path: '/admin/modules/delete'
+  defaults:
+    _form: 'Drupal\ibm_apim\Form\CustomModulesDeleteForm'
+    _title: 'Delete'
+  requirements:
+    _permission: 'administer modules'
+
+ibm_apim.custommodules_delete_confirm:
+  path: '/admin/modules/delete/confirm'
+  defaults:
+    _form: 'Drupal\ibm_apim\Form\CustomModulesDeleteConfirmForm'
+    _title: 'Confirm delete'
+  requirements:
+    _permission: 'administer modules'

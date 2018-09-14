@@ -107,10 +107,7 @@ Scenario: View own edit profile form as admin user (uid==1)
   And I should see the text "Time zone"
   And I should see the text "Email address"
   And the element "mail" is enabled
-  And I should see the text "Username"
-  And the element "name" is enabled
-  And the "name" field should contain "admin"
-
+  And I should not see the text "Username"
 
 @api
 Scenario: View another users edit profile form as admin user (uid==1)
@@ -135,4 +132,24 @@ Scenario: View another users edit profile form as admin user (uid==1)
   And I should not see the text "Current Password"
   And I should not see the text "Username"
 
-
+  @api
+  Scenario: View admin user edit profile form as andre with Administrator role
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+    Given I am logged in as a user with the "Administrator" role
+    And I am at "/user/1/edit"
+    Then I should see the text "First Name"
+    And the element "first_name[0][value]" is disabled
+    And I should see the text "Last Name"
+    And the element "last_name[0][value]" is disabled
+    And I should see the text "Email Address"
+    And the element "emailaddress" is disabled
+    And I should see the text "Picture"
+    And I should see the text "Code Snippet language"
+    And I should see the text "Time zone"
+    And I should not see the text "Current Password"
+    And I should not see the text "Username"

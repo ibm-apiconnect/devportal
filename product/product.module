@@ -317,11 +317,24 @@ function product_preprocess(&$variables, $hook, &$info) {
         else {
           $templateFileName = 'node--' . $contentTypeToShow . '--' . $viewModeToUse;
         }
-        $templateFilePath = drupal_get_path('module', 'product') . '/templates/' . $templateFileName . '.html.twig';
-        if (file_exists($templateFilePath)) {
-          $info['theme path'] = drupal_get_path('module', 'product');
-          $info['path'] = drupal_get_path('module', 'product') . '/templates';
+
+        $theme_name = \Drupal::theme()->getActiveTheme()->getName();
+        $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
+        if (file_exists($theme_path . '/templates/node/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = drupal_get_path('theme', $theme_name);
+          $info['path'] = drupal_get_path('theme', $theme_name) . '/templates/node';
           $info['template'] = $templateFileName;
+        } elseif (file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = drupal_get_path('theme', $theme_name);
+          $info['path'] = drupal_get_path('theme', $theme_name) . '/templates';
+          $info['template'] = $templateFileName;
+        } else {
+          $templateFilePath = drupal_get_path('module', 'product') . '/templates/' . $templateFileName . '.html.twig';
+          if (file_exists($templateFilePath)) {
+            $info['theme path'] = drupal_get_path('module', 'product');
+            $info['path'] = drupal_get_path('module', 'product') . '/templates';
+            $info['template'] = $templateFileName;
+          }
         }
       }
       ibm_apim_exit_trace(__FUNCTION__, NULL);

@@ -88,8 +88,8 @@ class ApicUserProfileForm extends ProfileForm {
           $form['last_name']['widget'][0]['value']['#default_value'] = 'admin';
         }
 
-        $form['account']['current_pass']['#access'] = FALSE;
-        $form['account']['current_pass']['#required'] = FALSE;
+        $form['account']['name']['#access'] = FALSE;
+        $form['account']['name']['#required'] = FALSE;
 
       }
       // For non-admin, there are some special cases to handle as well.
@@ -118,34 +118,34 @@ class ApicUserProfileForm extends ProfileForm {
     }
     else {
 
-      // This is admin editing someone else.
+      // This is admin (or someone with Administrator role) editing someone else.
       $form['first_name']['#disabled'] = TRUE;
       $form['first_name']['#required'] = FALSE;
 
       $form['last_name']['#disabled'] = TRUE;
       $form['last_name']['#required'] = FALSE;
 
-      // suppress account = current pw and email field.
+      // suppress account but reinstate email field as readonly.
       $form['account']['#access'] = FALSE;
       $form['account']['#required'] = FALSE;
 
       // also have to set every field individually to disabled for account_field_split to work properly
       $form['account']['name']['#access'] = FALSE;
       $form['account']['name']['#required'] = FALSE;
-      $form['account']['mail']['#access'] = FALSE;
-      $form['account']['mail']['#required'] = FALSE;
       $form['account']['pass']['#access'] = FALSE;
       $form['account']['pass']['#required'] = FALSE;
+      $form['account']['mail']['#access'] = FALSE;
+      $form['account']['mail']['#required'] = FALSE;
       $form['account']['current_pass']['#access'] = FALSE;
       $form['account']['current_pass']['#required'] = FALSE;
       $form['account']['password_policy_status']['#access'] = FALSE;
     }
 
-    $ro = $this->state->get('ibm_apim.readonly_idp');
-
     $form_for_user = $this->entity->get('uid')->value;
-    // not applicable to admin (uid=1) form as that has account on it.
-    if ($form_for_user != '1') {
+
+    // we need to add an email address field as account is supressed for all users except for
+    // admin, unless it is another Administrator viewing admin.
+    if ($form_for_user !== '1' || $this->currentUser()->id() !== '1') {
 
       // we store a special email address for users where there is nothing
       // stored in the user registry, blank this out for display purposes.
@@ -212,11 +212,18 @@ class ApicUserProfileForm extends ProfileForm {
     $mailValue = $form_state->getValue('mail');
     $username = $form_state->getValue('name');
 
+    if ($form_state->getValue('current_pass') !== NULL) {
+      $password = $form_state->getValue('current_pass');
+    }
+
     $edit_user = new ApicUser();
     $edit_user->setFirstName($firstNameValue);
     $edit_user->setLastName($lastNameValue);
     $edit_user->setMail($mailValue);
     $edit_user->setUsername($username);
+    if($password) {
+      $edit_user->setPassword($password);
+    }
 
     // We need to call different functions on the user manager
     // depending on who we are and who we edited.

@@ -291,9 +291,7 @@ textarea,
 }
 
 select,
-.bx--form-item select,
-.apiconnect-explorer .bx--select__input,
-select:hover {
+.select-wrapper select {
   display: block;
   padding: .35rem 2.75rem .35rem 1rem;;
   border: none;
@@ -684,6 +682,7 @@ input[type="checkbox"].bx--checkbox {
 .route-consumerorgresend-invite .main-container .row,
 .route-change-pwd-pagechange-password-form .main-container .row .apic-change-pwd-form,
 .route-entityuseredit-form .main-container .row .user-form,
+.route-ibm-apimsubscription-wizardnoplan .modal-dialog .form-item input,
 form.user-pass-reset,
 .apicForm,
 .apic-user-form {
@@ -698,6 +697,16 @@ form.user-pass-reset,
     border-color: $default-input-border;
   }
 
+}
+.route-ibm-apimsubscription-wizard .modal-dialog,
+.route-ibm-apimsubscription-wizardnoplan .modal-dialog {
+  .form-item input,
+  .form-item input:hover,
+  .form-item textarea,
+  .form-item select {
+    background-color: $default-input-bg;
+    border-color: $default-input-border;
+  }
 }
 
 .route-apic-appcreate .main-container .row,
@@ -735,6 +744,14 @@ form.user-pass-reset,
 
   .page-header {
     border: none;
+  }
+}
+.route-ibm-apimsubscription-wizard .modal-dialog,
+.route-ibm-apimsubscription-wizardnoplan .modal-dialog {
+  .form-item input,
+  .form-item input:hover
+  {
+    width: 100%;
   }
 }
 

@@ -2,6 +2,9 @@
 
 namespace Drupal\ibm_apim\Controller;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ThemeHandlerInterface;
+use Drupal\ibm_apim\Service\Utils;
 use Drupal\system\Controller\ThemeController;
 use Drupal\Core\Config\PreExistingConfigException;
 use Drupal\Core\Config\UnmetDependenciesException;
@@ -15,6 +18,22 @@ use Leafo\ScssPhp\Compiler;
  */
 class IbmApimThemeInstallController extends ThemeController {
 
+  private $utils;
+
+  public function __construct(Utils $utils,
+                              ThemeHandlerInterface $theme_handler,
+                              ConfigFactoryInterface $config_factory) {
+    $this->utils = $utils;
+    parent::__construct($theme_handler, $config_factory);
+  }
+
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('ibm_apim.utils'),
+      $container->get('theme_handler'),
+      $container->get('config.factory')
+    );
+  }
 
   /**
    * Uninstalls a theme.
@@ -192,8 +211,8 @@ class IbmApimThemeInstallController extends ThemeController {
       // Check if the specified theme is disabled
       if (!in_array($theme, $themes)) {
         $item_path = drupal_get_path('theme', $theme);
-        if (isset($item_path)) {
-          $this->file_delete_recursive($item_path);
+        if (isset($item_path) && !empty($item_path)) {
+          $this->utils->file_delete_recursive($item_path);
           // clear all caches otherwise reinstalling the same theme will fail
           drupal_flush_all_caches();
 
@@ -206,28 +225,6 @@ class IbmApimThemeInstallController extends ThemeController {
     }
 
     throw new AccessDeniedHttpException();
-  }
-
-  /**
-   * Private utility function to recursively delete a directory
-   *
-   * @param $path
-   */
-  private function file_delete_recursive($path) {
-    if (isset($path)) {
-      if (is_dir($path)) { // Path is directory
-        $files = scandir($path);
-        foreach ($files as $file) {
-          if ($file != '.' && $file != '..') {
-            $this->file_delete_recursive($path . '/' . $file); // Recursive call
-          }
-        }
-        rmdir($path);
-      }
-      else {
-        unlink($path); // Delete the file
-      }
-    }
   }
 
   /**

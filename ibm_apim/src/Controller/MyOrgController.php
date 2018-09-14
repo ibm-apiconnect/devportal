@@ -70,13 +70,26 @@ class MyOrgController extends ControllerBase {
         $orgmember = unserialize($arrayValue['value']);
         $member_user_url = $orgmember->getUserUrl();
         if ($myorgOwnerUrl == $member_user_url) {
-          $owner = $orgmember;
+          $owner = array();
+          $owner['name'] = $orgmember->getUser()->getFirstName() . ' ' . $orgmember->getUser()->getLastName();
+          $owner['mail'] = $orgmember->getUser()->getMail();
+          $owner['username'] = $orgmember->getUser()->getUsername();
+          $owner['state'] = $orgmember->getUser()->getState();
+          $owner['id'] = $orgmember->getId();
+          $owner['role_urls'] = $orgmember->getRoleUrls();
+          $entity = $orgmember->getUser()->getDrupalUser();
+          if (!empty($entity->user_picture) && $entity->user_picture->isEmpty() === FALSE) {
+            $image = $entity->user_picture;
+            $uri = $image->entity->getFileUri();
+            $owner['user_picture'] = file_create_url($uri);
+          }
         }
         else {
           $member = array();
           $member['name'] = $orgmember->getUser()->getFirstName() . ' ' . $orgmember->getUser()->getLastName();
           $member['mail'] = $orgmember->getUser()->getMail();
           $member['state'] = $orgmember->getUser()->getState();
+          $member['username'] = $orgmember->getUser()->getUsername();
           $member['id'] = $orgmember->getId();
           $member['role_urls'] = $orgmember->getRoleUrls();
           $entity = $orgmember->getUser()->getDrupalUser();

@@ -3,7 +3,7 @@
 BASEDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # if change the project name then also need to update the jenkins docker image webroot
 PROJECT_NAME="devportal"
-VERSION=2018.3.7
+VERSION=2018.3.8
 SERVICE="false"
 
 BUILD_DIR="$BASEDIR/build"
@@ -57,7 +57,7 @@ php composer.phar -n config -g github-oauth.github.ibm.com 23b3b2c497a3fa8cc59a1
 
 # Create new composer project
 rm -rf $PROJECT_NAME
-php composer.phar -n create-project --no-dev --prefer-dist drupal/drupal $PROJECT_NAME 8.5.6
+php composer.phar -n create-project --no-dev --prefer-dist drupal/drupal $PROJECT_NAME 8.5.7
 
 cp -f $BASEDIR/composer.json $PROJECT_NAME
 cp -f $BASEDIR/composer.lock $PROJECT_NAME

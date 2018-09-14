@@ -851,3 +851,14 @@ function apim_profile_update_8001() {
     ->set('notify.register_pending_approval', FALSE)
     ->save();
 }
+
+/**
+ * Upgrade to 2018.3.7
+ *
+ * Fix the products link in the getting started block
+ */
+function apim_profile_update_8002() {
+  $path = dirname(__FILE__);
+  require_once $path . '/apim_profile.homepage.inc';
+  update_gsg_block();
+}

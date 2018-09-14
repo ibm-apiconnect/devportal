@@ -350,7 +350,7 @@ function get_localized_gsb_content($langcode) {
   $html .= t('<a href="@link">Create a new account</a> and get started with our APIs. It\'s free to join.', ['@link' => 'user/register'], ['langcode' => $langcode]);
   $html .= '</div><div class="gsstep explore"><div class="placeholder"></div>';
   $html .= t('<h3>Explore our APIs</h3>', [], ['langcode' => $langcode]) . '<p>';
-  $html .= t('Take a look at our <a href="@link">API products</a> and quickly find APIs to construct a fully featured application', ['@link' => 'products'], ['langcode' => $langcode]) . '</p>';
+  $html .= t('Take a look at our <a href="@link">API products</a> and quickly find APIs to construct a fully featured application', ['@link' => 'product'], ['langcode' => $langcode]) . '</p>';
   $html .= '</div><div class="gsstep subscribe"><div class="placeholder"></div>';
   $html .= t('<h3>Create</h3>', [], ['langcode' => $langcode]) . '<p>';
   $html .= t('Subscribe to a plan and create your application to make use of our APIs.', [], ['langcode' => $langcode]) . '</p></div></div>';
@@ -377,4 +377,42 @@ function get_localized_gethelp_content($langcode) {
 function get_localized_goahead_content($langcode) {
   $html = '<div class="goahead" ><div class="goaheadtext"><h3>' . t('Go ahead! Start building with our APIs today!', [], ['langcode' => $langcode]) . '</h3><a class="button cta-btns--white__btn" href="product">' . t('Explore API documentation', [], ['langcode' => $langcode]) . '</a></div></div>';
   return $html;
+}
+
+/*
+ * Function to update all the links in the getting started guide from /products to /product
+ */
+function update_gsg_block() {
+  $query = \Drupal::entityQuery('block_content');
+  $query->condition('info.value', 'Getting Started [en]');
+  $nids = $query->execute();
+
+  if (isset($nids) && !empty($nids)) {
+    $blockid = array_shift($nids);
+  }
+  $block = BlockContent::load($blockid);
+  // update english
+  $bodyValue = $block->body->value;
+  // href="products"
+  $updated = str_replace('href="products"','href="product"',$bodyValue);
+  $block->set('body',array(
+    'value' => $updated,
+    'format' => 'full_html',
+  ));
+  $block->save();
+
+  $languages = \Drupal::languageManager()->getLanguages();
+  foreach ($languages as $language) {
+    if ($language->getId() === 'en') {
+      continue;
+    }
+    $translation = $block->getTranslation($language->getId());
+    $bodyValue = $translation->body->value;
+    $updated = str_replace('href="products"','href="product"', $bodyValue);
+    $translation->set('body',array(
+      'value' => $updated,
+      'format' => 'full_html',
+    ));
+    $translation->save();
+  }
 }

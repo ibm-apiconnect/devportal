@@ -120,7 +120,8 @@ class ChangeMemberRoleForm extends FormBase {
         }
         else {
           foreach ($members as $member) {
-            if ($member->getId() == $this->memberId) {
+            if ($member->getId() == $memberId) {
+              $this->memberId = $memberId;
               $this->member = $member;
             }
           }
@@ -205,7 +206,8 @@ class ChangeMemberRoleForm extends FormBase {
       drupal_set_message(t('Member is not set.'), 'error');
     }
     else {
-      $response = $this->consumerOrgService->changeMemberRole($member, $new_role);
+      $selected_role_url = \Drupal::service('ibm_apim.apim_utils')->createFullyQualifiedUrl($new_role);
+      $response = $this->consumerOrgService->changeMemberRole($member, $selected_role_url);
       if ($response->success()) {
         drupal_set_message(t('Member role updated.'));
       }

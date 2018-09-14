@@ -104,7 +104,7 @@ class ApplicationPromotionForm extends ConfirmFormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appId = $this->node->application_id->value;
     $url = $this->node->apic_url->value;
-    $result = $this->restService->promoteApplication($url, json_encode(array('lifecycle_state' => 'production')));
+    $result = $this->restService->promoteApplication($url, json_encode(array('lifecycle_state_pending' => 'production')));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       drupal_set_message($this->t('Application upgrade requested.'));
 

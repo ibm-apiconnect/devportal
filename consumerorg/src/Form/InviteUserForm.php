@@ -17,6 +17,7 @@ use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\ibm_apim\Service\UserUtils;
@@ -168,6 +169,37 @@ class InviteUserForm extends FormBase {
    */
   public function getCancelUrl() {
     return Url::fromRoute('ibm_apim.myorg');
+  }
+
+  /**
+   * If check_dns is enabled then validate the email address now
+   *
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    parent::validateForm($form, $form_state);
+    $moduleHandler = \Drupal::service('module_handler');
+    if ($moduleHandler->moduleExists('check_dns')) {
+      $mail = $form_state->getValue('new_email');
+
+      if (isset($mail) && 2 < strlen($mail)) {
+
+        // Get the email.
+        $mail = SafeMarkup::checkPlain($mail);
+        $mail = explode('@', $mail);
+        // Fetch DNS Resource Records associated with a hostname.
+        $result = checkdnsrr(end($mail));
+
+        if (empty($result) || $result != true) {
+          // If no record is found.
+          $form_state->setErrorByName('new_email', t('Your email domain is not recognised. Please enter a valid email id.'));
+        }
+      }
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 
   /**

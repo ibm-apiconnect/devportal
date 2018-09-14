@@ -240,4 +240,27 @@ class Utils {
     ];
     return $translations;
   }
+
+  /**
+   * Recursively delete a directory
+   *
+   * @param $path
+   */
+  function file_delete_recursive($path) {
+    if (isset($path)) {
+      if (is_dir($path)) { // Path is directory
+        $files = scandir($path);
+        foreach ($files as $file) {
+          if ($file != '.' && $file != '..') {
+            $this->file_delete_recursive($path . '/' . $file); // Recursive call
+          }
+        }
+        rmdir($path);
+      }
+      else {
+        unlink($path); // Delete the file
+      }
+    }
+  }
+
 }

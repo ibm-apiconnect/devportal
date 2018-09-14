@@ -563,13 +563,12 @@ class ApicUserManager implements UserManagerInterface {
       $returnValue = FALSE;
 
     } else {
-
       $account->set('first_name', $user->getFirstname());
       $account->set('last_name', $user->getLastname());
       $account->set('mail', $user->getMail());
 
       // For all non-admin users, don't store their password in our database.
-      if($account->id() !== 1) {
+      if($account->id() !== "1") {
         $account->setPassword(NULL);
       }
 

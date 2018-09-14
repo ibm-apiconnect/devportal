@@ -110,6 +110,7 @@ class Product {
       $node->set('product_license_url', NULL);
       $node->set('product_terms_of_service', NULL);
       $node->set('product_visibility', NULL);
+      $node->set('product_view_enabled', NULL);
       $node->set('product_subscribe_enabled', NULL);
       $node->set('product_visibility_public', NULL);
       $node->set('product_visibility_authenticated', NULL);
@@ -346,11 +347,12 @@ class Product {
       else {
         $node->set('product_visibility', array());
       }
-      if (isset($product['catalog_product']['visibility']['view']['enabled']) && $product['catalog_product']['visibility']['view']['enabled'] == TRUE) {
-        $node->set("product_view_enabled", 1);
+      // default to product visibility being enabled to avoid bugs in apim where the value is not getting set correctly
+      if (isset($product['catalog_product']['visibility']['view']) && array_key_exists('enabled', $product['catalog_product']['visibility']['view']) && $product['catalog_product']['visibility']['view']['enabled'] == FALSE) {
+        $node->set("product_view_enabled", 0);
       }
       else {
-        $node->set("product_view_enabled", 0);
+        $node->set("product_view_enabled", 1);
       }
       if (isset($product['catalog_product']['visibility']['subscribe']['enabled']) && $product['catalog_product']['visibility']['subscribe']['enabled'] == TRUE) {
         $node->set("product_subscribe_enabled", 1);

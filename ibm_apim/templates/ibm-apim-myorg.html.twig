@@ -54,9 +54,9 @@
         <div class="apicMyOrgMember">
           <div class="apicMyOrgMemberDetails">
             <div class="memberIcon">
-              <span title="{{ user.account.name }}">
-                {% if user.user_picture is defined %}
-                  <img src="{{ user.user_picture }}" alt="{{ user.name }}" title="{{ user.name }}"/>
+              <span title="{{ myorg_owner.name }}">
+                {% if myorg_owner.user_picture is defined %}
+                  <img src="{{ myorg_owner.user_picture }}" alt="{{ myorg_owner.name }}" title="{{ myorg_owner.name }}"/>
                 {% else %}
                   {% include images_path ~ '/images/user.svg' %}
                 {% endif %}

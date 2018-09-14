@@ -288,6 +288,10 @@ apiconnect-explorer pre {
   line-height: normal;
 }
 
+apiconnect-explorer a,
+apiconnect-explorer .bx--link {
+  color: $brand-primary;
+}
 
 .featuredcontent h3,
 .featuredcontent a,

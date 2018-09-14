@@ -26,3 +26,10 @@ system.modules_uninstall:
   menu_name: admin
   parent: system.modules_list
   weight: 100
+
+ibm_apim.modules_delete:
+  title: 'Delete module'
+  route_name: ibm_apim.custommodules_delete
+  menu_name: admin
+  parent: system.modules_list
+  weight: 110
