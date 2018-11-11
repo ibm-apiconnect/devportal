@@ -9,7 +9,7 @@ then
   exit 1
 fi
 
-DRUPAL_CORE_VERSION="8.5.6"
+DRUPAL_CORE_VERSION="8.6.2"
 
 TGZ_UNPACK_DIR=$1
 

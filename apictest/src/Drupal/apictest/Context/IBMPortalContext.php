@@ -818,4 +818,44 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
   }
 
+  /**
+   * Check whether a link on the page has a link with a specific href location.
+   *
+   * @Then I should see a link with href including :arg1
+   */
+  public function iShouldSeeALinkWithHrefIncluding($url_segment)
+  {
+    $page = $this->getSession()->getPage();
+    $links = $page->findAll('xpath', '//a/@href');
+
+    $foundMatch = FALSE;
+
+    foreach ($links as $link) {
+
+      // If element or tag is empty...
+      if (empty($link->getParent())) {
+        continue;
+      }
+
+      $href = $link->getParent()->getAttribute('href');
+
+      // Skip if empty
+      if (empty($href)) {
+        continue;
+      }
+
+      // Skip remote links
+      if (strpos($href, $url_segment) != 0) {
+        print "Found link with $url_segment -> $href  \n";
+        $foundMatch = TRUE;
+        continue;
+      }
+    }
+
+    if (!$foundMatch) {
+      throw new \Exception("No link found with href including: $url_segment");
+    }
+
+  }
+
 }

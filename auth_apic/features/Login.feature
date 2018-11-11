@@ -86,3 +86,22 @@ Feature: Login
     | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
   When I am at "/user/login?registry_url=thisisnotvalid"
   Then I should see the text "Sign in with @data(user_registries[0].title)"
+
+@api
+Scenario: Login form loads with oidc registry link (non-default)
+  Given the cache has been cleared
+  Given I am not logged in
+  Given userregistries:
+    | type | title                             | url                               | user_managed | default |
+    | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+    | oidc | @data(user_registries[3].title)   | @data(user_registries[3].url)     | no           | no      |
+  When I am at "/user/login"
+  Then I should see the text "Sign in with @data(user_registries[0].title)"
+  And I should see "or" in the ".apic-user-form-or" element
+  And I should see the text "or"
+  And I should see the text "Continue with"
+  And I should see the link "@data(user_registries[3].title)"
+  And I should see a link with href including "/consumer-api/oauth2/authorize"
+  And I should see the link "Forgot password?"
+  And I should see the text "Don't have an account?"
+  And I should see the link "Sign up"

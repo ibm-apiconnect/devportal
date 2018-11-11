@@ -11,7 +11,7 @@ properties([ durabilityHint('PERFORMANCE_OPTIMIZED'),
 
 def pipelineOpts = [
     slackChannel: '',
-    labels: 'apic-build-fast',
+    labels: 'apic-build-fast-taas',
     nodeVersion: null,
 ]
 
@@ -30,7 +30,7 @@ veloxPipeline(pipelineOpts) { p ->
 
   }
 
-  p.branch(~/master|\d+\.\d+/) {
+  p.branch(~/master|\d+\.\d+|\d+\.\d+\.\d+/) {
 
     stage('Checkout Source') {
       checkout scm

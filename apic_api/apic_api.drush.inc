@@ -248,6 +248,10 @@ function drush_apic_api_massupdate($apis = array(), $event = 'api_massupdate') {
       drush_apic_api_createOrUpdate($api, $event, 'MassUpdate');
     }
   }
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('views')) {
+    views_invalidate_cache();
+  }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 

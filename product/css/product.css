@@ -181,7 +181,7 @@ ul.apicProductApiList {
   margin: 0 0 10px 10px;
   display: inline-block;
   min-width: 300px;
-  height: 64px;
+  min-height: 64px;
   outline: 1px solid #dfe3e6;
 }
 .main-container .apicProductApiList li {
@@ -269,6 +269,9 @@ h3.field__label.label
 .apicApiCell .apicTwistieTitle {
   width: 16px;
   flex: .2;
+  text-overflow: ellipsis;
+  overflow-wrap: break-word;
+  overflow: auto;
 }
 
 .apicTwistieContent div {
@@ -355,6 +358,10 @@ h3.field__label.label
 
 .productApiWrapper .titleInnerWrapper .rightTitle {
   padding-top: 32px;
+}
+
+.productApiWrapper .titleInnerWrapper .leftTitle {
+  max-width: calc( 100% - 111px );
 }
 
 @media screen and (max-width: 1024px) {
@@ -693,13 +700,13 @@ div[class*="planColumn"]:not(:last-of-type)
 }
 
 /* cards */
-node--type-product.bx--card {
+.node--type-product.bx--card {
   height: 19rem;
   border: none;
   box-shadow: none;
 }
 
-node--type-product.bx--card {
+.node--type-product.bx--card {
   border: none;
   box-shadow: none;
 }

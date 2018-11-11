@@ -145,4 +145,23 @@ class ApimUtils {
     return $result;
   }
 
+  /**
+   * Return the host url for the portal site.
+   *
+   * Note: If you need to add the site specifics (porg/catalog) to it then you can append `. base_path()`
+   *
+   * @return string
+   *  url
+   */
+  public function getHostUrl() {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
+    $url = 'https://' . $_SERVER['SERVER_NAME'];
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $url);
+    }
+    return $url;
+  }
+
 }

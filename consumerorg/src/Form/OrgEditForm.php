@@ -71,14 +71,19 @@ class OrgEditForm extends FormBase {
       drupal_set_message($message, 'error');
 
       $form = array();
-      $form['description'] = array('#markup' => t('You do not have sufficient access to perform this action.'));
+      $form['description'] = array('#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>');
 
       $form['actions'] = array('#type' => 'actions');
       $form['actions']['cancel'] = array(
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#href' => 'myorg',
+        '#attributes' => array('class' => array('button'))
       );
+      $themeHandler = \Drupal::service('theme_handler');
+      if ($themeHandler->themeExists('bootstrap')) {
+        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+      }
 
       return $form;
     } else {
@@ -105,6 +110,11 @@ class OrgEditForm extends FormBase {
         '#url' => $this->getCancelUrl(),
         '#attributes' => ['class' => ['button', 'apicSecondary']]
       );
+      $themeHandler = \Drupal::service('theme_handler');
+      if ($themeHandler->themeExists('bootstrap')) {
+        $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
+        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+      }
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       return $form;
     }
@@ -114,7 +124,7 @@ class OrgEditForm extends FormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return $this->redirect('ibm_apim.myorg');
+    return Url::fromRoute('ibm_apim.myorg');
   }
 
   /**

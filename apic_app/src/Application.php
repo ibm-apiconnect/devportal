@@ -557,7 +557,7 @@ class Application {
       $file = File::load($fid[0]['target_id']);
 
       if(isset($file)) {
-        $returnValue = $file->toUrl();
+        $returnValue = $file->toUrl()->toUriString();
       }
     }
     if(!isset($returnValue) && $config->get('show_placeholder_images')) {
@@ -699,7 +699,7 @@ class Application {
           $cost = t('Free');
           if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
             $file = \Drupal\file\Entity\File::load($fid[0]['target_id']);
-            $product_image_url = $file->toUrl();
+            $product_image_url = $file->toUrl()->toUriString();
           }
           else {
             if ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('product')) {
@@ -708,6 +708,7 @@ class Application {
             }
           }
           $superseding_product = null;
+          $plan_title = null;
           if ($moduleHandler->moduleExists('product')) {
             $productPlans = array();
             foreach ($product->product_plans->getValue() as $arrayValue) {
@@ -720,6 +721,7 @@ class Application {
                 $thisPlan['billing-model'] = [];
               }
               $cost = product_parse_billing($thisPlan['billing-model']);
+              $plan_title = $productPlans[$sub['plan']]['title'];
             }
             if(isset($productPlans[$sub['plan']]['superseded-by'])) {
               $superseded_by_producturl = $productPlans[$sub['plan']]['superseded-by']['product_url'];
@@ -734,22 +736,37 @@ class Application {
               $query->condition('status', 1);
               $query->condition('apic_url.value', $superseded_by_producturl);
               $results = $query->execute();
-
+              $full_plan_title = null;
               if (isset($results) && !empty($results)) {
                 $nid = array_shift($results);
                 $full_product = Node::load($nid);
                 $product_yaml = yaml_parse($full_product->product_data->value);
                 $superseded_by_title = $product_yaml['info']['title'];
                 $superseded_by_version = $product_yaml['info']['version'];
+                $full_productPlans = array();
+                foreach ($full_product->product_plans->getValue() as $arrayValue) {
+                  $full_product_plan = unserialize($arrayValue['value']);
+                  $full_productPlans[$full_product_plan['name']] = $full_product_plan;
+                }
+                if (isset($full_productPlans[$full_product_plan])) {
+                  $full_plan_title = $full_productPlans[$full_product_plan]['title'];
+                }
+              }
+              if (!isset($full_plan_title) || empty($full_plan_title)) {
+                $full_plan_title = Html::escape($superseded_by_plan);
               }
 
               $superseding_product = [
                 "product_ref" => $superseded_by_ref,
                 "plan" => $superseded_by_plan,
+                "plan_title" => $full_plan_title,
                 "product_title" => $superseded_by_title,
                 "product_version" => $superseded_by_version
               ];
             }
+          }
+          if (!isset($plan_title) || empty($plan_title)) {
+            $plan_title = Html::escape($sub['plan']);
           }
           $subarray[] = [
             'product_title' => Html::escape($product->getTitle()),
@@ -757,6 +774,7 @@ class Application {
             'product_nid' => $nid,
             'product_image' => $product_image_url,
             'plan_name' => Html::escape($sub['plan']),
+            'plan_title' => Html::escape($plan_title),
             'state' => Html::escape($sub['state']),
             'subId' => Html::escape($sub['id']),
             'cost' => $cost,

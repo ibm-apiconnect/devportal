@@ -355,49 +355,49 @@ class ApplicationRestService implements ApplicationRestInterface {
           $node = Node::load($appnid);
 
           $current_user = \Drupal::currentUser();
-          \Drupal::logger('apic_app')->notice('Application @appname requested subscription to @plan by @username', array(
+          \Drupal::logger('apic_app')->notice('Application @appname requested subscription to @plan by @username', [
             '@appname' => $node->getTitle(),
             '@plan' => $product_url . ':' . $planname,
             '@username' => $current_user->getAccountName()
-          ));
+          ]);
 
           // Calling all modules implementing 'hook_apic_app_subscribe':
-          \Drupal::moduleHandler()->invokeAll('apic_app_subscribe', array(
+          \Drupal::moduleHandler()->invokeAll('apic_app_subscribe', [
             'node' => $node,
             'data' => $result->data,
             'appId' => $appUrl,
             'planId' => $product_url . ':' . $planname
-          ));
-        }
+          ]);
 
-        // Create subscription in our database if no approval was required
-        if (isset($result->data)) {
-          $sub = $result->data;
-          $state = 'enabled';
-          if (isset($sub['state'])) {
-            $state = $sub['state'];
-          }
-          try {
-            // Rules
-            $moduleHandler = \Drupal::service('module_handler');
-            if ($moduleHandler->moduleExists('rules')) {
-              // Set the args twice on the event: as the main subject but also in the
-              // list of arguments.
-              $event = new SubscriptionCreateEvent($node, $productnode, $planname, $state, [
-                'application' => $node,
-                'product' => $productnode,
-                'planName' => $planname,
-                'state' => $state
-              ]);
-              $event_dispatcher = \Drupal::service('event_dispatcher');
-              $event_dispatcher->dispatch(SubscriptionCreateEvent::EVENT_NAME, $event);
+          // Create subscription in our database if no approval was required
+          if (isset($result->data)) {
+            $sub = $result->data;
+            $state = 'enabled';
+            if (isset($sub['state'])) {
+              $state = $sub['state'];
             }
+            try {
+              // Rules
+              $moduleHandler = \Drupal::service('module_handler');
+              if ($moduleHandler->moduleExists('rules')) {
+                // Set the args twice on the event: as the main subject but also in the
+                // list of arguments.
+                $event = new SubscriptionCreateEvent($node, $productnode, $planname, $state, [
+                  'application' => $node,
+                  'product' => $productnode,
+                  'planName' => $planname,
+                  'state' => $state
+                ]);
+                $event_dispatcher = \Drupal::service('event_dispatcher');
+                $event_dispatcher->dispatch(SubscriptionCreateEvent::EVENT_NAME, $event);
+              }
 
-            // TODO set billing_url correctly
-            $billing_url = NULL;
-            Subscription::create($appUrl, $sub['id'], $product_url, $sub['plan'], $state, $billing_url);
-          } catch (\Exception $e) {
+              // TODO set billing_url correctly
+              $billing_url = NULL;
+              Subscription::create($appUrl, $sub['id'], $product_url, $sub['plan'], $state, $billing_url);
+            } catch (\Exception $e) {
 
+            }
           }
         }
       }

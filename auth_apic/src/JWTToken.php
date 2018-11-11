@@ -20,7 +20,6 @@ namespace Drupal\auth_apic;
 class JWTToken {
 
   private $url = NULL;
-  private $jwt = NULL;
   private $decodedJwt = NULL;
   private $headers = NULL;
   private $payload = NULL;
@@ -46,24 +45,6 @@ class JWTToken {
    */
   public function getUrl(){
     return $this->url;
-  }
-
-  /**
-   * Get the raw JWT data
-   *
-   * @return null
-   */
-  public function getJwt() {
-    return $this->jwt;
-  }
-
-  /**
-   * Set the raw JWT data
-   *
-   * @param null $jwt
-   */
-  public function setJwt($jwt) {
-    $this->jwt = $jwt;
   }
 
   /**

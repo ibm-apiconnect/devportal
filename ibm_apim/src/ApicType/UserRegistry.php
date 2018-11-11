@@ -13,6 +13,8 @@
 namespace Drupal\ibm_apim\ApicType;
 
 
+use Drupal\Core\Url;
+
 class UserRegistry {
 
   private $id = NULL;
@@ -26,6 +28,7 @@ class UserRegistry {
   private $onboarding = false;
   private $case_sensitive = false;
   private $identity_providers = array();
+  private $provider_type = NULL;
 
   /**
    * @return null
@@ -168,6 +171,20 @@ class UserRegistry {
   }
 
   /**
+   * @return null
+   */
+  public function getProviderType() {
+    return $this->provider_type;
+  }
+
+  /**
+   * @param null $provider_type
+   */
+  public function setProviderType($provider_type) {
+    $this->provider_type = $provider_type;
+  }
+
+  /**
    * @return array
    */
   public function getIdentityProviders(): array {
@@ -238,7 +255,57 @@ class UserRegistry {
    * @deprecated
    */
   public function getRealm() {
-    return $this->getRealmForIdp($this->getIdentityProviders()[0]['name']);
+    if (isset($this->getIdentityProviders()[0]['name'])) {
+      return $this->getRealmForIdp($this->getIdentityProviders()[0]['name']);
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * Get the url which initiates the OIDC authentication.
+   *
+   * // TODO - too complicated for a type class, move somewhere we can inject dependencies - UserRegistryService probably
+   */
+  public function getOIDCauthUrl() {
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
+
+    if ($this->getRegistryType() !== 'oidc') {
+      \Drupal::logger('ibm_apim')->warning('attempt to get oidc authentication URL from non-oidc registry');
+      return NULL;
+    }
+
+    $state = \Drupal::service('state');
+    $client_id = $state->get('ibm_apim.site_client_id');
+
+    if ($client_id === NULL) {
+      \Drupal::logger('ibm_apim')->warning('unable to retrieve site client id to build oidc authentication url');
+      return NULL;
+    }
+
+    $utils = \Drupal::service('ibm_apim.utils');
+    $state_param = $utils->base64_url_encode($this->getUrl());
+    $apim_utils = \Drupal::service('ibm_apim.apim_utils');
+    $host = $apim_utils->getHostUrl();
+    $route = URL::fromRoute('auth_apic.azcode')->toString();
+
+    $redirect_uri = $host . $route;
+
+    $url = $apim_utils->createFullyQualifiedUrl('/consumer-api/oauth2/authorize');
+
+    $url = $url . '?client_id=' . $client_id;
+    $url = $url . '&state=' . $state_param;
+    $url = $url . '&redirect_uri=' . $redirect_uri;
+    $url = $url . '&realm=' . $this->getRealm(); // TODO: need to support multiple IDPS.
+    $url = $url . '&response_type=code';
+
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $url);
+    }
+    return $url;
+
   }
 
   /**
@@ -280,6 +347,11 @@ class UserRegistry {
       $this->setCaseSensitive(false);
     }
     $this->setIdentityProviders($registryJson['identity_providers']);
+    if (isset($registryJson['configuration'])) {
+      if (isset($registryJson['configuration']['provider_type'])) {
+        $this->setProviderType($registryJson['configuration']['provider_type']);
+      }
+    }
 
   }
 

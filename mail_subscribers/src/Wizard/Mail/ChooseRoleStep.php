@@ -15,8 +15,6 @@ namespace Drupal\mail_subscribers\Wizard\Mail;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 
-use Symfony\Component\HttpFoundation\RedirectResponse;
-
 class ChooseRoleStep extends FormBase {
 
   /**
@@ -80,6 +78,7 @@ class ChooseRoleStep extends FormBase {
     $role = $form_state->getUserInput()['role'];
 
     $cached_values['role'] = $role;
+    $cached_values['instance'] = time();
 
     $form_state->setTemporaryValue('wizard', $cached_values);
 

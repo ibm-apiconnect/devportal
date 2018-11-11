@@ -14,7 +14,6 @@ namespace Drupal\mail_subscribers\Wizard\Mail;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\node\Entity\Node;
 
 class ConfirmSend extends FormBase {
@@ -43,66 +42,66 @@ class ConfirmSend extends FormBase {
     $headers = $cached_values['headers'];
 
     $form['intro'] = array(
-      '#markup' => '<p>' . t('Please confirm the below settings are correct and then click Next to send the message.') . '</p>',
+      '#markup' => '<p>' . $this->t('Please confirm the below settings are correct and then click Next to send the message.') . '</p>',
       '#weight' => -100
     );
 
-    if ($objectType == 'product') {
+    if ($objectType === 'product') {
       $node = Node::load($cached_values['product']);
-      if ($role == 'owners') {
+      if ($role === 'owners') {
         $form['product'] = array(
-          '#markup' => '<p>' . t('Email all owners of consumer organizations subscribing to any %product_title plan the following message:', array('%product_title'=>$node->getTitle())) . '</p>',
+          '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to any %product_title plan the following message:', array('%product_title'=>$node->getTitle())) . '</p>',
           '#weight' => -80
         );
       }
       else {
         $form['product'] = array(
-          '#markup' => '<p>' . t('Email all members of consumer organizations subscribing to any %product_title plan the following message:', array('%product_title'=>$node->getTitle())) . '</p>',
+          '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to any %product_title plan the following message:', array('%product_title'=>$node->getTitle())) . '</p>',
           '#weight' => -80
         );
       }
     }
-    elseif ($objectType == 'plan') {
+    elseif ($objectType === 'plan') {
       $plan = $cached_values['plan'];
       $node = Node::load($cached_values['product']);
-      if ($role == 'owners') {
+      if ($role === 'owners') {
         $form['plan'] = array(
-          '#markup' => '<p>' . t('Email all owners of consumer organizations subscribing to the %product_title %plan plan the following message:', array('%product_title'=>$node->getTitle(), '%plan'=>$plan['title'])) . '</p>',
+          '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to the %product_title %plan plan the following message:', array('%product_title'=>$node->getTitle(), '%plan'=>$plan['title'])) . '</p>',
           '#weight' => -80
         );
       }
       else {
         $form['plan'] = array(
-          '#markup' => '<p>' . t('Email all members of consumer organizations subscribing to the %product_title %plan plan the following message:', array('%product_title'=>$node->getTitle(), '%plan'=>$plan['title'])) . '</p>',
+          '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to the %product_title %plan plan the following message:', array('%product_title'=>$node->getTitle(), '%plan'=>$plan['title'])) . '</p>',
           '#weight' => -80
         );
       }
     }
-    elseif ($objectType == 'api') {
+    elseif ($objectType === 'api') {
       $node = Node::load($cached_values['api']);
-      if ($role == 'owners') {
+      if ($role === 'owners') {
         $form['api'] = array(
-          '#markup' => '<p>' . t('Email all owners of consumer organizations subscribing to plans containing API: %api_title the following message:', array('%api_title'=>$node->getTitle())) . '</p>',
+          '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to plans containing API: %api_title the following message:', array('%api_title'=>$node->getTitle())) . '</p>',
           '#weight' => -80
         );
       }
       else {
         $form['api'] = array(
-          '#markup' => '<p>' . t('Email all members of consumer organizations subscribing to plans containing API: %api_title the following message:', array('%api_title'=>$node->getTitle())) . '</p>',
+          '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to plans containing API: %api_title the following message:', array('%api_title'=>$node->getTitle())) . '</p>',
           '#weight' => -80
         );
       }
     }
-    elseif ($objectType == 'all') {
-      if ($role == 'owners') {
+    elseif ($objectType === 'all') {
+      if ($role === 'owners') {
         $form['all'] = array(
-          '#markup' => '<p>' . t('Email all owners of all consumer organization the following message:') . '</p>',
+          '#markup' => '<p>' . $this->t('Email all owners of all consumer organization the following message:') . '</p>',
           '#weight' => -80
         );
       }
       else {
         $form['all'] = array(
-          '#markup' => '<p>' . t('Email all members of all consumer organization the following message:') . '</p>',
+          '#markup' => '<p>' . $this->t('Email all members of all consumer organization the following message:') . '</p>',
           '#weight' => -80
         );
       }
@@ -115,7 +114,7 @@ class ConfirmSend extends FormBase {
       '#weight' => -70
     );
     $form['message'] = array(
-      '#title' => t('Message'),
+      '#title' => $this->t('Message'),
       '#type' => 'textarea',
       '#default_value' => $message['value'],
       '#wysiwyg' => FALSE,
@@ -125,14 +124,14 @@ class ConfirmSend extends FormBase {
 
     $form['priority'] = array(
       '#type' => 'select',
-      '#title' => t('Priority'),
+      '#title' => $this->t('Priority'),
       '#options' => array(
-        0 => t('none'),
-        1 => t('highest'),
-        2 => t('high'),
-        3 => t('normal'),
-        4 => t('low'),
-        5 => t('lowest')
+        0 => $this->t('none'),
+        1 => $this->t('highest'),
+        2 => $this->t('high'),
+        3 => $this->t('normal'),
+        4 => $this->t('low'),
+        5 => $this->t('lowest')
       ),
       '#default_value' => $priority,
       '#disabled' => TRUE,
@@ -140,14 +139,14 @@ class ConfirmSend extends FormBase {
     );
     $form['receipt'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Request receipt'),
+      '#title' => $this->t('Request receipt'),
       '#default_value' => $receipt,
       '#disabled' => TRUE,
       '#weight' => -40
     );
     $form['headers'] = array(
       '#type' => 'textarea',
-      '#title' => t('Additional headers'),
+      '#title' => $this->t('Additional headers'),
       '#rows' => 4,
       '#default_value' => $headers,
       '#disabled' => TRUE,
@@ -156,22 +155,29 @@ class ConfirmSend extends FormBase {
 
     $form['direct'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Send the message directly using the Batch API.'),
+      '#title' => $this->t('Send the message directly using the Batch API.'),
       '#default_value' => $direct,
       '#disabled' => TRUE,
       '#weight' => -20
     );
     $form['carbon_copy'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Send a copy of the message to the sender.'),
+      '#title' => $this->t('Send a copy of the message to the sender.'),
       '#default_value' => $carbon_copy,
       '#disabled' => TRUE,
       '#weight' => -10
     );
 
-    $form_state->setTemporaryValue('wizard', $cached_values);
-
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 
   /**
@@ -196,28 +202,28 @@ class ConfirmSend extends FormBase {
 
     $rc = NULL;
 
-    if ($cached_values['objectType'] == 'product' && $cached_values['role'] == 'owners') {
+    if ($cached_values['objectType'] === 'product' && $cached_values['role'] === 'owners') {
       $rc = $mailService->mailProductOwners($cached_values, $from, $langcode);
     }
-    elseif ($cached_values['objectType'] == 'product' && $cached_values['role'] == 'members') {
+    elseif ($cached_values['objectType'] === 'product' && $cached_values['role'] === 'members') {
       $rc = $mailService->mailProductMembers($cached_values, $from, $langcode);
     }
-    elseif ($cached_values['objectType'] == 'plan' && $cached_values['role'] == 'owners') {
+    elseif ($cached_values['objectType'] === 'plan' && $cached_values['role'] === 'owners') {
       $rc = $mailService->mailProductOwners($cached_values, $from, $langcode);
     }
-    elseif ($cached_values['objectType'] == 'plan' && $cached_values['role'] == 'members') {
+    elseif ($cached_values['objectType'] === 'plan' && $cached_values['role'] === 'members') {
       $rc = $mailService->mailProductMembers($cached_values, $from, $langcode);
     }
-    elseif ($cached_values['objectType'] == 'api' && $cached_values['role'] == 'owners') {
+    elseif ($cached_values['objectType'] === 'api' && $cached_values['role'] === 'owners') {
       $rc = $mailService->mailApiOwners($cached_values, $from, $langcode);
     }
-    elseif ($cached_values['objectType'] == 'api' && $cached_values['role'] == 'members') {
+    elseif ($cached_values['objectType'] === 'api' && $cached_values['role'] === 'members') {
       $rc = $mailService->mailApiMembers($cached_values, $from, $langcode);
     }
-    elseif ($cached_values['objectType'] == 'all' && $cached_values['role'] == 'owners') {
+    elseif ($cached_values['objectType'] === 'all' && $cached_values['role'] === 'owners') {
       $rc = $mailService->mailAllOwners($cached_values, $from, $langcode);
     }
-    elseif ($cached_values['objectType'] == 'all' && $cached_values['role'] == 'members') {
+    elseif ($cached_values['objectType'] === 'all' && $cached_values['role'] === 'members') {
       $rc = $mailService->mailAllMembers($cached_values, $from, $langcode);
     }
     else {
@@ -227,6 +233,22 @@ class ConfirmSend extends FormBase {
 
     $cached_values['result'] = $rc;
 
+    $result_state = \Drupal::state()->get('mail_subscribers.result');
+    if ($result_state === null) {
+      $result_state = [];
+    }
+    if (isset($cached_values['instance'])) {
+      $result_state[$cached_values['instance']] = $rc;
+      // clear out any old results
+      $TTL = 86400;
+      $now = time();
+      foreach ($result_state as $key => $value) {
+        if ($now > ((int)$key + $TTL)) {
+          unset($result_state[$key]);
+        }
+      }
+      \Drupal::state()->set('mail_subscribers.result', $result_state);
+    }
     $form_state->setTemporaryValue('wizard', $cached_values);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

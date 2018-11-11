@@ -4,7 +4,7 @@ apic_api.view:
     _controller: '\Drupal\apic_api\Controller\ApiController::apiView'
     _title_callback: '\Drupal\apic_api\Controller\ApiController::apiTitle'
   requirements:
-    _user_is_logged_in: 'TRUE'
+    _permission: 'access content'
   options:
     parameters:
       apiNode:

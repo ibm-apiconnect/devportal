@@ -36,6 +36,30 @@ define('SUBSCRIBED_TO_PRODUCT_GRANT', 4);
 define('ORG_PRODUCT_GRANT', 5);
 define('TAG_PRODUCT_GRANT', 6);
 
+/* Return the permission strings so that they can be displayed in the ACL log
+ *
+ * @param gid
+ * @return string
+ */
+function product_permission_value($gid) {
+  switch($gid) {
+    case EDIT_ANY_PRODUCT_CONTENT_GRANT:
+      return "EDIT_ANY_PRODUCT_CONTENT_GRANT";
+    case PUBLIC_PRODUCT_GRANT:
+      return "PUBLIC_PRODUCT_GRANT";
+    case AUTHENTICATED_PRODUCT_GRANT:
+      return "AUTHENTICATED_PRODUCT_GRANT";
+    case SUBSCRIBED_TO_PRODUCT_GRANT:
+      return "SUBSCRIBED_TO_PRODUCT_GRANT";
+    case ORG_PRODUCT_GRANT:
+      return "ORG_PRODUCT_GRANT";
+    case TAG_PRODUCT_GRANT:
+      return "TAG_PRODUCT_GRANT";
+    default:
+      return "Permission Value Not Known";
+  }
+}
+
 /**
  * Implements hook_node_access_records().
  *
@@ -51,22 +75,18 @@ define('TAG_PRODUCT_GRANT', 6);
  */
 function product_node_access_records($node) {
 
+  ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
   $config = \Drupal::config('ibm_apim.settings');
   $acl_debug = $config->get('acl_debug');
 
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('product')->debug('Enter: product_node_access_records');
-  }
   $type = is_string($node) ? $node : $node->getType();
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('product')->debug('Node type is: %type', array("%type" => var_export($type, TRUE)));
-  }
-
   $grants = array();
+
   // Only build permissions for product nodes
   if ($type == 'product') {
     if (isset($acl_debug) && $acl_debug == TRUE) {
-      \Drupal::logger('product')
+      \Drupal::logger('ACLDEBUG')
         ->debug('Product Title: %title', array("%title" => var_export($node->getTitle(), TRUE)));
     }
     // Only issue grants if product_view is enabled
@@ -159,12 +179,15 @@ function product_node_access_records($node) {
       }
     }
     if (isset($acl_debug) && $acl_debug == TRUE) {
-      \Drupal::logger('product')->debug('Grants: %grants', array("%grants" => var_export($grants, TRUE)));
+      foreach ($grants as $grant) {
+        \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
+          '@realm' => $grant['realm'],
+          '@grant' => product_permission_value($grant['gid'])
+        ]);
+      };
     }
   }
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('product')->debug('Exit: product_node_access_records');
-  }
+  ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $grants);
   return $grants;
 }
 
@@ -180,12 +203,10 @@ function product_node_access_records($node) {
  */
 function product_node_grants($account, $op) {
 
+  ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
   $config = \Drupal::config('ibm_apim.settings');
   $acl_debug = $config->get('acl_debug');
-
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('product')->debug('Enter: product_node_grants');
-  }
 
   $grants = array();
   $grants['product'] = array();
@@ -195,15 +216,8 @@ function product_node_grants($account, $op) {
 
   // If logged in, grant AUTHENTICATED_PRODUCT_GRANT
   if (\Drupal::currentUser()->isAuthenticated()) {
-    if (isset($acl_debug) && $acl_debug == TRUE) {
-      \Drupal::logger('product')->debug('Account: %name', array("%name" => $account->getDisplayName()));
-    }
+
     array_push($grants['product'], AUTHENTICATED_PRODUCT_GRANT);
-  }
-  else {
-    if (isset($acl_debug) && $acl_debug == TRUE) {
-      \Drupal::logger('product')->debug('Account: anonymous');
-    }
   }
 
   $userUtils = \Drupal::service('ibm_apim.user_utils');
@@ -261,9 +275,16 @@ WHERE (id.consumerorg_url_value = '" . $orgurl . "')");
   }
 
   if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('product')->debug('Grants: %grants', array("%grants" => var_export($grants, TRUE)));
-    \Drupal::logger('product')->debug('Exit: product_node_grants');
+    foreach ($grants as $realm => $perms) {
+      foreach ($perms as $grant) {
+        \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
+          '@realm' => $realm,
+          '@grant' => product_permission_value($grant)
+        ]);
+      };
+    }
   }
+  ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $grants);
   return $grants;
 }
 
@@ -406,7 +427,8 @@ function product_preprocess_node(&$variables) {
         $apiNids = array_values($results);
       }
       $apiList = array();
-      if (count($apiNids) > 0) {
+      // safety net to avoid blowing OOM - dont load APIs if there are more than 100
+      if (count($apiNids) > 0 && count($apiNids) < 100) {
         $apis = Node::loadMultiple($apiNids);
 
         foreach ($apis as $api) {
@@ -971,16 +993,16 @@ function product_check_product_subscribe($node) {
               elseif (isset($visibility['subscribe']['type']) && mb_strtolower($visibility['subscribe']['type']) == 'authenticated' && $loggedIn) {
                 $returnValue = TRUE;
               }
-              elseif (isset($visibility['subscribe']['type']) && mb_strtolower($visibility['subscribe']['type']) == 'custom' && isset($myorg['id'])) {
-                foreach ($visibility['subscribe']['orgs'] as $customorg) {
-                  if ($customorg == $myorg['id']) {
+              elseif (isset($visibility['subscribe']['type']) && mb_strtolower($visibility['subscribe']['type']) == 'custom' && isset($myorg['url'])) {
+                foreach ($visibility['subscribe']['org_urls'] as $customorg) {
+                  if ($customorg == $myorg['url']) {
                     $returnValue = TRUE;
                   }
                 }
                 if ($returnValue == FALSE) {
                   $query = \Drupal::entityQuery('node');
-                  $query->condition('bundle', 'consumerorg');
-                  $query->condition('consumerorg_id.value', $myorg['id']);
+                  $query->condition('type', 'consumerorg');
+                  $query->condition('consumerorg_url.value', $myorg['url']);
                   $consumerorgresults = $query->execute();
                   if (isset($consumerorgresults) && !empty($consumerorgresults)) {
                     $first = array_shift($consumerorgresults);

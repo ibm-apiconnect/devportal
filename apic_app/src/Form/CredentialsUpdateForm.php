@@ -119,6 +119,15 @@ class CredentialsUpdateForm extends FormBase {
       '#url' => $this->getCancelUrl(),
       '#attributes' => ['class' => ['button', 'apicSecondary']]
     );
+    $themeHandler = \Drupal::service('theme_handler');
+    if ($themeHandler->themeExists('bootstrap')) {
+      if (isset($form['actions']['submit'])) {
+        $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
+      }
+      if (isset($form['actions']['cancel'])) {
+        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+      }
+    }
     $form['#attached']['library'][] = 'apic_app/basic';
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $form;

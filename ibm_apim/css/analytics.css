@@ -3,7 +3,7 @@
   grid-row-gap: 2rem;
   grid-column-gap: 2rem;
   grid-template-columns: minmax(22%, 300px) minmax(22%, 300px) minmax(22%, 300px) minmax(22%, 300px);
-  grid-template-rows: minmax(50%, auto) minmax(50%, 400px);
+  grid-template-rows: minmax(40%, auto) minmax(40%, 400px);
   grid-template-areas:
       'apistats apistats apistats numbers'
       'apicalls apicalls subscriptions subscriptions';

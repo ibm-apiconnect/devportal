@@ -65,7 +65,7 @@ Feature: Self Sign-up
     Then there are errors
     And there are no messages
     And I should not see the text "Your account was created successfully"
-    And I should see the text "A problem occurred while attempting to create your account. If you already have an account then please use that to login."
+    And I should see the text "A problem occurred while attempting to create your account. If you already have an account then please use that to Sign in."
 
   Scenario: View the sign up form with multiple registries
     Given I am not logged in

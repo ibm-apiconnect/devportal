@@ -82,7 +82,7 @@ Feature: Forgot Password
       | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | yes     |
     When I am at "/user/password"
     And I should see the text "@data(user_registries[2].title)"
-    And I should see the text "If you have forgotten your 'admin' password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your user registry administrator."
+    And I should see the text "If you have forgotten your 'admin' password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your authentication provider."
 
   @api
   Scenario: Forgot password changes user registry via link
@@ -97,5 +97,5 @@ Feature: Forgot Password
     And I should see the link "@data(user_registries[2].title)"
     When I click "@data(user_registries[2].title)"
     And I should see the text "@data(user_registries[2].title)"
-    And I should see the text "If you have forgotten your 'admin' password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your user registry administrator."
+    And I should see the text "If you have forgotten your 'admin' password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your authentication provider."
     And I should see the link "@data(user_registries[0].title)"

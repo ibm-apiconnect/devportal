@@ -72,7 +72,8 @@ class APIMServer implements ManagementServerInterface {
 
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $user);
 
-    $token = $this->getAuth($user);
+    //$token = $this->getAuth($user);
+    $token = $user->getBearerToken();
     \Drupal::service('tempstore.private')->get('ibm_apim')->set('auth', $token);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -93,17 +94,32 @@ class APIMServer implements ManagementServerInterface {
         ->error('Failed to find user registry with URL @regurl for user @username.',
                 array('@regurl' => $user_registry_url, '@username' => $user->getUsername()));
       drupal_set_message(t('Unable to authorize your request. Contact the site administrator.'), 'error');
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       return NULL;
     }
 
-    $token_request = array(
-      "realm" => $user_registry->getRealm(),
-      "username" => $user->getUsername(),
-      "password" => $user->getPassword(),
-      "client_id" => $this->siteConfig->getClientId(),
-      "client_secret" => $this->siteConfig->getClientSecret(),
-      "grant_type" => 'password'
-    );
+    $authcode = $user->getAuthcode();
+    if(empty($authcode)) {
+      // Normal user login, use password grant type
+      $token_request = [
+        "realm" => $user_registry->getRealm(),
+        "username" => $user->getUsername(),
+        "password" => $user->getPassword(),
+        "client_id" => $this->siteConfig->getClientId(),
+        "client_secret" => $this->siteConfig->getClientSecret(),
+        "grant_type" => 'password'
+      ];
+    } else {
+      // TODO: Do we need to add a header to include the porg.catalog like 'X-IBM-Consumer-Context: ibm.sandbox'?
+      $token_request = [
+        // AZ Code login, use authorization code flow
+        "realm" => $user_registry->getRealm(),
+        "client_id" => $this->siteConfig->getClientId(),
+        "client_secret" => $this->siteConfig->getClientSecret(),
+        "grant_type" => 'authorization_code',
+        "code" => $authcode
+      ];
+    }
 
     $response = ApicRest::post('/token', json_encode($token_request));
 
@@ -160,6 +176,20 @@ class APIMServer implements ManagementServerInterface {
     $meResponseReader = new MeResponseReader($this->logger);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $meResponseReader->read($response);
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public function deleteMe() {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $url = '/me';
+    $result = ApicRest::delete($url);
+    $reader = new RestResponseReader();
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $reader->read($result);
   }
 
   /**
@@ -267,10 +297,12 @@ class APIMServer implements ManagementServerInterface {
       "email" => $name,
       "realm" => $realm
     );
-    $result = ApicRest::post($url, json_encode($data));
+    $response = ApicRest::post($url, json_encode($data));
+
+    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $result;
+    return $reader->read($response);
   }
 
   /**

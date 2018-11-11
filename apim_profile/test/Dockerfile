@@ -10,7 +10,7 @@ RUN mkdir /tmp/nvm \
         && cd - \
         && export NVM_DIR="$HOME/.nvm" \
         && . "$NVM_DIR/nvm.sh" \
-        && nvm install 6.3.0
+        && nvm install --lts
 
 COPY site-template_test.sh /tmp/
 

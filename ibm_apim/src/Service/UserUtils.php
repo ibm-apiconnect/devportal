@@ -246,10 +246,13 @@ class UserUtils {
    */
   function loadOwnedConsumerorgs() {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $user = User::load($this->currentUser->id());
+
     $owned = array();
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
-    $query->condition('consumerorg_owner.value', $this->currentUser);
+    $query->condition('consumerorg_owner.value', $user->get('apic_url')->value);
     $nids = $query->execute();
     if (isset($nids) && !empty($nids)) {
       $nodes = Node::loadMultiple($nids);

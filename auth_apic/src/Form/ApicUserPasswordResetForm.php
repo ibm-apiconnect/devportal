@@ -155,6 +155,27 @@ class ApicUserPasswordResetForm extends FormBase {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $moduleService = \Drupal::service('module_handler');
+    if ($moduleService->moduleExists('password_policy')) {
+      $show_password_policy_status = _password_policy_show_policy();
+
+      // add validator if relevant.
+      if ($show_password_policy_status) {
+        if (!isset($form)) {
+          $form = array();
+        }
+        _password_policy_user_profile_form_validate($form, $form_state);
+      }
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     $password = $form_state->getValue('pass');
@@ -174,6 +195,14 @@ class ApicUserPasswordResetForm extends FormBase {
       return;
     }
 
+    $moduleService = \Drupal::service('module_handler');
+    if ($moduleService->moduleExists('password_policy')) {
+      if (!isset($form)) {
+        $form = array();
+      }
+      _password_policy_user_profile_form_submit($form, $form_state);
+    }
+
     $resetPasswordObject = unserialize($token);
 
     $responseCode = $this->userManager->resetPassword($resetPasswordObject, $password);
@@ -189,5 +218,12 @@ class ApicUserPasswordResetForm extends FormBase {
       return;
     }
 
+  }
+
+  /**
+   * @return \Drupal\auth_apic\Form\Drupal\Core\Session\AccountProxy|\Drupal\Core\Session\AccountProxy
+   */
+  public function getEntity() {
+    return $this->currentUser;
   }
 }

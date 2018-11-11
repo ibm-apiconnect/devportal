@@ -190,6 +190,9 @@ class SocialBlock extends BlockBase {
       'twitterTweetTypes' => $this->configuration['twitterTweetTypes']
     );
     \Drupal::state()->set('socialblock.config', $config_instances);
+
+    // run cron to re-populate the cache
+    socialblock_cron();
   }
 
   /**

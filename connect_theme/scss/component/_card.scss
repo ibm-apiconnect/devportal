@@ -14,25 +14,6 @@
   border: 1px solid $card-border-color;
   margin: 20px 0;
 
-  &.node--type-application{
-    min-height: unset;
-    width: 12.5rem;
-    height: 15rem;
-
-    .apicCardIcon{
-      align-self: center;
-    }
-    .apicAppCardMain {
-      text-align: center;
-      .applicationType {
-        margin: 0 0 10px 0;
-      }
-      .apicAppDesc {
-        text-align: left;
-      }
-    }
-  }
-
   &:focus {
     @include focus-outline('border');
   }
@@ -67,24 +48,6 @@
   padding-left: 1rem;
   padding-right: 1rem;
   font-size: 0.75rem;
-}
-
-.apicAppStatus{
-  display: flex;
-  &:before {
-    content: ' ';
-    height: 1rem;
-    width: 1rem;
-    border-radius: 100%;
-    margin-right: 0.25rem;
-    background-color: $brand-success;
-  }
-  &.suspended:before {
-    background-color: $disabled-bg;
-  }
-  .apicStatusText {
-    align-self:center;
-  }
 }
 
 .bx--card-footer__link {
@@ -151,14 +114,6 @@
   }
 }
 
-// APP CARD STYLES
-.bx--card-footer__app-status {
-  @include reset;
-  .active {
-    display: flex;
-  }
-}
-
 .bx--app-actions__button {
   @include font-size('16');
   display: inline-block;
@@ -211,7 +166,7 @@
 .bx--card .apicFade {
   max-height: 6.9rem;
   &.apicAppDesc {
-    max-height: 4.7rem;
+    max-height: 2.5rem;
   }
 }
 
@@ -227,23 +182,14 @@
   margin-bottom: 0;
 }
 
-.bx--card .apicAppCard{
-  padding-left: 1rem;
-  padding-top: 1rem;
-  padding-right: 1rem;
-  display: flex;
-}
-
-.bx--card .apicAppCard{
-  flex-direction: column;
-  height: 12rem;
-}
-
-.bx--card .apicAppDesc{
-  font-size: 75%;
-  line-height: 0.85rem;
-}
-
 .bx--card .votingapi-widgets .select-wrapper a {
   font-size: 0.875rem;
+}
+
+.node--type-application.bx--card a {
+  color: $black-01;
+}
+
+.node--type-application.bx--card a .apicAppName {
+  color: $brand-primary;
 }

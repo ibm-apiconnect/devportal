@@ -39,6 +39,8 @@ class ApicUser {
   private $apic_idp;
   private $bearer_token;
 
+  private $authcode;
+
   /**
    * Constructor.
    */
@@ -128,6 +130,21 @@ class ApicUser {
   public function setState($state) {
     $this->state = $state;
   }
+
+  /**
+   * @return mixed
+   */
+  public function getAuthcode() {
+    return $this->authcode;
+  }
+
+  /**
+   * @param mixed $state
+   */
+  public function setAuthcode($code) {
+    $this->authcode = $code;
+  }
+
 
   /**
    * @return mixed

@@ -106,7 +106,6 @@ class JWTParserTest extends UnitTestCase {
   private function getValidJWTObject() {
     $jwt = new JWTToken();
     $jwt->setUrl($this->getValidUrl());
-    $jwt->setJwt($this->getValidEncodedJWT());
     $jwt->setDecodedJwt($this->getValidJWT());
     $jwt->setHeaders( json_decode(\base64_decode($this->getValidHeaders()), TRUE));
     $jwt->setPayload( json_decode(\base64_decode($this->getValidPayload()), TRUE));

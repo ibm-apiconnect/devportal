@@ -95,6 +95,11 @@ class OrgCreateForm extends FormBase {
       '#url' => $this->getCancelUrl(),
       '#attributes' => ['class' => ['button', 'apicSecondary']]
     );
+    $themeHandler = \Drupal::service('theme_handler');
+    if ($themeHandler->themeExists('bootstrap')) {
+      $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
+      $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+    }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $form;
   }

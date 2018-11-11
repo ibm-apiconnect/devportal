@@ -58,6 +58,15 @@ class Generator {
           $srcFile = $srcDir . '/overrides.' . $type;
           $tgtFile = $targetDir . '/' . $type . '/overrides.' . $type;
           copy($srcFile, $tgtFile);
+
+          $srcFile = $srcDir . '/logo.svg' ;
+          $tgtFile = $targetDir . '/logo.svg';
+          copy($srcFile, $tgtFile);
+
+          $srcFile = $srcDir . '/screenshot.png' ;
+          $tgtFile = $targetDir . '/screenshot.png';
+          copy($srcFile, $tgtFile);
+
         } else {
           \Drupal::logger('themegenerator')->notice('Sub-theme @name specified an invalid template @template', ['@name' => $name, '@template' => $template]);
         }

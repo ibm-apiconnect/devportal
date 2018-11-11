@@ -195,6 +195,10 @@ function drush_product_update($content, $event = 'product_update') {
 function drush_product_delete($product, $event = 'product_del') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   if (isset($product)) {
+    // handle being sent the content payload or the sub-element 'product'
+    if (isset($product['product']) && !empty($product['product'])) {
+      $product = $product['product'];
+    }
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = Drupal::service('account_switcher');
@@ -318,6 +322,10 @@ function drush_product_massupdate($products = array(), $event = 'content_refresh
   if (!empty($products)) {
     foreach ($products as $product) {
       drush_product_createOrUpdate($product, $event, 'MassUpdate');
+    }
+    $moduleHandler = \Drupal::service('module_handler');
+    if ($moduleHandler->moduleExists('views')) {
+      views_invalidate_cache();
     }
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);

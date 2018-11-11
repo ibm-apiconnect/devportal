@@ -75,6 +75,9 @@ class IbmApimRouteSubscriber extends RouteSubscriberBase {
     if ($route = $collection->get('entity.user.canonical')) {
       $route->setOption('_admin_route', FALSE);
     }
+    if ($route = $collection->get('entity.shortcut_set.collection')) {
+      $route->setOption('_admin_route', FALSE);
+    }
     if ($route = $collection->get('user.login')) {
       $route->setDefault('_title', 'Sign in');
     }

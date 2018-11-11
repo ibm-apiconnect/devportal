@@ -51,11 +51,11 @@ function apim_profile_create_homepage_blocks() {
 
   $welcome_values = array(
     'id' => 'welcomebanner',
-    'plugin' => 'block_content:welcomebanner',
+    'plugin' => 'block_content:' . $welcome_block_content->uuid(),
     'provider' => NULL,
     'region' => 'disabled',
     'settings' => array(
-      'id' => 'block_content:welcomebanner',
+      'id' => 'block_content:' . $welcome_block_content->uuid(),
       'label' => 'Welcome banner',
       'provider' => 'block_content',
       'label_display' => 'visible'
@@ -98,11 +98,11 @@ function apim_profile_create_homepage_blocks() {
   $gsg_block_content->save();
   $gsg_values = array(
     'id' => 'getting_started',
-    'plugin' => 'block_content:getting_started',
+    'plugin' => 'block_content:' . $gsg_block_content->uuid(),
     'provider' => NULL,
     'region' => 'disabled',
     'settings' => array(
-      'id' => 'block_content:getting_started',
+      'id' => 'block_content:' . $gsg_block_content->uuid(),
       'label' => 'Getting Started',
       'provider' => 'block_content',
       'label_display' => FALSE

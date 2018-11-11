@@ -174,4 +174,17 @@ interface UserManagerInterface {
    * @return \Drupal\Core\Session\AccountInterface
    */
   public function findUserByUrl($url);
+
+
+  /**
+   * Delete current user in apim and local database.
+   *
+   * @return UserManagerResponse
+   *   containing success of deletion and any messages to display to the user.
+   */
+  public function deleteUser();
+
+
+
+
 }

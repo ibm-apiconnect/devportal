@@ -39,6 +39,30 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  */
 define('EDIT_ANY_API_CONTENT_GRANT', 1);
 
+/* Return the permission strings so that they can be displayed in the ACL log
+ * Most of these come from the product module
+ *
+ * @param gid
+ * @return string
+ */
+function api_permission_value($gid) {
+  switch($gid) {
+    case EDIT_ANY_API_CONTENT_GRANT:
+      return "EDIT_ANY_API_CONTENT_GRANT";
+    case PUBLIC_PRODUCT_GRANT:
+      return "PUBLIC_PRODUCT_GRANT";
+    case AUTHENTICATED_PRODUCT_GRANT:
+      return "AUTHENTICATED_PRODUCT_GRANT";
+    case SUBSCRIBED_TO_PRODUCT_GRANT:
+      return "SUBSCRIBED_TO_PRODUCT_GRANT";
+    case ORG_PRODUCT_GRANT:
+      return "ORG_PRODUCT_GRANT";
+    case TAG_PRODUCT_GRANT:
+      return "TAG_PRODUCT_GRANT";
+    default:
+      return "Permission Value Not Known";
+  }
+}
 /**
  * Implements hook_node_access_records().
  *
@@ -51,18 +75,13 @@ define('EDIT_ANY_API_CONTENT_GRANT', 1);
  * Note: hook is called when rebuilding permissions
  */
 function apic_api_node_access_records($node) {
+
+  ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
   $config = \Drupal::config('ibm_apim.settings');
   $acl_debug = $config->get('acl_debug');
 
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('apic_api')->debug('Enter: apic_api_node_access_records');
-  }
-
   $type = is_string($node) ? $node : $node->getType();
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('apic_api')->debug('Node type is: %type', array("%type" => var_export($type, TRUE)));
-  }
-
   $grants = array();
   $uniquegrants = array();
 
@@ -70,7 +89,7 @@ function apic_api_node_access_records($node) {
   if ($type == 'api') {
 
     if (isset($acl_debug) && $acl_debug == TRUE) {
-      \Drupal::logger('apic_api')->debug('Node Title: %title', array("%title" => var_export($node->getTitle(), TRUE)));
+      \Drupal::logger('ACLDEBUG')->debug('Node Title: %title', array("%title" => var_export($node->getTitle(), TRUE)));
     }
 
     // Create a grant for 'edit any api content'
@@ -167,8 +186,9 @@ WHERE  (pub.entity_id = " . $prod->entity_id . ")");
           // org uuid.  If there are multiple orgs, then multiple grants each
           // with their own realm will be created
           if (isset($row->product_visibility_custom_orgs_value)) {
+            $url = str_replace("/", "_", $row->product_visibility_custom_orgs_value);
             $grants[] = array(
-              'realm' => 'product_org_' . $row->product_visibility_custom_orgs_value,
+              'realm' => 'product_org_' . $url,
               'gid' => ORG_PRODUCT_GRANT,
               'grant_view' => 1,
               'grant_update' => 0,
@@ -199,13 +219,15 @@ WHERE  (pub.entity_id = " . $prod->entity_id . ")");
     // there are no duplicates
     $uniquegrants = array_map("unserialize", array_unique(array_map("serialize", $grants)));
     if (isset($acl_debug) && $acl_debug == TRUE) {
-      \Drupal::logger('apic_api')->debug('Grants: %uniquegrants', array("%uniquegrants" => var_export($uniquegrants, TRUE)));
+      foreach ($uniquegrants as $grant) {
+        \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
+          '@realm' => $grant['realm'],
+          '@grant' => api_permission_value($grant['gid'])
+        ]);
+      };
     }
   }
-
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('apic_api')->debug('Exit: apic_api_node_access_records');
-  }
+  ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $uniquegrants);
   return $uniquegrants;
 }
 
@@ -225,38 +247,28 @@ WHERE  (pub.entity_id = " . $prod->entity_id . ")");
  */
 function apic_api_node_grants($account, $op) {
 
+  ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
   $config = \Drupal::config('ibm_apim.settings');
   $acl_debug = $config->get('acl_debug');
 
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('apic_api')->debug('Enter: apic_api_node_grants');
-  }
-
-  if (\Drupal::currentUser()->isAuthenticated()) {
-    if (isset($acl_debug) && $acl_debug == TRUE) {
-      \Drupal::logger('apic_api')->debug('Account: %name', array("%name" => $account->getDisplayName()));
-    }
-  }
-  else {
-    if (isset($acl_debug) && $acl_debug == TRUE) {
-      \Drupal::logger('apic_api')->debug('Account: anonymous');
-    }
-  }
-
   $grants = array();
-
   $userUtils = \Drupal::service('ibm_apim.user_utils');
   // If 'edit any api content' is set, grant EDIT_ANY_API_CONTENT_GRANT
   if ($userUtils->explicitUserAccess('edit any api content')) {
     $grants['api'] = array(EDIT_ANY_API_CONTENT_GRANT);
     if (isset($acl_debug) && $acl_debug == TRUE) {
-      \Drupal::logger('apic_api')->debug('Grants: %grants', array("%grants" => var_export($grants, TRUE)));
+      foreach ($grants as $realm => $perms) {
+        foreach ($perms as $grant) {
+          \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
+            '@realm' => $realm,
+            '@grant' => api_permission_value($grant)
+          ]);
+        };
+      }
     }
   }
-
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('apic_api')->debug('Exit: apic_api_node_grants');
-  }
+  ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $grants);
   return $grants;
 }
 

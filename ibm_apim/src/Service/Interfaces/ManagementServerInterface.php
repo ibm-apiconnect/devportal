@@ -61,6 +61,14 @@ interface ManagementServerInterface {
   public function updateMe(ApicUser $user);
 
   /**
+   * DELETE /me - delete current user from management server.
+   *
+   * @return \Drupal\ibm_apim\Rest\RestReponse
+   *   Response from the call.
+   */
+  public function deleteMe();
+
+  /**
    * POST /users/register.
    *
    * @param \Drupal\auth_apic\ApicUser $user

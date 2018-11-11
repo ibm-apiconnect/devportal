@@ -103,8 +103,8 @@ class GenerateTheme extends FormBase {
     if (!isset($name) || empty($name)) {
       $form_state->setErrorByName('name', $this->t('Sub-theme name is a required field.'));
     }
-    if (!preg_match('/^[a-z0-9_\-]+$/', $name)) {
-      $form_state->setErrorByName('name', $this->t('The sub-theme name can only contain the following characters: a-z0-9_-'));
+    if (!preg_match('/^[a-z0-9_]+$/', $name)) {
+      $form_state->setErrorByName('name', $this->t('The sub-theme name can only contain the following characters: a-z0-9_'));
     }
     if (strlen($name) > 20) {
       $form_state->setErrorByName('name', $this->t('The sub-theme name must be less than 20 characters long.'));

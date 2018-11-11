@@ -78,13 +78,18 @@ class OrgDeleteForm extends ConfirmFormBase {
       drupal_set_message($message, 'error');
 
       $form = array();
-      $form['description'] = array('#markup' => t('You do not have sufficient access to perform this action.'));
+      $form['description'] = array('#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>');
 
       $form['cancel'] = array(
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#url' => Url::fromRoute('ibm_apim.myorg'),
+        '#attributes' => array('class' => array('button'))
       );
+      $themeHandler = \Drupal::service('theme_handler');
+      if ($themeHandler->themeExists('bootstrap')) {
+        $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+      }
 
       return $form;
     } else if (sizeof($this->userUtils->loadConsumerorgs()) == 1) {
@@ -92,13 +97,18 @@ class OrgDeleteForm extends ConfirmFormBase {
       drupal_set_message($message, 'error');
 
       $form = array();
-      $form['description'] = array('#markup' => t('You cannot delete your organization because this is your only organization and you must be a member of at least one organization.'));
+      $form['description'] = array('#markup' => '<p>' . t('You cannot delete your organization because this is your only organization and you must be a member of at least one organization.') . '</p>');
 
       $form['cancel'] = array(
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#url' => Url::fromRoute('ibm_apim.myorg'),
+        '#attributes' => array('class' => array('button'))
       );
+      $themeHandler = \Drupal::service('theme_handler');
+      if ($themeHandler->themeExists('bootstrap')) {
+        $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+      }
       return $form;
     }
     else {
@@ -111,18 +121,35 @@ class OrgDeleteForm extends ConfirmFormBase {
         drupal_set_message($message, 'error');
 
         $form = array();
-        $form['description'] = array('#markup' => t('You cannot delete an organization that you do not own.'));
+        $form['description'] = array('#markup' => '<p>' . t('You cannot delete an organization that you do not own.') . '</p>');
 
         $form['cancel'] = array(
           '#type' => 'link',
           '#title' => t('Cancel'),
           '#url' => Url::fromRoute('ibm_apim.myorg'),
+          '#attributes' => array('class' => array('button'))
         );
+        $themeHandler = \Drupal::service('theme_handler');
+        if ($themeHandler->themeExists('bootstrap')) {
+          $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+        }
         return $form;
       }
 
+
+      $form =  parent::buildForm($form, $form_state);
+      $themeHandler = \Drupal::service('theme_handler');
+      if ($themeHandler->themeExists('bootstrap')) {
+        if (isset($form['actions']['submit'])) {
+          $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
+        }
+        if (isset($form['actions']['cancel'])) {
+          $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+        }
+      }
+
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return parent::buildForm($form, $form_state);
+      return $form;
     }
   }
 

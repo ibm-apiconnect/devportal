@@ -471,8 +471,6 @@ ul.analyticsAppSelector li.selected {
   border: none;
 }
 
-.apic-user-form.apic-user-form-login.ur-count-1,
-.apic-user-form.apic-user-form-register.ur-count-1,
 .pass-change .apic-user-form.apic-user-form-change-pwd
 {
   max-width: 30rem;
@@ -496,6 +494,10 @@ ul.analyticsAppSelector li.selected {
   padding: 1.5rem;
 }
 
+.apic-user-form-footer {
+  padding-top: 1rem;
+}
+
 .apic-user-form-footer .apic-user-form-text,
 .apic-user-forgot-password {
   text-align: center;
@@ -509,10 +511,23 @@ ul.analyticsAppSelector li.selected {
 
 .apic-user-form-inner-wrapper {
   margin: auto;
+  margin-top: 0;
   width: 100%;
   max-width: 25rem;
   display: flex;
   flex-direction: column;
+}
+
+.apic-user-form.apic-user-form-reset-pwd.ur-count-1,
+.apic-user-form.apic-user-form-register.ur-count-1 {
+  max-width: 30rem;
+}
+.apic-user-form.apic-user-form-reset-pwd.ur-count-1 .apic-user-form-wrapper {
+  padding-top: 1rem;
+}
+
+.user-register-form .apic-user-form-inner-wrapper #edit-account {
+  display:none;
 }
 
 .apic-user-form-wrapper .form-actions button.form-submit,
@@ -522,7 +537,11 @@ ul.analyticsAppSelector li.selected {
 }
 
 .apic-user-form-inner-wrapper.apic-user-form-registries {
-  margin-top:1.5rem;
+  padding-top: 2rem;
+}
+
+.chosen-registry-button {
+  margin-top:2rem;
 }
 
 .apic-user-form-subheader {
@@ -530,7 +549,7 @@ ul.analyticsAppSelector li.selected {
   width: 50%;
   text-align: center;
   font-weight: 600;
-  padding-top: 1rem;
+  padding: 1rem 0;
   word-wrap: break-word;
 }
 
@@ -539,7 +558,7 @@ ul.analyticsAppSelector li.selected {
 }
 
 .apic-user-form-or-container {
-  padding: 1em;
+  padding: 1rem;
 }
 
 .apic-user-form-line {
@@ -790,7 +809,7 @@ body[class*='forgot-password'] .apic-user-form
 .apic-user-form-registries a.registry-button {
   display: flex;
   justify-contenser-t: start;
-  margin: 0.5rem;
+  margin-bottom: 0.5rem;
   min-height:40px;
   white-space:  normal;
   height:unset;
@@ -799,7 +818,7 @@ body[class*='forgot-password'] .apic-user-form
 }
 
 span.registry-name {
-  padding-left: 3rem;
+  padding-left: 0.5rem;
   max-width: 14.5rem;
 }
 

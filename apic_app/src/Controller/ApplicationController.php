@@ -122,7 +122,7 @@ class ApplicationController extends ControllerBase {
         $application_image_url = NULL;
         if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
           $file = File::load($fid[0]['target_id']);
-          $application_image_url = $file->toUrl();
+          $application_image_url = $file->toUrl()->toUriString();
         }
         else {
           if ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('apic_app')) {
@@ -255,7 +255,7 @@ class ApplicationController extends ControllerBase {
         $application_image_url = NULL;
         if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
           $file = File::load($fid[0]['target_id']);
-          $application_image_url = $file->toUrl();
+          $application_image_url = $file->toUrl()->toUriString();
         }
         else {
           if ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('apic_app')) {
@@ -309,7 +309,7 @@ class ApplicationController extends ControllerBase {
               $cost = t('Free');
               if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
                 $file = File::load($fid[0]['target_id']);
-                $product_image_url = $file->toUrl();
+                $product_image_url = $file->toUrl()->toUriString();
               }
               else {
                 if ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('product')) {
@@ -317,6 +317,7 @@ class ApplicationController extends ControllerBase {
                   $product_image_url = base_path() . drupal_get_path('module', 'product') . '/images/' . $rawImage;
                 }
               }
+              $plan_title = '';
               if ($moduleHandler->moduleExists('product')) {
                 $productPlans = array();
                 foreach ($product->product_plans->getValue() as $arrayValue) {
@@ -329,7 +330,11 @@ class ApplicationController extends ControllerBase {
                     $thisPlan['billing-model'] = [];
                   }
                   $cost = product_parse_billing($thisPlan['billing-model']);
+                  $plan_title = $productPlans[$sub['plan']]['title'];
                 }
+              }
+              if (!isset($plan_title) || empty($plan_title)) {
+                $plan_title = Html::escape($sub['plan']);
               }
               $subarray[] = [
                 'product_title' => Html::escape($product->getTitle()),
@@ -337,9 +342,10 @@ class ApplicationController extends ControllerBase {
                 'product_nid' => $nid,
                 'product_image' => $product_image_url,
                 'plan_name' => Html::escape($sub['plan']),
+                'plan_title' => Html::escape($plan_title),
                 'state' => Html::escape($sub['state']),
                 'subId' => Html::escape($sub['id']),
-                'cost' => $cost,
+                'cost' => $cost
               ];
             }
           }

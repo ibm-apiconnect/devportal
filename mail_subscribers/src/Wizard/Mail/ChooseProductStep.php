@@ -31,7 +31,7 @@ class ChooseProductStep extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $cached_values = $form_state->getTemporaryValue('wizard');
-    if ($cached_values['objectType'] == 'plan') {
+    if ($cached_values['objectType'] === 'plan') {
       $form['intro'] = array(
         '#markup' => '<p>' . t('This wizard will email all subscribers of a specific plan for a specific Product. Each subscriber will be sent an individual email.') . '</p>'
           . '<p>' . t('Select the Product below and then select one of its Plans on the next page.') . '</p>',

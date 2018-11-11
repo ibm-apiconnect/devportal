@@ -143,7 +143,7 @@ class ProductController extends ControllerBase {
         if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
           $file = File::load($fid[0]['target_id']);
           if (isset($file)) {
-            $api_image_url = $file->toUrl();
+            $api_image_url = $file->toUrl()->toUriString();
           }
         }
         else {

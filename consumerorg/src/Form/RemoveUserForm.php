@@ -59,14 +59,19 @@ class RemoveUserForm extends ConfirmFormBase {
       drupal_set_message($message, 'error');
 
       $form = array();
-      $form['description'] = array('#markup' => t('You do not have sufficient access to perform this action.'));
+      $form['description'] = array('#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>');
 
       $form['actions'] = array('#type' => 'actions');
       $form['actions']['cancel'] = array(
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#href' => 'myorg',
+        '#attributes' => array('class' => array('button'))
       );
+      $themeHandler = \Drupal::service('theme_handler');
+      if ($themeHandler->themeExists('bootstrap')) {
+        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+      }
 
       return $form;
     } else {
@@ -99,8 +104,19 @@ class RemoveUserForm extends ConfirmFormBase {
         // return error as memberId not in this consumerorg
         throw new NotFoundHttpException(t('Specified member not found in this consumer organization.'));
       }
+      $form =  parent::buildForm($form, $form_state);
+      $themeHandler = \Drupal::service('theme_handler');
+      if ($themeHandler->themeExists('bootstrap')) {
+        if (isset($form['actions']['submit'])) {
+          $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
+        }
+        if (isset($form['actions']['cancel'])) {
+          $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+        }
+      }
+
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return parent::buildForm($form, $form_state);
+      return $form;
     }
   }
 
@@ -152,6 +168,9 @@ class RemoveUserForm extends ConfirmFormBase {
       }
       $this->org->set('consumerorg_members', $new_member_list);
       $this->org->save();
+      // invalidate myorg page cache
+      \Drupal::service('cache_tags.invalidator')->invalidateTags(array('myorg:url:' . $this->org->consumerorg_url->value));
+
       drupal_set_message(t('User removed successfully.'));
       $current_user = \Drupal::currentUser();
       \Drupal::logger('consumerorg')->notice('Organization member @member removed from @orgname by @username', array('@orgname' => $this->org->getTitle(), '@member' => basename($this->member->getUrl()), '@username' => $current_user->getAccountName()));

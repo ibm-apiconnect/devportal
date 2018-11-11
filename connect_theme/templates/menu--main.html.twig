@@ -37,7 +37,7 @@
           item.is_expanded? 'expanded',
           item.is_expanded and menu_level == 0 ? 'dropdown',
           item.in_active_trail ? 'active',
-          item.url.getRouteName() | clean_class,
+          item.url.isRouted() ? item.url.getRouteName() | clean_class : 'external-link',
           item.title | clean_class
         ]
       %}

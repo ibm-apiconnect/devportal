@@ -53,10 +53,10 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
     </div>
     {% if content.apic_summary['#items'][0].value is defined and content.apic_summary['#items'][0].value is not empty %}
       <div class="apicProductDesc summary"
-           title="{{- content.apic_summary['#items'][0].value -}}">{{ content.apic_summary }}</div>
+           title="{{- content.apic_summary['#items'][0].value|striptags -}}">{{ content.apic_summary }}</div>
     {% else %}
       <div class="apicProductDesc"
-           title="{{- content.apic_description['#items'][0].value -}}">{{ content.apic_description }}</div>
+           title="{{- content.apic_description['#items'][0].value|striptags -}}">{{ content.apic_description }}</div>
     {% endif %}
     {% if custom_fields is defined and custom_fields is not empty %}
       <div class="customFields">

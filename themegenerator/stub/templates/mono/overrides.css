@@ -1385,8 +1385,3 @@ section.block-getting-started, section.block-socialblock, section.block-go-ahead
 {
   fill: #464646;
 }
-
-.navbar .logo
-{
-  filter: invert(75%);
-}

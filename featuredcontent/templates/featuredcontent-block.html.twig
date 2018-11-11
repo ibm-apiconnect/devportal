@@ -6,14 +6,13 @@
  * @ingroup themeable
  */
 #}
-
+{%  if nodes|length > 0%}
 <div class="featuredcontent featuredcontentBlockWrapper">
-  {%  if nodes|length > 0%}
   <div class="featuredcontentBlockHeader">
     <h3>{{ 'API Products'|t }}</h3>
     <a href="product">{{ 'See all products'|t }}</a>
   </div>
-  {% endif %}
+
   <div
     class="featuredcontentNodeContainer featuredcontentNodeType-{{ nodeType|clean_class }} featuredcontentAlgorithm-{{ algorithm|clean_class }}">
     {% for node in nodes %}
@@ -57,3 +56,4 @@
     {% endfor %}
   </div>
 </div>
+{% endif %}

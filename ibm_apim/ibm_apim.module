@@ -98,77 +98,6 @@ function ibm_apim_user_insert($account) {
 }
 
 /**
- * A form submission handler that redirects to the start page the first time
- * and then the home page from then on. Will redirect to the create org page
- * if the user who just logged in is not in any orgs and self onboarding is
- * enabled.
- *
- * @param $form
- *   The form being submitted.
- * @param FormStateInterface $form_state
- *   The form state.
- */
-function ibm_apim_redirect_to_home(&$form, FormStateInterface &$form_state) {
-  $current_user = \Drupal::currentUser();
-  $first_time_login = NULL;
-  $subscription_wizard_cookie = NULL;
-  if (isset($current_user)) {
-    $current_user = User::load($current_user->id());
-    $first_time_login = $current_user->first_time_login->value;
-    $subscription_wizard_cookie = \Drupal::request()->cookies->get('Drupal_visitor_startSubscriptionWizard');
-  }
-  if (isset($current_user) && $first_time_login != 0 && empty($subscription_wizard_cookie)) {
-    $start_url = \Drupal::service('path.validator')->getUrlIfValid('/start');
-    // set first_time_login to 0 for next time
-    $current_user->set('first_time_login', 0);
-    $current_user->save();
-
-    if ($start_url !== FALSE) {
-      $start_url->setAbsolute();
-      $redirectUrl = $start_url->toString();
-    }
-  }
-  else {
-
-    // If the startSubscriptionWizard cookie is set, grab the value from it, set up a redirect and delete it
-    if (!empty($subscription_wizard_cookie)) {
-      $subscription_wizard_url = Url::fromRoute('ibm_apim.subscription_wizard.step', array(
-        'step' => 'chooseplan',
-        'productId' => $subscription_wizard_cookie
-      ));
-      $subscription_wizard_url->setAbsolute();
-      $redirectUrl = $subscription_wizard_url->toString();
-      user_cookie_delete('startSubscriptionWizard');
-    }
-    else {
-      $homepage_url = \Drupal::service('path.validator')->getUrlIfValid('/');
-      if ($homepage_url !== FALSE) {
-        $homepage_url->setAbsolute();
-        $redirectUrl = $homepage_url->toString();
-      }
-    }
-  }
-
-  // check if the user we just logged in is a member of at least one dev org
-  $current_corg = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerorg();
-  if (!isset($current_corg)) {
-    // if onboarding is enabled, we can redirect to the create org page
-    if (\Drupal::service('ibm_apim.site_config')->isSelfOnboardingEnabled()) {
-      $redirectUrl = Url::fromRoute('consumerorg.create')->toString();
-    }
-    else {
-      // we can't help the user, they need to talk to an administrator
-      $redirectUrl = Url::fromRoute('ibm_apim.noperms')->toString();
-    }
-  }
-
-  if (isset($redirectUrl)) {
-    $response = new RedirectResponse($redirectUrl);
-    $response->send();
-  }
-}
-
-/**
  * Add twig template for My Organization page
  *
  * @param $existing
@@ -342,46 +271,6 @@ function ibm_apim_preprocess(&$variables, $hook, &$info) {
     }
   }
 
-  if ($hook == 'form') {
-
-    if ($variables['element']['#form_id'] == 'user_login_form' || $variables['element']['#form_id'] == 'user_register_form') {
-      $templateFileName = 'form-' . str_replace('_', '-', $variables['element']['#form_id']);
-    }
-    else if ($variables['element']['#form_id'] == 'user_pass' || $variables['element']['#form_id'] == 'apic_resetpw') {
-      $templateFileName = 'form-user-pass-form';
-    }
-    else if ($variables['element']['#form_id'] == 'apic_change_pwd_form') {
-      $templateFileName = 'form-change-pwd-form';
-    }
-
-    if (isset($templateFileName)) {
-      ibm_apim_entry_trace(__FUNCTION__, 'form');
-
-      $theme_name = \Drupal::theme()->getActiveTheme()->getName();
-      $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
-      if (file_exists($theme_path . '/templates/form/' . $templateFileName . '.html.twig')) {
-        $info['theme path'] = drupal_get_path('theme', $theme_name);
-        $info['path'] = drupal_get_path('theme', $theme_name) . '/templates/form';
-        $info['template'] = $templateFileName;
-      }
-      elseif (file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
-        $info['theme path'] = drupal_get_path('theme', $theme_name);
-        $info['path'] = drupal_get_path('theme', $theme_name) . '/templates';
-        $info['template'] = $templateFileName;
-      }
-      else {
-        $templateFilePath = drupal_get_path('module', 'ibm_apim') . '/templates/' . $templateFileName . '.html.twig';
-        if (file_exists($templateFilePath)) {
-          $info['theme path'] = drupal_get_path('module', 'ibm_apim');
-          $info['path'] = drupal_get_path('module', 'ibm_apim') . '/templates';
-          $info['template'] = $templateFileName;
-        }
-      }
-
-      ibm_apim_exit_trace(__FUNCTION__, 'form');
-    }
-  }
-
   if ($hook == 'ibm_apim_myorg' || $hook == 'ibm_apim_analytics') {
     // set analytics variables if it is enabled
     $variables['analytics_access'] = FALSE;
@@ -543,47 +432,12 @@ function ibm_apim_updater_info_alter(&$updaters) {
  */
 function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   switch ($form_id) {
-    case 'change_pwd_form':
-      /* We want to redirect to the front page if the form being submitted is
-      * the login form or the password change form.
-      *
-      * The register form has a specific form_alter method that overrides this general one.
-      */
-      $form['#submit'][] = 'ibm_apim_redirect_to_home';
-      // disable autocomplete
-      if (isset($form['account']['current_pass'])) {
-        if (empty($form['account']['current_pass']['#attributes'])) {
-          $form['account']['current_pass']['#attributes'] = array();
-        }
-        $form['account']['current_pass']['#attributes']['autocomplete'] = 'off';
-      }
-      if (isset($form['account']['pass'])) {
-        if (empty($form['account']['pass']['#attributes'])) {
-          $form['account']['pass']['#attributes'] = array();
-        }
-        $form['account']['pass']['#attributes']['autocomplete'] = 'off';
-      }
-      break;
     case 'user_register_form' :
       // We have to hide the elements that password policy module adds so we can replace them with something more compact!
       if (\Drupal::moduleHandler()->moduleExists("password_policy")) {
         $form['auth-apic-password-policy-status']['#weight'] = 7;
         $form['account']['password_policy_status']['#access'] = FALSE;
       }
-      // disable autocomplete
-      if (isset($form['pass'])) {
-        if (empty($form['pass']['#attributes'])) {
-          $form['pass']['#attributes'] = array();
-        }
-        $form['pass']['#attributes']['autocomplete'] = 'off';
-      }
-      if (isset($form['name'])) {
-        if (empty($form['name']['#attributes'])) {
-          $form['name']['#attributes'] = array();
-        }
-        $form['name']['#attributes']['autocomplete'] = 'off';
-      }
-      $form['actions']['submit']['#value'] = t('Sign up');
       break;
     case 'user_form':
       $form['account']['password_policy_status']['#access'] = FALSE;
@@ -592,29 +446,6 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       // do not support password reset
       if (isset($form['password_reset'])) {
         unset($form['password_reset']);
-      }
-      break;
-    case 'user_login_form' :
-      /* We want to redirect to the front page if the form being submitted is
-      * the login form or the password change form.
-      *
-      * The register form has a specific form_alter method that overrides this general one.
-      */
-      $form['#submit'][] = 'ibm_apim_redirect_to_home';
-      // rename the Log in link
-      $form['actions']['submit']['#value'] = t('Sign in');
-      // disable autocomplete
-      if (isset($form['pass'])) {
-        if (empty($form['pass']['#attributes'])) {
-          $form['pass']['#attributes'] = array();
-        }
-        $form['pass']['#attributes']['autocomplete'] = 'off';
-      }
-      if (isset($form['name'])) {
-        if (empty($form['name']['#attributes'])) {
-          $form['name']['#attributes'] = array();
-        }
-        $form['name']['#attributes']['autocomplete'] = 'off';
       }
       break;
     case 'user_pass_reset' :
@@ -824,6 +655,19 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       }
       if (isset($form['update_notification_threshold'])) {
         unset($form['update_notification_threshold']);
+      }
+      break;
+    case 'search_api_index_edit_form':
+      // remove the ability to turn on instant indexing due to the perf impact of it
+      if (isset($form['options']['index_directly'])) {
+        unset($form['options']['index_directly']);
+        if (!isset($form['options'])) {
+          $form['options'] = array();
+        }
+        $form['options']['index_directly'] = array(
+          '#type' => 'hidden',
+          '#value' => false
+        );
       }
       break;
   }

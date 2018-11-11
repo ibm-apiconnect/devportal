@@ -23,22 +23,22 @@
                 <td class="product">{% if sub.application_image %}
                     <div class="miniApplicationLogo"><img
                         src="{{- sub.application_image -}}" alt=""/></div>{% endif %}{{ sub.product_title }}
-                  {% if showVersions %}({{ sub.product_version }}){% endif %} {% if not sub.state == 'enabled' %}({{ 'Pending approval'|t }}){% endif %}
+                  {% if showVersions %}({{ sub.product_version }}){% endif %} {% if sub.state != 'enabled' %}({{ 'Pending approval'|t }}){% endif %}
                 </td>
-                <td class="plan">{{ sub.plan_name }}</td>
+                <td class="plan">{{ sub.plan_title }}</td>
                 {% if billing_enabled == true %}
                   <td class="cost">{{ sub.cost }}</td>
                 {% endif %}
                 {% if sub.superseded_by_product%}
                   <td class="migrate">
                     <a href="{{ path('apic_app.migrate_subscription', {'appId': node.application_id.value, 'subId': sub.subId, 'planRef': sub.superseded_by_product.product_ref}) }}">
-                        {% trans %} Migrate this subscription to plan '<em>{{ sub.superseded_by_product.plan }}</em>' in product '<em>{{ sub.superseded_by_product.product_title }}</em>' at version '<em>{{ sub.superseded_by_product.product_version }}</em>' {% endtrans %}
+                        {% trans %} Migrate this subscription to plan '<em>{{ sub.superseded_by_product.plan_title|striptags }}</em>' in product '<em>{{ sub.superseded_by_product.product_title|striptags }}</em>' at version '<em>{{ sub.superseded_by_product.product_version|striptags }}</em>' {% endtrans %}
                     </a>
                   </td>
                 {% endif %}
                 <td class="action" data-subid="{{ sub.id }}">
                   <ul class="overflow-menu subscriptionMenu dropitmenu">
-                    <li title="{% trans %}Manage {{ sub.product_title }} subscription{% endtrans %}">
+                    <li title="{% trans %}Manage {{ sub.product_title|striptags }} subscription{% endtrans %}">
                       <a href="#" class="trigger">
                           <span class="dropit-icon">
                             <svg width="4px" height="20px" viewBox="0 0 4 20" version="1.1"
@@ -53,11 +53,11 @@
                       <ul class="dropitmenu-submenu">
                         <li class="viewDocumentation"><a
                               href="{{ path('entity.node.canonical', {'node': sub.product_nid}) }}"
-                              title="{% trans %}View documentation for {{ sub.product_title }}{% endtrans %}">{{ 'View documentation'|t }}</a>
+                              title="{% trans %}View documentation for {{ sub.product_title|striptags }}{% endtrans %}">{{ 'View documentation'|t }}</a>
                         </li>
                         <li class="unsubscribe"><a
                               href="{{ path('apic_app.unsubscribe', {'appId': node.application_id.value, 'subId': sub.subId}) }}"
-                              title="{% trans %}Unsubscribe from {{ sub.product_title }}{% endtrans %}">{{ 'Unsubscribe'|t }}</a>
+                              title="{% trans %}Unsubscribe from {{ sub.product_title|striptags }}{% endtrans %}">{{ 'Unsubscribe'|t }}</a>
                         </li>
                       </ul>
                     </li>

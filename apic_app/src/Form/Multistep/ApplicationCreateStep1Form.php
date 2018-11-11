@@ -14,6 +14,8 @@ namespace Drupal\apic_app\Form\Multistep;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\node\Entity\Node;
+use Drupal\apic_app\Application;
 
 class ApplicationCreateStep1Form extends MultistepFormBase {
 
@@ -93,7 +95,26 @@ class ApplicationCreateStep1Form extends MultistepFormBase {
       '#value' => $this->t('Submit'),
       '#button_type' => 'primary',
     ];
+    $form['actions']['cancel'] = array(
+      '#type' => 'link',
+      '#title' => t('Cancel'),
+      '#url' => $this->getCancelUrl(),
+      '#attributes' => ['class' => ['button', 'apicSecondary']]
+    );
+    $themeHandler = \Drupal::service('theme_handler');
+    if ($themeHandler->themeExists('bootstrap')) {
+      $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
+      $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+    }
     $form['#attached']['library'][] = 'apic_app/basic';
+
+    // remove any admin fields if they exist
+    if (isset($form['revision_log'])) {
+      unset($form['revision_log']);
+    }
+    if (isset($form['status'])) {
+      unset($form['status']);
+    }
 
     // If we were invoked from somewhere else and given a redirect location, we want to go back there later so store it
     $redirect_to = \Drupal::request()->query->get('redirectTo');
@@ -122,6 +143,13 @@ class ApplicationCreateStep1Form extends MultistepFormBase {
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCancelUrl() {
+    return Url::fromRoute('view.applications.page_1');
   }
 
   /**
@@ -163,6 +191,22 @@ class ApplicationCreateStep1Form extends MultistepFormBase {
       }
       $this->store->set('appId', $result->data['id']);
       $this->store->set('nid', $result->data['nid']);
+
+      $customfields = Application::getCustomFields();
+      if (isset($customfields) && count($customfields) > 0) {
+        $node = Node::load($result->data['nid']);
+        foreach ($customfields as $customfield) {
+          $value = $form_state->getValue($customfield);
+          if (is_array($value) && isset($value[0]['value'])) {
+            $value = $value[0]['value'];
+          } else if (isset($value[0])) {
+            $value = array_values($value[0]);
+          }
+          $node->set($customfield, $value);
+        }
+        $node->save();
+      }
+
       $form_state->setRedirect('apic_app.create_step_two');
     }
     else {

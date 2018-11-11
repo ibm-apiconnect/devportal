@@ -59,14 +59,19 @@ class ResendInviteForm extends ConfirmFormBase {
       drupal_set_message($message, 'error');
 
       $form = array();
-      $form['description'] = array('#markup' => t('You do not have sufficient access to perform this action.'));
+      $form['description'] = array('#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>');
 
       $form['actions'] = array('#type' => 'actions');
       $form['actions']['cancel'] = array(
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#href' => 'myorg',
+        '#attributes' => array('class' => array('button'))
       );
+      $themeHandler = \Drupal::service('theme_handler');
+      if ($themeHandler->themeExists('bootstrap')) {
+        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+      }
 
       return $form;
     } else {
@@ -77,14 +82,14 @@ class ResendInviteForm extends ConfirmFormBase {
       $nids = $query->execute();
       $this->orgId = NULL;
       if (isset($nids) && !empty($nids)) {
-        $productnid = array_shift($nids);
-        $this->orgId = Node::load($productnid);
+        $nid = array_shift($nids);
+        $this->orgId = Node::load($nid);
       }
       $this->inviteId = Html::escape($inviteId);
       $found = FALSE;
       foreach ($this->orgId->consumerorg_invites->getValue() as $arrayValue) {
         $invite = unserialize($arrayValue['value']);
-        if ($invite['id'] != $this->inviteId) {
+        if ($invite['id'] == $this->inviteId) {
           $found = TRUE;
         }
       }
@@ -92,8 +97,19 @@ class ResendInviteForm extends ConfirmFormBase {
         // return error as inviteId not in this consumerorg
         throw new NotFoundHttpException(t('Specified invite not found in this consumer organization.'));
       }
+      $form =  parent::buildForm($form, $form_state);
+      $themeHandler = \Drupal::service('theme_handler');
+      if ($themeHandler->themeExists('bootstrap')) {
+        if (isset($form['actions']['submit'])) {
+          $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
+        }
+        if (isset($form['actions']['cancel'])) {
+          $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+        }
+      }
+
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return parent::buildForm($form, $form_state);
+      return $form;
     }
   }
 

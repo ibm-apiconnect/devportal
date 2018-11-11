@@ -37,7 +37,7 @@ class WritableUserRegistryAccessCheck implements AccessInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     if ($account->id() == 1) {
-      \Drupal::logger('ibm_apim')->error('admin user allowed from ' . __CLASS__);
+      \Drupal::logger('auth_apic')->info('admin user allowed from %class', array( '%class' => __CLASS__));
       $allowed = true;
     }
     else {
@@ -47,7 +47,7 @@ class WritableUserRegistryAccessCheck implements AccessInterface {
       $registry = $registryService->get($registry_url);
 
       if (!$registry) {
-        \Drupal::logger('ibm_apim')->error('No registry found for ' . __CLASS__);
+        \Drupal::logger('auth_apic')->error('No registry found for %class', array( '%class' => __CLASS__));
         $allowed = FALSE;
       }
       else {

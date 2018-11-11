@@ -55,6 +55,10 @@ class MemberService {
       $member->setRoleUrls($json['role_urls']);
     }
 
+    if(!empty($json['org_url'])) {
+      $member->setOrgUrl($json['org_url']);
+    }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $member);
     return $member;
   }

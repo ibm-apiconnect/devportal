@@ -76,7 +76,7 @@ class CustomModulesDeleteForm extends FormBase {
       '#type' => 'tableselect',
       '#header' => $header,
       '#options' => $options,
-      '#empty' => $this->t('No uninstallable modules found.'),
+      '#empty' => $this->t('No deletable modules found.'),
     );
 
     $form['actions']['#type'] = 'actions';

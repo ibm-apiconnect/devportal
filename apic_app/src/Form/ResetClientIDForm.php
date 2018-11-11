@@ -78,8 +78,20 @@ class ResetClientIDForm extends ConfirmFormBase {
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL) {
     $this->node = $appId;
     $this->credId = Html::escape($credId);
+    $form =  parent::buildForm($form, $form_state);
+    $themeHandler = \Drupal::service('theme_handler');
+    if ($themeHandler->themeExists('bootstrap')) {
+      if (isset($form['actions']['submit'])) {
+        $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
+      }
+      if (isset($form['actions']['cancel'])) {
+        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+      }
+    }
     $form['#attached']['library'][] = 'apic_app/basic';
-    return parent::buildForm($form, $form_state);
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $form;
   }
 
   /**

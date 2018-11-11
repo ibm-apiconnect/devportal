@@ -76,6 +76,8 @@ class MyOrgController extends ControllerBase {
           $owner['username'] = $orgmember->getUser()->getUsername();
           $owner['state'] = $orgmember->getUser()->getState();
           $owner['id'] = $orgmember->getId();
+          $owner['firstname'] = $orgmember->getUser()->getFirstname();
+          $owner['lastname'] = $orgmember->getUser()->getLastname();
           $owner['role_urls'] = $orgmember->getRoleUrls();
           $entity = $orgmember->getUser()->getDrupalUser();
           if (!empty($entity->user_picture) && $entity->user_picture->isEmpty() === FALSE) {
@@ -90,6 +92,8 @@ class MyOrgController extends ControllerBase {
           $member['mail'] = $orgmember->getUser()->getMail();
           $member['state'] = $orgmember->getUser()->getState();
           $member['username'] = $orgmember->getUser()->getUsername();
+          $member['firstname'] = $orgmember->getUser()->getFirstname();
+          $member['lastname'] = $orgmember->getUser()->getLastname();
           $member['id'] = $orgmember->getId();
           $member['role_urls'] = $orgmember->getRoleUrls();
           $entity = $orgmember->getUser()->getDrupalUser();
@@ -105,28 +109,12 @@ class MyOrgController extends ControllerBase {
       // add pending invitations into the list of members.
       foreach ($myorg->consumerorg_invites->getValue() as $invites_array) {
         $invite = unserialize($invites_array['value']);
-        $invitation_email = $invite['email'];
-        $invitation_required = TRUE;
-
-        // TODO: when webhooks are in place to handle accepting invitations we won't need to check members.
-        foreach ($members as $member) {
-          if ($invitation_email === $member['mail']) {
-            $invitation_required = FALSE;
-            break;
-          }
-        }
-
-        if ($invitation_required) {
-
-          $invited_member = array();
-          $invited_member['mail'] = $invitation_email;
-          $invited_member['state'] = 'Pending';
-          $invited_member['id'] = basename($invite['url']);
-          $invited_member['role_urls'] = $invite['role_urls'];
-
-          $members[] = $invited_member;
-        }
-
+        $invited_member = [];
+        $invited_member['mail'] = $invite['email'];
+        $invited_member['state'] = 'Pending';
+        $invited_member['id'] = basename($invite['url']);
+        $invited_member['role_urls'] = $invite['role_urls'];
+        $members[] = $invited_member;
       }
 
       foreach ($members as &$member) {
@@ -172,6 +160,9 @@ class MyOrgController extends ControllerBase {
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return array(
+      '#cache' => [
+        'tags' => ['myorg:url:' . $org['url']],
+      ],
       '#theme' => 'ibm_apim_myorg',
       '#images_path' => drupal_get_path('module', 'ibm_apim'),
       '#myorg_title' => $myorg->getTitle(),

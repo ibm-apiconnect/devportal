@@ -11,6 +11,7 @@
  ********************************************************** {COPYRIGHT-END} **/
 
 use Drupal\Core\StreamWrapper\PublicStream;
+use Drupal\themegenerator\Generator;
 
 /**
  * Implements hook_cron().

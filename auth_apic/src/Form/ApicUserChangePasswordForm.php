@@ -20,15 +20,13 @@ use Drupal\Core\Password\PasswordInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Routing\UrlGeneratorTrait;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\user\Entity\User;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\auth_apic\Service\Interfaces\UserManagerInterface;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-
-// TODO: use UrlGeneratorTrait to enable unit test of the redirects.
-// at the moment importing them to have them in the ctors ready for doing this properly.
 
 class ApicUserChangePasswordForm extends ChangePasswordForm {
 
@@ -108,10 +106,48 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
     if ($this->getRequest()->get('pass-reset-token')) {
       // admin password reset or one-time login form.
       // this request has come via the change_pwd_page ChangePasswordResetForm page so fall back to their processing..
-      return parent::buildForm($form, $form_state, $account);
-    }
+      $form = parent::buildForm($form, $form_state, $account);
 
-    if (!$user->isAnonymous()) {
+      if (!isset($form['#form_id'])) {
+        $form['#form_id'] = $this->getFormId();
+      }
+      if (!isset($form['account'])) {
+        $form['account'] = array(
+          '#type' => 'container',
+          '#weight' => -10,
+        );
+      }
+      if (!isset($form['account']['roles'])) {
+        $form['account']['roles'] = array();
+      }
+      if (!isset($form['account']['roles']['#default_value'])) {
+        $form['account']['roles']['#default_value'] = array();
+      }
+
+      // If the password policy module is enabled, modify this form to show
+      // the configured policy.
+      $showPasswordPolicy = FALSE;
+
+      if ($this->moduleHandler->moduleExists('password_policy')) {
+        $showPasswordPolicy = _password_policy_show_policy();
+      }
+
+      if ($showPasswordPolicy) {
+        $form['account']['password_policy_status'] = array(
+          '#title' => $this->t('Password policies'),
+          '#type' => 'table',
+          '#header' => array(t('Policy'), t('Status'), t('Constraint')),
+          '#empty' => t('There are no constraints for the selected user roles'),
+          '#weight' => '400',
+          '#prefix' => '<div id="password-policy-status" class="hidden">',
+          '#suffix' => '</div>',
+          '#rows' => _password_policy_constraints_table($form, $form_state),
+        );
+
+        $form['auth-apic-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
+      }
+
+    } elseif (!$user->isAnonymous()) {
       // Account information.
       $form['account'] = array(
         '#type' => 'container',
@@ -136,6 +172,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
         '#type' => 'password_confirm',
         '#required' => TRUE,
         '#description' => $this->t('Provide a password.'),
+        '#attributes' => array('autocomplete' => 'off'),
       );
 
       $form['#form_id'] = $this->getFormId();
@@ -168,8 +205,9 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       $form['actions'] = ['#type' => 'actions'];
       $form['actions']['submit'] = ['#type' => 'submit', '#value' => $this->t('Submit')];
 
-      return $form;
     }
+
+    return $form;
 
   }
 
@@ -178,6 +216,25 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $user = $this->currentUser();
+
+    $moduleService = \Drupal::service('module_handler');
+    if ($moduleService->moduleExists('password_policy')) {
+      $show_password_policy_status = _password_policy_show_policy();
+
+      // add validator if relevant.
+      if ($show_password_policy_status) {
+        if (!isset($form)) {
+          $form = array();
+        }
+        if (!isset($form['account']['roles'])) {
+          $form['account']['roles'] = array();
+        }
+        if (!isset($form['account']['roles']['#default_value'])) {
+          $form['account']['roles']['#default_value'] = array();
+        }
+        _password_policy_user_profile_form_validate($form, $form_state);
+      }
+    }
 
     // special case original admin user who uses the drupal db.
     if ($user->id() === '1') {
@@ -194,11 +251,26 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    // redirect to the home page regardless of outcome.
+    $form_state->setRedirect('<front>');
+
+    $moduleService = \Drupal::service('module_handler');
+    if ($moduleService->moduleExists('password_policy')) {
+      if (!isset($form)) {
+        $form = array();
+      }
+      if (!isset($form['account']['roles'])) {
+        $form['account']['roles'] = array();
+      }
+      if (!isset($form['account']['roles']['#default_value'])) {
+        $form['account']['roles']['#default_value'] = array();
+      }
+      _password_policy_user_profile_form_submit($form, $form_state);
+    }
 
     // special case original admin user who uses the drupal db.
     if ($this->currentUser()->id() === '1') {
       $this->logger->notice('change password form submit for admin user');
-      $form_state->setRedirect('<front>');
       parent::submitForm($form, $form_state);
     }
     else {
@@ -211,5 +283,16 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
         //$form_state->setRedirect('user.logout');
       }
     }
+  }
+
+  /**
+   * @return \Drupal\Core\Entity\EntityInterface|null|static
+   */
+  public function getEntity() {
+    $current_user = $this->currentUser();
+    if (isset($current_user)) {
+      $current_user = User::load($current_user->id());
+    }
+    return $current_user;
   }
 }

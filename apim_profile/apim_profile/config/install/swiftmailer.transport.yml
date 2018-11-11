@@ -4,6 +4,6 @@ smtp_port: 25
 smtp_encryption: ''
 smtp_username: ''
 smtp_password: ''
-sendmail_path: /usr/sbin/sendmail
+sendmail_path: /opt/ibm/bin/sendmail
 sendmail_mode: t
 spool_directory: ''

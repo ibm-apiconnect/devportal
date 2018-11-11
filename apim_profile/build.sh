@@ -3,7 +3,7 @@
 BASEDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # if change the project name then also need to update the jenkins docker image webroot
 PROJECT_NAME="devportal"
-VERSION=2018.3.8
+VERSION=2018.4.1.1
 SERVICE="false"
 
 BUILD_DIR="$BASEDIR/build"
@@ -57,10 +57,9 @@ php composer.phar -n config -g github-oauth.github.ibm.com 23b3b2c497a3fa8cc59a1
 
 # Create new composer project
 rm -rf $PROJECT_NAME
-php composer.phar -n create-project --no-dev --prefer-dist drupal/drupal $PROJECT_NAME 8.5.7
+php composer.phar -n create-project drupal-composer/drupal-project:8.x-dev $PROJECT_NAME --stability dev --no-interaction --no-install
 
 cp -f $BASEDIR/composer.json $PROJECT_NAME
-cp -f $BASEDIR/composer.lock $PROJECT_NAME
 
 # copy auth.json file if it exists
 if [[ -f "$BASEDIR/auth.json" ]]
@@ -71,6 +70,16 @@ fi
 # This installs our 3rdparty dependencies from composer.json
 cd $PROJECT_NAME
 php ../composer.phar -n -v install
+
+if [[ ! -f "$PROJECT_NAME/autoload.php" ]]
+then
+  cp $BASEDIR/composer-stub/autoload.php $BUILD_DIR/$PROJECT_NAME/autoload.php
+fi
+
+# have to do install first and then update with lock file or we dont seem to get any php files
+# seems to be an autoload issue
+cp -f $BASEDIR/composer.lock $BUILD_DIR/$PROJECT_NAME
+php ../composer.phar -n -v update
 
 #Apply patches
 cd $BUILD_DIR
@@ -85,17 +94,24 @@ rm -rf $PROJECT_NAME/vendor/youshido/graphql/examples/js-relay
 cd $PROJECT_NAME
 
 # Add our modules
-php ../composer.phar -n require --prefer-dist drupal/apictest:^1.0 drupal/ghmarkdown:^1.0 drupal/socialblock:^1.0 drupal/featuredcontent:^1.0 drupal/ibm_apim:^1.0 drupal/mail_subscribers:^1.0 drupal/auth_apic:^1.0 drupal/apic_api:^1.0 drupal/apic_app:^1.0 drupal/consumerorg:^1.0 drupal/product:^1.0 drupal/themegenerator:^1.0 drupal/connect_theme:^1.0
+php ../composer.phar -n require --prefer-dist drupal/apictest:1.2.* drupal/ghmarkdown:1.0.* drupal/socialblock:1.0.* drupal/featuredcontent:1.0.* drupal/ibm_apim:1.2.* drupal/mail_subscribers:1.0.* drupal/auth_apic:1.1.* drupal/apic_api:1.0.* drupal/apic_app:1.4.* drupal/consumerorg:1.1.* drupal/product:1.0.* drupal/themegenerator:1.0.* drupal/connect_theme:1.0.*
 
 # copy installation profile
 mkdir -p $BUILD_DIR/$PROJECT_NAME/profiles
 cp -rf $BASEDIR/apim_profile $BUILD_DIR/$PROJECT_NAME/profiles
+
+#delete drush
+php ../composer.phar -n -v remove drush/drush
+rm -rf $BUILD_DIR/$PROJECT_NAME/drush
 
 echo "version: '$VERSION'" > $BUILD_DIR/$PROJECT_NAME/profiles/apim_profile/apic_version.yaml
 echo "build: '$BUILD_TIMESTAMP'" >> $BUILD_DIR/$PROJECT_NAME/profiles/apim_profile/apic_version.yaml
 
 mkdir -p $BUILD_DIR/$PROJECT_NAME/libraries
 cp -rf $BASEDIR/libraries/* $BUILD_DIR/$PROJECT_NAME/libraries
+
+# copy site stub files needed by aegir
+cp $BASEDIR/composer-stub/sites/* $BUILD_DIR/$PROJECT_NAME/sites
 
 # copy our overrides
 cp -rf $BASEDIR/overrides/* $BUILD_DIR/$PROJECT_NAME

@@ -227,12 +227,12 @@ class Api {
       $node->set('apic_version', $api['consumer_api']['info']['version']);
 
       // if unset, default state to online
-      if(!isset($api['state'])) {
+      if(!isset($api['state']) || empty($api['state'])) {
         $api['state'] = 'online';
       }
       // if set, make sure it is one of the valid options and default to online if not
       $state = strtolower($api['state']);
-      if ($state !== 'online' || $state !== 'offline' || $state !== 'archived') {
+      if ($state !== 'online' && $state !== 'offline' && $state !== 'archived') {
         $api['state'] = 'online';
       }
       $node->set('api_state', $state);

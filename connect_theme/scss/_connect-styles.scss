@@ -554,7 +554,8 @@ header h1,
   color: $alert-info-text;
 }
 
-.socialblock .hashtag {
+.socialblock .hashtag,
+.socialblock .url {
   color: $brand-primary;
 }
 
@@ -655,4 +656,33 @@ section.block-go-ahead {
 
 .ibmapimNoPermissions .iconDiv svg {
   fill: $modal-content-color;
+}
+
+// maintenance page
+.maintenance-page {
+  header.navbar,
+  header.navbar .container,
+  header.navbar .container .col-sm-12 {
+    padding-left: 0;
+    padding-right: 0;
+    a.name.navbar-brand {
+      padding-top: 10px;
+    }
+  }
+  .main-container.container .row {
+    margin: 40px;
+    width: calc(100% - 80px);
+
+    .col-sm-12 {
+      padding: 30px;
+      border: 1px solid #ddd;
+      width: 100%;
+      background-color: #fff;
+
+      h1 {
+        padding-bottom: 10px;
+      }
+    }
+  }
+
 }

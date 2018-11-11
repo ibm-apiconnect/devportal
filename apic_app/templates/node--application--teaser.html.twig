@@ -29,11 +29,11 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
     <div class="apicAppTeaserMain">
       <h2>
         <a href="{{- path('entity.node.canonical', {'node': node.id}) -}}" rel="bookmark">
-          <span class="apicAppName apicTruncate" title="{{- label -}}">{{- label -}}</span>
+          <span class="apicAppName apicTruncate" title="{{ node.title.value|striptags }}">{{- label -}}</span>
         </a>
       </h2>
       <div class="apicAppDesc apicFade"
-           title="{{- content.apic_summary['#items'][0].value -}}">{{ content.apic_summary }}</div>
+           title="{{- content.apic_summary['#items'][0].value|striptags -}}">{{ content.apic_summary }}</div>
       {% if custom_fields is defined and custom_fields is not empty %}
         <div class="customFields">
           {% for custom_field in custom_fields %}

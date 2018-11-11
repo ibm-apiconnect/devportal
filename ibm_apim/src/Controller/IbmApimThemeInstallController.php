@@ -99,8 +99,7 @@ class IbmApimThemeInstallController extends ThemeController {
           $themes = $this->themeHandler->listInfo();
           drupal_set_message($this->t('The %theme theme has been enabled.', ['%theme' => $themes[$theme]->info['name']]));
 
-          $auto_build_scss = $themes[$theme]->info['auto_build_scss'];
-          if(isset($auto_build_scss) && $auto_build_scss) {
+          if(isset($themes[$theme]->info['auto_build_scss']) && $themes[$theme]->info['auto_build_scss']) {
             $this->compile_scss($theme);
           }
         }
@@ -157,8 +156,7 @@ class IbmApimThemeInstallController extends ThemeController {
       if (isset($themes[$theme]) || $this->themeHandler->install([$theme])) {
         $themes = $this->themeHandler->listInfo();
 
-        $auto_build_scss = $themes[$theme]->info['auto_build_scss'];
-        if(isset($auto_build_scss) && $auto_build_scss) {
+        if(isset($themes[$theme]->info['auto_build_scss']) && $themes[$theme]->info['auto_build_scss']) {
           $this->compile_scss($theme);
         }
 
@@ -205,7 +203,7 @@ class IbmApimThemeInstallController extends ThemeController {
   public function delete(Request $request) {
     $theme = $request->query->get('theme');
 
-    if (isset($theme)) {
+    if (isset($theme) && !empty($theme)) {
       // Get current list of themes.
       $themes = $this->themeHandler->listInfo();
       // Check if the specified theme is disabled
@@ -220,11 +218,12 @@ class IbmApimThemeInstallController extends ThemeController {
         }
       }
 
-
-      return $this->redirect('system.themes_page');
     }
+    else {
+      drupal_set_message($this->t('There was an error deleting the theme. Please contact your system administrator.'), 'error');
+    }
+    return $this->redirect('system.themes_page');
 
-    throw new AccessDeniedHttpException();
   }
 
   /**

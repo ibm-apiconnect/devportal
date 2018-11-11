@@ -256,14 +256,14 @@ class ApicUserManager implements UserManagerInterface {
 
     if ($mgmtResponse) {
       // For !user_managed registries there is no real sign up process so this is just an authentication check.
-      // If we have a response then all is good, report this and inform the user to log in.
+      // If we have a response then all is good, report this and inform the user to sign in.
       $userManagerResponse->setSuccess(TRUE);
       $this->logger->notice('non user managed sign-up processed for %username', [
         '%username' => $new_user->getUsername(),
       ]);
 
       if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
-        $userManagerResponse->setMessage(t('Your account was created successfully. You may now log in.'));
+        $userManagerResponse->setMessage(t('Your account was created successfully. You may now sign in.'));
       }
       $userManagerResponse->setRedirect('<front>');
 
@@ -283,7 +283,6 @@ class ApicUserManager implements UserManagerInterface {
     }
     return $userManagerResponse;
   }
-
 
   /**
    * @inheritDoc
@@ -314,11 +313,16 @@ class ApicUserManager implements UserManagerInterface {
 
     if ($apic_me->getCode() !== 200) {
       $this->logger->error('failed to authenticate with APIM server');
-      // Not successfully authenticated with management server, do not log in.
+      // Not successfully authenticated with management server, do not sign in.
       $loginResponse->setSuccess(FALSE);
       $loginResponse->setMessage(serialize($apic_me->getData()));
     }
     else {
+
+      $meuser = $apic_me->getUser();
+      if($user->getUsername() == '') {
+        $user->setUsername($meuser->getUsername());
+      }
 
       // Pull the existing account out of the drupal db or create it if it doesn't exist yet
       $this->createOrGetLocalAccount($user);
@@ -348,42 +352,53 @@ class ApicUserManager implements UserManagerInterface {
 
       // Now we have called userLoginFinalize we are logged in to drupal and
       // have a new private tempstore for this user so we need to setAuth again
+      $user->setBearerToken($token_retrieved);
       $this->mgmtServer->setAuth($user);
 
-      // If this is the first log in for this user, user_consumerorg_url will not be populated.
-      // We rely on this field to be able to set the current dev org and populate the consumerorg selector.
       $apicMeConsumerorgs = $apic_me->getUser()->getConsumerorgs();
-      $consumerorg_urls = $account->get('consumerorg_url')->getValue();
 
-      foreach ($apicMeConsumerorgs as $nextApicConsumerorg) {
+      if (empty($apicMeConsumerorgs)) {
+        // user has no consumer orgs, ensure we reset any data
+        $this->logger->notice('no consumer orgs set on login');
+        $account->set('consumerorg_url', NULL);
+        $account->save();
+        $this->userUtils->setCurrentConsumerorg(NULL);
+      }
+      else {
+        // If this is the first sign in for this user, user_consumerorg_url will not be populated.
+        // We rely on this field to be able to set the current dev org and populate the consumerorg selector.
+        $consumerorg_urls = $account->get('consumerorg_url')->getValue();
 
-        $org_is_new = TRUE;
-        foreach ($consumerorg_urls as $index => $valueArray) {
-          $nextExistingConsumerorgUrl = $valueArray['value'];
-          if ($nextExistingConsumerorgUrl == $nextApicConsumerorg->getUrl()) {
-            // Already in the list, don't add it again.
-            $org_is_new = FALSE;
+        foreach ($apicMeConsumerorgs as $nextApicConsumerorg) {
+
+          $org_is_new = TRUE;
+          foreach ($consumerorg_urls as $index => $valueArray) {
+            $nextExistingConsumerorgUrl = $valueArray['value'];
+            if ($nextExistingConsumerorgUrl == $nextApicConsumerorg->getUrl()) {
+              // Already in the list, don't add it again.
+              $org_is_new = FALSE;
+            }
+          }
+
+          if ($org_is_new) {
+            $consumerorg_urls[] = array("value" => $nextApicConsumerorg->getUrl());
           }
         }
 
-        if ($org_is_new) {
-          $consumerorg_urls[] = array("value" => $nextApicConsumerorg->getUrl());
+        // Update field and save
+        $account->set('consumerorg_url', $consumerorg_urls);
+        $account->save();
+
+        // We may not have a consumerorg in our database for this user. Check and create as required.
+        foreach ($apicMeConsumerorgs as $nextApicConsumerorg) {
+          $this->createOrUpdateLocalConsumerorg($nextApicConsumerorg, $updatedUser);
         }
-      }
 
-      // Update field and save
-      $account->set('consumerorg_url', $consumerorg_urls);
-      $account->save();
-
-      // We may not have a consumerorg in our database for this user. Check and create as required.
-      foreach ($apicMeConsumerorgs as $nextApicConsumerorg) {
-        $this->createOrUpdateLocalConsumerorg($nextApicConsumerorg, $updatedUser);
-      }
-
-      // if not logging in as admin then set current consumerorg to first in the list returned by apic
-      if ($account->id() != 1) {
-        $this->userUtils->setCurrentConsumerorg();
-        $this->userUtils->setOrgSessionData();
+        // if not logging in as admin then set current consumerorg to first in the list returned by apic
+        if ($account->id() != 1) {
+          $this->userUtils->setCurrentConsumerorg();
+          $this->userUtils->setOrgSessionData();
+        }
       }
 
       $loginResponse->setSuccess(TRUE);
@@ -449,7 +464,7 @@ class ApicUserManager implements UserManagerInterface {
       \Drupal::logger('auth_apic')->error('Error while processing user activation. Received response code \'@code\' from backend. 
         Message from backend was \'@message\'.', array('@code' => $mgmt_result->code, '@message' => $mgmt_result->data['message'][0]));
     } else {
-      // We can activate the account in our local database and allow the user to log in
+      // We can activate the account in our local database and allow the user to sign in
       $user_mail = $jwt->getPayload()['email'];
       $account = $this->externalAuth->load($user_mail, $this->provider);
 
@@ -473,8 +488,8 @@ class ApicUserManager implements UserManagerInterface {
         $account->activate();
         $account->save();
 
-        // all is well - direct the user to log in!
-        drupal_set_message(t('Your account has been activated. You can now log in.'));
+        // all is well - direct the user to sign in!
+        drupal_set_message(t('Your account has been activated. You can now sign in.'));
       }
     }
     if (function_exists('ibm_apim_exit_trace')) {
@@ -635,9 +650,18 @@ class ApicUserManager implements UserManagerInterface {
         drupal_set_message(t("There was an error while saving your account data. Contact your site administrator."), "error");
       }
 
+      $errors = $apic_me->getErrors();
+      if (is_array($errors)) {
+        if (empty($errors)) {
+          $errors = '';
+        } else {
+          $errors = implode(", ", $errors);
+        }
+      }
+
       $this->logger->error("Failed to update a user in the management server. Response code was @code and error message was @error", array(
         '@code' => $apic_me->getCode(),
-        '@error' => $apic_me->getErrors()
+        '@error' => $errors
       ));
       $returnValue = FALSE;
     }
@@ -857,6 +881,40 @@ class ApicUserManager implements UserManagerInterface {
     }
 
     return $account;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public function deleteUser() {
+
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $mgmtResponse = $this->mgmtServer->deleteMe();
+    $userManagerResponse = new UserManagerResponse();
+
+    if($mgmtResponse === NULL) {
+      $userManagerResponse = NULL;
+    }
+    else if ($mgmtResponse->getCode() === 200) { // DELETE /me should return 200 with me resource
+      // we have successfully deleted in apim, now to clean things up locally (drupal account)
+
+      $current_user = \Drupal::currentUser();
+      $this->logger->notice('Account deleted by @username', array(
+        '@username' => $current_user->getAccountName()
+      ));
+
+      user_cancel(array('user_cancel_notify' => FALSE), $current_user->id(), 'user_cancel_reassign');
+
+      $userManagerResponse->setSuccess(TRUE);
+
+    }
+    else {
+      $userManagerResponse->setSuccess(FALSE);
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $userManagerResponse !== NULL ? $userManagerResponse->success(): NULL);
+    return $userManagerResponse;
   }
 
 }

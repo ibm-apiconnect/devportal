@@ -3,6 +3,7 @@ type: theme
 base theme: connect_theme
 
 name: 'stub'
+project: 'stub'
 description: 'Sub-theme of connect_theme.'
 package: 'Bootstrap'
 

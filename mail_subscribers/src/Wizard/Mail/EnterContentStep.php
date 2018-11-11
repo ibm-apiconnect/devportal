@@ -15,8 +15,6 @@ namespace Drupal\mail_subscribers\Wizard\Mail;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 
-use Symfony\Component\HttpFoundation\RedirectResponse;
-
 class EnterContentStep extends FormBase {
 
   /**
@@ -79,7 +77,7 @@ class EnterContentStep extends FormBase {
     }
 
     $form['intro'] = array(
-      '#markup' => '<p>' . t('Now provide the content of the message to send.') . '</p>',
+      '#markup' => '<p>' . $this->t('Now provide the content of the message to send.') . '</p>',
       '#weight' => 0
     );
 
@@ -90,14 +88,14 @@ class EnterContentStep extends FormBase {
     );
 
     $form['message'] = array(
-      '#title' => t('Message'),
+      '#title' => $this->t('Message'),
       '#type' => 'text_format',
       '#format' => $message['format'],
       '#wysiwyg' => TRUE,
       '#default_value' => $message['value'],
       '#allowed_formats' => ['basic_html', 'plain_text'],
       '#rows' => 10,
-      '#description' => t('Enter the body of the message. You can use tokens in the message.'),
+      '#description' => $this->t('Enter the body of the message. You can use tokens in the message.'),
     );
 
     if (!\Drupal::moduleHandler()->moduleExists('token')) {
@@ -110,14 +108,14 @@ class EnterContentStep extends FormBase {
 
       $form['token'] = array(
         '#type' => 'details',
-        '#title' => t('Replacements'),
-        '#description' => t('You can use the following tokens in the subject or message.'),
+        '#title' => $this->t('Replacements'),
+        '#description' => $this->t('You can use the following tokens in the subject or message.'),
       );
 
       // standard tokens from drupal
 //      $form['token']['general'] = array(
 //        '#type' => 'details',
-//        '#title' => t('General tokens'),
+//        '#title' => $this->t('General tokens'),
 //      );
 
       $token_types = array('site', 'user', 'node', 'current-date');
@@ -129,57 +127,57 @@ class EnterContentStep extends FormBase {
       // TODO : implement mail subscriber specific tokens
       //      $form['token']['mail_subscribers'] = array(
       //        '#type' => 'details',
-      //        '#title' => t('Mail Subscribers specific tokens'),
+      //        '#title' => $this->t('Mail Subscribers specific tokens'),
       //      );
       //      $form['token']['mail_subscribers']['tokens'] = array(
       //        '#markup' => mail_subscribers_token_help($fields_name_text)
       //      );
       //      $form['token']['general'] = array(
       //        '#type' => 'details',
-      //        '#title' => t('General tokens'),
+      //        '#title' => $this->t('General tokens'),
       //      );
     }
 
     $form['additional'] = array(
       '#type' => 'details',
-      '#title' => t('Additional email options'),
+      '#title' => $this->t('Additional email options'),
     );
     $form['additional']['priority'] = array(
       '#type' => 'select',
-      '#title' => t('Priority'),
+      '#title' => $this->t('Priority'),
       '#options' => array(
-        0 => t('none'),
-        1 => t('highest'),
-        2 => t('high'),
-        3 => t('normal'),
-        4 => t('low'),
-        5 => t('lowest')
+        0 => $this->t('none'),
+        1 => $this->t('highest'),
+        2 => $this->t('high'),
+        3 => $this->t('normal'),
+        4 => $this->t('low'),
+        5 => $this->t('lowest')
       ),
-      '#description' => t('Note that email priority is ignored by a lot of email programs.'),
+      '#description' => $this->t('Note that email priority is ignored by a lot of email programs.'),
       '#default_value' => $priority,
     );
     $form['additional']['receipt'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Request receipt'),
+      '#title' => $this->t('Request receipt'),
       '#default_value' => $receipt,
-      '#description' => t('Request a Read Receipt from your emails. A lot of e-mail programs ignore these so it is not a definitive indication of how many people have read your message.'),
+      '#description' => $this->t('Request a Read Receipt from your emails. A lot of e-mail programs ignore these so it is not a definitive indication of how many people have read your message.'),
     );
     $form['additional']['headers'] = array(
       '#type' => 'textarea',
-      '#title' => t('Additional headers'),
-      '#description' => t("Additional headers to be sent with the message. Enter one per line. Example:<pre>Reply-To: noreply@example.com\nX-MyCustomHeader: Value</pre>"),
+      '#title' => $this->t('Additional headers'),
+      '#description' => $this->t("Additional headers to be sent with the message. Enter one per line. Example:<pre>Reply-To: noreply@example.com\nX-MyCustomHeader: Value</pre>"),
       '#rows' => 4,
       '#default_value' => $headers,
     );
 
     $form['direct'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Send the message directly using the Batch API.'),
+      '#title' => $this->t('Send the message directly using the Batch API.'),
       '#default_value' => $direct,
     );
     $form['carbon_copy'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Send a copy of the message to the sender.'),
+      '#title' => $this->t('Send a copy of the message to the sender.'),
       '#default_value' => $carbon_copy,
     );
 
@@ -192,11 +190,11 @@ class EnterContentStep extends FormBase {
   public function validateForm(array &$form, FormStateInterface $form_state) {
 
     if (empty($form_state->getUserInput()['subject'])) {
-      $form_state->setErrorByName('subject', t('You must enter a Subject.'));
+      $form_state->setErrorByName('subject', $this->t('You must enter a Subject.'));
       return FALSE;
     }
     if (empty($form_state->getUserInput()['message'])) {
-      $form_state->setErrorByName('message', t('You must enter some content for the message.'));
+      $form_state->setErrorByName('message', $this->t('You must enter some content for the message.'));
       return FALSE;
     }
   }

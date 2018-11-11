@@ -89,3 +89,21 @@ function ibm_apim_install() {
     ->removeComponent('field_last_password_reset')
     ->save();
 }
+
+/**
+ * Changes from 8.x-1.2.3 to 8.x-1.2.4 :
+ *  - make first_name and last_name not required fields
+ */
+function ibm_apim_update_8101() {
+
+  \Drupal::service('config.factory')
+    ->getEditable('field.field.user.user.first_name')
+    ->set('required', FALSE)
+    ->save();
+
+  \Drupal::service('config.factory')
+    ->getEditable('field.field.user.user.last_name')
+    ->set('required', FALSE)
+    ->save();
+
+}

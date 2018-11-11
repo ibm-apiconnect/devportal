@@ -99,15 +99,6 @@ ibm_apim.billing_submit:
     _role: 'authenticated'
     _ibm_apim_billiing_access_check: 'TRUE'
 
-ibm_apim.deleteuser:
-  path: '/user/delete'
-  defaults:
-    _form: '\Drupal\ibm_apim\Form\UserDeleteForm'
-    _title: 'Delete account'
-  requirements:
-    _ibm_apim_delete_user_access_check: 'TRUE'
-    _ibm_apim_loggedin_not_admin_access_check: 'TRUE'
-
 ibm_apim.subscription_wizard:
   path: '/subscription'
   defaults:

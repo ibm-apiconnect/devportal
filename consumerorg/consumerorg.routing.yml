@@ -61,3 +61,11 @@ consumerorg.resend_invite:
     _title: 'Resend an invitation to a user in your consumer organization'
   requirements:
     _consumerorg_edit_org_access_check: 'TRUE'
+
+consumerorg.delete_invite:
+  path: '/myorg/delete/{inviteId}'
+  defaults:
+    _form: '\Drupal\consumerorg\Form\DeleteInviteForm'
+    _title: 'Delete an invitation to a user in your consumer organization'
+  requirements:
+    _consumerorg_edit_org_access_check: 'TRUE'

@@ -127,7 +127,7 @@ Scenario: Invalid new password as non-admin
   And I enter "thisisinvalid" for "Password"
   And I enter "thisisinvalid" for "Confirm password"
   And I press the "Submit" button
-  Then I should see the text "Password must contain characters from 3 of the 4 following categories:"
+  Then I should see the text "Password must contain at least 3 types of characters from the following character types:"
 
 Scenario: Form not available if not logged in
   Given I am not logged in

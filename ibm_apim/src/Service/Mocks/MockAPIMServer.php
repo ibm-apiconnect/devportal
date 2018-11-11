@@ -98,6 +98,13 @@ class MockAPIMServer implements ManagementServerInterface {
   }
 
   /**
+   * @inheritdoc
+   */
+  public function deleteMe() {
+    // TODO: Implement deleteMe() method.
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function postUsersRegister(ApicUser $user) {
@@ -114,7 +121,12 @@ class MockAPIMServer implements ManagementServerInterface {
   }
 
   public function forgotPassword($username, $realm) {
-    return array("code" => 200, "data" => "forgotPassword mock response");
+    $response = new RestResponse();
+
+    $response->setCode(200);
+    $response->setData("forgotPassword mock response");
+
+    return $response;
   }
 
   public function resetPassword(JWTToken $obj, $password) {

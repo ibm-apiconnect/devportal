@@ -63,7 +63,6 @@ class JWTParser implements TokenParserInterface {
       return NULL;
     }
 
-    $jwt->setJwt($token);
     $jwt->setDecodedJwt($decoded_token);
 
     // format = header.payload.signature

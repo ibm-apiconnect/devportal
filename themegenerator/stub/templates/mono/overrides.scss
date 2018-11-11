@@ -130,10 +130,4 @@ $table-zebra-stripe: $gray-02;
 // import everything from connect_theme as a starting point
 @import "connect-styles";
 
-// place further styling overrides here
 
-.navbar .logo {
-  // sample logo is white
-  // remove this filter if substituting your own logo
-  filter: invert(75%);
-}

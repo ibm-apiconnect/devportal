@@ -160,10 +160,14 @@ function apic_api_remove_empty_elements($yaml) {
     }
     if (isset($yaml['paths'])) {
       foreach ($yaml['paths'] as $pathname => $path) {
-        foreach ($path as $verb => $op) {
-          if (isset($op['responses'])) {
-            foreach ($op['responses'] as $code => $response) {
-              $yaml['paths'][$pathname][$verb]['responses'][$code] = tidyYaml($yaml['paths'][$pathname][$verb]['responses'][$code]);
+        if (is_array($yaml['paths'][$pathname]) && empty($yaml['paths'][$pathname])) {
+          unset($yaml['paths'][$pathname]);
+        } else {
+          foreach ($path as $verb => $op) {
+            if (isset($op['responses'])) {
+              foreach ($op['responses'] as $code => $response) {
+                $yaml['paths'][$pathname][$verb]['responses'][$code] = tidyYaml($yaml['paths'][$pathname][$verb]['responses'][$code]);
+              }
             }
           }
         }

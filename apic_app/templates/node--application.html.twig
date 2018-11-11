@@ -48,9 +48,11 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
             <div class="apicAppLifecycle apicAppActions">
               {% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %}
                 {% if content.application_lifecycle_pending['#items'][0].value is not defined or content.application_lifecycle_pending['#items'][0].value is empty %}
-                  <a href="{{- path('apic_app.promote', {'appId': content.application_id['#items'][0].value}) -}}"
-                     class="button apicUpgradeApp"
-                     title="{{ 'Upgrade to production'|t }}">{{ 'Upgrade to production'|t }}</a>
+                  {% if node.application_id.value is defined and node.application_id.value is not empty %}
+                    <a href="{{- path('apic_app.promote', {'appId': node.application_id.value}) -}}"
+                       class="button apicUpgradeApp"
+                       title="{{ 'Upgrade to production'|t }}">{{ 'Upgrade to production'|t }}</a>
+                  {% endif %}
                 {% else %}
                   <span>{{ 'Pending Upgrade'|t }}</span>
                 {% endif %}
@@ -69,18 +71,20 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
                   <circle id="Oval" cx="2" cy="18" r="2"></circle>
                 </svg></span></a>
                   <ul class="dropitmenu-submenu">
-                    <li class="editApplication"><a
-                          href="{{ path('apic_app.update', {'appId': content.application_id['#items'][0].value}) }}"
-                          title="{{ 'Edit App'|t }}">{{ 'Edit'|t }}</a>
-                    </li>
-                    <li class="uploadImage"><a
-                          href="{{ path('apic_app.image_upload', {'appId': content.application_id['#items'][0].value}) }}"
-                          title="{{ 'Upload image'|t }}">{{ 'Upload image'|t }}</a>
-                    </li>
-                    <li class="deleteApplication"><a
-                          href="{{ path('apic_app.delete', {'appId': content.application_id['#items'][0].value}) }}"
-                          title="{{ 'Delete App'|t }}">{{ 'Delete'|t }}</a>
-                    </li>
+                    {% if node.application_id.value is defined and node.application_id.value is not empty %}
+                      <li class="editApplication"><a
+                            href="{{ path('apic_app.update', {'appId': node.application_id.value}) }}"
+                            title="{{ 'Edit App'|t }}">{{ 'Edit'|t }}</a>
+                      </li>
+                      <li class="uploadImage"><a
+                            href="{{ path('apic_app.image_upload', {'appId': node.application_id.value}) }}"
+                            title="{{ 'Upload image'|t }}">{{ 'Upload image'|t }}</a>
+                      </li>
+                      <li class="deleteApplication"><a
+                            href="{{ path('apic_app.delete', {'appId': node.application_id.value}) }}"
+                            title="{{ 'Delete App'|t }}">{{ 'Delete'|t }}</a>
+                      </li>
+                    {% endif %}
                   </ul>
                 </li>
               </ul>
@@ -92,7 +96,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
             <ul>
               <li class="selected"><a href="#">{{ 'Dashboard'|t }}</a></li>
               {#<li><a class="analyticsApplication"#}
-                     {#href="{{- path('apic_app.activity', {'node': node.id}) -}}">{{ 'Activity'|t }}</a></li>#}
+              {#href="{{- path('apic_app.activity', {'node': node.id}) -}}">{{ 'Activity'|t }}</a></li>#}
               <li><a class="subscriptionsApplication"
                      href="{{- path('apic_app.subscriptions', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
             </ul>

@@ -238,7 +238,30 @@ class Product {
       $node->set("apic_provider_id", $siteconfig->getOrgId());
       $node->set("apic_catalog_id", $siteconfig->getEnvId());
       $node->set("product_id", $product['id']);
-      $node->set("product_state", mb_strtolower($product['state']));
+      if (!isset($product['state']) || empty($product['state'])) {
+        $product['state'] = 'published';
+      }
+      switch (mb_strtolower($product['state'])) {
+        case "deprecated" :
+          $product_state = 'deprecated';
+          break;
+        case "staged" :
+          $product_state = 'staged';
+          break;
+        case "pending" :
+          $product_state = 'pending';
+          break;
+        case "retired" :
+          $product_state = 'retired';
+          break;
+        case "archived" :
+          $product_state = 'archived';
+          break;
+        default :
+          $product_state = 'published';
+          break;
+      }
+      $node->set("product_state", $product_state);
       $node->set("apic_ref", $product['catalog_product']['info']['name'] . ':' . $product['catalog_product']['info']['version']);
       $node->set("product_name", $product['catalog_product']['info']['name']);
       $node->set("apic_version", $product['catalog_product']['info']['version']);
@@ -339,8 +362,15 @@ class Product {
       }
       $node->set("product_terms_of_service", $product['catalog_product']['info']['termsOfService']);
       $node->set('product_visibility', array());
-      if (isset($product['catalog_product']['visibility'])) {
-        foreach ($product['catalog_product']['visibility'] as $type => $visibility) {
+      // If there is a 'visibility' block in the product use that to determine visibility,
+      // otherwise use the one inside catalog_product
+      if (array_key_exists('visibility',$product)) {
+        $visblock = $product['visibility'];
+      } else {
+        $visblock = $product['catalog_product']['visibility'];
+      }
+      if (isset($visblock)) {
+        foreach ($visblock as $type => $visibility) {
           $node->product_visibility[] = serialize(array($type => $visibility));
         }
       }
@@ -348,40 +378,40 @@ class Product {
         $node->set('product_visibility', array());
       }
       // default to product visibility being enabled to avoid bugs in apim where the value is not getting set correctly
-      if (isset($product['catalog_product']['visibility']['view']) && array_key_exists('enabled', $product['catalog_product']['visibility']['view']) && $product['catalog_product']['visibility']['view']['enabled'] == FALSE) {
+      if (isset($visblock['view']) && array_key_exists('enabled', $visblock['view']) && $visblock['view']['enabled'] == FALSE) {
         $node->set("product_view_enabled", 0);
       }
       else {
         $node->set("product_view_enabled", 1);
       }
-      if (isset($product['catalog_product']['visibility']['subscribe']['enabled']) && $product['catalog_product']['visibility']['subscribe']['enabled'] == TRUE) {
+      if (isset($visblock['subscribe']['enabled']) && $visblock['subscribe']['enabled'] == TRUE) {
         $node->set("product_subscribe_enabled", 1);
       }
       else {
         $node->set("product_subscribe_enabled", 0);
       }
-      if (isset($product['catalog_product']['visibility']['view']['type']) && mb_strtolower($product['catalog_product']['visibility']['view']['type']) == 'public') {
+      if (isset($visblock['view']['type']) && mb_strtolower($visblock['view']['type']) == 'public') {
         $node->set("product_visibility_public", 1);
       }
       else {
         $node->set("product_visibility_public", 0);
       }
-      if (isset($product['catalog_product']['visibility']['view']['type']) && mb_strtolower($product['catalog_product']['visibility']['view']['type']) == 'authenticated') {
+      if (isset($visblock['view']['type']) && mb_strtolower($visblock['view']['type']) == 'authenticated') {
         $node->set("product_visibility_authenticated", 1);
       }
       else {
         $node->set("product_visibility_authenticated", 0);
       }
       $product_visibility_custom_orgs = array();
-      if (isset($product['catalog_product']['visibility']['view']['type']) && $product['catalog_product']['visibility']['view']['type'] == 'custom' && isset($product['catalog_product']['visibility']['view']['org_urls'])) {
-        foreach ($product['catalog_product']['visibility']['view']['org_urls'] as $org_url) {
+      if (isset($visblock['view']['type']) && $visblock['view']['type'] == 'custom' && isset($visblock['view']['org_urls'])) {
+        foreach ($visblock['view']['org_urls'] as $org_url) {
           $product_visibility_custom_orgs[] = $org_url;
         }
       }
       $node->set('product_visibility_custom_orgs', $product_visibility_custom_orgs);
       $product_visibility_custom_tags = array();
-      if (isset($product['catalog_product']['visibility']['view']['type']) && $product['catalog_product']['visibility']['view']['type'] == 'custom' && isset($product['catalog_product']['visibility']['view']['tags'])) {
-        foreach ($product['catalog_product']['visibility']['view']['tags'] as $tag) {
+      if (isset($visblock['view']['type']) && $visblock['view']['type'] == 'custom' && isset($visblock['view']['tags'])) {
+        foreach ($visblock['view']['tags'] as $tag) {
           $product_visibility_custom_tags[] = $tag;
         }
       }

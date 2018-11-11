@@ -19,6 +19,7 @@ use Drupal\key\Entity\Key;
 use Drupal\node\Entity\Node;
 use Drupal\product\Product;
 use Drupal\Core\Session\UserSession;
+use Drupal\search_api\Entity\Index;
 
 function ibm_apim_drush_command() {
 
@@ -675,6 +676,12 @@ function drush_ibm_apim_content_refresh() {
 
     drush_log(t('Got type: @type', array('@type' => $type)), 'success');
 
+    // checking memory
+    drush_ibm_apim_manage_memory_usage();
+
+    // assert that the index_directly value of the search_api module's default_index is
+    // set correctly according to the number of nodes in the site
+    drush_ibm_apim_assert_index_directly_value();
 
     try {
       if (isset($type) && $type != 'error' && isset($content)) {
@@ -686,8 +693,7 @@ function drush_ibm_apim_content_refresh() {
             }
             $prodList[] = $content['name'] . ':' . $content['version'];
             // have to massage the content so we can reuse the same logic for snapshot as we use for webhooks
-            $product = array('product' => $content);
-            drush_product_createOrUpdate($product, 'ContentRefresh', 'content_refresh');
+            drush_product_createOrUpdate(array('product' => $content), 'ContentRefresh', 'content_refresh');
             \Drupal::state()->set('ibm_apim.content_refresh_products', $prodList);
             break;
           case 'api':
@@ -827,11 +833,16 @@ function drush_ibm_apim_content_refresh() {
             // reached the end of the snapshot payload
             drush_ibm_apim_clearup();
 
+            // assert that the index_directly value of the search_api module's default_index is
+            // set correctly according to the number of nodes in the site
+            drush_ibm_apim_assert_index_directly_value();
+
             break;
           default:
             drush_log(dt('There is no drush code to handle the payload type @type', array('@type' => $type)), 'warning');
             break;
         }
+        unset($content);
       }
       else {
         drush_log(dt('No content provided for webhook', array()), 'error');
@@ -844,10 +855,9 @@ function drush_ibm_apim_content_refresh() {
 
     $input = trim(fgets(STDIN));
 
-
   }
 
-  drush_log(dt('Drush ibm_apim_listen exiting'), 'success');
+  drush_log(dt('Drush ibm_apim_content_refresh exiting'), 'success');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
@@ -860,6 +870,7 @@ function drush_ibm_apim_clearup() {
 
 
   // remove any products in our db that were not returned by apim
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up products'), 'success');
   $current_products = \Drupal::state()->get('ibm_apim.content_refresh_products');
   if (!is_array($current_products)) {
     $current_products = array();
@@ -885,6 +896,7 @@ function drush_ibm_apim_clearup() {
   }
 
   // remove any apis in our db that were not returned by apim
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up apis'), 'success');
   $current_apis = \Drupal::state()->get('ibm_apim.content_refresh_apis');
   if (!is_array($current_apis)) {
     $current_apis = array();
@@ -906,58 +918,55 @@ function drush_ibm_apim_clearup() {
   }
 
   // remove any consumerorgs in our db that were not returned by apim
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up consumerorgs'), 'success');
   $current_consumerorgs = \Drupal::state()->get('ibm_apim.content_refresh_consumerorgs');
   if (!is_array($current_consumerorgs)) {
     $current_consumerorgs = array();
   }
-  $query = \Drupal::entityQuery('node');
-  $query->condition('type', 'consumerorg');
-  $nids = $query->execute();
-  if (isset($nids) && !empty($nids)) {
-    $consumernodes = Node::loadMultiple($nids);
-    foreach ($consumernodes as $orgnode) {
-      if (isset($orgnode)) {
-        $found = FALSE;
-        foreach ($current_consumerorgs as $org_url) {
-          if ($orgnode->consumerorg_url->value == $org_url) {
-            $found = TRUE;
-          }
-        }
-        if ($found != TRUE) {
-          $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
-          // TODO : don't delete these due to a webhooks giving us different urls than /me response does
-          //$consumerOrgService->deleteNode($orgnode->id(), 'content_refresh');
-        }
-      }
-    }
-  }
+  // TODO need to handle tidying up consumerorgs once know we're getting the right webhooks - see TODO below
+  // commenting out entire section for now since doing a pointless loadMultiple is silly
+//  $query = \Drupal::entityQuery('node');
+//  $query->condition('type', 'consumerorg');
+//  $nids = $query->execute();
+//  if (isset($nids) && !empty($nids)) {
+//    $consumernodes = Node::loadMultiple($nids);
+//    foreach ($consumernodes as $orgnode) {
+//      if (isset($orgnode)) {
+//        $found = FALSE;
+//        foreach ($current_consumerorgs as $org_url) {
+//          if ($orgnode->consumerorg_url->value == $org_url) {
+//            $found = TRUE;
+//          }
+//        }
+//        if ($found != TRUE) {
+//          $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
+//          // TODO : don't delete these due to a webhooks giving us different urls than /me response does
+//          //$consumerOrgService->deleteNode($orgnode->id(), 'content_refresh');
+//        }
+//      }
+//    }
+//  }
 
   // remove any apps in our db that were not returned by apim
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up applications'), 'success');
   $current_apps = \Drupal::state()->get('ibm_apim.content_refresh_apps');
   if (!is_array($current_apps)) {
     $current_apps = array();
   }
   $query = \Drupal::entityQuery('node');
   $query->condition('type', 'application');
-  $nids = $query->execute();
-  if (isset($nids) && !empty($nids)) {
-    $appnodes = Node::loadMultiple($nids);
-    foreach ($appnodes as $appnode) {
-      if (isset($appnode)) {
-        $found = FALSE;
-        foreach ($current_apps as $app_id) {
-          if ($appnode->application_id->value == $app_id) {
-            $found = TRUE;
-          }
-        }
-        if ($found != TRUE) {
-          Application::deleteNode($appnode->id(), 'content_refresh');
-        }
-      }
+  if (!empty($current_apps)) {
+    $query->condition('application_id', $current_apps, 'NOT IN');
+  }
+  $results = $query->execute();
+  if ($results !== null && !empty($results)) {
+    foreach ($results as $nid) {
+      Application::deleteNode($nid, 'content_refresh');
     }
   }
 
   // update application subscriptions
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up subscriptions'), 'success');
   $current_subs = \Drupal::state()->get('ibm_apim.content_refresh_subs');
   if (!is_array($current_subs)) {
     $current_subs = array();
@@ -970,12 +979,16 @@ function drush_ibm_apim_clearup() {
     $query->condition('apic_url.value', array_keys($current_subs), 'NOT IN');
   }
   $nids = $query->execute();
-  if (isset($nids) && !empty($nids)) {
-    $appnodes = Node::loadMultiple($nids);
-    foreach ($appnodes as $appnode) {
-      $current_subs[$appnode->apic_url->value] = [];
+  if (is_array($nids)) {
+    $buckets = array_chunk($nids, 100);  // chop up array into bucket size units
+    foreach ($buckets as $bucket) {
+      $appnodes = Node::loadMultiple($bucket);
+      foreach ($appnodes as $appnode) {
+        $current_subs[$appnode->apic_url->value] = [];
+      }
     }
   }
+
   // now update the db with the subscriptions for each app
   foreach ($current_subs as $appUrl => $appsub) {
     $query = \Drupal::entityQuery('node');
@@ -998,6 +1011,7 @@ function drush_ibm_apim_clearup() {
   }
 
   // remove any user registries in our db that were not returned by apim
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up user registries'), 'success');
   $current_urs = \Drupal::state()->get('ibm_apim.content_refresh_user_registries');
   if (!is_array($current_urs)) {
     $current_urs = array();
@@ -1013,6 +1027,7 @@ function drush_ibm_apim_clearup() {
   }
 
   // remove any vendor extensions in our db that were not returned by apim
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up extensions'), 'success');
   $current_exts = \Drupal::state()->get('ibm_apim.content_refresh_extensions');
   if (!is_array($current_exts)) {
     $current_exts = array();
@@ -1028,6 +1043,7 @@ function drush_ibm_apim_clearup() {
   }
 
   // remove any groups in our db that were not returned by apim
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up groups'), 'success');
   $current_groups = \Drupal::state()->get('ibm_apim.content_refresh_groups');
   if (!is_array($current_groups)) {
     $current_groups = array();
@@ -1043,6 +1059,7 @@ function drush_ibm_apim_clearup() {
   }
 
   // remove any billing objects in our db that were not returned by apim
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up billing objects'), 'success');
   $current_bills = \Drupal::state()->get('ibm_apim.content_refresh_billing_objects');
   if (!is_array($current_bills)) {
     $current_bills = array();
@@ -1058,6 +1075,7 @@ function drush_ibm_apim_clearup() {
   }
 
   // remove any tls client profile objects in our db that were not returned by apim
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up TLS profiles'), 'success');
   $current_tls = \Drupal::state()->get('ibm_apim.content_refresh_tlsprofile_objects');
   if (!is_array($current_tls)) {
     $current_tls = array();
@@ -1073,6 +1091,7 @@ function drush_ibm_apim_clearup() {
   }
 
   // remove any analytics objects in our db that were not returned by apim
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up analytics objects'), 'success');
   $current_analytics = \Drupal::state()->get('ibm_apim.content_refresh_analytics_objects');
   if (!is_array($current_analytics)) {
     $current_analytics = array();
@@ -1088,6 +1107,7 @@ function drush_ibm_apim_clearup() {
   }
 
   // remove any permission objects in our db that were not returned by apim
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up permission objects'), 'success');
   $current_perms = \Drupal::state()->get('ibm_apim.content_refresh_permission_objects');
   if (!is_array($current_perms)) {
     $current_perms = array();
@@ -2234,3 +2254,103 @@ function drush_ibm_apim_content_check($type = 'product', $url = null) {
   }
   return $output;
 }
+
+/**
+ * Utility function to reset drupal statics if memory reaches .7 of max
+ *
+ * Note: this has been borrowed from the 'import' command of Drupal's import module.
+ */
+function drush_ibm_apim_manage_memory_usage() {
+  $mem_thresh = .7;
+  $mem_usage = memory_get_usage();
+  $memory_limit = drush_ibm_apim_convertToBytes(ini_get('memory_limit'));
+  if (isset($memory_limit) && $memory_limit > 0) {
+    $pct_mem = $mem_usage / $memory_limit;
+    if ($pct_mem > $mem_thresh) {
+      drush_log(dt("Memory usage reached &mem % of max, resetting statics", array('&mem'=> ($mem_thresh * 100)), 'warning'));
+      drupal_static_reset();
+    }
+  }
+}
+
+/**
+ * @param $value
+ *
+ * @return int|string
+ */
+function drush_ibm_apim_convertToBytes($value) {
+  if ('-1' === $value) {
+    return -1;
+  }
+
+  $value = strtolower($value);
+  $max = strtolower(ltrim($value, '+'));
+  if (0 === strpos($max, '0x')) {
+    $max = intval($max, 16);
+  }
+  elseif (0 === strpos($max, '0')) {
+    $max = intval($max, 8);
+  }
+  else {
+    $max = intval($max);
+  }
+
+  switch (substr($value, -1)) {
+    /** @noinspection PhpMissingBreakStatementInspection */
+    case 't':
+      $max *= 1024;
+    // no break
+    /** @noinspection PhpMissingBreakStatementInspection */
+    case 'g':
+      $max *= 1024;
+    // no break
+    /** @noinspection PhpMissingBreakStatementInspection */
+    case 'm':
+      $max *= 1024;
+    // no break
+    /** @noinspection PhpMissingBreakStatementInspection */
+    case 'k':
+      $max *= 1024;
+    // no break
+  }
+
+  return $max;
+}
+
+/**
+ * Asserts that the apropriate value is set for the index_directly property
+ * on the default search api index according to the number of nodes in the site.
+ * Disabling index directly on sites with lots of nodes is needed to prevent
+ * php from going OOM after processing a snapshot
+ */
+function drush_ibm_apim_assert_index_directly_value() {
+  $query = \Drupal::entityQuery('node');
+  $result = $query->count()->execute();
+  $count = (int)$result;
+  if ($count > 50) {
+    drush_ibm_apim_index_directly(FALSE, $count);
+  }
+}
+
+/**
+ * Sets the value of the index_directly property of the search_api module's
+ * default_index.
+ * @param $indexDirectly
+ * @param $count
+ */
+function drush_ibm_apim_index_directly($indexDirectly, $count) {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('search_api')) {
+    $index = Index::load('default_index');
+    if (isset($index) && !empty($index)) {
+      if ($index->getOption('index_directly') !== $indexDirectly) {
+        $index->setOption('index_directly', $indexDirectly)->save();
+
+        drush_log(t('Set index_directly value to @value', array('@value' => $indexDirectly ? 'true' : 'false')), 'success');
+      } else {
+        drush_log(t('index_directly value @value matched, no action needed', array('@value' => $indexDirectly ? 'true' : 'false')));
+      }
+    }
+  }
+}
+

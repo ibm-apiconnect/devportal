@@ -5,7 +5,7 @@
         <div class="leftTitle">
           <h1 class="orgName">{{- myorg_title -}}</h1>
         </div>
-        {% if myorg_can_rename_org or myorg_can_delete_org %}
+        {% if myorg_can_rename_org or myorg_can_delete_org or myorg_can_transfer_owner %}
           <div class="rightTitle">
             <div class="extraMenu apicMyOrgActions">
               <ul class="overflow-menu organizationMenu dropitmenu">
@@ -23,6 +23,12 @@
                         <a href="{{ url('consumerorg.update') }}" title="{{ 'Edit organization name'|t }}">
                           {{ 'Edit organization name'|t }}
                         </a>
+                      </li>
+                    {% endif %}
+                    {% if myorg_can_transfer_owner and myorg_members|length > 0 %}
+                      <li class="changeOrganizationOwner">
+                        <a href="{{ url('consumerorg.changeowner') }}" title="{{ 'Change organization owner'|t }}">
+                          {{ 'Change organization owner'|t }}</a>
                       </li>
                     {% endif %}
                     {% if myorg_can_delete_org %}
@@ -54,50 +60,46 @@
         <div class="apicMyOrgMember">
           <div class="apicMyOrgMemberDetails">
             <div class="memberIcon">
-              <span title="{{ myorg_owner.name }}">
+              {% if myorg_owner.name is defined %}
+                <span title="{{ myorg_owner.name }}">
+                  {% if myorg_owner.user_picture is defined %}
+                    <img src="{{ myorg_owner.user_picture }}" alt="{{ myorg_owner.name }}"
+                         title="{{ myorg_owner.name }}"/>
+                  {% else %}
+                    {% include images_path ~ '/images/user.svg' %}
+                  {% endif %}
+                </span>
+              {% else %}
+                <span title="{{ myorg_owner.username }}">
                 {% if myorg_owner.user_picture is defined %}
-                  <img src="{{ myorg_owner.user_picture }}" alt="{{ myorg_owner.name }}" title="{{ myorg_owner.name }}"/>
+                  <img src="{{ myorg_owner.user_picture }}" alt="{{ myorg_owner.username }}"
+                       title="{{ myorg_owner.username }}"/>
                 {% else %}
                   {% include images_path ~ '/images/user.svg' %}
                 {% endif %}
               </span>
+              {% endif %}
             </div>
             <div class="orgApicUser">
               <h5 class="apicUserFirstLastName">
-                {{ myorg_owner.user.firstname }} {{ myorg_owner.user.lastname }}
+                {{ myorg_owner.firstname }} {{ myorg_owner.lastname }}
                 <mark class="ownerTag">{{ 'Owner'|t }}</mark>
               </h5>
-              <span class="apicUserMail">{{ myorg_owner.user.mail }}</span>
+              {% if myorg_owner.mail is defined %}
+                <span class="apicUserMail">{{ myorg_owner.mail }}</span>
+              {% else %}
+                <span class="apicUserMail apicUserName">{{ myorg_owner.username }}</span>
+              {% endif %}
             </div>
           </div>
-          {% if myorg_can_transfer_owner and myorg_members|length > 0 %}
-            <div class="extraMenu apicMyOrgActions">
-              <ul class="overflow-menu organizationMenu dropitmenu">
-                <li title="{{ 'Manage organization owner'|t }}"><a href="#" class="trigger">
-                <span class="dropit-icon">
-                <svg width="4px" height="20px" viewBox="0 0 4 20" version="1.1" xmlns="http://www.w3.org/2000/svg"
-                     xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd">
-                  <circle id="Oval" cx="2" cy="2" r="2"></circle>
-                  <circle id="Oval" cx="2" cy="10" r="2"></circle>
-                  <circle id="Oval" cx="2" cy="18" r="2"></circle>
-                </svg></span></a>
-                  <ul class="dropitmenu-submenu">
-                    <li class="changeOrganizationOwner">
-                      <a href="{{ url('consumerorg.changeowner') }}" title="{{ 'Change organization owner'|t }}">
-                        {{ 'Change organization owner'|t }}</a>
-                    </li>
-                  </ul>
-                </li>
-              </ul>
-            </div>
-          {% endif %}
         </div>
       </div>
       <div class="memberHeader">
         <h3>{{ 'Members'|t }}</h3>
         {% if myorg_has_member_manage_perm %}
           <div class="apicNewUserWrapper">
-            <a class="button apicNewUser orgInvite" href="{{ url('consumerorg.invite') }}" title="{{ 'Invite other users to join your developer organization'|t }}">
+            <a class="button apicNewUser orgInvite" href="{{ url('consumerorg.invite') }}"
+               title="{{ 'Invite other users to join your developer organization'|t }}">
               <span>{{ 'Invite'|t }}</span>
             </a>
           </div>
@@ -136,22 +138,41 @@
                   <div class="apicMyOrgMember">
                     <div class="apicMyOrgMemberDetails">
                       <div class="memberIcon">
-                        <span title="{{ member.name }}">
-                          {% if member.user_picture is defined %}
-                            <img src="{{ member.user_picture }}" alt="{{ member.name }}" title="{{ member.name }}"/>
-                          {% else %}
-                            {% include images_path ~ '/images/user.svg' %}
-                          {% endif %}
-                        </span>
+                        {% if member.name is defined %}
+                          <span title="{{ member.name }}">
+                            {% if member.user_picture is defined %}
+                              <img src="{{ member.user_picture }}" alt="{{ member.name }}" title="{{ member.name }}"/>
+                            {% else %}
+                              {% include images_path ~ '/images/user.svg' %}
+                            {% endif %}
+                          </span>
+                        {% else %}
+                          <span title="{{ member.username }}">
+                            {% if member.user_picture is defined %}
+                              <img src="{{ member.user_picture }}" alt="{{ member.username }}"
+                                   title="{{ member.username }}"/>
+                            {% else %}
+                              {% include images_path ~ '/images/user.svg' %}
+                            {% endif %}
+                          </span>
+                        {% endif %}
                       </div>
                       <div class="orgApicUser">
                         {% if member.state == 'Pending' %}
-                          <span class="apicUserMail">{{ member.mail }}</span>
+                          {% if member.mail is defined %}
+                            <span class="apicUserMail">{{ member.mail }}</span>
+                          {% else %}
+                            <span class="apicUserMail apicUserName">{{ member.username }}</span>
+                          {% endif %}
                         {% else %}
                           <h5 class="apicUserFirstLastName">
-                              {{ member.name }}
+                            {{ member.name }}
                           </h5>
-                          <span class="apicUserMail">{{ member.mail }}</span>
+                          {% if member.mail is defined %}
+                            <span class="apicUserMail">{{ member.mail }}</span>
+                          {% else %}
+                            <span class="apicUserMail apicUserName">{{ member.username }}</span>
+                          {% endif %}
                         {% endif %}
                       </div>
                     </div>
@@ -161,7 +182,7 @@
                   <td>
                     {% for userrole in member.roles %}
                       {% if userrole.name == role.name %}
-                        <span title="{{ member.name }}_{{ userrole.name }}">
+                        <span title="{{ member.username }}_{{ userrole.name }}">
                           {% include images_path ~ '/images/checkmark.svg' %}
                         </span>
                       {% endif %}
@@ -189,7 +210,8 @@
                         <li title="{{ 'Manage organization user'|t }}">
                           <a href="#" class="trigger">
                             <span class="dropit-icon">
-                              <svg width="4px" height="20px" viewBox="0 0 4 20" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                              <svg width="4px" height="20px" viewBox="0 0 4 20" version="1.1"
+                                   xmlns="http://www.w3.org/2000/svg"
                                    xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd">
                                 <circle id="Oval" cx="2" cy="2" r="2"></circle>
                                 <circle id="Oval" cx="2" cy="10" r="2"></circle>
@@ -208,16 +230,22 @@
                               <li class="removeOrganizationUser">
                                 <a href="{{ url('consumerorg.remove_user', {'memberId': member.id}) }}"
                                    title="{{ 'Delete member'|t }}">
-                                   {{ 'Delete member'|t }}
+                                  {{ 'Delete member'|t }}
                                 </a>
                               </li>
                             {% endif %}
 
                             {% if member.state == 'Pending' %}
-                              <li class="removeOrganizationUser">
+                              <li class="resendInvitation">
                                 <a href="{{ url('consumerorg.resend_invite', {'inviteId': member.id}) }}"
-                                   title="{{ 'Resend invitation'|t }}" >
-                                   {{ 'Resend invitation'|t }}
+                                   title="{{ 'Resend invitation'|t }}">
+                                  {{ 'Resend invitation'|t }}
+                                </a>
+                              </li>
+                              <li class="removeInvitation">
+                                <a href="{{ url('consumerorg.delete_invite', {'inviteId': member.id}) }}"
+                                   title="{{ 'Delete invitation'|t }}">
+                                  {{ 'Delete invitation'|t }}
                                 </a>
                               </li>
                             {% endif %}

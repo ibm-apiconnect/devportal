@@ -15,8 +15,6 @@ namespace Drupal\mail_subscribers\Wizard\Mail;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 
-use Symfony\Component\HttpFoundation\RedirectResponse;
-
 class ChooseApiStep extends FormBase {
 
   /**

@@ -14,7 +14,7 @@ properties([
 
 def pipelineOpts = [
 		slackChannel: '',
-		labels      : 'apic-build-fast',
+		labels      : 'apic-build-fast-taas',
 		nodeVersion : null,
 ]
 
@@ -37,7 +37,7 @@ veloxPipeline(pipelineOpts) { p ->
 		slackSend channel: slackChannel, color: resultColor, message: msg
 	}
 
-	p.branch(~/master|([\d]+[\.][\d]+)/) {
+	p.branch(~/master|([\d]+[\.][\d]+)|([\d]+[\.][\d]+[\.][\d]+)/) {
 		// set the primary build identifiers
 		buildInfo.setName "portal-apim-profile-${releaseName}"
 		buildInfo.setNumber currentBuild.id
@@ -52,7 +52,7 @@ veloxPipeline(pipelineOpts) { p ->
 	env.PKG_MANIFEST = "image-package-manifest.tgz"
 	env.PKG_APP_FILES = "image-app-files.tgz"
 	env.DOCKER_REGISTRY = 'apic-dev-docker-local.artifactory.swg-devops.com'
-	env.mainBranch = '2018.3'
+	env.mainBranch = '2018.4.1'
 
 	p.common {
 		try {
@@ -91,13 +91,28 @@ veloxPipeline(pipelineOpts) { p ->
 					sh "docker pull ${DOCKER_REGISTRY}/velox/portal-site-template:${env.BRANCH_NAME}"
 					sh "docker tag ${DOCKER_REGISTRY}/velox/portal-site-template:${env.BRANCH_NAME} portal-site-template:latest"
 				} catch (Exception e) {
-					print e;
-					if ("${env.BRANCH_NAME}" != "${env.mainBranch}") {
-						sh "docker pull ${DOCKER_REGISTRY}/velox/portal-site-template:${env.mainBranch}"
-						sh "docker tag ${DOCKER_REGISTRY}/velox/portal-site-template:${env.mainBranch} portal-site-template:latest"
-					} else {
-						throw e;
-					}
+				    print e;
+                    if ("${env.BRANCH_NAME}" != "${env.mainBranch}") {
+				        try {
+						    sh "docker pull ${DOCKER_REGISTRY}/velox/portal-site-template:${env.mainBranch}"
+						    sh "docker tag ${DOCKER_REGISTRY}/velox/portal-site-template:${env.mainBranch} portal-site-template:latest"
+				        } catch (Exception f) {
+					        print f;
+					        if ("${env.mainBranch}" != "master") {
+						        sh "docker pull ${DOCKER_REGISTRY}/velox/portal-site-template:master"
+						        sh "docker tag ${DOCKER_REGISTRY}/velox/portal-site-template:master portal-site-template:latest"
+					        } else {
+						        throw f;
+					        }
+				        }
+				    } else if ("${env.mainBranch}" != "master") {
+				    	try {
+                    		sh "docker pull ${DOCKER_REGISTRY}/velox/portal-site-template:master"
+                    		sh "docker tag ${DOCKER_REGISTRY}/velox/portal-site-template:master portal-site-template:latest"
+                    	} catch (Exception f) {
+                    	    throw f;
+                    	}
+				    }
 				}
 			}
 
@@ -131,7 +146,7 @@ veloxPipeline(pipelineOpts) { p ->
 		}
 	}
 
-	p.branch(~/master|\d+\.\d+/) {
+	p.branch(~/master|\d+\.\d+|\d+\.\d+\.\d+/) {
 		stage('Upload') {
 			sh 'cd build; tar cfz platform-and-site-template-8.x-${BUILD_TIMESTAMP}.tgz *.tgz'
 			def artifactZip = findFiles(glob: 'build/platform-and-site-template-8.x-*.tgz')[0]

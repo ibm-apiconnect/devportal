@@ -150,8 +150,11 @@ then
   su $DEVPORTAL_USER -c "PATH=$PATH:$MY_DIR/bin AEGIR_ROOT=/var/aegir site_template \! -l -u -v $SITE_TEMPLATE_OPTS $(basename $(ls -1d /var/aegir/platforms/*8.x*))"
 else
   echo "Creating site."
+  mkdir -p /var/devportal/storenosync
+  touch /var/devportal/storenosync/hosts
+  chown $DEVPORTAL_USER:$DEVPORTAL_USER  /var/devportal/storenosync/hosts
   su $DEVPORTAL_USER -c "PATH=$PATH:$MY_DIR/bin AEGIR_ROOT=/var/aegir set_apim_host https://test.mgmt"
-  su $DEVPORTAL_USER -c "PATH=$PATH:$MY_DIR/bin AEGIR_ROOT=/var/aegir create_site a.b https://localhost email@is.invalid clientid clientsecret"
+  su $DEVPORTAL_USER -c "PATH=$PATH:$MY_DIR/bin AEGIR_ROOT=/var/aegir create_site a.b https://localhost email@is.invalid clientid clientsecret" || true
   echo "Site creation complete."
 fi
 

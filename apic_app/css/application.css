@@ -44,16 +44,13 @@
 }
 .apicAppIcon img {
   border: 0;
-  width: 36px;
-  height: 36px;
+  max-width: 36px;
+  max-height: 36px;
 }
 .applicationType {
-  margin-left: 1rem;
-  background-color: #80b723;
+  background-color: #8897a2;
   color: #fff;
-  margin-left: 10px;
   padding: .5rem;
-  text-transform: uppercase;
   vertical-align: middle;
   font-size: 0.75rem;
   display: inline-flex;
@@ -61,9 +58,14 @@
   border-radius: 1rem;
   -webkit-box-align: center;
   align-items: center;
+  align-self: flex-start;
+  margin-top: 1.5rem;
 }
 .applicationType.development {
   background-color: #ff8500;
+}
+.applicationType.production {
+  background-color: #80b723;
 }
 .apicAppHeader {
   display: flex;
@@ -75,17 +77,7 @@
 .apicAppHeader h1 {
   margin-bottom: 6px;
 }
-.apicAppType {
-  background-color: #fe8500;
-  color: white;
-  border-radius: 14px;
-  padding: 2px 6px;
-  margin-right: 6px;
-  text-transform: uppercase;
-}
-.apicAppType.production {
-  background-color: #81b532;
-}
+
 .apicAppActions a {
   padding: 0 4px 0 8px;
 }
@@ -439,8 +431,8 @@
   padding: 0;
 }
 .field--name-application-redirect-endpoints .field-multiple-table div.form-type-textfield {
-  display: inline-block;
-  width: 393px;
+  display: block;
+  width: 100%;
   margin-bottom: 0.7rem;
   margin-right: 4px;
   margin-left: 10px;
@@ -448,7 +440,28 @@
 .field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button {
   display: inline-block;
   vertical-align: top;
+  height: auto;
+  background-color: transparent;
 }
+.bx--global-light-ui .field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.active,
+.bx--global-light-ui .field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.focus,
+.bx--global-light-ui .field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.hover,
+.field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.hover,
+.field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.active,
+.field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.focus,
+.bx--global-light-ui .button.apicSecondary.multiple-fields-remove-button:focus,
+.bx--global-light-ui button.apicSecondary.multiple-fields-remove-button:focus,
+.bx--global-light-ui .button.apicSecondary.multiple-fields-remove-button:hover,
+.bx--global-light-ui button.apicSecondary.multiple-fields-remove-button:hover {
+  background-color: transparent;
+}
+.field--name-application-redirect-endpoints .field-multiple-table td.has-multiple-fields-remove-button .form-item input,
+.field--name-application-redirect-endpoints .field-multiple-table td.has-multiple-fields-remove-button .form-item input:active,
+.field--name-application-redirect-endpoints .field-multiple-table td.has-multiple-fields-remove-button .form-item input:focus,
+.field--name-application-redirect-endpoints .field-multiple-table td.has-multiple-fields-remove-button .form-item input:hover {
+  width: 505px;
+}
+
 .field--name-application-redirect-endpoints .form-item .clearfix {
   border-left: 1px solid #ddd;
   border-right: 1px solid #ddd;
@@ -457,6 +470,101 @@
   padding-bottom: 10px;
   padding-right: 10px;
 }
+
+/* application cards */
+.node--type-application.bx--card {
+  min-height: unset;
+  min-width: 15.625rem;
+  height: 18.75rem;
+  max-width: 15.625rem;
+}
+
+.node--type-application.bx--card .apicCardIcon {
+  align-self: center;
+}
+
+.node--type-application.bx--card .apicCardIcon .bx--about__icon {
+  width: 4rem;
+  height: 4rem;
+  margin: 1rem 0;
+}
+
+.node--type-application.bx--card .apicAppCardMain {
+  text-align: center;
+  height: 5.5rem;
+}
+.node--type-application.bx--card .apicAppCardMain .bx--about__title--name {
+  width: auto;
+  font-size: 1.5rem;
+  padding: 0;
+  padding-bottom: 1rem;
+}
+.node--type-application.bx--card .apicAppCardMain .applicationType {
+  margin: 0 0 10px 0;
+}
+.node--type-application.bx--card .apicAppCardMain .apicAppDesc {
+  text-align: center;
+}
+
+.apicAppStatus {
+  display: flex;
+}
+
+.apicAppStatus:before {
+  content: ' ';
+  height: 1rem;
+  width: 1rem;
+  border-radius: 100%;
+  margin-right: 0.25rem;
+  background-color: #5aa700;
+}
+
+.apicAppStatus.suspended:before {
+  background-color: #5a6872;
+}
+
+.apicAppStatus .apicStatusText {
+  align-self: center;
+}
+
+.bx--card-footer__app-status {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font-family: inherit;
+  vertical-align: baseline;
+}
+
+.bx--card-footer__app-status > *,
+.bx--card-footer__app-status > *:before,
+.bx--card-footer__app-status > *:after {
+  box-sizing: inherit;
+}
+
+.bx--card-footer__app-status .active {
+  display: flex;
+}
+
+.bx--card .apicAppCard{
+  padding-left: 1rem;
+  padding-top: 1rem;
+  padding-right: 1rem;
+  display: flex;
+}
+
+.bx--card .apicAppCard{
+  flex-direction: column;
+  height: 15.75rem;
+}
+
+.bx--card .apicAppDesc{
+  font-size: 75%;
+  line-height: 0.85rem;
+}
+
+/* media query */
 
 @media screen and (max-width: 1024px) {
   .apicAppName {

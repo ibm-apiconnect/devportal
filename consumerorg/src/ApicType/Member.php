@@ -20,6 +20,7 @@ class Member {
   private $user_url;
   private $user;
   private $role_urls = array();
+  private $org_url;
 
   /**
    * Gets the user that this member record relates to.
@@ -84,6 +85,20 @@ class Member {
    */
   public function setUrl($url) {
     $this->url = $url;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getOrgUrl() {
+    return $this->org_url;
+  }
+
+  /**
+   * @param mixed $org_url
+   */
+  public function setOrgUrl($org_url) {
+    $this->org_url = $org_url;
   }
 
   /**

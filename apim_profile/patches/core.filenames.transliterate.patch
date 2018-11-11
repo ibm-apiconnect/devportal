@@ -4,9 +4,9 @@
      // rename filename.php.foo and filename.php to filename.php.foo.txt and
      // filename.php.txt, respectively). Don't rename if 'allow_insecure_uploads'
      // evaluates to TRUE.
--    if (!\Drupal::config('system.file')->get('allow_insecure_uploads') && preg_match('/\.(php|pl|py|cgi|asp|js)(\.|$)/i', $file->getFilename()) && (substr($file->getFilename(), -4) != '.txt')) {
+-    if (!\Drupal::config('system.file')->get('allow_insecure_uploads') && preg_match(FILE_INSECURE_EXTENSION_REGEX, $file->getFilename()) && (substr($file->getFilename(), -4) != '.txt')) {
 +    $system_file_config = \Drupal::config('system.file');
-+    if (!$system_file_config->get('allow_insecure_uploads') && preg_match('/\.(php|pl|py|cgi|asp|js)(\.|$)/i', $file->getFilename()) && (substr($file->getFilename(), -4) != '.txt')) {
++    if (!$system_file_config->get('allow_insecure_uploads') && preg_match(FILE_INSECURE_EXTENSION_REGEX, $file->getFilename()) && (substr($file->getFilename(), -4) != '.txt')) {
        $file->setMimeType('text/plain');
        // The destination filename will also later be used to create the URI.
        $file->setFilename($file->getFilename() . '.txt');

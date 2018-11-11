@@ -89,14 +89,19 @@ class ChangeMemberRoleForm extends FormBase {
       drupal_set_message($message, 'error');
 
       $form = array();
-      $form['description'] = array('#markup' => t('You do not have sufficient access to perform this action.'));
+      $form['description'] = array('#markup' => '<p>' . t('You do not have sufficient access to perform this action.') .'</p>');
 
       $form['actions'] = array('#type' => 'actions');
       $form['actions']['cancel'] = array(
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#href' => 'myorg',
+        '#attributes' => array('class' => array('button'))
       );
+      $themeHandler = \Drupal::service('theme_handler');
+      if ($themeHandler->themeExists('bootstrap')) {
+        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+      }
 
       return $form;
     }
@@ -146,6 +151,19 @@ class ChangeMemberRoleForm extends FormBase {
               '#type' => 'submit',
               '#value' => t('Submit'),
             );
+            $themeHandler = \Drupal::service('theme_handler');
+            if ($themeHandler->themeExists('bootstrap')) {
+              $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
+            }
+            $form['actions']['cancel'] = array(
+              '#type' => 'link',
+              '#title' => t('Cancel'),
+              '#href' => 'myorg',
+              '#attributes' => array('class' => ['button', 'apicSecondary'])
+            );
+            if ($themeHandler->themeExists('bootstrap')) {
+              $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+            }
           }
           else {
             drupal_set_message(t('Cannot change role: could not find more than 1 role for developer organization %org', array("%org" => $this->orgNode->getTitle())), 'error');
@@ -156,13 +174,18 @@ class ChangeMemberRoleForm extends FormBase {
         drupal_set_message(t('Failed to retrieve member list for developer organization %org', array("%org" => $this->orgNode->getTitle())), 'error');
 
         $form = array();
-        $form['description'] = array('#markup' => t('Could not get member list for this organization.'));
+        $form['description'] = array('#markup' => '<p>' . t('Could not get member list for this organization.') . '</p>');
 
         $form['cancel'] = array(
           '#type' => 'link',
           '#title' => t('Cancel'),
           '#url' => Url::fromRoute('ibm_apim.myorg'),
+          '#attributes' => array('class' => array('button'))
         );
+        $themeHandler = \Drupal::service('theme_handler');
+        if ($themeHandler->themeExists('bootstrap')) {
+          $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+        }
         return $form;
       }
 
@@ -175,7 +198,7 @@ class ChangeMemberRoleForm extends FormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return $this->redirect('ibm_apim.myorg');
+    return Url::fromRoute('ibm_apim.myorg');
   }
 
   /**

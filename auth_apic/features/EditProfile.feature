@@ -27,6 +27,10 @@ Feature: Edit Profile
     And I should not see the text "Current Password"
     And I should not see an "#edit-name" element
     And I should not see an "#edit-consumer-organization-0-value" element
+    And I should not see the text "Cancel account"
+    And I should see the text "Cancel"
+    And I should see the text "Save"
+    And I should see the text "Delete account"
 
 @api
   Scenario: Editing user details as a non admin user
@@ -58,7 +62,7 @@ Feature: Edit Profile
 @api
   # This test is testing for admin users where uid!=1 i.e. apim users
   # who have been given the admin role by another admin
-  Scenario: Viewing the edit profile form as an admin user
+  Scenario: Viewing the edit profile form as a user with the Administrator role
     Given I am logged in as a user with the "Administrator" role
     When I am at "/user/@uid/edit"
     Then I should see the text "First Name"
@@ -75,6 +79,10 @@ Feature: Edit Profile
     And I should not see the text "Current Password"
     And I should not see an "#edit-name" element
     And I should not see an "#edit-consumer-organization-0-value" element
+    And I should not see the text "Cancel account"
+    And I should see the text "Cancel"
+    And I should see the text "Save"
+    And I should see the text "Delete account"
 
 @api
   # This is a user with administrator role, not uid==1 admin user.
@@ -108,6 +116,10 @@ Scenario: View own edit profile form as admin user (uid==1)
   And I should see the text "Email address"
   And the element "mail" is enabled
   And I should not see the text "Username"
+  And I should not see the text "Cancel account"
+  And I should see the text "Cancel"
+  And I should see the text "Save"
+  And I should not see the text "Delete account"
 
 @api
 Scenario: View another users edit profile form as admin user (uid==1)
@@ -131,6 +143,10 @@ Scenario: View another users edit profile form as admin user (uid==1)
   And I should see the text "Time zone"
   And I should not see the text "Current Password"
   And I should not see the text "Username"
+  And I should not see the text "Cancel account"
+  And I should see the text "Cancel"
+  And I should see the text "Save"
+  And I should not see the text "Delete account"
 
   @api
   Scenario: View admin user edit profile form as andre with Administrator role
@@ -153,3 +169,7 @@ Scenario: View another users edit profile form as admin user (uid==1)
     And I should see the text "Time zone"
     And I should not see the text "Current Password"
     And I should not see the text "Username"
+    And I should not see the text "Cancel account"
+    And I should see the text "Cancel"
+    And I should see the text "Save"
+    And I should not see the text "Delete account"

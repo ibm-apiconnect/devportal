@@ -44,7 +44,7 @@ mail_subscribers.product_wizard.step:
     _user_is_logged_in: 'TRUE'
     _mail_subscribers_access_check: 'TRUE'
   options:
-      _admin_route: TRUE
+    _admin_route: TRUE
 
 mail_subscribers.api_wizard:
   path: '/subscribers/api'
@@ -57,7 +57,7 @@ mail_subscribers.api_wizard:
     _user_is_logged_in: 'TRUE'
     _mail_subscribers_access_check: 'TRUE'
   options:
-      _admin_route: TRUE
+    _admin_route: TRUE
 
 mail_subscribers.api_wizard.step:
   path: '/subscribers/api/{step}'
@@ -70,7 +70,7 @@ mail_subscribers.api_wizard.step:
     _user_is_logged_in: 'TRUE'
     _mail_subscribers_access_check: 'TRUE'
   options:
-      _admin_route: TRUE
+    _admin_route: TRUE
 
 mail_subscribers.plan_wizard:
   path: '/subscribers/plan'
@@ -83,7 +83,7 @@ mail_subscribers.plan_wizard:
     _user_is_logged_in: 'TRUE'
     _mail_subscribers_access_check: 'TRUE'
   options:
-      _admin_route: TRUE
+    _admin_route: TRUE
 
 mail_subscribers.plan_wizard.step:
   path: '/subscribers/plan/{step}'
@@ -96,7 +96,7 @@ mail_subscribers.plan_wizard.step:
     _user_is_logged_in: 'TRUE'
     _mail_subscribers_access_check: 'TRUE'
   options:
-      _admin_route: TRUE
+    _admin_route: TRUE
 
 mail_subscribers.all_wizard:
   path: '/subscribers/all'
@@ -109,7 +109,7 @@ mail_subscribers.all_wizard:
     _user_is_logged_in: 'TRUE'
     _mail_subscribers_access_check: 'TRUE'
   options:
-      _admin_route: TRUE
+    _admin_route: TRUE
 
 mail_subscribers.all_wizard.step:
   path: '/subscribers/all/{step}'
@@ -122,4 +122,4 @@ mail_subscribers.all_wizard.step:
     _user_is_logged_in: 'TRUE'
     _mail_subscribers_access_check: 'TRUE'
   options:
-      _admin_route: TRUE
+    _admin_route: TRUE

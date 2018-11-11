@@ -37,7 +37,7 @@
               {% endif %}
           </div>
           <div class='apic-user-form-container'>
-              <div class='apic-user-form-inner-wrapper apic-user-form-registries'>
+              <div class='apic-user-form-inner-wrapper'>
                   {% set registry_title = element['#registry_title']['registry_title'] %}
                   {% set admin_only = element['admin_only'] %}
                   {% if admin_only %}
@@ -45,7 +45,7 @@
                       If you have forgotten your 'admin' password, you can reset it here.
                       {% endtrans %}
                       {% trans %}
-                      Your {{ registry_title }} account is managed externally and you must contact your user registry administrator.
+                      Your {{ registry_title }} account is managed externally and you must contact your authentication provider.
                       {% endtrans %}
                   {% else %}
                       {% trans %}

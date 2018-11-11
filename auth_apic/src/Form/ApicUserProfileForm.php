@@ -90,9 +90,8 @@ class ApicUserProfileForm extends ProfileForm {
 
         $form['account']['name']['#access'] = FALSE;
         $form['account']['name']['#required'] = FALSE;
-
       }
-      // For non-admin, there are some special cases to handle as well.
+      // For non-admin (andre), there are some special cases to handle as well.
       else {
 
         $form['account']['#access'] = FALSE;
@@ -113,9 +112,13 @@ class ApicUserProfileForm extends ProfileForm {
         $form['consumer_organization']['#disabled'] = TRUE;
         $form['consumer_organization']['widget']['#required'] = FALSE;
 
-      }
+        $form['registry_type'] = array(
+          '#type' => 'hidden',
+          '#value' => $registry->getRegistryType()
+        );
 
-    }
+      } // end - andre editting own form
+    } // end - editting own form
     else {
 
       // This is admin (or someone with Administrator role) editing someone else.
@@ -139,7 +142,7 @@ class ApicUserProfileForm extends ProfileForm {
       $form['account']['current_pass']['#access'] = FALSE;
       $form['account']['current_pass']['#required'] = FALSE;
       $form['account']['password_policy_status']['#access'] = FALSE;
-    }
+    } // end - editting someone elses form
 
     $form_for_user = $this->entity->get('uid')->value;
 
@@ -189,20 +192,86 @@ class ApicUserProfileForm extends ProfileForm {
       $form['field_password_expiration']['#access'] = FALSE;
     }
 
-    $config = \Drupal::config('ibm_apim.settings');
-    $ibm_apim_allow_user_deletion = $config->get('allow_user_delete');
-    if ($ibm_apim_allow_user_deletion && $form_for_user == $this->currentUser()->id() && $this->currentUser()->id() != 1) {
-      $form['delete'] = array(
-        '#type' => 'link',
-        '#title' => t('Delete account'),
-        '#weight' => 500,
-        '#url' => Url::fromRoute('ibm_apim.deleteuser'),
-        '#attributes' => ['class' => ['button', 'apicSecondary']]
+    // do not allow editing status or roles on edit profile page so convert to plaintext instead of form item
+    if (isset($form['account']['status'])) {
+      $default_value = $form['account']['status']['#default_value'];
+      if ($form['account']['status']['#default_value'] == 1) {
+        $markup = '<span class="children">' . t('Active') . '</span>';
+      }
+      else {
+        $markup = '<span class="children">' . t('Blocked') . '</span>';
+      }
+      $weight = NULL;
+      if (isset($form['account']['status']['#weight'])) {
+        $weight = $form['account']['status']['#weight'];
+      }
+      $form['statusText'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Status'),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE
       );
+      $form['statusText']['text'] = array(
+        '#markup' => $markup
+      );
+      if (isset($weight)) {
+        $form['statusText']['#weight'] = $weight;
+      }
+      $form['account']['status'] = array('#type' => 'hidden', '#default_value' => $default_value, '#value' => $default_value);
     }
 
+    if (isset($form['account']['roles'])) {
+      $roles = [];
+      $default_value = $form['account']['roles']['#default_value'];
+      if (isset($form['account']['roles']['#default_value'])) {
+        foreach (array_values($form['account']['roles']['#default_value']) as $roleName) {
+          if (isset($form['account']['roles']['#options'][$roleName])) {
+            $roles[] = $form['account']['roles']['#options'][$roleName];
+          }
+          else {
+            $roles[] = $roleName;
+          }
+
+        }
+      }
+      $weight = NULL;
+      $markup = '';
+      if (isset($form['account']['roles']['#weight'])) {
+        $weight = $form['account']['roles']['#weight'];
+      }
+      foreach (array_unique($roles) as $role) {
+        $markup .= '<div class="children">' . $role . '</div>';
+      }
+      $form['rolesText'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Roles'),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE
+      );
+      $form['rolesText']['text'] = array(
+        '#markup' => $markup
+      );
+      if (isset($weight)) {
+        $form['rolesText']['#weight'] = $weight;
+      }
+      $form['account']['roles'] = array('#type' => 'hidden', '#default_value' => $default_value, '#value' => $default_value);
+    }
 
     return $form;
+  }
+
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    if ($form_state->getValue('registry_type') !== NULL && $form_state->getValue('registry_type') === 'lur') {
+      $first_name = $form_state->getValue(['first_name', '0', 'value']);
+      if (empty($first_name)) {
+        $form_state->setErrorByName('first_name', $this->t('First Name is required.'));
+      }
+      $last_name = $form_state->getValue(['last_name', '0', 'value']);
+      if (empty($last_name)) {
+        $form_state->setErrorByName('last_name', $this->t('Last Name is required.'));
+      }
+    }
+    return parent::validateForm($form, $form_state);
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
@@ -221,7 +290,7 @@ class ApicUserProfileForm extends ProfileForm {
     $edit_user->setLastName($lastNameValue);
     $edit_user->setMail($mailValue);
     $edit_user->setUsername($username);
-    if($password) {
+    if ($password) {
       $edit_user->setPassword($password);
     }
 
@@ -266,6 +335,70 @@ class ApicUserProfileForm extends ProfileForm {
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     return $returnValue;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  protected function actions(array $form, FormStateInterface $form_state) {
+    $element = parent::actions($form, $form_state);
+    // Remove the Cancel account button.
+    if (isset($element['delete'])) {
+      unset($element['delete']);
+    }
+
+    // Add a cancel editting button
+    $element['cancel'] = array(
+      '#type' => 'link',
+      '#title' => t('Cancel'),
+      '#weight' => 30,
+      '#url' => Url::fromRoute('entity.user.canonical',
+                              ['user' => $this->entity->id()]),
+      '#attributes' => [
+        'class' => [
+          'button',
+          'apicSecondary'
+        ]
+      ]
+    );
+    $themeHandler = \Drupal::service('theme_handler');
+    if ($themeHandler->themeExists('bootstrap')) {
+      $element['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+    }
+
+
+    $config = \Drupal::config('ibm_apim.settings');
+    $ibm_apim_allow_user_deletion = $config->get('allow_user_delete');
+    if ($ibm_apim_allow_user_deletion && $this->entity->id() == $this->currentUser()->id() && $this->currentUser()->id() != 1) {
+      $element['delete'] = array(
+        '#type' => 'link',
+        '#title' => t('Delete account'),
+        '#weight' => 500,
+        '#url' => Url::fromRoute('auth_apic.deleteuser'),
+        '#attributes' => [
+          'class' => [
+            'button',
+            'apicSecondary'
+          ]
+        ]
+      );
+      if ($themeHandler->themeExists('bootstrap')) {
+        $element['delete']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
+      }
+    }
+
+    return $element;
+  }
+
+  /**
+   * Provides a submit handler for the 'Cancel' button.
+   * Note, this is cancel the edit form not cancel account which was on the drupal core form.
+   */
+  public function editCancelSubmit($form, FormStateInterface $form_state) {
+    $form_state->setRedirect(
+      'entity.user.canonical',
+      ['user' => $this->entity->id()]
+    );
   }
 
 }

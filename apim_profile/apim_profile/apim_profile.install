@@ -20,6 +20,8 @@ use Drupal\block\Entity\Block;
 use Drupal\captcha\Entity\CaptchaPoint;
 use Drupal\locale\Gettext;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
+use Drupal\search_api\Entity\Index;
+use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\user\RoleInterface;
 use Symfony\Component\Yaml\Yaml;
@@ -543,6 +545,7 @@ function apim_profile_default_apic_config() {
     ->set('allow_consumerorg_creation', TRUE)
     ->set('allow_consumerorg_rename', TRUE)
     ->set('allow_consumerorg_delete', TRUE)
+    ->set('allow_consumerorg_change_owner', TRUE)
     ->set('allow_user_delete', TRUE)
     ->set('categories', $categories)
     ->set('codesnippets', $codesnippets)
@@ -861,4 +864,74 @@ function apim_profile_update_8002() {
   $path = dirname(__FILE__);
   require_once $path . '/apim_profile.homepage.inc';
   update_gsg_block();
+}
+
+/**
+ * ensure default permissions for all roles are set
+ */
+function apim_profile_update_8003() {
+  $path = dirname(__FILE__);
+
+  // reset permissions to defaults from the yml files
+  foreach (array('content_author', 'forum_moderator', 'authenticated', 'administrator', 'anonymous', 'superuser') as $role_id) {
+    $info = \yaml_parse_file($path . '/config/install/user.role.' . $role_id . '.yml');
+
+    $role = Role::load($role_id);
+
+    $issueAccessPermissions = $info['permissions'];
+
+    foreach ($issueAccessPermissions as $permission) {
+      $role->grantPermission($permission);
+    }
+  }
+}
+
+/**
+ * disable instantaneous indexing of content for performance reasons - let cron handle it
+ */
+function apim_profile_update_8004() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('search_api')) {
+    $index = Index::load('default_index');
+    if (isset($index) && !empty($index)) {
+      $index->setOption('index_directly', false)->save();
+    }
+  }
+}
+
+/**
+ * update mail transport
+ */
+function apim_profile_update_8005() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('swiftmailer')) {
+    \Drupal::service('config.factory')
+      ->getEditable('swiftmailer.transport')
+      ->set('sendmail_path', '/opt/ibm/bin/sendmail')
+      ->save();
+  }
+}
+
+/**
+ * ensure have permission to change consumer org owner
+ */
+function apim_profile_update_8006() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('allow_consumerorg_change_owner', TRUE)
+    ->save();
+}
+
+/**
+ * Implements hook_update_dependencies().
+ */
+function apim_profile_update_dependencies() {
+  return [
+    'apim_profile' => [
+      // block_content 8600 must run before apim_profile 8002.
+      8002 => [
+        'block_content' => 8600,
+      ],
+    ],
+  ];
 }

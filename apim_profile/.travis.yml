@@ -25,7 +25,7 @@ matrix:
 # Set up environment variables.
 env:
   global:
-    - DRUPAL_TI_CORE_BRANCH="8.5.x"
+    - DRUPAL_TI_CORE_BRANCH="8.6.x"
     # add composer's global bin directory to the path
     # see: https://github.com/drush-ops/drush#install---composer
     - PATH="$PATH:$HOME/.composer/vendor/bin"
@@ -93,7 +93,7 @@ before_install:
   - drupal-ti before_install
 
 install:
-  - composer create-project drupal/drupal my_site_name 8.5.* --no-dev
+  - composer create-project drupal/drupal my_site_name 8.6.* --no-dev
 
 before_script:
   - travis_wait drupal-ti --include "./travis-ci/travis-before-script.sh"

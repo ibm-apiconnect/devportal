@@ -133,7 +133,13 @@ class MockUserManager implements UserManagerInterface {
    * @inheritDoc
    */
   public function login(ApicUser $user) {
+    // check for authcode first, is so then we are an oidc user - so mock out test responses.
+    if ($authcode = $user->getAuthcode()) {
+      return $this->oidcLogin($user);
+    }
+
     drupal_set_message('MOCKED: MockUserManager->login()');
+    // otherwise we are a non-oidc user.
     $password = $user->getPassword();
     $username = $user->getUsername();
 
@@ -172,56 +178,24 @@ class MockUserManager implements UserManagerInterface {
     return $umResponse;
   }
 
-//  /**
-//   * Register new apic user.
-//   *
-//   * @param ApicUser $user
-//   *   New user object.
-//   */
-//  public function register(ApicUser $user) {
-//
-//    $response = new UserManagerResponse();
-//
-//    // For now, always return success message
-//    if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
-//
-//      if (\Drupal::state()->get('apictest-' . $user->getUsername()) === TRUE) {
-//        drupal_set_message('MOCKED SERVICE:: The username ' . $user->getUsername() . ' is already taken.', 'error');
-//      }
-//      if (\Drupal::state()->get('apictest-' . $user->getMail()) === TRUE) {
-//        drupal_set_message('MOCKED SERVICE:: The email address ' . $user->getMail() . ' is already taken.', 'error');
-//      }
-//
-//      if (\Drupal::state()->get('apictest-' . $user->getUsername()) === TRUE || \Drupal::state()->get('apictest-' . $user->getMail()) === TRUE) {
-//        $response->setSuccess(FALSE);
-//        return $response;
-//      }
-//      else {
-//
-//        // If we get here, we have not found a clashing user in the database so we can call this a successful registration
-//        $ro = $this->state->get('ibm_apim.readonly_idp');
-//
-//        if ($ro == 1) {
-//          drupal_set_message('MOCKED SERVICE - READ ONLY:: Your account was created successfully. Please login to continue.');
-//        }
-//        else {
-//          drupal_set_message('MOCKED SERVICE :: Your account was created successfully. You will receive an email with activation instructions.');
-//        }
-//        user_logout();
-//
-//        // In case we want to come back and re-register the same user for a negative test, store the fact that these email/usernames have been used
-//        \Drupal::state()->set('apictest-' . $user->getUsername(), TRUE);
-//        \Drupal::state()->set('apictest-' . $user->getMail(), TRUE);
-//
-//        $response->setSuccess(TRUE);
-//        $response->setRedirect('<front>');
-//        return $response;
-//      }
-//    }
-//
-//    $response->setSuccess(FALSE);
-//    return $response;
-//  }
+  private function oidcLogin(ApicUser $user) {
+    $response = new UserManagerResponse();
+
+    switch ($user->getAuthCode()) {
+      case "validauthcode":
+        $response->setSuccess(TRUE);
+        break;
+      case "failwithmessage":
+        $response->setSuccess(FALSE);
+        $response->setMessage("Mocked error message from apim login() call");
+        break;
+      case "fail":
+        $response->setSuccess(FALSE);
+        break;
+    }
+
+    return $response;
+  }
 
   /**
    * @inheritDoc
@@ -263,51 +237,6 @@ class MockUserManager implements UserManagerInterface {
     }
     return $returnValue;
   }
-
-//  /**
-//   * Activate a user that has been registered previously.
-//   *
-//   * @param ActivationObject $activationObj
-//   *   Object representing the decoded activation token received.
-//   */
-//  public function activate(ActivationObject $activationObj, ApicUser $invitedUser = NULL, $auth = NULL) {
-//
-//    $activationResponse = $this->mgmtServer->activateUser($activationObj, $invitedUser, $auth);
-//    $umResponse = new UserManagerResponse();
-//
-//    if ($activationResponse->getCode() == 204) {
-//      $umResponse->setMessage('MOCKED :: Account registration complete. please login to continue.');
-//      $umResponse->setSuccess(TRUE);
-//      $umResponse->setRedirect('user.login');
-//      return $umResponse;
-//    }
-//    else {
-//      $error = $activationResponse->getErrors();
-//      $umResponse->setSuccess(FALSE);
-//
-//      if (array_key_exists("missingFields", $error) || array_key_exists("validation.resource.representation.missingOrEmptyValues", $error)) {
-//        // invited user, capture this case and present a new form.
-//        $umResponse->setMessage('MOCKED :: We need some more information to activate your account.');
-//        $umResponse->setRedirect('missingFields');
-//        return $umResponse;
-//      }
-//      elseif (array_key_exists("user.exists.in.portal.active", $error) || array_key_exists("user.exists.in.portal.pending", $error)) {
-//        $umResponse->setMessage('MOCKED :: User already exists. Please use existing credentials to sign in.');
-//        $umResponse->setRedirect('user.login');
-//        return $umResponse;
-//      }
-//      else {
-//        $umResponse->setMessage('MOCKED :: Invalid activation token. Contact the system administrator.');
-//        $umResponse->setRedirect('<front>');
-//        return $umResponse;
-//      }
-//    }
-//
-//    $umResponse->setMessage('MOCKED :: User activation failed.');
-//    $umResponse->setSuccess(FALSE);
-//    $umResponse->setRedirect('<front>');
-//    return $umResponse;
-//  }
 
   /**
    * @inheritDoc
@@ -404,6 +333,10 @@ class MockUserManager implements UserManagerInterface {
   }
 
   public function findUserByUrl($url) {
+    return NULL;
+  }
+
+  public function deleteUser() {
     return NULL;
   }
 }

@@ -6,7 +6,9 @@ label: 'Forum Moderator'
 weight: -8
 is_admin: null
 permissions:
+  - 'access administration pages'
   - 'access taxonomy overview'
+  - 'access toolbar'
   - 'administer forums'
   - 'create terms in forums'
   - 'delete any forum content'
@@ -18,3 +20,4 @@ permissions:
   - 'edit terms in forums'
   - 'revert forum revisions'
   - 'view forum revisions'
+  - 'view the administration theme'

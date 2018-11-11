@@ -149,6 +149,14 @@ class ModalApplicationCreateForm extends FormBase {
     $form['#attached']['library'][] = 'apic_app/basic';
     $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
 
+    // remove any admin fields if they exist
+    if (isset($form['revision_log'])) {
+      unset($form['revision_log']);
+    }
+    if (isset($form['status'])) {
+      unset($form['status']);
+    }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $form;
   }
@@ -230,6 +238,21 @@ class ModalApplicationCreateForm extends FormBase {
 
       // Add the new app to the app list
       $node = Node::load($nid);
+
+      $customfields = Application::getCustomFields();
+      if (isset($customfields) && count($customfields) > 0) {
+        foreach ($customfields as $customfield) {
+          $value = $form_state->getValue($customfield);
+          if (is_array($value) && isset($value[0]['value'])) {
+            $value = $value[0]['value'];
+          } else if (isset($value[0])) {
+            $value = array_values($value[0]);
+          }
+          $node->set($customfield, $value);
+        }
+        $node->save();
+      }
+
       $renderArray = node_view($node, 'subscribewizard');
       $renderer = \Drupal::service('renderer');
       $html = $renderer->render($renderArray);

@@ -42,17 +42,15 @@ define('CONSUMERORG_GRANT', 1);
  */
 function consumerorg_node_access_records($node) {
 
+  ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
   $config = \Drupal::config('ibm_apim.settings');
   $acl_debug = $config->get('acl_debug');
 
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('consumerorg')->debug('Enter: consumerorg_node_access_records');
-  }
   $type = is_string($node) ? $node : $node->getType();
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('consumerorg')->debug('Node type is: %type', array("%type" => var_export($type, TRUE)));
-  }
   $grants = array();
+
+  // Only build permissions for consumerorg nodes
   if ($type == 'consumerorg') {
     $orgurl = $node->consumerorg_url->value;
     $escaped_orgurl = str_replace("/", "_", $orgurl);
@@ -65,12 +63,15 @@ function consumerorg_node_access_records($node) {
       'priority' => 0,
     );
     if (isset($acl_debug) && $acl_debug == TRUE) {
-      \Drupal::logger('consumerorg')->debug('Grants: %grants', array("%grants" => var_export($grants, TRUE)));
+      foreach ($grants as $grant) {
+        \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
+          '@realm' => $grant['realm'],
+          '@grant' => "CONSUMERORG_GRANT"
+        ]);
+      };
     }
   }
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('consumerorg')->debug('Exit: consumerorg_node_access_records');
-  }
+  ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $grants);
   return $grants;
 }
 
@@ -89,12 +90,11 @@ function consumerorg_node_access_records($node) {
  */
 function consumerorg_node_grants($account, $op) {
 
+  ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
   $config = \Drupal::config('ibm_apim.settings');
   $acl_debug = $config->get('acl_debug');
 
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('consumerorg')->debug('Enter: consumerorg_node_grants');
-  }
   $grants = array();
   if ($op == 'view' && \Drupal::currentUser()->isAuthenticated()) {
 
@@ -108,13 +108,17 @@ function consumerorg_node_grants($account, $op) {
     }
 
     if (isset($acl_debug) && $acl_debug == TRUE) {
-      \Drupal::logger('consumerorg')->debug('Grants: %grants', array("%grants" => var_export($grants, TRUE)));
+      foreach ($grants as $realm => $perms) {
+        foreach ($perms as $grant) {
+          \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
+            '@realm' => $realm,
+            '@grant' => "CONSUMERORG_GRANT"
+          ]);
+        };
+      }
     }
-
   }
-  if (isset($acl_debug) && $acl_debug == TRUE) {
-    \Drupal::logger('consumerorg')->debug('Exit: consumerorg_node_grants');
-  }
+  ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $grants);
   return $grants;
 }
 

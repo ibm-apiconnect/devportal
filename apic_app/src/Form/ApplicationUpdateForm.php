@@ -152,7 +152,25 @@ class ApplicationUpdateForm extends FormBase {
       '#url' => $this->getCancelUrl(),
       '#attributes' => ['class' => ['button', 'apicSecondary']]
     );
+    $themeHandler = \Drupal::service('theme_handler');
+    if ($themeHandler->themeExists('bootstrap')) {
+      if (isset($form['actions']['submit'])) {
+        $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
+      }
+      if (isset($form['actions']['cancel'])) {
+        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+      }
+    }
     $form['#attached']['library'][] = 'apic_app/basic';
+
+    // remove any admin fields if they exist
+    if (isset($form['revision_log'])) {
+      unset($form['revision_log']);
+    }
+    if (isset($form['status'])) {
+      unset($form['status']);
+    }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $form;
   }
@@ -235,6 +253,8 @@ class ApplicationUpdateForm extends FormBase {
             $value = $form_state->getValue($customfield);
             if (is_array($value) && isset($value[0]['value'])) {
               $value = $value[0]['value'];
+            } else if (isset($value[0])) {
+              $value = array_values($value[0]);
             }
             $this->node->set($customfield, $value);
           }

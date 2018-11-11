@@ -17,6 +17,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
 {{ attach_library('ibm_apim/core') }}
 {{ attach_library('apic_app/basic') }}
 <article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  <a href="{{- path('entity.node.canonical', {'node': node.id}) -}}" rel="bookmark">
   <div class="apicAppCard">
     {% if content.application_image is defined and content.application_image|render|trim is not empty %}
       <div class="apicCardIcon bx--about__icon">
@@ -29,16 +30,13 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
     {% endif %}
     <div class="apicAppCardMain">
       <div class="bx--about__title--name">
-        <a href="{{- path('entity.node.canonical', {'node': node.id}) -}}" rel="bookmark">
-          <span class="apicAppName apicTruncate" title="{{- label -}}">{{- label -}}</span>
-        </a>
+
+          <span class="apicAppName apicTruncate" title="{{ node.title.value|striptags }}">{{- label -}}</span>
+
       </div>
-      {% if applifecycleEnabled %}
-        <div
-          class="applicationType {{ content.application_lifecycle_state['#items'][0].value|clean_class }}">{% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %} {{ 'Development'|t }} {% else %} {{ 'Production'|t }} {% endif %}</div>
-      {% endif %}
+
       <div class="apicAppDesc apicFade"
-           title="{{- content.apic_summary['#items'][0].value -}}">{{ content.apic_summary }}</div>
+           title="{{- content.apic_summary['#items'][0].value|striptags -}}">{{ content.apic_summary }}</div>
       {% if custom_fields is defined and custom_fields is not empty %}
         <div class="customFields">
           {% for custom_field in custom_fields %}
@@ -48,7 +46,19 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
           {% endfor %}
         </div>
       {% endif %}
+
     </div>
+    {% if applifecycleEnabled %}
+      <div class="applicationType {{ content.application_lifecycle_state['#items'][0].value|clean_class }}">
+        {% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %}
+          {{ 'Development'|t }}
+        {% elseif content.application_lifecycle_state['#items'][0].value|upper == 'PRODUCTION' %}
+          {{ 'Production'|t }}
+        {% else  %}
+          {{ content.application_lifecycle_state['#items'][0].value }}
+        {% endif %}
+      </div>
+    {% endif %}
   </div>
   <div class="bx--card-footer apicAppFooter">
     <div class="bx--card-footer__app-status">
@@ -66,4 +76,5 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
       </div>
     </div>
   </div>
+  </a>
 </article>

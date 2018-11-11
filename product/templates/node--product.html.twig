@@ -209,7 +209,7 @@
                             <a onclick="Drupal.settings.product.toggleTwistieRow(event)" href="javascript:">
                               <span class="apicTwistieIcon"><i class="fa fa-angle-right"></i></span>
                               <span
-                                class="apiName">{{ api.node.title[0].value }}{% if showVersions %} {{ api.node.apic_version[0].value }}{% endif %}</span>
+                                class="apiName" title="{{ api.node.title[0].value }}">{{ api.node.title[0].value }}{% if showVersions %} {{ api.node.apic_version[0].value }}{% endif %}</span>
                             </a>
                           </div>
                         </div>

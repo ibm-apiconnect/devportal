@@ -16,8 +16,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\node\Entity\Node;
 
-use Symfony\Component\HttpFoundation\RedirectResponse;
-
 class ChoosePlanStep extends FormBase {
 
   protected $plans;
@@ -62,9 +60,9 @@ class ChoosePlanStep extends FormBase {
       return NULL;
     }
     foreach ($productPlans as $planname => $plan) {
-      $options[$planname] = $plan['title'];
+      $options[$plan['name']] = $plan['title'];
     }
-    $this->plans = $productPlans;
+    $this->plans = $options;
     $keys = array_keys($options);
     $default = reset($keys);
 

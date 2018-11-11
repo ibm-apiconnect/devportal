@@ -17,7 +17,7 @@ fi
 
 NVM_DIR="$HOME/.nvm"
 . "$NVM_DIR/nvm.sh" \
-nvm use 6.3.0
+nvm use 8.12.0
 
 export PORTAL_DB_SERVICE_NAME=there.is.no.service
 export SERVICE_NAME=there.is.no.service

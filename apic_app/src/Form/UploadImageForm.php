@@ -67,6 +67,18 @@ class UploadImageForm extends FormBase {
       '#value' => t('Cancel'),
       '#submit' => ['::cancelForm']
     ];
+    $themeHandler = \Drupal::service('theme_handler');
+    if ($themeHandler->themeExists('bootstrap')) {
+      if (isset($form['actions']['submit'])) {
+        $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
+      }
+      if (isset($form['actions']['remove'])) {
+        $form['actions']['remove']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
+      }
+      if (isset($form['actions']['cancel'])) {
+        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+      }
+    }
     $form['#attached']['library'][] = 'apic_app/basic';
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $form;
