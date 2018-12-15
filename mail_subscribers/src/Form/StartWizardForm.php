@@ -46,7 +46,7 @@ class StartWizardForm extends FormBase {
       'product' => t('Product subscribers'),
       'plan' => t('Plan subscribers'),
       'api' => t('API subscribers'),
-      'all' => t('All subscribers')
+      'all' => t('All users')
     );
 
     $form['objectType'] = array(

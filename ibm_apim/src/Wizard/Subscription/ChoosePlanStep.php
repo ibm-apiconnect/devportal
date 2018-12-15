@@ -35,7 +35,10 @@ class ChoosePlanStep extends IbmWizardStepBase {
 
     // If a non-developer user somehow gets in to the wizard, validateAccess will send them away again
     if($this->validateAccess()) {
-      $cached_values = $form_state->getTemporaryValue('wizard');
+      /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
+      $temp_store_factory = \Drupal::service('session_based_temp_store');
+      /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
+      $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
       // if refering page was not another part of the subscription wizard, store a reference to it in the drupal session
       if(strpos($_SERVER['HTTP_REFERER'], '/subscription') === FALSE && strpos($_SERVER['HTTP_REFERER'], '/login') === FALSE){
@@ -47,11 +50,11 @@ class ChoosePlanStep extends IbmWizardStepBase {
 
       if(empty($product_id)) {
         // If someone pushed "previous" from the choose app page, we need the productId out of the wizard context
-        $product_id = $cached_values['productId'];
+        $product_id = $temp_store->get('productId');
         if(empty($product_id)) {
           $products_url = \Drupal::l(t('API Products'), \Drupal\Core\Url::fromRoute('view.products.page_1'));
           drupal_set_message(t("Subscription wizard was invoked with no productId. Start the wizard again from the %apiproducts page.", array('%apiproducts' => $products_url)), 'error');
-          $this->redirect("<front>")->send();
+          $this->redirect('<front>')->send();
           return;
         }
       }
@@ -61,10 +64,8 @@ class ChoosePlanStep extends IbmWizardStepBase {
 
       $form['product'] = $product_node_build;
 
-      $cached_values['productId'] = $product_id;
-      $cached_values['productName'] = $product_node->getTitle();
-
-      $form_state->setTemporaryValue('wizard', $cached_values);
+      $temp_store->set('productId', $product_id);
+      $temp_store->set('productName', $product_node->getTitle());
     }
 
     return $form;
@@ -86,15 +87,15 @@ class ChoosePlanStep extends IbmWizardStepBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $cached_values = $form_state->getTemporaryValue('wizard');
+    /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
+    $temp_store_factory = \Drupal::service('session_based_temp_store');
+    /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
+    $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
-    $plan_bits = explode(":", $form_state->getUserInput()['selectedPlan']);
-
-    $cached_values['planName'] = $plan_bits[0];
-    $cached_values['productUrl'] = $plan_bits[1];
-    $cached_values['planId'] = $plan_bits[1] . ':' . $plan_bits[2];
-
-    $form_state->setTemporaryValue('wizard', $cached_values);
+    $plan_bits = explode(':', $form_state->getUserInput()['selectedPlan']);
+    $temp_store->set('planName', $plan_bits[0]);
+    $temp_store->set('productUrl', $plan_bits[1]);
+    $temp_store->set('planId', $plan_bits[1] . ':' . $plan_bits[2]);
   }
 
 }

@@ -670,6 +670,27 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         );
       }
       break;
+    case 'config_export_form' :
+      if ($form['submit'] !== null) {
+        unset($form['submit']);
+      }
+      $form['intro'] = array(
+        '#markup' => '<p>' . t('This functionality will be available in a future release of the IBM API Connect command line client.') . '</p>',
+        '#weight' => 50
+      );
+      break;
+    case 'config_import_form' :
+      if ($form['submit'] !== null) {
+        unset($form['submit']);
+      }
+      if ($form['import_tarball'] !== null) {
+        unset($form['import_tarball']);
+      }
+      $form['intro'] = array(
+        '#markup' => '<p>' . t('This functionality will be available in a future release of the IBM API Connect command line client.') . '</p>',
+        '#weight' => 50
+      );
+      break;
   }
 
   // Look for any form provided by the contact module and remove preview button

@@ -28,7 +28,7 @@ class ApimUtilsTest extends UnitTestCase {
   private $prophet;
 
   /*
-   Dependencies of JWTParser.
+   Dependencies of ApimUtils.
    */
   protected $logger;
   protected $siteconfig;

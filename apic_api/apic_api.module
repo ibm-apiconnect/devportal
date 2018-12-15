@@ -79,16 +79,16 @@ function apic_api_node_access_records($node) {
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
   $config = \Drupal::config('ibm_apim.settings');
-  $acl_debug = $config->get('acl_debug');
+  $acl_debug = (boolean) $config->get('acl_debug');
 
   $type = is_string($node) ? $node : $node->getType();
   $grants = array();
   $uniquegrants = array();
 
   // Only build permissions for API nodes
-  if ($type == 'api') {
+  if ($type === 'api') {
 
-    if (isset($acl_debug) && $acl_debug == TRUE) {
+    if ($acl_debug === TRUE) {
       \Drupal::logger('ACLDEBUG')->debug('Node Title: %title', array("%title" => var_export($node->getTitle(), TRUE)));
     }
 
@@ -250,14 +250,14 @@ function apic_api_node_grants($account, $op) {
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
   $config = \Drupal::config('ibm_apim.settings');
-  $acl_debug = $config->get('acl_debug');
+  $acl_debug = (boolean) $config->get('acl_debug');
 
   $grants = array();
   $userUtils = \Drupal::service('ibm_apim.user_utils');
   // If 'edit any api content' is set, grant EDIT_ANY_API_CONTENT_GRANT
   if ($userUtils->explicitUserAccess('edit any api content')) {
     $grants['api'] = array(EDIT_ANY_API_CONTENT_GRANT);
-    if (isset($acl_debug) && $acl_debug == TRUE) {
+    if ($acl_debug === TRUE) {
       foreach ($grants as $realm => $perms) {
         foreach ($perms as $grant) {
           \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
@@ -356,10 +356,10 @@ function apic_api_preprocess_node(&$variables) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
     // get global settings first
     $config = \Drupal::config('ibm_apim.settings');
-    $ibm_apim_show_placeholder_images = $config->get('show_placeholder_images');
-    $render_api_schema_view = $config->get('render_api_schema_view');
+    $ibm_apim_show_placeholder_images = (boolean) $config->get('show_placeholder_images');
+    $render_api_schema_view = (boolean) $config->get('render_api_schema_view');
     if ($ibm_apim_show_placeholder_images === NULL) {
-      $ibm_apim_show_placeholder_images = 1;
+      $ibm_apim_show_placeholder_images = TRUE;
     }
     $variables['showPlaceholders'] = $ibm_apim_show_placeholder_images;
     if ($ibm_apim_show_placeholder_images) {
@@ -369,15 +369,15 @@ function apic_api_preprocess_node(&$variables) {
     else {
       $variables['placeholderUrl'] = NULL;
     }
-    $ibm_apim_show_versions = $config->get('show_versions');
+    $ibm_apim_show_versions = (boolean) $config->get('show_versions');
     if ($ibm_apim_show_versions === NULL) {
-      $ibm_apim_show_versions = 1;
+      $ibm_apim_show_versions = TRUE;
     }
     $variables['showVersions'] = $ibm_apim_show_versions;
 
     // custom fields
     $view_mode = $variables['view_mode'];
-    if ($view_mode == 'full') {
+    if ($view_mode === 'full') {
       $view_mode = 'default';
     }
     $entity_view = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.' . $view_mode);
@@ -400,10 +400,10 @@ function apic_api_preprocess_node(&$variables) {
     $diff = array_diff($field_list, $merged);
     $variables['custom_fields'] = $diff;
 
-    if ($variables['view_mode'] == 'full') {
-      $show_cors_warnings = $config->get('show_cors_warnings');
-      $soap_swagger_download = $config->get('soap_swagger_download');
-      $soap_codesnippets = $config->get('soap_codesnippets');
+    if ($variables['view_mode'] === 'full') {
+      $show_cors_warnings = (boolean) $config->get('show_cors_warnings');
+      $soap_swagger_download = (boolean) $config->get('soap_swagger_download');
+      $soap_codesnippets = (boolean) $config->get('soap_codesnippets');
       $codesnippet_langs = array();
       $codesnippets = $config->get('codesnippets');
       $first_enabled = NULL;
@@ -415,38 +415,34 @@ function apic_api_preprocess_node(&$variables) {
           }
         }
       }
-      $enable_api_test = $config->get('enable_api_test');
+      $enable_api_test = (boolean) $config->get('enable_api_test');
       $applications = array();
+      $default_codesnippet_lang = null;
       $current_user = \Drupal::currentUser();
       if ($current_user->isAuthenticated() && array_key_exists("codesnippet", $current_user)) {
         $default_codesnippet_lang = $current_user->codesnippet->value;
       }
 
       $current_route = \Drupal::routeMatch()->getRouteName();
-      if (isset($current_route) && !empty($current_route)) {
-        if ($current_route == 'entity.node.canonical') {
-          $prod_nids = Product::getProductsContainingAPI($variables['node']->apic_ref->value);
-          $apiNid = $variables['node']->id();
-          if (isset($prod_nids) && count($prod_nids) == 1) {
-            $prodNid = reset($prod_nids);
-            $path = Url::fromRoute('product.api', array('prodNode' => $prodNid, 'apiNode' => $apiNid))
-              ->setAbsolute()
-              ->toString();
-            $response = new RedirectResponse($path);
-            $response->send();
-            return NULL;
-          }
-          else {
-            $path = Url::fromRoute('product.select', array('apiNode' => $apiNid))->setAbsolute()->toString();
-            $response = new RedirectResponse($path);
-            $response->send();
-            return NULL;
-          }
+      if ($current_route !== null && $current_route === 'entity.node.canonical') {
+        $prod_nids = Product::getProductsContainingAPI($variables['node']->apic_ref->value);
+        $apiNid = $variables['node']->id();
+        if ($prod_nids !== NULL && count($prod_nids) === 1) {
+          $prodNid = reset($prod_nids);
+          $path = Url::fromRoute('product.api', ['prodNode' => $prodNid, 'apiNode' => $apiNid])
+            ->setAbsolute()
+            ->toString();
         }
+        else {
+          $path = Url::fromRoute('product.select', ['apiNode' => $apiNid])->setAbsolute()->toString();
+        }
+        $response = new RedirectResponse($path);
+        $response->send();
+        return NULL;
       }
 
       // if user's default lang not set or is not one of the enabled ones then default to first enabled
-      if (!isset($default_codesnippet_lang) || !empty($default_codesnippet_lang) || !in_array($default_codesnippet_lang, $codesnippet_langs)) {
+      if ($default_codesnippet_lang === null || empty($default_codesnippet_lang) || !in_array($default_codesnippet_lang, $codesnippet_langs)) {
         $default_codesnippet_lang = $first_enabled;
       }
       if (!$current_user->isAnonymous() && $current_user->id() != 1) {
@@ -457,10 +453,12 @@ function apic_api_preprocess_node(&$variables) {
             $credentials = array();
             // add credentials in unserialized form too as easier to parse in JS
             $appCredentials = array();
-            foreach($application->application_credentials->getValue() as $arrayValue) {
-              $appCredentials[] = unserialize($arrayValue['value']);
+            if ($application !== null) {
+              foreach ($application->application_credentials->getValue() as $arrayValue) {
+                $appCredentials[] = unserialize($arrayValue['value']);
+              }
             }
-            if (isset($appCredentials) && !empty($appCredentials)) {
+            if ($appCredentials !== null && !empty($appCredentials)) {
               foreach ($appCredentials as $cred) {
                 $credentials[] = array(
                   'client_id' => $cred['client_id'],
@@ -482,13 +480,14 @@ function apic_api_preprocess_node(&$variables) {
         }
       }
       $custom_image = $variables['node']->apic_image;
-      if (isset($custom_image) && !empty($custom_image)) {
+      $custom_image_string = null;
+      if ($custom_image !== null && !empty($custom_image)) {
         $entity = $variables['node']->apic_image->entity;
-        if (isset($entity)) {
+        if ($entity !== null) {
           $custom_image_string = $entity->getFileUri();
         }
       }
-      if (isset($custom_image_string) && !empty($custom_image_string)) {
+      if ($custom_image_string !== null && !empty($custom_image_string)) {
         $apiImageUrl = $custom_image_string;
       }
       else if ($ibm_apim_show_placeholder_images) {
@@ -503,7 +502,7 @@ function apic_api_preprocess_node(&$variables) {
       $viewBuilder = \Drupal::entityTypeManager()->getViewBuilder('node');
       if (isset($variables['custom_fields']) && !empty($variables['custom_fields'])) {
         foreach ($variables['custom_fields'] as $custom_field) {
-          if (isset($custom_field) && !empty($custom_field)) {
+          if ($custom_field !== null && !empty($custom_field)) {
             $component = $entity_view->getComponent($custom_field);
             if (isset($variables['node']->{$custom_field}) && isset($variables['node']->{$custom_field}->value) && !empty($variables['node']->{$custom_field}->value) && $field = $variables['node']->{$custom_field}) {
               $fieldRenderable = $viewBuilder->viewField($field, $component);
@@ -532,7 +531,7 @@ function apic_api_preprocess_node(&$variables) {
         $apic_component = $entity_view->getComponent($field_name);
         if (isset($variables['node']->{$field_name}) && $field = $variables['node']->{$field_name}) {
           $fieldRenderable = $viewBuilder->viewField($field, $apic_component);
-          if (count($fieldRenderable) && !empty($fieldRenderable)) {
+          if (!empty($fieldRenderable) && count($fieldRenderable)) {
             $html = $renderer->renderPlain($fieldRenderable);
             $field_config = \Drupal::entityTypeManager()->getStorage('field_config')->load('node.api.' . $field_name);
             $location = 'OVERVIEW';
@@ -548,8 +547,8 @@ function apic_api_preprocess_node(&$variables) {
       $moduleHandler = \Drupal::service('module_handler');
       if ($moduleHandler->moduleExists('forum')) {
         $config = \Drupal::config('ibm_apim.settings');
-        $forum_links_enabled = $config->get('autocreate_apiforum');
-        if ($forum_links_enabled == 1) {
+        $forum_links_enabled = (boolean) $config->get('autocreate_apiforum');
+        if ($forum_links_enabled === TRUE) {
           $clean_forum_name = \Drupal::service('apic_api.taxonomy')
             ->sanitise_api_name(html_entity_decode($variables['node']->getTitle(), ENT_QUOTES));
           $forumID = taxonomy_term_load_multiple_by_name($clean_forum_name, 'forums');

@@ -51,24 +51,24 @@ function consumerorg_node_access_records($node) {
   $grants = array();
 
   // Only build permissions for consumerorg nodes
-  if ($type == 'consumerorg') {
-    $orgurl = $node->consumerorg_url->value;
-    $escaped_orgurl = str_replace("/", "_", $orgurl);
+  if ($type === 'consumerorg') {
+    $orgUrl = $node->consumerorg_url->value;
+    $escapedOrgUrl = str_replace('/', '_', $orgUrl);
     $grants[] = array(
-      'realm' => 'consumerorg_' . $escaped_orgurl,
+      'realm' => 'consumerorg_' . $escapedOrgUrl,
       'gid' => CONSUMERORG_GRANT,
       'grant_view' => 1,
       'grant_update' => 0,
       'grant_delete' => 0,
       'priority' => 0,
     );
-    if (isset($acl_debug) && $acl_debug == TRUE) {
+    if ($acl_debug !== null && $acl_debug === TRUE) {
       foreach ($grants as $grant) {
         \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
           '@realm' => $grant['realm'],
-          '@grant' => "CONSUMERORG_GRANT"
+          '@grant' => 'CONSUMERORG_GRANT'
         ]);
-      };
+      }
     }
   }
   ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $grants);
@@ -96,25 +96,25 @@ function consumerorg_node_grants($account, $op) {
   $acl_debug = $config->get('acl_debug');
 
   $grants = array();
-  if ($op == 'view' && \Drupal::currentUser()->isAuthenticated()) {
+  if ($op === 'view' && \Drupal::currentUser()->isAuthenticated()) {
 
     $user = User::load(\Drupal::currentUser()->id());
-    $user_orgs = $user->consumerorg_url->getValue();
+    $userOrgs = $user->consumerorg_url->getValue();
 
-    foreach ($user_orgs as $index => $values) {
-      $user_org_url = $values['value'];
-      $escaped_orgurl = str_replace("/", "_", $user_org_url);
-      $grants['consumerorg_' . $escaped_orgurl] = array(CONSUMERORG_GRANT);
+    foreach ($userOrgs as $index => $values) {
+      $userOrgUrl = $values['value'];
+      $escapedOrgUrl = str_replace('/', '_', $userOrgUrl);
+      $grants['consumerorg_' . $escapedOrgUrl] = array(CONSUMERORG_GRANT);
     }
 
-    if (isset($acl_debug) && $acl_debug == TRUE) {
+    if ($acl_debug !== null && $acl_debug === TRUE) {
       foreach ($grants as $realm => $perms) {
         foreach ($perms as $grant) {
           \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
             '@realm' => $realm,
-            '@grant' => "CONSUMERORG_GRANT"
+            '@grant' => 'CONSUMERORG_GRANT'
           ]);
-        };
+        }
       }
     }
   }
@@ -132,11 +132,11 @@ function consumerorg_node_grants($account, $op) {
  * @return \Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultForbidden|\Drupal\Core\Access\AccessResultNeutral
  */
 function consumerorg_node_access(NodeInterface $node, $operation, AccountInterface $account) {
-  $type = is_string($node) ? $node : $node->type;
-  if ($type == 'consumerorg' && $operation == 'view') {
+  $type = $node->type;
+  if ($type === 'consumerorg' && $operation === 'view') {
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $org = $userUtils->getCurrentConsumerorg();
-    if ($node->consumerorg_url->value == $org['url']) {
+    if ($node->consumerorg_url->value === $org['url']) {
       $access = new AccessResultAllowed();
     }
     else {
@@ -157,18 +157,18 @@ function consumerorg_node_access(NodeInterface $node, $operation, AccountInterfa
  * @param $info
  */
 function consumerorg_preprocess(&$variables, $hook, &$info) {
-  if ($hook == 'node') {
+  if ($hook === 'node') {
     $contentTypeToShow = $variables['node']->bundle();
-    if ($contentTypeToShow == 'consumerorg') {
+    if ($contentTypeToShow === 'consumerorg') {
       ibm_apim_entry_trace(__FUNCTION__, NULL);
       //Load the view mode names.
       $allViewModes = \Drupal::service('entity_display.repository')->getViewModes('node');
       //View mode for this request.
       $viewModeToUse = $variables['view_mode'];
       //Is the view mode defined for nodes?
-      if (key_exists($viewModeToUse, $allViewModes)) {
+      if (\array_key_exists($viewModeToUse, $allViewModes)) {
         //Is there a template file for the view modes in the module?
-        if ($viewModeToUse == 'full') {
+        if ($viewModeToUse === 'full') {
           $templateFileName = 'node--' . $contentTypeToShow;
         }
         else {
@@ -176,17 +176,17 @@ function consumerorg_preprocess(&$variables, $hook, &$info) {
         }
         $theme_name = \Drupal::theme()->getActiveTheme()->getName();
         $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
-        if (file_exists($theme_path . '/templates/node/' . $templateFileName . '.html.twig')) {
+        if (\file_exists($theme_path . '/templates/node/' . $templateFileName . '.html.twig')) {
           $info['theme path'] = drupal_get_path('theme', $theme_name);
           $info['path'] = drupal_get_path('theme', $theme_name) . '/templates/node';
           $info['template'] = $templateFileName;
-        } elseif (file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
+        } elseif (\file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
           $info['theme path'] = drupal_get_path('theme', $theme_name);
           $info['path'] = drupal_get_path('theme', $theme_name) . '/templates';
           $info['template'] = $templateFileName;
         } else {
           $templateFilePath = drupal_get_path('module', 'consumerorg') . '/templates/' . $templateFileName . '.html.twig';
-          if (file_exists($templateFilePath)) {
+          if (\file_exists($templateFilePath)) {
             $info['theme path'] = drupal_get_path('module', 'consumerorg');
             $info['path'] = drupal_get_path('module', 'consumerorg') . '/templates';
             $info['template'] = $templateFileName;
@@ -209,7 +209,7 @@ function consumerorg_form_alter(array &$form, FormStateInterface $form_state, $f
   switch ($form_id) {
     // remove link to delete our content type
     case 'node_type_edit_form' :
-      if (isset($form['type']['#default_value']) && $form['type']['#default_value'] == 'consumerorg') {
+      if (isset($form['type']['#default_value']) && $form['type']['#default_value'] === 'consumerorg') {
         if (isset($form['actions']['delete'])) {
           unset($form['actions']['delete']);
         }
@@ -226,7 +226,7 @@ function consumerorg_form_alter(array &$form, FormStateInterface $form_state, $f
  * @param $hook
  */
 function consumerorg_module_implements_alter(&$implementations, $hook) {
-  if (($hook == 'form_alter' || $hook == 'menu_links_discovered_alter') && isset($implementations['consumerorg'])) {
+  if (($hook === 'form_alter' || $hook === 'menu_links_discovered_alter') && isset($implementations['consumerorg'])) {
     $group = $implementations['consumerorg'];
     unset($implementations['consumerorg']);
     $implementations['consumerorg'] = $group;

@@ -153,6 +153,7 @@ class LoginTest extends UserManagerTestBaseClass {
       $org = new ConsumerOrg();
       $org->setUrl('/consumer-orgs/1234/5678/9abc');
       $org->setName('org1');
+      $org->setTitle('org1');
       $org->setId('999');
       $this->get('/consumer-orgs/1234/5678/9abc')->willReturn($org);
     });
@@ -192,6 +193,7 @@ class LoginTest extends UserManagerTestBaseClass {
     $org = new ConsumerOrg();
     $org->setUrl('/consumer-orgs/1234/5678/9abc');
     $org->setName('org1');
+    $org->setTitle('org1');
     $org->setId('999');
 
     $meResponse->getUser()->setConsumerorgs(array($org));
@@ -212,10 +214,11 @@ class LoginTest extends UserManagerTestBaseClass {
     $org = new ConsumerOrg();
     $org->setUrl('/consumer-orgs/1234/5678/9abc');
     $org->setName('org1');
+    $org->setTitle('org1');
     $org->setId('999');
     $this->consumerorg->get('/consumer-orgs/1234/5678/9abc')->willReturn($org);
     $this->consumerorg->create(Argument::any())->shouldNotBeCalled();
-    $this->consumerorg->createOrUpdateNode(Argument::any(), Argument::any())->willReturn(NULL);
+    $this->consumerorg->createOrUpdateNode(Argument::any(), Argument::any())->willReturn(FALSE);
 
     $this->mgmtServer->getAuth(Argument::any())->willReturn("aBearerToken");
     $this->mgmtServer->setAuth(Argument::any())->willReturn("aBearerToken");

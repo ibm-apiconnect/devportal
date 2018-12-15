@@ -117,6 +117,7 @@ abstract class UserManagerTestBaseClass extends UnitTestCase {
     $consumerorg->id = '999';
     $consumerorg->url = '/consumer-orgs/1234/5678/9abc';
     $consumerorg->name = 'org1';
+    $consumerorg->title = 'org1';
     $consumerorg->roles = NULL;
     $consumerorg->tags = NULL;
 

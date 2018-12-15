@@ -27,6 +27,10 @@ chown -R aegir:aegir /web
 mysql=( su - aegir -c "mysql --protocol=socket" )
 DEVPORTAL_USER=aegir
 
+# Workaround for using MySQL with overlay2 in Docker; prevents startup issues
+find /var/lib/mysqldata/mysql -type f -exec touch {} \;
+chown -R mysql:mysql /var/lib/mysqldata/mysql /var/log/mysqllog/mysql
+
 mysqld --wsrep-new-cluster --user=mysql --datadir="/var/lib/mysqldata/mysql" --log-bin="/var/log/mysqllog/mysql/mysql-bin.log" --log-bin-index="/var/log/mysqllog/mysql/mysql-bin.index" &
 pid=$!
 

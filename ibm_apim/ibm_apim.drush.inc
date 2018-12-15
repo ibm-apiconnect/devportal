@@ -517,6 +517,15 @@ function drush_ibm_apim_listen() {
           case 'member_update':
             drush_ibm_apim_user_update($content);
             break;
+          case 'user_update':
+            drush_ibm_apim_user_createOrUpdate($content, 'user_update');
+            break;
+          case 'user_create':
+            drush_ibm_apim_user_createOrUpdate($content, 'user_create');
+            break;
+          case 'user_del':
+            drush_ibm_apim_user_delete($content);
+            break;
           case 'configured_catalog_user_registry_update':
             drush_ibm_apim_user_registry_update($content);
             break;
@@ -1431,7 +1440,7 @@ function drush_ibm_apim_user_create($apicuser, $event = 'user_create') {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if (isset($apicuser)) {
+  if ($apicuser !== null) {
     if (is_string($apicuser)) {
       $apicuser = json_decode($apicuser, TRUE);
     }
@@ -1442,19 +1451,23 @@ function drush_ibm_apim_user_create($apicuser, $event = 'user_create') {
 
     // check if user already exists in Drupal DB
     $user = user_load_by_name($apicuser['username']);
-    if (isset($user)) {
-      drush_print("User already exists: " . $apicuser['username']);
+    if ($user !== null) {
+      drush_print('User already exists: ' . $apicuser['username']);
       return;
     }
     else {
 
       $create_user = new ApicUser();
-      $create_user->setFirstName($apicuser['first_name']);
-      $create_user->setLastName($apicuser['last_name']);
+      $create_user->setFirstname($apicuser['first_name']);
+      $create_user->setLastname($apicuser['last_name']);
       $create_user->setMail($apicuser['email']);
       $create_user->setUsername($apicuser['username']);
-      $create_user->setApicURL($apicuser['url']);
-      $create_user->setApicUserRegistryURL($apicuser['user_registry_url']);
+      if ($apicuser['url'] !== null) {
+        $create_user->setUrl($apicuser['url']);
+      }
+      if ($apicuser['user_registry_url'] !== null) {
+        $create_user->setApicUserRegistryUrl($apicuser['user_registry_url']);
+      }
 
       $user_manager = \Drupal::service('auth_apic.usermanager');
       drush_print('Creating apic user ' . $apicuser['username']);
@@ -1478,29 +1491,33 @@ function drush_ibm_apim_user_delete($apicuser, $event = 'user_delete') {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if (isset($apicuser)) {
+  if ($apicuser !== null) {
     if (is_string($apicuser)) {
       $apicuser = json_decode($apicuser, TRUE);
     }
 
     // check if user already exists in Drupal DB
-    $user = user_load_by_name($apicuser->username);
-    if (!isset($user)) {
-      drush_print("User does not exist: $apicuser->username");
+    $user = user_load_by_name($apicuser['username']);
+    if ($user !== null) {
+      drush_print('User does not exist: ' . $apicuser['username']);
       return;
     }
     else {
 
       $delete_user = new ApicUser();
-      $delete_user->setFirstName($apicuser->first_name);
-      $delete_user->setLastName($apicuser->last_name);
-      $delete_user->setMail($apicuser->email);
-      $delete_user->setUsername($apicuser->username);
-      $delete_user->setApicURL($apicuser->url);
-      $delete_user->setApicUserRegistryURL($apicuser->user_registry_url);
+      $delete_user->setFirstname($apicuser['first_name']);
+      $delete_user->setLastname($apicuser['last_name']);
+      $delete_user->setMail($apicuser['email']);
+      $delete_user->setUsername($apicuser['username']);
+      if ($apicuser['url'] !== null) {
+        $delete_user->setUrl($apicuser['url']);
+      }
+      if ($apicuser['user_registry_url'] !== null) {
+        $delete_user->setApicUserRegistryUrl($apicuser['user_registry_url']);
+      }
 
       $user_manager = \Drupal::service('auth_apic.usermanager');
-      drush_print('Deleting apic user ' . $apicuser->username);
+      drush_print('Deleting apic user ' . $apicuser['username']);
       $user_manager->deleteLocalAccount($delete_user);
     }
 
@@ -1520,23 +1537,23 @@ function drush_ibm_apim_user_block($apicuser, $event = 'user_block') {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if (isset($apicuser)) {
+  if ($apicuser !== null) {
     if (is_string($apicuser)) {
       $apicuser = json_decode($apicuser, TRUE);
     }
 
-    $user = user_load_by_name($apicuser->username);
+    $user = user_load_by_name($apicuser['username']);
 
-    if (!isset($user)) {
-      drush_print("User does not exist: $apicuser->username");
+    if ($user === null) {
+      drush_print('User does not exist: ' . $apicuser['username']);
       return;
     }
     else {
-      if ($user->get('uid')->value == 1) {
+      if ($user->get('uid')->value === 1) {
         drush_print('admin so won\'t block this');
       }
       else {
-        drush_print('Blocking apic user ' . $apicuser->username);
+        drush_print('Blocking apic user ' . $apicuser['username']);
         $user->set('status', 0);
         $user->save();
       }
@@ -1558,19 +1575,19 @@ function drush_ibm_apim_user_unblock($apicuser, $event = 'user_unblock') {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if (isset($apicuser)) {
+  if ($apicuser !== null) {
     if (is_string($apicuser)) {
       $apicuser = json_decode($apicuser, TRUE);
     }
 
-    $user = user_load_by_name($apicuser->username);
+    $user = user_load_by_name($apicuser['username']);
 
-    if (!isset($user)) {
-      drush_print("User does not exist: $apicuser->username");
+    if ($user === null) {
+      drush_print('User does not exist: ' . $apicuser['username']);
       return;
     }
     else {
-      drush_print('Unblocking apic user ' . $apicuser->username);
+      drush_print('Unblocking apic user ' . $apicuser['username']);
       $user->set('status', 1);
       $user->save();
     }
@@ -1590,29 +1607,33 @@ function drush_ibm_apim_user_update($apicuser, $event = 'user_update') {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if (isset($apicuser)) {
+  if ($apicuser !== null) {
     if (is_string($apicuser)) {
       $apicuser = json_decode($apicuser, TRUE);
     }
 
     // check if user already exists in Drupal DB
-    $user = user_load_by_name($apicuser->username);
-    if (!isset($user)) {
-      drush_print("User does not exist: $apicuser->username");
+    $user = user_load_by_name($apicuser['username']);
+    if ($user === null) {
+      drush_print('User does not exist: ' . $apicuser['username']);
       return;
     }
     else {
 
       $edit_user = new ApicUser();
-      $edit_user->setFirstName($apicuser->first_name);
-      $edit_user->setLastName($apicuser->last_name);
-      $edit_user->setMail($apicuser->email);
-      $edit_user->setUsername($apicuser->username);
-      $edit_user->setApicURL($apicuser->url);
-      $edit_user->setApicUserRegistryURL($apicuser->user_registry_url);
+      $edit_user->setFirstname($apicuser['first_name']);
+      $edit_user->setLastname($apicuser['last_name']);
+      $edit_user->setMail($apicuser['email']);
+      $edit_user->setUsername($apicuser['username']);
+      if ($apicuser['url'] !== null) {
+        $edit_user->setUrl($apicuser['url']);
+      }
+      if ($apicuser['user_registry_url'] !== null) {
+        $edit_user->setApicUserRegistryUrl($apicuser['user_registry_url']);
+      }
 
       $user_manager = \Drupal::service('auth_apic.usermanager');
-      drush_print('Updating apic user ' . $apicuser->username);
+      drush_print('Updating apic user ' . $apicuser['username']);
       $user_manager->updateLocalAccount($edit_user);
     }
 
@@ -1632,28 +1653,32 @@ function drush_ibm_apim_user_createOrUpdate($apicuser, $event = 'user_update') {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if (isset($apicuser)) {
+  if ($apicuser !== null) {
     if (is_string($apicuser)) {
       $apicuser = json_decode($apicuser, TRUE);
     }
 
     // check if user already exists in Drupal DB
-    $user = user_load_by_name($apicuser->username);
+    $user = user_load_by_name($apicuser['username']);
     if (!isset($user)) {
       drush_ibm_apim_user_create($apicuser, $event);
     }
     else {
 
       $edit_user = new ApicUser();
-      $edit_user->setFirstName($apicuser->first_name);
-      $edit_user->setLastName($apicuser->last_name);
-      $edit_user->setMail($apicuser->email);
-      $edit_user->setUsername($apicuser->username);
-      $edit_user->setApicURL($apicuser->url);
-      $edit_user->setApicUserRegistryURL($apicuser->user_registry_url);
+      $edit_user->setFirstname($apicuser['first_name']);
+      $edit_user->setLastname($apicuser['last_name']);
+      $edit_user->setMail($apicuser['email']);
+      $edit_user->setUsername($apicuser['username']);
+      if ($apicuser['url'] !== null) {
+        $edit_user->setUrl($apicuser['url']);
+      }
+      if ($apicuser['user_registry_url'] !== null) {
+        $edit_user->setApicUserRegistryUrl($apicuser['user_registry_url']);
+      }
 
       $user_manager = \Drupal::service('auth_apic.usermanager');
-      drush_print('Updating apic user ' . $apicuser->username);
+      drush_print('Updating apic user ' . $apicuser['username']);
       $user_manager->updateLocalAccount($edit_user);
     }
 

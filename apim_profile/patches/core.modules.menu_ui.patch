@@ -1,6 +1,5 @@
-diff --Naur core/modules/menu_ui/menu_ui.module core/modules/menu_ui/menu_ui.module
---- core/modules/menu_ui/menu_ui.module
-+++ core/modules/menu_ui/menu_ui.module
+--- core/modules/menu_ui/menu_ui.module	2018-11-07 19:36:14.000000000 +0000
++++ core/modules/menu_ui/menu_ui.module	2018-11-07 20:16:24.000000000 +0000
 @@ -11,6 +11,7 @@
  use Drupal\Core\Breadcrumb\Breadcrumb;
  use Drupal\Core\Cache\CacheableMetadata;
@@ -9,7 +8,7 @@ diff --Naur core/modules/menu_ui/menu_ui.module core/modules/menu_ui/menu_ui.mod
  use Drupal\Core\Link;
  use Drupal\Core\Menu\MenuLinkInterface;
  use Drupal\Core\Form\FormStateInterface;
-@@ -185,6 +186,7 @@ function menu_ui_get_menu_link_defaults(NodeInterface $node) {
+@@ -141,6 +142,7 @@
    /** @var \Drupal\node\NodeTypeInterface $node_type */
    $node_type = $node->type->entity;
    $menu_name = strtok($node_type->getThirdPartySetting('menu_ui', 'parent', 'main:'), ':');
@@ -17,7 +16,7 @@ diff --Naur core/modules/menu_ui/menu_ui.module core/modules/menu_ui/menu_ui.mod
    $defaults = FALSE;
    if ($node->id()) {
      $id = FALSE;
-@@ -194,6 +196,7 @@ function menu_ui_get_menu_link_defaults(NodeInterface $node) {
+@@ -150,6 +152,7 @@
        $query = \Drupal::entityQuery('menu_link_content')
          ->condition('link.uri', 'node/' . $node->id())
          ->condition('menu_name', $menu_name)
@@ -25,7 +24,7 @@ diff --Naur core/modules/menu_ui/menu_ui.module core/modules/menu_ui/menu_ui.mod
          ->sort('id', 'ASC')
          ->range(0, 1);
        $result = $query->execute();
-@@ -205,6 +208,7 @@ function menu_ui_get_menu_link_defaults(NodeInterface $node) {
+@@ -161,6 +164,7 @@
        $query = \Drupal::entityQuery('menu_link_content')
          ->condition('link.uri', 'entity:node/' . $node->id())
          ->condition('menu_name', array_values($type_menus), 'IN')
@@ -33,19 +32,14 @@ diff --Naur core/modules/menu_ui/menu_ui.module core/modules/menu_ui/menu_ui.mod
          ->sort('id', 'ASC')
          ->range(0, 1);
        $result = $query->execute();
-@@ -262,11 +266,14 @@ function menu_ui_form_node_form_alter(&$form, FormStateInterface $form_state) {
-   $node_type = $node->type->entity;
-   /** @var \Drupal\Core\Menu\MenuParentFormSelectorInterface $menu_parent_selector */
-   $menu_parent_selector = \Drupal::service('menu.parent_form_selector');
--  $menu_names = menu_ui_get_menus();
-+  $menus = Menu::loadMultiple();
-   $type_menus = $node_type->getThirdPartySetting('menu_ui', 'available_menus', ['main']);
+@@ -229,7 +233,10 @@
+   $type_menus = Menu::loadMultiple($type_menus_ids);
    $available_menus = [];
    foreach ($type_menus as $menu) {
--    $available_menus[$menu] = $menu_names[$menu];
+-    $available_menus[$menu->id()] = $menu->label();
 +    // Only menus with the language of the current node, not specified, or not applicable will be used.
-+    if (isset($menus[$menu]) && in_array($menus[$menu]->language()->getId(), array($node->language()->getId(), LanguageInterface::LANGCODE_NOT_SPECIFIED, LanguageInterface::LANGCODE_NOT_APPLICABLE))) {
-+      $available_menus[$menu] = $menus[$menu]->label();
++    if (isset($type_menus[$menu]) && in_array($type_menus[$menu]->language()->getId(), array($node->language()->getId(), LanguageInterface::LANGCODE_NOT_SPECIFIED, LanguageInterface::LANGCODE_NOT_APPLICABLE))) {
++      $available_menus[$menu->id()] = $type_menus[$menu]->label();
 +    }
    }
    if ($defaults['id']) {

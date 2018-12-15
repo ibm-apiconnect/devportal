@@ -123,6 +123,8 @@ dependencies:
   - csp
   - perimeter
   - account_field_split
+  - session_based_temp_store
+  - noopener_filter
   - ibm_apim
   - ibm_log_stdout
   - auth_apic

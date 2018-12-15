@@ -11,7 +11,7 @@ properties([
 
 def pipelineOpts = [
   slackChannel: '',
-  labels: 'apic-build-fast-taas',
+  labels: 'portal-taas',
   nodeVersion: null,
 ]
 
@@ -92,7 +92,3 @@ veloxPipeline(pipelineOpts) { p ->
   }
 
 }
-
-
-
-

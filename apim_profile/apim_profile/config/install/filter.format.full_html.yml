@@ -4,6 +4,7 @@ dependencies:
   module:
     - editor
     - entity_embed
+    - noopener_filter
 name: 'Full HTML'
 format: full_html
 weight: 1
@@ -47,3 +48,9 @@ filters:
       allowed_html: '<em> <strong> <cite> <blockquote cite> <code> <ul type> <ol start type> <li> <dl> <dt> <dd> <h2 id> <h3 id> <h4 id> <h5 id> <h6 id> <u> <s> <sup> <sub> <a href hreflang data-entity-type data-entity-uuid> <drupal-entity data-entity-type data-entity-uuid data-entity-embed-display data-entity-embed-display-settings data-align data-caption data-embed-button> <img src alt data-entity-type data-entity-uuid data-align data-caption> <div data-oembed-url> <table> <caption> <tbody> <thead> <tfoot> <th> <td> <tr> <hr> <p> <h1> <pre>'
       filter_html_help: true
       filter_html_nofollow: false
+  filter_noopener:
+    id: filter_noopener
+    provider: noopener_filter
+    status: true
+    weight: 0
+    settings: {  }

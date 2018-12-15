@@ -13,25 +13,27 @@
 namespace Drupal\consumerorg\Form;
 
 use Drupal\Component\Utility\Html;
+use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\ibm_apim\ApicRest;
-use Drupal\node\Entity\Node;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Drupal\ibm_apim\Service\UserUtils;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Drupal\Core\Extension\ThemeHandler;
 
 /**
  * Resend user invitation form for consumerorg members.
  */
 class ResendInviteForm extends ConfirmFormBase {
 
-  /**
-   * The node representing the consumerorg.
-   *
-   * @var \Drupal\node\NodeInterface
-   */
-  protected $orgId;
+  protected $consumerOrgService;
+
+  protected $userUtils;
+
+  protected $themeHandler;
+
+  protected $currentOrg;
 
   /**
    * The id of the invitation to resend
@@ -41,65 +43,80 @@ class ResendInviteForm extends ConfirmFormBase {
   protected $inviteId;
 
   /**
+   * ResendInviteForm constructor.
+   *
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
+   * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
+   * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
+   */
+  public function __construct(
+    ConsumerOrgService $consumer_org_service,
+    UserUtils $user_utils,
+    ThemeHandler $themeHandler
+  ) {
+    $this->consumerOrgService = $consumer_org_service;
+    $this->userUtils = $user_utils;
+    $this->themeHandler = $themeHandler;
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('ibm_apim.consumerorg'),
+      $container->get('ibm_apim.user_utils'),
+      $container->get('theme_handler')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
     return 'consumerorg_resend_invitation_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $inviteId = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $inviteId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $current_user = \Drupal::currentUser();
-    $userUtils = \Drupal::service('ibm_apim.user_utils');
-    if (!$userUtils->checkHasPermission('member:manage')) {
+    if (!$this->userUtils->checkHasPermission('member:manage')) {
       $message = t('Permission denied.');
       drupal_set_message($message, 'error');
 
-      $form = array();
-      $form['description'] = array('#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>');
+      $form = [];
+      $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
 
-      $form['actions'] = array('#type' => 'actions');
-      $form['actions']['cancel'] = array(
+      $form['actions'] = ['#type' => 'actions'];
+      $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#href' => 'myorg',
-        '#attributes' => array('class' => array('button'))
-      );
-      $themeHandler = \Drupal::service('theme_handler');
-      if ($themeHandler->themeExists('bootstrap')) {
+        '#attributes' => ['class' => ['button']],
+      ];
+      if ($this->themeHandler->themeExists('bootstrap')) {
         $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
       }
+    }
+    else {
+      $org = $this->userUtils->getCurrentConsumerorg();
+      $this->currentOrg = $this->consumerOrgService->get($org['url']);
 
-      return $form;
-    } else {
-      $org = $userUtils->getCurrentConsumerOrg();
-      $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'consumerorg');
-      $query->condition('consumerorg_url.value', $org['url']);
-      $nids = $query->execute();
-      $this->orgId = NULL;
-      if (isset($nids) && !empty($nids)) {
-        $nid = array_shift($nids);
-        $this->orgId = Node::load($nid);
-      }
       $this->inviteId = Html::escape($inviteId);
       $found = FALSE;
-      foreach ($this->orgId->consumerorg_invites->getValue() as $arrayValue) {
-        $invite = unserialize($arrayValue['value']);
-        if ($invite['id'] == $this->inviteId) {
+      foreach ($this->currentOrg->getInvites() as $invite) {
+        if ($invite['id'] === $this->inviteId) {
           $found = TRUE;
         }
       }
-      if ($found != TRUE) {
+      if ($found !== TRUE) {
         // return error as inviteId not in this consumerorg
         throw new NotFoundHttpException(t('Specified invite not found in this consumer organization.'));
       }
-      $form =  parent::buildForm($form, $form_state);
-      $themeHandler = \Drupal::service('theme_handler');
-      if ($themeHandler->themeExists('bootstrap')) {
+      $form = parent::buildForm($form, $form_state);
+      if ($this->themeHandler->themeExists('bootstrap')) {
         if (isset($form['actions']['submit'])) {
           $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
         }
@@ -107,10 +124,9 @@ class ResendInviteForm extends ConfirmFormBase {
           $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
         }
       }
-
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return $form;
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $form;
   }
 
   /**
@@ -137,23 +153,29 @@ class ResendInviteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     return Url::fromRoute('ibm_apim.myorg');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $orgid = $this->orgId->consumerorg_id->value;
 
-    $url = '/orgs/' . $orgid . '/member-invitations/' . $this->inviteId . '/regenerate';
-    $result = ApicRest::post($url, json_encode(array("notify"=> true)));
-    if (isset($result) && $result->code === 200) {
+    $response = $this->consumerOrgService->resendMemberInvitation($this->currentOrg, $this->inviteId);
+    if ($response->success()) {
       drupal_set_message(t('Another invitation has been sent.'));
       $current_user = \Drupal::currentUser();
-      \Drupal::logger('consumerorg')->notice('Organization invitation @id resent for @orgname by @username', array('@orgname' => $this->orgId->getTitle(), '@id' => $this->inviteId, '@username' => $current_user->getAccountName()));
+      \Drupal::logger('consumerorg')
+        ->notice('Organization invitation @id resent for @orgname by @username', [
+          '@orgname' => $this->currentOrg->getTitle(),
+          '@id' => $this->inviteId,
+          '@username' => $current_user->getAccountName(),
+        ]);
+    }
+    else {
+      drupal_set_message(t('Error sending invitation. Contact the system administrator.'), 'error');
     }
 
     $form_state->setRedirectUrl($this->getCancelUrl());

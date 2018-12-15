@@ -40,7 +40,7 @@
     "cweagans/composer-patches": "^1.6.5",
     "drupal-composer/drupal-scaffold": "^2.5",
     "drupal/console": "^1.0.2",
-    "drupal/core": "8.6.2",
+    "drupal/core": "8.6.3",
     "vlucas/phpdotenv": "^2.4",
     "webflo/drupal-finder": "^1.0.0",
     "webmozart/path-util": "^2.3",
@@ -190,10 +190,12 @@
     "drupal/social_post": "^2.0@beta",
     "drupal/social_post_twitter": "^2.0",
     "drupal/smart_trim": "^1.1",
-    "drupal/views_custom_cache_tag": "^1.0"
+    "drupal/views_custom_cache_tag": "^1.0",
+    "drupal/noopener_filter": "^1.0",
+    "drupal/session_based_temp_store": "^1.0@alpha"
   },
   "require-dev": {
-    "webflo/drupal-core-require-dev": "^8.6.0"
+    "webflo/drupal-core-require-dev": "8.6.3"
   },
   "conflict": {
     "drupal/drupal": "*"

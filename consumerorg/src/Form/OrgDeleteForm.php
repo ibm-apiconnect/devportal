@@ -16,14 +16,11 @@ use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\ibm_apim\Service\UserUtils;
-use Drupal\node\Entity\Node;
-use Drupal\user\Entity\User;
 use Drupal\Core\Url;
-use Drupal\ibm_apim\ApicRest;
+use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Drupal\Core\Extension\ThemeHandler;
 
 /**
  * Remove form for consumerorgs.
@@ -31,22 +28,28 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class OrgDeleteForm extends ConfirmFormBase {
 
   protected $consumerOrgService;
+
   protected $currentOrg;
+
   protected $userUtils;
+
   protected $currentUser;
 
-  /**
-   * Constructs an Org User Invitation Form.
-   *
-   * {@inheritdoc}
-   *
-   * @param ConsumerOrgService $consumerOrgService
+  protected $themeHandler;
 
+  /**
+   * OrgDeleteForm constructor.
+   *
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
+   * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
    */
-  public function __construct(ConsumerOrgService $consumer_org_service, UserUtils $user_utils, AccountProxyInterface $current_user) {
+  public function __construct(ConsumerOrgService $consumer_org_service, UserUtils $user_utils, AccountProxyInterface $current_user, ThemeHandler $themeHandler) {
     $this->consumerOrgService = $consumer_org_service;
     $this->userUtils = $user_utils;
     $this->currentUser = $current_user;
+    $this->themeHandler = $themeHandler;
   }
 
   /**
@@ -56,101 +59,95 @@ class OrgDeleteForm extends ConfirmFormBase {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('ibm_apim.user_utils'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('theme_handler')
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'consumerorg_delete_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     if (!$this->userUtils->checkHasPermission('settings:manage')) {
       $message = t('Permission denied.');
       drupal_set_message($message, 'error');
 
-      $form = array();
-      $form['description'] = array('#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>');
+      $form = [];
+      $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
 
-      $form['cancel'] = array(
+      $form['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#url' => Url::fromRoute('ibm_apim.myorg'),
-        '#attributes' => array('class' => array('button'))
-      );
-      $themeHandler = \Drupal::service('theme_handler');
-      if ($themeHandler->themeExists('bootstrap')) {
+        '#attributes' => ['class' => ['button']],
+      ];
+      if ($this->themeHandler->themeExists('bootstrap')) {
         $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
       }
 
-      return $form;
-    } else if (sizeof($this->userUtils->loadConsumerorgs()) == 1) {
+    }
+    elseif (sizeof($this->userUtils->loadConsumerorgs()) === 1) {
       $message = t('You cannot delete your organization because you are not a member of any other organizations.');
       drupal_set_message($message, 'error');
 
-      $form = array();
-      $form['description'] = array('#markup' => '<p>' . t('You cannot delete your organization because this is your only organization and you must be a member of at least one organization.') . '</p>');
+      $form = [];
+      $form['description'] = ['#markup' => '<p>' . t('You cannot delete your organization because this is your only organization and you must be a member of at least one organization.') . '</p>'];
 
-      $form['cancel'] = array(
+      $form['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#url' => Url::fromRoute('ibm_apim.myorg'),
-        '#attributes' => array('class' => array('button'))
-      );
-      $themeHandler = \Drupal::service('theme_handler');
-      if ($themeHandler->themeExists('bootstrap')) {
+        '#attributes' => ['class' => ['button']],
+      ];
+      if ($this->themeHandler->themeExists('bootstrap')) {
         $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
       }
-      return $form;
     }
     else {
-      $org = $this->userUtils->getCurrentConsumerOrg();
+      $org = $this->userUtils->getCurrentConsumerorg();
       $this->currentOrg = $this->consumerOrgService->get($org['url']);
 
       $current_user_node = User::load($this->currentUser->id());
-      if($current_user_node->apic_url->value !== $this->currentOrg->getOwnerUrl()) {
+      if ($current_user_node === NULL || $current_user_node->apic_url->value !== $this->currentOrg->getOwnerUrl()) {
         $message = t('You cannot delete this organization as you are not the owner.');
         drupal_set_message($message, 'error');
 
-        $form = array();
-        $form['description'] = array('#markup' => '<p>' . t('You cannot delete an organization that you do not own.') . '</p>');
+        $form = [];
+        $form['description'] = ['#markup' => '<p>' . t('You cannot delete an organization that you do not own.') . '</p>'];
 
-        $form['cancel'] = array(
+        $form['cancel'] = [
           '#type' => 'link',
           '#title' => t('Cancel'),
           '#url' => Url::fromRoute('ibm_apim.myorg'),
-          '#attributes' => array('class' => array('button'))
-        );
-        $themeHandler = \Drupal::service('theme_handler');
-        if ($themeHandler->themeExists('bootstrap')) {
+          '#attributes' => ['class' => ['button']],
+        ];
+        if ($this->themeHandler->themeExists('bootstrap')) {
           $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
         }
-        return $form;
       }
-
-
-      $form =  parent::buildForm($form, $form_state);
-      $themeHandler = \Drupal::service('theme_handler');
-      if ($themeHandler->themeExists('bootstrap')) {
-        if (isset($form['actions']['submit'])) {
-          $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
-        }
-        if (isset($form['actions']['cancel'])) {
-          $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+      else {
+        $form = parent::buildForm($form, $form_state);
+        if ($this->themeHandler->themeExists('bootstrap')) {
+          if (isset($form['actions']['submit'])) {
+            $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
+          }
+          if (isset($form['actions']['cancel'])) {
+            $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+          }
         }
       }
-
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return $form;
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $form;
   }
 
   /**
@@ -177,14 +174,14 @@ class OrgDeleteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     return Url::fromRoute('ibm_apim.myorg');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $apim_response = $this->consumerOrgService->delete($this->currentOrg);

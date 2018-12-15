@@ -38,7 +38,10 @@ class ChooseApplicationStep extends IbmWizardStepBase {
     // If a non-developer user somehow gets in to the wizard, validateAccess will send them away again
     if($this->validateAccess()) {
 
-      $cached_values = $form_state->getTemporaryValue('wizard');
+      /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
+      $temp_store_factory = \Drupal::service('session_based_temp_store');
+      /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
+      $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
       // if refering page was not another part of the subscription wizard, store a reference to it in the drupal session
       if(strpos($_SERVER['HTTP_REFERER'], '/subscription') === FALSE && strpos($_SERVER['HTTP_REFERER'], '/login') === FALSE){
@@ -49,20 +52,21 @@ class ChooseApplicationStep extends IbmWizardStepBase {
       $product_id = \Drupal::request()->query->get('productId');
       $plan_title = \Drupal::request()->query->get('planTitle');
       $plan_id = \Drupal::request()->query->get('planId');
+      $productName = '';
 
       if(isset($product_id) && isset($plan_title) && isset($plan_id)) {
         $product_node = Node::load($product_id);
-        $cached_values['productId'] = $product_id;
-        $cached_values['productName'] = $product_node->getTitle();
-        $cached_values['productUrl'] = $product_node->get('apic_url')->value;
-        $cached_values['planName'] = $plan_title;
-        $cached_values['planId'] = $plan_id;
-        $form_state->setTemporaryValue('wizard', $cached_values);
+        $temp_store->set('productId', $product_id);
+        $temp_store->set('planName', $plan_title);
+        $temp_store->set('planId', $plan_id);
+        if ($product_node !== null) {
+          $temp_store->set('productName', $product_node->getTitle());
+          $temp_store->set('productUrl', $product_node->get('apic_url')->value);
+          $productName = $product_node->getTitle();
+        }
       }
 
-      $productName = $cached_values['productName'];
-      $planId = $cached_values['planId'];
-      $parts = explode(':', $planId);
+      $parts = explode(':', $plan_id);
       $product_url = $parts[0];
 
       $allApps = Application::listApplications();
@@ -77,27 +81,27 @@ class ChooseApplicationStep extends IbmWizardStepBase {
       // - if there are no apps left to display after that, put up a message
 
       foreach($allApps as $nid => $nextApp) {
-        if (isset($nextApp->apic_state->value) && mb_strtoupper($nextApp->apic_state->value) == 'SUSPENDED') {
-          array_push($suspendedApps, $nextApp);
+        if (isset($nextApp->apic_state->value) && mb_strtoupper($nextApp->apic_state->value) === 'SUSPENDED') {
+          $suspendedApps[] = $nextApp;
         }
         else if (isset($nextApp->application_subscriptions->value)) {
           $subs = unserialize($nextApp->application_subscriptions->value);
           if (is_array($subs)) {
             $appSubscribedToProduct = FALSE;
             foreach ($subs as $sub) {
-              if (isset($sub['product_url']) && $sub['product_url'] == $product_url) {
-                array_push($subscribedApps, $nextApp);
+              if (isset($sub['product_url']) && $sub['product_url'] === $product_url) {
+                $subscribedApps[] = $nextApp;
                 $appSubscribedToProduct = TRUE;
                 break;
               }
             }
             if(!$appSubscribedToProduct) {
-              array_push($validApps, $nextApp);
+              $validApps[] = $nextApp;
             }
           }
         }
         else {
-          array_push($validApps, $nextApp);
+          $validApps[] = $nextApp;
         }
       }
 
@@ -127,7 +131,7 @@ class ChooseApplicationStep extends IbmWizardStepBase {
       if(!empty($validApps)) {
         $form['apps'] = node_view_multiple($validApps, 'subscribewizard');
         $form['apps']['#prefix'] = "<div class='apicSubscribeAppsList'>";
-        $form['apps']['#suffix'] = "</div>";
+        $form['apps']['#suffix'] = '</div>';
       }
       else {
         $form['#messages']['noAppsNotice'] = t('There are no applications that can be subscribed to this Plan.');
@@ -137,7 +141,6 @@ class ChooseApplicationStep extends IbmWizardStepBase {
       $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
       $form['#attached']['library'][] = 'apic_app/basic';
 
-      $form_state->setTemporaryValue('wizard', $cached_values);
     }
 
     return $form;
@@ -159,14 +162,16 @@ class ChooseApplicationStep extends IbmWizardStepBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $cached_values = $form_state->getTemporaryValue('wizard');
+    /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
+    $temp_store_factory = \Drupal::service('session_based_temp_store');
+    /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
+    $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
     $application = Node::load($form_state->getUserInput()['selectedApplication']);
-    $cached_values['applicationUrl'] = $application->get('apic_url')->value;
-    $cached_values['applicationName'] = $application->getTitle();
-    $cached_values['applicationNodeId'] = $form_state->getUserInput()['selectedApplication'];
 
-    $form_state->setTemporaryValue('wizard', $cached_values);
+    $temp_store->set('applicationUrl', $application->get('apic_url')->value);
+    $temp_store->set('applicationName', $application->getTitle());
+    $temp_store->set('applicationNodeId', $form_state->getUserInput()['selectedApplication']);
   }
 
 }

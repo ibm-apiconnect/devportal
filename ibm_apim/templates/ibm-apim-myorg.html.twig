@@ -60,36 +60,21 @@
         <div class="apicMyOrgMember">
           <div class="apicMyOrgMemberDetails">
             <div class="memberIcon">
-              {% if myorg_owner.name is defined %}
-                <span title="{{ myorg_owner.name }}">
-                  {% if myorg_owner.user_picture is defined %}
-                    <img src="{{ myorg_owner.user_picture }}" alt="{{ myorg_owner.name }}"
-                         title="{{ myorg_owner.name }}"/>
-                  {% else %}
-                    {% include images_path ~ '/images/user.svg' %}
-                  {% endif %}
-                </span>
-              {% else %}
-                <span title="{{ myorg_owner.username }}">
+              <span title="{{ myorg_owner.name }}">
                 {% if myorg_owner.user_picture is defined %}
-                  <img src="{{ myorg_owner.user_picture }}" alt="{{ myorg_owner.username }}"
-                       title="{{ myorg_owner.username }}"/>
+                  <img src="{{ myorg_owner.user_picture }}" alt="{{ myorg_owner.name }}"
+                       title="{{ myorg_owner.name }}"/>
                 {% else %}
                   {% include images_path ~ '/images/user.svg' %}
                 {% endif %}
               </span>
-              {% endif %}
             </div>
             <div class="orgApicUser">
               <h5 class="apicUserFirstLastName">
-                {{ myorg_owner.firstname }} {{ myorg_owner.lastname }}
-                <mark class="ownerTag">{{ 'Owner'|t }}</mark>
+                  {{ myorg_owner.name }}
+                  <mark class="ownerTag">{{ 'Owner'|t }}</mark>
               </h5>
-              {% if myorg_owner.mail is defined %}
-                <span class="apicUserMail">{{ myorg_owner.mail }}</span>
-              {% else %}
-                <span class="apicUserMail apicUserName">{{ myorg_owner.username }}</span>
-              {% endif %}
+              <span class="apicUserMail">{{ myorg_owner.details }}</span>
             </div>
           </div>
         </div>
@@ -138,41 +123,22 @@
                   <div class="apicMyOrgMember">
                     <div class="apicMyOrgMemberDetails">
                       <div class="memberIcon">
-                        {% if member.name is defined %}
-                          <span title="{{ member.name }}">
-                            {% if member.user_picture is defined %}
-                              <img src="{{ member.user_picture }}" alt="{{ member.name }}" title="{{ member.name }}"/>
-                            {% else %}
-                              {% include images_path ~ '/images/user.svg' %}
-                            {% endif %}
-                          </span>
-                        {% else %}
-                          <span title="{{ member.username }}">
-                            {% if member.user_picture is defined %}
-                              <img src="{{ member.user_picture }}" alt="{{ member.username }}"
-                                   title="{{ member.username }}"/>
-                            {% else %}
-                              {% include images_path ~ '/images/user.svg' %}
-                            {% endif %}
-                          </span>
-                        {% endif %}
+                        <span title="{{ member.name }}">
+                          {% if member.user_picture is defined %}
+                            <img src="{{ member.user_picture }}" alt="{{ member.name }}" title="{{ member.name }}"/>
+                          {% else %}
+                            {% include images_path ~ '/images/user.svg' %}
+                          {% endif %}
+                        </span>
                       </div>
                       <div class="orgApicUser">
                         {% if member.state == 'Pending' %}
-                          {% if member.mail is defined %}
-                            <span class="apicUserMail">{{ member.mail }}</span>
-                          {% else %}
-                            <span class="apicUserMail apicUserName">{{ member.username }}</span>
-                          {% endif %}
+                          <span class="apicUserMail">{{ member.details }}</span>
                         {% else %}
                           <h5 class="apicUserFirstLastName">
                             {{ member.name }}
                           </h5>
-                          {% if member.mail is defined %}
-                            <span class="apicUserMail">{{ member.mail }}</span>
-                          {% else %}
-                            <span class="apicUserMail apicUserName">{{ member.username }}</span>
-                          {% endif %}
+                          <span class="apicUserMail">{{ member.details }}</span>
                         {% endif %}
                       </div>
                     </div>

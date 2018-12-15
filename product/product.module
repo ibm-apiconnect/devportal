@@ -435,7 +435,7 @@ function product_preprocess_node(&$variables) {
           $fid = $api->apic_image->getValue();
           $api_image_url = NULL;
           if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
-          $file = File::load($fid[0]['target_id']);
+            $file = File::load($fid[0]['target_id']);
             if (isset($file)) {
               $api_image_url = $file->toUrl();
             }
@@ -713,11 +713,10 @@ function product_process_plan($planid, $plan, $apinodes, $apiRefs) {
       $planarray['nodes'][$apiSafeNodeRef]['version'] = $apinode['node']->apic_version->getValue();
       $planarray['nodes'][$apiSafeNodeRef]['resources'] = array();
       $swagger = unserialize($apinode['node']->api_swagger->value);
-      if (isset($swagger)) {
-        $paths = $swagger['paths'];
+      if ($swagger !== null && $swagger['paths'] !== null) {
         // build up list of resources
-        if (is_array($paths)) {
-          foreach ($paths as $pathname => $path) {
+        if (is_array($swagger['paths'])) {
+          foreach ($swagger['paths'] as $pathname => $path) {
             $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname] = array();
             foreach ($path as $verb => $op) {
               if (in_array(mb_strtoupper($verb), array(
@@ -726,6 +725,7 @@ function product_process_plan($planid, $plan, $apinodes, $apiRefs) {
                 'GET',
                 'DELETE',
                 'OPTIONS',
+                'TRACE',
                 'HEAD',
                 'PATCH'
               ))) {

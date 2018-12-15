@@ -17,43 +17,43 @@ use Drupal\consumerorg\ApicType\Role;
 
 class RoleService {
 
-  function __construct() {
+  public function __construct() {
 
   }
 
   /**
    * Parse an ApicType/Role object out of the given JSON structure (e.g. from a webhook body or snapshot)
    *
-   * @param $json
+   * @param object $json
    *
    * @return \Drupal\consumerorg\ApicType\Role
    */
-  public function createFromJSON($json){
+  public function createFromJSON($json): Role {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $role = new Role();
 
-    if(!empty($json['id'])) {
+    if (!empty($json['id'])) {
       $role->setId($json['id']);
     }
-    if(!empty($json['url'])) {
+    if (!empty($json['url'])) {
       $role->setUrl($json['url']);
     }
-    if(!empty($json['name'])) {
+    if (!empty($json['name'])) {
       $role->setName($json['name']);
     }
-    if(!empty($json['title'])) {
+    if (!empty($json['title'])) {
       $role->setTitle($json['title']);
     }
-    if(!empty($json['summary'])) {
+    if (!empty($json['summary'])) {
       $role->setSummary($json['summary']);
     }
-    if(!empty($json['permission_urls'])) {
+    if (!empty($json['permission_urls'])) {
       $role->setPermissions($json['permission_urls']);
     }
-    if(!empty($json['scope'])) {
+    if (!empty($json['scope'])) {
       $role->setScope($json['scope']);
     }
-    if(!empty($json['org_url'])) {
+    if (!empty($json['org_url'])) {
       $role->setOrgUrl($json['org_url']);
     }
 

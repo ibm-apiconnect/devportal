@@ -36,13 +36,17 @@ class SubscribeSummary extends IbmWizardStepBase {
 
     // If a non-developer user somehow gets in to the wizard, validateAccess will send them away again
     if($this->validateAccess()) {
-      $cached_values = $form_state->getTemporaryValue('wizard');
-      $product_name = $cached_values['productName'];
-      $plan_name = $cached_values['planName'];
-      $application_name = $cached_values['applicationName'];
-      $application_node_id = $cached_values['applicationNodeId'];
-      $result = $cached_values['result'];
-      $product_node_id = $cached_values['productId'];
+      /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
+      $temp_store_factory = \Drupal::service('session_based_temp_store');
+      /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
+      $temp_store = $temp_store_factory->get('ibm_apim.wizard');
+
+      $product_name = $temp_store->get('productName');
+      $plan_name = $temp_store->get('planName');
+      $application_name = $temp_store->get('applicationName');
+      $application_node_id = $temp_store->get('applicationNodeId');
+      $result = $temp_store->get('result');
+      $product_node_id = $temp_store->get('productId');
 
       // read referer and clear it again
       $referer = \Drupal::service('tempstore.private')->get('ibm_apim')->get('subscription_wizard_referer', NULL);
@@ -114,12 +118,12 @@ class SubscribeSummary extends IbmWizardStepBase {
       }
       else {
         // Failed to subscribe for some reason
-        $form['#messages']['statusText'] = t("There was a problem with your subscription request. Review any error messages, correct the problem and try again.");
+        $form['#messages']['statusText'] = t('There was a problem with your subscription request. Review any error messages, correct the problem and try again.');
         $form['#error'] = true;
       }
 
       // blank out the form state - we've finished now
-      $form_state->setTemporaryValue('wizard', array());
+      $temp_store->deleteAll();
     }
 
     return $form;
@@ -129,7 +133,11 @@ class SubscribeSummary extends IbmWizardStepBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $form_state->setTemporaryValue('wizard', array());
+    /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
+    $temp_store_factory = \Drupal::service('session_based_temp_store');
+    /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
+    $temp_store = $temp_store_factory->get('ibm_apim.wizard');
+    $temp_store->deleteAll();
 
     $form_state->setRedirect('<front>');
   }

@@ -46,33 +46,44 @@ class AdminMessagesBlock extends BlockBase {
         }
       }
     }
-
+    $errors = [];
     $config_set = \Drupal::service('ibm_apim.site_config')->isSet();
     if (!isset($config_set) || $config_set === FALSE) {
       $messages['config'][] = t('FATAL: Initial portal configuration has not been received from the API Manager. Contact your system administrator before continuing further. This will prevent almost all portal functionality from working including user login.');
+      $errors[] = 'No portal config received.';
     }
     $urs = \Drupal::service('ibm_apim.user_registry')->getAll();
     if (!isset($urs) || empty($urs)) {
       $messages['config'][] = t('FATAL: No user registries defined. Contact your system administrator before continuing. This will prevent almost all portal functionality from working including user login.');
+      $errors[] = 'No user registries defined.';
     }
     $orgId = \Drupal::service('ibm_apim.site_config')->getOrgId();
     if (!isset($orgId) || empty($orgId)) {
       $messages['config'][] = t('FATAL: Missing provider organization ID. Contact your system administrator before continuing further. This will prevent almost all portal functionality from working including user login.');
+      $errors[] = 'Missing provider organization ID.';
     }
     $envId = \Drupal::service('ibm_apim.site_config')->getEnvId();
     if (!isset($envId) || empty($envId)) {
       $messages['config'][] = t('FATAL: Missing catalog ID. Contact your system administrator before continuing further. This will prevent almost all portal functionality from working including user login.');
+      $errors[] = 'Missing catalog ID.';
     }
     $clientId = \Drupal::service('ibm_apim.site_config')->getClientId();
     $clientSecret = \Drupal::service('ibm_apim.site_config')->getClientSecret();
     if (!isset($clientId) || empty($clientId) || !isset($clientSecret) || empty($clientSecret)) {
       $messages['config'][] = t('FATAL: Site credentials are missing. Contact your system administrator before continuing further. This will prevent almost all portal functionality from working including user login.');
+      $errors[] = 'Site credentials are missing.';
     }
 
     if (isset($messages) && !empty($messages)) {
       $build['#header'] = t('There are issues with your site:');
       $build['#messages'] = $messages;
       $build['#theme'] = 'ibm_apim_status_messages_block';
+    }
+
+    if (!empty($errors)) {
+      \Drupal::logger('ibm_apim')->error('AdminMessagesBlock FATAL ERRORS: %data.', [
+        '%data' => implode(',', $errors)
+      ]);
     }
 
     return $build;

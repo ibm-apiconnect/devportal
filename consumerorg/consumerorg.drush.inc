@@ -15,65 +15,65 @@ use Drupal\consumerorg\ApicType\Member;
 
 function consumerorg_drush_command() {
 
-  $items['consumerorg-cleanse-drush-command'] = array(
+  $items['consumerorg-cleanse-drush-command'] = [
     'description' => 'Clears the consumerorg entries back to a clean state.',
-    'aliases' => array('cleanse_consumerorgs')
-  );
-  $items['consumerorg-update'] = array(
+    'aliases' => ['cleanse_consumerorgs'],
+  ];
+  $items['consumerorg-update'] = [
     'description' => 'Updates a consumerorg',
-    'aliases' => array('uorg'),
-    'arguments' => array(
+    'aliases' => ['uorg'],
+    'arguments' => [
       'event' => 'The event type',
-      'product' => 'The JSON consumerorg payload'
-    )
-  );
-  $items['consumerorg-create'] = array(
+      'product' => 'The JSON consumerorg payload',
+    ],
+  ];
+  $items['consumerorg-create'] = [
     'description' => 'Creates a consumerorg',
-    'aliases' => array('corg'),
-    'arguments' => array(
+    'aliases' => ['corg'],
+    'arguments' => [
       'event' => 'The event type',
-      'product' => 'The JSON consumerorg payload'
-    )
-  );
-  $items['consumerorg-delete'] = array(
+      'product' => 'The JSON consumerorg payload',
+    ],
+  ];
+  $items['consumerorg-delete'] = [
     'description' => 'Deletes a consumerorg',
-    'aliases' => array('dorg'),
-    'arguments' => array(
+    'aliases' => ['dorg'],
+    'arguments' => [
       'event' => 'The event type',
-      'id' => 'The consumerorg ID'
-    )
-  );
-  $items['consumerorg-massupdate'] = array(
+      'id' => 'The consumerorg ID',
+    ],
+  ];
+  $items['consumerorg-massupdate'] = [
     'description' => 'Mass updates a list of Consumerorgs',
-    'aliases' => array('morg'),
-    'arguments' => array(
+    'aliases' => ['morg'],
+    'arguments' => [
       'consumerorgs' => 'The JSON array of Consumerorgs',
-      'event' => 'The event type'
-    )
-  );
-  $items['consumerorg-tidy'] = array(
-    'description' => 'Tidies the list of Consumerorgs to ensure consistency with APIm',
-    'aliases' => array('torg'),
-    'arguments' => array(
-      'consumerorgids' => 'The JSON array of consumerorg IDs'
-    )
-  );
-  $items['consumerorg-role-create'] = array(
-    'description' => 'Creates a role (which belongs to an org)',
-    'aliases' => array('crole'),
-    'arguments' => array(
       'event' => 'The event type',
-      'product' => 'The JSON role payload'
-    )
-  );
-  $items['consumerorg-member-create'] = array(
+    ],
+  ];
+  $items['consumerorg-tidy'] = [
+    'description' => 'Tidies the list of Consumerorgs to ensure consistency with APIm',
+    'aliases' => ['torg'],
+    'arguments' => [
+      'consumerorgids' => 'The JSON array of consumerorg IDs',
+    ],
+  ];
+  $items['consumerorg-role-create'] = [
+    'description' => 'Creates a role (which belongs to an org)',
+    'aliases' => ['crole'],
+    'arguments' => [
+      'event' => 'The event type',
+      'product' => 'The JSON role payload',
+    ],
+  ];
+  $items['consumerorg-member-create'] = [
     'description' => 'Create a member in the org',
-    'aliases' => array('cmembercreate'),
-    'arguments' => array(
+    'aliases' => ['cmembercreate'],
+    'arguments' => [
       'payload' => 'The JSON member payload',
-      'event' => 'The event type'
-    )
-  );
+      'event' => 'The event type',
+    ],
+  ];
 
   return $items;
 }
@@ -85,9 +85,9 @@ function drush_consumerorg_cleanse_drush_command() {
   $accountSwitcher = Drupal::service('account_switcher');
   $original_user = \Drupal::currentUser();
   if ($original_user->id() != 1) {
-    $accountSwitcher->switchTo(new UserSession(array('uid' => 1)));
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
-  $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties(array('type' => 'consumerorg'));
+  $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties(['type' => 'consumerorg']);
 
   foreach ($nodes as $node) {
     $node->delete();
@@ -106,44 +106,45 @@ function drush_consumerorg_cleanse_drush_command() {
  */
 function drush_consumerorg_createOrUpdate($content, $event, $func) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
-  if (isset($content)) {
+  if ($content !== null) {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = Drupal::service('account_switcher');
     $original_user = \Drupal::currentUser();
     if ($original_user->id() != 1) {
-      $accountSwitcher->switchTo(new UserSession(array('uid' => 1)));
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
 
     $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
     $org = $consumerOrgService->createFromJSON($content);
 
-    if (isset($org)) {
+    if ($org !== null) {
       $ref = $org->getUrl();
       $createdOrUpdated = $consumerOrgService->createOrUpdateNode($org, $event);
       if ($createdOrUpdated) {
-        drush_log(dt('Drush @func created organization @org', array(
+        drush_log(dt('Drush @func created organization @org', [
           '@func' => $func,
-          '@org' => $ref
-        )), 'success');
+          '@org' => $ref,
+        ]), 'success');
       }
       else {
-        drush_log(dt('Drush @func updated existing organization @org', array(
+        drush_log(dt('Drush @func updated existing organization @org', [
           '@func' => $func,
-          '@org' => $ref
-        )), 'success');
+          '@org' => $ref,
+        ]), 'success');
       }
-    } else {
-      drush_log(dt('Drush @func ignoring organization update payload due to missing data', array(
-        '@func' => $func
-      )), 'warning');
     }
-    if (isset($original_user) && $original_user->id() != 1) {
+    else {
+      drush_log(dt('Drush @func ignoring organization update payload due to missing data', [
+        '@func' => $func,
+      ]), 'warning');
+    }
+    if ($original_user !== NULL && $original_user->id() != 1) {
       $accountSwitcher->switchBack();
     }
   }
   else {
-    drush_log(dt('Drush @func No organization provided', array('@func' => $func)), 'error');
+    drush_log(dt('Drush @func No organization provided', ['@func' => $func]), 'error');
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
@@ -154,7 +155,7 @@ function drush_consumerorg_createOrUpdate($content, $event, $func) {
  */
 function drush_consumerorg_create($content, $event = 'consumer_org_create') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
-  drush_consumerorg_createOrUpdate($content, $event, "createOrg");
+  drush_consumerorg_createOrUpdate($content, $event, 'createOrg');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
@@ -164,7 +165,7 @@ function drush_consumerorg_create($content, $event = 'consumer_org_create') {
  */
 function drush_consumerorg_update($content, $event = 'consumer_org_update') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
-  drush_consumerorg_createOrUpdate($content, $event, "updateOrg");
+  drush_consumerorg_createOrUpdate($content, $event, 'updateOrg');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
@@ -174,13 +175,13 @@ function drush_consumerorg_update($content, $event = 'consumer_org_update') {
  */
 function drush_consumerorg_delete($content, $event = 'consumer_org_del') {
   ibm_apim_entry_trace(__FUNCTION__);
-  if (isset($content)) {
+  if ($content !== NULL) {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = Drupal::service('account_switcher');
     $original_user = \Drupal::currentUser();
     if ($original_user->id() != 1) {
-      $accountSwitcher->switchTo(new UserSession(array('uid' => 1)));
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
 
     if (is_string($content)) {
@@ -188,7 +189,7 @@ function drush_consumerorg_delete($content, $event = 'consumer_org_del') {
     }
 
     // TODO : hack until https://github.ibm.com/velox/apim/issues/6145 is fixed
-    if(isset($content['portal_consumer_orgs'])) {
+    if (isset($content['portal_consumer_orgs'])) {
       $content = $content['portal_consumer_orgs'];
     }
 
@@ -197,26 +198,26 @@ function drush_consumerorg_delete($content, $event = 'consumer_org_del') {
     $query->condition('consumerorg_url.value', $content['consumer_org']['url']);
 
     $nids = $query->execute();
-    if (isset($nids) && !empty($nids)) {
+    if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
       $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
       $consumerOrgService->deleteNode($nid, $event);
-      drush_log(dt('Drush DeleteOrg deleted organization @org', array('@org' => $content['consumer_org']['title'])), 'success');
+      drush_log(dt('Drush DeleteOrg deleted organization @org', ['@org' => $content['consumer_org']['title']]), 'success');
     }
     else {
-      drush_log(dt('Drush DeleteOrg could not find organization @org', array('@org' => $content['consumer_org']['title'])), 'warning');
+      drush_log(dt('Drush DeleteOrg could not find organization @org', ['@org' => $content['consumer_org']['title']]), 'warning');
     }
     if (isset($original_user) && $original_user->id() != 1) {
       $accountSwitcher->switchBack();
     }
   }
   else {
-    drush_log(dt('Drush DeleteOrg no ID provided', array()), 'error');
+    drush_log(dt('Drush DeleteOrg no ID provided', []), 'error');
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
-function drush_consumerorg_massupdate($consumerorgs = array(), $event = 'content_refresh') {
+function drush_consumerorg_massupdate($consumerorgs = [], $event = 'content_refresh') {
   ibm_apim_entry_trace(__FUNCTION__, count($consumerorgs));
   $consumerorgs = json_decode($consumerorgs, TRUE);
   if (!empty($consumerorgs)) {
@@ -227,15 +228,14 @@ function drush_consumerorg_massupdate($consumerorgs = array(), $event = 'content
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
-function drush_consumerorg_tidy($consumerorgids = array()) {
-  ibm_apim_entry_trace(__FUNCTION__, count($consumerorgids));
-  $consumerorgids = json_decode($consumerorgids, TRUE);
-  if (!empty($consumerorgids)) {
-    $nids = array();
+function drush_consumerorg_tidy($consumerorgIds = []) {
+  ibm_apim_entry_trace(__FUNCTION__, count($consumerorgIds));
+  if (!empty($consumerorgIds)) {
+    $nids = [];
     $query = \Drupal::entityQuery('node');
-    $query->condition('type', 'consumerorg')->condition('consumerorg_id', $consumerorgids, 'NOT IN');
+    $query->condition('type', 'consumerorg')->condition('consumerorg_id', $consumerorgIds, 'NOT IN');
     $results = $query->execute();
-    if (isset($results)) {
+    if ($results !== NULL) {
       foreach ($results as $item) {
         $nids[] = $item;
       }
@@ -269,35 +269,34 @@ function drush_consumerorg_invitation_update($content, $event = 'consumer_org_in
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
-function drush_consumerorg_invitation_delete($content = array(), $event = 'invitation_delete') {
-  ibm_apim_entry_trace(__FUNCTION__, null);
-  if (isset($content)) {
+function drush_consumerorg_invitation_delete($content = [], $event = 'invitation_delete') {
+  ibm_apim_entry_trace(__FUNCTION__, NULL);
+  if ($content !== NULL) {
     $org_url = $content['consumer_org_url'];
     if (!empty($org_url)) {
-      if (isset($content)) {
-        // in case moderation is on we need to run as admin
-        // save the current user so we can switch back at the end
-        $accountSwitcher = Drupal::service('account_switcher');
-        $original_user = \Drupal::currentUser();
-        if ($original_user->id() != 1) {
-          $accountSwitcher->switchTo(new UserSession(array('uid' => 1)));
-        }
-
-        $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
-
-        $consumerOrgService->deleteInvitation($content, $event);
-
-        if (isset($original_user) && $original_user->id() != 1) {
-          $accountSwitcher->switchBack();
-        }
-        drush_log(dt('Drush deleted invitation for organization @org', array(
-          '@org' => $org_url
-        )), 'success');
+      // in case moderation is on we need to run as admin
+      // save the current user so we can switch back at the end
+      $accountSwitcher = Drupal::service('account_switcher');
+      $original_user = \Drupal::currentUser();
+      if ($original_user->id() != 1) {
+        $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
       }
+
+      $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
+
+      $consumerOrgService->deleteInvitation($content, $event);
+
+      if (isset($original_user) && $original_user->id() != 1) {
+        $accountSwitcher->switchBack();
+      }
+      drush_log(dt('Drush deleted invitation for organization @org', [
+        '@org' => $org_url,
+      ]), 'success');
+
     }
   }
   else {
-    drush_log(dt('Drush @func No invitation provided', array('@func' => 'drush_consumerorg_invitation_delete')), 'error');
+    drush_log(dt('Drush @func No invitation provided', ['@func' => 'drush_consumerorg_invitation_delete']), 'error');
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
@@ -309,13 +308,13 @@ function drush_consumerorg_invitation_delete($content = array(), $event = 'invit
  */
 function drush_consumerorg_invitation_createOrUpdate($content, $event) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
-  if (isset($content)) {
+  if ($content !== NULL) {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = Drupal::service('account_switcher');
     $original_user = \Drupal::currentUser();
     if ($original_user->id() != 1) {
-      $accountSwitcher->switchTo(new UserSession(array('uid' => 1)));
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
 
     $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
@@ -323,23 +322,23 @@ function drush_consumerorg_invitation_createOrUpdate($content, $event) {
     $createdOrUpdated = $consumerOrgService->createOrUpdateInvitation($content, $event);
     $ref = $content['consumer_org_url'];
     if ($createdOrUpdated) {
-      drush_log(dt('Drush @func created invitation for organization @org', array(
+      drush_log(dt('Drush @func created invitation for organization @org', [
         '@func' => 'drush_consumerorg_invitation_createOrUpdate',
-        '@org' => $ref
-      )), 'success');
+        '@org' => $ref,
+      ]), 'success');
     }
     else {
-      drush_log(dt('Drush @func updated existing invitation for organization @org', array(
+      drush_log(dt('Drush @func updated existing invitation for organization @org', [
         '@func' => 'drush_consumerorg_invitation_createOrUpdate',
-        '@org' => $ref
-      )), 'success');
+        '@org' => $ref,
+      ]), 'success');
     }
     if (isset($original_user) && $original_user->id() != 1) {
       $accountSwitcher->switchBack();
     }
   }
   else {
-    drush_log(dt('Drush @func No invitation provided', array('@func' => 'drush_consumerorg_invitation_createOrUpdate')), 'error');
+    drush_log(dt('Drush @func No invitation provided', ['@func' => 'drush_consumerorg_invitation_createOrUpdate']), 'error');
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
@@ -359,10 +358,10 @@ function drush_consumerorg_role_create($content, $event = 'role_create') {
   $accountSwitcher = Drupal::service('account_switcher');
   $original_user = \Drupal::currentUser();
   if ($original_user->id() != 1) {
-    $accountSwitcher->switchTo(new UserSession(array('uid' => 1)));
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
 
-  if(is_string($content)) {
+  if (is_string($content)) {
     $content = json_decode($content, 1);
   }
 
@@ -371,7 +370,7 @@ function drush_consumerorg_role_create($content, $event = 'role_create') {
   $corg = $corg_service->get($corg_url);
 
   if (empty($corg)) {
-    drush_log(dt('Drush create role could not find org with url @org_url', array('@org_url' => $corg_url)), 'warning');
+    drush_log(dt('Drush create role could not find org with url @org_url', ['@org_url' => $corg_url]), 'warning');
   }
   else {
     // update the org with the new roles
@@ -380,10 +379,10 @@ function drush_consumerorg_role_create($content, $event = 'role_create') {
     $corg_roles[] = $new_role;
     $corg->setRoles($corg_roles);
     $corg_service->createOrUpdateNode($corg, 'create role');
-    drush_log(dt('Drush create role added role @role to org @org', array(
+    drush_log(dt('Drush create role added role @role to org @org', [
       '@org' => $corg->getTitle(),
-      '@role' => $new_role->getName()
-    )), 'status');
+      '@role' => $new_role->getName(),
+    ]), 'status');
   }
 
   if (isset($original_user) && $original_user->id() != 1) {
@@ -408,10 +407,10 @@ function drush_consumerorg_role_update($content, $event = 'role_update') {
   $accountSwitcher = Drupal::service('account_switcher');
   $original_user = \Drupal::currentUser();
   if ($original_user->id() != 1) {
-    $accountSwitcher->switchTo(new UserSession(array('uid' => 1)));
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
 
-  if(is_string($content)) {
+  if (is_string($content)) {
     $content = json_decode($content, 1);
   }
 
@@ -420,14 +419,14 @@ function drush_consumerorg_role_update($content, $event = 'role_update') {
   $corg = $corg_service->get($corg_url);
 
   if (empty($corg)) {
-    drush_log(dt('Drush update role could not find org with url @org_url', array('@org_url' => $corg_url)), 'warning');
+    drush_log(dt('Drush update role could not find org with url @org_url', ['@org_url' => $corg_url]), 'warning');
   }
   else {
     // update the org with the new roles
     $corg_roles = $corg->getRoles();
-    $new_roles = array();
+    $new_roles = [];
     if (!empty($corg_roles)) {
-      foreach($corg_roles as $corg_role) {
+      foreach ($corg_roles as $corg_role) {
         if ($corg_role->getUrl() != $content['url']) {
           $new_roles[] = $corg_role;
         }
@@ -437,10 +436,10 @@ function drush_consumerorg_role_update($content, $event = 'role_update') {
     $new_roles[] = $new_role;
     $corg->setRoles($new_roles);
     $corg_service->createOrUpdateNode($corg, 'update role');
-    drush_log(dt('Drush update role updated role @role from org @org', array(
+    drush_log(dt('Drush update role updated role @role from org @org', [
       '@org' => $corg->getTitle(),
-      '@role' => $content['name']
-    )), 'status');
+      '@role' => $content['name'],
+    ]), 'status');
   }
 
   if (isset($original_user) && $original_user->id() != 1) {
@@ -464,10 +463,10 @@ function drush_consumerorg_role_delete($content, $event = 'role_delete') {
   $accountSwitcher = Drupal::service('account_switcher');
   $original_user = \Drupal::currentUser();
   if ($original_user->id() != 1) {
-    $accountSwitcher->switchTo(new UserSession(array('uid' => 1)));
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
 
-  if(is_string($content)) {
+  if (is_string($content)) {
     $content = json_decode($content, 1);
   }
 
@@ -476,14 +475,14 @@ function drush_consumerorg_role_delete($content, $event = 'role_delete') {
   $corg = $corg_service->get($corg_url);
 
   if (empty($corg)) {
-    drush_log(dt('Drush delete role could not find org with url @org_url', array('@org_url' => $corg_url)), 'warning');
+    drush_log(dt('Drush delete role could not find org with url @org_url', ['@org_url' => $corg_url]), 'warning');
   }
   else {
     // update the org with the new roles
     $corg_roles = $corg->getRoles();
-    $new_roles = array();
+    $new_roles = [];
     if (!empty($corg_roles)) {
-      foreach($corg_roles as $corg_role) {
+      foreach ($corg_roles as $corg_role) {
         if ($corg_role->getUrl() != $content['url']) {
           $new_roles[] = $corg_role;
         }
@@ -491,10 +490,10 @@ function drush_consumerorg_role_delete($content, $event = 'role_delete') {
     }
     $corg->setRoles($new_roles);
     $corg_service->createOrUpdateNode($corg, 'delete role');
-    drush_log(dt('Drush delete role removed role @role from org @org', array(
+    drush_log(dt('Drush delete role removed role @role from org @org', [
       '@org' => $corg->getTitle(),
-      '@role' => $content['name']
-    )), 'status');
+      '@role' => $content['name'],
+    ]), 'status');
   }
 
   if (isset($original_user) && $original_user->id() != 1) {
@@ -516,13 +515,13 @@ function drush_consumerorg_member_create($payload, $event = 'member_create') {
   $accountSwitcher = Drupal::service('account_switcher');
   $original_user = \Drupal::currentUser();
   if ($original_user->id() != 1) {
-    $accountSwitcher->switchTo(new UserSession(array('uid' => 1)));
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
 
   $corg_service = \Drupal::service('ibm_apim.consumerorg');
   $user_service = \Drupal::service('ibm_apim.apicuser');
 
-  if(is_string($payload)) {
+  if (\is_string($payload)) {
     $payload = json_decode($payload, 1);
   }
 
@@ -531,15 +530,15 @@ function drush_consumerorg_member_create($payload, $event = 'member_create') {
   $corg = $corg_service->get($corg_url, 1);
 
   if (empty($corg)) {
-    drush_log(dt('Drush member-create could not find org with url @org_url', array('@org_url' => $corg_url)), 'warning');
+    drush_log(dt('Drush member-create could not find org with url @org_url', ['@org_url' => $corg_url]), 'warning');
   }
   else {
-    if(empty($payload['user'])) {
+    if (empty($payload['user'])) {
       drush_log(dt('Drush member-create no user object provided'), 'error');
     }
     else {
 
-      if(empty($payload['role_urls'])) {
+      if (empty($payload['role_urls'])) {
         drush_log(dt('Drush member-create no role_urls provided'), 'error');
       }
       else {
@@ -553,7 +552,10 @@ function drush_consumerorg_member_create($payload, $event = 'member_create') {
         $corg->addMember($member);
         $corg_service->createOrUpdateNode($corg, 'member_create_drush');
 
-        drush_log(dt("Added member @username to consumer org @id", array("@username" => $member->getUser()->getUsername(), "@id" => $corg->getId() )));
+        drush_log(dt("Added member @username to consumer org @id", [
+          "@username" => $member->getUser()->getUsername(),
+          "@id" => $corg->getId(),
+        ]));
 
       }
 
@@ -581,13 +583,13 @@ function drush_consumerorg_member_delete($payload, $event = 'member_delete') {
   $accountSwitcher = Drupal::service('account_switcher');
   $original_user = \Drupal::currentUser();
   if ($original_user->id() != 1) {
-    $accountSwitcher->switchTo(new UserSession(array('uid' => 1)));
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
 
   $corg_service = \Drupal::service('ibm_apim.consumerorg');
   $user_service = \Drupal::service('ibm_apim.apicuser');
 
-  if(is_string($payload)) {
+  if (\is_string($payload)) {
     $payload = json_decode($payload, 1);
   }
 
@@ -596,25 +598,28 @@ function drush_consumerorg_member_delete($payload, $event = 'member_delete') {
   $corg = $corg_service->get($corg_url, 1);
 
   if (empty($corg)) {
-    drush_log(dt('Drush member-delete could not find org with url @org_url', array('@org_url' => $corg_url)), 'warning');
+    drush_log(dt('Drush member-delete could not find org with url @org_url', ['@org_url' => $corg_url]), 'warning');
   }
   else {
-    if(empty($payload['user'])) {
+    if (empty($payload['user'])) {
       drush_log(dt('Drush member-delete no user object provided'), 'error');
     }
     else {
 
-     $member = new Member();
-     $member->setUrl($payload['url']);
-     $member->setUser($user_service->getUserFromJSON($payload['user']));
-     $member->setUserUrl($payload['user_url']);
-     $member->setRoleUrls($payload['role_urls']);
-     $member->setState($payload['state']);
+      $member = new Member();
+      $member->setUrl($payload['url']);
+      $member->setUser($user_service->getUserFromJSON($payload['user']));
+      $member->setUserUrl($payload['user_url']);
+      $member->setRoleUrls($payload['role_urls']);
+      $member->setState($payload['state']);
 
-     $corg->removeMember($member);
-     $corg_service->createOrUpdateNode($corg, 'member_remove_drush');
+      $corg->removeMember($member);
+      $corg_service->createOrUpdateNode($corg, 'member_remove_drush');
 
-      drush_log(dt("Removed member @username from consumer org @id", array("@username" => $member->getUser()->getUsername(), "@id" => $corg->getId() )));
+      drush_log(dt("Removed member @username from consumer org @id", [
+        "@username" => $member->getUser()->getUsername(),
+        "@id" => $corg->getId(),
+      ]));
 
     }
   }

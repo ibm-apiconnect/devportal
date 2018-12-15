@@ -176,11 +176,34 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * @inheritDoc
    */
+  public function postTransferConsumerOrg(ConsumerOrg $org, string $newOwnerUrl, $role = NULL) {
+    \Drupal::logger("apictest")->error("Implementation of MockUserManager::postTransferConsumerOrg() is missing!");
+    return NULL;
+  }
+
+  /**
+   * @inheritDoc
+   */
   public function postMemberInvitation(ConsumerOrg $org, string $email_address, string $role = NULL) {
     \Drupal::logger("apictest")->error("Implementation of MockUserManager::postMemberInvitation() is missing!");
     return NULL;
   }
 
+  /**
+   * @inheritDoc
+   */
+  public function deleteMemberInvitation(ConsumerOrg $org, string $inviteId) {
+    \Drupal::logger("apictest")->error("Implementation of MockUserManager::deleteMemberInvitation() is missing!");
+    return NULL;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function resendMemberInvitation(ConsumerOrg $org, string $inviteId) {
+    \Drupal::logger("apictest")->error("Implementation of MockUserManager::resendMemberInvitation() is missing!");
+    return NULL;
+  }
   /**
    * @inheritDoc
    */
@@ -202,6 +225,14 @@ class MockAPIMServer implements ManagementServerInterface {
    */
   public function patchMember(Member $member, array $data) {
     \Drupal::logger("apictest")->error("Implementation of MockUserManager::patchMember() is missing!");
+    return NULL;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function deleteMember(Member $member) {
+    \Drupal::logger("apictest")->error("Implementation of MockUserManager::deleteMember() is missing!");
     return NULL;
   }
 }

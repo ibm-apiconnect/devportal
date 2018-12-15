@@ -17,10 +17,10 @@ use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\ibm_apim\ApicRest;
 use Drupal\ibm_apim\Service\UserUtils;
-use Drupal\node\Entity\Node;
+use Drupal\ibm_apim\Service\ApimUtils;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Extension\ThemeHandler;
 
 /**
  * Form to change the role of a consumerorg member.
@@ -30,6 +30,10 @@ class ChangeMemberRoleForm extends FormBase {
   protected $consumerOrgService;
 
   protected $userUtils;
+
+  protected $apimUtils;
+
+  protected $themeHandler;
 
   /**
    * The node representing the application.
@@ -52,86 +56,90 @@ class ChangeMemberRoleForm extends FormBase {
    */
   protected $member;
 
+  protected $currentOrg;
 
   /**
-   * Constructs an Org User Invitation Form.
+   * ChangeMemberRoleForm constructor.
    *
-   * {@inheritdoc}
-   *
-   * @param ConsumerOrgService $consumerOrgService
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
+   * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
+   * @param \Drupal\ibm_apim\Service\ApimUtils $apim_utils
+   * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
    */
-  public function __construct(ConsumerOrgService $consumer_org_service, UserUtils $user_utils) {
+  public function __construct(
+    ConsumerOrgService $consumer_org_service,
+    UserUtils $user_utils,
+    ApimUtils $apim_utils,
+    ThemeHandler $themeHandler
+  ) {
     $this->consumerOrgService = $consumer_org_service;
     $this->userUtils = $user_utils;
+    $this->apimUtils = $apim_utils;
+    $this->themeHandler = $themeHandler;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('ibm_apim.consumerorg'), $container->get('ibm_apim.user_utils'));
+    return new static(
+      $container->get('ibm_apim.consumerorg'),
+      $container->get('ibm_apim.user_utils'),
+      $container->get('ibm_apim.apim_utils'),
+      $container->get('theme_handler')
+    );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'consumerorg_change_member_role_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $memberId = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $memberId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if (!$this->userUtils->checkHasPermission('settings:manage')) {
       $message = t('Permission denied.');
       drupal_set_message($message, 'error');
 
-      $form = array();
-      $form['description'] = array('#markup' => '<p>' . t('You do not have sufficient access to perform this action.') .'</p>');
+      $form = [];
+      $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
 
-      $form['actions'] = array('#type' => 'actions');
-      $form['actions']['cancel'] = array(
+      $form['actions'] = ['#type' => 'actions'];
+      $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#href' => 'myorg',
-        '#attributes' => array('class' => array('button'))
-      );
-      $themeHandler = \Drupal::service('theme_handler');
-      if ($themeHandler->themeExists('bootstrap')) {
+        '#attributes' => ['class' => ['button']],
+      ];
+      if ($this->themeHandler->themeExists('bootstrap')) {
         $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
       }
-
-      return $form;
     }
     else {
-      $org = $this->userUtils->getCurrentConsumerOrg();
-      $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'consumerorg');
-      $query->condition('consumerorg_url.value', $org['url']);
-      $nids = $query->execute();
-      $this->orgNode = NULL;
-      if (isset($nids) && !empty($nids)) {
-        $productnid = array_shift($nids);
-        $this->orgNode = Node::load($productnid);
-      }
-      $members = $this->consumerOrgService->getMembers($this->orgNode->consumerorg_url->value);
+      $org = $this->userUtils->getCurrentConsumerorg();
+      $this->currentOrg = $this->consumerOrgService->get($org['url']);
+
+      $members = $this->currentOrg->getMembers();
       if ($members) {
-        $values = array();
+        $values = [];
         // If there is only one member, do not allow change
         if (count($members) === 1) {
-          drupal_set_message(t('Cannot change role: no other members in developer organization %org', array("%org" => $this->orgNode->getTitle())), 'error');
+          drupal_set_message(t('Cannot change role: no other members in developer organization %org', ['%org' => $this->currentOrg->getTitle()]), 'error');
         }
         else {
           foreach ($members as $member) {
-            if ($member->getId() == $memberId) {
+            if ($member->getId() === $memberId) {
               $this->memberId = $memberId;
               $this->member = $member;
             }
           }
 
-          $roles = $this->consumerOrgService->getRoles($this->orgNode->consumerorg_url->value);
+          $roles = $this->currentOrg->getRoles();
           if (count($roles) > 1) {
             foreach ($roles as $role) {
               // owner and member are special cases - ignore them
@@ -139,77 +147,74 @@ class ChangeMemberRoleForm extends FormBase {
                 $values[$role->getUrl()] = $role->getTitle();
               }
             }
-            $form['new_role'] = array(
+            $form['new_role'] = [
               '#title' => t('New Role'),
               '#type' => 'radios',
-              '#description' => t("Select the new role for this member."),
-              '#options' => $values
-            );
+              '#description' => t('Select the new role for this member.'),
+              '#options' => $values,
+            ];
 
             $form['actions']['#type'] = 'actions';
-            $form['actions']['submit'] = array(
+            $form['actions']['submit'] = [
               '#type' => 'submit',
               '#value' => t('Submit'),
-            );
-            $themeHandler = \Drupal::service('theme_handler');
-            if ($themeHandler->themeExists('bootstrap')) {
+            ];
+            if ($this->themeHandler->themeExists('bootstrap')) {
               $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
             }
-            $form['actions']['cancel'] = array(
+            $form['actions']['cancel'] = [
               '#type' => 'link',
               '#title' => t('Cancel'),
               '#href' => 'myorg',
-              '#attributes' => array('class' => ['button', 'apicSecondary'])
-            );
-            if ($themeHandler->themeExists('bootstrap')) {
+              '#attributes' => ['class' => ['button', 'apicSecondary']],
+            ];
+            if ($this->themeHandler->themeExists('bootstrap')) {
               $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
             }
           }
           else {
-            drupal_set_message(t('Cannot change role: could not find more than 1 role for developer organization %org', array("%org" => $this->orgNode->getTitle())), 'error');
+            drupal_set_message(t('Cannot change role: could not find more than 1 role for developer organization %org', ['%org' => $this->currentOrg->getTitle()]), 'error');
           }
         }
       }
       else {
-        drupal_set_message(t('Failed to retrieve member list for developer organization %org', array("%org" => $this->orgNode->getTitle())), 'error');
+        drupal_set_message(t('Failed to retrieve member list for developer organization %org', ['%org' => $this->currentOrg->getTitle()]), 'error');
 
-        $form = array();
-        $form['description'] = array('#markup' => '<p>' . t('Could not get member list for this organization.') . '</p>');
+        $form = [];
+        $form['description'] = ['#markup' => '<p>' . t('Could not get member list for this organization.') . '</p>'];
 
-        $form['cancel'] = array(
+        $form['cancel'] = [
           '#type' => 'link',
           '#title' => t('Cancel'),
           '#url' => Url::fromRoute('ibm_apim.myorg'),
-          '#attributes' => array('class' => array('button'))
-        );
-        $themeHandler = \Drupal::service('theme_handler');
-        if ($themeHandler->themeExists('bootstrap')) {
+          '#attributes' => ['class' => ['button']],
+        ];
+        if ($this->themeHandler->themeExists('bootstrap')) {
           $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
         }
-        return $form;
       }
 
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return $form;
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $form;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     return Url::fromRoute('ibm_apim.myorg');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     $new_role = $form_state->getValue('new_role');
-    if (is_array($new_role) && isset($new_role[0]['value'])) {
+    if (\is_array($new_role) && isset($new_role[0]['value'])) {
       $new_role = $new_role[0]['value'];
     }
-    if (!isset($new_role) || empty($new_role)) {
+    if ($new_role === NULL || empty($new_role)) {
       $form_state->setErrorByName('New Role', $this->t('New role name is a required field.'));
     }
   }
@@ -217,19 +222,19 @@ class ChangeMemberRoleForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $new_role = $form_state->getValue('new_role');
     $member = $this->member;
 
-    if (!isset($new_role) || empty($new_role)) {
+    if ($new_role === NULL || empty($new_role)) {
       drupal_set_message(t('A new role is required.'), 'error');
     }
-    elseif (!isset($member)) {
+    elseif ($member === NULL) {
       drupal_set_message(t('Member is not set.'), 'error');
     }
     else {
-      $selected_role_url = \Drupal::service('ibm_apim.apim_utils')->createFullyQualifiedUrl($new_role);
+      $selected_role_url = $this->apimUtils->createFullyQualifiedUrl($new_role);
       $response = $this->consumerOrgService->changeMemberRole($member, $selected_role_url);
       if ($response->success()) {
         drupal_set_message(t('Member role updated.'));
@@ -239,7 +244,7 @@ class ChangeMemberRoleForm extends FormBase {
       }
 
     }
-    $form_state->setRedirectUrl(Url::fromRoute('ibm_apim.myorg'));
+    $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 }

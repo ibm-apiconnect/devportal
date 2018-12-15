@@ -1,0 +1,246 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+namespace Drupal\consumerorg\Form;
+
+use Drupal\consumerorg\Service\ConsumerOrgService;
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\ibm_apim\ApicRest;
+use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\node\Entity\Node;
+use Drupal\user\Entity\User;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * Form to edit the consumerorg owner.
+ */
+class ChangeOrgOwnerForm extends FormBase {
+
+  /**
+   * The node representing the application.
+   *
+   * @var \Drupal\node\NodeInterface
+   */
+  protected $orgNode;
+
+  protected $currentOrg;
+
+  protected $consumerOrgService;
+
+  protected $userUtils;
+  protected $currentOrg;
+
+  /**
+   * ChangeOrgOwnerForm constructor.
+   *
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
+   * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
+   */
+  public function __construct(ConsumerOrgService $consumer_org_service, UserUtils $user_utils) {
+    $this->consumerOrgService = $consumer_org_service;
+    $this->userUtils = $user_utils;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('ibm_apim.consumerorg'),
+      $container->get('ibm_apim.user_utils')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
+    return 'consumerorg_change_owner_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $userUtils = \Drupal::service('ibm_apim.user_utils');
+    if (!$userUtils->checkHasPermission('settings:manage')) {
+      $message = t('Permission denied.');
+      drupal_set_message($message, 'error');
+
+      $form = [];
+      $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
+
+      $form['actions'] = ['#type' => 'actions'];
+      $form['actions']['cancel'] = [
+        '#type' => 'link',
+        '#title' => t('Cancel'),
+        '#href' => 'myorg',
+        '#attributes' => ['class' => ['button']],
+      ];
+      $themeHandler = \Drupal::service('theme_handler');
+      if ($themeHandler->themeExists('bootstrap')) {
+        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+      }
+
+      return $form;
+    }
+    else {
+<<<<<<< HEAD
+      $org = $userUtils->getCurrentConsumerOrg();
+      $this->currentOrg = $this->consumerOrgService->getConsumerOrgAsObject($org['url']);
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'consumerorg');
+      $query->condition('consumerorg_url.value', $org['url']);
+      $nids = $query->execute();
+      $this->orgNode = NULL;
+      if ($nids !== NULL && !empty($nids)) {
+        $productnid = array_shift($nids);
+        $this->orgNode = Node::load($productnid);
+      }
+      $members = $this->consumerOrgService->getMembers($this->orgNode->consumerorg_url->value);
+=======
+      $org = $this->userUtils->getCurrentConsumerOrg();
+      $this->currentOrg = $this->consumerOrgService->get($org['url']);
+
+      $members = $this->consumerOrgService->getMembers($org['url']);
+>>>>>>> a483320... update consumerorg service
+      if ($members) {
+        $values = [];
+        // If there is only one member, do not allow change
+        if (count($members) === 1) {
+          drupal_set_message(t('Cannot change ownership: only one user in developer organization %org', ['%org' => $this->currentOrg->getTitle()]), 'error');
+        }
+        else {
+
+          foreach ($members as $member) {
+            // Don't include the current user in the list
+            $user = User::load(\Drupal::currentUser()->id());
+            if ($member->getUser()->getUrl() !== $user->get('apic_url')->value) {
+              $values[$member->getUrl()] = $member->getUser()->getUsername();
+            }
+          }
+          $form['new_owner'] = [
+            '#title' => t('New Owner'),
+            '#type' => 'select',
+            '#description' => t('Select the user to take ownership.'),
+            '#options' => $values,
+          ];
+
+          // These are the roles to assign to the old owner now that he isn't the owner any more
+          $roles = $this->currentOrg->getRoles();
+          if ($roles !== NULL && count($roles) > 1) {
+            $roles_array = [];
+            $default_role = NULL;
+            foreach ($roles as $role) {
+              if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
+                $roles_array[$role->getUrl()] = $role->getTitle();
+              }
+              if ($role->getName() === 'developer') {
+                $default_role = $role->getUrl();
+              }
+            }
+
+            $form['role'] = [
+              '#type' => 'radios',
+              '#title' => t('Assign Role'),
+              '#default_value' => $default_role,
+              '#options' => $roles_array,
+              '#description' => t('Select the new role for the previous owner.'),
+            ];
+          }
+
+          $form['actions']['#type'] = 'actions';
+          $form['actions']['submit'] = [
+            '#type' => 'submit',
+            '#value' => t('Submit'),
+          ];
+          $form['actions']['cancel'] = [
+            '#type' => 'link',
+            '#title' => t('Cancel'),
+            '#url' => $this->getCancelUrl(),
+            '#attributes' => ['class' => ['button', 'apicSecondary']],
+          ];
+          $themeHandler = \Drupal::service('theme_handler');
+          if ($themeHandler->themeExists('bootstrap')) {
+            $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
+            $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+          }
+        }
+      }
+      else {
+        drupal_set_message(t('Failed to retrieve member list for developer organization %org', ['%org' => $this->orgNode->getTitle()]), 'error');
+
+        $form = [];
+        $form['description'] = ['#markup' => '<p>' . t('Could not get member list for this organization so can not transfer ownership.') . '</p>'];
+
+        $form['cancel'] = [
+          '#type' => 'link',
+          '#title' => t('Cancel'),
+          '#url' => Url::fromRoute('ibm_apim.myorg'),
+          '#attributes' => ['class' => ['button']],
+        ];
+        $themeHandler = \Drupal::service('theme_handler');
+        if ($themeHandler->themeExists('bootstrap')) {
+          $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
+        }
+        return $form;
+      }
+
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      return $form;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCancelUrl(): Url {
+    return Url::fromRoute('ibm_apim.myorg');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $new_owner = $form_state->getValue('new_owner');
+    $role = $form_state->getValue('role');
+
+    if (empty($new_owner)) {
+      drupal_set_message(t('A new owner is required.'), 'error');
+    }
+    else {
+      // update APIm
+      $newUserUrl = \Drupal::service('ibm_apim.apim_utils')->createFullyQualifiedUrl($new_owner);
+
+      $response = $this->consumerOrgService->changeOrgOwner($this->currentOrg, $newUserUrl, $role);
+      if ($response->success()) {
+        drupal_set_message(t('Organization owner updated.'));
+        $current_user = \Drupal::currentUser();
+        \Drupal::logger('consumerorg')->notice('Consumer organization owner for @orgname changed by @username', [
+          '@orgname' => $this->orgNode->getTitle(),
+          '@username' => $current_user->getAccountName(),
+        ]);
+      }
+      else {
+        drupal_set_message(t('Error updating the organization owner. Contact the system administrator.'), 'error');
+      }
+    }
+    $form_state->setRedirectUrl($this->getCancelUrl());
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+}

@@ -3,6 +3,7 @@ status: true
 dependencies:
   module:
     - ghmarkdown
+    - noopener_filter
 name: 'Github Markdown'
 format: ghmarkdown
 weight: 5
@@ -10,6 +11,12 @@ filters:
   ghmarkdown:
     id: ghmarkdown
     provider: ghmarkdown
+    status: true
+    weight: 0
+    settings: {  }
+  filter_noopener:
+    id: filter_noopener
+    provider: noopener_filter
     status: true
     weight: 0
     settings: {  }

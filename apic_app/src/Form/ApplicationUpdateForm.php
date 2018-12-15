@@ -268,8 +268,10 @@ class ApplicationUpdateForm extends FormBase {
           '@username' => $current_user->getAccountName(),
         ]);
 
-        // apic_app_update hook invoked by Application::update so doesnt need calling here
+        // Calling all modules implementing 'hook_apic_app_update':
         $moduleHandler = \Drupal::service('module_handler');
+        $moduleHandler->invokeAll('apic_app_update', [$this->node, $result->data]);
+
         if ($moduleHandler->moduleExists('rules')) {
           // Set the args twice on the event: as the main subject but also in the
           // list of arguments.

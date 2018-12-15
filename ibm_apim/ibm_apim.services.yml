@@ -123,3 +123,7 @@ services:
     class: Drupal\ibm_apim\Service\Utils
     tags:
       - { name: ibm_apim }
+  ibm_apim.myorgsvc:
+    class: Drupal\ibm_apim\Service\MyOrgService
+    tags:
+      - { name: ibm_apim }

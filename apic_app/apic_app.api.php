@@ -226,12 +226,11 @@ function hook_apic_app_clientsecret_reset(NodeInterface $node, $data, $appId, $c
  * This can be used to define a specific placeholder image used when the consumer has not uploaded their own
  * custom image for their application.
  *
- * @param array $placeholderImage
+ * @param string $placeholderImage
  *   The path to a placeholder image file.
  */
-function hook_apic_app_getplaceholderimage_alter(array &$placeholderImage) {
-  $placeholderImage = Url::fromUri('internal:/' . drupal_get_path('module', 'mycustommodule') . '/images/foo.png')
-    ->toString();
+function hook_apic_app_modify_getplaceholderimage_alter(string &$placeholderImage) {
+  $placeholderImage = Url::fromUri('internal:/' . drupal_get_path('module', 'mycustommodule') . '/images/foo.png')->toString();
 }
 
 /**
@@ -239,40 +238,40 @@ function hook_apic_app_getplaceholderimage_alter(array &$placeholderImage) {
  * This can be used to provide a full path to a specific image to use for an application overriding any custom
  * image they might have uploaded.
  *
- * @param array $appImage
+ * @param string $appImage
  *   The path to a placeholder image file.
  */
-function hook_apic_app_getimageforapp_alter(array &$appImage) {
+function hook_apic_app_modify_getimageforapp_alter(string &$appImage) {
   $appImage = 'https://example.com/path/foo.png';
 }
 
 /**
  * Alter the client ID provided by API Manager when the ID is reset
  *
- * @param $appId
  * @param $data
+ * @param $appId
  */
-function hook_apic_app_client_id_reset_alter($appId, &$data) {
+function hook_apic_app_modify_client_id_reset_alter(&$data, $appId) {
   $data['client_id'] = '12345';
 }
 
 /**
  * Alter the client secret provided by API Manager when the secret is reset
  *
- * @param $appId
  * @param $data
+ * @param $appId
  */
-function hook_apic_app_client_secret_reset_alter($appId, &$data) {
+function hook_apic_app_modify_client_secret_reset_alter(&$data, $appId) {
   $data['client_secret'] = 'abcdefgh';
 }
 
 /**
  * Alter the credentials provided by API Manager when a new application is created
  *
- * @param $appId
  * @param $data
+ * @param $appId
  */
-function hook_apic_app_create_alter($appId, &$data) {
+function hook_apic_app_modify_create_alter(&$data, $appId) {
   $data['client_id'] = '12345';
   $data['client_secret'] = 'abcdefgh';
 }
@@ -280,10 +279,10 @@ function hook_apic_app_create_alter($appId, &$data) {
 /**
  * Alter the credentials provided by API Manager when new credentials are created
  *
- * @param $appId
  * @param $data
+ * @param $appId
  */
-function hook_apic_app_credentials_create_alter($appId, &$data) {
+function hook_apic_app_modify_credentials_create_alter(&$data, $appId) {
   $data['client_id'] = '12345';
   $data['client_secret'] = 'abcdefgh';
 }

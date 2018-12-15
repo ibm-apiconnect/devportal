@@ -1,6 +1,8 @@
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - noopener_filter
 name: 'Restricted HTML'
 format: restricted_html
 weight: 4
@@ -27,3 +29,9 @@ filters:
     weight: 0
     settings:
       filter_url_length: 72
+  filter_noopener:
+    id: filter_noopener
+    provider: noopener_filter
+    status: true
+    weight: 0
+    settings: {  }

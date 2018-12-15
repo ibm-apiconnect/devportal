@@ -22,7 +22,7 @@ class AllSubscribersWizard extends FormWizardBase {
    * {@inheritdoc}
    */
   public function getWizardLabel() {
-    return t('Mail All Subscribers Wizard');
+    return t('Mail All Users Wizard');
   }
 
   /**
@@ -46,7 +46,7 @@ class AllSubscribersWizard extends FormWizardBase {
     $steps = array();
 
     $steps['choosesubs'] = array(
-      'title' => t('Select Subscribers'),
+      'title' => t('Select Users'),
       'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChooseRoleStep'
     );
 

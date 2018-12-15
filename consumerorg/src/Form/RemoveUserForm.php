@@ -13,18 +13,27 @@
 namespace Drupal\consumerorg\Form;
 
 use Drupal\Component\Utility\Html;
+use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicRest;
-use Drupal\node\Entity\Node;
+use Drupal\ibm_apim\Service\UserUtils;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Drupal\Core\Extension\ThemeHandler;
 
 /**
  * Remove form for consumerorg members.
  */
 class RemoveUserForm extends ConfirmFormBase {
+
+  protected $consumerOrgService;
+
+  protected $userUtils;
+
+  protected $themeHandler;
 
   /**
    * The node representing the consumerorg.
@@ -32,6 +41,10 @@ class RemoveUserForm extends ConfirmFormBase {
    * @var \Drupal\node\NodeInterface
    */
   protected $orgId;
+
+  protected $currentOrg;
+
+  protected $member;
 
   /**
    * The id of the member to remove
@@ -41,72 +54,89 @@ class RemoveUserForm extends ConfirmFormBase {
   protected $memberId;
 
   /**
+   * RemoveUserForm constructor.
+   *
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
+   * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
+   * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
+   */
+  public function __construct(
+    ConsumerOrgService $consumer_org_service,
+    UserUtils $user_utils,
+    ThemeHandler $themeHandler
+  ) {
+    $this->consumerOrgService = $consumer_org_service;
+    $this->userUtils = $user_utils;
+    $this->themeHandler = $themeHandler;
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('ibm_apim.consumerorg'),
+      $container->get('ibm_apim.user_utils'),
+      $container->get('theme_handler')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
     return 'consumerorg_remove_user_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $memberId = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $memberId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $current_user = \Drupal::currentUser();
-    $userUtils = \Drupal::service('ibm_apim.user_utils');
-    if (!$userUtils->checkHasPermission('member:manage')) {
+    if (!$this->userUtils->checkHasPermission('member:manage')) {
       $message = t('Permission denied.');
       drupal_set_message($message, 'error');
 
-      $form = array();
-      $form['description'] = array('#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>');
+      $form = [];
+      $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
 
-      $form['actions'] = array('#type' => 'actions');
-      $form['actions']['cancel'] = array(
+      $form['actions'] = ['#type' => 'actions'];
+      $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#href' => 'myorg',
-        '#attributes' => array('class' => array('button'))
-      );
-      $themeHandler = \Drupal::service('theme_handler');
-      if ($themeHandler->themeExists('bootstrap')) {
+        '#attributes' => ['class' => ['button']],
+      ];
+      if ($this->themeHandler->themeExists('bootstrap')) {
         $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
       }
 
-      return $form;
-    } else {
-      $org = $userUtils->getCurrentConsumerOrg();
-      $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'consumerorg');
-      $query->condition('consumerorg_url.value', $org['url']);
-      $nids = $query->execute();
-      $this->org = NULL;
-      if (isset($nids) && !empty($nids)) {
-        $productnid = array_shift($nids);
-        $this->org = Node::load($productnid);
-      }
+    }
+    else {
+      $org = $this->userUtils->getCurrentConsumerorg();
+      $this->currentOrg = $this->consumerOrgService->getConsumerOrgAsNode($org['url']);
       $this->memberId = Html::escape($memberId);
       $found = FALSE;
-      foreach ($this->org->consumerorg_members->getValue() as $arrayValue) {
+      foreach ($this->currentOrg->consumerorg_members->getValue() as $arrayValue) {
         $member = unserialize($arrayValue['value']);
-        if ($member->getId() == $this->memberId) {
-          if ($current_user->getAccountName() == $member->getUser()->getUsername()) {
-            // return error as cannot remove yourself
-            throw new BadRequestHttpException(t('Cannot remove yourself from a consumer organization.'));
-          }
-          else {
+        if ($member->getId() === $this->memberId) {
+          if ($current_user->getAccountName() !== $member->getUser()->getUsername()) {
             $found = TRUE;
             $this->member = $member;
           }
+          else {
+            // return error as cannot remove yourself
+            throw new BadRequestHttpException(t('Cannot remove yourself from a consumer organization.'));
+          }
         }
       }
-      if ($found != TRUE) {
+      if ($found !== TRUE) {
         // return error as memberId not in this consumerorg
         throw new NotFoundHttpException(t('Specified member not found in this consumer organization.'));
       }
-      $form =  parent::buildForm($form, $form_state);
-      $themeHandler = \Drupal::service('theme_handler');
-      if ($themeHandler->themeExists('bootstrap')) {
+      $form = parent::buildForm($form, $form_state);
+      if ($this->themeHandler->themeExists('bootstrap')) {
         if (isset($form['actions']['submit'])) {
           $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
         }
@@ -114,17 +144,18 @@ class RemoveUserForm extends ConfirmFormBase {
           $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
         }
       }
-
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return $form;
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $form;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getDescription() {
-    return $this->t('Are you sure you want to remove the user <em>@user?</em>', array('@user' => $this->member->getUser()->getUsername()));
+    return $this->t('Are you sure you want to remove the user <em>@user?</em>', [
+      '@user' => $this->member->getUser()->getUsername(),
+    ]);
   }
 
   /**
@@ -138,42 +169,35 @@ class RemoveUserForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to remove the user <em>@user?</em>', array('@user' => $this->member->getUser()->getUsername()));
+    return $this->t('Are you sure you want to remove the user <em>@user?</em>', [
+      '@user' => $this->member->getUser()->getUsername(),
+    ]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     return Url::fromRoute('ibm_apim.myorg');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $member_url = $this->member->getUrl();
 
-    $result = ApicRest::delete($member_url);
-
-    if (isset($result)) {
-      // remove from our db too
-      $new_member_list = array();
-      foreach ($this->org->consumerorg_members->getValue() as $arrayValue) {
-        $member = unserialize($arrayValue['value']);
-        if ($member->getId() != $this->memberId) {
-          $new_member_list[] = serialize($member);
-        }
-      }
-      $this->org->set('consumerorg_members', $new_member_list);
-      $this->org->save();
-      // invalidate myorg page cache
-      \Drupal::service('cache_tags.invalidator')->invalidateTags(array('myorg:url:' . $this->org->consumerorg_url->value));
-
+    $response = $this->consumerOrgService->deleteMember($this->currentOrg, $this->member);
+    if ($response->success()) {
       drupal_set_message(t('User removed successfully.'));
+
       $current_user = \Drupal::currentUser();
-      \Drupal::logger('consumerorg')->notice('Organization member @member removed from @orgname by @username', array('@orgname' => $this->org->getTitle(), '@member' => basename($this->member->getUrl()), '@username' => $current_user->getAccountName()));
+      \Drupal::logger('consumerorg')
+        ->notice('Organization member @member removed from @orgname by @username', [
+          '@orgname' => $this->currentOrg->getTitle(),
+          '@member' => basename($this->member->getUrl()),
+          '@username' => $current_user->getAccountName(),
+        ]);
     }
 
     $form_state->setRedirectUrl($this->getCancelUrl());

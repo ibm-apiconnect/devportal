@@ -411,6 +411,32 @@ class APIMServer implements ManagementServerInterface {
   /**
    * @inheritDoc
    */
+  public function deleteMemberInvitation(ConsumerOrg $org, string $inviteId) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $response = ApicRest::delete($org->getUrl() . '/member-invitations/' . $inviteId);
+    $reader = new RestResponseReader();
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $reader->read($response);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function resendMemberInvitation(ConsumerOrg $org, string $inviteId) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $response = ApicRest::post($org->getUrl() . '/member-invitations/' . $inviteId . '/regenerate', json_encode(['notify' => TRUE]));
+    $reader = new RestResponseReader();
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $reader->read($response);
+  }
+
+  /**
+   * @inheritDoc
+   */
   public function patchConsumerOrg(ConsumerOrg $org, array $data) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
@@ -441,6 +467,36 @@ class APIMServer implements ManagementServerInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $response = ApicRest::patch($member->getUrl(), json_encode($data));
+    $reader = new RestResponseReader();
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $reader->read($response);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function deleteMember(Member $member) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $response = ApicRest::delete($member->getUrl());
+    $reader = new RestResponseReader();
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $reader->read($response);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function postTransferConsumerOrg(ConsumerOrg $org, string $newOwnerUrl, $role = NULL) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $data = ['new_owner_member_url' => $newOwnerUrl];
+    if ($role !== NULL && !empty($role)) {
+      $data['old_owner_new_role_urls'] = [$role];
+    }
+
+    $response = ApicRest::post($org->getUrl() . '/transfer-owner', json_encode($data));
     $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

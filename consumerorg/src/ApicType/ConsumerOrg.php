@@ -15,186 +15,199 @@ namespace Drupal\consumerorg\ApicType;
 
 class ConsumerOrg {
 
-  var $name;
-  var $title;
-  var $summary;
-  var $id;
-  var $state;
-  var $created_at;
-  var $updated_at;
-  var $url;
-  var $org_url;
-  var $catalog_url;
-  var $owner_url;
-  var $roles = array();
-  var $members = array();
-  var $invites = array();
+  private $name;
+
+  private $title;
+
+  private $summary;
+
+  private $id;
+
+  private $state;
+
+  private $created_at;
+
+  private $updated_at;
+
+  private $url;
+
+  private $org_url;
+
+  private $catalog_url;
+
+  private $owner_url;
+
+  private $roles = [];
+
+  private $members = [];
+
+  private $invites = [];
 
   /**
    * @return string
    */
-  public function getName() {
+  public function getName(): string {
     return $this->name;
   }
 
   /**
    * @param string $name
    */
-  public function setName($name) {
+  public function setName($name): void {
     $this->name = $name;
   }
 
   /**
    * @return string
    */
-  public function getTitle() {
+  public function getTitle(): ?string {
     return $this->title;
   }
 
   /**
    * @param string $title
    */
-  public function setTitle($title) {
+  public function setTitle($title): void {
     $this->title = $title;
   }
 
   /**
    * @return string
    */
-  public function getSummary() {
+  public function getSummary(): ?string {
     return $this->summary;
   }
 
   /**
    * @param string $summary
    */
-  public function setSummary($summary) {
+  public function setSummary($summary): void {
     $this->summary = $summary;
   }
 
   /**
    * @return string
    */
-  public function getId() {
+  public function getId(): string {
     return $this->id;
   }
 
   /**
    * @param string $id
    */
-  public function setId($id) {
+  public function setId($id): void {
     $this->id = $id;
   }
 
   /**
    * @return string
    */
-  public function getState() {
+  public function getState(): ?string {
     return $this->state;
   }
 
   /**
    * @param string $state
    */
-  public function setState($state) {
+  public function setState($state): void {
     $this->state = $state;
   }
 
   /**
    * @return string
    */
-  public function getCreatedAt() {
+  public function getCreatedAt(): ?string {
     return $this->created_at;
   }
 
   /**
    * @param string $created_at
    */
-  public function setCreatedAt($created_at) {
+  public function setCreatedAt($created_at): void {
     $this->created_at = $created_at;
   }
 
   /**
    * @return string
    */
-  public function getUpdatedAt() {
+  public function getUpdatedAt(): ?string {
     return $this->updated_at;
   }
 
   /**
    * @param string $updated_at
    */
-  public function setUpdatedAt($updated_at) {
+  public function setUpdatedAt($updated_at): void {
     $this->updated_at = $updated_at;
   }
 
   /**
    * @return string
    */
-  public function getUrl() {
+  public function getUrl(): string {
     return $this->url;
   }
 
   /**
    * @param string $url
    */
-  public function setUrl($url) {
+  public function setUrl($url): void {
     $this->url = $url;
   }
 
   /**
    * @return string
    */
-  public function getOrgUrl() {
+  public function getOrgUrl(): ?string {
     return $this->org_url;
   }
 
   /**
    * @param string $org_url
    */
-  public function setOrgUrl($org_url) {
+  public function setOrgUrl($org_url): void {
     $this->org_url = $org_url;
   }
 
   /**
    * @return string
    */
-  public function getCatalogUrl() {
+  public function getCatalogUrl(): ?string {
     return $this->catalog_url;
   }
 
   /**
    * @param string $catalog_url
    */
-  public function setCatalogUrl($catalog_url) {
+  public function setCatalogUrl($catalog_url): void {
     $this->catalog_url = $catalog_url;
   }
 
   /**
    * @return string
    */
-  public function getOwnerUrl() {
+  public function getOwnerUrl(): ?string {
     return $this->owner_url;
   }
 
   /**
    * @param string $owner_url
    */
-  public function setOwnerUrl($owner_url) {
+  public function setOwnerUrl($owner_url): void {
     $this->owner_url = $owner_url;
   }
 
   /**
    * @return array
    */
-  public function getRoles() {
+  public function getRoles(): ?array {
     return $this->roles;
   }
 
   /**
    * @param array $roles
    */
-  public function setRoles($roles) {
+  public function setRoles($roles): void {
     $this->roles = $roles;
   }
 
@@ -203,11 +216,12 @@ class ConsumerOrg {
    * entries.
    *
    * @param \Drupal\consumerorg\ApicType\Role $role
+   *
    * @return bool
    */
-  public function addRole(Role $role) {
-    foreach($this->roles as $existing_role) {
-      if($existing_role->getName() === $role->getName()) {
+  public function addRole(Role $role): bool {
+    foreach ($this->roles as $existing_role) {
+      if ($existing_role->getName() === $role->getName()) {
         return FALSE;
       }
     }
@@ -219,8 +233,8 @@ class ConsumerOrg {
   /**
    * @param array $roles
    */
-  public function addRoles(array $roles){
-    foreach($roles as $role){
+  public function addRoles(array $roles): void {
+    foreach ($roles as $role) {
       $this->addRole($role);
     }
   }
@@ -229,16 +243,17 @@ class ConsumerOrg {
    * Get role from url
    *
    * @param string $url
+   *
    * @return Role
    */
-  public function getRoleFromUrl($url) {
-    foreach($this->roles as $existing_role) {
-      if($existing_role->getUrl() === $url) {
+  public function getRoleFromUrl($url): ?Role {
+    foreach ($this->roles as $existing_role) {
+      if ($existing_role->getUrl() === $url) {
         return $existing_role;
       }
     }
 
-    \Drupal::logger('consumerorg')->warning("No role found for %url", array("%url"=>$url));
+    \Drupal::logger('consumerorg')->warning('No role found for %url', ['%url' => $url]);
     return NULL;
   }
 
@@ -248,7 +263,7 @@ class ConsumerOrg {
    *
    * @return array
    */
-  public function getMembers() {
+  public function getMembers(): ?array {
     return $this->members;
   }
 
@@ -258,7 +273,7 @@ class ConsumerOrg {
    *
    * @param array $members
    */
-  public function setMembers($members) {
+  public function setMembers($members): void {
     $this->members = $members;
   }
 
@@ -267,7 +282,7 @@ class ConsumerOrg {
    *
    * @return array
    */
-  public function getInvites() {
+  public function getInvites(): ?array {
     return $this->invites;
   }
 
@@ -276,7 +291,7 @@ class ConsumerOrg {
    *
    * @param array $invites
    */
-  public function setInvites($invites) {
+  public function setInvites($invites): void {
     $this->invites = $invites;
   }
 
@@ -285,11 +300,12 @@ class ConsumerOrg {
    * are already a member (no duplicates)
    *
    * @param Member $member
+   *
    * @return bool
    */
-  public function addMember(Member $member){
-    foreach($this->members as $existing_member) {
-      if($existing_member->getUserUrl() === $member->getUserUrl()) {
+  public function addMember(Member $member): bool {
+    foreach ($this->members as $existing_member) {
+      if ($existing_member->getUserUrl() === $member->getUserUrl()) {
         return FALSE;
       }
     }
@@ -301,8 +317,8 @@ class ConsumerOrg {
   /**
    * @param array $members
    */
-  public function addMembers(array $members){
-    foreach($members as $member) {
+  public function addMembers(array $members): void {
+    foreach ($members as $member) {
       $this->addMember($member);
     }
   }
@@ -312,10 +328,10 @@ class ConsumerOrg {
    *
    * @param \Drupal\consumerorg\ApicType\Member $member
    */
-  public function removeMember(Member $member) {
-    $new_members = array();
-    foreach($this->members as $existing_member) {
-      if($existing_member->getUserUrl() !== $member->getUserUrl()) {
+  public function removeMember(Member $member): void {
+    $new_members = [];
+    foreach ($this->members as $existing_member) {
+      if ($existing_member->getUserUrl() !== $member->getUserUrl()) {
         $new_members[] = $existing_member;
       }
     }
@@ -327,13 +343,14 @@ class ConsumerOrg {
    * of this consumer org.
    *
    * @param $userUrl
+   *
    * @return bool
    */
-  public function isMember($userUrl){
+  public function isMember($userUrl): bool {
     $returnValue = FALSE;
 
-    foreach($this->members as $member){
-      if($member->getUserUrl() === $userUrl) {
+    foreach ($this->members as $member) {
+      if ($member->getUserUrl() === $userUrl) {
         $returnValue = TRUE;
         break;
       }
@@ -346,11 +363,11 @@ class ConsumerOrg {
    * Check the provided user URL against the owner of this org and return TRUE
    * if they match.
    *
-   * @param $userUrl
+   * @param string $userUrl
    *
    * @return bool
    */
-  public function isOwner($userUrl) {
+  public function isOwner($userUrl): bool {
     return $this->getOwnerUrl() === $userUrl;
   }
 
@@ -358,18 +375,18 @@ class ConsumerOrg {
    * If the provided user url represents a member of this consumer org, return their
    * roles in the org. Returns empty array if the user is not a member.
    *
-   * @param $userUrl
+   * @param string $userUrl
    *
    * @return array
    */
-  public function getRolesForMember($userUrl) {
-    $returnValue = array();
+  public function getRolesForMember($userUrl): array {
+    $returnValue = [];
 
-    if($this->isMember($userUrl)){
-      foreach($this->members as $member) {
-        if($member->getUserUrl() === $userUrl) {
+    if ($this->isMember($userUrl)) {
+      foreach ($this->members as $member) {
+        if ($member->getUserUrl() === $userUrl) {
           $roleUrls = $member->getRoleUrls();
-          foreach($roleUrls as $roleUrl) {
+          foreach ($roleUrls as $roleUrl) {
             $role = $this->getRoleFromUrl($roleUrl);
             $returnValue[] = $role;
           }
@@ -386,17 +403,17 @@ class ConsumerOrg {
    * all roles that the user has for the permission name and returns TRUE if
    * found.
    *
-   * @param $userUrl
-   * @param $permissionName
+   * @param string $userUrl
+   * @param string $permissionName
    *
    * @return bool
    */
-  public function hasPermission($userUrl, $permissionName) {
+  public function hasPermission($userUrl, $permissionName): bool {
     $returnValue = FALSE;
 
     $roles = $this->getRolesForMember($userUrl);
-    foreach($roles as $role) {
-      if(in_array($permissionName, $role->getPermissions())) {
+    foreach ($roles as $role) {
+      if (\in_array($permissionName, $role->getPermissions())) {
         $returnValue = TRUE;
         break;
       }

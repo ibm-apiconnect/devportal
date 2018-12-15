@@ -15,89 +15,96 @@ namespace Drupal\consumerorg\ApicType;
 
 class Role {
 
-  var $id;
-  var $url;
-  var $name;
-  var $title;
-  var $summary;
-  var $permissions;
-  var $scope;
-  var $org_url;
+  private $id;
+
+  private $url;
+
+  private $name;
+
+  private $title;
+
+  private $summary;
+
+  private $permissions;
+
+  private $scope;
+
+  private $org_url;
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function getId() {
+  public function getId(): string {
     return $this->id;
   }
 
   /**
-   * @param mixed $id
+   * @param string $id
    */
-  public function setId($id) {
+  public function setId($id): void {
     $this->id = $id;
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function getUrl() {
+  public function getUrl(): string {
     return $this->url;
   }
 
   /**
-   * @param mixed $url
+   * @param string $url
    */
-  public function setUrl($url) {
+  public function setUrl($url): void {
     $this->url = $url;
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function getName() {
+  public function getName(): string {
     return $this->name;
   }
 
   /**
-   * @param mixed $name
+   * @param string $name
    */
-  public function setName($name) {
+  public function setName($name): void {
     $this->name = $name;
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function getTitle() {
+  public function getTitle(): string {
     return $this->title;
   }
 
   /**
-   * @param mixed $title
+   * @param string $title
    */
-  public function setTitle($title) {
+  public function setTitle($title): void {
     $this->title = $title;
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function getSummary() {
+  public function getSummary(): string {
     return $this->summary;
   }
 
   /**
-   * @param mixed $summary
+   * @param string $summary
    */
-  public function setSummary($summary) {
+  public function setSummary($summary): void {
     $this->summary = $summary;
   }
 
   /**
-   * @return mixed
+   * @return array
    */
-  public function getPermissions() {
+  public function getPermissions(): array {
     return $this->permissions;
   }
 
@@ -105,16 +112,16 @@ class Role {
    * Can be either strings like "member:manage" or urls. If urls are given
    * they will be translated to strings.
    *
-   * @param mixed $permissions
+   * @param array $permissions
    */
-  public function setPermissions($permissions = null) {
-    $permission_names = array();
-    if (isset($permissions) && !empty($permissions)) {
-      foreach($permissions as $permission) {
-        if(strpos($permission, '/') > -1) {
+  public function setPermissions($permissions = NULL): void {
+    $permission_names = [];
+    if ($permissions !== null && !empty($permissions)) {
+      foreach ($permissions as $permission) {
+        if (strpos($permission, '/') > -1) {
           $permission_name = \Drupal::service('ibm_apim.permissions')->get($permission)['name'];
           if (empty($permission_name)) {
-            \Drupal::logger('consumerorg_role')->warning('No permission found for %url', array('%url' => $permission));
+            \Drupal::logger('consumerorg_role')->warning('No permission found for %url', ['%url' => $permission]);
           }
           else {
             $permission_names[] = $permission_name;
@@ -130,30 +137,30 @@ class Role {
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function getScope() {
+  public function getScope(): string {
     return $this->scope;
   }
 
   /**
-   * @param mixed $scope
+   * @param string $scope
    */
-  public function setScope($scope) {
+  public function setScope($scope): void {
     $this->scope = $scope;
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function getOrgUrl() {
+  public function getOrgUrl(): string {
     return $this->org_url;
   }
 
   /**
-   * @param mixed $org_url
+   * @param string $org_url
    */
-  public function setOrgUrl($org_url) {
+  public function setOrgUrl($org_url): void {
     $this->org_url = $org_url;
   }
 

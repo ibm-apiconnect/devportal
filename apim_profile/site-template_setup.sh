@@ -24,6 +24,10 @@ chown -R aegir:aegir /web
 mysql=( su - aegir -c "mysql --protocol=socket" )
 DEVPORTAL_USER=aegir
 
+# Workaround for using MySQL with overlay2 in Docker; prevents startup issues
+find /var/lib/mysqldata/mysql -type f -exec touch {} \;
+chown -R mysql:mysql /var/lib/mysqldata/mysql /var/log/mysqllog/mysql
+
 mysqld --wsrep-new-cluster --user=mysql --datadir="/var/lib/mysqldata/mysql" --log-bin="/var/log/mysqllog/mysql/mysql-bin.log" --log-bin-index="/var/log/mysqllog/mysql/mysql-bin.index" &
 pid=$!
 
@@ -38,7 +42,6 @@ if [ "$i" = 0 ]; then
   echo >&2 'MySQL init process failed.'
   exit 1
 fi
-
 mysql -e "set global pxc_strict_mode=DISABLED; set global show_compatibility_56=ON; set global pxc_maint_transition_period=0;"
 
 bash /tmp/data/portal.sql.sh

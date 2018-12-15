@@ -200,14 +200,18 @@ class MockApplicationRestService implements ApplicationRestInterface {
     $data = [];
     $requestBody = json_decode($requestBody, TRUE);
     $appList = \Drupal::state()->get('mock.appList');
-    if (!isset($appList) || empty($appList)) {
+    if ($appList === null) {
       $appList = [];
     }
     foreach ($appList as $key => $app) {
-      // need the cast to string here or it doesnt work
-      if (\Drupal::service('ibm_apim.utils')->endsWith($url, (string) $key) == 1) {
-        $appList[$key]['name'] = $requestBody['name'];
-        $appList[$key]['description'] = $requestBody['description'];
+      // need the cast to string here or it doesn't work
+      if (\Drupal::service('ibm_apim.utils')->endsWith($url, (string) $key) === 1) {
+        if ($requestBody['name'] !== null) {
+          $appList[$key]['name'] = $requestBody['name'];
+        }
+        if ($requestBody['description'] !== null) {
+          $appList[$key]['description'] = $requestBody['description'];
+        }
         $data = $appList[$key];
       }
       \Drupal::state()->set('mock.appList', $appList);

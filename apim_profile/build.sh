@@ -128,7 +128,10 @@ cp -rf $TMP_DIR/analytics/package/dist/* $BUILD_DIR/$PROJECT_NAME/modules/ibm_ap
 
 # translations
 mkdir -p $BUILD_DIR/$PROJECT_NAME/sites/all/translations
+# hiding the logging of this copy as it fills the log with thousands of lines of output otherwise.
+set +x
 cp $BASEDIR/po_files/* $BUILD_DIR/$PROJECT_NAME/sites/all/translations
+set -x
 
 # compile SCSS
 cd $BUILD_DIR/$PROJECT_NAME/themes/connect_theme
@@ -158,22 +161,6 @@ remove_internal_files themegenerator
 remove_internal_files apictest
 remove_internal_files mail_subscribers
 remove_internal_files_theme connect_theme
-
-# remove our repositories from the composer json file
-cd $BUILD_DIR/$PROJECT_NAME
-jq 'del(.repositories.ghmarkdown)' composer.json > composer.tmp && mv composer.tmp composer.json
-jq 'del(.repositories.socialblock)' composer.json > composer.tmp && mv composer.tmp composer.json
-jq 'del(.repositories.featuredcontent)' composer.json > composer.tmp && mv composer.tmp composer.json
-jq 'del(.repositories.ibm_apim)' composer.json > composer.tmp && mv composer.tmp composer.json
-jq 'del(.repositories.api)' composer.json > composer.tmp && mv composer.tmp composer.json
-jq 'del(.repositories.application)' composer.json > composer.tmp && mv composer.tmp composer.json
-jq 'del(.repositories.product)' composer.json > composer.tmp && mv composer.tmp composer.json
-jq 'del(.repositories.consumerorg)' composer.json > composer.tmp && mv composer.tmp composer.json
-jq 'del(.repositories.auth_apic)' composer.json > composer.tmp && mv composer.tmp composer.json
-jq 'del(.repositories.themegenerator)' composer.json > composer.tmp && mv composer.tmp composer.json
-jq 'del(.repositories.apictest)' composer.json > composer.tmp && mv composer.tmp composer.json
-jq 'del(.repositories.mail_subscribers)' composer.json > composer.tmp && mv composer.tmp composer.json
-jq 'del(.repositories.connect_theme)' composer.json > composer.tmp && mv composer.tmp composer.json
 
 cd $BUILD_DIR
 cp ../sqlexports/translations.sql devportal/

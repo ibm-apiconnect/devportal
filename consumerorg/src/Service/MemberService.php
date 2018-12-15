@@ -19,7 +19,7 @@ class MemberService {
 
   private $userService;
 
-  function __construct(ApicUserService $user_service) {
+  public function __construct(ApicUserService $user_service) {
     $this->userService = $user_service;
   }
 
@@ -27,35 +27,35 @@ class MemberService {
   /**
    * Parse an ApicType/Member object out of the given JSON structure (e.g. from a webhook body or snapshot)
    *
-   * @param $json
+   * @param object $json
    *
    * @return \Drupal\consumerorg\ApicType\Member
    */
-  public function createFromJSON($json){
+  public function createFromJSON($json): Member {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $member = new Member();
 
-    if(!empty($json['url'])) {
+    if (!empty($json['url'])) {
       $member->setUrl($json['url']);
     }
 
-    if(!empty($json['state'])) {
+    if (!empty($json['state'])) {
       $member->setState($json['state']);
     }
 
-    if(!empty($json['user_url'])) {
+    if (!empty($json['user_url'])) {
       $member->setUserUrl($json['user_url']);
     }
 
-    if(!empty($json['user'])) {
+    if (!empty($json['user'])) {
       $member->setUser($this->userService->getUserFromJSON($json['user']));
     }
 
-    if(!empty($json['role_urls'])) {
+    if (!empty($json['role_urls'])) {
       $member->setRoleUrls($json['role_urls']);
     }
 
-    if(!empty($json['org_url'])) {
+    if (!empty($json['org_url'])) {
       $member->setOrgUrl($json['org_url']);
     }
 

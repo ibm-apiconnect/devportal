@@ -190,16 +190,23 @@ class TranslationMerger {
     // versions might have changed so we need to search wildcards for the version.
     $projectNameVersion = $this->splitProjectNameVersion($projectName);
 
-    $list = glob($this->new_translation_files_location . '/' . $projectNameVersion['name'] . '-*/' . $projectNameVersion['name'] . '-*.' . $language . '.po');
+    if (isset($projectNameVersion['version'])) {
+      $project_search_wildcard = $projectNameVersion['name'] . '-*';
+    }
+    else {
+      $project_search_wildcard = $projectNameVersion['name'];
+    }
+
+    $list = glob($this->new_translation_files_location . '/' . $project_search_wildcard . '/' . $project_search_wildcard . '.' . $language . '.po');
 
     if(\sizeof($list) > 1) {
-      echo "Multiple new translation files found for " . $projectNameVersion['name'] . ":";
+      echo "Multiple new translation files found for " . $projectNameVersion['name'] . ":" . \PHP_EOL;
       \var_dump($list);
-      echo "Using the first one from the list";
+      echo "Using the first one from the list" . \PHP_EOL;
     }
 
     if (\sizeof($list) === 0){
-      echo "No new translation files found for " . $projectNameVersion['name'];
+      echo "No new translation files found for " . $projectNameVersion['name'] . \PHP_EOL;
       return NULL;
     }
     else {

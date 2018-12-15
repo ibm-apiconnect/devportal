@@ -9,19 +9,20 @@
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
 namespace Drupal\apic_app\Event;
 
 use Drupal\core\Entity\EntityInterface;
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Component\EventDispatcher\GenericEvent;
 
 /**
  * Event that is fired when an application is deleted.
  *
  * @see Application::deleteNode()
  */
-class ApplicationDeleteEvent extends Event {
+class ApplicationDeleteEvent extends GenericEvent {
 
-  const EVENT_NAME = 'application_delete';
+  public const EVENT_NAME = 'application_delete';
 
   /**
    * The application.
@@ -31,13 +32,29 @@ class ApplicationDeleteEvent extends Event {
   public $application;
 
   /**
-   * Constructs the object.
+   * ApplicationDeleteEvent constructor.
    *
    * @param \Drupal\core\Entity\EntityInterface $application
-   *   The application that was deleted.
+   * @param array $arguments
    */
-  public function __construct(EntityInterface $application) {
+  public function __construct(EntityInterface $application, array $arguments = []) {
+    GenericEvent::__construct($application, $arguments);
     $this->application = $application;
+    $this->arguments = $arguments;
+  }
+
+  /**
+   * @return \Drupal\core\Entity\EntityInterface|null
+   */
+  public function getApplication(): ?EntityInterface {
+    return $this->application;
+  }
+
+  /**
+   * @param \Drupal\core\Entity\EntityInterface $node
+   */
+  public function setApplication(EntityInterface $node): void {
+    $this->application = $node;
   }
 
 }

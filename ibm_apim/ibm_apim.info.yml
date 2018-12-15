@@ -3,7 +3,7 @@ type: module
 description: 'Core IBM API Connect integration'
 package: 'IBM API Connect'
 core: 8.x
-version: '8.x-1.2.5'
+version: '8.x-1.2.6'
 project: 'ibm_apim'
 dependencies:
   - telephone
@@ -24,6 +24,7 @@ dependencies:
   - views_autocomplete_filters
   - ibm_log_stdout
   - content_translation
+  - session_based_temp_store
 libraries:
   - 'ibm_apim/core'
   - 'core/drupal.dialog'

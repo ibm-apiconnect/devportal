@@ -43,19 +43,33 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 class ConsumerOrgService {
 
   private $logger;
+
   private $state;
+
   private $siteconfig;
+
   private $permissions;
+
   private $apimUtils;
+
   private $eventDispatcher;
+
   private $currentUser;
+
   private $userQuery;
+
   private $moduleHandler;
+
   private $apimServer;
+
   private $session;
+
   private $userUtils;
+
   private $cacheTagsInvalidator;
+
   private $memberService;
+
   private $roleService;
 
 
@@ -96,7 +110,7 @@ class ConsumerOrgService {
                               CacheTagsInvalidatorInterface $invalidator,
                               MemberService $member_service,
                               RoleService $role_service
-                              ) {
+  ) {
     $this->logger = $logger;
     $this->state = $state;
     $this->siteconfig = $site_config;
@@ -116,13 +130,14 @@ class ConsumerOrgService {
 
   /**
    * Create a new consumer org. Calls consumer api to create in apim and handles local nodes and state as well.
+   *
    * @param string $name
    *
    * @return \Drupal\auth_apic\UserManagerResponse
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \Drupal\Core\TempStore\TempStoreException
    */
-  public function create(string $name) {
+  public function create(string $name): UserManagerResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $response = new UserManagerResponse();
 
@@ -139,22 +154,25 @@ class ConsumerOrgService {
 
       $this->createNode($org);
       $response->setMessage(t('Consumer organization created successfully.'));
-      $this->logger->notice('Consumer organization @orgname created by @username', array('@orgname' => $name, '@username' => $this->currentUser->getAccountName()));
+      $this->logger->notice('Consumer organization @orgname created by @username', [
+        '@orgname' => $name,
+        '@username' => $this->currentUser->getAccountName(),
+      ]);
 
       $this->session->set('consumer_organizations', NULL);
       $this->userUtils->loadConsumerorgs();
-      $this->cacheTagsInvalidator->invalidateTags(array('config:block.block.consumerorganizationselection'));
+      $this->cacheTagsInvalidator->invalidateTags(['config:block.block.consumerorganizationselection']);
       $response->setSuccess(TRUE);
       // invalidate the devorg select block cache
-      $this->cacheTagsInvalidator->invalidateTags(array('consumer_org_select_block:uid:' . $this->currentUser->id()));
+      $this->cacheTagsInvalidator->invalidateTags(['consumer_org_select_block:uid:' . $this->currentUser->id()]);
     }
     else {
       $response->setMessage(t('Failed to create consumer organization.'), 'error');
-      $this->logger->error('Failed to create consumer organization. response: @response', array('@response' => serialize($apim_response->getData())));
+      $this->logger->error('Failed to create consumer organization. response: @response', ['@response' => serialize($apim_response->getData())]);
 
       // If user is not in an org, log them out.
       $other_orgs = $this->getList();
-      if(empty($other_orgs)) {
+      if (empty($other_orgs)) {
         $response->setRedirect('/user/logout');
       }
     }
@@ -165,35 +183,36 @@ class ConsumerOrgService {
 
   /**
    * Delete consumer org in apim and locally.
+   *
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
    *
    * @return \Drupal\auth_apic\UserManagerResponse
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function delete(ConsumerOrg $org) {
+  public function delete(ConsumerOrg $org): UserManagerResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $response = new UserManagerResponse();
 
     $apim_response = $this->apimServer->deleteConsumerOrg($org);
 
 
-    if (isset($apim_response) && $apim_response->getCode() === 200) {
+    if ($apim_response !== NULL && $apim_response->getCode() === 200) {
 
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $org->getUrl());
       $nids = $query->execute();
       $orgNode = NULL;
-      if (isset($nids) && !empty($nids)) {
+      if ($nids !== NULL && !empty($nids)) {
         $this->deleteNode(array_shift($nids));
       }
       // invalidate the devorg select block cache
-      $this->cacheTagsInvalidator->invalidateTags(array('consumer_org_select_block:uid:' . $this->currentUser->id()));
+      $this->cacheTagsInvalidator->invalidateTags(['consumer_org_select_block:uid:' . $this->currentUser->id()]);
 
-      $this->logger->notice('Organization @orgname deleted by @username', array(
-          '@orgname' => $org->getName(),
-          '@username' => $this->currentUser->getAccountName()
-        ));
+      $this->logger->notice('Organization @orgname deleted by @username', [
+        '@orgname' => $org->getName(),
+        '@username' => $this->currentUser->getAccountName(),
+      ]);
 
       $response->setSuccess(TRUE);
     }
@@ -225,16 +244,16 @@ class ConsumerOrgService {
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $consumer->getUrl())->sort('nid', 'ASC');
       $nids = $query->execute();
-      if (isset($nids) && !empty($nids)) {
+      if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
-        $oldnode = Node::load($nid);
+        $oldNode = Node::load($nid);
       }
     }
 
-    if (isset($oldnode) && $oldnode->id()) {
+    if (isset($oldNode) && $oldNode->id()) {
 
       // duplicate node
-      $node = $oldnode->createDuplicate();
+      $node = $oldNode->createDuplicate();
 
       // wipe all our fields to ensure they get set to new values
       $node->set('apic_hostname', NULL);
@@ -242,7 +261,7 @@ class ConsumerOrgService {
       $node->set('apic_provider_id', NULL);
       $node->set('consumerorg_memberlist', NULL);
       $node->set('consumerorg_members', NULL);
-//      $node->set('consumerorg_communities', NULL);
+      //      $node->set('consumerorg_communities', NULL);
       $node->set('consumerorg_id', NULL);
       $node->set('consumerorg_url', NULL);
       $node->set('consumerorg_name', NULL);
@@ -252,17 +271,17 @@ class ConsumerOrgService {
       $node->set('consumerorg_invites', NULL);
     }
     else {
-      $node = Node::create(array(
+      $node = Node::create([
         'type' => 'consumerorg',
-      ));
+      ]);
     }
 
     // get the update method to do the update for us
     $node = $this->updateNode($node, $consumer, 'internal');
-    if (isset($node)) {
-      $this->logger->notice('Consumer organization @consumerorg created', array('@consumerorg' => $node->getTitle()));
+    if ($node !== NULL) {
+      $this->logger->notice('Consumer organization @consumerorg created', ['@consumerorg' => $node->getTitle()]);
       // Calling all modules implementing 'hook_consumerorg_create':
-      $this->moduleHandler->invokeAll('consumerorg_create', array('node' => $node, 'data' => $consumer));
+      $this->moduleHandler->invokeAll('consumerorg_create', ['node' => $node, 'data' => $consumer]);
 
       if ($this->moduleHandler->moduleExists('rules')) {
         // Set the args twice on the event: as the main subject but also in the
@@ -285,11 +304,11 @@ class ConsumerOrgService {
    * @return \Drupal\node\NodeInterface|null
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function updateNode(NodeInterface $node, ConsumerOrg $consumer, $event = 'content_refresh') {
+  public function updateNode(NodeInterface $node, ConsumerOrg $consumer, $event = 'content_refresh'): ?NodeInterface {
     ibm_apim_entry_trace(__FUNCTION__, $consumer->getUrl());
-    if (isset($node)) {
-      $utils = \Drupal::service( 'ibm_apim.utils');
-      $apim_utils = \Drupal::service( 'ibm_apim.apim_utils');
+    if ($node !== NULL) {
+      $utils = \Drupal::service('ibm_apim.utils');
+      $apim_utils = \Drupal::service('ibm_apim.apim_utils');
       $hostvariable = $this->siteconfig->getApimHost();
       $node->setTitle($utils->truncate_string($consumer->getTitle()));
       $node->setPromoted(NODE_NOT_PROMOTED);
@@ -298,15 +317,15 @@ class ConsumerOrgService {
       $node->set("apic_catalog_id", $this->siteconfig->getEnvId());
       $node->set('consumerorg_id', $consumer->getId());
       $node->set('consumerorg_url', $consumer->getUrl());
-      $node->set('consumerorg_name', $utils->truncate_string($consumer->getName(),128));
+      $node->set('consumerorg_name', $utils->truncate_string($consumer->getName(), 128));
       $node->set('consumerorg_owner', $consumer->getOwnerUrl());
       // TODO: consumerorg tags
-//      if ($consumer->getTags() === NULL) {
-//        $consumer->setTags(array());
-//      }
-//      $node->set('consumerorg_tags', $consumer->getTags());
+      //      if ($consumer->getTags() === NULL) {
+      //        $consumer->setTags(array());
+      //      }
+      //      $node->set('consumerorg_tags', $consumer->getTags());
 
-      $roles = array();
+      $roles = [];
       if ($consumer->getRoles() !== NULL) {
         // Role objects need to be flattened for storage in the DB
         foreach ($consumer->getRoles() as $role) {
@@ -320,12 +339,12 @@ class ConsumerOrgService {
       // members = url, user_url, state, roles
       // memberlist = user_url
 
-      $members = array();
-      $memberlist = array();
+      $members = [];
+      $memberlist = [];
 
       // when a user creates a new org, we don't initially have all the data we need in the response
       // if we don't do the below, the new org doesn't appear in the corg selector block
-      if(empty($consumer->getMembers()) && !empty($consumer->getOwnerUrl())) {
+      if (empty($consumer->getMembers()) && !empty($consumer->getOwnerUrl())) {
 
         // munge the urls because the apim side gives us too much
         $corg_url = $apim_utils->removeFullyQualifiedUrl($consumer->getUrl());
@@ -333,7 +352,7 @@ class ConsumerOrgService {
 
         $account = User::load($this->currentUser->id());
 
-        if($account->apic_url->value === $owner_url) {
+        if ($account->apic_url->value === $owner_url) {
           $already_added = FALSE;
           if (!empty($account->consumerorg_url->getValue())) {
             $org_urls = $account->consumerorg_url->getValue();
@@ -356,12 +375,12 @@ class ConsumerOrgService {
       if ($consumer->getMembers() !== NULL) {
         foreach ($consumer->getMembers() as $member) {
           $memberlist[] = $member->getUserUrl();
-//          $new_member = new Member();rray(
-//            'url' => $member->getUrl(),
-//            'user_url' => $member->getUserUrl(),
-//            'state' => $member->getState(),
-//            'roles' => $member->getRoleUrls()
-//          );
+          //          $new_member = new Member();rray(
+          //            'url' => $member->getUrl(),
+          //            'user_url' => $member->getUserUrl(),
+          //            'state' => $member->getState(),
+          //            'roles' => $member->getRoleUrls()
+          //          );
           $members[] = serialize($member);
 
           if ($member->getUser() !== NULL && $member->getUser()->getUsername() !== NULL) {
@@ -388,20 +407,21 @@ class ConsumerOrgService {
       $node->set('consumerorg_members', $members);
       $node->set('consumerorg_memberlist', $memberlist);
       $consumer_invites = $consumer->getInvites();
-      if ($consumer_invites === null) {
+      if ($consumer_invites === NULL) {
         $invites = [];
-      } else {
+      }
+      else {
         $invites = [];
-        foreach($consumer_invites as $value) {
+        foreach ($consumer_invites as $value) {
           $invites[] = serialize($value);
         }
       }
       $node->set('consumerorg_invites', $invites);
       $node->save();
       if (isset($node) && $event != 'internal') {
-        $this->logger->notice('Consumer organization @consumerorg updated', array('@consumerorg' => $node->getTitle()));
+        $this->logger->notice('Consumer organization @consumerorg updated', ['@consumerorg' => $node->getTitle()]);
         // Calling all modules implementing 'hook_consumerorg_update':
-        $this->moduleHandler->invokeAll('consumerorg_update', array('node' => $node, 'data' => $consumer));
+        $this->moduleHandler->invokeAll('consumerorg_update', ['node' => $node, 'data' => $consumer]);
 
         if ($this->moduleHandler->moduleExists('rules')) {
           // Set the args twice on the event: as the main subject but also in the
@@ -411,12 +431,12 @@ class ConsumerOrgService {
         }
       }
       // invalidate myorg page cache
-      $this->cacheTagsInvalidator->invalidateTags(array('myorg:url:' . $consumer->getUrl()));
+      $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $consumer->getUrl()]);
       ibm_apim_exit_trace(__FUNCTION__, NULL);
       return $node;
     }
     else {
-      $this->logger->error('Update consumerorg: no node provided.', array());
+      $this->logger->error('Update consumerorg: no node provided.', []);
       ibm_apim_exit_trace(__FUNCTION__, NULL);
       return NULL;
     }
@@ -426,11 +446,13 @@ class ConsumerOrgService {
    * Create a new consumerorg if one doesnt already exist for that consumer organization reference
    * Update one if it does
    *
-   * @param ConsumerOrg $consumer
+   * @param \Drupal\consumerorg\ApicType\ConsumerOrg $consumer
    * @param $event
+   *
    * @return bool
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function createOrUpdateNode(ConsumerOrg $consumer, $event) {
+  public function createOrUpdateNode(ConsumerOrg $consumer, $event): bool {
     ibm_apim_entry_trace(__FUNCTION__, $consumer->getUrl());
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
@@ -462,9 +484,9 @@ class ConsumerOrgService {
    * @return bool|null
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function createOrUpdateInvitation($invitation, $event) {
-    ibm_apim_entry_trace(__FUNCTION__, null);
-    $createdOrUpdated = null;
+  public function createOrUpdateInvitation($invitation, $event): ?bool {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    $createdOrUpdated = NULL;
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $invitation['consumer_org_url']);
@@ -473,22 +495,22 @@ class ConsumerOrgService {
     if (isset($nids) && !empty($nids)) {
       $nid = array_shift($nids);
       $node = Node::load($nid);
-      $invites = array();
+      $invites = [];
       foreach ($node->consumerorg_invites->getValue() as $arrayValue) {
         $unserialized = unserialize($arrayValue['value']);
         $invites[] = $unserialized;
       }
-      $found = false;
-      foreach($invites as $key=>$value) {
+      $found = FALSE;
+      foreach ($invites as $key => $value) {
         if ($value['url'] == $invitation['url']) {
           $invites[$key] = $invitation;
-          $found = true;
+          $found = TRUE;
         }
       }
-      if ($found == false) {
+      if ($found == FALSE) {
         $invites[] = $invitation;
       }
-      $serialized_invites = array();
+      $serialized_invites = [];
       foreach ($invites as $key => $invite) {
         if (isset($invite['url'])) {
           $invite['url'] = \Drupal::service('ibm_apim.apim_utils')->removeFullyQualifiedUrl($invite['url']);
@@ -499,25 +521,60 @@ class ConsumerOrgService {
       $node->save();
 
       $createdOrUpdated = !$found;
-    } else {
-      // no node found, ignore
     }
     ibm_apim_exit_trace(__FUNCTION__, $createdOrUpdated);
     return $createdOrUpdated;
   }
 
   /**
-   * Delete an invitation
+   * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
+   * @param $invitation
+   *
+   * @return \Drupal\auth_apic\UserManagerResponse
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function cancelInvitation(ConsumerOrg $org, $invitation): UserManagerResponse {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $response = new UserManagerResponse();
+    $apim_response = $this->apimServer->deleteMemberInvitation($org, $invitation['id']);
+    if ($apim_response !== NULL && $apim_response->getCode() === 200) {
+      // update our DB
+      $invites = [];
+      foreach ($org->getInvites() as $existingInvite) {
+        if ($existingInvite['url'] !== $invitation['url']) {
+          $invites[] = $existingInvite;
+        }
+      }
+      $org->setInvites($invites);
+      $this->createOrUpdateNode($org, 'internal');
+      $response->setSuccess(TRUE);
+    }
+    else {
+      $response->setSuccess(FALSE);
+      $this->logger->error('Unable to cancel invitation @invite to @orgname', [
+        '@invite' => $invitation['id'],
+        '@orgname' => $org->getTitle(),
+      ]);
+    }
+    // invalidate myorg page cache
+    $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $org->getUrl()]);
+
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    return $response;
+  }
+
+  /**
+   * Delete an invitation, invoked from drush so just updates our db
    *
    * @param $invitation
    * @param $event
    *
-   * @return null
+   * @return void
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function deleteInvitation($invitation, $event) {
-    ibm_apim_entry_trace(__FUNCTION__, null);
-    $createdOrUpdated = null;
+  public function deleteInvitation($invitation, $event = 'internal'): void {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $invitation['consumer_org_url']);
@@ -526,35 +583,35 @@ class ConsumerOrgService {
     if (isset($nids) && !empty($nids)) {
       $nid = array_shift($nids);
       $node = Node::load($nid);
-      $invites = array();
+      $invites = [];
       foreach ($node->consumerorg_invites->getValue() as $arrayValue) {
         $unserialized = unserialize($arrayValue['value']);
-        if ($unserialized['url'] != $invitation['url']) {
+        if ($unserialized['url'] !== $invitation['url']) {
           $invites[] = $unserialized;
         }
       }
-      $serialized_invites = array();
+      $serialized_invites = [];
       foreach ($invites as $key => $invite) {
         $serialized_invites[] = serialize($invite);
       }
       $node->set('consumerorg_invites', $serialized_invites);
       $node->save();
       // invalidate myorg page cache
-      $this->cacheTagsInvalidator->invalidateTags(array('myorg:url:' . $invitation['consumer_org_url']));
-    } else {
-      // no node found, ignore
+      $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $invitation['consumer_org_url']]);
     }
-    ibm_apim_exit_trace(__FUNCTION__, null);
-    return $createdOrUpdated;
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
   }
 
   /**
    * Delete a consumerorg by NID
+   *
    * @param $nid
+   *
+   * @return void
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function deleteNode($nid) {
+  public function deleteNode($nid): void {
     ibm_apim_entry_trace(__FUNCTION__, $nid);
     $node = Node::load($nid);
     $consumerorg_url = $node->consumerorg_url->value;
@@ -562,7 +619,7 @@ class ConsumerOrgService {
     $query = $this->userQuery;
     $query->condition('consumerorg_url.value', $consumerorg_url, 'CONTAINS');
     $results = $query->execute();
-    if (isset($results) && !empty($results)) {
+    if ($results !== NULL && !empty($results)) {
       $uids = array_values($results);
       if (!empty($uids)) {
         $accounts = User::loadMultiple($uids);
@@ -573,7 +630,7 @@ class ConsumerOrgService {
             // Hence additional complication in removing elements from the array
             foreach ($account->consumerorg_url->getValue() as $index => $valueArray) {
               $nextExistingConsumerorgUrl = $valueArray['value'];
-              if ($nextExistingConsumerorgUrl == $consumerorg_url) {
+              if ($nextExistingConsumerorgUrl === $consumerorg_url) {
                 unset($consumerorg_urls[$index]);
               }
             }
@@ -585,7 +642,7 @@ class ConsumerOrgService {
     }
 
     // Calling all modules implementing 'hook_consumerorg_delete':
-    $this->moduleHandler->invokeAll('consumerorg_delete', array('node' => $node));
+    $this->moduleHandler->invokeAll('consumerorg_delete', ['node' => $node]);
     if ($this->moduleHandler->moduleExists('rules')) {
       // Set the args twice on the event: as the main subject but also in the
       // list of arguments.
@@ -593,7 +650,7 @@ class ConsumerOrgService {
 
       $this->eventDispatcher->dispatch(ConsumerorgDeleteEvent::EVENT_NAME, $event);
     }
-    $this->logger->notice('Consumer organization @consumerorg deleted', array('@consumerorg' => $node->getTitle()));
+    $this->logger->notice('Consumer organization @consumerorg deleted', ['@consumerorg' => $node->getTitle()]);
 
     $node->delete();
     unset($node);
@@ -608,43 +665,43 @@ class ConsumerOrgService {
    *
    * @return \Drupal\consumerorg\ApicType\ConsumerOrg
    */
-  public function retrieveNode($nid) {
+  public function getByNid($nid): ConsumerOrg {
     ibm_apim_entry_trace(__FUNCTION__, $nid);
 
     $node = Node::load($nid);
 
     $org = new ConsumerOrg();
 
-    if($node->getTitle()) {
+    if ($node->getTitle()) {
       $org->setTitle($node->getTitle());
     }
-    if($node->consumerorg_name) {
+    if ($node->consumerorg_name) {
       $org->setName($node->get('consumerorg_name')->value);
     }
-    if($node->consumerorg_url) {
+    if ($node->consumerorg_url) {
       $org->setUrl($node->get('consumerorg_url')->value);
     }
-    if($node->consumerorg_id) {
+    if ($node->consumerorg_id) {
       $org->setId($node->get('consumerorg_id')->value);
     }
-    if($node->consumerorg_owner) {
+    if ($node->consumerorg_owner) {
       $org->setOwnerUrl($node->get('consumerorg_owner')->value);
     }
-    if($node->consumerorg_roles) {
+    if ($node->consumerorg_roles) {
       $roles = $node->get('consumerorg_roles')->getValue();
-      foreach($roles as $role){
+      foreach ($roles as $role) {
         $org->addRole(unserialize($role['value']));
       }
     }
-    if($node->consumerorg_members) {
-      $members = array();
+    if ($node->consumerorg_members) {
+      $members = [];
       foreach ($node->consumerorg_members->getValue() as $arrayValue) {
         $members[] = unserialize($arrayValue['value']);
       }
       $org->setMembers($members);
     }
-    if($node->consumerorg_invites) {
-      $invites = array();
+    if ($node->consumerorg_invites) {
+      $invites = [];
       foreach ($node->consumerorg_invites->getValue() as $arrayValue) {
         $invites[] = unserialize($arrayValue['value']);
       }
@@ -661,20 +718,21 @@ class ConsumerOrgService {
    * Get the members for a given consumerorg
    *
    * @param $orgUrl
+   *
    * @return array|null
    */
-  public function getMembers($orgUrl) {
+  public function getMembers($orgUrl): ?array {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
     $returnValue = NULL;
-    if (isset($orgUrl)) {
+    if ($orgUrl !== NULL) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $orgUrl);
       $nids = $query->execute();
-      if (isset($nids) && !empty($nids)) {
+      if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
         $node = Node::load($nid);
-        $members = array();
+        $members = [];
         foreach ($node->consumerorg_members->getValue() as $arrayValue) {
           $members[] = unserialize($arrayValue['value']);
         }
@@ -689,20 +747,21 @@ class ConsumerOrgService {
    * Get the available roles for a given consumerorg
    *
    * @param $orgUrl
+   *
    * @return array|null
    */
-  public function getRoles($orgUrl) {
+  public function getRoles($orgUrl): ?array {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
     $returnValue = NULL;
-    if (isset($orgUrl)) {
+    if ($orgUrl !== NULL) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $orgUrl);
       $nids = $query->execute();
-      if (isset($nids) && !empty($nids)) {
+      if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
         $node = Node::load($nid);
-        $members = array();
+        $members = [];
         foreach ($node->consumerorg_roles->getValue() as $arrayValue) {
           $members[] = unserialize($arrayValue['value']);
         }
@@ -716,14 +775,15 @@ class ConsumerOrgService {
   /**
    * Get a single consumerorg by the consumerorg url
    *
-   * @param string $orgUrl
+   * @param string $url
    *   The APIC UID of the consumerorg to find.
    * @param int $admin
    *   If set to 1 then bypass the access check on the memberlist
-   * @return Node
+   *
+   * @return null|ConsumerOrg
    *   The Node loaded from the database that matches the consumerorg uid.
    */
-  public function get($orgUrl, $admin = 0) {
+  public function get($url, $admin = 0): ?ConsumerOrg {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
     $result = NULL;
     $nid = NULL;
@@ -731,18 +791,48 @@ class ConsumerOrgService {
     if (!$this->currentUser->isAnonymous()) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
-      $query->condition('consumerorg_url.value', $orgUrl);
+      $query->condition('consumerorg_url.value', $url);
 
       // TODO: need to check member list against user url. Not currently stored for user.
-//      if ($admin != 1 && $this->currentUser->id() != 1) {
-//        $query->condition('consumerorg_memberlist.value', $this->currentUser->getAccountName(), 'CONTAINS');
-//      }
+      //      if ($admin != 1 && $this->currentUser->id() != 1) {
+      //        $query->condition('consumerorg_memberlist.value', $this->currentUser->getAccountName(), 'CONTAINS');
+      //      }
 
       $results = $query->execute();
 
-      if (isset($results) && !empty($results)) {
+      if ($results !== NULL && !empty($results)) {
         $nid = array_shift($results);
-        $result = $this->retrieveNode($nid);
+        $result = $this->getByNid($nid);
+      }
+    }
+    ibm_apim_exit_trace(__FUNCTION__, $nid);
+    return $result;
+  }
+
+  /**
+   * Get a single consumerorg node by the consumerorg url
+   *
+   * @param string $url
+   *   The APIC UID of the consumerorg to find.
+   *
+   * @return Node
+   *   The Node loaded from the database that matches the consumerorg uid.
+   */
+  public function getConsumerOrgAsNode($url): Node {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    $result = NULL;
+    $nid = NULL;
+
+    if (!$this->currentUser->isAnonymous()) {
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'consumerorg');
+      $query->condition('consumerorg_url.value', $url);
+
+      $results = $query->execute();
+
+      if ($results !== NULL && !empty($results)) {
+        $nid = array_shift($results);
+        $result = Node::load($nid);
       }
     }
     ibm_apim_exit_trace(__FUNCTION__, $nid);
@@ -751,11 +841,12 @@ class ConsumerOrgService {
 
   /**
    * Database based query to get list of consumerorgs for the current user
+   *
    * @return array
    */
-  public function getList() {
+  public function getList(): array {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
-    $list = array();
+    $list = [];
     $account = User::load($this->currentUser->id());
     if (!$this->currentUser->isAnonymous() && $this->currentUser->id() != 1) {
       $query = \Drupal::entityQuery('node');
@@ -763,7 +854,7 @@ class ConsumerOrgService {
       $query->condition('consumerorg_memberlist.value', $account->apic_url->value, 'CONTAINS');
 
       $results = $query->execute();
-      if (isset($results) && !empty($results)) {
+      if ($results !== NULL && !empty($results)) {
         $list = array_values($results);
       }
     }
@@ -776,9 +867,9 @@ class ConsumerOrgService {
    *
    * @return array
    */
-  public function getIBMFields() {
+  public function getIBMFields(): array {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
-    $ibmfields = array(
+    $ibmfields = [
       'apic_hostname',
       'apic_provider_id',
       'apic_catalog_id',
@@ -792,8 +883,8 @@ class ConsumerOrgService {
       'consumerorg_name',
       'consumerorg_owner',
       'consumerorg_tags',
-      'consumerorg_url'
-    );
+      'consumerorg_url',
+    ];
     ibm_apim_exit_trace(__FUNCTION__, $ibmfields);
     return $ibmfields;
   }
@@ -807,12 +898,12 @@ class ConsumerOrgService {
    *
    * @return boolean
    */
-  public function isConsumerorgAssociatedWithAccount($consumerorg_url, $account) {
-    if (isset($account)) {
-      ibm_apim_entry_trace(__FUNCTION__, array($consumerorg_url, $account->getUsername()));
+  public function isConsumerorgAssociatedWithAccount($consumerorg_url, $account): bool {
+    if ($account !== NULL) {
+      ibm_apim_entry_trace(__FUNCTION__, [$consumerorg_url, $account->getUsername()]);
     }
     else {
-      ibm_apim_entry_trace(__FUNCTION__, array($consumerorg_url));
+      ibm_apim_entry_trace(__FUNCTION__, [$consumerorg_url]);
     }
 
     $returnValue = FALSE;
@@ -823,7 +914,7 @@ class ConsumerOrgService {
     // Hence the below code rather than the much simpler in_array call we might want to have made!
     foreach ($account->consumerorg_url->getValue() as $index => $valueArray) {
       $nextExistingConsumerorgUrl = $valueArray['value'];
-      if ($nextExistingConsumerorgUrl == $consumerorg_url) {
+      if ($nextExistingConsumerorgUrl === $consumerorg_url) {
         $returnValue = TRUE;
       }
     }
@@ -838,24 +929,28 @@ class ConsumerOrgService {
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
    * @param string $email_address
    * @param string|NULL $role
+   *
    * @return \Drupal\auth_apic\UserManagerResponse
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function inviteMember(ConsumerOrg $org, string $email_address, string $role = NULL) {
+  public function inviteMember(ConsumerOrg $org, string $email_address, string $role = NULL): UserManagerResponse {
 
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $response = new UserManagerResponse();
     $apim_response = $this->apimServer->postMemberInvitation($org, $email_address, $role);
-    if ($apim_response !== null && $apim_response->getCode() === 201) {
+    if ($apim_response !== NULL && $apim_response->getCode() === 201) {
       $data = $apim_response->getData();
-      if ($data['id'] !== null) {
+      if ($data['id'] !== NULL) {
         $invitationId = $data['id'];
-      } else {
+      }
+      else {
         $invitationId = 'temp';
       }
-      if ($data['url'] !== null) {
+      if ($data['url'] !== NULL) {
         $invitationUrl = $this->apimUtils->removeFullyQualifiedUrl($data['url']);
-      } else {
+      }
+      else {
         $invitationUrl = 'temp';
       }
       $response->setSuccess(TRUE);
@@ -882,10 +977,13 @@ class ConsumerOrgService {
     }
     else {
       $response->setSuccess(FALSE);
-      $this->logger->error('Unable to invite user @username to @orgname', array('@username' => $this->currentUser->getAccountName(), '@orgname' => $org->getTitle()));
+      $this->logger->error('Unable to invite user @username to @orgname', [
+        '@username' => $this->currentUser->getAccountName(),
+        '@orgname' => $org->getTitle(),
+      ]);
     }
     // invalidate myorg page cache
-    $this->cacheTagsInvalidator->invalidateTags(array('myorg:url:' . $org->getUrl()));
+    $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $org->getUrl()]);
 
     ibm_apim_exit_trace(__FUNCTION__, NULL);
     return $response;
@@ -893,31 +991,104 @@ class ConsumerOrgService {
   }
 
   /**
-   * @param \Drupal\consumerorg\ApicType\Member $member
-   * @param string|NULL $role
+   * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
+   * @param string $inviteId
+   *
    * @return \Drupal\auth_apic\UserManagerResponse
    */
-  public function changeMemberRole(Member $member, string $role = NULL) {
+  public function resendMemberInvitation(ConsumerOrg $org, string $inviteId): UserManagerResponse {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $response = new UserManagerResponse();
+    $apim_response = $this->apimServer->resendMemberInvitation($org, $inviteId);
+    if ($apim_response !== NULL && $apim_response->getCode() === 200) {
+
+      $response->setSuccess(TRUE);
+    }
+    else {
+      $response->setSuccess(FALSE);
+      $this->logger->error('Unable to resend invitation @invite for @orgname', [
+        '@invite' => $inviteId,
+        '@orgname' => $org->getTitle(),
+      ]);
+    }
+
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    return $response;
+  }
+
+  /**
+   * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
+   * @param \Drupal\consumerorg\ApicType\Member $member
+   *
+   * @return \Drupal\auth_apic\UserManagerResponse
+   */
+  public function deleteMember(ConsumerOrg $org, Member $member): UserManagerResponse {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $response = new UserManagerResponse();
+    $apim_response = $this->apimServer->deleteMember($member);
+    if ($apim_response !== NULL && $apim_response->getCode() === 200) {
+      // remove from our db too
+      $members = $org->getMembers();
+      $newmembers = [];
+      foreach ($members as $list_member) {
+        if ($member->getId() !== $list_member->getId()) {
+          $newmembers[] = $list_member;
+        }
+      }
+      $org->set('consumerorg_members', $newmembers);
+      $org->save();
+
+      $response->setSuccess(TRUE);
+
+      // invalidate myorg page cache
+      \Drupal::service('cache_tags.invalidator')->invalidateTags(['myorg:url:' . $this->currentOrg->consumerorg_url->value]);
+    }
+    else {
+      $response->setSuccess(FALSE);
+      $this->logger->error('Member @member deleted', [
+        '@member' => $member->getId(),
+      ]);
+    }
+
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    return $response;
+  }
+
+  /**
+   * @param \Drupal\consumerorg\ApicType\Member $member
+   * @param string|NULL $role
+   *
+   * @return \Drupal\auth_apic\UserManagerResponse
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function changeMemberRole(Member $member, string $role = NULL): UserManagerResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     // update APIm
-    $newdata = array('role_urls' => array($role));
+    $newdata = ['role_urls' => [$role]];
 
     $response = new UserManagerResponse();
     $apim_response = $this->apimServer->patchMember($member, $newdata);
-    if (isset($apim_response) && $apim_response->getCode() === 200) {
+    if ($apim_response !== NULL && $apim_response->getCode() === 200) {
       $response->setSuccess(TRUE);
-      $this->logger->notice('Member @member assigned new role @role by @username', array('@role'=>$role, '@member' => $member->getUser()->getUsername(), '@username' => $this->currentUser->getAccountName()));
+      $this->logger->notice('Member @member assigned new role @role by @username', [
+        '@role' => $role,
+        '@member' => $member->getUser()->getUsername(),
+        '@username' => $this->currentUser->getAccountName(),
+      ]);
 
       $org_url = $member->getOrgUrl();
-      if ($org_url !== null) {
+      if ($org_url !== NULL) {
         $org = $this->getConsumerOrgAsObject($member->getOrgUrl());
         $members = $org->getMembers();
         $newmembers = [];
-        foreach($members as $list_member) {
+        foreach ($members as $list_member) {
           if ($member->getUrl() === $list_member->getUrl()) {
-            $list_member->setRoleUrls(array($role));
+            $list_member->setRoleUrls([$role]);
             $newmembers[] = $list_member;
-          } else {
+          }
+          else {
             $newmembers[] = $list_member;
           }
         }
@@ -928,7 +1099,58 @@ class ConsumerOrgService {
     }
     else {
       $response->setSuccess(FALSE);
-      $this->logger->error('Unable to assign new role @role to @member by @username', array('@role'=>$role, '@member' => $member->getUser()->getUsername(), '@username' => $this->currentUser->getAccountName()));
+      $this->logger->error('Unable to assign new role @role to @member by @username', [
+        '@role' => $role,
+        '@member' => $member->getUser()->getUsername(),
+        '@username' => $this->currentUser->getAccountName(),
+      ]);
+    }
+
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    return $response;
+  }
+
+  /**
+   * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
+   * @param $newOwnerUrl
+   * @param null $role
+   *
+   * @return \Drupal\auth_apic\UserManagerResponse
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function changeOrgOwner(ConsumerOrg $org, $newOwnerUrl, $role = NULL): UserManagerResponse {
+
+    $response = new UserManagerResponse();
+    $apim_response = $this->apimServer->postTransferConsumerOrg($org, $newOwnerUrl, $role);
+    if ($apim_response !== NULL && $apim_response->getCode() === 200) {
+      $response->setSuccess(TRUE);
+
+      // update our db too
+      $current_owner = $org->getOwnerUrl();
+      $members = $org->getMembers();
+      $newmembers = [];
+      foreach ($members as $list_member) {
+        if ($current_owner === $list_member->getUrl()) {
+          $list_member->setRoleUrls([$role]);
+          $newmembers[] = $list_member;
+        }
+        else {
+          $newmembers[] = $list_member;
+        }
+      }
+      $org->setMembers($newmembers);
+      $org->setOwnerUrl($newOwnerUrl);
+      $this->createOrUpdateNode($org, 'internal');
+
+      $session_store = \Drupal::service('tempstore.private')->get('ibm_apim');
+      $session_store->set('consumer_organizations', NULL);
+
+      $this->userUtils->refreshUserData();
+      $this->userUtils->setCurrentConsumerorg($org->getUrl());
+      \Drupal::service('cache_tags.invalidator')
+        ->invalidateTags(['config:block.block.consumerorganizationselection']);
+      // invalidate myorg page cache
+      \Drupal::service('cache_tags.invalidator')->invalidateTags(['myorg:url:' . $org->getUrl()]);
     }
 
     ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -943,15 +1165,15 @@ class ConsumerOrgService {
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \Drupal\Core\TempStore\TempStoreException
    */
-  public function editOrgTitle(ConsumerOrg $org, string $title) {
+  public function editOrgTitle(ConsumerOrg $org, string $title): UserManagerResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     // update APIm
-    $newdata = array('title' => $title);
+    $newdata = ['title' => $title];
 
     $response = new UserManagerResponse();
     $apim_response = $this->apimServer->patchConsumerOrg($org, $newdata);
-    if (isset($apim_response) && $apim_response->getCode() === 200) {
+    if ($apim_response !== NULL && $apim_response->getCode() === 200) {
 
       // TODO: this should be done via other functions in this service rather than explicitly here.
       // update our DB as well.
@@ -971,21 +1193,24 @@ class ConsumerOrgService {
 
       $this->userUtils->refreshUserData();
       $this->userUtils->setCurrentConsumerorg($org->getUrl());
-      $this->cacheTagsInvalidator->invalidateTags(array('config:block.block.consumerorganizationselection'));
+      $this->cacheTagsInvalidator->invalidateTags(['config:block.block.consumerorganizationselection']);
 
       $response->setSuccess(TRUE);
 
       // invalidate the devorg select block cache
-      $this->cacheTagsInvalidator->invalidateTags(array('consumer_org_select_block:uid:' . $this->currentUser->id()));
+      $this->cacheTagsInvalidator->invalidateTags(['consumer_org_select_block:uid:' . $this->currentUser->id()]);
       // invalidate myorg page cache
-      $this->cacheTagsInvalidator->invalidateTags(array('myorg:url:' . $org->getUrl()));
+      $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $org->getUrl()]);
 
-      $this->logger->notice('Consumer organization @orgname updated by @username', array('@orgname' => $title, '@username' => $this->currentUser->getAccountName()));
+      $this->logger->notice('Consumer organization @orgname updated by @username', [
+        '@orgname' => $title,
+        '@username' => $this->currentUser->getAccountName(),
+      ]);
 
     }
     else {
       $response->setSuccess(FALSE);
-      $this->logger->error('Unable to update @orgurl to @orgname', array('@orgurl' => $org->getUrl(), '@orgname' => $title));
+      $this->logger->error('Unable to update @orgurl to @orgname', ['@orgurl' => $org->getUrl(), '@orgname' => $title]);
     }
 
     ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -1001,76 +1226,77 @@ class ConsumerOrgService {
    *
    * @return ConsumerOrg
    */
-  public function createFromJSON($json) {
+  public function createFromJSON($json): ConsumerOrg {
 
     ibm_apim_entry_trace(__FUNCTION__, NULL);
 
     $org = NULL;
 
-    if(is_string($json)) {
+    if (\is_string($json)) {
       $json = json_decode($json, 1);
     }
 
     // some webhooks have the data at different levels.
-    if (array_key_exists('portal_consumer_orgs', $json)) {
+    if (\array_key_exists('portal_consumer_orgs', $json)) {
       $this->logger->debug('Using portal_consumer_orgs object for consumer org payload.');
       $json = $json['portal_consumer_orgs'];
     }
 
     // ignore any create or update webhooks that dont have the minimum number or roles and at least 1 member
     // workaround to avoid https://github.ibm.com/velox/apim/issues/6227
-    if (isset($json['roles']) && count($json['roles'])>4 && isset($json['members']) && !empty($json['members'])) {
+    if ($json['roles'] !== NULL && $json['members'] !== NULL && !empty($json['members']) && count($json['roles']) > 4) {
       $org = new ConsumerOrg();
 
-      if(isset($json['consumer_org']['name'])) {
+      if (isset($json['consumer_org']['name'])) {
         $org->setName($json['consumer_org']['name']);
       }
-      if(isset($json['consumer_org']['title'])) {
+      if (isset($json['consumer_org']['title'])) {
         $org->setTitle($json['consumer_org']['title']);
       }
-      if(isset($json['consumer_org']['summary'])) {
+      if (isset($json['consumer_org']['summary'])) {
         $org->setSummary($json['consumer_org']['summary']);
       }
-      if(isset($json['consumer_org']['id'])) {
+      if (isset($json['consumer_org']['id'])) {
         $org->setId($json['consumer_org']['id']);
       }
-      if(isset($json['consumer_org']['state'])) {
+      if (isset($json['consumer_org']['state'])) {
         $org->setState($json['consumer_org']['state']);
       }
-      if(isset($json['consumer_org']['created_at'])) {
+      if (isset($json['consumer_org']['created_at'])) {
         $org->setCreatedAt($json['consumer_org']['created_at']);
       }
-      if(isset($json['consumer_org']['updated_at'])) {
+      if (isset($json['consumer_org']['updated_at'])) {
         $org->setUpdatedAt($json['consumer_org']['updated_at']);
       }
-      if(isset($json['consumer_org']['url'])) {
+      if (isset($json['consumer_org']['url'])) {
         $org->setUrl($json['consumer_org']['url']);
       }
-      if(isset($json['consumer_org']['org_url'])) {
+      if (isset($json['consumer_org']['org_url'])) {
         $org->setOrgUrl($json['consumer_org']['org_url']);
       }
-      if(isset($json['consumer_org']['catalog_url'])) {
+      if (isset($json['consumer_org']['catalog_url'])) {
         $org->setCatalogUrl($json['consumer_org']['catalog_url']);
       }
-      if(isset($json['consumer_org']['owner_url'])) {
+      if (isset($json['consumer_org']['owner_url'])) {
         $org->setOwnerUrl($json['consumer_org']['owner_url']);
       }
-      $roles = array();
-      foreach($json['roles'] as $role){
+      $roles = [];
+      foreach ($json['roles'] as $role) {
         $roles[] = $this->roleService->createFromJSON($role);
       }
       $org->setRoles($roles);
 
-      $members = array();
-      foreach($json['members'] as $member) {
+      $members = [];
+      foreach ($json['members'] as $member) {
         $members[] = $this->memberService->createFromJSON($member);
       }
       $org->setMembers($members);
 
-      if(isset($json['memberInvitations'])) {
+      if (isset($json['memberInvitations'])) {
         $org->setInvites($json['memberInvitations']);
-      } else {
-        $org->setInvites(array());
+      }
+      else {
+        $org->setInvites([]);
       }
     }
 
@@ -1088,7 +1314,7 @@ class ConsumerOrgService {
    *
    * @return ConsumerOrg
    */
-  public function createFromMeResponseJSON($json) {
+  public function createFromMeResponseJSON($json): ConsumerOrg {
 
     ibm_apim_entry_trace(__FUNCTION__, $json);
 
@@ -1096,35 +1322,35 @@ class ConsumerOrgService {
 
     $apim_utils = \Drupal::service('ibm_apim.apim_utils');
 
-    if(is_string($json)) {
+    if (\is_string($json)) {
       $json = json_decode($json, 1);
     }
 
-    if(isset($json['org']['name'])) {
+    if (isset($json['org']['name'])) {
       $org->setName($json['org']['name']);
     }
-    if(isset($json['org']['title'])) {
+    if (isset($json['org']['title'])) {
       $org->setTitle($json['org']['title']);
     }
-    if(isset($json['org']['summary'])) {
+    if (isset($json['org']['summary'])) {
       $org->setSummary($json['org']['summary']);
     }
-    if(isset($json['org']['id'])) {
+    if (isset($json['org']['id'])) {
       $org->setId($json['org']['id']);
     }
-    if(isset($json['org']['state'])) {
+    if (isset($json['org']['state'])) {
       $org->setState($json['org']['state']);
     }
-    if(isset($json['org']['created_at'])) {
+    if (isset($json['org']['created_at'])) {
       $org->setCreatedAt($json['org']['created_at']);
     }
-    if(isset($json['org']['updated_at'])) {
+    if (isset($json['org']['updated_at'])) {
       $org->setUpdatedAt($json['org']['updated_at']);
     }
-    if(isset($json['org']['url'])) {
+    if (isset($json['org']['url'])) {
       $org->setUrl($apim_utils->removeFullyQualifiedUrl($json['org']['url']));
     }
-    if(isset($json['org']['owner_url'])) {
+    if (isset($json['org']['owner_url'])) {
       $org->setOwnerUrl($apim_utils->removeFullyQualifiedUrl($json['org']['owner_url']));
     }
 
@@ -1136,27 +1362,29 @@ class ConsumerOrgService {
   /**
    * Returns a JSON representation of a consumer organization
    *
-   * @param $url
+   * @param string $url
+   *
    * @return string (JSON)
    */
-  public function getConsumerOrgAsJson($url) {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, array('url' => $url));
-    $output = null;
+  public function getConsumerOrgAsJson(string $url): string {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['url' => $url]);
+    $output = NULL;
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $url);
 
     $nids = $query->execute();
 
-    if (isset($nids) && !empty($nids)) {
+    if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
       $node = Node::load($nid);
       $moduleHandler = \Drupal::service('module_handler');
       if ($moduleHandler->moduleExists('serialization')) {
         $serializer = \Drupal::service('serializer');
         $output = $serializer->serialize($node, 'json', ['plugin_id' => 'entity']);
-      } else {
-        \Drupal::logger('consumerorg')->notice('getConsumerOrgAsJson: serialization module not enabled', array());
+      }
+      else {
+        \Drupal::logger('consumerorg')->notice('getConsumerOrgAsJson: serialization module not enabled', []);
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -1166,25 +1394,27 @@ class ConsumerOrgService {
   /**
    * Returns a consumer organization object
    *
-   * @param $url
+   * @param string $url
+   *
    * @return \Drupal\consumerorg\ApicType\ConsumerOrg
    */
-  public function getConsumerOrgAsObject($url) {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, array('url' => $url));
-    $output = null;
+  public function getConsumerOrgAsObject(string $url): ConsumerOrg {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['url' => $url]);
+    $output = NULL;
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $url);
 
     $nids = $query->execute();
 
-    if (isset($nids) && !empty($nids)) {
+    if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
-      $org = $this->retrieveNode($nid);
-    } else {
-      \Drupal::logger('consumerorg')->notice('getConsumerOrgAsObject: Consumer Organization not found', array());
+      $output = $this->getByNid($nid);
+    }
+    else {
+      \Drupal::logger('consumerorg')->notice('getConsumerOrgAsObject: Consumer Organization not found', []);
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $org;
+    return $output;
   }
 }

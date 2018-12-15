@@ -193,7 +193,9 @@ function apim_profile_install() {
     'serialization',
     'rules_http_client',
     'smart_trim',
-    'r4032login'
+    'r4032login',
+    'noopener_filter',
+    'session_based_temp_store'
   );
 
   $our_modules = array(
@@ -920,6 +922,16 @@ function apim_profile_update_8006() {
     ->getEditable('ibm_apim.settings')
     ->set('allow_consumerorg_change_owner', TRUE)
     ->save();
+}
+
+/**
+ * enable additional modules
+ */
+function apim_profile_update_8007() {
+  $module_installer = \Drupal::service('module_installer');
+  foreach (['noopener_filter', 'session_based_temp_store'] as $module) {
+    $module_installer->install([$module]);
+  }
 }
 
 /**

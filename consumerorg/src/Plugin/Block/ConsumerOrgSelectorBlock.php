@@ -68,7 +68,7 @@ class ConsumerOrgSelectorBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  public function build() {
+  public function build():array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $myorgs = array();
     $selected_name = NULL;
@@ -87,9 +87,9 @@ class ConsumerOrgSelectorBlock extends BlockBase {
       $create_allowed = TRUE;
     }
 
-    if (isset($orgs)) {
+    if ($orgs !== null && !empty($orgs)) {
       $selected = $userUtils->getCurrentConsumerorg();
-      if (!isset($selected) || empty($selected)) {
+      if ($selected === null || empty($selected)) {
         $selected = $userUtils->setCurrentConsumerorg();
         $userUtils->setOrgSessionData();
       }
@@ -100,8 +100,8 @@ class ConsumerOrgSelectorBlock extends BlockBase {
       foreach ($orgs as $consumer_org) {
         $title = $consumer_org;
         $node = $consumerOrgService->get($consumer_org);
-        $consumer_org_url = str_replace("/", "_", $consumer_org);
-        if (isset($node)) {
+        $consumer_org_url = str_replace('/', '_', $consumer_org);
+        if ($node !== null) {
           $title = $node->getTitle();
         }
         $myorgs[] = array(

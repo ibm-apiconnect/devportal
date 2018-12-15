@@ -179,6 +179,26 @@ interface ManagementServerInterface {
   public function postMemberInvitation(ConsumerOrg $org, string $email_address, string $role = NULL);
 
   /**
+   * Delete a member invitation.
+   *
+   * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
+   * @param string $inviteId
+   *
+   * @return mixed
+   */
+  public function deleteMemberInvitation(ConsumerOrg $org, string $inviteId);
+
+  /**
+   * Resend a member invitation.
+   *
+   * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
+   * @param string $inviteId
+   *
+   * @return mixed
+   */
+  public function resendMemberInvitation(ConsumerOrg $org, string $inviteId);
+
+  /**
    * Edit a consumer org.
    *
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
@@ -207,4 +227,23 @@ interface ManagementServerInterface {
    */
   public function patchMember(Member $member, array $data);
 
+  /**
+   * Delete a consumer org member.
+   *
+   * @param \Drupal\consumerorg\ApicType\Member $member
+   *
+   * @return mixed
+   */
+  public function deleteMember(Member $member);
+
+  /**
+   * Transfer the ownership of a consumer organization
+   *
+   * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
+   * @param string $newOwnerUrl
+   * @param string|null $role
+   *
+   * @return mixed
+   */
+  public function postTransferConsumerOrg(ConsumerOrg $org, string $newOwnerUrl, $role);
 }

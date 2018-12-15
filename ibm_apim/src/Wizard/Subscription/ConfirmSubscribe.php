@@ -35,10 +35,13 @@ class ConfirmSubscribe extends IbmWizardStepBase {
 
     // If a non-developer user somehow gets in to the wizard, validateAccess will send them away again
     if($this->validateAccess()) {
-      $cached_values = $form_state->getTemporaryValue('wizard');
-      $product_name = $cached_values['productName'];
-      $plan_name = $cached_values['planName'];
-      $application_name = $cached_values['applicationName'];
+      /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
+      $temp_store_factory = \Drupal::service('session_based_temp_store');
+      /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
+      $temp_store = $temp_store_factory->get('ibm_apim.wizard');
+      $product_name = $temp_store->get('productName');
+      $plan_name = $temp_store->get('planName');
+      $application_name = $temp_store->get('applicationName');
 
       $form['productName'] = array(
         '#type' => 'textfield',
@@ -60,8 +63,6 @@ class ConfirmSubscribe extends IbmWizardStepBase {
         '#default_value' => $application_name,
         '#disabled' => TRUE,
       );
-
-      $form_state->setTemporaryValue('wizard', $cached_values);
     }
 
     return $form;
@@ -71,17 +72,17 @@ class ConfirmSubscribe extends IbmWizardStepBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $cached_values = $form_state->getTemporaryValue('wizard');
+    /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
+    $temp_store_factory = \Drupal::service('session_based_temp_store');
+    /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
+    $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
-    $applicationUrl = $cached_values['applicationUrl'];
-    $planId = $cached_values['planId'];
+    $applicationUrl = $temp_store->get('applicationUrl');
+    $planId = $temp_store->get('planId');
 
     $restService = \Drupal::service('apic_app.rest_service');
     $result = $restService->subscribeToPlan($applicationUrl, $planId);
-
-    $cached_values['result'] = $result;
-
-    $form_state->setTemporaryValue('wizard', $cached_values);
+    $temp_store->set('result', $result);
   }
 
 }

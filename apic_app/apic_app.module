@@ -24,7 +24,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
-use Drupal\product\Product;
+use Drupal\node\Entity\Node;
+use Drupal\Core\Cache\Cache;
 use Drupal\user\Entity\User;
 
 /* Define a single permission to be granted */
@@ -492,5 +493,31 @@ function apic_app_preprocess_field_multiple_value_form(&$variables) {
     if (isset($variables['button'])) {
       $variables['button']['#attributes']['class'][] = 'apicSecondary';
     }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ *
+ * @param \Drupal\node\Entity\Node $node
+ */
+function apic_app_node_presave(Node $node) {
+  if ($node->getType() === 'application') {
+    // Allows for clearing of caches for a given app id
+    $tags = ['application:' . $node->id()];
+    Cache::invalidateTags($tags);
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete().
+ *
+ * @param \Drupal\node\Entity\Node $node
+ */
+function apic_app_node_delete(Node $node) {
+  if ($node->getType() === 'application') {
+    // Allows for clearing of caches for a given app id
+    $tags = ['application:' . $node->id()];
+    Cache::invalidateTags($tags);
   }
 }

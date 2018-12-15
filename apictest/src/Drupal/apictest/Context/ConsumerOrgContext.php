@@ -51,6 +51,8 @@ class ConsumerOrgContext extends RawDrupalContext {
       $org->setName($row['name']);
       $org->setId($row['id']);
       $org->setOwnerUrl($row['owner']);
+      $org->setOrgUrl('/orgs/1234');
+      $org->setCatalogUrl('/catalogs/1234/5678');
       $org->setUrl('/consumer-orgs/1234/5678/' . $row['id']);
 
       $owner_role = ApicTestUtils::makeOwnerRole($org);

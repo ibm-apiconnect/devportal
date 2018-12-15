@@ -17,6 +17,8 @@ use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicRest;
+use Drupal\ibm_apim\Service\MyOrgService;
+use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\ibm_apim\Service\Billing;
 use Drupal\node\Entity\Node;
@@ -28,15 +30,29 @@ class MyOrgController extends ControllerBase {
   protected $userUtils;
   protected $billingService;
   protected $config;
+  protected $siteConfig;
+  protected $orgService;
 
-  public function __construct(UserUtils $userUtils, Billing $billingService, ConfigFactory $config_factory) {
+  public function __construct(UserUtils $userUtils,
+                              Billing $billingService,
+                              ConfigFactory $config_factory,
+                              SiteConfig $site_config,
+                              MyOrgService $org_service) {
     $this->userUtils = $userUtils;
     $this->billingService = $billingService;
     $this->config = $config_factory->get('ibm_apim.settings');
+    $this->siteConfig = $site_config;
+    $this->orgService = $org_service;
   }
 
   public static function create(ContainerInterface $container) {
-    return new static($container->get('ibm_apim.user_utils'), $container->get('ibm_apim.billing'), $container->get('config.factory'));
+    return new static(
+      $container->get('ibm_apim.user_utils'),
+      $container->get('ibm_apim.billing'),
+      $container->get('config.factory'),
+      $container->get('ibm_apim.site_config'),
+      $container->get('ibm_apim.myorgsvc')
+    );
   }
 
   public function content() {
@@ -52,69 +68,49 @@ class MyOrgController extends ControllerBase {
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $org['url']);
     $nids = $query->execute();
-    if (isset($nids) && !empty($nids)) {
+    if ($nids !== null && !empty($nids)) {
       $nid = array_shift($nids);
       $myorg = Node::load($nid);
 
       $myorgOwnerUrl = $myorg->consumerorg_owner->value;
-
-      foreach ($myorg->consumerorg_roles->getValue() as $arrayValue) {
-        // Owner and member are special cases that we handle separately in the org page.
-        $role = unserialize($arrayValue['value']);
-        if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
-          $org_roles[] = $role;
+      $cOrgRoles = $myorg->consumerorg_roles->getValue();
+      if ($cOrgRoles !== null) {
+        foreach ($cOrgRoles as $arrayValue) {
+          // Owner and member are special cases that we handle separately in the org page.
+          $role = unserialize($arrayValue['value']);
+          if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
+            $org_roles[] = $role;
+          }
         }
       }
 
-      foreach ($myorg->consumerorg_members->getValue() as $arrayValue) {
-        $orgmember = unserialize($arrayValue['value']);
-        $member_user_url = $orgmember->getUserUrl();
-        if ($myorgOwnerUrl == $member_user_url) {
-          $owner = array();
-          $owner['name'] = $orgmember->getUser()->getFirstName() . ' ' . $orgmember->getUser()->getLastName();
-          $owner['mail'] = $orgmember->getUser()->getMail();
-          $owner['username'] = $orgmember->getUser()->getUsername();
-          $owner['state'] = $orgmember->getUser()->getState();
-          $owner['id'] = $orgmember->getId();
-          $owner['firstname'] = $orgmember->getUser()->getFirstname();
-          $owner['lastname'] = $orgmember->getUser()->getLastname();
-          $owner['role_urls'] = $orgmember->getRoleUrls();
-          $entity = $orgmember->getUser()->getDrupalUser();
-          if (!empty($entity->user_picture) && $entity->user_picture->isEmpty() === FALSE) {
-            $image = $entity->user_picture;
-            $uri = $image->entity->getFileUri();
-            $owner['user_picture'] = file_create_url($uri);
+      $cOrgMembers = $myorg->consumerorg_members->getValue();
+      if ($cOrgMembers !== null) {
+        foreach ($cOrgMembers as $arrayValue) {
+          $orgmember = unserialize($arrayValue['value']);
+
+          $member_user_url = $orgmember->getUserUrl();
+          if ($myorgOwnerUrl === $member_user_url) {
+            $owner = $this->orgService->prepareOrgMemberForDisplay($orgmember);
           }
-        }
-        else {
-          $member = array();
-          $member['name'] = $orgmember->getUser()->getFirstName() . ' ' . $orgmember->getUser()->getLastName();
-          $member['mail'] = $orgmember->getUser()->getMail();
-          $member['state'] = $orgmember->getUser()->getState();
-          $member['username'] = $orgmember->getUser()->getUsername();
-          $member['firstname'] = $orgmember->getUser()->getFirstname();
-          $member['lastname'] = $orgmember->getUser()->getLastname();
-          $member['id'] = $orgmember->getId();
-          $member['role_urls'] = $orgmember->getRoleUrls();
-          $entity = $orgmember->getUser()->getDrupalUser();
-          if (!empty($entity->user_picture) && $entity->user_picture->isEmpty() === FALSE) {
-            $image = $entity->user_picture;
-            $uri = $image->entity->getFileUri();
-            $member['user_picture'] = file_create_url($uri);
+          else {
+            $members[] = $this->orgService->prepareOrgMemberForDisplay($orgmember);
           }
-          $members[] = $member;
         }
       }
 
       // add pending invitations into the list of members.
-      foreach ($myorg->consumerorg_invites->getValue() as $invites_array) {
-        $invite = unserialize($invites_array['value']);
-        $invited_member = [];
-        $invited_member['mail'] = $invite['email'];
-        $invited_member['state'] = 'Pending';
-        $invited_member['id'] = basename($invite['url']);
-        $invited_member['role_urls'] = $invite['role_urls'];
-        $members[] = $invited_member;
+      $cOrgInvites = $myorg->consumerorg_invites->getValue();
+      if ($cOrgInvites !== null) {
+        foreach ($cOrgInvites as $invites_array) {
+          $invite = unserialize($invites_array['value']);
+          $invited_member = [];
+          $invited_member['details'] = $invite['email'];
+          $invited_member['state'] = 'Pending';
+          $invited_member['id'] = basename($invite['url']);
+          $invited_member['role_urls'] = $invite['role_urls'];
+          $members[] = $invited_member;
+        }
       }
 
       foreach ($members as &$member) {
@@ -143,10 +139,10 @@ class MyOrgController extends ControllerBase {
 
     }
 
-    if (!isset($myorg)) {
+    if ($myorg === null || empty($myorg)) {
       // the user is not in any orgs. send them somewhere else.
       // if onboarding is enabled, we can redirect to the create org page
-      if (\Drupal::service('ibm_apim.site_config')->isSelfOnboardingEnabled()) {
+      if ($this->siteConfig->isSelfOnboardingEnabled()) {
         $response = new RedirectResponse(Url::fromRoute('consumerorg.create')->toString());
       }
       else {
@@ -310,4 +306,5 @@ class MyOrgController extends ControllerBase {
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

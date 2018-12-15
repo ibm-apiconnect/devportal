@@ -76,6 +76,10 @@ class Application {
   public static function update(NodeInterface $node, $app, $event = 'content_refresh') {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if (isset($node)) {
+      // Don't store client_secret!
+      if (isset($app['client_secret'])) {
+        unset($app['client_secret']);
+      }
       $utils = \Drupal::service('ibm_apim.utils');
       $apim_utils = \Drupal::service('ibm_apim.apim_utils');
       $siteconfig = \Drupal::service('ibm_apim.site_config');
@@ -109,14 +113,15 @@ class Application {
       if (isset($app['consumer_org_url'])) {
         $path_url = $apim_utils->removeFullyQualifiedUrl($app['consumer_org_url']);
         $node->set('application_consumer_org_url', $path_url);
-      } elseif (isset($app['org_url'])) {
+      }
+      elseif (isset($app['org_url'])) {
         $path_url = $apim_utils->removeFullyQualifiedUrl($app['org_url']);
         $node->set('application_consumer_org_url', $path_url);
       }
 
       $converted_enabled = ($app['state'] === "enabled") ? 'true' : 'false';
       $node->set('application_enabled', $converted_enabled);
-      $endpoints = array();
+      $endpoints = [];
       if (isset($app['redirect_endpoints'])) {
         foreach ($app['redirect_endpoints'] as $redirectUrl) {
           $endpoints = $redirectUrl;
@@ -139,7 +144,7 @@ class Application {
         $node->set('application_lifecycle_pending', NULL);
       }
       if (isset($app['app_credentials']) && !empty($app['app_credentials'])) {
-        $creds = array();
+        $creds = [];
         // do not store client secrets
         foreach ($app['app_credentials'] as $key => $cred) {
           if (isset($cred['client_secret'])) {
@@ -155,23 +160,24 @@ class Application {
           $creds[] = serialize($cred);
         }
         $node->set('application_credentials', $creds);
-      } elseif(isset($app['client_id']) && isset($app['app_credential_urls']) && sizeof($app['app_credential_urls']) == 1) {
+      }
+      elseif (isset($app['client_id']) && isset($app['app_credential_urls']) && sizeof($app['app_credential_urls']) == 1) {
         // If this is app create we will have client_id but no app_credentials array - fudge
         $cred_url = $apim_utils->removeFullyQualifiedUrl($app['app_credential_urls'][0]);
-        $credential = array('client_id' => $app['client_id'], 'url' => $cred_url);
+        $credential = ['client_id' => $app['client_id'], 'url' => $cred_url];
         $path = parse_url($credential['url'])['path'];
         $parts = explode("/", $path);
         $credential['id'] = array_pop($parts);
 
-        $node->set('application_credentials', array(0 => serialize($credential)));
+        $node->set('application_credentials', [0 => serialize($credential)]);
       }
       else {
-        $node->set('application_credentials', array());
+        $node->set('application_credentials', []);
       }
 
       $node->set('application_data', serialize($app));
       $node->save();
-      if (isset($node) && $event != 'internal') {
+      if ($node !== null) {
         \Drupal::logger('apic_app')->notice('Application @app updated', ['@app' => $node->getTitle()]);
 
         // Calling all modules implementing 'hook_apic_app_update':
@@ -238,26 +244,29 @@ class Application {
   /**
    * Delete an application by NID
    *
-   * @param $nid
-   * @param $event
+   * @param int $nid
+   * @param string $event
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public static function deleteNode($nid, $event) {
+  public static function deleteNode(int $nid, string $event = 'internal'): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $nid);
 
     $node = Node::load($nid);
-    $app_title = $node->getTitle();
-    $moduleHandler = \Drupal::service('module_handler');
-    if ($moduleHandler->moduleExists('rules')) {
-      // Set the args twice on the event: as the main subject but also in the
-      // list of arguments.
-      $event = new ApplicationDeleteEvent($node, ['application' => $node]);
-      $event_dispatcher = \Drupal::service('event_dispatcher');
-      $event_dispatcher->dispatch(ApplicationDeleteEvent::EVENT_NAME, $event);
-    }
-    $node->delete();
-    \Drupal::logger('apic_app')->notice('Application @app deleted', ['@app' => $node->getTitle()]);
-    unset($node);
+    if ($node !== NULL) {
+      $moduleHandler = \Drupal::service('module_handler');
+      if ($moduleHandler->moduleExists('rules')) {
+        // Set the args twice on the event: as the main subject but also in the
+        // list of arguments.
+        $event = new ApplicationDeleteEvent($node, ['application' => $node]);
+        $event_dispatcher = \Drupal::service('event_dispatcher');
+        $event_dispatcher->dispatch(ApplicationDeleteEvent::EVENT_NAME, $event);
+      }
 
+      $node->delete();
+      \Drupal::logger('apic_app')->notice('Application @app deleted', ['@app' => $node->getTitle()]);
+      unset($node);
+    }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 
@@ -266,6 +275,7 @@ class Application {
    *
    * @param $appURL
    * @param $credId
+   *
    * @return bool
    */
   public static function deleteCredential($appURL, $credId) {
@@ -284,7 +294,7 @@ class Application {
         $node = Node::load($nid);
         $newcreds = [];
         if (!empty($node->application_credentials->getValue())) {
-          foreach($node->application_credentials->getValue() as $arrayValue){
+          foreach ($node->application_credentials->getValue() as $arrayValue) {
             $unserialized = unserialize($arrayValue['value']);
             if (!isset($unserialized['id']) || $unserialized['id'] != $credId) {
               $newcreds[] = serialize($unserialized);
@@ -311,6 +321,7 @@ class Application {
    *
    * @param $appURL
    * @param $cred
+   *
    * @return bool
    */
   public static function createOrUpdateCredential($appURL, $cred) {
@@ -330,7 +341,7 @@ class Application {
         $node = Node::load($nid);
         $newcreds = [];
         if (!empty($node->application_credentials->getValue())) {
-          foreach($node->application_credentials->getValue() as $arrayValue){
+          foreach ($node->application_credentials->getValue() as $arrayValue) {
             $unserialized = unserialize($arrayValue['value']);
             if (!isset($unserialized['id']) || $unserialized['id'] != $cred['id']) {
               $newcreds[] = serialize($unserialized);
@@ -536,48 +547,51 @@ class Application {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $name);
     $placeholderImage = Url::fromUri('internal:/' . drupal_get_path('module', 'apic_app') . '/images/' . Application::getRandomImageName($name))
       ->toString();
-    \Drupal::moduleHandler()->alter('apic_app_getplaceholderimage', $placeholderImage);
+    \Drupal::moduleHandler()->alter('apic_app_modify_getplaceholderimage', $placeholderImage);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $placeholderImage);
     return $placeholderImage;
   }
 
   /**
    * Get the URL to the image for an application node
-   * Optional second parameter of name to allow for updating the app name, need the new image before the node has been updated
+   * Optional second parameter of name to allow for updating the app name, need the new image before the node has been
+   * updated
    *
    * @param $node
    * @param $name
+   *
    * @return $this|\Drupal\Core\Url|string
    */
   public static function getImageForApp($node, $name = NULL) {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, array('id' => $node->id(), 'name' => $name));
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['id' => $node->id(), 'name' => $name]);
     $fid = $node->application_image->getValue();
     $config = \Drupal::config('ibm_apim.settings');
     if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
       $file = File::load($fid[0]['target_id']);
 
-      if(isset($file)) {
+      if (isset($file)) {
         $returnValue = $file->toUrl()->toUriString();
       }
     }
-    if(!isset($returnValue) && $config->get('show_placeholder_images')) {
+    if (!isset($returnValue) && $config->get('show_placeholder_images')) {
       if (!isset($name) || empty($name)) {
         $name = $node->getTitle();
       }
       $rawImage = Application::getRandomImageName($name);
       $appImage = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
-      \Drupal::moduleHandler()->alter('apic_app_getimageforapp', $appImage);
+      \Drupal::moduleHandler()->alter('apic_app_modify_getimageforapp', $appImage);
     }
     else {
       $appImage = '';
     }
 
     // apim expects fully qualified urls to image files
-    if(strpos($appImage, 'https://') !== 0) {
+    if (strpos($appImage, 'https://') !== 0) {
       $appImage = $_SERVER['HTTP_HOST'] . $appImage;
-      if($_SERVER['HTTPS'] == 'on') {
+      if ($_SERVER['HTTPS'] == 'on') {
         $appImage = "https://" . $appImage;
-      } else {
+      }
+      else {
         $appImage = "http://" . $appImage;
       }
     }
@@ -673,10 +687,11 @@ class Application {
    * return sub array for a node
    *
    * @param $node
+   *
    * @return array
    */
   public static function getSubscriptions($node) {
-    $subscriptions = array();
+    $subscriptions = [];
     foreach ($node->application_subscriptions->getValue() as $appSub) {
       $subscriptions[] = unserialize($appSub['value']);
     }
@@ -707,10 +722,10 @@ class Application {
               $product_image_url = base_path() . drupal_get_path('module', 'product') . '/images/' . $rawImage;
             }
           }
-          $superseding_product = null;
-          $plan_title = null;
+          $superseding_product = NULL;
+          $plan_title = NULL;
           if ($moduleHandler->moduleExists('product')) {
-            $productPlans = array();
+            $productPlans = [];
             foreach ($product->product_plans->getValue() as $arrayValue) {
               $product_plan = unserialize($arrayValue['value']);
               $productPlans[$product_plan['name']] = $product_plan;
@@ -723,27 +738,27 @@ class Application {
               $cost = product_parse_billing($thisPlan['billing-model']);
               $plan_title = $productPlans[$sub['plan']]['title'];
             }
-            if(isset($productPlans[$sub['plan']]['superseded-by'])) {
+            if (isset($productPlans[$sub['plan']]['superseded-by'])) {
               $superseded_by_producturl = $productPlans[$sub['plan']]['superseded-by']['product_url'];
               $superseded_by_plan = $productPlans[$sub['plan']]['superseded-by']['plan'];
               $utils = \Drupal::service('ibm_apim.utils');
               $superseded_by_ref = $utils->base64_url_encode($superseded_by_producturl . ':' . $superseded_by_plan);
-              $superseded_by_title = null;
-              $superseded_by_version = null;
+              $superseded_by_title = NULL;
+              $superseded_by_version = NULL;
 
               $query = \Drupal::entityQuery('node');
               $query->condition('type', 'product');
               $query->condition('status', 1);
               $query->condition('apic_url.value', $superseded_by_producturl);
               $results = $query->execute();
-              $full_plan_title = null;
+              $full_plan_title = NULL;
               if (isset($results) && !empty($results)) {
                 $nid = array_shift($results);
                 $full_product = Node::load($nid);
                 $product_yaml = yaml_parse($full_product->product_data->value);
                 $superseded_by_title = $product_yaml['info']['title'];
                 $superseded_by_version = $product_yaml['info']['version'];
-                $full_productPlans = array();
+                $full_productPlans = [];
                 foreach ($full_product->product_plans->getValue() as $arrayValue) {
                   $full_product_plan = unserialize($arrayValue['value']);
                   $full_productPlans[$full_product_plan['name']] = $full_product_plan;
@@ -761,7 +776,7 @@ class Application {
                 "plan" => $superseded_by_plan,
                 "plan_title" => $full_plan_title,
                 "product_title" => $superseded_by_title,
-                "product_version" => $superseded_by_version
+                "product_version" => $superseded_by_version,
               ];
             }
           }
@@ -804,11 +819,12 @@ class Application {
    * Returns a JSON representation of an application
    *
    * @param $url
+   *
    * @return string (JSON)
    */
   public function getApplicationAsJson($url) {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, array('url' => $url));
-    $output = null;
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['url' => $url]);
+    $output = NULL;
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('apic_url.value', $url);
@@ -822,8 +838,9 @@ class Application {
       if ($moduleHandler->moduleExists('serialization')) {
         $serializer = \Drupal::service('serializer');
         $output = $serializer->serialize($node, 'json', ['plugin_id' => 'entity']);
-      } else {
-        \Drupal::logger('apic_app')->notice('getApplicationAsJson: serialization module not enabled', array());
+      }
+      else {
+        \Drupal::logger('apic_app')->notice('getApplicationAsJson: serialization module not enabled', []);
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

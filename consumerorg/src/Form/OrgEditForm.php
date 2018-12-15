@@ -19,6 +19,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Extension\ThemeHandler;
 
 
 /**
@@ -27,8 +28,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class OrgEditForm extends FormBase {
 
   protected $consumerOrgService;
+
   protected $currentOrg;
+
   protected $userUtils;
+
+  protected $themeHandler;
 
   /**
    * Constructs an Org User Invitation Form.
@@ -36,11 +41,11 @@ class OrgEditForm extends FormBase {
    * {@inheritdoc}
    *
    * @param ConsumerOrgService $consumerOrgService
-
    */
-  public function __construct(ConsumerOrgService $consumer_org_service, UserUtils $user_utils) {
+  public function __construct(ConsumerOrgService $consumer_org_service, UserUtils $user_utils, ThemeHandler $themeHandler) {
     $this->consumerOrgService = $consumer_org_service;
     $this->userUtils = $user_utils;
+    $this->themeHandler = $themeHandler;
   }
 
   /**
@@ -49,7 +54,8 @@ class OrgEditForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('ibm_apim.consumerorg'),
-      $container->get('ibm_apim.user_utils')
+      $container->get('ibm_apim.user_utils'),
+      $container->get('theme_handler')
     );
   }
 
@@ -57,80 +63,77 @@ class OrgEditForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'consumerorg_edit_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if (!$this->userUtils->checkHasPermission('settings:manage')) {
       $message = t('Permission denied.');
       drupal_set_message($message, 'error');
 
-      $form = array();
-      $form['description'] = array('#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>');
+      $form = [];
+      $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
 
-      $form['actions'] = array('#type' => 'actions');
-      $form['actions']['cancel'] = array(
+      $form['actions'] = ['#type' => 'actions'];
+      $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#href' => 'myorg',
-        '#attributes' => array('class' => array('button'))
-      );
-      $themeHandler = \Drupal::service('theme_handler');
-      if ($themeHandler->themeExists('bootstrap')) {
+        '#attributes' => ['class' => ['button']],
+      ];
+      if ($this->themeHandler->themeExists('bootstrap')) {
         $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
       }
-
-      return $form;
-    } else {
-      $org = $this->userUtils->getCurrentConsumerOrg();
+    }
+    else {
+      $org = $this->userUtils->getCurrentConsumerorg();
       $this->currentOrg = $this->consumerOrgService->get($org['url']);
 
-      $form['orgname'] = array(
+      $form['orgname'] = [
         '#type' => 'textfield',
         '#title' => t('Organization name'),
         '#size' => 25,
         '#maxlength' => 128,
         '#required' => TRUE,
         '#default_value' => $this->currentOrg->getTitle(),
-      );
+      ];
 
       $form['actions']['#type'] = 'actions';
-      $form['actions']['submit'] = array(
+      $form['actions']['submit'] = [
         '#type' => 'submit',
         '#value' => t('Submit'),
-      );
-      $form['actions']['cancel'] = array(
+      ];
+      $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#url' => $this->getCancelUrl(),
-        '#attributes' => ['class' => ['button', 'apicSecondary']]
-      );
-      $themeHandler = \Drupal::service('theme_handler');
-      if ($themeHandler->themeExists('bootstrap')) {
+        '#attributes' => ['class' => ['button', 'apicSecondary']],
+      ];
+      if ($this->themeHandler->themeExists('bootstrap')) {
         $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
         $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
       }
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return $form;
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $form;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     return Url::fromRoute('ibm_apim.myorg');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $orgname = $form_state->getValue('orgname');
 
@@ -148,7 +151,7 @@ class OrgEditForm extends FormBase {
       }
 
     }
-    $form_state->setRedirectUrl(Url::fromRoute('ibm_apim.myorg'));
+    $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 }

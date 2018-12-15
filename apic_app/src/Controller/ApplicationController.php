@@ -178,6 +178,10 @@ class ApplicationController extends ControllerBase {
       'userHasSubManage' => $userHasSubManage,
       'applifecycleEnabled' => $applifecycleEnabled
     ));
+    $nodeId = 0;
+    if ($node !== null) {
+      $nodeId = $node->id();
+    }
 
     $build = array(
       '#theme' => $theme,
@@ -194,8 +198,8 @@ class ApplicationController extends ControllerBase {
         'drupalSettings' => $drupalSettings
       ),
       '#cache' => [
-        'contexts' => [
-          'node',
+        'tags' => [
+          'application:' . $nodeId,
         ],
       ],
     );
@@ -387,6 +391,10 @@ class ApplicationController extends ControllerBase {
       'node' => $appnode,
       'applifecycleEnabled' => $applifecycleEnabled
     ));
+    $nodeId = 0;
+    if ($node !== null) {
+      $nodeId = $node->id();
+    }
 
     $build = array(
       '#theme' => $theme,
@@ -403,8 +411,8 @@ class ApplicationController extends ControllerBase {
         'drupalSettings' => $drupalSettings
       ),
       '#cache' => [
-        'contexts' => [
-          'node',
+        'tags' => [
+          'application:' . $nodeId,
         ],
       ],
     );

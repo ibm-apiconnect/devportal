@@ -13,16 +13,15 @@
 
 namespace Drupal\consumerorg\Form;
 
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
-use Drupal\ibm_apim\Service\UserUtils;
-use Drupal\node\Entity\Node;
 use Drupal\Core\Url;
+use Drupal\ibm_apim\Service\UserUtils;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -32,10 +31,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class InviteUserForm extends FormBase {
 
   protected $consumerOrgService;
+
   protected $currentOrg;
+
+  protected $currentOrgNode;
+
   protected $currentUser;
+
   protected $logger;
+
   protected $userUtils;
+
   protected $state;
 
   /**
@@ -79,101 +85,90 @@ class InviteUserForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId() :string{
     return 'consumerorg_invite_user_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if (!$this->userUtils->checkHasPermission('member:manage')) {
       $message = t('Permission denied.');
       drupal_set_message($message, 'error');
 
-      $form = array();
-      $form['description'] = array('#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>');
+      $form = [];
+      $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
 
-      $form['actions'] = array('#type' => 'actions');
-      $form['actions']['cancel'] = array(
+      $form['actions'] = ['#type' => 'actions'];
+      $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#href' => 'myorg',
-        '#attributes' => array('class' => array('button'))
-      );
+        '#attributes' => ['class' => ['button']],
+      ];
 
-      return $form;
-    } else {
-      $org = $this->userUtils->getCurrentConsumerOrg();
-      // TODO move getCurrentConsumerOrg to correct service.
+    }
+    else {
+      $org = $this->userUtils->getCurrentConsumerorg();
       $this->currentOrg = $this->consumerOrgService->get($org['url']);
 
-      $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'consumerorg');
-      $query->condition('consumerorg_url.value', $this->currentOrg->getUrl());
-      $nids = $query->execute();
-      $this->orgNode = NULL;
-      if (isset($nids) && !empty($nids)) {
-        $productnid = array_shift($nids);
-        $this->orgNode = Node::load($productnid);
-      }
-
-      $form['new_email'] = array(
+      $form['new_email'] = [
         '#type' => 'email',
         '#title' => t('Email'),
         '#size' => 25,
         '#maxlength' => 100,
-        '#required' => TRUE
-      );
+        '#required' => TRUE,
+      ];
 
       $roles = $this->currentOrg->getRoles();
-      if (isset($roles) && count($roles) > 1) {
-        $roles_array = array();
+      if ($roles !== NULL && count($roles) > 1) {
+        $roles_array = [];
         $default_role = NULL;
         foreach ($roles as $role) {
-          if($role->getName() !== 'owner' && $role->getName() !== 'member') {
+          if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
             $roles_array[$role->getUrl()] = $role->getTitle();
           }
-          if($role->getName() === 'developer') {
+          if ($role->getName() === 'developer') {
             $default_role = $role->getUrl();
           }
         }
 
-        $form['role'] = array(
+        $form['role'] = [
           '#type' => 'radios',
           '#title' => t('Assign Roles'),
           '#default_value' => $default_role,
           '#options' => $roles_array,
-          '#description' => t('Select which role the new user will have in your organization.')
-        );
+          '#description' => t('Select which role the new user will have in your organization.'),
+        ];
       }
 
       $form['actions']['#type'] = 'actions';
-      $form['actions']['submit'] = array(
+      $form['actions']['submit'] = [
         '#type' => 'submit',
         '#value' => t('Submit'),
-      );
-      $form['actions']['cancel'] = array(
+      ];
+      $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#url' => $this->getCancelUrl(),
-        '#attributes' => ['class' => ['button', 'apicSecondary']]
-      );
+        '#attributes' => ['class' => ['button', 'apicSecondary']],
+      ];
       $themeHandler = \Drupal::service('theme_handler');
       if ($themeHandler->themeExists('bootstrap')) {
         $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
         $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
       }
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return $form;
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $form;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     return Url::fromRoute('ibm_apim.myorg');
   }
 
@@ -183,14 +178,14 @@ class InviteUserForm extends FormBase {
    * @param array $form
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     parent::validateForm($form, $form_state);
     $moduleHandler = \Drupal::service('module_handler');
     if ($moduleHandler->moduleExists('check_dns')) {
       $mail = $form_state->getValue('new_email');
 
-      if (isset($mail) && 2 < strlen($mail)) {
+      if ($mail !== NULL && 2 < \strlen($mail)) {
 
         // Get the email.
         $mail = SafeMarkup::checkPlain($mail);
@@ -198,7 +193,7 @@ class InviteUserForm extends FormBase {
         // Fetch DNS Resource Records associated with a hostname.
         $result = checkdnsrr(end($mail));
 
-        if (empty($result) || $result != true) {
+        if (empty($result) || $result !== TRUE) {
           // If no record is found.
           $form_state->setErrorByName('new_email', t('Your email domain is not recognised. Please enter a valid email id.'));
         }
@@ -211,7 +206,7 @@ class InviteUserForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $email = Html::escape($form_state->getValue('new_email'));
     $role = Html::escape($form_state->getValue('role'));

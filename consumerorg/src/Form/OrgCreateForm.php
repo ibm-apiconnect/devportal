@@ -20,6 +20,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Extension\ThemeHandler;
 
 /**
  * Form to create a new consumerorg.
@@ -27,8 +28,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class OrgCreateForm extends FormBase {
 
   protected $consumerOrgService;
+
   protected $currentUser;
+
   protected $logger;
+
+  protected $themeHandler;
 
 
   /**
@@ -42,13 +47,15 @@ class OrgCreateForm extends FormBase {
    *   Logger.
    */
   public function __construct(
-                              ConsumerOrgService $consumer_org_service,
-                              AccountInterface $account,
-                              LoggerInterface $logger
-                             ) {
+    ConsumerOrgService $consumer_org_service,
+    AccountInterface $account,
+    LoggerInterface $logger,
+    ThemeHandler $themeHandler
+  ) {
     $this->consumerOrgService = $consumer_org_service;
     $this->currentUser = $account;
     $this->logger = $logger;
+    $this->themeHandler = $themeHandler;
   }
 
   /**
@@ -58,45 +65,46 @@ class OrgCreateForm extends FormBase {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('current_user'),
-      $container->get('logger.channel.auth_apic')
+      $container->get('logger.channel.auth_apic'),
+      $container->get('theme_handler')
     );
   }
+
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'consumerorg_create_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $form['intro'] = array(
-      '#markup' => '<p>' . t('A consumer organization can own one or more applications and have multiple members. It is possible to own multiple consumer organizations, use this form to create a new one.') . '</p>'
-    );
-    $form['orgname'] = array(
+    $form['intro'] = [
+      '#markup' => '<p>' . t('A consumer organization can own one or more applications and have multiple members. It is possible to own multiple consumer organizations, use this form to create a new one.') . '</p>',
+    ];
+    $form['orgname'] = [
       '#type' => 'textfield',
       '#title' => t('Organization name'),
       '#size' => 25,
       '#maxlength' => 128,
-      '#required' => TRUE
-    );
+      '#required' => TRUE,
+    ];
 
     $form['actions']['#type'] = 'actions';
-    $form['actions']['submit'] = array(
+    $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => t('Submit'),
-    );
-    $form['actions']['cancel'] = array(
+    ];
+    $form['actions']['cancel'] = [
       '#type' => 'link',
       '#title' => t('Cancel'),
       '#url' => $this->getCancelUrl(),
-      '#attributes' => ['class' => ['button', 'apicSecondary']]
-    );
-    $themeHandler = \Drupal::service('theme_handler');
-    if ($themeHandler->themeExists('bootstrap')) {
+      '#attributes' => ['class' => ['button', 'apicSecondary']],
+    ];
+    if ($this->themeHandler->themeExists('bootstrap')) {
       $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
       $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
     }
@@ -107,14 +115,14 @@ class OrgCreateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     return Url::fromRoute('<front>');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $orgname = $form_state->getValue('orgname');
