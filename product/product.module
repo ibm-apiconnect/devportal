@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -42,21 +42,21 @@ define('TAG_PRODUCT_GRANT', 6);
  * @return string
  */
 function product_permission_value($gid) {
-  switch($gid) {
+  switch ($gid) {
     case EDIT_ANY_PRODUCT_CONTENT_GRANT:
-      return "EDIT_ANY_PRODUCT_CONTENT_GRANT";
+      return 'EDIT_ANY_PRODUCT_CONTENT_GRANT';
     case PUBLIC_PRODUCT_GRANT:
-      return "PUBLIC_PRODUCT_GRANT";
+      return 'PUBLIC_PRODUCT_GRANT';
     case AUTHENTICATED_PRODUCT_GRANT:
-      return "AUTHENTICATED_PRODUCT_GRANT";
+      return 'AUTHENTICATED_PRODUCT_GRANT';
     case SUBSCRIBED_TO_PRODUCT_GRANT:
-      return "SUBSCRIBED_TO_PRODUCT_GRANT";
+      return 'SUBSCRIBED_TO_PRODUCT_GRANT';
     case ORG_PRODUCT_GRANT:
-      return "ORG_PRODUCT_GRANT";
+      return 'ORG_PRODUCT_GRANT';
     case TAG_PRODUCT_GRANT:
-      return "TAG_PRODUCT_GRANT";
+      return 'TAG_PRODUCT_GRANT';
     default:
-      return "Permission Value Not Known";
+      return 'Permission Value Not Known';
   }
 }
 
@@ -69,6 +69,7 @@ function product_permission_value($gid) {
  * after product id, organisation or tag
  *
  * @param $node
+ *
  * @return array
  *
  * Note: hook is called when rebuilding permissions
@@ -78,32 +79,33 @@ function product_node_access_records($node) {
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
   $config = \Drupal::config('ibm_apim.settings');
-  $acl_debug = $config->get('acl_debug');
+  $aclDebug = (boolean) $config->get('acl_debug');
 
   $type = is_string($node) ? $node : $node->getType();
-  $grants = array();
+  $grants = [];
 
   // Only build permissions for product nodes
-  if ($type == 'product') {
-    if (isset($acl_debug) && $acl_debug == TRUE) {
+  if ($type === 'product') {
+    if ($aclDebug === TRUE) {
       \Drupal::logger('ACLDEBUG')
-        ->debug('Product Title: %title', array("%title" => var_export($node->getTitle(), TRUE)));
+        ->debug('Product Title: %title', ['%title' => var_export($node->getTitle(), TRUE)]);
     }
     // Only issue grants if product_view is enabled
-    if (isset($node->product_view_enabled->value) && $node->product_view_enabled->value == 1) {
+    if (isset($node->product_view_enabled->value) && (int) $node->product_view_enabled->value === 1) {
       // If the product is deprecated, only allow subscribers
       $state = $node->product_state->value;
-      if (!isset($state) || empty($state) || mb_strtolower($state) == 'deprecated') {
-        $pref = str_replace("/", "_", $node->apic_url->value);
-        $grants[] = array(
+      if ($state === NULL || empty($state) || mb_strtolower($state) === 'deprecated') {
+        $pref = str_replace('/', '_', $node->apic_url->value);
+        $grants[] = [
           'realm' => 'product_ref_' . $pref,
           'gid' => SUBSCRIBED_TO_PRODUCT_GRANT,
           'grant_view' => 1,
           'grant_update' => 0,
           'grant_delete' => 0,
           'priority' => 0,
-        );
-      } else {
+        ];
+      }
+      else {
         // Create a grant for 'edit any product content'
         $grants[] = [
           'realm' => 'product',
@@ -114,7 +116,7 @@ function product_node_access_records($node) {
           'priority' => 0,
         ];
         // Create a grant for public access if public is set
-        if (isset($node->product_visibility_public->value) && $node->product_visibility_public->value == 1) {
+        if ($node->product_visibility_public->value !== NULL && (int) $node->product_visibility_public->value === 1) {
           $grants[] = [
             'realm' => 'product',
             'gid' => PUBLIC_PRODUCT_GRANT,
@@ -125,7 +127,7 @@ function product_node_access_records($node) {
           ];
         }
         // Create a grant for authenticated access if authenticated is set
-        if (isset($node->product_visibility_authenticated->value) && $node->product_visibility_authenticated->value == 1) {
+        if (isset($node->product_visibility_authenticated->value) && (int) $node->product_visibility_authenticated->value === 1) {
           $grants[] = [
             'realm' => 'product',
             'gid' => AUTHENTICATED_PRODUCT_GRANT,
@@ -136,7 +138,7 @@ function product_node_access_records($node) {
           ];
         }
         // Create a grant for subscription to this node based on product reference
-        $pref = str_replace("/", "_", $node->apic_url->value);
+        $pref = str_replace('/', '_', $node->apic_url->value);
         $grants[] = [
           'realm' => 'product_ref_' . $pref,
           'gid' => SUBSCRIBED_TO_PRODUCT_GRANT,
@@ -147,9 +149,9 @@ function product_node_access_records($node) {
         ];
         // Create a grant for all organisations (as separate realms) if org visibility is set
         if (isset($node->product_visibility_custom_orgs)) {
-          foreach ($node->product_visibility_custom_orgs->getValue() as $customorg) {
-            if (isset($customorg['value'])) {
-              $url = str_replace("/", "_", $customorg['value']);
+          foreach ($node->product_visibility_custom_orgs->getValue() as $customOrg) {
+            if ($customOrg['value'] !== NULL) {
+              $url = str_replace('/', '_', $customOrg['value']);
               $grants[] = [
                 'realm' => 'product_org_' . $url,
                 'gid' => ORG_PRODUCT_GRANT,
@@ -164,27 +166,27 @@ function product_node_access_records($node) {
       }
       // Create a grant for all tags (as separate realms) if tag visibility is set
       if (isset($node->product_visibility_custom_tags)) {
-        foreach ($node->product_visibility_custom_tags->getValue() as $customtag) {
-          if (isset($customtag['value'])) {
-            $grants[] = array(
-              'realm' => 'product_tag_' . $customtag['value'],
+        foreach ($node->product_visibility_custom_tags->getValue() as $customTag) {
+          if ($customTag['value'] !== NULL) {
+            $grants[] = [
+              'realm' => 'product_tag_' . $customTag['value'],
               'gid' => TAG_PRODUCT_GRANT,
               'grant_view' => 1,
               'grant_update' => 0,
               'grant_delete' => 0,
               'priority' => 0,
-            );
+            ];
           }
         }
       }
     }
-    if (isset($acl_debug) && $acl_debug == TRUE) {
+    if ($aclDebug === TRUE) {
       foreach ($grants as $grant) {
         \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
           '@realm' => $grant['realm'],
-          '@grant' => product_permission_value($grant['gid'])
+          '@grant' => product_permission_value($grant['gid']),
         ]);
-      };
+      }
     }
   }
   ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $grants);
@@ -196,6 +198,7 @@ function product_node_access_records($node) {
  *
  * @param $account
  * @param $op
+ *
  * @return array
  *
  * Note: hook is not called at all when admin logged in
@@ -206,50 +209,47 @@ function product_node_grants($account, $op) {
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
   $config = \Drupal::config('ibm_apim.settings');
-  $acl_debug = $config->get('acl_debug');
+  $aclDebug = (boolean) $config->get('acl_debug');
 
-  $grants = array();
-  $grants['product'] = array();
+  $grants = [];
+  $grants['product'] = [];
 
   // Grant everyone PUBLIC_PRODUCT_GRANT
-  array_push($grants['product'], PUBLIC_PRODUCT_GRANT);
+  $grants['product'][] = PUBLIC_PRODUCT_GRANT;
 
   // If logged in, grant AUTHENTICATED_PRODUCT_GRANT
   if (\Drupal::currentUser()->isAuthenticated()) {
-
-    array_push($grants['product'], AUTHENTICATED_PRODUCT_GRANT);
+    $grants['product'][] = AUTHENTICATED_PRODUCT_GRANT;
   }
 
   $userUtils = \Drupal::service('ibm_apim.user_utils');
   // If 'edit any product content' is set, grant EDIT_ANY_PRODUCT_CONTENT_GRANT
   if ($userUtils->explicitUserAccess('edit any product content')) {
-    array_push($grants['product'], EDIT_ANY_PRODUCT_CONTENT_GRANT);
+    $grants['product'][] = EDIT_ANY_PRODUCT_CONTENT_GRANT;
   }
 
   // Subscriptions and tags are only set for orgs, so only run that code
   // if the user is in a development organisation
-  $myorg = $userUtils->getCurrentConsumerOrg();
-  if (isset($myorg['url'])) {
+  $myOrg = $userUtils->getCurrentConsumerOrg();
+  if (isset($myOrg['url'])) {
 
     // Grant ORG_PRODUCT_GRANT for a realm representing the user's org
-    $orgurl = $myorg['url'];
-    $escaped_orgurl = str_replace("/", "_", $orgurl);
-    $grants['product_org_' . $escaped_orgurl] = array(ORG_PRODUCT_GRANT);
+    $orgUrl = $myOrg['url'];
+    $escapedOrgUrl = str_replace('/', '_', $orgUrl);
+    $grants['product_org_' . $escapedOrgUrl] = [ORG_PRODUCT_GRANT];
 
     // Check for subscriptions, if they exist add a SUBSCRIBED_TO_PRODUCT_GRANT
     // for each subscription to a product-specific realm
     $query = db_query("SELECT subs.application_subscriptions_value as application_subscriptions_value
 FROM `node__application_subscriptions` subs
 INNER JOIN `node__application_consumer_org_url` apps ON apps.entity_id = subs.entity_id
-WHERE (apps.application_consumer_org_url_value = '" . $orgurl . "')");
-    $subresults = $query->fetchAll();
-    foreach ($subresults as $sub) {
-      $sub = unserialize($sub->application_subscriptions_value);
-      if (isset($sub) && is_array($sub)) {
-        if (isset($sub['product_url'])) {
-          $pref = str_replace("/", "_", $sub['product_url']);
-          $grants['product_ref_' . $pref] = array(SUBSCRIBED_TO_PRODUCT_GRANT);
-        }
+WHERE (apps.application_consumer_org_url_value = '" . $orgUrl . "')");
+    $subResults = $query->fetchAll();
+    foreach ($subResults as $sub) {
+      $sub = unserialize($sub->application_subscriptions_value, ['allowed_classes' => false]);
+      if ($sub !== NULL && is_array($sub) && $sub['product_url'] !== NULL) {
+        $pref = str_replace('/', '_', $sub['product_url']);
+        $grants['product_ref_' . $pref] = [SUBSCRIBED_TO_PRODUCT_GRANT];
       }
     }
 
@@ -258,30 +258,29 @@ WHERE (apps.application_consumer_org_url_value = '" . $orgurl . "')");
     $query = db_query("SELECT tags.consumerorg_tags_value as consumerorg_tags_value
 FROM `node__consumerorg_url` id
 INNER JOIN `node__consumerorg_tags` tags ON id.entity_id = tags.entity_id
-WHERE (id.consumerorg_url_value = '" . $orgurl . "')");
-    $doresults = $query->fetchAll();
-    $tags = array();
-    foreach ($doresults as $do) {
+WHERE (id.consumerorg_url_value = '" . $orgUrl . "')");
+    $doResults = $query->fetchAll();
+    $tags = [];
+    foreach ($doResults as $do) {
       $tags[] = $do->consumerorg_tags_value;
     }
-    if (isset($tags) && is_array($tags) && count($tags) > 0) {
-      foreach ($tags as $customtag) {
-        if (isset($customtag)) {
-          $grants['product_tag_' . $customtag] = array(TAG_PRODUCT_GRANT);
+    if ($tags !== NULL && is_array($tags) && count($tags) > 0) {
+      foreach ($tags as $customTag) {
+        if ($customTag !== NULL) {
+          $grants['product_tag_' . $customTag] = [TAG_PRODUCT_GRANT];
         }
       }
     }
-
   }
 
-  if (isset($acl_debug) && $acl_debug == TRUE) {
+  if ($aclDebug === TRUE) {
     foreach ($grants as $realm => $perms) {
       foreach ($perms as $grant) {
         \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
           '@realm' => $realm,
-          '@grant' => product_permission_value($grant)
+          '@grant' => product_permission_value($grant),
         ]);
-      };
+      }
     }
   }
   ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $grants);
@@ -295,11 +294,12 @@ WHERE (id.consumerorg_url_value = '" . $orgurl . "')");
  * @param \Drupal\node\NodeInterface $node
  * @param $operation
  * @param \Drupal\Core\Session\AccountInterface $account
+ *
  * @return \Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultForbidden|\Drupal\Core\Access\AccessResultNeutral
  */
 function product_node_access(NodeInterface $node, $operation, AccountInterface $account) {
-  $type = is_string($node) ? $node : $node->type;
-  if ($type == 'product' && $operation == 'view') {
+  $type = $node->type;
+  if ($type === 'product' && $operation === 'view') {
     if (Product::checkAccess($node)) {
       $access = new AccessResultAllowed();
     }
@@ -321,35 +321,37 @@ function product_node_access(NodeInterface $node, $operation, AccountInterface $
  * @param $info
  */
 function product_preprocess(&$variables, $hook, &$info) {
-  if ($hook == 'node') {
+  if ($hook === 'node') {
     $contentTypeToShow = $variables['node']->bundle();
-    if ($contentTypeToShow == 'product') {
+    if ($contentTypeToShow === 'product') {
       ibm_apim_entry_trace(__FUNCTION__, NULL);
       //Load the view mode names.
       $allViewModes = \Drupal::service('entity_display.repository')->getViewModes('node');
       //View mode for this request.
       $viewModeToUse = $variables['view_mode'];
       //Is the view mode defined for nodes?
-      if (key_exists($viewModeToUse, $allViewModes)) {
+      if (array_key_exists($viewModeToUse, $allViewModes)) {
         //Is there a template file for the view modes in the module?
-        if ($viewModeToUse == 'full') {
+        if ($viewModeToUse === 'full') {
           $templateFileName = 'node--' . $contentTypeToShow;
         }
         else {
           $templateFileName = 'node--' . $contentTypeToShow . '--' . $viewModeToUse;
         }
 
-        $theme_name = \Drupal::theme()->getActiveTheme()->getName();
-        $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
-        if (file_exists($theme_path . '/templates/node/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $theme_name);
-          $info['path'] = drupal_get_path('theme', $theme_name) . '/templates/node';
+        $themeName = \Drupal::theme()->getActiveTheme()->getName();
+        $themePath = \Drupal::theme()->getActiveTheme()->getPath();
+        if (file_exists($themePath . '/templates/node/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = drupal_get_path('theme', $themeName);
+          $info['path'] = drupal_get_path('theme', $themeName) . '/templates/node';
           $info['template'] = $templateFileName;
-        } elseif (file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $theme_name);
-          $info['path'] = drupal_get_path('theme', $theme_name) . '/templates';
+        }
+        elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = drupal_get_path('theme', $themeName);
+          $info['path'] = drupal_get_path('theme', $themeName) . '/templates';
           $info['template'] = $templateFileName;
-        } else {
+        }
+        else {
           $templateFilePath = drupal_get_path('module', 'product') . '/templates/' . $templateFileName . '.html.twig';
           if (file_exists($templateFilePath)) {
             $info['theme path'] = drupal_get_path('module', 'product');
@@ -365,9 +367,13 @@ function product_preprocess(&$variables, $hook, &$info) {
 
 /**
  * @param $variables
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityMalformedException
  */
 function product_preprocess_node(&$variables) {
-  if ($variables['node']->getType() == 'product') {
+  if ($variables['node']->getType() === 'product') {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
 
     $keySvg = file_get_contents(drupal_get_path('module', 'product') . '/images/key.svg');
@@ -375,45 +381,45 @@ function product_preprocess_node(&$variables) {
 
     // get global settings first
     $config = \Drupal::config('ibm_apim.settings');
-    $ibm_apim_show_placeholder_images = $config->get('show_placeholder_images');
-    if ($ibm_apim_show_placeholder_images === NULL) {
-      $ibm_apim_show_placeholder_images = 1;
+    $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
+    if ($ibmApimShowPlaceholderImages === NULL) {
+      $ibmApimShowPlaceholderImages = TRUE;
     }
-    $variables['showPlaceholders'] = $ibm_apim_show_placeholder_images;
-    if ($ibm_apim_show_placeholder_images) {
+    $variables['showPlaceholders'] = $ibmApimShowPlaceholderImages;
+    if ($ibmApimShowPlaceholderImages) {
       $placeholderUrl = Product::getPlaceholderImageURL($variables['node']->getTitle());
       $variables['placeholderUrl'] = $placeholderUrl;
     }
     else {
       $variables['placeholderUrl'] = NULL;
     }
-    $ibm_apim_show_versions = $config->get('show_versions');
-    if ($ibm_apim_show_versions === NULL) {
-      $ibm_apim_show_versions = 1;
+    $ibmApimShowVersions = (boolean) $config->get('show_versions');
+    if ($ibmApimShowVersions === NULL) {
+      $ibmApimShowVersions = TRUE;
     }
-    $variables['showVersions'] = $ibm_apim_show_versions;
+    $variables['showVersions'] = $ibmApimShowVersions;
 
-    $selfSignUpEnabled = \Drupal::state()->get('ibm_apim.selfSignUpEnabled');
+    $selfSignUpEnabled = (boolean) \Drupal::state()->get('ibm_apim.selfSignUpEnabled');
     if ($selfSignUpEnabled === NULL) {
-      $selfSignUpEnabled = 1;
+      $selfSignUpEnabled = TRUE;
     }
     $variables['selfSignUpEnabled'] = $selfSignUpEnabled;
 
     // get API count
     $variables['apiCount'] = 0;
-    $apiNids = array();
-    $productApis = array();
+    $apiNids = [];
+    $productApis = [];
 
     foreach ($variables['node']->product_apis->getValue() as $arrayValue) {
-      $productApis[] = unserialize($arrayValue['value']);
+      $productApis[] = unserialize($arrayValue['value'], ['allowed_classes' => false]);
     }
-    if (isset($productApis) && is_array($productApis)) {
+    if ($productApis !== NULL && is_array($productApis)) {
       $variables['apiCount'] = count($productApis);
     }
     if ($variables['apiCount'] > 0) {
       // pre-process the list of APIs in the product
-      $apiNames = array();
-      $apiRefs = array();
+      $apiNames = [];
+      $apiRefs = [];
       foreach ($productApis as $key => $productApi) {
         $apiNames[] = $productApi['name'];
         $apiRefs[$key] = Html::getClass($productApi['name']);
@@ -423,78 +429,79 @@ function product_preprocess_node(&$variables) {
       $query->condition('status', 1);
       $query->condition('apic_ref.value', $apiNames, 'IN');
       $results = $query->execute();
-      if (isset($results) && !empty($results)) {
+      if ($results !== NULL && !empty($results)) {
         $apiNids = array_values($results);
       }
-      $apiList = array();
-      // safety net to avoid blowing OOM - dont load APIs if there are more than 100
-      if (count($apiNids) > 0 && count($apiNids) < 100) {
+      $apiList = [];
+      // safety net to avoid blowing OOM - don't load APIs if there are more than 100
+      $apiCount = count($apiNids);
+      if ($apiCount > 0 && $apiCount < 100) {
         $apis = Node::loadMultiple($apiNids);
 
         foreach ($apis as $api) {
           $fid = $api->apic_image->getValue();
-          $api_image_url = NULL;
-          if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
+          $apiImageUrl = NULL;
+          if ($fid !== NULL && !empty($fid) && isset($fid[0]['target_id'])) {
             $file = File::load($fid[0]['target_id']);
-            if (isset($file)) {
-              $api_image_url = $file->toUrl();
+            if ($file !== NULL) {
+              $apiImageUrl = $file->toUrl();
             }
           }
 
           $placeholderUrl = NULL;
-          if ($ibm_apim_show_placeholder_images) {
+          if ($ibmApimShowPlaceholderImages) {
             $placeholderUrl = Api::getPlaceholderImageURL($api->getTitle());
           }
           $swagger = NULL;
           if (isset($api->api_swagger->value)) {
-            $swagger = unserialize($api->api_swagger->value);
+            $swagger = unserialize($api->api_swagger->value, ['allowed_classes' => false]);
           }
-          $listEntry = array(
+          $listEntry = [
             'node' => $api,
-            'icon' => $api_image_url,
+            'icon' => $apiImageUrl,
             'placeholderUrl' => $placeholderUrl,
-            'swagger' => $swagger
-          );
+            'swagger' => $swagger,
+          ];
           $apiList[] = $listEntry;
 
         } // end for
       }
       $variables['apiList'] = $apiList;
-      if ($variables['view_mode'] == 'full' || $variables['view_mode'] == 'subscribewizard') {
+      if ($variables['view_mode'] === 'full' || $variables['view_mode'] === 'subscribewizard') {
         // pre-process the list of plans in the product
-        $planArray = array();
-        $productPlans = array();
+        $planArray = [];
+        $productPlans = [];
         foreach ($variables['node']->product_plans->getValue() as $arrayValue) {
-          $productPlans[] = unserialize($arrayValue['value']);
+          $productPlans[] = unserialize($arrayValue['value'], ['allowed_classes' => false]);
         }
-        if (isset($productPlans) && is_array($productPlans) && count($productPlans) > 0) {
+        if ($productPlans !== NULL && is_array($productPlans) && count($productPlans) > 0) {
           foreach ($productPlans as $plan) {
-            $planid = $variables['node']->apic_url->value . ':' . $plan['name'];
-            $planArray[$planid] = product_process_plan($planid, $plan, $apiList, $apiRefs);
+            $planId = $variables['node']->apic_url->value . ':' . $plan['name'];
+            $planArray[$planId] = product_process_plan($planId, $plan, $apiList, $apiRefs);
             if (isset($plan['deploymentState'])) {
-              $planArray[$planid]['deploymentState'] = $plan['deploymentState'];
+              $planArray[$planId]['deploymentState'] = $plan['deploymentState'];
             }
             if (isset($plan['supersedes'])) {
-              $planArray[$planid]['supersedes'] = $plan['supersedes'];
+              $planArray[$planId]['supersedes'] = $plan['supersedes'];
             }
             if (isset($plan['superseded-by'])) {
-              $planArray[$planid]['superseded-by'] = $plan['superseded-by'];
+              $planArray[$planId]['superseded-by'] = $plan['superseded-by'];
             }
-            $approvestr = 'false';
-            if (isset($plan['approval']) && $plan['approval'] == TRUE) {
-              $approvestr = 'true';
+            $approveStr = 'false';
+            if (isset($plan['approval']) && (boolean) $plan['approval'] === TRUE) {
+              $approveStr = 'true';
             }
             if (!isset($plan['billing-model'])) {
-              $plan['billing-model'] = array();
+              $plan['billing-model'] = [];
             }
-            $planArray[$planid]['billing-info'] = product_parse_billing($plan['billing-model']);
+            $planArray[$planId]['billing-info'] = product_parse_billing($plan['billing-model']);
           } // end for
         }
         $variables['plans'] = $productPlans;
         $variables['planList'] = $planArray;
         $billing = FALSE;
-        $billing_enabled = \Drupal::state()->get('ibm_apim.billing_enabled');
-        if ($billing_enabled) {
+        $billingEnabled = (boolean) \Drupal::state()->get('ibm_apim.billing_enabled');
+        if ($billingEnabled) {
           foreach ($productPlans as $planName => $plan) {
             if (isset($plan['billing-model'])) {
               $billing = TRUE;
@@ -508,19 +515,22 @@ function product_preprocess_node(&$variables) {
         $userUtils = \Drupal::service('ibm_apim.user_utils');
         $variables['userHasSubManage'] = $userUtils->checkHasPermission('subscription:manage');
 
-        $docpages = Product::getLinkedPages($variables['node']->id());
-        $variables['docpages'] = $docpages;
+        $docPages = Product::getLinkedPages($variables['node']->id());
+        $variables['docpages'] = $docPages;
         $variables['#attached']['library'][] = 'apic_app/subscribe';
       }
     }
     // custom fields
     $view_mode = $variables['view_mode'];
-    if ($view_mode == 'full') {
+    if ($view_mode === 'full') {
       $view_mode = 'default';
     }
-    $entity_view = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.product.' . $view_mode);
-    $field_list = array_keys($entity_view->getComponents());
-    $core_fields = array(
+    $fieldList = [];
+    $entityView = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.product.' . $view_mode);
+    if ($entityView !== NULL) {
+      $fieldList = array_keys($entityView->getComponents());
+    }
+    $coreFields = [
       'title',
       'vid',
       'status',
@@ -530,11 +540,11 @@ function product_preprocess_node(&$variables) {
       'links',
       'addtoany',
       'uid',
-      'comment'
-    );
-    $ibmfields = Product::getIBMFields();
-    $merged = array_merge($core_fields, $ibmfields);
-    $diff = array_diff($field_list, $merged);
+      'comment',
+    ];
+    $ibmFields = Product::getIBMFields();
+    $merged = array_merge($coreFields, $ibmFields);
+    $diff = array_diff($fieldList, $merged);
     $variables['custom_fields'] = $diff;
     $variables['#attached']['library'][] = 'ibm_apim/core';
     $variables['#attached']['library'][] = 'product/basic';
@@ -550,62 +560,62 @@ function product_preprocess_node(&$variables) {
  * @param $form_id
  */
 function product_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  switch ($form_id) {
+  if ($form_id === 'node_type_edit_form') {
     // remove link to delete our content type
-    case 'node_type_edit_form' :
-      if (isset($form['type']['#default_value']) && $form['type']['#default_value'] == 'product') {
-        if (isset($form['actions']['delete'])) {
-          unset($form['actions']['delete']);
-        }
+    if ($form['type']['#default_value'] !== NULL && $form['type']['#default_value'] === 'product') {
+      if ($form['actions']['delete'] !== NULL) {
+        unset($form['actions']['delete']);
       }
-      break;
+    }
   }
 }
 
 /**
  * Convert the programmatic rate limit into a translatable nicely formatted form
+ *
  * @param $value
+ *
  * @return null|string
  */
 function product_parse_rate_limit($value) {
   ibm_apim_entry_trace(__FUNCTION__, $value);
-  if (isset($value)) {
-    if (mb_strtolower($value) == 'unlimited') {
+  if ($value !== NULL) {
+    if (mb_strtolower($value) === 'unlimited') {
       return t('unlimited');
     }
-    $utils = \Drupal::service( 'ibm_apim.utils');
+    $utils = \Drupal::service('ibm_apim.utils');
     $parts = explode('/', $value);
-    $quantity = $parts[0];
-    $timeperiod = $parts[1];
-    preg_match("~^(\d+)~", $timeperiod, $m);
+    [$quantity, $timePeriod] = $parts;
+    $periodCount = NULL;
+    preg_match("~^(\d+)~", $timePeriod, $m);
     if (isset($m[1])) {
-      $periodcount = $m[1];
+      $periodCount = $m[1];
     }
-    if (!isset($periodcount)) {
-      $periodcount = 1;
+    if ($periodCount === NULL) {
+      $periodCount = 1;
     }
-    $period = trim(str_replace($periodcount, "", $timeperiod, $i));
+    $period = trim(str_replace($periodCount, '', $timePeriod, $i));
 
     switch ($period) {
       case 'second' :
         return \Drupal::translation()
-          ->formatPlural($periodcount, '@quantity calls per second', '@quantity calls per @count seconds', array('@quantity' => $utils->format_number_locale($quantity, 0)));
+          ->formatPlural($periodCount, '@quantity calls per second', '@quantity calls per @count seconds', ['@quantity' => $utils->format_number_locale($quantity, 0)]);
         break;
       case 'minute':
         return \Drupal::translation()
-          ->formatPlural($periodcount, '@quantity calls per minute', '@quantity calls per @count minutes', array('@quantity' => $utils->format_number_locale($quantity, 0)));
+          ->formatPlural($periodCount, '@quantity calls per minute', '@quantity calls per @count minutes', ['@quantity' => $utils->format_number_locale($quantity, 0)]);
         break;
       case 'hour':
         return \Drupal::translation()
-          ->formatPlural($periodcount, '@quantity calls per hour', '@quantity calls per @count hours', array('@quantity' => $utils->format_number_locale($quantity, 0)));
+          ->formatPlural($periodCount, '@quantity calls per hour', '@quantity calls per @count hours', ['@quantity' => $utils->format_number_locale($quantity, 0)]);
         break;
       case 'day':
         return \Drupal::translation()
-          ->formatPlural($periodcount, '@quantity calls per day', '@quantity calls per @count days', array('@quantity' => $utils->format_number_locale($quantity, 0)));
+          ->formatPlural($periodCount, '@quantity calls per day', '@quantity calls per @count days', ['@quantity' => $utils->format_number_locale($quantity, 0)]);
         break;
       case 'week':
         return \Drupal::translation()
-          ->formatPlural($periodcount, '@quantity calls per week', '@quantity calls per @count weeks', array('@quantity' => $utils->format_number_locale($quantity, 0)));
+          ->formatPlural($periodCount, '@quantity calls per week', '@quantity calls per @count weeks', ['@quantity' => $utils->format_number_locale($quantity, 0)]);
         break;
     }
   }
@@ -614,244 +624,227 @@ function product_parse_rate_limit($value) {
 }
 
 /**
- * @param $planid
+ * @param $planId
  * @param $plan
- * @param $apinodes
+ * @param $apiNodes
  * @param $apiRefs
+ *
  * @return array
  */
-function product_process_plan($planid, $plan, $apinodes, $apiRefs) {
+function product_process_plan($planId, $plan, $apiNodes, $apiRefs) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
-  $planarray = array();
-  $planarray['nodes'] = array();
-  $planarray['data'] = $plan;
+  $tooltip = NULL;
+  $planArray = [];
+  $planArray['nodes'] = [];
+  $planArray['data'] = $plan;
   // put a plain API list in the raw plan data so we can index it in the template
-  $planarray['data']['apiList'] = array();
-  if (isset($planarray['data']['apis']) && !empty($planarray['data']['apis'])) {
-    foreach ($planarray['data']['apis'] as $key => $api) {
-      $planarray['data']['apiList'][] = $key;
+  $planArray['data']['apiList'] = [];
+  if (isset($planArray['data']['apis']) && !empty($planArray['data']['apis'])) {
+    foreach ($planArray['data']['apis'] as $key => $api) {
+      $planArray['data']['apiList'][] = $key;
     } // end for
   }
-  $planratelimit = product_parse_rate_limit('unlimited');
+  $planRateLimit = product_parse_rate_limit('unlimited');
   if (isset($plan['rate-limits']) || isset($plan['burst-limits'])) {
     $rateLimitCount = 0;
     $burstLimitCount = 0;
-    if (isset($plan['rate-limits'])) {
+    if ($plan['rate-limits'] !== NULL) {
       $rateLimitCount = count($plan['rate-limits']);
     }
-    elseif (isset($plan['rate-limit'])) {
+    elseif ($plan['rate-limit'] !== NULL) {
       // handle having burst-limits but rate-limit (mix of v5 and v4 schemas)
       $rateLimitCount = 1;
     }
-    if (isset($plan['burst-limits'])) {
+    if ($plan['burst-limits'] !== NULL) {
       $burstLimitCount = count($plan['burst-limits']);
     }
-    if ($rateLimitCount == 0) {
+    if ($rateLimitCount === 0) {
       // if no rate limits but there is a burst limit then rate limit assumed to be unlimited
-      $plan['rate-limits'][] = array('value' => 'unlimited');
+      $plan['rate-limits'][] = ['value' => 'unlimited'];
       $rateLimitCount = count($plan['rate-limits']);
     }
     if (($rateLimitCount + $burstLimitCount) > 1) {
-      $tooltip = array('#rates' => array(), '#bursts' => array());
+      $tooltip = ['#rates' => [], '#bursts' => []];
       $tooltip['#rateLabel'] = t('Rate limits');
       $tooltip['#burstLabel'] = t('Burst limits');
-      if (isset($plan['rate-limits']) && !empty($plan['rate-limits'])) {
-        foreach ($plan['rate-limits'] as $ratename => $ratelimit) {
-          $tooltip['#rates'][] = product_parse_rate_limit($ratelimit['value']);
+      if ($plan['rate-limits'] !== NULL && !empty($plan['rate-limits'])) {
+        foreach ($plan['rate-limits'] as $rateName => $rateLimit) {
+          $tooltip['#rates'][] = product_parse_rate_limit($rateLimit['value']);
         }
       }
-      elseif ((!isset($plan['rate-limits']) || empty($plan['rate-limits'])) && isset($plan['rate-limit'])) {
+      elseif ((!isset($plan['rate-limits']) || empty($plan['rate-limits'])) && $plan['rate-limit'] !== NULL) {
         // handle having burst-limits but rate-limit (mix of v5 and v4 schemas)
         $tooltip['#rates'][] = product_parse_rate_limit($plan['rate-limit']['value']);
       }
-      if (isset($plan['burst-limits']) && !empty($plan['burst-limits'])) {
-        foreach ($plan['burst-limits'] as $ratename => $ratelimit) {
-          $tooltip['#bursts'][] = product_parse_rate_limit($ratelimit['value']);
+      if ($plan['burst-limits'] !== NULL && !empty($plan['burst-limits'])) {
+        foreach ($plan['burst-limits'] as $rateName => $rateLimit) {
+          $tooltip['#bursts'][] = product_parse_rate_limit($rateLimit['value']);
         }
       }
-      $planratelimit = t('@count rate limits *', array('@count' => $rateLimitCount + $burstLimitCount));
+      $planRateLimit = t('@count rate limits *', ['@count' => $rateLimitCount + $burstLimitCount]);
     }
-    else {
-      if ($rateLimitCount > 0) {
-        if (!isset($plan['rate-limits']) && isset($plan['rate-limit'])) {
-          // handle having burst-limits but rate-limit (mix of v5 and v4 schemas)
-          $planratelimit = product_parse_rate_limit($plan['rate-limit']['value']);
-        }
-        else {
-          $planratelimit = product_parse_rate_limit(array_shift($plan['rate-limits'])['value']);
-        }
+    elseif ($rateLimitCount > 0) {
+      if (!isset($plan['rate-limits']) && $plan['rate-limit'] !== NULL) {
+        // handle having burst-limits but rate-limit (mix of v5 and v4 schemas)
+        $planRateLimit = product_parse_rate_limit($plan['rate-limit']['value']);
       }
       else {
-        $planratelimit = product_parse_rate_limit(array_shift($plan['burst-limits'])['value']);
+        $planRateLimit = product_parse_rate_limit(array_shift($plan['rate-limits'])['value']);
       }
     }
+    else {
+      $planRateLimit = product_parse_rate_limit(array_shift($plan['burst-limits'])['value']);
+    }
   }
-  elseif (isset($plan['rate-limit']) && isset($plan['rate-limit']['value'])) {
-    $planratelimit = product_parse_rate_limit($plan['rate-limit']['value']);
+  elseif (isset($plan['rate-limit']) && $plan['rate-limit']['value'] !== NULL) {
+    $planRateLimit = product_parse_rate_limit($plan['rate-limit']['value']);
   }
-  $planarray['rateLimit'] = $planratelimit;
-  if (isset($tooltip)) {
-    $planarray['rateData'] = json_encode($tooltip, JSON_UNESCAPED_UNICODE);
+  $planArray['rateLimit'] = $planRateLimit;
+  if ($tooltip !== NULL) {
+    $planArray['rateData'] = json_encode($tooltip, JSON_UNESCAPED_UNICODE);
   }
-  if (isset($plan['approval'])) {
-    $planarray['requiresApproval'] = $plan['approval'];
-  }
-  else {
-    $planarray['requiresApproval'] = FALSE;
-  }
-  $planarray['planId'] = $planid;
-  if (is_array($apinodes) && count($apinodes) > 0) {
-    foreach ($apinodes as $apinode) {
-      $apiSafeNodeRef = Html::getClass($apinode['node']->apic_ref->value);
-      $planarray['nodes'][$apiSafeNodeRef] = array();
-      $planarray['nodes'][$apiSafeNodeRef]['nid'] = $apinode['node']->id();
-      $planarray['nodes'][$apiSafeNodeRef]['enabled'] = FALSE;
-      $planarray['nodes'][$apiSafeNodeRef]['title'] = $apinode['node']->getTitle();
-      $planarray['nodes'][$apiSafeNodeRef]['protocol'] = $apinode['node']->api_protocol->getValue();
-      $planarray['nodes'][$apiSafeNodeRef]['url'] = $apinode['node']->apic_url->getValue();
-      $planarray['nodes'][$apiSafeNodeRef]['id'] = $apinode['node']->api_id->getValue();
-      $planarray['nodes'][$apiSafeNodeRef]['version'] = $apinode['node']->apic_version->getValue();
-      $planarray['nodes'][$apiSafeNodeRef]['resources'] = array();
-      $swagger = unserialize($apinode['node']->api_swagger->value);
-      if ($swagger !== null && $swagger['paths'] !== null) {
+  $planArray['requiresApproval'] = $plan['approval'] ?? FALSE;
+  $planArray['planId'] = $planId;
+  if (is_array($apiNodes) && count($apiNodes) > 0) {
+    foreach ($apiNodes as $apiNode) {
+      $apiSafeNodeRef = Html::getClass($apiNode['node']->apic_ref->value);
+      $planArray['nodes'][$apiSafeNodeRef] = [];
+      $planArray['nodes'][$apiSafeNodeRef]['nid'] = $apiNode['node']->id();
+      $planArray['nodes'][$apiSafeNodeRef]['enabled'] = FALSE;
+      $planArray['nodes'][$apiSafeNodeRef]['title'] = $apiNode['node']->getTitle();
+      $planArray['nodes'][$apiSafeNodeRef]['protocol'] = $apiNode['node']->api_protocol->getValue();
+      $planArray['nodes'][$apiSafeNodeRef]['url'] = $apiNode['node']->apic_url->getValue();
+      $planArray['nodes'][$apiSafeNodeRef]['id'] = $apiNode['node']->api_id->getValue();
+      $planArray['nodes'][$apiSafeNodeRef]['version'] = $apiNode['node']->apic_version->getValue();
+      $planArray['nodes'][$apiSafeNodeRef]['resources'] = [];
+      $swagger = unserialize($apiNode['node']->api_swagger->value, ['allowed_classes' => false]);
+      if ($swagger !== NULL && $swagger['paths'] !== NULL && is_array($swagger['paths'])) {
         // build up list of resources
-        if (is_array($swagger['paths'])) {
-          foreach ($swagger['paths'] as $pathname => $path) {
-            $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname] = array();
-            foreach ($path as $verb => $op) {
-              if (in_array(mb_strtoupper($verb), array(
-                'PUT',
-                'POST',
-                'GET',
-                'DELETE',
-                'OPTIONS',
-                'TRACE',
-                'HEAD',
-                'PATCH'
-              ))) {
-                $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)] = array('enabled' => FALSE);
-                $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['rateLimit'] = $planratelimit;
-                if (isset($op['x-ibm-soap']['soap-action']) && !empty($op['x-ibm-soap']['soap-action'])) {
-                  $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['soap-action'] = $op['x-ibm-soap']['soap-action'];
-                }
+        foreach ($swagger['paths'] as $pathName => $path) {
+          $planArray['nodes'][$apiSafeNodeRef]['resources'][$pathName] = [];
+          foreach ($path as $verb => $op) {
+            if (in_array(mb_strtoupper($verb), [
+              'PUT',
+              'POST',
+              'GET',
+              'DELETE',
+              'OPTIONS',
+              'TRACE',
+              'HEAD',
+              'PATCH',
+            ])) {
+              $planArray['nodes'][$apiSafeNodeRef]['resources'][$pathName][mb_strtoupper($verb)] = ['enabled' => FALSE];
+              $planArray['nodes'][$apiSafeNodeRef]['resources'][$pathName][mb_strtoupper($verb)]['rateLimit'] = $planRateLimit;
+              if (isset($op['x-ibm-soap']['soap-action']) && !empty($op['x-ibm-soap']['soap-action'])) {
+                $planArray['nodes'][$apiSafeNodeRef]['resources'][$pathName][mb_strtoupper($verb)]['soap-action'] = $op['x-ibm-soap']['soap-action'];
               }
             }
           }
         }
+
       }
       // now mark included apis as enabled
-      if (isset($plan['apis']) && !empty($plan['apis'])) {
-        foreach ($plan['apis'] as $apiname => $planapi) {
+      if (array_key_exists('apis', $plan) && !empty($plan['apis'])) {
+        foreach ($plan['apis'] as $apiName => $planApi) {
           // only include apis matching the current API
-          if ($apiRefs[$apiname] == $apiSafeNodeRef) {
-            $planarray['nodes'][$apiSafeNodeRef]['enabled'] = TRUE;
-            if (!isset($planarray['nodes'][$apiSafeNodeRef]['resources']) || !is_array($planarray['nodes'][$apiSafeNodeRef]['resources'])) {
-              $planarray['nodes'][$apiSafeNodeRef]['resources'] = array();
+          if (array_key_exists($apiName, $planArray['data']['apis'])) {
+            $apiSafeName = Html::getClass($apiName);
+            $planArray['nodes'][$apiSafeName]['enabled'] = TRUE;
+            if (!isset($planArray['nodes'][$apiSafeName]['resources']) || !is_array($planArray['nodes'][$apiSafeName]['resources'])) {
+              $planArray['nodes'][$apiSafeName]['resources'] = [];
             }
-            if (isset($planapi['operations']) && is_array($planapi['operations'])) {
-              foreach ($planapi['operations'] as $resource) {
-                if (in_array(mb_strtoupper(mb_strtoupper($resource['operation'])), array(
+            if (array_key_exists('operations', $planApi) && is_array($planApi['operations'])) {
+              foreach ($planApi['operations'] as $resource) {
+                if (in_array(mb_strtoupper($resource['operation']), [
                   'PUT',
                   'POST',
                   'GET',
                   'DELETE',
                   'OPTIONS',
                   'HEAD',
-                  'PATCH'
-                ))) {
+                  'PATCH',
+                ])) {
                   // remove any query param portion of the path
                   $path = mb_strstr($resource['path'], '?', TRUE) ?: $resource['path'];
-                  if (!isset($planarray['nodes'][$apiSafeNodeRef]['resources'][$path][mb_strtoupper($resource['operation'])])) {
-                    $planarray['nodes'][$apiSafeNodeRef]['resources'][$path][mb_strtoupper($resource['operation'])] = array();
+                  if (!isset($planArray['nodes'][$apiSafeName]['resources'][$path][mb_strtoupper($resource['operation'])])) {
+                    $planArray['nodes'][$apiSafeName]['resources'][$path][mb_strtoupper($resource['operation'])] = [];
                   }
-                  $planarray['nodes'][$apiSafeNodeRef]['resources'][$path][mb_strtoupper($resource['operation'])]['enabled'] = TRUE;
+                  $planArray['nodes'][$apiSafeName]['resources'][$path][mb_strtoupper($resource['operation'])]['enabled'] = TRUE;
                   // include rate limit info
-                  $ratelimit = $planratelimit;
-                  if (isset($tooltip)) {
-                    $optooltip = $tooltip;
-                    unset($optooltip['bursts']);
-                  }
-                  else {
-                    unset($optooltip);
+                  $rateLimit = $planRateLimit;
+                  $opTooltip = NULL;
+                  if ($tooltip !== NULL) {
+                    $opTooltip = $tooltip;
+                    unset($opTooltip['bursts']);
                   }
                   if (isset($resource['rate-limits'])) {
                     if (count($resource['rate-limits']) > 1) {
-                      $optooltip = array('rates' => array());
-                      $optooltip['rateLabel'] = t('Rate limits');
-                      $optooltip['burstLabel'] = t('Burst limits');
-                      foreach ($resource['rate-limits'] as $ratename => $ratelimit) {
-                        $optooltip['rates'][] = product_parse_rate_limit($ratelimit['value']);
+                      $opTooltip = ['rates' => []];
+                      $opTooltip['rateLabel'] = t('Rate limits');
+                      $opTooltip['burstLabel'] = t('Burst limits');
+                      foreach ($resource['rate-limits'] as $rateName => $rateLimit) {
+                        $opTooltip['rates'][] = product_parse_rate_limit($rateLimit['value']);
                       }
-                      $ratelimit = t('@count rate limits *', array('@count' => count($resource['rate-limits'])));
+                      $rateLimit = t('@count rate limits *', ['@count' => count($resource['rate-limits'])]);
                     }
                     else {
-                      $ratelimit = product_parse_rate_limit(array_shift($resource['rate-limits'])['value']);
+                      $rateLimit = product_parse_rate_limit(array_shift($resource['rate-limits'])['value']);
                     }
                   }
-                  elseif (isset($resource['rate-limit']) && isset($resource['rate-limit']['value'])) {
-                    $ratelimit = product_parse_rate_limit($resource['rate-limit']['value']);
+                  elseif (isset($resource['rate-limit']) && $resource['rate-limit']['value'] !== NULL) {
+                    $rateLimit = product_parse_rate_limit($resource['rate-limit']['value']);
                   }
                   elseif (isset($plan['rateLimit']['value'])) {
-                    $ratelimit = product_parse_rate_limit($plan['rateLimit']['value']);
+                    $rateLimit = product_parse_rate_limit($plan['rateLimit']['value']);
                   }
-                  $planarray['nodes'][$apiSafeNodeRef]['resources'][$path][mb_strtoupper($resource['operation'])]['rateLimit'] = $ratelimit;
-                  if (isset($optooltip)) {
-                    $planarray['nodes'][$apiSafeNodeRef]['resources'][$path][mb_strtoupper($resource['operation'])]['rateData'] = json_encode($optooltip, JSON_UNESCAPED_UNICODE);
+                  $planArray['nodes'][$apiSafeName]['resources'][$path][mb_strtoupper($resource['operation'])]['rateLimit'] = $rateLimit;
+                  if ($opTooltip !== NULL) {
+                    $planArray['nodes'][$apiSafeName]['resources'][$path][mb_strtoupper($resource['operation'])]['rateData'] = json_encode($opTooltip, JSON_UNESCAPED_UNICODE);
                   }
-                  $planarray['nodes'][$apiSafeNodeRef]['resources'][$path][mb_strtoupper($resource['operation'])]['op'] = $resource;
+                  $planArray['nodes'][$apiSafeName]['resources'][$path][mb_strtoupper($resource['operation'])]['op'] = $resource;
                   if (isset($resource['x-ibm-soap']['soap-action']) && !empty($resource['x-ibm-soap']['soap-action'])) {
                     $pos = strpos($resource['x-ibm-soap']['soap-action'], ':');
                     if ($pos !== FALSE) {
                       $parts = explode(':', $resource['x-ibm-soap']['soap-action']);
-                      if (isset($parts[1])) {
-                        $planarray['nodes'][$apiSafeNodeRef]['resources'][$path][mb_strtoupper($resource['operation'])]['soap-action'] = $parts[1];
-                      }
-                      else {
-                        $planarray['nodes'][$apiSafeNodeRef]['resources'][$path][mb_strtoupper($resource['operation'])]['soap-action'] = $resource['x-ibm-soap']['soap-action'];
-                      }
+                      $planArray['nodes'][$apiSafeName]['resources'][$path][mb_strtoupper($resource['operation'])]['soap-action'] = $parts[1] ?? $resource['x-ibm-soap']['soap-action'];
                     }
                     else {
-                      $planarray['nodes'][$apiSafeNodeRef]['resources'][$path][mb_strtoupper($resource['operation'])]['soap-action'] = $resource['x-ibm-soap']['soap-action'];
+                      $planArray['nodes'][$apiSafeName]['resources'][$path][mb_strtoupper($resource['operation'])]['soap-action'] = $resource['x-ibm-soap']['soap-action'];
                     }
                   }
                 }
               }
             }
             else {
-              //assume all enabled
-              foreach ($planarray['nodes'][$apiSafeNodeRef]['resources'] as $pathname => $path) {
+              //assume all operations enabled
+              foreach ($planArray['nodes'][$apiSafeName]['resources'] as $pathName => $path) {
                 foreach ($path as $verb => $op) {
-                  if (in_array(mb_strtoupper($verb), array(
+                  if (in_array(mb_strtoupper($verb), [
                     'PUT',
                     'POST',
                     'GET',
                     'DELETE',
                     'OPTIONS',
                     'HEAD',
-                    'PATCH'
-                  ))) {
-                    if (!isset($planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)])) {
-                      $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)] = array();
+                    'PATCH',
+                  ])) {
+                    if (!isset($planArray['nodes'][$apiSafeName]['resources'][$pathName][mb_strtoupper($verb)])) {
+                      $planArray['nodes'][$apiSafeName]['resources'][$pathName][mb_strtoupper($verb)] = [];
                     }
-                    $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['enabled'] = TRUE;
-                    $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['rateLimit'] = $planratelimit;
-                    if (isset($tooltip)) {
-                      $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['rateData'] = json_encode($tooltip, JSON_UNESCAPED_UNICODE);
+                    $planArray['nodes'][$apiSafeName]['resources'][$pathName][mb_strtoupper($verb)]['enabled'] = TRUE;
+                    $planArray['nodes'][$apiSafeName]['resources'][$pathName][mb_strtoupper($verb)]['rateLimit'] = $planRateLimit;
+                    if ($tooltip !== NULL) {
+                      $planArray['nodes'][$apiSafeName]['resources'][$pathName][mb_strtoupper($verb)]['rateData'] = json_encode($tooltip, JSON_UNESCAPED_UNICODE);
                     }
-                    $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['op'] = $op;
+                    $planArray['nodes'][$apiSafeName]['resources'][$pathName][mb_strtoupper($verb)]['op'] = $op;
                     if (isset($op['soap-action']) && !empty($op['soap-action'])) {
                       $pos = mb_strpos($op['soap-action'], ':');
                       if ($pos !== FALSE) {
                         $parts = explode(':', $op['soap-action']);
-                        if (isset($parts[1])) {
-                          $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['soap-action'] = $parts[1];
-                        }
-                        else {
-                          $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['soap-action'] = $op['soap-action'];
-                        }
+                        $planArray['nodes'][$apiSafeName]['resources'][$pathName][mb_strtoupper($verb)]['soap-action'] = $parts[1] ?? $op['soap-action'];
                       }
                       else {
-                        $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['soap-action'] = $op['soap-action'];
+                        $planArray['nodes'][$apiSafeName]['resources'][$pathName][mb_strtoupper($verb)]['soap-action'] = $op['soap-action'];
                       }
                     }
                   }
@@ -863,31 +856,26 @@ function product_process_plan($planid, $plan, $apinodes, $apiRefs) {
       }
       else {
         // no $plan['apis'] means all enabled
-        $planarray['nodes'][$apiSafeNodeRef]['enabled'] = TRUE;
-        foreach ($planarray['nodes'][$apiSafeNodeRef]['resources'] as $pathname => $path) {
+        $planArray['nodes'][$apiSafeNodeRef]['enabled'] = TRUE;
+        foreach ($planArray['nodes'][$apiSafeNodeRef]['resources'] as $pathName => $path) {
           foreach ($path as $verb => $op) {
-            if (isset($planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)])) {
-              $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)] = array();
+            if (isset($planArray['nodes'][$apiSafeNodeRef]['resources'][$pathName][mb_strtoupper($verb)])) {
+              $planArray['nodes'][$apiSafeNodeRef]['resources'][$pathName][mb_strtoupper($verb)] = [];
             }
-            $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['enabled'] = TRUE;
-            $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['rateLimit'] = $planratelimit;
-            if (isset($tooltip)) {
-              $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['rateData'] = json_encode($tooltip, JSON_UNESCAPED_UNICODE);
+            $planArray['nodes'][$apiSafeNodeRef]['resources'][$pathName][mb_strtoupper($verb)]['enabled'] = TRUE;
+            $planArray['nodes'][$apiSafeNodeRef]['resources'][$pathName][mb_strtoupper($verb)]['rateLimit'] = $planRateLimit;
+            if ($tooltip !== NULL) {
+              $planArray['nodes'][$apiSafeNodeRef]['resources'][$pathName][mb_strtoupper($verb)]['rateData'] = json_encode($tooltip, JSON_UNESCAPED_UNICODE);
             }
-            $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['op'] = $op;
+            $planArray['nodes'][$apiSafeNodeRef]['resources'][$pathName][mb_strtoupper($verb)]['op'] = $op;
             if (isset($op['soap-action']) && !empty($op['soap-action'])) {
               $pos = mb_strpos($op['soap-action'], ':');
               if ($pos !== FALSE) {
                 $parts = explode(':', $op['soap-action']);
-                if (isset($parts[1])) {
-                  $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['soap-action'] = $parts[1];
-                }
-                else {
-                  $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['soap-action'] = $op['soap-action'];
-                }
+                $planArray['nodes'][$apiSafeNodeRef]['resources'][$pathName][mb_strtoupper($verb)]['soap-action'] = $parts[1] ?? $op['soap-action'];
               }
               else {
-                $planarray['nodes'][$apiSafeNodeRef]['resources'][$pathname][mb_strtoupper($verb)]['soap-action'] = $op['soap-action'];
+                $planArray['nodes'][$apiSafeNodeRef]['resources'][$pathName][mb_strtoupper($verb)]['soap-action'] = $op['soap-action'];
               }
             }
           }
@@ -896,53 +884,48 @@ function product_process_plan($planid, $plan, $apinodes, $apiRefs) {
     }
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
-  return $planarray;
+  return $planArray;
 }
 
 /**
  * Given a billing object it returns a display string for that price plan
  *
  * @param array $billing
+ *
  * @return string
  */
-function product_parse_billing($billing = array()) {
+function product_parse_billing($billing = []) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
-  $text = t("Free");
-  $utils = \Drupal::service( 'ibm_apim.utils');
+  $text = t('Free');
+  $utils = \Drupal::service('ibm_apim.utils');
 
   if (isset($billing['model'])) {
-    if (isset($billing['currency']) && $billing['currency'] != 'JPY') {
-      $billing['amount'] = $billing['amount'] / 100;
+    if (isset($billing['currency']) && $billing['currency'] !== 'JPY') {
+      $billing['amount'] /= 100;
     }
     if ($billing['model'] === 'flat-fee') {
       $text = $utils->format_number_locale($billing['amount']) . ' ' . strtoupper($billing['currency']);
     }
-    else {
-      if ($billing['model'] === 'stripe_monthly_fixed') {
-        $text = t('%length per month', array('%length' => $utils->format_number_locale($billing['amount']) . ' ' . strtoupper($billing['currency'])));
-        if ($billing['trial-period-days']) {
-          $text .= ' ' . \Drupal::translation()
-              ->formatPlural($billing['trial-period-days'], '(%length day trial period)', '(%length days trial period)', array('%length' => $utils->format_number_locale($billing['trial-period-days'])));
-        }
+    elseif ($billing['model'] === 'stripe_monthly_fixed') {
+      $text = t('%length per month', ['%length' => $utils->format_number_locale($billing['amount']) . ' ' . strtoupper($billing['currency'])]);
+      if ($billing['trial-period-days']) {
+        $text .= ' ' . \Drupal::translation()
+            ->formatPlural($billing['trial-period-days'], '(%length day trial period)', '(%length days trial period)', ['%length' => $utils->format_number_locale($billing['trial-period-days'])]);
       }
-      else {
-        if ($billing['model'] === 'flat-calls') {
-          $text = t('%length per API call per month', array('%length' => $utils->format_number_locale($billing['amount']) . ' ' . strtoupper($billing['currency'])));
-          if ($billing['freemium'] && $billing['freeCalls']) {
-            $text .= ' ' . \Drupal::translation()
-                ->formatPlural($billing['freeCalls'], '(%length call free per month)', '(%length calls free per month)', array('%length' => $utils->format_number_locale($billing['freeCalls'])));
-          }
-        }
-        else {
-          if ($billing['model'] === 'credits') {
-            $text .= \Drupal::translation()
-              ->formatPlural($billing['credits'], '%price for %quantity API Call Credit', '%price for %quantity API Call Credits', array(
-                '%price' => $utils->format_number_locale($billing['amount']) . ' ' . strtoupper($billing['currency']),
-                '%quantity' => $utils->format_number_locale($billing['credits'])
-              ));
-          }
-        }
+    }
+    elseif ($billing['model'] === 'flat-calls') {
+      $text = t('%length per API call per month', ['%length' => $utils->format_number_locale($billing['amount']) . ' ' . strtoupper($billing['currency'])]);
+      if ($billing['freemium'] && $billing['freeCalls']) {
+        $text .= ' ' . \Drupal::translation()
+            ->formatPlural($billing['freeCalls'], '(%length call free per month)', '(%length calls free per month)', ['%length' => $utils->format_number_locale($billing['freeCalls'])]);
       }
+    }
+    elseif ($billing['model'] === 'credits') {
+      $text .= \Drupal::translation()
+        ->formatPlural($billing['credits'], '%price for %quantity API Call Credit', '%price for %quantity API Call Credits', [
+          '%price' => $utils->format_number_locale($billing['amount']) . ' ' . strtoupper($billing['currency']),
+          '%quantity' => $utils->format_number_locale($billing['credits']),
+        ]);
     }
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -951,67 +934,72 @@ function product_parse_billing($billing = array()) {
 
 /**
  * Check if we have access to subscribe to the specified product Node
+ *
  * @param $node
+ *
  * @return bool
  */
 function product_check_product_subscribe($node) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   $returnValue = FALSE;
-  if (isset($node)) {
+  if ($node !== NULL) {
 
     // Special case for subscription wizard - if you are not logged in, clicking "subscribe" on the product
     // will take you through the login / create account process so just allow all unauthenticated through
     if (\Drupal::currentUser()->isAnonymous()) {
       // even for anonymous we need to block subscribing to deprecated products
       $state = $node->product_state->value;
-      if (!isset($state) || empty($state) || mb_strtolower($state) != 'deprecated') {
+      if ($state === NULL || empty($state) || mb_strtolower($state) !== 'deprecated') {
         $returnValue = TRUE;
       }
     }
     else {
-      $loggedIn = TRUE;
+      $loggedIn = !\Drupal::currentUser()->isAnonymous();
       // if not a developer return false
       $userUtils = \Drupal::service('ibm_apim.user_utils');
       if ($userUtils->checkHasPermission('subscription:manage')) {
         // if deprecated then no one has access
         $state = $node->product_state->value;
-        if (!isset($state) || empty($state) || mb_strtolower($state) != 'deprecated') {
+        if ($state === NULL || empty($state) || mb_strtolower($state) !== 'deprecated') {
           // if subscribe disabled then no one has access
-          $subscribeEnabled = $node->product_subscribe_enabled->value;
-          if (isset($subscribeEnabled) && $subscribeEnabled == 1) {
+          $subscribeEnabled = (boolean) $node->product_subscribe_enabled->value;
+          if ($subscribeEnabled === TRUE) {
             // now check specific access
 
-            $myorg = $userUtils->getCurrentConsumerOrg();
-            $visibility = array();
+            $myOrg = $userUtils->getCurrentConsumerOrg();
+            $visibility = [[]];
             foreach ($node->product_visibility->getValue() as $arrayValue) {
-              $visibility = array_merge($visibility, unserialize($arrayValue['value']));
+              $visibility[] = unserialize($arrayValue['value'], ['allowed_classes' => false]);
             }
-            if (isset($visibility)) {
-              if (isset($visibility['subscribe']['type']) && mb_strtolower($visibility['subscribe']['type']) == 'public') {
+            $visibility = array_merge(...$visibility);
+            if ($visibility !== NULL && $visibility['subscribe']['type'] !== NULL) {
+              if (mb_strtolower($visibility['subscribe']['type']) === 'public') {
                 $returnValue = TRUE;
               }
-              elseif (isset($visibility['subscribe']['type']) && mb_strtolower($visibility['subscribe']['type']) == 'authenticated' && $loggedIn) {
+              elseif ($loggedIn && mb_strtolower($visibility['subscribe']['type']) === 'authenticated') {
                 $returnValue = TRUE;
               }
-              elseif (isset($visibility['subscribe']['type']) && mb_strtolower($visibility['subscribe']['type']) == 'custom' && isset($myorg['url'])) {
-                foreach ($visibility['subscribe']['org_urls'] as $customorg) {
-                  if ($customorg == $myorg['url']) {
+              elseif ($myOrg['url'] !== NULL && mb_strtolower($visibility['subscribe']['type']) === 'custom') {
+                foreach ($visibility['subscribe']['org_urls'] as $customOrg) {
+                  if ($customOrg === $myOrg['url']) {
                     $returnValue = TRUE;
                   }
                 }
-                if ($returnValue == FALSE) {
+                if ($returnValue === FALSE) {
                   $query = \Drupal::entityQuery('node');
                   $query->condition('type', 'consumerorg');
-                  $query->condition('consumerorg_url.value', $myorg['url']);
-                  $consumerorgresults = $query->execute();
-                  if (isset($consumerorgresults) && !empty($consumerorgresults)) {
-                    $first = array_shift($consumerorgresults);
-                    $consumerorg = Node::load($first);
-                    $tags = $consumerorg->consumerorg_tags->getValue();
-                    if (isset($tags) && is_array($tags) && count($tags) > 0) {
-                      foreach ($visibility['subscribe']['tags'] as $customtag) {
-                        if (isset($customtag) && in_array($customtag, $tags)) {
-                          $returnValue = TRUE;
+                  $query->condition('consumerorg_url.value', $myOrg['url']);
+                  $consumerOrgResults = $query->execute();
+                  if ($consumerOrgResults !== NULL && !empty($consumerOrgResults)) {
+                    $first = array_shift($consumerOrgResults);
+                    $consumerOrg = Node::load($first);
+                    if ($consumerOrg !== NULL) {
+                      $tags = $consumerOrg->consumerorg_tags->getValue();
+                      if ($tags !== NULL && is_array($tags) && count($tags) > 0) {
+                        foreach ($visibility['subscribe']['tags'] as $customTag) {
+                          if ($customTag !== NULL && !empty($customTag) && in_array($customTag, $tags, TRUE)) {
+                            $returnValue = TRUE;
+                          }
                         }
                       }
                     }
@@ -1036,7 +1024,7 @@ function product_check_product_subscribe($node) {
  * @param $hook
  */
 function product_module_implements_alter(&$implementations, $hook) {
-  if (($hook == 'form_alter' || $hook == 'menu_links_discovered_alter') && isset($implementations['product'])) {
+  if (($hook === 'form_alter' || $hook === 'menu_links_discovered_alter') && isset($implementations['product'])) {
     $group = $implementations['product'];
     unset($implementations['product']);
     $implementations['product'] = $group;
@@ -1066,23 +1054,24 @@ function product_menu_links_discovered_alter(&$links) {
  * @param $type
  * @param $theme
  * @param $path
+ *
  * @return array
  */
 function product_theme($existing, $type, $theme, $path) {
-  return array(
-    'product_select' => array(
-      'variables' => array(
+  return [
+    'product_select' => [
+      'variables' => [
         'apiNid' => NULL,
-        'products' => NULL
-      )
-    ),
-    'product_wrapper' => array(
-      'variables' => array(
+        'products' => NULL,
+      ],
+    ],
+    'product_wrapper' => [
+      'variables' => [
         'api' => NULL,
         'product' => NULL,
         'showPlaceholders' => TRUE,
-        'showVersions' => TRUE
-      )
-    )
-  );
+        'showVersions' => TRUE,
+      ],
+    ],
+  ];
 }

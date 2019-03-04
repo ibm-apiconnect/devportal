@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -27,9 +27,9 @@ class ClientIDResetCheck implements AccessInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $allowed = FALSE;
     $config = \Drupal::config('ibm_apim.settings');
-    $allow_clientid_reset = $config->get('allow_clientid_reset');
+    $allow_clientid_reset = (boolean) $config->get('allow_clientid_reset');
 
-    if ($allow_clientid_reset) {
+    if ($allow_clientid_reset === TRUE) {
       $allowed = TRUE;
     }
 

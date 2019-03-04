@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -14,8 +14,6 @@ namespace Drupal\ibm_apim\Access;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Routing\Access\AccessInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Route;
 use Drupal\Core\Routing\RouteMatch;
 
 /**
@@ -23,15 +21,15 @@ use Drupal\Core\Routing\RouteMatch;
  */
 class IbmViewCheck implements AccessInterface {
 
-  public function access(RouteMatch $routeMatch = NULL) {
+  public function access(RouteMatch $routeMatch = NULL): AccessResult {
     $allowed = TRUE;
 
     if (isset($routeMatch)) {
       $parameters = $routeMatch->getParameters();
-      $view = $parameters->get('view');      
+      $view = $parameters->get('view');
       if (isset($view)) {
         $view_id = $view->id();
-        if ($view_id == 'apis' || $view_id == 'applications' || $view_id == 'products' || $view_id == 'faqs') {
+        if ($view_id === 'apis' || $view_id === 'applications' || $view_id === 'products' || $view_id === 'faqs') {
           $allowed = FALSE;
         }
       }

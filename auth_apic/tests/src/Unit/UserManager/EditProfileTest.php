@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,11 +13,9 @@
 
 namespace Drupal\Tests\auth_apic\Unit;
 
-use Drupal\Tests\auth_apic\Unit\UserManager\UserManagerTestBaseClass;
 use Drupal\auth_apic\Rest\MeResponse;
-
 use Drupal\ibm_apim\ApicType\ApicUser;
-
+use Drupal\Tests\auth_apic\Unit\UserManager\UserManagerTestBaseClass;
 use Prophecy\Argument;
 
 
@@ -29,7 +27,7 @@ use Prophecy\Argument;
  */
 class EditProfileTest extends UserManagerTestBaseClass {
 
-  public function testEditUser() {
+  public function testEditUser(): void {
 
     $user = $this->createUser();
     $meResponse = $this->createMeResponse();
@@ -49,22 +47,22 @@ class EditProfileTest extends UserManagerTestBaseClass {
 
   }
 
-  public function testBadManagementNodeResponse() {
+  public function testBadManagementNodeResponse(): void {
 
     $user = $this->createUser();
     $meResponse = $this->createMeResponse();
     $meResponse->setCode(401);
-    $meResponse->setErrors('TEST ERROR');
+    $meResponse->setErrors(['TEST ERROR']);
 
     $accountStub = $this->createAccountStub();
 
     $this->mgmtServer->updateMe($user)->willReturn($meResponse);
     $this->externalAuth->load('andre', 'auth_apic')->willReturn($accountStub);
 
-    $this->logger->error("Failed to update a user in the management server. Response code was @code and error message was @error", array(
+    $this->logger->error('Failed to update a user in the management server. Response code was @code and error message was @error', [
       '@code' => '401',
-      '@error' => 'TEST ERROR'
-    ))->shouldBeCalled();
+      '@error' => 'TEST ERROR',
+    ])->shouldBeCalled();
 
     $userManager = $this->createUserManager();
     $result = $userManager->updateApicAccount($user);
@@ -72,7 +70,7 @@ class EditProfileTest extends UserManagerTestBaseClass {
 
   }
 
-  public function testBadExternalAuthLoad() {
+  public function testBadExternalAuthLoad(): void {
 
     $user = $this->createUser();
     $meResponse = $this->createMeResponse();
@@ -86,21 +84,21 @@ class EditProfileTest extends UserManagerTestBaseClass {
 
   }
 
-  private function createUser() {
+  private function createUser(): ApicUser {
     $user = new ApicUser();
 
     $user->setUsername('andre');
     $user->setMail('abc@me.com');
     $user->setPassword('abc');
-    $user->setfirstname('abc');
-    $user->setlastname('def');
-    $user->setorganization('org1');
+    $user->setFirstname('abc');
+    $user->setLastname('def');
+    $user->setOrganization('org1');
 
     return $user;
 
   }
 
-  private function createMeResponse() {
+  private function createMeResponse(): MeResponse {
     $meResponse = new MeResponse();
 
     $meResponse->setCode(200);

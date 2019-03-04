@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -24,10 +24,12 @@ namespace Drupal\ibm_apim\Translation;
 class TranslationSplitter {
 
   private $strings;
+
   private $translations;
 
-  private $memories = array();
-  private $translation_required = array();
+  private $memories = [];
+
+  private $translation_required = [];
 
   public function __construct($potFile, $poFile, $languageCode) {
     $potReader = new TranslationFileReader($potFile);
@@ -40,13 +42,13 @@ class TranslationSplitter {
 
   }
 
-  private function split() {
-    if ($this->strings == NULL || sizeof($this->strings) == 0) {
-      throw new \Exception("No strings available.");
+  private function split(): void {
+    if ($this->strings === NULL || sizeof($this->strings) === 0) {
+      throw new \Exception('No strings available.');
     }
 
-    if ($this->translations == NULL || sizeof($this->translations) == 0) {
-      throw new \Exception("No translations available.");
+    if ($this->translations === NULL || sizeof($this->translations) === 0) {
+      throw new \Exception('No translations available.');
     }
 
     foreach ($this->strings as $string) {
@@ -68,11 +70,11 @@ class TranslationSplitter {
     }
   }
 
-  public function getMemories() {
+  public function getMemories(): array {
     return $this->memories;
   }
 
-  public function getRequiredTranslations() {
+  public function getRequiredTranslations(): array {
     return $this->translation_required;
   }
 

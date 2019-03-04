@@ -78,9 +78,9 @@ class ApiEmailSubscribers extends RulesActionBase implements ContainerFactoryPlu
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
+   * @param string $pluginId
    *   The plugin ID for the plugin instance.
-   * @param mixed $plugin_definition
+   * @param mixed $pluginDefinition
    *   The plugin implementation definition.
    * @param \Psr\Log\LoggerInterface $logger
    *   The alias storage service.
@@ -89,8 +89,8 @@ class ApiEmailSubscribers extends RulesActionBase implements ContainerFactoryPlu
    * @param \Drupal\mail_subscribers\Service\MailService $subscriberMailService
    *   The subscriber mail service
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerInterface $logger, MailManagerInterface $mail_manager, MailService $subscriberMailService) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public function __construct(array $configuration, $pluginId, $pluginDefinition, LoggerInterface $logger, MailManagerInterface $mail_manager, MailService $subscriberMailService) {
+    parent::__construct($configuration, $pluginId, $pluginDefinition);
     $this->logger = $logger;
     $this->mailManager = $mail_manager;
     $this->subscriberMailService = $subscriberMailService;
@@ -99,11 +99,11 @@ class ApiEmailSubscribers extends RulesActionBase implements ContainerFactoryPlu
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $pluginId, $pluginDefinition) {
     return new static(
       $configuration,
-      $plugin_id,
-      $plugin_definition,
+      $pluginId,
+      $pluginDefinition,
       $container->get('logger.factory')->get('rules'),
       $container->get('plugin.manager.mail'),
       $container->get('mail_subscribers.mail_service')
@@ -125,26 +125,28 @@ class ApiEmailSubscribers extends RulesActionBase implements ContainerFactoryPlu
    *   (optional) Reply to email address.
    * @param \Drupal\Core\Language\LanguageInterface|null $language
    *   (optional) Language code.
+   *
+   * @throws \Exception
    */
   protected function doExecute($node, $members = FALSE, $subject, $message, $reply = NULL, LanguageInterface $language = NULL) {
-    $langcode = isset($language) ? $language->getId() : LanguageInterface::LANGCODE_SITE_DEFAULT;
+    $langcode = $language !== null ? $language->getId() : LanguageInterface::LANGCODE_SITE_DEFAULT;
     $mailParams = [
       'subject' => $subject,
       'message' => $message,
     ];
 
-    if ($node->getType() == 'api') {
-      if ($members == TRUE) {
-        $to_list = $this->subscriberMailService->getApiSubscribingMembers($node->id());
+    if ($node->getType() === 'api') {
+      if ($members === TRUE) {
+        $toList = $this->subscriberMailService->getApiSubscribingMembers($node->id());
       }
       else {
-        $to_list = $this->subscriberMailService->getApiSubscribingOwners($node->id());
+        $toList = $this->subscriberMailService->getApiSubscribingOwners($node->id());
       }
 
       $mailParams['langcode'] = $langcode;
 
-      $this->subscriberMailService->sendEmail($mailParams, $to_list, $reply);
-      if ($members == TRUE) {
+      $this->subscriberMailService->sendEmail($mailParams, $toList, $reply);
+      if ($members === TRUE) {
         $this->logger->notice('Sent email to members subscribing to API %api', array(
           '%api' => $node->getTitle()
         ));

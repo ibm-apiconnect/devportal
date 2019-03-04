@@ -37,8 +37,8 @@ class ProductIsOfState extends RulesConditionBase {
    * @return bool
    *   TRUE if the product state is in the array of states.
    */
-  protected function doEvaluate(NodeInterface $node, array $states) {
-    return in_array($node->product_state->value, $states);
+  protected function doEvaluate(NodeInterface $node, array $states): bool {
+    return in_array($node->product_state->value, $states, FALSE);
   }
 
 }

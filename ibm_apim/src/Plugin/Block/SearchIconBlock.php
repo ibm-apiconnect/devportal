@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -15,7 +15,6 @@ namespace Drupal\ibm_apim\Plugin\Block;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Session\AccountInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'SearchIcon' block.
@@ -31,17 +30,17 @@ class SearchIconBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  protected function blockAccess(AccountInterface $account) {
+  protected function blockAccess(AccountInterface $account): AccessResult {
     return AccessResult::allowedIfHasPermission($account, 'search content');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function build() {
-    return array(
-      '#theme' => 'ibm_apim_search_icon_block'
-    );
+  public function build(): array {
+    return [
+      '#theme' => 'ibm_apim_search_icon_block',
+    ];
   }
 
 }

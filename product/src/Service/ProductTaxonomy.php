@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -14,6 +14,7 @@
 namespace Drupal\product\Service;
 
 use Drupal\ibm_apim\Service\ApicTaxonomy;
+use Drupal\node\NodeInterface;
 
 class ProductTaxonomy {
 
@@ -27,37 +28,39 @@ class ProductTaxonomy {
    * Asserts the relevant taxonomy hierarchy is in
    * place from any provided product categories
    *
-   * @param $product
-   * @param $node
+   * @param array $product
+   * @param \Drupal\node\NodeInterface $node
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function process_categories($product, $node) {
+  public function process_categories(array $product, NodeInterface $node): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $categories = $product['catalog_product']['info']['categories'];
     $tids = $this->apicTaxonomy->get_taxonomies_from_categories($categories);
 
-    if ($node->hasField('apic_tags')) {
-      $currenttags = $node->apic_tags->getValue();
+    if ($node !== NULL && $node->hasField('apic_tags')) {
+      $currentTags = $node->apic_tags->getValue();
     }
     else {
-      $currenttags = array();
+      $currentTags = [];
     }
 
     if (is_array($tids) && !empty($tids)) {
       foreach ($tids as $tid) {
         if (isset($tid) && is_numeric($tid)) {
           $found = FALSE;
-          foreach ($currenttags as $currentvalue) {
-            if (isset($currentvalue['target_id']) && $currentvalue['target_id'] == $tid) {
+          foreach ($currentTags as $currentValue) {
+            if (isset($currentValue['target_id']) && (string) $currentValue['target_id'] === (string) $tid) {
               $found = TRUE;
             }
           }
-          if ($found == FALSE) {
-            $currenttags[] = array('target_id' => $tid);
+          if ($found === FALSE) {
+            $currentTags[] = ['target_id' => $tid];
           }
         }
       }
 
-      $node->set('apic_tags', $currenttags);
+      $node->set('apic_tags', $currentTags);
       $node->save();
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

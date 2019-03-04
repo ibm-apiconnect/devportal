@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,21 +13,19 @@
 
 namespace Drupal\apictest\Context;
 
-use Drupal\user\Entity\User;
-
-use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Behat\Gherkin\Node\TableNode;
-
 use Drupal\apictest\ApicTestUtils;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
+use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\ibm_apim\ApicUser;
+use Drupal\user\Entity\User;
 
 class ConsumerOrgContext extends RawDrupalContext {
 
   /**
    * @Given consumerorgs:
    */
-  public function createConsumerorgs(TableNode $table) {
+  public function createConsumerorgs(TableNode $table): void {
 
     // If we are not using mocks, then we are testing with live data from a management appliance
     // Under those circumstances, we should absolutely not create any consumerorg in the database!
@@ -39,9 +37,9 @@ class ConsumerOrgContext extends RawDrupalContext {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = \Drupal::service('account_switcher');
-    $original_user = \Drupal::currentUser();
-    if ($original_user->id() != 1) {
-      $accountSwitcher->switchTo(\Drupal\user\Entity\User::load(1));
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(User::load(1));
     }
 
     foreach ($table as $row) {
@@ -55,38 +53,36 @@ class ConsumerOrgContext extends RawDrupalContext {
       $org->setCatalogUrl('/catalogs/1234/5678');
       $org->setUrl('/consumer-orgs/1234/5678/' . $row['id']);
 
-      $owner_role = ApicTestUtils::makeOwnerRole($org);
-      $dev_role = ApicTestUtils::makeDeveloperRole($org);
-      $viewer_role = ApicTestUtils::makeViewerRole($org);
-      $org->addRole($owner_role);
-      $org->addRole($dev_role);
-      $org->addRole($viewer_role);
+      $ownerRole = ApicTestUtils::makeOwnerRole($org);
+      $devRole = ApicTestUtils::makeDeveloperRole($org);
+      $viewerRole = ApicTestUtils::makeViewerRole($org);
+      $org->addRole($ownerRole);
+      $org->addRole($devRole);
+      $org->addRole($viewerRole);
 
       $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
       $consumerOrgService->createOrUpdateNode($org, 'test');
-      $user_service = \Drupal::service('ibm_apim.apicuser');
+      $userService = \Drupal::service('ibm_apim.apicuser');
 
       // Need to update the user record with a consumerorg_url as well
       $ids = \Drupal::entityQuery('user')->execute();
       $users = User::loadMultiple($ids);
 
-      foreach ($users as $drupal_user) {
-        if ($drupal_user->getUsername() == $row['owner']) {
-          if (!$consumerOrgService->isConsumerorgAssociatedWithAccount($org->getUrl(), $drupal_user)) {
-            $drupal_user->consumer_organization[] = $org->getUrl();
-            $drupal_user->consumerorg_url[] = $org->getUrl();
-            $drupal_user->save();
+      foreach ($users as $drupalUser) {
+        if ($drupalUser->getUsername() === $row['owner'] && !$consumerOrgService->isConsumerorgAssociatedWithAccount($org->getUrl(), $drupalUser)) {
+          $drupalUser->consumer_organization[] = $org->getUrl();
+          $drupalUser->consumerorg_url[] = $org->getUrl();
+          $drupalUser->save();
 
-            $user = $user_service->parseDrupalAccount($drupal_user);
-            ApicTestUtils::addMemberToOrg($org, $user, array($owner_role));
+          $user = $userService->parseDrupalAccount($drupalUser);
+          ApicTestUtils::addMemberToOrg($org, $user, [$ownerRole]);
 
-            print("Saved user " . $drupal_user->getUsername() . " after adding consumerorg field " . $org->getUrl() . "\n");
-          }
+          print('Saved user ' . $drupalUser->getUsername() . ' after adding consumerorg field ' . $org->getUrl() . "\n");
         }
       }
       $consumerOrgService->createOrUpdateNode($org, 'test');
     }
-    if (isset($original_user) && $original_user->id() != 1) {
+    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -98,7 +94,7 @@ class ConsumerOrgContext extends RawDrupalContext {
    *
    * @param \Behat\Gherkin\Node\TableNode $table
    */
-  public function assignConsumerorgRoles(TableNode $table) {
+  public function assignConsumerorgRoles(TableNode $table): void {
 
     // If we are not using mocks, then we are testing with live data from a management appliance
     // Under those circumstances, we should absolutely not create any consumerorg in the database!
@@ -113,39 +109,39 @@ class ConsumerOrgContext extends RawDrupalContext {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = \Drupal::service('account_switcher');
-    $original_user = \Drupal::currentUser();
-    if ($original_user->id() != 1) {
-      $accountSwitcher->switchTo(\Drupal\user\Entity\User::load(1));
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(User::load(1));
     }
 
     foreach ($table as $row) {
       $account = user_load_by_name($row['name']);
-      $consumerorg_url = '/consumer-orgs/1234/5678/' . $row['consumerorgid'];
+      $consumerorgUrl = '/consumer-orgs/1234/5678/' . $row['consumerorgid'];
 
-      if (!$consumerOrgService->isConsumerorgAssociatedWithAccount($consumerorg_url, $account)) {
-        $account->consumerorg_url[] = $consumerorg_url;
+      if (!$consumerOrgService->isConsumerorgAssociatedWithAccount($consumerorgUrl, $account)) {
+        $account->consumerorg_url[] = $consumerorgUrl;
         $account->save();
-        print("Saved user " . $account->getUsername() . " after adding consumerorg field " . $consumerorg_url . "\n");
+        print('Saved user ' . $account->getUsername() . ' after adding consumerorg field ' . $consumerorgUrl . "\n");
       }
       $email = '';
-      if (isset($account)) {
+      if ($account !== NULL) {
         $email = $account->get('mail')->value;
       }
 
       // get the corg from the consumerorg service
-      $corg = \Drupal::service('ibm_apim.consumerorg')->get($consumerorg_url);
-      $org_roles = $corg->getRoles();
-      foreach($org_roles as $role) {
+      $corg = \Drupal::service('ibm_apim.consumerorg')->get($consumerorgUrl);
+      $orgRoles = $corg->getRoles();
+      foreach ($orgRoles as $role) {
         print($row['role']);
         print($role->getName());
-        if($role->getName() == $row['role']){
+        if ($role->getName() === $row['role']) {
           // this is the role we wanted to add to the user
-          ApicTestUtils::addMemberToOrg($corg, $userService->parseDrupalAccount($account), array($role));
+          ApicTestUtils::addMemberToOrg($corg, $userService->parseDrupalAccount($account), [$role]);
         }
       }
     }
 
-    if (isset($original_user) && $original_user->id() != 1) {
+    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -16,10 +16,11 @@
  * Provides APIC integration.
  */
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\Component\Utility\Html;
 use Drupal\ibm_apim\Exception\ModuleInstallationBlocked;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -27,20 +28,20 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Implementation of hook_init().
+ *
+ * @throws \Exception
  */
 function ibm_apim_init() {
   // not during install
-  if (\Drupal::state()->get('install_task') == 'done') {
-    if (isset($_SERVER["REMOTE_ADDR"]) && $_SERVER["REMOTE_ADDR"] != '127.0.0.1') {
-      // The time stamp should be today's date at 23:59:59 hours in seconds
-      // so it is easy to compare with the timestamp in the sessions and users tables
-      $date = new DateTime();
-      $timestamp = $date->setTime(23, 59, 59)->getTimeStamp();
+  if (isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] !== '127.0.0.1' && \Drupal::state()->get('install_task') === 'done') {
+    // The time stamp should be today's date at 23:59:59 hours in seconds
+    // so it is easy to compare with the timestamp in the sessions and users tables
+    $date = new DateTime();
+    $timestamp = $date->setTime(23, 59, 59)->getTimestamp();
 
-      $ibm_apim_last_access = \Drupal::state()->get('ibm_apim.last_access', 0);
-      if ($ibm_apim_last_access != $timestamp) {
-        \Drupal::state()->set('ibm_apim.last_access', $timestamp);
-      }
+    $ibm_apim_last_access = \Drupal::state()->get('ibm_apim.last_access', 0);
+    if ($ibm_apim_last_access !== $timestamp) {
+      \Drupal::state()->set('ibm_apim.last_access', $timestamp);
     }
   }
 }
@@ -49,11 +50,11 @@ function ibm_apim_init() {
  * We need our module to run last for the user register form so we can remove any other fields
  * other modules might have added - such as the forum notifications.
  *
- * @param $implementations
- * @param $hook
+ * @param array $implementations
+ * @param string $hook
  */
 function ibm_apim_module_implements_alter(&$implementations, $hook) {
-  if (($hook == 'form_alter' || $hook == 'menu_links_discovered_alter') && isset($implementations['ibm_apim'])) {
+  if (($hook === 'form_alter' || $hook === 'menu_links_discovered_alter') && isset($implementations['ibm_apim'])) {
     $group = $implementations['ibm_apim'];
     unset($implementations['ibm_apim']);
     $implementations['ibm_apim'] = $group;
@@ -63,7 +64,7 @@ function ibm_apim_module_implements_alter(&$implementations, $hook) {
 /**
  *  Implements hook_menu_links_discovered_alter().
  *
- * @param $links
+ * @param array $links
  */
 function ibm_apim_menu_links_discovered_alter(&$links) {
   // remove option to create new user
@@ -71,7 +72,7 @@ function ibm_apim_menu_links_discovered_alter(&$links) {
     unset($links['user.admin_create']);
   }
   // remove duplicate block content link
-  if (isset($links['entity.block_content.collection']) && isset($links['block.admin_display_view.block_content.page_1'])) {
+  if (isset($links['entity.block_content.collection'], $links['block.admin_display_view.block_content.page_1'])) {
     unset($links['entity.block_content.collection']);
   }
   // some config_translation menu entries seem to be missing titles!
@@ -88,10 +89,12 @@ function ibm_apim_menu_links_discovered_alter(&$links) {
  * When new users are created force first_time_login to 1
  * This will get changed to 0 by the login redirect
  *
- * @param $account
+ * @param \Drupal\user\Entity\User $account
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
-function ibm_apim_user_insert($account) {
-  if ($account->id() != 1) {
+function ibm_apim_user_insert(User $account) {
+  if ($account !== NULL && (int) $account->id() !== 1) {
     $account->set('first_time_login', 1);
     $account->save();
   }
@@ -104,12 +107,13 @@ function ibm_apim_user_insert($account) {
  * @param $type
  * @param $theme
  * @param $path
+ *
  * @return array
  */
 function ibm_apim_theme($existing, $type, $theme, $path) {
-  return array(
-    'ibm_apim_myorg' => array(
-      'variables' => array(
+  return [
+    'ibm_apim_myorg' => [
+      'variables' => [
         'images_path' => NULL,
         'myorg' => NULL,
         'myorg_title' => NULL,
@@ -123,32 +127,32 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
         'myorg_has_settings_manage_perm' => NULL,
         'myorg_can_transfer_owner' => NULL,
         'myorg_can_rename_org' => NULL,
-        'myorg_can_delete_org' => NULL
-      )
-    ),
-    'ibm_apim_search_icon_block' => array(
-      'variables' => array()
-    ),
-    'ibm_apim_get_started' => array(
-      'variables' => array(
+        'myorg_can_delete_org' => NULL,
+      ],
+    ],
+    'ibm_apim_search_icon_block' => [
+      'variables' => [],
+    ],
+    'ibm_apim_get_started' => [
+      'variables' => [
         'userHasAppManage' => FALSE,
         'show_register_app' => FALSE,
-      )
-    ),
-    'ibm_apim_noperms' => array(
-      'variables' => array(
-        'images_path' => drupal_get_path('module', 'ibm_apim')
-      )
-    ),
-    'ibm_apim_support' => array(
-      'variables' => array(
+      ],
+    ],
+    'ibm_apim_noperms' => [
+      'variables' => [
+        'images_path' => drupal_get_path('module', 'ibm_apim'),
+      ],
+    ],
+    'ibm_apim_support' => [
+      'variables' => [
         'forum' => TRUE,
         'contact' => TRUE,
-        'social' => TRUE
-      )
-    ),
-    'ibm_apim_analytics' => array(
-      'variables' => array(
+        'social' => TRUE,
+      ],
+    ],
+    'ibm_apim_analytics' => [
+      'variables' => [
         'consumerorgId' => NULL,
         'catalogId' => NULL,
         'catalogName' => NULL,
@@ -156,62 +160,62 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
         'consumerorgTitle' => NULL,
         'filter' => NULL,
         'filterValue' => NULL,
-        'node' => NULL
-      )
-    ),
-    'ibm_apim_status_messages_block' => array(
-      'variables' => array(
+        'node' => NULL,
+      ],
+    ],
+    'ibm_apim_status_messages_block' => [
+      'variables' => [
         'header' => NULL,
-        'messages' => NULL
-      )
-    ),
-    'form_subscription_wizard_choose_application' => array(
-      'variables' => array()
-    ),
-    'form_subscription_wizard_confirm_subscribe' => array(
-      'variables' => array()
-    ),
-    'form_subscription_wizard_subscribe_result' => array(
-      'variables' => array()
-    )
-  );
+        'messages' => NULL,
+      ],
+    ],
+    'form_subscription_wizard_choose_application' => [
+      'variables' => [],
+    ],
+    'form_subscription_wizard_confirm_subscribe' => [
+      'variables' => [],
+    ],
+    'form_subscription_wizard_subscribe_result' => [
+      'variables' => [],
+    ],
+  ];
 }
 
 /**
  * Need to use our custom content type templates for FAQ
  *
- * @param $variables
- * @param $hook
- * @param $info
+ * @param array $variables
+ * @param string $hook
+ * @param array $info
  */
 function ibm_apim_preprocess(&$variables, $hook, &$info) {
-  if ($hook == 'node') {
+  if ($hook === 'node') {
     $contentTypeToShow = $variables['node']->bundle();
-    if ($contentTypeToShow == 'faq') {
+    if ($contentTypeToShow === 'faq') {
       ibm_apim_entry_trace(__FUNCTION__, NULL);
       //Load the view mode names.
       $allViewModes = \Drupal::service('entity_display.repository')->getViewModes('node');
       //View mode for this request.
       $viewModeToUse = $variables['view_mode'];
       //Is the view mode defined for nodes?
-      if (key_exists($viewModeToUse, $allViewModes)) {
+      if (array_key_exists($viewModeToUse, $allViewModes)) {
         //Is there a template file for the view modes in the module?
-        if ($viewModeToUse == 'full') {
+        if ($viewModeToUse === 'full') {
           $templateFileName = 'node--' . $contentTypeToShow;
         }
         else {
           $templateFileName = 'node--' . $contentTypeToShow . '--' . $viewModeToUse;
         }
-        $theme_name = \Drupal::theme()->getActiveTheme()->getName();
-        $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
-        if (file_exists($theme_path . '/templates/node/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $theme_name);
-          $info['path'] = drupal_get_path('theme', $theme_name) . '/templates/node';
+        $themeName = \Drupal::theme()->getActiveTheme()->getName();
+        $themePath = \Drupal::theme()->getActiveTheme()->getPath();
+        if (file_exists($themePath . '/templates/node/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = drupal_get_path('theme', $themeName);
+          $info['path'] = drupal_get_path('theme', $themeName) . '/templates/node';
           $info['template'] = $templateFileName;
         }
-        elseif (file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $theme_name);
-          $info['path'] = drupal_get_path('theme', $theme_name) . '/templates';
+        elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = drupal_get_path('theme', $themeName);
+          $info['path'] = drupal_get_path('theme', $themeName) . '/templates';
           $info['template'] = $templateFileName;
         }
         else {
@@ -227,36 +231,36 @@ function ibm_apim_preprocess(&$variables, $hook, &$info) {
     }
   }
 
-  if ($hook == 'views_exposed_form') {
+  if ($hook === 'views_exposed_form') {
     $parts = explode('-', $variables['form']['#attributes']['data-drupal-selector']);
-    if (count($parts) >= 4 && ($parts[3] == 'applications' || $parts[3] == 'apis' || $parts[3] == 'products' || $parts[3] == 'faqs' || ($parts[3] == 'search' && $parts[4] == 'content'))) {
+    if (count($parts) >= 4 && ($parts[3] === 'applications' || $parts[3] === 'apis' || $parts[3] === 'products' || $parts[3] === 'faqs' || ($parts[3] === 'search' && $parts[4] === 'content'))) {
       ibm_apim_entry_trace(__FUNCTION__, NULL);
       $templateFileName = 'views-exposed-form--' . $parts[3];
-      if (isset($parts[4]) && !empty($parts[4]) && $parts[4] != 'page') {
+      if (isset($parts[4]) && !empty($parts[4]) && $parts[4] !== 'page') {
         $templateFileName = $templateFileName . '-' . $parts[4];
       }
       // by default use viewname without the 's' to get the module name
-      $moduleName = rtrim($parts[3], "s");
+      $moduleName = rtrim($parts[3], 's');
       // faq content type comes from this module
-      if ($parts[3] == 'faqs' || ($parts[3] == 'search' && $parts[4] == 'content')) {
+      if ($parts[3] === 'faqs' || ($parts[3] === 'search' && $parts[4] === 'content')) {
         $moduleName = 'ibm_apim';
       }
-      elseif ($parts[3] == 'applications') {
+      elseif ($parts[3] === 'applications') {
         $moduleName = 'apic_app';
       }
-      elseif ($parts[3] == 'apis') {
+      elseif ($parts[3] === 'apis') {
         $moduleName = 'apic_api';
       }
-      $theme_name = \Drupal::theme()->getActiveTheme()->getName();
-      $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
-      if (file_exists($theme_path . '/templates/views/' . $templateFileName . '.html.twig')) {
-        $info['theme path'] = drupal_get_path('theme', $theme_name);
-        $info['path'] = drupal_get_path('theme', $theme_name) . '/templates/views';
+      $themeName = \Drupal::theme()->getActiveTheme()->getName();
+      $themePath = \Drupal::theme()->getActiveTheme()->getPath();
+      if (file_exists($themePath . '/templates/views/' . $templateFileName . '.html.twig')) {
+        $info['theme path'] = drupal_get_path('theme', $themeName);
+        $info['path'] = drupal_get_path('theme', $themeName) . '/templates/views';
         $info['template'] = $templateFileName;
       }
-      elseif (file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
-        $info['theme path'] = drupal_get_path('theme', $theme_name);
-        $info['path'] = drupal_get_path('theme', $theme_name) . '/templates';
+      elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
+        $info['theme path'] = drupal_get_path('theme', $themeName);
+        $info['path'] = drupal_get_path('theme', $themeName) . '/templates';
         $info['template'] = $templateFileName;
       }
       else {
@@ -271,12 +275,12 @@ function ibm_apim_preprocess(&$variables, $hook, &$info) {
     }
   }
 
-  if ($hook == 'ibm_apim_myorg' || $hook == 'ibm_apim_analytics') {
+  if ($hook === 'ibm_apim_myorg' || $hook === 'ibm_apim_analytics') {
     // set analytics variables if it is enabled
     $variables['analytics_access'] = FALSE;
-    $analytics_access_check = \Drupal::service('ibm_apim.analytics_access_checker')->access();
-    if (isset($analytics_access_check)) {
-      $variables['analytics_access'] = $analytics_access_check->isAllowed();
+    $analyticsAccessCheck = \Drupal::service('ibm_apim.analytics_access_checker')->access();
+    if (isset($analyticsAccessCheck)) {
+      $variables['analytics_access'] = $analyticsAccessCheck->isAllowed();
     }
   }
 
@@ -285,89 +289,94 @@ function ibm_apim_preprocess(&$variables, $hook, &$info) {
 /**
  * Use our template for the status report instead
  *
- * @param $theme_registry
+ * @param array $theme_registry
  */
 function ibm_apim_theme_registry_alter(&$theme_registry) {
   $theme_registry['status_report_general_info']['path'] = drupal_get_path('module', 'ibm_apim') . '/templates';
 }
 
+/**
+ * @param array $variables
+ */
 function template_preprocess_status_report_general_info(&$variables) {
-  $filename = drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml';
-  if (file_exists($filename)) {
+  $fileName = drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml';
+  if (file_exists($fileName)) {
     $yaml = yaml_parse_file(drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml');
-    $variables['apic'] = array('value' => $yaml['version'], 'description' => $yaml['build']);
+    $variables['apic'] = ['value' => $yaml['version'], 'description' => $yaml['build']];
   }
   else {
-    $variables['apic'] = array('value' => 'undefined', 'description' => t('Could not detect APIC version'));
+    $variables['apic'] = ['value' => 'undefined', 'description' => t('Could not detect APIC version')];
   }
 
   $moduleHandler = \Drupal::service('module_handler');
   if ($moduleHandler->moduleExists('apic_api')) {
-    $filename = drupal_get_path('module', 'apic_api') . '/explorer/app/version.json';
-    if (file_exists($filename)) {
+    $fileName = drupal_get_path('module', 'apic_api') . '/explorer/app/version.json';
+    if (file_exists($fileName)) {
       $contents = file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app/version.json');
       $json = json_decode($contents, TRUE);
-      $variables['explorer'] = array(
+      $variables['explorer'] = [
         'value' => $json['version']['version'],
-        'description' => $json['version']['buildDate']
-      );
+        'description' => $json['version']['buildDate'],
+      ];
     }
   }
   else {
-    $variables['explorer'] = array('value' => 'undefined', 'description' => t('Could not detect Explorer version'));
+    $variables['explorer'] = ['value' => 'undefined', 'description' => t('Could not detect Explorer version')];
   }
 
-  $custom_modules = array();
-  $custom_themes = array();
-  $site_path = \Drupal::service('site.path');
-  $dir = new DirectoryIterator($site_path . '/modules');
-  foreach ($dir as $fileinfo) {
-    if ($fileinfo->isDir() && !$fileinfo->isDot()) {
-      $custom_modules[] = $fileinfo->getFilename();
+  $customModules = [];
+  $customThemes = [];
+  $sitePath = \Drupal::service('site.path');
+  $dir = new DirectoryIterator($sitePath . '/modules');
+  foreach ($dir as $fileInfo) {
+    if ($fileInfo->isDir() && !$fileInfo->isDot()) {
+      $customModules[] = $fileInfo->getFilename();
     }
   }
-  $dir = new DirectoryIterator($site_path . '/themes');
-  foreach ($dir as $fileinfo) {
-    if ($fileinfo->isDir() && !$fileinfo->isDot()) {
-      $custom_themes[] = $fileinfo->getFilename();
+  $dir = new DirectoryIterator($sitePath . '/themes');
+  foreach ($dir as $fileInfo) {
+    if ($fileInfo->isDir() && !$fileInfo->isDot()) {
+      $customThemes[] = $fileInfo->getFilename();
     }
   }
-  $variables['custom_modules'] = $custom_modules;
-  $variables['custom_themes'] = $custom_themes;
+  $variables['custom_modules'] = $customModules;
+  $variables['custom_themes'] = $customThemes;
 }
 
 /**
  * Preprocess variables for html templates.
+ *
+ * @param array $variables
  */
 function ibm_apim_preprocess_html(&$variables) {
   if (function_exists('ibm_apim_entry_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  $current_path = \Drupal::service('path.current')->getPath();
-  $current_path_alias = \Drupal::service('path.alias_manager')->getAliasByPath($current_path);
-  $variables['current_path'] = $current_path_alias;
-  $variables['attributes']['class'][] = Html::cleanCssIdentifier('context-' . $current_path_alias);
+  $currentPath = \Drupal::service('path.current')->getPath();
+  $currentPathAlias = \Drupal::service('path.alias_manager')->getAliasByPath($currentPath);
+  $variables['current_path'] = $currentPathAlias;
+  $variables['attributes']['class'][] = Html::cleanCssIdentifier('context-' . $currentPathAlias);
   // add user registry type to body
-  $default_registry = \Drupal::service('ibm_apim.user_registry')->getDefaultRegistry();
-  if (isset($default_registry)) {
-    $variables['idpType'] = $default_registry->getRegistryType();
-    $variables['attributes']['class'][] = Html::cleanCssIdentifier('user-registry-' . $default_registry->getRegistryType());
+  $defaultRegistry = \Drupal::service('ibm_apim.user_registry')->getDefaultRegistry();
+  if (isset($defaultRegistry)) {
+    $variables['idpType'] = $defaultRegistry->getRegistryType();
+    $variables['attributes']['class'][] = Html::cleanCssIdentifier('user-registry-' . $defaultRegistry->getRegistryType());
   }
-  $route_name = \Drupal::routeMatch()->getRouteName();
-  if (isset($route_name)) {
-    $variables['route_name'] = $route_name;
-    $variables['attributes']['class'][] = Html::cleanCssIdentifier('route-' . $route_name);
+  $routeName = \Drupal::routeMatch()->getRouteName();
+  if (isset($routeName)) {
+    $variables['route_name'] = $routeName;
+    $variables['attributes']['class'][] = Html::cleanCssIdentifier('route-' . $routeName);
   }
 
   // add variable with the user registry count - useful for the user management forms
   $urs = \Drupal::service('ibm_apim.user_registry')->getAll();
-  $ur_count = count($urs);
-  $variables['user_registry_count'] = $ur_count;
-  $variables['attributes']['class'][] = Html::cleanCssIdentifier('ur-count-' . $ur_count);
+  $urCount = count($urs);
+  $variables['user_registry_count'] = $urCount;
+  $variables['attributes']['class'][] = Html::cleanCssIdentifier('ur-count-' . $urCount);
 
-  $pass_reset_token = \Drupal::request()->get('pass-reset-token');
-  if (isset($pass_reset_token) && !empty($pass_reset_token)) {
+  $passResetToken = \Drupal::request()->get('pass-reset-token');
+  if (isset($passResetToken) && !empty($passResetToken)) {
     $variables['pass_reset_token'] = TRUE;
     $variables['attributes']['class'][] = 'pass-reset';
   }
@@ -395,11 +404,11 @@ function ibm_apim_page_attachments(array &$attachments) {
 /**
  * remove security kit options that are handled by nginx
  *
- * @param $form
+ * @param array $form
  * @param \Drupal\Core\Form\FormStateInterface $form_state
- * @param $form_id
+ * @param string $form_id
  */
-function ibm_apim_form_seckit_settings_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function ibm_apim_form_seckit_settings_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   if (isset($form['seckit_xss']['csp'])) {
     unset($form['seckit_xss']['csp']);
   }
@@ -427,8 +436,10 @@ function ibm_apim_updater_info_alter(&$updaters) {
 
 /**
  * Implementation of hook_form_alter() to alter the Edit profile form
- * @param $form
- * @param $form_state
+ *
+ * @param array $form
+ * @param FormStateInterface $form_state
+ * @param string $form_id
  */
 function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   switch ($form_id) {
@@ -503,45 +514,40 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         unset($form['modules']['Core (Experimental)']['migrate_drupal_ui']);
       }
       // blacklist some modules
-      $module_blacklist = \Drupal::config('ibm_apim.settings')->get('module_blacklist');
-      if (isset($module_blacklist) && !empty($module_blacklist)) {
-        foreach ($form['modules'] as $module_package => $modules) {
+      $moduleBlacklist = \Drupal::config('ibm_apim.settings')->get('module_blacklist');
+      if (isset($moduleBlacklist) && !empty($moduleBlacklist)) {
+        foreach ($form['modules'] as $modulePackage => $modules) {
           if (!is_array($modules)) {
             continue;
           }
 
-          foreach ($modules as $module_name => $module_info) {
+          foreach ($modules as $moduleName => $module_info) {
             // Checks whether the module is blacklisted.
-            if (!in_array($module_name, $module_blacklist)) {
+            if (!in_array($moduleName, $moduleBlacklist, FALSE)) {
               continue;
             }
 
             // Skips modules that are already enabled, even if it is blacklisted.
-            if ($form['modules'][$module_package][$module_name]['enable']['#default_value'] === TRUE) {
+            if ($form['modules'][$modulePackage][$moduleName]['enable']['#default_value'] === TRUE) {
               continue;
             }
 
             // Alters the module form row, disabling the module installation.
-            $form['modules'][$module_package][$module_name]['enable']['#disabled'] = TRUE;
-            $form['modules'][$module_package][$module_name]['name']['#markup'] .= " (" . t('blocked') . ")";
-            $form['modules'][$module_package][$module_name]['description']['#markup'] .= ' ' . t('WARNING: The installation of this module is being blocked.');
+            $form['modules'][$modulePackage][$moduleName]['enable']['#disabled'] = TRUE;
+            $form['modules'][$modulePackage][$moduleName]['name']['#markup'] .= " (" . t('blocked') . ")";
+            $form['modules'][$modulePackage][$moduleName]['description']['#markup'] .= ' ' . t('WARNING: The installation of this module is being blocked.');
           }
         }
       }
       $form['actions']['submit']['#value'] = t('Enable');
 
-      if (isset($form['modules']['#prefix'])) {
-        $existing_modules_msg = $form['modules']['#prefix'];
-      }
-      else {
-        $existing_modules_msg = '';
-      }
-      $form['modules']['#prefix'] = $existing_modules_msg . '<p>' . t('Below is a list of installed modules. Modules that are installed and enabled are shown with a selected check box. To enable a module, select the check box against the module name, and click Enable.') . '</p>';
+      $existingModulesMsg = $form['modules']['#prefix'] ?? '';
+      $form['modules']['#prefix'] = $existingModulesMsg . '<p>' . t('Below is a list of installed modules. Modules that are installed and enabled are shown with a selected check box. To enable a module, select the check box against the module name, and click Enable.') . '</p>';
 
       break;
     case 'system_modules_uninstall':
       // prevent uninstall of our modules
-      $module_list = array(
+      $moduleList = [
         'ibm_apim',
         'apic_api',
         'apic_app',
@@ -553,9 +559,9 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         'socialblock',
         'auth_apic',
         'ibm_log_stdout',
-        'eventstream'
-      );
-      foreach ($module_list as $module) {
+        'eventstream',
+      ];
+      foreach ($moduleList as $module) {
         if (isset($form['modules'][$module])) {
           unset($form['modules'][$module]);
         }
@@ -564,9 +570,9 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     case 'system_theme_settings':
       // automatically redirect from global settings to the theme specific variant
       // avoids usability issues with filling in a form that wont actually take effect
-      if (isset($form['config_key']['#value']) && $form['config_key']['#value'] == 'system.theme.global') {
-        $default_theme = \Drupal::config('system.theme')->get('default');
-        $redirectUrl = Url::fromRoute('system.theme_settings_theme', ['theme' => $default_theme])->toString();
+      if (isset($form['config_key']['#value']) && $form['config_key']['#value'] === 'system.theme.global') {
+        $defaultTheme = \Drupal::config('system.theme')->get('default');
+        $redirectUrl = Url::fromRoute('system.theme_settings_theme', ['theme' => $defaultTheme])->toString();
         $response = new RedirectResponse($redirectUrl);
         $response->send();
       }
@@ -574,32 +580,32 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     case 'update_manager_update_form':
       // do not allow updates to modules and themes via the UI, only via fixpack
       $utils = \Drupal::service('ibm_apim.utils');
-      $shipped_content_list = array_merge($utils->get_bundled_modules(), $utils->get_bundled_themes());
-      $ibm_update_needed = array();
-      if (isset($form['projects']) && isset($form['projects']['#options'])) {
-        foreach ($form['projects']['#options'] as $projectname => $project) {
-          if (in_array($projectname, $shipped_content_list)) {
-            unset($form['projects']['#options'][$projectname]);
-            $ibm_update_needed[] = $projectname;
+      $shippedContentList = array_merge($utils->get_bundled_modules(), $utils->get_bundled_themes());
+      $ibmUpdateNeeded = [];
+      if (isset($form['projects']['#options'])) {
+        foreach ($form['projects']['#options'] as $projectName => $project) {
+          if (in_array($projectName, $shippedContentList, FALSE)) {
+            unset($form['projects']['#options'][$projectName]);
+            $ibmUpdateNeeded[] = $projectName;
           }
         }
       }
-      if (isset($form['disabled_projects']) && isset($form['disabled_projects']['#options'])) {
-        foreach ($form['disabled_projects']['#options'] as $projectname => $project) {
-          if (in_array($projectname, $shipped_content_list)) {
-            unset($form['disabled_projects'][$projectname]);
-            $ibm_update_needed[] = $projectname;
+      if (isset($form['disabled_projects']['#options'])) {
+        foreach ($form['disabled_projects']['#options'] as $projectName => $project) {
+          if (in_array($projectName, $shippedContentList, FALSE)) {
+            unset($form['disabled_projects'][$projectName]);
+            $ibmUpdateNeeded[] = $projectName;
           }
         }
       }
       if (isset($form['manual_updates'])) {
         $form['manual_updates']['#prefix'] .= '<p>' . t('To update the version of Drupal Core download the latest IBM API Connect release or contact IBM Support.') . '</p>';
       }
-      if (count($ibm_update_needed) > 0) {
-        $form['ibm_update'] = array(
-          '#markup' => '<h2>' . t('IBM APIC Developer Portal Modules') . '</h2><p>' . t('Updates found for the following modules provided by IBM API Connect: %modules.', array('%modules' => implode(",", $ibm_update_needed))) . '</p><p>' . t('To update modules provided by IBM API Connect download the latest API Connect release or contact IBM Support.') . '</p>',
-          '#weight' => 150
-        );
+      if (count($ibmUpdateNeeded) > 0) {
+        $form['ibm_update'] = [
+          '#markup' => '<h2>' . t('IBM APIC Developer Portal Modules') . '</h2><p>' . t('Updates found for the following modules provided by IBM API Connect: %modules.', ['%modules' => implode(",", $ibmUpdateNeeded)]) . '</p><p>' . t('To update modules provided by IBM API Connect download the latest API Connect release or contact IBM Support.') . '</p>',
+          '#weight' => 150,
+        ];
         // if no updatable modules left remove the table
         if (isset($form['projects']['#options']) && empty($form['projects']['#options'])) {
           unset($form['projects']);
@@ -609,16 +615,16 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         }
         else {
           $form['projects']['#weight'] = 20;
-          $form['table_prefix'] = array(
+          $form['table_prefix'] = [
             '#markup' => '<h2>' . t('Custom Modules') . '</h2>',
-            '#weight' => 10
-          );
+            '#weight' => 10,
+          ];
         }
       }
       break;
     // remove link to delete our content type
     case 'node_type_edit_form' :
-      if (isset($form['type']['#default_value']) && $form['type']['#default_value'] == 'faq') {
+      if (isset($form['type']['#default_value']) && $form['type']['#default_value'] === 'faq') {
         if (isset($form['actions']['delete'])) {
           unset($form['actions']['delete']);
         }
@@ -629,10 +635,10 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       }
       break;
     case 'block_content_basic_edit_form':
-      $form['intro'] = array(
+      $form['intro'] = [
         '#markup' => '<p>' . t('Use this form to edit the content of the block. If the block content is HTML then clicking on the \'Source\' button in the editor provides a direct way to edit the HTML markup. Use the \'Translate\' tab above to edit the content for other languages.') . '</p>',
-        '#weight' => -50
-      );
+        '#weight' => -50,
+      ];
       break;
     case 'user_admin_settings':
       if (isset($form['password_timeout_settings']['password_reset_timeout'])) {
@@ -662,34 +668,34 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       if (isset($form['options']['index_directly'])) {
         unset($form['options']['index_directly']);
         if (!isset($form['options'])) {
-          $form['options'] = array();
+          $form['options'] = [];
         }
-        $form['options']['index_directly'] = array(
+        $form['options']['index_directly'] = [
           '#type' => 'hidden',
-          '#value' => false
-        );
+          '#value' => FALSE,
+        ];
       }
       break;
     case 'config_export_form' :
-      if ($form['submit'] !== null) {
+      if ($form['submit'] !== NULL) {
         unset($form['submit']);
       }
-      $form['intro'] = array(
+      $form['intro'] = [
         '#markup' => '<p>' . t('This functionality will be available in a future release of the IBM API Connect command line client.') . '</p>',
-        '#weight' => 50
-      );
+        '#weight' => 50,
+      ];
       break;
     case 'config_import_form' :
-      if ($form['submit'] !== null) {
+      if ($form['submit'] !== NULL) {
         unset($form['submit']);
       }
-      if ($form['import_tarball'] !== null) {
+      if ($form['import_tarball'] !== NULL) {
         unset($form['import_tarball']);
       }
-      $form['intro'] = array(
+      $form['intro'] = [
         '#markup' => '<p>' . t('This functionality will be available in a future release of the IBM API Connect command line client.') . '</p>',
-        '#weight' => 50
-      );
+        '#weight' => 50,
+      ];
       break;
   }
 
@@ -704,7 +710,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
  * and leads users to click on options that dont work
  * instead redirect to the actual theme settings using a hook_form_alter above
  *
- * @param $local_tasks
+ * @param array $local_tasks
  */
 function ibm_apim_local_tasks_alter(&$local_tasks) {
   unset($local_tasks['system.theme_settings_global']);
@@ -714,10 +720,14 @@ function ibm_apim_local_tasks_alter(&$local_tasks) {
 
 /**
  * Implements hook_module_preinstall().
+ *
+ * @param string $module
+ *
+ * @throws \Drupal\ibm_apim\Exception\ModuleInstallationBlocked
  */
 function ibm_apim_module_preinstall($module) {
-  $module_blacklist = \Drupal::config('ibm_apim.settings')->get('module_blacklist');
-  if (!$module_blacklist || !in_array($module, $module_blacklist)) {
+  $moduleBlacklist = \Drupal::config('ibm_apim.settings')->get('module_blacklist');
+  if (!$moduleBlacklist || !in_array($module, $moduleBlacklist, FALSE)) {
     return;
   }
 
@@ -734,11 +744,11 @@ function ibm_apim_module_preinstall($module) {
 /**
  * Modify node edit form
  *
- * @param $form
- * @param $form_state
- * @param $form_id
+ * @param array $form
+ * @param FormStateInterface $form_state
+ * @param string $form_id
  */
-function ibm_apim_form_node_form_alter(&$form, &$form_state, $form_id) {
+function ibm_apim_form_node_form_alter(array &$form, FormStateInterface &$form_state, $form_id) {
   $moduleHandler = \Drupal::service('module_handler');
   $node = $form_state->getFormObject()->getEntity();
   if (isset($node)) {
@@ -746,14 +756,12 @@ function ibm_apim_form_node_form_alter(&$form, &$form_state, $form_id) {
     if ($moduleHandler->moduleExists('book')) {
       $allowed_types = \Drupal::config('book.settings')->get('allowed_types');
       // Only show the book part of edit node for nodes of content types defined to be allowed in books
-      if (isset($allowed_types) && isset($nodeBundle)) {
-        if (!in_array($nodeBundle, array_values($allowed_types)) && isset($form['book'])) {
-          unset($form['book']);
-        }
+      if (isset($allowed_types, $nodeBundle, $form['book']) && !in_array($nodeBundle, array_values($allowed_types), FALSE)) {
+        unset($form['book']);
       }
     }
     // remove URL Alias option from APIs and Products
-    if (isset($nodeBundle) && in_array($nodeBundle, array('api', 'product')) && isset($form['path_settings'])) {
+    if (isset($nodeBundle, $form['path_settings']) && in_array($nodeBundle, ['api', 'product'], FALSE)) {
       unset($form['path_settings']);
     }
   }
@@ -761,16 +769,22 @@ function ibm_apim_form_node_form_alter(&$form, &$form_state, $form_id) {
 
 /**
  * Implements hook_entity_bundle_field_info_alter().
+ *
+ * @param array $fields
+ * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+ * @param $bundle
  */
 function ibm_apim_entity_bundle_field_info_alter(&$fields, EntityTypeInterface $entity_type, $bundle) {
   // add validator for our apic_pathalias field
-  if ($entity_type->id() == 'node' && isset($fields['apic_pathalias']) && !empty($fields['apic_pathalias'])) {
+  if (isset($fields['apic_pathalias']) && !empty($fields['apic_pathalias']) && $entity_type->id() === 'node') {
     $fields['apic_pathalias']->addConstraint('ApicPathAlias', []);
   }
 }
 
 /**
  * Implements hook_element_info_alter().
+ *
+ * @param array $types
  */
 function ibm_apim_element_info_alter(array &$types) {
   // This is part of the code needed to suppress the password policy status table.
@@ -791,69 +805,74 @@ function ibm_apim_element_info_alter(array &$types) {
 function ibm_apim_password_policy_check_constraints_password_confirm_process($element) {
 
   // This is part of the code needed to suppress the password policy status table.
-  $element['pass1']['#ajax'] = array(
+  $element['pass1']['#ajax'] = [
     'event' => 'change',
     'callback' => 'ibm_apim_password_policy_check_constraints',
     'method' => 'replace',
     'wrapper' => 'ibm-apim-password-policy-status',
     'disable-refocus' => TRUE,
-  );
+  ];
 
   return $element;
 }
 
 /**
  * AJAX callback for user form.
+ *
+ * @param array $form
+ * @param FormStateInterface $form_state
+ *
+ * @return array
  */
-function ibm_apim_password_policy_check_constraints($form, $form_state) {
+function ibm_apim_password_policy_check_constraints(array $form, FormStateInterface $form_state) {
 
-  $response = array();
+  $response = [];
 
   // If there is no password_policy_status element, this is the first render pass of the form
   // so we need to display an initial message rather than saying that the password is good.
   if (!isset($form['account']['password_policy_status'])) {
-    return array(
+    return [
       '#type' => 'html_tag',
       '#tag' => 'div',
       '#value' => t('You must enter a password that conforms to the password policies enabled for this site.'),
       '#prefix' => "<div id='ibm-apim-password-policy-status' class='alert alert-danger'>",
-      '#suffix' => "</div>"
-    );
+      '#suffix' => '</div>',
+    ];
   }
 
   // We want to work on the data from the password policy table.
   $dataRows = $form['account']['password_policy_status']['#rows'];
-  $status = array();
+  $status = [];
 
   // Go through each row, extract the status, check pass/fail and keep the message.
   foreach ($dataRows as $row) {
-    $passed = (preg_match('/Fail/', $row['status']) ? FALSE : TRUE);
+    $passed = FALSE === strpos($row['status'], 'Fail');
     if (!$passed) {
       $status[] = "<i class='fa fa-times' aria-hidden='true'></i> " . substr($row['status'], strpos($row['status'], '-') + 2);
-      $status[] = "";
+      $status[] = '';
     }
   }
 
   // If there are no fails, just return the 'div' hook point with no content.
   if (count($status) === 0) {
-    return array(
+    $response = [
       '#type' => 'html_tag',
       '#tag' => 'div',
       '#value' => t('Your password meets the password policies required for this site'),
       '#prefix' => "<div id='ibm-apim-password-policy-status' class='alert alert-success'>",
-      '#suffix' => "</div>",
-    );
+      '#suffix' => '</div>',
+    ];
   }
   // Otherwise, build up an array of elements.
   else {
-    $response[] = array(
+    $response[] = [
       '#type' => 'html_tag',
       '#tag' => 'div',
-      '#value' => implode("</br>", $status),
+      '#value' => implode('</br>', $status),
       '#title_display' => 'above',
       '#prefix' => "<div id='ibm-apim-password-policy-status' class='alert alert-danger'>",
-      '#suffix' => "</div>",
-    );
+      '#suffix' => '</div>',
+    ];
   }
 
   return $response;
@@ -863,15 +882,15 @@ function ibm_apim_password_policy_check_constraints($form, $form_state) {
  * Entry Trace logging function
  *
  * @param string $function
- * @param null $args
+ * @param null|mixed $args
  */
 function ibm_apim_entry_trace($function = 'undefined', $args = NULL) {
-  $entry_exit_trace = \Drupal::config('ibm_apim.settings')->get('entry_exit_trace');
-  if (isset($entry_exit_trace) && $entry_exit_trace == TRUE) {
-    \Drupal::logger('ibm_apim')->debug('%function ENTRY Trace input: %data.', array(
+  $entryExitTrace = (boolean) \Drupal::config('ibm_apim.settings')->get('entry_exit_trace');
+  if ($entryExitTrace === TRUE) {
+    \Drupal::logger('ibm_apim')->debug('%function ENTRY Trace input: %data.', [
       '%function' => $function,
-      '%data' => serialize($args)
-    ));
+      '%data' => serialize($args),
+    ]);
   }
 }
 
@@ -879,15 +898,15 @@ function ibm_apim_entry_trace($function = 'undefined', $args = NULL) {
  * Exit Trace logging function
  *
  * @param string $function
- * @param null $response
+ * @param null|mixed $response
  */
 function ibm_apim_exit_trace($function = 'undefined', $response = NULL) {
-  $entry_exit_trace = \Drupal::config('ibm_apim.settings')->get('entry_exit_trace');
-  if (isset($entry_exit_trace) && $entry_exit_trace == TRUE) {
-    \Drupal::logger('ibm_apim')->debug('%function EXIT Trace return: %data.', array(
+  $entryExitTrace = (boolean) \Drupal::config('ibm_apim.settings')->get('entry_exit_trace');
+  if ($entryExitTrace === TRUE) {
+    \Drupal::logger('ibm_apim')->debug('%function EXIT Trace return: %data.', [
       '%function' => $function,
-      '%data' => serialize($response)
-    ));
+      '%data' => serialize($response),
+    ]);
   }
 }
 
@@ -895,23 +914,26 @@ function ibm_apim_exit_trace($function = 'undefined', $response = NULL) {
  * Implement hook_theme_suggestions_HOOK_alter to insert additional suggestions
  * for some UI elements that we want to theme that drupal doesn't have default
  * twig insertion points for
- **/
+ *
+ * @param array $suggestions
+ * @param array $variables
+ */
 function ibm_apim_theme_suggestions_form_alter(array &$suggestions, array $variables) {
   if (function_exists('ibm_apim_entry_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
   if (isset($variables['element']['#form_id']) && !empty($variables['element']['#form_id'])) {
-    $suggestions[] = "form_" . $variables['element']['#form_id'];
+    $suggestions[] = 'form_' . $variables['element']['#form_id'];
   }
   // change password form - different ids for auth_apic vs base drupal
-  if ($variables['element']['#form_id'] == 'apic_change_pwd_form') {
-    $suggestions[] = "form_change_pwd_form";
+  if ($variables['element']['#form_id'] === 'apic_change_pwd_form') {
+    $suggestions[] = 'form_change_pwd_form';
   }
 
   // reset password form
-  if ($variables['element']['#form_id'] == 'apic_resetpw' || $variables['element']['#form_id'] == 'user_pass') {
-    $suggestions[] = "form_user_pass_form";
+  if ($variables['element']['#form_id'] === 'apic_resetpw' || $variables['element']['#form_id'] === 'user_pass') {
+    $suggestions[] = 'form_user_pass_form';
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -919,6 +941,9 @@ function ibm_apim_theme_suggestions_form_alter(array &$suggestions, array $varia
   }
 }
 
+/**
+ * @param array $variables
+ */
 function ibm_apim_preprocess_form_subscription_wizard_choose_application(&$variables) {
   if (function_exists('ibm_apim_entry_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -931,6 +956,9 @@ function ibm_apim_preprocess_form_subscription_wizard_choose_application(&$varia
   }
 }
 
+/**
+ * @param array $variables
+ */
 function ibm_apim_preprocess_form_subscription_wizard_confirm_subscribe(&$variables) {
   if (function_exists('ibm_apim_entry_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -943,6 +971,9 @@ function ibm_apim_preprocess_form_subscription_wizard_confirm_subscribe(&$variab
   }
 }
 
+/**
+ * @param array $variables
+ */
 function ibm_apim_preprocess_form_subscription_wizard_subscribe_result(&$variables) {
   if (function_exists('ibm_apim_entry_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -957,6 +988,10 @@ function ibm_apim_preprocess_form_subscription_wizard_subscribe_result(&$variabl
 
 /**
  * Implements hook_form_FORMID_alter for the file system settings admin form
+ *
+ * @param array $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ * @param string $form_id
  */
 function ibm_apim_form_system_file_system_settings_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
   unset($form['translation_path']);
@@ -965,6 +1000,10 @@ function ibm_apim_form_system_file_system_settings_alter(&$form, \Drupal\Core\Fo
 /**
  * Implements hook_form_FORMID_alter for the choose application
  * part of the subscription wizard.
+ *
+ * @param array $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ * @param string $form_id
  */
 function ibm_apim_form_subscription_wizard_choose_application_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
 
@@ -976,6 +1015,10 @@ function ibm_apim_form_subscription_wizard_choose_application_alter(&$form, \Dru
 /**
  * Implements hook_form_FORMID_alter for the subscription confirmation
  * part of the subscription wizard.
+ *
+ * @param array $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ * @param string $form_id
  */
 function ibm_apim_form_subscription_wizard_confirm_subscribe_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
 
@@ -990,54 +1033,52 @@ function ibm_apim_form_subscription_wizard_confirm_subscribe_alter(&$form, \Drup
 /**
  * Ensure forms have an aria-label for accessibility
  *
- * @param $variables
+ * @param array $variables
  */
 function ibm_apim_preprocess_form(&$variables) {
   // Accessibility - ensure the form has a label
-  if (isset($variables['elements']) && isset($variables['elements']['#form_id'])) {
-    if ($variables['elements']['#form_id'] == "views_exposed_form") {
+  if (isset($variables['elements']['#form_id'])) {
+    if ($variables['elements']['#form_id'] === 'views_exposed_form') {
       $variables['attributes']['aria-label'] = t('Filter results')->render();
     }
-    elseif ($variables['elements']['#form_id'] == "contact-message-feedback-form") {
+    elseif ($variables['elements']['#form_id'] === 'contact-message-feedback-form') {
       $variables['attributes']['aria-label'] = t('Provide feedback')->render();
     }
   }
 
   // add variable with the user registry count - useful for the user management forms
   $urs = \Drupal::service('ibm_apim.user_registry')->getAll();
-  $ur_count = count($urs);
-  $variables['user_registry_count'] = $ur_count;
+  $urCount = count($urs);
+  $variables['user_registry_count'] = $urCount;
 
   // set variable as to whether a user managed registry is present or not
-  $user_managed_registry_present = FALSE;
-  $user_unmanaged_registry_present = FALSE;
+  $userManagedRegistryPresent = FALSE;
+  $userUnmanagedRegistryPresent = FALSE;
   if (isset($urs) && !empty($urs)) {
-    foreach ($urs as $registry_url => $registry) {
+    foreach ($urs as $registryUrl => $registry) {
       if ($registry->isUserManaged()) {
-        $user_managed_registry_present = TRUE;
+        $userManagedRegistryPresent = TRUE;
       }
       else {
-        $user_unmanaged_registry_present = TRUE;
+        $userUnmanagedRegistryPresent = TRUE;
       }
     }
   }
-  $variables['user_managed_registry_present'] = $user_managed_registry_present;
-  $variables['user_unmanaged_registry_present'] = $user_unmanaged_registry_present;
+  $variables['user_managed_registry_present'] = $userManagedRegistryPresent;
+  $variables['user_unmanaged_registry_present'] = $userUnmanagedRegistryPresent;
 
   // set a variable for self service onboarding too
   $variables['enable_signup_link'] = \Drupal::state()->get('ibm_apim.selfSignUpEnabled', 0);
 
   // if there is an invitation token in the session, allow the login link to be displayed regardless of onboarding enabled/disabled
-  $jwt = NULL;
-  if (!empty($_SESSION['auth_apic'])) {
-    $jwt = $_SESSION['auth_apic']['invitation_object'];
-    if (!empty($jwt)) {
-      $variables['enable_signup_link'] = TRUE;
-    }
+  $sessionStore = \Drupal::service('session_based_temp_store')->get('auth_apic_invitation_token');
+  $jwt = $sessionStore->get('invitation_object');
+  if ($jwt !== NULL) {
+    $variables['enable_signup_link'] = TRUE;
   }
 
-  $pass_reset_token = \Drupal::request()->get('pass-reset-token');
-  if (isset($pass_reset_token) && !empty($pass_reset_token)) {
+  $passResetToken = \Drupal::request()->get('pass-reset-token');
+  if (isset($passResetToken) && !empty($passResetToken)) {
     $variables['pass_reset_token'] = TRUE;
   }
 
@@ -1047,26 +1088,24 @@ function ibm_apim_preprocess_form(&$variables) {
 /**
  * Dynamically add to the ibm_apim/analytics library since the name of the files change every build
  *
- * @param $libraries
+ * @param array $libraries
  * @param $extension
  */
 function ibm_apim_library_info_alter(&$libraries, $extension) {
-  if (in_array('analytics', array_keys($libraries))) {
-    if (file_exists(drupal_get_path('module', 'ibm_apim') . '/analytics/asset-manifest.json')) {
-      $string = file_get_contents(drupal_get_path('module', 'ibm_apim') . '/analytics/asset-manifest.json');
-      $json = json_decode($string, TRUE);
-      if (isset($json['main.js']) && file_get_contents(drupal_get_path('module', 'ibm_apim') . '/analytics/' . $json['main.js'])) {
-        $libraries['analytics']['js']['analytics/' . $json['main.js']] = array(
-          'weight' => -1,
-          'minified' => TRUE,
-          'preprocess' => FALSE
-        );
-      }
-      if (isset($json['main.css']) && file_get_contents(drupal_get_path('module', 'ibm_apim') . '/analytics/' . $json['main.css'])) {
-        $libraries['analytics']['css']['component']['analytics/' . $json['main.css']] = array(
-          'weight' => -20
-        );
-      }
+  if (array_key_exists('analytics', $libraries) && file_exists(drupal_get_path('module', 'ibm_apim') . '/analytics/asset-manifest.json')) {
+    $string = file_get_contents(drupal_get_path('module', 'ibm_apim') . '/analytics/asset-manifest.json');
+    $json = json_decode($string, TRUE);
+    if (isset($json['main.js']) && file_get_contents(drupal_get_path('module', 'ibm_apim') . '/analytics/' . $json['main.js'])) {
+      $libraries['analytics']['js']['analytics/' . $json['main.js']] = [
+        'weight' => -1,
+        'minified' => TRUE,
+        'preprocess' => FALSE,
+      ];
+    }
+    if (isset($json['main.css']) && file_get_contents(drupal_get_path('module', 'ibm_apim') . '/analytics/' . $json['main.css'])) {
+      $libraries['analytics']['css']['component']['analytics/' . $json['main.css']] = [
+        'weight' => -20,
+      ];
     }
   }
 }
@@ -1074,7 +1113,7 @@ function ibm_apim_library_info_alter(&$libraries, $extension) {
 /**
  * Implements hook_user_login
  *
- * @param $account
+ * @param AccountInterface $account
  */
 function ibm_apim_user_login($account) {
   if (isset($account)) {
@@ -1087,8 +1126,8 @@ function ibm_apim_user_login($account) {
   // trigger avatar generation
   $moduleHandler = \Drupal::service('module_handler');
   if ($moduleHandler->moduleExists('avatars')) {
-    $avatar_manager = \Drupal::service('avatars.avatar_manager');
-    $avatar_manager->syncAvatar($account);
+    $avatarManager = \Drupal::service('avatars.avatar_manager');
+    $avatarManager->syncAvatar($account);
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }

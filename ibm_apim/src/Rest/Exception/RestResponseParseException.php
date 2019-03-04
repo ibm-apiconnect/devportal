@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -17,4 +17,5 @@ namespace Drupal\ibm_apim\Rest\Exception;
  * Class RestResponseParseException.
  */
 class RestResponseParseException extends \Exception {
+
 }

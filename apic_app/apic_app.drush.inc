@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -132,8 +132,8 @@ function drush_apic_app_cleanse_drush_command() {
   // in case moderation is on we need to run as admin
   // save the current user so we can switch back at the end
   $accountSwitcher = Drupal::service('account_switcher');
-  $original_user = \Drupal::currentUser();
-  if ($original_user->id() != 1) {
+  $originalUser = \Drupal::currentUser();
+  if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
   $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties(['type' => 'application']);
@@ -141,7 +141,7 @@ function drush_apic_app_cleanse_drush_command() {
   foreach ($nodes as $node) {
     $node->delete();
   }
-  if (isset($original_user) && $original_user->id() != 1) {
+  if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
     $accountSwitcher->switchBack();
   }
   drush_log(dt('All application entries deleted.'), 'success');
@@ -150,12 +150,12 @@ function drush_apic_app_cleanse_drush_command() {
 
 function drush_apic_app_createOrUpdate($content, $event, $func) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
-  if (isset($content)) {
+  if ($content !== NULL) {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = Drupal::service('account_switcher');
-    $original_user = \Drupal::currentUser();
-    if ($original_user->id() != 1) {
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
     if (is_string($content)) {
@@ -176,10 +176,10 @@ function drush_apic_app_createOrUpdate($content, $event, $func) {
       ]), 'success');
     }
     $moduleHandler = \Drupal::service('module_handler');
-    if ($moduleHandler->moduleExists('views') && $func != 'MassUpdate') {
+    if ($func !== 'MassUpdate' && $moduleHandler->moduleExists('views')) {
       views_invalidate_cache();
     }
-    if (isset($original_user) && $original_user->id() != 1) {
+    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -203,12 +203,12 @@ function drush_apic_app_update($app, $event = 'app_update') {
 
 function drush_apic_app_delete($app, $event = 'app_del') {
   ibm_apim_entry_trace(__FUNCTION__);
-  if (isset($app)) {
+  if ($app !== NULL) {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = Drupal::service('account_switcher');
-    $original_user = \Drupal::currentUser();
-    if ($original_user->id() != 1) {
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
 
@@ -217,7 +217,7 @@ function drush_apic_app_delete($app, $event = 'app_del') {
     }
 
     $rc = Application::deleteById($app['id'], $event);
-    if ($rc == TRUE) {
+    if ($rc === TRUE) {
       drush_log(dt('Drush DeleteApplication deleted application @app', ['@app' => $app['id']]), 'success');
       $moduleHandler = \Drupal::service('module_handler');
       if ($moduleHandler->moduleExists('views')) {
@@ -227,7 +227,7 @@ function drush_apic_app_delete($app, $event = 'app_del') {
     else {
       drush_log(dt('Drush DeleteApplication could not find application @app', ['@app' => $app['id']]), 'warning');
     }
-    if (isset($original_user) && $original_user->id() != 1) {
+    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -237,21 +237,21 @@ function drush_apic_app_delete($app, $event = 'app_del') {
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
-function drush_apic_app_createOrUpdatesub($subinput, $event, $func) {
-  ibm_apim_entry_trace(__FUNCTION__, $subinput);
+function drush_apic_app_createOrUpdatesub($subInput, $event, $func) {
+  ibm_apim_entry_trace(__FUNCTION__, $subInput);
   // in case moderation is on we need to run as admin
   // save the current user so we can switch back at the end
   $accountSwitcher = Drupal::service('account_switcher');
-  $original_user = \Drupal::currentUser();
-  if ($original_user->id() != 1) {
+  $originalUser = \Drupal::currentUser();
+  if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
-  if (isset($subinput)) {
-    if (is_string($subinput)) {
-      $subinput = json_decode($subinput, TRUE);
+  if ($subInput !== NULL) {
+    if (is_string($subInput)) {
+      $subInput = json_decode($subInput, TRUE);
     }
-    $ref = $subinput['id'];
-    $createdOrUpdated = Subscription::createOrUpdate($subinput);
+    $ref = $subInput['id'];
+    $createdOrUpdated = Subscription::createOrUpdate($subInput);
     if ($createdOrUpdated) {
       drush_log(dt('Drush @func created subscription @sub', [
         '@func' => $func,
@@ -268,39 +268,39 @@ function drush_apic_app_createOrUpdatesub($subinput, $event, $func) {
   else {
     drush_log(dt('Drush @func No subscription provided', ['@func' => $func]), 'error');
   }
-  if (isset($original_user) && $original_user->id() != 1) {
+  if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
     $accountSwitcher->switchBack();
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
-function drush_apic_app_createsub($subinput, $event = 'create_sub') {
-  ibm_apim_entry_trace(__FUNCTION__, $subinput);
-  drush_apic_app_createOrUpdatesub($subinput, $event, 'CreateSubscription');
+function drush_apic_app_createsub($subInput, $event = 'create_sub') {
+  ibm_apim_entry_trace(__FUNCTION__, $subInput);
+  drush_apic_app_createOrUpdatesub($subInput, $event, 'CreateSubscription');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
-function drush_apic_app_updatesub($subinput, $event = 'update_sub') {
-  ibm_apim_entry_trace(__FUNCTION__, $subinput);
-  drush_apic_app_createOrUpdatesub($subinput, $event, 'UpdateSubscription');
+function drush_apic_app_updatesub($subInput, $event = 'update_sub') {
+  ibm_apim_entry_trace(__FUNCTION__, $subInput);
+  drush_apic_app_createOrUpdatesub($subInput, $event, 'UpdateSubscription');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
-function drush_apic_app_deletesub($subinput, $event = 'delete_sub') {
-  ibm_apim_entry_trace(__FUNCTION__, $subinput);
-  $appUrl = $subinput['app_url'];
-  $subid = $subinput['id'];
-  if (isset($appUrl) && isset($subid)) {
+function drush_apic_app_deletesub($subInput, $event = 'delete_sub') {
+  ibm_apim_entry_trace(__FUNCTION__, $subInput);
+  $appUrl = $subInput['app_url'];
+  $subId = $subInput['id'];
+  if ($appUrl !== NULL && $subId !== NULL) {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = Drupal::service('account_switcher');
-    $original_user = \Drupal::currentUser();
-    if ($original_user->id() != 1) {
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
-    Subscription::delete($appUrl, $subid);
+    Subscription::delete($appUrl, $subId);
     drush_log(dt('Subscription deleted.'), 'success');
-    if (isset($original_user) && $original_user->id() != 1) {
+    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -312,7 +312,6 @@ function drush_apic_app_deletesub($subinput, $event = 'delete_sub') {
 
 function drush_apic_app_massupdate($apps = [], $event = 'content_refresh') {
   ibm_apim_entry_trace(__FUNCTION__, count($apps));
-  $apps = json_decode($apps, TRUE);
   if (!empty($apps)) {
     foreach ($apps as $app) {
       drush_apic_app_createOrUpdate($app, $event, 'MassUpdate');
@@ -323,7 +322,6 @@ function drush_apic_app_massupdate($apps = [], $event = 'content_refresh') {
 
 function drush_apic_app_sub_massupdate($subs = [], $event = 'content_refresh') {
   ibm_apim_entry_trace(__FUNCTION__, count($subs));
-  $subs = json_decode($subs, TRUE);
   if (!empty($subs)) {
     foreach ($subs as $sub) {
       drush_apic_app_createOrUpdatesub($sub, $event, 'MassUpdate');
@@ -341,7 +339,7 @@ function drush_apic_app_tidy($appUrls = []) {
     $query->condition('type', 'application')
       ->condition('apic_url.value', $appUrls, 'NOT IN');
     $results = $query->execute();
-    if (isset($results)) {
+    if ($results !== NULL) {
       foreach ($results as $item) {
         $nids[] = $item;
       }
@@ -365,27 +363,29 @@ function drush_apic_app_sub_tidy($appUrls) {
     $query->condition('type', 'application')->condition('apic_url.value', array_keys($appUrls), 'NOT IN');
     $results = $query->execute();
 
-    if (isset($results)) {
+    if ($results !== NULL) {
       foreach ($results as $nid) {
         $node = Node::load($nid);
-        $appUrls[$node->apic_url->value] = '';
+        if ($node !== NULL) {
+          $appUrls[$node->apic_url->value] = '';
+        }
       }
     }
 
-    foreach ($appUrls as $appUrl => $appsub) {
+    foreach ($appUrls as $appUrl => $appSub) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'application')->condition('apic_url.value', $appUrl);
       $results = $query->execute();
 
-      if (isset($results)) {
+      if ($results !== NULL) {
         foreach ($results as $nid) {
           $node = Node::load($nid);
-          if (isset($node)) {
-            $newsubs = array();
-            foreach ($appsub as $sub) {
-              $newsubs[] = serialize($sub);
+          if ($node !== NULL) {
+            $newSubs = [];
+            foreach ($appSub as $sub) {
+              $newSubs[] = serialize($sub);
             }
-            $node->set('application_subscriptions', $newsubs);
+            $node->set('application_subscriptions', $newSubs);
             $node->save();
           }
         }
@@ -409,23 +409,23 @@ function drush_apic_app_updatecred($cred, $event = 'cred_update') {
 
 function drush_apic_app_deletecred($cred, $event = 'cred_del') {
   ibm_apim_entry_trace(__FUNCTION__);
-  if (isset($cred)) {
+  if ($cred !== NULL) {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = Drupal::service('account_switcher');
-    $original_user = \Drupal::currentUser();
-    if ($original_user->id() != 1) {
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
 
-    if (isset($cred['app_url']) && isset($cred['id'])) {
+    if (isset($cred['app_url'], $cred['id'])) {
       Application::deleteCredential($cred['app_url'], $cred['id']);
     }
     else {
       drush_log(dt('Drush @func app_url or id missing', ['@func' => 'drush_apic_app_deletecred']), 'error');
     }
 
-    if (isset($original_user) && $original_user->id() != 1) {
+    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -441,16 +441,16 @@ function drush_apic_app_createOrUpdateCred($cred, $event, $func) {
   // in case moderation is on we need to run as admin
   // save the current user so we can switch back at the end
   $accountSwitcher = Drupal::service('account_switcher');
-  $original_user = \Drupal::currentUser();
-  if ($original_user->id() != 1) {
+  $originalUser = \Drupal::currentUser();
+  if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
-  if (isset($cred)) {
+  if ($cred !== NULL) {
     if (is_string($cred)) {
       $cred = json_decode($cred, TRUE);
     }
 
-    if (isset($cred['app_url']) && isset($cred['id'])) {
+    if (isset($cred['app_url'], $cred['id'])) {
       Application::createOrUpdateCredential($cred['app_url'], $cred);
     }
     else {
@@ -460,7 +460,7 @@ function drush_apic_app_createOrUpdateCred($cred, $event, $func) {
   else {
     drush_log(dt('Drush @func No credential provided', ['@func' => $func]), 'error');
   }
-  if (isset($original_user) && $original_user->id() != 1) {
+  if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
     $accountSwitcher->switchBack();
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);

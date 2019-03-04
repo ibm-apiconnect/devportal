@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -18,6 +18,7 @@ use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\NodeInterface;
@@ -42,8 +43,14 @@ class ResetClientIDForm extends ConfirmFormBase {
    */
   protected $credId;
 
+  /**
+   * @var \Drupal\apic_app\Service\ApplicationRestInterface
+   */
   protected $restService;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
   /**
@@ -68,17 +75,17 @@ class ResetClientIDForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'application_reset_clientid_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL): array {
     $this->node = $appId;
     $this->credId = Html::escape($credId);
-    $form =  parent::buildForm($form, $form_state);
+    $form = parent::buildForm($form, $form_state);
     $themeHandler = \Drupal::service('theme_handler');
     if ($themeHandler->themeExists('bootstrap')) {
       if (isset($form['actions']['submit'])) {
@@ -97,49 +104,51 @@ class ResetClientIDForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
+  public function getDescription(): TranslatableMarkup {
     return $this->t('Are you sure you want to reset the client ID and client secret? This action cannot be undone.');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfirmText() {
+  public function getConfirmText(): TranslatableMarkup {
     return $this->t('Reset');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getQuestion() {
+  public function getQuestion(): TranslatableMarkup {
     return $this->t('Reset the client ID and secret for %title?', ['%title' => $this->node->title->value]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
-    if(isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
-      return Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
-    } else {
-      return Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
+    if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
+      $url = Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
     }
+    else {
+      $url = Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
+    }
+    return $url;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appId = $this->node->application_id->value;
     $url = $this->node->apic_url->value . '/credentials/' . $this->credId . '/reset';
-    $result = $this->restService->postClientId($url, null);
+    $result = $this->restService->postClientId($url, NULL);
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
-      $current_user = \Drupal::currentUser();
-      \Drupal::logger('apic_app')->notice('Application @appname client ID and secret reset by @username', [
-        '@appname' => $this->node->getTitle(),
-        '@username' => $current_user->getAccountName(),
+      $currentUser = \Drupal::currentUser();
+      \Drupal::logger('apic_app')->notice('Application @appName client ID and secret reset by @username', [
+        '@appName' => $this->node->getTitle(),
+        '@username' => $currentUser->getAccountName(),
       ]);
       $data = $result->data;
       // alter hook (pre-invoke)
@@ -159,15 +168,15 @@ class ResetClientIDForm extends ConfirmFormBase {
 
       // update the stored app
       if (!empty($this->node->application_credentials->getValue())) {
-        $existingcreds = $this->node->application_credentials->getValue();
-        foreach($existingcreds as $key=>$arrayValue){
-          $unserialized = unserialize($arrayValue['value']);
-          if (isset($unserialized['id']) && $unserialized['id'] == $this->credId) {
+        $existingCreds = $this->node->application_credentials->getValue();
+        foreach ($existingCreds as $key => $arrayValue) {
+          $unserialized = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+          if (isset($unserialized['id']) && (string) $unserialized['id'] === (string) $this->credId) {
             $unserialized['client_id'] = $data['client_id'];
-            $existingcreds[$key] = serialize($unserialized);
+            $existingCreds[$key] = serialize($unserialized);
           }
         }
-        $this->node->set('application_credentials', $existingcreds);
+        $this->node->set('application_credentials', $existingCreds);
       }
       $this->node->save();
 
@@ -184,8 +193,8 @@ class ResetClientIDForm extends ConfirmFormBase {
         // Set the args twice on the event: as the main subject but also in the
         // list of arguments.
         $event = new CredentialClientIDResetEvent($this->node, ['application' => $this->node]);
-        $event_dispatcher = \Drupal::service('event_dispatcher');
-        $event_dispatcher->dispatch(CredentialClientIDResetEvent::EVENT_NAME, $event);
+        $eventDispatcher = \Drupal::service('event_dispatcher');
+        $eventDispatcher->dispatch(CredentialClientIDResetEvent::EVENT_NAME, $event);
       }
     }
     $form_state->setRedirectUrl($this->getCancelUrl());

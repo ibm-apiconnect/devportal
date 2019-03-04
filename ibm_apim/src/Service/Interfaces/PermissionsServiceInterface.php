@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -25,24 +25,25 @@ interface PermissionsServiceInterface {
   /**
    * get all the permissions objects
    *
-   * @return NULL if an error occurs otherwise an array of the permissions objects.
+   * @return NULL|array if an error occurs otherwise an array of the permissions objects.
    */
-  public function getAll();
+  public function getAll(): ?array;
 
   /**
    * get a specific permissions object by url
    *
    * @param $key
+   *
    * @return null|array
    */
-  public function get($key);
+  public function get($key): ?array;
 
   /**
    * Update all permissions objects
    *
    * @param $data array of permissions objects keyed on url
    */
-  public function updateAll($data);
+  public function updateAll($data): void;
 
   /**
    * Update a specific permissions object
@@ -50,18 +51,18 @@ interface PermissionsServiceInterface {
    * @param $key
    * @param $data
    */
-  public function update($key, $data);
+  public function update($key, $data): void;
 
   /**
    * Delete a specific permissions object
    *
    * @param $key (url)
    */
-  public function delete($key);
+  public function delete($key): void;
 
   /**
    * Delete all current permissions objects
    */
-  public function deleteAll();
+  public function deleteAll(): void;
 
 }

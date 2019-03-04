@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,13 +13,10 @@
 
 namespace Drupal\Tests\auth_apic\Unit;
 
+use Drupal\auth_apic\JWTToken;
+use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\Tests\auth_apic\Unit\UserManager\UserManagerTestBaseClass;
-
-use Drupal\auth_apic\Rest\ActivationResponse;
-use Drupal\ibm_apim\ApicType\ApicUser;
-use Drupal\auth_apic\JWTToken;
-
 use Prophecy\Argument;
 
 /**
@@ -32,7 +29,7 @@ use Prophecy\Argument;
  */
 class AcceptInviteTest extends UserManagerTestBaseClass {
 
-  public function testAcceptInvite() {
+  public function testAcceptInvite(): void {
 
     $jwt = $this->createJWT();
     $user = $this->createUser();
@@ -40,9 +37,9 @@ class AcceptInviteTest extends UserManagerTestBaseClass {
     $mgmtResponse = new RestResponse();
     $mgmtResponse->setCode(201);
 
-    $this->mgmtServer->acceptInvite($jwt,$user,"AndreOrg")->willReturn($mgmtResponse);
+    $this->mgmtServer->acceptInvite($jwt, $user, 'AndreOrg')->willReturn($mgmtResponse);
 
-    $this->logger->notice('invitation processed for %username', array('%username' => $user->getUsername()))->shouldBeCalled();
+    $this->logger->notice('invitation processed for @username', ['@username' => $user->getUsername()])->shouldBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
     $userManager = $this->createUserManager();
@@ -54,7 +51,7 @@ class AcceptInviteTest extends UserManagerTestBaseClass {
   }
 
 
-  public function testAcceptInviteFailFromMgmt() {
+  public function testAcceptInviteFailFromMgmt(): void {
 
 
     $jwt = $this->createJWT();
@@ -62,11 +59,11 @@ class AcceptInviteTest extends UserManagerTestBaseClass {
 
     $mgmtResponse = new RestResponse();
     $mgmtResponse->setCode(400);
-    $mgmtResponse->setErrors(array('TEST ERROR'));
+    $mgmtResponse->setErrors(['TEST ERROR']);
 
-    $this->mgmtServer->acceptInvite($jwt,$user,'AndreOrg')->willReturn($mgmtResponse);
+    $this->mgmtServer->acceptInvite($jwt, $user, 'AndreOrg')->willReturn($mgmtResponse);
 
-    $this->logger->error('Error during acceptInvite:  %error' , array('%error' => 'TEST ERROR'))->shouldBeCalled();
+    $this->logger->error('Error during acceptInvite:  @error', ['@error' => 'TEST ERROR'])->shouldBeCalled();
 
     $userManager = $this->createUserManager();
     $result = $userManager->acceptInvite($jwt, $user);
@@ -78,22 +75,21 @@ class AcceptInviteTest extends UserManagerTestBaseClass {
   }
 
 
-
   // Helper functions:
-  private function createUser() {
+  private function createUser(): ApicUser {
     $user = new ApicUser();
 
     $user->setMail('andre@example.com');
     $user->setPassword('abc');
-    $user->setfirstName('Andre');
-    $user->setlastName('Andresson');
-    $user->setorganization('AndreOrg');
+    $user->setFirstname('Andre');
+    $user->setLastname('Andresson');
+    $user->setOrganization('AndreOrg');
 
     return $user;
 
   }
 
-  private function createJWT() {
+  private function createJWT(): JWTToken {
     $jwt = new JWTToken();
     $jwt->setUrl('accept/invite/url');
     return $jwt;

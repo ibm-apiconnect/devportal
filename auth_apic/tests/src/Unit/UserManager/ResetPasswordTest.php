@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,10 +13,9 @@
 
 namespace Drupal\Tests\auth_apic\Unit;
 
-use Drupal\Tests\auth_apic\Unit\UserManager\UserManagerTestBaseClass;
-use Drupal\auth_apic\Service\ApicUserManager;
 use Drupal\auth_apic\JWTToken;
 use Drupal\ibm_apim\Rest\RestResponse;
+use Drupal\Tests\auth_apic\Unit\UserManager\UserManagerTestBaseClass;
 use Prophecy\Argument;
 
 /**
@@ -28,7 +27,7 @@ class ResetPasswordTest extends UserManagerTestBaseClass {
   /**
    * Test successful (204) response from management server.
    */
-  public function testResetPasswordSuccess() {
+  public function testResetPasswordSuccess(): void {
     $obj = $this->createJWT();
     $password = 'abc123';
 
@@ -47,7 +46,7 @@ class ResetPasswordTest extends UserManagerTestBaseClass {
   /**
    * Test with non-204 response from management server.
    */
-  public function testResetPasswordFail() {
+  public function testResetPasswordFail(): void {
     $obj = $this->createJWT();
     $password = 'abc123';
 
@@ -56,7 +55,7 @@ class ResetPasswordTest extends UserManagerTestBaseClass {
 
     $this->mgmtServer->resetPassword($obj, $password)->willReturn($response);
     $this->logger->notice('Error resetting password.')->shouldBeCalled();
-    $this->logger->error('Reset password response: %result', Argument::type('array'))->shouldBeCalled();
+    $this->logger->error('Reset password response: @result', Argument::type('array'))->shouldBeCalled();
 
     $userManager = $this->createUserManager();
     $rc = $userManager->resetPassword($obj, $password);
@@ -65,7 +64,7 @@ class ResetPasswordTest extends UserManagerTestBaseClass {
 
   }
 
-  private function createJWT() {
+  private function createJWT(): JWTToken {
     $jwt = new JWTToken();
     $jwt->setUrl('j/w/t');
     return $jwt;

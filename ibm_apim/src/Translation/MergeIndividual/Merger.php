@@ -9,7 +9,7 @@ use Drupal\ibm_apim\Translation\TranslationMerger;
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -26,7 +26,9 @@ use Drupal\ibm_apim\Translation\TranslationMerger;
 class Merger extends TranslationMerger {
 
   private $outputDir;
+
   private $masterItems;
+
   private $secondaryItems;
 
   /**
@@ -37,6 +39,8 @@ class Merger extends TranslationMerger {
    * @param $file1 - This file takes precedent when there is a matching msgstr in both files.
    * @param $file2 - A msgstr in this file will be replaced if it exists in $file1
    * @param $outputdir - A new file will be written out to this location.
+   *
+   * @throws \Exception
    */
   function __construct($file1, $file2, $outputdir = '/tmp/mergedir') {
 
@@ -55,8 +59,10 @@ class Merger extends TranslationMerger {
 
   /**
    * Take everything from master items and add things not included there from secondary items.
+   *
+   * @return array|null
    */
-  private function mergeFiles() {
+  private function mergeFiles(): ?array {
 
     $complete_items = $this->masterItems;
 
@@ -80,7 +86,13 @@ class Merger extends TranslationMerger {
 
   }
 
-  private function writeOutput($items, $filename) {
+  /**
+   * @param array $items
+   * @param string $filename
+   *
+   * @throws \Exception
+   */
+  private function writeOutput($items, $filename): void {
     echo 'Writing to ' . $filename . PHP_EOL;
     new TranslationFileWriter($items, $filename);
     echo 'Written: ' . $filename . "\n";

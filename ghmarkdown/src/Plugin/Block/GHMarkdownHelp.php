@@ -17,14 +17,16 @@ class GHMarkdownHelp extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  public function build() {
-    $build = array();
+  public function build(): array {
+    $build = [];
     $build['#title'] = t('Markdown filter tips');
     $build['#markup'] = $this->markdownHelpContent();
+
+    return $build;
   }
 
-  protected function markdownHelpContent() {
-    return '<pre>' . t("
+  protected function markdownHelpContent(): string {
+    return '<pre>' . t('
 ## Header 2 ##
 ### Header 3 ###
 #### Header 4 ####
@@ -49,7 +51,7 @@ Inline markup like _italics_,
 
 And now some code:
     // Code is indented text
-    is_easy() to_remember();") . '</pre>';
+    is_easy() to_remember();') . '</pre>';
   }
 
 }

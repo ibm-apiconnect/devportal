@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -24,7 +24,7 @@ use Drupal\node\NodeInterface;
  */
 class RenameOrgAccessCheck implements AccessInterface {
 
-  public function access() {
+  public function access(): AccessResult {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $allowed = FALSE;
     $current_user = \Drupal::currentUser();
@@ -32,11 +32,11 @@ class RenameOrgAccessCheck implements AccessInterface {
     $user_utils = \Drupal::service('ibm_apim.user_utils');
 
     // block anonymous and admin
-    if (!$current_user->isAnonymous() && $current_user->id() != 1) {
+    if (!$current_user->isAnonymous() && (int) $current_user->id() !== 1) {
       // Only consumerorg owner can edit the consumerorg name
       $config = \Drupal::config('ibm_apim.settings');
-      $allow_consumerorg_rename = $config->get('allow_consumerorg_rename');
-      if ($user_utils->checkHasPermission('settings:manage') && $allow_consumerorg_rename) {
+      $allow_consumerorg_rename = (boolean) $config->get('allow_consumerorg_rename');
+      if ($allow_consumerorg_rename === TRUE && $user_utils->checkHasPermission('settings:manage')) {
         $allowed = TRUE;
       }
     }

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -22,14 +22,14 @@ class ApplicationCreateStep2Form extends MultistepFormBase {
   /**
    * {@inheritdoc}.
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'application_create_form_two';
   }
 
   /**
    * {@inheritdoc}.
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $form = parent::buildForm($form, $form_state);
 
@@ -48,7 +48,7 @@ class ApplicationCreateStep2Form extends MultistepFormBase {
         '#weight' => 0,
       ];
 
-      $creds = unserialize($this->store->get('creds'));
+      $creds = unserialize($this->store->get('creds'), ['allowed_classes' => FALSE]);
 
       $form['client_id'] = [
         '#markup' => \Drupal\Core\Render\Markup::create('<div class="clientIDContainer toggleParent"><p class="field__label">' . t('Key') . '</p><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_id" type="password" readonly value="' . $creds['client_id'] . '"></div><div class="apicAppCheckButton">
@@ -78,7 +78,7 @@ class ApplicationCreateStep2Form extends MultistepFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $nid = $this->store->get('nid');
@@ -86,16 +86,16 @@ class ApplicationCreateStep2Form extends MultistepFormBase {
     $form_state->setRedirectUrl($node->toUrl());
 
     // If we came to this wizard from somewhere else, go back there
-    $redirect_to = $this->store->get('redirect_to');
-    if(!empty($redirect_to)){
-      $redirect_endpoint = \Drupal::service('path.validator')->getUrlIfValid($redirect_to);
-      if ($redirect_endpoint !== FALSE) {
-        $form_state->setRedirect($redirect_endpoint->getRouteName(), $redirect_endpoint->getRouteParameters());
+    $redirectTo = $this->store->get('redirect_to');
+    if (!empty($redirectTo)) {
+      $redirectEndpoint = \Drupal::service('path.validator')->getUrlIfValid($redirectTo);
+      if ($redirectEndpoint !== FALSE) {
+        $form_state->setRedirect($redirectEndpoint->getRouteName(), $redirectEndpoint->getRouteParameters());
       }
     }
 
     // Delete the saved data
-    parent::deleteStore();
+    $this->deleteStore();
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 }

@@ -11,6 +11,7 @@ namespace Drupal\ghmarkdown\cebe\markdown\block;
  * Adds the block quote elements
  */
 trait QuoteTrait {
+
   /**
    * identify a line as the beginning of a block quote.
    */

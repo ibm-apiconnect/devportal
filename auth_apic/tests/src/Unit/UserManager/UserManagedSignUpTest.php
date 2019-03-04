@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,25 +13,21 @@
 
 namespace Drupal\Tests\ibm_apim\Unit;
 
-use Drupal\auth_apic\UserManagerResponse;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\Tests\auth_apic\Unit\UserManager\UserManagerTestBaseClass;
-use Drupal\auth_apic\Service\ApicUserManager;
-use Drupal\auth_apic\Rest\UsersRegisterResponse;
-
-
 use Prophecy\Argument;
+
 
 /**
  * PHPUnit tests for:
  *   public function register(\Drupal\ibm_apim\ApicType\ApicUser $user);
  *
- * @group ibm_apim
+ * @group auth_apic
  */
 class UserManagedSignUpTest extends UserManagerTestBaseClass {
 
- public function testUserManagedSignUp() {
+  public function testUserManagedSignUp(): void {
 
     $user = $this->createUser();
     $accountStub = $this->createAccountStub();
@@ -43,14 +39,14 @@ class UserManagedSignUpTest extends UserManagerTestBaseClass {
     $this->userService->getUserAccountFields($user)->willReturn($accountFields);
 
     $extAuth = $this->externalAuth;
-    $extAuth->register(NULL, "auth_apic", Argument::any())->will(function ($args) use ($extAuth, $accountStub) {
-        $extAuth->load('fred@example.com', 'auth_apic')->willReturn($accountStub);
-        return $accountStub;
-      });
+    $extAuth->register(NULL, 'auth_apic', Argument::any())->will(function ($args) use ($extAuth, $accountStub) {
+      $extAuth->load('fred@example.com', 'auth_apic')->willReturn($accountStub);
+      return $accountStub;
+    });
 
     $this->mgmtServer->postSignUp($user)->willReturn($mgmtServerResponse);
 
-    $this->logger->notice('sign-up processed for %username', array('%username' => $user->getUsername()))->shouldBeCalled();
+    $this->logger->notice('sign-up processed for @username', ['@username' => $user->getUsername()])->shouldBeCalled();
 
     $userManager = $this->createUserManager();
     $result = $userManager->userManagedSignUp($user);
@@ -59,7 +55,7 @@ class UserManagedSignUpTest extends UserManagerTestBaseClass {
     $this->assertEquals('<front>', $result->getRedirect());
   }
 
-  public function testRegisterNewUserFailure() {
+  public function testRegisterNewUserFailure(): void {
 
     $user = $this->createUser();
 
@@ -73,14 +69,14 @@ class UserManagedSignUpTest extends UserManagerTestBaseClass {
     $this->assertEquals(FALSE, $result->success());
   }
 
-  private function createUser() {
+  private function createUser(): ApicUser {
     $user = new ApicUser();
 
     $user->setMail('fred@example.com');
     $user->setPassword('abc');
-    $user->setfirstname('fred');
-    $user->setlastname('fredsonn');
-    $user->setorganization('org1');
+    $user->setFirstname('fred');
+    $user->setLastname('fredsonn');
+    $user->setOrganization('org1');
 
     return $user;
 

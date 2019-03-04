@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -15,33 +15,29 @@ namespace Drupal\product\ParamConverter;
 
 use Drupal\Core\ParamConverter\ParamConverterInterface;
 use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 use Symfony\Component\Routing\Route;
 
 class ProdIdParamConverter implements ParamConverterInterface {
-  public function convert($value, $definition, $name, array $defaults) {
+
+  public function convert($value, $definition, $name, array $defaults): ?NodeInterface {
+    $returnValue = NULL;
     if (!empty($value)) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product');
       $query->condition('status', 1);
       $query->condition('product_id.value', $value);
-
       $nids = $query->execute();
 
       if (isset($nids) && !empty($nids)) {
         $nid = array_shift($nids);
-        $node = Node::load($nid);
-        return $node;
-      }
-      else {
-        return NULL;
+        $returnValue = Node::load($nid);
       }
     }
-    else {
-      return NULL;
-    }
+    return $returnValue;
   }
 
-  public function applies($definition, $name, Route $route) {
-    return (!empty($definition['type']) && $definition['type'] == 'product.id');
+  public function applies($definition, $name, Route $route): bool {
+    return (!empty($definition['type']) && $definition['type'] === 'product.id');
   }
 }

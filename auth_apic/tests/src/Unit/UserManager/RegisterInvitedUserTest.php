@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,13 +13,10 @@
 
 namespace Drupal\Tests\auth_apic\Unit;
 
+use Drupal\auth_apic\JWTToken;
+use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\Tests\auth_apic\Unit\UserManager\UserManagerTestBaseClass;
-
-use Drupal\auth_apic\Rest\ActivationResponse;
-use Drupal\ibm_apim\ApicType\ApicUser;
-use Drupal\auth_apic\JWTToken;
-
 use Prophecy\Argument;
 
 /**
@@ -33,7 +30,7 @@ use Prophecy\Argument;
  */
 class RegisterInvitedUserTest extends UserManagerTestBaseClass {
 
-  public function testRegisterInvitedUser() {
+  public function testRegisterInvitedUser(): void {
 
     $jwt = $this->createJWT();
     $user = $this->createUser();
@@ -46,9 +43,10 @@ class RegisterInvitedUserTest extends UserManagerTestBaseClass {
     $this->externalAuth->register('andre', 'auth_apic', $accountFields)->willReturn($this->createAccountStub());
     $this->mgmtServer->orgInvitationsRegister($jwt, $user)->willReturn($invitationResponse);
 
-    $this->logger->notice("Activating %uid directly in the database.", array("%uid" => "1")) ->shouldBeCalled();
-    $this->logger->notice('invitation processed for %username', array('%username' => 'andre'))->shouldBeCalled();
+    $this->logger->notice('Activating @uid directly in the database.', ['@uid' => '1'])->shouldBeCalled();
+    $this->logger->notice('invitation processed for @username', ['@username' => 'andre'])->shouldBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
+    $this->logger->debug("Registering @username in database as new account.", ["@username" => "andre"])->shouldBeCalled();
 
     $user_manager = $this->createUserManager();
     $response = $user_manager->registerInvitedUser($jwt, $user);
@@ -59,45 +57,43 @@ class RegisterInvitedUserTest extends UserManagerTestBaseClass {
   }
 
 
-  public function testRegisterInvitedUserMgmtError() {
+  public function testRegisterInvitedUserMgmtError(): void {
     $jwt = $this->createJWT();
     $user = $this->createUser();
 
     $invitationResponse = new RestResponse();
     $invitationResponse->setCode(400);
-    $invitationResponse->setErrors(array('TEST ERROR'));
+    $invitationResponse->setErrors(['TEST ERROR']);
 
     $this->mgmtServer->orgInvitationsRegister($jwt, $user)->willReturn($invitationResponse);
 
-    $this->logger->notice("Activating %uid directly in the database.", array("%uid" => "1")) ->shouldNotBeCalled();
-    $this->logger->error('Error during account registration:  %error', ['%error' => 'TEST ERROR'])->shouldBeCalled();
+    $this->logger->notice('Activating @uid directly in the database.', ['@uid' => '1'])->shouldNotBeCalled();
+    $this->logger->error('Error during account registration: @error', ['@error' => 'TEST ERROR'])->shouldBeCalled();
 
     $user_manager = $this->createUserManager();
     $response = $user_manager->registerInvitedUser($jwt, $user);
 
     $this->assertFalse($response->success(), 'Expected registerInvitedUser() NOT to be successful');
-    $this->assertEquals('<front>', $response->getRedirect(), 'Expected redirect to <front>');
   }
 
 
-
   // Helper functions:
-  private function createUser() {
+  private function createUser(): ApicUser {
     $user = new ApicUser();
 
     $user->setUsername('andre');
     $user->setMail('andre@example.com');
     $user->setPassword('abc');
-    $user->setfirstName('Andre');
-    $user->setlastName('Andresson');
-    $user->setorganization('AndreOrg');
+    $user->setFirstname('Andre');
+    $user->setLastname('Andresson');
+    $user->setOrganization('AndreOrg');
 
 
     return $user;
 
   }
 
-  private function createJWT() {
+  private function createJWT(): JWTToken {
     $jwt = new JWTToken();
     $jwt->setUrl('accept/invite/url');
     return $jwt;

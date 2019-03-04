@@ -62,7 +62,7 @@ services:
     arguments: ['@state', '@logger.channel.ibm_apim']
   ibm_apim.site_config:
     class: Drupal\ibm_apim\Service\SiteConfig
-    arguments: ['@state', '@config.factory', '@module_installer', '@logger.channel.ibm_apim', '@ibm_apim.user_registry', '@ibm_apim.billing', '@ibm_apim.permissions']
+    arguments: ['@state', '@config.factory', '@logger.channel.ibm_apim', '@ibm_apim.user_registry', '@ibm_apim.billing', '@ibm_apim.permissions', '@ibm_apim.analytics', '@ibm_apim.tls_client_profiles', '@ibm_apim.group', '@ibm_apim.vendor_extension', '@plugin.manager.menu.link']
   ibm_apim.node_type_checker:
     class: Drupal\ibm_apim\Access\IbmNodeTypeCheck
     tags:

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -15,13 +15,16 @@ namespace Drupal\auth_apic\Service\Interfaces;
 
 use Drupal\auth_apic\JWTToken;
 use Drupal\ibm_apim\ApicType\ApicUser;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\auth_apic\UserManagerResponse;
+use Drupal\user\Entity\User;
 
 interface UserManagerInterface {
 
   /**
    * Register a user that has been invited into the org. (Andre invited Andre).
    *
-   * @param InvitationObject $invitationObject
+   * @param JWTToken $token
    *    The invitation object used to auth with the mgmt appliance.
    * @param ApicUser $invitedUser
    *    Invited user.
@@ -47,7 +50,7 @@ interface UserManagerInterface {
    *
    * @return \Drupal\auth_apic\UserManagerResponse
    */
-  public function userManagedSignUp(ApicUser $new_user);
+  public function userManagedSignUp(ApicUser $new_user): UserManagerResponse;
 
   /**
    * @param ApicUser $new_user
@@ -56,7 +59,7 @@ interface UserManagerInterface {
    *
    * @return \Drupal\auth_apic\UserManagerResponse
    */
-  public function nonUserManagedSignUp(ApicUser $new_user);
+  public function nonUserManagedSignUp(ApicUser $new_user): UserManagerResponse;
 
 
   /**
@@ -67,12 +70,12 @@ interface UserManagerInterface {
    * @param array $fields
    *   The other fields associated with that user e.g. firstName, lastName etc.
    *
-   * @return Account|null
+   * @return AccountInterface|null
    *   the account for the registered user
    *
-   * @throws \Drupal\auth_apic\Service\ExternalAuthRegisterException
+   * @throws \Drupal\externalauth\Exception\ExternalAuthRegisterException
    */
-  public function registerApicUser($user, array $fields);
+  public function registerApicUser($username, array $fields): ?AccountInterface;
 
   /**
    * Check whether the user is known in apim and log them in.
@@ -86,7 +89,7 @@ interface UserManagerInterface {
    *   containing success of login and the uid of the logged in user if successful.
    *
    */
-  public function login(ApicUser $user);
+  public function login(ApicUser $user): UserManagerResponse;
 
   /**
    * Updates the local drupal user account based on the possibly updated
@@ -94,9 +97,10 @@ interface UserManagerInterface {
    *
    * @param ApicUser $user
    *  the user to be updated
+   *
    * @return bool
    */
-  public function updateLocalAccount(ApicUser $user);
+  public function updateLocalAccount(ApicUser $user): bool;
 
   /**
    * Updates the roles of a given user. The roles specified replace all existing
@@ -107,18 +111,20 @@ interface UserManagerInterface {
    *  the user to update
    * @param array roles
    *  the complete list of roles to set for this user
+   *
    * @return bool
    */
-  public function updateLocalAccountRoles(ApicUser $user, $roles);
+  public function updateLocalAccountRoles(ApicUser $user, $roles): bool;
 
   /**
    * Updates the user profile of an apim user.
    *
-   * @param \Drupal\auth_apic\ApicUser $user
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $user
    *   the user profile to update including the updated fields
+   *
    * @return bool
    */
-  public function updateApicAccount(ApicUser $user);
+  public function updateApicAccount(ApicUser $user): bool;
 
   /**
    * Reset users password.
@@ -136,15 +142,14 @@ interface UserManagerInterface {
   /**
    * Change users password.
    *
-   * @param $username
+   * @param \Drupal\user\Entity\User $user
    *   The user account.
    * @param $old_password
    *   Current password.
    * @param $new_password
    *   New password.
-   * @return
    */
-  public function changePassword($user, $old_password, $new_password);
+  public function changePassword(User $user, $old_password, $new_password);
 
   /**
    * Deletes the local drupal user account based on the user provided.
@@ -153,7 +158,7 @@ interface UserManagerInterface {
    * @param ApicUser $user
    *  the user to be deleted
    */
-  public function deleteLocalAccount(ApicUser $user);
+  public function deleteLocalAccount(ApicUser $user): void;
 
   /**
    * Attempts to find and retrieve the user account for the user with the given
@@ -163,17 +168,18 @@ interface UserManagerInterface {
    *
    * @return \Drupal\Core\Session\AccountInterface
    */
-  public function findUserInDatabase($username);
+  public function findUserInDatabase($username): ?AccountInterface;
 
   /**
    * Attempts to find and retrieve the user account for the user with the given
    * url.
    *
-   * @param $url The APIC url for the user to find
+   * @param $url
+   *   The APIC url for the user to find
    *
    * @return \Drupal\Core\Session\AccountInterface
    */
-  public function findUserByUrl($url);
+  public function findUserByUrl($url): ?AccountInterface;
 
 
   /**
@@ -182,9 +188,18 @@ interface UserManagerInterface {
    * @return UserManagerResponse
    *   containing success of deletion and any messages to display to the user.
    */
-  public function deleteUser();
+  public function deleteUser(): UserManagerResponse;
 
+  /**
+   * @param $user user account
+   * @param $form_state user.register form state
+   * @param $view_mode entity view mode
+   *
+   */
+  public function saveCustomFields($user, $form_state, $view_mode): void;
 
-
-
+  /**
+   * @param $user user account
+   */
+  public function setDefaultLanguage($user): void;
 }

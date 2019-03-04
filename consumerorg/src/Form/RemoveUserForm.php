@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,11 +13,11 @@
 namespace Drupal\consumerorg\Form;
 
 use Drupal\Component\Utility\Html;
+use Drupal\consumerorg\ApicType\Member;
 use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\ibm_apim\ApicRest;
 use Drupal\ibm_apim\Service\UserUtils;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -115,11 +115,10 @@ class RemoveUserForm extends ConfirmFormBase {
     }
     else {
       $org = $this->userUtils->getCurrentConsumerorg();
-      $this->currentOrg = $this->consumerOrgService->getConsumerOrgAsNode($org['url']);
+      $this->currentOrg = $this->consumerOrgService->getConsumerOrgAsObject($org['url']);
       $this->memberId = Html::escape($memberId);
       $found = FALSE;
-      foreach ($this->currentOrg->consumerorg_members->getValue() as $arrayValue) {
-        $member = unserialize($arrayValue['value']);
+      foreach ($this->currentOrg->getMembers() as $member) {
         if ($member->getId() === $this->memberId) {
           if ($current_user->getAccountName() !== $member->getUser()->getUsername()) {
             $found = TRUE;

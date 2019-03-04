@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -12,265 +12,268 @@
 
 use Drupal\apic_api\Api;
 use Drupal\apic_app\Application;
-use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Session\UserSession;
 use Drupal\Core\Url;
-use Drupal\key\Entity\Key;
+use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\node\Entity\Node;
 use Drupal\product\Product;
-use Drupal\Core\Session\UserSession;
 use Drupal\search_api\Entity\Index;
 
 function ibm_apim_drush_command() {
 
-  $items['ibm_apim-updateconfig'] = array(
+  $items['ibm_apim-updateconfig'] = [
     'description' => 'Updates the site config',
-    'aliases' => array('ucon'),
-    'arguments' => array(
+    'aliases' => ['ucon'],
+    'arguments' => [
       'config' => 'The JSON config payload',
-    )
-  );
-  $items['ibm_apim-setcreds'] = array(
+    ],
+  ];
+  $items['ibm_apim-setcreds'] = [
     'description' => 'Updates the catalog credentials from APIM',
-    'aliases' => array('setcreds'),
-    'arguments' => array(
+    'aliases' => ['setcreds'],
+    'arguments' => [
       'clientid' => 'The catalog client ID',
       'clientsecret' => 'The catalog client secret',
-    )
-  );
-  $items['ibm_apim-bgsync'] = array(
+    ],
+  ];
+  $items['ibm_apim-bgsync'] = [
     'description' => 'Runs background sync',
-    'aliases' => array('bgsync')
-  );
-  $items['ibm_apim-listen'] = array(
+    'aliases' => ['bgsync'],
+  ];
+  $items['ibm_apim-listen'] = [
     'description' => 'Listens to stdin and runs the drush commands piped in',
-    'aliases' => array('listen')
-  );
-  $items['ibm_apim-clearup'] = array(
+    'aliases' => ['listen'],
+  ];
+  $items['ibm_apim-clearup'] = [
     'description' => 'Tidies up the local database at the end of a snapshot to remove any superfluous content',
-    'aliases' => array('clearup')
-  );
-  $items['ibm_apim-content_refresh'] = array(
+    'aliases' => ['clearup'],
+  ];
+  $items['ibm_apim-deleteconfig'] = [
+    'description' => 'Removes catalog configuration from the portal database',
+    'aliases' => ['deleteconfig'],
+  ];
+  $items['ibm_apim-content_refresh'] = [
     'description' => 'Listens to stdin and updates the db for each item piped in',
-    'aliases' => array('contrefresh')
-  );
-  $items['ibm_apim-request_refresh'] = array(
+    'aliases' => ['contrefresh'],
+  ];
+  $items['ibm_apim-request_refresh'] = [
     'description' => 'Invokes ApicRest.php to request a content refresh',
-    'aliases' => array('reqrefresh')
-  );
+    'aliases' => ['reqrefresh'],
+  ];
 
-  $items['ibm_apim-send_welcome_email'] = array(
+  $items['ibm_apim-send_welcome_email'] = [
     'description' => 'Sends a new welcome email',
-    'aliases' => array('welcomeemail')
-  );
-  $items['ibm_apim-checkapimcert'] = array(
+    'aliases' => ['welcomeemail'],
+  ];
+  $items['ibm_apim-checkapimcert'] = [
     'description' => 'Check APIM management certificate',
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_ROOT,
-    'aliases' => array('checkcert'),
-    'arguments' => array(
+    'aliases' => ['checkcert'],
+    'arguments' => [
       'url' => 'APIM management url',
       'insecure' => 'Insecure certificate',
       'provided_cert' => 'Provided certificate',
-    )
-  );
-  $items['ibm_apim-set_admin_timestamps'] = array(
+    ],
+  ];
+  $items['ibm_apim-set_admin_timestamps'] = [
     'description' => 'On creation of a site from template, set admin timestamps to current time',
-    'aliases' => array('admintime'),
-    'hidden' => TRUE
-  );
-  $items['ibm_apim-generate_nlsexport'] = array(
+    'aliases' => ['admintime'],
+    'hidden' => TRUE,
+  ];
+  $items['ibm_apim-generate_nlsexport'] = [
     'description' => 'Generate .pot/.po files to be sent for translation.',
-    'aliases' => array('nlsexport'),
-    'options' => array(
+    'aliases' => ['nlsexport'],
+    'options' => [
       'required_pot_dir' => 'Directory containing complete set of .pot files for which translations are required.',
       'existing_drupal_po_dir' => 'Directory containing downloaded existing drupal .po files.',
       'output_dir' => 'Directory to place the output.',
       'platform_dir' => 'Platform directory.',
-      'merge_dir' => 'Directory to merge existing translations in.'
-    )
-  );
-  $items['ibm_apim-merge_nlsdrop'] = array(
+      'merge_dir' => 'Directory to merge existing translations in.',
+    ],
+  ];
+  $items['ibm_apim-merge_nlsdrop'] = [
     'description' => 'Merge new translation files with memories to give new complete set of translation (.po) files.',
-    'aliases' => array('merge-nlsdrop'),
-    'arguments' => array(
+    'aliases' => ['merge-nlsdrop'],
+    'arguments' => [
       'drop_dir' => 'Directory containing newly translated files received from the translation centre.',
-      'original_export_dir' => 'Directory containing the original files that were sent to the translation centre (.pot and -memories.\<lang\>.po)'
-    ),
-    'options' => array(
-      'output_dir' => 'Directory to place the output.'
-    )
-  );
-  $items['ibm_apim-merge_nlsindividual'] = array(
+      'original_export_dir' => 'Directory containing the original files that were sent to the translation centre (.pot and -memories.\<lang\>.po)',
+    ],
+    'options' => [
+      'output_dir' => 'Directory to place the output.',
+    ],
+  ];
+  $items['ibm_apim-merge_nlsindividual'] = [
     'description' => 'Merge a pair of individual .po translation files .',
-    'aliases' => array('merge-nlsindividual'),
-    'arguments' => array(
+    'aliases' => ['merge-nlsindividual'],
+    'arguments' => [
       'master_file' => 'File contain the master record of translations.',
-      'secondary_file' => 'File containing the translations that need to be merged in, note the master file will take precedence.'
-    ),
-    'options' => array(
-      'output_dir' => 'Where to place the merged .po file.'
-    )
-  );
-  $items['ibm_apim-locale_clear_status'] = array(
+      'secondary_file' => 'File containing the translations that need to be merged in, note the master file will take precedence.',
+    ],
+    'options' => [
+      'output_dir' => 'Where to place the merged .po file.',
+    ],
+  ];
+  $items['ibm_apim-locale_clear_status'] = [
     'description' => 'Clear the status of known translation files, used to ensure a full load of files is performed.',
-    'aliases' => array('locale-clear-status'),
-  );
-  $items['ibm_apim-locale_load_config_translation'] = array(
+    'aliases' => ['locale-clear-status'],
+  ];
+  $items['ibm_apim-locale_load_config_translation'] = [
     'description' => 'Load configuration translations for all languages.',
-    'aliases' => array('locale-load-config'),
-  );
-  $items['ibm_apim-createkey'] = array(
+    'aliases' => ['locale-load-config'],
+  ];
+  $items['ibm_apim-createkey'] = [
     'description' => 'Create encryption key',
-    'aliases' => array('createkey'),
-    'arguments' => array(
-      'clientid' => 'Site Client ID'
-    )
-  );
+    'aliases' => ['createkey'],
+    'arguments' => [
+      'clientid' => 'Site Client ID',
+    ],
+  ];
 
-  $items['ibm_apim-user_create'] = array(
+  $items['ibm_apim-apicuser_create'] = [
     'description' => 'Creates an IBM APIC user',
-    'aliases' => array('cibmuser'),
-    'arguments' => array(
+    'aliases' => ['cibmuser'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-user_update'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-apicuser_update'] = [
     'description' => 'Updates an IBM APIC user',
-    'aliases' => array('uibmuser'),
-    'arguments' => array(
+    'aliases' => ['uibmuser'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-user_delete'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-apicuser_delete'] = [
     'description' => 'Deletes an IBM APIC user',
-    'aliases' => array('dibmuser'),
-    'arguments' => array(
+    'aliases' => ['dibmuser'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-user_block'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-apicuser_block'] = [
     'description' => 'Blocks an IBM APIC user',
-    'aliases' => array('crtibmuser'),
-    'arguments' => array(
+    'aliases' => ['crtibmuser'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-user_unblock'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-apicuser_unblock'] = [
     'description' => 'Unblocks an IBM APIC user',
-    'aliases' => array('ubibmuser'),
-    'arguments' => array(
+    'aliases' => ['ubibmuser'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-user_registry_create'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-user_registry_create'] = [
     'description' => 'Creates an IBM APIC user registry',
-    'aliases' => array('cibmuserreg'),
-    'arguments' => array(
+    'aliases' => ['cibmuserreg'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-user_registry_update'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-user_registry_update'] = [
     'description' => 'Updates an IBM APIC user registry',
-    'aliases' => array('uibmuserreg'),
-    'arguments' => array(
+    'aliases' => ['uibmuserreg'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-user_registry_delete'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-user_registry_delete'] = [
     'description' => 'Deletes an IBM APIC user registry',
-    'aliases' => array('dibmuserreg'),
-    'arguments' => array(
+    'aliases' => ['dibmuserreg'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-vendor_extension_create'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-vendor_extension_create'] = [
     'description' => 'Creates an IBM APIC vendor extension',
-    'aliases' => array('cibmvendext'),
-    'arguments' => array(
+    'aliases' => ['cibmvendext'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-vendor_extension_update'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-vendor_extension_update'] = [
     'description' => 'Updates an IBM APIC vendor extension',
-    'aliases' => array('uibmvendext'),
-    'arguments' => array(
+    'aliases' => ['uibmvendext'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-vendor_extension_delete'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-vendor_extension_delete'] = [
     'description' => 'Deletes an IBM APIC vendor extension',
-    'aliases' => array('dibmvendext'),
-    'arguments' => array(
+    'aliases' => ['dibmvendext'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-group_create'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-group_create'] = [
     'description' => 'Creates an IBM APIC group',
-    'aliases' => array('cibmgroup'),
-    'arguments' => array(
+    'aliases' => ['cibmgroup'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-group_update'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-group_update'] = [
     'description' => 'Updates an IBM APIC group',
-    'aliases' => array('uibmgroup'),
-    'arguments' => array(
+    'aliases' => ['uibmgroup'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-group_delete'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-group_delete'] = [
     'description' => 'Deletes an IBM APIC group',
-    'aliases' => array('dibmgroup'),
-    'arguments' => array(
+    'aliases' => ['dibmgroup'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-billing_create'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-billing_create'] = [
     'description' => 'Creates an IBM APIC billing object',
-    'aliases' => array('cibmbilling'),
-    'arguments' => array(
+    'aliases' => ['cibmbilling'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-billing_update'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-billing_update'] = [
     'description' => 'Updates an IBM APIC billing object',
-    'aliases' => array('uibmbilling'),
-    'arguments' => array(
+    'aliases' => ['uibmbilling'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-billing_delete'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-billing_delete'] = [
     'description' => 'Deletes an IBM APIC billing object',
-    'aliases' => array('dibmbilling'),
-    'arguments' => array(
+    'aliases' => ['dibmbilling'],
+    'arguments' => [
       'content' => 'The webhook JSON content',
-      'event' => 'The event type'
-    )
-  );
-  $items['ibm_apim-content_check'] = array(
+      'event' => 'The event type',
+    ],
+  ];
+  $items['ibm_apim-content_check'] = [
     'description' => 'Check if a specific artifact is in the database',
-    'aliases' => array('ibmcontentcheck'),
-    'arguments' => array(
+    'aliases' => ['ibmcontentcheck'],
+    'arguments' => [
       'type' => 'The artifact type, e.g. product',
-      'url' => 'The artifact URL reference, e.g. /product/xyz/1'
-    )
-  );
+      'url' => 'The artifact URL reference, e.g. /product/xyz/1',
+    ],
+  ];
 
   return $items;
 }
@@ -279,58 +282,59 @@ function ibm_apim_drush_command() {
  * @param $url
  * @param $account
  * @param $language
- * @param $client_email
+ * @param $clientEmail
  * @param $onetime
  */
-function _drush_ibm_apim_send_welcome_mail($url, $account, $language, $client_email, $onetime) {
+function _drush_ibm_apim_send_welcome_mail($url, $account, $language, $clientEmail, $onetime) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
-  if ($client_email) {
+  if ($clientEmail) {
     $config = \Drupal::config('system.site');
     $mailManager = \Drupal::service('plugin.manager.mail');
-    $ibm_apim_site_url = \Drupal::state()->get('ibm_apim.site_url');
+    $ibmApimSiteUrl = \Drupal::state()->get('ibm_apim.site_url');
     // Mail one time login URL and instructions.
     $from = $config->get('mail');
-    $site_name = $config->get('name');
+    $siteName = $config->get('name');
 
     if (!isset($from) || empty($from)) {
       $from = ini_get('sendmail_from');
-      drush_log(dt('Setting FROM address using PHP config file: @email', array('@email' => $from)), 'success');
-    } else {
-      drush_log(dt('Setting FROM address using site config: @email', array('@email' => $from)), 'success');
+      drush_log(dt('Setting FROM address using PHP config file: @email', ['@email' => $from]), 'success');
+    }
+    else {
+      drush_log(dt('Setting FROM address using site config: @email', ['@email' => $from]), 'success');
     }
 
-    $login_url = Url::fromRoute('user.login', array('absolute' => TRUE))->toString();
-    $edit_url = Url::fromRoute('user.page', array('absolute' => TRUE))->toString();
+    $loginUrl = Url::fromRoute('user.login', ['absolute' => TRUE])->toString();
+    $editUrl = Url::fromRoute('user.page', ['absolute' => TRUE])->toString();
 
-    if (!isset($ibm_apim_site_url) || empty($ibm_apim_site_url)) {
-      $ibm_apim_site_url = 'null';
+    if (!isset($ibmApimSiteUrl) || empty($ibmApimSiteUrl)) {
+      $ibmApimSiteUrl = 'null';
     }
-    if (!isset($site_name) || empty($site_name)) {
-      $site_name = 'null';
+    if (!isset($siteName) || empty($siteName)) {
+      $siteName = 'null';
     }
     if (!isset($from) || empty($from)) {
       $from = 'null@example.com';
     }
 
-    $mail_params['variables'] = array(
+    $mailParams['variables'] = [
       '!username' => $account->getAccountName(),
-      '!site' => $site_name,
+      '!site' => $siteName,
       '!login_url' => $onetime,
-      '!uri' => $ibm_apim_site_url,
-      '!uri_brief' => preg_replace('!^https?://!', '', $ibm_apim_site_url),
+      '!uri' => $ibmApimSiteUrl,
+      '!uri_brief' => preg_replace('!^https?://!', '', $ibmApimSiteUrl),
       '!mailto' => $account->getEmail(),
       '!date' => \Drupal::service('date.formatter')->format(time()),
-      '!login_uri' => $login_url,
-      '!edit_uri' => $edit_url
-    );
+      '!login_uri' => $loginUrl,
+      '!edit_uri' => $editUrl,
+    ];
 
-    $mail_success = $mailManager->mail('ibm_apim_drush', 'welcome-admin', $account->getEmail(), $account->getPreferredLangcode(), $mail_params, $from, TRUE);
+    $mailSuccess = $mailManager->mail('ibm_apim_drush', 'welcome-admin', $account->getEmail(), $account->getPreferredLangcode(), $mailParams, $from, TRUE);
 
-    if ($mail_success) {
-      drush_log(dt('Sent welcome mail to @client', array('@client' => $client_email)), 'success');
+    if ($mailSuccess) {
+      drush_log(dt('Sent welcome mail to @client', ['@client' => $clientEmail]), 'success');
     }
     else {
-      drush_log(dt('Could not send welcome mail to @client', array('@client' => $client_email)), 'warning');
+      drush_log(dt('Could not send welcome mail to @client', ['@client' => $clientEmail]), 'warning');
     }
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -344,16 +348,19 @@ function _drush_ibm_apim_send_welcome_mail($url, $account, $language, $client_em
 function ibm_apim_drush_mail($key, &$message, $params) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   require_once '/var/aegir/.drush/provision/platform/provision_welcome_mail.inc';
+  // $mail is magically set here by drupal
   $message['subject'] = strtr($mail['subject'], $params['variables']);
   $message['body'][0] = Markup::create(strtr($mail['body'], $params['variables']));
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
 /**
- * @param $client_email
- * @throws \Exception
+ * @param $clientEmail
+ *
+ * @return string
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
-function drush_ibm_apim_send_welcome_email($client_email) {
+function drush_ibm_apim_send_welcome_email($clientEmail) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   global $url;
   global $install_locale;
@@ -363,19 +370,21 @@ function drush_ibm_apim_send_welcome_email($client_email) {
   $account = \Drupal\user\Entity\User::load(1);
 
   // temporarily disable drupal's default mail notification
-  $user_settings_config = \Drupal::config('user.settings');
-  $prev = $user_settings_config->get('notify.status_activated');
+  $userSettingsConfig = \Drupal::config('user.settings');
+  $prev = $userSettingsConfig->get('notify.status_activated');
   \Drupal::service('config.factory')->getEditable('user.settings')->set('notify.status_activated', FALSE)->save();
 
-  $account->set('mail', $client_email);
-  $account->set('init', $client_email);
-  $account->save();
+  if ($account !== NULL) {
+    $account->set('mail', $clientEmail);
+    $account->set('init', $clientEmail);
+    $account->save();
+  }
 
   \Drupal::service('config.factory')->getEditable('user.settings')->set('notify.status_activated', $prev)->save();
-  \Drupal::service('config.factory')->getEditable('system.site')->set('mail', $client_email)->save();
+  \Drupal::service('config.factory')->getEditable('system.site')->set('mail', $clientEmail)->save();
   \Drupal::service('config.factory')
     ->getEditable('update.settings')
-    ->set('notification.emails', array($client_email))
+    ->set('notification.emails', [$clientEmail])
     ->save();
 
   //HACK HACK HACK. Why is the base_url set wrong when this is run. Don't know, but I
@@ -383,9 +392,9 @@ function drush_ibm_apim_send_welcome_email($client_email) {
   $base_url = \Drupal::state()->get('ibm_apim.site_url');
 
   $onetime = user_pass_reset_url($account);
-  drush_log(dt('Login url: @onetime', array('@onetime' => $onetime)), 'success');
+  drush_log(dt('Login url: @onetime', ['@onetime' => $onetime]), 'success');
 
-  _drush_ibm_apim_send_welcome_mail($url, $account, $install_locale, $client_email, $onetime);
+  _drush_ibm_apim_send_welcome_mail($url, $account, $install_locale, $clientEmail, $onetime);
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 
   return $onetime;
@@ -405,23 +414,23 @@ function drush_ibm_apim_listen() {
 
   $command = trim(fgets(STDIN));
   $attempt = 0;
-
+  $content = NULL;
   while ($command) {
 
-    drush_log(dt('Got command: @cmd', array ('@cmd' => $command)), 'success');
+    drush_log(dt('Got command: @cmd', ['@cmd' => $command]), 'success');
 
     // only read from stdin on the first attempt. next time around we already have the content!
-    if ($attempt == 0) {
+    if ($attempt === 0) {
       $content = trim(fgets(STDIN));
       $content = json_decode($content, TRUE);
     }
 
     try {
-      $webhook_debug = \Drupal::config('ibm_apim.settings')->get('webhook_debug');
-      if ($webhook_debug == TRUE) {
-        $webhook_payloads = \Drupal::state()->get('ibm_apim.webhook_payloads');
-        $webhook_payloads[] = array('content' => $content, 'type' => $command, 'timestamp' => time());
-        \Drupal::state()->set('ibm_apim.webhook_payloads', $webhook_payloads);
+      $webhookDebug = (boolean) \Drupal::config('ibm_apim.settings')->get('webhook_debug');
+      if ($webhookDebug === TRUE) {
+        $webhookPayloads = \Drupal::state()->get('ibm_apim.webhook_payloads');
+        $webhookPayloads[] = ['content' => $content, 'type' => $command, 'timestamp' => time()];
+        \Drupal::state()->set('ibm_apim.webhook_payloads', $webhookPayloads);
       }
       if (isset($content)) {
         switch ($command) {
@@ -509,13 +518,13 @@ function drush_ibm_apim_listen() {
             drush_consumerorg_member_delete($content);
             break;
           case 'member_block':
-            drush_ibm_apim_user_block($content);
+            drush_ibm_apim_apicuser_block($content);
             break;
           case 'member_unblock':
-            drush_ibm_apim_user_unblock($content);
+            drush_ibm_apim_apicuser_unblock($content);
             break;
           case 'member_update':
-            drush_ibm_apim_user_update($content);
+            drush_ibm_apim_apicuser_update($content);
             break;
           case 'user_update':
             drush_ibm_apim_user_createOrUpdate($content, 'user_update');
@@ -524,7 +533,7 @@ function drush_ibm_apim_listen() {
             drush_ibm_apim_user_createOrUpdate($content, 'user_create');
             break;
           case 'user_del':
-            drush_ibm_apim_user_delete($content);
+            drush_ibm_apim_apicuser_delete($content);
             break;
           case 'configured_catalog_user_registry_update':
             drush_ibm_apim_user_registry_update($content);
@@ -557,19 +566,19 @@ function drush_ibm_apim_listen() {
             drush_ibm_apim_updateconfig($content);
             break;
           default:
-            drush_log(dt('There is no drush code to handle the webhook command @cmd', array('@cmd' => $command)), 'error');
+            drush_log(dt('There is no drush code to handle the webhook command @cmd', ['@cmd' => $command]), 'error');
             break;
         }
       }
       else {
-        drush_log(dt('No content provided for webhook command @cmd', array('@cmd' => $command)), 'error');
+        drush_log(dt('No content provided for webhook command @cmd', ['@cmd' => $command]), 'error');
       }
       $attempt = 0;
     } catch (Exception $e) {
-      drush_log(dt('Attempt @attempt. Caught exception: @message', array(
+      drush_log(dt('Attempt @attempt. Caught exception: @message', [
         '@attempt' => $attempt,
-        '@message' => $e->getMessage()
-      )), 'warning');
+        '@message' => $e->getMessage(),
+      ]), 'warning');
       $attempt++;
 
       if ($attempt > 2) {
@@ -580,9 +589,9 @@ function drush_ibm_apim_listen() {
     }
 
     // If we were successful, get the next command
-    if ($attempt == 0) {
+    if ($attempt === 0) {
       $command = trim(fgets(STDIN));
-      $content = "";
+      $content = '';
     }
 
 
@@ -603,13 +612,13 @@ function drush_ibm_apim_request_refresh() {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
   // HACK: need to include the classes explicitly otherwise this does not work in bootstrap level DRUSH_BOOTSTRAP_DRUPAL_ROOT
-  require_once __DIR__ . "/src/ApicRestInterface.php";
-  require_once __DIR__ . "/src/ApicRest.php";
+  require_once __DIR__ . '/src/ApicRestInterface.php';
+  require_once __DIR__ . '/src/ApicRest.php';
 
   try {
     $namespace = \Drupal::state()->get('ibm_apim.site_namespace');
-    $siteconfig = \Drupal::service('ibm_apim.site_config');
-    $host_pieces = $siteconfig->parseApimHost();
+    $siteConfig = \Drupal::service('ibm_apim.site_config');
+    $host_pieces = $siteConfig->parseApimHost();
     // need the apim hostname without any path component on the ingress (such as consumer-api)
     $url = $host_pieces['scheme'] . '://' . $host_pieces['host'] . ':' . $host_pieces['port'] . '/catalogs/' . $namespace . '/webhooks/snapshot';
     Drupal\ibm_apim\ApicRest::patch($url, NULL, 'clientid', TRUE, TRUE);
@@ -619,26 +628,26 @@ function drush_ibm_apim_request_refresh() {
     // When we have a system to test against, we need to work out what the relevant errors actually are here
     echo 'Caught exception: ', $e->getMessage(), "\n";
 
-    $failures = array(
+    $failures = [
       7 => 'Could not communicate with server. Reason: SSL certificate problem: unable to get local issuer certificate',
       6 => 'Could not communicate with server. Reason: SSL certificate problem: self signed certificate',
       5 => 'SSL: certificate verification failed (result: 5)',
       4 => 'Could not communicate with server. Reason: Could not resolve host:',
       2 => 'Could not communicate with server. Reason: SSL: no alternative certificate subject name matches target host name',
-      3 => 'Could not communicate with server.'
-    );
+      3 => 'Could not communicate with server.',
+    ];
 
-    $message = "";
+    $message = '';
 
     foreach ($failures as $rc => $msg) {
       if (strpos($e->getMessage(), $failures[$rc]) !== FALSE) {
-        $message = "[[" . $rc . "]] " . $failures[$rc] . ' error';
+        $message = '[[' . $rc . ']] ' . $failures[$rc] . ' error';
         break;
       }
     }
 
     // failed with unknown error
-    if ($message === "") {
+    if ($message === '') {
       $message = '[[1]] Error requesting Content Refresh: ' . $e->getMessage() . 'error';
     }
 
@@ -676,14 +685,14 @@ function drush_ibm_apim_content_refresh() {
     if (!isset($type)) {
       $type = 'error';
     }
-    $webhook_debug = \Drupal::config('ibm_apim.settings')->get('webhook_debug');
-    if ($webhook_debug == TRUE) {
-      $webhook_payloads = \Drupal::state()->get('ibm_apim.snapshot_webhook_payloads');
-      $webhook_payloads[] = array('content' => $content, 'type' => $type, 'timestamp' => time());
-      \Drupal::state()->set('ibm_apim.snapshot_webhook_payloads', $webhook_payloads);
+    $webhookDebug = (boolean) \Drupal::config('ibm_apim.settings')->get('webhook_debug');
+    if ($webhookDebug === TRUE) {
+      $webhookPayloads = \Drupal::state()->get('ibm_apim.snapshot_webhook_payloads');
+      $webhookPayloads[] = ['content' => $content, 'type' => $type, 'timestamp' => time()];
+      \Drupal::state()->set('ibm_apim.snapshot_webhook_payloads', $webhookPayloads);
     }
 
-    drush_log(t('Got type: @type', array('@type' => $type)), 'success');
+    drush_log(t('Got type: @type', ['@type' => $type]), 'success');
 
     // checking memory
     drush_ibm_apim_manage_memory_usage();
@@ -693,22 +702,22 @@ function drush_ibm_apim_content_refresh() {
     drush_ibm_apim_assert_index_directly_value();
 
     try {
-      if (isset($type) && $type != 'error' && isset($content)) {
+      if ($type !== NULL && $type !== 'error' && $content !== NULL) {
         switch ($type) {
           case 'product':
             $prodList = \Drupal::state()->get('ibm_apim.content_refresh_products');
             if (!isset($prodList)) {
-              $prodList = array();
+              $prodList = [];
             }
             $prodList[] = $content['name'] . ':' . $content['version'];
             // have to massage the content so we can reuse the same logic for snapshot as we use for webhooks
-            drush_product_createOrUpdate(array('product' => $content), 'ContentRefresh', 'content_refresh');
+            drush_product_createOrUpdate(['product' => $content], 'ContentRefresh', 'content_refresh');
             \Drupal::state()->set('ibm_apim.content_refresh_products', $prodList);
             break;
           case 'api':
             $apiList = \Drupal::state()->get('ibm_apim.content_refresh_apis');
             if (!isset($apiList)) {
-              $apiList = array();
+              $apiList = [];
             }
             $apiList[] = $content['name'] . ':' . $content['version'];
             drush_apic_api_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
@@ -717,7 +726,7 @@ function drush_ibm_apim_content_refresh() {
           case 'app':
             $appList = \Drupal::state()->get('ibm_apim.content_refresh_apps');
             if (!isset($appList)) {
-              $appList = array();
+              $appList = [];
             }
             $appList[] = $content['id'];
             drush_apic_app_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
@@ -726,7 +735,7 @@ function drush_ibm_apim_content_refresh() {
           case 'consumer_org':
             $orgList = \Drupal::state()->get('ibm_apim.content_refresh_consumerorgs');
             if (!isset($orgList)) {
-              $orgList = array();
+              $orgList = [];
             }
             $orgList[] = $content['url'];
             drush_consumerorg_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
@@ -746,7 +755,7 @@ function drush_ibm_apim_content_refresh() {
           case 'configured_catalog_user_registry':
             $urList = \Drupal::state()->get('ibm_apim.content_refresh_user_registries');
             if (!isset($urList)) {
-              $urList = array();
+              $urList = [];
             }
             $urList[] = $content['url'];
             drush_ibm_apim_user_registry_update($content, 'content_refresh');
@@ -755,7 +764,7 @@ function drush_ibm_apim_content_refresh() {
           case 'extension':
             $extList = \Drupal::state()->get('ibm_apim.content_refresh_extensions');
             if (!isset($extList)) {
-              $extList = array();
+              $extList = [];
             }
             $extList[] = $content['name'];
             drush_ibm_apim_vendor_extension_update($content, 'content_refresh');
@@ -764,7 +773,7 @@ function drush_ibm_apim_content_refresh() {
           case 'group':
             $groupList = \Drupal::state()->get('ibm_apim.content_refresh_groups');
             if (!isset($groupList)) {
-              $groupList = array();
+              $groupList = [];
             }
             $groupList[] = $content['url'];
             drush_ibm_apim_group_update($content, 'content_refresh');
@@ -773,28 +782,28 @@ function drush_ibm_apim_content_refresh() {
           case 'subscription':
             $subList = \Drupal::state()->get('ibm_apim.content_refresh_subs');
             if (!is_array($subList)) {
-              $subList = array();
+              $subList = [];
             }
             if (isset($content['app_url'])) {
               if (!isset($subList[$content['app_url']]) || !is_array($subList[$content['app_url']])) {
-                $subList[$content['app_url']] = array();
+                $subList[$content['app_url']] = [];
               }
               if (!isset($content['state'])) {
-                $sub['state'] = "enabled";
+                $sub['state'] = 'enabled';
               }
-              $subList[$content['app_url']][] = array(
+              $subList[$content['app_url']][] = [
                 'id' => $content['id'],
                 'product_url' => $content['product_url'],
                 'plan' => $content['plan'],
-                'state' => $content['state']
-              );
+                'state' => $content['state'],
+              ];
             }
             \Drupal::state()->set('ibm_apim.content_refresh_subs', $subList);
             break;
           case 'tls_client_profile':
             $tlsList = \Drupal::state()->get('ibm_apim.content_refresh_tlsprofile_objects');
             if (!isset($tlsList)) {
-              $tlsList = array();
+              $tlsList = [];
             }
             $tlsList[] = $content['url'];
             drush_ibm_apim_tlsprofile_update($content, 'content_refresh');
@@ -814,7 +823,7 @@ function drush_ibm_apim_content_refresh() {
           case 'billing':
             $billList = \Drupal::state()->get('ibm_apim.content_refresh_billing_objects');
             if (!isset($billList)) {
-              $billList = array();
+              $billList = [];
             }
             $billList[] = $content['url'];
             drush_ibm_apim_billing_update($content, 'content_refresh');
@@ -823,7 +832,7 @@ function drush_ibm_apim_content_refresh() {
           case 'permission':
             $permList = \Drupal::state()->get('ibm_apim.content_refresh_permission_objects');
             if (!isset($permList)) {
-              $permList = array();
+              $permList = [];
             }
             $permList[] = $content['url'];
             drush_ibm_apim_permission_update($content, 'content_refresh');
@@ -832,7 +841,7 @@ function drush_ibm_apim_content_refresh() {
           case 'analytics_service':
             $analyticsList = \Drupal::state()->get('ibm_apim.content_refresh_analytics_objects');
             if (!isset($analyticsList)) {
-              $analyticsList = array();
+              $analyticsList = [];
             }
             $analyticsList[] = $content['url'];
             drush_ibm_apim_analytics_update($content, 'content_refresh');
@@ -848,18 +857,18 @@ function drush_ibm_apim_content_refresh() {
 
             break;
           default:
-            drush_log(dt('There is no drush code to handle the payload type @type', array('@type' => $type)), 'warning');
+            drush_log(dt('There is no drush code to handle the payload type @type', ['@type' => $type]), 'warning');
             break;
         }
         unset($content);
       }
       else {
-        drush_log(dt('No content provided for webhook', array()), 'error');
+        drush_log(dt('No content provided for webhook', []), 'error');
       }
     } catch (Exception $e) {
-      drush_log(dt('Caught exception: @message', array(
-        '@message' => $e->getMessage()
-      )), 'warning');
+      drush_log(dt('Caught exception: @message', [
+        '@message' => $e->getMessage(),
+      ]), 'warning');
     }
 
     $input = trim(fgets(STDIN));
@@ -882,23 +891,23 @@ function drush_ibm_apim_clearup() {
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up products'), 'success');
   $current_products = \Drupal::state()->get('ibm_apim.content_refresh_products');
   if (!is_array($current_products)) {
-    $current_products = array();
+    $current_products = [];
   }
   $query = \Drupal::entityQuery('node');
   $query->condition('type', 'product');
   $nids = $query->execute();
   if (isset($nids) && !empty($nids)) {
-    $productnodes = Node::loadMultiple($nids);
-    foreach ($productnodes as $productnode) {
-      if (isset($productnode)) {
+    $productNodes = Node::loadMultiple($nids);
+    foreach ($productNodes as $productNode) {
+      if (isset($productNode)) {
         $found = FALSE;
         foreach ($current_products as $product_ref) {
-          if ($productnode->apic_ref->value == $product_ref) {
+          if ($productNode->apic_ref->value === $product_ref) {
             $found = TRUE;
           }
         }
-        if ($found != TRUE) {
-          Product::deleteNode($productnode->id(), 'content_refresh');
+        if ($found !== TRUE) {
+          Product::deleteNode($productNode->id(), 'content_refresh');
         }
       }
     }
@@ -908,7 +917,7 @@ function drush_ibm_apim_clearup() {
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up apis'), 'success');
   $current_apis = \Drupal::state()->get('ibm_apim.content_refresh_apis');
   if (!is_array($current_apis)) {
-    $current_apis = array();
+    $current_apis = [];
   }
   $query = \Drupal::entityQuery('node');
   $query->condition('type', 'api');
@@ -916,7 +925,7 @@ function drush_ibm_apim_clearup() {
     $query->condition('apic_ref', $current_apis, 'NOT IN');
   }
   $results = $query->execute();
-  $nids = array();
+  $nids = [];
   if (isset($results)) {
     foreach ($results as $item) {
       $nids[] = $item;
@@ -930,37 +939,37 @@ function drush_ibm_apim_clearup() {
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up consumerorgs'), 'success');
   $current_consumerorgs = \Drupal::state()->get('ibm_apim.content_refresh_consumerorgs');
   if (!is_array($current_consumerorgs)) {
-    $current_consumerorgs = array();
+    $current_consumerorgs = [];
   }
   // TODO need to handle tidying up consumerorgs once know we're getting the right webhooks - see TODO below
   // commenting out entire section for now since doing a pointless loadMultiple is silly
-//  $query = \Drupal::entityQuery('node');
-//  $query->condition('type', 'consumerorg');
-//  $nids = $query->execute();
-//  if (isset($nids) && !empty($nids)) {
-//    $consumernodes = Node::loadMultiple($nids);
-//    foreach ($consumernodes as $orgnode) {
-//      if (isset($orgnode)) {
-//        $found = FALSE;
-//        foreach ($current_consumerorgs as $org_url) {
-//          if ($orgnode->consumerorg_url->value == $org_url) {
-//            $found = TRUE;
-//          }
-//        }
-//        if ($found != TRUE) {
-//          $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
-//          // TODO : don't delete these due to a webhooks giving us different urls than /me response does
-//          //$consumerOrgService->deleteNode($orgnode->id(), 'content_refresh');
-//        }
-//      }
-//    }
-//  }
+  //  $query = \Drupal::entityQuery('node');
+  //  $query->condition('type', 'consumerorg');
+  //  $nids = $query->execute();
+  //  if (isset($nids) && !empty($nids)) {
+  //    $consumernodes = Node::loadMultiple($nids);
+  //    foreach ($consumernodes as $orgnode) {
+  //      if (isset($orgnode)) {
+  //        $found = FALSE;
+  //        foreach ($current_consumerorgs as $org_url) {
+  //          if ($orgnode->consumerorg_url->value == $org_url) {
+  //            $found = TRUE;
+  //          }
+  //        }
+  //        if ($found != TRUE) {
+  //          $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
+  //          // TODO : don't delete these due to a webhooks giving us different urls than /me response does
+  //          //$consumerOrgService->deleteNode($orgnode->id(), 'content_refresh');
+  //        }
+  //      }
+  //    }
+  //  }
 
   // remove any apps in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up applications'), 'success');
   $current_apps = \Drupal::state()->get('ibm_apim.content_refresh_apps');
   if (!is_array($current_apps)) {
-    $current_apps = array();
+    $current_apps = [];
   }
   $query = \Drupal::entityQuery('node');
   $query->condition('type', 'application');
@@ -968,7 +977,7 @@ function drush_ibm_apim_clearup() {
     $query->condition('application_id', $current_apps, 'NOT IN');
   }
   $results = $query->execute();
-  if ($results !== null && !empty($results)) {
+  if ($results !== NULL && !empty($results)) {
     foreach ($results as $nid) {
       Application::deleteNode($nid, 'content_refresh');
     }
@@ -976,30 +985,30 @@ function drush_ibm_apim_clearup() {
 
   // update application subscriptions
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up subscriptions'), 'success');
-  $current_subs = \Drupal::state()->get('ibm_apim.content_refresh_subs');
-  if (!is_array($current_subs)) {
-    $current_subs = array();
+  $currentSubs = \Drupal::state()->get('ibm_apim.content_refresh_subs');
+  if (!is_array($currentSubs)) {
+    $currentSubs = [];
   }
   // Any applications that exist in the database that were not mentioned in the list of apps=>subscriptions
   // must have no subscriptions at all. Insert empty arrays to record this
   $query = \Drupal::entityQuery('node');
   $query->condition('type', 'application');
-  if (!empty($current_subs)) {
-    $query->condition('apic_url.value', array_keys($current_subs), 'NOT IN');
+  if (!empty($currentSubs)) {
+    $query->condition('apic_url.value', array_keys($currentSubs), 'NOT IN');
   }
   $nids = $query->execute();
   if (is_array($nids)) {
     $buckets = array_chunk($nids, 100);  // chop up array into bucket size units
     foreach ($buckets as $bucket) {
-      $appnodes = Node::loadMultiple($bucket);
-      foreach ($appnodes as $appnode) {
-        $current_subs[$appnode->apic_url->value] = [];
+      $appNodes = Node::loadMultiple($bucket);
+      foreach ($appNodes as $appNode) {
+        $currentSubs[$appNode->apic_url->value] = [];
       }
     }
   }
 
   // now update the db with the subscriptions for each app
-  foreach ($current_subs as $appUrl => $appsub) {
+  foreach ($currentSubs as $appUrl => $appSub) {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('apic_url.value', $appUrl);
@@ -1008,12 +1017,12 @@ function drush_ibm_apim_clearup() {
       $nid = reset($nids);
       $node = Node::load($nid);
       if (isset($node)) {
-        $subs = array();
-        foreach ($appsub as $nextSub) {
+        $subs = [];
+        foreach ($appSub as $nextSub) {
           $subs[] = serialize($nextSub);
         }
 
-        $node->set("application_subscriptions", $subs);
+        $node->set('application_subscriptions', $subs);
         $node->save();
       }
     }
@@ -1021,15 +1030,15 @@ function drush_ibm_apim_clearup() {
 
   // remove any user registries in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up user registries'), 'success');
-  $current_urs = \Drupal::state()->get('ibm_apim.content_refresh_user_registries');
-  if (!is_array($current_urs)) {
-    $current_urs = array();
+  $currentUrs = \Drupal::state()->get('ibm_apim.content_refresh_user_registries');
+  if (!is_array($currentUrs)) {
+    $currentUrs = [];
   }
   $urService = \Drupal::service('ibm_apim.user_registry');
-  $db_urs = $urService->getAll();
-  if (!empty($db_urs)) {
-    foreach ($db_urs as $url => $ur) {
-      if (!in_array($url, $current_urs)) {
+  $dbUrs = $urService->getAll();
+  if (!empty($dbUrs)) {
+    foreach ($dbUrs as $url => $ur) {
+      if (!in_array($url, $currentUrs, FALSE)) {
         $urService->delete($url);
       }
     }
@@ -1037,15 +1046,15 @@ function drush_ibm_apim_clearup() {
 
   // remove any vendor extensions in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up extensions'), 'success');
-  $current_exts = \Drupal::state()->get('ibm_apim.content_refresh_extensions');
-  if (!is_array($current_exts)) {
-    $current_exts = array();
+  $currentExts = \Drupal::state()->get('ibm_apim.content_refresh_extensions');
+  if (!is_array($currentExts)) {
+    $currentExts = [];
   }
   $extService = \Drupal::service('ibm_apim.vendor_extension');
-  $db_exts = $extService->getAll();
-  if (!empty($db_exts)) {
-    foreach ($db_exts as $name => $ext) {
-      if (!in_array($name, $current_exts)) {
+  $dbExts = $extService->getAll();
+  if (!empty($dbExts)) {
+    foreach ($dbExts as $name => $ext) {
+      if (!in_array($name, $currentExts, FALSE)) {
         $extService->delete($name);
       }
     }
@@ -1053,15 +1062,15 @@ function drush_ibm_apim_clearup() {
 
   // remove any groups in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up groups'), 'success');
-  $current_groups = \Drupal::state()->get('ibm_apim.content_refresh_groups');
-  if (!is_array($current_groups)) {
-    $current_groups = array();
+  $currentGroups = \Drupal::state()->get('ibm_apim.content_refresh_groups');
+  if (!is_array($currentGroups)) {
+    $currentGroups = [];
   }
   $groupService = \Drupal::service('ibm_apim.group');
-  $db_groups = $groupService->getAll();
-  if (!empty($db_groups)) {
-    foreach ($db_groups as $url => $ext) {
-      if (!in_array($url, $current_groups)) {
+  $dbGroups = $groupService->getAll();
+  if (!empty($dbGroups)) {
+    foreach ($dbGroups as $url => $group) {
+      if (!in_array($url, $currentGroups, FALSE)) {
         $groupService->delete($url);
       }
     }
@@ -1069,15 +1078,15 @@ function drush_ibm_apim_clearup() {
 
   // remove any billing objects in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up billing objects'), 'success');
-  $current_bills = \Drupal::state()->get('ibm_apim.content_refresh_billing_objects');
-  if (!is_array($current_bills)) {
-    $current_bills = array();
+  $currentBills = \Drupal::state()->get('ibm_apim.content_refresh_billing_objects');
+  if (!is_array($currentBills)) {
+    $currentBills = [];
   }
   $billService = \Drupal::service('ibm_apim.billing');
-  $db_bills = $billService->getAll();
-  if (!empty($db_bills)) {
-    foreach ($db_bills as $url => $ur) {
-      if (!in_array($url, $current_bills)) {
+  $dbBills = $billService->getAll();
+  if (!empty($dbBills)) {
+    foreach ($dbBills as $url => $ur) {
+      if (!in_array($url, $currentBills, FALSE)) {
         $billService->delete($url);
       }
     }
@@ -1085,15 +1094,15 @@ function drush_ibm_apim_clearup() {
 
   // remove any tls client profile objects in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up TLS profiles'), 'success');
-  $current_tls = \Drupal::state()->get('ibm_apim.content_refresh_tlsprofile_objects');
-  if (!is_array($current_tls)) {
-    $current_tls = array();
+  $currentTls = \Drupal::state()->get('ibm_apim.content_refresh_tlsprofile_objects');
+  if (!is_array($currentTls)) {
+    $currentTls = [];
   }
   $tlsService = \Drupal::service('ibm_apim.tls_client_profiles');
-  $db_tls = $tlsService->getAll();
-  if (!empty($db_tls)) {
-    foreach ($db_tls as $url => $ur) {
-      if (!in_array($url, $current_tls)) {
+  $dbTls = $tlsService->getAll();
+  if (!empty($dbTls)) {
+    foreach ($dbTls as $url => $tls) {
+      if (!in_array($url, $currentTls, FALSE)) {
         $tlsService->delete($url);
       }
     }
@@ -1101,15 +1110,15 @@ function drush_ibm_apim_clearup() {
 
   // remove any analytics objects in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up analytics objects'), 'success');
-  $current_analytics = \Drupal::state()->get('ibm_apim.content_refresh_analytics_objects');
-  if (!is_array($current_analytics)) {
-    $current_analytics = array();
+  $currentAnalytics = \Drupal::state()->get('ibm_apim.content_refresh_analytics_objects');
+  if (!is_array($currentAnalytics)) {
+    $currentAnalytics = [];
   }
   $analyticsService = \Drupal::service('ibm_apim.analytics');
-  $db_analytics = $analyticsService->getAll();
-  if (!empty($db_analytics)) {
-    foreach ($db_analytics as $url => $ur) {
-      if (!in_array($url, $current_analytics)) {
+  $dbAnalytics = $analyticsService->getAll();
+  if (!empty($dbAnalytics)) {
+    foreach ($dbAnalytics as $url => $analytics) {
+      if (!in_array($url, $currentAnalytics, FALSE)) {
         $analyticsService->delete($url);
       }
     }
@@ -1117,15 +1126,15 @@ function drush_ibm_apim_clearup() {
 
   // remove any permission objects in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up permission objects'), 'success');
-  $current_perms = \Drupal::state()->get('ibm_apim.content_refresh_permission_objects');
-  if (!is_array($current_perms)) {
-    $current_perms = array();
+  $currentPerms = \Drupal::state()->get('ibm_apim.content_refresh_permission_objects');
+  if (!is_array($currentPerms)) {
+    $currentPerms = [];
   }
   $permService = \Drupal::service('ibm_apim.permissions');
-  $db_perms = $permService->getAll();
-  if (!empty($db_perms)) {
-    foreach ($db_perms as $url => $ur) {
-      if (!in_array($url, $current_perms)) {
+  $dbPerms = $permService->getAll();
+  if (!empty($dbPerms)) {
+    foreach ($dbPerms as $url => $perm) {
+      if (!in_array($url, $currentPerms, FALSE)) {
         $permService->delete($url);
       }
     }
@@ -1154,8 +1163,8 @@ function drush_ibm_apim_clearup() {
  */
 function drush_ibm_apim_updatecatalog($catalog) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
-  $siteconfig = \Drupal::service('ibm_apim.site_config');
-  $siteconfig->updateCatalog($catalog);
+  $siteConfig = \Drupal::service('ibm_apim.site_config');
+  $siteConfig->updateCatalog($catalog);
   drush_log(dt('Catalog updated.'), 'success');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
@@ -1166,24 +1175,32 @@ function drush_ibm_apim_updatecatalog($catalog) {
 function drush_ibm_apim_updateconfig($config) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   drush_log(dt('Updating site config.'), 'success');
-  $siteconfig = \Drupal::service('ibm_apim.site_config');
-  $siteconfig->update($config);
+  $siteConfig = \Drupal::service('ibm_apim.site_config');
+  $siteConfig->update($config);
   drush_log(dt('Config updated.'), 'success');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+function drush_ibm_apim_deleteconfig() {
+  ibm_apim_entry_trace(__FUNCTION__, NULL);
+  $siteConfig = \Drupal::service('ibm_apim.site_config');
+  $siteConfig->deleteAll();
+  drush_log(dt('Configuration deleted.'), 'success');
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
+
 /**
- * @param $clientid
- * @param $clientsecret
+ * @param $clientId
+ * @param $clientSecret
  */
-function drush_ibm_apim_setcreds($clientid, $clientsecret) {
+function drush_ibm_apim_setcreds($clientId, $clientSecret) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
 
-  if (isset($clientid) && !empty($clientid)) {
-    \Drupal::state()->set('ibm_apim.site_client_id', $clientid);
+  if (isset($clientId) && !empty($clientId)) {
+    \Drupal::state()->set('ibm_apim.site_client_id', $clientId);
   }
-  if (isset($clientsecret) && !empty($clientsecret)) {
-    \Drupal::state()->set('ibm_apim.site_client_secret', $clientsecret);
+  if (isset($clientSecret) && !empty($clientSecret)) {
+    \Drupal::state()->set('ibm_apim.site_client_secret', $clientSecret);
   }
   drush_log(dt('Credentials updated.'), 'success');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -1199,8 +1216,8 @@ function drush_ibm_apim_checkapimcert($url, $insecure, $provided_cert) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
   // HACK: need to include the classes explicitly otherwise this does not work in bootstrap level DRUSH_BOOTSTRAP_DRUPAL_ROOT
-  require_once __DIR__ . "/src/ApicRestInterface.php";
-  require_once __DIR__ . "/src/ApicRest.php";
+  require_once __DIR__ . '/src/ApicRestInterface.php';
+  require_once __DIR__ . '/src/ApicRest.php';
 
   try {
     // $insecure is a string 'true' or 'false' and needs converting to a boolean
@@ -1212,26 +1229,26 @@ function drush_ibm_apim_checkapimcert($url, $insecure, $provided_cert) {
 
     echo 'Caught exception: ', $e->getMessage(), "\n";
 
-    $failures = array(
+    $failures = [
       7 => 'Could not communicate with server. Reason: SSL certificate problem: unable to get local issuer certificate',
       6 => 'Could not communicate with server. Reason: SSL certificate problem: self signed certificate',
       5 => 'SSL: certificate verification failed (result: 5)',
       4 => 'Could not communicate with server. Reason: Could not resolve host:',
       2 => 'Could not communicate with server. Reason: SSL: no alternative certificate subject name matches target host name',
-      3 => 'Could not communicate with server.'
-    );
+      3 => 'Could not communicate with server.',
+    ];
 
-    $message = "";
+    $message = '';
 
     foreach ($failures as $rc => $msg) {
       if (strpos($e->getMessage(), $failures[$rc]) !== FALSE) {
-        $message = "[[" . $rc . "]] " . $failures[$rc] . ' error';
+        $message = '[[' . $rc . ']] ' . $failures[$rc] . ' error';
         break;
       }
     }
 
     // failed with unknown error
-    if ($message === "") {
+    if ($message === '') {
       $message = '[[1]] Error checking certificate: ' . $e->getMessage() . 'error';
     }
 
@@ -1246,7 +1263,7 @@ function drush_ibm_apim_checkapimcert($url, $insecure, $provided_cert) {
 function drush_ibm_apim_set_admin_timestamps() {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   $time = \Drupal::time()->getCurrentTime();
-  $result = db_update('users_field_data')->fields(array('created' => $time))->condition('uid', 1)->execute();
+  $result = db_update('users_field_data')->fields(['created' => $time])->condition('uid', 1)->execute();
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
@@ -1255,7 +1272,7 @@ function drush_ibm_apim_generate_nlsexport() {
 
   $required_pot_dir = drush_get_option('required_pot_dir', '/tmp/translation_files/required_pots');
   $existing_drupal_po_dir = drush_get_option('existing_drupal_po_dir', '/tmp/translation_files/existing_drupal_pos');
-  $output_dir = drush_get_option('output_dir', '/tmp/translation_files/output');
+  $outputDir = drush_get_option('output_dir', '/tmp/translation_files/output');
   $platform_dir = drush_get_option('platform_dir', NULL);
   $merge_dir = drush_get_option('merge_dir', '/tmp/translation_files/merge');
 
@@ -1278,58 +1295,58 @@ function drush_ibm_apim_generate_nlsexport() {
     return;
   }
 
-  $prep = new Drupal\ibm_apim\Translation\TranslationPreparation($required_pot_dir, $existing_drupal_po_dir, $output_dir, $platform_dir, $merge_dir);
+  $prep = new Drupal\ibm_apim\Translation\TranslationPreparation($required_pot_dir, $existing_drupal_po_dir, $outputDir, $platform_dir, $merge_dir);
   new Drupal\ibm_apim\Translation\ProjectParser($prep->getProjectInfos());
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 
 }
 
 /**
- * @param $drop_dir
- * @param $original_export_dir
+ * @param $dropDir
+ * @param $originalExportDir
  */
-function drush_ibm_apim_merge_nlsdrop($drop_dir, $original_export_dir) {
+function drush_ibm_apim_merge_nlsdrop($dropDir, $originalExportDir) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
 
-  $output_dir = drush_get_option('output_dir', '/tmp/new_translation_files');
+  $outputDir = drush_get_option('output_dir', '/tmp/new_translation_files');
 
-  if (!is_dir($drop_dir)) {
-    drush_log("Required new drop directory does not exist: $drop_dir", 'error');
+  if (!is_dir($dropDir)) {
+    drush_log("Required new drop directory does not exist: $dropDir", 'error');
     return;
   }
 
-  if (!is_dir($original_export_dir)) {
-    drush_log("Exported files directory does not exist: $original_export_dir", 'error');
+  if (!is_dir($originalExportDir)) {
+    drush_log("Exported files directory does not exist: $originalExportDir", 'error');
     return;
   }
 
-  $mergedrop = new \Drupal\ibm_apim\Translation\TranslationMerger($drop_dir, $original_export_dir, $output_dir);
-  $mergedrop->merge();
+  $mergeDrop = new \Drupal\ibm_apim\Translation\TranslationMerger($dropDir, $originalExportDir, $outputDir);
+  $mergeDrop->merge();
 
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 
 }
 
 /**
- * @param $master_file
- * @param $secondary_file
+ * @param $masterFile
+ * @param $secondaryFile
  */
-function drush_ibm_apim_merge_nlsindividual($master_file, $secondary_file) {
+function drush_ibm_apim_merge_nlsindividual($masterFile, $secondaryFile) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
 
-  $output_dir = drush_get_option('output_dir', '/tmp/merged_po_files');
+  $outputDir = drush_get_option('output_dir', '/tmp/merged_po_files');
 
-  if (!is_file($master_file)) {
-    drush_log("Master file not found: $master_file", 'error');
+  if (!is_file($masterFile)) {
+    drush_log("Master file not found: $masterFile", 'error');
     return;
   }
 
-  if (!is_file($secondary_file)) {
-    drush_log("Secondary file not found: $secondary_file", 'error');
+  if (!is_file($secondaryFile)) {
+    drush_log("Secondary file not found: $secondaryFile", 'error');
     return;
   }
 
-  new \Drupal\ibm_apim\Translation\MergeIndividual\Merger($master_file, $secondary_file, $output_dir);
+  new \Drupal\ibm_apim\Translation\MergeIndividual\Merger($masterFile, $secondaryFile, $outputDir);
 
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 
@@ -1350,29 +1367,31 @@ function drush_ibm_apim_locale_clear_status() {
 function drush_ibm_apim_locale_load_config_translation() {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
 
-  $localeconfig = \Drupal::service('locale.config_manager');
-  $components = $localeconfig->getComponentNames();
-  $localeconfig->updateConfigTranslations($components);
+  $localeConfig = \Drupal::service('locale.config_manager');
+  $components = $localeConfig->getComponentNames();
+  $localeConfig->updateConfigTranslations($components);
 
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
 /**
- * @param null $clientid
+ * @param string|null $clientId
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
-function drush_ibm_apim_createkey($clientid = NULL) {
+function drush_ibm_apim_createkey($clientId = NULL) {
   if (function_exists('ibm_apim_entry_trace')) {
-    ibm_apim_entry_trace(__FUNCTION__, $clientid);
+    ibm_apim_entry_trace(__FUNCTION__, $clientId);
   }
   // if dont pass in a client id then try and get the stored site one
-  if ($clientid == NULL) {
+  if ($clientId === NULL) {
     drush_print('Using site client ID');
-    $clientid = \Drupal::state()->get('ibm_apim.client_id');
+    $clientId = \Drupal::state()->get('ibm_apim.client_id');
   }
 
-  if ($clientid != NULL) {
-    $key_name = 'client_id';
-    $value = str_replace(array('_', '-'), '', $clientid);
+  if ($clientId !== NULL) {
+    $keyName = 'client_id';
+    $value = str_replace(['_', '-'], '', $clientId);
 
     // key must be 32bytes/256bits in length for an AES profile
     $value = str_pad($value, 32, 'x');
@@ -1380,32 +1399,32 @@ function drush_ibm_apim_createkey($clientid = NULL) {
     $moduleHandler = \Drupal::service('module_handler');
     if (!$moduleHandler->moduleExists('key') || !$moduleHandler->moduleExists('encrypt') || !$moduleHandler->moduleExists('real_aes')) {
       drush_print('Enabling required encryption modules');
-      $module_installer = \Drupal::service('module_installer');
-      $module_installer->install(['key', 'encrypt', 'real_aes']);
+      $moduleInstaller = \Drupal::service('module_installer');
+      $moduleInstaller->install(['key', 'encrypt', 'real_aes']);
     }
 
-    $key = Drupal::service('key.repository')->getKey($key_name);
+    $key = Drupal::service('key.repository')->getKey($keyName);
     if (isset($key) && !empty($key)) {
       drush_print('Key already exists, refusing to update value as it would break existing encrypted content');
     }
     else {
       drush_print('Creating new key');
       $key = \Drupal\key\Entity\Key::create([
-        'id' => $key_name,
-        'label' => $key_name,
+        'id' => $keyName,
+        'label' => $keyName,
         'key_type' => 'encryption',
-        'key_type_settings' => array('key_size' => 256),
+        'key_type_settings' => ['key_size' => 256],
         'key_provider' => 'config',
-        'key_provider_settings' => array('base64_encoded' => FALSE, 'key_value' => $value),
+        'key_provider_settings' => ['base64_encoded' => FALSE, 'key_value' => $value],
         'key_input' => 'text_field',
-        'key_input_settings' => array('base64_encoded' => FALSE)
+        'key_input_settings' => ['base64_encoded' => FALSE],
       ]);
       $key->save();
     }
 
     // check there is an encryption profile
-    $profile_name = 'socialblock';
-    $profile = Drupal::service('encrypt.encryption_profile.manager')->getEncryptionProfile($profile_name);
+    $profileName = 'socialblock';
+    $profile = Drupal::service('encrypt.encryption_profile.manager')->getEncryptionProfile($profileName);
     if (isset($profile) && !empty($profile)) {
       drush_print('Encryption profile already exists');
       // dont think there is anything to do if already exists
@@ -1413,17 +1432,17 @@ function drush_ibm_apim_createkey($clientid = NULL) {
     else {
       drush_print('Creating new encryption profile');
       $profile = \Drupal\encrypt\Entity\EncryptionProfile::create([
-        'id' => $profile_name,
-        'label' => $profile_name,
+        'id' => $profileName,
+        'label' => $profileName,
         'encryption_method' => 'real_aes',
-        'encryption_key' => $key_name,
-        'encryption_method_configuration' => array()
+        'encryption_key' => $keyName,
+        'encryption_method_configuration' => [],
       ]);
       $profile->save();
     }
   }
   else {
-    drush_log("Client ID not set", 'error');
+    drush_log('Client ID not set', 'error');
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -1432,49 +1451,56 @@ function drush_ibm_apim_createkey($clientid = NULL) {
 }
 
 /**
- * @param $apicuser
+ * @param $apicUser
  * @param string $event
  */
-function drush_ibm_apim_user_create($apicuser, $event = 'user_create') {
+function drush_ibm_apim_apicuser_create($apicUser, $event = 'user_create') {
   if (function_exists('ibm_apim_entry_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if ($apicuser !== null) {
-    if (is_string($apicuser)) {
-      $apicuser = json_decode($apicuser, TRUE);
+  if ($apicUser !== NULL) {
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+    if (is_string($apicUser)) {
+      $apicUser = json_decode($apicUser, TRUE);
     }
 
-    if (isset($apicuser['user'])) {
-      $apicuser = $apicuser['user'];
+    if (isset($apicUser['user'])) {
+      $apicUser = $apicUser['user'];
     }
 
     // check if user already exists in Drupal DB
-    $user = user_load_by_name($apicuser['username']);
-    if ($user !== null) {
-      drush_print('User already exists: ' . $apicuser['username']);
-      return;
+    $user = user_load_by_name($apicUser['username']);
+    if ($user !== NULL && $user !== FALSE) {
+      drush_print('User already exists: ' . $apicUser['username']);
     }
     else {
-
-      $create_user = new ApicUser();
-      $create_user->setFirstname($apicuser['first_name']);
-      $create_user->setLastname($apicuser['last_name']);
-      $create_user->setMail($apicuser['email']);
-      $create_user->setUsername($apicuser['username']);
-      if ($apicuser['url'] !== null) {
-        $create_user->setUrl($apicuser['url']);
+      $createUser = new ApicUser();
+      $createUser->setFirstname($apicUser['first_name']);
+      $createUser->setLastname($apicUser['last_name']);
+      $createUser->setMail($apicUser['email']);
+      $createUser->setUsername($apicUser['username']);
+      if ($apicUser['url'] !== NULL) {
+        $createUser->setUrl($apicUser['url']);
       }
-      if ($apicuser['user_registry_url'] !== null) {
-        $create_user->setApicUserRegistryUrl($apicuser['user_registry_url']);
+      if ($apicUser['user_registry_url'] !== NULL) {
+        $createUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
       }
 
-      $user_manager = \Drupal::service('auth_apic.usermanager');
-      drush_print('Creating apic user ' . $apicuser['username']);
+      $userManager = \Drupal::service('auth_apic.usermanager');
+      drush_print('Creating apic user ' . $apicUser['username']);
       $userService = \Drupal::service('ibm_apim.apicuser');
-      $user_manager->registerApicUser($create_user->getUsername(), $userService->getUserAccountFields($create_user));
+      $userManager->registerApicUser($createUser->getUsername(), $userService->getUserAccountFields($createUser));
     }
-
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -1483,44 +1509,52 @@ function drush_ibm_apim_user_create($apicuser, $event = 'user_create') {
 }
 
 /**
- * @param $apicuser
+ * @param $apicUser
  * @param string $event
  */
-function drush_ibm_apim_user_delete($apicuser, $event = 'user_delete') {
+function drush_ibm_apim_apicuser_delete($apicUser, $event = 'user_delete') {
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if ($apicuser !== null) {
-    if (is_string($apicuser)) {
-      $apicuser = json_decode($apicuser, TRUE);
+  if ($apicUser !== NULL) {
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+    if (is_string($apicUser)) {
+      $apicUser = json_decode($apicUser, TRUE);
     }
 
-    // check if user already exists in Drupal DB
-    $user = user_load_by_name($apicuser['username']);
-    if ($user !== null) {
-      drush_print('User does not exist: ' . $apicuser['username']);
-      return;
+    // check if user exists in Drupal DB
+    $user = user_load_by_name($apicUser['username']);
+    if ($user === NULL || $user === FALSE) {
+      drush_print('Nothing to delete as user does not exist: ' . $apicUser['username']);
     }
     else {
 
-      $delete_user = new ApicUser();
-      $delete_user->setFirstname($apicuser['first_name']);
-      $delete_user->setLastname($apicuser['last_name']);
-      $delete_user->setMail($apicuser['email']);
-      $delete_user->setUsername($apicuser['username']);
-      if ($apicuser['url'] !== null) {
-        $delete_user->setUrl($apicuser['url']);
+      $deleteUser = new ApicUser();
+      $deleteUser->setFirstname($apicUser['first_name']);
+      $deleteUser->setLastname($apicUser['last_name']);
+      $deleteUser->setMail($apicUser['email']);
+      $deleteUser->setUsername($apicUser['username']);
+      if ($apicUser['url'] !== NULL) {
+        $deleteUser->setUrl($apicUser['url']);
       }
-      if ($apicuser['user_registry_url'] !== null) {
-        $delete_user->setApicUserRegistryUrl($apicuser['user_registry_url']);
+      if ($apicUser['user_registry_url'] !== NULL) {
+        $deleteUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
       }
 
-      $user_manager = \Drupal::service('auth_apic.usermanager');
-      drush_print('Deleting apic user ' . $apicuser['username']);
-      $user_manager->deleteLocalAccount($delete_user);
+      $userManager = \Drupal::service('auth_apic.usermanager');
+      drush_print('Deleting apic user ' . $apicUser['username']);
+      $userManager->deleteLocalAccount($deleteUser);
     }
-
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -1529,36 +1563,42 @@ function drush_ibm_apim_user_delete($apicuser, $event = 'user_delete') {
 }
 
 /**
- * @param $apicuser
+ * @param $apicUser
  * @param string $event
  */
-function drush_ibm_apim_user_block($apicuser, $event = 'user_block') {
+function drush_ibm_apim_apicuser_block($apicUser, $event = 'user_block') {
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if ($apicuser !== null) {
-    if (is_string($apicuser)) {
-      $apicuser = json_decode($apicuser, TRUE);
+  if ($apicUser !== NULL) {
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+    if (is_string($apicUser)) {
+      $apicUser = json_decode($apicUser, TRUE);
     }
 
-    $user = user_load_by_name($apicuser['username']);
+    $user = user_load_by_name($apicUser['username']);
 
-    if ($user === null) {
-      drush_print('User does not exist: ' . $apicuser['username']);
-      return;
+    if ($user === NULL || $user === FALSE) {
+      drush_print('User does not exist: ' . $apicUser['username']);
+    }
+    elseif ((int) $user->get('uid')->value === 1) {
+      drush_print('admin so won\'t block this');
     }
     else {
-      if ($user->get('uid')->value === 1) {
-        drush_print('admin so won\'t block this');
-      }
-      else {
-        drush_print('Blocking apic user ' . $apicuser['username']);
-        $user->set('status', 0);
-        $user->save();
-      }
+      drush_print('Blocking apic user ' . $apicUser['username']);
+      $user->set('status', 0);
+      $user->save();
     }
-
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -1567,30 +1607,39 @@ function drush_ibm_apim_user_block($apicuser, $event = 'user_block') {
 }
 
 /**
- * @param $apicuser
+ * @param $apicUser
  * @param string $event
  */
-function drush_ibm_apim_user_unblock($apicuser, $event = 'user_unblock') {
+function drush_ibm_apim_apicuser_unblock($apicUser, $event = 'user_unblock') {
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if ($apicuser !== null) {
-    if (is_string($apicuser)) {
-      $apicuser = json_decode($apicuser, TRUE);
+  if ($apicUser !== NULL) {
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+    if (is_string($apicUser)) {
+      $apicUser = json_decode($apicUser, TRUE);
     }
 
-    $user = user_load_by_name($apicuser['username']);
+    $user = user_load_by_name($apicUser['username']);
 
-    if ($user === null) {
-      drush_print('User does not exist: ' . $apicuser['username']);
-      return;
+    if ($user === NULL || $user === FALSE) {
+      drush_print('User does not exist: ' . $apicUser['username']);
     }
     else {
-      drush_print('Unblocking apic user ' . $apicuser['username']);
+      drush_print('Unblocking apic user ' . $apicUser['username']);
       $user->set('status', 1);
       $user->save();
     }
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -1599,44 +1648,51 @@ function drush_ibm_apim_user_unblock($apicuser, $event = 'user_unblock') {
 }
 
 /**
- * @param $apicuser
+ * @param $apicUser
  * @param string $event
  */
-function drush_ibm_apim_user_update($apicuser, $event = 'user_update') {
+function drush_ibm_apim_apicuser_update($apicUser, $event = 'user_update') {
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if ($apicuser !== null) {
-    if (is_string($apicuser)) {
-      $apicuser = json_decode($apicuser, TRUE);
+  if ($apicUser !== NULL) {
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+    if (is_string($apicUser)) {
+      $apicUser = json_decode($apicUser, TRUE);
     }
 
     // check if user already exists in Drupal DB
-    $user = user_load_by_name($apicuser['username']);
-    if ($user === null) {
-      drush_print('User does not exist: ' . $apicuser['username']);
-      return;
+    $user = user_load_by_name($apicUser['username']);
+    if ($user === NULL || $user === FALSE) {
+      drush_print('User does not exist: ' . $apicUser['username']);
     }
     else {
-
-      $edit_user = new ApicUser();
-      $edit_user->setFirstname($apicuser['first_name']);
-      $edit_user->setLastname($apicuser['last_name']);
-      $edit_user->setMail($apicuser['email']);
-      $edit_user->setUsername($apicuser['username']);
-      if ($apicuser['url'] !== null) {
-        $edit_user->setUrl($apicuser['url']);
+      $editUser = new ApicUser();
+      $editUser->setFirstname($apicUser['first_name']);
+      $editUser->setLastname($apicUser['last_name']);
+      $editUser->setMail($apicUser['email']);
+      $editUser->setUsername($apicUser['username']);
+      if ($apicUser['url'] !== NULL) {
+        $editUser->setUrl($apicUser['url']);
       }
-      if ($apicuser['user_registry_url'] !== null) {
-        $edit_user->setApicUserRegistryUrl($apicuser['user_registry_url']);
+      if ($apicUser['user_registry_url'] !== NULL) {
+        $editUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
       }
 
-      $user_manager = \Drupal::service('auth_apic.usermanager');
-      drush_print('Updating apic user ' . $apicuser['username']);
-      $user_manager->updateLocalAccount($edit_user);
+      $userManager = \Drupal::service('auth_apic.usermanager');
+      drush_print('Updating apic user ' . $apicUser['username']);
+      $userManager->updateLocalAccount($editUser);
     }
-
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -1645,43 +1701,27 @@ function drush_ibm_apim_user_update($apicuser, $event = 'user_update') {
 }
 
 /**
- * @param $apicuser
+ * @param $apicUser
  * @param string $event
  */
-function drush_ibm_apim_user_createOrUpdate($apicuser, $event = 'user_update') {
+function drush_ibm_apim_user_createOrUpdate($apicUser, $event = 'user_update') {
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if ($apicuser !== null) {
-    if (is_string($apicuser)) {
-      $apicuser = json_decode($apicuser, TRUE);
+  if ($apicUser !== NULL) {
+    if (is_string($apicUser)) {
+      $apicUser = json_decode($apicUser, TRUE);
     }
 
     // check if user already exists in Drupal DB
-    $user = user_load_by_name($apicuser['username']);
-    if (!isset($user)) {
-      drush_ibm_apim_user_create($apicuser, $event);
+    $user = user_load_by_name($apicUser['username']);
+    if ($user !== NULL && $user !== FALSE) {
+      drush_ibm_apim_apicuser_update($apicUser, $event);
     }
     else {
-
-      $edit_user = new ApicUser();
-      $edit_user->setFirstname($apicuser['first_name']);
-      $edit_user->setLastname($apicuser['last_name']);
-      $edit_user->setMail($apicuser['email']);
-      $edit_user->setUsername($apicuser['username']);
-      if ($apicuser['url'] !== null) {
-        $edit_user->setUrl($apicuser['url']);
-      }
-      if ($apicuser['user_registry_url'] !== null) {
-        $edit_user->setApicUserRegistryUrl($apicuser['user_registry_url']);
-      }
-
-      $user_manager = \Drupal::service('auth_apic.usermanager');
-      drush_print('Updating apic user ' . $apicuser['username']);
-      $user_manager->updateLocalAccount($edit_user);
+      drush_ibm_apim_apicuser_create($apicUser, $event);
     }
-
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -2074,23 +2114,23 @@ function drush_ibm_apim_permission_delete($perm, $event = 'permission_del') {
 }
 
 /**
- * @param $tls_profile
+ * @param $tlsProfile
  * @param string $event
  */
-function drush_ibm_apim_tlsprofile_create($tls_profile, $event = 'tlsprofile_create') {
+function drush_ibm_apim_tlsprofile_create($tlsProfile, $event = 'tlsprofile_create') {
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
-  if (isset($tls_profile)) {
-    if (is_string($tls_profile)) {
-      $tls_profile = json_decode($tls_profile, TRUE);
+  if (isset($tlsProfile)) {
+    if (is_string($tlsProfile)) {
+      $tlsProfile = json_decode($tlsProfile, TRUE);
     }
 
-    if (!isset($tls_profile['url'])) {
-      $tls_profile['url'] = 'unknown';
+    if (!isset($tlsProfile['url'])) {
+      $tlsProfile['url'] = 'unknown';
     }
     $tlsService = \Drupal::service('ibm_apim.tls_client_profiles');
-    $tlsService->update($tls_profile['url'], $tls_profile);
+    $tlsService->update($tlsProfile['url'], $tlsProfile);
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -2099,23 +2139,23 @@ function drush_ibm_apim_tlsprofile_create($tls_profile, $event = 'tlsprofile_cre
 }
 
 /**
- * @param $tls_profile
+ * @param $tlsProfile
  * @param string $event
  */
-function drush_ibm_apim_tlsprofile_update($tls_profile, $event = 'tlsprofile_update') {
+function drush_ibm_apim_tlsprofile_update($tlsProfile, $event = 'tlsprofile_update') {
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if (isset($tls_profile)) {
-    if (is_string($tls_profile)) {
-      $tls_profile = json_decode($tls_profile, TRUE);
+  if (isset($tlsProfile)) {
+    if (is_string($tlsProfile)) {
+      $tlsProfile = json_decode($tlsProfile, TRUE);
     }
-    if (!isset($tls_profile['url'])) {
-      $tls_profile['url'] = 'unknown';
+    if (!isset($tlsProfile['url'])) {
+      $tlsProfile['url'] = 'unknown';
     }
     $tlsService = \Drupal::service('ibm_apim.tls_client_profiles');
-    $tlsService->update($tls_profile['url'], $tls_profile);
+    $tlsService->update($tlsProfile['url'], $tlsProfile);
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -2124,23 +2164,23 @@ function drush_ibm_apim_tlsprofile_update($tls_profile, $event = 'tlsprofile_upd
 }
 
 /**
- * @param $tls_profile
+ * @param $tlsProfile
  * @param string $event
  */
-function drush_ibm_apim_tlsprofile_delete($tls_profile, $event = 'tlsprofile_del') {
+function drush_ibm_apim_tlsprofile_delete($tlsProfile, $event = 'tlsprofile_del') {
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if (isset($tls_profile)) {
-    if (is_string($tls_profile)) {
-      $tls_profile = json_decode($tls_profile, TRUE);
+  if (isset($tlsProfile)) {
+    if (is_string($tlsProfile)) {
+      $tlsProfile = json_decode($tlsProfile, TRUE);
     }
-    if (!isset($tls_profile['url'])) {
-      $tls_profile['url'] = 'unknown';
+    if (!isset($tlsProfile['url'])) {
+      $tlsProfile['url'] = 'unknown';
     }
     $tlsService = \Drupal::service('ibm_apim.tls_client_profiles');
-    $tlsService->delete($tls_profile['url']);
+    $tlsService->delete($tlsProfile['url']);
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -2226,23 +2266,22 @@ function drush_ibm_apim_analytics_delete($analytics, $event = 'analytics_del') {
 /**
  * @param string $type
  * @param null $url
- * @param string $type
- * @param null $url
- * @return null|string
+ *
+ * @return string|null
  */
-function drush_ibm_apim_content_check($type = 'product', $url = null) {
+function drush_ibm_apim_content_check($type = 'product', $url = NULL) {
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
-  $output = null;
+  $output = NULL;
   if (isset($url)) {
     if (mb_strpos($url, 'https://') !== 0) {
       // in case moderation is on we need to run as admin
       // save the current user so we can switch back at the end
       $accountSwitcher = Drupal::service('account_switcher');
-      $original_user = \Drupal::currentUser();
-      if ($original_user->id() != 1) {
-        $accountSwitcher->switchTo(new UserSession(array('uid' => 1)));
+      $originalUser = \Drupal::currentUser();
+      if ((int) $originalUser->id() !== 1) {
+        $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
       }
       switch ($type) {
         case 'product':
@@ -2257,21 +2296,23 @@ function drush_ibm_apim_content_check($type = 'product', $url = null) {
           $output = Application::getApplicationAsJson($url);
           break;
         case 'consumerorg':
-          $corg_service = \Drupal::service('ibm_apim.consumerorg');
-          $output = $corg_service->getConsumerOrgAsJson($url);
+          $cOrgService = \Drupal::service('ibm_apim.consumerorg');
+          $output = $cOrgService->getConsumerOrgAsJson($url);
           break;
         default:
-          drush_log(dt('There is no drush code to check content of type @type', array('@type' => $type)), 'error');
+          drush_log(dt('There is no drush code to check content of type @type', ['@type' => $type]), 'error');
           break;
       }
-      if (isset($original_user) && $original_user->id() != 1) {
+      if (isset($originalUser) && (int) $originalUser->id() !== 1) {
         $accountSwitcher->switchBack();
       }
-    } else {
-      drush_log(dt('Content Check URL invalid @url', array('@url' => $url)), 'warning');
     }
-  } else {
-    drush_log(dt('Content Check URL not set', array()), 'warning');
+    else {
+      drush_log(dt('Content Check URL invalid @url', ['@url' => $url]), 'warning');
+    }
+  }
+  else {
+    drush_log(dt('Content Check URL not set', []), 'warning');
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -2286,13 +2327,13 @@ function drush_ibm_apim_content_check($type = 'product', $url = null) {
  * Note: this has been borrowed from the 'import' command of Drupal's import module.
  */
 function drush_ibm_apim_manage_memory_usage() {
-  $mem_thresh = .7;
-  $mem_usage = memory_get_usage();
-  $memory_limit = drush_ibm_apim_convertToBytes(ini_get('memory_limit'));
-  if (isset($memory_limit) && $memory_limit > 0) {
-    $pct_mem = $mem_usage / $memory_limit;
-    if ($pct_mem > $mem_thresh) {
-      drush_log(dt("Memory usage reached &mem % of max, resetting statics", array('&mem'=> ($mem_thresh * 100)), 'warning'));
+  $memThreshold = .7;
+  $memUsage = memory_get_usage();
+  $memoryLimit = drush_ibm_apim_convertToBytes(ini_get('memory_limit'));
+  if (isset($memoryLimit) && $memoryLimit > 0) {
+    $pctMem = $memUsage / $memoryLimit;
+    if ($pctMem > $memThreshold) {
+      drush_log(dt('Memory usage reached &mem % of max, resetting statics', ['&mem' => $memThreshold * 100], 'warning'));
       drupal_static_reset();
     }
   }
@@ -2317,7 +2358,7 @@ function drush_ibm_apim_convertToBytes($value) {
     $max = intval($max, 8);
   }
   else {
-    $max = intval($max);
+    $max = (int) $max;
   }
 
   switch (substr($value, -1)) {
@@ -2351,7 +2392,7 @@ function drush_ibm_apim_convertToBytes($value) {
 function drush_ibm_apim_assert_index_directly_value() {
   $query = \Drupal::entityQuery('node');
   $result = $query->count()->execute();
-  $count = (int)$result;
+  $count = (int) $result;
   if ($count > 50) {
     drush_ibm_apim_index_directly(FALSE, $count);
   }
@@ -2360,6 +2401,7 @@ function drush_ibm_apim_assert_index_directly_value() {
 /**
  * Sets the value of the index_directly property of the search_api module's
  * default_index.
+ *
  * @param $indexDirectly
  * @param $count
  */
@@ -2371,9 +2413,10 @@ function drush_ibm_apim_index_directly($indexDirectly, $count) {
       if ($index->getOption('index_directly') !== $indexDirectly) {
         $index->setOption('index_directly', $indexDirectly)->save();
 
-        drush_log(t('Set index_directly value to @value', array('@value' => $indexDirectly ? 'true' : 'false')), 'success');
-      } else {
-        drush_log(t('index_directly value @value matched, no action needed', array('@value' => $indexDirectly ? 'true' : 'false')));
+        drush_log(t('Set index_directly value to @value', ['@value' => $indexDirectly ? 'true' : 'false']), 'success');
+      }
+      else {
+        drush_log(t('index_directly value @value matched, no action needed', ['@value' => $indexDirectly ? 'true' : 'false']));
       }
     }
   }

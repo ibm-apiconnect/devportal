@@ -2,7 +2,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -109,6 +109,20 @@
         var password_field = $(':checkbox', showPassword).closest('.toggleParent').find('.toggle')[0];
         password_field.type = "password";
       });
+    }
+  };
+
+  Drupal.behaviors.closeAppModalDialog = {
+    attach: function (context) {
+      // used for the result modal dialog from creating an app within the subscribe flow.
+      // drupal doesnt seem to add a close button so need to do our own
+      $('#drupal-modal .modalAppResultContainer .modal-header .close').click(function (e) {
+        e.preventDefault();
+
+        // This will close the dialog
+        $('#drupal-modal').dialog('close');
+      });
+
     }
   };
 

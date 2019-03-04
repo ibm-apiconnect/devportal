@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -18,6 +18,7 @@ use Drupal\apic_app\Subscription;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\UserUtils;
@@ -52,23 +53,39 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
    */
   protected $planRef;
 
+  /**
+   * @var \Drupal\apic_app\Service\ApplicationRestInterface
+   */
   protected $restService;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\ApimUtils
+   */
   protected $apimUtils;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
   protected $utils;
 
   /**
-   * ApplicationCreateForm constructor.
+   * MigrateSubscriptionForm constructor.
    *
-   * @param ApplicationRestInterface $restService
-   * @param UserUtils $userUtils
+   * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   * @param \Drupal\ibm_apim\Service\ApimUtils $apimUtils
+   * @param \Drupal\ibm_apim\Service\Utils $utils
    */
   public function __construct(
-                              ApplicationRestInterface $restService,
-                              UserUtils $userUtils,
-                              ApimUtils $apimUtils,
-                              Utils $utils) {
+    ApplicationRestInterface $restService,
+    UserUtils $userUtils,
+    ApimUtils $apimUtils,
+    Utils $utils) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->apimUtils = $apimUtils;
@@ -91,18 +108,18 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'application_migrate_subscription_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $subId = NULL, $planRef = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $subId = NULL, $planRef = NULL): array {
     $this->node = $appId;
     $this->subId = Html::escape($subId);
     $this->planRef = Html::escape($planRef);
-    $form =  parent::buildForm($form, $form_state);
+    $form = parent::buildForm($form, $form_state);
     $themeHandler = \Drupal::service('theme_handler');
     if ($themeHandler->themeExists('bootstrap')) {
       if (isset($form['actions']['submit'])) {
@@ -121,57 +138,62 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
+  public function getDescription() : TranslatableMarkup{
     return $this->t('Are you sure you want to migrate this subscription? This action cannot be undone.');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfirmText() {
+  public function getConfirmText(): TranslatableMarkup {
     return $this->t('Migrate subscription');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getQuestion() {
+  public function getQuestion() : TranslatableMarkup{
     return $this->t('Migrate the subscription for %title?', ['%title' => $this->node->title->value]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl() : Url{
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
-    if(isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
-      return Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
-    } else {
-      return Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
+    if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
+      $url = Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
     }
+    else {
+      $url = Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
+    }
+    return $url;
   }
 
   /**
-   * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $appId = $this->node->application_id->value;
-    $planref = Html::escape($this->utils->base64_url_decode($this->planRef));
+    $planRef = Html::escape($this->utils->base64_url_decode($this->planRef));
 
     $url = $this->node->apic_url->value . '/subscriptions/' . $this->subId;
-    $parts = explode(':', $planref);
-    $product_url = $parts[0];
-    $planname = $parts[1];
+    $parts = explode(':', $planRef);
+    $productUrl = $parts[0];
+    $planName = $parts[1];
 
     // 'adjust' the product url if it isn't in the format that the consumer-api expects
-    $full_product_url = $this->apimUtils->createFullyQualifiedUrl($product_url);
+    $fullProductUrl = $this->apimUtils->createFullyQualifiedUrl($productUrl);
 
-    $data = array(
-      "product_url" => $full_product_url,
-      'plan' => $planname
-    );
+    $data = [
+      'product_url' => $fullProductUrl,
+      'plan' => $planName,
+    ];
 
     $result = $this->restService->patchSubscription($url, json_encode($data));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
@@ -185,10 +207,10 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
         'subId' => $this->subId,
       ]);
 
-      $current_user = \Drupal::currentUser();
-      \Drupal::logger('apic_app')->notice('Subscription migrated for application @appname by @username', [
-        '@appname' => $this->node->getTitle(),
-        '@username' => $current_user->getAccountName(),
+      $currentUser = \Drupal::currentUser();
+      \Drupal::logger('apic_app')->notice('Subscription migrated for application @appName by @username', [
+        '@appName' => $this->node->getTitle(),
+        '@username' => $currentUser->getAccountName(),
       ]);
 
       // Update the subscription

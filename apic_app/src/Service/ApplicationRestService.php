@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -129,9 +129,11 @@ class ApplicationRestService implements ApplicationRestInterface {
    * Triggers the get request to be made to apim
    *
    * @param $url
-   * @return mixed
+   *
+   * @return \stdClass|null
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  private function doGet($url) {
+  private function doGet($url) : ?\stdClass{
     return ApicRest::get($url);
   }
 
@@ -140,9 +142,11 @@ class ApplicationRestService implements ApplicationRestInterface {
    *
    * @param $url
    * @param $requestBody
-   * @return mixed
+   *
+   * @return \stdClass|null
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  private function doPost($url, $requestBody) {
+  private function doPost($url, $requestBody) : ?\stdClass{
     return ApicRest::post($url, $requestBody);
   }
 
@@ -151,9 +155,11 @@ class ApplicationRestService implements ApplicationRestInterface {
    *
    * @param $url
    * @param $requestBody
-   * @return mixed
+   *
+   * @return \stdClass|null
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  private function doPut($url, $requestBody) {
+  private function doPut($url, $requestBody) : ?\stdClass{
     return ApicRest::put($url, $requestBody);
   }
 
@@ -161,9 +167,11 @@ class ApplicationRestService implements ApplicationRestInterface {
    * Triggers the delete request to be made to apim
    *
    * @param $url
-   * @return mixed
+   *
+   * @return \stdClass|null
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  private function doDelete($url) {
+  private function doDelete($url) : ?\stdClass{
     return ApicRest::delete($url);
   }
 
@@ -172,9 +180,11 @@ class ApplicationRestService implements ApplicationRestInterface {
    *
    * @param $url
    * @param $requestBody
-   * @return mixed
+   *
+   * @return \stdClass|null
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  private function doPatch($url, $requestBody) {
+  private function doPatch($url, $requestBody) : ?\stdClass{
     return ApicRest::patch($url, $requestBody);
   }
 
@@ -187,7 +197,9 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param null $certificate
    * @param null $formState
    *
-   * @return mixed|null
+   * @return mixed|\stdClass|null
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function createApplication($name, $summary, $oauthUrls, $certificate = NULL, $formState = NULL) {
@@ -229,7 +241,7 @@ class ApplicationRestService implements ApplicationRestInterface {
         }
       }
       $config = \Drupal::config('ibm_apim.settings');
-      if ($config->get('show_placeholder_images')) {
+      if ((boolean) $config->get('show_placeholder_images')) {
         $rawImage = Application::getRandomImageName($name);
         $application_image_url = $_SERVER['HTTP_HOST'] . base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
         if ($_SERVER['HTTPS'] === 'on') {
@@ -262,7 +274,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
         $app_data = $result->data;
 
-        $nid = Application::create($app_data, 'create');
+        $nid = Application::createOrUpdateReturnNid($app_data, 'create');
         $node = Node::load($nid);
 
         if (!empty($formState) && $node !== null) {

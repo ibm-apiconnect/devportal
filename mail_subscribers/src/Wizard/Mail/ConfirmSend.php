@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -21,14 +21,14 @@ class ConfirmSend extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'mail_subscribers_wizard_confirm_send';
   }
 
   /**
    * @inheritDoc
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
 
     $cached_values = $form_state->getTemporaryValue('wizard');
     $objectType = $cached_values['objectType'];
@@ -41,132 +41,142 @@ class ConfirmSend extends FormBase {
     $receipt = $cached_values['receipt'];
     $headers = $cached_values['headers'];
 
-    $form['intro'] = array(
+    $form['intro'] = [
       '#markup' => '<p>' . $this->t('Please confirm the below settings are correct and then click Next to send the message.') . '</p>',
-      '#weight' => -100
-    );
+      '#weight' => -100,
+    ];
 
     if ($objectType === 'product') {
       $node = Node::load($cached_values['product']);
-      if ($role === 'owners') {
-        $form['product'] = array(
-          '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to any %product_title plan the following message:', array('%product_title'=>$node->getTitle())) . '</p>',
-          '#weight' => -80
-        );
-      }
-      else {
-        $form['product'] = array(
-          '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to any %product_title plan the following message:', array('%product_title'=>$node->getTitle())) . '</p>',
-          '#weight' => -80
-        );
+      if ($node !== NULL) {
+        if ($role === 'owners') {
+          $form['product'] = [
+            '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to any %product_title plan the following message:', ['%product_title' => $node->getTitle()]) . '</p>',
+            '#weight' => -80,
+          ];
+        }
+        else {
+          $form['product'] = [
+            '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to any %product_title plan the following message:', ['%product_title' => $node->getTitle()]) . '</p>',
+            '#weight' => -80,
+          ];
+        }
       }
     }
     elseif ($objectType === 'plan') {
       $plan = $cached_values['plan'];
       $node = Node::load($cached_values['product']);
-      if ($role === 'owners') {
-        $form['plan'] = array(
-          '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to the %product_title %plan plan the following message:', array('%product_title'=>$node->getTitle(), '%plan'=>$plan['title'])) . '</p>',
-          '#weight' => -80
-        );
-      }
-      else {
-        $form['plan'] = array(
-          '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to the %product_title %plan plan the following message:', array('%product_title'=>$node->getTitle(), '%plan'=>$plan['title'])) . '</p>',
-          '#weight' => -80
-        );
+      if ($node !== NULL) {
+        if ($role === 'owners') {
+          $form['plan'] = [
+            '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to the %product_title %plan plan the following message:', [
+                '%product_title' => $node->getTitle(),
+                '%plan' => $plan['title'],
+              ]) . '</p>',
+            '#weight' => -80,
+          ];
+        }
+        else {
+          $form['plan'] = [
+            '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to the %product_title %plan plan the following message:', [
+                '%product_title' => $node->getTitle(),
+                '%plan' => $plan['title'],
+              ]) . '</p>',
+            '#weight' => -80,
+          ];
+        }
       }
     }
     elseif ($objectType === 'api') {
       $node = Node::load($cached_values['api']);
       if ($role === 'owners') {
-        $form['api'] = array(
-          '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to plans containing API: %api_title the following message:', array('%api_title'=>$node->getTitle())) . '</p>',
-          '#weight' => -80
-        );
+        $form['api'] = [
+          '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to plans containing API: %api_title the following message:', ['%api_title' => $node->getTitle()]) . '</p>',
+          '#weight' => -80,
+        ];
       }
       else {
-        $form['api'] = array(
-          '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to plans containing API: %api_title the following message:', array('%api_title'=>$node->getTitle())) . '</p>',
-          '#weight' => -80
-        );
+        $form['api'] = [
+          '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to plans containing API: %api_title the following message:', ['%api_title' => $node->getTitle()]) . '</p>',
+          '#weight' => -80,
+        ];
       }
     }
     elseif ($objectType === 'all') {
       if ($role === 'owners') {
-        $form['all'] = array(
+        $form['all'] = [
           '#markup' => '<p>' . $this->t('Email all owners of all consumer organization the following message:') . '</p>',
-          '#weight' => -80
-        );
+          '#weight' => -80,
+        ];
       }
       else {
-        $form['all'] = array(
+        $form['all'] = [
           '#markup' => '<p>' . $this->t('Email all members of all consumer organization the following message:') . '</p>',
-          '#weight' => -80
-        );
+          '#weight' => -80,
+        ];
       }
     }
-    $form['subject'] = array(
+    $form['subject'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Subject'),
       '#default_value' => $subject,
       '#disabled' => TRUE,
-      '#weight' => -70
-    );
-    $form['message'] = array(
+      '#weight' => -70,
+    ];
+    $form['message'] = [
       '#title' => $this->t('Message'),
       '#type' => 'textarea',
       '#default_value' => $message['value'],
       '#wysiwyg' => FALSE,
       '#disabled' => TRUE,
-      '#weight' => -60
-    );
+      '#weight' => -60,
+    ];
 
-    $form['priority'] = array(
+    $form['priority'] = [
       '#type' => 'select',
       '#title' => $this->t('Priority'),
-      '#options' => array(
+      '#options' => [
         0 => $this->t('none'),
         1 => $this->t('highest'),
         2 => $this->t('high'),
         3 => $this->t('normal'),
         4 => $this->t('low'),
-        5 => $this->t('lowest')
-      ),
+        5 => $this->t('lowest'),
+      ],
       '#default_value' => $priority,
       '#disabled' => TRUE,
-      '#weight' => -50
-    );
-    $form['receipt'] = array(
+      '#weight' => -50,
+    ];
+    $form['receipt'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Request receipt'),
       '#default_value' => $receipt,
       '#disabled' => TRUE,
-      '#weight' => -40
-    );
-    $form['headers'] = array(
+      '#weight' => -40,
+    ];
+    $form['headers'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Additional headers'),
       '#rows' => 4,
       '#default_value' => $headers,
       '#disabled' => TRUE,
-      '#weight' => -30
-    );
+      '#weight' => -30,
+    ];
 
-    $form['direct'] = array(
+    $form['direct'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Send the message directly using the Batch API.'),
       '#default_value' => $direct,
       '#disabled' => TRUE,
-      '#weight' => -20
-    );
-    $form['carbon_copy'] = array(
+      '#weight' => -20,
+    ];
+    $form['carbon_copy'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Send a copy of the message to the sender.'),
       '#default_value' => $carbon_copy,
       '#disabled' => TRUE,
-      '#weight' => -10
-    );
+      '#weight' => -10,
+    ];
 
     return $form;
   }
@@ -174,7 +184,7 @@ class ConfirmSend extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -183,7 +193,7 @@ class ConfirmSend extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $cached_values = $form_state->getTemporaryValue('wizard');
@@ -194,11 +204,11 @@ class ConfirmSend extends FormBase {
 
     $config = \Drupal::config('mail_subscribers.settings');
     $site_config = \Drupal::config('system.site');
-    $from = array();
+    $from = [];
     $from_name = $config->get('from_name');
     $from_mail = $config->get('from_mail');
-    $from['name'] = (isset($from_name) && !empty($from_name)) ? $from_name : $site_config->get('name');
-    $from['mail'] = (isset($from_mail) && !empty($from_mail)) ? $from_mail : $site_config->get('mail');
+    $from['name'] = ($from_mail !== NULL && !empty($from_name)) ? $from_name : $site_config->get('name');
+    $from['mail'] = ($from_mail !== NULL && !empty($from_mail)) ? $from_mail : $site_config->get('mail');
 
     $rc = NULL;
 
@@ -226,15 +236,11 @@ class ConfirmSend extends FormBase {
     elseif ($cached_values['objectType'] === 'all' && $cached_values['role'] === 'members') {
       $rc = $mailService->mailAllMembers($cached_values, $from, $langcode);
     }
-    else {
-      // invalid combination
-      // TODO something here
-    }
 
     $cached_values['result'] = $rc;
 
     $result_state = \Drupal::state()->get('mail_subscribers.result');
-    if ($result_state === null) {
+    if ($result_state === NULL) {
       $result_state = [];
     }
     if (isset($cached_values['instance'])) {
@@ -243,7 +249,7 @@ class ConfirmSend extends FormBase {
       $TTL = 86400;
       $now = time();
       foreach ($result_state as $key => $value) {
-        if ($now > ((int)$key + $TTL)) {
+        if ($now > ((int) $key + $TTL)) {
           unset($result_state[$key]);
         }
       }

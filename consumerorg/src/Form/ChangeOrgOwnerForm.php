@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -214,8 +214,6 @@ class ChangeOrgOwnerForm extends FormBase {
       $roleUrl = $this->apimUtils->createFullyQualifiedUrl($role);
       $response = $this->consumerOrgService->changeOrgOwner($this->currentOrg, $newUserUrl, $roleUrl);
       if ($response->success()) {
-        $org = $this->userUtils->getCurrentConsumerorg();
-        $this->currentOrg = $this->consumerOrgService->get($org['url']);
         drupal_set_message(t('Organization owner updated.'));
         \Drupal::logger('consumerorg')->notice('Consumer organization owner for @orgname changed by @username', [
           '@orgname' => $this->currentOrg->getTitle(),

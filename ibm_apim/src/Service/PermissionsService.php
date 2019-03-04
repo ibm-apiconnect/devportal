@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -22,6 +22,7 @@ use Psr\Log\LoggerInterface;
 class PermissionsService implements PermissionsServiceInterface {
 
   private $state;
+
   private $logger;
 
   public function __construct(StateInterface $state, LoggerInterface $logger) {
@@ -32,9 +33,9 @@ class PermissionsService implements PermissionsServiceInterface {
   /**
    * get all the permissions objects
    *
-   * @return NULL if an error occurs otherwise an array of the permissions objects.
+   * @return NULL|array null if an error occurs otherwise an array of the permissions objects.
    */
-  public function getAll() {
+  public function getAll(): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $perms = $this->state->get('ibm_apim.permissions_objects');
@@ -47,9 +48,10 @@ class PermissionsService implements PermissionsServiceInterface {
    * get a specific permissions object by url
    *
    * @param $key
+   *
    * @return null|array
    */
-  public function get($key) {
+  public function get($key): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     $perm = NULL;
@@ -57,7 +59,7 @@ class PermissionsService implements PermissionsServiceInterface {
       // clear caches if config different to previous requests
       $current_data = $this->state->get('ibm_apim.permissions_objects');
 
-      if (isset($current_data) && isset($current_data[$key])) {
+      if (isset($current_data[$key])) {
         $perm = $current_data[$key];
       }
     }
@@ -71,11 +73,11 @@ class PermissionsService implements PermissionsServiceInterface {
    *
    * @param $data array of permissions objects keyed on url
    */
-  public function updateAll($data) {
+  public function updateAll($data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $data);
 
     if (isset($data)) {
-      $permissions = array();
+      $permissions = [];
       foreach ($data as $perm) {
         $permissions[$perm['url']] = $perm;
       }
@@ -91,14 +93,14 @@ class PermissionsService implements PermissionsServiceInterface {
    * @param $key
    * @param $data
    */
-  public function update($key, $data) {
+  public function update($key, $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
-    if (isset($key) && isset($data)) {
+    if (isset($key, $data)) {
       $current_data = $this->state->get('ibm_apim.permissions_objects');
 
       if (!is_array($current_data)) {
-        $current_data = array();
+        $current_data = [];
       }
       $current_data[$key] = $data;
       $this->state->set('ibm_apim.permissions_objects', $current_data);
@@ -112,16 +114,16 @@ class PermissionsService implements PermissionsServiceInterface {
    *
    * @param $key (url)
    */
-  public function delete($key) {
+  public function delete($key): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     if (isset($key)) {
       $current_data = $this->state->get('ibm_apim.permissions_objects');
 
       if (isset($current_data)) {
-        $new_data = array();
+        $new_data = [];
         foreach ($current_data as $url => $value) {
-          if ($url != $key) {
+          if ($url !== $key) {
             $new_data[$url] = $value;
           }
         }
@@ -135,10 +137,10 @@ class PermissionsService implements PermissionsServiceInterface {
   /**
    * Delete all current permissions objects
    */
-  public function deleteAll() {
+  public function deleteAll(): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $this->state->set('ibm_apim.permissions_objects', array());
+    $this->state->set('ibm_apim.permissions_objects', []);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }

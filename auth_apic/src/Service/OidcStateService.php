@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -22,19 +22,23 @@ use Symfony\Component\HttpFoundation\Session\Session;
 class OidcStateService implements OidcStateServiceInterface {
 
   private $state;
+
   private $encryptService;
+
   private $logger;
+
   private $session;
 
   private $encryptionProfile = NULL;
 
-  const STATE_KEY = 'auth_apic.oidc_state';
-  const ENCRYPTION_PROFILE_NAME = 'socialblock';
+  public const STATE_KEY = 'auth_apic.oidc_state';
+
+  public const ENCRYPTION_PROFILE_NAME = 'socialblock';
 
   public function __construct(StateInterface $state,
                               EncryptServiceInterface $encrypt_service,
                               LoggerInterface $logger,
-                              Session $session){
+                              Session $session) {
     $this->state = $state;
     $this->encryptService = $encrypt_service;
     $this->logger = $logger;
@@ -51,7 +55,7 @@ class OidcStateService implements OidcStateServiceInterface {
 
     $key = NULL;
     // we need a registry url to generate a key
-    if (isset($data) && isset($data['registry_url'])) {
+    if (isset($data['registry_url'])) {
       // KEY = created_time:registry_url:sessionid
       $key = time() . ':' . $data['registry_url'] . ':' . $this->session->getId();
     }
@@ -101,7 +105,7 @@ class OidcStateService implements OidcStateServiceInterface {
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'item returned');
       }
-      return unserialize($data);
+      return unserialize($data, ['allowed_classes' => FALSE]);
     }
     else {
       if (function_exists('ibm_apim_exit_trace')) {
@@ -165,7 +169,7 @@ class OidcStateService implements OidcStateServiceInterface {
     foreach ($all_state as $key => $encrypted_value) {
       // TODO: $key contains timestamp
       $value = $this->encryptService->decrypt($encrypted_value, $this->getEncryptionProfile());
-      if (isset($value['created']) && ($now > ((int)$value['created'] + $TTL))) {
+      if (isset($value['created']) && ($now > ((int) $value['created'] + $TTL))) {
         unset($all_state[$key]);
       }
     }
@@ -187,7 +191,7 @@ class OidcStateService implements OidcStateServiceInterface {
         $this->encryptionProfile = $profile;
       }
       else {
-        $this->logger->error(t('Unable to locate %profile_name encryption profile.', array('%profile_name' => self::ENCRYPTION_PROFILE_NAME)));
+        $this->logger->error(t('Unable to locate %profile_name encryption profile.', ['%profile_name' => self::ENCRYPTION_PROFILE_NAME]));
         if (function_exists('ibm_apim_exit_trace')) {
           ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
         }
@@ -206,16 +210,16 @@ class OidcStateService implements OidcStateServiceInterface {
     }
     $all_state = $this->state->get(self::STATE_KEY);
     if (!isset($all_state)) {
-      $this->logger->debug(t('Unable to retrieve %key from state, initializing.', array('%key' => self::STATE_KEY)));
+      $this->logger->debug(t('Unable to retrieve %key from state, initializing.', ['%key' => self::STATE_KEY]));
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'initialized array');
       }
-      return array();
+      return [];
     }
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-    return unserialize($all_state);
+    return unserialize($all_state, ['allowed_classes' => FALSE]);
   }
 
   private function saveAllOidcState($state) {

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -26,10 +26,29 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class ApicUserDeleteForm extends ConfirmFormBase {
 
+  /**
+   * @var array
+   */
   protected $ownedOrgs;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
+
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
   protected $orgService;
+
+  /**
+   * @var \Drupal\auth_apic\Service\Interfaces\UserManagerInterface
+   */
   protected $userManager;
+
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
   protected $logger;
 
   public function __construct(UserUtils $user_utils,
@@ -53,66 +72,69 @@ class ApicUserDeleteForm extends ConfirmFormBase {
       $container->get('logger.channel.auth_apic')
     );
   }
-  
+
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'user_delete_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    
+
     $this->ownedOrgs = $this->userUtils->loadOwnedConsumerorgs();
 
     if (sizeof($this->ownedOrgs) > 1) {
       $this->logger->warning('Attempt to load ApicUserDeleteForm while owning more than 1 org.');
       drupal_set_message(t('You cannot delete your account because you own more than 1 organization.'), 'error');
 
-      $form = array();
-      $form['description'] = array(
+      $form = [];
+      $form['description'] = [
         '#markup' => t('You are the owner of multiple consumer organizations. 
                         You can delete your account only when you are the owner of a single organization. 
-                        Please transfer the ownership of, or delete, the other organizations before you delete your account.')
-      );
+                        Please transfer the ownership of, or delete, the other organizations before you delete your account.'),
+      ];
 
-      $form['actions'] = array(
-        '#type' => 'actions'
-      );
+      $form['actions'] = [
+        '#type' => 'actions',
+      ];
 
-      $form['actions']['cancel'] = array(
+      $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
         '#url' => Url::fromRoute('<front>'),
-        '#attributes' => array(
-          'class' => array(
-            'button'
-          )
-        )
-      );
+        '#attributes' => [
+          'class' => [
+            'button',
+          ],
+        ],
+      ];
 
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'own >1 org(not allowed)');
-      return $form;
+      $message = 'own >1 org(not allowed)';
+      $returnForm = $form;
     }
-    else if (sizeof($this->ownedOrgs) === 1){
+    elseif (sizeof($this->ownedOrgs) === 1) {
       // at this point which org the user in is irrelevant, if they own one org we need to delete it.
-      $form['org_to_delete']  = array(
+      $form['org_to_delete'] = [
         '#type' => 'value',
         '#value' => array_shift($this->ownedOrgs),
-      );
+      ];
 
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'own 1 org');
-      return parent::buildForm($form, $form_state);
+      $message = 'own 1 org';
+      $returnForm = parent::buildForm($form, $form_state);
     }
     else {
       // delete user is ok, no need to delete any org.
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'own 0 orgs');
-      return parent::buildForm($form, $form_state);
+      $message = 'own 0 orgs';
+      $returnForm = parent::buildForm($form, $form_state);
     }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $message);
+    return $returnForm;
   }
 
   /**
@@ -120,11 +142,12 @@ class ApicUserDeleteForm extends ConfirmFormBase {
    */
   public function getDescription() {
     if (sizeof($this->ownedOrgs) === 1) {
-      return $this->t('Are you sure you want to delete your account? This action cannot be undone. This action will also remove the organization you own. This permanently removes access to the organization, and all of its applications and subscriptions, for all members of the organization. Please note that once an organization has been deleted, it cannot be reactivated. You might want to consider changing ownership of your Developer organizations, before deleting your account.');
+      $description = $this->t('Are you sure you want to delete your account? This action cannot be undone. This action will also remove the organization you own. This permanently removes access to the organization, and all of its applications and subscriptions, for all members of the organization. Please note that once an organization has been deleted, it cannot be reactivated. You might want to consider changing ownership of your Developer organizations, before deleting your account.');
     }
     else {
-      return $this->t('Are you sure you want to delete your account? This action cannot be undone.');
+      $description = $this->t('Are you sure you want to delete your account? This action cannot be undone.');
     }
+    return $description;
   }
 
   /**
@@ -144,18 +167,21 @@ class ApicUserDeleteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     return Url::fromRoute('<front>');
   }
 
   /**
-   * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     if ($org_url = $form_state->getValue('org_to_delete')) {
-      $this->logger->info(t('Deleting %org_url as part of user deletion', array('%org_url' => $org_url)));
+      $this->logger->info(t('Deleting %org_url as part of user deletion', ['%org_url' => $org_url]));
       $org_delete_response = $this->orgService->delete($this->orgService->get($org_url)); // TODO - delete by url
 
       if ($org_delete_response->success()) {
@@ -163,7 +189,7 @@ class ApicUserDeleteForm extends ConfirmFormBase {
         drupal_set_message(t('Organization successfully deleted.'));
       }
       else {
-        $msg = t('Error deleting organization (%org_url). Please contact your system administrator for assistance.', array('%org_url' => $org_url));
+        $msg = t('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $org_url]);
         $this->logger->debug($msg);
         drupal_set_message($msg, 'error');
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'error deleting org');
@@ -192,8 +218,11 @@ class ApicUserDeleteForm extends ConfirmFormBase {
 
   /**
    * Provides a submit handler for the 'Cancel' button.
+   *
+   * @param $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
    */
-  public function deleteCancelSubmit($form, FormStateInterface $form_state) {
+  public function deleteCancelSubmit($form, FormStateInterface $form_state) : void{
     $form_state->setRedirect('<front>');
   }
 

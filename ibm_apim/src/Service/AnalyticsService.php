@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -22,6 +22,7 @@ use Psr\Log\LoggerInterface;
 class AnalyticsService {
 
   private $state;
+
   private $logger;
 
   public function __construct(StateInterface $state, LoggerInterface $logger) {
@@ -32,9 +33,9 @@ class AnalyticsService {
   /**
    * get all the analytics service definitions
    *
-   * @return NULL if an error occurs otherwise an array of the registries.
+   * @return NULL|array null if an error occurs otherwise an array of the registries.
    */
-  public function getAll() {
+  public function getAll(): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $analytics_services = $this->state->get('ibm_apim.analytics_services');
@@ -51,9 +52,10 @@ class AnalyticsService {
    * get a specific analytics service by url
    *
    * @param $key
-   * @return null|array
+   *
+   * @return null|AnalyticsServiceDefinition
    */
-  public function get($key) {
+  public function get($key): ?AnalyticsServiceDefinition {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     $analytics_service = NULL;
@@ -61,7 +63,7 @@ class AnalyticsService {
       // clear caches if config different to previous requests
       $current_data = $this->getAll();
 
-      if (isset($current_data) && isset($current_data[$key])) {
+      if (isset($current_data[$key])) {
         $analytics_service = $current_data[$key];
       }
     }
@@ -75,11 +77,11 @@ class AnalyticsService {
    *
    * @param $data array of analytics services
    */
-  public function updateAll($data) {
+  public function updateAll($data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $data);
 
     if (isset($data)) {
-      $analytics_services = array();
+      $analytics_services = [];
       foreach ($data as $next_service) {
         $analytics_service_object = new AnalyticsServiceDefinition();
         $analytics_service_object->setValues($next_service);
@@ -97,14 +99,14 @@ class AnalyticsService {
    * @param $key
    * @param $data
    */
-  public function update($key, $data) {
+  public function update($key, $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
-    if (isset($key) && isset($data)) {
+    if (isset($key, $data)) {
       $current_data = $this->getAll();
 
       if (!is_array($current_data)) {
-        $current_data = array();
+        $current_data = [];
       }
       $analytics_service_object = new AnalyticsServiceDefinition();
       $analytics_service_object->setValues($data);
@@ -120,16 +122,16 @@ class AnalyticsService {
    *
    * @param $key (analytics service url)
    */
-  public function delete($key) {
+  public function delete($key): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     if (isset($key)) {
       $current_data = $this->getAll();
 
       if (isset($current_data)) {
-        $new_data = array();
+        $new_data = [];
         foreach ($current_data as $url => $value) {
-          if ($url != $key) {
+          if ($url !== $key) {
             $new_data[$url] = $value;
           }
         }
@@ -143,10 +145,10 @@ class AnalyticsService {
   /**
    * Delete all current analytics services
    */
-  public function deleteAll() {
+  public function deleteAll(): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $this->state->set('ibm_apim.analytics_services', array());
+    $this->state->set('ibm_apim.analytics_services', []);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
@@ -164,7 +166,7 @@ class AnalyticsService {
     $default_service = NULL;
 
     $analytics_services = $this->getAll();
-    if(!empty($analytics_services)) {
+    if (!empty($analytics_services)) {
       $default_service = array_values($analytics_services)[0];
     }
 

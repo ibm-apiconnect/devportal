@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,7 +13,6 @@
 namespace Drupal\ibm_apim\Wizard;
 
 use Drupal\ctools\Wizard\FormWizardBase;
-use Drupal\Core\Form\FormStateInterface;
 
 class SubscriptionWizard extends FormWizardBase {
 
@@ -27,42 +26,42 @@ class SubscriptionWizard extends FormWizardBase {
   /**
    * {@inheritdoc}
    */
-  public function getMachineLabel() {
-    return $this->t('subscription_wizard');
+  public function getMachineLabel(): string {
+    return 'subscription_wizard';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getRouteName() {
+  public function getRouteName(): string {
     return 'ibm_apim.subscription_wizard.step';
   }
 
   /**
    * {@inheritdoc}
    */
-  function getOperations($cached_values) {
-    $steps = array();
+  public function getOperations($cached_values): array {
+    $steps = [];
 
-    $steps['chooseplan'] = array(
+    $steps['chooseplan'] = [
       'title' => t('Select Plan'),
-      'form' => 'Drupal\ibm_apim\Wizard\Subscription\ChoosePlanStep'
-    );
+      'form' => 'Drupal\ibm_apim\Wizard\Subscription\ChoosePlanStep',
+    ];
 
-    $steps['chooseapp'] = array(
+    $steps['chooseapp'] = [
       'title' => t('Select Application'),
-      'form' => 'Drupal\ibm_apim\Wizard\Subscription\ChooseApplicationStep'
-    );
+      'form' => 'Drupal\ibm_apim\Wizard\Subscription\ChooseApplicationStep',
+    ];
 
-    $steps['confirm'] = array(
+    $steps['confirm'] = [
       'title' => t('Subscribe'),
-      'form' => 'Drupal\ibm_apim\Wizard\Subscription\ConfirmSubscribe'
-    );
+      'form' => 'Drupal\ibm_apim\Wizard\Subscription\ConfirmSubscribe',
+    ];
 
-    $steps['summary'] = array(
+    $steps['summary'] = [
       'title' => t('Summary'),
-      'form' => 'Drupal\ibm_apim\Wizard\Subscription\SubscribeSummary'
-    );
+      'form' => 'Drupal\ibm_apim\Wizard\Subscription\SubscribeSummary',
+    ];
 
     return $steps;
   }

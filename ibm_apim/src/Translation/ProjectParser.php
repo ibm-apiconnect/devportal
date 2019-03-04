@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -31,16 +31,19 @@ namespace Drupal\ibm_apim\Translation;
 class ProjectParser {
 
   private $projects;
-  private $fulltranslations = array();
+
+  private $fulltranslations = [];
 
   /**
    * ProjectParser constructor.
    *
    * @param array $projects
    *   Array of ProjectInfo objects
+   *
+   * @throws \Exception
    */
   public function __construct(array $projects) {
-    if ($projects == NULL || sizeof($projects) == 0) {
+    if ($projects === NULL || sizeof($projects) === 0) {
       throw new \Exception('No projects to work with.');
     }
     $this->projects = $projects;
@@ -51,10 +54,10 @@ class ProjectParser {
   /**
    * Produce memories and requiretranslation objects for each project.
    */
-  private function process() {
+  private function process(): void {
 
     foreach ($this->projects as $project => $info) {
-      $translation_files = array();
+      $translation_files = [];
       echo "Project: $project \n";
       foreach ($info->getPoFiles() as $language => $poFile) {
         $translation_files[$language] = new TranslationSplitter($info->getPotFile(), $poFile, $language);
@@ -70,12 +73,12 @@ class ProjectParser {
    *
    * @throws \Exception No translations available.
    */
-  private function write() {
-    if (sizeof($this->fulltranslations) == 0) {
+  private function write(): void {
+    if (sizeof($this->fulltranslations) === 0) {
       throw new \Exception('No translations available when trying to write out files.');
     }
 
-    echo "Writing output ";
+    echo 'Writing output ';
 
     foreach ($this->fulltranslations as $project => $translations) {
       $output_dir = $this->createOutputDir($this->projects[$project]->getOutputDir());
@@ -94,13 +97,19 @@ class ProjectParser {
           new TranslationFileWriter($split_translations->getRequiredTranslations(), $output_dir . '/' . $project . '-translationrequired.' . $lang . '.po');
         }
       }
-      echo ".";
+      echo '.';
     }
 
-    echo "\nWriting output complete.\n";
+    echo '\nWriting output complete.\n';
 
   }
 
+  /**
+   * @param $location
+   *
+   * @return mixed
+   * @throws \Exception
+   */
   private function createOutputDir($location) {
     #echo "output dir is: " . $location . "\n";
     if (!is_dir($location)) {
@@ -108,9 +117,9 @@ class ProjectParser {
       if (!$success) {
         throw new \Exception('Unable to create output directory: ' . $location);
       }
-#      else {
-#        echo "Output directory $location created.\n";
-#      }
+      #      else {
+      #        echo "Output directory $location created.\n";
+      #      }
     }
 
     return $location;

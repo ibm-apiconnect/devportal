@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -32,9 +32,31 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
 
   use StringTranslationTrait;
   use UrlGeneratorTrait;
+
+  /**
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
   protected $moduleHandler;
+
+  /**
+   * @var \Drupal\auth_apic\Service\Interfaces\UserManagerInterface
+   */
   protected $userManager;
+
+  /**
+   * @var \Drupal\Core\Entity\EntityManagerInterface
+   */
   protected $entityManager;
+
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $account;
 
   /**
    * Constructs a ChangePasswordForm object.
@@ -53,6 +75,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
    *   The password hasher.
    * @param \Drupal\auth_apic\Service\Interfaces\UserManagerInterface $user_manager
    *   User manager.
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    */
   public function __construct(AccountInterface $account,
                               ModuleHandler $module_handler,
@@ -62,6 +85,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
                               PasswordInterface $password_hasher,
                               UserManagerInterface $user_manager,
                               EntityManagerInterface $entity_manager) {
+    parent::__construct($password_hasher, $account);
     $this->account = $account;
     $this->moduleHandler = $module_handler;
     $this->logger = $logger;
@@ -91,14 +115,14 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'apic_change_pwd_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, UserInterface $user = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, UserInterface $user = NULL): array {
 
     $this->user_profile = $account = $user;
     $user = $this->account;
@@ -112,16 +136,16 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
         $form['#form_id'] = $this->getFormId();
       }
       if (!isset($form['account'])) {
-        $form['account'] = array(
+        $form['account'] = [
           '#type' => 'container',
           '#weight' => -10,
-        );
+        ];
       }
       if (!isset($form['account']['roles'])) {
-        $form['account']['roles'] = array();
+        $form['account']['roles'] = [];
       }
       if (!isset($form['account']['roles']['#default_value'])) {
-        $form['account']['roles']['#default_value'] = array();
+        $form['account']['roles']['#default_value'] = [];
       }
 
       // If the password policy module is enabled, modify this form to show
@@ -133,28 +157,29 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       }
 
       if ($showPasswordPolicy) {
-        $form['account']['password_policy_status'] = array(
+        $form['account']['password_policy_status'] = [
           '#title' => $this->t('Password policies'),
           '#type' => 'table',
-          '#header' => array(t('Policy'), t('Status'), t('Constraint')),
+          '#header' => [t('Policy'), t('Status'), t('Constraint')],
           '#empty' => t('There are no constraints for the selected user roles'),
           '#weight' => '400',
           '#prefix' => '<div id="password-policy-status" class="hidden">',
           '#suffix' => '</div>',
           '#rows' => _password_policy_constraints_table($form, $form_state),
-        );
+        ];
 
         $form['auth-apic-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
       }
 
-    } elseif (!$user->isAnonymous()) {
+    }
+    elseif (!$user->isAnonymous()) {
       // Account information.
-      $form['account'] = array(
+      $form['account'] = [
         '#type' => 'container',
         '#weight' => -10,
-      );
+      ];
 
-      $form['account']['current_pass'] = array(
+      $form['account']['current_pass'] = [
         '#type' => 'password',
         '#title' => $this->t('Current password'),
         '#size' => 25,
@@ -163,21 +188,21 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
         // Do not let web browsers remember this password, since we are
         // trying to confirm that the person submitting the form actually
         // knows the current one.
-        '#attributes' => array('autocomplete' => 'off'),
+        '#attributes' => ['autocomplete' => 'off'],
         '#required' => TRUE,
-      );
+      ];
       $form_state->set('user', $account);
 
-      $form['account']['pass'] = array(
+      $form['account']['pass'] = [
         '#type' => 'password_confirm',
         '#required' => TRUE,
         '#description' => $this->t('Provide a password.'),
-        '#attributes' => array('autocomplete' => 'off'),
-      );
+        '#attributes' => ['autocomplete' => 'off'],
+      ];
 
       $form['#form_id'] = $this->getFormId();
-      $form['account']['roles'] = array();
-      $form['account']['roles']['#default_value'] = array();
+      $form['account']['roles'] = [];
+      $form['account']['roles']['#default_value'] = [];
 
       // If the password policy module is enabled, modify this form to show
       // the configured policy.
@@ -188,16 +213,16 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       }
 
       if ($showPasswordPolicy) {
-        $form['account']['password_policy_status'] = array(
+        $form['account']['password_policy_status'] = [
           '#title' => $this->t('Password policies'),
           '#type' => 'table',
-          '#header' => array(t('Policy'), t('Status'), t('Constraint')),
+          '#header' => [t('Policy'), t('Status'), t('Constraint')],
           '#empty' => t('There are no constraints for the selected user roles'),
           '#weight' => '400',
           '#prefix' => '<div id="password-policy-status" class="hidden">',
           '#suffix' => '</div>',
           '#rows' => _password_policy_constraints_table($form, $form_state),
-        );
+        ];
 
         $form['auth-apic-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
       }
@@ -214,7 +239,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     $user = $this->currentUser();
 
     $moduleService = \Drupal::service('module_handler');
@@ -224,20 +249,20 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       // add validator if relevant.
       if ($show_password_policy_status) {
         if (!isset($form)) {
-          $form = array();
+          $form = [];
         }
         if (!isset($form['account']['roles'])) {
-          $form['account']['roles'] = array();
+          $form['account']['roles'] = [];
         }
         if (!isset($form['account']['roles']['#default_value'])) {
-          $form['account']['roles']['#default_value'] = array();
+          $form['account']['roles']['#default_value'] = [];
         }
         _password_policy_user_profile_form_validate($form, $form_state);
       }
     }
 
     // special case original admin user who uses the drupal db.
-    if ($user->id() === '1') {
+    if ((int) $user->id() === 1) {
       $this->logger->notice('change password form validation for admin user');
       parent::validateForm($form, $form_state);
     }
@@ -250,34 +275,36 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     // redirect to the home page regardless of outcome.
     $form_state->setRedirect('<front>');
 
     $moduleService = \Drupal::service('module_handler');
     if ($moduleService->moduleExists('password_policy')) {
       if (!isset($form)) {
-        $form = array();
+        $form = [];
       }
       if (!isset($form['account']['roles'])) {
-        $form['account']['roles'] = array();
+        $form['account']['roles'] = [];
       }
       if (!isset($form['account']['roles']['#default_value'])) {
-        $form['account']['roles']['#default_value'] = array();
+        $form['account']['roles']['#default_value'] = [];
       }
       _password_policy_user_profile_form_submit($form, $form_state);
     }
 
     // special case original admin user who uses the drupal db.
-    if ($this->currentUser()->id() === '1') {
+    if ((int) $this->currentUser()->id() === 1) {
       $this->logger->notice('change password form submit for admin user');
       parent::submitForm($form, $form_state);
     }
     else {
+      $success = FALSE;
       $user = $this->entityManager->getStorage('user')->load($this->currentUser()->id());
-
-      $this->logger->notice('change password form submit for non-admin user');
-      $success = $this->userManager->changePassword($user, $form_state->getValue('current_pass'), $form_state->getValue('pass'));
+      if ($user !== NULL) {
+        $this->logger->notice('change password form submit for non-admin user');
+        $success = $this->userManager->changePassword($user, $form_state->getValue('current_pass'), $form_state->getValue('pass'));
+      }
       if ($success) {
         drupal_set_message(t('Password changed successfully'));
         //$form_state->setRedirect('user.logout');

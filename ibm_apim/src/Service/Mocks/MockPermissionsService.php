@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -22,9 +22,10 @@ use Psr\Log\LoggerInterface;
 class MockPermissionsService implements PermissionsServiceInterface {
 
   private $state;
+
   private $logger;
 
-  private $permissionsMap = array();
+  private $permissionsMap = [];
 
   public function __construct(StateInterface $state, LoggerInterface $logger) {
     $this->state = $state;
@@ -36,9 +37,9 @@ class MockPermissionsService implements PermissionsServiceInterface {
   /**
    * get all the permissions objects
    *
-   * @return NULL if an error occurs otherwise an array of the permissions objects.
+   * @return NULL|array null if an error occurs otherwise an array of the permissions objects.
    */
-  public function getAll() {
+  public function getAll(): ?array {
     return $this->permissionsMap;
   }
 
@@ -46,14 +47,15 @@ class MockPermissionsService implements PermissionsServiceInterface {
    * get a specific permissions object by url
    *
    * @param $key
+   *
    * @return null|array
    */
-  public function get($key) {
+  public function get($key): ?array {
     $perm = NULL;
     if (isset($key)) {
       $current_data = $this->getAll();
 
-      if (isset($current_data) && isset($current_data[$key])) {
+      if (isset($current_data[$key])) {
         $perm = $current_data[$key];
       }
     }
@@ -66,9 +68,9 @@ class MockPermissionsService implements PermissionsServiceInterface {
    *
    * @param $data array of permissions objects keyed on url
    */
-  public function updateAll($data) {
+  public function updateAll($data): void {
     if (isset($data)) {
-      $permissions = array();
+      $permissions = [];
       foreach ($data as $perm) {
         $permissions[$perm['url']] = $perm;
       }
@@ -82,8 +84,8 @@ class MockPermissionsService implements PermissionsServiceInterface {
    * @param $key
    * @param $data
    */
-  public function update($key, $data) {
-    if (isset($key) && isset($data)) {
+  public function update($key, $data): void {
+    if (isset($key, $data)) {
       $this->permissionsMap[$key] = $data;
     }
   }
@@ -93,11 +95,11 @@ class MockPermissionsService implements PermissionsServiceInterface {
    *
    * @param $key (url)
    */
-  public function delete($key) {
+  public function delete($key): void {
     if (isset($key)) {
       $new_data = [];
       foreach ($this->permissionsMap as $url => $value) {
-        if ($url != $key) {
+        if ($url !== $key) {
           $new_data[$url] = $value;
         }
       }
@@ -108,7 +110,7 @@ class MockPermissionsService implements PermissionsServiceInterface {
   /**
    * Delete all current permissions objects
    */
-  public function deleteAll() {
-    $this->permissionsMap =  array();
+  public function deleteAll(): void {
+    $this->permissionsMap = [];
   }
 }

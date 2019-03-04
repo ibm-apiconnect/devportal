@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,14 +13,14 @@
 
 namespace Drupal\Tests\auth_apic\Unit;
 
-use Drupal\consumerorg\ApicType\ConsumerOrg;
-use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\auth_apic\Rest\MeResponse;
+use Drupal\auth_apic\Rest\TokenResponse;
+use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\ibm_apim\ApicType\ApicUser;
-
-
+use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\Tests\auth_apic\Unit\UserManager\UserManagerTestBaseClass;
 use Prophecy\Argument;
+
 
 /**
  * @coversDefaultClass \Drupal\auth_apic\Service\ApicUserManager
@@ -29,15 +29,12 @@ use Prophecy\Argument;
 class LoginTest extends UserManagerTestBaseClass {
 
 
-
-
-
-  public function testUserManagerCreate() {
+  public function testUserManagerCreate(): void {
     $userManager = $this->createUserManager();
     $this->assertNotEmpty($userManager);
   }
 
-  public function testLoginFailNoBearerToken() {
+  public function testLoginFailNoBearerToken(): void {
     $user = new ApicUser();
     $user->setUsername('abc');
     $user->setPassword('123');
@@ -50,7 +47,7 @@ class LoginTest extends UserManagerTestBaseClass {
     $this->assertFalse($response->success());
   }
 
-  public function testLoginNoLocalUser() {
+  public function testLoginNoLocalUser(): void {
 
     $user = new ApicUser();
     $user->setUsername('abc');
@@ -62,7 +59,7 @@ class LoginTest extends UserManagerTestBaseClass {
 
     $extAuth = $this->externalAuth;
     $extAuth->load('abc', 'auth_apic')->willReturn(NULL);
-    $extAuth->register("abc", "auth_apic", Argument::any())->will(function ($args) use ($extAuth, $accountStub) {
+    $extAuth->register('abc', 'auth_apic', Argument::any())->will(function ($args) use ($extAuth, $accountStub) {
       // Redefine what load() will return as we now have a user.
       $extAuth->load('abc', 'auth_apic')->willReturn($accountStub);
       // and then return account for register as well
@@ -77,7 +74,7 @@ class LoginTest extends UserManagerTestBaseClass {
 
   }
 
-  public function testLoginWithLocalUser() {
+  public function testLoginWithLocalUser(): void {
 
     // Test starts here.
     $user = new ApicUser();
@@ -101,7 +98,30 @@ class LoginTest extends UserManagerTestBaseClass {
     $this->assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
   }
 
-  public function testLoginFailure() {
+  public function testLoginWithBlockedUser(): void {
+
+    // Test starts here.
+    $user = new ApicUser();
+    $user->setUsername('abc');
+    $user->setPassword('123');
+
+    $accountStub = $this->createBlockedAccountStub();
+    $this->primeForTest($user);
+
+    // we need to pass externalAuth into the closure so create a local var to pass through..
+    $extAuth = $this->externalAuth;
+    $extAuth->load('abc', 'auth_apic')->willReturn($accountStub);
+    $extAuth->userLoginFinalize(Argument::any(), 'abc', 'auth_apic')->willReturn($accountStub);
+
+    $extAuth->register(Argument::any())->shouldNotBeCalled();
+    $this->database->update(Argument::any())->shouldNotBeCalled();
+
+    $userManager = $this->createUserManager();
+    $response = $userManager->login($user);
+    $this->assertFalse($response->success(), 'Expected !success() return from login call');
+  }
+
+  public function testLoginFailure(): void {
 
     $user = new ApicUser();
     $user->setUsername('xxx');
@@ -110,8 +130,12 @@ class LoginTest extends UserManagerTestBaseClass {
     $meResponse = new MeResponse();
     $meResponse->setCode(401);
 
-    $this->mgmtServer->getAuth(Argument::any())->willReturn("aBearerToken");
-    $this->mgmtServer->getMe("aBearerToken")->willReturn($meResponse);
+    $tokenResponse = new TokenResponse();
+    $tokenResponse->setBearerToken('aBearerToken');
+    $tokenResponse->setExpiresIn('12345');
+
+    $this->mgmtServer->getAuth(Argument::any())->willReturn($tokenResponse);
+    $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
 
     $this->externalAuth->load(Argument::any())->shouldNotBeCalled();
     $this->externalAuth->register(Argument::any())->shouldNotBeCalled();
@@ -127,7 +151,7 @@ class LoginTest extends UserManagerTestBaseClass {
     $this->assertFalse($response->success(), 'Expected !success() return from login call');
   }
 
-  public function testLoginWithNewConsumerorg() {
+  public function testLoginWithNewConsumerorg(): void {
 
     // Test starts here.
     $user = new ApicUser();
@@ -139,7 +163,7 @@ class LoginTest extends UserManagerTestBaseClass {
 
     $extAuth = $this->externalAuth;
     $extAuth->load('abc', 'auth_apic')->willReturn(NULL);
-    $extAuth->register("abc", "auth_apic", Argument::any())->will(function ($args) use ($extAuth, $accountStub) {
+    $extAuth->register('abc', 'auth_apic', Argument::any())->will(function ($args) use ($extAuth, $accountStub) {
       // Redefine what load() will return as we now have a user.
       $extAuth->load('abc', 'auth_apic')->willReturn($accountStub);
       // and then return account for register as well
@@ -147,7 +171,7 @@ class LoginTest extends UserManagerTestBaseClass {
     });
     $extAuth->userLoginFinalize(Argument::any(), 'abc', 'auth_apic')->willReturn($accountStub);
 
-    $this->consumerorg->getList()->willReturn(array());
+    $this->consumerorg->getList()->willReturn([]);
     $this->consumerorg->get('/consumer-orgs/1234/5678/9abc')->willReturn(NULL);
     $this->consumerorg->createNode(Argument::any())->shouldBeCalled()->will(function () {
       $org = new ConsumerOrg();
@@ -157,11 +181,11 @@ class LoginTest extends UserManagerTestBaseClass {
       $org->setId('999');
       $this->get('/consumer-orgs/1234/5678/9abc')->willReturn($org);
     });
-//
-//    $this->logger->notice('Consumerorg @consumerorgname (url=@consumerorgurl) was not found in drupal database during login. It will be created.', array(
-//      '@consumerorgurl' => '/consumer-orgs/1234/5678/9abc',
-//      '@consumerorgname' => 'org13'
-//    ))->shouldBeCalled();
+    //
+    //    $this->logger->notice('Consumerorg @consumerorgname (url=@consumerorgurl) was not found in drupal database during login. It will be created.', array(
+    //      '@consumerorgurl' => '/consumer-orgs/1234/5678/9abc',
+    //      '@consumerorgname' => 'org13'
+    //    ))->shouldBeCalled();
 
     $userManager = $this->createUserManager();
     $response = $userManager->login($user);
@@ -172,14 +196,10 @@ class LoginTest extends UserManagerTestBaseClass {
   }
 
 
-
   // Helper Functions.
 
 
-
-
-
-  private function createMeResponse(ApicUser $user) {
+  private function createMeResponse(ApicUser $user): MeResponse {
 
     $meResponse = new MeResponse();
 
@@ -196,12 +216,11 @@ class LoginTest extends UserManagerTestBaseClass {
     $org->setTitle('org1');
     $org->setId('999');
 
-    $meResponse->getUser()->setConsumerorgs(array($org));
-//    $meResponse->getUser()->setMail('abc@me.com');
+    $meResponse->getUser()->setConsumerorgs([$org]);
+    //    $meResponse->getUser()->setMail('abc@me.com');
 
     return $meResponse;
   }
-
 
 
   /**
@@ -209,7 +228,7 @@ class LoginTest extends UserManagerTestBaseClass {
    *
    * @param $user
    */
-  private function primeForTest($user) {
+  private function primeForTest($user): void {
 
     $org = new ConsumerOrg();
     $org->setUrl('/consumer-orgs/1234/5678/9abc');
@@ -220,10 +239,14 @@ class LoginTest extends UserManagerTestBaseClass {
     $this->consumerorg->create(Argument::any())->shouldNotBeCalled();
     $this->consumerorg->createOrUpdateNode(Argument::any(), Argument::any())->willReturn(FALSE);
 
-    $this->mgmtServer->getAuth(Argument::any())->willReturn("aBearerToken");
-    $this->mgmtServer->setAuth(Argument::any())->willReturn("aBearerToken");
+    $tokenResponse = new TokenResponse();
+    $tokenResponse->setBearerToken('aBearerToken');
+    $tokenResponse->setExpiresIn('12345');
+
+    $this->mgmtServer->getAuth(Argument::any())->willReturn($tokenResponse);
+    $this->mgmtServer->setAuth(Argument::any())->willReturn('aBearerToken');
     $meResponse = $this->createMeResponse($user);
-    $this->mgmtServer->getMe("aBearerToken")->willReturn($meResponse);
+    $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
 
     $accountFields = $this->createAccountFields($user);
     $this->userService->getUserAccountFields($user)->willReturn($accountFields);

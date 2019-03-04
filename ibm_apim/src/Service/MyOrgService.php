@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -17,7 +17,7 @@ use Drupal\consumerorg\ApicType\Member;
 
 class MyOrgService {
 
-  public function __construct(){
+  public function __construct() {
 
   }
 
@@ -27,14 +27,14 @@ class MyOrgService {
    * @return array
    */
   public function prepareOrgMemberForDisplay(Member $orgmember): array {
-    $member = array();
+    $member = [];
     $user = $orgmember->getUser();
     $member['username'] = $user->getUsername();
 
     // name - will be used to identify the user in the myorg page.
     // we need to ensure we always have a value so fallback onto username if we don't have first/last name
-    if (!empty($user->getFirstName()) && !empty($user->getLastName())) {
-      $member['name'] = $user->getFirstName() . ' ' . $user->getLastName();
+    if (!empty($user->getFirstname()) && !empty($user->getLastname())) {
+      $member['name'] = $user->getFirstname() . ' ' . $user->getLastname();
     }
     else {
       $member['name'] = $member['username'];

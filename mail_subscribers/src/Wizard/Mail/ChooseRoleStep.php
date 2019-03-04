@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -20,40 +20,40 @@ class ChooseRoleStep extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'mail_subscribers_wizard_choose_role';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     $cached_values = $form_state->getTemporaryValue('wizard');
-    if ($cached_values['objectType'] == 'all') {
-      $form['intro'] = array(
+    if ($cached_values['objectType'] === 'all') {
+      $form['intro'] = [
         '#markup' => '<p>' . t('This wizard will email all consumer organizations. Each recipient will be sent an individual email.') . '</p>'
           . '<p>' . t('Specify below whether to email all members of each consumer organization or just their owners.') . '</p>',
-        '#weight' => 0
-      );
+        '#weight' => 0,
+      ];
     }
     else {
-      $form['intro'] = array(
+      $form['intro'] = [
         '#markup' => '<p>' . t('Specify below whether to email all members of each consumer organization or just their owners.') . '</p>',
-        '#weight' => 0
-      );
+        '#weight' => 0,
+      ];
     }
-    $options = array(
+    $options = [
       'owners' => t('Owners'),
-      'members' => t('Members')
-    );
+      'members' => t('Members'),
+    ];
 
-    $form['role'] = array(
+    $form['role'] = [
       '#type' => 'radios',
       '#title' => t('Recipient role'),
       '#options' => $options,
       '#description' => t('For each subscribing consumer organization email just the owner or all members?'),
       '#default_value' => 'owners',
-    );
+    ];
     return $form;
   }
 
@@ -72,7 +72,7 @@ class ChooseRoleStep extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $cached_values = $form_state->getTemporaryValue('wizard');
 
     $role = $form_state->getUserInput()['role'];

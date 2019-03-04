@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -32,17 +32,17 @@ use Prophecy\Argument;
  */
 class RegisterApicUserTest extends UserManagerTestBaseClass {
 
-  public function testRegisterApicUserAndre() {
+  public function testRegisterApicUserAndre(): void {
     $account = $this->createAndreAccount();
     $this->register($account);
   }
 
-  public function testRegisterApicUserAdmin() {
+  public function testRegisterApicUserAdmin(): void {
     $account = $this->createAdminAccount();
     $this->register($account);
   }
 
-  private function register($account) {
+  private function register($account): void {
 
     $user = $this->createUser();
 
@@ -50,8 +50,9 @@ class RegisterApicUserTest extends UserManagerTestBaseClass {
     $this->externalAuth->register('andre', 'auth_apic', $accountFields)->willReturn($account);
 
 
-    $this->logger->notice(Argument::any()) ->shouldNotBeCalled();
+    $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
+    $this->logger->debug("Registering @username in database as new account.",["@username" => "andre"])->shouldBeCalled();
 
     $user_manager = $this->createUserManager();
     $response = $user_manager->registerApicUser('andre', $accountFields);
@@ -61,17 +62,16 @@ class RegisterApicUserTest extends UserManagerTestBaseClass {
   }
 
 
-
   // Helper functions:
-  private function createUser() {
+  private function createUser(): ApicUser {
     $user = new ApicUser();
 
     $user->setUsername('andre');
     $user->setMail('andre@example.com');
     $user->setPassword('abc');
-    $user->setfirstName('Andre');
-    $user->setlastName('Andresson');
-    $user->setorganization('AndreOrg');
+    $user->setFirstname('Andre');
+    $user->setLastname('Andresson');
+    $user->setOrganization('AndreOrg');
 
 
     return $user;
@@ -79,7 +79,7 @@ class RegisterApicUserTest extends UserManagerTestBaseClass {
   }
 
   protected function createAndreAccount() {
-    $account = $this->prophet->prophesize('Drupal\user\Entity\User');
+    $account = $this->prophet->prophesize(\Drupal\user\Entity\User::class);
 
     $account->id()->willReturn(2);
     // important check here is that we null out the pw for andre.
@@ -90,14 +90,13 @@ class RegisterApicUserTest extends UserManagerTestBaseClass {
   }
 
   protected function createAdminAccount() {
-    $account = $this->prophet->prophesize('Drupal\user\Entity\User');
+    $account = $this->prophet->prophesize(\Drupal\user\Entity\User::class);
 
     $account->id()->willReturn(1);
     $account->setPassword(Argument::any())->shouldNotBeCalled();
 
     return $account->reveal();
   }
-
 
 
 }

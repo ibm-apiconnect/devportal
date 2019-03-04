@@ -1,7 +1,7 @@
 /********************************************************* {COPYRIGHT-TOP} ***
  * Licensed Materials - Property of IBM
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -227,16 +227,28 @@
         }
 
         // Single-stat widgets
-        anv.render(drupalSettings.anv.totalCallsWidget, document.getElementById('totalcalls'));
-        anv.render(drupalSettings.anv.totalErrorsWidget, document.getElementById('totalerrors'));
-        anv.render(drupalSettings.anv.averageResponseTimeWidget, document.getElementById('averageresponsetime'));
+        if (document.getElementById('totalcalls')) {
+          anv.render(drupalSettings.anv.totalCallsWidget, document.getElementById('totalcalls'));
+        }
+        if (document.getElementById('totalerrors')) {
+          anv.render(drupalSettings.anv.totalErrorsWidget, document.getElementById('totalerrors'));
+        }
+        if (document.getElementById('averageresponsetime')) {
+          anv.render(drupalSettings.anv.averageResponseTimeWidget, document.getElementById('averageresponsetime'));
+        }
 
         // Bar graph
-        anv.render(drupalSettings.anv.apiStatsWidget, document.getElementById('appAnalyticsSummary'));
+        if (document.getElementById('appAnalyticsSummary')) {
+          anv.render(drupalSettings.anv.apiStatsWidget, document.getElementById('appAnalyticsSummary'));
+        }
 
         // Meters
-        anv.render(drupalSettings.anv.apiCallsErrorsWidget, document.getElementById('subscriptionsWidget'));
-        anv.render(drupalSettings.anv.apiCallsWidget, document.getElementById('apicallhistory'));
+        if (document.getElementById('subscriptionsWidget')) {
+          anv.render(drupalSettings.anv.apiCallsErrorsWidget, document.getElementById('subscriptionsWidget'));
+        }
+        if (document.getElementById('apicallhistory')) {
+          anv.render(drupalSettings.anv.apiCallsWidget, document.getElementById('apicallhistory'));
+        }
       } else {
         console.log("drupalSettings.analytics.proxyURL is not set");
       }

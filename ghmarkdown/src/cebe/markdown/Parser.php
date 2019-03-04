@@ -17,16 +17,18 @@ use Drupal\Component\Utility\Xss;
  * @author Carsten Brandt <mail@cebe.cc>
  */
 abstract class Parser {
+
   /**
    * @var integer the maximum nesting level for language elements.
    */
   public $maximumNestingLevel = 32;
 
   /**
-   * @var string the current context the parser is in.
+   * @var array the current context the parser is in.
    * TODO remove in favor of absy
    */
   protected $context = [];
+
   /**
    * @var array these are "escapeable" characters. When using one of these prefixed with a
    * backslash, the character will be outputted without the backslash and is not interpreted
@@ -45,6 +47,7 @@ abstract class Parser {
    * This includes parsing block elements as well as inline elements.
    *
    * @param string $text the text to parse
+   *
    * @return string parsed markup
    */
   public function parse($text) {
@@ -69,6 +72,7 @@ abstract class Parser {
    * Parses a paragraph without block elements (block elements are ignored).
    *
    * @param string $text the text to parse
+   *
    * @return string parsed markup
    */
   public function parseParagraph($text) {
@@ -128,8 +132,10 @@ abstract class Parser {
   /**
    * Given a set of lines and an index of a current line it uses the registed block types to
    * detect the type of this line.
+   *
    * @param array $lines
    * @param integer $current
+   *
    * @return string name of the block type in lower case
    */
   protected function detectLineType($lines, $current) {
@@ -176,8 +182,10 @@ abstract class Parser {
 
   /**
    * Parses the block at current line by identifying the block type and parsing the content
+   *
    * @param $lines
    * @param $current
+   *
    * @return array Array of two elements, the first element contains the block,
    * the second contains the next line index to be parsed.
    */
@@ -204,6 +212,7 @@ abstract class Parser {
    *
    * @param $lines
    * @param $current
+   *
    * @return array
    */
   protected function consumeParagraph($lines, $current) {
@@ -228,6 +237,7 @@ abstract class Parser {
    * Render a paragraph block
    *
    * @param $block
+   *
    * @return string
    */
   protected function renderParagraph($block) {
@@ -280,6 +290,7 @@ abstract class Parser {
    *
    * Add all markers that are present in markdown.
    * Check is done to avoid iterations in parseInline(), good for huge markdown files
+   *
    * @param string $text
    */
   protected function prepareMarkers($text) {
@@ -304,6 +315,7 @@ abstract class Parser {
    * Parses inline elements of the language.
    *
    * @param string $text the inline text to parse.
+   *
    * @return array
    */
   protected function parseInline($text) {

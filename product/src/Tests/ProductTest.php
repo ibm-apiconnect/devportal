@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -33,7 +33,7 @@ class ProductTest extends WebTestBase {
    *
    * @var array
    */
-  static public $modules = array('ibm_apim', 'consumerorg', 'product');
+  static public $modules = ['ibm_apim', 'consumerorg', 'product'];
 
   /**
    * The installation profile to use with this test.
@@ -51,6 +51,7 @@ class ProductTest extends WebTestBase {
 
   /**
    * votingapi_widget seems to fail the strict validator
+   *
    * @var bool
    */
   protected $strictConfigSchema = FALSE;
@@ -58,7 +59,7 @@ class ProductTest extends WebTestBase {
   /**
    * Setup basic environment.
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
   }
@@ -66,7 +67,7 @@ class ProductTest extends WebTestBase {
   /**
    * Test that does nothing
    */
-  function testNoddy() {
+  function testNoddy(): void {
     $this->assertEqual(TRUE, TRUE, 'true');
   }
 

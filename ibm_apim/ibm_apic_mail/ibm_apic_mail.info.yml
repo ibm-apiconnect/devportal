@@ -1,0 +1,10 @@
+name: 'APIC Email Provider'
+type: module
+description: 'Send all Drupal emails via API Manager'
+package: 'IBM API Connect'
+core: 8.x
+version: 8.x-1.0.1
+project: ibm_apic_mail
+dependencies:
+- ibm_apim
+interface translation project: ibm_apic_mail

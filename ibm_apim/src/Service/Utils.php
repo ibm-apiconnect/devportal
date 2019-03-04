@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -26,8 +26,8 @@ class Utils {
    *
    * @return bool
    */
-  function startsWith($haystack, $needle) {
-    return $needle === "" || mb_strpos($haystack, $needle) === 0;
+  public function startsWith($haystack, $needle): bool {
+    return $needle === '' || mb_strpos($haystack, $needle) === 0;
   }
 
   /**
@@ -36,8 +36,8 @@ class Utils {
    *
    * @return bool
    */
-  function endsWith($haystack, $needle) {
-    return $needle === "" || mb_substr($haystack, -mb_strlen($needle)) === $needle;
+  public function endsWith($haystack, $needle): bool {
+    return $needle === '' || mb_substr($haystack, -mb_strlen($needle)) === $needle;
   }
 
   /**
@@ -49,10 +49,10 @@ class Utils {
    *
    * @return array|string
    */
-  function truncate_string($string, $length = 191, $append = "…") {
+  public function truncate_string($string, $length = 191, $append = '…') {
     $string = trim($string);
     if (mb_strlen($string) > $length) {
-      $string = mb_substr($string, 0, ($length - mb_strlen($append)));
+      $string = mb_substr($string, 0, $length - mb_strlen($append));
       $string = trim($string) . $append;
     }
     return $string;
@@ -65,20 +65,19 @@ class Utils {
    *
    * @return null|string
    */
-  function convert_lang_name($lang_name) {
+  public function convert_lang_name($lang_name): ?string {
+    $returnValue = NULL;
     if (isset($lang_name)) {
-      if (strtolower($lang_name) == 'zh_hans' || strtolower($lang_name) == 'zh-hans') {
+      $langNameLower = strtolower($lang_name);
+      if ($langNameLower === 'zh_hans' || $langNameLower === 'zh-hans') {
         $lang_name = 'zh-cn';
       }
-      elseif (strtolower($lang_name) == 'zh_hant' || strtolower($lang_name) == 'zh-hant') {
+      elseif ($langNameLower === 'zh_hant' || $langNameLower === 'zh-hant') {
         $lang_name = 'zh-tw';
       }
-      $lang_name = str_replace('_', '-', $lang_name);
-      return $lang_name;
+      $returnValue = str_replace('_', '-', $lang_name);
     }
-    else {
-      return NULL;
-    }
+    return $returnValue;
   }
 
   /**
@@ -88,20 +87,19 @@ class Utils {
    *
    * @return null|string
    */
-  function convert_lang_name_to_drupal($lang_name) {
+  public function convert_lang_name_to_drupal($lang_name): ?string {
+    $returnValue = NULL;
     if (isset($lang_name)) {
-      if (strtolower($lang_name) == 'zh-cn' || strtolower($lang_name) == 'zh_cn') {
+      $langNameLower = strtolower($lang_name);
+      if ($langNameLower === 'zh-cn' || $langNameLower === 'zh_cn') {
         $lang_name = 'zh_hans';
       }
-      elseif (strtolower($lang_name) == 'zh_tw' || strtolower($lang_name) == 'zh-tw') {
+      elseif ($langNameLower === 'zh_tw' || $langNameLower === 'zh-tw') {
         $lang_name = 'zh_hant';
       }
-      $lang_name = str_replace('-', '_', $lang_name);
-      return $lang_name;
+      $returnValue = str_replace('-', '_', $lang_name);
     }
-    else {
-      return NULL;
-    }
+    return $returnValue;
   }
 
   /**
@@ -110,9 +108,10 @@ class Utils {
    * @param int $n
    *
    * @return int
+   * @throws \Exception
    */
-  function random_num($n = 5) {
-    return rand(0, pow(10, $n));
+  public function random_num($n = 5): int {
+    return random_int(0, 10 ** $n);
   }
 
   /**
@@ -120,9 +119,9 @@ class Utils {
    *
    * @param $input
    *
-   * @return string
+   * @return string|null
    */
-  function base64_url_encode($input) {
+  public function base64_url_encode($input): ?string {
     return strtr(base64_encode($input), '+/=', '-_,');
   }
 
@@ -131,9 +130,9 @@ class Utils {
    *
    * @param $input
    *
-   * @return string
+   * @return string|null
    */
-  function base64_url_decode($input) {
+  public function base64_url_decode($input): ?string {
     return base64_decode(strtr($input, '-_,', '+/='));
   }
 
@@ -142,7 +141,7 @@ class Utils {
    *
    * @return array
    */
-  function get_bundled_modules() {
+  public function get_bundled_modules(): array {
     return $this->get_bundled_content('modules');
   }
 
@@ -151,7 +150,7 @@ class Utils {
    *
    * @return array
    */
-  function get_bundled_themes() {
+  public function get_bundled_themes(): array {
     return $this->get_bundled_content('themes');
   }
 
@@ -159,9 +158,11 @@ class Utils {
    * Returns a list of all the content of the specified type in the main shared modules directory (non-site specific)
    * e.g. pass 'themes' to get all the themes in drupal_root/themes or 'foo' to get drupal_root/foo content
    *
+   * @param $contentDirName
+   *
    * @return array
    */
-  private function get_bundled_content($contentDirName) {
+  private function get_bundled_content($contentDirName): array {
     $content_dir = DRUPAL_ROOT . '/' . $contentDirName;
     $dirs = array_filter(glob($content_dir . '/*', GLOB_ONLYDIR), 'is_dir');
     $content_list = [];
@@ -182,16 +183,16 @@ class Utils {
    *
    * @return string
    */
-  function format_number_locale($number, $decimals = NULL, $dec_point = NULL, $thousands_sep = NULL) {
-    if (is_null($decimals) || is_null($dec_point) || is_null($thousands_sep)) {
+  public function format_number_locale($number, $decimals = NULL, $dec_point = NULL, $thousands_sep = NULL): string {
+    if ($decimals === NULL || $dec_point === NULL || $thousands_sep === NULL) {
       $locale = localeconv();
-      if (is_null($decimals)) {
+      if ($decimals === NULL) {
         $decimals = $locale['int_frac_digits'];
       }
-      if (is_null($dec_point)) {
+      if ($dec_point === NULL) {
         $dec_point = $locale['decimal_point'];
       }
-      if (is_null($thousands_sep)) {
+      if ($thousands_sep === NULL) {
         $thousands_sep = $locale['thousands_sep'];
       }
     }
@@ -208,7 +209,7 @@ class Utils {
    *
    * @return array
    */
-  function analytics_translations() {
+  public function analytics_translations(): array {
 
     $translations = [
       'api_calls' => t('API Calls'),
@@ -246,12 +247,12 @@ class Utils {
    *
    * @param $path
    */
-  function file_delete_recursive($path) {
+  public function file_delete_recursive($path): void {
     if (isset($path)) {
       if (is_dir($path)) { // Path is directory
-        $files = scandir($path);
+        $files = scandir($path, SCANDIR_SORT_NONE);
         foreach ($files as $file) {
-          if ($file != '.' && $file != '..') {
+          if ($file !== '.' && $file !== '..') {
             $this->file_delete_recursive($path . '/' . $file); // Recursive call
           }
         }

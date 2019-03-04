@@ -65,8 +65,13 @@ mysql -e "set global pxc_strict_mode=DISABLED; set global show_compatibility_56=
 /usr/sbin/nginx &
 npid=$!
 
+mkdir -p /var/run/pid
+chmod a+rwx /var/run/pid
+
 /usr/sbin/php-fpm7.1 -OF &
 ppid=$!
+
+ln -fs /var/run/pid/php7.1-fpm.sock /var/run/php7.1-fpm.sock
 
 echo "Running test setup"
 #find the most recent platform

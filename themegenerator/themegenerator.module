@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -22,11 +22,9 @@ function themegenerator_cron() {
   $parentDir = PublicStream::basePath() . '/themegenerator/';
   if (file_exists($parentDir)) {
     $dir = new \DirectoryIterator($parentDir);
-    foreach ($dir as $fileinfo) {
-      if ($fileinfo->isDir() && !$fileinfo->isDot()) {
-        if (time() - $fileinfo->getMTime() > 86400 ) {
-          Generator::delTree($fileinfo->getFilename());
-        }
+    foreach ($dir as $fileInfo) {
+      if ($fileInfo->isDir() && !$fileInfo->isDot() && (time() - $fileInfo->getMTime() > 86400)) {
+        Generator::delTree($fileInfo->getFilename());
       }
     }
   }

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -15,21 +15,21 @@ namespace Drupal\consumerorg\ApicType;
 
 class Role {
 
-  private $id;
+  public $id;
 
-  private $url;
+  public $url;
 
-  private $name;
+  public $name;
 
-  private $title;
+  public $title;
 
-  private $summary;
+  public $summary;
 
-  private $permissions;
+  public $permissions;
 
-  private $scope;
+  public $scope;
 
-  private $org_url;
+  public $org_url;
 
   /**
    * @return string
@@ -46,9 +46,9 @@ class Role {
   }
 
   /**
-   * @return string
+   * @return string|null
    */
-  public function getUrl(): string {
+  public function getUrl(): ?string {
     return $this->url;
   }
 
@@ -60,9 +60,9 @@ class Role {
   }
 
   /**
-   * @return string
+   * @return string|null
    */
-  public function getName(): string {
+  public function getName(): ?string {
     return $this->name;
   }
 
@@ -116,7 +116,7 @@ class Role {
    */
   public function setPermissions($permissions = NULL): void {
     $permission_names = [];
-    if ($permissions !== null && !empty($permissions)) {
+    if ($permissions !== NULL && !empty($permissions)) {
       foreach ($permissions as $permission) {
         if (strpos($permission, '/') > -1) {
           $permission_name = \Drupal::service('ibm_apim.permissions')->get($permission)['name'];
@@ -164,4 +164,69 @@ class Role {
     $this->org_url = $org_url;
   }
 
+  /**
+   * convert array to object
+   *
+   * @param array $content
+   */
+  public function createFromArray(array $content): void {
+    if (array_key_exists('id', $content)) {
+      $this->setId($content['id']);
+    }
+    if (array_key_exists('url', $content)) {
+      $this->setUrl($content['url']);
+    }
+    if (array_key_exists('name', $content)) {
+      $this->setName($content['name']);
+    }
+    if (array_key_exists('title', $content)) {
+      $this->setTitle($content['title']);
+    }
+    if (array_key_exists('summary', $content)) {
+      $this->setSummary($content['summary']);
+    }
+    if (array_key_exists('permissions', $content)) {
+      $this->setPermissions($content['permissions']);
+    }
+    if (array_key_exists('scope', $content)) {
+      $this->setScope($content['scope']);
+    }
+    if (array_key_exists('org_url', $content)) {
+      $this->setOrgUrl($content['org_url']);
+    }
+  }
+
+  /**
+   * Convert object to array
+   *
+   * @return array
+   */
+  public function toArray(): array {
+    $content = [];
+    if ($this->id !== NULL) {
+      $content['id'] = $this->id;
+    }
+    if ($this->url !== NULL) {
+      $content['url'] = $this->url;
+    }
+    if ($this->name !== NULL) {
+      $content['name'] = $this->name;
+    }
+    if ($this->title !== NULL) {
+      $content['title'] = $this->title;
+    }
+    if ($this->summary !== NULL) {
+      $content['summary'] = $this->summary;
+    }
+    if ($this->permissions !== NULL) {
+      $content['permissions'] = $this->permissions;
+    }
+    if ($this->scope !== NULL) {
+      $content['scope'] = $this->scope;
+    }
+    if ($this->org_url !== NULL) {
+      $content['org_url'] = $this->org_url;
+    }
+    return $content;
+  }
 }

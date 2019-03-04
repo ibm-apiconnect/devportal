@@ -1,29 +1,29 @@
-name: 'API'
+name: API
 type: module
-description: 'Provides the API node content type'
-package: 'IBM API Connect'
+description: Provides the API node content type
+package: IBM API Connect
 core: 8.x
-version: '8.x-1.0.3'
-project: 'apic_api'
+version: 8.x-1.0.5
+project: apic_api
 dependencies:
-  - path
-  - file
-  - image
-  - options
-  - comment
-  - ibm_apim:ibm_apim
-  - consumerorg:consumerorg
-  - product:product
-  - apic_app:apic_app
-  - node
-  - user
-  - votingapi_widgets
-  - views_autocomplete_filters
-  - cshs
-  - taxonomy
-  - views
-  - masonry_views
-  - masonry
-  - better_exposed_filters
-  - smart_trim
-'interface translation project': apic_api
+- path
+- file
+- image
+- options
+- comment
+- ibm_apim:ibm_apim
+- consumerorg:consumerorg
+- product:product
+- apic_app:apic_app
+- node
+- user
+- votingapi_widgets
+- views_autocomplete_filters
+- cshs
+- taxonomy
+- views
+- masonry_views
+- masonry
+- better_exposed_filters
+- smart_trim
+interface translation project: apic_api

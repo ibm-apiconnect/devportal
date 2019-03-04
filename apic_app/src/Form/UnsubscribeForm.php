@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -19,9 +19,10 @@ use Drupal\apic_app\Subscription;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
-use Drupal\node\Entity\Node;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -44,8 +45,14 @@ class UnsubscribeForm extends ConfirmFormBase {
    */
   protected $subId;
 
+  /**
+   * @var \Drupal\apic_app\Service\ApplicationRestInterface
+   */
   protected $restService;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
   /**
@@ -70,14 +77,14 @@ class UnsubscribeForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'application_unsubscribe_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $subId = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $subId = NULL): array {
     $this->node = $appId;
     $this->subId = Html::escape($subId);
     $form = parent::buildForm($form, $form_state);
@@ -99,58 +106,64 @@ class UnsubscribeForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
+  public function getDescription(): TranslatableMarkup {
     return $this->t('Are you sure you want to unsubscribe from this plan?');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfirmText() {
+  public function getConfirmText(): TranslatableMarkup {
     return $this->t('Unsubscribe');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getQuestion() {
+  public function getQuestion(): TranslatableMarkup {
     return $this->t('Unsubscribe %title from this plan?', ['%title' => $this->node->title->value]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
-    if(isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
-      return Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
-    } else {
-      return Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
+    if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
+      $url = Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
     }
+    else {
+      $url = Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
+    }
+    return $url;
   }
 
   /**
-   * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appId = $this->node->application_id->value;
     $url = $this->node->apic_url->value . '/subscriptions/' . $this->subId;
     $result = $this->restService->deleteSubscription($url);
+    $productUrl = '';
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
-      $planname = '';
+      $planName = '';
       // get details of the subscription before removing it
       if (!empty($this->node->application_subscriptions->getValue())) {
-        $existingsubs = array();
-        foreach($this->node->application_subscriptions->getValue() as $nextSub){
-          $existingsubs[] = unserialize($nextSub['value']);
+        $existingSubs = [];
+        foreach ($this->node->application_subscriptions->getValue() as $nextSub) {
+          $existingSubs[] = unserialize($nextSub['value'], ['allowed_classes' => FALSE]);
         }
-        if (is_array($existingsubs)) {
-          foreach ($existingsubs as $sub) {
-            if (isset($sub['id']) && $sub['id'] == $this->subId) {
+        if (is_array($existingSubs)) {
+          foreach ($existingSubs as $sub) {
+            if (isset($sub['id']) && (string) $sub['id'] === (string) $this->subId) {
               // found the one we want
-              $product_url = $sub['product_url'];
-              $planname = $sub['plan'];
+              $productUrl = $sub['product_url'];
+              $planName = $sub['plan'];
               break;
             }
           }
@@ -159,14 +172,14 @@ class UnsubscribeForm extends ConfirmFormBase {
       // Find name and version of product
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product');
-      $query->condition('apic_url.value', $product_url);
+      $query->condition('apic_url.value', $productUrl);
       $nids = $query->execute();
       if (isset($nids) && !empty($nids)) {
         $nids = array_values($nids);
       }
-      if(count($nids) < 1){
-        \Drupal::logger('apic_app')->warning('Unable to find product name and version for @producturl. Found @size matches in db.',
-          array('@producturl' => $product_url, '@size' => count($nids)));
+      if (count($nids) < 1) {
+        \Drupal::logger('apic_app')->warning('Unable to find product name and version for @productUrl. Found @size matches in db.',
+          ['@productUrl' => $productUrl, '@size' => count($nids)]);
         $productTitle = 'unknown';
         $theProduct = NULL;
       }
@@ -178,20 +191,20 @@ class UnsubscribeForm extends ConfirmFormBase {
       Subscription::delete($this->node->apic_url->value, $this->subId);
 
       drupal_set_message(t('Application unsubscribed successfully.'));
-      $current_user = \Drupal::currentUser();
-      \Drupal::logger('apic_app')->notice('Application @appname unsubscribed from @product @plan plan by @username', [
-        '@appname' => $this->node->getTitle(),
+      $currentUser = \Drupal::currentUser();
+      \Drupal::logger('apic_app')->notice('Application @appName unsubscribed from @product @plan plan by @username', [
+        '@appName' => $this->node->getTitle(),
         '@product' => $productTitle,
-        '@plan' => $planname,
-        '@username' => $current_user->getAccountName(),
+        '@plan' => $planName,
+        '@username' => $currentUser->getAccountName(),
       ]);
       // Calling all modules implementing 'hook_apic_app_unsubscribe':
       \Drupal::moduleHandler()->invokeAll('apic_app_unsubscribe', [
         'node' => $this->node,
         'data' => $result->data,
         'appId' => $appId,
-        'product_url' => $product_url,
-        'plan' => $planname,
+        'product_url' => $productUrl,
+        'plan' => $planName,
         'subId' => $this->subId,
       ]);
 
@@ -200,7 +213,11 @@ class UnsubscribeForm extends ConfirmFormBase {
       if ($moduleHandler->moduleExists('rules')) {
         // Set the args twice on the event: as the main subject but also in the
         // list of arguments.
-        $event = new SubscriptionDeleteEvent($this->node, $theProduct, $planname, ['application' => $this->node, 'product' => $theProduct, 'planName' => $planname]);
+        $event = new SubscriptionDeleteEvent($this->node, $theProduct, $planName, [
+          'application' => $this->node,
+          'product' => $theProduct,
+          'planName' => $planName,
+        ]);
         $event_dispatcher = \Drupal::service('event_dispatcher');
         $event_dispatcher->dispatch(SubscriptionDeleteEvent::EVENT_NAME, $event);
       }

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -38,6 +38,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class AppCostBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
   public function __construct(array $configuration, $plugin_id, $plugin_definition, UserUtils $userUtils) {
@@ -52,24 +55,24 @@ class AppCostBlock extends BlockBase implements ContainerFactoryPluginInterface 
   /**
    * {@inheritdoc}
    */
-  protected function blockAccess(AccountInterface $account) {
+  protected function blockAccess(AccountInterface $account) : AccessResult{
     $current_user = \Drupal::currentUser();
 
-    return AccessResult::allowedIf(!$current_user->isAnonymous() && $current_user->id() != 1);
+    return AccessResult::allowedIf(!$current_user->isAnonymous() && (int) $current_user->id() !== 1);
   }
 
   public function getCacheContexts() {
     //if you depends on \Drupal::routeMatch()
     //you must set context of this block with 'route' context tag.
     //Every new route this block will rebuild
-    return Cache::mergeContexts(parent::getCacheContexts(), array('route'));
+    return Cache::mergeContexts(parent::getCacheContexts(), ['route']);
   }
 
   public function getCacheTags() {
     //With this when your node change your block will rebuild
     if ($node = \Drupal::routeMatch()->getParameter('node')) {
       //if there is node add its cachetag
-      return Cache::mergeTags(parent::getCacheTags(), array('node:' . $node->id()));
+      return Cache::mergeTags(parent::getCacheTags(), ['node:' . $node->id()]);
     }
     else {
       //Return default tags instead.
@@ -80,12 +83,12 @@ class AppCostBlock extends BlockBase implements ContainerFactoryPluginInterface 
   /**
    * {@inheritdoc}
    */
-  public function build() {
+  public function build(): array {
     return [
       '#theme' => 'app_cost',
-      '#attached' => array(
-        'library' => array('apic_app/basic', 'apic_app/app_cost'),
-      ),
+      '#attached' => [
+        'library' => ['apic_app/basic', 'apic_app/app_cost'],
+      ],
     ];
   }
 }

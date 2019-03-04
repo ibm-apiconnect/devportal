@@ -11,8 +11,10 @@ namespace Drupal\ghmarkdown\cebe\markdown\inline;
  * Adds strikeout inline elements
  */
 trait StrikeoutTrait {
+
   /**
    * Parses the strikethrough feature.
+   *
    * @marker ~~
    */
   protected function parseStrike($markdown) {
@@ -31,4 +33,8 @@ trait StrikeoutTrait {
   protected function renderStrike($block) {
     return '<del>' . $this->renderAbsy($block[1]) . '</del>';
   }
+
+  abstract protected function parseInline($text);
+
+  abstract protected function renderAbsy($blocks);
 }

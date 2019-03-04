@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -105,7 +105,7 @@ class IbmApimController extends ControllerBase {
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $userHasAppManage = $userUtils->checkHasPermission('app:manage');
     $config = \Drupal::config('ibm_apim.settings');
-    $show_register_app = $config->get('show_register_app');
+    $show_register_app = (boolean) $config->get('show_register_app');
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return array(

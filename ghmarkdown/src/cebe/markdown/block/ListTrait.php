@@ -11,6 +11,7 @@ namespace Drupal\ghmarkdown\cebe\markdown\block;
  * Adds the list blocks
  */
 trait ListTrait {
+
   /**
    * @var bool enable support `start` attribute of ordered lists. This means that lists
    * will start with the number you actually type in markdown and not the HTML generated one.
@@ -22,7 +23,7 @@ trait ListTrait {
    * identify a line as the beginning of an ordered list.
    */
   protected function identifyOl($line) {
-    return (($l = $line[0]) > '0' && $l <= '9' || $l === ' ') && preg_match('/^ {0,3}\d+\.[ \t]/', $line);
+    return ((($l = $line[0]) > '0' && $l <= '9') || $l === ' ') && preg_match('/^ {0,3}\d+\.[ \t]/', $line);
   }
 
   /**
@@ -31,7 +32,7 @@ trait ListTrait {
   protected function identifyUl($line) {
     $l = $line[0];
     return ($l === '-' || $l === '+' || $l === '*') && (isset($line[1]) && (($l1 = $line[1]) === ' ' || $l1 === "\t")) ||
-    ($l === ' ' && preg_match('/^ {0,3}[\-\+\*][ \t]/', $line));
+      ($l === ' ' && preg_match('/^ {0,3}[\-\+\*][ \t]/', $line));
   }
 
   /**
@@ -75,7 +76,7 @@ trait ListTrait {
     for ($i = $current, $count = count($lines); $i < $count; $i++) {
       $line = $lines[$i];
       // match list marker on the beginning of the line
-      $pattern = ($type == 'ol') ? '/^( {0,' . $leadSpace . '})(\d+)\.[ \t]+/' : '/^( {0,' . $leadSpace . '})\\' . $marker . '[ \t]+/';
+      $pattern = ($type === 'ol') ? '/^( {0,' . $leadSpace . '})(\d+)\.[ \t]+/' : '/^( {0,' . $leadSpace . '})\\' . $marker . '[ \t]+/';
       if (preg_match($pattern, $line, $matches)) {
         if (($len = substr_count($matches[0], "\t")) > 0) {
           $indent = str_repeat("\t", $len);
@@ -90,7 +91,7 @@ trait ListTrait {
           $leadSpace = strlen($matches[1]) + 1;
         }
 
-        if ($type == 'ol' && $this->keepListStartNumber) {
+        if ($type === 'ol' && $this->keepListStartNumber) {
           // attr `start` for ol
           if (!isset($block['attr']['start']) && isset($matches[2])) {
             $block['attr']['start'] = $matches[2];
@@ -120,7 +121,7 @@ trait ListTrait {
         elseif (strncmp($lines[$i + 1], $indent, $len) === 0 || !empty($lines[$i + 1]) && $lines[$i + 1][0] == "\t") {
           $block['items'][$item][] = $line;
           $nextLine = $lines[$i + 1][0] === "\t" ? substr($lines[$i + 1], 1) : substr($lines[$i + 1], $len);
-          $block['lazyItems'][$item] = !method_exists($this, 'identifyReference') || !$this->identifyReference($nextLine);
+          $block['lazyItems'][$item] = empty($nextLine) || !method_exists($this, 'identifyReference') || !$this->identifyReference($nextLine);
 
           // everything else ends the list
         }
@@ -137,6 +138,11 @@ trait ListTrait {
         }
         $block['items'][$item][] = $line;
         $lastLineEmpty = FALSE;
+      }
+
+      // if next line is <hr>, end the list
+      if (!empty($lines[$i + 1]) && method_exists($this, 'identifyHr') && $this->identifyHr($lines[$i + 1])) {
+        break;
       }
     }
 
@@ -180,7 +186,9 @@ trait ListTrait {
 
   /**
    * Return html attributes string from [attrName => attrValue] list
+   *
    * @param array $attributes the attribute name-value pairs.
+   *
    * @return string
    */
   private function generateHtmlAttributes($attributes) {

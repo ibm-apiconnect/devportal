@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -22,12 +22,7 @@ class TokenResponse extends RestResponse {
 
   private $bearer_token;
 
-  /**
-   * Token Response constructor.
-   */
-  public function __construct() {
-    parent::__construct();
-  }
+  private $expires_in;
 
   /**
    * @return mixed
@@ -39,8 +34,21 @@ class TokenResponse extends RestResponse {
   /**
    * @param mixed $bearer_token
    */
-  public function setBearerToken($bearer_token) {
+  public function setBearerToken($bearer_token): void {
     $this->bearer_token = $bearer_token;
   }
 
+  /**
+   * @return mixed
+   */
+  public function getExpiresIn() {
+    return $this->expires_in;
+  }
+
+  /**
+   * @param mixed $expires_in
+   */
+  public function setExpiresIn($expires_in): void {
+    $this->expires_in = $expires_in;
+  }
 }

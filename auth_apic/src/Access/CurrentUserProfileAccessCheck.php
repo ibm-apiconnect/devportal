@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -31,13 +31,14 @@ class CurrentUserProfileAccessCheck implements AccessInterface {
    * @return AccessResult
    *   True if admin and not using read only registry
    */
-  public function access(AccountInterface $account, User $user) {
+  public function access(AccountInterface $account, User $user): AccessResult {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    if ($account->id() == $user->id()) {
-      $allowed = true;
-    } else {
-      $allowed = false;
+    if ((int) $account->id() === (int) $user->id()) {
+      $allowed = TRUE;
+    }
+    else {
+      $allowed = FALSE;
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $allowed);
     return AccessResult::allowedIf($allowed);

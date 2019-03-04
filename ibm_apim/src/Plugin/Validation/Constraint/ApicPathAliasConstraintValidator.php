@@ -3,12 +3,13 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
 namespace Drupal\ibm_apim\Plugin\Validation\Constraint;
 
 use Symfony\Component\Validator\Constraint;
@@ -22,7 +23,7 @@ class ApicPathAliasConstraintValidator extends ConstraintValidator {
   /**
    * {@inheritdoc}
    */
-  public function validate($items, Constraint $constraint) {
+  public function validate($items, Constraint $constraint): void {
     if (!isset($items) || empty($items)) {
       return NULL;
     }

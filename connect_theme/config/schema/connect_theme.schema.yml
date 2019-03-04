@@ -1,5 +1,0 @@
-# Schema for the theme setting configuration file of the connect_theme theme.
-
-connect_theme.settings:
-  type: theme_settings
-  label: 'connect_theme settings'

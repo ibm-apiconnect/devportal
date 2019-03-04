@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -31,16 +31,17 @@ use Drupal\node\Entity\Node;
 class SocialBlock extends BlockBase {
 
   private $forumVocabularies;
+
   private $forumTermIds;
 
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
 
     $default = [
       'numberOfTiles' => 3,
-      'forumsList' => array(),
+      'forumsList' => [],
       'twitterSearchBy' => 0,
       'twitterSearchParameter' => 'IBMintegration',
       'twitterTweetTypes' => 0,
@@ -55,29 +56,29 @@ class SocialBlock extends BlockBase {
    * This is the form that is displayed when placing or editting a social block
    */
 
-  public function blockForm($form, FormStateInterface $form_state) {
+  public function blockForm($form, FormStateInterface $form_state): array {
 
     // For the forums display, we need to do some processing
     // The 'tableselect' form type, needs a header element
-    $header = array(
-      'forum' => array(
+    $header = [
+      'forum' => [
         'data' => $this->t('Forum'),
         'field' => 's.forum',
-        'sort' => 'asc'
-      ),
-      'description' => array(
+        'sort' => 'asc',
+      ],
+      'description' => [
         'data' => $this->t('Description'),
-        'field' => 's.description'
-      ),
-      'topics' => array(
+        'field' => 's.description',
+      ],
+      'topics' => [
         'data' => $this->t('Number of Topics'),
-        'field' => 's.topics'
-      ),
-      'posts' => array(
+        'field' => 's.topics',
+      ],
+      'posts' => [
         'data' => $this->t('Number of Posts'),
-        'field' => 's.posts'
-      )
-    );
+        'field' => 's.posts',
+      ],
+    ];
 
     // We need to get a list of the forums and forum topic ids
     // These functions live in socialblock.module in the root directory
@@ -87,37 +88,37 @@ class SocialBlock extends BlockBase {
     $container = \Drupal::getContainer();
 
     // Build up an array of forums and topics to display in the form (needed later)
-    $options = array();
-    $selectedForumDefaults = array();
-    if (isset($this->forumVocabularies)) {
+    $options = [];
+    $selectedForumDefaults = [];
+    if ($this->forumVocabularies !== NULL && $container !== NULL) {
 
-      foreach ($this->forumVocabularies as $forum_vocabulary) {
+      foreach ($this->forumVocabularies as $forumVocabulary) {
 
         $forumManager = $container->get('forum_manager');
-        $forumTopics = $forumManager->getTopics($forum_vocabulary->tid, $container->get('current_user'));
+        $forumTopics = $forumManager->getTopics($forumVocabulary->tid, $container->get('current_user'));
 
-        $options[$forum_vocabulary->tid] = array(
-          'forum' => $forum_vocabulary->name,
-          'description' => strip_tags($forum_vocabulary->description__value),
+        $options[$forumVocabulary->tid] = [
+          'forum' => $forumVocabulary->name,
+          'description' => strip_tags($forumVocabulary->description__value),
           'topics' => sizeof($forumTopics['topics']),
-          'posts' => -1
-        );
+          'posts' => -1,
+        ];
 
         // if this forum id is in the forumsList array, it was previously enabled when this block was configured
         // so the form needs to render with it selected now.
-        $selectedForumDefaults[$forum_vocabulary->tid] = in_array($forum_vocabulary->tid, $this->configuration['forumsList']);
+        $selectedForumDefaults[$forumVocabulary->tid] = \in_array($forumVocabulary->tid, $this->configuration['forumsList'], FALSE);
       }
     }
 
     // Start laying out the form
-    $form['numberOfTiles'] = array(
+    $form['numberOfTiles'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Number of tiles to display'),
       '#default_value' => $this->configuration['numberOfTiles'],
       '#required' => TRUE,
-    );
+    ];
 
-    $form['forumsList'] = array(
+    $form['forumsList'] = [
       '#type' => 'tableselect',
       '#title' => $this->t('Forums to include in display'),
       '#header' => $header,
@@ -125,42 +126,42 @@ class SocialBlock extends BlockBase {
       '#default_value' => $selectedForumDefaults,
       '#empty' => $this->t('No forums available'),
       '#multiple' => TRUE,
-    );
+    ];
 
-    $form['twitterConfig'] = array(
+    $form['twitterConfig'] = [
       '#type' => 'container',
-      '#attributes' => array(//          'class' => array('container-inline')
-      ),
-    );
+      '#attributes' => [// 'class' => array('container-inline')
+      ],
+    ];
 
-    $form['twitterConfig']['twitterSearchBy'] = array(
+    $form['twitterConfig']['twitterSearchBy'] = [
       '#type' => 'select',
       '#title' => $this->t('Get tweets from'),
-      '#options' => array(
+      '#options' => [
         0 => $this->t('User'),
-        1 => $this->t('Search term')
-      ),
+        1 => $this->t('Search term'),
+      ],
       '#default_value' => $this->configuration['twitterSearchBy'],
       '#required' => TRUE,
-    );
+    ];
 
-    $form['twitterConfig']['twitterSearchParameter'] = array(
+    $form['twitterConfig']['twitterSearchParameter'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Twitter search parameter'),
       '#default_value' => $this->configuration['twitterSearchParameter'],
       '#required' => TRUE,
-    );
+    ];
 
-    $form['twitterConfig']['twitterTweetTypes'] = array(
+    $form['twitterConfig']['twitterTweetTypes'] = [
       '#type' => 'select',
       '#title' => $this->t('Types of tweets to display'),
-      '#options' => array(
+      '#options' => [
         0 => $this->t('Tweets'),
         1 => $this->t('Tweets & replies'),
-      ),
+      ],
       '#default_value' => $this->configuration['twitterTweetTypes'],
       '#required' => TRUE,
-    );
+    ];
 
     return $form;
 
@@ -178,18 +179,18 @@ class SocialBlock extends BlockBase {
     $this->configuration['twitterSearchParameter'] = $form_state->getValue(['twitterConfig', 'twitterSearchParameter']);
     $this->configuration['twitterTweetTypes'] = $form_state->getValue(['twitterConfig', 'twitterTweetTypes']);
     $uuid = $this->getConfiguration()['uuid'];
-    $config_instances = \Drupal::state()->get('socialblock.config');
-    if (!isset($config_instances)) {
-      $config_instances = array();
+    $configInstances = \Drupal::state()->get('socialblock.config');
+    if ($configInstances === NULL) {
+      $configInstances = [];
     }
-    $config_instances[$uuid] = array(
+    $configInstances[$uuid] = [
       'numberOfTiles' => $this->configuration['numberOfTiles'],
       'forumsList' => $this->configuration['forumsList'],
       'twitterSearchBy' => $this->configuration['twitterSearchBy'],
       'twitterSearchParameter' => $this->configuration['twitterSearchParameter'],
-      'twitterTweetTypes' => $this->configuration['twitterTweetTypes']
-    );
-    \Drupal::state()->set('socialblock.config', $config_instances);
+      'twitterTweetTypes' => $this->configuration['twitterTweetTypes'],
+    ];
+    \Drupal::state()->set('socialblock.config', $configInstances);
 
     // run cron to re-populate the cache
     socialblock_cron();
@@ -199,62 +200,67 @@ class SocialBlock extends BlockBase {
    * {@inheritdoc}
    * This is where the "view" portion of the code lives. Here we render the social block
    */
-  public function build() {
+  public function build(): array {
     $uuid = $this->getConfiguration()['uuid'];
     // check our config is saved, might not happen if the config form hasn't been saved and this block was created programmatically
-    $config_instances = \Drupal::state()->get('socialblock.config');
-    if (!isset($config_instances) && !isset($config_instances[$uuid])) {
-      $config_instances[$uuid] = array(
+    $configInstances = \Drupal::state()->get('socialblock.config');
+    if ($configInstances === NULL) {
+      $configInstances = [];
+    }
+    if ($configInstances[$uuid] === NULL) {
+      $configInstances[$uuid] = [
         'numberOfTiles' => $this->configuration['numberOfTiles'],
         'forumsList' => $this->configuration['forumsList'],
         'twitterSearchBy' => $this->configuration['twitterSearchBy'],
         'twitterSearchParameter' => $this->configuration['twitterSearchParameter'],
-        'twitterTweetTypes' => $this->configuration['twitterTweetTypes']
-      );
-      \Drupal::state()->set('socialblock.config', $config_instances);
+        'twitterTweetTypes' => $this->configuration['twitterTweetTypes'],
+      ];
+      \Drupal::state()->set('socialblock.config', $configInstances);
     }
 
-    $posts = array();
+    $posts = [];
     $tweets = NULL;
     $container = \Drupal::getContainer();
-    $forumManager = $container->get('forum_manager');
+    if ($container !== NULL) {
+      $forumManager = $container->get('forum_manager');
 
-    // First sort out tweets
-    $data_instances = \Drupal::state()->get('socialblock.data');
-    if (isset($data_instances)) {
-      $tweets = $data_instances[$uuid];
-    }
-
-    if (is_array($tweets)) {
-      foreach ($tweets as $tweet) {
-        $tweet->tweet = TRUE;
-        array_push($posts, $tweet);
+      // First sort out tweets
+      $dataInstances = \Drupal::state()->get('socialblock.data');
+      if ($dataInstances !== NULL) {
+        $tweets = $dataInstances[$uuid];
       }
-    }
 
-    // Next up - forums
-    $enabledForums = $this->configuration['forumsList'];
+      if (\is_array($tweets)) {
+        foreach ($tweets as $tweet) {
+          $tweet->tweet = TRUE;
+          $posts[] = $tweet;
+        }
+      }
 
-    if (sizeof($enabledForums) != 0) {
-      foreach ($enabledForums as $enabledForum) {
+      // Next up - forums
+      $enabledForums = $this->configuration['forumsList'];
 
-        $forumTopics = $forumManager->getTopics($enabledForum, $container->get('current_user'));
-        $topics = $forumTopics['topics'];
+      if (sizeof($enabledForums) !== 0) {
+        foreach ($enabledForums as $enabledForum) {
 
-        foreach ($topics as $id => $forumTopic) {
-          $forumTopic->tweet = FALSE;
-          $forumTopic->id = $id;
-          array_push($posts, $forumTopic);
+          $forumTopics = $forumManager->getTopics($enabledForum, $container->get('current_user'));
+          $topics = $forumTopics['topics'];
+
+          foreach ($topics as $id => $forumTopic) {
+            $forumTopic->tweet = FALSE;
+            $forumTopic->id = $id;
+            $posts[] = $forumTopic;
+          }
         }
       }
     }
 
-    $block_posts = array();
-    if (isset($posts) && !empty($posts)) {
+    $blockPosts = [];
+    if ($posts !== NULL && !empty($posts)) {
       // Sort array by time of forum topic or tweet and then chop of the top X
       // where X is the number of tiles to be displayed in this block
       uasort($posts, 'socialblock_sort_by_created');
-      $posts = array_slice($posts, 0, $this->configuration['numberOfTiles']);
+      $posts = \array_slice($posts, 0, $this->configuration['numberOfTiles']);
 
       foreach ($posts as $post) {
 
@@ -263,168 +269,172 @@ class SocialBlock extends BlockBase {
           if (isset($post->retweeted_status)) {
             $post = $post->retweeted_status;
           }
-          $tweet_id = $post->id_str;
-          $profile_img = $post->user->profile_image_url_https;
+          $tweetId = $post->id_str;
+          $profileImg = $post->user->profile_image_url_https;
           $name = $post->user->name;
           $handle = $post->user->screen_name;
           $timestamp = date_diff(date_create('@' . strtotime($post->created_at)), date_create('@' . time()));
-          $raw_content = $post->text;
+          $rawContent = $post->text;
           $hashtags = $post->entities->hashtags;
-          $user_mentions = $post->entities->user_mentions;
+          $userMentions = $post->entities->user_mentions;
 
-          $hashtags_replace = array();
+          $hashtagsReplace = [];
           foreach ($hashtags as $hashtag) {
-            $hashtag_replace = mb_substr($raw_content, $hashtag->indices[0], $hashtag->indices[1] - $hashtag->indices[0]);
-            array_push($hashtags_replace, $hashtag_replace);
+            $hashtagReplace = mb_substr($rawContent, $hashtag->indices[0], $hashtag->indices[1] - $hashtag->indices[0]);
+            $hashtagsReplace[] = $hashtagReplace;
           }
 
-          $user_mentions_replace = array();
-          foreach ($user_mentions as $user_mention) {
-            $user_mention_replace = mb_substr($raw_content, $user_mention->indices[0], $user_mention->indices[1] - $user_mention->indices[0]);
-            array_push($user_mentions_replace, $user_mention_replace);
+          $userMentionsReplace = [];
+          foreach ($userMentions as $userMention) {
+            $userMentionReplace = mb_substr($rawContent, $userMention->indices[0], $userMention->indices[1] - $userMention->indices[0]);
+            $userMentionsReplace[] = $userMentionReplace;
           }
 
-          foreach ($hashtags_replace as $hashtag_replace) {
-            $raw_content = str_replace($hashtag_replace, '<a href="https://twitter.com/hashtag/' . ltrim($hashtag_replace, '#') . '" target="_blank" rel="noopener" title="' . $hashtag_replace . '" class="hashtag">' . $hashtag_replace . '</a>', $raw_content);
+          foreach ($hashtagsReplace as $hashtagReplace) {
+            $rawContent = str_replace($hashtagReplace, '<a href="https://twitter.com/hashtag/' . ltrim($hashtagReplace, '#') . '" target="_blank" rel="noopener" title="' . $hashtagReplace . '" class="hashtag">' . $hashtagReplace . '</a>', $rawContent);
           }
 
-          foreach ($user_mentions_replace as $user_mention_replace) {
-            $raw_content = str_replace($user_mention_replace, '<a href="https://twitter.com/' . ltrim($user_mention_replace, '@') . '" target="_blank" rel="noopener" title="' . $user_mention_replace . '" class="user_mention">' . $user_mention_replace . '</a>', $raw_content);
+          foreach ($userMentionsReplace as $userMentionReplace) {
+            $rawContent = str_replace($userMentionReplace, '<a href="https://twitter.com/' . ltrim($userMentionReplace, '@') . '" target="_blank" rel="noopener" title="' . $userMentionReplace . '" class="user_mention">' . $userMentionReplace . '</a>', $rawContent);
           }
 
-          $media = isset($post->entities->media) ? $post->entities->media : array();
-          $extended_media = isset($post->extended_entities->media) ? $post->extended_entities->media : array();
-          $photos = array();
-          $gifs = array();
+          $media = $post->entities->media ?? [];
+          $extendedMedia = $post->extended_entities->media ?? [];
+          $photos = [];
+          $gifs = [];
 
-          $urls = isset($post->entities->urls) ? $post->entities->urls : array();
+          $urls = $post->entities->urls ?? [];
 
-          $video_ids = array();
+          $videoIds = [];
           foreach ($media as $medium) {
-            if ($medium->type == 'photo') {
-              array_push($photos, $medium);
+            if ($medium->type === 'photo') {
+              $photos[] = $medium;
               // remove photo urls from the content if we're displaying the image
-              if (strpos($raw_content, $medium->url) != FALSE) {
-                $raw_content = str_replace($medium->url, '', $raw_content);
+              if (strpos($rawContent, $medium->url) !== FALSE) {
+                $rawContent = str_replace($medium->url, '', $rawContent);
               }
             }
           }
-          foreach ($extended_media as $ext_medium) {
-            if ($ext_medium->type == 'animated_gif') {
-              array_push($gifs, $ext_medium);
+          foreach ($extendedMedia as $extMedium) {
+            if ($extMedium->type === 'animated_gif') {
+              $gifs[] = $extMedium;
               // remove gif urls from the content if we're displaying the image
-              if (strpos($raw_content, $ext_medium->url) != FALSE) {
-                $raw_content = str_replace($ext_medium->url, '', $raw_content);
+              if (strpos($rawContent, $extMedium->url) !== FALSE) {
+                $rawContent = str_replace($extMedium->url, '', $rawContent);
               }
             }
           }
 
           foreach ($urls as $url) {
-            $short_url = $url->url;
-            $expanded_url = $url->expanded_url;
-            $true_url = socialblock_expand_url($expanded_url);
-            if (isset($true_url)) {
-              if (preg_match('/^(https?:\/\/)?(www\.)?youtube\.com\/.*/i', $true_url)) {
-                $video_ids[] = preg_replace('/^(https?:\/\/)?(www\.)?youtube\.com\/watch\?v=/i', '', $true_url);
+            $shortUrl = $url->url;
+            $expandedUrl = $url->expanded_url;
+            $trueUrl = socialblock_expand_url($expandedUrl);
+            if ($trueUrl !== NULL) {
+              if (preg_match('/^(https?:\/\/)?(www\.)?youtube\.com\//i', $trueUrl)) {
+                $videoIds[] = preg_replace('/^(https?:\/\/)?(www\.)?youtube\.com\/watch\?v=/i', '', $trueUrl);
               }
-              else {
-                if (preg_match('/^(https?:\/\/)?(youtu\.be)\//i', $true_url)) {
-                  $video_ids[] = preg_replace('/^(https?:\/\/)?(youtu\.be)\//i', '', $true_url);
-                }
+              elseif (preg_match('/^(https?:\/\/)?(youtu\.be)\//i', $trueUrl)) {
+                $videoIds[] = preg_replace('/^(https?:\/\/)?(youtu\.be)\//i', '', $trueUrl);
               }
             }
 
 
-            if (isset($short_url)) {
-              if (strpos($raw_content, $short_url) != FALSE) {
-                $raw_content = str_replace($short_url, '<a href="' . $expanded_url . '" target="_blank" rel="noopener" class="url">' . $short_url . '</a>', $raw_content);
+            if ($shortUrl !== NULL) {
+              if (strpos($rawContent, $shortUrl) !== FALSE) {
+                $rawContent = str_replace($shortUrl, '<a href="' . $expandedUrl . '" target="_blank" rel="noopener" class="url">' . $shortUrl . '</a>', $rawContent);
               }
               else {
-                $raw_content = str_replace($short_url, '', $raw_content);
+                $rawContent = str_replace($shortUrl, '', $rawContent);
               }
             }
 
           }
-          $block_post = array(
+          $blockPost = [
             'type' => 'tweet',
-            'profile_img' => $profile_img,
+            'profile_img' => $profileImg,
             'handle' => $handle,
-            'tweet_id' => $tweet_id,
+            'tweet_id' => $tweetId,
             'timestamp' => socialblock_get_tweet_timediff($timestamp),
-            'name' => $name
-          );
+            'name' => $name,
+          ];
           // sanity check existing content
-          $raw_content = Xss::filter($raw_content);
+          $rawContent = Xss::filter($rawContent);
 
           // extended media, embedded gifs etc
           if (!empty($gifs)) {
             foreach ($gifs as $gif) {
               if (isset($gif->video_info->variants[0]->url)) {
-                $raw_content = '<div class="centerContainer"><video class="tweet_video" autoplay="true" loop="true" preload="none"><source src="' . $gif->video_info->variants[0]->url . '" type="video/mp4"/></video></div>' . $raw_content;
+                $rawContent = '<div class="centerContainer"><video class="tweet_video" autoplay="true" loop="true" preload="none"><source src="' . $gif->video_info->variants[0]->url . '" type="video/mp4"/></video></div>' . $rawContent;
               }
             }
           }
           // only display photos that aren't also in the extended_media listing
           if (!empty($photos)) {
-            $photo_out = array();
+            $photo_out = [];
             foreach ($photos as $photo) {
               $found = FALSE;
               if (!empty($gifs)) {
                 foreach ($gifs as $gif) {
-                  if ($photo->id == $gif->id) {
+                  if ($photo->id === $gif->id) {
                     $found = TRUE;
                   }
                 }
               }
-              if ($found != TRUE) {
-                $photo_out[] = array('url' => $photo->media_url_https);
+              if ($found !== TRUE) {
+                $photo_out[] = ['url' => $photo->media_url_https];
               }
             }
-            $block_post['photos'] = $photo_out;
+            $blockPost['photos'] = $photo_out;
           }
 
-          if (!empty($video_ids)) {
-            $raw_content = $raw_content . '<iframe class="yt_embed" title="' . t('Watch on YouTube') . '" src="https://www.youtube.com/embed/' . $video_ids[0] . '?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>';
+          if (!empty($videoIds)) {
+            $rawContent = $rawContent . '<iframe class="yt_embed" title="' . t('Watch on YouTube') . '" src="https://www.youtube.com/embed/' . $videoIds[0] . '?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>';
           }
-          $block_post['content'] = $raw_content;
-          $block_posts[] = $block_post;
+          $blockPost['content'] = $rawContent;
+          $blockPosts[] = $blockPost;
         }
         else {
 
-          $topic_node = Node::load($post->id);
-          $forum_tid = $post->forum_tid;
-          $term_data = \Drupal\taxonomy\Entity\Term::load($forum_tid);
+          $topicNode = Node::load($post->id);
+          $forumTid = $post->forum_tid;
+          $termData = \Drupal\taxonomy\Entity\Term::load($forumTid);
+          $timestamp = '';
 
-          $topicCreatedTime = DateTimePlus::createFromTimestamp($topic_node->created->value);
-          $now = DateTimePlus::createFromTimestamp(time());
-          $timestamp = $now->diff($topicCreatedTime);
+          if ($topicNode !== NULL) {
+            $topicCreatedTime = DateTimePlus::createFromTimestamp($topicNode->created->value);
+            $now = DateTimePlus::createFromTimestamp(time());
+            $timestamp = $now->diff($topicCreatedTime);
+            $timestamp = socialblock_get_tweet_timediff($timestamp);
+          }
 
           $op = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['name' => $post->name]);
           $user = array_shift($op);
+          $forumName = '';
+          if ($termData !== NULL) {
+            $forumName = $termData->name->value;
+          }
 
-          $block_post = array(
+          $blockPost = [
             'type' => 'forum_topic',
             'url' => Url::fromUserInput('/node/' . $post->id)->toString(),
             'handle' => $user->getDisplayName(),
             'title' => $post->title->value,
-            'forum' => $term_data->name->value,
-            'forum_url' => Url::fromUserInput('/forum/' . $forum_tid)->toString(),
-            'timestamp' => socialblock_get_tweet_timediff($timestamp)
-          );
-          $block_posts[] = $block_post;
+            'forum' => $forumName,
+            'forum_url' => Url::fromUserInput('/forum/' . $forumTid)->toString(),
+            'timestamp' => $timestamp,
+          ];
+          $blockPosts[] = $blockPost;
         }
       }
     }
-    return array(
+    return [
       '#theme' => 'socialblock_block',
-      '#posts' => $block_posts,
+      '#posts' => $blockPosts,
       '#allowed_tags' => ['h3', 'div', 'img', 'span', 'i', 'ul', 'li', 'a', 'iframe', 'video'],
-      '#attached' => array(
+      '#attached' => [
         'library' => 'socialblock/socialblock',
-      ),
-    );
+      ],
+    ];
   }
 
 }
-
-?>

@@ -3,12 +3,13 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
 namespace Drupal\ibm_apim;
 
 use Drupal\Core\Extension\ModuleInstaller;
@@ -31,7 +32,7 @@ class ModuleBlacklistModuleInstaller extends ModuleInstaller {
    * @param string $module
    *   The module name.
    */
-  public function rollbackPreinstall($module) {
+  public function rollbackPreinstall($module): void {
     // Remove the module's entry from the config. Don't check schema when
     // uninstalling a module since we are only clearing a key.
     \Drupal::configFactory()->getEditable('core.extension')->clear("module.$module")->save(TRUE);

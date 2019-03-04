@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -18,6 +18,7 @@
 
 namespace Drupal\apic_app\Plugin\Block;
 
+use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
@@ -39,30 +40,39 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, UserUtils $userUtils) {
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
+  protected $consumerOrgService;
+
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, UserUtils $userUtils, ConsumerOrgService $consumerOrgService) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->userUtils = $userUtils;
+    $this->consumerOrgService = $consumerOrgService;
   }
 
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition, $container->get('ibm_apim.user_utils'));
+    return new static($configuration, $plugin_id, $plugin_definition, $container->get('ibm_apim.user_utils'), $container->get('ibm_apim.consumerorg'));
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function blockAccess(AccountInterface $account) {
+  protected function blockAccess(AccountInterface $account): AccessResult {
     $current_user = \Drupal::currentUser();
     $node = \Drupal::routeMatch()->getParameter('node');
     $allowed = FALSE;
-    if (!$current_user->isAnonymous() && $current_user->id() != 1) {
+    if (!$current_user->isAnonymous() && (int) $current_user->id() !== 1) {
       $consumerorg_url = $node->application_consumer_org_url->value;
-      $org = \Drupal::service("ibm_apim.consumerorg")->get($consumerorg_url);
+      $org = $this->consumerOrgService->get($consumerorg_url);
       $user = User::load($current_user->id());
 
-      if ($org->isMember($user->get('apic_url')->value)) {
+      if ($user !== NULL && $org !== NULL && $org->isMember($user->get('apic_url')->value)) {
         $allowed = TRUE;
       }
     }
@@ -74,14 +84,14 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
     //if you depends on \Drupal::routeMatch()
     //you must set context of this block with 'route' context tag.
     //Every new route this block will rebuild
-    return Cache::mergeContexts(parent::getCacheContexts(), array('route'));
+    return Cache::mergeContexts(parent::getCacheContexts(), ['route']);
   }
 
   public function getCacheTags() {
     //With this when your node change your block will rebuild
     if ($node = \Drupal::routeMatch()->getParameter('node')) {
       //if there is node add its cachetag
-      return Cache::mergeTags(parent::getCacheTags(), array('node:' . $node->id()));
+      return Cache::mergeTags(parent::getCacheTags(), ['node:' . $node->id()]);
     }
     else {
       //Return default tags instead.
@@ -92,33 +102,33 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
   /**
    * {@inheritdoc}
    */
-  public function build() {
+  public function build(): array {
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $node = \Drupal::routeMatch()->getParameter('node');
     $userHasAppManage = $userUtils->checkHasPermission('app:manage');
 
-    $credentials = array();
+    $credentials = [];
     foreach ($node->application_credentials->getValue() as $arrayValue) {
-      $credentials[] = unserialize($arrayValue['value']);
+      $credentials[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
     }
-    $nodeArray = array(
-      'application_id' => array('value' => $node->application_id->value),
+    $nodeArray = [
+      'application_id' => ['value' => $node->application_id->value],
       'credentials' => $credentials,
-      'id' => $node->id()
-    );
+      'id' => $node->id(),
+    ];
 
-    $drupalSettings = array(
-      'application' => array('id' => $node->application_id->value, 'credentials' => $credentials)
-    );
+    $drupalSettings = [
+      'application' => ['id' => $node->application_id->value, 'credentials' => $credentials],
+    ];
 
     return [
       '#theme' => 'app_credentials',
       '#node' => $nodeArray,
       '#userHasAppManage' => $userHasAppManage,
-      '#attached' => array(
-        'library' => array('apic_app/basic'),
-        'drupalSettings' => $drupalSettings
-      ),
+      '#attached' => [
+        'library' => ['apic_app/basic'],
+        'drupalSettings' => $drupalSettings,
+      ],
     ];
   }
 }

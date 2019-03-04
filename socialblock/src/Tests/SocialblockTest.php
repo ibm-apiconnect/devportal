@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -31,7 +31,7 @@ class SocialblockTest extends WebTestBase {
    *
    * @var array
    */
-  static public $modules = array('socialblock');
+  static public $modules = ['socialblock'];
 
   /**
    * The installation profile to use with this test.
@@ -45,12 +45,12 @@ class SocialblockTest extends WebTestBase {
   /**
    * Setup basic environment.
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
   }
 
-  public function testTrue() {
+  public function testTrue(): void {
     $found = TRUE;
 
     $this->assertTrue($found, 'TRUE');

@@ -36,7 +36,7 @@
         <div class="apicProductTitleText">
           <h1 class="productName">
                 <span
-                  class="field field-name-title field-formatter-string field-type-string field-label-hidden">{{- label -}}</span>
+                    class="field field-name-title field-formatter-string field-type-string field-label-hidden">{{- label -}}</span>
           </h1>
           {% if showVersions %}
             <span class="apicProductVersion">{{- content.apic_version -}}</span>
@@ -106,7 +106,7 @@
               <div class="apicApiTeaser">
                 {% if api.icon is defined and api.icon|render|trim is not empty %}
                   <div class="apicProductIcon">
-                  <img src="{{- api.icon }}" alt=""/>
+                    <img src="{{- api.icon }}" alt=""/>
                   </div>
                 {% elseif showPlaceholders %}
                   <div class="apicProductIcon">
@@ -141,7 +141,7 @@
                   {% set login_path = path('user.login') %}
                   {% trans %}
                     In order to subscribe, you must <a href="{{ register_path }}">create an account</a> or <a
-                    href="{{ login_path }}">sign in</a>.
+                      href="{{ login_path }}">sign in</a>.
                   {% endtrans %}
                 {% else %}
                   {% set login_path = path('user.login') %}
@@ -179,9 +179,14 @@
                                 {{ plan.billing-info }}
                               </div>
                             {% endif %}
-
+                            {% if plan.data.description is defined and plan.data.description is not empty %}
+                              <div class="planDescription">
+                                {{ plan.data.description }}
+                              </div>
+                            {% endif %}
                             {% if subscribable %}
-                              <a class="button" href="{{ path('ibm_apim.subscription_wizard.noplan') }}/?productId={{ node.id }}&planTitle={{ plan.data.title }}&planId={{ planid }}">
+                              <a class="button"
+                                 href="{{ path('ibm_apim.subscription_wizard.noplan') }}/?productId={{ node.id }}&planTitle={{ plan.data.title }}&planId={{ planid }}">
                                 {{ 'Subscribe'|t }}
                               </a>
                             {% else %}
@@ -209,7 +214,8 @@
                             <a onclick="Drupal.settings.product.toggleTwistieRow(event)" href="javascript:">
                               <span class="apicTwistieIcon"><i class="fa fa-angle-right"></i></span>
                               <span
-                                class="apiName" title="{{ api.node.title[0].value }}">{{ api.node.title[0].value }}{% if showVersions %} {{ api.node.apic_version[0].value }}{% endif %}</span>
+                                  class="apiName"
+                                  title="{{ api.node.title[0].value }}">{{ api.node.title[0].value }}{% if showVersions %} {{ api.node.apic_version[0].value }}{% endif %}</span>
                             </a>
                           </div>
                         </div>
@@ -241,7 +247,7 @@
                               <div class="apicApiOperation apicTruncate apicSecondaryRow {{ verb|lower }}"
                                    title="{{ verb|upper }} {{ pathSegment }}">
                                 <span class="verb">{{ verb|upper }}</span>
-                                <span  class="path">{{ pathSegment }}</span>
+                                <span class="path">{{ pathSegment }}</span>
 
                               </div>
                             {% endif %}
@@ -289,7 +295,8 @@
                     <span class="apicTwistieIcon"><i class="fa fa-angle-down"></i></span>
                   </a>
 
-                    <a class="showPlans hidden" title="Show the available plans" onclick="Drupal.settings.product.showPlans(event)" href="javascript:">
+                    <a class="showPlans hidden" title="Show the available plans"
+                       onclick="Drupal.settings.product.showPlans(event)" href="javascript:">
                     <span class="linkLabel">{{ 'Hide details'|t }}</span>
                     <span class="apicTwistieIcon"><i class="fa fa-angle-up"></i></span>
                     </a>
@@ -304,11 +311,11 @@
                 {{ '* burst limit exists; hover to view limits'|t }}
               </div>
             {% endif %}
-            {%  if requireApproval %}
+            {% if requireApproval %}
               <div class="planRequiresSubKey">
                 <p>
                   {{ key_svg|raw }}
-                  {{ 'Requires subscription approval'|t}}
+                  {{ 'Requires subscription approval'|t }}
                 </p>
               </div>
             {% endif %}
@@ -322,8 +329,8 @@
                   <svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg"
                        xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd">
                     <path
-                      d="M8,0 C3.6,0 0,3.6 0,8 C0,12.4 3.6,16 8,16 C12.4,16 16,12.4 16,8 C16,3.6 12.4,0 8,0 L8,0 Z M8,4 C8.6,4 9,4.4 9,5 C9,5.6 8.6,6 8,6 C7.4,6 7,5.6 7,5 C7,4.4 7.4,4 8,4 L8,4 Z M10,12 L6,12 L6,11 L7,11 L7,8 L6,8 L6,7 L9,7 L9,11 L10,11 L10,12 L10,12 Z"
-                      id="Shape"></path>
+                        d="M8,0 C3.6,0 0,3.6 0,8 C0,12.4 3.6,16 8,16 C12.4,16 16,12.4 16,8 C16,3.6 12.4,0 8,0 L8,0 Z M8,4 C8.6,4 9,4.4 9,5 C9,5.6 8.6,6 8,6 C7.4,6 7,5.6 7,5 C7,4.4 7.4,4 8,4 L8,4 Z M10,12 L6,12 L6,11 L7,11 L7,8 L6,8 L6,7 L9,7 L9,11 L10,11 L10,12 L10,12 Z"
+                        id="Shape"></path>
                   </svg>
                 </span>
                   <div class="alert-text-wrapper">
@@ -353,7 +360,7 @@
             {% endif %}
             {% if content.product_contact_email['#items'][0].value is defined %}
               <div class="contactEmail"><a
-                  href="mailto:{{- content.product_contact_email['#items'][0].value -}}">{{ 'email'|t }}</a>
+                    href="mailto:{{- content.product_contact_email['#items'][0].value -}}">{{ 'email'|t }}</a>
               </div>
             {% endif %}
             {% if content.product_contact_url['#items'][0].value is defined %}
@@ -377,8 +384,10 @@
         <div class="field apicProductTermsOfService">
           <h3 class="field__label label">{{ 'Terms of Service'|t }}</h3>
           <div class="tosContainer">
-            <div class="collapse termsOfService" id="collapseTos" aria-expanded="false">{{ content.product_terms_of_service }}</div>
-            <a role="button" class="collapsed fa" data-toggle="collapse" href="#collapseTos" aria-expanded="false" aria-controls="collapseTos"></a>
+            <div class="collapse termsOfService" id="collapseTos"
+                 aria-expanded="false">{{ content.product_terms_of_service }}</div>
+            <a role="button" class="collapsed fa" data-toggle="collapse" href="#collapseTos" aria-expanded="false"
+               aria-controls="collapseTos"></a>
           </div>
         </div>
 

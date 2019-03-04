@@ -15,9 +15,8 @@ use Drupal\Core\Routing\RouteMatchInterface;
  * @return mixed
  */
 function ghmarkdown_help($route_name, RouteMatchInterface $route_match) {
-  switch ($route_name) {
-    case 'help.page.ghmarkdown':
-      return t('<p>The Markdown filter allows you to enter content using <a href="https://guides.github.com/features/mastering-markdown/">Github Markdown</a>, a simple plain-text syntax that is transformed into valid HTML.</p>');
+  if ($route_name === 'help.page.ghmarkdown') {
+    return t('<p>The Markdown filter allows you to enter content using <a href="https://guides.github.com/features/mastering-markdown/">Github Markdown</a>, a simple plain-text syntax that is transformed into valid HTML.</p>');
   }
 }
 

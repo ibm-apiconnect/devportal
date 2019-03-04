@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -119,7 +119,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
     }
     foreach ($appList as $key => $app) {
       // need the cast to string here or it doesnt work
-      if (\Drupal::service('ibm_apim.utils')->endsWith($url, (string) $key) == 1) {
+      if (\Drupal::service('ibm_apim.utils')->endsWith($url, (string) $key) === TRUE) {
         $data = $appList[$key];
       }
     }
@@ -146,7 +146,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
       $apps = [];
     }
     foreach ($this->appsList as $key => $app) {
-      if ($requestBody['name'] == $app['name']) {
+      if ($requestBody['name'] === $app['name']) {
         $apps[$key] = $this->appsList[$key];
         $data = $this->appsList[$key];
       }
@@ -205,7 +205,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
     }
     foreach ($appList as $key => $app) {
       // need the cast to string here or it doesn't work
-      if (\Drupal::service('ibm_apim.utils')->endsWith($url, (string) $key) === 1) {
+      if (\Drupal::service('ibm_apim.utils')->endsWith($url, (string) $key) === TRUE) {
         if ($requestBody['name'] !== null) {
           $appList[$key]['name'] = $requestBody['name'];
         }
@@ -313,6 +313,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
             $cred['description'] = $requestBody['description'];
           }
         }
+        unset($cred);
         \Drupal::state()->set('mock.appList', $appList);
       }
     }
@@ -397,14 +398,16 @@ class MockApplicationRestService implements ApplicationRestInterface {
    * @param $description
    * @param $oauthUrl
    * @param null $formState
-   * @return mixed|object
+   *
+   * @return object
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function createApplication($name, $description, $oauthUrl, $formState = NULL) {
 
     $data = array(
-      "name" => $name,
-      "description" => $description,
-      "oauthRedirectURI" => $oauthUrl
+      'name' => $name,
+      'description' => $description,
+      'oauthRedirectURI' => $oauthUrl
     );
 
     $result = $this->postApplication('randomstring', json_encode($data));
@@ -412,7 +415,6 @@ class MockApplicationRestService implements ApplicationRestInterface {
     // Insert nid in to results so that callers don't have to do a db query to find it
     $app_data = Application::fetchFromAPIC($result->data['url']);
     $nid = Application::create($app_data, 'create');
-    $node = Node::load($nid);
 
     $result->data['nid'] = $nid;
 

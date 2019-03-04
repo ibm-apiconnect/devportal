@@ -3,12 +3,13 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
 use Drupal\Component\Utility\Unicode;
 
 /**
@@ -20,12 +21,12 @@ use Drupal\Component\Utility\Unicode;
  *   Integer: The message priority.
  * @param $from
  *   String: The sender's e-mail address.
- * @param $additional_headers
+ * @param $additionalHeaders
  *
  * @return array Header array with priority and receipt confirmation info
  */
-function _mail_subscribers_headers($receipt, $priority, $from, $additional_headers) {
-  $headers = array();
+function _mail_subscribers_headers($receipt, $priority, $from, $additionalHeaders) {
+  $headers = [];
 
   // If receipt is requested, add headers.
   if ($receipt) {
@@ -66,13 +67,13 @@ function _mail_subscribers_headers($receipt, $priority, $from, $additional_heade
   $headers['Precedence'] = 'bulk';
 
   // Add additional headers.
-  $additional_headers = trim($additional_headers);
-  $additional_headers = str_replace("\r", "\n", $additional_headers);
-  $additional_headers = explode("\n", $additional_headers);
-  foreach ($additional_headers as $header) {
+  $additionalHeaders = trim($additionalHeaders);
+  $additionalHeaders = str_replace("\r", "\n", $additionalHeaders);
+  $additionalHeaders = explode("\n", $additionalHeaders);
+  foreach ($additionalHeaders as $header) {
     $header = trim($header);
     if (!empty($header)) {
-      list($key, $value) = explode(': ', $header, 2);
+      [$key, $value] = explode(': ', $header, 2);
       $headers[$key] = trim($value);
     }
   }
@@ -86,18 +87,20 @@ function _mail_subscribers_headers($receipt, $priority, $from, $additional_heade
  * @param $mail
  * @param $name
  * @param bool $encode
+ *
  * @return string
  */
 function _mail_subscribers_format_address($mail, $name, $encode = TRUE) {
 
   // Do not format address on Windows based PHP systems or when $name is empty.
-  if ((substr(PHP_OS, 0, 3) == 'WIN') || empty($name)) {
-    return $mail;
+  if (empty($name) || (strpos(PHP_OS, 'WIN') === 0)) {
+    $returnValue = $mail;
   }
   else {
     $name = ($encode ? Unicode::mimeHeaderEncode($name) : $name);
-    return sprintf('"%s" <%s>', $name, $mail);
+    $returnValue = sprintf('"%s" <%s>', $name, $mail);
   }
+  return $returnValue;
 }
 
 /**
@@ -134,7 +137,7 @@ function _mail_subscribers_prepare_mail(&$message, $plain_format = TRUE) {
   $key = 'direct';
 
   // Build message parameters.
-  $params = array();
+  $params = [];
 
   $params['from_name'] = $from_name;
   $params['from_mail'] = $from_mail;
@@ -142,7 +145,7 @@ function _mail_subscribers_prepare_mail(&$message, $plain_format = TRUE) {
 
   $params['to_name'] = $to_name;
   $params['to_mail'] = $to_mail;
-  $to_mail_formatted = array();
+  $to_mail_formatted = [];
   foreach (explode(',', $to_mail) as $addr) {
     $to_mail_formatted[] = _mail_subscribers_format_address($addr, $to_name);
   }
@@ -152,7 +155,7 @@ function _mail_subscribers_prepare_mail(&$message, $plain_format = TRUE) {
   $params['headers'] = $headers;
   $params['format'] = $headers['Content-Type'];
 
-  $mimemail = \Drupal::moduleHandler()->moduleExists('mimemail');
+  $mimeMail = \Drupal::moduleHandler()->moduleExists('mimemail');
 
   // Call Drupal standard mail function, but without sending.
   $mail = \Drupal::service('plugin.manager.mail')
@@ -161,7 +164,7 @@ function _mail_subscribers_prepare_mail(&$message, $plain_format = TRUE) {
       ->getId(), $params, $params['from_formatted'], FALSE);
 
   // Add additional Mime Mail post processing.
-  if ($mimemail) {
+  if ($mimeMail) {
     // We want to spool the Subject decoded.
     $mail['subject'] = Unicode::mimeHeaderDecode($mail['subject']);
   }
@@ -178,6 +181,7 @@ function _mail_subscribers_prepare_mail(&$message, $plain_format = TRUE) {
  * Sending a prepared message.
  *
  * @param $message
+ *
  * @return mixed
  *   Boolean indicating if the message was sent successfully.
  */
@@ -187,15 +191,15 @@ function mail_subscribers_deliver($message) {
   }
 
   $key = 'direct';
-  $headers = unserialize($message->headers);
+  $headers = unserialize($message->headers, ['allowed_classes' => false]);
 
-  $mail = array(
+  $mail = [
     'to' => $message->to_mail,
     'from' => $message->from_mail,
     'subject' => Unicode::mimeHeaderEncode($message->subject),
     'body' => $message->body,
     'headers' => $headers,
-  );
+  ];
 
   $result = \Drupal::service('plugin.manager.mail')
     ->mail('mail_subscribers', $key, $message->to_mail, \Drupal::currentUser()
@@ -208,43 +212,43 @@ function mail_subscribers_deliver($message) {
  * Returns property info for the Email Message
  */
 function _mail_subscribers_email_message_property_info() {
-  $propertyinfo = array(
-    'uid' => array(
+  $propertyInfo = [
+    'uid' => [
       'type' => 'integer',
       'label' => t('User ID'),
-    ),
-    'timestamp' => array(
+    ],
+    'timestamp' => [
       'type' => 'integer',
       'label' => t('Timestamp'),
-    ),
-    'from_name' => array(
+    ],
+    'from_name' => [
       'type' => 'text',
       'label' => t('Sender\'s name'),
-    ),
-    'from_mail' => array(
+    ],
+    'from_mail' => [
       'type' => 'text',
       'label' => t('Sender\'s e-mail'),
-    ),
-    'to_name' => array(
+    ],
+    'to_name' => [
       'type' => 'text',
       'label' => t('Recipient\'s name'),
-    ),
-    'to_mail' => array(
+    ],
+    'to_mail' => [
       'type' => 'text',
       'label' => t('Recipient\'s e-mail'),
-    ),
-    'subject' => array(
+    ],
+    'subject' => [
       'type' => 'text',
       'label' => t('E-mail subject'),
-    ),
-    'body' => array(
+    ],
+    'body' => [
       'type' => 'text',
       'label' => t('E-mail body'),
-    ),
-    'headers' => array(
+    ],
+    'headers' => [
       'type' => 'text',
       'label' => t('E-mail headers (serialized)'),
-    ),
-  );
-  return $propertyinfo;
+    ],
+  ];
+  return $propertyInfo;
 }

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -33,30 +33,33 @@ class WritableUserRegistryAccessCheck implements AccessInterface {
    * @return AccessResult
    *   True if admin and not using read only registry
    */
-  public function access(AccountInterface $account) {
+  public function access(AccountInterface $account): AccessResult {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    if ($account->id() == 1) {
-      \Drupal::logger('auth_apic')->info('admin user allowed from %class', array( '%class' => __CLASS__));
-      $allowed = true;
+    if ((int) $account->id() === 1) {
+      \Drupal::logger('auth_apic')->info('admin user allowed from %class', ['%class' => __CLASS__]);
+      $allowed = TRUE;
     }
     else {
-      $user =  User::load($account->id());
-      $registry_url = $user->get('apic_user_registry_url')->value;
-      $registryService = \Drupal::service('ibm_apim.user_registry');
-      $registry = $registryService->get($registry_url);
+      $user = User::load($account->id());
+      if ($user !== NULL) {
+        $registry_url = $user->get('apic_user_registry_url')->value;
+        $registryService = \Drupal::service('ibm_apim.user_registry');
+        $registry = $registryService->get($registry_url);
 
-      if (!$registry) {
-        \Drupal::logger('auth_apic')->error('No registry found for %class', array( '%class' => __CLASS__));
-        $allowed = FALSE;
-      }
-      else {
-        if ($registry->isUserManaged()) {
+        if (!$registry) {
+          \Drupal::logger('auth_apic')->error('No registry found for %class', ['%class' => __CLASS__]);
+          $allowed = FALSE;
+        }
+        elseif ($registry->isUserManaged()) {
           $allowed = TRUE;
         }
         else {
           $allowed = FALSE;
         }
+      }
+      else {
+        $allowed = FALSE;
       }
     }
 

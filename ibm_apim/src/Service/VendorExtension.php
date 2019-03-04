@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -21,6 +21,7 @@ use Psr\Log\LoggerInterface;
 class VendorExtension {
 
   private $state;
+
   private $logger;
 
   public function __construct(StateInterface $state, LoggerInterface $logger) {
@@ -31,9 +32,9 @@ class VendorExtension {
   /**
    * get all the vendor extensions
    *
-   * @return NULL if an error occurs otherwise an array of the extensions.
+   * @return NULL|array an array of the extensions.
    */
-  public function getAll() {
+  public function getAll(): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $extensions = $this->state->get('ibm_apim.vendor_extensions');
@@ -46,9 +47,10 @@ class VendorExtension {
    * get a specific vendor extension by name
    *
    * @param $key
+   *
    * @return null|array
    */
-  public function get($key) {
+  public function get($key): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     $extension = NULL;
@@ -56,7 +58,7 @@ class VendorExtension {
       // clear caches if config different to previous requests
       $current_data = $this->state->get('ibm_apim.vendor_extensions');
 
-      if (isset($current_data) && isset($current_data[$key])) {
+      if (isset($current_data[$key])) {
         $extension = $current_data[$key];
       }
     }
@@ -70,11 +72,11 @@ class VendorExtension {
    *
    * @param $data array of vendor extensions keyed on name
    */
-  public function updateAll($data) {
+  public function updateAll($data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $data);
 
     if (isset($data)) {
-      $exts = array();
+      $exts = [];
       foreach ($data as $ext) {
         $exts[$ext['name']] = $ext;
       }
@@ -90,14 +92,14 @@ class VendorExtension {
    * @param $key
    * @param $data
    */
-  public function update($key, $data) {
+  public function update($key, $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
-    if (isset($key) && isset($data)) {
+    if (isset($key, $data)) {
       $current_data = $this->state->get('ibm_apim.vendor_extensions');
 
       if (!is_array($current_data)) {
-        $current_data = array();
+        $current_data = [];
       }
       $current_data[$key] = $data;
       $this->state->set('ibm_apim.vendor_extensions', $current_data);
@@ -111,16 +113,16 @@ class VendorExtension {
    *
    * @param $key (vendor extension name)
    */
-  public function delete($key) {
+  public function delete($key): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     if (isset($key)) {
       $current_data = $this->state->get('ibm_apim.vendor_extensions');
 
       if (isset($current_data)) {
-        $new_data = array();
+        $new_data = [];
         foreach ($current_data as $name => $value) {
-          if ($name != $key) {
+          if ($name !== $key) {
             $new_data[$name] = $value;
           }
         }
@@ -134,10 +136,10 @@ class VendorExtension {
   /**
    * Delete all current vendor extensions
    */
-  public function deleteAll() {
+  public function deleteAll(): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $this->state->set('ibm_apim.vendor_extensions', array());
+    $this->state->set('ibm_apim.vendor_extensions', []);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }

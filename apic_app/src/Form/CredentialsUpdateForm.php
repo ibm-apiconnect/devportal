@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -42,8 +42,14 @@ class CredentialsUpdateForm extends FormBase {
    */
   protected $credId;
 
+  /**
+   * @var \Drupal\apic_app\Service\ApplicationRestInterface
+   */
   protected $restService;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
   /**
@@ -68,29 +74,30 @@ class CredentialsUpdateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'application_update_credentials_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $this->node = $appId;
     $this->credId = Html::escape($credId);
 
     $form['intro'] = ['#markup' => '<p>' . t('Use this form to update an existing set of credentials for this application.') . '</p>'];
+    $title = '';
+    $summary = '';
+    $creds = [];
 
-    $description = '';
-    $creds = array();
     foreach ($this->node->application_credentials->getValue() as $arrayValue) {
-      $creds[] = unserialize($arrayValue['value']);
+      $creds[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
     }
-    foreach ($creds as $key => $existingcred) {
-      if (isset($existingcred['id']) && $existingcred['id'] == $this->credId) {
-        $summary = $existingcred['summary'];
-        $title = $existingcred['title'];
+    foreach ($creds as $key => $existingCred) {
+      if (isset($existingCred['id']) && (string) $existingCred['id'] === (string) $this->credId) {
+        $summary = $existingCred['summary'];
+        $title = $existingCred['title'];
       }
     }
 
@@ -113,12 +120,12 @@ class CredentialsUpdateForm extends FormBase {
       '#type' => 'submit',
       '#value' => t('Submit'),
     ];
-    $form['actions']['cancel'] = array(
+    $form['actions']['cancel'] = [
       '#type' => 'link',
       '#title' => t('Cancel'),
       '#url' => $this->getCancelUrl(),
-      '#attributes' => ['class' => ['button', 'apicSecondary']]
-    );
+      '#attributes' => ['class' => ['button', 'apicSecondary']],
+    ];
     $themeHandler = \Drupal::service('theme_handler');
     if ($themeHandler->themeExists('bootstrap')) {
       if (isset($form['actions']['submit'])) {
@@ -136,52 +143,52 @@ class CredentialsUpdateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
     if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
-      return Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
+      $url = Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
     }
     else {
-      return Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
+      $url = Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
     }
+    return $url;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $org = $this->userUtils->getCurrentConsumerOrg();
     $appUrl = $this->node->apic_url->value;
     $title = $form_state->getValue('title');
     $summary = $form_state->getValue('summary');
     $url = $appUrl . '/credentials/' . $this->credId;
-    $data = ["title" => $title, "summary" => $summary];
+    $data = ['title' => $title, 'summary' => $summary];
     $result = $this->restService->patchCredentials($url, json_encode($data));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       drupal_set_message(t('Application credentials updated.'));
       // update the stored app with the new creds
       if (!empty($this->node->application_credentials->getValue())) {
-        $existingcreds = array();
+        $existingCreds = [];
         foreach ($this->node->application_credentials->getValue() as $arrayValue) {
-          $existingcreds[] = unserialize($arrayValue['value']);
+          $existingCreds[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
         }
-        $this->node->set('application_credentials', array());
-        foreach ($existingcreds as $existingcred) {
-          if (isset($existingcred['id']) && $existingcred['id'] == $this->credId) {
-            $existingcred['summary'] = $summary;
-            $existingcred['title'] = $title;
+        $this->node->set('application_credentials', []);
+        foreach ($existingCreds as $existingCred) {
+          if (isset($existingCred['id']) && (string) $existingCred['id'] === (string) $this->credId) {
+            $existingCred['summary'] = $summary;
+            $existingCred['title'] = $title;
           }
-          $this->node->application_credentials[] = serialize($existingcred);
+          $this->node->application_credentials[] = serialize($existingCred);
         }
-        if (!empty($existingcreds)) {
+        if (!empty($existingCreds)) {
           $this->node->save();
         }
       }
-      $current_user = \Drupal::currentUser();
-      \Drupal::logger('apic_app')->notice('Application @appname credentials updated by @username', [
-        '@appname' => $this->node->getTitle(),
-        '@username' => $current_user->getAccountName(),
+      $currentUser = \Drupal::currentUser();
+      \Drupal::logger('apic_app')->notice('Application @appName credentials updated by @username', [
+        '@appName' => $this->node->getTitle(),
+        '@username' => $currentUser->getAccountName(),
       ]);
 
       // Calling all modules implementing 'hook_apic_app_creds_update':
@@ -189,7 +196,7 @@ class CredentialsUpdateForm extends FormBase {
       $moduleHandler->invokeAll('apic_app_creds_update', [
         'node' => $this->node,
         'data' => $result->data,
-        'credId' => $this->credId
+        'credId' => $this->credId,
       ]);
 
       if ($moduleHandler->moduleExists('rules')) {
@@ -198,10 +205,10 @@ class CredentialsUpdateForm extends FormBase {
         $event = new CredentialUpdateEvent($this->node, $result->data, $this->credId, [
           'application' => $this->node,
           'data' => $result->data,
-          'credId' => $this->credId
+          'credId' => $this->credId,
         ]);
-        $event_dispatcher = \Drupal::service('event_dispatcher');
-        $event_dispatcher->dispatch(CredentialUpdateEvent::EVENT_NAME, $event);
+        $eventDispatcher = \Drupal::service('event_dispatcher');
+        $eventDispatcher->dispatch(CredentialUpdateEvent::EVENT_NAME, $event);
       }
     }
     $form_state->setRedirectUrl($this->getCancelUrl());

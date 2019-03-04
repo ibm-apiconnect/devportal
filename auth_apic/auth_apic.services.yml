@@ -28,7 +28,9 @@ services:
                 '@ibm_apim.user_registry',
                 '@ibm_apim.apicuser',
                 '@ibm_apim.user_utils',
-                '@module_handler'
+                '@module_handler',
+                '@language_manager',
+                '@tempstore.private'
                 ]
     tags:
       - { name: auth_apic }

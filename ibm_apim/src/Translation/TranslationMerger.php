@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -18,16 +18,20 @@ namespace Drupal\ibm_apim\Translation;
  * Translated strings are delivered back in files which contain just the strings which have been newly translated.
  * These need to be merged back with the translation memories which are the strings which were previously translated.
  * This can then be compared to the .pot file (the full set of strings) to verify everything has been translated.
+ *
  * @package Drupal\ibm_apim\Translation
  *
  */
 class TranslationMerger {
 
   private $projects;
+
   private $languages;
 
   private $new_translation_files_location;
+
   private $export_files_location;
+
   private $output_location;
 
   /**
@@ -39,19 +43,20 @@ class TranslationMerger {
    *   directory containing files which were provided to the translation centres, i.e. .pot files + .memories.<lang>.po files.
    * @param $output_location
    *   base dir for files to be output to.
+   * @param array $languages
    */
   public function __construct($new_translation_files_location, $export_files_location, $output_location, $languages = []) {
 
     $this->new_translation_files_location = $new_translation_files_location;
     $this->export_files_location = $export_files_location;
 
-    $this->projects = array();
-    foreach(glob($export_files_location . '/*', GLOB_ONLYDIR) as $projectpath) {
+    $this->projects = [];
+    foreach (glob($export_files_location . '/*', GLOB_ONLYDIR) as $projectpath) {
       $this->projects[] = $projectpath;
-    };
+    }
 
     // Single file project processing:
-//    $this->projects[] = '/tmp/translation_files/dev2tc/account_field_split-8.x-1.0-alpha2';
+    //    $this->projects[] = '/tmp/translation_files/dev2tc/account_field_split-8.x-1.0-alpha2';
 
     $this->output_location = $output_location;
 
@@ -65,17 +70,17 @@ class TranslationMerger {
    * Iterate over the projects.
    * We use the .pot file as the source of truth, and iterate over the other files based on that.
    */
-  public function merge() {
+  public function merge(): void {
 
     $this->checkDir($this->output_location);
     $this->logDirs();
 
-    foreach ( $this->projects as $project_path ) {
+    foreach ($this->projects as $project_path) {
 
       $project = basename($project_path);
-      echo "vvvvv Processing: " . $project . " vvvvv\n";
+      echo 'vvvvv Processing: ' . $project . ' vvvvv\n';
       $pot_file = $project_path . '/' . $project . '.pot';
-      if(!file_exists($pot_file)){
+      if (!file_exists($pot_file)) {
         echo "ERROR: No .pot file found for $project. Looked for $pot_file \n";
       }
       else {
@@ -83,16 +88,16 @@ class TranslationMerger {
         $this->checkDir($project_output_dir);
 
         foreach ($this->languages as $language) {
-          echo "  vvvvv " . $language . " vvvvv\n";
+          echo '  vvvvv ' . $language . ' vvvvv\n';
           $memory_items = $this->getMemoryItems($project, $language);
           $new_items = $this->getNewTranslationItems($project, $language);
           $complete_items = $this->buildCompleteTranslationFile($pot_file, $memory_items, $new_items);
           $this->writeOutput($complete_items, $language, $project, $project_output_dir);
-          echo "  ^^^^^ " . $language . " ^^^^^\n";
+          echo '  ^^^^^ ' . $language . ' ^^^^^\n';
         }
 
       }
-      echo "^^^^^ Completed: " . $project . " ^^^^^\n\n";
+      echo '^^^^^ Completed: ' . $project . ' ^^^^^\n\n';
     } // projects
 
   }
@@ -101,35 +106,37 @@ class TranslationMerger {
    *
    * Get all active languages that drupal knows about.
    * If it is present strip out english.
+   *
    * @return array
    *  Language keys.
    *
    */
-  private function getAllLanguages() {
+  private function getAllLanguages(): array {
     $langs = array_keys(\Drupal::languageManager()->getLanguages());
-    $index = array_search('en',$langs);
-    if($index !== false){
+    $index = array_search('en', $langs, FALSE);
+    if ($index !== FALSE) {
       unset($langs[$index]);
     }
     return $langs;
   }
 
-  private function logDirs() {
-    echo "=============================\n";
-    echo "New translation files:      " . $this->new_translation_files_location . "\n";
-    echo "Exported translation files: " . $this->export_files_location . "\n";
-    echo "Output directory:           " . $this->output_location . "\n";
-    echo "=============================\n\n";
+  private function logDirs(): void {
+    echo '=============================\n';
+    echo 'New translation files:      ' . $this->new_translation_files_location . "\n";
+    echo 'Exported translation files: ' . $this->export_files_location . "\n";
+    echo 'Output directory:           ' . $this->output_location . "\n";
+    echo '=============================\n\n';
   }
 
   /**
    *
    * Check a dir exists, if not attempt to create it.
+   *
    * @param $path
    *
    * @throws \Exception
    */
-  protected function checkDir($path) {
+  protected function checkDir($path): void {
     if (!file_exists($path) && !is_dir($path)) {
       $success = mkdir($path);
       if (!$success) {
@@ -141,10 +148,11 @@ class TranslationMerger {
   /**
    * @param string $filename
    *  .po/ .pot file for reading in.
+   *
    * @return array
    *  PoItem array representing the strings in the translation files.
    */
-  protected function getTranslationFileItems(string $filename) {
+  protected function getTranslationFileItems(string $filename): ?array {
 
     if (!file_exists($filename)) {
       echo 'Not found: ' . $filename . "\n";
@@ -165,10 +173,11 @@ class TranslationMerger {
    *   Project name.
    * @param string $language
    *   Language.
+   *
    * @return array
    *   PoItem array
    */
-  private function getMemoryItems(string $projectName, string $language) {
+  private function getMemoryItems(string $projectName, string $language): array {
     // e.g. acl-8.x-1.0-alpha1-memories.de.po
     $filename = $this->export_files_location . '/' . $projectName . '/' . $projectName . '-memories.' . $language . '.po';
     return $this->getTranslationFileItems($filename);
@@ -182,10 +191,11 @@ class TranslationMerger {
    *   Project name.
    * @param string $language
    *   Language.
+   *
    * @return array
    *   PoItem array
    */
-  private function getNewTranslationItems(string $projectName, string $language) {
+  private function getNewTranslationItems(string $projectName, string $language): ?array {
 
     // versions might have changed so we need to search wildcards for the version.
     $projectNameVersion = $this->splitProjectNameVersion($projectName);
@@ -199,14 +209,14 @@ class TranslationMerger {
 
     $list = glob($this->new_translation_files_location . '/' . $project_search_wildcard . '/' . $project_search_wildcard . '.' . $language . '.po');
 
-    if(\sizeof($list) > 1) {
-      echo "Multiple new translation files found for " . $projectNameVersion['name'] . ":" . \PHP_EOL;
+    if (\sizeof($list) > 1) {
+      echo 'Multiple new translation files found for ' . $projectNameVersion['name'] . ':' . \PHP_EOL;
       \var_dump($list);
-      echo "Using the first one from the list" . \PHP_EOL;
+      echo 'Using the first one from the list' . \PHP_EOL;
     }
 
-    if (\sizeof($list) === 0){
-      echo "No new translation files found for " . $projectNameVersion['name'] . \PHP_EOL;
+    if (\sizeof($list) === 0) {
+      echo 'No new translation files found for ' . $projectNameVersion['name'] . \PHP_EOL;
       return NULL;
     }
     else {
@@ -215,14 +225,21 @@ class TranslationMerger {
     }
   }
 
-  private function buildCompleteTranslationFile(string $pot_file, $memory_items, $newtranslation_items) {
+  /**
+   * @param string $pot_file
+   * @param $memory_items
+   * @param $newtranslation_items
+   *
+   * @return array
+   */
+  private function buildCompleteTranslationFile(string $pot_file, $memory_items, $newtranslation_items) : array{
     $reader = new TranslationFileReader($pot_file);
     $items = $reader->getItems();
-    $complete_items = array();
+    $complete_items = [];
     foreach ($items as $item) {
       $got_memory = FALSE;
       $got_new = FALSE;
-      if($memory_items !== NULL) {
+      if ($memory_items !== NULL) {
         foreach ($memory_items as $mem) {
           if ($item->getSource() === $mem->getSource()) {
             $complete_items[] = $mem;
@@ -250,8 +267,8 @@ class TranslationMerger {
 
       // this means we haven't found any translations. Notify of this as it suggests something has been missed in our file processing/ translation process.
       // this is not added to the list of strings otherwise we might load an empty string as the translation.
-      $notfound = gettype($item->getSource()) == "array" ? serialize($item->getSource()) : $item->getSource();
-      echo "NO TRANSLATION FOUND FOR: " . $notfound . "\n";
+      $notfound = is_array($item->getSource()) ? serialize($item->getSource()) : $item->getSource();
+      echo 'NO TRANSLATION FOUND FOR: ' . $notfound . "\n";
 
     } // items
 
@@ -269,7 +286,7 @@ class TranslationMerger {
    * @param string $dir
    *   Output directory.
    */
-  private function writeOutput(array $complete_items, string $language, string $project, string $dir) {
+  private function writeOutput(array $complete_items, string $language, string $project, string $dir) : void{
     $filename = $dir . '/' . $project . '.' . $language . '.po';
     new TranslationFileWriter($complete_items, $filename);
     echo 'Written: ' . basename($filename) . "\n";
@@ -277,18 +294,21 @@ class TranslationMerger {
 
   /**
    * Split a project into name-version. Version is optional.
-   * @param $proj
+   *
+   * @param $project
+   *
+   * @return array
    */
-  private function splitProjectNameVersion($proj): array {
-    $split = explode('-', $proj, 2);
+  private function splitProjectNameVersion($project): array {
+    $split = explode('-', $project, 2);
 
-    $project = array();
+    $returnProject = [];
 
-    $project['name'] = $split[0];
+    $returnProject['name'] = $split[0];
     if (sizeof($split) > 1) {
-      $project['version'] = $split[1];
+      $returnProject['version'] = $split[1];
     }
-    return $project;
+    return $returnProject;
   }
 
 

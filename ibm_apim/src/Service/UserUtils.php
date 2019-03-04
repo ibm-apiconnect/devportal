@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -14,12 +14,12 @@ namespace Drupal\ibm_apim\Service;
 
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicRest;
-use Drupal\user\Entity\User;
-use Drupal\Core\TempStore\PrivateTempStoreFactory;
-use Psr\Log\LoggerInterface;
 use Drupal\node\Entity\Node;
+use Drupal\user\Entity\User;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
@@ -28,8 +28,11 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 class UserUtils {
 
   private $currentUser;
+
   private $sessionStore;
+
   private $state;
+
   private $logger;
 
   public function __construct(AccountProxy $current_user, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, LoggerInterface $logger) {
@@ -46,13 +49,14 @@ class UserUtils {
    *
    * @param $current_pass
    * @param $account
+   *
    * @return bool
    */
-  function checkPassword($current_pass, $account) {
+  public function checkPassword($current_pass, $account): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $rc = FALSE;
     $moduleHandler = \Drupal::service('module_handler');
-    if ($this->currentUser->id() == 1) {
+    if ((int) $this->currentUser->id() === 1) {
       // Check password. (from user.module user_validate_current_pass()).
       $uid = \Drupal::service('user.auth')->authenticate($account->getUsername(), $current_pass);
 
@@ -60,10 +64,9 @@ class UserUtils {
         $rc = TRUE;
       }
     }
-    else {
-      if ($moduleHandler->moduleExists('auth_apic')) {
-        $rc = auth_apic_authenticate($account->getAccountName(), $current_pass);
-      }
+    elseif ($account !== NULL && $moduleHandler->moduleExists('auth_apic')) {
+      // TODO fix this since this function doesnt exist!
+      $rc = auth_apic_authenticate($account->getAccountName(), $current_pass);
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
     return $rc;
@@ -74,14 +77,16 @@ class UserUtils {
    *
    * This method cannot invoke any node operations or it will introduce cycles.
    *
-   * @return array
+   * @return null|array
    *    The the current consumer org object or NULL if a user does not
    *    belong to a consumer org or one is not set.
+   *
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
-  function getCurrentConsumerorg() {
+  public function getCurrentConsumerorg(): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $rc = NULL;
-    if (!$this->currentUser->isAnonymous() && $this->currentUser->id() != 1) {
+    if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
       $consumerorg = $this->sessionStore->get('current_consumer_organization');
       if (isset($consumerorg) && !empty($consumerorg)) {
         $rc = $consumerorg;
@@ -93,7 +98,7 @@ class UserUtils {
     }
     else {
       // Anonymous user, return empty array.
-      $rc = array('url' => NULL);
+      $rc = ['url' => NULL];
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
     return $rc;
@@ -108,12 +113,14 @@ class UserUtils {
    * This method cannot invoke any node operations or it will introduce cycles.
    *
    * @param string|null $org_url
-   * @return array The form
+   *
+   * @return null|array
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
-  function setCurrentConsumerorg($org_url = NULL) {
+  public function setCurrentConsumerorg($org_url = NULL): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $org_url);
     $org = NULL;
-    if (!$this->currentUser->isAnonymous() && $this->currentUser->id() != 1) {
+    if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
       $org_urls = $this->loadConsumerorgs();
       $found = FALSE;
       if ($org_urls && !empty($org_urls)) {
@@ -121,12 +128,12 @@ class UserUtils {
         if (!isset($org_url)) {
           $org_url = reset($org_urls);
         }
-        if (in_array($org_url, $org_urls)) {
+        if (in_array($org_url, $org_urls, FALSE)) {
           $found = TRUE;
-          $org = array('url' => $org_url);
+          $org = ['url' => $org_url];
           $this->sessionStore->set('current_consumer_organization', $org);
         }
-        if ($found != TRUE) {
+        if ($found !== TRUE) {
           $this->sessionStore->set('current_consumer_organization', NULL);
         }
       }
@@ -134,7 +141,7 @@ class UserUtils {
         $this->sessionStore->set('current_consumer_organization', NULL);
       }
 
-      $this->logger->notice('Setting current consumerorg to %data', array('%data' => json_encode($org, JSON_PRETTY_PRINT)));
+      $this->logger->notice('Setting current consumerorg to %data', ['%data' => json_encode($org, JSON_PRETTY_PRINT)]);
     }
     else {
       $this->logger->notice('Cannot set current consumerorg for anonymous users or admin');
@@ -145,12 +152,13 @@ class UserUtils {
 
   /**
    * Set session variables for the current consumerorg
-   * @throws \Drupal\user\TempStoreException
+   *
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
-  function setOrgSessionData() {
+  public function setOrgSessionData(): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $this->sessionStore->set('permissions', array());
-    if (!$this->currentUser->isAnonymous() && $this->currentUser->id() != 1) {
+    $this->sessionStore->set('permissions', []);
+    if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
       if (!isset($this->getCurrentConsumerorg()['url'])) {
         // if current consumerorg not set then invoke it and try again
         $this->setCurrentConsumerorg();
@@ -158,26 +166,28 @@ class UserUtils {
       if (isset($this->getCurrentConsumerorg()['url'])) {
         $consumerorg_url = $this->getCurrentConsumerorg()['url'];
         $org_urls = $this->loadConsumerorgs();
-        if ($org_urls && !empty($org_urls) && isset($consumerorg_url)) {
-          if (in_array($consumerorg_url, $org_urls)) {
-            $consumerOrg = \Drupal::service('ibm_apim.consumerorg')->get($consumerorg_url);
-            // store the current consumerorg in the session
-            if (isset($consumerOrg)) {
-              $org = array('url' => $consumerOrg->getUrl(), 'name' => $consumerOrg->getName());
-              $this->sessionStore->set('current_consumer_organization', $org);
+        if ($org_urls && !empty($org_urls) && isset($consumerorg_url) && in_array($consumerorg_url, $org_urls, FALSE)) {
+          $consumerOrg = \Drupal::service('ibm_apim.consumerorg')->get($consumerorg_url);
+          // store the current consumerorg in the session
+          if (isset($consumerOrg)) {
+            $org = ['url' => $consumerOrg->getUrl(), 'name' => $consumerOrg->getName()];
+            $this->sessionStore->set('current_consumer_organization', $org);
 
-              // total permissions for user is all permissions of all roles that the user has
-              $perms = array();
-              $user = User::load($this->currentUser->id());
+            // total permissions for user is all permissions of all roles that the user has
+            $perms = [[]];
+            $user = User::load($this->currentUser->id());
+            if ($user !== NULL) {
               $roles = $consumerOrg->getRolesForMember($user->get('apic_url')->value);
-
               foreach ($roles as $role) {
                 if ($role) {
-                  $perms = array_merge($perms, $role->getPermissions());
+                  $perms[] = $role->getPermissions();
                 }
               }
-              $this->sessionStore->set('permissions', $perms);
+              // weird construct done to avoid doing CPU intensive array_merge in a loop
+              // see https://github.com/kalessil/phpinspectionsea/blob/master/docs/performance.md#slow-array-function-used-in-loop
+              $perms = array_merge(...$perms);
             }
+            $this->sessionStore->set('permissions', $perms);
           }
         }
       }
@@ -190,17 +200,20 @@ class UserUtils {
 
   /**
    * update the cached user data (orgs list, roles, etc.)
+   *
    * @return mixed
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  function refreshUserData() {
+  public function refreshUserData() {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $return = NULL;
-    if (!$this->currentUser->isAnonymous() && $this->currentUser->id() != 1) {
+    if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
       $result = ApicRest::get('/me?expand=true');
 
       $this->sessionStore->set('userdata', NULL);
 
-      if (isset($result) && ($result->code == 200) && $result->data != '') {
+      if (isset($result) && ((int) $result->code === 200) && $result->data !== '') {
         $this->sessionStore->set('userdata', $result->data);
         if (isset($result->data['id'])) {
           $this->sessionStore->set('memberid', $result->data['id']);
@@ -221,18 +234,18 @@ class UserUtils {
    *
    * @return array|null
    */
-  function loadConsumerorgs() {
+  public function loadConsumerorgs(): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $return = NULL;
-    if (!$this->currentUser->isAnonymous() && $this->currentUser->id() != 1) {
-      $orgs = array();
+    if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
+      $orgs = [];
       // use the consumerorg urls list set on the user object
       $account = User::load($this->currentUser->id());
-      if (!empty($account->consumerorg_url->getValue())) {
+      if ($account !== NULL && !empty($account->consumerorg_url->getValue())) {
         $org_urls = $account->consumerorg_url->getValue();
         foreach ($org_urls as $index => $valueArray) {
           $nextOrgUrl = $valueArray['value'];
-          array_push($orgs, $nextOrgUrl);
+          $orgs[] = $nextOrgUrl;
         }
       }
       $return = $orgs;
@@ -244,20 +257,22 @@ class UserUtils {
   /**
    * Return all of the consumer orgs the current user owns.
    */
-  function loadOwnedConsumerorgs() {
+  public function loadOwnedConsumerorgs(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $user = User::load($this->currentUser->id());
 
-    $owned = array();
-    $query = \Drupal::entityQuery('node');
-    $query->condition('type', 'consumerorg');
-    $query->condition('consumerorg_owner.value', $user->get('apic_url')->value);
-    $nids = $query->execute();
-    if (isset($nids) && !empty($nids)) {
-      $nodes = Node::loadMultiple($nids);
-      foreach ($nodes as $node) {
-        $owned[] = $node->consumerorg_url->value;
+    $owned = [];
+    if ($user !== NULL) {
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'consumerorg');
+      $query->condition('consumerorg_owner.value', $user->get('apic_url')->value);
+      $nids = $query->execute();
+      if (isset($nids) && !empty($nids)) {
+        $nodes = Node::loadMultiple($nids);
+        foreach ($nodes as $node) {
+          $owned[] = $node->consumerorg_url->value;
+        }
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $owned);
@@ -269,14 +284,15 @@ class UserUtils {
    *
    * @param $string
    * @param null $account
+   *
    * @return bool
    */
-  function explicitUserAccess($string, $account = NULL) {
-    if (isset($account)) {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, array($string, $account->id()));
+  public function explicitUserAccess($string, $account = NULL): bool {
+    if ($account !== NULL) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$string, $account->id()]);
     }
     else {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, array($string, NULL));
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$string, NULL]);
     }
 
     if (!isset($account)) {
@@ -294,7 +310,7 @@ class UserUtils {
     if (!isset($perm[$account->id()])) {
       $role_permissions = user_role_permissions($account->getRoles());
 
-      $perms = array();
+      $perms = [];
       foreach ($role_permissions as $one_role) {
         $perms += $one_role;
       }
@@ -309,15 +325,16 @@ class UserUtils {
    * Check if the current user has a specific permission
    *
    * @param null $perm
+   *
    * @return bool
    */
-  function checkHasPermission($perm = NULL) {
+  public function checkHasPermission($perm = NULL): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $perm);
     $return = FALSE;
-    if (!$this->currentUser->isAnonymous() && $this->currentUser->id() != 1 && isset($perm) && !empty($perm)) {
+    if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1 && isset($perm) && !empty($perm)) {
       $perms = $this->sessionStore->get('permissions');
       if (isset($perms) && !empty($perms)) {
-        $return = in_array($perm, $perms);
+        $return = in_array($perm, $perms, FALSE);
       }
       else {
         // the user has no permissions at all. send them away.
@@ -331,10 +348,12 @@ class UserUtils {
 
   /**
    * Decrypt data using APIC encryption (AES-256-CBC)
+   *
    * @param $data
+   *
    * @return bool|string
    */
-  function decryptData($data) {
+  public function decryptData($data) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $data);
     $return = FALSE;
     $ibm_apim_site_url = $this->state->get('ibm_apim.site_url');
@@ -344,11 +363,11 @@ class UserUtils {
         $ibm_apim_site_url = 'https://' . $ibm_apim_site_url;
       }
       exec('bash -c "/usr/local/bin/node /home/admin/bgsync/decrypt_token.js -p ' . escapeshellarg($ibm_apim_site_url) . ' -e ' . escapeshellarg($data) . ' 2> >(ADMIN_USER=$USER ~admin/bin/background_sync_logger >> /var/log/devportal/decrypt.log)"', $output, $rc);
-      if (isset($rc) && $rc != 0) {
-        $this->logger->notice('Decryption returned %rc. Output: %data', array(
+      if (isset($rc) && $rc !== 0) {
+        $this->logger->notice('Decryption returned %rc. Output: %data', [
           '%rc' => $rc,
           '%data' => var_export($output),
-        ));
+        ]);
         $return = FALSE;
       }
       else {

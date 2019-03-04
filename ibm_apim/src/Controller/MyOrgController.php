@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,24 +13,46 @@
 
 namespace Drupal\ibm_apim\Controller;
 
+use Drupal\consumerorg\ApicType\Member;
+use Drupal\consumerorg\ApicType\Role;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicRest;
+use Drupal\ibm_apim\ApicType\ApicUser;
+use Drupal\ibm_apim\Service\Billing;
 use Drupal\ibm_apim\Service\MyOrgService;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
-use Drupal\ibm_apim\Service\Billing;
 use Drupal\node\Entity\Node;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class MyOrgController extends ControllerBase {
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\Billing
+   */
   protected $billingService;
+
+  /**
+   * @var \Drupal\Core\Config\Config|\Drupal\Core\Config\ImmutableConfig
+   */
   protected $config;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
   protected $siteConfig;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\MyOrgService
+   */
   protected $orgService;
 
   public function __construct(UserUtils $userUtils,
@@ -55,68 +77,78 @@ class MyOrgController extends ControllerBase {
     );
   }
 
-  public function content() {
+  public function content(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $myorg = NULL;
     $owner = NULL;
-    $members = array();
-    $org_roles = array();
+    $members = [];
+    $orgRoles = [];
+    $hasMemberManagePerm = FALSE;
+    $hasSettingsManagePerm = FALSE;
+    $canTransferOwner = FALSE;
+    $canRenameOrg = FALSE;
+    $canDeleteOrg = FALSE;
+
     $org = $this->userUtils->getCurrentConsumerorg();
     // load the current consumerorg node to pass through to the twig template
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $org['url']);
     $nids = $query->execute();
-    if ($nids !== null && !empty($nids)) {
+    if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
       $myorg = Node::load($nid);
 
       $myorgOwnerUrl = $myorg->consumerorg_owner->value;
       $cOrgRoles = $myorg->consumerorg_roles->getValue();
-      if ($cOrgRoles !== null) {
+      if ($cOrgRoles !== NULL) {
+        $whitelist = [Role::class];
         foreach ($cOrgRoles as $arrayValue) {
           // Owner and member are special cases that we handle separately in the org page.
-          $role = unserialize($arrayValue['value']);
+          $role = new Role();
+          $role->createFromArray(unserialize($arrayValue['value'], ['allowed_classes' => $whitelist]));
           if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
-            $org_roles[] = $role;
+            $orgRoles[] = $role;
           }
         }
       }
 
       $cOrgMembers = $myorg->consumerorg_members->getValue();
-      if ($cOrgMembers !== null) {
+      if ($cOrgMembers !== NULL) {
+        $whitelist = [Member::class, ApicUser::class];
         foreach ($cOrgMembers as $arrayValue) {
-          $orgmember = unserialize($arrayValue['value']);
+          $orgMember = new Member();
+          $orgMember->createFromArray(unserialize($arrayValue['value'], ['allowed_classes' => $whitelist]));
 
-          $member_user_url = $orgmember->getUserUrl();
-          if ($myorgOwnerUrl === $member_user_url) {
-            $owner = $this->orgService->prepareOrgMemberForDisplay($orgmember);
+          $memberUserUrl = $orgMember->getUserUrl();
+          if ($myorgOwnerUrl === $memberUserUrl) {
+            $owner = $this->orgService->prepareOrgMemberForDisplay($orgMember);
           }
           else {
-            $members[] = $this->orgService->prepareOrgMemberForDisplay($orgmember);
+            $members[] = $this->orgService->prepareOrgMemberForDisplay($orgMember);
           }
         }
       }
 
       // add pending invitations into the list of members.
       $cOrgInvites = $myorg->consumerorg_invites->getValue();
-      if ($cOrgInvites !== null) {
+      if ($cOrgInvites !== NULL) {
         foreach ($cOrgInvites as $invites_array) {
-          $invite = unserialize($invites_array['value']);
-          $invited_member = [];
-          $invited_member['details'] = $invite['email'];
-          $invited_member['state'] = 'Pending';
-          $invited_member['id'] = basename($invite['url']);
-          $invited_member['role_urls'] = $invite['role_urls'];
-          $members[] = $invited_member;
+          $invite = unserialize($invites_array['value'], ['allowed_classes' => FALSE]);
+          $invitedMember = [];
+          $invitedMember['details'] = $invite['email'];
+          $invitedMember['state'] = 'Pending';
+          $invitedMember['id'] = basename($invite['url']);
+          $invitedMember['role_urls'] = $invite['role_urls'];
+          $members[] = $invitedMember;
         }
       }
 
       foreach ($members as &$member) {
-        $roles = array();
+        $roles = [];
         foreach ($member['role_urls'] as $role_url) {
-          $role = $org_roles[array_search($role_url, array_column($org_roles, 'url'))];
+          $role = $orgRoles[array_search($role_url, array_column($orgRoles, 'url'))];
           $roles[] = $role;
         }
         $member['roles'] = $roles;
@@ -126,20 +158,20 @@ class MyOrgController extends ControllerBase {
 
       // TODO: sort members so we are consistent
 
-      $has_member_manage_perm = $this->userUtils->checkHasPermission('member:manage');
-      $has_settings_manage_perm = $this->userUtils->checkHasPermission('settings:manage');
+      $hasMemberManagePerm = $this->userUtils->checkHasPermission('member:manage');
+      $hasSettingsManagePerm = $this->userUtils->checkHasPermission('settings:manage');
 
-      $allow_consumerorg_change_owner = $this->config->get('allow_consumerorg_change_owner');
-      $allow_consumerorg_rename = $this->config->get('allow_consumerorg_rename');
-      $allow_consumerorg_delete = $this->config->get('allow_consumerorg_delete');
+      $allowConsumerorgChangeOwner = (boolean) $this->config->get('allow_consumerorg_change_owner');
+      $allowConsumerorgRename = (boolean) $this->config->get('allow_consumerorg_rename');
+      $allowConsumerorgDelete = (boolean) $this->config->get('allow_consumerorg_delete');
 
-      $can_transfer_owner = $has_settings_manage_perm && $allow_consumerorg_change_owner;
-      $can_rename_org = $has_settings_manage_perm && $allow_consumerorg_rename;
-      $can_delete_org = $has_settings_manage_perm && $allow_consumerorg_delete;
+      $canTransferOwner = $hasSettingsManagePerm && $allowConsumerorgChangeOwner;
+      $canRenameOrg = $hasSettingsManagePerm && $allowConsumerorgRename;
+      $canDeleteOrg = $hasSettingsManagePerm && $allowConsumerorgDelete;
 
     }
 
-    if ($myorg === null || empty($myorg)) {
+    if ($myorg === NULL || empty($myorg)) {
       // the user is not in any orgs. send them somewhere else.
       // if onboarding is enabled, we can redirect to the create org page
       if ($this->siteConfig->isSelfOnboardingEnabled()) {
@@ -155,7 +187,7 @@ class MyOrgController extends ControllerBase {
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return array(
+    return [
       '#cache' => [
         'tags' => ['myorg:url:' . $org['url']],
       ],
@@ -166,75 +198,75 @@ class MyOrgController extends ControllerBase {
       '#myorg_url' => $myorg->consumerorg_url->value,
       '#myorg_owner' => $owner,
       '#myorg_members' => $members,
-      '#myorg_roles' => $org_roles,
+      '#myorg_roles' => $orgRoles,
       '#myorg' => $myorg,
-      '#myorg_has_member_manage_perm' => $has_member_manage_perm,
-      '#myorg_has_settings_manage_perm' => $has_settings_manage_perm,
-      '#myorg_can_transfer_owner' => $can_transfer_owner,
-      '#myorg_can_rename_org' => $can_rename_org,
-      '#myorg_can_delete_org' => $can_delete_org
-    );
+      '#myorg_has_member_manage_perm' => $hasMemberManagePerm,
+      '#myorg_has_settings_manage_perm' => $hasSettingsManagePerm,
+      '#myorg_can_transfer_owner' => $canTransferOwner,
+      '#myorg_can_rename_org' => $canRenameOrg,
+      '#myorg_can_delete_org' => $canDeleteOrg,
+    ];
   }
 
   /**
    * Allow consumerorg owner to set billing info for monetization
    */
-  public function billing() {
+  public function billing(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $markup = '';
-    $billing_data = array();
-    $consumer_org = $this->userUtils->getCurrentConsumerorg();
+    $billingData = [];
+    $consumerOrg = $this->userUtils->getCurrentConsumerorg();
 
     // get current billing info
-    $url = '/' . $consumer_org['url'] . '/payment-methods';
+    $url = '/' . $consumerOrg['url'] . '/payment-methods';
     $result = ApicRest::get($url);
     // TODO this needs fixing up to reflect the consumer api, and the fact can have multiple payment methods per consumer org now
     // TODO it also needs converting over to have the HTML in a template and pass variables through rather than inlined HTML here.
-    if (isset($result) && isset($result->data) && !isset($result->data['errors'])) {
-      $billing_data = $result->data;
+    if (isset($result, $result->data) && !isset($result->data['errors'])) {
+      $billingData = $result->data;
     }
-    if (!isset($billing_data[0]['properties']['email'])) {
-      $billing_data[0]['properties']['email'] = '';
+    if (!isset($billingData[0]['properties']['email'])) {
+      $billingData[0]['properties']['email'] = '';
     }
-    if (!isset($billing_data[0]['properties']['name'])) {
-      $billing_data[0]['properties']['name'] = '';
+    if (!isset($billingData[0]['properties']['name'])) {
+      $billingData[0]['properties']['name'] = '';
     }
-    if (!isset($billing_data[0]['properties']['last4'])) {
-      $billing_data[0]['properties']['last4'] = '';
+    if (!isset($billingData[0]['properties']['last4'])) {
+      $billingData[0]['properties']['last4'] = '';
     }
-    if (!isset($billing_data[0]['properties']['exp_month'])) {
-      $billing_data[0]['properties']['exp_month'] = '';
+    if (!isset($billingData[0]['properties']['exp_month'])) {
+      $billingData[0]['properties']['exp_month'] = '';
     }
-    if (!isset($billing_data[0]['properties']['exp_year'])) {
-      $billing_data[0]['properties']['exp_year'] = '';
+    if (!isset($billingData[0]['properties']['exp_year'])) {
+      $billingData[0]['properties']['exp_year'] = '';
     }
-    $markup .= "<p>" . t('The current billing information for your consumer organization is shown below. To update the information use the \'Update\' button to launch a wizard which will guide you through the process.') . "</p>";
+    $markup .= '<p>' . t('The current billing information for your consumer organization is shown below. To update the information use the \'Update\' button to launch a wizard which will guide you through the process.') . '</p>';
     $markup .= "<div id='billing' class='fieldset-wrapper'>";
     $markup .= "<div class='form-item form-item-role'>";
-    $markup .= "<label for='edit-role'>" . t('Contact information') . "</label>";
+    $markup .= "<label for='edit-role'>" . t('Contact information') . '</label>';
     $markup .= "<div class='form-item form-type-textfield'>";
-    $markup .= "<label for='billing_name'>" . t('Name:') . "</label>";
-    $markup .= "<input type='text' id='billing_name' readonly size='20' value='" . $billing_data[0]['properties']['name'] . "' placeholder='" . t('None on file') . "' class='form-text'/>";
-    $markup .= "</div>";
+    $markup .= "<label for='billing_name'>" . t('Name:') . '</label>';
+    $markup .= "<input type='text' id='billing_name' readonly size='20' value='" . $billingData[0]['properties']['name'] . "' placeholder='" . t('None on file') . "' class='form-text'/>";
+    $markup .= '</div>';
     $markup .= "<div class='form-item form-type-textfield'>";
-    $markup .= "<label for='billing_email'>" . t('Email:') . "</label>";
-    $markup .= "<input type='text' id='billing_email' readonly size='20' value='" . $billing_data[0]['properties']['email'] . "' placeholder='" . t('None on file') . "' class='form-text'/>";
-    $markup .= "</div>";
-    $markup .= "</div>";
+    $markup .= "<label for='billing_email'>" . t('Email:') . '</label>';
+    $markup .= "<input type='text' id='billing_email' readonly size='20' value='" . $billingData[0]['properties']['email'] . "' placeholder='" . t('None on file') . "' class='form-text'/>";
+    $markup .= '</div>';
+    $markup .= '</div>';
     $markup .= "<div class='form-item form-item-role'>";
-    $markup .= "<label for='edit-role'>" . t('Credit card') . "</label>";
+    $markup .= "<label for='edit-role'>" . t('Credit card') . '</label>';
     $markup .= "<div class='form-item form-type-textfield'>";
-    $markup .= "<label for='card_ending'>" . t('Card ending in:') . "</label>";
-    $markup .= "<input type='text' id='card_ending' readonly size='11' value='" . $billing_data[0]['properties']['last4'] . "' placeholder='" . t('None on file') . "' class='form-text'/>";
-    $markup .= "</div>";
+    $markup .= "<label for='card_ending'>" . t('Card ending in:') . '</label>';
+    $markup .= "<input type='text' id='card_ending' readonly size='11' value='" . $billingData[0]['properties']['last4'] . "' placeholder='" . t('None on file') . "' class='form-text'/>";
+    $markup .= '</div>';
     $markup .= "<div class='form-item form-type-textfield form-item-new-email'>";
-    $markup .= "<label for='card_expiring'>" . t('Card expiration:') . "</label>";
-    $markup .= "<input type='text' id='card_expiring' readonly size='10' value='" . $billing_data[0]['properties']['exp_month'] . '/' . $billing_data[0]['properties']['exp_year'] . "' placeholder='" . t('None on file') . "' class='form-text'/>";
-    $markup .= "</div>";
-    $markup .= "</div>";
-    $markup .= "<button id='billing_button' class='form-submit'>" . t('Update') . "</button>";
-    $markup .= "</div>";
+    $markup .= "<label for='card_expiring'>" . t('Card expiration:') . '</label>';
+    $markup .= "<input type='text' id='card_expiring' readonly size='10' value='" . $billingData[0]['properties']['exp_month'] . '/' . $billingData[0]['properties']['exp_year'] . "' placeholder='" . t('None on file') . "' class='form-text'/>";
+    $markup .= '</div>';
+    $markup .= '</div>';
+    $markup .= "<button id='billing_button' class='form-submit'>" . t('Update') . '</button>';
+    $markup .= '</div>';
 
     // get the current site logo
     if (!$logo = theme_get_setting('logo_path')) {
@@ -255,33 +287,37 @@ class MyOrgController extends ControllerBase {
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return array(
+    return [
       '#markup' => $markup,
-      '#attached' => array(
-        'drupalSettings' => array(
+      '#attached' => [
+        'drupalSettings' => [
           'billing_key' => $billing_service['configuration']['publishableKey'],
           'billing_siteName' => \Drupal::config('system.site')->get('name'),
           'billing_logoPath' => $logo,
           'billing_label' => t('Update Billing Details'),
           'billing_description' => t('Update your Billing Information'),
-          'billing_endpoint' => Url::fromUri('internal:/ibm_apim/billing')->toString()
-        ),
-        'library' => array(
+          'billing_endpoint' => Url::fromUri('internal:/ibm_apim/billing')->toString(),
+        ],
+        'library' => [
           'ibm_apim/billing',
-        ),
-      ),
-    );
+        ],
+      ],
+    ];
   }
 
   /**
    * Take token from stripe and pass to APIM
+   *
    * @param $input
+   *
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  public function billingSubmit($input) {
+  public function billingSubmit($input): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $token = json_decode(ibm_apim_base64_url_decode($input), TRUE);
-    $consumer_org = $this->userUtils->getCurrentConsumerorg();
+    $consumerOrg = $this->userUtils->getCurrentConsumerorg();
 
     if (!isset($token['card']['name'])) {
       $token['card']['name'] = ' ';
@@ -289,19 +325,19 @@ class MyOrgController extends ControllerBase {
     if (!isset($token['email'])) {
       $token['email'] = ' ';
     }
-    $data = array(
+    $data = [
       'provider' => 'stripe',
       'model' => 'stripe_customer',
-      'properties' => array(
+      'properties' => [
         'source' => $token['id'],
-        "email" => $token['email'],
-        "name" => $token['card']['name']
-      )
-    );
+        'email' => $token['email'],
+        'name' => $token['card']['name'],
+      ],
+    ];
 
-    $url = '/' . $consumer_org['url'] . '/payment-gateways';
+    $url = '/' . $consumerOrg['url'] . '/payment-gateways';
     $result = ApicRest::put($url, json_encode($data));
-    if (isset($result) && isset($result->data) && !isset($result->data['errors'])) {
+    if (isset($result, $result->data) && !isset($result->data['errors'])) {
       drupal_set_message(t('Billing information updated successfully'));
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

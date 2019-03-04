@@ -30,9 +30,7 @@ services:
   ibm_apim.consumerorg:
     class: Drupal\consumerorg\Service\ConsumerOrgService
     arguments: ['@logger.channel.consumerorg',
-                '@state',
                 '@ibm_apim.site_config',
-                '@ibm_apim.permissions',
                 '@ibm_apim.apim_utils',
                 '@event_dispatcher',
                 '@current_user',

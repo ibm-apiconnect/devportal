@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -22,19 +22,15 @@ use Drupal\ibm_apim\Rest\RestResponse;
  */
 class MeResponse extends RestResponse {
 
-  private $user;
-
   /**
-   * Me Response constructor.
+   * @var ApicUser
    */
-  public function __construct() {
-    parent::__construct();
-  }
+  private $user;
 
   /**
    * @param ApicUser $user
    */
-  public function setUser(ApicUser $user) {
+  public function setUser(ApicUser $user): void {
     $this->user = $user;
   }
 
@@ -42,7 +38,7 @@ class MeResponse extends RestResponse {
   /**
    * @return ApicUser
    */
-  public function getUser() {
+  public function getUser(): ApicUser {
     return $this->user;
   }
 

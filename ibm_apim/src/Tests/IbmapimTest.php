@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -31,7 +31,7 @@ class IbmapimTest extends WebTestBase {
    *
    * @var array
    */
-  static public $modules = array('ibm_apim');
+  static public $modules = ['ibm_apim'];
 
   /**
    * The installation profile to use with this test.
@@ -42,7 +42,7 @@ class IbmapimTest extends WebTestBase {
 
   protected $strictConfigSchema = FALSE;
 
-  public function testContentTypeExists() {
+  public function testContentTypeExists(): void {
     $found = TRUE;
 
     $this->assertTrue($found, 'TRUE!');

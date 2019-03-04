@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -24,8 +24,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
 
   protected $keyValueExpirable;
+
   protected $logger;
+
   protected $sitePath;
+
   protected $utils;
 
   /**
@@ -33,7 +36,7 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
    *
    * @var array
    */
-  protected $modules = array();
+  protected $modules = [];
 
   public function __construct(KeyValueStoreExpirableInterface $key_value_expirable,
                               LoggerInterface $logger,
@@ -74,7 +77,7 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     return new Url('ibm_apim.custommodules_delete');
   }
 
@@ -88,7 +91,7 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'ibm_apim_custommodules_delete_confirm_form';
   }
 
@@ -109,10 +112,10 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
 
     $form['text']['#markup'] = '<p>' . $this->t('The following modules will be completely deleted from your system, and <em>all data from these modules will be lost</em>!') . '</p>';
     // TODO: pass through the module name from the info.yml to list on the page
-    $form['modules'] = array(
+    $form['modules'] = [
       '#theme' => 'item_list',
       '#items' => $this->modules,
-    );
+    ];
 
     return parent::buildForm($form, $form_state);
   }
@@ -120,7 +123,7 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
 
     // Clear the key value store entry.
     $account = $this->currentUser()->id();
@@ -137,17 +140,22 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
     $form_state->setRedirectUrl($this->getCancelUrl());
   }
 
-  private function deleteModulesOnFileSystem(array $modules) {
-    $paths = array();
+  /**
+   * @param array $modules
+   *
+   * @return bool
+   */
+  private function deleteModulesOnFileSystem(array $modules): bool {
+    $paths = [];
+    $error_found = FALSE;
     foreach ($modules as $module) {
       $path = \DRUPAL_ROOT . '/' . $this->sitePath . '/modules/' . $module;
-      $error_found = FALSE;
-      $this->logger->debug('Delete modules: checking existence of %path', array('%path' => $path));
+      $this->logger->debug('Delete modules: checking existence of %path', ['%path' => $path]);
       if (is_dir($path)) {
         $paths[] = $path;
       }
       else {
-        $this->logger->error('%path is not a directory, exitting.', array('%path' => $path));
+        $this->logger->error('%path is not a directory, exitting.', ['%path' => $path]);
         $error_found = TRUE;
       }
     }
@@ -156,19 +164,16 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
       $this->logger->error('Errors found while checking module directories to delete, so cancelling processing.');
       $return = FALSE;
     }
+    elseif (!empty($paths)) {
+      foreach ($paths as $path) {
+        $this->logger->debug('Delete modules: recursively deleting %path', ['%path' => $path]);
+        $this->utils->file_delete_recursive($path);
+      }
+      $return = TRUE;
+    }
     else {
-      if (!empty($paths)) {
-        foreach ($paths as $path) {
-          $this->logger->debug('Delete modules: recursively deleting %path', ['%path' => $path]);
-          $this->utils->file_delete_recursive($path);
-        }
-        $return = TRUE;
-      }
-      else {
-        $this->logger->error('Empty list of paths to delete.');
-        $return = FALSE;
-      }
-
+      $this->logger->error('Empty list of paths to delete.');
+      $return = FALSE;
     }
 
     return $return;

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -20,39 +20,45 @@ class EnterContentStep extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'mail_subscribers_wizard_enter_content';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $message = NULL;
+    $headers = NULL;
+    $priority = NULL;
+    $receipt = NULL;
+    $direct = NULL;
+    $carbon_copy = NULL;
     // load any saved values in case have gone backwards in the wizard
     $cached_values = $form_state->getTemporaryValue('wizard');
-    if(!empty($cached_values) && isset($cached_values['subject'])) {
+    if (!empty($cached_values) && isset($cached_values['subject'])) {
       $subject = $cached_values['subject'];
     }
-    if(!empty($cached_values) && isset($cached_values['message'])) {
+    if (!empty($cached_values) && isset($cached_values['message'])) {
       $message = $cached_values['message'];
     }
-    if(!empty($cached_values) && isset($cached_values['direct'])) {
+    if (!empty($cached_values) && isset($cached_values['direct'])) {
       $direct = $cached_values['direct'];
     }
-    if(!empty($cached_values) && isset($cached_values['carbon_copy'])) {
+    if (!empty($cached_values) && isset($cached_values['carbon_copy'])) {
       $carbon_copy = $cached_values['carbon_copy'];
     }
-    if(!empty($cached_values) && isset($cached_values['priority'])) {
+    if (!empty($cached_values) && isset($cached_values['priority'])) {
       $priority = $cached_values['priority'];
     }
-    if(!empty($cached_values) && isset($cached_values['receipt'])) {
+    if (!empty($cached_values) && isset($cached_values['receipt'])) {
       $receipt = $cached_values['receipt'];
     }
-    if(!empty($cached_values) && isset($cached_values['headers'])) {
+    if (!empty($cached_values) && isset($cached_values['headers'])) {
       $headers = $cached_values['headers'];
     }
-    if (!isset($message)) {
-      $message = array();
+    if ($message === NULL) {
+      $message = [];
     }
     if (!isset($message['value'])) {
       $message['value'] = '';
@@ -60,34 +66,34 @@ class EnterContentStep extends FormBase {
     if (!isset($message['format'])) {
       $message['format'] = 'basic_html';
     }
-    if (!isset($headers)) {
+    if ($headers === NULL) {
       $headers = '';
     }
-    if (!isset($priority)) {
+    if ($priority === NULL) {
       $priority = 0;
     }
-    if (!isset($receipt)) {
+    if ($receipt === NULL) {
       $receipt = 0;
     }
-    if (!isset($direct)) {
+    if ($direct === NULL) {
       $direct = 1;
     }
-    if (!isset($carbon_copy)) {
+    if ($carbon_copy === NULL) {
       $carbon_copy = 1;
     }
 
-    $form['intro'] = array(
+    $form['intro'] = [
       '#markup' => '<p>' . $this->t('Now provide the content of the message to send.') . '</p>',
-      '#weight' => 0
-    );
+      '#weight' => 0,
+    ];
 
-    $form['subject'] = array(
+    $form['subject'] = [
       '#type' => 'textfield',
-      '#default_value' => !empty($subject) ? $subject : "" ,
-      '#title' => $this->t('Subject')
-    );
+      '#default_value' => !empty($subject) ? $subject : '',
+      '#title' => $this->t('Subject'),
+    ];
 
-    $form['message'] = array(
+    $form['message'] = [
       '#title' => $this->t('Message'),
       '#type' => 'text_format',
       '#format' => $message['format'],
@@ -96,7 +102,7 @@ class EnterContentStep extends FormBase {
       '#allowed_formats' => ['basic_html', 'plain_text'],
       '#rows' => 10,
       '#description' => $this->t('Enter the body of the message. You can use tokens in the message.'),
-    );
+    ];
 
     if (!\Drupal::moduleHandler()->moduleExists('token')) {
       // TODO : implement mail subscriber specific tokens
@@ -106,23 +112,23 @@ class EnterContentStep extends FormBase {
     }
     else {
 
-      $form['token'] = array(
+      $form['token'] = [
         '#type' => 'details',
         '#title' => $this->t('Replacements'),
         '#description' => $this->t('You can use the following tokens in the subject or message.'),
-      );
+      ];
 
       // standard tokens from drupal
-//      $form['token']['general'] = array(
-//        '#type' => 'details',
-//        '#title' => $this->t('General tokens'),
-//      );
+      //      $form['token']['general'] = array(
+      //        '#type' => 'details',
+      //        '#title' => $this->t('General tokens'),
+      //      );
 
-      $token_types = array('site', 'user', 'node', 'current-date');
-      $form['token']['tokens'] = array(
+      $token_types = ['site', 'user', 'node', 'current-date'];
+      $form['token']['tokens'] = [
         '#theme' => 'token_tree_link',
         '#token_types' => $token_types,
-      );
+      ];
 
       // TODO : implement mail subscriber specific tokens
       //      $form['token']['mail_subscribers'] = array(
@@ -138,48 +144,48 @@ class EnterContentStep extends FormBase {
       //      );
     }
 
-    $form['additional'] = array(
+    $form['additional'] = [
       '#type' => 'details',
       '#title' => $this->t('Additional email options'),
-    );
-    $form['additional']['priority'] = array(
+    ];
+    $form['additional']['priority'] = [
       '#type' => 'select',
       '#title' => $this->t('Priority'),
-      '#options' => array(
+      '#options' => [
         0 => $this->t('none'),
         1 => $this->t('highest'),
         2 => $this->t('high'),
         3 => $this->t('normal'),
         4 => $this->t('low'),
-        5 => $this->t('lowest')
-      ),
+        5 => $this->t('lowest'),
+      ],
       '#description' => $this->t('Note that email priority is ignored by a lot of email programs.'),
       '#default_value' => $priority,
-    );
-    $form['additional']['receipt'] = array(
+    ];
+    $form['additional']['receipt'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Request receipt'),
       '#default_value' => $receipt,
       '#description' => $this->t('Request a Read Receipt from your emails. A lot of e-mail programs ignore these so it is not a definitive indication of how many people have read your message.'),
-    );
-    $form['additional']['headers'] = array(
+    ];
+    $form['additional']['headers'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Additional headers'),
       '#description' => $this->t("Additional headers to be sent with the message. Enter one per line. Example:<pre>Reply-To: noreply@example.com\nX-MyCustomHeader: Value</pre>"),
       '#rows' => 4,
       '#default_value' => $headers,
-    );
+    ];
 
-    $form['direct'] = array(
+    $form['direct'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Send the message directly using the Batch API.'),
       '#default_value' => $direct,
-    );
-    $form['carbon_copy'] = array(
+    ];
+    $form['carbon_copy'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Send a copy of the message to the sender.'),
       '#default_value' => $carbon_copy,
-    );
+    ];
 
     return $form;
   }
@@ -202,7 +208,7 @@ class EnterContentStep extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $cached_values = $form_state->getTemporaryValue('wizard');
 
     $subject = $form_state->getUserInput()['subject'];

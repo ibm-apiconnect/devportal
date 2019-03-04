@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,6 +13,8 @@
 namespace Drupal\consumerorg\ApicType;
 
 
+use Drupal\ibm_apim\ApicType\ApicUser;
+
 class Member {
 
   private $url;
@@ -21,6 +23,7 @@ class Member {
 
   private $user_url;
 
+  /** @var ApicUser */
   private $user;
 
   private $role_urls = [];
@@ -126,20 +129,61 @@ class Member {
   public function setState($state): void {
     $this->state = $state;
   }
-  //  /**
-  //   * Add the provided role to this member.
-  //   *
-  //   * @param \Drupal\consumerorg\ApicType\Role $role
-  //   */
-  //  public function addRole(Role $role){
-  //    foreach($this->roles as $existing_role) {
-  //      if($existing_role->getName() === $role->getName()) {
-  //        return FALSE;
-  //      }
-  //    }
-  //
-  //    $this->roles[] = $role;
-  //    return TRUE;
-  //  }
 
+  /**
+   * convert array to object
+   *
+   * @param array $content
+   */
+  public function createFromArray(array $content): void {
+
+    if (array_key_exists('url', $content)) {
+      $this->setUrl($content['url']);
+    }
+    if (array_key_exists('state', $content)) {
+      $this->setState($content['state']);
+    }
+    if (array_key_exists('user_url', $content)) {
+      $this->setUserUrl($content['user_url']);
+    }
+    if (array_key_exists('role_urls', $content)) {
+      $this->setRoleUrls($content['role_urls']);
+    }
+    if (array_key_exists('org_url', $content)) {
+      $this->setOrgUrl($content['org_url']);
+    }
+    if (array_key_exists('user', $content)) {
+      $user = new ApicUser();
+      $user->createFromArray($content['user']);
+      $this->setUser($user);
+    }
+  }
+
+  /**
+   * Convert object to array
+   *
+   * @return array
+   */
+  public function toArray(): array {
+    $content = [];
+    if ($this->url !== NULL) {
+      $content['url'] = $this->url;
+    }
+    if ($this->state !== NULL) {
+      $content['state'] = $this->state;
+    }
+    if ($this->user_url !== NULL) {
+      $content['user_url'] = $this->user_url;
+    }
+    if ($this->role_urls !== NULL) {
+      $content['role_urls'] = $this->role_urls;
+    }
+    if ($this->org_url !== NULL) {
+      $content['org_url'] = $this->org_url;
+    }
+    if ($this->user !== NULL) {
+      $content['user'] = $this->user->toArray();
+    }
+    return $content;
+  }
 }

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -20,6 +20,7 @@ use Psr\Log\LoggerInterface;
 class ApimUtils {
 
   private $logger;
+
   private $siteconfig;
 
   /**
@@ -43,18 +44,18 @@ class ApimUtils {
    *
    * @return string
    */
-  public function createFullyQualifiedUrl($url) {
+  public function createFullyQualifiedUrl($url): string {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
     }
 
     // We always need the hostname on the front
-    if(strpos($url, 'https://') !== 0) {
+    if (strpos($url, 'https://') !== 0) {
 
       // Should start with a /
-      if(strpos($url, '/') !== 0) {
+      if (strpos($url, '/') !== 0) {
         $url = '/' . $url;
-        $this->logger->debug('createFullyQualifiedUrl: url does not start with / so updated to ' . $url );
+        $this->logger->debug('createFullyQualifiedUrl: url does not start with / so updated to ' . $url);
       }
 
       $hostname = $this->siteconfig->getApimHost();
@@ -63,7 +64,8 @@ class ApimUtils {
       $hostname = $this->stripConsumerApiSuffix($hostname);
 
       $complete_url = $hostname . $url;
-    } else {
+    }
+    else {
       $complete_url = $url;
     }
 
@@ -73,12 +75,12 @@ class ApimUtils {
     return $complete_url;
   }
 
-  public function removeFullyQualifiedUrl($url) {
+  public function removeFullyQualifiedUrl($url): string {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
     }
 
-    if(strpos($url, 'https://') === 0) {
+    if (strpos($url, 'https://') === 0) {
 
       $hostname = $this->siteconfig->getApimHost();
 
@@ -87,14 +89,15 @@ class ApimUtils {
       $hostname = $this->stripConsumerApiSuffix($hostname);
 
       $redacted_url = str_replace($hostname, '', $url);
-    } else {
+    }
+    else {
       $redacted_url = $url;
     }
 
     // Should start with a /
-    if(strpos($redacted_url, '/') !== 0) {
+    if (strpos($redacted_url, '/') !== 0) {
       $redacted_url = '/' . $redacted_url;
-      $this->logger->debug('removeFullyQualifiedUrl: url does not start with / so updated to ' . $redacted_url );
+      $this->logger->debug('removeFullyQualifiedUrl: url does not start with / so updated to ' . $redacted_url);
     }
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $redacted_url);
@@ -109,7 +112,7 @@ class ApimUtils {
    *
    * @return string
    */
-  private function stripConsumerApiSuffix($hostname) {
+  private function stripConsumerApiSuffix($hostname): string {
     $consumer_api_path = '/consumer-api';
     $length = strlen($consumer_api_path);
 
@@ -130,7 +133,7 @@ class ApimUtils {
    * @return int
    *   0 = not valid, 1 = valid
    */
-  public function sanitizeRegistryUrl($url) {
+  public function sanitizeRegistryUrl($url): int {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
     }
@@ -153,7 +156,7 @@ class ApimUtils {
    * @return string
    *  url
    */
-  public function getHostUrl() {
+  public function getHostUrl(): string {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }

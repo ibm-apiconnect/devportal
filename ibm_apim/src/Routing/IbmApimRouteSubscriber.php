@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -20,15 +20,16 @@ use Symfony\Component\Routing\RouteCollection;
  * Listens to the dynamic route events.
  */
 class IbmApimRouteSubscriber extends RouteSubscriberBase {
+
   /**
    * {@inheritdoc}
    */
-  public function alterRoutes(RouteCollection $collection) {
+  public function alterRoutes(RouteCollection $collection): void {
     if ($route = $collection->get('node.add_page')) {
-      $route->setDefaults(array(
+      $route->setDefaults([
         '_title' => 'Add content',
-        '_controller' => '\Drupal\ibm_apim\Controller\IbmApimNodeController::addPage'
-      ));
+        '_controller' => '\Drupal\ibm_apim\Controller\IbmApimNodeController::addPage',
+      ]);
     }
     if ($route = $collection->get('system.themes_page')) {
       // Override the themes list controller with an extended version of it
@@ -84,46 +85,46 @@ class IbmApimRouteSubscriber extends RouteSubscriberBase {
     // add a requirement for delete node type to ensure it isnt one of our node types
     if ($route = $collection->get('entity.node_type.delete_form')) {
       // (second argument must be a string)
-      $route->addRequirements(array('_ibm_node_type_check' => 'TRUE'));
+      $route->addRequirements(['_ibm_node_type_check' => 'TRUE']);
     }
 
     // add a requirement for delete field to ensure it isnt one of ours
     if ($route = $collection->get('entity.field_config.node_field_delete_form')) {
       // (second argument must be a string)
-      $route->addRequirements(array('_ibm_field_type_check' => 'TRUE'));
+      $route->addRequirements(['_ibm_field_type_check' => 'TRUE']);
     }
 
     // ensure do not delete our view modes
     if ($route = $collection->get('entity.entity_view_mode.delete_form')) {
       // (second argument must be a string)
-      $route->addRequirements(array('_ibm_view_mode_check' => 'TRUE'));
+      $route->addRequirements(['_ibm_view_mode_check' => 'TRUE']);
     }
     // ensure do not delete our form modes
     if ($route = $collection->get('entity.entity_form_mode.delete_form')) {
       // (second argument must be a string)
-      $route->addRequirements(array('_ibm_form_mode_check' => 'TRUE'));
+      $route->addRequirements(['_ibm_form_mode_check' => 'TRUE']);
     }
     // ensure do not delete our views
     if ($route = $collection->get('entity.view.delete_form')) {
       // (second argument must be a string)
-      $route->addRequirements(array('_ibm_view_check' => 'TRUE'));
+      $route->addRequirements(['_ibm_view_check' => 'TRUE']);
     }
     // ensure do not delete tags vocabulary
     if ($route = $collection->get('entity.taxonomy_vocabulary.delete_form')) {
       // (second argument must be a string)
-      $route->addRequirements(array('_ibm_taxonomy_check' => 'TRUE'));
+      $route->addRequirements(['_ibm_taxonomy_check' => 'TRUE']);
     }
 
     // prevent removing our account fields
     if ($route = $collection->get('entity.field_config.user_field_delete_form')) {
       // (second argument must be a string)
-      $route->addRequirements(array('_ibm_user_field_check' => 'TRUE'));
+      $route->addRequirements(['_ibm_user_field_check' => 'TRUE']);
     }
 
-    if($route = $collection->get('entity.configurable_language.delete_form')) {
-      $route->addRequirements(array('_ibm_langauge_delete_check' => 'TRUE'));
+    if ($route = $collection->get('entity.configurable_language.delete_form')) {
+      $route->addRequirements(['_ibm_langauge_delete_check' => 'TRUE']);
     }
-    if($route = $collection->get('system.modules_uninstall')) {
+    if ($route = $collection->get('system.modules_uninstall')) {
       $route->setDefault('_title', 'Disable');
     }
 

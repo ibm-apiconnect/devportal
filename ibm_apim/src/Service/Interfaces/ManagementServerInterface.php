@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -131,7 +131,7 @@ interface ManagementServerInterface {
    * @param \string $password
    *   New password.
    *
-   * @return \Drupal\auth_apic\Rest\RestResponse
+   * @return \Drupal\ibm_apim\Rest\RestResponse
    */
   public function resetPassword(JWTToken $obj, $password);
 
@@ -143,14 +143,14 @@ interface ManagementServerInterface {
    * @param /string $new_password
    *   New password.
    *
-   * @return \Drupal\auth_apic\Rest\RestResponse
+   * @return \Drupal\ibm_apim\Rest\RestResponse
    */
   public function changePassword($old_password, $new_password);
 
   /**
    * POST s/sign-up
    *
-   * @param \Drupal\auth_apic\ApicUser $new_user
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $new_user
    *  The user to create
    *
    * @return mixed

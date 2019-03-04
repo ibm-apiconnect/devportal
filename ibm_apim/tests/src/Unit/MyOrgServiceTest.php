@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -37,7 +37,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $this->prophet->checkPredictions();
   }
 
-  public function testPrepareOrgMemberForDisplay() {
+  public function testPrepareOrgMemberForDisplay(): void {
 
     $user = new ApicUser();
     $user->setUsername('andre');
@@ -49,7 +49,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member = new Member();
     $member->setUrl('/member/or/org');
     $member->setUser($user);
-    $member->setRoleUrls(array());
+    $member->setRoleUrls([]);
 
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);
@@ -62,7 +62,7 @@ class MyOrgServiceTest extends UnitTestCase {
 
   }
 
-  public function testNoFirstName() {
+  public function testNoFirstName(): void {
 
     $user = new ApicUser();
     $user->setUsername('andre');
@@ -74,7 +74,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member = new Member();
     $member->setUrl('/member/or/org');
     $member->setUser($user);
-    $member->setRoleUrls(array());
+    $member->setRoleUrls([]);
 
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);
@@ -85,7 +85,7 @@ class MyOrgServiceTest extends UnitTestCase {
 
   }
 
-  public function testNoFirstOrLastName() {
+  public function testNoFirstOrLastName(): void {
 
     $user = new ApicUser();
     $user->setUsername('andre');
@@ -97,7 +97,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member = new Member();
     $member->setUrl('/member/or/org');
     $member->setUser($user);
-    $member->setRoleUrls(array());
+    $member->setRoleUrls([]);
 
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);
@@ -108,7 +108,7 @@ class MyOrgServiceTest extends UnitTestCase {
 
   }
 
-  public function testEmptyFirstOrLastName() {
+  public function testEmptyFirstOrLastName(): void {
 
     $user = new ApicUser();
     $user->setUsername('andre');
@@ -120,7 +120,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member = new Member();
     $member->setUrl('/member/or/org');
     $member->setUser($user);
-    $member->setRoleUrls(array());
+    $member->setRoleUrls([]);
 
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);
@@ -131,7 +131,7 @@ class MyOrgServiceTest extends UnitTestCase {
 
   }
 
-  public function testNoEmail() {
+  public function testNoEmail(): void {
 
     $user = new ApicUser();
     $user->setUsername('andre');
@@ -143,7 +143,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member = new Member();
     $member->setUrl('/member/or/org');
     $member->setUser($user);
-    $member->setRoleUrls(array());
+    $member->setRoleUrls([]);
 
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);
@@ -153,7 +153,7 @@ class MyOrgServiceTest extends UnitTestCase {
 
   }
 
-  public function testEmptyEmail() {
+  public function testEmptyEmail(): void {
 
     $user = new ApicUser();
     $user->setUsername('andre');
@@ -165,7 +165,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member = new Member();
     $member->setUrl('/member/or/org');
     $member->setUser($user);
-    $member->setRoleUrls(array());
+    $member->setRoleUrls([]);
 
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);
@@ -175,7 +175,7 @@ class MyOrgServiceTest extends UnitTestCase {
 
   }
 
-  public function testMatchingEmailAndUsername() {
+  public function testMatchingEmailAndUsername(): void {
 
     $user = new ApicUser();
     $user->setUsername('andre@example.com');
@@ -187,7 +187,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member = new Member();
     $member->setUrl('/member/or/org');
     $member->setUser($user);
-    $member->setRoleUrls(array());
+    $member->setRoleUrls([]);
 
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);

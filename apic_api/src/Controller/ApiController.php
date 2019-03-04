@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,10 +13,8 @@
 
 namespace Drupal\apic_api\Controller;
 
-use Drupal\apic_api\Api;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
-use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -27,34 +25,42 @@ class ApiController extends ControllerBase {
 
   /**
    * This method loads the node with the node having been loaded via a ParamConverter
+   *
    * @param \Drupal\node\NodeInterface|NULL $apiNode
-   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse|array
    */
   public function apiView(NodeInterface $apiNode = NULL) {
-    if ($apiNode->bundle() == 'api') {
+    $returnValue = NULL;
+    if ($apiNode !== NULL && $apiNode->bundle() === 'api') {
       $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
       $build = $view_builder->view($apiNode, 'full');
-      return $build;
+      $returnValue = $build;
     }
     else {
-      \Drupal::logger('apic_api')->error('apiView: not a valid api.', array());
+      \Drupal::logger('apic_api')->error('apiView: not a valid api.', []);
       drupal_set_message(t('The specified arguments were not correct.'), 'warning');
       $url = Url::fromRoute('<front>')->toString();
-      return new RedirectResponse($url);
+      $returnValue = new RedirectResponse($url);
     }
+    return $returnValue;
   }
 
   /**
    * @param \Drupal\node\NodeInterface|NULL $apiNode
+   *
    * @return string
    */
-  public function apiTitle(NodeInterface $apiNode = NULL) {
-    if ($apiNode->bundle() == 'api') {
-      return $apiNode->getTitle() .' - ' . \Drupal::config('system.site')->get('name');
-    } else {
-      \Drupal::logger('apic_api')->error('apiView: not a valid api.', array());
-      drupal_set_message(t('The specified arguments were not correct.'), 'warning');
-      return 'ERROR';
+  public function apiTitle(NodeInterface $apiNode = NULL): string {
+    $returnValue = NULL;
+    if ($apiNode !== NULL && $apiNode->bundle() === 'api') {
+      $returnValue = $apiNode->getTitle() . ' - ' . \Drupal::config('system.site')->get('name');
     }
+    else {
+      \Drupal::logger('apic_api')->error('apiView: not a valid api.', []);
+      drupal_set_message(t('The specified arguments were not correct.'), 'warning');
+      $returnValue = 'ERROR';
+    }
+    return $returnValue;
   }
 }

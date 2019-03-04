@@ -1,28 +1,28 @@
-name: 'Product'
+name: Product
 type: module
-description: 'Products from IBM API Connect'
-package: 'IBM API Connect'
+description: Products from IBM API Connect
+package: IBM API Connect
 core: 8.x
-version: '8.x-1.0.5'
-project: 'product'
+version: 8.x-1.0.8
+project: product
 dependencies:
-  - path
-  - file
-  - image
-  - consumerorg:consumerorg
-  - ibm_apim:ibm_apim
-  - apic_app:apic_app
-  - node
-  - user
-  - votingapi_widgets
-  - cshs
-  - comment
-  - taxonomy
-  - views
-  - masonry
-  - masonry_views
-  - better_exposed_filters
-  - views_autocomplete_filters
-  - twig_tweak
-  - smart_trim
-'interface translation project': product
+- path
+- file
+- image
+- consumerorg:consumerorg
+- ibm_apim:ibm_apim
+- apic_app:apic_app
+- node
+- user
+- votingapi_widgets
+- cshs
+- comment
+- taxonomy
+- views
+- masonry
+- masonry_views
+- better_exposed_filters
+- views_autocomplete_filters
+- twig_tweak
+- smart_trim
+interface translation project: product

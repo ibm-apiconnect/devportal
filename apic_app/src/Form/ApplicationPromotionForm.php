@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -16,6 +16,8 @@ namespace Drupal\apic_app\Form;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -32,6 +34,14 @@ class ApplicationPromotionForm extends ConfirmFormBase {
    */
   protected $node;
 
+  /**
+   * @var \Drupal\apic_app\Service\ApplicationRestInterface
+   */
+  protected $restService;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
   /**
@@ -56,16 +66,16 @@ class ApplicationPromotionForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'application_promote_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
     $this->node = $appId;
-    $form =  parent::buildForm($form, $form_state);
+    $form = parent::buildForm($form, $form_state);
     $themeHandler = \Drupal::service('theme_handler');
     if ($themeHandler->themeExists('bootstrap')) {
       if (isset($form['actions']['submit'])) {
@@ -84,53 +94,53 @@ class ApplicationPromotionForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
+  public function getDescription(): TranslatableMarkup {
     return $this->t('Are you sure you want to request an upgrade of this application to Production?');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfirmText() {
+  public function getConfirmText(): TranslatableMarkup {
     return $this->t('Request upgrade');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getQuestion() {
+  public function getQuestion(): TranslatableMarkup {
     return $this->t('Request an upgrade to production for %title?', ['%title' => $this->node->title->value]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     return $this->node->toUrl();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appId = $this->node->application_id->value;
     $url = $this->node->apic_url->value;
-    $result = $this->restService->promoteApplication($url, json_encode(array('lifecycle_state_pending' => 'production')));
+    $result = $this->restService->promoteApplication($url, json_encode(['lifecycle_state_pending' => 'production']));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       drupal_set_message($this->t('Application upgrade requested.'));
 
-      $current_user = \Drupal::currentUser();
-      \Drupal::logger('apic_app')->notice('Application @appname requested promotion by @username', [
-        '@appname' => $this->node->getTitle(),
-        '@username' => $current_user->getAccountName(),
+      $currentUser = \Drupal::currentUser();
+      \Drupal::logger('apic_app')->notice('Application @appName requested promotion by @username', [
+        '@appName' => $this->node->getTitle(),
+        '@username' => $currentUser->getAccountName(),
       ]);
 
       // Calling all modules implementing 'hook_apic_app_promote':
       \Drupal::moduleHandler()->invokeAll('apic_app_promote', [
         'node' => $this->node,
         'data' => $result->data,
-        'appId' => $appId
+        'appId' => $appId,
       ]);
 
     }

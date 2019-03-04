@@ -1,0 +1,4 @@
+services:
+  logger.channel.ibm_apic_mail:
+    parent: logger.channel_base
+    arguments: ['ibm_apic_mail']

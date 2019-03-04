@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -33,11 +33,11 @@ interface ApicRestInterface {
    * @param bool $returnresult
    *          return entire result object or just data
    *
-   * @return null|\stdClass|void
+   * @return null|\stdClass
    *
    * @see _ibm_apim_call_base()
    */
-  public static function get($url, $auth = 'user', $getting_config = FALSE, $message_errors = TRUE, $returnresult = FALSE);
+  public static function get($url, $auth = 'user', $getting_config = FALSE, $message_errors = TRUE, $returnresult = FALSE): ?\stdClass;
 
   /**
    * A helper function to use when submitting an IBM API POST call
@@ -51,11 +51,11 @@ interface ApicRestInterface {
    * @param string $auth
    *          The authorization string to use, the default is the current user
    *
-   * @return null|\stdClass|void
+   * @return null|\stdClass
    *
    * @see _ibm_apim_call_base()
    */
-  public static function post($url, $data, $auth = 'user');
+  public static function post($url, $data, $auth = 'user'): ?\stdClass;
 
   /**
    * A helper function to use when submitting an IBM API PUT call
@@ -69,11 +69,11 @@ interface ApicRestInterface {
    * @param string $auth
    *          The authorization string to use, the default is the current user
    *
-   * @return null|\stdClass|void
+   * @return null|\stdClass
    *
    * @see _ibm_apim_call_base()
    */
-  public static function put($url, $data, $auth = 'user');
+  public static function put($url, $data, $auth = 'user'): ?\stdClass;
 
   /**
    * A helper function to use when submitting an IBM API PATCH call
@@ -87,11 +87,11 @@ interface ApicRestInterface {
    * @param string $auth
    *          The authorization string to use, the default is the current user
    *
-   * @return null|\stdClass|void
+   * @return null|\stdClass
    *
    * @see _ibm_apim_call_base()
    */
-  public static function patch($url, $data, $auth = 'user');
+  public static function patch($url, $data, $auth = 'user'): ?\stdClass;
 
   /**
    * A helper function to use when submitting an IBM API DELETE call
@@ -102,13 +102,13 @@ interface ApicRestInterface {
    * @param string $auth
    *          The authorization string to use, the default is the current user
    *
-   * @return null|\stdClass|void
+   * @return null|\stdClass
    *         Note that DELETE calls usually return nothing in which this function
    *         will return an empty string.
    *
    * @see _ibm_apim_call_base()
    */
-  public static function delete($url, $auth = 'user');
+  public static function delete($url, $auth = 'user'): ?\stdClass;
 
   /**
    * A helper function to use when submitting an IBM API GET call to get RAW data
@@ -129,11 +129,11 @@ interface ApicRestInterface {
    * @param bool $returnresult
    *          return entire result object or just data
    *
-   * @return null|\stdClass|void
+   * @return null|\stdClass
    *
    * @see _ibm_apim_call_base()
    */
-  public static function raw($url, $auth = 'user', $getting_config = FALSE, $message_errors = FALSE, $returnresult = TRUE);
+  public static function raw($url, $auth = 'user', $getting_config = FALSE, $message_errors = FALSE, $returnresult = TRUE): ?\stdClass;
 
 
   /**
@@ -145,6 +145,7 @@ interface ApicRestInterface {
    * @param bool $filter
    * @param null $data
    * @param null $extraHeaders
+   *
    * @return mixed
    */
   public static function proxy($url, $verb = 'GET', $node = NULL, $filter = FALSE, $data = NULL, $extraHeaders = NULL);

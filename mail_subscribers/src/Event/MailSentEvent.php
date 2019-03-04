@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -19,7 +19,7 @@ use Drupal\Core\TypedData\Plugin\DataType\Map;
  */
 class MailSentEvent extends Event {
 
-  const EVENT_NAME = 'mail_subscribers_email_sent';
+  public const EVENT_NAME = 'mail_subscribers_email_sent';
 
   /**
    * The message.

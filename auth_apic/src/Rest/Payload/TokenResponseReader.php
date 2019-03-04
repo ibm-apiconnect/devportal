@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -15,6 +15,7 @@ namespace Drupal\auth_apic\Rest\Payload;
 
 use Drupal\auth_apic\Rest\TokenResponse;
 use Drupal\ibm_apim\Rest\Exception\RestResponseParseException;
+use Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface;
 use Drupal\ibm_apim\Rest\Payload\RestResponseReader;
 
 /**
@@ -23,19 +24,16 @@ use Drupal\ibm_apim\Rest\Payload\RestResponseReader;
 class TokenResponseReader extends RestResponseReader {
 
   /**
-   * Response constructor.
-   */
-  public function __construct() {
-  }
-
-  /**
    * Read the HTTP response body and pull out the fields we care about.
    *
    * @param $response
-   * @return \Drupal\auth_apic\Rest\TokenResponse
+   * @param null $response_object
+   *
+   * //@return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|null
+   * @return \Drupal\auth_apic\Rest\TokenResponse|null
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  public function read($response, $response_object = NULL) {
+  public function read($response, $response_object = NULL): ?RestResponseInterface {
 
     // Create a new, specific object for the API response.
     $token_response = new TokenResponse();
@@ -56,6 +54,11 @@ class TokenResponseReader extends RestResponseReader {
       throw new RestResponseParseException('No access_token available from GET /token with success response');
     }
     $token_response->setBearerToken($data['access_token']);
+
+    if (!isset($data['expires_in'])) {
+      throw new RestResponseParseException('No expires_in available from GET /token with success response');
+    }
+    $token_response->setExpiresIn(time() + (int)$data['expires_in']);
 
     return $token_response;
   }

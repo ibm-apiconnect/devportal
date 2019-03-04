@@ -27,9 +27,8 @@ use Drupal\mail_subscribers\Service\MailService;
  *     ),
  *     "members" = @ContextDefinition("boolean",
  *       label = @Translation("Send to all developer organization members"),
- *       description = @Translation("If disabled then the mail will only be sent to the owner of the developer organization."),
- *       default_value = FALSE,
- *       required = FALSE
+ *       description = @Translation("If disabled then the mail will only be sent to the owner of the developer
+ *   organization."), default_value = FALSE, required = FALSE
  *     ),
  *     "subject" = @ContextDefinition("string",
  *       label = @Translation("Subject"),
@@ -41,10 +40,8 @@ use Drupal\mail_subscribers\Service\MailService;
  *     ),
  *     "reply" = @ContextDefinition("email",
  *       label = @Translation("Reply to"),
- *       description = @Translation("The mail's reply-to address. Leave it empty to use the site-wide configured address."),
- *       default_value = NULL,
- *       allow_null = TRUE,
- *       required = FALSE
+ *       description = @Translation("The mail's reply-to address. Leave it empty to use the site-wide configured
+ *   address."), default_value = NULL, allow_null = TRUE, required = FALSE
  *     ),
  *     "language" = @ContextDefinition("language",
  *       label = @Translation("Language"),
@@ -82,9 +79,9 @@ class ProductEmailSubscribers extends RulesActionBase implements ContainerFactor
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
+   * @param string $pluginId
    *   The plugin ID for the plugin instance.
-   * @param mixed $plugin_definition
+   * @param mixed $pluginDefinition
    *   The plugin implementation definition.
    * @param \Psr\Log\LoggerInterface $logger
    *   The alias storage service.
@@ -93,8 +90,8 @@ class ProductEmailSubscribers extends RulesActionBase implements ContainerFactor
    * @param \Drupal\mail_subscribers\Service\MailService $subscriberMailService
    *   The subscriber mail service
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerInterface $logger, MailManagerInterface $mail_manager, MailService $subscriberMailService) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public function __construct(array $configuration, $pluginId, $pluginDefinition, LoggerInterface $logger, MailManagerInterface $mail_manager, MailService $subscriberMailService) {
+    parent::__construct($configuration, $pluginId, $pluginDefinition);
     $this->logger = $logger;
     $this->mailManager = $mail_manager;
     $this->subscriberMailService = $subscriberMailService;
@@ -103,11 +100,11 @@ class ProductEmailSubscribers extends RulesActionBase implements ContainerFactor
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $pluginId, $pluginDefinition) {
     return new static(
       $configuration,
-      $plugin_id,
-      $plugin_definition,
+      $pluginId,
+      $pluginDefinition,
       $container->get('logger.factory')->get('rules'),
       $container->get('plugin.manager.mail'),
       $container->get('mail_subscribers.mail_service')
@@ -131,51 +128,53 @@ class ProductEmailSubscribers extends RulesActionBase implements ContainerFactor
    *   (optional) Reply to email address.
    * @param \Drupal\Core\Language\LanguageInterface|null $language
    *   (optional) Language code.
+   *
+   * @throws \Exception
    */
   protected function doExecute($node, $plan = NULL, $members = FALSE, $subject, $message, $reply = NULL, LanguageInterface $language = NULL) {
-    $langcode = isset($language) ? $language->getId() : LanguageInterface::LANGCODE_SITE_DEFAULT;
+    $langcode = $language !== NULL ? $language->getId() : LanguageInterface::LANGCODE_SITE_DEFAULT;
     $mailParams = [
       'subject' => $subject,
       'message' => $message,
     ];
-    if ($node->getType() == 'product') {
-      $plan_ref = '';
-      if (isset($plan_name)) {
-        $prodPlans = array();
+    if ($node->getType() === 'product') {
+      $planRef = '';
+      if ($plan !== NULL) {
+        $prodPlans = [];
         foreach ($node->product_plans->getValue() as $arrayValue) {
-          $prodPlans[] = unserialize($arrayValue['value']);
+          $prodPlans[] = unserialize($arrayValue['value'], ['allowed_classes' => false]);
         }
         foreach ($prodPlans as $prodPlan) {
-          if ($plan == $prodPlan['title']) {
-            $plan_ref = ':' . $prodPlan['title'];
+          if ($plan === $prodPlan['title']) {
+            $planRef = ':' . $prodPlan['title'];
           }
         }
       }
-      if ($members == TRUE) {
-        $to_list = $this->subscriberMailService->getProductSubscribingMembers($node->apic_ref->value . $plan_ref);
+      if ($members === TRUE) {
+        $toList = $this->subscriberMailService->getProductSubscribingMembers($node->apic_ref->value . $planRef);
       }
       else {
-        $to_list = $this->subscriberMailService->getProductSubscribingOwners($node->apic_ref->value . $plan_ref);
+        $toList = $this->subscriberMailService->getProductSubscribingOwners($node->apic_ref->value . $planRef);
       }
 
       $mailParams['langcode'] = $langcode;
 
-      $this->subscriberMailService->sendEmail($mailParams, $to_list, $reply);
-      if ($members == TRUE) {
-        $this->logger->notice('Sent email to members subscribing to product %product', array(
-          '%product' => $node->getTitle()
-        ));
+      $this->subscriberMailService->sendEmail($mailParams, $toList, $reply);
+      if ($members === TRUE) {
+        $this->logger->notice('Sent email to members subscribing to product %product', [
+          '%product' => $node->getTitle(),
+        ]);
       }
       else {
-        $this->logger->notice('Sent email to owners subscribing to product %product', array(
-          '%product' => $node->getTitle()
-        ));
+        $this->logger->notice('Sent email to owners subscribing to product %product', [
+          '%product' => $node->getTitle(),
+        ]);
       }
     }
     else {
-      $this->logger->error('Node %product is not a product', array(
-        '%product' => $node->getTitle()
-      ));
+      $this->logger->error('Node %product is not a product', [
+        '%product' => $node->getTitle(),
+      ]);
     }
 
   }

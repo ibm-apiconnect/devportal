@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -15,86 +15,98 @@
  * Implements hook_schema().
  */
 function mail_subscribers_schema() {
-  $schema['mail_subscribers_spool'] = array(
+  $schema['mail_subscribers_spool'] = [
     'description' => 'Table holds e-mails that are being send on cron.',
-    'fields' => array(
-      'eid' => array(
+    'fields' => [
+      'eid' => [
         'description' => 'The primary identifier for an e-mail.',
         'type' => 'serial',
         'unsigned' => TRUE,
-        'not null' => TRUE),
-      'uid' => array(
+        'not null' => TRUE,
+      ],
+      'uid' => [
         'description' => 'The user that has sent the message.',
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'default' => 0),
-      'timestamp' => array(
+        'default' => 0,
+      ],
+      'timestamp' => [
         'description' => 'The Unix timestamp when the message was added to spool.',
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'default' => 0),
-      'status' => array(
+        'default' => 0,
+      ],
+      'status' => [
         'description' => 'Status: 0 = pending; 1 = sent.',
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'default' => 0),
-      'tentatives' => array(
+        'default' => 0,
+      ],
+      'tentatives' => [
         'description' => 'How many times we tried to send this message.',
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'default' => 0),
-      'from_name' => array(
+        'default' => 0,
+      ],
+      'from_name' => [
         'description' => 'The real name of the sender.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => FALSE,
-        'default' => ''),
-      'from_mail' => array(
+        'default' => '',
+      ],
+      'from_mail' => [
         'description' => 'The sender e-mail address.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
-        'default' => ''),
-      'to_name' => array(
+        'default' => '',
+      ],
+      'to_name' => [
         'description' => 'The real name of the recipient.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => FALSE,
-        'default' => ''),
-      'to_mail' => array(
+        'default' => '',
+      ],
+      'to_mail' => [
         'description' => 'The recipient e-mail address.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
-        'default' => ''),
-      'subject' => array(
+        'default' => '',
+      ],
+      'subject' => [
         'description' => 'The e-mail subject.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
-        'default' => ''),
-      'body' => array(
+        'default' => '',
+      ],
+      'body' => [
         'description' => 'The e-mail body.',
         'type' => 'text',
         'not null' => TRUE,
-        'size' => 'big',),
-      'headers' => array(
+        'size' => 'big',
+      ],
+      'headers' => [
         'description' => 'The e-mail additional headers.',
         'type' => 'text',
         'not null' => TRUE,
-        'size' => 'big',),
-    ),
-    'indexes' => array(
-      'uid' => array('uid'),
-      'timestamp' => array('timestamp'),
-    ),
-    'primary key' => array('eid'),
-  );
+        'size' => 'big',
+      ],
+    ],
+    'indexes' => [
+      'uid' => ['uid'],
+      'timestamp' => ['timestamp'],
+    ],
+    'primary key' => ['eid'],
+  ];
   return $schema;
 }
 

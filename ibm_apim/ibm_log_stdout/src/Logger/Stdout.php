@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -42,12 +42,7 @@ class Stdout implements LoggerInterface {
    * {@inheritdoc}
    */
   public function log($level, $message, array $context = []) {
-    if ($level <= RfcLogLevel::WARNING) {
-      $output = fopen('php://stderr', 'w');
-    }
-    else {
-      $output = fopen('php://stdout', 'w');
-    }
+    $output = fopen('php://stderr', 'w');
     $severity = strtoupper(RfcLogLevel::getLevels()[$level]);
     $username = '';
     if (isset($context['user']) && !empty($context['user'])) {

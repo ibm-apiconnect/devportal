@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -21,17 +21,19 @@ namespace Drupal\apictest\TestData;
 class TestData {
 
   // directory containing the .json test data files
-  private $scenarioDirectory = __DIR__ . "/../../../../testdata";
+  private $scenarioDirectory = __DIR__ . '/../../../../testdata';
 
   // any array properties need marking as such for our processing later
   private $arrayProperties = array(
-    "andre",
-    "consumerorg",
-    "application",
-    "api",
-    "product",
-    "user_registries"
+    'andre',
+    'consumerorg',
+    'application',
+    'api',
+    'product',
+    'user_registries'
   );
+
+  public $rawScenario;
 
   /**
    * Constructor. Takes a string that names the test data scenario to load.
@@ -40,10 +42,12 @@ class TestData {
    *
    * @param String $testDataScenario
    *  the name of the scenario file to load e.g. mocked, production
+   *
+   * @throws \Exception
    */
-  public function __construct($testDataScenario = "mocked") {
+  public function __construct($testDataScenario = 'mocked') {
 
-    $this->scenario = $this->loadTestDataFromScenarioFile($this->scenarioDirectory . "/" . $testDataScenario . ".json");
+    $this->loadTestDataFromScenarioFile($this->scenarioDirectory . '/' . $testDataScenario . '.json');
 
   }
 
@@ -52,8 +56,10 @@ class TestData {
    *
    * @param String $scenarioFile
    *  the full path to the scenario file to be loaded.
+   *
+   * @throws \Exception
    */
-  private function loadTestDataFromScenarioFile($scenarioFile) {
+  private function loadTestDataFromScenarioFile($scenarioFile) :void {
 
     if (!file_exists($scenarioFile)) {
       throw new \Exception("Couldn't find a scenario file at $scenarioFile");
@@ -69,8 +75,10 @@ class TestData {
    *
    * @param String $parameter
    *  the @data(object.property) string that needs data injecting in to it.
+   *
+   * @return string
    */
-  public function insertTestData($parameter) {
+  public function insertTestData($parameter) :string {
 
     // The @data(property) part of the string may be embedded in a larger string
     // e.g. /span/@title['@data(andre.mail)']. We need to extract the @data
@@ -83,15 +91,14 @@ class TestData {
     $length = $endPos - $startPos;
     $chunkToReplace = substr($parameter, $startPos, $length);
 
-    $searchString = str_replace("@data(", "", $chunkToReplace);
-    $searchString = str_replace(")", "", $searchString);
+    $searchString = str_replace('@data(', '', $chunkToReplace);
+    $searchString = str_replace(')', '', $searchString);
 
     $replacement = $this->processPlaceholder($searchString);
 
     // now insert back in to the main string
-    $result = str_replace($chunkToReplace, $replacement, $wholestring);
 
-    return $result;
+    return str_replace($chunkToReplace, $replacement, $wholestring);
   }
 
   /**
@@ -103,6 +110,8 @@ class TestData {
    * @param array $partsCollectedSoFar
    *  do not set this parameter. This function is recursive and makes use of this
    *  array to keep track of current progress.
+   *
+   * @return mixed
    */
   private function processPlaceholder($placeholder, $partsCollectedSoFar = array()) {
 
@@ -113,7 +122,7 @@ class TestData {
     // and so on so this is a nice problem to solve recursively.
 
     // Pop the next property off the list. Store the remainder of the string to replace.
-    list($nextProperty, $newPlaceholder) = $this->popNextProperty($placeholder);
+    [$nextProperty, $newPlaceholder] = $this->popNextProperty($placeholder);
 
     // if we popped a null, we've reached the end of the recursion so unwind again
     if ($nextProperty === NULL) {
@@ -172,24 +181,28 @@ class TestData {
   /**
    * Find the next property from a string that needs processing i.e.
    * the next bit of the string up to the first '.' character.
+   *
+   * @param $argumentString
+   *
+   * @return array|null
    */
-  private function popNextProperty($argumentString) {
+  private function popNextProperty($argumentString) : ?array{
 
-    if ($argumentString === NULL || $argumentString == "") {
+    if ($argumentString === NULL || $argumentString === '') {
       return array(NULL, NULL);
     }
 
-    $dotPosition = strpos($argumentString, ".");
+    $dotPosition = strpos($argumentString, '.');
 
     if ($dotPosition === FALSE) {
-      return array($argumentString, NULL);
+      $returnValue = array($argumentString, NULL);
     }
     else {
       $property = substr($argumentString, 0, $dotPosition);
       $remainingString = substr($argumentString, $dotPosition + 1);
-      return array($property, $remainingString);
+      $returnValue = array($property, $remainingString);
     }
-
+    return $returnValue;
   }
 
   /**
@@ -197,8 +210,12 @@ class TestData {
    * selected in the property e.g. if the string contains [5], return 5.
    * If the string contains no [N] substring, return 0 which forces the
    * first element of the array to be returned.
+   *
+   * @param $placeholder
+   *
+   * @return int
    */
-  private function getSelectedNumber($placeholder) {
+  private function getSelectedNumber($placeholder): int {
 
     // Default number is 0. If no number has been selected, we return the first item in the list.
     $selectedNumber = 0;
@@ -215,6 +232,10 @@ class TestData {
   /**
    * Check if a property has an array index qualfiier (i.e. [N]).
    * Return TRUE if it does and FALSE otherwise.
+   *
+   * @param $part
+   *
+   * @return false|int
    */
   private function partHasArrayIndex($part) {
     return preg_match("/\[(\d+)\]/", $part, $matches);
@@ -223,9 +244,13 @@ class TestData {
   /**
    * Get the property name of an array qualfied string.
    * e.g. for input 'name[6]' return 'name'.
+   *
+   * @param $part
+   *
+   * @return bool|string
    */
   private function getPartName($part) {
-    return substr($part, 0, strpos($part, "["));
+    return substr($part, 0, strpos($part, '['));
   }
 
 }

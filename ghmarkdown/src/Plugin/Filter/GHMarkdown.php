@@ -14,18 +14,21 @@ use Drupal\ghmarkdown\cebe\markdown\GithubMarkdown;
  *   id = "ghmarkdown",
  *   module = "ghmarkdown",
  *   title = @Translation("Markdown"),
- *   description = @Translation("Allows content to be submitted using Github Markdown, a simple plain-text syntax that is filtered into valid HTML."),
- *   type = Drupal\filter\Plugin\FilterInterface::TYPE_MARKUP_LANGUAGE,
+ *   description = @Translation("Allows content to be submitted using Github Markdown, a simple plain-text syntax that
+ *   is filtered into valid HTML."), type = Drupal\filter\Plugin\FilterInterface::TYPE_MARKUP_LANGUAGE,
  * )
  */
 class GHMarkdown extends FilterBase {
 
   /**
-   * {@inheritdoc}
+   * @param string $text
+   * @param string $langcode
+   *
+   * @return \Drupal\filter\FilterProcessResult
    */
-  public function process($text, $langcode) {
-    if (!empty($text)) {
-      $text = GHMarkdown::parse($text);
+  public function process($text, $langcode): FilterProcessResult {
+    if ($text !== NULL && !empty($text)) {
+      $text = (string) self::parse($text);
     }
 
     return new FilterProcessResult($text);
@@ -36,7 +39,7 @@ class GHMarkdown extends FilterBase {
    */
   public function tips($long = FALSE) {
     if ($long) {
-      return $this->t('Quick Tips:<ul>
+      $returnValue = $this->t('Quick Tips:<ul>
       <li>Two or more spaces at a line\'s end = Line break</li>
       <li>Double returns = Paragraph</li>
       <li>*Single asterisks* or _single underscores_ = <em>Emphasis</em></li>
@@ -45,25 +48,28 @@ class GHMarkdown extends FilterBase {
       </ul>For complete details on the Markdown syntax, see the <a href="http://daringfireball.net/projects/markdown/syntax">Markdown documentation</a> and <a href="http://michelf.com/projects/php-markdown/extra/">Markdown Extra documentation</a> for tables, footnotes, and more.');
     }
     else {
-      return $this->t('You can use <a href="@filter_tips">Markdown syntax</a> to format and style the text. Also see <a href="@markdown_extra">Markdown Extra</a> for tables, footnotes, and more.', array(
+      $returnValue = $this->t('You can use <a href="@filter_tips">Markdown syntax</a> to format and style the text. Also see <a href="@markdown_extra">Markdown Extra</a> for tables, footnotes, and more.', [
         '@filter_tips' => Url::fromRoute('filter.tips_all')->toString(),
         '@markdown_extra' => 'http://michelf.com/projects/php-markdown/extra/',
-      ));
+      ]);
     }
+    return $returnValue;
   }
 
   /**
-   * @param $text
+   * @param string $text
+   *
    * @return null|string
    */
-  public static function parse($text) {
-    if (!empty($text)) {
+  public static function parse(string $text): ?string {
+    if ($text !== NULL && !empty($text)) {
       $parser = new GithubMarkdown();
       $text = $parser->parse($text);
-      return $text;
+      $returnValue = $text;
     }
     else {
-      return NULL;
+      $returnValue = NULL;
     }
+    return $returnValue;
   }
 }

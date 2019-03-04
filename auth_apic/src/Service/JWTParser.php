@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -24,6 +24,7 @@ use Psr\Log\LoggerInterface;
 class JWTParser implements TokenParserInterface {
 
   protected $logger;
+
   protected $utils;
 
   public function __construct(LoggerInterface $logger,
@@ -55,7 +56,7 @@ class JWTParser implements TokenParserInterface {
     $jwt = new JWTToken();
     $decoded_token = base64_decode($token);
 
-    if(!$this->validate($decoded_token)) {
+    if (!$this->validate($decoded_token)) {
       $this->logger->error('invalid invitation jwt');
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -72,7 +73,7 @@ class JWTParser implements TokenParserInterface {
     $header = json_decode($this->utils->base64_url_decode($elements[0]), TRUE);
     $payload = json_decode($this->utils->base64_url_decode($elements[1]), TRUE);
 
-    if(!isset($payload['scopes']) || !isset($payload['scopes']['url'])) {
+    if (!isset($payload['scopes']) || !isset($payload['scopes']['url'])) {
       $this->logger->error('payload.scopes.url not available in activation jwt');
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -82,9 +83,10 @@ class JWTParser implements TokenParserInterface {
 
     // handle the url possibly starting with /consumer-api
     $prefix = '/consumer-api';
-    if (substr($payload['scopes']['url'], 0, strlen($prefix)) == $prefix) {
+    if (strpos($payload['scopes']['url'], $prefix) === 0) {
       $url = substr($payload['scopes']['url'], strlen($prefix));
-    } else {
+    }
+    else {
       $url = $payload['scopes']['url'];
     }
     $jwt->setUrl($url);
@@ -106,18 +108,18 @@ class JWTParser implements TokenParserInterface {
   /**
    * Validate the activation object.
    *
-   * @param object $token
+   * @param mixed $token
    *    Decoded activation object.
    *
    * @return bool
    *    Valid activation object.
    */
-  private function validate($token) {
+  private function validate($token): bool {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
     $returnValue = TRUE;
-    if(substr_count($token, '.') !== 2){
+    if (substr_count($token, '.') !== 2) {
       $this->logger->error('Invalid jwt token. Expected 3 period separated elements.');
       $returnValue = FALSE;
     }

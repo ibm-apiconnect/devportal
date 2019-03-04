@@ -1,31 +1,30 @@
-name: 'IBM APIC'
+name: IBM APIC
 type: module
-description: 'Core IBM API Connect integration'
-package: 'IBM API Connect'
+description: Core IBM API Connect integration
+package: IBM API Connect
 core: 8.x
-version: '8.x-1.2.6'
-project: 'ibm_apim'
+version: 8.x-1.2.18
+project: ibm_apim
 dependencies:
-  - telephone
-  - options
-  - user
-  - image
-  - externalauth
-  - comment
-  - menu_ui
-  - taxonomy
-  - masonry
-  - ctools
-  - path
-  - views
-  - faqfield
-  - better_exposed_filters
-  - twig_tweak
-  - views_autocomplete_filters
-  - ibm_log_stdout
-  - content_translation
-  - session_based_temp_store
+- telephone
+- options
+- user
+- image
+- externalauth
+- comment
+- menu_ui
+- taxonomy
+- masonry
+- ctools
+- path
+- views
+- faqfield
+- better_exposed_filters
+- twig_tweak
+- views_autocomplete_filters
+- ibm_log_stdout
+- content_translation
 libraries:
-  - 'ibm_apim/core'
-  - 'core/drupal.dialog'
-'interface translation project': ibm_apim
+- ibm_apim/core
+- core/drupal.dialog
+interface translation project: ibm_apim

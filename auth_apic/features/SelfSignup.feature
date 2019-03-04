@@ -107,3 +107,60 @@ Feature: Self Sign-up
       | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
     When I am at "/user/register?registry_url=thisisnotvalid"
     Then I should see the text "Sign up with @data(user_registries[0].title)"
+
+  Scenario: Self signup form captcha failure
+    Given I am not logged in
+    And I am at "/user/register"
+    Given I enter "Andre" for "First Name"
+    And I enter "Andreson_@now" for "Last Name"
+    And I enter "andre_org_@now" for "Consumer organization"
+    And I enter "andre_@now@example.com" for "Email address"
+    And I enter "andre_@now@example.com" for "Username"
+    And I enter "Qwert123" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And if the field "captcha_response" is present, enter the value "this(almostcertainly)isnotrightapologiesifitis"
+    When I press the "Sign up" button
+    Then there are no messages
+    And there are errors
+    And there are no warnings
+    And I should see the text "1 error has been found:"
+    And I should see the text "What code is in the image?"
+    And I should not see the text "Your account was created successfully"
+
+
+  Scenario: Self signup form password policy failure - length
+    Given I am not logged in
+    And I am at "/user/register"
+    Given I enter "Andre" for "First Name"
+    And I enter "Andreson_@now" for "Last Name"
+    And I enter "andre_org_@now" for "Consumer organization"
+    And I enter "andre_@now@example.com" for "Email address"
+    And I enter "andre_@now@example.com" for "Username"
+    And I enter "a" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "a"
+    And if the field "captcha_response" is present, enter the value "@captcha"
+    When I press the "Sign up" button
+    Then there are no messages
+    And there are errors
+    And there are no warnings
+    And I should see the text "The password does not satisfy the password policies."
+    And I should not see the text "Your account was created successfully"
+
+  Scenario: Self signup form password policy failure - consecutive characters
+    Given I am not logged in
+    And I am at "/user/register"
+    Given I enter "Andre" for "First Name"
+    And I enter "Andreson_@now" for "Last Name"
+    And I enter "andre_org_@now" for "Consumer organization"
+    And I enter "andre_@now@example.com" for "Email address"
+    And I enter "andre_@now@example.com" for "Username"
+    And I enter "Qwert111" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert111"
+    And if the field "captcha_response" is present, enter the value "@captcha"
+    When I press the "Sign up" button
+    Then there are no messages
+    And there are errors
+    And there are no warnings
+    And I should see the text "The password does not satisfy the password policies."
+    And I should not see the text "Your account was created successfully"
+

@@ -3,29 +3,27 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
 namespace Drupal\apictest\Context;
 
 use Behat\Behat\Context\SnippetAcceptingContext;
-use Behat\Behat\Hook\Scope\AfterStepScope;
-use Behat\Testwork\Hook\Scope\SuiteScope;
-use Behat\Testwork\Hook\Scope\BeforeSuiteScope;
-use Behat\Testwork\Hook\Scope\AfterSuiteScope;
 use Behat\Behat\Hook\Scope\AfterFeatureScope;
+use Behat\Behat\Hook\Scope\AfterStepScope;
 use Behat\Gherkin\Node\TableNode;
-
-use Drupal\DrupalExtension\Context\DrupalContext;
-
-use Drupal\Core\Database\Database;
-use Drupal\user\Entity\User;
-
+use Behat\Testwork\Hook\Scope\AfterSuiteScope;
+use Behat\Testwork\Hook\Scope\BeforeSuiteScope;
+use Behat\Testwork\Hook\Scope\SuiteScope;
 use Drupal\apictest\MockServiceHandler;
 use Drupal\apictest\TestData\TestData;
+use Drupal\Core\Database\Database;
+use Drupal\DrupalExtension\Context\DrupalContext;
+use Drupal\user\Entity\User;
 
 
 /**
@@ -33,7 +31,7 @@ use Drupal\apictest\TestData\TestData;
  */
 class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext {
 
-  private $apicUsers = array();
+  private $apicUsers = [];
 
   private $testData;
 
@@ -54,9 +52,9 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    * You can also pass arbitrary arguments to the
    * context constructor through behat.yml.
    */
-  public function __construct($siteDirectory, $modulesDirectory, $useMockServices, $dumpHtmlToScreen, $debugDumpDir = "/tmp", $testDataScenario = "mocked", $userRegistry = 'lur', $mockSiteConfig = TRUE) {
+  public function __construct($siteDirectory, $modulesDirectory, $useMockServices, $dumpHtmlToScreen, $debugDumpDir = '/tmp', $testDataScenario = 'mocked', $userRegistry = 'lur', $mockSiteConfig = TRUE) {
 
-    if ($siteDirectory == NULL || $siteDirectory == '') {
+    if ($siteDirectory === NULL || $siteDirectory === '') {
       throw new \Exception("No value or empty value specified for 'siteDirectory' parameter. Check your behat.yml configuration.");
     }
     if (!file_exists($siteDirectory)) {
@@ -69,13 +67,13 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     $this->useMockServices = $useMockServices;
     $this->dumpHtmlToScreen = $dumpHtmlToScreen;
 
-    if ($debugDumpDir == "/tmp" || !isset($debugDumpDir) || empty($debugDumpDir)) {
+    if ($debugDumpDir === '/tmp' || $debugDumpDir === NULL || empty($debugDumpDir)) {
       // Make the debug dump directory a little more unique
-      $debugDumpDir = "/tmp/behat-html-dumps-" . uniqid();
+      $debugDumpDir = '/tmp/behat-html-dumps-' . uniqid("", FALSE);
     }
 
-    if (!file_exists($debugDumpDir)) {
-      mkdir($debugDumpDir, 0777, TRUE);
+    if (!is_dir($debugDumpDir) && !mkdir($debugDumpDir, 0777, TRUE) && !is_dir($debugDumpDir)) {
+      print "ERROR: Failed to create $debugDumpDir\n";
     }
     $this->debugDumpDir = $debugDumpDir;
 
@@ -88,6 +86,13 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     // The data for use generally in this scenario
     $this->testData = new TestData($testDataScenario);
     $this->localDrupalLoggedIn = FALSE;
+
+    // Ensure captcha is always presented for deterministic behat tests
+    // captcha persistence 0 = CAPTCHA_PERSISTENCE_SHOW_ALWAYS
+    if ((int) \Drupal::config('captcha.settings')->get('persistence') !== 0) {
+      print('Setting captcha persistence to always present it.\n\n');
+      \Drupal::service('config.factory')->getEditable('captcha.settings')->set('persistence', 0)->save();
+    }
   }
 
   // ************************************************************************************************************
@@ -122,11 +127,9 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
     // If this is a @javascript test, start the zombie session if it isn't already running
     $session = $this->getSession();
-    if (strpos(get_class($session->getDriver()), 'ZombieDriver')) {
-      if (!$session->isStarted()) {
-        print "Starting new zombie session\n";
-        $session->start();
-      }
+    if (!$session->isStarted() && strpos(\get_class($session->getDriver()), 'ZombieDriver')) {
+      print "Starting new zombie session\n";
+      $session->start();
     }
 
     // If we want to chain multiple steps together, we need access to the MinkContext. Grab that here.
@@ -171,12 +174,12 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    **/
   public function findElementsByIdOrName($elementIdOrName, $failIfNotFound = FALSE) {
     $page = $this->getSession()->getPage();
-    $field = $page->find('named', array('id_or_name', $elementIdOrName));
+    $field = $page->find('named', ['id_or_name', $elementIdOrName]);
 
-    if (isset($field) || sizeof($field) !== 0) {
+    if ($field !== NULL || sizeof($field) !== 0) {
       return $field;
     }
-    else if ($failIfNotFound) {
+    elseif ($failIfNotFound) {
       throw new \Exception("Field $elementIdOrName was not on the page.");
     }
 
@@ -192,9 +195,11 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    *  BeforeScenario event object
    * @param tag
    *  String representing the name of the tag
+   *
+   * @return bool
    */
-  public function scenarioHasTag($event, $tag) {
-    return array_search($tag, $event->getScenario()->getTags()) !== TRUE;
+  public function scenarioHasTag($event, $tag): bool {
+    return array_search($tag, $event->getScenario()->getTags());
   }
 
   /**
@@ -214,7 +219,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     $contexts = $scope->getSuite()->getSetting('contexts');
     $settings = NULL;
     foreach ($contexts as $ctx) {
-      if (gettype($ctx) === 'array') {
+      if (\is_array($ctx)) {
         $settings = $ctx[$name];
       }
     }
@@ -222,7 +227,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       return $settings;
     }
     else {
-      print "parameters not found for " . $name . "context\n";
+      print 'parameters not found for ' . $name . 'context\n';
       return NULL;
     }
 
@@ -283,6 +288,8 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    * With a parameter (e.g. @uid(@data(andre.name))) it will look up that users uid.
    *
    * @param $argument
+   *
+   * @return mixed
    */
   private function processUid($argument) {
 
@@ -298,12 +305,12 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       // if this is a real stack test, the user->id field may not be set yet
       // so we need to go and get if from the db.
       $current_user = $this->getUserManager()->getCurrentUser();
-      if (!isset($current_user->uid) || $current_user->uid == NULL) {
+      if (!isset($current_user->uid) || $current_user->uid === NULL) {
         $ids = \Drupal::entityQuery('user')->execute();
         $users = User::loadMultiple($ids);
 
         foreach ($users as $drupal_user) {
-          if ($drupal_user->getUsername() == $current_user->name) {
+          if ($drupal_user->getUsername() === $current_user->name) {
             $current_user->uid = $drupal_user->id();
             break;
           }
@@ -325,23 +332,23 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       $chunktoreplace = substr($argument, $startofparam, $lengthofparam);
 
       // and extract the username to search on.
-      $startofusername = strlen($parameter_check);
+      $startofusername = \strlen($parameter_check);
       $username = substr($chunktoreplace, $startofusername, -1);
 
       $ids = \Drupal::entityQuery('user')->execute();
       $users = User::loadMultiple($ids);
 
-      print "searching for username: " . $username . "\n";
+      print 'searching for username: ' . $username . "\n";
 
       foreach ($users as $drupal_user) {
-        if ($drupal_user->getUsername() == $username) {
+        if ($drupal_user->getUsername() === $username) {
           $uid = $drupal_user->id();
           break;
         }
       }
     }
 
-    print "replacing: " . $chunktoreplace . " with " . $uid . "\n";
+    print 'replacing: ' . $chunktoreplace . ' with ' . $uid . "\n";
 
     return str_replace($chunktoreplace, $uid, $argument);
 
@@ -362,10 +369,10 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   public function processTableArguments(TableNode $table) {
 
     $hash = $table->getTable();
-    $newHash = array();
+    $newHash = [];
 
     foreach ($hash as $tableRow) {
-      $newTableRow = array();
+      $newTableRow = [];
       foreach ($tableRow as $value) {
         $newTableRow[] = $this->processArgument($value);
       }
@@ -384,20 +391,20 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $org = $userUtils->getCurrentConsumerOrg();
     $orgs = $userUtils->loadConsumerOrgs();
-    print("Current org: " . serialize($org) . "\n");
-    print("LoadConsumerOrgs: " . serialize($orgs) . "\n");
+    print('Current org: ' . serialize($org) . '\n');
+    print('LoadConsumerOrgs: ' . serialize($orgs) . '\n');
     $sessionStore = \Drupal::service('tempstore.private')->get('ibm_apim');
     $perms = $sessionStore->get('permissions');
-    print("Permissions: " . serialize($perms) . "\n");
+    print('Permissions: ' . serialize($perms) . '\n');
 
     $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
 
     $orgObject = $consumerOrgService->get($org['url']);
-    if (isset($orgObject)) {
-      print("\nCurrent consumerorg node ID: " . $orgObject->getId() . "\n");
+    if ($orgObject !== NULL) {
+      print('\nCurrent consumerorg node ID: ' . $orgObject->getId() . '\n');
     }
     else {
-      print("ERROR: Failed to load Consumerorg node.\n");
+      print('ERROR: Failed to load Consumerorg node.\n');
     }
   }
 
@@ -405,8 +412,8 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    * @Then Enable ACLDebug
    */
   public function enableACLDebug() {
-    if (!\Drupal::config('ibm_apim.settings')->get('acl_debug')) {
-      print("Setting 'acl_debug' config to true. ");
+    if (!(boolean) \Drupal::config('ibm_apim.settings')->get('acl_debug')) {
+      print('Setting \'acl_debug\' config to true. ');
       \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->set('acl_debug', TRUE)->save();
     }
   }
@@ -415,8 +422,8 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    * @Then Disable ACLDebug
    */
   public function disableACLDebug() {
-    if (!\Drupal::config('ibm_apim.settings')->get('acl_debug')) {
-      print("Setting 'acl_debug' config to false. ");
+    if (!(boolean) \Drupal::config('ibm_apim.settings')->get('acl_debug')) {
+      print('Setting \'acl_debug\' config to false. ');
       \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->set('acl_debug', FALSE)->save();
     }
   }
@@ -432,22 +439,22 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   public function dumpTheCurrentHtml() {
 
     $this->minkContext->printCurrentUrl();
-    print "\n";
+    print '\n';
 
     $html = $this->getSession()->getDriver()->getContent();
-    $htmlFileName = $this->debugDumpDir . "/failure-html-dump-" . $this->timestamp . "_" . $this->htmlDumpNumber . ".html";
+    $htmlFileName = $this->debugDumpDir . '/failure-html-dump-' . $this->timestamp . '_' . $this->htmlDumpNumber . '.html';
     file_put_contents($htmlFileName, $html);
 
     print sprintf("HTML failure dump available at %s \n", $htmlFileName);
 
-    if ($this->dumpHtmlToScreen != FALSE) {
+    if ($this->dumpHtmlToScreen !== FALSE) {
       print "Dumping HTML of current page to screen\n";
       print "**************************************\n";
       print $html;
       print "**************************************\n";
     }
 
-    $this->htmlDumpNumber = $this->htmlDumpNumber + 1;
+    ++$this->htmlDumpNumber;
 
   }
 
@@ -461,11 +468,11 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     $types = \Drupal::service('entity.manager')->getStorage('node_type')->loadMultiple();
 
     foreach ($types as $type) {
-      if ($type->id() && $type->id() == $contentType) {
+      if ($type->id() && (string) $type->id() === $contentType) {
         $found = TRUE;
       }
     }
-    if ($found != TRUE) {
+    if ($found !== TRUE) {
       throw new \Exception("The content type $contentType was not found!");
     }
   }
@@ -473,14 +480,15 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   /**
    * @Given if the field :arg1 is present, enter the value :arg2
    *
-   * Our tests need to be run both via travis and directly on the appliance. There are however differences between how the portal behaves
-   * in travis vs the actual behaviour we ship to customers. For example, when testing auth_apic in isolation in travis, there is no 'captcha'
-   * field as that module is installed on the appliance as part of the apim_profile. In order to make a test that works on the appliance, we must
-   * provide a value for the captcha field. For travis, the field doesn't exist and any test that tries to interact with a non-existant field
-   * will fail.
+   * Our tests need to be run both via travis and directly on the appliance. There are however differences between how
+   *   the portal behaves in travis vs the actual behaviour we ship to customers. For example, when testing auth_apic
+   *   in isolation in travis, there is no 'captcha' field as that module is installed on the appliance as part of the
+   *   apim_profile. In order to make a test that works on the appliance, we must provide a value for the captcha
+   *   field. For travis, the field doesn't exist and any test that tries to interact with a non-existant field will
+   *   fail.
    *
-   * That is where this function comes in. If there are fields that exist in travis but not on the appliance (or vice-versa), this step definition
-   * allows a scenario to function in both cases.
+   * That is where this function comes in. If there are fields that exist in travis but not on the appliance (or
+   *   vice-versa), this step definition allows a scenario to function in both cases.
    */
   public function ifTheFieldIsPresentEnterTheValue($fieldIdOrName, $value) {
     $result = $this->findElementsByIdOrName($fieldIdOrName, FALSE);
@@ -491,7 +499,6 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   }
 
 
-
   /**
    * @Given the element :element is :enabledOrDisabled
    *
@@ -500,7 +507,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   public function theElementIsEnabledOrDisabled($elementIdOrName, $enabled) {
 
     if ($enabled !== 'enabled' && $enabled !== 'disabled') {
-      throw new \Exception("Second argument to this step definition must be either \"enabled\" or \"disabled\"");
+      throw new \Exception('Second argument to this step definition must be either \"enabled\" or \"disabled\"');
     }
 
     $element = $this->findElementsByIdOrName($elementIdOrName, TRUE);
@@ -545,33 +552,33 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
     // Depending on the page or the type of user logged in, the css class for messages could differ
     // Allow for there possibly being multiple different classes to match on.
-    $cssClasses = array();
-    $xpathStrings = array();
+    $cssClasses = [];
+    $xpathStrings = [];
 
-    if ($type == "messages") {
-      $cssClasses[] = ".alert-success";     // non admin users
-      $cssClasses[] = ".messages--status"; // admin users
-      $xpathStrings[] = "//div[@aria-label='Status message']"; // for travis
+    if ($type === 'messages') {
+      $cssClasses[] = '.alert-success';     // non admin users
+      $cssClasses[] = '.messages--status'; // admin users
+      $xpathStrings[] = '//div[@aria-label=\'Status message\']'; // for travis
     }
-    else if ($type == "warnings") {
-      $cssClasses[] = ".alert-warning";
+    elseif ($type === 'warnings') {
+      $cssClasses[] = '.alert-warning';
     }
-    else if ($type == "errors") {
-      $cssClasses[] = ".alert-danger"; // non admin users
-      $xpathStrings[] = "//div[@aria-label='Error message']"; // for travis
+    elseif ($type === 'errors') {
+      $cssClasses[] = '.alert-danger'; // non admin users
+      $xpathStrings[] = '//div[@aria-label=\'Error message\']'; // for travis
     }
     else {
-      throw new \Exception("Message type " . $type . " is not understood.");
+      throw new \Exception('Message type ' . $type . ' is not understood.');
     }
 
-    $messages = array();
+    $messages = [];
 
     // Process the css classes list
     foreach ($cssClasses as $cssClass) {
       $thisClassMessages = $page->find('css', $cssClass);
 
       if ($thisClassMessages !== NULL) {
-        array_push($messages, $thisClassMessages);
+        $messages[] = $thisClassMessages;
       }
     }
 
@@ -580,20 +587,20 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       $thisXpathMatches = $page->find('xpath', $xpathSelector);
 
       if ($thisXpathMatches !== NULL) {
-        array_push($messages, $thisXpathMatches);
+        $messages[] = $thisXpathMatches;
       }
     }
 
-    if ($noMessages !== NULL && $noMessages !== "") {
+    if ($noMessages !== NULL && $noMessages !== '') {
       // Expected no messages
       if ($messages !== NULL && sizeof($messages) !== 0) {
-        throw new \Exception("There were " . sizeof($messages) . " " . $type . " on the page but we expected none.");
+        throw new \Exception('There were ' . sizeof($messages) . ' ' . $type . ' on the page but we expected none.');
       }
     }
     else {
       // Expected at least one message
       if ($messages === NULL || sizeof($messages) === 0) {
-        throw new \Exception("There were no " . $type . " on the page but we expected at least one.");
+        throw new \Exception('There were no ' . $type . ' on the page but we expected at least one.');
       }
     }
   }
@@ -607,11 +614,11 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   public function theApimUserIsLoggedIn($username, $not = NULL) {
 
     // Detect if this test is running in travis
-    $amInTravis = getenv("TRAVIS");
+    $amInTravis = getenv('TRAVIS');
 
     if ($amInTravis) {
       // For travis, just look for text in the page
-      if ($not === " not") {
+      if ($not === ' not') {
         $this->minkContext->assertPageNotContainsText($username);
       }
       else {
@@ -620,7 +627,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     }
     else {
       // For jenkins / appliance look for the user profile menu
-      if ($not === " not") {
+      if ($not === ' not') {
         $this->minkContext->assertElementNotOnPage(".imageContainer [title='" . $username . "']");
       }
       else {
@@ -692,7 +699,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
     // We may need to create some users and not others so we should create a new TableNode
     // that we can pass to the parent::createUsers() function if needed
-    $makeUsersTableHash = array();
+    $makeUsersTableHash = [];
     $makeUsersTableHash[] = $table->getRows()[0]; // row[0] are the column headers
 
     // For each user we were given in the table, we need to look for a match in the database
@@ -700,8 +707,8 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       $userAlreadyExists = FALSE;
       foreach ($users as $drupal_user) {
 
-        if ($drupal_user->getUsername() == $row['name'] || $drupal_user->getEmail() == $row['mail']) {
-          print "Found an existing user record for " . $drupal_user->getUsername() . " (email=" . $drupal_user->getEmail() . ") in the database.\n";
+        if ($drupal_user->getUsername() === $row['name'] || $drupal_user->getEmail() === $row['mail']) {
+          print 'Found an existing user record for ' . $drupal_user->getUsername() . ' (email=' . $drupal_user->getEmail() . ') in the database.\n';
           $basicUser = new \stdClass();
           $basicUser->name = $row['name'];
           $basicUser->mail = $row['mail'];
@@ -732,8 +739,8 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
         // Add the headers into the initial row of the table, if they aren't already there:
         $new_headers = ['first_name', 'last_name', 'apic_url'];
         foreach ($new_headers as $header) {
-          if (!in_array($header, $makeUsersTableHash[0])) {
-            array_push($makeUsersTableHash[0], $header);
+          if (!\in_array($header, $makeUsersTableHash[0])) {
+            $makeUsersTableHash[0][] = $header;
           }
         }
         // Set the fields to be stored in the DB.
@@ -780,17 +787,21 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     $foundMatch = FALSE;
 
     foreach ($users as $dbuser) {
-      if ($dbuser->getUsername() == $user->name) {
+      if ($dbuser->getUsername() === $user->name) {
         $foundMatch = TRUE;
         user_login_finalize($dbuser);
         $this->localDrupalLoggedIn = TRUE;
         break;
       }
     }
-    if ($foundMatch != TRUE) {
+    if ($foundMatch !== TRUE) {
       throw new \Exception("No user found with name: ('$name')");
     }
-
+    $session = $this->getSession();
+    $page = $session->getPage();
+    if (!$page->findLink('Sign out')) {
+      throw new \Exception("Log out link not found for user name: ('$name'), assuming login failed");
+    }
   }
 
   /**
@@ -810,9 +821,8 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     // A few checks needed here to prevent any code from blowing up
     // or printing a warning (both cause test failure) if we are not
     // actually logged in.
-    if (\Drupal::currentUser()
-        ->isAuthenticated() && $this->localDrupalLoggedIn === TRUE && session_status() == PHP_SESSION_ACTIVE
-    ) {
+    if ($this->localDrupalLoggedIn === TRUE && session_status() === PHP_SESSION_ACTIVE && \Drupal::currentUser()
+        ->isAuthenticated()) {
       user_logout();
     }
 
@@ -823,8 +833,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    *
    * @Then I should see a link with href including :arg1
    */
-  public function iShouldSeeALinkWithHrefIncluding($url_segment)
-  {
+  public function iShouldSeeALinkWithHrefIncluding($url_segment) {
     $page = $this->getSession()->getPage();
     $links = $page->findAll('xpath', '//a/@href');
 
@@ -845,7 +854,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       }
 
       // Skip remote links
-      if (strpos($href, $url_segment) != 0) {
+      if (strpos($href, $url_segment) !== 0) {
         print "Found link with $url_segment -> $href  \n";
         $foundMatch = TRUE;
         continue;

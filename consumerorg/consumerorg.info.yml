@@ -1,15 +1,15 @@
-name: 'Consumer organization'
+name: Consumer organization
 type: module
-description: 'Adds the content type representing consumer organizations in IBM API Connect'
-package: 'IBM API Connect'
+description: Adds the content type representing consumer organizations in IBM API Connect
+package: IBM API Connect
 core: 8.x
-version: '8.x-1.1.4'
-project: 'consumerorg'
+version: 8.x-1.1.8
+project: consumerorg
 dependencies:
-  - path
-  - node
-  - entity_reference
-  - ibm_apim:ibm_apim
-  - votingapi_widgets
-  - cshs
-'interface translation project': consumerorg
+- path
+- node
+- entity_reference
+- ibm_apim:ibm_apim
+- votingapi_widgets
+- cshs
+interface translation project: consumerorg

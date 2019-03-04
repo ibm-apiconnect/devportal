@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -221,13 +221,28 @@ class ConsumerOrg {
    */
   public function addRole(Role $role): bool {
     foreach ($this->roles as $existing_role) {
-      if ($existing_role->getName() === $role->getName()) {
+      $newRoleName = $role->getName();
+      if ($newRoleName === null || $existing_role->getName() === $newRoleName) {
         return FALSE;
       }
     }
 
     $this->roles[] = $role;
     return TRUE;
+  }
+  /**
+   * Adds the provided Role to this consumer org checking first to avoid duplicate
+   * entries.
+   *
+   * @param array $roleArray
+   *
+   * @return bool
+   */
+  public function addRoleFromArray(array $roleArray): bool {
+    $role = new Role();
+    $role->createFromArray($roleArray);
+
+    return $this->addRole($role);
   }
 
   /**
@@ -248,7 +263,7 @@ class ConsumerOrg {
    */
   public function getRoleFromUrl($url): ?Role {
     foreach ($this->roles as $existing_role) {
-      if ($existing_role->getUrl() === $url) {
+      if ($url !== null && $existing_role->getUrl() === $url) {
         return $existing_role;
       }
     }
@@ -275,6 +290,23 @@ class ConsumerOrg {
    */
   public function setMembers($members): void {
     $this->members = $members;
+  }
+
+  /**
+   * Sets the members of this org. The array should be an array of arrays
+   * each one representing a member.
+   *
+   * @param array $membersArray
+   */
+  public function setMembersFromArray(array $membersArray): void {
+    $members = [];
+    foreach($membersArray as $memberArray) {
+      $member = new Member();
+      $member->createFromArray($memberArray);
+      $members[] = $member;
+    }
+
+    $this->setMembers($members);
   }
 
   /**

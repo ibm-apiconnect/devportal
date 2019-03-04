@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -22,13 +22,17 @@ use Drupal\node\Entity\Node;
  * Changes from 8.x-1.0 to 8.x-1.1 :
  *  - remove apic_image from application
  *  - add application_image to application
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apic_app_update_8101() {
 
   // check if new field exists, skip if it does
   // it shouldn't, but better safe than sorry
-  $new_field_config = \Drupal\field\Entity\FieldConfig::loadByName('node', 'application', 'application_image');
-  if (!isset($new_field_config) || empty($new_field_config)) {
+  $newFieldConfig = \Drupal\field\Entity\FieldConfig::loadByName('node', 'application', 'application_image');
+  if (!isset($newFieldConfig) || empty($newFieldConfig)) {
     /**
      * 1. Gather all apic_image values for applications and store for later
      * 2. Create 'application_image' storage
@@ -45,56 +49,64 @@ function apic_app_update_8101() {
     $query->condition('type', 'application');
     $results = $query->execute();
 
-    $existing_application_images = array();
+    $existingApplicationImages = [];
     if (isset($results)) {
       foreach ($results as $result) {
         $application = Node::load($result);
-        $existing_application_images[$result] = $application->get('apic_image')->getValue();
+        if ($application !== NULL) {
+          $existingApplicationImages[$result] = $application->get('apic_image')->getValue();
+        }
       }
     }
 
     // Create a new field storage 'application_image'
-    $field_storage_config = \Drupal\field\Entity\FieldStorageConfig::create(array(
+    $fieldStorageConfig = \Drupal\field\Entity\FieldStorageConfig::create([
       'field_name' => 'application_image',
       'entity_type' => 'node',
       'type' => 'image',
       'required' => FALSE,
       'cardinality' => 1,
-    ));
-    $field_storage_config->save();
+    ]);
+    $fieldStorageConfig->save();
 
     // Create a new field for the application module
-    $field_config = \Drupal\field\Entity\FieldConfig::create([
+    $fieldConfig = \Drupal\field\Entity\FieldConfig::create([
       'field_name' => 'application_image',
       'entity_type' => 'node',
       'bundle' => 'application',
-      'label' => t('Image')
+      'label' => t('Image'),
     ]);
-    $field_config->save();
+    $fieldConfig->save();
 
     // Modify entity form display modes to show application_image field
-    $form_display = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('node.application.default');
-    $form_display->setComponent('application_image', $form_display->getComponent('apic_image')); // copy all existing settings across from old field
-    $form_display->save();
+    $formDisplay = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('node.application.default');
+    if ($formDisplay !== NULL) {
+      $formDisplay->setComponent('application_image', $formDisplay->getComponent('apic_image')); // copy all existing settings across from old field
+      $formDisplay->save();
+    }
 
     // Do the same for the view display modes
-    $display_modes = ['default', 'card', 'content_browser', 'subscribewizard', 'teaser'];
-    foreach ($display_modes as $display_mode) {
-      $view_display = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.application.' . $display_mode);
-      $view_display->setComponent('application_image', $view_display->getComponent('apic_image')); // copy all existing settings across from old field
-      $view_display->save();
+    $displayModes = ['default', 'card', 'content_browser', 'subscribewizard', 'teaser'];
+    foreach ($displayModes as $displayMode) {
+      $viewDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.application.' . $displayMode);
+      if ($viewDisplay !== NULL) {
+        $viewDisplay->setComponent('application_image', $viewDisplay->getComponent('apic_image')); // copy all existing settings across from old field
+        $viewDisplay->save();
+      }
     }
 
     // Put the values we stored from apic_image back in to application_image
-    foreach ($existing_application_images as $node_id => $image) {
-      $application = Node::load($node_id);
-      $application->set('application_image', $image);
-      $application->save();
+    foreach ($existingApplicationImages as $nodeId => $image) {
+      $application = Node::load($nodeId);
+      if ($application !== NULL) {
+        $application->set('application_image', $image);
+        $application->save();
+      }
     }
 
     // Remove the old apic_image field from application
-    $field_config = \Drupal\field\Entity\FieldConfig::loadByName('node', 'application', 'apic_image');
-    $field_config->delete();
+    $fieldConfig = \Drupal\field\Entity\FieldConfig::loadByName('node', 'application', 'apic_image');
+    $fieldConfig->delete();
   }
 }
 
@@ -103,18 +115,18 @@ function apic_app_update_8101() {
  *  - change field length for application_redirect_endpoints
  */
 function apic_app_update_8102() {
-  $field_storage_config = \Drupal\field\Entity\FieldStorageConfig::loadByName('node', 'application_redirect_endpoints');
-  $length = $field_storage_config->getSetting('max_length');
+  $fieldStorageConfig = \Drupal\field\Entity\FieldStorageConfig::loadByName('node', 'application_redirect_endpoints');
+  $length = $fieldStorageConfig->getSetting('max_length');
   if (!isset($length) || !is_int($length) || $length < 999) {
     $length = 999;
   }
-  $field_storage_config->setSetting('max_length', $length);
-  $is_ascii = $field_storage_config->getSetting('is_ascii');
-  if (!isset($is_ascii)) {
-    $is_ascii = false;
+  $fieldStorageConfig->setSetting('max_length', $length);
+  $isAscii = $fieldStorageConfig->getSetting('is_ascii');
+  if (!isset($isAscii)) {
+    $isAscii = FALSE;
   }
-  $field_storage_config->setSetting('is_ascii', $is_ascii);
-  $field_storage_config->save();
+  $fieldStorageConfig->setSetting('is_ascii', $isAscii);
+  $fieldStorageConfig->save();
 }
 
 /**
@@ -123,12 +135,14 @@ function apic_app_update_8102() {
  */
 function apic_app_update_8103() {
   // Modify entity form display modes to hide the scheduler and moderation fields by default
-  $form_display = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('node.application.default');
-  foreach(array('publish_on', 'unpublish_on', 'moderation_state') as $field_name) {
-    $component = $form_display->getComponent($field_name);
-    if (isset($component)) {
-      $form_display->removeComponent($field_name);
+  $formDisplay = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('node.application.default');
+  if ($formDisplay !== NULL) {
+    foreach (['publish_on', 'unpublish_on', 'moderation_state'] as $field_name) {
+      $component = $formDisplay->getComponent($field_name);
+      if (isset($component)) {
+        $formDisplay->removeComponent($field_name);
+      }
     }
+    $formDisplay->save();
   }
-  $form_display->save();
 }

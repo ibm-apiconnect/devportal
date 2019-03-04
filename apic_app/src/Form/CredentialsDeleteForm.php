@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -19,6 +19,7 @@ use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\NodeInterface;
@@ -36,8 +37,14 @@ class CredentialsDeleteForm extends ConfirmFormBase {
    */
   protected $node;
 
+  /**
+   * @var \Drupal\apic_app\Service\ApplicationRestInterface
+   */
   protected $restService;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
   /**
@@ -69,14 +76,14 @@ class CredentialsDeleteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'application_delete_credentials_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL): array {
     $this->node = $appId;
     $this->credId = Html::escape($credId);
     $form = parent::buildForm($form, $form_state);
@@ -98,41 +105,42 @@ class CredentialsDeleteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
+  public function getDescription(): TranslatableMarkup {
     return $this->t('Are you sure you want to delete these credentials? This action cannot be undone.');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfirmText() {
+  public function getConfirmText(): TranslatableMarkup {
     return $this->t('Delete');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getQuestion() {
+  public function getQuestion(): TranslatableMarkup {
     return $this->t('Delete credentials for %title?', ['%title' => $this->node->title->value]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
     if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
-      return Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
+      $url = Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
     }
     else {
-      return Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
+      $url = Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
     }
+    return $url;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appUrl = $this->node->apic_url->value;
     $url = $appUrl . '/credentials/' . $this->credId;
@@ -146,7 +154,7 @@ class CredentialsDeleteForm extends ConfirmFormBase {
       $moduleHandler->invokeAll('apic_app_creds_delete', [
         'node' => $this->node,
         'data' => $result->data,
-        'credId' => $this->credId
+        'credId' => $this->credId,
       ]);
       if ($moduleHandler->moduleExists('rules')) {
         // Set the args twice on the event: as the main subject but also in the
@@ -154,17 +162,17 @@ class CredentialsDeleteForm extends ConfirmFormBase {
         $event = new CredentialDeleteEvent($this->node, $result->data, $this->credId, [
           'application' => $this->node,
           'data' => $result->data,
-          'credId' => $this->credId
+          'credId' => $this->credId,
         ]);
-        $event_dispatcher = \Drupal::service('event_dispatcher');
-        $event_dispatcher->dispatch(CredentialDeleteEvent::EVENT_NAME, $event);
+        $eventDispatcher = \Drupal::service('event_dispatcher');
+        $eventDispatcher->dispatch(CredentialDeleteEvent::EVENT_NAME, $event);
       }
 
       drupal_set_message($this->t('Credentials deleted successfully.'));
-      $current_user = \Drupal::currentUser();
-      \Drupal::logger('apic_app')->notice('Application @appname credentials deleted by @username', [
-        '@appname' => $this->node->getTitle(),
-        '@username' => $current_user->getAccountName(),
+      $currentUser = \Drupal::currentUser();
+      \Drupal::logger('apic_app')->notice('Application @appName credentials deleted by @username', [
+        '@appName' => $this->node->getTitle(),
+        '@username' => $currentUser->getAccountName(),
       ]);
     }
     $form_state->setRedirectUrl($this->getCancelUrl());

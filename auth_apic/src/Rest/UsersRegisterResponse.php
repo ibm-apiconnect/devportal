@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -20,11 +20,5 @@ use Drupal\ibm_apim\Rest\RestResponse;
  */
 class UsersRegisterResponse extends RestResponse {
 
-  /**
-   * Activation Response constructor.
-   */
-  public function __construct() {
-    parent::__construct();
-  }
 
 }

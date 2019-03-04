@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,9 +13,10 @@
 
 namespace Drupal\ibm_apim\Service;
 
-use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\Core\State\State;
+use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
+use Drupal\user\Entity\User;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -24,17 +25,19 @@ use Psr\Log\LoggerInterface;
 class ApicUserService {
 
   private $logger;
+
   private $state;
+
   private $userRegistryService;
 
   /**
    * ApicUserManager constructor.
    *
-   * @param Psr\Log\LoggerInterface $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   Logger
    * @param \Drupal\core\State\State $state
    *   State service.
-   * @param UserRegistryService $user_registry_service
+   * @param UserRegistryServiceInterface $user_registry_service
    *   User registry service.
    */
   public function __construct(LoggerInterface $logger,
@@ -43,10 +46,10 @@ class ApicUserService {
     $this->logger = $logger;
     $this->state = $state;
     $this->userRegistryService = $user_registry_service;
-   }
+  }
 
   /**
-   * Create an ApicUser from a user registeration form.
+   * Create an ApicUser from a user registration form.
    *
    * @param array $form_values
    *   Values from form state.
@@ -54,29 +57,29 @@ class ApicUserService {
    * @return ApicUser
    *   ApicUser.
    */
-  public function parseRegisterForm($form_values) {
+  public function parseRegisterForm($form_values): ApicUser {
 
     $user = new ApicUser();
 
     if (isset($form_values['name'])) {
       $user->setUsername($form_values['name']);
     }
-    if (isset($form_values['mail']) && isset($form_values['mail']->value)) {
+    if (isset($form_values['mail']->value)) {
       $user->setMail($form_values['mail']->value);
     }
 
-    if (isset($form_values['pass']) && isset($form_values['pass']['pass1'])) {
+    if (isset($form_values['pass']['pass1'])) {
       $user->setPassword($form_values['pass']['pass1']);
     }
-    else if (isset($form_values['pw_no_policy'])) {
+    elseif (isset($form_values['pw_no_policy'])) {
       $user->setPassword($form_values['pw_no_policy']);
     }
 
-    if (isset($form_values['first_name']) && isset($form_values['first_name'][0]) && isset($form_values['first_name'][0]['value'])) {
+    if (isset($form_values['first_name'][0]['value'])) {
       $user->setFirstname($form_values['first_name'][0]['value']);
     }
 
-    if (isset($form_values['last_name']) && isset($form_values['last_name'][0]) && isset($form_values['last_name'][0]['value'])) {
+    if (isset($form_values['last_name'][0]['value'])) {
       $user->setLastname($form_values['last_name'][0]['value']);
     }
     if (isset($form_values['consumerorg'])) {
@@ -86,7 +89,12 @@ class ApicUserService {
     return $user;
   }
 
-  public function parseDrupalAccount($account) {
+  /**
+   * @param User $account
+   *
+   * @return \Drupal\ibm_apim\ApicType\ApicUser
+   */
+  public function parseDrupalAccount($account): ApicUser {
 
     $user = new ApicUser();
 
@@ -110,7 +118,7 @@ class ApicUserService {
       $user->setPassword($account->get('pass')->getValue()[0]['value']);
     }
 
-    if (isset($account->apic_url) && isset($account->apic_url->value)) {
+    if (isset($account->apic_url->value)) {
       $user->setUrl($account->apic_url->value);
     }
 
@@ -121,32 +129,34 @@ class ApicUserService {
   /**
    * Get JSON payload for a user.
    *
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $user
+   *
    * @return string
-   *   JSON representation of the user.
+   *        JSON representation of the user.
    */
-  public function getUserJSON(ApicUser $user) {
-    $data = array();
+  public function getUserJSON(ApicUser $user): string {
+    $data = [];
 
-    if ($user->getApicUserRegistryURL() != NULL) {
-      $data['realm'] = $this->userRegistryService->get($user->getApicUserRegistryURL())->getRealm();
+    if ($user->getApicUserRegistryUrl() !== NULL) {
+      $data['realm'] = $this->userRegistryService->get($user->getApicUserRegistryUrl())->getRealm();
     }
 
-    if ($user->getUsername() != NULL) {
+    if ($user->getUsername() !== NULL) {
       $data['username'] = $user->getUsername();
     }
-    if ($user->getPassword() != NULL) {
+    if ($user->getPassword() !== NULL) {
       $data['password'] = $user->getPassword();
     }
-    if ($user->getFirstName() != NULL) {
+    if ($user->getFirstname() !== NULL) {
       $data['first_name'] = $user->getFirstname();
     }
-    if ($user->getLastName() != NULL) {
+    if ($user->getLastname() !== NULL) {
       $data['last_name'] = $user->getLastname();
     }
-    if ($user->getMail() != NULL) {
+    if ($user->getMail() !== NULL) {
       $data['email'] = $user->getMail();
     }
-    if ($user->getUrl() != NULL) {
+    if ($user->getUrl() !== NULL) {
       $data['url'] = $user->getUrl();
     }
 
@@ -156,11 +166,14 @@ class ApicUserService {
   /**
    * Get fields in format required for drupal DB.
    *
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $user
+   *
    * @return array
-   *   associative array of fields.
    */
-  public function getUserAccountFields(ApicUser $user) {
-    $data = array();
+  public function getUserAccountFields(ApicUser $user): array {
+    $data = [];
+
+    $userRegistry = $this->userRegistryService->get($user->getApicUserRegistryURL());
 
     $data['first_name'] = $user->getFirstname();
     $data['last_name'] = $user->getLastname();
@@ -168,21 +181,23 @@ class ApicUserService {
     $data['email'] = $user->getMail();
     $data['mail'] = $user->getMail();
     $data['consumer_organization'] = $user->getOrganization();
-    $data['realm'] = $this->userRegistryService->get($user->getApicUserRegistryURL())->getRealm();
+    if ($userRegistry !== NULL) {
+      $data['realm'] = $userRegistry->getRealm();
+    }
     $data['apic_url'] = $user->getUrl();
-    $data['apic_user_registry_url'] = $user->getApicUserRegistryURL();
-    $data['apic_idp'] = $user->getApicIDP();
+    $data['apic_user_registry_url'] = $user->getApicUserRegistryUrl();
+    $data['apic_idp'] = $user->getApicIdp();
 
     // check whether we are in a unit test env.
-    if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
-      $readOnlyIdp = !$this->userRegistryService->get($user->getApicUserRegistryURL())->isUserManaged();
+    if ($userRegistry !== NULL && !isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      $readOnlyIdp = !$userRegistry->isUserManaged();
     }
     else {
-      $readOnlyIdp = 0;
+      $readOnlyIdp = FALSE;
     }
 
     // If using readonly IDP then the user should be activated immediately.
-    if ($readOnlyIdp == 1) {
+    if ($readOnlyIdp === TRUE) {
       $data['status'] = 1;
     }
     else {
@@ -195,11 +210,12 @@ class ApicUserService {
   /**
    * Build an ApicUser object from json payload.
    * Note this function does not create the user in the DB. That has to be done as a subsequent step by the caller.
+   *
    * @param $payload
    *
    * @return \Drupal\ibm_apim\ApicType\ApicUser
    */
-  public function getUserFromJSON($payload) {
+  public function getUserFromJSON($payload): ApicUser {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -218,24 +234,24 @@ class ApicUserService {
     // check if user already exists in Drupal DB
     $user = user_load_by_name($apicuser['username']);
     if (isset($user)) {
-      $this->logger->notice("User exists: %user", array("%user" => $apicuser['username']));
+      $this->logger->notice('User exists: %user', ['%user' => $apicuser['username']]);
     }
     else {
-      $this->logger->notice("User does not exist: %user", array("%user" => $apicuser['username']));
+      $this->logger->notice('User does not exist: %user', ['%user' => $apicuser['username']]);
     }
 
     $user = new ApicUser();
-    $user->setFirstName($apicuser['first_name']);
-    $user->setLastName($apicuser['last_name']);
+    $user->setFirstname($apicuser['first_name']);
+    $user->setLastname($apicuser['last_name']);
     $user->setMail($apicuser['email']);
     $user->setUsername($apicuser['username']);
     $user->setUrl($apicuser['url']);
-    $user->setApicUserRegistryURL($apicuser['user_registry_url']);
+    $user->setApicUserRegistryUrl($apicuser['user_registry_url']);
     $user->setState($apicuser['state']);
-//
-//      $this->logger->notice('Creating apic user %user', array("%user" => $apicuser['username']));
-//      $this->userManager->registerApicUser($create_user->getUsername(), $this->getUserAccountFields($create_user));
-    
+    //
+    //      $this->logger->notice('Creating apic user %user', array('%user' => $apicuser['username']));
+    //      $this->userManager->registerApicUser($create_user->getUsername(), $this->getUserAccountFields($create_user));
+
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $user->getUsername());
     }
@@ -243,6 +259,74 @@ class ApicUserService {
 
   }
 
-
-
+  /**
+   * @param string $viewMode
+   *
+   * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  public function getCustomUserFields($viewMode = 'default'): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $components = \Drupal::entityTypeManager()
+      ->getStorage('entity_form_display')
+      ->load('user.user.' . $viewMode)
+      ->getComponents();
+    $keys = array_keys($components);
+    $coreFields = [
+      'nid',
+      'uuid',
+      'vid',
+      'langcode',
+      'type',
+      'revision_timestamp',
+      'revision_uid',
+      'revision_log',
+      'status',
+      'title',
+      'uid',
+      'created',
+      'changed',
+      'promote',
+      'sticky',
+      'default_langcode',
+      'revision_default',
+      'revision_translation_affected',
+      'metatag',
+      'path',
+      'menu_link',
+      'content_translation_source',
+      'content_translation_outdated',
+      'mail',
+      'name',
+      'pass',
+      'roles',
+      'current_pass',
+      'account',
+      'notify',
+    ];
+    $ibmFields = [
+      'consumer_organization',
+      'first_name',
+      'last_name',  'apic_catalog_id',
+      'apic_hostname',
+      'apic_pathalias',
+      'apic_provider_id',
+      'apic_rating',
+      'apic_tags',
+      'consumerorg_id',
+      'consumerorg_invites',
+      'consumerorg_memberlist',
+      'consumerorg_members',
+      'consumerorg_name',
+      'consumerorg_owner',
+      'consumerorg_roles',
+      'consumerorg_tags',
+      'consumerorg_url',
+    ];
+    $merged = array_merge($coreFields, $ibmFields);
+    $fields = array_diff($keys, $merged);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $fields);
+    return $fields;
+  }
 }

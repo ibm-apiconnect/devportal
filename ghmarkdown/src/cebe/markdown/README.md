@@ -4,7 +4,6 @@ A super fast, highly extensible markdown parser for PHP
 [![Latest Stable Version](https://poser.pugx.org/cebe/markdown/v/stable.png)](https://packagist.org/packages/cebe/markdown)
 [![Total Downloads](https://poser.pugx.org/cebe/markdown/downloads.png)](https://packagist.org/packages/cebe/markdown)
 [![Build Status](https://travis-ci.org/cebe/markdown.svg?branch=master)](http://travis-ci.org/cebe/markdown)
-[![Tested against HHVM](http://hhvm.h4cc.de/badge/cebe/markdown.png)](http://hhvm.h4cc.de/package/cebe/markdown)
 [![Code Coverage](https://scrutinizer-ci.com/g/cebe/markdown/badges/coverage.png?s=db6af342d55bea649307ef311fbd536abb9bab76)](https://scrutinizer-ci.com/g/cebe/markdown/)
 [![Scrutinizer Quality Score](https://scrutinizer-ci.com/g/cebe/markdown/badges/quality-score.png?s=17448ca4d140429fd687c58ff747baeb6568d528)](https://scrutinizer-ci.com/g/cebe/markdown/)
 
@@ -53,20 +52,26 @@ Installation <a name="installation"></a>
 [PHP 5.4 or higher](http://www.php.net/downloads.php) is required to use it.
 It will also run on facebook's [hhvm](http://hhvm.com/).
 
+The library uses PHPDoc annotations to determine the markdown elements that should be parsed.
+So in case you are using PHP `opcache`, make sure 
+[it does not strip comments](http://php.net/manual/en/opcache.configuration.php#ini.opcache.save-comments).
+
 Installation is recommended to be done via [composer][] by running:
 
-	composer require cebe/markdown "~1.0.1"
+	composer require cebe/markdown "~1.2.0"
 
 Alternatively you can add the following to the `require` section in your `composer.json` manually:
 
 ```json
-"cebe/markdown": "~1.0.1"
+"cebe/markdown": "~1.2.0"
 ```
 
 Run `composer update` afterwards.
 
 [composer]: https://getcomposer.org/ "The PHP package manager"
 
+> Note: If you have configured PHP with opcache you need to enable the
+> [opcache.save_comments](http://php.net/manual/en/opcache.configuration.php#ini.opcache.save-comments) option because inline element parsing relies on PHPdoc annotations to find declared elements.
 
 Usage <a name="usage"></a>
 -----
@@ -88,19 +93,19 @@ Here are some examples:
 ```php
 // traditional markdown and parse full text
 $parser = new \cebe\markdown\Markdown();
-$parser->parse($markdown);
+echo $parser->parse($markdown);
 
 // use github markdown
 $parser = new \cebe\markdown\GithubMarkdown();
-$parser->parse($markdown);
+echo $parser->parse($markdown);
 
 // use markdown extra
 $parser = new \cebe\markdown\MarkdownExtra();
-$parser->parse($markdown);
+echo $parser->parse($markdown);
 
 // parse only inline elements (useful for one-line descriptions)
 $parser = new \cebe\markdown\GithubMarkdown();
-$parser->parseParagraph($markdown);
+echo $parser->parseParagraph($markdown);
 ```
 
 You may optionally set one of the following options on the parser object:
@@ -115,7 +120,7 @@ For GithubMarkdown:
 
 - `$parser->enableNewlines = true` to convert all newlines to `<br/>`-tags. By default only newlines with two preceding spaces are converted to `<br/>`-tags. 
 
-It is recommended to use UTF-8 encoding for the input strings. Other encodings are currently not tested.
+It is recommended to use UTF-8 encoding for the input strings. Other encodings may work, but are currently untested.
 
 ### The command line script
 
@@ -182,7 +187,8 @@ Here are some extensions to this library:
 - [kartik-v/yii2-markdown](https://github.com/kartik-v/yii2-markdown) - Advanced Markdown editing and conversion utilities for Yii Framework 2.0.
 - [cebe/markdown-latex](https://github.com/cebe/markdown-latex) - Convert Markdown to LaTeX and PDF
 - [softark/creole](https://github.com/softark/creole) - A creole markup parser
-- ... [add yours!](https://github.com/cebe/markdown/edit/master/README.md#L98)
+- [hyn/frontmatter](https://github.com/hyn/frontmatter) - Frontmatter Metadata Support (JSON, TOML, YAML)
+- ... [add yours!](https://github.com/cebe/markdown/edit/master/README.md#L186)
 
 
 Extending the language <a name="extend"></a>
@@ -212,13 +218,13 @@ In the following example we will implement support for [fenced code blocks][] wh
 
 class MyMarkdown extends \cebe\markdown\Markdown
 {
-	protected function identifyLine($line, $lines, $current)
+	protected function identifyFencedCode($line, $lines, $current)
 	{
 		// if a line starts with at least 3 backticks it is identified as a fenced code block
 		if (strncmp($line, '```', 3) === 0) {
-			return 'fencedCode';
+			return true;
 		}
-		return parent::identifyLine($lines, $current);
+		return false;
 	}
 
 	// ...
@@ -230,7 +236,7 @@ You may use `$lines` and `$current` to check other lines than the current line. 
 
 Parsing of a block element is done in two steps:
 
-1. "consuming" all the lines belonging to it. In most cases this is iterating over the lines starting from the identified
+1. **Consuming** all the lines belonging to it. In most cases this is iterating over the lines starting from the identified
    line until a blank line occurs. This step is implemented by a method named `consume{blockName}()` where `{blockName}`
    is the same name as used for the identify function above. The consume method also takes the lines array
    and the number of the current line. It will return two arguments: an array representing the block element in the abstract syntax tree
@@ -268,7 +274,7 @@ Parsing of a block element is done in two steps:
 	}
 	```
 
-2. "rendering" the element. After all blocks have been consumed, they are being rendered using the
+2. **Rendering** the element. After all blocks have been consumed, they are being rendered using the
    `render{elementName}()`-method where `elementName` refers to the name of the element in the abstract syntax tree:
 
    ```php
@@ -414,7 +420,7 @@ parsing to ensure you get a reusable object.
 
 #### Define escapeable characters
 
-Depenedend on the language features you have chosen there is a different set of characters that can be escaped
+Depending on the language features you have chosen there is a different set of characters that can be escaped
 using `\`. The following is the set of escapeable characters for traditional markdown, you can copy it to your class
 as is.
 
@@ -486,6 +492,8 @@ to using callbacks to inject functionallity into the parser.
 [real parser]: http://en.wikipedia.org/wiki/Parsing#Types_of_parser
 
 [Parsedown]: http://parsedown.org/ "The Parsedown PHP Markdown parser"
+
+[Yii framework 2.0]: https://github.com/yiisoft/yii2
 
 ### Where do I report bugs or rendering issues?
 

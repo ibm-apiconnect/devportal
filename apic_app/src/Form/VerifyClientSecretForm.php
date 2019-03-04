@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -41,8 +41,14 @@ class VerifyClientSecretForm extends FormBase {
    */
   protected $credId;
 
+  /**
+   * @var \Drupal\apic_app\Service\ApplicationRestInterface
+   */
   protected $restService;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
   /**
@@ -67,14 +73,14 @@ class VerifyClientSecretForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'application_verify_clientsecret_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $this->node = $appId;
     $this->credId = Html::escape($credId);
@@ -94,12 +100,12 @@ class VerifyClientSecretForm extends FormBase {
       '#type' => 'submit',
       '#value' => t('Submit'),
     ];
-    $form['actions']['cancel'] = array(
+    $form['actions']['cancel'] = [
       '#type' => 'link',
       '#title' => t('Cancel'),
       '#url' => $this->getCancelUrl(),
-      '#attributes' => ['class' => ['button', 'apicSecondary']]
-    );
+      '#attributes' => ['class' => ['button', 'apicSecondary']],
+    ];
     $themeHandler = \Drupal::service('theme_handler');
     if ($themeHandler->themeExists('bootstrap')) {
       if (isset($form['actions']['submit'])) {
@@ -118,31 +124,31 @@ class VerifyClientSecretForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
+    $url = Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
-    if(isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
-      return Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
-    } else {
-      return Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
+    if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
+      $url = Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
     }
+    return $url;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $secret = $form_state->getValue('secret');
-    $clientid = null;
+    $clientid = NULL;
     foreach ($this->node->application_credentials->getValue() as $arrayValue) {
-      $unserialized = unserialize($arrayValue['value']);
-      if (isset($unserialized['id']) && $unserialized['id'] == $this->credId) {
+      $unserialized = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+      if (isset($unserialized['id']) && (string) $unserialized['id'] === (string) $this->credId) {
         $clientid = $unserialized['client_id'];
       }
     }
     $url = $this->node->apic_url->value . '/credentials/' . $this->credId . '/verify-client-secret';
 
-    $data = ["client_secret" => $secret, "client_id"=>$clientid];
+    $data = ['client_secret' => $secret, 'client_id' => $clientid];
     $result = $this->restService->postClientSecret($url, json_encode($data));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       drupal_set_message(t('Application secret verified successfully.'));

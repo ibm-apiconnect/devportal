@@ -3,15 +3,15 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
 namespace Drupal\ibm_apim\Updater;
 
-use Drupal\Core\Url;
 use Drupal\Core\Updater\Module;
 use Drupal\Core\Updater\UpdaterException;
 
@@ -21,8 +21,10 @@ use Drupal\Core\Updater\UpdaterException;
  */
 class ApicModule extends Module {
 
+  public $title;
+
   /**
-   * Constructs a new updater.
+   * ApicModule constructor.
    *
    * @param string $source
    *   Directory to install from.
@@ -30,6 +32,8 @@ class ApicModule extends Module {
    *   The root directory under which the project will be copied to if it's a
    *   new project. Usually this is the app root (the directory in which the
    *   Drupal site is installed).
+   *
+   * @throws \Drupal\Core\Updater\UpdaterException
    */
   public function __construct($source, $root) {
     parent::__construct($source, $root);
@@ -49,7 +53,7 @@ class ApicModule extends Module {
    *
    * @throws \Drupal\Core\Updater\UpdaterException
    */
-  public static function getProjectTitle($directory) {
+  public static function getProjectTitle($directory): string {
     $info_file = self::findInfoFile($directory);
     $info = \Drupal::service('info_parser')->parse($info_file);
     if (empty($info)) {
@@ -60,8 +64,8 @@ class ApicModule extends Module {
     $files = file_scan_directory($directory, '/(.*\.php$|.*\.module$|.*\.install$|.*\.inc$)/');
     foreach ($files as $file) {
       $rc = self::checkFunctionNames($file->uri);
-      if ($rc != TRUE) {
-        throw new UpdaterException(t("The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/support/knowledgecenter/en/SSMNED_2018/com.ibm.apic.devportal.doc/rapic_portal_custom_modules_drupal8.html", array('%file' => $file->uri)));
+      if ($rc !== TRUE) {
+        throw new UpdaterException(t('The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/support/knowledgecenter/en/SSMNED_2018/com.ibm.apic.devportal.doc/rapic_portal_custom_modules_drupal8.html', ['%file' => $file->uri]));
       }
     }
 
@@ -72,14 +76,15 @@ class ApicModule extends Module {
    * Check to make sure no APIC source code is within this module / theme
    *
    * @param $file
+   *
    * @return bool
    */
-  public static function checkFunctionNames($file) {
+  public static function checkFunctionNames($file): bool {
     $rc = TRUE;
     if (isset($file) && file_exists($file)) {
       $data = file_get_contents($file);
 
-      $prefixes = array(
+      $prefixes = [
         'ghmarkdown',
         'connect_theme',
         'ibm_apim',
@@ -93,8 +98,8 @@ class ApicModule extends Module {
         'mail-subscribers',
         'ibm_log_stdout',
         'themegenerator',
-        'eventstream'
-      );
+        'eventstream',
+      ];
       $regex = '';
       foreach ($prefixes as $prefix) {
         $regex .= 'function\s+' . $prefix . '_|';
@@ -111,42 +116,16 @@ class ApicModule extends Module {
   }
 
   /**
-   * Returns the directory where a module should be installed.
-   *
-   * If the module is already installed, drupal_get_path() will return a valid
-   * path and we should install it there. If we're installing a new module, we
-   * always want it to go into /modules, since that's where all the
-   * documentation recommends users install their modules, and there's no way
-   * that can conflict on a multi-site installation, since the Update manager
-   * won't let you install a new module if it's already found on your system,
-   * and if there was a copy in the top-level we'd see it.
-   *
-   * @return string
-   *   The absolute path of the directory.
-   */
-  public function getInstallDirectory() {
-    if ($this->isInstalled() && ($relative_path = drupal_get_path('module', $this->name))) {
-      // The return value of drupal_get_path() is always relative to the site,
-      // so prepend DRUPAL_ROOT.
-      return DRUPAL_ROOT . '/' . dirname($relative_path);
-    }
-    else {
-      // When installing a new module, prepend the requested root directory.
-      return $this->root . '/' . $this->getRootDirectoryRelativePath();
-    }
-  }
-
-  /**
    * {@inheritdoc}
    */
-  public static function getRootDirectoryRelativePath() {
+  public static function getRootDirectoryRelativePath(): string {
     return \Drupal::service('site.path') . '/modules';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function isInstalled() {
+  public function isInstalled(): bool {
     // Check if the module exists in the file system, regardless of whether it
     // is enabled or not.
     $modules = \Drupal::state()->get('system.module.files', []);
@@ -156,22 +135,10 @@ class ApicModule extends Module {
   /**
    * {@inheritdoc}
    */
-  public static function canUpdateDirectory($directory) {
+  public static function canUpdateDirectory($directory): bool {
     $info = static::getExtensionInfo($directory);
 
-    return (isset($info['type']) && $info['type'] == 'module');
-  }
-
-  /**
-   * Determines whether this class can update the specified project.
-   *
-   * @param string $project_name
-   *   The project to check.
-   *
-   * @return bool
-   */
-  public static function canUpdate($project_name) {
-    return (bool) drupal_get_path('module', $project_name);
+    return (isset($info['type']) && $info['type'] === 'module');
   }
 
   /**
@@ -179,7 +146,7 @@ class ApicModule extends Module {
    *
    * @return array
    */
-  public function getSchemaUpdates() {
+  public function getSchemaUpdates(): array {
     require_once DRUPAL_ROOT . '/core/includes/install.inc';
     require_once DRUPAL_ROOT . '/core/includes/update.inc';
 
@@ -192,43 +159,10 @@ class ApicModule extends Module {
       return [];
     }
     $modules_with_updates = update_get_update_list();
-    if ($updates = $modules_with_updates[$this->name]) {
-      if ($updates['start']) {
-        return $updates['pending'];
-      }
+    if (($updates = $modules_with_updates[$this->name]) && isset($updates['start'])) {
+      return $updates['pending'];
     }
     return [];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function postInstallTasks() {
-    // Since this is being called outsite of the primary front controller,
-    // the base_url needs to be set explicitly to ensure that links are
-    // relative to the site root.
-    // @todo Simplify with https://www.drupal.org/node/2548095
-    $default_options = [
-      '#type' => 'link',
-      '#options' => [
-        'absolute' => TRUE,
-        'base_url' => $GLOBALS['base_url'],
-      ],
-    ];
-    return [
-      $default_options + [
-        '#url' => Url::fromRoute('update.module_install'),
-        '#title' => t('Install another module'),
-      ],
-      $default_options + [
-        '#url' => Url::fromRoute('system.modules_list'),
-        '#title' => t('Enable newly added modules'),
-      ],
-      $default_options + [
-        '#url' => Url::fromRoute('system.admin'),
-        '#title' => t('Administration pages'),
-      ],
-    ];
   }
 
   /**

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,43 +13,49 @@
 
 /**
  * Save the WSDL data as a file on the fs for serving up to clients
- * @param $apiID
+ *
+ * @param $apiId
  * @param $data
- * @param $filename
- * @return bool|null|\stdClass
+ * @param $fileName
+ *
+ * @return bool|null|\Drupal\file\FileInterface
  */
-function apic_api_save_wsdl($apiID, $data, $filename = NULL) {
-  ibm_apim_entry_trace(__FUNCTION__, $apiID);
+function apic_api_save_wsdl($apiId, $data, $fileName = NULL) {
+  ibm_apim_entry_trace(__FUNCTION__, $apiId);
   try {
-    $apiimgdir = 'private://apiwsdl';
-    file_prepare_directory($apiimgdir, FILE_CREATE_DIRECTORY);
+    $apiImgDir = 'private://apiwsdl';
+    file_prepare_directory($apiImgDir, FILE_CREATE_DIRECTORY);
 
-    if ($data == NULL) {
-      $file_temp = NULL;
+    if ($data === NULL) {
+      $fileTemp = NULL;
     }
     else {
-      if (isset($filename)) {
-        $filename = str_replace(array('\'', '"'), '', $filename);
-        $filename = urlencode($filename);
+      if ($fileName !== NULL) {
+        $fileName = str_replace(['\'', '"'], '', $fileName);
+        $fileName = urlencode($fileName);
       }
-      if (!isset($filename)) {
-        $filename = 'API.wsdl';
+      if ($fileName === NULL) {
+        $fileName = 'API.wsdl';
       }
-      $apidir = $apiimgdir . '/' . $apiID;
-      file_prepare_directory($apidir, FILE_CREATE_DIRECTORY);
+      $apiDir = $apiImgDir . '/' . $apiId;
+      file_prepare_directory($apiDir, FILE_CREATE_DIRECTORY);
 
       // Saves a file to the specified destination and creates a database entry.
-      $file_temp = file_save_data($data, $apiimgdir . '/' . $apiID . '/' . $filename, FILE_EXISTS_REPLACE);
+      $fileTemp = file_save_data($data, $apiImgDir . '/' . $apiId . '/' . $fileName, FILE_EXISTS_REPLACE);
     }
-    if (isset($file_temp)) {
-      \Drupal::logger('apic_api')->notice('Saved WSDL to filesystem for apiID: %apiID, filename: %filename', array('%apiID' => $apiID, '%filename' => $filename));
-    } else {
-      \Drupal::logger('apic_api')->notice('Failed to save WSDL to filesystem for apiID: %apiID', array('%apiID' => $apiID));
+    if ($fileTemp !== NULL) {
+      \Drupal::logger('apic_api')->notice('Saved WSDL to filesystem for apiID: %apiID, filename: %filename', [
+        '%apiID' => $apiId,
+        '%filename' => $fileName,
+      ]);
     }
-    ibm_apim_exit_trace(__FUNCTION__, $apiimgdir . '/' . $apiID . '/' . $filename);
-    return $file_temp;
+    else {
+      \Drupal::logger('apic_api')->notice('Failed to save WSDL to filesystem for apiID: %apiID', ['%apiID' => $apiId]);
+    }
+    ibm_apim_exit_trace(__FUNCTION__, $apiImgDir . '/' . $apiId . '/' . $fileName);
+    return $fileTemp;
   } catch (Exception $e) {
-    \Drupal::logger('apic_api')->notice('Save of WSDL to filesystem failed with: %data', array('%data' => $e->getMessage()));
+    \Drupal::logger('apic_api')->notice('Save of WSDL to filesystem failed with: %data', ['%data' => $e->getMessage()]);
     ibm_apim_exit_trace(__FUNCTION__, NULL);
     return NULL;
   }

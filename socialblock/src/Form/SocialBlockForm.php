@@ -4,12 +4,13 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
 /**
  * @file
  * Contains \Drupal\socialblock\Form\SocialBlockForm
@@ -26,27 +27,29 @@ class SocialBlockForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'socialblock_form';
   }
 
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
 
     $form = parent::buildForm($form, $form_state);
 
     $config = $this->config('socialblock.settings');
     $data = $config->get('credentials');
 
-    if (isset($data) && !empty($data)) {
-      $encryption_profile = EncryptionProfile::load('socialblock');
-      if (isset($encryption_profile)) {
-        $settings = unserialize(\Drupal::service('encryption')->decrypt($data, $encryption_profile));
-      } else {
-        $form_state->setError($form, t('The "socialblock" encryption profile is missing.'));
-        $settings = array();
+    if ($data !== NULL && !empty($data)) {
+      $encryptionProfile = EncryptionProfile::load('socialblock');
+      if ($encryptionProfile !== NULL) {
+        $settings = unserialize(\Drupal::service('encryption')->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
       }
-    } else {
-      $settings = array();
+      else {
+        $form_state->setError($form, t('The "socialblock" encryption profile is missing.'));
+        $settings = [];
+      }
+    }
+    else {
+      $settings = [];
     }
 
     if (!isset($settings['consumerKey'])) {
@@ -62,41 +65,41 @@ class SocialBlockForm extends ConfigFormBase {
       $settings['accessTokenSecret'] = '';
     }
 
-    $form['consumerKey'] = array(
+    $form['consumerKey'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Twitter Application Consumer Key'),
       '#default_value' => $settings['consumerKey'],
       '#description' => $this->t('The Consumer Key displayed in \'Keys and Access Tokens\' in your Twitter application'),
       '#required' => TRUE,
       //'#attributes' => ['autocomplete' => 'off']
-    );
+    ];
 
-    $form['consumerSecret'] = array(
+    $form['consumerSecret'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Twitter Application Consumer Secret'),
       '#default_value' => $settings['consumerSecret'],
       '#description' => $this->t('The Consumer Secret displayed in \'Keys and Access Tokens\' in your Twitter application'),
       '#required' => TRUE,
       //'#attributes' => ['autocomplete' => 'off']
-    );
+    ];
 
-    $form['accessToken'] = array(
+    $form['accessToken'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Twitter Application Access Token'),
       '#default_value' => $settings['accessToken'],
       '#description' => $this->t('The Access Token displayed in \'Keys and Access Tokens\' in your Twitter application'),
       '#required' => TRUE,
       //'#attributes' => ['autocomplete' => 'off']
-    );
+    ];
 
-    $form['accessTokenSecret'] = array(
+    $form['accessTokenSecret'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Twitter Application Access Token Secret'),
       '#default_value' => $settings['accessTokenSecret'],
       '#description' => $this->t('The Access Token Secret displayed in \'Keys and Access Tokens\' in your Twitter application'),
       '#required' => TRUE,
       //'#attributes' => ['autocomplete' => 'off']
-    );
+    ];
 
     return $form;
   }
@@ -104,24 +107,24 @@ class SocialBlockForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
 
-    $credentials = array();
+    $credentials = [];
 
     $consumerKey = $form_state->getValue('consumerKey');
     $consumerSecret = $form_state->getValue('consumerSecret');
     $accessToken = $form_state->getValue('accessToken');
     $accessTokenSecret = $form_state->getValue('accessTokenSecret');
 
-    $credentials['consumerKey'] = isset($consumerKey) ? trim($consumerKey) : '';
-    $credentials['consumerSecret'] = isset($consumerSecret) ? trim($consumerSecret) : '';
-    $credentials['accessToken'] = isset($accessToken) ? trim($accessToken) : '';
-    $credentials['accessTokenSecret'] = isset($accessTokenSecret) ? trim($accessTokenSecret) : '';
+    $credentials['consumerKey'] = $consumerKey !== NULL ? trim($consumerKey) : '';
+    $credentials['consumerSecret'] = $consumerSecret !== NULL ? trim($consumerSecret) : '';
+    $credentials['accessToken'] = $accessToken !== NULL ? trim($accessToken) : '';
+    $credentials['accessTokenSecret'] = $accessTokenSecret !== NULL ? trim($accessTokenSecret) : '';
 
-    $no_cred = empty($consumerKey) || empty($consumerSecret) || empty($accessToken) || empty($accessTokenSecret);
-    $response = socialblock_call_twitter_api($credentials, 'application/rate_limit_status', array());
+    $noCred = empty($consumerKey) || empty($consumerSecret) || empty($accessToken) || empty($accessTokenSecret);
+    $response = socialblock_call_twitter_api($credentials, 'application/rate_limit_status', []);
 
-    if ($no_cred || empty($response)) {
+    if ($noCred || empty($response)) {
       $form_state->setError($form, t('The credentials you have entered are invalid'));
       $this->config('socialblock.settings')->delete();
     }
@@ -131,27 +134,28 @@ class SocialBlockForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $config = $this->config('socialblock.settings');
 
-    $credentials = array();
+    $credentials = [];
     $consumerKey = $form_state->getValue('consumerKey');
     $consumerSecret = $form_state->getValue('consumerSecret');
     $accessToken = $form_state->getValue('accessToken');
     $accessTokenSecret = $form_state->getValue('accessTokenSecret');
 
-    $credentials['consumerKey'] = isset($consumerKey) ? trim($consumerKey) : '';
-    $credentials['consumerSecret'] = isset($consumerSecret) ? trim($consumerSecret) : '';
-    $credentials['accessToken'] = isset($accessToken) ? trim($accessToken) : '';
-    $credentials['accessTokenSecret'] = isset($accessTokenSecret) ? trim($accessTokenSecret) : '';
+    $credentials['consumerKey'] = $consumerKey !== NULL ? trim($consumerKey) : '';
+    $credentials['consumerSecret'] = $consumerSecret !== NULL ? trim($consumerSecret) : '';
+    $credentials['accessToken'] = $accessToken !== NULL ? trim($accessToken) : '';
+    $credentials['accessTokenSecret'] = $accessTokenSecret !== NULL ? trim($accessTokenSecret) : '';
 
 
-    $encryption_profile = EncryptionProfile::load('socialblock');
-    if (isset($encryption_profile)) {
-      $encrypted = \Drupal::service('encryption')->encrypt(serialize($credentials), $encryption_profile);
-    } else {
+    $encryptionProfile = EncryptionProfile::load('socialblock');
+    if ($encryptionProfile !== NULL) {
+      $encrypted = \Drupal::service('encryption')->encrypt(serialize($credentials), $encryptionProfile);
+    }
+    else {
       drupal_set_message(t('The "socialblock" encryption profile is missing.'), 'error');
-      $encrypted = array();
+      $encrypted = [];
     }
 
     $config->set('credentials', $encrypted);
@@ -162,14 +166,13 @@ class SocialBlockForm extends ConfigFormBase {
 
     parent::submitForm($form, $form_state);
 
-    return;
   }
 
   /**
    * {@inheritdoc}
    */
 
-  public function getEditableConfigNames() {
+  public function getEditableConfigNames(): array {
 
     return ['socialblock.settings', 'socialblock.validate'];
 

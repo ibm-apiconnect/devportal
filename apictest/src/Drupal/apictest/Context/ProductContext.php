@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,30 +13,28 @@
 
 namespace Drupal\apictest\Context;
 
-use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\Component\Utility\Random;
-use Drupal\product\Product;
+use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\Entity\Node;
-use Drupal\Core\Session\UserSession;
-use Drupal\apic_app\Subscription;
+use Drupal\product\Product;
 
 class ProductContext extends RawDrupalContext {
 
   /**
    * @Given I publish a product with the name :arg1, id :arg2 and categories :arg3
    */
-  public function iPublishAProductWithNameIdCategories($name, $id, $categories) {
+  public function iPublishAProductWithNameIdCategories($name, $id, $categories): void {
     $random = new Random();
-    if (!isset($name) || empty($name)) {
+    if ($name === NULL || empty($name)) {
       $name = $random->name(8);
     }
-    $object = array();
-    $object['catalog_product'] = array();
-    $object['catalog_product']['info'] = array();
+    $object = [];
+    $object['catalog_product'] = [];
+    $object['catalog_product']['info'] = [];
     $object['catalog_product']['info']['name'] = $name;
     $object['catalog_product']['info']['title'] = $name;
     $object['catalog_product']['info']['version'] = '1.0';
-    $object['catalog_product']['info']['categories'] = array($categories);
+    $object['catalog_product']['info']['categories'] = [$categories];
     $object['state'] = 'published';
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';
@@ -44,7 +42,7 @@ class ProductContext extends RawDrupalContext {
     $object['catalog_product']['visibility']['subscribe']['enabled'] = TRUE;
     $object['catalog_product']['visibility']['view']['type'] = 'public';
 
-    if (!\Drupal::config('ibm_apim.settings')->get('categories')['create_taxonomies_from_categories']) {
+    if (!(boolean) \Drupal::config('ibm_apim.settings')->get('categories')['create_taxonomies_from_categories']) {
       print("Setting 'create_taxonomies_from_categories' config to true. ");
       \Drupal::service('config.factory')
         ->getEditable('ibm_apim.settings')
@@ -55,23 +53,23 @@ class ProductContext extends RawDrupalContext {
     $product = new Product();
     $nid = $product->create($object);
 
-    print("Saved product " . $name . " as nid " . $nid);
+    print('Saved product ' . $name . ' as nid ' . $nid);
   }
 
   /**
    * @Then I should have a product with the name :arg1, id :arg2 and categories :arg3
    */
-  public function iShouldHaveAProductWithNameIdCategories($name, $id, $categories) {
+  public function iShouldHaveAProductWithNameIdCategories($name, $id, $categories): void {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'product');
     $query->condition('title.value', $name);
     $results = $query->execute();
 
-    if (isset($results) && !empty($results)) {
+    if ($results !== NULL && !empty($results)) {
       $querynid = array_shift($results);
       $product = Node::load($querynid);
 
-      if ($product->get('product_id')->value === $id && $product->get('product_name')->value === $name) {
+      if ($product !== NULL && $product->get('product_id')->value === $id && $product->get('product_name')->value === $name) {
         print("The product with the name $name and id $id was created successfully. ");
       }
       else {
@@ -79,26 +77,23 @@ class ProductContext extends RawDrupalContext {
       }
 
       // Make sure the parent term was created from the categories
-      if ($terms = taxonomy_term_load_multiple_by_name("Sport", "tags")) {
+      if ($terms = taxonomy_term_load_multiple_by_name('Sport', 'tags')) {
 
         $terms = \Drupal::entityTypeManager()
           ->getStorage('taxonomy_term')
-          ->loadTree("tags", reset($terms)->get('tid')->value);
+          ->loadTree('tags', reset($terms)->get('tid')->value);
 
         // Make sure the first child in the tree is Ball
-        if ($terms[0]->name === "Ball") {
-          //print("Child term Ball was created");
-        }
-        else {
-          throw new \Exception("Failed to find a term in the tree with the name Ball");
+        if ($terms[0]->name !== 'Ball') {
+          throw new \Exception('Failed to find a term in the tree with the name Ball');
         }
 
         // Make sure the final child in the tree is Rugby
-        if ($terms[1]->name === "Rugby") {
+        if ($terms[1]->name === 'Rugby') {
 
           // Make sure the id of the term was added to the product
           if ($product->get('apic_tags')->getValue()[0]['target_id'] == $terms[1]->tid) {
-            print("Categories where successfully created and linked to the product. ");
+            print('Categories where successfully created and linked to the product. ');
           }
           else {
             throw new \Exception("Categories where not added to the product with name $name");
@@ -106,7 +101,7 @@ class ProductContext extends RawDrupalContext {
 
         }
         else {
-          throw new \Exception("Failed to find a term in the tree with the name Rugby");
+          throw new \Exception('Failed to find a term in the tree with the name Rugby');
         }
       }
 
@@ -120,26 +115,26 @@ class ProductContext extends RawDrupalContext {
   /**
    * @Given I publish a product with the name :name and categories :categories and create_taxonomies_from_categories is false
    */
-  public function iPublishAProductWithTheNameAndCategoriesAndCreateTaxonomiesFromCategoriesIsFalse($name, $categories) {
+  public function iPublishAProductWithTheNameAndCategoriesAndCreateTaxonomiesFromCategoriesIsFalse($name, $categories): void {
     $random = new Random();
-    if (!isset($name) || empty($name)) {
+    if ($name === NULL || empty($name)) {
       $name = $random->name(8);
     }
-    $object = array();
-    $object['catalog_product'] = array();
-    $object['catalog_product']['info'] = array();
+    $object = [];
+    $object['catalog_product'] = [];
+    $object['catalog_product']['info'] = [];
     $object['catalog_product']['info']['name'] = $name;
     $object['catalog_product']['info']['title'] = $name;
     $object['catalog_product']['info']['version'] = '1.0';
-    $object['catalog_product']['info']['categories'] = array($categories);
+    $object['catalog_product']['info']['categories'] = [$categories];
     $object['state'] = 'published';
-    $object['id'] = "12345678";
+    $object['id'] = '12345678';
     $object['url'] = 'https://localhost.com';
     $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
     $object['catalog_product']['visibility']['subscribe']['enabled'] = TRUE;
     $object['catalog_product']['visibility']['view']['type'] = 'public';
 
-    if (\Drupal::config('ibm_apim.settings')->get('categories')['create_taxonomies_from_categories']) {
+    if ((boolean) \Drupal::config('ibm_apim.settings')->get('categories')['create_taxonomies_from_categories']) {
       print("Setting 'create_taxonomies_from_categories' config to false. ");
       \Drupal::service('config.factory')
         ->getEditable('ibm_apim.settings')
@@ -156,23 +151,23 @@ class ProductContext extends RawDrupalContext {
     $product = new Product();
     $nid = $product->create($object);
 
-    print("Saved product " . $name . " as nid " . $nid);
+    print('Saved product ' . $name . ' as nid ' . $nid);
   }
 
   /**
    * @Then I should have a product with name :name and no taxonomies for the categories :categories
    */
-  public function iShouldHaveAProductWithNameAndNoTaxonomiesForTheCategories($name, $categories) {
+  public function iShouldHaveAProductWithNameAndNoTaxonomiesForTheCategories($name, $categories): void {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'product');
     $query->condition('title.value', $name);
     $results = $query->execute();
 
-    if (isset($results) && !empty($results)) {
+    if ($results !== NULL && !empty($results)) {
       $querynid = array_shift($results);
       $product = Node::load($querynid);
 
-      if ($product->get('product_name')->value === $name) {
+      if ($product !== NULL && $product->get('product_name')->value === $name) {
         print("The product with the name $name was created successfully. ");
       }
       else {
@@ -182,8 +177,8 @@ class ProductContext extends RawDrupalContext {
       $apicTags = $product->get('apic_tags')->getValue();
 
       // Make sure the categories where not associated with the product
-      if (isset($apicTags) && !empty($apicTags)) {
-        throw new \Exception("Categories where added to product entity when they should not have been");
+      if ($apicTags !== NULL && !empty($apicTags)) {
+        throw new \Exception('Categories where added to product entity when they should not have been');
       }
 
     }
@@ -196,14 +191,14 @@ class ProductContext extends RawDrupalContext {
   /**
    * @Given I publish a product with the name :arg1, id :arg2 and visibility :arg3 :arg4
    */
-  public function iPublishAProductWithNameIdVisibility($name, $id, $visi, $data) {
+  public function iPublishAProductWithNameIdVisibility($name, $id, $visi, $data): void {
     $random = new Random();
-    if (!isset($name) || empty($name)) {
+    if ($name === NULL || empty($name)) {
       $name = $random->name(8);
     }
-    $object = array();
-    $object['catalog_product'] = array();
-    $object['catalog_product']['info'] = array();
+    $object = [];
+    $object['catalog_product'] = [];
+    $object['catalog_product']['info'] = [];
     $object['catalog_product']['info']['name'] = $name;
     $object['catalog_product']['info']['title'] = $name;
     $object['catalog_product']['info']['version'] = '1.0';
@@ -223,12 +218,12 @@ class ProductContext extends RawDrupalContext {
       case 'org_urls':
         // organization: only people in the given orgs can view
         $object['catalog_product']['visibility']['view']['type'] = 'custom';
-        $object['catalog_product']['visibility']['view']['org_urls'] = array($data);
+        $object['catalog_product']['visibility']['view']['org_urls'] = [$data];
         break;
       case 'tags':
         // category: only people in an org with the right community string can view
         $object['catalog_product']['visibility']['view']['type'] = 'custom';
-        $object['catalog_product']['visibility']['view']['tags'] = array($data);
+        $object['catalog_product']['visibility']['view']['tags'] = [$data];
         break;
       case 'subs':
         // subscription: only people with an app that is subscribed to the portal can view
@@ -239,20 +234,20 @@ class ProductContext extends RawDrupalContext {
 
     $product = new Product();
     $nid = $product->create($object);
-    print("Saved product " . $name . " as nid " . $nid . PHP_EOL);
+    print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
   }
 
   /**
    * @Then The product with the name :arg1 and id :arg2 should be visible to :arg3
    */
-  public function iShouldHaveAProductWithNameIdVisisbleAs($name, $id, $switchto) {
+  public function iShouldHaveAProductWithNameIdVisisbleAs($name, $id, $switchto): void {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'product');
     $query->condition('title.value', $name);
     $results = $query->execute();
 
-    print("Query results: " . serialize($results) . PHP_EOL);
-    if (isset($results) && !empty($results)) {
+    print('Query results: ' . serialize($results) . PHP_EOL);
+    if ($results !== NULL && !empty($results)) {
       $product = Node::load(array_shift($results));
       if ($product->get('product_id')->value === $id && $product->get('product_name')->value === $name) {
         print("Product with the name $name and id $id exists and was viewable by $switchto." . PHP_EOL);
@@ -269,10 +264,10 @@ class ProductContext extends RawDrupalContext {
   /**
    * @Then The product with the name :arg1 and id :arg2 should not be visible to :arg3
    */
-  public function iShouldHaveAProductWithNameIdNotVisisbleAs($name, $id, $switchto) {
+  public function iShouldHaveAProductWithNameIdNotVisisbleAs($name, $id, $switchto): void {
 
     $original_user = \Drupal::currentUser();
-    print("Current user uid: " . $original_user->id() . PHP_EOL);
+    print('Current user uid: ' . $original_user->id() . PHP_EOL);
 
     // Switch to the userid provided
     $accountSwitcher = \Drupal::service('account_switcher');
@@ -286,7 +281,7 @@ class ProductContext extends RawDrupalContext {
     }
 
     $new_user = \Drupal::currentUser();
-    print("Current user uid: " . $new_user->id() . PHP_EOL);
+    print('Current user uid: ' . $new_user->id() . PHP_EOL);
 
 
     $query = \Drupal::entityQuery('node')
@@ -294,11 +289,11 @@ class ProductContext extends RawDrupalContext {
       ->condition('title.value', $name)
       ->accessCheck(TRUE);
     $results = $query->execute();
-    // print("Query results: " . serialize($results) . PHP_EOL);
-    if (isset($results) && !empty($results)) {
+    // print('Query results: ' . serialize($results) . PHP_EOL);
+    if ($results !== NULL && !empty($results)) {
       $querynid = array_shift($results);
-      $product = Node::load($querynid);
-      // print("Product: " . serialize($product) . PHP_EOL);
+      // $product = Node::load($querynid);
+      // print('Product: ' . serialize($product) . PHP_EOL);
       //if ($product->get('product_id')->value === $id && $product->get('product_name')->value === $name) {
       throw new \Exception("Product with the name $name and id $id was viewable by $switchto");
     }
@@ -310,14 +305,14 @@ class ProductContext extends RawDrupalContext {
   /**
    * @Given I publish a product name :arg1, id :arg2, apis :arg3 and visible to org :arg4
    */
-  public function iPublishAProductWithNameIdAPIsAndOrgVisibility($name, $id, $api, $org) {
+  public function iPublishAProductWithNameIdAPIsAndOrgVisibility($name, $id, $api, $org): void {
     $random = new Random();
-    if (!isset($name) || empty($name)) {
+    if ($name === NULL || empty($name)) {
       $name = $random->name(8);
     }
-    $object = array();
-    $object['catalog_product'] = array();
-    $object['catalog_product']['info'] = array();
+    $object = [];
+    $object['catalog_product'] = [];
+    $object['catalog_product']['info'] = [];
     $object['catalog_product']['info']['name'] = $name;
     $object['catalog_product']['info']['title'] = $name;
     $object['catalog_product']['info']['version'] = '1.0';
@@ -326,11 +321,11 @@ class ProductContext extends RawDrupalContext {
     $object['url'] = 'https://localhost.com';
     $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
     $object['catalog_product']['visibility']['view']['type'] = 'custom';
-    $object['catalog_product']['visibility']['view']['orgs'] = array($org);
-    $object['catalog_product']['apis'] = array($api => array('name' => $api));
+    $object['catalog_product']['visibility']['view']['orgs'] = [$org];
+    $object['catalog_product']['apis'] = [$api => ['name' => $api]];
 
     $product = new Product();
     $nid = $product->create($object);
-    print("Saved product " . $name . " as nid " . $nid . PHP_EOL);
+    print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
   }
 }

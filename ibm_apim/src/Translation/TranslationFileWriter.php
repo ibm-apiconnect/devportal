@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -19,7 +19,9 @@ use Drupal\Component\Gettext\PoStreamWriter;
 class TranslationFileWriter {
 
   private $items;
+
   private $file;
+
   private $strip_msgstr = FALSE;
 
   /**
@@ -28,6 +30,8 @@ class TranslationFileWriter {
    * @param array $items - PO Items to write.
    * @param $file - filename.
    * @param bool $strip_msgstr - strip msgstr entries, i.e. translations, used to generate an english only version of a file.
+   *
+   * @throws \Exception
    */
   public function __construct(array $items, $file, $strip_msgstr = FALSE) {
     $this->items = $items;
@@ -36,7 +40,10 @@ class TranslationFileWriter {
     $this->writeFile();
   }
 
-  private function writeFile() {
+  /**
+   * @throws \Exception
+   */
+  private function writeFile() : void{
     $writer = new PoStreamWriter();
     $writer->setURI($this->file);
     // TODO: pass through the header.
@@ -45,11 +52,11 @@ class TranslationFileWriter {
     try {
       $writer->open();
       foreach ($this->items as $item) {
-        if($this->strip_msgstr) {
-          if($item->isPlural()) {
-            $emptyarray = array();
+        if ($this->strip_msgstr) {
+          if ($item->isPlural()) {
+            $emptyarray = [];
             foreach ($item->getTranslation() as $entry) {
-              array_push($emptyarray, NULL);
+              $emptyarray[] = NULL;
             }
             $item->setTranslation($emptyarray);
           }
@@ -60,8 +67,7 @@ class TranslationFileWriter {
         $writer->writeItem($item);
       }
       $writer->close();
-    }
-    catch (\Exception $exception) {
+    } catch (\Exception $exception) {
       throw $exception;
     }
   }

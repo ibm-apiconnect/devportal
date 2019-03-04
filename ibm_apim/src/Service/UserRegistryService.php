@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,9 +13,9 @@
 namespace Drupal\ibm_apim\Service;
 
 use Drupal\Core\State\StateInterface;
+use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Psr\Log\LoggerInterface;
-use Drupal\ibm_apim\ApicType\UserRegistry;
 
 /**
  * Functionality for handling user registries
@@ -23,6 +23,7 @@ use Drupal\ibm_apim\ApicType\UserRegistry;
 class UserRegistryService implements UserRegistryServiceInterface {
 
   protected $state;
+
   protected $logger;
 
   public function __construct(StateInterface $state, LoggerInterface $logger) {
@@ -33,9 +34,9 @@ class UserRegistryService implements UserRegistryServiceInterface {
   /**
    * get all the user_registries
    *
-   * @return NULL if an error occurs otherwise an array of the registries.
+   * @return NULL|array an array of the registries.
    */
-  public function getAll() {
+  public function getAll(): ?array {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -55,9 +56,10 @@ class UserRegistryService implements UserRegistryServiceInterface {
    * get a specific user_registry by url
    *
    * @param $key
-   * @return null|array
+   *
+   * @return null|UserRegistry
    */
-  public function get($key) {
+  public function get($key): ?UserRegistry {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
     }
@@ -68,7 +70,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
       //$current_data = $this->state->get('ibm_apim.user_registries');
       $current_data = $this->getAll();
 
-      if (isset($current_data) && isset($current_data[$key])) {
+      if (isset($current_data[$key])) {
         $registry = $current_data[$key];
       }
     }
@@ -82,15 +84,15 @@ class UserRegistryService implements UserRegistryServiceInterface {
   /**
    * Update all user_registries
    *
-   * @param $data array of user_registries keyed on url
+   * @param $data array of UserRegistries keyed on url
    */
-  public function updateAll($data) {
+  public function updateAll($data): void {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $data);
     }
 
     if (isset($data)) {
-      $user_registries = array();
+      $user_registries = [];
       foreach ($data as $ur) {
         $registry_object = new UserRegistry();
         $registry_object->setValues($ur);
@@ -110,16 +112,16 @@ class UserRegistryService implements UserRegistryServiceInterface {
    * @param $key
    * @param $data
    */
-  public function update($key, $data) {
+  public function update($key, $data): void {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
     }
 
-    if (isset($key) && isset($data)) {
+    if (isset($key, $data)) {
       $current_data = $this->state->get('ibm_apim.user_registries');
 
       if (!is_array($current_data)) {
-        $current_data = array();
+        $current_data = [];
       }
       $registry_object = new UserRegistry();
       $registry_object->setValues($data);
@@ -137,7 +139,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
    *
    * @param $key (user_registries url)
    */
-  public function delete($key) {
+  public function delete($key): void {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
     }
@@ -146,9 +148,9 @@ class UserRegistryService implements UserRegistryServiceInterface {
       $current_data = $this->state->get('ibm_apim.user_registries');
 
       if (isset($current_data)) {
-        $new_data = array();
+        $new_data = [];
         foreach ($current_data as $url => $value) {
-          if ($url != $key) {
+          if ($url !== $key) {
             $new_data[$url] = $value;
           }
         }
@@ -165,12 +167,12 @@ class UserRegistryService implements UserRegistryServiceInterface {
   /**
    * Delete all current user registries
    */
-  public function deleteAll() {
+  public function deleteAll(): void {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
 
-    $this->state->set('ibm_apim.user_registries', array());
+    $this->state->set('ibm_apim.user_registries', []);
 
     // TODO this needs to delete all users
 
@@ -181,9 +183,10 @@ class UserRegistryService implements UserRegistryServiceInterface {
 
   /**
    * @param $identityProviderName
-   * @return null
+   *
+   * @return UserRegistry|null
    */
-  public function getRegistryContainingIdentityProvider($identityProviderName){
+  public function getRegistryContainingIdentityProvider($identityProviderName) :?UserRegistry{
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -191,7 +194,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
     $result = NULL;
     $all_registries = $this->state->get('ibm_apim.user_registries');
     foreach ($all_registries as $registry) {
-      if($registry->hasIdentityProviderNamed($identityProviderName)) {
+      if ($registry->hasIdentityProviderNamed($identityProviderName)) {
         $result = $registry;
         break;
       }
@@ -207,12 +210,13 @@ class UserRegistryService implements UserRegistryServiceInterface {
   /**
    * @inheritdoc
    */
-  public function getDefaultRegistry() {
+  public function getDefaultRegistry() :?UserRegistry{
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
 
     $default_url = $this->state->get('ibm_apim.default_user_registry');
+    $default = NULL;
 
     $fallback_required = FALSE;
     if (!$default_url) {
@@ -245,6 +249,9 @@ class UserRegistryService implements UserRegistryServiceInterface {
     return $default;
   }
 
+  /**
+   * @return mixed|null
+   */
   private function calculateFallbackDefaultRegistry() {
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -255,7 +262,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
     $all_registries = $this->getAll();
 
     if (sizeof($all_registries) === 0) {
-      $this->logger->warning("No registries available when trying to calculate the default.");
+      $this->logger->warning('No registries available when trying to calculate the default.');
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }
@@ -263,7 +270,9 @@ class UserRegistryService implements UserRegistryServiceInterface {
     }
 
     // if we have any user_managed registries then use the first of them, otherwise just return the first one.
-    $user_managed = array_filter($all_registries, function($reg) { return $reg->isUserManaged(); } );
+    $user_managed = array_filter($all_registries, function ($reg) {
+      return $reg->isUserManaged();
+    });
     if ($user_managed) {
       $default = array_shift($user_managed);
     }
@@ -276,6 +285,11 @@ class UserRegistryService implements UserRegistryServiceInterface {
     return $default;
   }
 
+  /**
+   * @param $url
+   *
+   * @return mixed|void
+   */
   public function setDefaultRegistry($url) {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);

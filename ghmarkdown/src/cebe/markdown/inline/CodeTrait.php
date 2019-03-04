@@ -11,8 +11,10 @@ namespace Drupal\ghmarkdown\cebe\markdown\inline;
  * Adds inline code elements
  */
 trait CodeTrait {
+
   /**
    * Parses an inline code span `` ` ``.
+   *
    * @marker `
    */
   protected function parseInlineCode($text) {

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -30,6 +30,13 @@ class AdminMessagesBlock extends BlockBase {
    */
   public function build() {
 
+    // clear cookies when navigating away from user management pages
+    $current_route = \Drupal::routeMatch()->getRouteName();
+    if ($current_route !== 'user.login' && $current_route !== 'user.register' && $current_route !== 'auth_apic.azcode') {
+      $sessionStore = \Drupal::service('session_based_temp_store')->get('auth_apic_invitation_token');
+      $sessionStore->delete('invitation_object');
+    }
+
     $build = array();
     $current_user = \Drupal::currentUser();
     if (isset($current_user)) {
@@ -47,8 +54,8 @@ class AdminMessagesBlock extends BlockBase {
       }
     }
     $errors = [];
-    $config_set = \Drupal::service('ibm_apim.site_config')->isSet();
-    if (!isset($config_set) || $config_set === FALSE) {
+    $config_set = (boolean) \Drupal::service('ibm_apim.site_config')->isSet();
+    if ($config_set === null || $config_set === FALSE) {
       $messages['config'][] = t('FATAL: Initial portal configuration has not been received from the API Manager. Contact your system administrator before continuing further. This will prevent almost all portal functionality from working including user login.');
       $errors[] = 'No portal config received.';
     }

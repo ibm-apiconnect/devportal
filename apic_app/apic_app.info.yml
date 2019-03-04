@@ -1,27 +1,26 @@
-name: 'Application'
+name: Application
 type: module
-description: 'Provides the Application node content type'
-package: 'IBM API Connect'
+description: Provides the Application node content type
+package: IBM API Connect
 core: 8.x
-version: '8.x-1.4.3'
-project: 'apic_app'
+version: 8.x-1.4.9
+project: apic_app
 dependencies:
-  - path
-  - image
-  - block
-  - ibm_apim:ibm_apim
-  - consumerorg:consumerorg
-  - node
-  - text
-  - options
-  - views
-  - user
-  - masonry_views
-  - masonry
-  - better_exposed_filters
-  - twig_tweak
-  - views_autocomplete_filters
-
+- path
+- image
+- block
+- ibm_apim:ibm_apim
+- consumerorg:consumerorg
+- node
+- text
+- options
+- views
+- user
+- masonry_views
+- masonry
+- better_exposed_filters
+- twig_tweak
+- views_autocomplete_filters
 libraries:
-  - 'apic_app/basic'
-'interface translation project': apic_app
+- apic_app/basic
+interface translation project: apic_app

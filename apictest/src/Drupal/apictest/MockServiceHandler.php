@@ -3,15 +3,14 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
-namespace Drupal\apictest;
 
-use Drupal\Core\Site\Settings;
+namespace Drupal\apictest;
 
 /**
  * If requested for the context in the behat.yml file the mock services
@@ -31,9 +30,10 @@ class MockServiceHandler {
    * @param string $userRegistry
    *   User registry specific mock to use - will load ibm_apim/src/Tests/ibm_apim_$userRegistry_mock.services.yml
    * @param boolean $mockSiteConfig
-   *   Whether to use MockSiteConfig service or load individually mocked MockPermissionsService, MockUserRegistryService etc instead
+   *   Whether to use MockSiteConfig service or load individually mocked MockPermissionsService,
+   *   MockUserRegistryService etc instead
    */
-  public static function install($siteDirectory, $modulesDirectory, $userRegistry = 'lur', $mockSiteConfig = TRUE) {
+  public static function install($siteDirectory, $modulesDirectory, $userRegistry = 'lur', $mockSiteConfig = TRUE): void {
     /*
      * This code came from : http://drupal.stackexchange.com/questions/197046/how-to-inject-a-fake-class-into-container-when-running-webtestbase-tests#comment237939_197060
      * (code from the Redis module for Drupal 8)
@@ -41,7 +41,7 @@ class MockServiceHandler {
      * Write the containers_yaml update by hand, since writeSettings() doesn't
      * support this syntax.
      */
-    print "Installing mock services in " . $siteDirectory . "\n";
+    print 'Installing mock services in ' . $siteDirectory . "\n";
 
     print "\n";
     print "MockServiceHandler parameters:\n";
@@ -70,15 +70,16 @@ class MockServiceHandler {
     $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/auth_apic/src/Tests/auth_apic_mock.services.yml\';';
     $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/apic_app/src/Tests/application_mock.services.yml\';';
 
-    if(!$mockSiteConfig) {
+    if (!$mockSiteConfig) {
       // Use either these mocks ...
       $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/ibm_apim/src/Service/Mocks/mock_ibm_apim.services.yml\';';
-    } else {
+    }
+    else {
       // ... or just mock the whole of the site config service
       $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/ibm_apim/src/Service/Mocks/mock_site_config.services.yml\';';
     }
 
-    if ($userRegistry != 'lur') {
+    if ($userRegistry !== 'lur') {
       $userRegistryMockServices = $modulesDirectory . '/auth_apic/src/Tests/auth_apic' . $userRegistry . '_mock.services.yml';
       if (file_exists($userRegistryMockServices)) {
         print "\nLoading user registry specific ($userRegistry) services from $userRegistryMockServices.\n";
@@ -95,7 +96,7 @@ class MockServiceHandler {
     // TEMPORARY DEBUG CODE
     print "\n\n";
     print "Dumping end of settings.php\n";
-    $output = array();
+    $output = [];
     exec("tail -n 5 $settingsPhp", $output);
     var_dump($output);
     // END TEMPORARY DEBUG CODE
@@ -111,9 +112,9 @@ class MockServiceHandler {
    * @param string $siteDirectory
    *   Site directory on the portal node.
    */
-  public static function uninstall($siteDirectory) {
+  public static function uninstall($siteDirectory): void {
 
-    print "Uninstalling mock services from " . $siteDirectory . "\n";
+    print 'Uninstalling mock services from ' . $siteDirectory . "\n";
 
     // Build file names
     $settingsPhp = $siteDirectory . '/settings.php';
@@ -130,7 +131,7 @@ class MockServiceHandler {
     // TEMPORARY DEBUG CODE
     print "\n\n";
     print "Dumping end of settings.php\n";
-    $output = array();
+    $output = [];
     exec("tail -n 5 $settingsPhp", $output);
     var_dump($output);
     // END TEMPORARY DEBUG CODE
@@ -141,8 +142,8 @@ class MockServiceHandler {
   /**
    * Clear drupal caches.
    */
-  private static function clearCaches() {
-    print "Clearing caches...";
+  private static function clearCaches(): void {
+    print 'Clearing caches...';
     drupal_flush_all_caches();
     print "done.\n";
   }

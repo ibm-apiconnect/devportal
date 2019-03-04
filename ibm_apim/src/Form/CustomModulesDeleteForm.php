@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -27,8 +27,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class CustomModulesDeleteForm extends FormBase {
 
   protected $sitePath;
+
   protected $moduleHandler;
+
   protected $logger;
+
   protected $keyValueExpirable;
 
   public function __construct(string $site_path,
@@ -53,31 +56,31 @@ class CustomModulesDeleteForm extends FormBase {
   /**
    * @inheritDoc
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'ibm_apim_custommodule_delete_form';
   }
 
   /**
    * @inheritDoc
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $form['preamble'] = array(
+    $form['preamble'] = [
       '#type' => 'item',
-      '#description' => 'This form allows you to delete any modules you have installed. Any modules shipped with IBM API Connect cannot be deleted. For a module to appear in the list it, and all of its sub-modules, need to be disabled.'
-    );
+      '#description' => 'This form allows you to delete any modules you have installed. Any modules shipped with IBM API Connect cannot be deleted. For a module to appear in the list it, and all of its sub-modules, need to be disabled.',
+    ];
     $header = [
       'module' => $this->t('Module'),
       'info' => $this->t('Information'),
     ];
     $options = $this->getDisabledCustomModules();
-    $form['table'] = array(
+    $form['table'] = [
       '#type' => 'tableselect',
       '#header' => $header,
       '#options' => $options,
       '#empty' => $this->t('No deletable modules found.'),
-    );
+    ];
 
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
@@ -89,7 +92,7 @@ class CustomModulesDeleteForm extends FormBase {
     return $form;
   }
 
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     if (empty(array_filter($form_state->getValue('table')))) {
@@ -103,7 +106,7 @@ class CustomModulesDeleteForm extends FormBase {
   /**
    * @inheritDoc
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     // Save all the values in an expirable key value store.
@@ -129,19 +132,19 @@ class CustomModulesDeleteForm extends FormBase {
    *
    * @return array options to pass into tableselect
    */
-  private function getDisabledCustomModules() {
+  private function getDisabledCustomModules(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $custom_module_dirs = $this->getCustomModuleDirectories();
 
-    $uninstall_list = array();
+    $uninstall_list = [];
 
     foreach ($custom_module_dirs as $cm) {
       if ($this->moduleHandler->moduleExists($cm)) {
-        $this->logger->debug('Delete form, %cm is enabled so not listed.', array('%cm' => $cm));
+        $this->logger->debug('Delete form, %cm is enabled so not listed.', ['%cm' => $cm]);
       }
       else {
 
-        $info_yml =  DRUPAL_ROOT . '/' . $this->sitePath . '/modules' . '/' . $cm . '/' . $cm . '.info.yml';
+        $info_yml = DRUPAL_ROOT . '/' . $this->sitePath . '/modules' . '/' . $cm . '/' . $cm . '.info.yml';
 
         if (file_exists($info_yml) && !$this->isHidden($info_yml)) {
 
@@ -150,28 +153,28 @@ class CustomModulesDeleteForm extends FormBase {
 
           foreach ($submodules as $sm) {
             if ($this->moduleHandler->moduleExists($sm)) {
-              $this->logger->info('Delete form, not listing %cm as sub-module %sm is still enabled', array('%cm' => $cm, '%sm' => $sm));
+              $this->logger->info('Delete form, not listing %cm as sub-module %sm is still enabled', ['%cm' => $cm, '%sm' => $sm]);
               $enabled_submodule = TRUE;
             }
           }
 
-          if(!$enabled_submodule){
+          if (!$enabled_submodule) {
             if (empty($submodules)) {
               $info_msg = $this->t('No sub-modules found.');
             }
             else {
-              $info_msg = $this->t('The following sub-modules will also be deleted: %modules', array('%modules' => \implode(', ', $submodules)));
+              $info_msg = $this->t('The following sub-modules will also be deleted: %modules', ['%modules' => \implode(', ', $submodules)]);
             }
 
             $module = [
               'module' => \yaml_parse_file($info_yml)['name'],
-              'info' => $info_msg
+              'info' => $info_msg,
             ];
             $uninstall_list[$cm] = $module;
           }
         }
         else {
-          $this->logger->debug('Delete form, info.yml not found or module marked as hidden for %cm.', array('%cm' => $cm));
+          $this->logger->debug('Delete form, info.yml not found or module marked as hidden for %cm.', ['%cm' => $cm]);
         }
 
       }
@@ -186,9 +189,9 @@ class CustomModulesDeleteForm extends FormBase {
    *
    * @return array directory names (= custom module names)
    */
-  private function getCustomModuleDirectories() {
+  private function getCustomModuleDirectories(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $custom_modules = array();
+    $custom_modules = [];
     $dir = new DirectoryIterator($this->sitePath . '/modules');
     foreach ($dir as $fileinfo) {
       if ($fileinfo->isDir() && !$fileinfo->isDot()) {
@@ -208,12 +211,12 @@ class CustomModulesDeleteForm extends FormBase {
    *
    * @return bool is hidden?
    */
-  private function isHidden($info_yml) {
+  private function isHidden($info_yml): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $info_yml);
     $info = \yaml_parse_file($info_yml);
     $hidden = FALSE;
-    if(isset($info['hidden']) && $info['hidden'] === TRUE) {
-      $this->logger->debug('Delete form, module marked as hidden in %info_yml', array('%info_yml' => basename($info_yml)));
+    if ($info['hidden'] !== NULL && (boolean) $info['hidden'] === TRUE) {
+      $this->logger->debug('Delete form, module marked as hidden in %info_yml', ['%info_yml' => basename($info_yml)]);
       $hidden = TRUE;
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $hidden);
@@ -228,19 +231,19 @@ class CustomModulesDeleteForm extends FormBase {
    *
    * @return array
    */
-  private function getSubModules(string $parent) {
+  private function getSubModules(string $parent): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $parent);
-    $subs = array();
+    $subs = [];
     $dir = new RecursiveDirectoryIterator($this->sitePath . '/modules/' . $parent);
     $ite = new RecursiveIteratorIterator($dir);
     $files = new RegexIterator($ite, '/^.+\.info.yml$/i', RegexIterator::GET_MATCH);
 
-    foreach($files as $file) {
+    foreach ($files as $file) {
       $info_yml_full_path = DRUPAL_ROOT . '/' . \array_shift($file);
 
-      if(!$this->isHidden($info_yml_full_path)) {
+      if (!$this->isHidden($info_yml_full_path)) {
         $info_yml = \basename($info_yml_full_path);
-        $module_name = \substr($info_yml, 0, -(\strlen('.info.yml')));
+        $module_name = \substr($info_yml, 0, -\strlen('.info.yml'));
         if ($module_name !== $parent) {
           $subs[] = $module_name;
         }

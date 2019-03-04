@@ -11,6 +11,7 @@ namespace Drupal\ghmarkdown\cebe\markdown\block;
  * Adds horizontal rules
  */
 trait RuleTrait {
+
   /**
    * identify a line as a horizontal rule.
    */

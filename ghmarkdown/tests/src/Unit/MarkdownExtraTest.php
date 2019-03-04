@@ -9,6 +9,7 @@ use Drupal\ghmarkdown\cebe\markdown\MarkdownExtra;
  * @group ghmarkdown
  */
 class MarkdownExtraTest extends BaseMarkdownTest {
+
   public function createMarkdown() {
     return new MarkdownExtra();
   }

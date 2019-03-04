@@ -13,14 +13,9 @@ paragraph 1 is here
 
 more markdown here
 
-< this is not an html tag
-
-<thisisnotanhtmltag
-
 but this is:
 
-<img src="file.jpg"
-     alt="some alt aligned with src attribute" title="some text" />
+<img src="file.jpg" alt="some alt aligned with src attribute" title="some text" />
 
 <span class="test">some inline **md**</span>
 
@@ -29,31 +24,22 @@ but this is:
 self-closing on block level:
 
 <p>this is a paragraph</p>
-<hr style="clear: both;" />
+<hr />
 
 something **bold**.
 
-<custom />
-
 # h1
-
-<custom multi="line" something="hi" />
 
 ## h2
 
-p <img src="file.jpg"
-       alt="some alt aligned with src attribute"
-       title="some text" />
+p <img src="file.jpg" alt="some alt aligned with src attribute" title="some text" />
    something
 
-p <img src="file.jpg"
-       alt="some alt aligned with src attribute"
-       title="some text" />
+p <img src="file.jpg" alt="some alt aligned with src attribute" title="some text" />
     something
 
 p is < than 5
     this is code
 
-this paragraph contains a <!-- multi
-line html comment -->
+this paragraph contains a
 newline

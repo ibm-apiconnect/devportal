@@ -36,6 +36,7 @@ defined('ENT_HTML401') || define('ENT_HTML401', 0);
  * ```
  */
 trait LinkTrait {
+
   /**
    * @var array a list of defined references in this document.
    */
@@ -43,7 +44,9 @@ trait LinkTrait {
 
   /**
    * Remove backslash from escaped characters
+   *
    * @param $text
+   *
    * @return string
    */
   protected function replaceEscape($text) {
@@ -70,14 +73,14 @@ trait LinkTrait {
           'refkey' => $key,
           'orig' => substr($markdown, 0, $offset),
         ],
-        $offset
+        $offset,
       ];
     }
     else {
       // remove all starting [ markers to avoid next one to be parsed as link
       $result = '[';
       $i = 1;
-      while (isset($markdown[$i]) && $markdown[$i] == '[') {
+      while (isset($markdown[$i]) && $markdown[$i] === '[') {
         $result .= '[';
         $i++;
       }
@@ -87,6 +90,7 @@ trait LinkTrait {
 
   /**
    * Parses an image indicated by `![`.
+   *
    * @marker ![
    */
   protected function parseImage($markdown) {
@@ -102,14 +106,14 @@ trait LinkTrait {
           'refkey' => $key,
           'orig' => substr($markdown, 0, $offset + 1),
         ],
-        $offset + 1
+        $offset + 1,
       ];
     }
     else {
       // remove all starting [ markers to avoid next one to be parsed as link
       $result = '!';
       $i = 1;
-      while (isset($markdown[$i]) && $markdown[$i] == '[') {
+      while (isset($markdown[$i]) && $markdown[$i] === '[') {
         $result .= '[';
         $i++;
       }
@@ -162,23 +166,24 @@ REGEXP;
 
   /**
    * Parses inline HTML.
+   *
    * @marker <
    */
   protected function parseLt($text) {
     if (strpos($text, '>') !== FALSE) {
       if (!in_array('parseLink', $this->context)) { // do not allow links in links
-        if (preg_match('/^<([^\s]*?@[^\s]*?\.\w+?)>/', $text, $matches)) {
+        if (preg_match('/^<([^\s>]*?@[^\s]*?\.\w+?)>/', $text, $matches)) {
           // email address
           return [
             ['email', $this->replaceEscape($matches[1])],
-            strlen($matches[0])
+            strlen($matches[0]),
           ];
         }
         elseif (preg_match('/^<([a-z]{3,}:\/\/[^\s]+?)>/', $text, $matches)) {
           // URL
           return [
             ['url', $this->replaceEscape($matches[1])],
-            strlen($matches[0])
+            strlen($matches[0]),
           ];
         }
       }
@@ -197,7 +202,9 @@ REGEXP;
 
   protected function renderUrl($block) {
     $url = htmlspecialchars($block[1], ENT_COMPAT | ENT_HTML401, 'UTF-8');
-    $text = htmlspecialchars(urldecode($block[1]), ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $decodedUrl = urldecode($block[1]);
+    $secureUrlText = preg_match('//u', $decodedUrl) ? $decodedUrl : $block[1];
+    $text = htmlspecialchars($secureUrlText, ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8');
     return "<a href=\"$url\">$text</a>";
   }
 
@@ -215,12 +222,15 @@ REGEXP;
         $block = array_merge($block, $ref);
       }
       else {
+        if (strncmp($block['orig'], '[', 1) === 0) {
+          return '[' . $this->renderAbsy($this->parseInline(substr($block['orig'], 1)));
+        }
         return $block['orig'];
       }
     }
     return '<a href="' . htmlspecialchars($block['url'], ENT_COMPAT | ENT_HTML401, 'UTF-8') . '"'
-    . (empty($block['title']) ? '' : ' title="' . htmlspecialchars($block['title'], ENT_COMPAT | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8') . '"')
-    . '>' . $this->renderAbsy($block['text']) . '</a>';
+      . (empty($block['title']) ? '' : ' title="' . htmlspecialchars($block['title'], ENT_COMPAT | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8') . '"')
+      . '>' . $this->renderAbsy($block['text']) . '</a>';
   }
 
   protected function renderImage($block) {
@@ -229,19 +239,22 @@ REGEXP;
         $block = array_merge($block, $ref);
       }
       else {
+        if (strncmp($block['orig'], '![', 2) === 0) {
+          return '![' . $this->renderAbsy($this->parseInline(substr($block['orig'], 2)));
+        }
         return $block['orig'];
       }
     }
     return '<img src="' . htmlspecialchars($block['url'], ENT_COMPAT | ENT_HTML401, 'UTF-8') . '"'
-    . ' alt="' . htmlspecialchars($block['text'], ENT_COMPAT | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8') . '"'
-    . (empty($block['title']) ? '' : ' title="' . htmlspecialchars($block['title'], ENT_COMPAT | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8') . '"')
-    . ($this->html5 ? '>' : ' />');
+      . ' alt="' . htmlspecialchars($block['text'], ENT_COMPAT | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8') . '"'
+      . (empty($block['title']) ? '' : ' title="' . htmlspecialchars($block['title'], ENT_COMPAT | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8') . '"')
+      . ($this->html5 ? '>' : ' />');
   }
 
   // references
 
   protected function identifyReference($line) {
-    return ($line[0] === ' ' || $line[0] === '[') && preg_match('/^ {0,3}\[(.+?)\]:\s*([^\s]+?)(?:\s+[\'"](.+?)[\'"])?\s*$/', $line);
+    return isset($line[0]) && ($line[0] === ' ' || $line[0] === '[') && preg_match('/^ {0,3}\[[^\[](.*?)\]:\s*([^\s]+?)(?:\s+[\'"](.+?)[\'"])?\s*$/', $line);
   }
 
   /**
@@ -268,4 +281,8 @@ REGEXP;
     }
     return [FALSE, --$current];
   }
+
+  abstract protected function parseInline($text);
+
+  abstract protected function renderAbsy($blocks);
 }

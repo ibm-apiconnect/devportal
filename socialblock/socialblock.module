@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -27,34 +27,33 @@ use Drupal\encrypt\Entity\EncryptionProfile;
  * @param $type
  * @param $theme
  * @param $path
+ *
  * @return array
  */
 function socialblock_theme($existing, $type, $theme, $path) {
-  return array(
-    'socialblock_block' => array(
-      'variables' => array(
-        'posts' => NULL
-      )
-    )
-  );
+  return [
+    'socialblock_block' => [
+      'variables' => [
+        'posts' => NULL,
+      ],
+    ],
+  ];
 }
 
 /**
  * @return array
  */
-function socialblock_get_forum_vocabularies() {
+function socialblock_get_forum_vocabularies(): array {
 
-  $vocabs = array();
-
-  $systemvocabs = Vocabulary::loadMultiple();
-
-  if (isset($systemvocabs)) {
-    foreach ($systemvocabs as $vocab) {
-      if ($vocab->label() == 'Forums') {
-        $vocabs = \Drupal::getContainer()
-          ->get('entity.manager')
-          ->getStorage('taxonomy_term')
-          ->loadTree($vocab->id());
+  $vocabs = [];
+  $systemVocabs = Vocabulary::loadMultiple();
+  if ($systemVocabs !== NULL) {
+    foreach ($systemVocabs as $vocab) {
+      if ($vocab->label() === 'Forums') {
+        $container = \Drupal::getContainer();
+        if ($container !== NULL) {
+          $vocabs = $container->get('entity.manager')->getStorage('taxonomy_term')->loadTree($vocab->id());
+        }
       }
     }
   }
@@ -65,14 +64,14 @@ function socialblock_get_forum_vocabularies() {
 /**
  * @return array
  */
-function socialblock_get_forum_term_ids() {
+function socialblock_get_forum_term_ids(): array {
 
   $vocabs = socialblock_get_forum_vocabularies();
 
-  $tids = array();
-  if (isset($vocabs)) {
+  $tids = [];
+  if ($vocabs !== NULL) {
     foreach ($vocabs as $vocab) {
-      $tids[$vocab->tid] = intval($vocab->tid);
+      $tids[$vocab->tid] = (int) $vocab->tid;
     }
   }
 
@@ -81,9 +80,10 @@ function socialblock_get_forum_term_ids() {
 
 /**
  * @param DateInterval $di
+ *
  * @return string
  */
-function socialblock_get_timediff(DateInterval $di) {
+function socialblock_get_timediff(DateInterval $di): string {
 
   $translate = \Drupal::translation();
 
@@ -94,29 +94,30 @@ function socialblock_get_timediff(DateInterval $di) {
   $minutes = $di->i;
   $seconds = $di->s;
 
-  $secondsString = \Drupal::translation()
+  $secondsString = $translate
     ->formatPlural($seconds, '1 second ago', '@count seconds ago');
-  $minutesString = \Drupal::translation()
+  $minutesString = $translate
     ->formatPlural($minutes, '1 minute ago', '@count minutes ago');
-  $hoursString = \Drupal::translation()
+  $hoursString = $translate
     ->formatPlural($hours, '1 hour ago', '@count hours ago');
-  $daysString = \Drupal::translation()
+  $daysString = $translate
     ->formatPlural($days, '1 day ago', '@count days ago');
-  $monthsString = \Drupal::translation()
+  $monthsString = $translate
     ->formatPlural($months, '1 month ago', '@count months ago');
-  $yearsString = \Drupal::translation()
+  $yearsString = $translate
     ->formatPlural($minutes, '1 year ago', '@count years ago');
 
-  $diff = $years == 0 ? ($months == 0 ? ($days == 0 ? ($hours == 0 ? ($minutes == 0 ? ($seconds == 0 ? t('Just now') : $secondsString) : $minutesString) : $hoursString) : $daysString) : $monthsString) : $yearsString;
+  $diff = $years === 0 ? ($months === 0 ? ($days === 0 ? ($hours === 0 ? ($minutes === 0 ? ($seconds === 0 ? t('Just now') : $secondsString) : $minutesString) : $hoursString) : $daysString) : $monthsString) : $yearsString;
 
   return $diff;
 }
 
 /**
  * @param DateInterval $di
+ *
  * @return null|string
  */
-function socialblock_get_tweet_timediff(DateInterval $di) {
+function socialblock_get_tweet_timediff(DateInterval $di): ?string {
 
   $years = $di->y;
   $months = $di->m;
@@ -124,7 +125,7 @@ function socialblock_get_tweet_timediff(DateInterval $di) {
   $hours = $di->h;
   $minutes = $di->i;
   $seconds = $di->s;
-  $diff = $years == 0 ? ($months == 0 ? ($days == 0 ? ($hours == 0 ? ($minutes == 0 ? ($seconds == 0 ? t('now') : $seconds . t('s')) : $minutes . t('m')) : $hours . t('h')) : $days . t('d')) : $months . t('M')) : $years . t('y');
+  $diff = $years === 0 ? ($months === 0 ? ($days === 0 ? ($hours === 0 ? ($minutes === 0 ? ($seconds === 0 ? t('now') : $seconds . t('s')) : $minutes . t('m')) : $hours . t('h')) : $days . t('d')) : $months . t('M')) : $years . t('y');
 
   return $diff;
 }
@@ -134,12 +135,11 @@ function socialblock_get_tweet_timediff(DateInterval $di) {
  */
 function socialblock_cron() {
 
-  $config_instances = \Drupal::state()->get('socialblock.config');
-  if (isset($config_instances) && !empty($config_instances)) {
-    foreach ($config_instances as $block_uuid => $settings) {
+  $configInstances = \Drupal::state()->get('socialblock.config');
+  if ($configInstances !== NULL && !empty($configInstances)) {
+    foreach ($configInstances as $blockUuid => $settings) {
 
       $numberOfTiles = $settings['numberOfTiles'];
-      $forumsList = $settings['forumsList'];                // In the form of array(forumId => [0|1])
       $twitterSearchBy = $settings['twitterSearchBy'];      // In the form of 0 = userid, 1 = search;
       $twitterSearchParameter = $settings['twitterSearchParameter'];
       $twitterTweetTypes = $settings['twitterTweetTypes'];  // In the form of 0 = tweets, 1 = tweets and replies
@@ -147,18 +147,18 @@ function socialblock_cron() {
       // These are the settings for the twitter oauth
       $config = \Drupal::config('socialblock.settings');
       $data = $config->get('credentials');
-      if (isset($data) && !empty($data)) {
-        $encryption_profile = EncryptionProfile::load('socialblock');
-        if (isset($encryption_profile)) {
-          $settings = unserialize(\Drupal::service('encryption')->decrypt($data, $encryption_profile));
+      if ($data !== NULL && !empty($data)) {
+        $encryptionProfile = EncryptionProfile::load('socialblock');
+        if ($encryptionProfile !== NULL) {
+          $settings = unserialize(\Drupal::service('encryption')->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
         }
         else {
           \Drupal::logger('socialblock')->info('Social Block : The "socialblock" encryption profile is missing.');
-          $settings = array();
+          $settings = [];
         }
       }
       else {
-        $settings = array();
+        $settings = [];
       }
       if (!isset($settings['consumerKey'])) {
         $settings['consumerKey'] = '';
@@ -173,58 +173,58 @@ function socialblock_cron() {
         $settings['accessTokenSecret'] = '';
       }
 
-      if (isset($settings['consumerKey']) && !empty($settings['consumerKey']) && isset($settings['consumerSecret']) && !empty($settings['consumerSecret']) && isset($settings['accessToken']) && !empty($settings['accessToken']) && isset($settings['accessTokenSecret']) && !empty($settings['accessTokenSecret'])) {
-        $api = "";
-        $api_param = "";
+      if ($settings['consumerKey'] !== NULL && !empty($settings['consumerKey']) && $settings['consumerSecret'] !== NULL && !empty($settings['consumerSecret']) && $settings['accessToken'] !== NULL && !empty($settings['accessToken']) && $settings['accessTokenSecret'] !== NULL && !empty($settings['accessTokenSecret'])) {
+        $api = '';
+        $apiParam = '';
 
         switch ($twitterSearchBy) {
 
           // Show tweets for a given user id
           case 0;
             $api = 'statuses/user_timeline';
-            $api_param = 'screen_name';
+            $apiParam = 'screen_name';
             break;
 
-          // Show tweets mactching a search term
+          // Show tweets matching a search term
           case 1;
             $api = 'search/tweets';
-            $api_param = 'q';
+            $apiParam = 'q';
             break;
         }
 
-        $tweets = array();
+        $tweets = [];
 
         switch ($twitterTweetTypes) {
 
           // Displaying just tweets
           case 0:
-            $remaining_calls = socialblock_not_rate_limited($settings);
+            $remainingCalls = socialblock_not_rate_limited($settings);
 
-            if ($remaining_calls > 0) {
-              $temp = socialblock_call_twitter_api($settings, $api, array(
-                $api_param => $twitterSearchParameter,
-                'count' => $numberOfTiles
-              ));
+            if ($remainingCalls > 0) {
+              $temp = socialblock_call_twitter_api($settings, $api, [
+                $apiParam => $twitterSearchParameter,
+                'count' => $numberOfTiles,
+              ]);
               $temp2 = $temp;
-              $remaining_calls--;
+              $remainingCalls--;
               $all_tweets = FALSE;
 
               while (!$all_tweets) {
-                if ($remaining_calls > 0 && !empty($temp)) {
+                if ($remainingCalls > 0 && !empty($temp)) {
                   $max_id = end($temp)->id;
-                  for ($i = 0; $i < sizeof($temp); $i++) {
-                    if (is_null($temp[$i]->in_reply_to_status_id)) {
-                      array_push($tweets, $temp[$i]);
+                  foreach ($temp as $index => $value) {
+                    if ($value->in_reply_to_status_id === NULL) {
+                      $tweets[] = $value;
                     }
                   }
-                  $all_tweets = sizeof($tweets) == $numberOfTiles;
+                  $all_tweets = sizeof($tweets) === $numberOfTiles;
                   if (!$all_tweets) {
-                    $temp = socialblock_call_twitter_api($settings, $api, array(
-                      $api_param => $twitterSearchParameter,
+                    $temp = socialblock_call_twitter_api($settings, $api, [
+                      $apiParam => $twitterSearchParameter,
                       'count' => $numberOfTiles - sizeof($tweets),
-                      'max_id' => $max_id - 1
-                    ));
-                    $remaining_calls--;
+                      'max_id' => $max_id - 1,
+                    ]);
+                    $remainingCalls--;
                     $temp2 = empty($temp) ? $temp2 : $temp;
                   }
                 }
@@ -242,12 +242,12 @@ function socialblock_cron() {
 
           // Tweets and replies
           case 1:
-            $remaining_calls = socialblock_not_rate_limited($settings);
-            if ($remaining_calls > 0) {
-              $tweets = socialblock_call_twitter_api($settings, $api, array(
-                $api_param => $twitterSearchParameter,
-                'count' => $numberOfTiles
-              ));
+            $remainingCalls = socialblock_not_rate_limited($settings);
+            if ($remainingCalls > 0) {
+              $tweets = socialblock_call_twitter_api($settings, $api, [
+                $apiParam => $twitterSearchParameter,
+                'count' => $numberOfTiles,
+              ]);
             }
             else {
               \Drupal::logger('socialblock')
@@ -255,23 +255,23 @@ function socialblock_cron() {
             }
             break;
           default:
-            $tweets = array();
+            $tweets = [];
         }
 
         // Store tweets as state config so that we can use it when rendering the socialblock
-        $data_instances = \Drupal::state()->get('socialblock.data');
-        if (!isset($data_instances)) {
-          $data_instances = array();
+        $dataInstances = \Drupal::state()->get('socialblock.data');
+        if ($dataInstances === NULL) {
+          $dataInstances = [];
         }
-        $data_instances[$block_uuid] = $tweets;
+        $dataInstances[$blockUuid] = $tweets;
 
-        \Drupal::state()->set('socialblock.data', $data_instances);
+        \Drupal::state()->set('socialblock.data', $dataInstances);
 
         \Drupal::logger('socialblock')
-          ->info('Social Block : Retrieved %num_tweets tweets for block with uuid [%uuid]', array(
-            "%num_tweets" => sizeof($tweets),
-            "%uuid" => $block_uuid
-          ));
+          ->info('Social Block : Retrieved %num_tweets tweets for block with uuid [%uuid]', [
+            '%num_tweets' => sizeof($tweets),
+            '%uuid' => $blockUuid,
+          ]);
 
       } // we had complete twitter credentials
 
@@ -284,6 +284,7 @@ function socialblock_cron() {
  * @param $credentials
  * @param $api
  * @param $params
+ *
  * @return array|null|object
  */
 function socialblock_call_twitter_api($credentials, $api, $params) {
@@ -294,16 +295,14 @@ function socialblock_call_twitter_api($credentials, $api, $params) {
   $accessTokenSecret = $credentials['accessTokenSecret'];
 
   $connection = new TwitterOAuth($consumerKey, $consumerSecret, $accessToken, $accessTokenSecret);
-  $connection->host = "https://api.twitter.com/1.1";
+  $connection->host = 'https://api.twitter.com/1.1';
   $response = $connection->get($api, $params);
 
   if (isset($response->errors)) {
     $response = NULL;
   }
-  else {
-    if ($api == 'search/tweets') {
-      $response = $response->statuses;
-    }
+  elseif ($api === 'search/tweets') {
+    $response = $response->statuses;
   }
 
   return $response;
@@ -311,33 +310,36 @@ function socialblock_call_twitter_api($credentials, $api, $params) {
 
 /**
  * @param $cred
+ *
  * @return bool
  */
-function socialblock_not_rate_limited($cred) {
-  $result = socialblock_call_twitter_api($cred, 'application/rate_limit_status', array('resources' => 'statuses'));
-  if (isset($result->resources->statuses->{'/statuses/user_timeline'}->remaining) && $result->resources->statuses->{'/statuses/user_timeline'}->remaining > 0) {
-    return TRUE;
-  }
-  else {
-    return FALSE;
-  }
+function socialblock_not_rate_limited($cred): bool {
+  $result = socialblock_call_twitter_api($cred, 'application/rate_limit_status', ['resources' => 'statuses']);
+  return isset($result->resources->statuses->{'/statuses/user_timeline'}->remaining) && $result->resources->statuses->{'/statuses/user_timeline'}->remaining > 0;
 }
 
 /**
  * @param $a
  * @param $b
+ *
  * @return int
  */
-function socialblock_sort_by_created($a, $b) {
-  $at = intval($a->tweet ? strtotime($a->created_at) : $a->created->getValue()[0]['value']);
-  $bt = intval($b->tweet ? strtotime($b->created_at) : $b->created->getValue()[0]['value']);
-  if ($at == $bt) {
+function socialblock_sort_by_created($a, $b): int {
+  $at = (int) ($a->tweet ? strtotime($a->created_at) : $a->created->getValue()[0]['value']);
+  $bt = (int) ($b->tweet ? strtotime($b->created_at) : $b->created->getValue()[0]['value']);
+  if ($at === $bt) {
     return 0;
   }
   return $at < $bt ? 1 : -1;
 }
 
-function socialblock_expand_url($url) {
+/**
+ * @param $url
+ *
+ * @return string
+ */
+function socialblock_expand_url($url): string {
+  $returnValue = NULL;
   $ch = curl_init();
   curl_setopt($ch, CURLOPT_URL, $url);
   curl_setopt($ch, CURLOPT_HEADER, TRUE);
@@ -350,10 +352,10 @@ function socialblock_expand_url($url) {
   $a = curl_exec($ch);
   curl_close($ch);
   if (preg_match('#Location: (.*)#', $a, $r)) {
-    $l = trim($r[1]);
-    return $l;
+    $returnValue = trim($r[1]);
   }
   else {
-    return $url;
+    $returnValue = $url;
   }
+  return $returnValue;
 }

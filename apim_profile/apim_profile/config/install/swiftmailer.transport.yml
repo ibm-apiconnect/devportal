@@ -1,9 +1,0 @@
-transport: sendmail
-smtp_host: 127.0.0.1
-smtp_port: 25
-smtp_encryption: ''
-smtp_username: ''
-smtp_password: ''
-sendmail_path: /opt/ibm/bin/sendmail
-sendmail_mode: t
-spool_directory: ''

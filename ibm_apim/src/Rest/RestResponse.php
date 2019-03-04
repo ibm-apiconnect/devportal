@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,15 +13,20 @@
 
 namespace Drupal\ibm_apim\Rest;
 
+use Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface;
+
 /**
  * REST response from APIC Management Server apis.
  */
-class RestResponse {
+class RestResponse implements RestResponseInterface {
 
-  private $code = NULL;
-  private $headers = NULL;
-  private $data = NULL;
-  private $errors = NULL;
+  private $code;
+
+  private $headers;
+
+  private $data;
+
+  private $errors;
 
   /**
    * Constructor.
@@ -31,8 +36,10 @@ class RestResponse {
 
   /**
    * Set status code.
+   *
+   * @param $code
    */
-  public function setCode($code) {
+  public function setCode($code): void {
     $this->code = $code;
   }
 
@@ -42,14 +49,16 @@ class RestResponse {
    * @return int
    *   Status code.
    */
-  public function getCode() {
+  public function getCode(): ?int {
     return $this->code;
   }
 
   /**
    * Set headers.
+   *
+   * @param $headers
    */
-  public function setHeaders($headers) {
+  public function setHeaders($headers): void {
     $this->headers = $headers;
   }
 
@@ -59,14 +68,16 @@ class RestResponse {
    * @return array
    *   HTTP headers
    */
-  public function getHeaders() {
+  public function getHeaders(): ?array {
     return $this->headers;
   }
 
   /**
    * Set data.
+   *
+   * @param $data
    */
-  public function setData($data) {
+  public function setData($data): void {
     $this->data = $data;
   }
 
@@ -76,14 +87,16 @@ class RestResponse {
    * @return array
    *   HTTP response body.
    */
-  public function getData() {
+  public function getData(): ?array {
     return $this->data;
   }
 
   /**
    * Set errors.
+   *
+   * @param $errors
    */
-  public function setErrors($errors) {
+  public function setErrors($errors): void {
     $this->errors = $errors;
   }
 
@@ -93,7 +106,7 @@ class RestResponse {
    * @return array
    *   Errors.
    */
-  public function getErrors() {
+  public function getErrors(): ?array {
     return $this->errors;
   }
 

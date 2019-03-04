@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -14,9 +14,6 @@ namespace Drupal\Tests\auth_apic\Unit;
 
 use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\Tests\auth_apic\Unit\UserManager\UserManagerTestBaseClass;
-use Drupal\Tests\UnitTestCase;
-use Drupal\auth_apic\Service\ApicUserManager;
-use Prophecy\Prophet;
 use Prophecy\Argument;
 
 /**
@@ -25,7 +22,7 @@ use Prophecy\Argument;
  */
 class ChangePasswordTest extends UserManagerTestBaseClass {
 
-  public function testChangePassword() {
+  public function testChangePassword(): void {
     $goodResponse = new RestResponse();
     $goodResponse->setCode(204);
 
@@ -33,7 +30,7 @@ class ChangePasswordTest extends UserManagerTestBaseClass {
 
     $this->mgmtServer->changePassword('oldun', 'newun')->willReturn($goodResponse);
 
-    $this->logger->notice('changePassword called for %username', array('%username' => 'andre'))->shouldBeCalled();
+    $this->logger->notice('changePassword called for @username', ['@username' => 'andre'])->shouldBeCalled();
     $this->logger->notice('Password changed successfully.')->shouldBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -45,14 +42,14 @@ class ChangePasswordTest extends UserManagerTestBaseClass {
     $this->assertTrue($result, 'positive result expected from change password.');
   }
 
-  public function testChangePasswordFail() {
+  public function testChangePasswordFail(): void {
     $badResponse = new RestResponse();
     $badResponse->setCode(400);
 
     $account = $this->createAccountStub();
 
     $this->mgmtServer->changePassword('oldun', 'newun')->willReturn($badResponse);
-    $this->logger->notice('changePassword called for %username', array('%username' => 'andre'))->shouldBeCalled();
+    $this->logger->notice('changePassword called for @username', ['@username' => 'andre'])->shouldBeCalled();
     $this->logger->error('Password change failure.')->shouldBeCalled();
     $this->mgmtServer->setAuth(Argument::any())->shouldNotBeCalled();
     $userManager = $this->createUserManager();

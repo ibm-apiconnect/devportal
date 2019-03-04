@@ -2,6 +2,8 @@
 
 namespace Drupal\ghmarkdown\cebe\markdown;
 
+use Drupal\ghmarkdown\cebe\markdown\block\TableTrait;
+
 // work around https://github.com/facebook/hhvm/issues/1120
 defined('ENT_HTML401') || define('ENT_HTML401', 0);
 
@@ -13,6 +15,7 @@ defined('ENT_HTML401') || define('ENT_HTML401', 0);
  * @link https://github.com/cebe/markdown#readme
  */
 class MarkdownExtra extends Markdown {
+
   // include block element parsing using traits
   use block\TableTrait;
   use block\FencedCodeTrait;
@@ -69,7 +72,7 @@ class MarkdownExtra extends Markdown {
   // block parsing
 
   protected function identifyReference($line) {
-    return ($line[0] === ' ' || $line[0] === '[') && preg_match('/^ {0,3}\[(.+?)\]:\s*([^\s]+?)(?:\s+[\'"](.+?)[\'"])?\s*(' . $this->_specialAttributesRegex . ')?\s*$/', $line);
+    return ($line[0] === ' ' || $line[0] === '[') && preg_match('/^ {0,3}\[[^\[](.*?)\]:\s*([^\s]+?)(?:\s+[\'"](.+?)[\'"])?\s*(' . $this->_specialAttributesRegex . ')?\s*$/', $line);
   }
 
   /**
@@ -108,7 +111,7 @@ class MarkdownExtra extends Markdown {
     $block = [
       'code',
     ];
-    $line = rtrim($lines[$current]);
+    $line = trim($lines[$current]);
     if (($pos = strrpos($line, '`')) === FALSE) {
       $pos = strrpos($line, '~');
     }
@@ -116,7 +119,7 @@ class MarkdownExtra extends Markdown {
     $block['attributes'] = substr($line, $pos);
     $content = [];
     for ($i = $current + 1, $count = count($lines); $i < $count; $i++) {
-      if (rtrim($line = $lines[$i]) !== $fence) {
+      if (($pos = strpos($line = $lines[$i], $fence)) === FALSE || $pos > 3) {
         $content[] = $line;
       }
       else {
@@ -130,8 +133,8 @@ class MarkdownExtra extends Markdown {
   protected function renderCode($block) {
     $attributes = $this->renderAttributes($block);
     return ($this->codeAttributesOnPre ? "<pre$attributes><code>" : "<pre><code$attributes>")
-    . htmlspecialchars($block['content'] . "\n", ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8')
-    . "</code></pre>\n";
+      . htmlspecialchars($block['content'] . "\n", ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8')
+      . "</code></pre>\n";
   }
 
   /**
@@ -220,13 +223,16 @@ class MarkdownExtra extends Markdown {
         $block = array_merge($block, $ref);
       }
       else {
+        if (strncmp($block['orig'], '[', 1) === 0) {
+          return '[' . $this->renderAbsy($this->parseInline(substr($block['orig'], 1)));
+        }
         return $block['orig'];
       }
     }
     $attributes = $this->renderAttributes($block);
     return '<a href="' . htmlspecialchars($block['url'], ENT_COMPAT | ENT_HTML401, 'UTF-8') . '"'
-    . (empty($block['title']) ? '' : ' title="' . htmlspecialchars($block['title'], ENT_COMPAT | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8') . '"')
-    . $attributes . '>' . $this->renderAbsy($block['text']) . '</a>';
+      . (empty($block['title']) ? '' : ' title="' . htmlspecialchars($block['title'], ENT_COMPAT | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8') . '"')
+      . $attributes . '>' . $this->renderAbsy($block['text']) . '</a>';
   }
 
   protected function renderImage($block) {
@@ -235,13 +241,16 @@ class MarkdownExtra extends Markdown {
         $block = array_merge($block, $ref);
       }
       else {
+        if (strncmp($block['orig'], '![', 2) === 0) {
+          return '![' . $this->renderAbsy($this->parseInline(substr($block['orig'], 2)));
+        }
         return $block['orig'];
       }
     }
     $attributes = $this->renderAttributes($block);
     return '<img src="' . htmlspecialchars($block['url'], ENT_COMPAT | ENT_HTML401, 'UTF-8') . '"'
-    . ' alt="' . htmlspecialchars($block['text'], ENT_COMPAT | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8') . '"'
-    . (empty($block['title']) ? '' : ' title="' . htmlspecialchars($block['title'], ENT_COMPAT | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8') . '"')
-    . $attributes . ($this->html5 ? '>' : ' />');
+      . ' alt="' . htmlspecialchars($block['text'], ENT_COMPAT | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8') . '"'
+      . (empty($block['title']) ? '' : ' title="' . htmlspecialchars($block['title'], ENT_COMPAT | ENT_HTML401 | ENT_SUBSTITUTE, 'UTF-8') . '"')
+      . $attributes . ($this->html5 ? '>' : ' />');
   }
 }

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -16,7 +16,7 @@ namespace Drupal\auth_apic\Service\Mocks;
 use Drupal\Core\State\State;
 use Drupal\externalauth\ExternalAuthInterface;
 use Drupal\externalauth\AuthmapInterface;
-
+use Drupal\Core\Session\AccountInterface;
 use Drupal\auth_apic\UserManagerResponse;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\user\Entity\User;
@@ -26,6 +26,7 @@ use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 
 use Drupal\auth_apic\JWTToken;
 use Drupal\ibm_apim\ApicType\ApicUser;
+use Drupal\externalauth\Exception\ExternalAuthRegisterException;
 
 /**
  * Mock of the ApicUserManager service.
@@ -59,9 +60,10 @@ class MockUserManager implements UserManagerInterface {
   /**
    * Management server.
    *
-   * @var \Drupal\ibm_apim\Service\ManagementServerInterface
+   * @var \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface
    */
   protected $mgmtServer;
+
   protected $state;
 
   protected $provider = 'auth_apic';
@@ -75,7 +77,7 @@ class MockUserManager implements UserManagerInterface {
    *   The auth map interface.
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $tempStoreFactory
    *   Tempstore factory interface for session data..
-   * @param \Drupal\ibm_apim\Service\ManagementServerInterface $mgmtInterface
+   * @param \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface $mgmtInterface
    *   Management server interface.
    */
   public function __construct(ExternalAuthInterface $externalAuth, AuthmapInterface $authMap, PrivateTempStoreFactory $tempStoreFactory, ManagementServerInterface $mgmtInterface, State $state) {
@@ -89,32 +91,34 @@ class MockUserManager implements UserManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function registerInvitedUser(JWTToken $token, ApicUser $invitedUser = NULL) {
+  public function registerInvitedUser(JWTToken $token, ApicUser $invitedUser = NULL): void {
     // TODO: Implement registerInvitedUser() method.
-    \Drupal::logger("apictest")->error("Implementation of MockUserManager::registerInvitedUser() is missing!");
+    \Drupal::logger('apictest')->error('Implementation of MockUserManager::registerInvitedUser() is missing!');
   }
 
   /**
    * @inheritDoc
    */
-  public function userManagedSignUp(ApicUser $new_user) {
+  public function userManagedSignUp(ApicUser $new_user): UserManagerResponse {
     $mgmtResponse = $this->mgmtServer->postSignUp($new_user);
     $userManagerResponse = new UserManagerResponse();
 
-    if($mgmtResponse == NULL) {
+    if ($mgmtResponse === NULL) {
       $userManagerResponse = NULL;
     }
-    else if ($mgmtResponse->getCode() === 204) {
-      $this->registerApicUser($new_user->getUsername(), \Drupal::service('ibm_apim.apicuser')->getUserAccountFields($new_user));
+    else {
+      if ($mgmtResponse->getCode() === 204) {
+        $this->registerApicUser($new_user->getUsername(), \Drupal::service('ibm_apim.apicuser')->getUserAccountFields($new_user));
 
-      $userManagerResponse->setSuccess(TRUE);
+        $userManagerResponse->setSuccess(TRUE);
 
-      \Drupal::logger("apictest")->notice('sign-up processed for %username', [
-        '%username' => $new_user->getUsername(),
-      ]);
+        \Drupal::logger('apictest')->notice('sign-up processed for %username', [
+          '%username' => $new_user->getUsername(),
+        ]);
 
-      $userManagerResponse->setMessage(t('Your account was created successfully. You will receive an email with activation instructions.'));
-      $userManagerResponse->setRedirect('<front>');
+        $userManagerResponse->setMessage(t('Your account was created successfully. You will receive an email with activation instructions.'));
+        $userManagerResponse->setRedirect('<front>');
+      }
     }
 
     return $userManagerResponse;
@@ -123,16 +127,16 @@ class MockUserManager implements UserManagerInterface {
   /**
    * @inheritDoc
    */
-  public function nonUserManagedSignUp(ApicUser $new_user) {
+  public function nonUserManagedSignUp(ApicUser $new_user): UserManagerResponse {
     // TODO: Implement nonUserManagedSignUp() method.
-    \Drupal::logger("apictest")->error("Implementation of MockUserManager::nonUserManagedSignUp() is missing!");
+    \Drupal::logger('apictest')->error('Implementation of MockUserManager::nonUserManagedSignUp() is missing!');
   }
 
 
   /**
    * @inheritDoc
    */
-  public function login(ApicUser $user) {
+  public function login(ApicUser $user): UserManagerResponse {
     // check for authcode first, is so then we are an oidc user - so mock out test responses.
     if ($authcode = $user->getAuthcode()) {
       return $this->oidcLogin($user);
@@ -146,7 +150,7 @@ class MockUserManager implements UserManagerInterface {
     $umResponse = new UserManagerResponse();
 
     // If password is 'invalidPassword', return 0 as the user id.
-    if ($password == 'invalidPassword') {
+    if ($password === 'invalidPassword') {
       $umResponse->setSuccess(FALSE);
       $umResponse->setUid(0);
       return $umResponse;
@@ -157,13 +161,13 @@ class MockUserManager implements UserManagerInterface {
     $users = User::loadMultiple($ids);
 
     // Return the id of the user if the user account is found.
-    foreach ($users as $user) {
-      if ($user->getUsername() == $username) {
-        user_login_finalize($user);
+    foreach ($users as $listUser) {
+      if ($listUser->getUsername() === $username) {
+        user_login_finalize($listUser);
         $umResponse->setSuccess(TRUE);
-        $umResponse->setUid($user->id());
+        $umResponse->setUid($listUser->id());
 
-        if ($user->id() != 1) {
+        if ((int) $listUser->id() !== 1) {
           \Drupal::service('ibm_apim.user_utils')->setCurrentConsumerorg();
           \Drupal::service('ibm_apim.user_utils')->setOrgSessionData();
         }
@@ -178,18 +182,18 @@ class MockUserManager implements UserManagerInterface {
     return $umResponse;
   }
 
-  private function oidcLogin(ApicUser $user) {
+  private function oidcLogin(ApicUser $user): UserManagerResponse {
     $response = new UserManagerResponse();
 
     switch ($user->getAuthCode()) {
-      case "validauthcode":
+      case 'validauthcode':
         $response->setSuccess(TRUE);
         break;
-      case "failwithmessage":
+      case 'failwithmessage':
         $response->setSuccess(FALSE);
-        $response->setMessage("Mocked error message from apim login() call");
+        $response->setMessage('Mocked error message from apim login() call');
         break;
-      case "fail":
+      case 'fail':
         $response->setSuccess(FALSE);
         break;
     }
@@ -200,8 +204,8 @@ class MockUserManager implements UserManagerInterface {
   /**
    * @inheritDoc
    */
-  public function registerApicUser($username = NULL, array $fields) {
-    if (function_exists('ibm_apim_entry_trace')) {
+  public function registerApicUser($username = NULL, array $fields): ?AccountInterface {
+    if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $username);
     }
     $returnValue = NULL;
@@ -217,14 +221,14 @@ class MockUserManager implements UserManagerInterface {
         $users = User::loadMultiple($ids);
 
         foreach ($users as $user) {
-          if ($user->getUsername() == $username) {
+          if ($user->getUsername() === $username) {
             // Ensure that there is an authmap entry for the user. There isn't if the account was created by OIDC.
             $this->externalAuth->linkExistingAccount($username, $this->provider, $user);
             $returnValue = $user;
           }
         }
       }
-      if ($returnValue == NULL) {
+      if ($returnValue === NULL) {
         $account = $this->externalAuth->register($username, $this->provider, $fields);
         $returnValue = $account;
       }
@@ -232,7 +236,7 @@ class MockUserManager implements UserManagerInterface {
       throw $e;
     }
 
-    if (function_exists('ibm_apim_exit_trace')) {
+    if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
     return $returnValue;
@@ -241,36 +245,37 @@ class MockUserManager implements UserManagerInterface {
   /**
    * @inheritDoc
    */
-  public function updateApicAccount(ApicUser $user) {
+  public function updateApicAccount(ApicUser $user): bool {
     return $this->updateLocalAccount($user);
   }
 
   /**
    * @inheritDoc
    */
-  public function updateLocalAccount(ApicUser $user) {
+  public function updateLocalAccount(ApicUser $user): bool {
     // Update the user directly in drupal db
     $ids = \Drupal::entityQuery('user')->execute();
     $users = User::loadMultiple($ids);
 
     foreach ($users as $dbuser) {
       if ($dbuser->getUsername() === $user->getUsername()) {
-        $dbuser->set("first_name", $user->getFirstname());
-        $dbuser->set("last_name", $user->getLastname());
-        $dbuser->set("mail", $user->getMail());
+        $dbuser->set('first_name', $user->getFirstname());
+        $dbuser->set('last_name', $user->getLastname());
+        $dbuser->set('mail', $user->getMail());
         $dbuser->save();
         break;
       }
     }
 
-    drupal_set_message("MOCKED SERVICE:: Your account has been updated.");
+    drupal_set_message('MOCKED SERVICE:: Your account has been updated.');
+    return TRUE;
   }
 
 
   /**
    * @inheritDoc
    */
-  public function updateLocalAccountRoles(ApicUser $user, $roles) {
+  public function updateLocalAccountRoles(ApicUser $user, $roles): bool {
     // Update the user directly in drupal db
     $ids = \Drupal::entityQuery('user')->execute();
     $users = User::loadMultiple($ids);
@@ -286,19 +291,20 @@ class MockUserManager implements UserManagerInterface {
         // Add all of the new roles
         unset($roles['authenticated']);          // This isn't a 'proper' role so remove it
         foreach ($roles as $role) {
-          if ($role != 'authenticated') {
+          if ($role !== 'authenticated') {
             $dbuser->addRole($role);
           }
         }
       }
     }
+    return TRUE;
   }
 
   public function resetPassword(JWTToken $obj, $password) {
 
-    drupal_set_message("MOCKED SERVICE:: In resetPassword, returned:" . $obj->getOrg() . ":" . $obj->getEnv());
+    drupal_set_message('MOCKED SERVICE:: In resetPassword, returned:' . $obj->getOrg() . ':' . $obj->getEnv());
     if ($obj->getOrg() === 'testorg' && $obj->getEnv() === 'testcatalog') {
-      drupal_set_message("MOCKED SERVICE:: In resetPassword return 200");
+      drupal_set_message('MOCKED SERVICE:: In resetPassword return 200');
       return 200;
     }
   }
@@ -306,7 +312,7 @@ class MockUserManager implements UserManagerInterface {
   /**
    * @inheritDoc
    */
-  public function changePassword($username, $old_password, $new_password) {
+  public function changePassword(User $username, $old_password, $new_password): bool {
     if ($old_password === 'thisiswrong') {
       // In the real form we rely on the message we get back from the management server to inform the user that the
       // pw is incorrect, we'll put the message out ourselves.
@@ -320,23 +326,31 @@ class MockUserManager implements UserManagerInterface {
     return TRUE;
   }
 
-  public function deleteLocalAccount(ApicUser $user) {
-    return NULL;
+  public function deleteLocalAccount(ApicUser $user): void {
   }
 
   public function acceptInvite(JWTToken $token, ApicUser $acceptingUser) {
     return NULL;
   }
 
-  public function findUserInDatabase($username) {
+  public function findUserInDatabase($username): ?AccountInterface {
     return NULL;
   }
 
-  public function findUserByUrl($url) {
+  public function findUserByUrl($url): ?AccountInterface {
     return NULL;
   }
 
-  public function deleteUser() {
-    return NULL;
+  public function deleteUser(): UserManagerResponse {
+    $userManagerResponse = new UserManagerResponse();
+    return $userManagerResponse;
+  }
+
+  public function saveCustomFields($user, $form_state, $view_mode): void {
+    \Drupal::logger('auth_apic_mocks')->error('MockUserManager::saveCustomFields not implemented');
+  }
+
+  public function setDefaultLanguage($user): void {
+    \Drupal::logger('auth_apic_mocks')->error('MockUserManager::setDefaultLanguage not implemented');
   }
 }

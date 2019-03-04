@@ -1,0 +1,9 @@
+theme: current
+defaults:
+  sender: mailsystem_apicmail
+  formatter: mailsystem_apicmail
+modules:
+  mail_subscribers:
+    none:
+      formatter: mailsystem_apicmail
+      sender: mailsystem_apicmail

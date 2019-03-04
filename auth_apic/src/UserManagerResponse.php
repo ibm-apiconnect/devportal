@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -22,13 +22,32 @@ namespace Drupal\auth_apic;
  */
 class UserManagerResponse {
 
+  /**
+   * @var boolean
+   */
   private $success;
+
+  /**
+   * @var string
+   */
   private $message;
+
+  /**
+   * @var string
+   */
   private $redirect;
+
+  /**
+   * @var array
+   */
   private $redirectParameters;
+
+  /**
+   * @var int
+   */
   private $uid;
 
-  function __construct() {
+  public function __construct() {
   }
 
   /**
@@ -36,7 +55,10 @@ class UserManagerResponse {
    *
    * @return boolean
    */
-  public function success() {
+  public function success(): bool {
+    if ($this->success === NULL) {
+      $this->success = FALSE;
+    }
     return $this->success;
   }
 
@@ -45,7 +67,7 @@ class UserManagerResponse {
    *
    * @param boolean $success
    */
-  public function setSuccess($success) {
+  public function setSuccess($success): void {
     $this->success = $success;
   }
 
@@ -54,7 +76,7 @@ class UserManagerResponse {
    *
    * @return string
    */
-  public function getMessage() {
+  public function getMessage(): ?string {
     return $this->message;
   }
 
@@ -63,7 +85,7 @@ class UserManagerResponse {
    *
    * @param string $message
    */
-  public function setMessage($message) {
+  public function setMessage($message): void {
     $this->message = $message;
   }
 
@@ -72,7 +94,7 @@ class UserManagerResponse {
    *
    * @return string
    */
-  public function getRedirect() {
+  public function getRedirect(): ?string {
     return $this->redirect;
   }
 
@@ -81,7 +103,7 @@ class UserManagerResponse {
    *
    * @param string $redirect
    */
-  public function setRedirect($redirect) {
+  public function setRedirect($redirect): void {
     $this->redirect = $redirect;
   }
 
@@ -90,7 +112,7 @@ class UserManagerResponse {
    *
    * @return array
    */
-  public function getRedirectParameters() {
+  public function getRedirectParameters(): ?array {
     return $this->redirectParameters;
   }
 
@@ -99,7 +121,7 @@ class UserManagerResponse {
    *
    * @param array $redirectParameters
    */
-  public function setRedirectParameters($redirectParameters) {
+  public function setRedirectParameters($redirectParameters): void {
     $this->redirectParameters = $redirectParameters;
   }
 
@@ -108,7 +130,7 @@ class UserManagerResponse {
    *
    * @return integer
    */
-  public function getUid() {
+  public function getUid(): ?int {
     return $this->uid;
   }
 
@@ -117,7 +139,7 @@ class UserManagerResponse {
    *
    * @param integer $uid
    */
-  public function setUid($uid) {
+  public function setUid($uid): void {
     $this->uid = $uid;
   }
 

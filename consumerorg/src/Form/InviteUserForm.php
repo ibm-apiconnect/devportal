@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -30,18 +30,34 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class InviteUserForm extends FormBase {
 
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
   protected $consumerOrgService;
 
+  /**
+   * @var \Drupal\consumerorg\ApicType\ConsumerOrg
+   */
   protected $currentOrg;
 
-  protected $currentOrgNode;
-
+  /**
+   * @var \Drupal\Core\Session\AccountInterface
+   */
   protected $currentUser;
 
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
   protected $logger;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
   protected $state;
 
   /**
@@ -85,7 +101,7 @@ class InviteUserForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() :string{
+  public function getFormId(): string {
     return 'consumerorg_invite_user_form';
   }
 
@@ -177,26 +193,41 @@ class InviteUserForm extends FormBase {
    *
    * @param array $form
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     parent::validateForm($form, $form_state);
+    $mail = $form_state->getValue('new_email');
     $moduleHandler = \Drupal::service('module_handler');
-    if ($moduleHandler->moduleExists('check_dns')) {
-      $mail = $form_state->getValue('new_email');
+    if ($moduleHandler->moduleExists('check_dns') && $mail !== NULL && 2 < \strlen($mail)) {
+      // Get the email.
+      $mail2 = SafeMarkup::checkPlain($mail);
+      $mail2 = explode('@', $mail2);
+      // Fetch DNS Resource Records associated with a hostname.
+      $result = checkdnsrr(end($mail2));
 
-      if ($mail !== NULL && 2 < \strlen($mail)) {
+      if (empty($result) || $result !== TRUE) {
+        // If no record is found.
+        $form_state->setErrorByName('new_email', t('Your email domain is not recognised. Please enter a valid email id.'));
+      }
+    }
+    // check not inviting the org owner
+    $org = $this->userUtils->getCurrentConsumerorg();
+    $members = $this->consumerOrgService->getMembers($org['url']);
+    $consumerorgOwnerUrl = $this->consumerOrgService->getConsumerOrgAsObject($org['url'])->getOwnerUrl();
+    $consumerorgOwnerAccount = \Drupal::service('auth_apic.usermanager')
+      ->findUserByUrl($consumerorgOwnerUrl);
+    if ($consumerorgOwnerAccount !== NULL && $consumerorgOwnerAccount->getEmail() === $mail) {
+      $form_state->setErrorByName('new_email', t('That email address is already a member of this consumer organization. Please enter a valid email id.'));
+    }
 
-        // Get the email.
-        $mail = SafeMarkup::checkPlain($mail);
-        $mail = explode('@', $mail);
-        // Fetch DNS Resource Records associated with a hostname.
-        $result = checkdnsrr(end($mail));
-
-        if (empty($result) || $result !== TRUE) {
-          // If no record is found.
-          $form_state->setErrorByName('new_email', t('Your email domain is not recognised. Please enter a valid email id.'));
-        }
+    // check not inviting an existing member
+    foreach ($members as $member) {
+      // Don't include the current owner in the list
+      if ($member->getUser()->getMail() === $mail) {
+        $form_state->setErrorByName('new_email', t('That email address is already a member of this consumer organization. Please enter a valid email id.'));
       }
     }
 
@@ -204,7 +235,10 @@ class InviteUserForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

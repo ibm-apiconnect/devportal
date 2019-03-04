@@ -13,6 +13,7 @@ namespace Drupal\ghmarkdown\cebe\markdown;
  * @author Carsten Brandt <mail@cebe.cc>
  */
 class Markdown extends Parser {
+
   // include block element parsing using traits
   use block\CodeTrait;
   use block\HeadlineTrait;
@@ -89,8 +90,7 @@ class Markdown extends Parser {
 
       // a list may break a paragraph when it is inside of a list
       if (isset($this->context[1]) && $this->context[1] === 'list' && !ctype_alpha($line[0]) && (
-          $this->identifyUl($line, $lines, $i) || $this->identifyOl($line, $lines, $i))
-      ) {
+          $this->identifyUl($line, $lines, $i) || $this->identifyOl($line, $lines, $i))) {
         break;
       }
 

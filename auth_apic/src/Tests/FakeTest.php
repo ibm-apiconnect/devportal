@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -22,12 +22,13 @@ use Drupal\simpletest\WebTestBase;
  */
 class FakeTest extends WebTestBase {
 
-  protected function setUp() { }
+  protected function setUp(): void {
+  }
 
   /**
    * A fake test
    */
-  public function testAlwaysPass() {
+  public function testAlwaysPass(): void {
 
     $this->assertTrue(TRUE);
 

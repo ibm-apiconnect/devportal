@@ -108,8 +108,6 @@ Scenario: View own edit profile form as admin user (uid==1)
   And the element "first_name[0][value]" is enabled
   And the "first_name[0][value]" field should contain "admin"
   And I should see the text "Last Name"
-  And the element "last_name[0][value]" is enabled
-  And the "last_name[0][value]" field should contain "admin"
   And I should see the text "Picture"
   And I should see the text "Code Snippet language"
   And I should see the text "Time zone"

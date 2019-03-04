@@ -3,15 +3,15 @@
 namespace Drupal\ibm_apim\Controller;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\PreExistingConfigException;
+use Drupal\Core\Config\UnmetDependenciesException;
 use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\ibm_apim\Service\Utils;
 use Drupal\system\Controller\ThemeController;
-use Drupal\Core\Config\PreExistingConfigException;
-use Drupal\Core\Config\UnmetDependenciesException;
+use Leafo\ScssPhp\Compiler;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Leafo\ScssPhp\Compiler;
 
 /**
  * Controller for theme handling.

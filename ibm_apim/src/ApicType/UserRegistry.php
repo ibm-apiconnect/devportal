@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -17,100 +17,111 @@ use Drupal\Core\Url;
 
 class UserRegistry {
 
-  private $id = NULL;
-  private $name = NULL;
-  private $title = NULL;
-  private $url = NULL;
-  private $summary = NULL;
-  private $registry_type = NULL;
-  private $user_managed = false;
-  private $user_registry_managed = false;
-  private $onboarding = false;
-  private $case_sensitive = false;
-  private $identity_providers = array();
-  private $provider_type = NULL;
+  private $idL;
+
+  private $name;
+
+  private $title;
+
+  private $url;
+
+  private $summary;
+
+  private $registry_type;
+
+  private $user_managed = FALSE;
+
+  private $user_registry_managed = FALSE;
+
+  private $onboarding = FALSE;
+
+  private $case_sensitive = FALSE;
+
+  private $identity_providers = [];
+
+  private $provider_type;
 
   /**
-   * @return null
+   * @return null|string
    */
-  public function getId() {
+  public function getId(): ?string {
     return $this->id;
   }
 
   /**
    * @param null $id
    */
-  public function setId($id) {
+  public function setId($id): void {
     $this->id = $id;
   }
 
   /**
-   * @return null
+   * @return null|string
    */
-  public function getName() {
+  public function getName(): ?string {
     return $this->name;
   }
 
   /**
-   * @param null $name
+   * @param string $name
    */
-  public function setName($name) {
+  public function setName($name): void {
     $this->name = $name;
   }
 
   /**
-   * @return null
+   * @return null|string
    */
-  public function getTitle() {
+  public function getTitle(): ?string {
     return $this->title;
   }
 
   /**
-   * @param null $title
+   * @param string $title
    */
-  public function setTitle($title) {
+  public function setTitle($title): void {
     $this->title = $title;
   }
 
   /**
-   * @return null
+   * @return null|string
    */
-  public function getUrl() {
+  public function getUrl(): ?string {
     return $this->url;
   }
 
   /**
-   * @param null $url
+   * @param string $url
    */
-  public function setUrl($url) {
+  public function setUrl($url): void {
     $this->url = $url;
   }
 
   /**
-   * @return null
+   * @return null|string
    */
-  public function getSummary() {
+  public function getSummary(): ?string {
     return $this->summary;
   }
 
   /**
-   * @param null $summary
+   * @param string $summary
    */
-  public function setSummary($summary) {
+  public function setSummary($summary): void {
     $this->summary = $summary;
   }
 
   /**
-   * @return null
+   * @return null|string
    */
-  public function getRegistryType() {
+  public function getRegistryType(): ?string {
     return $this->registry_type;
   }
 
   /**
-   * @param null $registry_type
+   * @param string $registry_type
    */
-  public function setRegistryType($registry_type) {
+  public function setRegistryType($registry_type): void {
     $this->registry_type = $registry_type;
   }
 
@@ -124,7 +135,7 @@ class UserRegistry {
   /**
    * @param bool $user_managed
    */
-  public function setUserManaged(bool $user_managed) {
+  public function setUserManaged(bool $user_managed): void {
     $this->user_managed = $user_managed;
   }
 
@@ -138,7 +149,7 @@ class UserRegistry {
   /**
    * @param bool $user_registry_managed
    */
-  public function setUserRegistryManaged(bool $user_registry_managed) {
+  public function setUserRegistryManaged(bool $user_registry_managed): void {
     $this->user_registry_managed = $user_registry_managed;
   }
 
@@ -152,7 +163,7 @@ class UserRegistry {
   /**
    * @param bool $onboarding
    */
-  public function setOnboarding(bool $onboarding) {
+  public function setOnboarding(bool $onboarding): void {
     $this->onboarding = $onboarding;
   }
 
@@ -166,21 +177,21 @@ class UserRegistry {
   /**
    * @param bool $case_sensitive
    */
-  public function setCaseSensitive(bool $case_sensitive) {
+  public function setCaseSensitive(bool $case_sensitive): void {
     $this->case_sensitive = $case_sensitive;
   }
 
   /**
-   * @return null
+   * @return null|string
    */
-  public function getProviderType() {
+  public function getProviderType(): ?string {
     return $this->provider_type;
   }
 
   /**
-   * @param null $provider_type
+   * @param string $provider_type
    */
-  public function setProviderType($provider_type) {
+  public function setProviderType($provider_type): void {
     $this->provider_type = $provider_type;
   }
 
@@ -194,7 +205,7 @@ class UserRegistry {
   /**
    * @param array $identity_providers
    */
-  public function setIdentityProviders(array $identity_providers) {
+  public function setIdentityProviders(array $identity_providers): void {
     $this->identity_providers = $identity_providers;
   }
 
@@ -207,13 +218,13 @@ class UserRegistry {
    *
    * @return array|null
    */
-  public function getIdentityProviderByName($idpNameToFind){
+  public function getIdentityProviderByName($idpNameToFind): ?array {
 
     $result = NULL;
 
-    if(!empty($this->getIdentityProviders())){
+    if (!empty($this->getIdentityProviders())) {
       foreach ($this->getIdentityProviders() as $idp) {
-        if($idp['name'] === $idpNameToFind){
+        if ($idp['name'] === $idpNameToFind) {
           $result = $idp;
           break;
         }
@@ -231,7 +242,7 @@ class UserRegistry {
    *
    * @return bool
    */
-  public function hasIdentityProviderNamed($idpNameToFind) {
+  public function hasIdentityProviderNamed($idpNameToFind): bool {
     return ($this->getIdentityProviderByName($idpNameToFind) !== NULL);
   }
 
@@ -242,23 +253,24 @@ class UserRegistry {
    *
    * @return string
    */
-  public function getRealmForIdp($idpName) {
+  public function getRealmForIdp($idpName): string {
     $config_service = \Drupal::service('ibm_apim.site_config');
-    return "consumer:" . $config_service->getOrgId() . ":" . $config_service->getEnvId() . "/" . $idpName;
+    return 'consumer:' . $config_service->getOrgId() . ':' . $config_service->getEnvId() . '/' . $idpName;
   }
 
   /**
    * This is a temporary function - there is only one IDP right now so we can
    * hard code the realm for that idp.
    *
-   * @return string
+   * @return null|string
    * @deprecated
    */
-  public function getRealm() {
+  public function getRealm(): ?string {
     if (isset($this->getIdentityProviders()[0]['name'])) {
       return $this->getRealmForIdp($this->getIdentityProviders()[0]['name']);
-    } else {
-      return null;
+    }
+    else {
+      return NULL;
     }
   }
 
@@ -267,7 +279,7 @@ class UserRegistry {
    *
    * // TODO - too complicated for a type class, move somewhere we can inject dependencies - UserRegistryService probably
    */
-  public function getOIDCauthUrl() {
+  public function getOIDCauthUrl(): ?string {
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -312,11 +324,11 @@ class UserRegistry {
    * Extract a single UserRegistry definition from a JSON string
    * representation e.g. as returned by a call to the consumer-api.
    *
-   * @param $registryJson
+   * @param array $registryJson
    */
-  public function setValues($registryJson) {
+  public function setValues($registryJson): void {
 
-    if(is_string($registryJson)) {
+    if (is_string($registryJson)) {
       $registryJson = json_decode($registryJson, 1);
     }
 
@@ -326,31 +338,33 @@ class UserRegistry {
     $this->setUrl($registryJson['url']);
     $this->setSummary($registryJson['summary']);
     $this->setRegistryType($registryJson['registry_type']);
-    if ($registryJson['user_managed'] === true) {
-      $this->setUserManaged(true);
-    } else {
-      $this->setUserManaged(false);
+    if ((boolean) $registryJson['user_managed'] === TRUE) {
+      $this->setUserManaged(TRUE);
     }
-    if ($registryJson['user_registry_managed'] === true) {
-      $this->setUserRegistryManaged(true);
-    } else {
-      $this->setUserRegistryManaged(false);
+    else {
+      $this->setUserManaged(FALSE);
     }
-    if ($registryJson['onboarding'] === true) {
-      $this->setOnboarding(true);
-    } else {
-      $this->setOnboarding(false);
+    if ((boolean) $registryJson['user_registry_managed'] === TRUE) {
+      $this->setUserRegistryManaged(TRUE);
     }
-    if ($registryJson['case_sensitive'] === true) {
-      $this->setCaseSensitive(true);
-    } else {
-      $this->setCaseSensitive(false);
+    else {
+      $this->setUserRegistryManaged(FALSE);
+    }
+    if ((boolean) $registryJson['onboarding'] === TRUE) {
+      $this->setOnboarding(TRUE);
+    }
+    else {
+      $this->setOnboarding(FALSE);
+    }
+    if ((boolean) $registryJson['case_sensitive'] === TRUE) {
+      $this->setCaseSensitive(TRUE);
+    }
+    else {
+      $this->setCaseSensitive(FALSE);
     }
     $this->setIdentityProviders($registryJson['identity_providers']);
-    if (isset($registryJson['configuration'])) {
-      if (isset($registryJson['configuration']['provider_type'])) {
-        $this->setProviderType($registryJson['configuration']['provider_type']);
-      }
+    if (isset($registryJson['configuration']['provider_type'])) {
+      $this->setProviderType($registryJson['configuration']['provider_type']);
     }
 
   }

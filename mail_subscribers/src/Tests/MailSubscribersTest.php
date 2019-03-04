@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -31,7 +31,7 @@ class MailSubscribersTest extends WebTestBase {
    *
    * @var array
    */
-  static public $modules = array('mail_subscribers');
+  static public $modules = ['mail_subscribers'];
 
   /**
    * The installation profile to use with this test.
@@ -48,7 +48,8 @@ class MailSubscribersTest extends WebTestBase {
   protected $adminUser;
 
   /**
-   * votingapi_widget seems to fail the strict validator
+   * seems to fail the strict validator
+   *
    * @var bool
    */
   protected $strictConfigSchema = FALSE;
@@ -56,7 +57,7 @@ class MailSubscribersTest extends WebTestBase {
   /**
    * Setup basic environment.
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
 
@@ -65,7 +66,7 @@ class MailSubscribersTest extends WebTestBase {
   /**
    * Test that does nothing
    */
-  function testNoddy() {
+  function testNoddy(): void {
     $this->assertEqual(TRUE, TRUE, 'true');
   }
 

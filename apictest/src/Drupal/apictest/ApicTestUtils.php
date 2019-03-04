@@ -21,7 +21,7 @@ class ApicTestUtils {
    *
    * @return mixed
    */
-  public static function makeId(){
+  public static function makeId() {
     return str_replace('.', '', microtime(1));
   }
 
@@ -33,9 +33,9 @@ class ApicTestUtils {
    *
    * @return \Drupal\consumerorg\ApicType\Role
    */
-  public static function makeNoPermissionsRole(ConsumerOrg $org) {
+  public static function makeNoPermissionsRole(ConsumerOrg $org): Role {
     $blank_role = new Role();
-    $blank_role->setId('generated-role-' . ApicTestUtils::makeId());
+    $blank_role->setId('generated-role-' . self::makeId());
     $blank_role->setUrl('/orgs/' . $org->getId() . '/roles/' . $blank_role->getId());
     $blank_role->setScope('org');
     $blank_role->setOrgUrl($org->getOrgUrl());
@@ -54,15 +54,15 @@ class ApicTestUtils {
    *
    * @return \Drupal\consumerorg\ApicType\Role
    */
-  public static function makeOwnerRole(ConsumerOrg $org) {
-    $owner = ApicTestUtils::makeNoPermissionsRole($org);
+  public static function makeOwnerRole(ConsumerOrg $org): Role {
+    $owner = self::makeNoPermissionsRole($org);
     $owner->setName('owner');
     $owner->setTitle('Owner');
     $owner->setSummary('Owns and administers the app developer organization');
 
     // Owner gets every permission under the sun
     $perms = \Drupal::service('ibm_apim.permissions')->getAll();
-    if (isset($perms) && !empty($perms)) {
+    if ($perms !== NULL && !empty($perms)) {
       $perms = array_keys($perms);
     }
     $owner->setPermissions($perms);
@@ -81,14 +81,22 @@ class ApicTestUtils {
    *
    * @return \Drupal\consumerorg\ApicType\Role
    */
-  public static function makeDeveloperRole(ConsumerOrg $org) {
-    $developer = ApicTestUtils::makeNoPermissionsRole($org);
+  public static function makeDeveloperRole(ConsumerOrg $org): Role {
+    $developer = self::makeNoPermissionsRole($org);
     $developer->setName('developer');
     $developer->setTitle('Developer');
     $developer->setSummary('A developer inside an org owned by another user');
 
     // Developers have a handful of view and manage permissions
-    $developer->setPermissions(array("member:view", "view", "product:view", "app:view", "app-dev:manage", "app:manage", "app-analytics:view"));
+    $developer->setPermissions([
+      'member:view',
+      'view',
+      'product:view',
+      'app:view',
+      'app-dev:manage',
+      'app:manage',
+      'app-analytics:view',
+    ]);
     $org->addRole($developer);
 
     // Update the org in the database
@@ -104,14 +112,22 @@ class ApicTestUtils {
    *
    * @return \Drupal\consumerorg\ApicType\Role
    */
-  public static function makeViewerRole(ConsumerOrg $org) {
-    $viewer = ApicTestUtils::makeNoPermissionsRole($org);
+  public static function makeViewerRole(ConsumerOrg $org): Role {
+    $viewer = self::makeNoPermissionsRole($org);
     $viewer->setName('viewer');
     $viewer->setTitle('Viewer');
     $viewer->setSummary('A viewer inside an org owned by another user');
 
     // Viewers only have a set of view permissions and can't manage / change stuff
-    $viewer->setPermissions(array("member:view", "settings:view", "view", "product:view", "app:view", "subscription:view", "app-analytics:view"));
+    $viewer->setPermissions([
+      'member:view',
+      'settings:view',
+      'view',
+      'product:view',
+      'app:view',
+      'subscription:view',
+      'app-analytics:view',
+    ]);
     $org->addRole($viewer);
 
     // Update the org in the database
@@ -127,15 +143,15 @@ class ApicTestUtils {
    * @param \Drupal\ibm_apim\ApicType\ApicUser $user
    * @param array $roles
    */
-  public static function addMemberToOrg(ConsumerOrg $org, ApicUser $user, array $roles) {
+  public static function addMemberToOrg(ConsumerOrg $org, ApicUser $user, array $roles): void {
     $member = new Member();
     $member->setUser($user);
     $member->setUserUrl($user->getUrl());
-    $member->setUrl('/generated-member/' . ApicTestUtils::makeId());
+    $member->setUrl('/generated-member/' . self::makeId());
     $member->setState('active');
 
-    $roleUrls = array();
-    foreach($roles as $role){
+    $roleUrls = [];
+    foreach ($roles as $role) {
       $roleUrls[] = $role->getUrl();
     }
     $member->setRoleUrls($roleUrls);

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,8 +13,8 @@
 namespace Drupal\ibm_apim\Service\Interfaces;
 
 use Drupal\Core\State\StateInterface;
-use Psr\Log\LoggerInterface;
 use Drupal\ibm_apim\ApicType\UserRegistry;
+use Psr\Log\LoggerInterface;
 
 /**
  * Functionality for handling user registries
@@ -26,17 +26,18 @@ interface UserRegistryServiceInterface {
   /**
    * get all the user_registries
    *
-   * @return NULL if an error occurs otherwise an array of the registries.
+   * @return NULL|array null if an error occurs otherwise an array of the registries.
    */
-  public function getAll();
+  public function getAll(): ?array;
 
   /**
    * get a specific user_registry by url
    *
    * @param $key
-   * @return null|array
+   *
+   * @return null|UserRegistry
    */
-  public function get($key);
+  public function get($key): ?UserRegistry;
 
   /**
    * Update all user_registries
@@ -67,22 +68,25 @@ interface UserRegistryServiceInterface {
 
   /**
    * @param $identityProviderName
-   * @return null
+   *
+   * @return UserRegistry
    */
-  public function getRegistryContainingIdentityProvider($identityProviderName);
+  public function getRegistryContainingIdentityProvider($identityProviderName): ?UserRegistry;
 
 
   /**
    * The site has a default registry, this is stored in the site config.hange in the future.
+   *
    * @return UserRegistry
    *   The default user registry.
    * @throws \Exception if not default registry is found.
    *
    */
-  public function getDefaultRegistry();
+  public function getDefaultRegistry(): ?UserRegistry;
 
   /**
    * Set default registry for this site.
+   *
    * @param $url
    *
    * @return mixed

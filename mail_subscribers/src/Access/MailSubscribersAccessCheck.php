@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -25,9 +25,10 @@ class MailSubscribersAccessCheck implements AccessInterface {
    * Check if user has the 'mail subscribers' permission.
    *
    * @param \Drupal\Core\Session\AccountInterface $account
-   * @return bool
+   *
+   * @return \Drupal\Core\Access\AccessResult
    */
-  public function access(AccountInterface $account) {
+  public function access(AccountInterface $account): AccessResult {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $allowed = $account->hasPermission('mail subscribers');

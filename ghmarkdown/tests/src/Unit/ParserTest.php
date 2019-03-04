@@ -17,6 +17,7 @@ use Drupal\ghmarkdown\cebe\markdown\Parser;
  * @group ghmarkdown
  */
 class ParserTest extends UnitTestCase {
+
   public function testMarkerOrder() {
     $parser = new TestParser();
     $parser->markers = [
@@ -64,6 +65,7 @@ class ParserTest extends UnitTestCase {
 }
 
 class TestParser extends Parser {
+
   public $markers = [];
 
   protected function inlineMarkers() {
@@ -81,9 +83,6 @@ class TestParser extends Parser {
   protected function parseMarkerC($text) {
     $terminatingMarkerPos = strrpos($text, ']');
     $inside = $this->parseInline(substr($text, 1, $terminatingMarkerPos - 1));
-    return [
-      ['text', '(C-' . $this->renderAbsy($inside) . ')'],
-      $terminatingMarkerPos + 1
-    ];
+    return [['text', '(C-' . $this->renderAbsy($inside) . ')'], $terminatingMarkerPos + 1];
   }
 }

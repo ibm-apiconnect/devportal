@@ -1,0 +1,9 @@
+header: HTTP_X_FORWARDED_FOR
+error_page: ''
+login_range: ''
+user: {  }
+role: {  }
+dependencies:
+  enforced:
+    module:
+      - restrict_by_ip

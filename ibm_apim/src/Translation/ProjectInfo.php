@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -15,16 +15,21 @@ namespace Drupal\ibm_apim\Translation;
 class ProjectInfo {
 
   private $name;
+
   private $version;
+
   private $pot_file;
+
   /**
-   * @var po_files
+   * @var array
    * Associative array:
    *      * key - langcode
    *      * value - po_file location.
    */
   private $po_files;
+
   private $po_header;
+
   private $output_dir;
 
   /**
@@ -37,7 +42,7 @@ class ProjectInfo {
   /**
    * @param mixed $name
    */
-  public function setName($name) {
+  public function setName($name): void {
     $this->name = $name;
   }
 
@@ -51,7 +56,7 @@ class ProjectInfo {
   /**
    * @param mixed $version
    */
-  public function setVersion($version) {
+  public function setVersion($version): void {
     $this->version = $version;
   }
 
@@ -65,7 +70,7 @@ class ProjectInfo {
   /**
    * @param mixed $pot_file
    */
-  public function setPotFile($pot_file) {
+  public function setPotFile($pot_file): void {
     $this->pot_file = $pot_file;
   }
 
@@ -74,7 +79,7 @@ class ProjectInfo {
    *   key=language
    *   value=path to language.po file
    */
-  public function getPoFiles() {
+  public function getPoFiles(): ?array {
     return $this->po_files;
   }
 
@@ -83,7 +88,7 @@ class ProjectInfo {
    *   key=language
    *   value=path to language.po file
    */
-  public function setPoFiles($po_files) {
+  public function setPoFiles($po_files): void {
     $this->po_files = $po_files;
   }
 
@@ -97,7 +102,7 @@ class ProjectInfo {
   /**
    * @param mixed $po_header
    */
-  public function setPoHeader($po_header) {
+  public function setPoHeader($po_header): void {
     $this->po_header = $po_header;
   }
 
@@ -111,7 +116,7 @@ class ProjectInfo {
   /**
    * @param mixed $output_dir
    */
-  public function setOutputDir($output_dir) {
+  public function setOutputDir($output_dir): void {
     $this->output_dir = $output_dir;
   }
 

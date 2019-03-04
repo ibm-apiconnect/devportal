@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -20,7 +20,16 @@ use Drupal\Component\Utility\Html;
 
 class AppIdParamConverter implements ParamConverterInterface {
 
+  /**
+   * @param mixed $value
+   * @param mixed $definition
+   * @param string $name
+   * @param array $defaults
+   *
+   * @return \Drupal\Core\Entity\EntityInterface|\Drupal\node\Entity\Node|mixed|null
+   */
   public function convert($value, $definition, $name, array $defaults) {
+    $returnValue = NULL;
     if (!empty($value)) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'application');
@@ -31,18 +40,15 @@ class AppIdParamConverter implements ParamConverterInterface {
       if (isset($nids) && !empty($nids)) {
         $nid = array_shift($nids);
         $node = Node::load($nid);
-        return $node;
-      }
-      else {
-        return NULL;
+        if ($node !== NULL) {
+          $returnValue = $node;
+        }
       }
     }
-    else {
-      return NULL;
-    }
+    return $returnValue;
   }
 
-  public function applies($definition, $name, Route $route) {
-    return (!empty($definition['type']) && $definition['type'] == 'apic_app.appid');
+  public function applies($definition, $name, Route $route): bool {
+    return (!empty($definition['type']) && $definition['type'] === 'apic_app.appid');
   }
 }

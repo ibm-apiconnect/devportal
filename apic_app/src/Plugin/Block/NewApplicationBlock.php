@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -50,17 +50,17 @@ class NewApplicationBlock extends BlockBase implements ContainerFactoryPluginInt
   /**
    * {@inheritdoc}
    */
-  protected function blockAccess(AccountInterface $account) {
+  protected function blockAccess(AccountInterface $account): AccessResult {
     $current_user = \Drupal::currentUser();
     $config = \Drupal::config('ibm_apim.settings');
-    $show_register_app = $config->get('show_register_app');
-    return AccessResult::allowedIf($show_register_app && !$current_user->isAnonymous() && $current_user->id() != 1 && $this->userUtils->checkHasPermission('app:manage'));
+    $show_register_app = (boolean) $config->get('show_register_app');
+    return AccessResult::allowedIf($show_register_app === TRUE && !$current_user->isAnonymous() && (int) $current_user->id() !== 1 && $this->userUtils->checkHasPermission('app:manage'));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function build() {
+  public function build(): array {
     return [
       '#theme' => 'new_application',
       '#cache' => [

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -16,10 +16,10 @@ namespace Drupal\auth_apic\Rest\Payload;
 use Drupal\auth_apic\Rest\MeResponse;
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\consumerorg\ApicType\Role;
-use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Rest\Exception\RestResponseParseException;
 use Drupal\ibm_apim\Rest\Payload\RestResponseReader;
+use Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -27,13 +27,21 @@ use Psr\Log\LoggerInterface;
  */
 class MeResponseReader extends RestResponseReader {
 
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
   private $logger;
+
   private $apimUtils;
+
   private $utils;
+
   private $consumerOrgService;
 
   /**
-   * MeResponseReader constructor
+   * MeResponseReader constructor.
+   *
+   * @param \Psr\Log\LoggerInterface $logger
    */
   public function __construct(LoggerInterface $logger) {
     parent::__construct();
@@ -48,10 +56,11 @@ class MeResponseReader extends RestResponseReader {
    *
    * @param $response
    * @param null $response_object
+   *
    * @return \Drupal\auth_apic\Rest\MeResponse
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  public function read($response, $response_object = NULL) {
+  public function read($response, $response_object = NULL): ?RestResponseInterface {
 
     // Create a new, specific object for the API response.
     $me_response = new MeResponse();
@@ -69,32 +78,33 @@ class MeResponseReader extends RestResponseReader {
 
     $user = new ApicUser();
 
-    $username = isset($data['username']) ? $data['username'] : NULL;
+    $username = $data['username'] ?? NULL;
     $user->setUsername($username);
 
-    $firstname = isset($data['first_name']) ? $data['first_name'] : NULL;
-    $user->setFirstname($firstname);
+    $firstName = $data['first_name'] ?? NULL;
+    $user->setFirstname($firstName);
 
-    $lastname = isset($data['last_name']) ? $data['last_name'] : NULL;
-    $user->setLastname($lastname);
+    $lastName = $data['last_name'] ?? NULL;
+    $user->setLastname($lastName);
 
-    $mail = isset($data['email']) ? $data['email'] : NULL;
+    $mail = $data['email'] ?? NULL;
     $user->setMail($mail);
 
-    $state = isset($data['state']) ? $data['state'] : NULL;
+    $state = $data['state'] ?? NULL;
     $user->setState($state);
 
     if (isset($data['url'])) {
       // 'adjust' the url so it isn't fully qualified
       $url = $this->apimUtils->removeFullyQualifiedUrl($data['url']);
-    } else {
-      $url = null;
+    }
+    else {
+      $url = NULL;
     }
     $user->setUrl($url);
 
-    $consumerorgs_json = isset($data['org_info']) ? $data['org_info'] : array();
-    $consumerorgs = array();
-    foreach ($consumerorgs_json as $org_json) {
+    $consumerOrgsJson = $data['org_info'] ?? [];
+    $consumerOrgs = [];
+    foreach ($consumerOrgsJson as $org_json) {
       // Should be three parts - org, roles and permissions
       $org_part = $org_json['org'];
       $org_roles_part = $org_json['roles'];
@@ -107,7 +117,7 @@ class MeResponseReader extends RestResponseReader {
       // process org part
       $org = $this->consumerOrgService->createFromMeResponseJSON($org_json);
 
-      if ($org->getUrl() == NULL) {
+      if ($org->getUrl() === NULL) {
         $this->logger->error('Invalid consumer organization. No url property found in response.');
       }
 
@@ -127,21 +137,22 @@ class MeResponseReader extends RestResponseReader {
       //$membership->addRole($role_object);
       $membership->setUrl($org_json['member_url']);
       $membership->setState('enabled');
-      $membership->setRoleUrls(array($org_role['url']));
+      $membership->setRoleUrls([$org_role['url']]);
       $membership->setUser($user);
       $membership->setUserUrl($this->apimUtils->removeFullyQualifiedUrl($user->getUrl()));
       $org->addMember($membership);
 
-      $consumerorgs[$org->getUrl()] = $org;
+      $consumerOrgs[$org->getUrl()] = $org;
 
 
     }
-    $user->setConsumerorgs($consumerorgs);
+    $user->setConsumerorgs($consumerOrgs);
 
     // in some registries (e.g. LDAP) there is no user stored.
     // we need to deal with this otherwise it causes merry hell
     // with drupal validation.
-    if ($user->getMail() == '' || $user->getMail() == NULL) {
+    $userMail = $user->getMail();
+    if ($userMail === '' || $userMail === NULL) {
       $random_prefix = $this->utils->random_num();
       $user->setMail($random_prefix . 'noemailinregistry@example.com');
     }

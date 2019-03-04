@@ -1,0 +1,25 @@
+<?php
+
+use Drupal\node\Entity\Node;
+
+/**
+ * Function to delete all the consumerorgs in the database
+ * They will be instantly repopulated via content snapshot
+ * This is being done to reliably convert the serialised classes in the database to accessible arrays
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function consumerorg_update_8101() {
+  $nids = \Drupal::entityQuery('node')
+    ->condition('type', 'consumerorg')
+    ->execute();
+
+  foreach($nids as $nid) {
+    $node = Node::load($nid);
+    if ($node !== null) {
+      $node->delete();
+    }
+
+  }
+
+}

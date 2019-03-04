@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -117,7 +117,7 @@ class ApplicationController extends ControllerBase {
       if (isset($node) && $node->bundle() == 'application' && ($node->application_consumer_org_url->value == $consumer_org['url'] || $current_user->hasPermission('bypass node access'))) {
         $moduleHandler = \Drupal::service('module_handler');
         $config = \Drupal::config('ibm_apim.settings');
-        $ibm_apim_show_placeholder_images = $config->get('show_placeholder_images');
+        $ibm_apim_show_placeholder_images = (boolean) $config->get('show_placeholder_images');
         $fid = $node->application_image->getValue();
         $application_image_url = NULL;
         if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
@@ -125,7 +125,7 @@ class ApplicationController extends ControllerBase {
           $application_image_url = $file->toUrl()->toUriString();
         }
         else {
-          if ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('apic_app')) {
+          if ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
             $rawImage = Application::getRandomImageName($node->getTitle());
             $application_image_url = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
           }
@@ -254,7 +254,7 @@ class ApplicationController extends ControllerBase {
       if (isset($node) && $node->bundle() == 'application' && ($node->application_consumer_org_url->value == $consumer_org['url'] || $current_user->hasPermission('bypass node access'))) {
         $moduleHandler = \Drupal::service('module_handler');
         $config = \Drupal::config('ibm_apim.settings');
-        $ibm_apim_show_placeholder_images = $config->get('show_placeholder_images');
+        $ibm_apim_show_placeholder_images = (boolean) $config->get('show_placeholder_images');
         $fid = $node->application_image->getValue();
         $application_image_url = NULL;
         if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
@@ -262,7 +262,7 @@ class ApplicationController extends ControllerBase {
           $application_image_url = $file->toUrl()->toUriString();
         }
         else {
-          if ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('apic_app')) {
+          if ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
             $rawImage = Application::getRandomImageName($node->getTitle());
             $application_image_url = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
           }
@@ -282,7 +282,7 @@ class ApplicationController extends ControllerBase {
         );
 
         foreach ($node->application_credentials->getValue() as $arrayValue) {
-          $unserialized = unserialize($arrayValue['value']);
+          $unserialized = unserialize($arrayValue['value'], ['allowed_classes' => false]);
           // ensure the credential ID is set since its used for routing and drupal goes bang otherwise
           // should purely be a safety net
           if (!isset($unserialized['id']) || empty($unserialized['id'])) {
@@ -295,7 +295,7 @@ class ApplicationController extends ControllerBase {
 
         $subscriptions = array();
         foreach ($node->application_subscriptions->getValue() as $appSub) {
-          $subscriptions[] = unserialize($appSub['value']);
+          $subscriptions[] = unserialize($appSub['value'], ['allowed_classes' => false]);
         }
 
         if (isset($subscriptions) && is_array($subscriptions)) {
@@ -325,7 +325,7 @@ class ApplicationController extends ControllerBase {
               if ($moduleHandler->moduleExists('product')) {
                 $productPlans = array();
                 foreach ($product->product_plans->getValue() as $arrayValue) {
-                  $product_plan = unserialize($arrayValue['value']);
+                  $product_plan = unserialize($arrayValue['value'], ['allowed_classes' => false]);
                   $productPlans[$product_plan['name']] = $product_plan;
                 }
                 if (isset($productPlans[$sub['plan']])) {

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -26,10 +26,29 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class ApicUserPasswordResetForm extends FormBase {
 
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
   protected $logger;
+
+  /**
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
   protected $languageManager;
+
+  /**
+   * @var \Drupal\auth_apic\Service\Interfaces\UserManagerInterface
+   */
   protected $userManager;
+
+  /**
+   * @var \Drupal\Core\Session\AccountProxy|\Drupal\Core\Session\AccountProxy
+   */
   protected $currentUser;
+
+  /**
+   * @var \Drupal\auth_apic\Service\Interfaces\TokenParserInterface
+   */
   protected $tokenParser;
 
   /**
@@ -41,11 +60,11 @@ class ApicUserPasswordResetForm extends FormBase {
    *   Logger.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   Language Manager.
-   * @param Drupal\auth_apic\Service\Interfaces\UserManagerInterface $user_manager
+   * @param \Drupal\auth_apic\Service\Interfaces\UserManagerInterface $user_manager
    *   User Manager.
-   * @param Drupal\Core\Session\AccountProxy $current_user
+   * @param \Drupal\Core\Session\AccountProxy $current_user
    *   Current User.
-   * @param Drupal\auth_apic\Service\Interfaces\ActivationTokenParserInterface $tokenParser
+   * @param \Drupal\auth_apic\Service\Interfaces\TokenParserInterface $tokenParser
    *   Activation/ Reset password token parser.
    */
   public function __construct(LoggerInterface $logger, LanguageManagerInterface $language_manager, UserManagerInterface $user_manager, AccountProxy $current_user, TokenParserInterface $token_parser) {
@@ -60,13 +79,17 @@ class ApicUserPasswordResetForm extends FormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('logger.channel.auth_apic'), $container->get('language_manager'), $container->get('auth_apic.usermanager'), $container->get('current_user'), $container->get('auth_apic.jwtparser'));
+    return new static($container->get('logger.channel.auth_apic'),
+      $container->get('language_manager'),
+      $container->get('auth_apic.usermanager'),
+      $container->get('current_user'),
+      $container->get('auth_apic.jwtparser'));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'apic_resetpw';
   }
 
@@ -77,11 +100,13 @@ class ApicUserPasswordResetForm extends FormBase {
    *   An associative array containing the structure of the form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
+   *
+   * @return array|\Symfony\Component\HttpFoundation\RedirectResponse
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
     // Check that nobody is logged in - if they are, send them away!
-    if(\Drupal::currentUser()->isAuthenticated()) {
+    if (\Drupal::currentUser()->isAuthenticated()) {
       drupal_set_message(t('You can not reset passwords while you are logged in. You must log out first.'));
       return $this->redirect('<front>');
     }
@@ -98,21 +123,21 @@ class ApicUserPasswordResetForm extends FormBase {
       $resetPasswordObject = $this->tokenParser->parse($token);
       if (empty($resetPasswordObject)) {
         drupal_set_message(t('Invalid token. Contact the system administrator for assistance.'), 'error');
-        $this->logger->notice('Invalid token: %token', array("%token" => $token));
+        $this->logger->notice('Invalid token: %token', ['%token' => $token]);
         return $this->redirect('<front>');
       }
     }
 
-    $form['token'] = array(
+    $form['token'] = [
       '#type' => 'hidden',
       '#value' => serialize($resetPasswordObject),
-    );
+    ];
 
-    $form['pass'] = array(
+    $form['pass'] = [
       '#type' => 'password_confirm',
       '#required' => TRUE,
       '#description' => $this->t('Provide a password.'),
-    );
+    ];
 
     // If the password policy module is enabled, modify this form to show
     // the configured policy.
@@ -125,29 +150,29 @@ class ApicUserPasswordResetForm extends FormBase {
 
     if ($showPasswordPolicy) {
 
-      // required for pasword_policy
+      // required for password_policy
       $form['#form_id'] = $this->getFormId();
-      $form['account']['roles'] = array();
-      $form['account']['roles']['#default_value'] = array('authenticated' => 'authenticated');
+      $form['account']['roles'] = [];
+      $form['account']['roles']['#default_value'] = ['authenticated' => 'authenticated'];
 
-      $form['account']['password_policy_status'] = array(
+      $form['account']['password_policy_status'] = [
         '#title' => $this->t('Password policies'),
         '#type' => 'table',
-        '#header' => array(t('Policy'), t('Status'), t('Constraint')),
+        '#header' => [t('Policy'), t('Status'), t('Constraint')],
         '#empty' => t('There are no constraints for the selected user roles'),
         '#weight' => '400',
         '#prefix' => '<div id="password-policy-status" class="hidden">',
         '#suffix' => '</div>',
         '#rows' => _password_policy_constraints_table($form, $form_state),
-      );
+      ];
 
       $form['auth-apic-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
     }
 
-    $form['submit'] = array(
+    $form['submit'] = [
       '#type' => 'submit',
       '#value' => t('Submit'),
-    );
+    ];
 
     return $form;
   }
@@ -155,7 +180,7 @@ class ApicUserPasswordResetForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $moduleService = \Drupal::service('module_handler');
     if ($moduleService->moduleExists('password_policy')) {
@@ -164,7 +189,7 @@ class ApicUserPasswordResetForm extends FormBase {
       // add validator if relevant.
       if ($show_password_policy_status) {
         if (!isset($form)) {
-          $form = array();
+          $form = [];
         }
         _password_policy_user_profile_form_validate($form, $form_state);
       }
@@ -176,7 +201,7 @@ class ApicUserPasswordResetForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
 
     $password = $form_state->getValue('pass');
     $token = $form_state->getValue('token');
@@ -198,12 +223,12 @@ class ApicUserPasswordResetForm extends FormBase {
     $moduleService = \Drupal::service('module_handler');
     if ($moduleService->moduleExists('password_policy')) {
       if (!isset($form)) {
-        $form = array();
+        $form = [];
       }
       _password_policy_user_profile_form_submit($form, $form_state);
     }
 
-    $resetPasswordObject = unserialize($token);
+    $resetPasswordObject = unserialize($token, ['allowed_classes' => FALSE]);
 
     $responseCode = $this->userManager->resetPassword($resetPasswordObject, $password);
 
@@ -221,9 +246,9 @@ class ApicUserPasswordResetForm extends FormBase {
   }
 
   /**
-   * @return \Drupal\auth_apic\Form\Drupal\Core\Session\AccountProxy|\Drupal\Core\Session\AccountProxy
+   * @return \Drupal\Core\Session\AccountProxy
    */
-  public function getEntity() {
+  public function getEntity(): AccountProxy {
     return $this->currentUser;
   }
 }

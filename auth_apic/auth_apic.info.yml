@@ -1,20 +1,21 @@
-name: 'API Manager Authentication'
+name: API Manager Authentication
 type: module
-description: 'Default authentication functionality for the IBM Developer Portal.'
+description: Default authentication functionality for the IBM Developer Portal.
 dependencies:
- - telephone
- - options
- - user
- - image
- - ibm_apim
- - consumerorg
- - change_pwd_page
- - account_field_split
- - encrypt
- - key
- - real_aes
-package: 'IBM API Connect'
+- telephone
+- options
+- user
+- image
+- ibm_apim
+- consumerorg
+- change_pwd_page
+- account_field_split
+- encrypt
+- key
+- real_aes
+- session_based_temp_store
+package: IBM API Connect
 core: 8.x
-version: '8.x-1.1.4'
-project: 'auth_apic'
-'interface translation project': auth_apic
+version: 8.x-1.1.16
+project: auth_apic
+interface translation project: auth_apic

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -19,20 +19,24 @@ namespace Drupal\auth_apic;
  */
 class JWTToken {
 
-  private $url = NULL;
-  private $decodedJwt = NULL;
-  private $headers = NULL;
-  private $payload = NULL;
-  private $signature = NULL;
+  private $url;
+
+  private $decodedJwt;
+
+  private $headers;
+
+  private $payload;
+
+  private $signature;
 
   /**
    * Set the value of Url
    *
-   * @param mixed url
+   * @param string url
    *
    * @return self
    */
-  public function setUrl($url) {
+  public function setUrl($url): self {
     $this->url = $url;
 
     return $this;
@@ -41,16 +45,16 @@ class JWTToken {
   /**
    * Returns the url for this object
    *
-   * @return string
+   * @return null|string
    */
-  public function getUrl(){
+  public function getUrl(): ?string {
     return $this->url;
   }
 
   /**
    * Get the base64 decoded version of the JWT token
    *
-   * @return null
+   * @return mixed
    */
   public function getDecodedJwt() {
     return $this->decodedJwt;
@@ -59,16 +63,16 @@ class JWTToken {
   /**
    * Set the base64 decoded version of the JWT token
    *
-   * @param null $decodedJwt
+   * @param mixed $decodedJwt
    */
-  public function setDecodedJwt($decodedJwt) {
+  public function setDecodedJwt($decodedJwt): void {
     $this->decodedJwt = $decodedJwt;
   }
 
   /**
    * Get the headers portion of the JWT
    *
-   * @return null
+   * @return mixed
    */
   public function getHeaders() {
     return $this->headers;
@@ -77,16 +81,16 @@ class JWTToken {
   /**
    * Set the headers portion of the JWT
    *
-   * @param null $headers
+   * @param mixed $headers
    */
-  public function setHeaders($headers) {
+  public function setHeaders($headers): void {
     $this->headers = $headers;
   }
 
   /**
    * Get the payload portion of the JWT
    *
-   * @return null
+   * @return mixed
    */
   public function getPayload() {
     return $this->payload;
@@ -95,27 +99,27 @@ class JWTToken {
   /**
    * Set the payload section of the JWT
    *
-   * @param null $payload
+   * @param mixed $payload
    */
-  public function setPayload($payload) {
+  public function setPayload($payload): void {
     $this->payload = $payload;
   }
 
   /**
    * Get the signature portion of the JWT
    *
-   * @return null
+   * @return null|string
    */
-  public function getSignature() {
+  public function getSignature(): ?string {
     return $this->signature;
   }
 
   /**
    * Set the signature section of the JWT
    *
-   * @param null $signature
+   * @param $signature
    */
-  public function setSignature($signature) {
+  public function setSignature($signature): void {
     $this->signature = $signature;
   }
 

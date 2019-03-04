@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,12 +13,10 @@
 
 namespace Drupal\Tests\auth_apic\Unit;
 
+use Drupal\auth_apic\JWTToken;
+use Drupal\auth_apic\Service\JWTParser;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Prophet;
-use Prophecy\Argument;
-
-use Drupal\auth_apic\Service\JWTParser;
-use Drupal\auth_apic\JWTToken;
 
 /**
  * @coversDefaultClass \Drupal\auth_apic\Service\JWTParser
@@ -35,12 +33,13 @@ class JWTParserTest extends UnitTestCase {
    Dependencies of JWTParser.
    */
   protected $logger;
+
   protected $utils;
 
   protected function setup() {
     $this->prophet = new Prophet();
-    $this->logger = $this->prophet->prophesize('Psr\Log\LoggerInterface');
-    $this->utils = $this->prophet->prophesize('Drupal\ibm_apim\Service\Utils');
+    $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
+    $this->utils = $this->prophet->prophesize(\Drupal\ibm_apim\Service\Utils::class);
   }
 
   protected function tearDown() {
@@ -50,7 +49,7 @@ class JWTParserTest extends UnitTestCase {
   /**
    * Positive parser test.
    */
-  public function testValidParse() {
+  public function testValidParse(): void {
 
     $this->utils->base64_url_decode($this->getValidHeaders())->willReturn(\base64_decode($this->getValidHeaders()));
     $this->utils->base64_url_decode($this->getValidPayload())->willReturn(\base64_decode($this->getValidPayload()));
@@ -66,7 +65,7 @@ class JWTParserTest extends UnitTestCase {
   /**
    * Invalid - missing headers section from encoded JWT
    */
-  public function testInvalidTokenParse() {
+  public function testInvalidTokenParse(): void {
 
     $this->logger->error('Invalid jwt token. Expected 3 period separated elements.')->shouldBeCalled();
     $this->logger->error('invalid invitation jwt')->shouldBeCalled();
@@ -80,13 +79,13 @@ class JWTParserTest extends UnitTestCase {
   /**
    * Invalid - missing url in token.
    */
-  public function testMissingUrlParse() {
+  public function testMissingUrlParse(): void {
 
     $this->logger->error('payload.scopes.url not available in activation jwt')->shouldBeCalled();
 
     $parser = new JWTParser($this->logger->reveal(), $this->utils->reveal());
     $result = $parser->parse($this->getEncodedJWTWithMissingUrl());
-    $this->assertNULL($result, 'Unexpected response when parsing a token with missing url');
+    $this->assertNull($result, 'Unexpected response when parsing a token with missing url');
 
   }
 
@@ -96,20 +95,20 @@ class JWTParserTest extends UnitTestCase {
    *
    * @expectedException \Exception
    */
-  public function testParseNULL() {
+  public function testParseNULL(): void {
 
     $parser = new JWTParser($this->logger->reveal(), $this->utils->reveal());
     $parser->parse(NULL);
 
   }
 
-  private function getValidJWTObject() {
+  private function getValidJWTObject(): JWTToken {
     $jwt = new JWTToken();
     $jwt->setUrl($this->getValidUrl());
     $jwt->setDecodedJwt($this->getValidJWT());
-    $jwt->setHeaders( json_decode(\base64_decode($this->getValidHeaders()), TRUE));
-    $jwt->setPayload( json_decode(\base64_decode($this->getValidPayload()), TRUE));
-    $jwt->setSignature( json_decode(\base64_decode($this->getValidSignature()), TRUE));
+    $jwt->setHeaders(json_decode(\base64_decode($this->getValidHeaders()), TRUE));
+    $jwt->setPayload(json_decode(\base64_decode($this->getValidPayload()), TRUE));
+    $jwt->setSignature(json_decode(\base64_decode($this->getValidSignature()), TRUE));
     return $jwt;
   }
 
@@ -122,38 +121,38 @@ class JWTParserTest extends UnitTestCase {
    * @return string
    *   JWT :
    *
-   {
-    "alg": "HS256",
-    "typ": "JWT"
-   }
-   {
-    "jti": "64452290-4976-4a21-ac08-8a0b3e5da50c",
-    "namespace": "cloud",
-    "aud": "n/a",
-    "sub": "andre@example.com",
-    "email": "andre@example.com",
-    "iss": "IBM API Connect",
-    "token_type": "temporary",
-    "iat": 1525862785,
-    "exp": 1526121985,
-    "scopes": {
-      "url": "/consumer-api/activate?activation_id=7a5a3515-a8c1-4db6-9be2-dd393266df78",
-      "actions": [
-        "activate"
-      ]
-    }
-   }
-    HMACSHA256(
-      base64UrlEncode(header) + "." +
-      base64UrlEncode(payload),
-
-      your-256-bit-secret
-
-    )
+   * {
+   * "alg": "HS256",
+   * "typ": "JWT"
+   * }
+   * {
+   * "jti": "64452290-4976-4a21-ac08-8a0b3e5da50c",
+   * "namespace": "cloud",
+   * "aud": "n/a",
+   * "sub": "andre@example.com",
+   * "email": "andre@example.com",
+   * "iss": "IBM API Connect",
+   * "token_type": "temporary",
+   * "iat": 1525862785,
+   * "exp": 1526121985,
+   * "scopes": {
+   * "url": "/consumer-api/activate?activation_id=7a5a3515-a8c1-4db6-9be2-dd393266df78",
+   * "actions": [
+   * "activate"
+   * ]
+   * }
+   * }
+   * HMACSHA256(
+   * base64UrlEncode(header) + "." +
+   * base64UrlEncode(payload),
+   *
+   * your-256-bit-secret
+   *
+   * )
    *
    */
-  private function getValidJWT() {
-    return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ew0KICAianRpIjogIjY0NDUyMjkwLTQ5NzYtNGEyMS1hYzA4LThhMGIzZTVkYTUwYyIsDQogICJuYW1lc3BhY2UiOiAiY2xvdWQiLA0KICAiYXVkIjogIm4vYSIsDQogICJzdWIiOiAiYW5kcmVAZXhhbXBsZS5jb20iLA0KICAiZW1haWwiOiAiYW5kcmVAZXhhbXBsZS5jb20iLA0KICAiaXNzIjogIklCTSBBUEkgQ29ubmVjdCIsDQogICJ0b2tlbl90eXBlIjogInRlbXBvcmFyeSIsDQogICJpYXQiOiAxNTI1ODYyNzg1LA0KICAiZXhwIjogMTUyNjEyMTk4NSwNCiAgInNjb3BlcyI6IHsNCiAgICAidXJsIjogIi9jb25zdW1lci1hcGkvYWN0aXZhdGU/YWN0aXZhdGlvbl9pZD03YTVhMzUxNS1hOGMxLTRkYjYtOWJlMi1kZDM5MzI2NmRmNzgiLA0KICAgICJhY3Rpb25zIjogWw0KICAgICAgImFjdGl2YXRlIg0KICAgIF0NCiAgfQ0KfQ==.ePZXLdPjGhYOcWjFLfgJvKdXNicjJuvl9v4wpt-ybD0";
+  private function getValidJWT(): string {
+    return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ew0KICAianRpIjogIjY0NDUyMjkwLTQ5NzYtNGEyMS1hYzA4LThhMGIzZTVkYTUwYyIsDQogICJuYW1lc3BhY2UiOiAiY2xvdWQiLA0KICAiYXVkIjogIm4vYSIsDQogICJzdWIiOiAiYW5kcmVAZXhhbXBsZS5jb20iLA0KICAiZW1haWwiOiAiYW5kcmVAZXhhbXBsZS5jb20iLA0KICAiaXNzIjogIklCTSBBUEkgQ29ubmVjdCIsDQogICJ0b2tlbl90eXBlIjogInRlbXBvcmFyeSIsDQogICJpYXQiOiAxNTI1ODYyNzg1LA0KICAiZXhwIjogMTUyNjEyMTk4NSwNCiAgInNjb3BlcyI6IHsNCiAgICAidXJsIjogIi9jb25zdW1lci1hcGkvYWN0aXZhdGU/YWN0aXZhdGlvbl9pZD03YTVhMzUxNS1hOGMxLTRkYjYtOWJlMi1kZDM5MzI2NmRmNzgiLA0KICAgICJhY3Rpb25zIjogWw0KICAgICAgImFjdGl2YXRlIg0KICAgIF0NCiAgfQ0KfQ==.ePZXLdPjGhYOcWjFLfgJvKdXNicjJuvl9v4wpt-ybD0';
   }
 
   /**
@@ -161,36 +160,36 @@ class JWTParserTest extends UnitTestCase {
    *
    * @return string
    */
-  private function getValidEncodedJWT() {
-    return "ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV3MEtJQ0FpYW5ScElqb2dJalkwTkRVeU1qa3dMVFE1TnpZdE5HRXlNUzFoWXpBNExUaGhNR0l6WlRWa1lUVXdZeUlzRFFvZ0lDSnVZVzFsYzNCaFkyVWlPaUFpWTJ4dmRXUWlMQTBLSUNBaVlYVmtJam9nSW00dllTSXNEUW9nSUNKemRXSWlPaUFpWVc1a2NtVkFaWGhoYlhCc1pTNWpiMjBpTEEwS0lDQWlaVzFoYVd3aU9pQWlZVzVrY21WQVpYaGhiWEJzWlM1amIyMGlMQTBLSUNBaWFYTnpJam9nSWtsQ1RTQkJVRWtnUTI5dWJtVmpkQ0lzRFFvZ0lDSjBiMnRsYmw5MGVYQmxJam9nSW5SbGJYQnZjbUZ5ZVNJc0RRb2dJQ0pwWVhRaU9pQXhOVEkxT0RZeU56ZzFMQTBLSUNBaVpYaHdJam9nTVRVeU5qRXlNVGs0TlN3TkNpQWdJbk5qYjNCbGN5STZJSHNOQ2lBZ0lDQWlkWEpzSWpvZ0lpOWpiMjV6ZFcxbGNpMWhjR2t2WVdOMGFYWmhkR1UvWVdOMGFYWmhkR2x2Ymw5cFpEMDNZVFZoTXpVeE5TMWhPR014TFRSa1lqWXRPV0psTWkxa1pETTVNekkyTm1SbU56Z2lMQTBLSUNBZ0lDSmhZM1JwYjI1eklqb2dXdzBLSUNBZ0lDQWdJbUZqZEdsMllYUmxJZzBLSUNBZ0lGME5DaUFnZlEwS2ZRPT0uZVBaWExkUGpHaFlPY1dqRkxmZ0p2S2RYTmljakp1dmw5djR3cHQteWJEMA==";
+  private function getValidEncodedJWT(): string {
+    return 'ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV3MEtJQ0FpYW5ScElqb2dJalkwTkRVeU1qa3dMVFE1TnpZdE5HRXlNUzFoWXpBNExUaGhNR0l6WlRWa1lUVXdZeUlzRFFvZ0lDSnVZVzFsYzNCaFkyVWlPaUFpWTJ4dmRXUWlMQTBLSUNBaVlYVmtJam9nSW00dllTSXNEUW9nSUNKemRXSWlPaUFpWVc1a2NtVkFaWGhoYlhCc1pTNWpiMjBpTEEwS0lDQWlaVzFoYVd3aU9pQWlZVzVrY21WQVpYaGhiWEJzWlM1amIyMGlMQTBLSUNBaWFYTnpJam9nSWtsQ1RTQkJVRWtnUTI5dWJtVmpkQ0lzRFFvZ0lDSjBiMnRsYmw5MGVYQmxJam9nSW5SbGJYQnZjbUZ5ZVNJc0RRb2dJQ0pwWVhRaU9pQXhOVEkxT0RZeU56ZzFMQTBLSUNBaVpYaHdJam9nTVRVeU5qRXlNVGs0TlN3TkNpQWdJbk5qYjNCbGN5STZJSHNOQ2lBZ0lDQWlkWEpzSWpvZ0lpOWpiMjV6ZFcxbGNpMWhjR2t2WVdOMGFYWmhkR1UvWVdOMGFYWmhkR2x2Ymw5cFpEMDNZVFZoTXpVeE5TMWhPR014TFRSa1lqWXRPV0psTWkxa1pETTVNekkyTm1SbU56Z2lMQTBLSUNBZ0lDSmhZM1JwYjI1eklqb2dXdzBLSUNBZ0lDQWdJbUZqZEdsMllYUmxJZzBLSUNBZ0lGME5DaUFnZlEwS2ZRPT0uZVBaWExkUGpHaFlPY1dqRkxmZ0p2S2RYTmljakp1dmw5djR3cHQteWJEMA==';
   }
 
 
   // The following functions just return specific parts of the valid token.
-  private function getValidHeaders() {
-    return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
+  private function getValidHeaders(): string {
+    return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
   }
 
 
-  private function getValidPayload() {
-    return "ew0KICAianRpIjogIjY0NDUyMjkwLTQ5NzYtNGEyMS1hYzA4LThhMGIzZTVkYTUwYyIsDQogICJuYW1lc3BhY2UiOiAiY2xvdWQiLA0KICAiYXVkIjogIm4vYSIsDQogICJzdWIiOiAiYW5kcmVAZXhhbXBsZS5jb20iLA0KICAiZW1haWwiOiAiYW5kcmVAZXhhbXBsZS5jb20iLA0KICAiaXNzIjogIklCTSBBUEkgQ29ubmVjdCIsDQogICJ0b2tlbl90eXBlIjogInRlbXBvcmFyeSIsDQogICJpYXQiOiAxNTI1ODYyNzg1LA0KICAiZXhwIjogMTUyNjEyMTk4NSwNCiAgInNjb3BlcyI6IHsNCiAgICAidXJsIjogIi9jb25zdW1lci1hcGkvYWN0aXZhdGU/YWN0aXZhdGlvbl9pZD03YTVhMzUxNS1hOGMxLTRkYjYtOWJlMi1kZDM5MzI2NmRmNzgiLA0KICAgICJhY3Rpb25zIjogWw0KICAgICAgImFjdGl2YXRlIg0KICAgIF0NCiAgfQ0KfQ==";
+  private function getValidPayload(): string {
+    return 'ew0KICAianRpIjogIjY0NDUyMjkwLTQ5NzYtNGEyMS1hYzA4LThhMGIzZTVkYTUwYyIsDQogICJuYW1lc3BhY2UiOiAiY2xvdWQiLA0KICAiYXVkIjogIm4vYSIsDQogICJzdWIiOiAiYW5kcmVAZXhhbXBsZS5jb20iLA0KICAiZW1haWwiOiAiYW5kcmVAZXhhbXBsZS5jb20iLA0KICAiaXNzIjogIklCTSBBUEkgQ29ubmVjdCIsDQogICJ0b2tlbl90eXBlIjogInRlbXBvcmFyeSIsDQogICJpYXQiOiAxNTI1ODYyNzg1LA0KICAiZXhwIjogMTUyNjEyMTk4NSwNCiAgInNjb3BlcyI6IHsNCiAgICAidXJsIjogIi9jb25zdW1lci1hcGkvYWN0aXZhdGU/YWN0aXZhdGlvbl9pZD03YTVhMzUxNS1hOGMxLTRkYjYtOWJlMi1kZDM5MzI2NmRmNzgiLA0KICAgICJhY3Rpb25zIjogWw0KICAgICAgImFjdGl2YXRlIg0KICAgIF0NCiAgfQ0KfQ==';
   }
 
-  private function getValidSignature() {
-    return "ePZXLdPjGhYOcWjFLfgJvKdXNicjJuvl9v4wpt-ybD0";
+  private function getValidSignature(): string {
+    return 'ePZXLdPjGhYOcWjFLfgJvKdXNicjJuvl9v4wpt-ybD0';
   }
 
-  private function getValidUrl() {
-    return "/activate?activation_id=7a5a3515-a8c1-4db6-9be2-dd393266df78";
+  private function getValidUrl(): string {
+    return '/activate?activation_id=7a5a3515-a8c1-4db6-9be2-dd393266df78';
   }
 
   // Invalid tokens... for specific tests
-  private function getEncodedJWTWithMissingHeaders() {
-    return "ZXcwS0lDQWlhblJwSWpvZ0lqWTBORFV5TWprd0xUUTVOell0TkdFeU1TMWhZekE0TFRoaE1HSXpaVFZrWVRVd1l5SXNEUW9nSUNKdVlXMWxjM0JoWTJVaU9pQWlZMnh2ZFdRaUxBMEtJQ0FpWVhWa0lqb2dJbTR2WVNJc0RRb2dJQ0p6ZFdJaU9pQWlZVzVrY21WQVpYaGhiWEJzWlM1amIyMGlMQTBLSUNBaVpXMWhhV3dpT2lBaVlXNWtjbVZBWlhoaGJYQnNaUzVqYjIwaUxBMEtJQ0FpYVhOeklqb2dJa2xDVFNCQlVFa2dRMjl1Ym1WamRDSXNEUW9nSUNKMGIydGxibDkwZVhCbElqb2dJblJsYlhCdmNtRnllU0lzRFFvZ0lDSnBZWFFpT2lBeE5USTFPRFl5TnpnMUxBMEtJQ0FpWlhod0lqb2dNVFV5TmpFeU1UazROU3dOQ2lBZ0luTmpiM0JsY3lJNklIc05DaUFnSUNBaWRYSnNJam9nSWk5amIyNXpkVzFsY2kxaGNHa3ZZV04wYVhaaGRHVS9ZV04wYVhaaGRHbHZibDlwWkQwM1lUVmhNelV4TlMxaE9HTXhMVFJrWWpZdE9XSmxNaTFrWkRNNU16STJObVJtTnpnaUxBMEtJQ0FnSUNKaFkzUnBiMjV6SWpvZ1d3MEtJQ0FnSUNBZ0ltRmpkR2wyWVhSbElnMEtJQ0FnSUYwTkNpQWdmUTBLZlE9PS5lUFpYTGRQakdoWU9jV2pGTGZnSnZLZFhOaWNqSnV2bDl2NHdwdC15YkQw";
+  private function getEncodedJWTWithMissingHeaders(): string {
+    return 'ZXcwS0lDQWlhblJwSWpvZ0lqWTBORFV5TWprd0xUUTVOell0TkdFeU1TMWhZekE0TFRoaE1HSXpaVFZrWVRVd1l5SXNEUW9nSUNKdVlXMWxjM0JoWTJVaU9pQWlZMnh2ZFdRaUxBMEtJQ0FpWVhWa0lqb2dJbTR2WVNJc0RRb2dJQ0p6ZFdJaU9pQWlZVzVrY21WQVpYaGhiWEJzWlM1amIyMGlMQTBLSUNBaVpXMWhhV3dpT2lBaVlXNWtjbVZBWlhoaGJYQnNaUzVqYjIwaUxBMEtJQ0FpYVhOeklqb2dJa2xDVFNCQlVFa2dRMjl1Ym1WamRDSXNEUW9nSUNKMGIydGxibDkwZVhCbElqb2dJblJsYlhCdmNtRnllU0lzRFFvZ0lDSnBZWFFpT2lBeE5USTFPRFl5TnpnMUxBMEtJQ0FpWlhod0lqb2dNVFV5TmpFeU1UazROU3dOQ2lBZ0luTmpiM0JsY3lJNklIc05DaUFnSUNBaWRYSnNJam9nSWk5amIyNXpkVzFsY2kxaGNHa3ZZV04wYVhaaGRHVS9ZV04wYVhaaGRHbHZibDlwWkQwM1lUVmhNelV4TlMxaE9HTXhMVFJrWWpZdE9XSmxNaTFrWkRNNU16STJObVJtTnpnaUxBMEtJQ0FnSUNKaFkzUnBiMjV6SWpvZ1d3MEtJQ0FnSUNBZ0ltRmpkR2wyWVhSbElnMEtJQ0FnSUYwTkNpQWdmUTBLZlE9PS5lUFpYTGRQakdoWU9jV2pGTGZnSnZLZFhOaWNqSnV2bDl2NHdwdC15YkQw';
   }
 
-  private function getEncodedJWTWithMissingUrl() {
-    return "ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJMk5EUTFNakk1TUMwME9UYzJMVFJoTWpFdFlXTXdPQzA0WVRCaU0yVTFaR0UxTUdNaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbUZ1WkhKbFFHVjRZVzF3YkdVdVkyOXRJaXdpWlcxaGFXd2lPaUpoYm1SeVpVQmxlR0Z0Y0d4bExtTnZiU0lzSW1semN5STZJa2xDVFNCQlVFa2dRMjl1Ym1WamRDSXNJblJ2YTJWdVgzUjVjR1VpT2lKMFpXMXdiM0poY25raUxDSnBZWFFpT2pFMU1qVTROakkzT0RVc0ltVjRjQ0k2TVRVeU5qRXlNVGs0TlN3aWMyTnZjR1Z6SWpwN0ltRmpkR2x2Ym5NaU9sc2lZV04wYVhaaGRHVWlYWDE5LlhBSkJENnRONlowWXpxM1kzOWkzd3JkdVBWaE5KVGRwUFhrT1dVS3dlU3M=";
+  private function getEncodedJWTWithMissingUrl(): string {
+    return 'ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJMk5EUTFNakk1TUMwME9UYzJMVFJoTWpFdFlXTXdPQzA0WVRCaU0yVTFaR0UxTUdNaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbUZ1WkhKbFFHVjRZVzF3YkdVdVkyOXRJaXdpWlcxaGFXd2lPaUpoYm1SeVpVQmxlR0Z0Y0d4bExtTnZiU0lzSW1semN5STZJa2xDVFNCQlVFa2dRMjl1Ym1WamRDSXNJblJ2YTJWdVgzUjVjR1VpT2lKMFpXMXdiM0poY25raUxDSnBZWFFpT2pFMU1qVTROakkzT0RVc0ltVjRjQ0k2TVRVeU5qRXlNVGs0TlN3aWMyTnZjR1Z6SWpwN0ltRmpkR2x2Ym5NaU9sc2lZV04wYVhaaGRHVWlYWDE5LlhBSkJENnRONlowWXpxM1kzOWkzd3JkdVBWaE5KVGRwUFhrT1dVS3dlU3M=';
   }
 
 }

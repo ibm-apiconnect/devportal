@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -12,70 +12,71 @@
  ********************************************************** {COPYRIGHT-END} **/
 
 /**
- * @return string - class name for tag
- *
  * @param $tagName
+ *
  * @return string
  */
-function apic_api_tag_to_class($tagName) {
+function apic_api_tag_to_class($tagName): string {
   ibm_apim_entry_trace(__FUNCTION__, $tagName);
   $asInt = 0;
-  for ($i = 0; $i < mb_strlen($tagName); $i++) {
+  $strLength = mb_strlen($tagName);
+  for ($i = 0; $i < $strLength; $i++) {
     $asInt += ord($tagName[$i]);
   }
-  $asInt = $asInt % 19;
+  $asInt %= 19;
   ibm_apim_exit_trace(__FUNCTION__, $asInt);
-  return "apiTag" . $asInt;
+  return 'apiTag' . $asInt;
 }
 
 /**
- * @return string - api icon for a given name
- *
  * @param $apiName
+ *
  * @return string
  */
-function apic_api_random_image($apiName) {
+function apic_api_random_image($apiName): string {
   ibm_apim_entry_trace(__FUNCTION__, $apiName);
   $asInt = 0;
-  for ($i = 0; $i < mb_strlen($apiName); $i++) {
+  $strLength = mb_strlen($apiName);
+  for ($i = 0; $i < $strLength; $i++) {
     $asInt += ord($apiName[$i]);
   }
   $digit = $asInt % 19;
-  if ($digit == 0) {
+  if ($digit === 0) {
     $digit = 1;
   }
   $num = str_pad($digit, 2, 0, STR_PAD_LEFT);
   ibm_apim_exit_trace(__FUNCTION__, $num);
-  return "api_" . $num . ".png";
+  return 'api_' . $num . '.png';
 }
 
 /**
- * take a bytearray, write it out to a zip file, and then read in
+ * take a byte array, write it out to a zip file, and then read in
  * concatenating all file content into a string
  *
  * @param $data
+ *
  * @return string
  */
-function apic_api_get_string_from_zip($data) {
+function apic_api_get_string_from_zip($data): string {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
-  $draft = "";
-  $file = \Drupal::service('file_system')->realpath(file_unmanaged_save_data($data,\Drupal\Core\Site\Settings::get('file_public_path')));
-  $tempdir = apic_api_tempdir(file_directory_temp());
+  $draft = '';
+  $file = \Drupal::service('file_system')->realpath(file_unmanaged_save_data($data, \Drupal\Core\Site\Settings::get('file_public_path')));
+  $tempDir = apic_api_tempdir(file_directory_temp());
   $zip = new ZipArchive();
   if ($zip->open($file) === TRUE) {
-    $zip->extractTo($tempdir);
+    $zip->extractTo($tempDir);
     $zip->close();
 
-    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tempdir, RecursiveDirectoryIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
-    foreach ($files as $fileinfo) {
-      $filename = $fileinfo->getFilename();
-      $pathname = $fileinfo->getPathname();
-      $fourcharext = mb_strtolower(mb_substr($filename, -4));
-      $threecharext = mb_strtolower(mb_substr($filename, -3));
-      if ($fourcharext == "wsdl" || $threecharext == "xml" || $threecharext == "xsd") {
-        $draft .= $filename . '\n';
-        $handle = fopen($pathname, "r");
-        $contents = fread($handle, filesize($pathname));
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tempDir, RecursiveDirectoryIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
+    foreach ($files as $fileInfo) {
+      $fileName = $fileInfo->getFilename();
+      $pathName = $fileInfo->getPathname();
+      $fourCharExt = mb_strtolower(mb_substr($fileName, -4));
+      $threeCharExt = mb_strtolower(mb_substr($fileName, -3));
+      if ($fourCharExt === 'wsdl' || $threeCharExt === 'xml' || $threeCharExt === 'xsd') {
+        $draft .= $fileName . '\n';
+        $handle = fopen($pathName, 'rb');
+        $contents = fread($handle, filesize($pathName));
         fclose($handle);
         $handle = NULL;
         // remove BOM
@@ -86,7 +87,7 @@ function apic_api_get_string_from_zip($data) {
   }
   // clear up zip and temp extract dir
   file_unmanaged_delete($file);
-  apic_api_deletedir($tempdir);
+  apic_api_deletedir($tempDir);
   ibm_apim_exit_trace(__FUNCTION__, NULL);
   return $draft;
 }
@@ -96,18 +97,19 @@ function apic_api_get_string_from_zip($data) {
  *
  * @param bool $dir
  * @param string $prefix
- * @return string
+ *
+ * @return null|string
  */
-function apic_api_tempdir($dir = FALSE, $prefix = 'wsdlzip') {
-  ibm_apim_entry_trace(__FUNCTION__, array($dir, $prefix));
+function apic_api_tempdir($dir = FALSE, $prefix = 'wsdlzip'): ?string {
+  ibm_apim_entry_trace(__FUNCTION__, [$dir, $prefix]);
   $returnValue = NULL;
-  $tempfile = tempnam($dir, $prefix);
-  if (file_exists($tempfile)) {
-    unlink($tempfile);
+  $tempFile = tempnam($dir, $prefix);
+  if (file_exists($tempFile)) {
+    unlink($tempFile);
   }
-  mkdir($tempfile);
-  if (is_dir($tempfile)) {
-    $returnValue = $tempfile;
+  mkdir($tempFile);
+  if (is_dir($tempFile)) {
+    $returnValue = $tempFile;
   }
   ibm_apim_exit_trace(__FUNCTION__, $returnValue);
   return $returnValue;
@@ -116,15 +118,15 @@ function apic_api_tempdir($dir = FALSE, $prefix = 'wsdlzip') {
 /**
  * utility function to recursively delete a directory
  *
- * @param $dir
+ * @param string $dir
  */
-function apic_api_deletedir($dir) {
+function apic_api_deletedir($dir): void {
   ibm_apim_entry_trace(__FUNCTION__, $dir);
   if (is_dir($dir)) {
     $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
-    foreach ($files as $fileinfo) {
-      $todo = ($fileinfo->isDir() ? 'rmdir' : 'unlink');
-      $todo($fileinfo->getRealPath());
+    foreach ($files as $fileInfo) {
+      $todo = ($fileInfo->isDir() ? 'rmdir' : 'unlink');
+      $todo($fileInfo->getRealPath());
     }
     rmdir($dir);
   }
@@ -135,38 +137,42 @@ function apic_api_deletedir($dir) {
  * This function exists to avoid issues caused by the json {} and [] looking the same in PHP!
  * Only option is to remove them from the structure.
  *
- * @param $yaml
- * @return mixed
+ * @param array $yaml
+ *
+ * @return array
  */
-function apic_api_remove_empty_elements($yaml) {
-  if (isset($yaml)) {
+function apic_api_remove_empty_elements($yaml): array {
+  if ($yaml !== NULL) {
     // if empty securityDefinitions and others then needs to be stdClass not array
-    foreach (array(
+    foreach ([
                'securityDefinitions',
                'responses',
                'parameters',
                'definitions',
                'paths',
                'contact',
-               'license'
-             ) as $key) {
+               'license',
+             ] as $key) {
       if (isset($yaml[$key])) {
-        if (is_array($yaml[$key]) && empty($yaml[$key])) {
+        $isArray = is_array($yaml[$key]);
+        if ($isArray === TRUE && empty($yaml[$key])) {
           unset($yaml[$key]);
-        } elseif (is_array($yaml[$key])) {
+        }
+        elseif ($isArray === TRUE) {
           $yaml[$key] = tidyYaml($yaml[$key]);
         }
       }
     }
     if (isset($yaml['paths'])) {
-      foreach ($yaml['paths'] as $pathname => $path) {
-        if (is_array($yaml['paths'][$pathname]) && empty($yaml['paths'][$pathname])) {
-          unset($yaml['paths'][$pathname]);
-        } else {
+      foreach ($yaml['paths'] as $pathName => $path) {
+        if (is_array($yaml['paths'][$pathName]) && empty($yaml['paths'][$pathName])) {
+          unset($yaml['paths'][$pathName]);
+        }
+        else {
           foreach ($path as $verb => $op) {
             if (isset($op['responses'])) {
               foreach ($op['responses'] as $code => $response) {
-                $yaml['paths'][$pathname][$verb]['responses'][$code] = tidyYaml($yaml['paths'][$pathname][$verb]['responses'][$code]);
+                $yaml['paths'][$pathName][$verb]['responses'][$code] = tidyYaml($yaml['paths'][$pathName][$verb]['responses'][$code]);
               }
             }
           }
@@ -180,31 +186,38 @@ function apic_api_remove_empty_elements($yaml) {
 /**
  * Utility method to recurse through the yaml doc and tidy up trailing empty objects / empty arrays
  *
- * @param $yaml
+ * @param array $yaml
+ *
  * @return array
  */
-function tidyYaml(&$yaml) {
+function tidyYaml(&$yaml): array {
   unset($prop);
-  if (is_array($yaml)) {
+  $isArray = is_array($yaml);
+  if ($isArray) {
     foreach ($yaml as $prop => $value) {
-      if ($prop == 'schema') {
-        if (is_array($yaml[$prop]) && empty($yaml[$prop])) {
+      $isArrayProp = is_array($yaml[$prop]);
+      if ($prop === 'schema') {
+        if ($isArrayProp === TRUE && empty($yaml[$prop])) {
           unset($yaml[$prop]);
-        } elseif (is_array($yaml[$prop])) {
+        }
+        elseif ($isArrayProp === TRUE) {
           $yaml[$prop] = tidyYaml($yaml[$prop]);
         }
       }
-      elseif ($prop == 'properties') {
-        if (is_array($yaml[$prop]) && empty($yaml[$prop])) {
+      elseif ($prop === 'properties') {
+
+        if ($isArrayProp === TRUE && empty($yaml[$prop])) {
           unset($yaml[$prop]);
           // handle empty objects now we've removed possibly their only attribute
-          if (is_array($yaml) && empty($yaml)) {
+          if ($isArray === TRUE && empty($yaml)) {
             $yaml['type'] = 'object';
           }
-        } elseif (is_array($yaml[$prop])) {
+        }
+        elseif ($isArrayProp === TRUE) {
           $yaml[$prop] = tidyYaml($yaml[$prop]);
         }
-      } elseif (is_array($yaml[$prop])) {
+      }
+      elseif ($isArrayProp === TRUE) {
         $yaml[$prop] = tidyYaml($yaml[$prop]);
       }
     }

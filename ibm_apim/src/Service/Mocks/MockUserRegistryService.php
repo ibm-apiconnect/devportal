@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -12,29 +12,22 @@
 
 namespace Drupal\ibm_apim\Service\Mocks;
 
-use Drupal\Core\State\StateInterface;
-
-use Drupal\ibm_apim\Service\UserRegistryService;
-use Psr\Log\LoggerInterface;
 use Drupal\ibm_apim\ApicType\UserRegistry;
+use Drupal\ibm_apim\Service\UserRegistryService;
 
 /**
  * Mock functionality for handling user registries
  */
 class MockUserRegistryService extends UserRegistryService {
 
-  public function __construct(StateInterface $state, LoggerInterface $logger) {
-
-    parent::__construct($state, $logger);
-  }
-
   /**
    * get a specific user_registry by url
    *
    * @param $key
-   * @return null|array
+   *
+   * @return null|\Drupal\ibm_apim\ApicType\UserRegistry
    */
-  public function get($key) {
+  public function get($key): ?UserRegistry {
 
     $registry = parent::get($key);
 
@@ -47,18 +40,18 @@ class MockUserRegistryService extends UserRegistryService {
     return $registry;
   }
 
-  public function updateAll($data) {
-    $this->logger->debug("MockUserRegistryService::updateAll() with " . serialize($data));
+  public function updateAll($data): void {
+    $this->logger->debug('MockUserRegistryService::updateAll() with ' . serialize($data));
     parent::updateAll($data);
   }
 
   /**
    * @return \Drupal\ibm_apim\ApicType\UserRegistry
    */
-  private function createMockRegistry(): \Drupal\ibm_apim\ApicType\UserRegistry {
+  private function createMockRegistry(): UserRegistry {
     $registry = new UserRegistry();
-    $registry->setTitle("Mock user registry");
-    $registry->setName("Mock user registry");
+    $registry->setTitle('Mock user registry');
+    $registry->setName('Mock user registry');
     $registry->setUserManaged(TRUE);
     $registry->setRegistryType('lur');
     $registry->setUserRegistryManaged(FALSE);
@@ -68,7 +61,6 @@ class MockUserRegistryService extends UserRegistryService {
     $registry->setCaseSensitive(TRUE);
     return $registry;
   }
-
 
 
 }

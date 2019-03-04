@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -34,8 +34,14 @@ class CredentialsCreateForm extends FormBase {
    */
   protected $node;
 
+  /**
+   * @var \Drupal\apic_app\Service\ApplicationRestInterface
+   */
   protected $restService;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
   /**
@@ -60,14 +66,14 @@ class CredentialsCreateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'application_create_credentials_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $this->node = $appId;
 
@@ -90,12 +96,12 @@ class CredentialsCreateForm extends FormBase {
       '#type' => 'submit',
       '#value' => t('Submit'),
     ];
-    $form['actions']['cancel'] = array(
+    $form['actions']['cancel'] = [
       '#type' => 'link',
       '#title' => t('Cancel'),
       '#url' => $this->getCancelUrl(),
-      '#attributes' => ['class' => ['button', 'apicSecondary']]
-    );
+      '#attributes' => ['class' => ['button', 'apicSecondary']],
+    ];
     $themeHandler = \Drupal::service('theme_handler');
     if ($themeHandler->themeExists('bootstrap')) {
       if (isset($form['actions']['submit'])) {
@@ -113,20 +119,21 @@ class CredentialsCreateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
     if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
-      return Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
+      $url = Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
     }
     else {
-      return Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
+      $url = Url::fromRoute('entity.node.canonical', ['node' => $this->node->id()]);
     }
+    return $url;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appUrl = $this->node->apic_url->value;
 
@@ -134,13 +141,13 @@ class CredentialsCreateForm extends FormBase {
     $summary = $form_state->getValue('summary');
 
     $url = $appUrl . '/credentials';
-    $data = ["title" => $title, "summary" => $summary];
+    $data = ['title' => $title, 'summary' => $summary];
     $result = $this->restService->postCredentials($url, json_encode($data));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
-      $current_user = \Drupal::currentUser();
-      \Drupal::logger('apic_app')->notice('New credentials created for application @appname by @username', [
-        '@appname' => $this->node->getTitle(),
-        '@username' => $current_user->getAccountName(),
+      $currentUser = \Drupal::currentUser();
+      \Drupal::logger('apic_app')->notice('New credentials created for application @appName by @username', [
+        '@appName' => $this->node->getTitle(),
+        '@username' => $currentUser->getAccountName(),
       ]);
 
       $data = $result->data;
@@ -162,45 +169,45 @@ class CredentialsCreateForm extends FormBase {
       ]));
 
       // update the stored app with the additional creds
-      $existingcreds = [];
+      $existingCreds = [];
       if (!empty($this->node->application_credentials->getValue())) {
         foreach ($this->node->application_credentials->getValue() as $arrayValue) {
-          $unserialized = unserialize($arrayValue['value']);
-          if (!isset($unserialized['id']) || !isset($data['id']) || $unserialized['id'] != $data['id']) {
-            $existingcreds[] = $unserialized;
+          $unserialized = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+          if (!isset($unserialized['id']) || !isset($data['id']) || (string) $unserialized['id'] !== (string) $data['id']) {
+            $existingCreds[] = $unserialized;
           }
         }
       }
-      $newcred = [
+      $newCred = [
         'id' => $data['id'],
         'client_id' => $data['client_id'],
         'summary' => $data['summary'],
         'name' => $data['name'],
-        'title' => $data['title']
+        'title' => $data['title'],
       ];
       if (isset($data['url'])) {
-        $newcred['url'] = \Drupal::service('ibm_apim.apim_utils')->removeFullyQualifiedUrl($data['url']);
+        $newCred['url'] = \Drupal::service('ibm_apim.apim_utils')->removeFullyQualifiedUrl($data['url']);
       }
       if (isset($data['app_url'])) {
-        $newcred['app_url'] = \Drupal::service('ibm_apim.apim_utils')->removeFullyQualifiedUrl($data['app_url']);
+        $newCred['app_url'] = \Drupal::service('ibm_apim.apim_utils')->removeFullyQualifiedUrl($data['app_url']);
       }
       if (isset($data['consumer_org_url'])) {
-        $newcred['consumer_org_url'] = \Drupal::service('ibm_apim.apim_utils')
+        $newCred['consumer_org_url'] = \Drupal::service('ibm_apim.apim_utils')
           ->removeFullyQualifiedUrl($data['consumer_org_url']);
       }
-      $existingcreds[] = $newcred;
-      $newcreds = [];
-      foreach ($existingcreds as $nextCred) {
-        $newcreds[] = serialize($nextCred);
+      $existingCreds[] = $newCred;
+      $newCreds = [];
+      foreach ($existingCreds as $nextCred) {
+        $newCreds[] = serialize($nextCred);
       }
-      $this->node->set('application_credentials', $newcreds);
+      $this->node->set('application_credentials', $newCreds);
       $this->node->save();
       // Calling all modules implementing 'hook_apic_app_creds_create':
       $moduleHandler = \Drupal::moduleHandler();
       $moduleHandler->invokeAll('apic_app_creds_create', [
         'node' => $this->node,
         'data' => $result->data,
-        'credId' => $data['id']
+        'credId' => $data['id'],
       ]);
 
       if ($moduleHandler->moduleExists('rules')) {
@@ -209,10 +216,10 @@ class CredentialsCreateForm extends FormBase {
         $event = new CredentialCreateEvent($this->node, $result->data, $data['id'], [
           'application' => $this->node,
           'data' => $result->data,
-          'credId' => $data['id']
+          'credId' => $data['id'],
         ]);
-        $event_dispatcher = \Drupal::service('event_dispatcher');
-        $event_dispatcher->dispatch(CredentialCreateEvent::EVENT_NAME, $event);
+        $eventDispatcher = \Drupal::service('event_dispatcher');
+        $eventDispatcher->dispatch(CredentialCreateEvent::EVENT_NAME, $event);
       }
     }
     $form_state->setRedirectUrl($this->getCancelUrl());

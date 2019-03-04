@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -19,6 +19,7 @@ use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\NodeInterface;
@@ -36,27 +37,42 @@ class ApplicationDeleteForm extends ConfirmFormBase {
    */
   protected $node;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
-  protected $appRestService;
+  /**
+   * @var \Drupal\apic_app\Service\ApplicationRestInterface
+   */
+  protected $restService;
 
+  /**
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
   protected $currentUser;
 
+  /**
+   * @var \Drupal\Core\Extension\ThemeHandler
+   */
   protected $themeHandler;
 
+  /**
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
   protected $moduleHandler;
 
   /**
    * ApplicationDeleteForm constructor.
    *
-   * @param \Drupal\apic_app\Service\ApplicationRestInterface $appRestService
+   * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
    * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
    * @param \Drupal\Core\Extension\ModuleHandler $moduleHandler
    */
-  public function __construct(ApplicationRestInterface $appRestService, UserUtils $userUtils, AccountProxyInterface $current_user, ThemeHandler $themeHandler, ModuleHandler $moduleHandler) {
-    $this->appRestService = $appRestService;
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, AccountProxyInterface $current_user, ThemeHandler $themeHandler, ModuleHandler $moduleHandler) {
+    $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->currentUser = $current_user;
     $this->themeHandler = $themeHandler;
@@ -108,21 +124,21 @@ class ApplicationDeleteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
+  public function getDescription(): TranslatableMarkup {
     return $this->t('Are you sure you want to delete this application? This action cannot be undone.');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfirmText() {
+  public function getConfirmText(): TranslatableMarkup {
     return $this->t('Delete');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getQuestion() {
+  public function getQuestion(): TranslatableMarkup {
     return $this->t('Delete application %title?', ['%title' => $this->node->title->value]);
   }
 
@@ -140,7 +156,7 @@ class ApplicationDeleteForm extends ConfirmFormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appId = $this->node->application_id->value;
     $url = $this->node->apic_url->value;
-    $result = $this->appRestService->deleteApplication($url);
+    $result = $this->restService->deleteApplication($url);
     if ($result !== NULL && $result->code >= 200 && $result->code < 300) {
       // create copy of the node we're deleting for use in hooks later
       $node = $this->node;

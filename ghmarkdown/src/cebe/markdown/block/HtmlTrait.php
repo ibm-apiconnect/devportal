@@ -11,6 +11,7 @@ namespace Drupal\ghmarkdown\cebe\markdown\block;
  * Adds inline and block HTML support
  */
 trait HtmlTrait {
+
   /**
    * @var array HTML elements considered as inline elements.
    * @see http://www.w3.org/wiki/HTML/Elements#Text-level_semantics
@@ -64,6 +65,7 @@ trait HtmlTrait {
     'wbr',
     'time',
   ];
+
   /**
    * @var array HTML elements known to be self-closing.
    */
@@ -171,6 +173,7 @@ trait HtmlTrait {
 
   /**
    * Parses inline HTML.
+   *
    * @marker <
    */
   protected function parseInlineHtml($text) {
@@ -189,6 +192,7 @@ trait HtmlTrait {
 
   /**
    * Escapes `>` characters.
+   *
    * @marker >
    */
   protected function parseGt($text) {

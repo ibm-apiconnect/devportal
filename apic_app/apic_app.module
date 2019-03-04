@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -48,15 +48,15 @@ function apic_app_node_access_records($node) {
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
   $config = \Drupal::config('ibm_apim.settings');
-  $acl_debug = $config->get('acl_debug');
+  $aclDebug = (boolean) $config->get('acl_debug');
 
   $type = is_string($node) ? $node : $node->getType();
   $grants = [];
 
   // Only build permissions for application nodes
-  if ($type == 'application') {
+  if ($type === 'application') {
     $org = $node->application_consumer_org_url->value;
-    $org = str_replace("/", "_", $org);
+    $org = str_replace('/', '_', $org);
     $grants[] = [
       'realm' => 'application_' . $org,
       'gid' => APPLICATION_GRANT,
@@ -65,13 +65,13 @@ function apic_app_node_access_records($node) {
       'grant_delete' => 0,
       'priority' => 0,
     ];
-    if (isset($acl_debug) && $acl_debug == TRUE) {
+    if ($aclDebug === TRUE) {
       foreach ($grants as $grant) {
         \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
           '@realm' => $grant['realm'],
-          '@grant' => "APPLICATION_GRANT"
+          '@grant' => 'APPLICATION_GRANT',
         ]);
-      };
+      }
     }
   }
   ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $grants);
@@ -97,23 +97,23 @@ function apic_app_node_grants($account, $op) {
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
   $config = \Drupal::config('ibm_apim.settings');
-  $acl_debug = $config->get('acl_debug');
+  $aclDebug = (boolean) $config->get('acl_debug');
 
   $grants = [];
-  if ($op == 'view' && \Drupal::currentUser()->isAuthenticated()) {
+  if ($op === 'view' && \Drupal::currentUser()->isAuthenticated()) {
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $org = $userUtils->getCurrentConsumerOrg();
     if (isset($org['url'])) {
-      $url = str_replace("/", "_", $org['url']);
+      $url = str_replace('/', '_', $org['url']);
       $grants['application_' . $url] = [APPLICATION_GRANT];
-      if (isset($acl_debug) && $acl_debug == TRUE) {
+      if ($aclDebug === TRUE) {
         foreach ($grants as $realm => $perms) {
           foreach ($perms as $grant) {
             \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
               '@realm' => $realm,
-              '@grant' => "APPLICATION_GRANT"
+              '@grant' => 'APPLICATION_GRANT',
             ]);
-          };
+          }
         }
       }
     }
@@ -133,11 +133,10 @@ function apic_app_node_grants($account, $op) {
  * @return \Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultForbidden|\Drupal\Core\Access\AccessResultNeutral
  */
 function apic_app_node_access(NodeInterface $node, $operation, AccountInterface $account) {
-  $type = is_string($node) ? $node : $node->type;
-  if ($type == 'application' && $operation == 'view') {
+  if ($node->type === 'application' && $operation === 'view') {
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $org = $userUtils->getCurrentConsumerOrg();
-    if ($node->application_consumer_org_url->value == $org['url']) {
+    if ($node->application_consumer_org_url->value === $org['url']) {
       $access = new AccessResultAllowed();
     }
     else {
@@ -158,34 +157,36 @@ function apic_app_node_access(NodeInterface $node, $operation, AccountInterface 
  * @param $info
  */
 function apic_app_preprocess(&$variables, $hook, &$info) {
-  if ($hook == 'node') {
+  if ($hook === 'node') {
     $contentTypeToShow = $variables['node']->bundle();
-    if ($contentTypeToShow == 'application') {
+    if ($contentTypeToShow === 'application') {
       ibm_apim_entry_trace(__FUNCTION__, NULL);
       //Load the view mode names.
       $allViewModes = \Drupal::service('entity_display.repository')->getViewModes('node');
       //View mode for this request.
       $viewModeToUse = $variables['view_mode'];
       //Is the view mode defined for nodes?
-      if (key_exists($viewModeToUse, $allViewModes)) {
+      if (array_key_exists($viewModeToUse, $allViewModes)) {
         //Is there a template file for the view modes in the module?
-        if ($viewModeToUse == 'full') {
+        if ($viewModeToUse === 'full') {
           $templateFileName = 'node--' . $contentTypeToShow;
         }
         else {
           $templateFileName = 'node--' . $contentTypeToShow . '--' . $viewModeToUse;
         }
-        $theme_name = \Drupal::theme()->getActiveTheme()->getName();
-        $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
-        if (file_exists($theme_path . '/templates/node/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $theme_name);
-          $info['path'] = drupal_get_path('theme', $theme_name) . '/templates/node';
+        $themeName = \Drupal::theme()->getActiveTheme()->getName();
+        $themePath = \Drupal::theme()->getActiveTheme()->getPath();
+        if (file_exists($themePath . '/templates/node/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = drupal_get_path('theme', $themeName);
+          $info['path'] = drupal_get_path('theme', $themeName) . '/templates/node';
           $info['template'] = $templateFileName;
-        } elseif (file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $theme_name);
-          $info['path'] = drupal_get_path('theme', $theme_name) . '/templates';
+        }
+        elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = drupal_get_path('theme', $themeName);
+          $info['path'] = drupal_get_path('theme', $themeName) . '/templates';
           $info['template'] = $templateFileName;
-        } else {
+        }
+        else {
           $templateFilePath = drupal_get_path('module', 'apic_app') . '/templates/' . $templateFileName . '.html.twig';
           if (file_exists($templateFilePath)) {
             $info['theme path'] = drupal_get_path('module', 'apic_app');
@@ -201,61 +202,62 @@ function apic_app_preprocess(&$variables, $hook, &$info) {
 
 /**
  * @param $variables
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  */
 function apic_app_preprocess_node(&$variables) {
-  if ($variables['node']->getType() == 'application') {
+  if ($variables['node']->getType() === 'application') {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
     // get global settings first
     $config = \Drupal::config('ibm_apim.settings');
-    $ibm_apim_show_placeholder_images = $config->get('show_placeholder_images');
-    if ($ibm_apim_show_placeholder_images == NULL) {
-      $ibm_apim_show_placeholder_images = 1;
+    $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
+    if ($ibmApimShowPlaceholderImages === NULL) {
+      $ibmApimShowPlaceholderImages = TRUE;
     }
-    $variables['showPlaceholders'] = $ibm_apim_show_placeholder_images;
-    if ($ibm_apim_show_placeholder_images) {
+    $variables['showPlaceholders'] = $ibmApimShowPlaceholderImages;
+    if ($ibmApimShowPlaceholderImages) {
       $rawImage = Application::getRandomImageName($variables['node']->getTitle());
       $variables['placeholderUrl'] = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
     }
     else {
       $variables['placeholderUrl'] = NULL;
     }
-    $siteconfig = \Drupal::service('ibm_apim.site_config');
-    if ($variables['view_mode'] == 'full') {
+    if ($variables['view_mode'] === 'full') {
       $userUtils = \Drupal::service('ibm_apim.user_utils');
       $variables['userHasAppManage'] = $userUtils->checkHasPermission('app:manage');
       $variables['userHasSubView'] = $userUtils->checkHasPermission('subscription:view');
       $variables['userHasSubManage'] = $userUtils->checkHasPermission('subscription:manage');
-      $variables['applifecycleEnabled'] = \Drupal::state()->get('ibm_apim.applifecycle_enabled');
-      $variables['appImageUploadEnabled'] = $config->get('application_image_upload');
-      $ibm_apim_show_versions = $config->get('showVersions');
-      if ($ibm_apim_show_versions === NULL) {
-        $ibm_apim_show_versions = 1;
+      $variables['appImageUploadEnabled'] = (boolean) $config->get('application_image_upload');
+      $ibmApimShowVersions = (boolean) $config->get('showVersions');
+      if ($ibmApimShowVersions === NULL) {
+        $ibmApimShowVersions = TRUE;
       }
-      $variables['showVersions'] = $ibm_apim_show_versions;
-      $credentials = array();
+      $variables['showVersions'] = $ibmApimShowVersions;
+      $credentials = [];
       foreach ($variables['node']->application_credentials->getValue() as $arrayValue) {
-        $credentials[] = unserialize($arrayValue['value']);
+        $credentials[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
       }
-      if (isset($credentials) && is_array($credentials)) {
+      if ($credentials !== NULL && is_array($credentials)) {
         $variables['credentials'] = $credentials;
         $variables['#attached']['drupalSettings']['application']['credentials'] = $credentials;
       }
       $variables['subscriptions'] = Application::getSubscriptions($variables['node']);
     }
     $variables['apic_state'] = $variables['node']->apic_state->value;
-    $variables['applifecycleEnabled'] = \Drupal::state()->get('ibm_apim.applifecycle_enabled');
+    $variables['applifecycleEnabled'] = (boolean) \Drupal::state()->get('ibm_apim.applifecycle_enabled');
     // custom fields
-    $view_mode = $variables['view_mode'];
-    if ($view_mode == 'full') {
-      $view_mode = 'default';
+    $viewMode = $variables['view_mode'];
+    if ($viewMode === 'full') {
+      $viewMode = 'default';
     }
     $diff = [];
-    $entity_view = \Drupal::entityTypeManager()
+    $entityView = \Drupal::entityTypeManager()
       ->getStorage('entity_view_display')
-      ->load('node.application.' . $view_mode);
-    if (isset($entity_view)) {
-      $field_list = array_keys($entity_view->getComponents());
-      $core_fields = [
+      ->load('node.application.' . $viewMode);
+    if ($entityView !== NULL) {
+      $fieldList = array_keys($entityView->getComponents());
+      $coreFields = [
         'title',
         'vid',
         'status',
@@ -265,37 +267,43 @@ function apic_app_preprocess_node(&$variables) {
         'links',
         'addtoany',
       ];
-      $ibmfields = Application::getIBMFields();
-      $merged = array_merge($core_fields, $ibmfields);
-      $diff = array_diff($field_list, $merged);
+      $ibmFields = Application::getIBMFields();
+      $merged = array_merge($coreFields, $ibmFields);
+      $diff = array_diff($fieldList, $merged);
     }
     $variables['custom_fields'] = $diff;
-    $billing_enabled = \Drupal::state()->get('ibm_apim.billing_enabled');
-    $variables['billing_enabled'] = $billing_enabled ? TRUE : FALSE;
+    $variables['billing_enabled'] = (boolean) \Drupal::state()->get('ibm_apim.billing_enabled');
 
     // set analytics variables if it is enabled
-    $portal_analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
-    if(isset($portal_analytics_service)) {
-      $analyticsClientUrl = $portal_analytics_service->getClientEndpoint();
+    $analyticsClientUrl = NULL;
+    $org = NULL;
+    $userUrl = NULL;
+    $portalAnalyticsService = \Drupal::service('ibm_apim.analytics')->getDefaultService();
+    if ($portalAnalyticsService !== NULL) {
+      $analyticsClientUrl = $portalAnalyticsService->getClientEndpoint();
     }
     $user = User::load(\Drupal::currentUser()->id());
-    $user_url = $user->get('apic_url')->value;
-    $org = \Drupal::service("ibm_apim.consumerorg")->get($variables['node']->application_consumer_org_url->value);
-    if (isset($org) && isset($analyticsClientUrl) && $org->hasPermission($user_url, 'app-analytics:view')) {
-      $variables['#attached']['library'][] = 'ibm_apim/analytics';
-      $variables['#attached']['library'][] = 'apic_app/app_analytics_dashboard';
-
-      $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString();
-      $translations = \Drupal::service('ibm_apim.utils')->analytics_translations();
-      $variables['#attached']['drupalSettings']['anv'] = array();
-      $variables['#attached']['drupalSettings']['analytics']['proxyURL'] = $url;
-      $variables['#attached']['drupalSettings']['analytics']['translations'] = $translations;
-      $variables['#attached']['drupalSettings']['analytics']['analyticsDir'] = base_path() . drupal_get_path('module', 'ibm_apim') . '/analytics';
-      $variables['#attached']['drupalSettings']['application']['id'] = $variables['node']->application_id->value;
-      $variables['analytics_access'] = TRUE;
+    if ($user !== NULL) {
+      $userUrl = $user->get('apic_url')->value;
+      $org = \Drupal::service('ibm_apim.consumerorg')->get($variables['node']->application_consumer_org_url->value);
     }
-    else {
-      $variables['analytics_access'] = FALSE;
+    if ($variables['view_mode'] === 'full') {
+      if ($org !== NULL && $analyticsClientUrl !== NULL && $userUrl !== NULL && $org->hasPermission($userUrl, 'app-analytics:view')) {
+        $variables['#attached']['library'][] = 'ibm_apim/analytics';
+        $variables['#attached']['library'][] = 'apic_app/app_analytics_dashboard';
+
+        $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString();
+        $translations = \Drupal::service('ibm_apim.utils')->analytics_translations();
+        $variables['#attached']['drupalSettings']['anv'] = [];
+        $variables['#attached']['drupalSettings']['analytics']['proxyURL'] = $url;
+        $variables['#attached']['drupalSettings']['analytics']['translations'] = $translations;
+        $variables['#attached']['drupalSettings']['analytics']['analyticsDir'] = base_path() . drupal_get_path('module', 'ibm_apim') . '/analytics';
+        $variables['#attached']['drupalSettings']['application']['id'] = $variables['node']->application_id->value;
+        $variables['analytics_access'] = TRUE;
+      }
+      else {
+        $variables['analytics_access'] = FALSE;
+      }
     }
 
     $variables['#attached']['drupalSettings']['application']['id'] = $variables['node']->application_id->value;
@@ -314,16 +322,14 @@ function apic_app_form_alter(array &$form, FormStateInterface $form_state, $form
   switch ($form_id) {
     // remove link to delete our content type
     case 'node_type_edit_form' :
-      if (isset($form['type']['#default_value']) && $form['type']['#default_value'] == 'application') {
-        if (isset($form['actions']['delete'])) {
-          unset($form['actions']['delete']);
-        }
+      if (isset($form['type']['#default_value'], $form['actions']['delete']) && $form['type']['#default_value'] === 'application') {
+        unset($form['actions']['delete']);
       }
       break;
     case 'node_application_edit_form':
       // disable fields to stop admin editing applications
-      $current_user = \Drupal::currentUser();
-      if ($current_user->id() == 1) {
+      $currentUser = \Drupal::currentUser();
+      if ((int) $currentUser->id() === 1) {
         $form['title']['#disabled'] = TRUE;
         $form['apic_summary']['#disabled'] = TRUE;
         $form['application_image']['#disabled'] = TRUE;
@@ -341,7 +347,7 @@ function apic_app_form_alter(array &$form, FormStateInterface $form_state, $form
  * @param $hook
  */
 function apic_app_module_implements_alter(&$implementations, $hook) {
-  if (($hook == 'form_alter' || $hook == 'menu_links_discovered_alter') && isset($implementations['apic_app'])) {
+  if (($hook === 'form_alter' || $hook === 'menu_links_discovered_alter') && isset($implementations['apic_app'])) {
     $group = $implementations['apic_app'];
     unset($implementations['apic_app']);
     $implementations['apic_app'] = $group;
@@ -376,11 +382,11 @@ function apic_app_menu_links_discovered_alter(&$links) {
  */
 function apic_app_theme($existing, $type, $theme, $path) {
   return [
-    'new_application' => array(
+    'new_application' => [
       'variables' => [],
-    ),
-    'application_subscriptions' => array(
-      'variables' => array(
+    ],
+    'application_subscriptions' => [
+      'variables' => [
         'catalogId' => NULL,
         'catalogName' => NULL,
         'porgId' => NULL,
@@ -390,11 +396,11 @@ function apic_app_theme($existing, $type, $theme, $path) {
         'applifecycleEnabled' => FALSE,
         'node' => NULL,
         'subscriptions' => NULL,
-        'credentials' => NULL
-      )
-    ),
-    'application_analytics' => array(
-      'variables' => array(
+        'credentials' => NULL,
+      ],
+    ],
+    'application_analytics' => [
+      'variables' => [
         'catalogId' => NULL,
         'catalogName' => NULL,
         'porgId' => NULL,
@@ -402,46 +408,46 @@ function apic_app_theme($existing, $type, $theme, $path) {
         'userHasSubManage' => FALSE,
         'userHasSubView' => FALSE,
         'applifecycleEnabled' => FALSE,
-        'node' => NULL
-      )
-    ),
-    'app_credentials' => array(
+        'node' => NULL,
+      ],
+    ],
+    'app_credentials' => [
       'variables' => [
         'node' => NULL,
-        'userHasAppManage' => FALSE
+        'userHasAppManage' => FALSE,
       ],
-    ),
-    'app_subscriptions' => array(
+    ],
+    'app_subscriptions' => [
       'variables' => [
         'node' => NULL,
         'userHasAppManage' => FALSE,
         'userHasSubView' => FALSE,
         'userHasSubManage' => FALSE,
         'showVersions' => FALSE,
-        'billing_enabled' => FALSE
+        'billing_enabled' => FALSE,
       ],
-    ),
-    'app_api_call_summary' => array(
+    ],
+    'app_api_call_summary' => [
       'variables' => [],
-    ),
-    'app_totals' => array(
+    ],
+    'app_totals' => [
       'variables' => [],
-    ),
-    'app_analytics_summary' => array(
+    ],
+    'app_analytics_summary' => [
       'variables' => [],
-    ),
-    'app_data_filter' => array(
+    ],
+    'app_data_filter' => [
       'variables' => [],
-    ),
-    'app_analytics_detail' => array(
+    ],
+    'app_analytics_detail' => [
       'variables' => [],
-    ),
-    'app_api_call_history' => array(
+    ],
+    'app_api_call_history' => [
       'variables' => [],
-    ),
-    'app_cost' => array(
+    ],
+    'app_cost' => [
       'variables' => [],
-    ),
+    ],
   ];
 }
 
@@ -451,15 +457,15 @@ function apic_app_theme($existing, $type, $theme, $path) {
  * @param $variables
  */
 function apic_app_preprocess_field_multiple_value_form(&$variables) {
-  if ($variables['element']['#field_name'] == 'application_redirect_endpoints') {
+  if ($variables['element']['#field_name'] === 'application_redirect_endpoints') {
 
     // This code removes the ability to sort the redirect endpoints
-    // which drupal allows by default but doesnt make sense in this case
+    // which drupal allows by default but doesn't make sense in this case
     unset($variables['table']['#tabledrag']);
     // Remove re-order header column
     if (isset($variables['table']['#header'])) {
       foreach ($variables['table']['#header'] as $header_i => $header) {
-        if (is_object($header) && (string) $header == 'Order') {
+        if (is_object($header) && (string) $header === 'Order') {
           unset($variables['table']['#header'][$header_i]);
         }
       }
@@ -468,7 +474,7 @@ function apic_app_preprocess_field_multiple_value_form(&$variables) {
     if (isset($variables['table']['#rows'])) {
       foreach ($variables['table']['#rows'] as &$row) {
         // Remove draggable class from tr
-        $i = array_search('draggable', $row['class']);
+        $i = array_search('draggable', $row['class'], FALSE);
         if ($i !== FALSE) {
           unset($row['class'][$i]);
         }
@@ -478,17 +484,19 @@ function apic_app_preprocess_field_multiple_value_form(&$variables) {
             continue;
           }
           // Remove td with drag handle
-          $i = array_search('field-multiple-drag', $col['class']);
+          $i = array_search('field-multiple-drag', $col['class'], FALSE);
           if ($i !== FALSE) {
             unset($row['data'][$col_i]);
           }
           // Remove td with re-ordering select
-          $i = array_search('delta-order', $col['class']);
+          $i = array_search('delta-order', $col['class'], FALSE);
           if ($i !== FALSE) {
             unset($row['data'][$col_i]);
           }
         }
+        unset($col);
       }
+      unset($row);
     }
     if (isset($variables['button'])) {
       $variables['button']['#attributes']['class'][] = 'apicSecondary';

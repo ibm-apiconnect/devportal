@@ -13,10 +13,10 @@ use Drupal\ghmarkdown\cebe\markdown\Parser;
 /**
  * Base class for all Test cases.
  *
- * @group ghmarkdown
  * @author Carsten Brandt <mail@cebe.cc>
  */
 abstract class BaseMarkdownTest extends UnitTestCase {
+
   protected $outputFileExtension = '.html';
 
   abstract public function getDataPaths();
@@ -41,18 +41,14 @@ abstract class BaseMarkdownTest extends UnitTestCase {
   public function testUtf8() {
     $this->assertSame("<p>абвгдеёжзийклмнопрстуфхцчшщъыьэюя</p>\n", $this->createMarkdown()
       ->parse('абвгдеёжзийклмнопрстуфхцчшщъыьэюя'));
-    $this->assertSame("<p>there is a charater, 配</p>\n", $this->createMarkdown()
-      ->parse('there is a charater, 配'));
-    $this->assertSame("<p>Arabic Latter \"م (M)\"</p>\n", $this->createMarkdown()
-      ->parse('Arabic Latter "م (M)"'));
+    $this->assertSame("<p>there is a charater, 配</p>\n", $this->createMarkdown()->parse('there is a charater, 配'));
+    $this->assertSame("<p>Arabic Latter \"م (M)\"</p>\n", $this->createMarkdown()->parse('Arabic Latter "م (M)"'));
     $this->assertSame("<p>電腦</p>\n", $this->createMarkdown()->parse('電腦'));
 
     $this->assertSame('абвгдеёжзийклмнопрстуфхцчшщъыьэюя', $this->createMarkdown()
       ->parseParagraph('абвгдеёжзийклмнопрстуфхцчшщъыьэюя'));
-    $this->assertSame('there is a charater, 配', $this->createMarkdown()
-      ->parseParagraph('there is a charater, 配'));
-    $this->assertSame('Arabic Latter "م (M)"', $this->createMarkdown()
-      ->parseParagraph('Arabic Latter "م (M)"'));
+    $this->assertSame('there is a charater, 配', $this->createMarkdown()->parseParagraph('there is a charater, 配'));
+    $this->assertSame('Arabic Latter "م (M)"', $this->createMarkdown()->parseParagraph('Arabic Latter "م (M)"'));
     $this->assertSame('電腦', $this->createMarkdown()->parseParagraph('電腦'));
   }
 
@@ -66,15 +62,13 @@ abstract class BaseMarkdownTest extends UnitTestCase {
     // http://en.wikipedia.org/wiki/Newline#Representations
     return [
       ["a\r\nb", "a\nb"],
-      ["a\n\rb", "a\nb"],
-      // Acorn BBC and RISC OS spooled text output :)
+      ["a\n\rb", "a\nb"], // Acorn BBC and RISC OS spooled text output :)
       ["a\nb", "a\nb"],
       ["a\rb", "a\nb"],
 
       ["a\n\nb", "a\n\nb", "a</p>\n<p>b"],
       ["a\r\rb", "a\n\nb", "a</p>\n<p>b"],
-      ["a\n\r\n\rb", "a\n\nb", "a</p>\n<p>b"],
-      // Acorn BBC and RISC OS spooled text output :)
+      ["a\n\r\n\rb", "a\n\nb", "a</p>\n<p>b"], // Acorn BBC and RISC OS spooled text output :)
       ["a\r\n\r\nb", "a\n\nb", "a</p>\n<p>b"],
     ];
   }
@@ -83,8 +77,7 @@ abstract class BaseMarkdownTest extends UnitTestCase {
    * @dataProvider pregData
    */
   public function testPregReplaceR($input, $exptected, $pexpect = NULL) {
-    $this->assertSame($exptected, $this->createMarkdown()
-      ->parseParagraph($input));
+    $this->assertSame($exptected, $this->createMarkdown()->parseParagraph($input));
     $this->assertSame($pexpect === NULL ? "<p>$exptected</p>\n" : "<p>$pexpect</p>\n", $this->createMarkdown()
       ->parse($input));
   }

@@ -3,17 +3,18 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
 namespace Drupal\ibm_apim\Updater;
 
-use Drupal\Core\Url;
 use Drupal\Core\Updater\Theme;
 use Drupal\Core\Updater\UpdaterException;
+use Drupal\Core\Url;
 
 /**
  * Defines a class for updating themes using
@@ -21,8 +22,10 @@ use Drupal\Core\Updater\UpdaterException;
  */
 class ApicTheme extends Theme {
 
+  public $title;
+
   /**
-   * Constructs a new updater.
+   * ApicTheme constructor.
    *
    * @param string $source
    *   Directory to install from.
@@ -30,6 +33,8 @@ class ApicTheme extends Theme {
    *   The root directory under which the project will be copied to if it's a
    *   new project. Usually this is the app root (the directory in which the
    *   Drupal site is installed).
+   *
+   * @throws \Drupal\Core\Updater\UpdaterException
    */
   public function __construct($source, $root) {
     parent::__construct($source, $root);
@@ -49,7 +54,7 @@ class ApicTheme extends Theme {
    *
    * @throws \Drupal\Core\Updater\UpdaterException
    */
-  public static function getProjectTitle($directory) {
+  public static function getProjectTitle($directory): string {
     $info_file = self::findInfoFile($directory);
     $info = \Drupal::service('info_parser')->parse($info_file);
     if (empty($info)) {
@@ -60,8 +65,8 @@ class ApicTheme extends Theme {
     $files = file_scan_directory($directory, '/(.*\.php$|.*\.module$|.*\.install$|.*\.inc$)/');
     foreach ($files as $file) {
       $rc = self::checkFunctionNames($file->uri);
-      if ($rc != TRUE) {
-        throw new UpdaterException(t("The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/support/knowledgecenter/en/SSMNED_2018/com.ibm.apic.devportal.doc/rapic_portal_custom_modules_drupal8.html", array('%file' => $file->uri)));
+      if ($rc !== TRUE) {
+        throw new UpdaterException(t('The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/support/knowledgecenter/en/SSMNED_2018/com.ibm.apic.devportal.doc/rapic_portal_custom_modules_drupal8.html', ['%file' => $file->uri]));
       }
     }
 
@@ -72,14 +77,15 @@ class ApicTheme extends Theme {
    * Check to ensure no APIC source code is within this module / theme
    *
    * @param $file
+   *
    * @return bool
    */
-  public static function checkFunctionNames($file) {
+  public static function checkFunctionNames($file): bool {
     $rc = TRUE;
     if (isset($file) && file_exists($file)) {
       $data = file_get_contents($file);
 
-      $prefixes = array(
+      $prefixes = [
         'ghmarkdown',
         'connect_theme',
         'ibm_apim',
@@ -93,8 +99,8 @@ class ApicTheme extends Theme {
         'mail-subscribers',
         'ibm_log_stdout',
         'themegenerator',
-        'eventstream'
-      );
+        'eventstream',
+      ];
       $regex = '';
       foreach ($prefixes as $prefix) {
         $regex .= 'function\s+' . $prefix . '_|';
@@ -124,69 +130,39 @@ class ApicTheme extends Theme {
    * @return string
    *   The absolute path of the directory.
    */
-  public function getInstallDirectory() {
+  public function getInstallDirectory(): ?string {
     if ($this->isInstalled() && ($relative_path = drupal_get_path('theme', $this->name))) {
       // The return value of drupal_get_path() is always relative to the site,
       // so prepend DRUPAL_ROOT.
-      return DRUPAL_ROOT . '/' . dirname($relative_path);
+      $returnValue = DRUPAL_ROOT . '/' . dirname($relative_path);
     }
     else {
       // When installing a new theme, prepend the requested root directory.
-      return $this->root . '/' . $this->getRootDirectoryRelativePath();
+      $returnValue = $this->root . '/' . self::getRootDirectoryRelativePath();
     }
+    return $returnValue;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function getRootDirectoryRelativePath() {
+  public static function getRootDirectoryRelativePath(): string {
     return \Drupal::service('site.path') . '/themes';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function isInstalled() {
-    // Check if the theme exists in the file system, regardless of whether it
-    // is enabled or not.
-    $themes = \Drupal::state()->get('system.theme.files', []);
-    return isset($themes[$this->name]);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function canUpdateDirectory($directory) {
+  public static function canUpdateDirectory($directory): bool {
     $info = static::getExtensionInfo($directory);
 
-    return (isset($info['type']) && $info['type'] == 'theme');
-  }
-
-  /**
-   * Determines whether this class can update the specified project.
-   *
-   * @param string $project_name
-   *   The project to check.
-   *
-   * @return bool
-   */
-  public static function canUpdate($project_name) {
-    return (bool) drupal_get_path('theme', $project_name);
+    return (isset($info['type']) && $info['type'] === 'theme');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function postInstall() {
-    // Update the theme info.
-    clearstatcache();
-    \Drupal::service('theme_handler')->rebuildThemeData();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function postInstallTasks() {
+  public function postInstallTasks(): array {
     // Since this is being called outside of the primary front controller,
     // the base_url needs to be set explicitly to ensure that links are
     // relative to the site root.

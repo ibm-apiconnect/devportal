@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,7 +13,10 @@
 
 namespace Drupal\mail_subscribers\Service;
 
+use Drupal\consumerorg\ApicType\Member;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Mail\MailFormatHelper;
+use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\mail_subscribers\Event\AllMailAddedEvent;
 use Drupal\mail_subscribers\Event\MailAddedEvent;
 use Drupal\node\Entity\Node;
@@ -31,28 +34,23 @@ class MailService {
    * @return int
    * @throws \Exception
    */
-  public function mailProductOwners($mailParams = [], $from = [], $langcode) {
+  public function mailProductOwners($mailParams = [], $from = [], $langcode): int {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $product_nid = $mailParams['product'];
-    if (isset($mailParams['plan']['name'])) {
-      $plan_name = $mailParams['plan']['name'];
-    }
-    else {
-      $plan_name = NULL;
-    }
+    $productNid = $mailParams['product'];
+    $planName = $mailParams['plan']['name'] ?? NULL;
 
-    $product = Node::load($product_nid);
+    $product = Node::load($productNid);
 
-    $to_list = $this->getProductSubscribingOwners($product->apic_url->value . ':' . $plan_name);
+    $toList = $this->getProductSubscribingOwners($product->apic_url->value . ':' . $planName);
 
     $mailParams['langcode'] = $langcode;
 
-    $rc = $this->sendEmail($mailParams, $to_list, $from);
+    $rc = $this->sendEmail($mailParams, $toList, $from, $productNid);
 
     \Drupal::logger('mail_subscribers')
       ->info('Sent email to owners subscribing to product %product', [
-        '%product' => $product_nid,
+        '%product' => $productNid,
       ]);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
@@ -69,27 +67,22 @@ class MailService {
    * @return int
    * @throws \Exception
    */
-  public function mailProductMembers($mailParams = [], $from = [], $langcode) {
+  public function mailProductMembers($mailParams = [], $from = [], $langcode): int {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $product_nid = $mailParams['product'];
-    if (isset($mailParams['plan']['name'])) {
-      $plan_name = $mailParams['plan']['name'];
-    }
-    else {
-      $plan_name = NULL;
-    }
+    $productNid = $mailParams['product'];
+    $planName = $mailParams['plan']['name'] ?? NULL;
 
-    $product = Node::load($product_nid);
-    $to_list = $this->getProductSubscribingMembers($product->apic_url->value . ':' . $plan_name);
+    $product = Node::load($productNid);
+    $toList = $this->getProductSubscribingMembers($product->apic_url->value . ':' . $planName);
 
     $mailParams['langcode'] = $langcode;
 
-    $rc = $this->sendEmail($mailParams, $to_list, $from);
+    $rc = $this->sendEmail($mailParams, $toList, $from, $productNid);
 
     \Drupal::logger('mail_subscribers')
       ->info('Sent email to members subscribing to product %product', [
-        '%product' => $product_nid,
+        '%product' => $productNid,
       ]);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
     return $rc;
@@ -105,20 +98,20 @@ class MailService {
    * @return int
    * @throws \Exception
    */
-  public function mailApiOwners($mailParams = [], $from = [], $langcode) {
+  public function mailApiOwners($mailParams = [], $from = [], $langcode): int {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $api_nid = $mailParams['api'];
+    $apiNid = $mailParams['api'];
 
-    $to_list = $this->getApiSubscribingOwners($api_nid);
+    $toList = $this->getApiSubscribingOwners($apiNid);
 
     $mailParams['langcode'] = $langcode;
 
-    $rc = $this->sendEmail($mailParams, $to_list, $from);
+    $rc = $this->sendEmail($mailParams, $toList, $from, $apiNid);
 
     \Drupal::logger('mail_subscribers')
       ->info('Sent email to owners subscribing to API %api', [
-        '%api' => $api_nid,
+        '%api' => $apiNid,
       ]);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
@@ -135,20 +128,20 @@ class MailService {
    * @return int
    * @throws \Exception
    */
-  public function mailApiMembers($mailParams = [], $from = [], $langcode) {
+  public function mailApiMembers($mailParams = [], $from = [], $langcode): int {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $api_nid = $mailParams['api'];
+    $apiNid = $mailParams['api'];
 
-    $to_list = $this->getApiSubscribingMembers($api_nid);
+    $toList = $this->getApiSubscribingMembers($apiNid);
 
     $mailParams['langcode'] = $langcode;
 
-    $rc = $this->sendEmail($mailParams, $to_list, $from);
+    $rc = $this->sendEmail($mailParams, $toList, $from, $apiNid);
 
     \Drupal::logger('mail_subscribers')
       ->info('Sent email to members subscribing to API %api', [
-        '%api' => $api_nid,
+        '%api' => $apiNid,
       ]);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
@@ -165,14 +158,14 @@ class MailService {
    * @return int
    * @throws \Exception
    */
-  public function mailAllOwners($mailParams = [], $from = [], $langcode) {
+  public function mailAllOwners($mailParams = [], $from = [], $langcode): int {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $to_list = $this->getAllSubscribingOwners();
+    $toList = $this->getAllSubscribingOwners();
 
     $mailParams['langcode'] = $langcode;
 
-    $rc = $this->sendEmail($mailParams, $to_list, $from);
+    $rc = $this->sendEmail($mailParams, $toList, $from);
 
     \Drupal::logger('mail_subscribers')->info('Sent email to all consumer organization owners');
 
@@ -190,14 +183,14 @@ class MailService {
    * @return int
    * @throws \Exception
    */
-  public function mailAllMembers($mailParams, $from = [], $langcode) {
+  public function mailAllMembers($mailParams, $from = [], $langcode): int {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $to_list = $this->getAllSubscribingMembers();
+    $toList = $this->getAllSubscribingMembers();
 
     $mailParams['langcode'] = $langcode;
 
-    $rc = $this->sendEmail($mailParams, $to_list, $from);
+    $rc = $this->sendEmail($mailParams, $toList, $from);
 
     \Drupal::logger('mail_subscribers')->info('Sent email to all consumer organization members');
 
@@ -213,7 +206,7 @@ class MailService {
    *
    * @return array
    */
-  public function getProductSubscribingOwners($plan) {
+  public function getProductSubscribingOwners($plan): array {
     return $this->getProductSubscribers($plan, 'owners');
   }
 
@@ -225,7 +218,7 @@ class MailService {
    *
    * @return array
    */
-  public function getProductSubscribingMembers($plan) {
+  public function getProductSubscribingMembers($plan): array {
     return $this->getProductSubscribers($plan, 'members');
   }
 
@@ -238,77 +231,84 @@ class MailService {
    *
    * @return array
    */
-  public function getProductSubscribers($plan, $type = 'members') {
+  public function getProductSubscribers($plan, $type = 'members'): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['plan' => $plan, 'type' => $type]);
 
     $orgs = [];
     // get subscribed apps
-    if (isset($plan)) {
+    if ($plan !== NULL) {
+      $planName = NULL;
       $parts = explode(':', $plan);
-      $product_url = $parts[0];
+      $productUrl = $parts[0];
       if (count($parts) > 1) {
-        $planname = $parts[1];
+        $planName = $parts[1];
       }
 
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'application');
-      if (isset($planname)) {
-        $query->condition('application_subscriptions.value', $product_url.'";s:4:"plan";s:' . \strlen($planname) . ':"' . $planname . '"', 'CONTAINS');
+      if ($planName !== NULL) {
+        $query->condition('application_subscriptions.value', $productUrl . '";s:4:"plan";s:' . \strlen($planName) . ':"' . $planName . '"', 'CONTAINS');
       }
       else {
-        $query->condition('application_subscriptions.value', $product_url, 'CONTAINS');
+        $query->condition('application_subscriptions.value', $productUrl, 'CONTAINS');
       }
       $nids = $query->execute();
-      if (isset($nids) && !empty($nids)) {
+      if ($nids !== NULL && !empty($nids)) {
         $nodes = Node::loadMultiple($nids);
-        if (isset($nodes)) {
+        if ($nodes !== NULL) {
           foreach ($nodes as $node) {
             $orgs[] = $node->application_consumer_org_url->value;
           }
         }
       }
     }
-    $recipients = [];
+    // this is a more performant way to avoid doing array_merge in a loop
+    // the inner empty array covers cases when no loops were made
+    $recipients = [[]];
     // get users in those orgs
-    if (isset($orgs) && is_array($orgs)) {
+    if ($orgs !== NULL && \is_array($orgs)) {
       foreach ($orgs as $org) {
         $query = \Drupal::entityQuery('node');
         $query->condition('type', 'consumerorg');
         $query->condition('consumerorg_url.value', $org);
         $nids = $query->execute();
-        if (isset($nids) && !empty($nids)) {
+        if ($nids !== NULL && !empty($nids)) {
           $nodes = Node::loadMultiple($nids);
-          if (isset($nodes) && is_array($nodes)) {
+          if ($nodes !== NULL && \is_array($nodes)) {
             foreach ($nodes as $node) {
-              $org_recipients = [];
+              $orgRecipients = [];
               if ($type === 'members') {
-                if (isset($node->consumerorg_members->value)) {
-                  $members = unserialize($node->consumerorg_members->value);
+                $members = $node->consumerorg_members->getValue();
+                if (isset($members)) {
                   foreach ($members as $member) {
-                    if (isset($member['email']) && !empty($member['email'])) {
-                      $org_recipients[] = $member['email'];
+                    $memberValue = unserialize($member['value'], ['allowed_classes' => FALSE]);
+                    $email = $memberValue['user']['mail'];
+                    if (isset($email) && !empty($email)) {
+                      $orgRecipients[] = $email;
                     }
                   }
                 }
               }
-              $consumerorg_owner = null;
-              $consumerorg_owner_url = $node->consumerorg_owner->value;
-              $consumerorg_owner_account = \Drupal::service('auth_apic.usermanager')->findUserByUrl($consumerorg_owner_url);
-              if ($consumerorg_owner_account !== NULL && \Drupal::service('email.validator')
-                  ->isValid($consumerorg_owner_account->getEmail())) {
-                $consumerorg_owner = $consumerorg_owner_account->getEmail();
+              $consumerorgOwner = NULL;
+              $consumerorgOwnerUrl = $node->consumerorg_owner->value;
+              $consumerorgOwnerAccount = \Drupal::service('auth_apic.usermanager')
+                ->findUserByUrl($consumerorgOwnerUrl);
+              if ($consumerorgOwnerAccount !== NULL && \Drupal::service('email.validator')
+                  ->isValid($consumerorgOwnerAccount->getEmail())) {
+                $consumerorgOwner = $consumerorgOwnerAccount->getEmail();
               }
-              if (isset($consumerorg_owner) && !empty($consumerorg_owner)) {
-                $org_recipients[] = $consumerorg_owner;
+              if ($consumerorgOwner !== NULL && !empty($consumerorgOwner)) {
+                $orgRecipients[] = $consumerorgOwner;
               }
-              if (!empty($org_recipients)) {
-                $recipients[] = implode(',', $org_recipients);
+              if (!empty($orgRecipients)) {
+                $recipients[] = $orgRecipients;
               }
             }
           }
         }
       }
     }
+    $recipients = array_merge(...$recipients);
     $recipients = array_unique($recipients);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, count($recipients));
     return $recipients;
@@ -317,58 +317,60 @@ class MailService {
   /**
    * Get subscription owners for a given API NID
    *
-   * @param $apinid
+   * @param $apiNid
    *
    * @return array
    */
-  function getApiSubscribingOwners($apinid) {
-    return $this->getApiSubscribers($apinid, 'owners');
+  public function getApiSubscribingOwners($apiNid): array {
+    return $this->getApiSubscribers($apiNid, 'owners');
   }
 
   /**
    * Get all consumer organization members subscribed to a given API NID
    *
-   * @param $apinid
+   * @param $apiNid
    *
    * @return array
    */
-  function getApiSubscribingMembers($apinid) {
-    return $this->getApiSubscribers($apinid, 'members');
+  public function getApiSubscribingMembers($apiNid): array {
+    return $this->getApiSubscribers($apiNid, 'members');
   }
 
   /**
    * Get subscribers for a given API NID
    *
-   * @param $apinid
+   * @param $apiNid
    * @param string $type
    *
    * @return array
    */
-  function getApiSubscribers($apinid, $type = 'members') {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['apinid' => $apinid, 'type' => $type]);
+  public function getApiSubscribers($apiNid, $type = 'members'): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['apiNid' => $apiNid, 'type' => $type]);
     $orgs = [];
     // get products containing this api
-    if (isset($apinid)) {
-      $api = Node::load($apinid);
-      $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'product');
-      $query->condition('product_apis.value', $api->apic_ref->value, 'CONTAINS');
+    if ($apiNid !== NULL) {
+      $api = Node::load($apiNid);
+      if ($api !== NULL) {
+        $query = \Drupal::entityQuery('node');
+        $query->condition('type', 'product');
+        $query->condition('product_apis.value', $api->apic_ref->value, 'CONTAINS');
 
-      $prod_nids = $query->execute();
-      if (isset($prod_nids)) {
-        // get subscribed apps to those products
-        foreach ($prod_nids as $prod_nid) {
-          $product = Node::load($prod_nid);
-          if (isset($product)) {
-            $query = \Drupal::entityQuery('node');
-            $query->condition('type', 'application');
-            $query->condition('application_subscriptions.value', $product->apic_url->value, 'CONTAINS');
-            $appnids = $query->execute();
-            if (isset($appnids)) {
-              $appnodes = Node::loadMultiple($appnids);
-              if (isset($appnodes)) {
-                foreach ($appnodes as $app) {
-                  $orgs[] = $app->application_consumer_org_url->value;
+        $prodNids = $query->execute();
+        if ($prodNids !== NULL) {
+          // get subscribed apps to those products
+          foreach ($prodNids as $prodNid) {
+            $product = Node::load($prodNid);
+            if ($product !== NULL) {
+              $query = \Drupal::entityQuery('node');
+              $query->condition('type', 'application');
+              $query->condition('application_subscriptions.value', $product->apic_url->value, 'CONTAINS');
+              $appNids = $query->execute();
+              if ($appNids !== NULL) {
+                $appNodes = Node::loadMultiple($appNids);
+                if ($appNodes !== NULL) {
+                  foreach ($appNodes as $app) {
+                    $orgs[] = $app->application_consumer_org_url->value;
+                  }
                 }
               }
             }
@@ -377,47 +379,53 @@ class MailService {
       }
     }
 
-    $recipients = [];
+    // this is a more performant way to avoid doing array_merge in a loop
+    // the inner empty array covers cases when no loops were made
+    $recipients = [[]];
     // get users in those orgs
-    if (isset($orgs) && is_array($orgs)) {
+    if ($orgs !== NULL && \is_array($orgs)) {
       foreach ($orgs as $org) {
         $query = \Drupal::entityQuery('node');
         $query->condition('type', 'consumerorg');
         $query->condition('consumerorg_url.value', $org);
         $nids = $query->execute();
-        if (isset($nids)) {
+        if ($nids !== NULL) {
           $nodes = Node::loadMultiple($nids);
-          if (isset($nodes) && is_array($nodes)) {
+          if ($nodes !== NULL && \is_array($nodes)) {
             foreach ($nodes as $node) {
-              $org_recipients = [];
+              $orgRecipients = [];
               if ($type === 'members') {
-                if (isset($node->consumerorg_members->value)) {
-                  $members = unserialize($node->consumerorg_members->value);
+                $members = $node->consumerorg_members->getValue();
+                if (isset($members)) {
                   foreach ($members as $member) {
-                    if (isset($member['email']) && !empty($member['email'])) {
-                      $org_recipients[] = $member['email'];
+                    $memberValue = unserialize($member['value'], ['allowed_classes' => FALSE]);
+                    $email = $memberValue['user']['mail'];
+                    if (isset($email) && !empty($email)) {
+                      $orgRecipients[] = $email;
                     }
                   }
                 }
               }
-              $consumerorg_owner = null;
-              $consumerorg_owner_url = $node->consumerorg_owner->value;
-              $consumerorg_owner_account = \Drupal::service('auth_apic.usermanager')->findUserByUrl($consumerorg_owner_url);
-              if ($consumerorg_owner_account !== NULL && \Drupal::service('email.validator')
-                  ->isValid($consumerorg_owner_account->getEmail())) {
-                $consumerorg_owner = $consumerorg_owner_account->getEmail();
+              $consumerorgOwner = NULL;
+              $consumerorgOwnerUrl = $node->consumerorg_owner->value;
+              $consumerorgOwnerAccount = \Drupal::service('auth_apic.usermanager')
+                ->findUserByUrl($consumerorgOwnerUrl);
+              if ($consumerorgOwnerAccount !== NULL && \Drupal::service('email.validator')
+                  ->isValid($consumerorgOwnerAccount->getEmail())) {
+                $consumerorgOwner = $consumerorgOwnerAccount->getEmail();
               }
-              if (isset($consumerorg_owner) && !empty($consumerorg_owner)) {
-                $org_recipients[] = $consumerorg_owner;
+              if ($consumerorgOwner !== NULL && !empty($consumerorgOwner)) {
+                $orgRecipients[] = $consumerorgOwner;
               }
-              if (!empty($org_recipients)) {
-                $recipients[] = implode(',', $org_recipients);
+              if (!empty($orgRecipients)) {
+                $recipients[] = $orgRecipients;
               }
             }
           }
         }
       }
     }
+    $recipients = array_merge(...$recipients);
     $recipients = array_unique($recipients);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, count($recipients));
     return $recipients;
@@ -429,7 +437,7 @@ class MailService {
    *
    * @return array
    */
-  public function getAllSubscribingOwners() {
+  public function getAllSubscribingOwners(): array {
     return $this->getAllSubscribers('owners');
   }
 
@@ -439,7 +447,7 @@ class MailService {
    *
    * @return array
    */
-  public function getAllSubscribingMembers() {
+  public function getAllSubscribingMembers(): array {
     return $this->getAllSubscribers('members');
   }
 
@@ -448,44 +456,49 @@ class MailService {
    *
    * @return array
    */
-  public function getAllSubscribers($type = 'members') {
+  public function getAllSubscribers($type = 'members'): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $type);
-    $recipients = [];
+    // this is a more performant way to avoid doing array_merge in a loop
+    // the inner empty array covers cases when no loops were made
+    $recipients = [[]];
     // get users in all orgs
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
     $nids = $query->execute();
-    if (isset($nids)) {
+    if ($nids !== NULL) {
       $nodes = Node::loadMultiple($nids);
-      if (isset($nodes) && is_array($nodes)) {
+      if ($nodes !== NULL && \is_array($nodes)) {
         foreach ($nodes as $node) {
-          $org_recipients = [];
+          $orgRecipients = [];
           if ($type === 'members') {
-            if (isset($node->consumerorg_members->value)) {
-              $members = unserialize($node->consumerorg_members->value);
+            $members = $node->consumerorg_members->getValue();
+            if (isset($members)) {
               foreach ($members as $member) {
-                if (isset($member['email']) && !empty($member['email'])) {
-                  $org_recipients[] = $member['email'];
+                $memberValue = unserialize($member['value'], ['allowed_classes' => FALSE]);
+                $email = $memberValue['user']['mail'];
+                if (isset($email) && !empty($email)) {
+                  $orgRecipients[] = $email;
                 }
               }
             }
           }
-          $consumerorg_owner = null;
-          $consumerorg_owner_url = $node->consumerorg_owner->value;
-          $consumerorg_owner_account = \Drupal::service('auth_apic.usermanager')->findUserByUrl($consumerorg_owner_url);
-          if ($consumerorg_owner_account !== NULL && \Drupal::service('email.validator')
-              ->isValid($consumerorg_owner_account->getEmail())) {
-            $consumerorg_owner = $consumerorg_owner_account->getEmail();
+          $consumerorgOwner = NULL;
+          $consumerorgOwnerUrl = $node->consumerorg_owner->value;
+          $consumerorgOwnerAccount = \Drupal::service('auth_apic.usermanager')->findUserByUrl($consumerorgOwnerUrl);
+          if ($consumerorgOwnerAccount !== NULL && \Drupal::service('email.validator')
+              ->isValid($consumerorgOwnerAccount->getEmail())) {
+            $consumerorgOwner = $consumerorgOwnerAccount->getEmail();
           }
-          if (isset($consumerorg_owner) && !empty($consumerorg_owner)) {
-            $org_recipients[] = $consumerorg_owner;
+          if ($consumerorgOwner !== NULL && !empty($consumerorgOwner)) {
+            $orgRecipients[] = $consumerorgOwner;
           }
-          if (!empty($org_recipients)) {
-            $recipients[] = implode(',', $org_recipients);
+          if (!empty($orgRecipients)) {
+            $recipients[] = $orgRecipients;
           }
         }
       }
     }
+    $recipients = array_merge(...$recipients);
     $recipients = array_unique($recipients);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, count($recipients));
     return $recipients;
@@ -493,55 +506,68 @@ class MailService {
 
   /**
    * @param $mailParams
-   * @param array $to_list
+   * @param array $toList
    * @param array $from
+   * @param int|null $nid
    *
    * @return int
    * @throws \Exception
    */
-  public function sendEmail($mailParams, $to_list = [], $from = []) {
+  public function sendEmail($mailParams, $toList = [], $from = [], $nid = NULL): int {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     module_load_include('helpers.inc', 'mail_subscribers');
-    $site_config = \Drupal::config('system.site');
+    $siteConfig = \Drupal::config('system.site');
     if (!isset($from['name']) || empty($from['name'])) {
-      $from['name'] = $site_config->get('name');
+      $from['name'] = $siteConfig->get('name');
     }
     if (!isset($from['mail']) || empty($from['mail'])) {
-      $from['mail'] = $site_config->get('mail');
+      $from['mail'] = $siteConfig->get('mail');
     }
 
     $operations = [];
     $langcode = $mailParams['langcode'];
     $languages = \Drupal::languageManager()->getStandardLanguageList();
-    $language = isset($languages[$langcode]) ? $languages[$langcode] : \Drupal::languageManager()
-      ->getCurrentLanguage()
-      ->getId();
+    $language = $languages[$langcode] ?? \Drupal::languageManager()->getCurrentLanguage()->getId();
     // We transform receipt, priority in headers, merging them to the user defined headers.
     $headers = _mail_subscribers_headers($mailParams['receipt'], $mailParams['priority'], $from['mail'], $mailParams['headers']);
 
     if ($mailParams['message']['format'] === 'plain_text') {
-      $plain_format = TRUE;
+      $plainFormat = TRUE;
       $headers['Content-Type'] = 'text/plain';
     }
     else {
-      $plain_format = FALSE;
+      $plainFormat = FALSE;
       $headers['Content-Type'] = 'text/html';
     }
 
-    if (isset($mailParams['carbon_copy']) && $mailParams['carbon_copy'] == TRUE) {
-      $to_list[] = $from['mail'];
+    if ($mailParams['carbon_copy'] !== null && (boolean) $mailParams['carbon_copy'] === TRUE) {
+      $toList[] = $from['mail'];
     }
-    $rules_enabled = \Drupal::moduleHandler()->moduleExists('rules');
+    $rulesEnabled = \Drupal::moduleHandler()->moduleExists('rules');
 
-    $mail_body = $mailParams['message']['value'];
-    if ((!\Drupal::moduleHandler()->moduleExists('mimemail') || (\Drupal::config('mimemail.settings')
-            ->get('format') === 'plain_text')) && $plain_format == FALSE
-    ) {
+    $mailBody = $mailParams['message']['value'];
+    $moduleHandler = \Drupal::moduleHandler();
+    if ($plainFormat === FALSE && (!$moduleHandler->moduleExists('mimemail') || (\Drupal::config('mimemail.settings')
+            ->get('format') === 'plain_text'))) {
       // seem to have been given HTML but need to send in plaintext
-      $mail_body = MailFormatHelper::htmlToText($mailParams['message']['value']);
+      $mailBody = MailFormatHelper::htmlToText($mailParams['message']['value']);
+    }
+    if ($moduleHandler->moduleExists('token')) {
+      $token_service = \Drupal::token();
+      $current_user = \Drupal::currentUser();
+      if (isset($current_user)) {
+        $current_user = User::load($current_user->id());
+      }
+      $context = array('user' => $current_user);
+      if ($nid !== null) {
+        $context['node'] = Node::load($nid);
+      }
+      $mailBody = $token_service->replace($mailBody, $context);
+
+      $mailParams['subject'] = $token_service->replace($mailParams['subject'], $context);
     }
     $sent = 0;
-    foreach ($to_list as $to) {
+    foreach ($toList as $to) {
       $to = trim(strip_tags($to));
       if ($to !== NULL && !empty($to)) {
         $message = [
@@ -552,29 +578,33 @@ class MailService {
           'to_name' => $to,
           'to_mail' => $to,
           'subject' => strip_tags($mailParams['subject']),
-          'body' => $mail_body,
+          'body' => $mailBody,
           'headers' => $headers,
         ];
         //$message['format'] = $headers['Content-Type'];
 
-        if (isset($mailParams['direct']) && $mailParams['direct'] == TRUE) {
+        if ($mailParams['direct'] !== NULL && (boolean) $mailParams['direct'] === TRUE) {
           $operations[] = ['mail_subscribers_batch_deliver', [$message]];
         }
         else {
           _mail_subscribers_prepare_mail($message);
           // Queue the message to the spool table.
-          db_insert('mail_subscribers_spool')->fields($message)->execute();
-          if ($rules_enabled) {
+          $options = ['target' => 'default'];
+          Database::getConnection($options['target'])
+            ->insert('mail_subscribers_spool', $options)
+            ->fields($message)
+            ->execute();
+          if ($rulesEnabled) {
             $event = new MailAddedEvent($message);
-            $event_dispatcher = \Drupal::service('event_dispatcher');
-            $event_dispatcher->dispatch(MailAddedEvent::EVENT_NAME, $event);
+            $eventDispatcher = \Drupal::service('event_dispatcher');
+            $eventDispatcher->dispatch(MailAddedEvent::EVENT_NAME, $event);
           }
         }
         $sent++;
       }
     }
 
-    if (isset($mailParams['direct']) && $mailParams['direct'] == TRUE) {
+    if ($mailParams['direct'] !== NULL && (boolean) $mailParams['direct'] === TRUE) {
       $batch = [
         'operations' => $operations,
         'finished' => 'mail_subscribers_batch_deliver_finished',
@@ -582,12 +612,10 @@ class MailService {
       ];
       batch_set($batch);
     }
-    else {
-      if (\Drupal::moduleHandler()->moduleExists('rules')) {
-        $event = new AllMailAddedEvent(count($to_list));
-        $event_dispatcher = \Drupal::service('event_dispatcher');
-        $event_dispatcher->dispatch(AllMailAddedEvent::EVENT_NAME, $event);
-      }
+    elseif (\Drupal::moduleHandler()->moduleExists('rules')) {
+      $event = new AllMailAddedEvent(count($toList));
+      $eventDispatcher = \Drupal::service('event_dispatcher');
+      $eventDispatcher->dispatch(AllMailAddedEvent::EVENT_NAME, $event);
     }
     // return the number of emails sent
     $rc = $sent;

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -18,11 +18,13 @@ use Drupal\node\Entity\Node;
 use Symfony\Component\Routing\Route;
 
 class ApiNidOrPathParamConverter implements ParamConverterInterface {
+
   public function convert($value, $definition, $name, array $defaults) {
+    $returnValue = NULL;
     if (!empty($value)) {
-      if (intval($value) > 0) {
+      if ((int) $value > 0) {
         $node = Node::load($value);
-        return $node;
+        $returnValue = $node;
       }
       else {
         $query = \Drupal::entityQuery('node');
@@ -31,22 +33,17 @@ class ApiNidOrPathParamConverter implements ParamConverterInterface {
         $query->condition('apic_pathalias.value', $value);
         $nids = $query->execute();
 
-        if (isset($nids) && !empty($nids)) {
+        if ($nids !== NULL && !empty($nids)) {
           $nid = array_shift($nids);
           $node = Node::load($nid);
-          return $node;
-        }
-        else {
-          return NULL;
+          $returnValue = $node;
         }
       }
     }
-    else {
-      return NULL;
-    }
+    return $returnValue;
   }
 
-  public function applies($definition, $name, Route $route) {
-    return (!empty($definition['type']) && $definition['type'] == 'apic_api.nidorpath');
+  public function applies($definition, $name, Route $route): bool {
+    return (!empty($definition['type']) && $definition['type'] === 'apic_api.nidorpath');
   }
 }

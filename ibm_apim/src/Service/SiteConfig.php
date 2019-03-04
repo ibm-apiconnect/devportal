@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,41 +13,95 @@
 namespace Drupal\ibm_apim\Service;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Extension\ModuleInstallerInterface;
+use Drupal\Core\Menu\MenuLinkManagerInterface;
 use Drupal\Core\State\StateInterface;
-use Psr\Log\LoggerInterface;
 use Drupal\ibm_apim\Service\Interfaces\PermissionsServiceInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Functionality for handling configuration updates
  */
 class SiteConfig {
 
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
   private $state;
+
+  /**
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
   private $configFactory;
-  private $moduleInstaller;
+
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
   private $logger;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
+   */
   private $urService;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\Billing
+   */
   private $billService;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\Interfaces\PermissionsServiceInterface
+   */
   private $permsService;
 
-  public function __construct(StateInterface $state, ConfigFactoryInterface $config_factory, ModuleInstallerInterface $module_installer, LoggerInterface $logger, UserRegistryServiceInterface $urService, Billing $billService, PermissionsServiceInterface $permsService) {
+  /**
+   * @var \Drupal\ibm_apim\Service\AnalyticsService
+   */
+  private $analyticsService;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\TlsClientProfilesService
+   */
+  private $tlsProfilesService;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\Group
+   */
+  private $groupService;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\VendorExtension
+   */
+  private $vendorExtService;
+
+  /**
+   * @var \Drupal\Core\Menu\MenuLinkManagerInterface
+   */
+  private $menuLinkManager;
+
+  public function __construct(StateInterface $state, ConfigFactoryInterface $config_factory,
+                              LoggerInterface $logger, UserRegistryServiceInterface $urService, Billing $billService,
+                              PermissionsServiceInterface $permsService, AnalyticsService $analyticsService,
+                              TlsClientProfilesService $tlsProfilesService, Group $groupService, VendorExtension $vendorExtService, MenuLinkManagerInterface $menuLinkManager) {
     $this->state = $state;
     $this->configFactory = $config_factory;
-    $this->moduleInstaller = $module_installer;
     $this->logger = $logger;
     $this->urService = $urService;
     $this->billService = $billService;
     $this->permsService = $permsService;
+    $this->analyticsService = $analyticsService;
+    $this->tlsProfilesService = $tlsProfilesService;
+    $this->groupService = $groupService;
+    $this->vendorExtService = $vendorExtService;
+    $this->menuLinkManager = $menuLinkManager;
   }
 
   /**
    * Get the APIm config. This function should only be called from inside this class.
    *
-   * @return NULL if an error occurs otherwise an array of the apim config.
+   * @return NULL|array null if an error occurs otherwise an array of the apim config.
    */
-  protected function get() {
+  protected function get(): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $catalog_config = $this->state->get('ibm_apim.site_config');
@@ -61,7 +115,7 @@ class SiteConfig {
    *
    * @return bool
    */
-  public function isSet() {
+  public function isSet(): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $catalog_config = $this->state->get('ibm_apim.site_config');
@@ -74,9 +128,9 @@ class SiteConfig {
    * get the APIm catalog info
    *
    *
-   * @return NULL if an error occurs otherwise an array of the catalog info.
+   * @return NULL|array null if an error occurs otherwise an array of the catalog info.
    */
-  public function getCatalog() {
+  public function getCatalog(): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $catalog_info = $this->state->get('ibm_apim.catalog_info');
@@ -87,9 +141,10 @@ class SiteConfig {
 
   /**
    * @param $catalog
+   *
    * @throws \Exception
    */
-  public function updateCatalog($catalog = NULL) {
+  public function updateCatalog($catalog = NULL): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $catalog);
 
     if (isset($catalog)) {
@@ -101,6 +156,26 @@ class SiteConfig {
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+  /**
+   * @return null|string
+   */
+  public function getPlatformApimEndpoint() {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $platformApimEndpoint = $this->state->get('ibm_apim.host');
+
+    if (isset($platformApimEndpoint) && !empty($platformApimEndpoint)) {
+      if (!preg_match('/^http[s]?:\/\//', $platformApimEndpoint)) {
+        $platformApimEndpoint = 'https://' . $platformApimEndpoint;
+      }
+    } else {
+      $platformApiEndpoint = NULL;
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $platformApimEndpoint;
   }
 
   /**
@@ -126,15 +201,15 @@ class SiteConfig {
             $returnValue = $apim_host;
           }
           else {
-            $this->logger->error('/web/config/apim_consumer_api_ingress not set correctly, value: %data.', array(
-              '%data' => $apim_host
-            ));
+            $this->logger->error('/web/config/apim_consumer_api_ingress not set correctly, value: %data.', [
+              '%data' => $apim_host,
+            ]);
             $returnValue = NULL;
           }
-        } catch (Exception $e) {
-          $this->logger->error('Get apim hostname exception: %data.', array(
-            '%data' => $e->getMessage()
-          ));
+        } catch (\Exception $e) {
+          $this->logger->error('Get apim hostname exception: %data.', [
+            '%data' => $e->getMessage(),
+          ]);
           $returnValue = NULL;
         }
       }
@@ -153,14 +228,14 @@ class SiteConfig {
    *
    * @return array|null
    */
-  public function parseApimHost() {
+  public function parseApimHost(): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $returnValue = NULL;
     $hostvariable = $this->getApimHost();
     if (isset($hostvariable)) {
       // only use parse_url if scheme is set
-      $pieces = explode(":", $hostvariable);
+      $pieces = explode(':', $hostvariable);
       $pieces_c = count($pieces);
       if (count($pieces) > 1) {
         // this will only work is scheme is set
@@ -169,7 +244,7 @@ class SiteConfig {
           $scheme = parse_url($hostvariable, PHP_URL_SCHEME);
           $port = (int) parse_url($hostvariable, PHP_URL_PORT);
           $path = parse_url($hostvariable, PHP_URL_PATH);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
         }
       }
       if (!isset($host)) {
@@ -186,23 +261,23 @@ class SiteConfig {
           $host = $hostvariable;
         }
       }
-      if (!isset($port) || $port == 0) {
+      if (!isset($port) || $port === 0) {
         $port = 443;
       }
-      if (!isset($scheme) || ($scheme != 'https' && $scheme != 'http')) {
+      if (!isset($scheme) || ($scheme !== 'https' && $scheme !== 'http')) {
         $scheme = 'https';
       }
       if (!isset($path)) {
         $path = '';
       }
-      $path = rtrim($path, "/");
-      $returnValue = array(
+      $path = rtrim($path, '/');
+      $returnValue = [
         'host' => $host,
         'port' => $port,
         'scheme' => $scheme,
         'path' => $path,
-        'url' => $scheme . '://' . $host . ':' . $port . $path
-      );
+        'url' => $scheme . '://' . $host . ':' . $port . $path,
+      ];
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
@@ -211,9 +286,10 @@ class SiteConfig {
 
   /**
    * @param $config
+   *
    * @throws \Exception
    */
-  public function update($config = NULL) {
+  public function update($config = NULL): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $config);
 
     if (isset($config)) {
@@ -230,7 +306,7 @@ class SiteConfig {
 
       // clear caches if config different to previous requests
       $current_config = $this->state->get('ibm_apim.site_config');
-      if (!isset($current_config) || $current_config != $config) {
+      if (!isset($current_config) || $current_config !== $config) {
         $this->state->set('ibm_apim.site_config', $config);
         $this->getCheckAndStore();
         drupal_flush_all_caches();
@@ -240,16 +316,43 @@ class SiteConfig {
   }
 
   /**
-   * Get basic APIC config and store it in the session.
+   * Delete all stored APIM configuration
    */
-  public function getCheckAndStore() {
+  public function deleteAll(): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $this->state->delete('ibm_apim.site_config');
+    $this->state->delete('ibm_apim.catalog_info');
+    $this->state->delete('ibm_apim.site_client_id');
+    $this->state->delete('ibm_apim.site_client_secret');
+    $this->state->delete('ibm_apim.selfSignUpEnabled');
+    $this->state->delete('ibm_apim.applifecycle_enabled');
+    $this->state->delete('ibm_apim.site_namespace');
+    $this->state->delete('ibm_apim.apim_host');
+    $this->tlsProfilesService->deleteAll();
+    $this->analyticsService->deleteAll();
+    $this->urService->deleteAll();
+    $this->billService->deleteAll();
+    $this->permsService->deleteAll();
+    $this->groupService->deleteAll();
+    $this->vendorExtService->deleteAll();
+    drupal_flush_all_caches();
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+  /**
+   * Get basic APIC config and store it in the session.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   */
+  public function getCheckAndStore(): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     // update version number
     $filename = drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml';
     if (file_exists($filename)) {
       $yaml = yaml_parse_file(drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml');
-      $this->state->set('ibm_apim.version', array('value' => $yaml['version'], 'description' => $yaml['build']));
+      $this->state->set('ibm_apim.version', ['value' => $yaml['version'], 'description' => $yaml['build']]);
     }
 
     $config_data = $this->get();
@@ -260,7 +363,7 @@ class SiteConfig {
         $this->urService->updateAll($config_data['configured_catalog_user_registries']);
       }
 
-      if(isset($config_data['user_registry_default_url'])) {
+      if (isset($config_data['user_registry_default_url'])) {
         $this->urService->setDefaultRegistry($config_data['user_registry_default_url']);
       }
 
@@ -279,26 +382,25 @@ class SiteConfig {
       }
 
       // if selfSignUpEnabled is disabled then disable user registration
-      if (isset($config_data['consumer_self_service_onboarding']) && $config_data['consumer_self_service_onboarding'] == FALSE) {
-        $this->state->set('ibm_apim.selfSignUpEnabled', 0);
+      if ($config_data['consumer_self_service_onboarding'] !== NULL && (boolean) $config_data['consumer_self_service_onboarding'] === FALSE) {
+        $this->state->set('ibm_apim.selfSignUpEnabled', FALSE);
         $this->configFactory->getEditable('user.settings')->set('register', USER_REGISTER_ADMINISTRATORS_ONLY)->save();
         $this->setCreateAccountLinkEnabled(FALSE);
         // TODO hide create new org link
-      } else if (isset($config_data['consumer_self_service_onboarding']) && $config_data['consumer_self_service_onboarding'] == TRUE) {
-        $this->state->set('ibm_apim.selfSignUpEnabled', 1);
+      }
+      elseif ($config_data['consumer_self_service_onboarding'] !== NULL && (boolean) $config_data['consumer_self_service_onboarding'] === TRUE) {
+        $this->state->set('ibm_apim.selfSignUpEnabled', TRUE);
         $this->configFactory->getEditable('user.settings')->set('register', USER_REGISTER_VISITORS)->save();
         $this->setCreateAccountLinkEnabled(TRUE);
         // TODO show create new org link
       }
 
-      if(isset($config_data['analytics'])) {
-        $analytics_service = \Drupal::service('ibm_apim.analytics');
-        $analytics_service->updateAll($config_data['analytics']);
+      if (isset($config_data['analytics'])) {
+        $this->analyticsService->updateAll($config_data['analytics']);
       }
 
-      if(isset($config_data['tls_client_profiles'])) {
-        $tls_profiles_service = \Drupal::service('ibm_apim.tls_client_profiles');
-        $tls_profiles_service->updateAll($config_data['tls_client_profiles']);
+      if (isset($config_data['tls_client_profiles'])) {
+        $this->tlsProfilesService->updateAll($config_data['tls_client_profiles']);
       }
 
       if (isset($config_data['application_lifecycle'])) {
@@ -338,7 +440,7 @@ class SiteConfig {
       drupal_get_messages();
 
       // Throw an exception with a useful message so that we stop processing the request here
-      throw new \Exception(t('Could not retrieve portal configuration. Please contact your system administrator.', array()));
+      throw new \Exception(t('Could not retrieve portal configuration. Please contact your system administrator.', []));
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
@@ -363,14 +465,14 @@ class SiteConfig {
     $client_id = $this->state->get('ibm_apim.site_client_id');
     if ($client_id) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $client_id);
-      return $client_id;
+      $returnValue = $client_id;
     }
     else {
       $this->logger->error('Unable to retrieve client id');
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return NULL;
+      $returnValue = NULL;
     }
-
+    return $returnValue;
   }
 
   /**
@@ -381,29 +483,30 @@ class SiteConfig {
     $client_secret = $this->state->get('ibm_apim.site_client_secret');
     if ($client_secret) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return $client_secret;
+      $returnValue = $client_secret;
     }
     else {
       $this->logger->error('Unable to retrieve client secret');
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return NULL;
+      $returnValue = NULL;
     }
+    return $returnValue;
   }
 
   /**
    * Get current provider organization ID
    *
-   * @return string
+   * @return string|null
    */
-  public function getOrgId() {
+  public function getOrgId(): ?string {
     $orgId = NULL;
     if (isset($this->get()['orgID']) && !empty($this->get()['orgID'])) {
       $orgId = $this->get()['orgID'];
     }
     else {
-      $namespace = \Drupal::state()->get('ibm_apim.site_namespace');
+      $namespace = $this->state->get('ibm_apim.site_namespace');
       $parts = explode('.', $namespace);
-      if(isset($parts[0])) {
+      if (isset($parts[0])) {
         $orgId = $parts[0];
       }
     }
@@ -413,17 +516,17 @@ class SiteConfig {
   /**
    * Get current catalog ID
    *
-   * @return string
+   * @return string|null
    */
-  public function getEnvId() {
+  public function getEnvId(): ?string {
     $envId = NULL;
     if (isset($this->get()['envID']) && !empty($this->get()['envID'])) {
       $envId = $this->get()['envID'];
     }
     else {
-      $namespace = \Drupal::state()->get('ibm_apim.site_namespace');
+      $namespace = $this->state->get('ibm_apim.site_namespace');
       $parts = explode('.', $namespace);
-      if(isset($parts[1])) {
+      if (isset($parts[1])) {
         $envId = $parts[1];
       }
     }
@@ -433,37 +536,37 @@ class SiteConfig {
   /**
    * @return boolean
    */
-  public function isInCloud() {
+  public function isInCloud(): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $returnValue = NULL;
 
-      $cloud_file = '/web/config/ibm_cloud';
+    $cloud_file = '/web/config/ibm_cloud';
 
-      if (file_exists($cloud_file)) {
-        try {
-          $isCloud = trim(file_get_contents($cloud_file));
-          if (isset($isCloud) && !empty($isCloud)) {
-            // cast to boolean
-            $returnValue = ($isCloud === 'true' || $isCloud === true);
-          }
-          else {
-            $this->logger->error('/web/config/ibm_cloud not set correctly, value: %data.', array(
-              '%data' => $isCloud
-            ));
-            $returnValue = false;
-          }
-        } catch (Exception $e) {
-          $this->logger->error('Get isInCloud exception: %data.', array(
-            '%data' => $e->getMessage()
-          ));
-          $returnValue = false;
+    if (file_exists($cloud_file)) {
+      try {
+        $isCloud = trim(file_get_contents($cloud_file));
+        if (isset($isCloud) && !empty($isCloud)) {
+          // cast to boolean
+          $returnValue = ($isCloud === 'true' || $isCloud === TRUE);
         }
+        else {
+          $this->logger->error('/web/config/ibm_cloud not set correctly, value: %data.', [
+            '%data' => $isCloud,
+          ]);
+          $returnValue = FALSE;
+        }
+      } catch (\Exception $e) {
+        $this->logger->error('Get isInCloud exception: %data.', [
+          '%data' => $e->getMessage(),
+        ]);
+        $returnValue = FALSE;
       }
-      else {
-        $this->logger->notice('isInCloud():: Unable to find isCloud via known file on appliance, assuming false.');
-        $returnValue = false;
-      }
+    }
+    else {
+      $this->logger->notice('isInCloud():: Unable to find isCloud via known file on appliance, assuming false.');
+      $returnValue = FALSE;
+    }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     return $returnValue;
@@ -472,7 +575,7 @@ class SiteConfig {
   /**
    * @return mixed
    */
-  public function isSelfOnboardingEnabled(){
+  public function isSelfOnboardingEnabled() {
     return $this->state->get('ibm_apim.selfSignUpEnabled', FALSE);
   }
 
@@ -480,25 +583,25 @@ class SiteConfig {
    * Enables or disables the "Create account" menu link shown on the front page
    * of the portal site.
    *
-   * @param $enabled
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
-  private function setCreateAccountLinkEnabled($enabled) {
+  private function setCreateAccountLinkEnabled($enabled): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $service = \Drupal::service('plugin.manager.menu.link');
-    $register_links = $service->loadLinksByRoute('user.register');
+    $register_links = $this->menuLinkManager->loadLinksByRoute('user.register');
     if (isset($register_links)) {
       $register_link = array_pop($register_links);
       if (isset($register_link)) {
         $settings = $register_link->getPluginDefinition();
         if (isset($settings)) {
           $settings['enabled'] = $enabled;
-          $service->updateDefinition($register_link->getPluginId(), $settings, TRUE);
+          $this->menuLinkManager->updateDefinition($register_link->getPluginId(), $settings, TRUE);
         }
       }
     }
 
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, null);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 
 }

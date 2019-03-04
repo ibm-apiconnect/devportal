@@ -11,8 +11,10 @@ namespace Drupal\ghmarkdown\cebe\markdown\inline;
  * Adds inline emphasizes and strong elements
  */
 trait EmphStrongTrait {
+
   /**
-   * Parses empathized and strong elements.
+   * Parses emphasized and strong elements.
+   *
    * @marker _
    * @marker *
    */
@@ -24,9 +26,16 @@ trait EmphStrongTrait {
     }
 
     if ($marker == $text[1]) { // strong
-      if ($marker == '*' && preg_match('/^[*]{2}((?:[^*]|[*][^*]*[*])+?)[*]{2}(?![*]{2})/s', $text, $matches) ||
-        $marker == '_' && preg_match('/^__((?:[^_]|_[^_]*_)+?)__(?!__)/us', $text, $matches)
-      ) {
+      // work around a PHP bug that crashes with a segfault on too much regex backtrack
+      // check whether the end marker exists in the text
+      // https://github.com/erusev/parsedown/issues/443
+      // https://bugs.php.net/bug.php?id=45735
+      if (strpos($text, $marker . $marker, 2) === FALSE) {
+        return [['text', $text[0] . $text[1]], 2];
+      }
+
+      if ($marker === '*' && preg_match('/^[*]{2}((?>\\\\[*]|[^*]|[*][^*]*[*])+?)[*]{2}/s', $text, $matches) ||
+        $marker === '_' && preg_match('/^__((?>\\\\_|[^_]|_[^_]*_)+?)__/us', $text, $matches)) {
 
         return [
           [
@@ -38,9 +47,20 @@ trait EmphStrongTrait {
       }
     }
     else { // emph
-      if ($marker == '*' && preg_match('/^[*]((?:[^*]|[*][*][^*]+?[*][*])+?)[*](?![*][^*])/s', $text, $matches) ||
-        $marker == '_' && preg_match('/^_((?:[^_]|__[^_]*__)+?)_(?!_[^_])\b/us', $text, $matches)
-      ) {
+      // work around a PHP bug that crashes with a segfault on too much regex backtrack
+      // check whether the end marker exists in the text
+      // https://github.com/erusev/parsedown/issues/443
+      // https://bugs.php.net/bug.php?id=45735
+      if (strpos($text, $marker, 1) === FALSE) {
+        return [['text', $text[0]], 1];
+      }
+
+      if ($marker === '*' && preg_match('/^[*]((?>\\\\[*]|[^*]|[*][*][^*]+?[*][*])+?)[*](?![*][^*])/s', $text, $matches) ||
+        $marker === '_' && preg_match('/^_((?>\\\\_|[^_]|__[^_]*__)+?)_(?!_[^_])\b/us', $text, $matches)) {
+        // if only a single whitespace or nothing is contained in an emphasis, do not consider it valid
+        if ($matches[1] === '' || $matches[1] === ' ') {
+          return [['text', $text[0]], 1];
+        }
         return [
           [
             'emph',
@@ -60,4 +80,8 @@ trait EmphStrongTrait {
   protected function renderEmph($block) {
     return '<em>' . $this->renderAbsy($block[1]) . '</em>';
   }
+
+  abstract protected function parseInline($text);
+
+  abstract protected function renderAbsy($blocks);
 }

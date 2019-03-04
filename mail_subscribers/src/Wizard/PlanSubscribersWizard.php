@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -28,8 +28,8 @@ class PlanSubscribersWizard extends FormWizardBase {
   /**
    * {@inheritdoc}
    */
-  public function getMachineLabel() {
-    return $this->t('mail_plan_subscribers_wizard');
+  public function getMachineLabel(): string {
+    return 'mail_plan_subscribers_wizard';
   }
 
   /**
@@ -42,38 +42,38 @@ class PlanSubscribersWizard extends FormWizardBase {
   /**
    * {@inheritdoc}
    */
-  function getOperations($cached_values) {
-    $steps = array();
+  public function getOperations($cached_values): array {
+    $steps = [];
 
-    $steps['chooseitem'] = array(
+    $steps['chooseitem'] = [
       'title' => t('Select a product'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChooseProductStep'
-    );
+      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChooseProductStep',
+    ];
 
-    $steps['chooseplan'] = array(
+    $steps['chooseplan'] = [
       'title' => t('Select a plan'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChoosePlanStep'
-    );
+      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChoosePlanStep',
+    ];
 
-    $steps['choosesubs'] = array(
+    $steps['choosesubs'] = [
       'title' => t('Select Subscribers'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChooseRoleStep'
-    );
+      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChooseRoleStep',
+    ];
 
-    $steps['entercontent'] = array(
+    $steps['entercontent'] = [
       'title' => t('Enter content'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\EnterContentStep'
-    );
+      'form' => 'Drupal\mail_subscribers\Wizard\Mail\EnterContentStep',
+    ];
 
-    $steps['confirm'] = array(
+    $steps['confirm'] = [
       'title' => t('Confirm'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ConfirmSend'
-    );
+      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ConfirmSend',
+    ];
 
-    $steps['summary'] = array(
+    $steps['summary'] = [
       'title' => t('Summary'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\MailSummary'
-    );
+      'form' => 'Drupal\mail_subscribers\Wizard\Mail\MailSummary',
+    ];
 
     return $steps;
   }
@@ -82,9 +82,9 @@ class PlanSubscribersWizard extends FormWizardBase {
     $values = [];
     $event = new WizardEvent($this, $values);
     $this->dispatcher->dispatch(FormWizardInterface::LOAD_VALUES, $event);
-    $tempvalues = $event->getValues();
-    $tempvalues['objectType'] = 'plan';
-    $event->setValues($tempvalues);
+    $tempValues = $event->getValues();
+    $tempValues['objectType'] = 'plan';
+    $event->setValues($tempValues);
     return $event->getValues();
   }
 }

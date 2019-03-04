@@ -2,8 +2,8 @@
 
 namespace Drupal\ibm_apim\Controller;
 
-use Drupal\system\Controller\SystemController;
 use Drupal\Core\Url;
+use Drupal\system\Controller\SystemController;
 
 class IbmApimThemeController extends SystemController {
 

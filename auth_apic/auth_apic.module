@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -21,9 +21,13 @@ use Drupal\Core\Url;
 
 /**
  * Implements hook_form_alter().
+ *
+ * @param $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ * @param $form_id
  */
-function auth_apic_form_alter(&$form, FormStateInterface &$form_state, $form_id) {
-  if ($form_id == 'system_modules') {
+function auth_apic_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if ($form_id === 'system_modules') {
     /*
      * Block use of modules which would conflict with auth_apic
      */
@@ -45,8 +49,9 @@ function auth_apic_form_alter(&$form, FormStateInterface &$form_state, $form_id)
     if (isset($form['modules']['Other']['openid_connect'])) {
       unset($form['modules']['Other']['openid_connect']);
     }
-  } elseif ($form_id == 'user_form') {
-    if (\Drupal::moduleHandler()->moduleExists("change_pwd_page")) {
+  }
+  elseif ($form_id === 'user_form') {
+    if (\Drupal::moduleHandler()->moduleExists('change_pwd_page')) {
       // this is here to ensure that the current password field is definitely not shown
       // mainly to avoid needing to patch the change_pwd_page module in test environments
 
@@ -58,14 +63,17 @@ function auth_apic_form_alter(&$form, FormStateInterface &$form_state, $form_id)
 
 /**
  * Implements hook_entity_type_alter().
+ *
+ * @param array $entity_types
  */
 function auth_apic_entity_type_alter(array &$entity_types) {
-  $entity_types['user']->setFormClass('default', 'Drupal\auth_apic\Form\ApicUserProfileForm');
-  $entity_types['user']->setFormClass('register', 'Drupal\auth_apic\Form\ApicUserRegisterForm');
+  $entity_types['user']->setFormClass('default', \Drupal\auth_apic\Form\ApicUserProfileForm::class);
+  $entity_types['user']->setFormClass('register', \Drupal\auth_apic\Form\ApicUserRegisterForm::class);
 }
 
 /**
  * Implementation of hook_form_FORM_ID_alter() to alter the account settings form
+ *
  * @param $form
  * @param $form_state
  */
@@ -96,27 +104,27 @@ function auth_apic_form_user_admin_settings_alter(&$form, FormStateInterface $fo
 /**
  * Alter local tasks.
  * Hide the change password link on the user profile pages if using ldap and not admin, or admin viewing someone elses account.
+ *
  * @param $data
  * @param $route_name
  */
 function auth_apic_menu_local_tasks_alter(&$data, $route_name) {
-  if (isset($data['tabs'][0]) && isset($data['tabs'][0]['change_pwd_page.change_password_form'])) {
+  if (isset($data['tabs'][0]['change_pwd_page.change_password_form'])) {
     $changepw_task = $data['tabs'][0]['change_pwd_page.change_password_form'];
   }
 
   if (isset($changepw_task)) {
     $url = $changepw_task['#link']['url'];
 
-    $current_user = \Drupal::currentUser()->id();
-    $form_for_user = $url->getRouteParameters()['user'];
-    $ro = \Drupal::state()->get('ibm_apim.readonly_idp');
+    $currentUserId = (int) \Drupal::currentUser()->id();
+    $form_for_user = (int) $url->getRouteParameters()['user'];
+    $ro = (boolean) \Drupal::state()->get('ibm_apim.readonly_idp');
 
-    if (($current_user != $form_for_user) || ($current_user != 1 && $ro == 1)) {
+    if (($currentUserId !== $form_for_user) || ($currentUserId !== 1 && $ro === TRUE)) {
       unset($data['tabs'][0]['change_pwd_page.change_password_form']);
     }
   }
 }
-
 
 
 /**
@@ -128,15 +136,15 @@ function auth_apic_menu_local_tasks_alter(&$data, $route_name) {
  */
 function auth_apic_preprocess(&$variables, $hook, &$info) {
 
-  if ($hook == 'form') {
+  if ($hook === 'form') {
 
-    if ($variables['element']['#form_id'] == 'user_login_form' || $variables['element']['#form_id'] == 'user_register_form') {
+    if ($variables['element']['#form_id'] === 'user_login_form' || $variables['element']['#form_id'] === 'user_register_form') {
       $templateFileName = 'form-' . str_replace('_', '-', $variables['element']['#form_id']);
     }
-    else if ($variables['element']['#form_id'] == 'user_pass' || $variables['element']['#form_id'] == 'apic_resetpw') {
+    elseif ($variables['element']['#form_id'] === 'user_pass' || $variables['element']['#form_id'] === 'apic_resetpw') {
       $templateFileName = 'form-user-pass-form';
     }
-    else if ($variables['element']['#form_id'] == 'apic_change_pwd_form') {
+    elseif ($variables['element']['#form_id'] === 'apic_change_pwd_form') {
       $templateFileName = 'form-change-pwd-form';
     }
 

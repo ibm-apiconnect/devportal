@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -14,7 +14,6 @@
 namespace Drupal\product\Controller;
 
 use Drupal\apic_api\Api;
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
@@ -58,149 +57,155 @@ class ProductController extends ControllerBase {
 
   /**
    * This method simply redirects to the node/x page, with the node having been loaded via a ParamConverter
-   * @param \Drupal\node\NodeInterface|NULL $prodNode
-   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *
+   * @param \Drupal\node\NodeInterface $prodNode
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse|array
    */
-  public function productView(NodeInterface $prodNode = NULL) {
-    if ($prodNode->bundle() == 'product') {
-      $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
-      $build = $view_builder->view($prodNode, 'full');
-      return $build;
+  public function productView(NodeInterface $prodNode) {
+    if ($prodNode !== NULL && $prodNode->bundle() === 'product') {
+      $viewBuilder = \Drupal::entityTypeManager()->getViewBuilder('node');
+      $returnValue = $viewBuilder->view($prodNode, 'full');
     }
     else {
-      \Drupal::logger('product')->error('productView: not a valid product.', array());
+      \Drupal::logger('product')->error('productView: not a valid product.', []);
       drupal_set_message(t('The specified arguments were not correct.'), 'warning');
       $url = Url::fromRoute('<front>')->toString();
-      return new RedirectResponse($url);
+      $returnValue = new RedirectResponse($url);
     }
+    return $returnValue;
   }
 
   /**
-   * @param \Drupal\node\NodeInterface|NULL $prodNode
+   * @param \Drupal\node\NodeInterface $prodNode
+   *
    * @return string
    */
-  public function productTitle(NodeInterface $prodNode = NULL) {
-    if ($prodNode->bundle() == 'product') {
-      return $prodNode->getTitle() . ' - ' . \Drupal::config('system.site')->get('name');
+  public function productTitle(NodeInterface $prodNode): string {
+    if ($prodNode !== NULL && $prodNode->bundle() === 'product') {
+      $returnValue = $prodNode->getTitle() . ' - ' . \Drupal::config('system.site')->get('name');
     }
     else {
-      \Drupal::logger('product')->error('productView: not a valid product.', array());
+      \Drupal::logger('product')->error('productView: not a valid product.', []);
       drupal_set_message(t('The specified arguments were not correct.'), 'warning');
-      return 'ERROR';
+      $returnValue = 'ERROR';
     }
+    return $returnValue;
   }
 
   /**
    * This method loads the product telling it which API to embed
    *
-   * @param \Drupal\node\NodeInterface|NULL $prodNode
-   * @param \Drupal\node\NodeInterface|NULL $apiNode
-   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   * @param \Drupal\node\NodeInterface $prodNode
+   * @param \Drupal\node\NodeInterface $apiNode
+   *
+   * @return array|\Symfony\Component\HttpFoundation\RedirectResponse
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
-  public function productApi(NodeInterface $prodNode = NULL, NodeInterface $apiNode = NULL) {
-    if ($prodNode->id() && $apiNode->id()) {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, array(
+  public function productApi(NodeInterface $prodNode, NodeInterface $apiNode) {
+    if ($prodNode !== NULL && $apiNode !== NULL && $prodNode->id() && $apiNode->id()) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [
         'prodNode' => $prodNode->id(),
-        'apiNode' => $apiNode->id()
-      ));
+        'apiNode' => $apiNode->id(),
+      ]);
     }
     else {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
     $found = FALSE;
     $config = \Drupal::config('ibm_apim.settings');
-    $ibm_apim_show_versions = $config->get('show_versions');
-    if ($ibm_apim_show_versions === NULL) {
-      $ibm_apim_show_versions = 1;
+    $ibmApimShowVersions = (boolean) $config->get('show_versions');
+    if ($ibmApimShowVersions === NULL) {
+      $ibmApimShowVersions = TRUE;
     }
-    $ibm_apim_show_placeholder_images = $config->get('show_placeholder_images');
-    if ($ibm_apim_show_placeholder_images === NULL) {
-      $ibm_apim_show_placeholder_images = 1;
+    $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
+    if ($ibmApimShowPlaceholderImages === NULL) {
+      $ibmApimShowPlaceholderImages = TRUE;
     }
+    $api = '';
+    $product = '';
 
-    if ($prodNode->bundle() == 'product') {
-      if ($apiNode->bundle() == 'api') {
+    if ($prodNode !== NULL && $prodNode->bundle() === 'product') {
+      if ($apiNode !== NULL && $apiNode->bundle() === 'api') {
         // check this product actually includes the specified API
-        $prodrefs = array();
+        $prodRefs = [];
         foreach ($prodNode->product_apis->getValue() as $arrayValue) {
-          $prodrefs[] = unserialize($arrayValue['value']);
+          $prodRefs[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
         }
-        foreach ($prodrefs as $prodref) {
-          if ($prodref['name'] == $apiNode->apic_ref->value) {
+        foreach ($prodRefs as $prodRef) {
+          if ($prodRef['name'] === $apiNode->apic_ref->value) {
             $found = TRUE;
-            $product = array(
+            $product = [
               'nid' => $prodNode->id(),
               'id' => $prodNode->product_id->value,
               'title' => $prodNode->getTitle(),
               'version' => $prodNode->apic_version->value,
-              'pathalias' => $prodNode->apic_pathalias->value
-            );
+              'pathalias' => $prodNode->apic_pathalias->value,
+            ];
           }
         }
 
         $fid = $apiNode->apic_image->getValue();
-        $api_image_url = NULL;
-        if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
+        $apiImageUrl = NULL;
+        if (isset($fid[0]['target_id'])) {
           $file = File::load($fid[0]['target_id']);
           if (isset($file)) {
-            $api_image_url = $file->toUrl()->toUriString();
+            $apiImageUrl = $file->toUrl()->toUriString();
           }
         }
-        else {
-          if ($ibm_apim_show_placeholder_images) {
-            $rawImage = Api::getRandomImageName($apiNode->getTitle());
-            $api_image_url = base_path() . drupal_get_path('module', 'apic_api') . '/images/' . $rawImage;
-          }
+        elseif ($ibmApimShowPlaceholderImages === TRUE) {
+          $rawImage = Api::getRandomImageName($apiNode->getTitle());
+          $apiImageUrl = base_path() . drupal_get_path('module', 'apic_api') . '/images/' . $rawImage;
         }
 
-        $api = array(
+        $api = [
           'nid' => $apiNode->id(),
           'id' => $apiNode->api_id->value,
           'title' => $apiNode->getTitle(),
           'version' => $apiNode->apic_version->value,
           'pathalias' => $apiNode->apic_pathalias->value,
-          'image_url' => $api_image_url
-        );
+          'image_url' => $apiImageUrl,
+        ];
 
         if (!$found) {
-          \Drupal::logger('product')->error('productApi: product does not contain the specified API.', array());
+          \Drupal::logger('product')->error('productApi: product does not contain the specified API.', []);
           drupal_set_message(t('The specified arguments were not correct.'), 'warning');
         }
       }
       else {
-        \Drupal::logger('product')->error('productApi: not a valid API.', array());
+        \Drupal::logger('product')->error('productApi: not a valid API.', []);
         drupal_set_message(t('The specified arguments were not correct.'), 'warning');
       }
     }
     else {
-      \Drupal::logger('product')->error('productApi: not a valid product.', array());
+      \Drupal::logger('product')->error('productApi: not a valid product.', []);
       drupal_set_message(t('The specified arguments were not correct.'), 'warning');
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $found);
     if ($found) {
-      $attached = array('library' => array());
+      $attached = ['library' => []];
       $attached['library'][] = 'product/basic';
       $moduleHandler = \Drupal::service('module_handler');
       if ($moduleHandler->moduleExists('votingapi_widgets')) {
         $attached['library'][] = 'votingapi_widgets/fivestar';
       }
 
-      return array(
+      return [
         '#theme' => 'product_wrapper',
         '#api' => $api,
         '#product' => $product,
         '#attached' => $attached,
-        '#showPlaceholders' => $ibm_apim_show_placeholder_images,
-        '#showVersions' => $ibm_apim_show_versions
-      );
+        '#showPlaceholders' => $ibmApimShowPlaceholderImages,
+        '#showVersions' => $ibmApimShowVersions,
+      ];
     }
     else {
       \Drupal::logger('product')
-        ->error('productApi: api %api is not in product %product.', array(
+        ->error('productApi: api %api is not in product %product.', [
           '%api' => $apiNode->id(),
-          '%product' => $prodNode->id()
-        ));
+          '%product' => $prodNode->id(),
+        ]);
       drupal_set_message(t('The specified arguments were not correct.'), 'warning');
       $url = Url::fromRoute('<front>')->toString();
       return new RedirectResponse($url);
@@ -209,68 +214,74 @@ class ProductController extends ControllerBase {
 
   /**
    * @param \Drupal\node\NodeInterface|NULL $apiNode
+   *
    * @return string
    */
-  public function productApiTitle(NodeInterface $apiNode = NULL) {
-    if ($apiNode->bundle() == 'api') {
-      return $apiNode->getTitle() . ' - ' . \Drupal::config('system.site')->get('name');
+  public function productApiTitle(NodeInterface $apiNode = NULL): string {
+    if ($apiNode !== NULL && $apiNode->bundle() === 'api') {
+      $returnValue = $apiNode->getTitle() . ' - ' . \Drupal::config('system.site')->get('name');
     }
     else {
-      \Drupal::logger('product')->error('productApi: not a valid api.', array());
+      \Drupal::logger('product')->error('productApi: not a valid api.', []);
       drupal_set_message(t('The specified arguments were not correct.'), 'warning');
-      return 'ERROR';
+      $returnValue = 'ERROR';
     }
+    return $returnValue;
   }
 
   /**
    * @param \Drupal\node\NodeInterface|NULL $apiNode
-   * @return array
+   *
+   * @return NULL|array
    */
-  public function select(NodeInterface $apiNode = NULL) {
-    if ($apiNode->id()) {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, array(
-        'apiNode' => $apiNode->id()
-      ));
-    }
-    else {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    }
+  public function select(NodeInterface $apiNode = NULL): ?array {
+    $products = [];
 
-    $products = array();
-    $product_nids = Product::getProductsContainingAPI($apiNode->apic_ref->value);
-    if (isset($product_nids) && !empty($product_nids)) {
-      $nodes = Node::loadMultiple($product_nids);
-      // if only one product found then just load it and redirect
-      if (count($nodes) == 1) {
-        $firstNode = reset($nodes);
-        $path = Url::fromRoute('product.api', array('prodNode' => $firstNode, 'apiNode' => $apiNode->id()))
-          ->setAbsolute()
-          ->toString();
-        $response = new RedirectResponse($path);
-        $response->send();
-        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-        return NULL;
-      }
-      else {
-        foreach ($nodes as $prodNode) {
-          $products[] = array(
-            'nid' => $prodNode->id(),
-            'id' => $prodNode->product_id->value,
-            'title' => $prodNode->getTitle(),
-            'version' => $prodNode->apic_version->value
-          );
+    if ($apiNode !== NULL && $apiNode->id()) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [
+        'apiNode' => $apiNode->id(),
+      ]);
+      $apiNid = $apiNode->id();
+
+      $productNids = Product::getProductsContainingAPI($apiNode->apic_ref->value);
+      if (isset($productNids) && !empty($productNids)) {
+        $nodes = Node::loadMultiple($productNids);
+        // if only one product found then just load it and redirect
+        if (count($nodes) === 1) {
+          $firstNode = reset($nodes);
+          $path = Url::fromRoute('product.api', ['prodNode' => $firstNode, 'apiNode' => $apiNode->id()])
+            ->setAbsolute()
+            ->toString();
+          $response = new RedirectResponse($path);
+          $response->send();
+          ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+          return NULL;
+        }
+        else {
+          foreach ($nodes as $prodNode) {
+            $products[] = [
+              'nid' => $prodNode->id(),
+              'id' => $prodNode->product_id->value,
+              'title' => $prodNode->getTitle(),
+              'version' => $prodNode->apic_version->value,
+            ];
+          }
         }
       }
     }
+    else {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      $apiNid = NULL;
+    }
 
-    $attached = array('library' => array());
+    $attached = ['library' => []];
     $attached['library'][] = 'product/basic';
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $products);
-    return array(
+    return [
       '#theme' => 'product_select',
-      '#apiNid' => $apiNode->id(),
+      '#apiNid' => $apiNid,
       '#products' => $products,
-      '#attached' => $attached
-    );
+      '#attached' => $attached,
+    ];
   }
 }

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -14,6 +14,7 @@ use Drupal\Core\Url;
 use Drupal\mail_subscribers\Event\MailAddedEvent;
 use Drupal\mail_subscribers\Event\MailSentEvent;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Database\Database;
 
 /**
  * Implements hook_cron().
@@ -41,9 +42,8 @@ function mail_subscribers_cron() {
  * @param $params
  */
 function mail_subscribers_mail($key, &$message, $params) {
-
   // This is a simple message send. User inputs the content directly.
-  if ($key == 'direct') {
+  if ($key === 'direct') {
 
     // Set the subject.
     $message['subject'] = $params['subject'];
@@ -54,7 +54,6 @@ function mail_subscribers_mail($key, &$message, $params) {
     // Add additional headers.
     $message['headers'] += $params['headers'];
   }
-
 }
 
 /**
@@ -69,18 +68,17 @@ function mail_subscribers_mail($key, &$message, $params) {
  * @todo: Add help for other tokens
  */
 function mail_subscribers_token_help($fields) {
-  $header = array(t('Token'), t('Replacement value'));
-  $rows = array();
+  $header = [t('Token'), t('Replacement value')];
+  $rows = [];
   foreach ($fields as $field => $title) {
-    $rows[] = array('[' . sprintf('mail-subscribers:%s', $field) . ']', $title);
+    $rows[] = ['[' . sprintf('mail-subscribers:%s', $field) . ']', $title];
   }
-  $table = array(
+  $table = [
     '#type' => 'table',
     '#header' => $header,
-    '#rows' => $rows
-  );
-  $output = drupal_render($table);
-  return $output;
+    '#rows' => $rows,
+  ];
+  return \Drupal::service('renderer')->render($table);
 }
 
 /**
@@ -88,22 +86,22 @@ function mail_subscribers_token_help($fields) {
  */
 function mail_subscribers_token_info() {
   module_load_include('helpers.inc', 'mail_subscribers');
-  $data = array();
+  $data = [];
   foreach (_mail_subscribers_email_message_property_info() as $key => $info) {
-    $data[$key] = array(
+    $data[$key] = [
       'name' => $info['label'],
-      'description' => ''
-    );
+      'description' => '',
+    ];
   }
-  $type = array(
+  $type = [
     'name' => t('Mail Subscribers e-mail message'),
     'description' => t('Tokens for Mail Subscribers e-mail message.'),
     'needs-data' => 'mail_subscribers_email_message',
-  );
-  return array(
-    'types' => array('mail_subscribers_email_message' => $type),
-    'tokens' => array('mail_subscribers_email_message' => $data),
-  );
+  ];
+  return [
+    'types' => ['mail_subscribers_email_message' => $type],
+    'tokens' => ['mail_subscribers_email_message' => $data],
+  ];
 }
 
 /**
@@ -115,11 +113,12 @@ function mail_subscribers_token_info() {
  * @param $tokens
  * @param array $data
  * @param array $options
+ *
  * @return array
  */
-function mail_subscribers_tokens($type, $tokens, array $data = array(), array $options = array()) {
-  $replacements = array();
-  if ($type == 'mail_subscribers_email_message' && !empty($data['mail_subscribers_email_message'])) {
+function mail_subscribers_tokens($type, $tokens, array $data = [], array $options = []) {
+  $replacements = [];
+  if ($type === 'mail_subscribers_email_message' && !empty($data['mail_subscribers_email_message'])) {
     foreach ($tokens as $name => $original) {
       $replacements[$original] = $data['mail_subscribers_email_message']->{$name};
     }
@@ -129,16 +128,18 @@ function mail_subscribers_tokens($type, $tokens, array $data = array(), array $o
 
 /**
  * Implements hook_preprocess_breadcrumb().
+ *
+ * @param $variables
  */
 function mail_subscribers_preprocess_breadcrumb(&$variables) {
-  if (\Drupal::routeMatch()->getRouteName() == 'mail_subscribers.startWizard') {
+  if (\Drupal::routeMatch()->getRouteName() === 'mail_subscribers.startWizard') {
     $variables['breadcrumb']['admin'] = [
       'text' => t('Administration'),
-      'url' => Url::fromRoute('system.admin')->toString()
+      'url' => Url::fromRoute('system.admin')->toString(),
     ];
     $variables['breadcrumb']['people'] = [
       'text' => t('People'),
-      'url' => Url::fromRoute('entity.user.collection')->toString()
+      'url' => Url::fromRoute('entity.user.collection')->toString(),
     ];
     $variables['#cache']['contexts'][] = 'url.path';
   }
@@ -146,37 +147,52 @@ function mail_subscribers_preprocess_breadcrumb(&$variables) {
 
 /**
  * Preparing and sending a message (coming from a batch job).
+ *
+ * @param $message
+ * @param $context
+ *
+ * @throws \Exception
  */
 function mail_subscribers_batch_deliver($message, &$context) {
   module_load_include('helpers.inc', 'mail_subscribers');
   _mail_subscribers_prepare_mail($message);
   $result = mail_subscribers_deliver($message);
 
-  if ($result['result'] == TRUE) {
-    if (\Drupal::config('mail_subscribers.settings')->get('debug')) {
-      \Drupal::logger('mail_subscribers')->notice('Message sent to %mail.', array('%mail' => $message['to_mail']));
+  if ($result['result'] === TRUE) {
+    if ((boolean) \Drupal::config('mail_subscribers.settings')->get('debug')) {
+      \Drupal::logger('mail_subscribers')->notice('Message sent to %mail.', ['%mail' => $message['to_mail']]);
     }
     if (\Drupal::moduleHandler()->moduleExists('rules')) {
       $event = new MailSentEvent($message);
-      $event_dispatcher = \Drupal::service('event_dispatcher');
-      $event_dispatcher->dispatch(MailSentEvent::EVENT_NAME, $event);
+      $eventDispatcher = \Drupal::service('event_dispatcher');
+      $eventDispatcher->dispatch(MailSentEvent::EVENT_NAME, $event);
     }
   }
   else {
     $context['results'][] = t('Failed sending message to %mail - spooling it.',
-      array('%mail' => $message['to_mail']));
+      ['%mail' => $message['to_mail']]);
     // Queue the message to the spool table.
-    db_insert('mail_subscribers_spool')->fields($message)->execute();
+    $options = ['target' => 'default'];
+    Database::getConnection($options['target'])
+      ->insert('mail_subscribers_spool', $options)
+      ->fields($message)
+      ->execute();
     if (\Drupal::moduleHandler()->moduleExists('rules')) {
       $event = new MailAddedEvent($message);
-      $event_dispatcher = \Drupal::service('event_dispatcher');
-      $event_dispatcher->dispatch(MailAddedEvent::EVENT_NAME, $event);
+      $eventDispatcher = \Drupal::service('event_dispatcher');
+      $eventDispatcher->dispatch(MailAddedEvent::EVENT_NAME, $event);
     }
   }
 }
 
 /**
  * Displays status after sending messages as a batch job.
+ *
+ * @param $success
+ * @param $results
+ * @param $operations
+ *
+ * @return \Symfony\Component\HttpFoundation\RedirectResponse
  */
 function mail_subscribers_batch_deliver_finished($success, $results, $operations) {
   if ($success) {
@@ -186,7 +202,7 @@ function mail_subscribers_batch_deliver_finished($success, $results, $operations
 
     // Redirect to summary page of wizard
     return new \Symfony\Component\HttpFoundation\RedirectResponse(
-      Url::fromRoute('mail_subscribers.product_wizard.step', array('step' => 'summary'))->toString());
+      Url::fromRoute('mail_subscribers.product_wizard.step', ['step' => 'summary'])->toString());
   }
 }
 
@@ -198,14 +214,14 @@ function mail_subscribers_batch_deliver_finished($success, $results, $operations
  * @param $info
  */
 function mail_subscribers_preprocess(&$variables, $hook, &$info) {
+  if ($hook === 'form') {
+    $templateFileName = NULL;
 
-  if ($hook == 'form') {
-
-    if(strpos($variables['element']['#form_id'], 'mail_subscribers') === 0 ) {
+    if (strpos($variables['element']['#form_id'], 'mail_subscribers') === 0) {
       $templateFileName = 'form-' . str_replace('_', '-', $variables['element']['#form_id']);
     }
 
-    if (isset($templateFileName)) {
+    if ($templateFileName !== NULL) {
       ibm_apim_entry_trace(__FUNCTION__, 'form');
 
       $templateFilePath = drupal_get_path('module', 'mail_subscribers') . '/templates/' . $templateFileName . '.html.twig';
@@ -223,22 +239,27 @@ function mail_subscribers_preprocess(&$variables, $hook, &$info) {
 
 }
 
-function mail_subscribers_theme_suggestions_ctools_wizard_trail_alter (array &$suggestions, array $variables){
-
-  if ($wizard = $variables['wizard']->getMachineName()) {
-    if($wizard == 'MailSubscribersWizard'){
-      $suggestions = ['mail_subscribers_ctools_wizard_trail'];
-    }
+/**
+ * @param array $suggestions
+ * @param array $variables
+ */
+function mail_subscribers_theme_suggestions_ctools_wizard_trail_alter(array &$suggestions, array $variables) {
+  if ($variables['wizard']->getMachineName() === 'MailSubscribersWizard') {
+    $suggestions = ['mail_subscribers_ctools_wizard_trail'];
   }
 }
 
+/**
+ * hook_theme impl
+ *
+ * @return array
+ */
 function mail_subscribers_theme() {
-
-  $theme_templates = [];
-  $theme_templates['mail_subscribers_ctools_wizard_trail'] = [
+  $themeTemplates = [];
+  $themeTemplates['mail_subscribers_ctools_wizard_trail'] = [
     'template' => 'mail-subscribers-ctools-wizard-trail',
-    'base hook' => 'ctools_wizard_trail'
+    'base hook' => 'ctools_wizard_trail',
   ];
-  return $theme_templates;
+  return $themeTemplates;
 }
 

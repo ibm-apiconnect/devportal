@@ -74,8 +74,7 @@ class GithubMarkdown extends Markdown {
           $this->identifyOl($line, $lines, $i) ||
           $this->identifyHr($line, $lines, $i)
         )
-        || $this->identifyHeadline($line, $lines, $i)
-      ) {
+        || $this->identifyHeadline($line, $lines, $i)) {
         break;
       }
       elseif ($this->identifyCode($line, $lines, $i)) {

@@ -11,6 +11,7 @@ namespace Drupal\ghmarkdown\cebe\markdown\block;
  * Adds the 4 space indented code blocks
  */
 trait CodeTrait {
+
   /**
    * identify a line as the beginning of a code block.
    */
@@ -36,8 +37,7 @@ trait CodeTrait {
         // but also if it is empty and the next line is intended by 4 spaces or a tab
       }
       elseif (($line === '' || rtrim($line) === '') && isset($lines[$i + 1][0]) &&
-        ($lines[$i + 1][0] === "\t" || strncmp($lines[$i + 1], '    ', 4) === 0)
-      ) {
+        ($lines[$i + 1][0] === "\t" || strncmp($lines[$i + 1], '    ', 4) === 0)) {
         if ($line !== '') {
           $line = $line[0] === "\t" ? substr($line, 1) : substr($line, 4);
         }

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -11,8 +11,6 @@
  ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Translation;
-
-use Drupal\Driver\Exception\Exception;
 
 /**
  * Class TranslationPreparation
@@ -26,7 +24,8 @@ use Drupal\Driver\Exception\Exception;
 class TranslationPreparation {
 
   private $projectInfos;
-  private $ibm_modules = array(
+
+  private $ibm_modules = [
     'apim_profile',
     'apic_api',
     'apic_app',
@@ -40,14 +39,15 @@ class TranslationPreparation {
     'mail_subscribers',
     'product',
     'socialblock',
-    'themegenerator');
+    'themegenerator',
+  ];
 
   /**
    * TranslationPreparation constructor.
    *
    * @param $pot_files_location
    *   directory containing pot files, i.e. complete list of strings.
-   * @param $drupal_po_files_location.
+   * @param $drupal_po_files_location .
    *   directory containing drupal po files, i.e. existing translations from localize.drupal.org.
    * @param $output_location
    *   base dir for files to be output to.
@@ -80,11 +80,14 @@ class TranslationPreparation {
    *  Associative array [project => ProjectInfo object]
    *
    */
-  public function getProjectInfos() {
+  public function getProjectInfos(): array {
     return $this->projectInfos;
   }
 
-  private function scanPotDir($potFilesLocation) {
+  /**
+   * @param $potFilesLocation
+   */
+  private function scanPotDir($potFilesLocation): void {
     // TODO: pass through options for projects from drush.
     //$pots = array($potFilesLocation . '/openid_connect-8.x-1.0-beta3.pot');
     //$pots = array($potFilesLocation . '/workbench-8.x-1.0.pot');
@@ -93,10 +96,10 @@ class TranslationPreparation {
     foreach ($pots as $pot) {
 
       // useful for debug as it speeds things up considerably ;)
-//      if ($pot === '/tmp/translation_files/required_pots/drupal-8.4.0.pot') {
-//        echo "SKIPPING DRUPAL MODULE...\n";
-//        continue;
-//      }
+      //      if ($pot === '/tmp/translation_files/required_pots/drupal-8.4.0.pot') {
+      //        echo "SKIPPING DRUPAL MODULE...\n";
+      //        continue;
+      //      }
 
       $info = new ProjectInfo();
       $info->setPotFile($pot);
@@ -113,23 +116,28 @@ class TranslationPreparation {
     }
   }
 
-  private function setOutputDirs($outputLocation) {
-    if ($this->projectInfos == NULL || sizeof($this->projectInfos) == 0) {
+  /**
+   * @param $outputLocation
+   *
+   * @throws \Exception
+   */
+  private function setOutputDirs($outputLocation): void {
+    if ($this->projectInfos === NULL || sizeof($this->projectInfos) === 0) {
       throw new \Exception('Trying to set output directories for no projects.');
     }
 
     foreach ($this->projectInfos as $key => $value) {
       $name_version = $this->splitProjectNameVersion($key);
-      if (in_array($name_version['name'], $this->ibm_modules)) {
+      if (in_array($name_version['name'], $this->ibm_modules, FALSE)) {
         $module_type = 'ibm';
       }
       else {
         $module_type = 'drupal';
       }
-      $value->setOutputDir($outputLocation . '/' . $module_type . '/'. $key);
+      $value->setOutputDir($outputLocation . '/' . $module_type . '/' . $key);
       //echo "setting output dir to be " .  $this->outputLocation . '/' . $key . "\n";
     }
-    
+
     $this->checkAndCreateDirectory($outputLocation);
     $this->checkAndCreateDirectory($outputLocation . '/ibm');
     $this->checkAndCreateDirectory($outputLocation . '/drupal');
@@ -142,9 +150,13 @@ class TranslationPreparation {
    * <platform_dir>/sites/all/translations and check whether there are any updates from drupal which would
    * supersede the ibm translations.
    *
+   * @param $platform_dir
    * @param $poFilesLocation
+   * @param $merge_dir
+   *
+   * @throws \Exception
    */
-  private function mergeLatestTranslations($platform_dir, $poFilesLocation, $merge_dir) {
+  private function mergeLatestTranslations($platform_dir, $poFilesLocation, $merge_dir): void {
 
     $current_translations_dir = $platform_dir . '/sites/all/translations';
     if (!is_dir($current_translations_dir)) {
@@ -164,12 +176,12 @@ class TranslationPreparation {
       // for IBM developed projects the translation centre will always return the latest version of the files, so
       // don't provide a merged output for this, which will mean later on we just use the latest copy.
       $proj_name_version = $this->splitProjectNameVersion($project);
-      if (in_array($proj_name_version['name'], $this->ibm_modules)) {
-        echo "Skipping merge of ibm project: " . $project . "\n";
+      if (in_array($proj_name_version['name'], $this->ibm_modules, FALSE)) {
+        echo 'Skipping merge of ibm project: ' . $project . "\n";
       }
       else {
 
-        echo "Merging project: " . $project . "\n";
+        echo 'Merging project: ' . $project . "\n";
         // if not in drupal translations, just add this.
         if (!key_exists($project, $drupal_translations) || empty($drupal_translations[$project])) {
           echo "  No drupal translations, copying straight across to merge directory.\n";
@@ -181,7 +193,7 @@ class TranslationPreparation {
           $drupal_translation = $drupal_translations[$project];
           foreach ($langfiles as $lang => $file) {
             echo "    Checking $lang\n";
-            if (!key_exists($lang, $drupal_translation)) {
+            if (!array_key_exists($lang, $drupal_translation)) {
               echo "      No drupal translation for $lang, copying straight across to merge directory.\n";
               $this->copySinglePoFile($file, $merge_dir);
             }
@@ -212,39 +224,39 @@ class TranslationPreparation {
    * @throws \Exception
    *   if we haven't built a list of projectInfos to work from.
    */
-  private function scanPoDir($poFilesLocation, $ignoreVersion = FALSE) {
-    if ($this->projectInfos == NULL || sizeof($this->projectInfos) == 0) {
+  private function scanPoDir($poFilesLocation, $ignoreVersion = FALSE): array {
+    if ($this->projectInfos === NULL || sizeof($this->projectInfos) === 0) {
       throw new \Exception('Trying to set po directories for no projects.');
     }
 
-    $translations = array();
+    $translations = [];
 
     foreach ($this->projectInfos as $key => $value) {
-      $po_list = array();
+      $po_list = [];
 
       $match = $key;
 
       // if we are ignoring the version then we just pick up the file based on the project name.
       if ($ignoreVersion) {
         $split = explode('-', $key, 2);
-        if(sizeof($split) === 1) {
+        if (sizeof($split) === 1) {
           // no version already... match is already correct.
         }
         elseif (sizeof($split) === 2) {
           $match = $split[0] . '-';
         }
         else {
-          throw new \Exception("Unexpected project name when searching for po files: " . $key);
+          throw new \Exception('Unexpected project name when searching for po files: ' . $key);
         }
       }
-      $pos = glob($poFilesLocation . '/' . $match . "*.po");
+      $pos = glob($poFilesLocation . '/' . $match . '*.po');
 
       foreach ($pos as $file) {
         $lang = $this->getLanguageFromPoFileName($file);
         $po_list[$lang] = $file;
       }
       //if (!empty($po_list)) {
-        $translations[$key] = $po_list;
+      $translations[$key] = $po_list;
       //}
 
     }
@@ -260,21 +272,29 @@ class TranslationPreparation {
    *
    * @param $merge_dir
    *   Directory containing .po files.
+   *
+   * @throws \Exception
    */
-  private function addPosToProjectInfo($merge_dir) {
+  private function addPosToProjectInfo($merge_dir): void {
     $merged_pos = $this->scanPoDir($merge_dir);
     foreach ($merged_pos as $project => $pos) {
       $this->getProjectInfos()[$project]->setPoFiles($pos);
     }
   }
 
+  /**
+   * @param $filename
+   *
+   * @return bool|string
+   * @throws \Exception
+   */
   private function getLanguageFromPoFileName($filename) {
     $langfile = basename($filename, '.po');
     $lastDotPos = strrpos($langfile, '.');
-    if ( !$lastDotPos ) {
+    if (!$lastDotPos) {
       throw new \Exception('Unable to find language in po file');
     }
-    return substr($langfile, $lastDotPos+1);
+    return substr($langfile, $lastDotPos + 1);
   }
 
   /**
@@ -291,13 +311,21 @@ class TranslationPreparation {
     }
   }
 
-  private function copyPoFiles($langFiles, $location) {
+  /**
+   * @param $langFiles
+   * @param $location
+   */
+  private function copyPoFiles($langFiles, $location): void {
     foreach ($langFiles as $lang => $file) {
       copy($file, $location . '/' . basename($file));
     }
   }
 
-  private function copySinglePoFile($file, $location) {
+  /**
+   * @param $file
+   * @param $location
+   */
+  private function copySinglePoFile($file, $location): void {
     copy($file, $location . '/' . basename($file));
   }
 
@@ -314,7 +342,7 @@ class TranslationPreparation {
    * @return array
    *   Merged PoItems
    */
-  private function mergePoFiles($ibm_translation, $drupal_translation) {
+  private function mergePoFiles($ibm_translation, $drupal_translation): array {
     echo "      In mergeTranslation with\n      - $ibm_translation\n      - $drupal_translation\n";
 
     $ibm_translation_reader = new TranslationFileReader($ibm_translation);
@@ -322,7 +350,7 @@ class TranslationPreparation {
 
     $ibm_items = $ibm_translation_reader->getItems();
     $drupal_items = $drupal_translation_reader->getItems();
-    $merged_items = array();
+    $merged_items = [];
 
     foreach ($ibm_items as $ibm_i) {
       $drupal_translation_used = FALSE;
@@ -352,12 +380,13 @@ class TranslationPreparation {
 
   /**
    * Write merged file out to location.
+   *
    * @param $project
    * @param $lang
    * @param $items
    * @param $location
    */
-  private function writeMergedFile($project, $lang, $items, $location) {
+  private function writeMergedFile($project, $lang, $items, $location): void {
     $file_path = $location . '/' . $project . '.' . $lang . '.po';
     echo "      Writing merged file to $file_path\n";
     new TranslationFileWriter($items, $file_path);
@@ -365,18 +394,21 @@ class TranslationPreparation {
 
   /**
    * Split a project into name-version. Version is optional.
-   * @param $proj
+   *
+   * @param $project
+   *
+   * @return array
    */
-  private function splitProjectNameVersion($proj): array {
-    $split = explode('-', $proj, 2);
+  private function splitProjectNameVersion($project): array {
+    $split = explode('-', $project, 2);
 
-    $project = array();
+    $returnProject = [];
 
-    $project['name'] = $split[0];
+    $returnProject['name'] = $split[0];
     if (sizeof($split) > 1) {
-      $project['version'] = $split[1];
+      $returnProject['version'] = $split[1];
     }
-    return $project;
+    return $returnProject;
   }
 
 

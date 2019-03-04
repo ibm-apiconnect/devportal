@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,10 +13,9 @@
 
 namespace Drupal\Tests\ibm_apim\Unit;
 
+use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Prophet;
-
-use Drupal\ibm_apim\Service\ApimUtils;
 
 /**
  * @coversDefaultClass \Drupal\ibm_apim\Service\ApimUtils
@@ -31,12 +30,13 @@ class ApimUtilsTest extends UnitTestCase {
    Dependencies of ApimUtils.
    */
   protected $logger;
-  protected $siteconfig;
+
+  protected $siteConfig;
 
   protected function setup() {
     $this->prophet = new Prophet();
-    $this->logger = $this->prophet->prophesize('Psr\Log\LoggerInterface');
-    $this->siteconfig = $this->prophet->prophesize('Drupal\ibm_apim\Service\SiteConfig');
+    $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
+    $this->siteConfig = $this->prophet->prophesize(\Drupal\ibm_apim\Service\SiteConfig::class);
   }
 
   protected function tearDown() {
@@ -45,104 +45,104 @@ class ApimUtilsTest extends UnitTestCase {
 
 
   /* CREATE */
-  public function testCreateFullyQualifiedUrl() {
+  public function testCreateFullyQualifiedUrl(): void {
 
-    $this->siteconfig->getApimHost()->willReturn('https://hostname');
-    $utils = new ApimUtils($this->logger->reveal(), $this->siteconfig->reveal());
+    $this->siteConfig->getApimHost()->willReturn('https://hostname');
+    $utils = new ApimUtils($this->logger->reveal(), $this->siteConfig->reveal());
 
     $result = $utils->createFullyQualifiedUrl('/url/path/only');
 
-    $this->assertEquals('https://hostname/url/path/only' , $result, 'Unexpected fully qualified url');
+    $this->assertEquals('https://hostname/url/path/only', $result, 'Unexpected fully qualified url');
 
   }
 
-  public function testCreateWithConsumerApiPart() {
+  public function testCreateWithConsumerApiPart(): void {
 
-    $this->siteconfig->getApimHost()->willReturn('https://hostname/consumer-api');
-    $utils = new ApimUtils($this->logger->reveal(), $this->siteconfig->reveal());
+    $this->siteConfig->getApimHost()->willReturn('https://hostname/consumer-api');
+    $utils = new ApimUtils($this->logger->reveal(), $this->siteConfig->reveal());
 
     $result = $utils->createFullyQualifiedUrl('/consumer-api/url/path/only');
 
-    $this->assertEquals('https://hostname/consumer-api/url/path/only' , $result, 'Unexpected fully qualified url');
+    $this->assertEquals('https://hostname/consumer-api/url/path/only', $result, 'Unexpected fully qualified url');
 
   }
 
-  public function testCreateWithConsumerApiInHostname() {
+  public function testCreateWithConsumerApiInHostname(): void {
 
-    $this->siteconfig->getApimHost()->willReturn('https://consumer-api-hostname/consumer-api');
-    $utils = new ApimUtils($this->logger->reveal(), $this->siteconfig->reveal());
+    $this->siteConfig->getApimHost()->willReturn('https://consumer-api-hostname/consumer-api');
+    $utils = new ApimUtils($this->logger->reveal(), $this->siteConfig->reveal());
 
     $result = $utils->createFullyQualifiedUrl('/url/path/only');
 
-    $this->assertEquals('https://consumer-api-hostname/url/path/only' , $result, 'Unexpected fully qualified url');
+    $this->assertEquals('https://consumer-api-hostname/url/path/only', $result, 'Unexpected fully qualified url');
 
   }
 
-  public function testCreateWithAlreadyFullyQualified() {
+  public function testCreateWithAlreadyFullyQualified(): void {
 
-    $this->siteconfig->getApimHost()->willReturn('https://hostname');
-    $utils = new ApimUtils($this->logger->reveal(), $this->siteconfig->reveal());
+    $this->siteConfig->getApimHost()->willReturn('https://hostname');
+    $utils = new ApimUtils($this->logger->reveal(), $this->siteConfig->reveal());
 
     $result = $utils->createFullyQualifiedUrl('https://hostname/url/path/only');
 
-    $this->assertEquals('https://hostname/url/path/only' , $result, 'Unexpected fully qualified url');
+    $this->assertEquals('https://hostname/url/path/only', $result, 'Unexpected fully qualified url');
 
   }
 
 
   /* REMOVE */
-  public function testRemoveFullyQualifiedUrl() {
+  public function testRemoveFullyQualifiedUrl(): void {
 
-    $this->siteconfig->getApimHost()->willReturn('https://hostname');
-    $utils = new ApimUtils($this->logger->reveal(), $this->siteconfig->reveal());
+    $this->siteConfig->getApimHost()->willReturn('https://hostname');
+    $utils = new ApimUtils($this->logger->reveal(), $this->siteConfig->reveal());
 
     $result = $utils->removeFullyQualifiedUrl('https://hostname/url/path/only');
 
-    $this->assertEquals('/url/path/only' , $result, 'Unexpected stripped url');
+    $this->assertEquals('/url/path/only', $result, 'Unexpected stripped url');
 
   }
 
-  public function testRemoveWithConsumerApiSuffix() {
+  public function testRemoveWithConsumerApiSuffix(): void {
 
-    $this->siteconfig->getApimHost()->willReturn('https://hostname/consumer-api');
-    $utils = new ApimUtils($this->logger->reveal(), $this->siteconfig->reveal());
+    $this->siteConfig->getApimHost()->willReturn('https://hostname/consumer-api');
+    $utils = new ApimUtils($this->logger->reveal(), $this->siteConfig->reveal());
 
     $result = $utils->removeFullyQualifiedUrl('https://hostname/consumer-api/url/path/only');
 
-    $this->assertEquals('/consumer-api/url/path/only' , $result, 'Unexpected stripped url');
+    $this->assertEquals('/consumer-api/url/path/only', $result, 'Unexpected stripped url');
 
   }
 
-  public function testValidRemoveWithConsumerApiInUrlOnly() {
+  public function testValidRemoveWithConsumerApiInUrlOnly(): void {
 
-    $this->siteconfig->getApimHost()->willReturn('https://hostname');
-    $utils = new ApimUtils($this->logger->reveal(), $this->siteconfig->reveal());
+    $this->siteConfig->getApimHost()->willReturn('https://hostname');
+    $utils = new ApimUtils($this->logger->reveal(), $this->siteConfig->reveal());
 
     $result = $utils->removeFullyQualifiedUrl('https://hostname/consumer-api/url/path/only');
 
-    $this->assertEquals('/consumer-api/url/path/only' , $result, 'Unexpected stripped url');
+    $this->assertEquals('/consumer-api/url/path/only', $result, 'Unexpected stripped url');
 
   }
 
-  public function testRemoveWithConsumerApiInHostname() {
+  public function testRemoveWithConsumerApiInHostname(): void {
 
-    $this->siteconfig->getApimHost()->willReturn('https://consumer-apic-hostname');
-    $utils = new ApimUtils($this->logger->reveal(), $this->siteconfig->reveal());
+    $this->siteConfig->getApimHost()->willReturn('https://consumer-apic-hostname');
+    $utils = new ApimUtils($this->logger->reveal(), $this->siteConfig->reveal());
 
     $result = $utils->removeFullyQualifiedUrl('https://consumer-apic-hostname/consumer-api/url/path/only');
 
-    $this->assertEquals('/consumer-api/url/path/only' , $result, 'Unexpected stripped url');
+    $this->assertEquals('/consumer-api/url/path/only', $result, 'Unexpected stripped url');
 
   }
 
-  public function testRemoveWithAlreadyStrippedUrl() {
+  public function testRemoveWithAlreadyStrippedUrl(): void {
 
-    $this->siteconfig->getApimHost()->willReturn('https://hostname');
-    $utils = new ApimUtils($this->logger->reveal(), $this->siteconfig->reveal());
+    $this->siteConfig->getApimHost()->willReturn('https://hostname');
+    $utils = new ApimUtils($this->logger->reveal(), $this->siteConfig->reveal());
 
     $result = $utils->removeFullyQualifiedUrl('/url/path/only');
 
-    $this->assertEquals('/url/path/only' , $result, 'Unexpected stripped url');
+    $this->assertEquals('/url/path/only', $result, 'Unexpected stripped url');
 
   }
 

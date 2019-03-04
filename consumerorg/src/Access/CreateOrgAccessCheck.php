@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -24,15 +24,15 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class CreateOrgAccessCheck implements AccessInterface {
 
-  public function access() {
+  public function access(): AccessResult {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $allowed = FALSE;
     $current_user = \Drupal::currentUser();
     // block anonymous and admin & self service onboarding must be enabled
-    $selfService = \Drupal::state()->get('ibm_apim.selfSignUpEnabled');
+    $selfService = (boolean) \Drupal::state()->get('ibm_apim.selfSignUpEnabled');
     $config = \Drupal::config('ibm_apim.settings');
-    $allow_consumerorg_creation = $config->get('allow_consumerorg_creation');
-    if (!$current_user->isAnonymous() && $current_user->id() != 1 && $selfService != 0 && $allow_consumerorg_creation) {
+    $allow_consumerorg_creation = (boolean) $config->get('allow_consumerorg_creation');
+    if ($selfService !== FALSE && $allow_consumerorg_creation === TRUE && !$current_user->isAnonymous() && (int) $current_user->id() !== 1) {
       $allowed = TRUE;
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $allowed);

@@ -2,7 +2,7 @@
 /********************************************************* {COPYRIGHT-TOP} ***
  * Licensed Materials - Property of IBM
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -39,12 +39,8 @@ class ApiIsOnline extends RulesConditionBase {
    * @return bool
    *   TRUE if the API is online.
    */
-  protected function doEvaluate(NodeInterface $node) {
-    if ($node->api_state->value == 'online') {
-      return true;
-    } else {
-      return false;
-    }
+  protected function doEvaluate(NodeInterface $node): bool {
+    return $node->api_state->value === 'online';
   }
 
 }

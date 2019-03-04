@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -38,9 +38,9 @@ class ConsumerOrgSelectorBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  protected function blockAccess(AccountInterface $account) {
+  protected function blockAccess(AccountInterface $account): AccessResult {
     $current_user = \Drupal::currentUser();
-    return AccessResult::allowedIf(!$current_user->isAnonymous() && $current_user->id() != 1);
+    return AccessResult::allowedIf(!$current_user->isAnonymous() && (int) $current_user->id() !== 1);
   }
 
   /**
@@ -68,9 +68,9 @@ class ConsumerOrgSelectorBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  public function build():array {
+  public function build(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $myorgs = array();
+    $myorgs = [];
     $selected_name = NULL;
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
@@ -80,16 +80,16 @@ class ConsumerOrgSelectorBlock extends BlockBase {
     $create_allowed = FALSE;
     $current_user = \Drupal::currentUser();
     // block anonymous and admin & self service onboarding must be enabled
-    $selfService = \Drupal::state()->get('ibm_apim.selfSignUpEnabled');
+    $selfService = (boolean) \Drupal::state()->get('ibm_apim.selfSignUpEnabled');
     $config = \Drupal::config('ibm_apim.settings');
-    $allow_consumerorg_creation = $config->get('allow_consumerorg_creation');
-    if (!$current_user->isAnonymous() && $current_user->id() != 1 && $selfService != 0 && $allow_consumerorg_creation) {
+    $allow_consumerorg_creation = (boolean) $config->get('allow_consumerorg_creation');
+    if ($selfService !== FALSE && $allow_consumerorg_creation === TRUE && !$current_user->isAnonymous() && (int) $current_user->id() !== 1) {
       $create_allowed = TRUE;
     }
 
-    if ($orgs !== null && !empty($orgs)) {
+    if ($orgs !== NULL && !empty($orgs)) {
       $selected = $userUtils->getCurrentConsumerorg();
-      if ($selected === null || empty($selected)) {
+      if ($selected === NULL || empty($selected)) {
         $selected = $userUtils->setCurrentConsumerorg();
         $userUtils->setOrgSessionData();
       }
@@ -101,22 +101,22 @@ class ConsumerOrgSelectorBlock extends BlockBase {
         $title = $consumer_org;
         $node = $consumerOrgService->get($consumer_org);
         $consumer_org_url = str_replace('/', '_', $consumer_org);
-        if ($node !== null) {
+        if ($node !== NULL) {
           $title = $node->getTitle();
         }
-        $myorgs[] = array(
+        $myorgs[] = [
           'title' => $title,
           'link_object' => Link::createFromRoute($title, 'ibm_apim.consumerorg_selection', ['orgUrl' => $consumer_org_url], $options)
-            ->toString()
-        );
+            ->toString(),
+        ];
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return array(
+    return [
       '#theme' => 'consumerorg_select_block',
       '#orgs' => $myorgs,
       '#selected_name' => $selected_name,
-      '#create_allowed' => $create_allowed
-    );
+      '#create_allowed' => $create_allowed,
+    ];
   }
 }
