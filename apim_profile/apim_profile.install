@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2016
+ * (C) Copyright IBM Corporation 2016, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -37,6 +37,7 @@ function apim_profile_install() {
     'devorg',
     'application',
     'pdurusers_export',
+    'custom_content_export',
     'image_captcha',
     'hs_taxonomy',
     'i18n_redirect',
@@ -828,7 +829,8 @@ js/admin_menu/cache/*');
     'edit any socialblock_block bean',
     'create any socialblock_block bean',
     'delete any socialblock_block bean',
-    'view any socialblock_block bean'
+    'view any socialblock_block bean',
+    'administer APIC integration'
   );
   user_role_grant_permissions($admin_rid, $adminpermissions);
   $anonpermissions = array(
@@ -1018,6 +1020,7 @@ js/admin_menu/cache/*');
   variable_set('ibm_apim_socialblock_perms_done', 1);
   variable_set('ibm_apim_revoke_blog_perms_done', 1);
   variable_set('ibm_apim_socialblock_encryption', 1);
+  variable_set('ibm_apim_custom_admin_perms_done', 1);
   // have to create the skip content approval permission programmatically
   db_insert('role_permission')->fields(array(
     'module' => 'content_approval',
@@ -1153,9 +1156,10 @@ js/admin_menu/cache/*');
   variable_set('seckit_csrf', array('origin' => 1, 'origin_whitelist' => ""));
   variable_set('seckit_ssl', array(
     'hsts' => 1,
-    'hsts_max_age' => "1000",
+    'hsts_max_age' => "2592000",
     'hsts_subdomains' => 1
   ));
+  variable_set('ibm_apim_done_hsts_config_upgrade', 1);
   variable_set('seckit_various', array(
     'from_origin' => 0,
     'from_origin_destination' => "same"
@@ -3235,7 +3239,8 @@ function apim_profile_update_7400() {
     'termcase',
     'node_page_disable',
     'flood_control',
-    'pdurusers_export'
+    'pdurusers_export',
+    'custom_content_export'
   );
   module_enable($modules, TRUE);
 
@@ -3260,18 +3265,18 @@ function apim_profile_update_7400() {
   apim_profile_create_book();
 
   // configure cron
-  if (variable_get('ultimate_cron_plugin_logger_default', NULL) == NULL) {
+  if (variable_get('ultimate_cron_plugin_logger_default', NULL) === NULL) {
     variable_set('ultimate_cron_plugin_logger_default', 'cache');
   }
 
-  if (variable_get('ultimate_cron_plugin_logger_cache_settings', NULL) == NULL) {
+  if (variable_get('ultimate_cron_plugin_logger_cache_settings', NULL) === NULL) {
     variable_set('ultimate_cron_plugin_logger_cache_settings', array(
       'bin' => 'cache_ultimate_cron',
       'timeout' => '-1'
     ));
   }
 
-  if (variable_get('ibm_apim_updated_filter', NULL) == NULL) {
+  if (variable_get('ibm_apim_updated_filter', NULL) === NULL) {
     db_update('filter')
       ->fields(array(
         'settings' => 'a:3:{s:12:"allowed_html";s:137:"<pre> <br> <a> <em> <strong> <cite> <blockquote> <code> <ul> <ol> <li> <dl> <dt> <dd> <h2> <h3> <h4> <h5> <h6> <p> <div> <address> <span>";s:16:"filter_html_help";i:1;s:20:"filter_html_nofollow";i:0;}',
@@ -3284,7 +3289,7 @@ function apim_profile_update_7400() {
     variable_set('ibm_apim_updated_filter', 1);
   }
 
-  if (variable_get('ibm_apim_done_password_policy_path_upgd', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_password_policy_path_upgd', NULL) === NULL) {
     $unprocessed_paths = variable_get('password_policy_force_change_extra_allowed_paths', 'system/ajax');
     $paths = array_filter(preg_split("/(\n|\r)/", $unprocessed_paths));
     $found_adminjs = FALSE;
@@ -3325,7 +3330,7 @@ js/admin_menu/cache/*';
     'x_content_type' => array('checkbox' => 1)
   ));
 
-  if (variable_get('ibm_apim_set_frontpage_title', NULL) == NULL) {
+  if (variable_get('ibm_apim_set_frontpage_title', NULL) === NULL) {
     // set frontpage page title
     if (module_exists('metatag')) {
       $cid = db_query("SELECT cid FROM {metatag_config} WHERE instance=:instance", array(
@@ -3347,9 +3352,9 @@ js/admin_menu/cache/*';
     variable_set('ibm_apim_set_frontpage_title', 1);
   }
 
-  if (variable_get('ibm_apim_socialblock_encryption', NULL) == NULL) {
+  if (variable_get('ibm_apim_socialblock_encryption', NULL) === NULL) {
     if (module_exists('socialblock')) {
-      if (variable_get('twitter_oauth_settings', NULL) == NULL) {
+      if (variable_get('twitter_oauth_settings', NULL) === NULL) {
         $settings = array();
         $settings['twitter_consumer_key'] = variable_get('twitter_consumer_key', '');
         $settings['twitter_consumer_secret'] = variable_get('twitter_consumer_secret', '');
@@ -3371,14 +3376,14 @@ js/admin_menu/cache/*';
     variable_set('ibm_apim_socialblock_encryption', 1);
   }
 
-  if (variable_get('ibm_apim_admin_theme_enabled', NULL) == NULL) {
+  if (variable_get('ibm_apim_admin_theme_enabled', NULL) === NULL) {
     module_disable(array('toolbar'), TRUE);
     // enable the adminimal admin theme
     theme_enable(array('adminimal'));
     variable_set('admin_theme', 'adminimal');
     variable_set('ibm_apim_admin_theme_enabled', 1);
   }
-  if (variable_get('ibm_apim_create_v5_frontpage', NULL) == NULL) {
+  if (variable_get('ibm_apim_create_v5_frontpage', NULL) === NULL) {
     // Create a page for the welcome block
     if (module_exists('panels_mini')) {
       $path = dirname(__FILE__);
@@ -3388,11 +3393,11 @@ js/admin_menu/cache/*';
     variable_set('ibm_apim_create_v5_frontpage', 1);
   }
 
-  if(variable_get('ibm_apim_disable_frontpage', NULL) == NULL) {
+  if(variable_get('ibm_apim_disable_frontpage', NULL) === NULL) {
     _apim_profile_disable_frontpage();
     variable_set('ibm_apim_disable_frontpage', 1);
   }
-  if (variable_get('ibm_apim_enable_connect_theme', NULL) == NULL) {
+  if (variable_get('ibm_apim_enable_connect_theme', NULL) === NULL) {
     $theme_default = variable_get('theme_default');
     if (isset($theme_default) && $theme_default == 'ibm_apim_theme') {
       theme_enable(array('connect_theme'));
@@ -3442,7 +3447,7 @@ js/admin_menu/cache/*';
     variable_set('ibm_apim_enable_connect_theme', 1);
   }
 
-  if (variable_get('ibm_apim_v5_apiinner_fields_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_v5_apiinner_fields_upgrade', NULL) === NULL) {
     db_update('field_config_instance')->fields(array(
       'data' => 'a:7:{s:5:"label";s:4:"Tags";s:6:"widget";a:5:{s:6:"weight";s:1:"8";s:4:"type";s:11:"taxonomy_hs";s:6:"module";s:11:"hs_taxonomy";s:6:"active";i:0;s:8:"settings";a:2:{s:4:"size";i:60;s:17:"autocomplete_path";s:21:"taxonomy/autocomplete";}}s:8:"settings";a:2:{s:18:"user_register_form";b:0;s:23:"entity_translation_sync";b:0;}s:7:"display";a:3:{s:7:"default";a:5:{s:5:"label";s:5:"above";s:4:"type";s:54:"hs_taxonomy_term_reference_hierarchical_text_last_link";s:6:"weight";s:2:"12";s:8:"settings";a:0:{}s:6:"module";s:11:"hs_taxonomy";}s:6:"teaser";a:4:{s:5:"label";s:5:"above";s:4:"type";s:6:"hidden";s:6:"weight";s:1:"0";s:8:"settings";a:0:{}}s:5:"inner";a:5:{s:5:"label";s:5:"above";s:4:"type";s:54:"hs_taxonomy_term_reference_hierarchical_text_last_link";s:6:"weight";s:1:"0";s:8:"settings";a:0:{}s:6:"module";s:11:"hs_taxonomy";}}s:8:"required";i:0;s:11:"description";s:0:"";s:13:"default_value";N;}'
     ))->condition('field_name', 'field_apitags')->execute();
@@ -3452,7 +3457,7 @@ js/admin_menu/cache/*';
     variable_set('ibm_apim_v5_apiinner_fields_upgrade', 1);
   }
 
-  if (variable_get('ibm_apim_v5_menu_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_v5_menu_upgrade', NULL) === NULL) {
     $mlid = db_query("SELECT mlid FROM {menu_links} WHERE router_path=:router_path AND link_path=:link_path AND menu_name=:menu_name", array(
       ':router_path' => 'api',
       ':link_path' => 'api',
@@ -3500,7 +3505,7 @@ js/admin_menu/cache/*';
     variable_set('ibm_apim_v5_menu_upgrade', 1);
   }
 
-  if (variable_get('ibm_apim_user_password_update', NULL) == NULL) {
+  if (variable_get('ibm_apim_user_password_update', NULL) === NULL) {
     $ibm_apim_social_login = variable_get('ibm_apim_social_login', 0);
     if ($ibm_apim_social_login == 0) {
       // remove passwords from everyone other than admin
@@ -3511,17 +3516,17 @@ js/admin_menu/cache/*';
     variable_set('ibm_apim_user_password_update', 1);
   }
 
-  if (variable_get('ibm_apim_enable_htmlmail', NULL) == NULL) {
+  if (variable_get('ibm_apim_enable_htmlmail', NULL) === NULL) {
     module_enable(array('mailsystem', 'htmlmail'), TRUE);
     _apim_profile_enable_htmlmail();
     variable_set('ibm_apim_enable_htmlmail', 1);
   }
-  if (variable_get('ibm_apim_support_ticket_promote_done', NULL) == NULL) {
+  if (variable_get('ibm_apim_support_ticket_promote_done', NULL) === NULL) {
     variable_set('node_options_support_ticket', array(0 => 'status'));
     variable_set('ibm_apim_support_ticket_promote_done', 1);
   }
 
-  if (variable_get('ibm_apim_done_menu_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_menu_upgrade', NULL) === NULL) {
     module_disable(array(
       'i18n_node',
       'translation_helpers',
@@ -3676,7 +3681,7 @@ js/admin_menu/cache/*';
 
   _apim_profile_use_title_field();
 
-  if (variable_get('ibm_apim_addtoany_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_addtoany_upgrade', NULL) === NULL) {
     // turn on add to any for products
     variable_set('addtoany_nodetypes', array(
       'api',
@@ -3688,41 +3693,41 @@ js/admin_menu/cache/*';
     variable_set('ibm_apim_addtoany_upgrade', 1);
   }
 
-  if (variable_get('ibm_apim_enable_password_tab', NULL) == NULL) {
+  if (variable_get('ibm_apim_enable_password_tab', NULL) === NULL) {
     module_enable(array('password_policy_password_tab'), TRUE);
     variable_set('ibm_apim_enable_password_tab', 1);
   }
 
-  if (variable_get('ibm_apim_enable_account_tabs', NULL) == NULL) {
+  if (variable_get('ibm_apim_enable_account_tabs', NULL) === NULL) {
     module_enable(array('account_tabs'), TRUE);
     variable_set('ibm_apim_enable_account_tabs', 1);
   }
 
-  if (variable_get('ibm_apim_disable_markdown', NULL) == NULL) {
+  if (variable_get('ibm_apim_disable_markdown', NULL) === NULL) {
     module_disable(array('markdown'), TRUE);
     variable_set('ibm_apim_disable_markdown', 1);
   }
 
-  if (variable_get('ibm_apim_disable_jqmulti', NULL) == NULL) {
+  if (variable_get('ibm_apim_disable_jqmulti', NULL) === NULL) {
     module_disable(array('jqmulti'), TRUE);
     variable_set('ibm_apim_disable_jqmulti', 1);
   }
 
-  if (variable_get('ibm_apim_disable_restws', NULL) == NULL) {
+  if (variable_get('ibm_apim_disable_restws', NULL) === NULL) {
     module_disable(array('restws'), TRUE);
     variable_set('ibm_apim_disable_restws', 1);
   }
 
-  if (variable_get('ibm_apim_disable_i18n_update', NULL) == NULL) {
+  if (variable_get('ibm_apim_disable_i18n_update', NULL) === NULL) {
     module_disable(array('i18n_update'), TRUE);
     variable_set('ibm_apim_disable_i18n_update', 1);
   }
-  if (variable_get('ibm_apim_disable_usersearchtoadmin', NULL) == NULL) {
+  if (variable_get('ibm_apim_disable_usersearchtoadmin', NULL) === NULL) {
     module_disable(array('usersearchtoadmin'), TRUE);
     variable_set('ibm_apim_disable_usersearchtoadmin', 1);
   }
 
-  if (variable_get('ibm_apim_taxonomy_menu_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_taxonomy_menu_upgrade', NULL) === NULL) {
     // delete old taxonomy menu
     $taxonomy_menu = array();
     $taxonomy_menu['menu_name'] = 'tags';
@@ -3791,7 +3796,7 @@ taxonomy/*',
     variable_set('ibm_apim_taxonomy_menu_upgrade', 1);
   }
 
-  if (variable_get('ibm_apim_update_taxonomy_block', NULL) == NULL) {
+  if (variable_get('ibm_apim_update_taxonomy_block', NULL) === NULL) {
     db_update('block')
       ->fields(array(
         'pages' => 'node/*
@@ -3855,7 +3860,7 @@ taxonomy/*'
   }
 
   // update the default filesize quota
-  if (variable_get('ibm_apim_update_upload_limit_done', NULL) == NULL) {
+  if (variable_get('ibm_apim_update_upload_limit_done', NULL) === NULL) {
     $imce_profiles = variable_get('imce_profiles', NULL);
     if (isset($imce_profiles)) {
       $newprofiles = array();
@@ -3901,14 +3906,14 @@ taxonomy/*'
     ))->execute();
   }
 
-  if (variable_get('ibm_apim_enable_api_test', NULL) == NULL) {
+  if (variable_get('ibm_apim_enable_api_test', NULL) === NULL) {
     variable_set('ibm_apim_enable_api_test', 1);
   }
-  if (variable_get('ibm_apim_autotag_with_phase', NULL) == NULL) {
+  if (variable_get('ibm_apim_autotag_with_phase', NULL) === NULL) {
     variable_set('ibm_apim_autotag_with_phase', 0);
   }
 
-  if (variable_get('ibm_apim_cron_update', NULL) == NULL) {
+  if (variable_get('ibm_apim_cron_update', NULL) === NULL) {
     // Make our cron job run every minute
     db_insert('ultimate_cron_job')->fields(array(
       'name' => 'auth_apic_cron',
@@ -3939,7 +3944,7 @@ taxonomy/*'
     'support_ticket' => 0
   ));
 
-  if (variable_get('ibm_apim_done_securityquestions_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_securityquestions_upgrade', NULL) === NULL) {
     // setup some example security questions
     $modules = array('security_questions');
     module_enable($modules, TRUE);
@@ -3956,7 +3961,7 @@ taxonomy/*'
     variable_set('ibm_apim_done_securityquestions_upgrade', 1);
   }
 
-  if (variable_get('ibm_apim_done_autologout_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_autologout_upgrade', NULL) === NULL) {
     module_load_include('inc', 'autologout', 'autologout.admin');
     $form_state = form_state_defaults();
     $form_state['values'] = array(
@@ -3967,7 +3972,7 @@ taxonomy/*'
     variable_set('ibm_apim_done_autologout_upgrade', 1);
   }
 
-  if (variable_get('ibm_apim_done_unlock_fields_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_unlock_fields_upgrade', NULL) === NULL) {
     foreach (array(
                'field_apirating',
                'field_applicationrating',
@@ -3984,7 +3989,7 @@ taxonomy/*'
     variable_set('ibm_apim_done_unlock_fields_upgrade', 1);
   }
 
-  if (variable_get('ibm_apim_done_phpmailer_removal', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_phpmailer_removal', NULL) === NULL) {
     if (module_exists('phpmailer')) {
       module_disable(array('phpmailer'), TRUE);
     }
@@ -3995,7 +4000,7 @@ taxonomy/*'
   variable_set('jquery_update_jquery_version', '1.8');
 
   // update forum access records
-  if (variable_get('ibm_apim_done_forum_access_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_forum_access_upgrade', NULL) === NULL) {
     // only do upgrade if forum is enabled
     if (module_exists('forum')) {
       $modules = array('acl', 'chain_menu_access', 'forum_access');
@@ -4092,7 +4097,7 @@ taxonomy/*'
   }
 
   // fix password policy
-  if (variable_get('ibm_apim_done_password_policy_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_password_policy_upgrade', NULL) === NULL) {
     $policy = array("character_types" => "3", "length" => "8");
     db_update('password_policy')
       ->fields(array('constraints' => serialize($policy)))
@@ -4103,7 +4108,7 @@ taxonomy/*'
   }
 
   // remove password expiry and force change settings
-  if (variable_get('ibm_apim_done_password_force_change_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_password_force_change_upgrade', NULL) === NULL) {
     db_update('password_policy_force_change')
       ->fields(array('force_change' => '0'))
       ->execute();
@@ -4112,24 +4117,24 @@ taxonomy/*'
     variable_set('ibm_apim_done_password_force_change_upgrade', 1);
   } 
 
-  if (variable_get('ibm_apim_done_csspreprocess_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_csspreprocess_upgrade', NULL) === NULL) {
     variable_set('preprocess_css', 1);
     variable_set('ibm_apim_done_csspreprocess_upgrade', 1);
   }
 
   // fix a security hole in bookmarks allowing user to access other people's bookmarks
-  if (variable_get('ibm_apim_done_flag_bookmark_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_flag_bookmark_upgrade', NULL) === NULL) {
     _apim_profile_create_bookmark_view();
     variable_set('ibm_apim_done_flag_bookmark_upgrade', 1);
   }
 
   // enable honeypot for spam protection
-  if (variable_get('ibm_apim_enable_honeypot', NULL) == NULL) {
+  if (variable_get('ibm_apim_enable_honeypot', NULL) === NULL) {
     _apim_profile_enable_honeypot();
     variable_set('ibm_apim_enable_honeypot', 1);
   }
 
-  if (variable_get('ibm_apim_done_frameprevention_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_frameprevention_upgrade', NULL) === NULL) {
     variable_set('seckit_clickjacking', array(
       "x_frame" => "1",
       "x_frame_allow_from" => "",
@@ -4139,7 +4144,7 @@ taxonomy/*'
     variable_set('ibm_apim_done_frameprevention_upgrade', 1);
   }
 
-  if (variable_get('ibm_apim_fix_faq_typo', NULL) == NULL) {
+  if (variable_get('ibm_apim_fix_faq_typo', NULL) === NULL) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'faq')
@@ -4157,17 +4162,17 @@ taxonomy/*'
     variable_set('ibm_apim_fix_faq_typo', 1);
   }
 
-  if (variable_get('ibm_apim_done_seckit_upgrade', NULL) == NULL) {
-    if (variable_get('seckit_csrf', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_seckit_upgrade', NULL) === NULL) {
+    if (variable_get('seckit_csrf', NULL) === NULL) {
       variable_set('seckit_csrf', array(
         'origin' => 1,
         'origin_whitelist' => ""
       ));
     }
-    if (variable_get('seckit_ssl', NULL) == NULL) {
+    if (variable_get('seckit_ssl', NULL) === NULL) {
       variable_set('seckit_ssl', array(
         'hsts' => 0,
-        'hsts_max_age' => "1000",
+        'hsts_max_age' => "2592000",
         'hsts_subdomains' => 1
       ));
     }
@@ -4176,18 +4181,29 @@ taxonomy/*'
       if ($hsts['hsts'] != 0) {
         variable_set('seckit_ssl', array(
           'hsts' => 0,
-          'hsts_max_age' => "1000",
+          'hsts_max_age' => "2592000",
           'hsts_subdomains' => 1
         ));
       }
     }
-    if (variable_get('seckit_various', NULL) == NULL) {
+    if (variable_get('ibm_apim_done_hsts_config_upgrade', NULL) === NULL) {
+      $hsts = variable_get('seckit_ssl');
+      if ($hsts['hsts'] != 0) {
+        variable_set('seckit_ssl', [
+          'hsts' => 1,
+          'hsts_max_age' => '2592000',
+          'hsts_subdomains' => 1
+        ]);
+      }
+      variable_set('ibm_apim_done_hsts_config_upgrade', 1);
+    }
+    if (variable_get('seckit_various', NULL) === NULL) {
       variable_set('seckit_various', array(
         'from_origin' => 0,
         'from_origin_destination' => "same"
       ));
     }
-    if (variable_get('seckit_xss', NULL) == NULL) {
+    if (variable_get('seckit_xss', NULL) === NULL) {
       variable_set('seckit_xss', array(
         'csp' => array(
           'checkbox' => 0,
@@ -4210,27 +4226,38 @@ taxonomy/*'
     }
     variable_set('ibm_apim_done_seckit_upgrade', 1);
   }
+  if (variable_get('ibm_apim_done_hsts_config_upgrade', NULL) === NULL) {
+    $hsts = variable_get('seckit_ssl');
+    if ($hsts['hsts'] != 0) {
+      variable_set('seckit_ssl', [
+        'hsts' => 1,
+        'hsts_max_age' => '2592000',
+        'hsts_subdomains' => 1
+      ]);
+    }
+    variable_set('ibm_apim_done_hsts_config_upgrade', 1);
+  }
 
-  if (variable_get('ibm_apim_done_loginsecurity_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_loginsecurity_upgrade', NULL) === NULL) {
     module_disable(array('flood_control'), TRUE);
     module_enable(array('login_security'), TRUE);
     variable_set('login_security_host_wrong_count', "50");
     variable_set('login_security_user_wrong_count', "5");
     variable_set('ibm_apim_done_loginsecurity_upgrade', 1);
   }
-  if (variable_get('ibm_apim_stop_hiding_login_errors', NULL) == NULL) {
+  if (variable_get('ibm_apim_stop_hiding_login_errors', NULL) === NULL) {
     variable_set('login_security_disable_core_login_error', 0);
     variable_set('ibm_apim_stop_hiding_login_errors', 1);
   }
 
-  if (variable_get('ibm_apim_done_no_autocomplete_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_done_no_autocomplete_upgrade', NULL) === NULL) {
     variable_set('no_autocomplete_login_form', 1);
     variable_set('no_autocomplete_profile_form', 1);
     variable_set('ibm_apim_done_no_autocomplete_upgrade', 1);
   }
 
   // Configure Default Search
-  if (variable_get('ibm_apim_default_search_node_done', NULL) == NULL) {
+  if (variable_get('ibm_apim_default_search_node_done', NULL) === NULL) {
     variable_set('search_active_modules', array(
       'user' => 0,
       'node' => 'node',
@@ -4240,7 +4267,7 @@ taxonomy/*'
     variable_set('ibm_apim_default_search_node_done', 1);
   }
 
-  if (variable_get('ibm_apim_admin_menu_perms_done', NULL) == NULL) {
+  if (variable_get('ibm_apim_admin_menu_perms_done', NULL) === NULL) {
     $perms = array('access administration menu');
     $mod_role = user_role_load_by_name('forum moderator');
     $mod_rid = $mod_role->rid;
@@ -4251,7 +4278,17 @@ taxonomy/*'
     variable_set('ibm_apim_admin_menu_perms_done', 1);
   }
 
-  if (variable_get('ibm_apim_popularapi_perms_done', NULL) == NULL) {
+  if (variable_get('ibm_apim_custom_admin_perms_done', NULL) === NULL) {
+    $adminperms = array(
+      'administer APIC integration'
+    );
+    $admin_role = user_role_load_by_name('administrator');
+    $admin_rid = $admin_role->rid;
+    user_role_grant_permissions($admin_rid, $adminperms);
+    variable_set('ibm_apim_custom_admin_perms_done', 1);
+  }
+
+  if (variable_get('ibm_apim_popularapi_perms_done', NULL) === NULL) {
     if (!module_exists('popularproduct')) {
       $modules = array('popularapi', 'popularproduct');
       module_enable($modules, TRUE);
@@ -4281,7 +4318,7 @@ taxonomy/*'
     variable_set('ibm_apim_popularapi_perms_done', 1);
   }
 
-  if (variable_get('ibm_apim_socialblock_perms_done', NULL) == NULL) {
+  if (variable_get('ibm_apim_socialblock_perms_done', NULL) === NULL) {
     if (!module_exists('socialblock')) {
       $modules = array('socialblock');
       module_enable($modules, TRUE);
@@ -4304,7 +4341,7 @@ taxonomy/*'
     variable_set('ibm_apim_socialblock_perms_done', 1);
   }
   // revoke create blog post perms
-  if (variable_get('ibm_apim_revoke_blog_perms_done', NULL) == NULL) {
+  if (variable_get('ibm_apim_revoke_blog_perms_done', NULL) === NULL) {
     $perms = array(
       'create blog content',
       'create article content',
@@ -4334,7 +4371,7 @@ taxonomy/*'
   }
 
   // configure search_config
-  if (variable_get('ibm_apim_search_config_done', NULL) == NULL) {
+  if (variable_get('ibm_apim_search_config_done', NULL) === NULL) {
     user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array(
       'search all content',
       'search all excluded entities'
@@ -4411,13 +4448,13 @@ taxonomy/*'
     variable_set('ibm_apim_search_config_done', 1);
   }
 
-  if (variable_get('ibm_apim_frontpage_styling_update', NULL) == NULL) {
+  if (variable_get('ibm_apim_frontpage_styling_update', NULL) === NULL) {
     require_once $path . '/content/welcome.page.inc';
     apim_profile_update_frontpage_styling();
     variable_set('ibm_apim_frontpage_styling_update', 1);
   }
 
-  if (variable_get('ibm_apim_created_no_link_email', NULL) == NULL) {
+  if (variable_get('ibm_apim_created_no_link_email', NULL) === NULL) {
     variable_set('user_mail_register_no_approval_required_no_link_body', '<p  style="font-family: Arial, Helvetica, Sans-Serif">[user:name],</p>
 <p  style="font-family: Arial, Helvetica, Sans-Serif">Thank you for registering at [site:name]. You may now log in at <a href="[site:login-url]">[site:login-url]</a> using:<br/><br/>
 username: [user:name]<br/>
@@ -4435,7 +4472,7 @@ password: Your password</p>
     variable_set('ibm_apim_created_no_link_email', 1);
   }
 
-  if (variable_get('ibm_apim_apitags_update', NULL) == NULL) {
+  if (variable_get('ibm_apim_apitags_update', NULL) === NULL) {
     db_update('field_config_instance')
       ->fields(array('data' => 'a:7:{s:5:"label";s:4:"Tags";s:6:"widget";a:5:{s:6:"weight";s:1:"8";s:4:"type";s:11:"taxonomy_hs";s:6:"module";s:11:"hs_taxonomy";s:6:"active";i:0;s:8:"settings";a:2:{s:4:"size";i:60;s:17:"autocomplete_path";s:21:"taxonomy/autocomplete";}}s:8:"settings";a:2:{s:18:"user_register_form";b:0;s:23:"entity_translation_sync";b:0;}s:7:"display";a:3:{s:7:"default";a:5:{s:5:"label";s:5:"above";s:4:"type";s:54:"hs_taxonomy_term_reference_hierarchical_text_last_link";s:6:"weight";s:2:"12";s:8:"settings";a:0:{}s:6:"module";s:11:"hs_taxonomy";}s:6:"teaser";a:4:{s:5:"label";s:5:"above";s:4:"type";s:6:"hidden";s:6:"weight";s:1:"0";s:8:"settings";a:0:{}}s:5:"inner";a:5:{s:5:"label";s:5:"above";s:4:"type";s:54:"hs_taxonomy_term_reference_hierarchical_text_last_link";s:6:"weight";s:1:"0";s:8:"settings";a:0:{}s:6:"module";s:11:"hs_taxonomy";}}s:8:"required";i:0;s:11:"description";s:0:"";s:13:"default_value";N;}'))
       ->condition('bundle', 'api')
@@ -4457,7 +4494,7 @@ password: Your password</p>
     variable_set('ibm_apim_api_expanded_schema_upgrade', 1);
   }
 
-  if (variable_get('ibm_apim_remove_promoted_nodes', NULL) == NULL) {
+  if (variable_get('ibm_apim_remove_promoted_nodes', NULL) === NULL) {
     // Get all api, application, devorg and product nodes and stop them from displaying on the front page
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
@@ -4479,11 +4516,11 @@ password: Your password</p>
     variable_set('ibm_apim_remove_promoted_nodes', 1);
   }
 
-  if (variable_get('ibm_apim_description_upgrade', NULL) == NULL) {
+  if (variable_get('ibm_apim_description_upgrade', NULL) === NULL) {
     _apim_profile_enable_description_translation();
   }
 
-  if(variable_get('ibm_apim_fix_authmap', NULL) == NULL) {
+  if(variable_get('ibm_apim_fix_authmap', NULL) === NULL) {
 
     // Need to update the auth_map table in the database to change any
     // instances of 'module=auth_apic' to 'module=ibm_apim'

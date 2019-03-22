@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2015, 2016
+ * (C) Copyright IBM Corporation 2015, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -1954,15 +1954,12 @@ function _api_create_forum_container() {
  */
 function _api_sanitise_apiname($apiname = NULL) {
   $cleanname = NULL;
-  if (isset($apiname)) {
-    $cleanname = preg_replace('/\%/', ' percentage', $apiname);
-    $cleanname = preg_replace('/\@/', ' at ', $cleanname);
-    $cleanname = preg_replace('/\&/', ' and ', $cleanname);
+  if ($apiname !== null) {
+    $cleanname = check_plain($apiname); // convert to plaintext
     $cleanname = preg_replace('/\s[\s]+/', '-', $cleanname); // Strip off multiple spaces
-    $cleanname = preg_replace('/[^A-Za-z0-9-_.,:\s]+/', '-', $cleanname); // Strip off non-alpha-numeric
     $cleanname = preg_replace('/^[\-]+/', '', $cleanname); // Strip off the starting hyphens
     $cleanname = preg_replace('/[\-]+$/', '', $cleanname); // // Strip off the ending hyphens
-    $cleanname = mb_strimwidth($cleanname, 0, 128, "..."); // truncate string at 128 characters
+    $cleanname = mb_strimwidth($cleanname, 0, 128, '...'); // truncate string at 128 characters
   }
   return $cleanname;
 }
@@ -2442,7 +2439,7 @@ function api_create_taxonomy_from_path($path) {
 function api_get_taxonomy_id_from_path($path) {
   $vocabulary = 'tags';
   // trim leading and trailing slashes
-  $path = trim($path, "/");
+  $path = trim($path, '/');
   // trim enclosing quotes
   $path = preg_replace('/^([\'"])(.*)\\1$/', '\\2', $path);
   // replace any double slashes with single
@@ -2456,8 +2453,9 @@ function api_get_taxonomy_id_from_path($path) {
       // only want root level tags so ignore ones with parents
       if (empty(taxonomy_get_parents($root_tid->tid))) {
         $tree = taxonomy_get_tree($vid, $root_tid->tid);
-        if (empty($tree)) {
-          // root level tag, no children
+        if (empty($tree) || count($pathParts) === 1) {
+          // root level tag, no children or
+          // has children but we want the root tag
           $answer[] = $root_tid->tid;
         }
         else {

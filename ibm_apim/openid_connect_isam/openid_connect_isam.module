@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function openid_connect_isam_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'openid_connect') {
+    return "plugins/$plugin";
+  }
+}
+
+function openid_connect_isam_menu() {
+  $items = array();
+  $items['ibm_apim/oidc/isam'] = array(
+    'title' => 'ISAM',
+    'page callback' => 'openid_connect_isam_oidc_login',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'openid_connect_isam.openid_connect.inc'
+  );
+  return $items;
+}
+
+
+
+

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2016
+ * (C) Copyright IBM Corporation 2016, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -156,40 +156,76 @@ function product_node_access_records($node) {
   // Only build permissions for product nodes
   if ($type == 'product') {
     //acl_log('Node: ' . $node->title);
-    // Only issue grants if product_view is enabled
-    if (isset($node->product_view_enabled[$node->language][0]) && $node->product_view_enabled[$node->language][0]['value'] == 1) {
-      // Create a grant for 'edit any product content' (will be set in hook_node_grants())
-      $grants[] = array(
-        'realm' => 'product',
-        'gid' => EDIT_ANY_PRODUCT_CONTENT_GRANT,
-        'grant_view' => 1,
-        'grant_update' => 0,
-        'grant_delete' => 0,
-        'priority' => 0,
-      );
-      // Create a grant for public access if public is set
-      if (isset($node->product_visibility_public[$node->language][0]['value']) && $node->product_visibility_public[$node->language][0]['value'] == 1) {
+
+    // only include published and deprecated products
+    if (isset($node->product_state[$node->language][0]) && $node->product_state[$node->language][0]['value'] == "published") {
+      // Only issue grants if product_view is enabled
+      if (isset($node->product_view_enabled[$node->language][0]) && $node->product_view_enabled[$node->language][0]['value'] == 1) {
+        // Create a grant for 'edit any product content' (will be set in hook_node_grants())
         $grants[] = array(
           'realm' => 'product',
-          'gid' => PUBLIC_PRODUCT_GRANT,
+          'gid' => EDIT_ANY_PRODUCT_CONTENT_GRANT,
           'grant_view' => 1,
           'grant_update' => 0,
           'grant_delete' => 0,
           'priority' => 0,
         );
+        // Create a grant for public access if public is set
+        if (isset($node->product_visibility_public[$node->language][0]['value']) && $node->product_visibility_public[$node->language][0]['value'] == 1) {
+          $grants[] = array(
+            'realm' => 'product',
+            'gid' => PUBLIC_PRODUCT_GRANT,
+            'grant_view' => 1,
+            'grant_update' => 0,
+            'grant_delete' => 0,
+            'priority' => 0,
+          );
+        }
+        // Create a grant for authenticated access if authenticated is set
+        if (isset($node->product_visibility_authenticated[$node->language][0]['value']) && $node->product_visibility_authenticated[$node->language][0]['value'] == 1 && user_is_logged_in()) {
+          $grants[] = array(
+            'realm' => 'product',
+            'gid' => AUTHENTICATED_PRODUCT_GRANT,
+            'grant_view' => 1,
+            'grant_update' => 0,
+            'grant_delete' => 0,
+            'priority' => 0,
+          );
+        }
+        // Create a grant for all organisations (as separate realms) if org visibility is set
+        if (isset($node->product_visibility_custom_orgs[$node->language])) {
+          foreach ($node->product_visibility_custom_orgs[$node->language] as $customorg) {
+            if (isset($customorg['value'])) {
+              $grants[] = array(
+                'realm' => 'product_org_' . $customorg['value'],
+                'gid' => ORG_PRODUCT_GRANT,
+                'grant_view' => 1,
+                'grant_update' => 0,
+                'grant_delete' => 0,
+                'priority' => 0,
+              );
+            }
+          }
+        }
+        // Create a grant for all tags (as separate realms) if tag visibility is set
+        if (isset($node->product_visibility_custom_tags[$node->language])) {
+          foreach ($node->product_visibility_custom_tags[$node->language] as $customtag) {
+            if (isset($customtag['value'])) {
+              $grants[] = array(
+                'realm' => 'product_tag_' . $customtag['value'],
+                'gid' => TAG_PRODUCT_GRANT,
+                'grant_view' => 1,
+                'grant_update' => 0,
+                'grant_delete' => 0,
+                'priority' => 0,
+              );
+            }
+          }
+        }
       }
-      // Create a grant for authenticated access if authenticated is set
-      if (isset($node->product_visibility_authenticated[$node->language][0]['value']) && $node->product_visibility_authenticated[$node->language][0]['value'] == 1 && user_is_logged_in()) {
-        $grants[] = array(
-          'realm' => 'product',
-          'gid' => AUTHENTICATED_PRODUCT_GRANT,
-          'grant_view' => 1,
-          'grant_update' => 0,
-          'grant_delete' => 0,
-          'priority' => 0,
-        );
-      }
-      // Create a grant for subscription to this node based on product reference
+    }
+    // Create a grant for subscription to this node based on product reference
+    if (isset($node->product_state[$node->language][0]) && $node->product_state[$node->language][0]['value'] == "deprecated") {
       $pref = $node->product_ref[$node->language][0]['value'];
       $grants[] = array(
         'realm' => 'product_ref_' . $pref,
@@ -199,37 +235,8 @@ function product_node_access_records($node) {
         'grant_delete' => 0,
         'priority' => 0,
       );
-      // Create a grant for all organisations (as separate realms) if org visibility is set
-      if (isset($node->product_visibility_custom_orgs[$node->language])) {
-        foreach ($node->product_visibility_custom_orgs[$node->language] as $customorg) {
-          if (isset($customorg['value'])) {
-            $grants[] = array(
-              'realm' => 'product_org_' . $customorg['value'],
-              'gid' => ORG_PRODUCT_GRANT,
-              'grant_view' => 1,
-              'grant_update' => 0,
-              'grant_delete' => 0,
-              'priority' => 0,
-            );
-          }
-        }
-      }
-      // Create a grant for all tags (as separate realms) if tag visibility is set
-      if (isset($node->product_visibility_custom_tags[$node->language])) {
-        foreach ($node->product_visibility_custom_tags[$node->language] as $customtag) {
-          if (isset($customtag['value'])) {
-            $grants[] = array(
-              'realm' => 'product_tag_' . $customtag['value'],
-              'gid' => TAG_PRODUCT_GRANT,
-              'grant_view' => 1,
-              'grant_update' => 0,
-              'grant_delete' => 0,
-              'priority' => 0,
-            );
-          }
-        }
-      }
     }
+
     //acl_log('Grants: ' . var_export($grants, TRUE));
   }
   //acl_log('Exit: product_node_access_records');
@@ -526,8 +533,8 @@ function product_collection_callback($productid = NULL) {
       $finalnodes = array();
       $allnodes = node_load_multiple($chunk);
       foreach ($allnodes as $node) {
-        if ($node->product_state[$node->language][0]['value'] == "published") {
-          array_push($finalnodes,$node);
+        if ($node->product_state[$node->language][0]['value'] == "published" || $node->product_state[$node->language][0]['value'] == "deprecated") {
+          array_push($finalnodes, $node);
         }
       }
 
@@ -674,7 +681,7 @@ function product_multiple_select_api($apinid) {
       $allnodes = node_load_multiple($chunk);
       foreach ($allnodes as $node) {
         if ($node->product_state[$node->language][0]['value'] == "published") {
-          array_push($finalnodes,$node);
+          array_push($finalnodes, $node);
         }
       }
 
@@ -726,18 +733,18 @@ function product_createOrUpdateProduct($product, $event) {
     $apis = product_get_apis($nid);
     _product_updateExistingProductNode($node, $product, $event);
     //retrieve new set of currently associated apic_ssh_key_status
-    $napis=product_get_apis($nid);
+    $napis = product_get_apis($nid);
     //check whether any of the apis in $apis is no longer associated
-    foreach ($apis as $apinid){
+    foreach ($apis as $apinid) {
       $found = FALSE;
-      foreach($napis as $napinid){
-        if($apinid == $napinid){
+      foreach ($napis as $napinid) {
+        if ($apinid == $napinid) {
           $found = TRUE;
         }
       }
-      //if not found API is potentially orphaned, so check if it is assoicated with any other products
-      if(!$found){
-        $api = node_load($apinid,null,TRUE);
+      //if not found API is potentially orphaned, so check if it is associated with any other products
+      if (!$found) {
+        $api = node_load($apinid, NULL, TRUE);
         //Check this api is not still referenced by a product
         $query = new EntityFieldQuery();
         $query->entityCondition('entity_type', 'node')
@@ -767,7 +774,7 @@ function product_createOrUpdateProduct($product, $event) {
         }
         else {
           api_deleteAPINode($nid, $event);
-          drupal_set_message(t('Drush DeleteAPI deleted API @api', array('@api'=>$api->api_ref[$api->language][0]['value'])), 'success');
+          drupal_set_message(t('Drush DeleteAPI deleted API @api', array('@api' => $api->api_ref[$api->language][0]['value'])), 'success');
         }
       }
     }
@@ -795,6 +802,14 @@ function _product_createNewProductNode($product, $event = 'publish') {
 
   if (isset($product) && isset($product['document']['info']) && isset($product['document']['info']['name']) && isset($product['document']['info']['version'])) {
     $xname = $product['document']['info']['name'];
+    if (strlen($product['document']['info']['name'] . ':' . $product['document']['info']['version']) > 254) {
+      // if product reference is too long then bomb out
+      watchdog('_product_createNewProductNode', 'ERROR: The "name:version" for this product is greater than 254 characters: %name %version', array(
+        '%name' => $product['document']['info']['name'],
+        '%version' => $product['document']['info']['version']
+      ), WATCHDOG_ERROR);
+      return null;
+    }
   }
 
   if (isset($xname)) {
@@ -1214,6 +1229,18 @@ function _product_createNewProductNode($product, $event = 'publish') {
 function _product_updateExistingProductNode($node, $product, $event = 'bgsync') {
   $hostvariable = variable_get('ibm_apim_host');
   $apim_session = &_ibm_apim_get_apim_session();
+
+  if (isset($product) && isset($product['document']['info']) && isset($product['document']['info']['name']) && isset($product['document']['info']['version'])) {
+    if (strlen($product['document']['info']['name'] . ':' . $product['document']['info']['version']) > 254) {
+      // if product reference is too long then bomb out
+      watchdog('_product_updateExistingProductNode', 'ERROR: The "name:version" for this product is greater than 254 characters: %name %version', array(
+        '%name' => $product['document']['info']['name'],
+        '%version' => $product['document']['info']['version']
+      ), WATCHDOG_ERROR);
+      return null;
+    }
+  }
+
   $language_list = array_keys(locale_language_list('name', TRUE));
   if (isset($product['document']['info']['x-ibm-languages']['title']) && !empty($product['document']['info']['x-ibm-languages']['title'])) {
     foreach ($product['document']['info']['x-ibm-languages']['title'] as $lang => $lang_array) {
@@ -2103,7 +2130,7 @@ function product_check_product_access($node) {
           $nids[] = $item->nid;
         }
         $nodes = node_load_multiple($nids);
-        if ($nodes) {
+        if ($nodes && isset($node->product_state[$node->language][0]) && $node->product_state[$node->language][0]['value'] == "deprecated") {
           foreach ($nodes as $app) {
             if (isset($app->application_subscriptions[$app->language][0]['value'])) {
               $subs = unserialize($app->application_subscriptions[$app->language][0]['value']);
@@ -2120,38 +2147,40 @@ function product_check_product_access($node) {
       }
     }
     if ($view_enabled == TRUE) {
-      // check public nodes
-      if (isset($node->product_visibility_public[$node->language][0]['value']) && $node->product_visibility_public[$node->language][0]['value'] == 1) {
-        $found = TRUE;
-      }
-      elseif (isset($node->product_visibility_authenticated[$node->language][0]['value']) && $node->product_visibility_authenticated[$node->language][0]['value'] == 1 && user_is_logged_in()) {
-        $found = TRUE;
-      }
-      if (isset($node->product_visibility_custom_orgs[$node->language]) && isset($myorg['id'])) {
-        foreach ($node->product_visibility_custom_orgs[$node->language] as $customorg) {
-          if (isset($customorg['value']) && $customorg['value'] == $myorg['id']) {
-            $found = TRUE;
+      if (isset($node->product_state[$node->language][0]) && $node->product_state[$node->language][0]['value'] == "published") {
+        // check public nodes
+        if (isset($node->product_visibility_public[$node->language][0]['value']) && $node->product_visibility_public[$node->language][0]['value'] == 1) {
+          $found = TRUE;
+        }
+        elseif (isset($node->product_visibility_authenticated[$node->language][0]['value']) && $node->product_visibility_authenticated[$node->language][0]['value'] == 1 && user_is_logged_in()) {
+          $found = TRUE;
+        }
+        if (isset($node->product_visibility_custom_orgs[$node->language]) && isset($myorg['id'])) {
+          foreach ($node->product_visibility_custom_orgs[$node->language] as $customorg) {
+            if (isset($customorg['value']) && $customorg['value'] == $myorg['id']) {
+              $found = TRUE;
+            }
           }
         }
-      }
-      if (isset($node->product_visibility_custom_tags[$node->language]) && isset($myorg['id'])) {
-        $query = new EntityFieldQuery();
-        $query->entityCondition('entity_type', 'node')
-          ->entityCondition('bundle', 'devorg')
-          ->fieldCondition('devorg_id', 'value', $myorg['id']);
-        $devorgresults = $query->execute();
-        if (isset($devorgresults['node'])) {
-          $first = array_shift($devorgresults['node']);
-          $devorgnid = $first->nid;
-          if (!empty($devorgnid)) {
-            $devorg = node_load($devorgnid);
-            foreach ($devorg->devorg_tags[$devorg->language] as $devorg_tag) {
-              $tags[] = $devorg_tag['value'];
-            }
-            if (isset($tags) && is_array($tags) && count($tags) > 0) {
-              foreach ($node->product_visibility_custom_tags[$node->language] as $customtag) {
-                if (isset($customtag['value']) && in_array($customtag['value'], $tags)) {
-                  $found = TRUE;
+        if (isset($node->product_visibility_custom_tags[$node->language]) && isset($myorg['id'])) {
+          $query = new EntityFieldQuery();
+          $query->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'devorg')
+            ->fieldCondition('devorg_id', 'value', $myorg['id']);
+          $devorgresults = $query->execute();
+          if (isset($devorgresults['node'])) {
+            $first = array_shift($devorgresults['node']);
+            $devorgnid = $first->nid;
+            if (!empty($devorgnid)) {
+              $devorg = node_load($devorgnid);
+              foreach ($devorg->devorg_tags[$devorg->language] as $devorg_tag) {
+                $tags[] = $devorg_tag['value'];
+              }
+              if (isset($tags) && is_array($tags) && count($tags) > 0) {
+                foreach ($node->product_visibility_custom_tags[$node->language] as $customtag) {
+                  if (isset($customtag['value']) && in_array($customtag['value'], $tags)) {
+                    $found = TRUE;
+                  }
                 }
               }
             }

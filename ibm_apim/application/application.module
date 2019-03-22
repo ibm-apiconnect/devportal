@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2015, 2016
+ * (C) Copyright IBM Corporation 2015, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -1191,7 +1191,7 @@ function application_new_application_clientcreds_submit($form, &$form_state) {
 
           if (isset($node)) {
             // Calling all modules implementing 'ibm_apim_application_creds_create':
-            module_invoke_all('ibm_apim_application_creds_create', $node, $result->data);
+            module_invoke_all('ibm_apim_application_creds_create', $node, $result->data, $data['id']);
 
             // invoke rules
             if (module_exists('rules')) {
@@ -1359,7 +1359,7 @@ function application_update_application_clientcreds_submit($form, &$form_state) 
 
           if (isset($node)) {
             // Calling all modules implementing 'ibm_apim_application_creds_update':
-            module_invoke_all('ibm_apim_application_creds_update', $node, $result->data);
+            module_invoke_all('ibm_apim_application_creds_update', $node, $result->data, $credId);
 
             // invoke rules
             if (module_exists('rules')) {
@@ -1508,7 +1508,7 @@ function application_delete_application_clientcreds_submit($form, &$form_state) 
 
         if (isset($node)) {
           // Calling all modules implementing 'ibm_apim_application_creds_delete':
-          module_invoke_all('ibm_apim_application_creds_delete', $node, $result->data);
+          module_invoke_all('ibm_apim_application_creds_delete', $node, $result->data, $credId);
 
           // invoke rules
           if (module_exists('rules')) {
@@ -1639,7 +1639,7 @@ function application_reset_application_clientid_submit($form, &$form_state) {
     $result = ibm_apim_put($url, json_encode($data));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       $data = $result->data;
-      drupal_alter('ibm_apim_application_reset_application_clientid', $appId, $data);
+      drupal_alter('ibm_apim_application_reset_application_clientid', $appId, $data, $credId);
       drupal_set_message(t('Application Client ID reset: !html_start@label!html_end', array(
         '!html_start' => '<div id="app_secret" class="appClientReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $data['clientID'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
         '@label' => t('Show Client ID'),
@@ -1670,7 +1670,7 @@ function application_reset_application_clientid_submit($form, &$form_state) {
             node_save($node);
             if (isset($node)) {
               // Calling all modules implementing 'hook_ibm_apim_application_clientid_reset':
-              module_invoke_all('ibm_apim_application_clientid_reset', $node, $data);
+              module_invoke_all('ibm_apim_application_clientid_reset', $node, $data, $credId);
               // invoke rules
               if (module_exists('rules')) {
                 if (isset($node->application_orgid[$node->language][0]['value'])) {
@@ -1803,7 +1803,7 @@ function application_reset_application_secret_submit($form, &$form_state) {
     $result = ibm_apim_put($url, json_encode($data));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       $data = $result->data;
-      drupal_alter('ibm_apim_application_reset_application_secret', $appId, $data);
+      drupal_alter('ibm_apim_application_reset_application_secret', $appId, $data, $credId);
       drupal_set_message(t('Application secret reset: !html_start@label!html_end', array(
         '!html_start' => '<div id="app_secret" class="appSecretReset"><input class="toggle-password" id="clientSecret" type="password" readonly value="' . $data['clientSecret'] . '"><div class="passwordToggleContainer"><input type="checkbox" id="show-clientSecret"> <label for="show-clientSecret">',
         '@label' => t('Show Client Secret'),
@@ -1822,7 +1822,7 @@ function application_reset_application_secret_submit($form, &$form_state) {
       $node = node_load($nid);
 
       // Calling all modules implementing 'hook_ibm_apim_application_clientsecret_reset':
-      module_invoke_all('ibm_apim_application_clientsecret_reset', $node, $data);
+      module_invoke_all('ibm_apim_application_clientsecret_reset', $node, $data, $credId);
 
       // invoke rules
       if (module_exists('rules')) {
@@ -2200,7 +2200,7 @@ function _application_edit_application_form_cancel_handler($form, &$form_state) 
  */
 function _application_edit_application_form_submit_handler($form, &$form_state) {
   $name_field = array_shift($form_state['input']['title_field']);
-  $name = $name_field[0]['value'];
+  $name = trim($name_field[0]['value']);
   $description = $form_state['input']['application_description']['und'][0]['value'];
   $oauthurl = trim($form_state['input']['application_oauthredirecturi']['und'][0]['value']);
   $org = ibm_apim_get_current_developer_org();
@@ -2461,7 +2461,7 @@ function _application_add_application_form($form, &$form_state) {
  */
 function _application_add_application_form_submit_handler($form, &$form_state) {
   $name_field = array_shift($form_state['input']['title_field']);
-  $name = $name_field[0]['value'];
+  $name = trim($name_field[0]['value']);
   $description = $form_state['input']['application_description']['und'][0]['value'];
   $oauth = trim($form_state['input']['application_oauthredirecturi']['und'][0]['value']);
   $org = ibm_apim_get_current_developer_org();
@@ -2633,19 +2633,23 @@ function _application_delete_application_submit($form, &$form_state) {
   $org = ibm_apim_get_current_developer_org();
   $developerOrg = $org['id'];
   $appId = $form_state['values']['appid'];
+  // retrieve the node now to avoid timing issues with it being deleted from the db before we can retrieve it
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'application')
+    ->fieldCondition('application_apiid', 'value', $appId);
+  $dbresults = $query->execute();
+  if (isset($dbresults['node'])) {
+    $first = array_shift($dbresults['node']);
+    $nid = $first->nid;
+    $node = node_load($nid);
+  }
+
   $url = '/v1/portal/orgs/' . $developerOrg . '/apps/' . $appId;
   $result = ibm_apim_delete($url);
   if (isset($result) && $result->code >= 200 && $result->code < 300) {
     // also delete the node from the drupal DB too
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', 'application')
-      ->fieldCondition('application_apiid', 'value', $appId);
-    $dbresults = $query->execute();
-    if (isset($dbresults['node'])) {
-      $first = array_shift($dbresults['node']);
-      $nid = $first->nid;
-      $node = node_load($nid);
+    if (isset($node)) {
       $devorgid = $node->application_orgid[$node->language][0]['value'];
       $rules_payload = array(
         'application_nid' => $node->nid,

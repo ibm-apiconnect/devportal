@@ -730,7 +730,6 @@ function apic_taxonomy_menu_block_get_nodes($tids, $vid, $ctype) {
       $query->join('taxonomy_term_data', 'ttd', 'ti.tid = ttd.tid');
       $query->condition('ttd.vid', $vid, '=');
       $query->condition('n.language', $lang, '=');
-      $query->groupBy('ti.tid');
 
       if (!empty($ctype)) {
         $or = db_or();
@@ -744,13 +743,15 @@ function apic_taxonomy_menu_block_get_nodes($tids, $vid, $ctype) {
       $valid_nodes = array();
       if (!empty($results)) {
         foreach($results as $result) {
-          if (node_access("view", $result->nid) === TRUE) {
+          $node = node_load($result->nid);
+          if (node_access("view", $node) === TRUE) {
             $valid_nodes[$result->tid]++;
           }
         }
       }
 
       $cache = cache_set($cache_identifier, $valid_nodes);
+      $nodes = $valid_nodes;
     }
   }
   else {
@@ -773,7 +774,6 @@ function apic_taxonomy_menu_block_get_nodes($tids, $vid, $ctype) {
       $query->fields('ti', array('tid', 'nid'));
       $query->join('taxonomy_term_data', 'ttd', 'ti.tid = ttd.tid');
       $query->condition('ttd.vid', $vid, '=');
-      $query->groupBy('ti.tid');
 
       if (!empty($ctype)) {
         $query->join('node', 'n', 'ti.nid = n.nid');
@@ -788,13 +788,15 @@ function apic_taxonomy_menu_block_get_nodes($tids, $vid, $ctype) {
       $valid_nodes = array();
       if (!empty($results)) {
         foreach($results as $result) {
-          if (node_access("view", $result->nid) === TRUE) {
+          $node = node_load($result->nid);
+          if (node_access("view", $node) === TRUE) {
             $valid_nodes[$result->tid]++;
           }
         }
       }
 
       $cache = cache_set($cache_identifier, $valid_nodes);
+      $nodes = $valid_nodes;
     }
   }
 

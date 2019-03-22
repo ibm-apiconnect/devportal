@@ -1,0 +1,57 @@
+<?php
+/**
+ * @file
+ * Base module file for custom_content_export
+ *
+ * @defgroup custom_content_export Custom Content Export
+ */
+define('CUSTOM_CONTENT_EXPORT_DEFAULT_DATE_FORMAT', 'Y-m-d H:i:s');
+
+/**
+ * Implements hook_menu().
+ */
+function custom_content_export_menu() {
+  $items = array();
+  $items['admin/content/customexport'] = array(
+    'title'            => 'Export custom content',
+    'description'      => 'Export custom content for migration to APIC v2018',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('custom_content_export_form'),
+    'file'             => 'includes/custom_content_export.admin.inc',
+    'access callback' => 'custom_content_export_access_admin_pdur',
+    'type'             => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+ * Check if the current user has access and PDUR is enabled
+ * @return bool
+ */
+function custom_content_export_access_admin_pdur() {
+  global $user;
+  $admin_role = user_role_load_by_name('administrator');
+  $admin_rid = $admin_role->rid;
+  return (isset($user->uid) && $user->uid === 1) || user_has_role($admin_rid);
+}
+
+/**
+ * Implements hook_theme
+ */
+function custom_content_export_theme($existing, $type, $theme, $path) {
+  return array(
+    'custom_content_export_flatfile' => array(
+      'variables' => array(
+        'header' => NULL,
+        'rows'   => NULL,
+        'type'   => NULL,
+        'html'   => FALSE,
+        'prefix' => '',
+        'suffix' => '',
+      ),
+      'file'      => 'includes/custom_content_export.admin.inc',
+    ),
+  );
+}
+

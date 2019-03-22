@@ -2,7 +2,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2016
+ * (C) Copyright IBM Corporation 2016, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -533,8 +533,11 @@
                                         populateCodeSnippetsTimeout(expanded, path, verb);
                                         var exampleid = cleanUpClassName(expanded.info["x-ibm-name"] + expanded.info["version"]) + "_paths_" + cleanUpKey(path) + "_" + verb;
                                         var tryid = cleanUpClassName(expanded.info["x-ibm-name"] + expanded.info["version"]) + "_" + cleanUpKey(path) + "_" + verb;
-                                        $("#tab-content_example_" + exampleid + " .exampleDefinition").text(verb.toUpperCase() + " " + endpoint + expanded['basePath'] + path);
-                                        $("#tab-content_try_" + tryid + " .apiURL").text(endpoint + expanded['basePath'] + path);
+                                        var url = endpoint + expanded['basePath'] + path;
+                                        // remove any double slashes in the path of the URL
+                                        url = url.replace(/([^:]\/)\/+/g, "$1");
+                                        $("#tab-content_example_" + exampleid + " .exampleDefinition").text(verb.toUpperCase() + " " + url);
+                                        $("#tab-content_try_" + tryid + " .apiURL").text(url);
                                     }
                                 });
                             });
@@ -1516,7 +1519,16 @@
         });
         if (headerParameters.length > 0) {
             headerParameters.forEach(function (parameter) {
-                if ((requestForm['param' + parameter.name] !== undefined && (!parameter.type || (parameter.type != "boolean" && !parameter.enum))) || (parameter.type && parameter.type == "boolean" && (requestForm['param' + parameter.name] == "true" || requestForm['param' + parameter.name] == "false")) || (parameter.enum && parameter.enum.indexOf(requestForm['param' + parameter.name]) != -1)) {
+                if (
+                    // parameter type only allowed to be undefined if it's type is either boolean, enum, or not assigned.
+                    (requestForm['param' + parameter.name] !== undefined && (!parameter.type || (parameter.type != "boolean" &&!parameter.enum)) && (requestForm['param' + parameter.name].length > 0)) ||
+
+                    // parameter type boolean can only be true or false. 
+                    (parameter.type && parameter.type == "boolean" && (requestForm['param' + parameter.name] == "true" || requestForm ['param' + parameter.name] == "false")) ||
+
+                    // parameter is enum and param value exists in it
+                    (parameter.enum && parameter.enum.indexOf(requestForm['param' + parameter.name]) != -1)
+                ) {
                     headers[parameter.name] = requestForm['param' + parameter.name];
                 } else if (parameter.type && parameter.type == "boolean" && parameter.required) {
                     // purely here to catch required boolean fields that are set to false
@@ -1643,9 +1655,17 @@
             }
             if (xhrObj.responseText && xhrObj.responseText !== "") {
                 if ((responseHeaderArray['content-type'] || responseHeaderArray['Content-Type']) && (responseHeaderArray['content-type'] == 'application/json' || responseHeaderArray['Content-Type'] == 'application/json')) {
-                    $(".responseDetails.responseBody", self.responseSection).text(window.vkbeautify.json(xhrObj.responseText));
+                    var parsedJsonResponse = window.vkbeautify.json(xhrObj.responseText);
+                    if (!parsedJsonResponse) {
+                        parsedJsonResponse = xhrObj.responseText;
+                    }
+                    $(".responseDetails.responseBody", self.responseSection).text(parsedJsonResponse);
                 } else if ((responseHeaderArray['content-type'] || responseHeaderArray['Content-Type']) && (responseHeaderArray['content-type'] == 'application/xml' || responseHeaderArray['Content-Type'] == 'application/xml')) {
-                    $(".responseDetails.responseBody", self.responseSection).text(window.vkbeautify.xml(xhrObj.responseText));
+                    var parsedXmlResponse = window.vkbeautify.xml(xhrObj.responseText);
+                    if (!parsedXmlResponse) {
+                        parsedXmlResponse = xhrObj.responseText;
+                    }
+                    $(".responseDetails.responseBody", self.responseSection).text(parsedXmlResponse);
                 } else {
                     $(".responseDetails.responseBody", self.responseSection).text(xhrObj.responseText);
                 }

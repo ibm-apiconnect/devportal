@@ -1,0 +1,8 @@
+name = Custom Content Export
+description = Export any custom content to a file for import into APIC v2018. This is only necessary for custom content that is not stored in IBM API Manager, e.g. custom additional fields
+package = IBM API Connect v5
+core = 7.x
+version = VERSION
+
+project = "custom_content_export"
+

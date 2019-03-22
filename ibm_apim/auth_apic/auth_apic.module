@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2015, 2016
+ * (C) Copyright IBM Corporation 2015, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -276,7 +276,7 @@ function _auth_apic_user_login_form_alter(&$form, &$form_state) {
     $form['#submit'] = array_diff($form['#submit'], array("security_questions_user_login_submit"));
   }
 
-  if (in_array('tfa_login_submit', $form['#submit'],true)) {
+  if (in_array('tfa_login_submit', $form['#submit'], TRUE)) {
     unset($form['#submit']['tfa_login_submit']);
   }
 
@@ -299,6 +299,9 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
         }
         if (isset($form['expiration'])) {
           unset($form['expiration']);
+        }
+        if (isset($form['email'])) {
+          unset($form['email']);
         }
         break;
       case 'password_policy_admin_form':
@@ -329,10 +332,13 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
         if (isset($form['modules']['IBM API Connect v5']['social_login'])) {
           unset($form['modules']['IBM API Connect v5']['social_login']);
         }
+        if (isset($form['modules']['IBM API Connect v5']['openid_connect_isam'])) {
+          unset($form['modules']['IBM API Connect v5']['openid_connect_isam']);
+        }
         break;
       case 'password_policy_password_tab' :
         global $user;
-        if (variable_get('no_autocomplete_profile_form', FALSE)) {
+        if (variable_get('no_autocomplete_login_form', FALSE)) {
           if (empty($form['pass']['#attributes'])) {
             $form['pass']['#attributes'] = array();
           }
@@ -386,12 +392,12 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
         $ibm_apim_saml_idp = variable_get('ibm_apim_saml_idp', 0);
         $emailasuser = variable_get('ibm_apim_email_as_username', 1);
         $debug_trace = variable_get('ibm_apim_debug_trace', FALSE);
-        if ($debug_trace == TRUE){
+        if ($debug_trace == TRUE) {
           watchdog('auth_apic_authenticate', 'Read only IDP: %readonly, SAML IDP: %saml, EmailAsUser: %emailasuser', array(
-                   '%readonly' => $ibm_apim_readonly_idp,
-                   '%saml' => $ibm_apim_saml_idp,
-                   '%emailasuser' => $emailasuser
-                   ), WATCHDOG_NOTICE);
+            '%readonly' => $ibm_apim_readonly_idp,
+            '%saml' => $ibm_apim_saml_idp,
+            '%emailasuser' => $emailasuser
+          ), WATCHDOG_NOTICE);
         }
         if ($ibm_apim_readonly_idp == TRUE) {
           if ($emailasuser == 1 || $ibm_apim_saml_idp == 1) {
@@ -420,6 +426,21 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
               break;
             }
           }
+        }
+        if (variable_get('no_autocomplete_login_form', FALSE)) {
+          if (isset($form['account']['pass'])) {
+            if (empty($form['account']['pass']['#attributes'])) {
+              $form['account']['pass']['#attributes'] = array();
+            }
+            $form['account']['pass']['#attributes']['autocomplete'] = 'off';
+          }
+          if (isset($form['pass'])) {
+            if (empty($form['pass']['#attributes'])) {
+              $form['pass']['#attributes'] = array();
+            }
+            $form['pass']['#attributes']['autocomplete'] = 'off';
+          }
+          $form['#attributes']['autocomplete'] = 'off';
         }
         break;
       case 'user_profile_form' :
@@ -652,10 +673,10 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
           if (isset($form['rip']['restrict_by_ip_address'])) {
             $form['rip']['#disabled'] = TRUE;
             $form['rip']['#required'] = FALSE;
-          } 
+          }
           if (isset($form['rip']['restrict_by_ip_address'])) {
             unset($form['rip']);
-          }         
+          }
         }
 
         $form['account']['#weight'] = -10;
@@ -675,11 +696,32 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
         if (isset($form['field_uid'])) {
           unset($form['field_uid']);
         }
+        if (variable_get('no_autocomplete_login_form', FALSE)) {
+          if (isset($form['account']['pass'])) {
+            if (empty($form['account']['pass']['#attributes'])) {
+              $form['account']['pass']['#attributes'] = array();
+            }
+            $form['account']['pass']['#attributes']['autocomplete'] = 'off';
+          }
+          if (isset($form['pass'])) {
+            if (empty($form['pass']['#attributes'])) {
+              $form['pass']['#attributes'] = array();
+            }
+            $form['pass']['#attributes']['autocomplete'] = 'off';
+          }
+          $form['#attributes']['autocomplete'] = 'off';
+        }
+
+        // if email field is disabled then remove the current password field
+        if ($form['account']['mail']['#disabled'] == TRUE) {
+          unset($form['account']['current_pass']);
+        }
 
         $form['#validate'] = array_diff($form['#validate'], array(
           'user_account_form_validate',
           'user_validate_current_pass'
         ));
+        $form['#validate'][] = 'ibm_apim_validate_current_pass';
         // if readonly registry then need to disable the email validator
         if ($ibm_apim_readonly_idp == TRUE) {
           for ($i = 0; $i < sizeof($form['#validate']); $i++) {
@@ -1119,7 +1161,8 @@ function auth_apic_authenticate_submit($form, &$form_state) {
             // Not required so continue with log in.
             auth_apic_authenticate_submit_redirect($form, $form_state);
           }
-        } else  {
+        }
+        else {
           // Restart session context, and TFA process.
           tfa_start_context($account);
           $tfa = tfa_get_process($account);
@@ -1165,6 +1208,8 @@ function auth_apic_authenticate_submit($form, &$form_state) {
  */
 function auth_apic_authenticate_submit_redirect($form, &$form_state) {
   $devorg = '';
+  module_load_include('pages.inc', 'user');
+
   // passed validation so login
   if (isset($form_state['uid'])) {
     user_login_submit(array(), $form_state);
@@ -1251,15 +1296,15 @@ function auth_apic_authenticate($name, $pass) {
   $result = _ibm_apim_json_http_request($url, 'GET', $headers);
 
   $debug_trace = variable_get('ibm_apim_debug_trace', FALSE);
-  if ($debug_trace == TRUE){
+  if ($debug_trace == TRUE) {
     watchdog('auth_apic_authenticate', 'User login result: %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
   }
   // Must get the session again now as it may have changed when we logged in
   $apim_session = &_ibm_apim_get_apim_session();
   if (isset($result) && ($result->code == 200) && $result->data != '') {
     watchdog('auth_apic_authenticate', '%user login return code %data', array(
-       '%data' => $result->code,
-       '%user' => $name
+      '%data' => $result->code,
+      '%user' => $name
     ), WATCHDOG_NOTICE);
     $apim_session['auth'] = base64_encode($name . ':' . $pass);
     $apim_session['userdata'] = $result->data;
@@ -1267,7 +1312,8 @@ function auth_apic_authenticate($name, $pass) {
       $apim_session['memberid'] = $result->data['id'];
     }
     return $result->data;
-  } else {
+  }
+  else {
     watchdog('auth_apic_authenticate', '%user login return code %data, check management server logs for more information', array(
       '%data' => $result->code,
       '%user' => $name
@@ -1414,6 +1460,7 @@ function auth_apic_form_user_register_form_alter(&$form, &$form_state) {
  * @param form_state
  */
 function auth_apic_register_user($form, &$form_state) {
+  module_load_include('pages.inc', 'user');
   $name = '';
   $mail = '';
   $pass = '';
@@ -1471,16 +1518,16 @@ function auth_apic_register_user($form, &$form_state) {
 
   $debug_trace = variable_get('ibm_apim_debug_trace', FALSE);
 
-  if ($debug_trace == TRUE){
+  if ($debug_trace == TRUE) {
     watchdog('auth_apic_register_user', 'Posting headers: %headers, URL: %url', array(
-                 '%headers' => serialize($headers),
-                 '%url' => $url
-            ), WATCHDOG_NOTICE);
+      '%headers' => serialize($headers),
+      '%url' => $url
+    ), WATCHDOG_NOTICE);
   }
 
   $result = _ibm_apim_json_http_request($url, 'POST', $headers, json_encode($data));
 
-  if ($debug_trace == TRUE){
+  if ($debug_trace == TRUE) {
     watchdog('auth_apic_register_user', 'Got back: %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
   }
 
@@ -1553,6 +1600,9 @@ function auth_apic_register_user($form, &$form_state) {
     elseif ($result->data && $result->data['errors'] && array_key_exists("user.exists.or.incorrect.credentials", $result->data['errors'][0])) {
       // user auth failed (authURL)
       drupal_set_message(t('Either a user already exists with those credentials or the credentials supplied were not correct.'), 'error');
+    }
+    elseif ($result->data && $result->data['errors'] && array_key_exists("usermanagement.improperCharacter", $result->data['errors'][0])) {
+      drupal_set_message(t('One of the characters entered is not supported by the system.'), 'error');
     }
     else {
       drupal_set_message(t('There was an error creating your account: %data', array('%data' => serialize($result->data))), 'error');
@@ -1771,17 +1821,17 @@ function _auth_apic_change_user_password($new_password, $authuser, $username, $c
       $headers[] = 'Accept-Language: ' . $lang_name;
     }
 
-    $debug_trace = variable_get('ibm_apim_debug_trace', FALSE); 
-    if ($debug_trace == TRUE){
+    $debug_trace = variable_get('ibm_apim_debug_trace', FALSE);
+    if ($debug_trace == TRUE) {
       watchdog('_auth_apic_change_user_password', 'Putting headers: %headers, URL: %url', array(
-                '%headers' => serialize($headers),
-                '%url' => $url
-                ), WATCHDOG_NOTICE);
+        '%headers' => serialize($headers),
+        '%url' => $url
+      ), WATCHDOG_NOTICE);
     }
 
     $result = _ibm_apim_json_http_request($url, 'PUT', $headers, json_encode($data));
 
-    if ($debug_trace == TRUE){
+    if ($debug_trace == TRUE) {
       watchdog('_auth_apic_change_user_password', 'Got back %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
     }
 
@@ -1804,10 +1854,15 @@ function _auth_apic_change_user_password($new_password, $authuser, $username, $c
         if ($result->data && $result->data['errors']) {
           if (array_key_exists("usermanagement.passwordtooweak", $result->data['errors'][0])) {
             drupal_set_message(t('Password must contain characters from 3 of the 4 following categories: 1. upper-case, 2. lower-case, 3. numeric, and 4. punctuation (for example, !, $, #, %)'), 'error');
-          } else if (array_key_exists("usermanagement.incorrectPassword", $result->data['errors'][0])) {
+          }
+          else if (array_key_exists("usermanagement.incorrectPassword", $result->data['errors'][0])) {
             drupal_set_message(t('The current password is incorrect.'), 'error');
-          } else {
-            drupal_set_message(t('An error occurred: %data', array('%data'=>serialize($result->data['errors']))), 'error');
+          }
+          else if (array_key_exists("usermanagement.improperCharacter", $result->data['errors'][0])) {
+            drupal_set_message(t('One of the characters entered is not supported by the system.'), 'error');
+          }
+          else {
+            drupal_set_message(t('An error occurred: %data', array('%data' => serialize($result->data['errors']))), 'error');
           }
         }
       }
@@ -2012,7 +2067,7 @@ function auth_apic_activate_id_callback($path = NULL) {
     // decode the base64 encoded JSON in the incoming URL
     $activationObj = json_decode(base64_decode($actToken));
     $debug_trace = variable_get('ibm_apim_debug_trace', FALSE);
-    if ($debug_trace == TRUE){
+    if ($debug_trace == TRUE) {
       watchdog('auth_apic_activate_id_callback', 'Decoded token %token ', array('%token' => serialize($activationObj)), WATCHDOG_NOTICE);
     }
     // set global variables with the temp auth credentials from the incoming URL payload
@@ -2022,7 +2077,8 @@ function auth_apic_activate_id_callback($path = NULL) {
       // essential info missing from token
       drupal_set_message(t('Invalid Token: missing required fields. Contact the system administrator for assistance.'), 'error');
       watchdog('auth_apic_activate_id_callback', 'Invalid Token: missing required fields. token: %token', array(
-        '%token' => serialize($activationObj)), WATCHDOG_NOTICE);
+        '%token' => serialize($activationObj)
+      ), WATCHDOG_NOTICE);
       drupal_goto();
     }
     $tempUser = $activationObj->{'authentication'}->{'username'};
@@ -2030,7 +2086,7 @@ function auth_apic_activate_id_callback($path = NULL) {
     $org = check_plain($activationObj->{'providerContext'}->{'orgID'});
     $env = check_plain($activationObj->{'providerContext'}->{'environmentID'});
     $userid = ibm_apim_decrypt_data($activationObj->{'username'});
-    if ($debug_trace == TRUE){
+    if ($debug_trace == TRUE) {
       watchdog('auth_apic_activate_id_callback', 'userid %userid ', array('%userid' => $userid), WATCHDOG_NOTICE);
     }
     if (!empty($userid)) {
@@ -2046,15 +2102,24 @@ function auth_apic_activate_id_callback($path = NULL) {
       $apimserver = _ibm_apim_parse_apim_host();
       if ($apimserver['port'] == '443') {
         $apimurl = $apimserver['scheme'] . "://" . $apimserver['host'] . "/";
-      } else {
+      }
+      else {
         $apimurl = $apimserver['scheme'] . "://" . $apimserver['host'] . ":" . $apimserver['port'] . "/";
       }
-      if(substr($url,0,strlen($apimurl)) != $apimurl) {
-        drupal_set_message(t('URL provided in token does not match APIM server. Contact the system administrator for assistance.'), 'error');
-        watchdog('auth_apic_activate_id_callback', 'Invalid Token: Token contains a invalid URL. token: %token', array(
-          '%token' => serialize($activationObj)
-        ), WATCHDOG_NOTICE);
-        drupal_goto();
+      if (substr($url, 0, strlen($apimurl)) != $apimurl) {
+        $tokenValidationDisabled = variable_get('ibm_apim_insecure_token_validation', FALSE);
+        if ($tokenValidationDisabled == FALSE) {
+          drupal_set_message(t('URL provided in token does not match APIM server. Contact the system administrator for assistance.'), 'error');
+          watchdog('auth_apic_activate_id_callback', 'Invalid Token: Token contains a invalid URL. token: %token', [
+            '%token' => serialize($activationObj)
+          ], WATCHDOG_NOTICE);
+          drupal_goto();
+        }
+        else {
+          watchdog('auth_apic_activate_id_callback', 'Invalid Token: Token contains a invalid URL. This is likely a misconfiguration. Since validation of tokens has been disabled, the token will be allowed to pass, however validation may fail. token: %token', [
+            '%token' => serialize($activationObj)
+          ], WATCHDOG_NOTICE);
+        }
       }
       $headers = array(
         'Content-Type: application/json',
@@ -2067,22 +2132,19 @@ function auth_apic_activate_id_callback($path = NULL) {
       if (isset($lang_name)) {
         $headers[] = 'Accept-Language: ' . $lang_name;
       }
-      if ($debug_trace == TRUE){
+      if ($debug_trace == TRUE) {
         watchdog('auth_apic_activate_id_callback', 'Posting headers: %headers', array('%headers' => serialize($headers)), WATCHDOG_NOTICE);
       }
 
       $result = _ibm_apim_json_http_request($url, 'POST', $headers, '{}');
 
-      if ($debug_trace == TRUE){
+      if ($debug_trace == TRUE) {
         watchdog('auth_apic_activate_id_callback', 'Got back: %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
       }
       if (isset($result) && $result->code >= 200 && $result->code < 300) {
         $account = user_load_by_name($userid);
         // update status via SQL to avoid triggering drupal activation email
-        db_update('users')
-          ->fields(array('status' => 1))
-          ->condition('uid', $account->uid)
-          ->execute();
+        db_update('users')->fields(array('status' => 1))->condition('uid', $account->uid)->execute();
 
         drupal_set_message(t('Account successfully activated, please login to continue.'));
         drupal_goto('user/login');
@@ -2098,6 +2160,9 @@ function auth_apic_activate_id_callback($path = NULL) {
               // user already exists
               drupal_set_message(t('User already exists. Please use existing credentials to sign in.'), 'error');
               drupal_goto('user/login');
+            }
+            else if (array_key_exists("usermanagement.improperCharacter", $result->data['errors'][0])) {
+              drupal_set_message(t('One of the characters entered is not supported by the system.'), 'error');
             }
             else {
               // invalid credentials, redirect to login form
@@ -2315,16 +2380,16 @@ function auth_apic_forgotpwd_form_submit_handler($form, &$form_state) {
 
     $debug_trace = variable_get('ibm_apim_debug_trace', FALSE);
 
-    if ($debug_trace == TRUE){
+    if ($debug_trace == TRUE) {
       watchdog('auth_apic_forgotpwd_form_submit_handler', 'Posting headers: %headers, URL: %url', array(
-               '%headers' => serialize($headers),
-               '%url' => $url
-               ), WATCHDOG_NOTICE);
+        '%headers' => serialize($headers),
+        '%url' => $url
+      ), WATCHDOG_NOTICE);
     }
 
     $result = _ibm_apim_json_http_request($url, 'POST', $headers, json_encode($data));
 
-    if ($debug_trace == TRUE){
+    if ($debug_trace == TRUE) {
       watchdog('auth_apic_forgotpwd_form_submit_handler', 'Got back: %result', array('%result' => serialize($result)), WATCHDOG_NOTICE);
     }
 
@@ -2454,7 +2519,7 @@ function _auth_apic_get_saml_endpoint() {
     $advPortalConfigIni = '/etc/ibm/apimConfigFiles/' . $envname . '/advPortalConfiguration.ini';
     if (file_exists($advPortalConfigIni)) {
       $advPortalConfig_array = parse_ini_file($advPortalConfigIni);
-      $endpoint_host = trim($advPortalConfig_array['devportal_lb_dns_name']);
+      $endpoint_host = trim($advPortalConfig_array['portal_api']);
     }
   }
   if (isset($endpoint_host) && !(empty($endpoint_host))) {

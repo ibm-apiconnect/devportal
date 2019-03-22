@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2015, 2016
+ * (C) Copyright IBM Corporation 2015, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -54,6 +54,17 @@ function ibm_apim_help($path, $arg) {
       $output .= '</dl>';
       return $output;
   }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function ibm_apim_permission() {
+  return array(
+    'administer APIC integration' => array(
+      'title' => t('Administer APIC integration')
+    )
+  );
 }
 
 /**
@@ -309,6 +320,14 @@ function ibm_apim_devel_config_form($form, &$form_state) {
     '#description' => t('WARNING: This should only be used for debugging purposes as it increases the logging load on the Developer Portal.')
   );
 
+  $form['ibm_apim_insecure_token_validation'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable Insecure Token Validation'),
+    '#default_value' => variable_get('ibm_apim_insecure_token_validation', FALSE),
+    '#weight' => -4,
+    '#description' => t('Disable validation of activation tokens. In some special configurations, the Portal\'s understanding of the management server URL (as set by set_apim_host) might be different to the URL configured in the management server. This should be corrected, but if that is impossible then this setting can be used to disable the validation of activation tokesn issued by the management server. WARNING: Enablng this setting may leave you vulnerable to malicious token manipulation attacks.')
+  );
+
   // Make it a settings form.
   $form = system_settings_form($form);
 
@@ -404,7 +423,8 @@ function ibm_apim_config_form($form, &$form_state) {
   );
 
   $ibm_apim_social_login = variable_get('ibm_apim_social_login', 0);
-  if ($ibm_apim_social_login == 1) {
+  $pdur_analytics_enabled = variable_get('ibm_apim_pdur_analytics', 0);
+  if ($ibm_apim_social_login == 1 && $pdur_analytics_enabled == 0) {
     $form['config']['ibm_apim_show_analytics']['#default_value'] = 0;
     $form['config']['ibm_apim_show_analytics']['#disabled'] = TRUE;
   }
@@ -423,6 +443,14 @@ function ibm_apim_config_form($form, &$form_state) {
     '#default_value' => variable_get('ibm_apim_allow_application_images', 1),
     '#weight' => -10,
     '#description' => t('If checked API consumers will be able to upload custom images for their applications.')
+  );
+
+  $form['config']['ibm_apim_enable_version_page'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable APIC version page'),
+    '#default_value' => variable_get('ibm_apim_enable_version_page', 0),
+    '#weight' => -10,
+    '#description' => t('If checked then the APIC version is available from /ibm_apim/version.')
   );
 
   // code snippets options
@@ -1399,7 +1427,8 @@ function _ibm_apim_switch_from_social_login() {
     'ldap_servers',
     'ldap_user',
     'ldap_sso',
-    'openid_connect'
+    'openid_connect',
+    'openid_connect_isam'
   ), TRUE);
 }
 
@@ -1483,7 +1512,7 @@ function ibm_apim_menu() {
     'description' => 'Configuration for the IBM API Connect module.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ibm_apim_config_form'),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('administer APIC integration'),
     'type' => MENU_NORMAL_ITEM
   );
   $items['admin/config/development/ibm_apim'] = array(
@@ -1491,7 +1520,7 @@ function ibm_apim_menu() {
     'description' => 'Development configuration for the IBM API Connect module.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ibm_apim_devel_config_form'),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('administer APIC integration'),
     'type' => MENU_NORMAL_ITEM
   );
   $items['ibm_apim/swaggerjson/%'] = array(
@@ -1622,7 +1651,7 @@ function ibm_apim_menu() {
     'title' => 'IBM API Connect Version',
     'type' => MENU_CALLBACK,
     'page callback' => 'ibm_apim_version',
-    'access callback' => TRUE
+    'access callback' => '_ibm_apim_version_page_enabled'
   );
 
   return $items;
@@ -1642,6 +1671,15 @@ function ibm_apim_health() {
   drupal_exit();
 }
 
+/**
+ * Whether to enable the ibm_apim/version page
+ *
+ * @return mixed
+ */
+function _ibm_apim_version_page_enabled() {
+  $ibm_apim_enable_version_page = variable_get('ibm_apim_enable_version_page', 0);
+  return $ibm_apim_enable_version_page;
+}
 
 /**
  * We need our module to run last for the user register form so we can remove any other fields
@@ -2719,7 +2757,7 @@ function ibm_apim_billing() {
 
   // get the current site logo
   if (!$logo = theme_get_setting('logo_path')) {
-    $logo = theme_get_setting('logo');
+    $logo = file_create_url(theme_get_setting('logo'));
   }
 
   if (empty($logo)) {
@@ -3237,6 +3275,12 @@ function ibm_apim_convert_to_apic_address($values) {
       // if username not email then update that too
       // commented out until APIC API can handle it
       //$data['email'] = $mail;
+
+      // do include email address for authURL user registries
+      $config_data = _ibm_apim_get_apim_config();
+      if (isset($config_data['userRegistry']) && isset($config_data['userRegistry']['type']) && $config_data['userRegistry']['type'] == "authUrl") {
+        $data['email'] = $mail;
+      }
     }
   }
   $data['username'] = $username;
@@ -3318,7 +3362,8 @@ function _ibm_apim_user_is_not_admin_analytics() {
   global $user;
   $analytics_enabled = variable_get('ibm_apim_show_analytics', 1);
   $ibm_apim_social_login = variable_get('ibm_apim_social_login', 0);
-  if ($analytics_enabled == 1 && $ibm_apim_social_login == 0 && user_is_logged_in() && isset($user) && $user->uid != 1) {
+  $pdur_analytics_enabled = variable_get('ibm_apim_pdur_analytics', 0);
+  if ($analytics_enabled == 1 && ($ibm_apim_social_login == 0|| $pdur_analytics_enabled == 1) && user_is_logged_in() && isset($user) && $user->uid != 1) {
     return TRUE;
   }
   else {
@@ -3509,7 +3554,7 @@ function _ibm_apim_myorg_page() {
     $markup .= '<div id="accordion"><div class="myorgAddUserLink"><h3>' . t('Add a user') . $image . '</h3>';
     $markup .= '<div class="portalApi animateMaxHeight">' . drupal_render($_ibm_apim_invite_user_form) . '</div></div></div>';
   }
-  $markup .= '<div class="clearBoth" id="ajax-response-goes-here"></div></div>';
+  $markup .= '<div class="clearBoth" id="ajax-response-goes-here"></div>';
 
   $limit = variable_get('default_nodes_main', 10);
   $developer_org = ibm_apim_get_current_developer_org();
@@ -3580,7 +3625,7 @@ function _ibm_apim_edit_myorg($form, &$form_state) {
     $form = array();
     $form['name'] = array(
       '#type' => 'textfield',
-      '#title' => 'Organization name',
+      '#title' => t('Organization name'),
       '#size' => 25,
       '#maxlength' => 50,
       '#required' => TRUE,
@@ -3588,7 +3633,14 @@ function _ibm_apim_edit_myorg($form, &$form_state) {
     );
     $form['orgid'] = array('#type' => 'hidden', '#value' => $developerOrg);
 
-    $form['submit'] = array('#type' => 'submit', '#value' => t('Submit'));
+    $form['actions'] = ['#type' => 'actions'];
+    $form['actions']['cancel'] = array(
+      '#type' => 'link',
+      '#title' => t('Cancel'),
+      '#href' => 'myorg',
+    );
+    $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Submit'));
+    $form['actions']['#submit'] = array('_ibm_apim_edit_myorg_submit_handler');
     $form['#submit'] = array('_ibm_apim_edit_myorg_submit_handler');
     $form['#attributes']['class'] = 'reg-form';
     return $form;
@@ -4134,6 +4186,15 @@ function ibm_apim_update_org_name($orgid = NULL, $orgname = NULL) {
 function ibm_apim_form_alter(&$form, &$form_state, $form_id) {
   global $user;
   switch ($form_id) {
+    case 'contact_site_form':
+      // if logged in then make the contact form mail field readonly
+      if (user_is_logged_in() && isset($user->mail)) {
+        if (isset($form['mail'])) {
+          $form['mail']['#default_value'] = $user->mail;
+          $form['mail']['#disabled'] = TRUE;
+        }
+      }
+      break;
     case 'flood_control_settings_form' :
       $form['apic_intro'] = array(
               '#markup' => '<br/><br/><p>' . t('Note: These settings control the login security provided by the Flood Control module.  Users blocked by these settings can be unblocked via the reset_locked_user CLI command.  These settings are independent of the Login Security settings managed in Configuration->People') . '</p>',
@@ -4204,27 +4265,32 @@ function ibm_apim_form_alter(&$form, &$form_state, $form_id) {
       break;
     case 'user_register_form' :
     case 'ibm_apim_activate_create_account_form' :
-      // force devorg field to look like a single text entry field even if we now have infinite cardinality
-      $form['field_developer_organization']['und']['#cardinality'] = '1';
-      $form['field_developer_organization']['und'][0]['#cardinality'] = '1';
-      if (isset($form['field_developer_organization']['und'][0]['_weight'])) {
-        unset($form['field_developer_organization']['und'][0]['_weight']);
-      }
-      if (isset($form['field_developer_organization']['und']['add_more'])) {
-        unset($form['field_developer_organization']['und']['add_more']);
-      }
-      if (isset($form['field_developer_organization']['und']['#description'])) {
-        $form['field_developer_organization']['und'][0]['#description'] = $form['field_developer_organization']['und']['#description'];
-        $form['field_developer_organization']['und'][0]['value']['#description'] = $form['field_developer_organization']['und']['#description'];
-      }
-      if (isset($form['field_developer_organization']['und']['#title'])) {
-        $form['field_developer_organization']['und'][0]['#title'] = $form['field_developer_organization']['und']['#title'];
-        $form['field_developer_organization']['und'][0]['value']['#title'] = $form['field_developer_organization']['und']['#title'];
+      if (isset($form['field_developer_organization'])) {
+        // force devorg field to look like a single text entry field even if we now have infinite cardinality
+        $form['field_developer_organization']['und']['#cardinality'] = '1';
+        $form['field_developer_organization']['und'][0]['#cardinality'] = '1';
+        if (isset($form['field_developer_organization']['und'][0]['_weight'])) {
+          unset($form['field_developer_organization']['und'][0]['_weight']);
+        }
+        if (isset($form['field_developer_organization']['und']['add_more'])) {
+          unset($form['field_developer_organization']['und']['add_more']);
+        }
+        if (isset($form['field_developer_organization']['und']['#description'])) {
+          $form['field_developer_organization']['und'][0]['#description'] = $form['field_developer_organization']['und']['#description'];
+          $form['field_developer_organization']['und'][0]['value']['#description'] = $form['field_developer_organization']['und']['#description'];
+        }
+        if (isset($form['field_developer_organization']['und']['#title'])) {
+          $form['field_developer_organization']['und'][0]['#title'] = $form['field_developer_organization']['und']['#title'];
+          $form['field_developer_organization']['und'][0]['value']['#title'] = $form['field_developer_organization']['und']['#title'];
+        }
       }
       break;
     case 'user_profile_form' :
-      // do not show devorg field on user profile panel
-      $form['field_developer_organization']['#access'] = FALSE;
+      // hide the devorg field since it is only used on user create
+      if (isset($form['field_developer_organization']) && variable_get('ibm_apim_hide_devorg_field', TRUE)) {
+        unset($form['field_developer_organization']);
+      }
+
       $ibm_apim_allow_user_deletion = variable_get('ibm_apim_allow_user_deletion', TRUE);
       if ($ibm_apim_allow_user_deletion == TRUE && $user->uid != 1) {
         global $user;
@@ -5507,8 +5573,8 @@ function ibm_apim_cron($customurl = NULL) {
                 // build up list of popular blocks to add to front page
                 if ($createPopularBlocks != 1) {
                   if ($index < 4) {
-                    if (isset($productnode->product_visibility_public[$productnode->language][0]['value']) && $productnode->product_visibility_public[$productnode->language][0]['value'] == 1 && isset($productnode->status) && $productnode->status == 1) {
-                      // only add public products to front page as part of cron
+                    if (isset($productnode->product_visibility_public[$productnode->language][0]['value']) && $productnode->product_visibility_public[$productnode->language][0]['value'] == 1 && $productnode->product_state[$productnode->language][0]['value'] == 'published' && isset($productnode->status) && $productnode->status == 1) {
+                      // only add published public products to front page as part of cron
                       $blocknids[] = $productnode->nid;
                       $index++;
                     }
@@ -6272,7 +6338,7 @@ function ibm_apim_external_login_register($name, $edit = array(), $login = FALSE
     }
   }
   if (module_exists('legal') && isset($legal_values['version']) && isset($legal_values['revision'])) {
-    legal_save_accept($legal_values['version'], $legal_values['revision'], $legal_values['language'], $account->uid);
+    legal_save_accept($legal_values['version'], $legal_values['revision'], $legal_values['language'], $legal_values['tc_id'], $account->uid);
     watchdog('legal', '%name accepted T&C version %tc_id.', array(
       '%name' => $account->name,
       '%tc_id' => $legal_values['tc_id']
@@ -6565,11 +6631,18 @@ function ibm_apim_activate_create_account_form_submit_handler($form, &$form_stat
       $apimurl = $apimserver['scheme'] . "://" . $apimserver['host'] . ":" . $apimserver['port'] . "/";
     }
     if(substr($url,0,strlen($apimurl)) != $apimurl) {
-      drupal_set_message(t('URL provided in token does not match APIM server. Contact the system administrator for assistance.'), 'error');
-      watchdog('auth_apic_activate_id_callback', 'Invalid Token: Token contains a invalid URL. token: %token', array(
-        '%token' => serialize($activationObj)
-      ), WATCHDOG_NOTICE);
-      drupal_goto();
+      $tokenValidationDisabled = variable_get('ibm_apim_insecure_token_validation', FALSE);
+      if ($tokenValidationDisabled == FALSE) {
+        drupal_set_message(t('URL provided in token does not match APIM server. Contact the system administrator for assistance.'), 'error');
+        watchdog('auth_apic_activate_id_callback', 'Invalid Token: Token contains a invalid URL. token: %token', [
+          '%token' => serialize($activationObj)
+        ], WATCHDOG_NOTICE);
+        drupal_goto();
+      } else {
+        watchdog('auth_apic_activate_id_callback', 'Invalid Token: Token contains a invalid URL. This is likely a misconfiguration. Since validation of tokens has been disabled, the token will be allowed to pass, however validation may fail. token: %token', [
+          '%token' => serialize($activationObj)
+        ], WATCHDOG_NOTICE);
+      }
     }
     $headers = array(
       'Content-Type: application/json',
@@ -6860,6 +6933,29 @@ function ibm_apim_check_password($current_pass, $account) {
     }
     else {
       return FALSE;
+    }
+  }
+}
+
+/**
+ * Form validation handler for the current password on the user_account_form().
+ *
+ * @see user_account_form()
+ */
+function ibm_apim_validate_current_pass(&$form, &$form_state) {
+  $account = $form['#user'];
+  foreach ($form_state['values']['current_pass_required_values'] as $key => $name) {
+    // This validation only works for required textfields (like mail) or
+    // form values like password_confirm that have their own validation
+    // that prevent them from being empty if they are changed.
+    if ((strlen(trim($form_state['values'][$key])) > 0) && ($form_state['values'][$key] != $account->$key)) {
+      $current_pass_failed = strlen(trim($form_state['values']['current_pass'])) == 0 || !ibm_apim_check_password($form_state['values']['current_pass'], $account);
+      if ($current_pass_failed) {
+        form_set_error('current_pass', t("Your current password is missing or incorrect; it's required to change the %name.", array('%name' => $name)));
+        form_set_error($key);
+      }
+      // We only need to check the password once.
+      break;
     }
   }
 }

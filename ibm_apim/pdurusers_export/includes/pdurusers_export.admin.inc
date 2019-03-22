@@ -95,6 +95,17 @@ function pdurusers_export_form($form, &$form_state) {
 function pdurusers_export_form_submit($form, &$form_state) {
 
   $values = $form_state['values'];
+
+  $export = _pdurusers_export_values($values);
+
+  drupal_add_http_header('Content-disposition', 'attachment; filename=' . $values['pdurusers_export_filename'] . '.json');
+  drupal_add_http_header('Content-Type', 'application/json');
+  echo json_encode($export, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_PRETTY_PRINT);
+
+  drupal_exit();
+}
+
+function _pdurusers_export_values($values = array()) {
   if ($values['pdurusers_export_memory_limit'] != -1) {
     ini_set('memory_limit', $values['pdurusers_export_memory_limit']);
   }
@@ -106,6 +117,7 @@ function pdurusers_export_form_submit($form, &$form_state) {
   // Load the users
   $query = db_select('users', 'u');
   $query->leftJoin('authmap', 'a', 'u.uid = a.uid');
+  $query->leftJoin('field_data_field_uid', 'f', 'u.uid = f.entity_id');
   $query->fields('u', array('uid', 'name', 'status'))->orderBy('uid');
   $query->addField('u', 'mail', 'email');
   $query->addField('u', 'created');
@@ -113,6 +125,7 @@ function pdurusers_export_form_submit($form, &$form_state) {
   $query->addField('u', 'access', 'last_access');
   $query->addField('u', 'login', 'last_login');
   $query->addField('u', 'pass');
+  $query->addField('f', 'field_uid_value', 'apic_id');
   $query->addField('a', 'module');
 
   $query->condition('u.uid', 0, '<>'); // Exclude anonymous.
@@ -140,6 +153,12 @@ function pdurusers_export_form_submit($form, &$form_state) {
 
   $data_grid = array();
 
+  // for ldap we need to gather a list of servers and their config so we can check users against them.
+  $ldapservers = NULL;
+  if (module_exists('ldap_servers')) {
+    $ldapservers = ldap_servers_get_servers(NULL, 'all');
+  }
+
   // Go through and create a row for each user.
   foreach ($result as $row) {
     $row = (array)$row;
@@ -154,6 +173,9 @@ function pdurusers_export_form_submit($form, &$form_state) {
         $row['provider'] = $row['module'];
         $row['module'] = 'ldap';
         $row['type'] = 'ldap';
+        if ($ldapservers !== NULL ) {
+          $row['ldap_servers'] = getLdapServersThatContainUser($ldapservers, $row['name']);
+        }
       }
       elseif (mb_strpos($row['module'], 'openid_connect') === 0) {
         $row['provider'] = $row['module'];
@@ -200,9 +222,7 @@ function pdurusers_export_form_submit($form, &$form_state) {
       $data_grid[$row['module']] = array('config' => array('type' => $row['type'], 'module' => $row['module']), 'users' => array());
       switch ($row['module']) {
         case 'ldap':
-          // pull out LDAP config
-          if (module_exists('ldap_servers')) {
-            $ldapservers = ldap_servers_get_servers(NULL, 'all');
+          if ($ldapservers !== NULL) {
             $data_grid[$row['module']]['config']['servers'] = $ldapservers;
           }
           break;
@@ -217,6 +237,11 @@ function pdurusers_export_form_submit($form, &$form_state) {
                 if (isset($client)) {
                   $oidc_plugins[$key]['endpoints'] = $client->getEndpoints();
                 }
+                $config = variable_get('openid_connect_client_' . $client_plugin['name'], NULL);
+                if ($config !== NULL) {
+                  $oidc_plugins[$key]['client_config'] = $config;
+                }
+
               }
             }
             $data_grid[$row['module']]['config']['plugins'] = $oidc_plugins;
@@ -238,9 +263,42 @@ function pdurusers_export_form_submit($form, &$form_state) {
   $path = drupal_get_path('module', 'ibm_apim') . '/ibm_apim.info';
   $info = drupal_parse_info_file($path);
   $export = array('modules' => $data_grid, 'catalog' => $config_data, 'version' => $info['version']);
+  return $export;
+}
 
+/**
+ * Gather all of the ldap servers a user is found in.
+ * Checking ldap is an expensive operation so if there is only one server then just return that.
+ *
+ * @param $ldapservers
+ * @param $username
+ *
+ * @return array ordered list of servers.
+ */
+function getLdapServersThatContainUser($ldapservers, $username): array {
 
-  drupal_add_http_header('Content-disposition', 'attachment; filename=' . $values['pdurusers_export_filename'] . '.json');
-  drupal_json_output($export);
-  drupal_exit();
+  module_load_include('php', 'ldap_servers', 'LdapServer.class');
+  $matches = [];
+  $num_servers = sizeof($ldapservers);
+
+  // We need to maintain an order on the list of servers we add to a user because of the way the d7 ldap module falls through the list of servers.
+  // Unfortunately if this starts at 0 the array becomes a boring old array rather than an associative one (something is lost either in php
+  // optimization or json serialization) so we will lose the explicit ordering. So that is why we start from 1.
+  if ($num_servers === 1) {
+    $matches = ['1' => array_shift($ldapservers)->sid];
+  }
+  else if ($num_servers > 1) {
+    $count = 1;
+    foreach ($ldapservers as $server) {
+      $sid = $server->sid; // key for a server.
+      $server = new LdapServer($sid);
+      if ($server->userUserNameToExistingLdapEntry($username)) {
+        $matches[$count++] = $sid;
+      };
+
+    }
+  }
+
+  return $matches;
+
 }

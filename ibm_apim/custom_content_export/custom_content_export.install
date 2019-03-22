@@ -1,0 +1,9 @@
+<?php
+
+/**
+ * Implements hook_enable().
+ */
+function custom_content_export_enable() {
+  drupal_set_message(t('You may export custom content by visiting <a href="@url">@url</a>.', array('@url' => url('admin/content/customexport'))));
+}
+

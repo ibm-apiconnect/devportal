@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2015, 2016
+ * (C) Copyright IBM Corporation 2015, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -50,10 +50,21 @@ function ibm_apim_drush_command() {
       'langcode' => 'The language code'
     )
   );
-  $items['ibm_apim-set_admin_timestamps']=array(
+  $items['ibm_apim-set_admin_timestamps'] = array(
     'description' => 'On creation of a site from template, set admin timestamps to current time',
     'aliases' => array('admintime'),
     'hidden' => TRUE
+  );
+  $items['ibm_apim-export_pdurusers'] = array(
+    'description' => 'Export PDUR user mapping file for migration to APIC v2018',
+    'aliases' => array('pdurexport')
+  );
+  $items['ibm_apim-export_content'] = array(
+    'description' => 'Export custom content file for migration to APIC v2018',
+    'aliases' => array('contentexport'),
+    'arguments' => array(
+      'directory' => 'The directory to create the zip in'
+    )
   );
 
   return $items;
@@ -394,9 +405,7 @@ function _drush_ibm_apim_translate_node($content = array(), $langcode) {
   $menu = $content['menu'];
 
   $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'node')
-    ->propertyCondition('title', $title)
-    ->execute();
+  $query->entityCondition('entity_type', 'node')->propertyCondition('title', $title)->execute();
   $results = $query->execute();
   if (isset($results['node'])) {
     $first = array_shift($results['node']);
@@ -492,12 +501,12 @@ function _drush_ibm_apim_translate_block_strings($info, $langcode) {
   if (isset($blockid)) {
     $block = block_block_view($blockid);
     if (isset($block['content'])) {
-      i18n_string_translation_update(
-        array('blocks', 'block', $blockid, 'body'),
-        locale($block['content'], $langcode),
-        $langcode,
-        $block['content']
-      );
+      i18n_string_translation_update(array(
+        'blocks',
+        'block',
+        $blockid,
+        'body'
+      ), locale($block['content'], $langcode), $langcode, $block['content']);
       // need to set the format to html
       list($textgroup, $context) = i18n_string_context('blocks:block:' . $blockid . ':body');
       i18n_string_textgroup($textgroup)->context_update($context, $block['content'], array('format' => 'FILTER_XSS_ADMIN'));
@@ -711,10 +720,55 @@ function _drush_ibm_apim_translate_book($langcode) {
   apim_profile_update_page_links($langcode);
 }
 
-function drush_ibm_apim_set_admin_timestamps(){
+function drush_ibm_apim_set_admin_timestamps() {
   $time = \Drupal::time()->getCurrentTime();
-  db_update('users_field_data')->fields(array('created'=>$time,
-    'login'=>$time))
-    ->condition('uid',1)
-    ->execute();
+  db_update('users_field_data')->fields(array(
+    'created' => $time,
+    'login' => $time
+  ))->condition('uid', 1)->execute();
+}
+
+/**
+ * @return null
+ */
+function drush_ibm_apim_export_pdurusers() {
+  $ibm_apim_social_login = variable_get('ibm_apim_social_login', 0);
+  if ($ibm_apim_social_login == 1) {
+    // export the file
+    module_enable(array('pdurusers_export'), TRUE);
+    module_load_include('inc', 'pdurusers_export', 'includes/pdurusers_export.admin');
+    $values = array(
+      'pdurusers_export_memory_limit' => variable_get('pdurusers_export_memory_limit', -1),
+      'pdurusers_export_max_execution' => variable_get('pdurusers_export_max_execution', 120),
+      'pdurusers_export_user_status' => variable_get('pdurusers_export_user_status', 2)
+    );
+    $export = _pdurusers_export_values($values);
+    // print output using specified format but defaulting to json
+    drush_print(drush_format($export, NULL, drush_get_option('format', 'json')));
+  }
+  else {
+    drush_log(t('PDUR user export is not available for non-pdur sites.'), 'error');
+    return NULL;
+  }
+}
+
+/**
+ * @param $directory
+ *        The directory needs to be creatable or already exist.
+ *
+ * @return null
+ */
+function drush_ibm_apim_export_customcontent($directory) {
+  // export the file
+  module_enable(['custom_content_export'], TRUE);
+  module_load_include('inc', 'custom_content_export', 'includes/custom_content_export.admin');
+  drush_mkdir($directory, TRUE);
+  $values = [
+    'custom_content_export_memory_limit' => variable_get('pdurusers_export_memory_limit', 160),
+    'custom_content_export_max_execution' => variable_get('pdurusers_export_max_execution', 60),
+    'custom_content_export_filename' => strtolower(preg_replace('/\W+/', '_', variable_get('site_name', 'custom_content_export')) . '_content'),
+    'custom_content_export_dir' => $directory,
+  ];
+  custom_content_export_create_zip($values);
+  return NULL;
 }

@@ -67,7 +67,8 @@ drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/App.js', array(
           class="appTitleActions">
           <?php $analytics_enabled = variable_get('ibm_apim_show_analytics', 1);
           $ibm_apim_social_login = variable_get('ibm_apim_social_login', 0);
-          if ($analytics_enabled == 1 && $ibm_apim_social_login == 0) :?>
+          $pdur_analytics_enabled = variable_get('ibm_apim_pdur_analytics', 0);
+          if ($analytics_enabled == 1 && ($ibm_apim_social_login == 0 || $pdur_analytics_enabled == 1)) :?>
             <span class="analyticsApp"><?php print $analyticslink; ?></span>
           <?php endif; ?>
           <span

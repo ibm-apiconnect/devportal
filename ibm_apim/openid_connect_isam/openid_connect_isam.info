@@ -1,0 +1,9 @@
+name = OpenID Connect ISAM
+description = Authenticate against ISAM using OIDC.
+package = IBM API Connect v5
+
+dependencies[] = ctools
+dependencies[] = openid_connect
+dependencies[] = social_login
+
+core = 7.x

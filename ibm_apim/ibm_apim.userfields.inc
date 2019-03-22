@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2015, 2016
+ * (C) Copyright IBM Corporation 2015, 2019
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -108,7 +108,7 @@ function _ibm_apim_add_user_developerorg_field() {
       ),
       'display' => array(
         'default' => array(
-          'type' => 'text_default',
+          'type' => 'hidden',
           'module' => 'text'
         )
       ),
