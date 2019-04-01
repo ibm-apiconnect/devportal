@@ -109,6 +109,7 @@ class Api {
       $node->set('apic_url', NULL);
       $node->set('apic_ref', NULL);
       $node->set('apic_version', NULL);
+      $node->set('apic_pathalias', NULL);
       $node->set('api_id', NULL);
       $node->set('api_xibmname', NULL);
       $node->set('api_protocol', NULL);
@@ -233,6 +234,9 @@ class Api {
       $node->set('apic_catalog_id', $configService->getEnvId());
       $node->set('api_id', $api['id']);
       $node->set('apic_version', $api['consumer_api']['info']['version']);
+      if (isset($api['consumer_api']['info']['x-pathalias'])) {
+        $node->set('apic_pathalias', $api['consumer_api']['info']['x-pathalias']);
+      }
 
       // if unset, default state to online
       if (!isset($api['state']) || empty($api['state'])) {

@@ -17,7 +17,7 @@ use Drupal\Core\Url;
 
 class UserRegistry {
 
-  private $idL;
+  private $id;
 
   private $name;
 

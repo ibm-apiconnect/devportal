@@ -1,0 +1,11 @@
+--- modules/swiftmailer/src/Plugin/Mail/SwiftMailer.php  	2018-02-11 13:01:55.000000000 +0000
++++ modules/swiftmailer/src/Plugin/Mail/SwiftMailer.php 	2018-02-11 13:02:55.000000000 +0000
+@@ -627,7 +627,7 @@ class SwiftMailer implements MailInterface, ContainerFactoryPluginInterface {
+     // and then treat the result as safe markup.
+     $line_endings = Settings::get('mail_line_endings', PHP_EOL);
+     $applicable_format = $this->getApplicableFormat($message);
+-    $filter_format = $this->config['message']['filter_format'];
++    $filter_format = isset($this->config['message']['filter_format']) ? $this->config['message']['filter_format'] : filter_fallback_format();
+     $message['body'] = Markup::create(implode($line_endings, array_map(function ($body) use ($applicable_format, $filter_format) {
+       // If the body contains no html tags but the applicable format is HTML,
+       // we can assume newlines will need be converted to <br>.

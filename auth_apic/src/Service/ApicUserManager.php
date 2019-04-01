@@ -21,7 +21,6 @@ namespace Drupal\auth_apic\Service;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\State\State;
 use Drupal\externalauth\ExternalAuthInterface;
 use Drupal\user\Entity\User;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
@@ -76,15 +75,9 @@ class ApicUserManager implements UserManagerInterface {
 
 
   /**
-   * Consumerorg adapter.
-   * TODO: shouldn't be required... need to remove static calls.
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
    */
   protected $consumerOrgService;
-
-  /**
-   * @var \Drupal\Core\State\State
-   */
-  protected $state;
 
   /**
    * @var \Drupal\ibm_apim\Service\SiteConfig
@@ -117,7 +110,7 @@ class ApicUserManager implements UserManagerInterface {
   protected $languageManager;
 
   /**
-   * @var \Drupal\user\PrivateTempStore
+   * @var \Drupal\Core\TempStore\PrivateTempStore
    */
   protected $tempStore;
 
@@ -130,8 +123,7 @@ class ApicUserManager implements UserManagerInterface {
    * @param \Drupal\Core\Database\Connection $database
    * @param \Drupal\externalauth\ExternalAuthInterface $external_auth
    * @param \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface $mgmt_interface
-   * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_servive
-   * @param \Drupal\core\State\State $state
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
    * @param \Drupal\ibm_apim\Service\SiteConfig $config
    * @param \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface $user_registry_service
    * @param ApicUserService $user_service
@@ -144,8 +136,7 @@ class ApicUserManager implements UserManagerInterface {
                               Connection $database,
                               ExternalAuthInterface $external_auth,
                               ManagementServerInterface $mgmt_interface,
-                              ConsumerOrgService $consumer_org_servive,
-                              State $state,
+                              ConsumerOrgService $consumer_org_service,
                               SiteConfig $config,
                               UserRegistryServiceInterface $user_registry_service,
                               ApicUserService $user_service,
@@ -157,8 +148,7 @@ class ApicUserManager implements UserManagerInterface {
     $this->database = $database;
     $this->externalAuth = $external_auth;
     $this->mgmtServer = $mgmt_interface;
-    $this->consumerOrgService = $consumer_org_servive;
-    $this->state = $state;
+    $this->consumerOrgService = $consumer_org_service;
     $this->siteConfig = $config;
     $this->userRegistryService = $user_registry_service;
     $this->userService = $user_service;
@@ -182,8 +172,8 @@ class ApicUserManager implements UserManagerInterface {
       $userMgrResponse = new UserManagerResponse();
 
       if ((int) $invitationResponse->getCode() === 201) {
-        $account = $this->registerApicUser($invitedUser->getUsername(), $this->userService->getUserAccountFields($invitedUser));
-        $this->activateUserInDB($account->get('uid')->value);
+        $invitedUser->setState('enabled');
+        $this->registerApicUser($invitedUser->getUsername(), $this->userService->getUserAccountFields($invitedUser));
 
         $this->logger->notice('invitation processed for @username', [
           '@username' => $invitedUser->getUsername(),
@@ -276,6 +266,8 @@ class ApicUserManager implements UserManagerInterface {
     }
     else {
       if ((int) $mgmtResponse->getCode() === 204) {
+        // user will need to accept invitation so invite as pending.
+        $new_user->setState('pending');
         $this->registerApicUser($new_user->getUsername(), $this->userService->getUserAccountFields($new_user));
 
         $userManagerResponse->setSuccess(TRUE);
@@ -374,10 +366,15 @@ class ApicUserManager implements UserManagerInterface {
       $loginResponse->setSuccess(FALSE);
       $loginResponse->setMessage(serialize($apic_me->getData()));
     }
+    else if ($apic_me->getUser() !== NULL && $this->userExistsInDifferentRegistry($apic_me->getUser())) {
+      $this->logger->error('Login failed because user would not be unique.');
+      $loginResponse->setSuccess(FALSE);
+    }
     else {
-
+      // happy days, go and create an account and log the user in.
       $meuser = $apic_me->getUser();
-      if ($user->getUsername() === '') {
+
+      if ($meuser !== NULL && $user->getUsername() === '') {
         $user->setUsername($meuser->getUsername());
       }
 
@@ -483,29 +480,6 @@ class ApicUserManager implements UserManagerInterface {
   }
 
   /**
-   * Activate user directly in db to avoid triggering email notification.
-   *
-   * @param $uid
-   *   UID of user to be activated.
-   */
-  private function activateUserInDB($uid = NULL): void {
-    if (\function_exists('ibm_apim_entry_trace')) {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $uid);
-    }
-    $this->logger->notice('Activating @uid directly in the database.', ['@uid' => $uid]);
-    $query = $this->database->update('users_field_data');
-    // TODO more reliable way to work out we are not in unit test environment here.
-    if ($query !== NULL) {
-      $query->fields(['status' => 1,]);
-      $query->condition('uid', $uid);
-      $query->execute();
-    }
-    if (\function_exists('ibm_apim_exit_trace')) {
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    }
-  }
-
-  /**
    * Process the provided JWTToken and activate the user account associated with it
    *
    * @param \Drupal\auth_apic\JWTToken $jwt
@@ -529,46 +503,46 @@ class ApicUserManager implements UserManagerInterface {
 
     $contact_link = \Drupal::l(t('Contact the site administrator.'), \Drupal\Core\Url::fromRoute('contact.site_page'));
 
-    if ((int) $mgmt_result->code === 401) {
+    if ($mgmt_result !== NULL && (int) $mgmt_result->code === 401) {
       drupal_set_message(t('There was an error while processing your activation. Has this activation link already been used?'), 'error');
       \Drupal::logger('auth_apic')->error('Error while processing user activation. Received response code \'@code\' from backend. 
         Message from backend was \'@message\'.', ['@code' => $mgmt_result->code, '@message' => $mgmt_result->data['message'][0]]);
     }
-    else {
-      if ((int) $mgmt_result->code !== 204) {
-        drupal_set_message(t('There was an error while processing your activation. @contact_link', ['@contact_link' => $contact_link]), 'error');
-        \Drupal::logger('auth_apic')->error('Error while processing user activation. Received response code \'@code\' from backend. 
+    elseif ($mgmt_result !== NULL && (int) $mgmt_result->code !== 204) {
+      drupal_set_message(t('There was an error while processing your activation. @contact_link', ['@contact_link' => $contact_link]), 'error');
+      \Drupal::logger('auth_apic')->error('Error while processing user activation. Received response code \'@code\' from backend. 
         Message from backend was \'@message\'.', ['@code' => $mgmt_result->code, '@message' => $mgmt_result->data['message'][0]]);
-      }
-      else {
-        // We can activate the account in our local database and allow the user to sign in
-        $user_mail = $jwt->getPayload()['email'];
-        $account = $this->externalAuth->load($user_mail, $this->provider);
+    }
+    else {
+      // We can activate the account in our local database and allow the user to sign in
+      $user_mail = $jwt->getPayload()['email'];
+      $account = $this->externalAuth->load($user_mail, $this->provider);
 
-        if (!$account) {
-          // username is not equal to email address - need to do a lookup
-          $ids = \Drupal::entityQuery('user')->execute();
-          $users = User::loadMultiple($ids);
+      if (!$account) {
+        // username is not equal to email address - need to do a lookup
+        $ids = \Drupal::entityQuery('user')->execute();
+        $users = User::loadMultiple($ids);
 
-          foreach ($users as $user) {
-            if ($user->getEmail() === $user_mail) {
-              $account = $this->externalAuth->load($user->getUsername(), $this->provider);
-            }
+        foreach ($users as $user) {
+          if ($user->getEmail() === $user_mail) {
+            $account = $this->externalAuth->load($user->getUsername(), $this->provider);
           }
         }
+      }
 
-        if (!$account) {
-          drupal_set_message(t('There was an error while processing your activation. @contact_link', ['@contact_link' => $contact_link]), 'error');
-          \Drupal::logger('auth_apic')->error('Error while processing user activation. Could not find account in our database for @mail',
-            ['@mail' => $user_mail]);
-        }
-        else {
-          $account->activate();
-          $account->save();
+      if (!$account) {
+        drupal_set_message(t('There was an error while processing your activation. @contact_link', ['@contact_link' => $contact_link]), 'error');
+        \Drupal::logger('auth_apic')->error('Error while processing user activation. Could not find account in our database for @mail',
+          ['@mail' => $user_mail]);
+      }
+      else {
+        // update the apic_state field to show this user is enabled. activate() sets the drupal status field.
+        $account->set('apic_state', 'enabled');
+        $account->activate();
+        $account->save();
 
-          // all is well - direct the user to sign in!
-          drupal_set_message(t('Your account has been activated. You can now sign in.'));
-        }
+        // all is well - direct the user to sign in!
+        drupal_set_message(t('Your account has been activated. You can now sign in.'));
       }
     }
     if (\function_exists('ibm_apim_exit_trace')) {
@@ -772,6 +746,7 @@ class ApicUserManager implements UserManagerInterface {
       $this->logger->notice('Error resetting password.');
       $this->logger->error('Reset password response: @result', ['@result' => serialize($mgmtResponse)]);
       if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+        // TODO: move this out to the form
         drupal_set_message(t('Error resetting password. Contact the system administrator.'), 'error');
         // If we have more information then provide it to the user as well.
         if ($mgmtResponse->getErrors() !== NULL) {
@@ -839,13 +814,8 @@ class ApicUserManager implements UserManagerInterface {
 
     // If user doesn't already exist in the drupal db, create them.
     if (!$account) {
-
-      $this->logger->notice('(Login) Registering and activating user in drupal database (username=@username)', ['@username' => $user->getUsername()]);
-
+      $this->logger->notice('Registering new account in drupal database (username=@username)', ['@username' => $user->getUsername()]);
       $account = $this->registerApicUser($user->getUsername(), $this->userService->getUserAccountFields($user));
-
-      $this->activateUserInDB($account->get('uid')->value);
-
     }
 
     if (\function_exists('ibm_apim_exit_trace')) {
@@ -993,24 +963,23 @@ class ApicUserManager implements UserManagerInterface {
     if ($mgmtResponse === NULL) {
       $userManagerResponse = NULL;
     }
-    else {
-      if ((int) $mgmtResponse->getCode() === 200) { // DELETE /me should return 200 with me resource
-        // we have successfully deleted in apim, now to clean things up locally (drupal account)
+    elseif ((int) $mgmtResponse->getCode() === 200) { // DELETE /me should return 200 with me resource
+      // we have successfully deleted in apim, now to clean things up locally (drupal account)
 
-        $current_user = \Drupal::currentUser();
-        $this->logger->notice('Account deleted by @username', [
-          '@username' => $current_user->getAccountName(),
-        ]);
+      $current_user = \Drupal::currentUser();
+      $this->logger->notice('Account deleted by @username', [
+        '@username' => $current_user->getAccountName(),
+      ]);
 
-        user_cancel(['user_cancel_notify' => FALSE], $current_user->id(), 'user_cancel_reassign');
+      user_cancel(['user_cancel_notify' => FALSE], $current_user->id(), 'user_cancel_reassign');
 
-        $userManagerResponse->setSuccess(TRUE);
+      $userManagerResponse->setSuccess(TRUE);
 
-      }
-      else {
-        $userManagerResponse->setSuccess(FALSE);
-      }
     }
+    else {
+      $userManagerResponse->setSuccess(FALSE);
+    }
+
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $userManagerResponse !== NULL ? $userManagerResponse->success() : NULL);
     }
@@ -1048,14 +1017,64 @@ class ApicUserManager implements UserManagerInterface {
   }
 
   /**
-   * @{inheritdoc}
+   * @param \Drupal\user\Entity\User $user
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function setDefaultLanguage($user): void {
     if ($user !== NULL) {
-      $language = $this->languageManager->getCurrentLanguage();
-      $user->set("langcode", $language);
-      $user->set("preferred_langcode", $language);
+      $language = $this->languageManager->getCurrentLanguage()->getId();
+      if ($language === NULL) {
+        $language = $this->languageManager->getDefaultLanguage()->getId();
+      }
+      if ($language === NULL) {
+        $language = 'en';
+      }
+      $user->set('langcode', $language);
+      $user->set('preferred_langcode', $language);
       $user->save();
     }
+  }
+
+  /**
+   * Check whether a user is unique based on username and email address of users already in the database.
+   * A user needs to be unique across user registries.
+   *
+   * This function includes a special case for admin to handle cases where previously external logins from
+   * admin users in external providers were allowed.
+   *
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $meuser
+   *
+   * @return bool
+   */
+  public function userExistsInDifferentRegistry(ApicUser $meuser) {
+    if (\function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $meuser->getUsername());
+    }
+    $existsInAnotherRegistry = FALSE;
+
+    if ($meuser->getUsername() === 'admin') {
+      $this->logger->error('Login failed because admin user from external registry is prohibited.');
+      $existsInAnotherRegistry = TRUE;
+    }
+    else {
+      $existingUserByName = $this->userUtils->loadUserByName($meuser->getUsername());
+      $existingUserByMail = $this->userUtils->loadUserByMail($meuser->getMail());
+
+      $userRegistryUrl = $this->userRegistryService->getRegistryContainingIdentityProvider($meuser->getApicIdp())->getUrl();
+
+      if ($existingUserByName && (isset($existingUserByName->apic_user_registry_url) && $existingUserByName->get('apic_user_registry_url')->value !== $userRegistryUrl)) {
+        $this->logger->error('Login failed because user with matching username exists in a different registry.');
+        $existsInAnotherRegistry = TRUE;
+      }
+      else if ($existingUserByMail && (isset($existingUserByMail->apic_user_registry_url) && $existingUserByMail->get('apic_user_registry_url')->value !== $userRegistryUrl)) {
+        $this->logger->error('Login failed because user with matching email address exists in a different registry.');
+        $existsInAnotherRegistry = TRUE;
+      }
+    }
+    if (\function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $existsInAnotherRegistry);
+    }
+    return $existsInAnotherRegistry;
   }
 }

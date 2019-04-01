@@ -9,6 +9,7 @@ dependencies:
     - better_exposed_filters
     - masonry_views
     - node
+    - select_translation
     - taxonomy
     - user
     - views_autocomplete_filters
@@ -331,6 +332,46 @@ display:
           level_labels: ''
           force_deepest: 0
           plugin_id: taxonomy_index_tid
+        select_translation:
+          id: select_translation
+          table: node_field_data
+          field: select_translation
+          relationship: none
+          group_type: group
+          admin_label: ''
+          operator: '='
+          value: default
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+          priorities: ''
+          default_language_only: 0
+          include_content_with_unpublished_translation: 0
+          entity_type: node
+          plugin_id: select_translation_filter
       sorts:
         title:
           id: title
@@ -654,10 +695,10 @@ display:
         weight: 5
         context: '0'
         menu_name: main
+      rendering_language: '***LANGUAGE_language_interface***'
     cache_metadata:
       max-age: -1
       contexts:
-        - 'languages:language_content'
         - 'languages:language_interface'
         - url
         - url.query_args

@@ -1,0 +1,304 @@
+/**
+ * Navbar styling.
+ */
+$mobile:          "screen and (max-width: #{$screen-xs-max})";
+$tablet:          "screen and (min-width: #{$screen-sm-min})";
+$normal:          "screen and (min-width: #{$screen-md-min})";
+$wide:            "screen and (min-width: #{$screen-lg-min})";
+$grid-breakpoint: "screen and (min-width: #{$grid-float-breakpoint})";
+
+body {
+  // Fix horizontal scrolling on iOS devices.
+  // http://drupal.org/node/1870076
+  position: relative;
+
+  &.navbar-is-static-top {
+    margin-top: 0;
+  }
+  &.navbar-is-fixed-top {
+    margin-top: ($navbar-height + ($grid-gutter-width / 2));
+  }
+  &.navbar-is-fixed-bottom {
+    padding-bottom: ($navbar-height + ($grid-gutter-width / 2));
+  }
+
+  @media #{$tablet} {
+    margin-top: ($grid-gutter-width / 2);
+  }
+  @media #{$mobile} {
+    &.toolbar-vertical {
+      &.navbar-is-fixed-top,
+      &.navbar-is-fixed-bottom {
+        .toolbar-bar {
+          position: fixed;
+        }
+        header {
+          z-index: 500;
+        }
+      }
+      // Default toolbar fixed height value.
+      // @see core/modules/toolbar/css/toolbar.icons.theme.css@261
+      &.navbar-is-fixed-top header {
+        top: 39px;
+      }
+    }
+  }
+}
+
+.navbar {
+  display: flex;
+  position: inherit;
+  border: none;
+}
+
+.apicStickyHeader .navbar.container {
+  width: 100%;
+}
+
+.navbar-default .navbar-toggle {
+  background-color: $navbar-default-bg;
+  @include navbar-vertical-align(40px);
+}
+
+
+nav.block-login .menu.nav {
+  @include navbar-vertical-align(40px);
+}
+
+// Branding.
+.navbar .logo {
+  max-width: 240px;
+  margin:0;
+  margin-right: -($grid-gutter-width / 2);
+  padding-left: ($grid-gutter-width / 2);
+  padding-right: ($grid-gutter-width / 2);
+  @media #{$grid-breakpoint} {
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  @media (max-width: $grid-float-breakpoint) {
+    display: none;
+  }
+}
+
+.apicStickyHeader .navbar,
+.apicStickyHeader .navbar .navbar-header,
+.apicStickyHeader .navbar .navbar-right{
+  padding:0;
+}
+
+.apicStickyHeader .navbar .logo img {
+  vertical-align: middle;
+}
+
+.navbar .region-navigation {
+  display: flex;
+}
+
+.navbar .region-navigation-right {
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.navbar .nav > li > a {
+  font-weight: lighter;
+  margin-right: 2rem;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.navbar .nav.navbar-nav > li:last-child > a {
+  margin-right: 0;
+}
+
+.navbar .dropitmenu,
+.navbar .ibmapimNotificationBlock,
+.navbar .ibmapimSearch{
+  margin: 0 1rem;
+  @include navbar-vertical-align(34px);
+}
+
+.navbar .ibmapimNotificationBlock,
+.navbar .ibmapimSearch{
+  .imageContainer svg {
+    width: 16px;
+    height: 16px;
+    margin: 8px;
+  }
+}
+
+.navbar .ibmapimNotificationBlock{
+  border-left: 1px solid $navbar-default-link-color;
+  margin-left: 0;
+  .imageContainer {
+    padding-left: 5px;
+  }
+}
+
+.navbar .dropitmenu .dropit-trigger a {
+  white-space:nowrap;
+  width:100%;
+}
+
+.navbar .dropitmenu .dropit-icon {
+  color: $brand-primary-light;
+  vertical-align: text-top;
+  font-size: 0.625rem;
+}
+
+.navbar .account-menu.dropitmenu  {
+  margin: 0.5rem 1rem;
+  .dropit-icon {
+    vertical-align: baseline;
+  }
+
+  .dropit-submenu {
+    margin-top: 8px;
+  }
+}
+
+.navbar .dropitmenu ul.dropit-submenu {
+  background-color: $navbar-default-bg;
+  border-radius: 0;
+  border-style: solid none none none;
+  border-color: $navbar-default-link-color;
+  padding:0;
+  line-height: 2.25rem;
+  margin-top: 7px;
+  margin-right: -1rem;
+  .selectorg {
+    font-size: 0.75rem;
+    color: $navbar-default-link-color;
+    border-top: 1px solid $navbar-default-link-color;
+    padding: 0 1rem;
+  }
+  a {
+    font-size: 0.875rem;
+    color: $navbar-default-color;
+    padding: 0 1rem;
+    line-height: 2.25rem;
+    &.elipsis-names {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 15rem;
+    }
+    &:hover{
+      background-color: $brand-primary-light;
+    }
+  }
+
+}
+.consumerorgSelectBlock .orgHeading {
+  display: inline-block;
+  color: $navbar-default-color;
+  width:100%;
+  .subTitle {
+    color: $navbar-default-link-color;
+    font-weight: lighter;
+    font-size: .75rem;
+    opacity: 0.6;
+    line-height: 1.1;
+  }
+
+  .currentOrg{
+    line-height:1.2;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.account-menu .imageContainer svg,
+.account-menu .imageContainer:hover svg {
+  fill: #bed5f1;
+  background: #eaf0f8;
+  border-radius: 50%;
+}
+
+nav.block-account,
+.block-consumer-organization-selection
+{
+  background: rgba(255,255,255,0.08);
+}
+
+.block-consumer-organization-selection {
+  max-width: 15rem;
+  min-width: 7.25rem;
+  margin-right: 0.625rem;
+  @media (max-width: $screen-xs-min) {
+    width: 10rem;
+  }
+}
+
+nav.block-account {
+  display: inline-block;
+}
+
+
+// main menu
+nav.block-menu ul.nav > li > a:focus,
+nav.block-menu ul.nav > li > a:hover,
+nav.block-menu ul.nav > li.active > a {
+  padding-bottom: 8px;
+  border-bottom: 4px solid $brand-primary-light;
+}
+
+.navbar-nav > li.front {
+  display:none;
+  @media (max-width: $grid-float-breakpoint) {
+    display: block;
+  }
+}
+
+// login menu
+nav.block-login ul.menu li {
+  display: inline-block;
+}
+nav.block-login ul.nav > li > a,
+nav.block-login ul.nav > li > a:visited {
+  margin-right: 20px;
+  display: inline-block;
+  color: $navbar-default-link-color;
+}
+nav.block-login ul.nav > li > a:focus,
+nav.block-login ul.nav > li > a:hover{
+  color: $navbar-default-link-hover-color;
+}
+nav.block-login ul.menu li+li:before {
+  content: " \00b7";
+  color: $ui-04;
+  margin-right: 20px;
+}
+
+// main menu overflow menu
+.navbar-default {
+  .navbar-nav {
+    > li svg.bx--overflow-menu__icon {
+      fill: $navbar-default-link-color;
+      &:hover,
+      &:focus {
+        fill: $navbar-default-link-hover-color;
+      }
+    }
+
+    .dropdown-menu {
+      background-color: $navbar-default-bg;
+      border-style: solid none none none;
+      border-color: $navbar-default-link-color;
+
+      a {
+        background-color: $navbar-default-bg;
+        color: $navbar-default-link-color;
+        font-weight: lighter;
+        &:hover,
+        &:focus {
+          color: $navbar-default-link-hover-color;
+        }
+      }
+    }
+
+  }
+}

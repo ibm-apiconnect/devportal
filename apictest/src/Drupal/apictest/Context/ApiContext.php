@@ -473,6 +473,60 @@ class ApiContext extends RawDrupalContext {
   }
 
   /**
+   * @Then the api named :name should be visible
+   */
+  public function iShouldHaveAnApiNameVisible($name): void {
+
+    print('Current user uid: ' . \Drupal::currentUser()->id() . PHP_EOL);
+
+    $query = \Drupal::entityQuery('node')
+      ->condition('type', 'api')
+      ->condition('title.value', $name)
+      ->accessCheck(TRUE);
+    $results = $query->execute();
+
+    print('Query results: ' . serialize($results) . PHP_EOL);
+
+    if ($results !== NULL && !empty($results)) {
+      $querynid = array_shift($results);
+      $api = Node::load($querynid);
+
+      if ($api !== NULL && $api->get('api_xibmname')->value === $name) {
+        print("API $name exists and is visible");
+      }
+      else {
+        throw new \Exception("The returned api was not visible");
+      }
+    } else {
+      throw new \Exception("Failed to find an api with the name $name");
+    }
+  }
+
+  /**
+   * @Then the api named :name should not be visible
+   */
+  public function iShouldHaveAnApiNameNotVisible($name): void {
+
+    print('Current user uid: ' . \Drupal::currentUser()->id() . PHP_EOL);
+
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', 'api');
+    $query->condition('title.value', $name);
+    $results = $query->execute();
+
+    print('Query results: ' . serialize($results) . PHP_EOL);
+
+    if ($results !== NULL && !empty($results)) {
+//      $querynid = array_shift($results);
+//      $api = Node::load($querynid);
+//      if ($api !== NULL && $api->get('api_xibmname')->value === $name) {
+        throw new \Exception("API $name exists and is visible");
+    } else {
+        print("The returned api was not visible");
+    }
+  }
+
+  /**
    * Creates an associative array representing an API
    *
    * @param $name
@@ -490,7 +544,7 @@ class ApiContext extends RawDrupalContext {
     $object['consumer_api']['info']['name'] = $name;
     $object['consumer_api']['info']['title'] = $name;
     $object['consumer_api']['info']['x-ibm-name'] = $name;
-    $object['consumer_api']['info']['version'] = '1.0';
+    $object['consumer_api']['info']['version'] = '1.0.0';
     $object['consumer_api']['info']['description'] = 'This is a test API';
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';

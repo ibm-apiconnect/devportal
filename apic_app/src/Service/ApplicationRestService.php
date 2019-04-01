@@ -363,12 +363,15 @@ class ApplicationRestService implements ApplicationRestInterface {
             '@username' => $currentUser->getAccountName()
           ]);
 
+          $subId = $result->data['id'] ?? '';
           // Calling all modules implementing 'hook_apic_app_subscribe':
           \Drupal::moduleHandler()->invokeAll('apic_app_subscribe', [
             'node' => $node,
             'data' => $result->data,
             'appId' => $appUrl,
-            'planId' => $productUrl . ':' . $planName
+            'product_url' => $productUrl,
+            'plan' => $planName,
+            'subId' => $subId
           ]);
 
           // Create subscription in our database if no approval was required

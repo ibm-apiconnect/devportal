@@ -54,13 +54,8 @@ else
   tar -xf $APICTESTDIR/behat/behat-package.tar.gz
 fi
 
-# default to using mocks if not explicitly passed in
-if [[ -z "$2" ]]
-then
-  USE_MOCKS='TRUE'
-else
-  USE_MOCKS=$2
-fi
+## default to using mocks if not explicitly passed in
+USE_MOCKS=${2-TRUE}
 
 mkdir -p /tmp/behat_gherkin_cache/v4.4-dev
 chmod a+wx /tmp/behat_gherkin_cache/v4.4-dev

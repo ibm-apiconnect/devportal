@@ -52,6 +52,9 @@ class ConsumerOrgContext extends RawDrupalContext {
       $org->setOrgUrl('/orgs/1234');
       $org->setCatalogUrl('/catalogs/1234/5678');
       $org->setUrl('/consumer-orgs/1234/5678/' . $row['id']);
+      if (array_key_exists('tags', $row)) {
+        $org->addTag($row['tags']);
+      }
 
       $ownerRole = ApicTestUtils::makeOwnerRole($org);
       $devRole = ApicTestUtils::makeDeveloperRole($org);

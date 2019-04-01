@@ -1,0 +1,9 @@
+--- modules/social_media_links/social_media_links.libraries.yml	2018-02-05 10:59:04.000000000 +0000
++++ modules/social_media_links/social_media_links.libraries.yml	2018-02-05 11:07:38.000000000 +0000
+@@ -6,4 +6,4 @@
+ fontawesome.component:
+   css:
+     component:
+-      //maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css: { type: external }
+\ No newline at end of file
++      css/font-awesome.min.css: {}

@@ -46,7 +46,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
       $this->logger->warning('Found no user registries in the catalog config. Potentially missing data from APIM.');
     }
     if (function_exists('ibm_apim_exit_trace')) {
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $registries);
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
     return $registries;
 
@@ -76,7 +76,11 @@ class UserRegistryService implements UserRegistryServiceInterface {
     }
 
     if (function_exists('ibm_apim_exit_trace')) {
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $registry);
+      $url = NULL;
+      if ($registry !== NULL) {
+        $url = $registry->getUrl();
+      }
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $url);
     }
     return $registry;
   }
@@ -88,7 +92,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
    */
   public function updateAll($data): void {
     if (function_exists('ibm_apim_entry_trace')) {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $data);
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
 
     if (isset($data)) {
@@ -201,7 +205,11 @@ class UserRegistryService implements UserRegistryServiceInterface {
     }
 
     if (function_exists('ibm_apim_exit_trace')) {
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $result);
+      $url = NULL;
+      if ($result !== NULL) {
+        $url = $result->getUrl();
+      }
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $url);
     }
 
     return $result;
@@ -238,12 +246,11 @@ class UserRegistryService implements UserRegistryServiceInterface {
       }
     }
 
-    $url = NULL;
-    if ($default) {
-      $url = $default->getUrl();
-    }
-
     if (function_exists('ibm_apim_exit_trace')) {
+      $url = NULL;
+      if ($default) {
+        $url = $default->getUrl();
+      }
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $url);
     }
     return $default;

@@ -17,8 +17,6 @@
  */
 
 use Drupal\user\Entity\User;
-use Drupal\user\RoleInterface;
-use Drupal\menu_link_content\Entity\MenuLinkContent;
 
 /**
  * Implements hook_install().
@@ -32,5 +30,29 @@ function auth_apic_install() {
 
   // High module weight allows our form_alter calls to be run after every other module ensuring that we win
   module_set_weight('auth_apic', 999);
+
+}
+
+/**
+ * Clean up properties which could have been added to admin user due to an issue allowing login from a different user registry.
+ */
+function auth_apic_upgrade_8121() {
+
+  $admin = User::load('1');
+
+  $properties = ['apic_url', 'apic_user_registry_url', 'first_name', 'last_name'];
+  $save_needed = FALSE;
+
+  foreach( $properties as $property ) {
+    if(isset($admin->$property) && $admin->$property->value !== NULL) {
+      \Drupal::logger('auth_apic.upgrade')->notice( 'Unsetting ' . $property . ' on admin user.');
+      $admin->set($property, NULL);
+      $save_needed = TRUE;
+    }
+  }
+
+  if ($save_needed) {
+    $admin->save();
+  }
 
 }

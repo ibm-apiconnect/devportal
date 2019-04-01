@@ -26,7 +26,12 @@ services:
     arguments: ['ibm_apim']
   ibm_apim.user_utils:
     class: Drupal\ibm_apim\Service\UserUtils
-    arguments: ['@current_user', '@tempstore.private', '@state', '@logger.channel.ibm_apim']
+    arguments: ['@current_user',
+                '@tempstore.private',
+                '@state',
+                '@logger.channel.ibm_apim',
+                '@entity_type.manager'
+                ]
   ibm_apim.taxonomy:
     class: Drupal\ibm_apim\Service\ApicTaxonomy
   remove_x_generator_subscriber:

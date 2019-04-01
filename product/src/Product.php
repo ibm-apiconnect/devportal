@@ -108,6 +108,7 @@ class Product {
       $node->set('apic_url', NULL);
       $node->set('apic_version', NULL);
       $node->set('apic_ref', NULL);
+      $node->set('apic_pathalias', NULL);
       $node->set('product_id', NULL);
       $node->set('product_contact_name', NULL);
       $node->set('product_contact_email', NULL);
@@ -239,7 +240,7 @@ class Product {
             $lang = $utils->convert_lang_name_to_drupal($lang);
             // if its one of our locales or the root of one of our locales
             foreach ($languageList as $langListKey => $langListValue) {
-              if ($lang === $langListKey || strpos($langListKey, $lang) === 0) {
+              if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
                   $translation = $node->addTranslation($lang, ['title' => $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['title'][$lang])]);
                   $translation->save();
@@ -304,7 +305,7 @@ class Product {
             $lang = $utils->convert_lang_name_to_drupal($lang);
             // if its one of our locales or the root of one of our locales
             foreach ($languageList as $langListKey => $langListValue) {
-              if ($lang === $langListKey || strpos($langListKey, $lang) === 0) {
+              if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
                   $translation = $node->addTranslation($lang, ['apic_description' => $product['catalog_product']['info']['x-ibm-languages']['description'][$lang]]);
                   $translation->save();
@@ -327,7 +328,7 @@ class Product {
             $lang = $utils->convert_lang_name_to_drupal($lang);
             // if its one of our locales or the root of one of our locales
             foreach ($languageList as $langListKey => $langListValue) {
-              if ($lang === $langListKey || strpos($langListKey, $lang) === 0) {
+              if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
                   $translation = $node->addTranslation($lang, [
                     'apic_summary' => $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['summary'][$lang]),
@@ -430,13 +431,18 @@ class Product {
         }
         $node->set('product_visibility_custom_orgs', $productVisibilityCustomOrgs);
         $productVisibilityCustomTags = [];
-        if (isset($visBlock['view']['type'], $visBlock['view']['tags']) && $visBlock['view']['type'] === 'custom') {
-          foreach ($visBlock['view']['tags'] as $tag) {
+        if (isset($visBlock['view']['type'], $visBlock['view']['group_urls']) && $visBlock['view']['type'] === 'custom') {
+          foreach ($visBlock['view']['group_urls'] as $tag) {
             $productVisibilityCustomTags[] = $tag;
           }
         }
         $node->set('product_visibility_custom_tags', $productVisibilityCustomTags);
         $node->set('apic_url', $product['url']);
+
+        if (isset($product['catalog_product']['info']['x-pathalias'])) {
+          $node->set('apic_pathalias', $product['catalog_product']['info']['x-pathalias']);
+        }
+
         if (isset($product['billing_url'])) {
           $node->set('product_billing_url', $product['billing_url']);
         }
@@ -525,42 +531,43 @@ class Product {
         }
 
         // if invoked from the create code then don't invoke the update event - will be invoked from create instead
-        if ($node !== NULL && $event !== 'internal') {
-          \Drupal::logger('product')->notice('Product @product updated', ['@product' => $node->getTitle()]);
+        if ($node !== NULL) {
+          if ($event !== 'internal') {
+            \Drupal::logger('product')->notice('Product @product updated', ['@product' => $node->getTitle()]);
 
-          // Calling all modules implementing 'hook_product_update':
-          $moduleHandler->invokeAll('product_update', [
-            'node' => $node,
-            'data' => $product,
-          ]);
-          // invoke rules
-          if ($moduleHandler->moduleExists('rules')) {
+            // Calling all modules implementing 'hook_product_update':
+            $moduleHandler->invokeAll('product_update', [
+              'node' => $node,
+              'data' => $product,
+            ]);
+            // invoke rules
+            if ($moduleHandler->moduleExists('rules')) {
 
-            $eventDispatcher = \Drupal::service('event_dispatcher');
-            // Set the args twice on the event: as the main subject but also in the
-            // list of arguments.
-            if ($event !== NULL && $utils->endsWith($event, 'replace')) {
-              $event = new ProductReplaceEvent($node, ['product' => $node]);
-              $eventDispatcher->dispatch(ProductReplaceEvent::EVENT_NAME, $event);
-            }
-            elseif ($event !== NULL && $utils->endsWith($event, 'supersede')) {
-              $event = new ProductSupersedeEvent($node, ['product' => $node]);
-              $eventDispatcher->dispatch(ProductSupersedeEvent::EVENT_NAME, $event);
-            }
-            elseif ($event !== NULL && $utils->endsWith($event, 'restageFromDraft')) {
-              $event = new ProductRestageEvent($node, ['product' => $node]);
-              $eventDispatcher->dispatch(ProductRestageEvent::EVENT_NAME, $event);
-            }
-            elseif ($event !== NULL && $utils->endsWith($event, 'deprecate')) {
-              $event = new ProductDeprecateEvent($node, ['product' => $node]);
-              $eventDispatcher->dispatch(ProductDeprecateEvent::EVENT_NAME, $event);
-            }
-            elseif ($event !== NULL || $utils->endsWith($event, 'update')) {
-              $event = new ProductUpdateEvent($node, ['product' => $node]);
-              $eventDispatcher->dispatch(ProductUpdateEvent::EVENT_NAME, $event);
+              $eventDispatcher = \Drupal::service('event_dispatcher');
+              // Set the args twice on the event: as the main subject but also in the
+              // list of arguments.
+              if ($event !== NULL && $utils->endsWith($event, 'replace')) {
+                $event = new ProductReplaceEvent($node, ['product' => $node]);
+                $eventDispatcher->dispatch(ProductReplaceEvent::EVENT_NAME, $event);
+              }
+              elseif ($event !== NULL && $utils->endsWith($event, 'supersede')) {
+                $event = new ProductSupersedeEvent($node, ['product' => $node]);
+                $eventDispatcher->dispatch(ProductSupersedeEvent::EVENT_NAME, $event);
+              }
+              elseif ($event !== NULL && $utils->endsWith($event, 'restageFromDraft')) {
+                $event = new ProductRestageEvent($node, ['product' => $node]);
+                $eventDispatcher->dispatch(ProductRestageEvent::EVENT_NAME, $event);
+              }
+              elseif ($event !== NULL && $utils->endsWith($event, 'deprecate')) {
+                $event = new ProductDeprecateEvent($node, ['product' => $node]);
+                $eventDispatcher->dispatch(ProductDeprecateEvent::EVENT_NAME, $event);
+              }
+              elseif ($event !== NULL || $utils->endsWith($event, 'update')) {
+                $event = new ProductUpdateEvent($node, ['product' => $node]);
+                $eventDispatcher->dispatch(ProductUpdateEvent::EVENT_NAME, $event);
+              }
             }
           }
-
           ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
           $returnValue = $node;
         }

@@ -1,0 +1,581 @@
+diff -Naur modules/page_manager/page_manager_ui/page_manager_ui.module modules/page_manager/page_manager_ui/page_manager_ui.module
+--- modules/page_manager/page_manager_ui/page_manager_ui.module
++++ modules/page_manager/page_manager_ui/page_manager_ui.module
+@@ -18,26 +18,30 @@ use Drupal\page_manager_ui\Wizard\PageVariantAddWizard;
+  */
+ function page_manager_ui_entity_type_build(array &$entity_types) {
+   /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+-  $entity_types['page']
+-    ->setListBuilderClass(PageListBuilder::class)
+-    ->setFormClass('delete', PageDeleteForm::class)
+-    ->setLinkTemplate('collection', '/admin/structure/page_manager')
+-    ->setLinkTemplate('add-form', '/admin/structure/page_manager/add')
+-    ->setLinkTemplate('edit-form', '/admin/structure/page_manager/manage/{machine_name}/{step}')
+-    ->setLinkTemplate('delete-form', '/admin/structure/page_manager/manage/{page}/delete')
+-    ->setLinkTemplate('enable', '/admin/structure/page_manager/manage/{page}/enable')
+-    ->setLinkTemplate('disable', '/admin/structure/page_manager/manage/{page}/disable')
+-    ->setHandlerClass('wizard', [
+-      'add' => PageAddWizard::class,
+-      'edit' => PageEditWizard::class,
++  if (isset($entity_types['page'])) {
++    $entity_types['page']
++      ->setListBuilderClass(PageListBuilder::class)
++      ->setFormClass('delete', PageDeleteForm::class)
++      ->setLinkTemplate('collection', '/admin/structure/page_manager')
++      ->setLinkTemplate('add-form', '/admin/structure/page_manager/add')
++      ->setLinkTemplate('edit-form', '/admin/structure/page_manager/manage/{machine_name}/{step}')
++      ->setLinkTemplate('delete-form', '/admin/structure/page_manager/manage/{page}/delete')
++      ->setLinkTemplate('enable', '/admin/structure/page_manager/manage/{page}/enable')
++      ->setLinkTemplate('disable', '/admin/structure/page_manager/manage/{page}/disable')
++      ->setHandlerClass('wizard', [
++        'add' => PageAddWizard::class,
++        'edit' => PageEditWizard::class,
+     ]);
++  }
+ 
+-   $entity_types['page_variant']
+-     // The edit-form template is required by config_translation.
+-     ->setLinkTemplate('edit-form', '/admin/structure/page_manager/manage/{machine_name}/{step}')
+-     ->setHandlerClass('wizard', [
+-       'add_variant' => PageVariantAddWizard::class,
+-     ]);
++  if (isset($entity_types['page_variant'])) {
++    $entity_types['page_variant']
++      // The edit-form template is required by config_translation.
++      ->setLinkTemplate('edit-form', '/admin/structure/page_manager/manage/{machine_name}/{step}')
++      ->setHandlerClass('wizard', [
++        'add_variant' => PageVariantAddWizard::class,
++    ]);
++  }
+ }
+ 
+ /**
+diff -Naur modules/page_manager/page_manager_ui/src/Controller/PageManagerController.php modules/page_manager/page_manager_ui/src/Controller/PageManagerController.php
+--- modules/page_manager/page_manager_ui/src/Controller/PageManagerController.php
++++ modules/page_manager/page_manager_ui/src/Controller/PageManagerController.php
+@@ -1,10 +1,5 @@
+ <?php
+ 
+-/**
+- * @file
+- * Contains \Drupal\page_manager_ui\Controller\PageManagerController.
+- */
+-
+ namespace Drupal\page_manager_ui\Controller;
+ 
+ use Drupal\Component\Plugin\PluginManagerInterface;
+@@ -16,7 +11,7 @@ use Drupal\Core\Url;
+ use Drupal\ctools\Form\AjaxFormTrait;
+ use Drupal\page_manager\PageInterface;
+ use Drupal\page_manager\PageVariantInterface;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ use Symfony\Component\HttpFoundation\Request;
+ 
+@@ -58,7 +53,7 @@ class PageManagerController extends ControllerBase {
+   /**
+    * Tempstore factory.
+    *
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempstore;
+ 
+@@ -73,8 +68,8 @@ class PageManagerController extends ControllerBase {
+    *   The variant manager.
+    * @param \Drupal\Core\Plugin\Context\ContextHandlerInterface $context_handler
+    *   The context handler.
+-+   * @param \Drupal\user\SharedTempStoreFactory $tempstore
+-+   *   The tempstore factory.
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
++   *   The tempstore factory.
+    */
+   public function __construct(BlockManagerInterface $block_manager, PluginManagerInterface $condition_manager, PluginManagerInterface $variant_manager, ContextHandlerInterface $context_handler, SharedTempStoreFactory $tempstore) {
+     $this->blockManager = $block_manager;
+@@ -93,7 +88,7 @@ class PageManagerController extends ControllerBase {
+       $container->get('plugin.manager.condition'),
+       $container->get('plugin.manager.display_variant'),
+       $container->get('context.handler'),
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+ 
+diff -Naur modules/page_manager/page_manager_ui/src/Form/PageReorderVariantsForm.php modules/page_manager/page_manager_ui/src/Form/PageReorderVariantsForm.php
+--- modules/page_manager/page_manager_ui/src/Form/PageReorderVariantsForm.php
++++ modules/page_manager/page_manager_ui/src/Form/PageReorderVariantsForm.php
+@@ -11,7 +11,7 @@ use Drupal\Core\Form\FormBase;
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\page_manager\Entity\PageVariant;
+ use Drupal\page_manager\PageInterface;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ 
+ /**
+@@ -22,14 +22,14 @@ class PageReorderVariantsForm extends FormBase {
+   /**
+    * Tempstore factory.
+    *
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempstore;
+ 
+   /**
+    * Constructs a new DisplayVariantAddForm.
+    *
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore factory.
+    */
+   public function __construct(SharedTempStoreFactory $tempstore) {
+@@ -41,7 +41,7 @@ class PageReorderVariantsForm extends FormBase {
+    */
+   public static function create(ContainerInterface $container) {
+     return new static(
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+ 
+@@ -49,6 +49,7 @@ class PageReorderVariantsForm extends FormBase {
+    * Get the tempstore id.
+    *
+    * @return string
++   *   The tempstore id.
+    */
+   protected function getTempstoreId() {
+     return 'page_manager.page';
+diff -Naur modules/page_manager/page_manager_ui/src/Form/PageVariantAddForm.php modules/page_manager/page_manager_ui/src/Form/PageVariantAddForm.php
+--- modules/page_manager/page_manager_ui/src/Form/PageVariantAddForm.php
++++ modules/page_manager/page_manager_ui/src/Form/PageVariantAddForm.php
+@@ -1,10 +1,5 @@
+ <?php
+ 
+-/**
+- * @file
+- * Contains Drupal\page_manager_ui\Form\PageVariantAddForm.
+- */
+-
+ namespace Drupal\page_manager_ui\Form;
+ 
+ use Drupal\Core\Display\VariantManager;
+@@ -12,7 +7,7 @@ use Drupal\Core\Form\FormBase;
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\page_manager\Entity\PageVariant;
+ use Drupal\page_manager\PageInterface;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ 
+ /**
+@@ -30,7 +25,7 @@ class PageVariantAddForm extends FormBase {
+   /**
+    * Tempstore factory.
+    *
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempstore;
+ 
+@@ -39,6 +34,8 @@ class PageVariantAddForm extends FormBase {
+    *
+    * @param \Drupal\Core\Display\VariantManager $variant_manager
+    *   The variant manager.
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
++   *   The shared temp store factory.
+    */
+   public function __construct(VariantManager $variant_manager, SharedTempStoreFactory $tempstore) {
+     $this->variantManager = $variant_manager;
+@@ -51,7 +48,7 @@ class PageVariantAddForm extends FormBase {
+   public static function create(ContainerInterface $container) {
+     return new static(
+       $container->get('plugin.manager.display_variant'),
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+ 
+diff -Naur modules/page_manager/page_manager_ui/src/Form/PageVariantDeleteForm.php modules/page_manager/page_manager_ui/src/Form/PageVariantDeleteForm.php
+--- modules/page_manager/page_manager_ui/src/Form/PageVariantDeleteForm.php
++++ modules/page_manager/page_manager_ui/src/Form/PageVariantDeleteForm.php
+@@ -1,16 +1,11 @@
+ <?php
+ 
+-/**
+- * @file
+- * Contains Drupal\page_manager_ui\Form\PageVariantDeleteForm.
+- */
+-
+ namespace Drupal\page_manager_ui\Form;
+ 
+ use Drupal\Core\Form\ConfirmFormBase;
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\Url;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ 
+ /**
+@@ -21,14 +16,14 @@ class PageVariantDeleteForm extends ConfirmFormBase {
+   /**
+    * Tempstore factory.
+    *
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempstore;
+ 
+   /**
+    * Constructs a PageVariantDeleteForm.
+    *
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore factory.
+    */
+   public function __construct(SharedTempStoreFactory $tempstore) {
+@@ -40,7 +35,7 @@ class PageVariantDeleteForm extends ConfirmFormBase {
+    */
+   public static function create(ContainerInterface $container) {
+     return new static(
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+ 
+@@ -48,6 +43,7 @@ class PageVariantDeleteForm extends ConfirmFormBase {
+    * Get the tempstore id.
+    *
+    * @return string
++   *   The temp store id.
+    */
+   protected function getTempstoreId() {
+     return 'page_manager.page';
+diff -Naur modules/page_manager/page_manager_ui/src/Form/ParameterEditForm.php modules/page_manager/page_manager_ui/src/Form/ParameterEditForm.php
+--- modules/page_manager/page_manager_ui/src/Form/ParameterEditForm.php
++++ modules/page_manager/page_manager_ui/src/Form/ParameterEditForm.php
+@@ -1,10 +1,5 @@
+ <?php
+ 
+-/**
+- * @file
+- * Contains \Drupal\page_manager_ui\Form\ParameterEditForm.
+- */
+-
+ namespace Drupal\page_manager_ui\Form;
+ 
+ use Drupal\Core\Entity\EntityTypeRepositoryInterface;
+@@ -12,8 +7,7 @@ use Drupal\Core\Form\FormBase;
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\TypedData\PrimitiveInterface;
+ use Drupal\Core\TypedData\TypedDataManagerInterface;
+-use Drupal\page_manager\PageInterface;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ 
+ /**
+@@ -50,11 +44,15 @@ class ParameterEditForm extends FormBase {
+   protected $typedDataManager;
+ 
+   /**
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * The shared temp store.
++   *
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempstore;
+ 
+   /**
++   * The temp store id.
++   *
+    * @var string
+    */
+   protected $tempstore_id;
+@@ -73,7 +71,7 @@ class ParameterEditForm extends FormBase {
+    *   The entity type repository.
+    * @param \Drupal\Core\TypedData\TypedDataManagerInterface $typed_data_manager
+    *   The typed data manager.
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The temporary store.
+    */
+   public function __construct(EntityTypeRepositoryInterface $entity_type_repository, TypedDataManagerInterface $typed_data_manager, SharedTempStoreFactory $tempstore) {
+@@ -89,15 +87,27 @@ class ParameterEditForm extends FormBase {
+     return new static(
+       $container->get('entity_type.repository'),
+       $container->get('typed_data_manager'),
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+ 
++  /**
++   * Gets the temp store values.
++   *
++   * @return array
++   *   The temp store values.
++   */
+   protected function getTempstore() {
+     return $this->tempstore->get($this->tempstore_id)->get($this->machine_name);
+   }
+ 
+-  protected function setTempstore($cached_values) {
++  /**
++   * Sets cached values into temp store.
++   *
++   * @param array $cached_values
++   *   Cached values.
++   */
++  protected function setTempstore(array $cached_values) {
+     $this->tempstore->get($this->tempstore_id)->set($this->machine_name, $cached_values);
+   }
+ 
+diff -Naur modules/page_manager/page_manager_ui/src/Form/VariantPluginAddBlockForm.php modules/page_manager/page_manager_ui/src/Form/VariantPluginAddBlockForm.php
+--- modules/page_manager/page_manager_ui/src/Form/VariantPluginAddBlockForm.php
++++ modules/page_manager/page_manager_ui/src/Form/VariantPluginAddBlockForm.php
+@@ -9,8 +9,7 @@ namespace Drupal\page_manager_ui\Form;
+ 
+ use Drupal\Component\Plugin\PluginManagerInterface;
+ use Drupal\Core\Form\FormStateInterface;
+-use Drupal\page_manager\PageVariantInterface;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ use Symfony\Component\HttpFoundation\Request;
+ 
+@@ -29,6 +28,8 @@ class VariantPluginAddBlockForm extends VariantPluginConfigureBlockFormBase {
+   /**
+    * Constructs a new VariantPluginFormBase.
+    *
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
++   *   The shared temp store.
+    * @param \Drupal\Component\Plugin\PluginManagerInterface $block_manager
+    *   The block manager.
+    */
+@@ -42,7 +43,7 @@ class VariantPluginAddBlockForm extends VariantPluginConfigureBlockFormBase {
+    */
+   public static function create(ContainerInterface $container) {
+     return new static(
+-      $container->get('user.shared_tempstore'),
++      $container->get('tempstore.shared'),
+       $container->get('plugin.manager.block')
+     );
+   }
+diff -Naur modules/page_manager/page_manager_ui/src/Form/VariantPluginConfigureBlockFormBase.php modules/page_manager/page_manager_ui/src/Form/VariantPluginConfigureBlockFormBase.php
+--- modules/page_manager/page_manager_ui/src/Form/VariantPluginConfigureBlockFormBase.php
++++ modules/page_manager/page_manager_ui/src/Form/VariantPluginConfigureBlockFormBase.php
+@@ -13,8 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\Plugin\Context\Context;
+ use Drupal\Core\Plugin\ContextAwarePluginAssignmentTrait;
+ use Drupal\Core\Plugin\ContextAwarePluginInterface;
+-use Drupal\page_manager\PageVariantInterface;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ 
+ /**
+@@ -27,7 +26,7 @@ abstract class VariantPluginConfigureBlockFormBase extends FormBase {
+   /**
+    * Tempstore factory.
+    *
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempstore;
+ 
+@@ -48,7 +47,7 @@ abstract class VariantPluginConfigureBlockFormBase extends FormBase {
+   /**
+    * Constructs a new VariantPluginConfigureBlockFormBase.
+    *
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore factory.
+    */
+   public function __construct(SharedTempStoreFactory $tempstore) {
+@@ -60,7 +59,7 @@ abstract class VariantPluginConfigureBlockFormBase extends FormBase {
+    */
+   public static function create(ContainerInterface $container) {
+     return new static(
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+ 
+@@ -68,6 +67,7 @@ abstract class VariantPluginConfigureBlockFormBase extends FormBase {
+    * Get the tempstore id.
+    *
+    * @return string
++   *   The temp store id.
+    */
+   protected function getTempstoreId() {
+     return 'page_manager.block_display';
+@@ -76,7 +76,8 @@ abstract class VariantPluginConfigureBlockFormBase extends FormBase {
+   /**
+    * Get the tempstore.
+    *
+-   * @return \Drupal\user\SharedTempStore
++   * @return \Drupal\Core\TempStore\SharedTempStore
++   *   The shared temp store.
+    */
+   protected function getTempstore() {
+     return $this->tempstore->get($this->getTempstoreId());
+@@ -191,6 +192,7 @@ abstract class VariantPluginConfigureBlockFormBase extends FormBase {
+    * Gets the variant plugin for this page variant entity.
+    *
+    * @return \Drupal\ctools\Plugin\BlockVariantInterface
++   *   The variant plugin.
+    */
+   protected function getVariantPlugin() {
+     return $this->variantPlugin;
+diff -Naur modules/page_manager/page_manager_ui/src/Form/VariantPluginContentForm.php modules/page_manager/page_manager_ui/src/Form/VariantPluginContentForm.php
+--- modules/page_manager/page_manager_ui/src/Form/VariantPluginContentForm.php
++++ modules/page_manager/page_manager_ui/src/Form/VariantPluginContentForm.php
+@@ -1,17 +1,12 @@
+ <?php
+ 
+-/**
+- * @file
+- * Contains Drupal\page_manager_ui\Form\VariantPluginContentForm.
+- */
+-
+ namespace Drupal\page_manager_ui\Form;
+ 
+ use Drupal\Core\Form\FormBase;
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\Url;
+ use Drupal\ctools\Form\AjaxFormTrait;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ 
+ /**
+@@ -24,14 +19,14 @@ class VariantPluginContentForm extends FormBase {
+   /**
+    * Tempstore factory.
+    *
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempstore;
+ 
+   /**
+    * Constructs a new VariantPluginContentForm.
+    *
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore factory.
+    */
+   public function __construct(SharedTempStoreFactory $tempstore) {
+@@ -43,7 +38,7 @@ class VariantPluginContentForm extends FormBase {
+    */
+   public static function create(ContainerInterface $container) {
+     return new static(
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+ 
+@@ -51,6 +46,7 @@ class VariantPluginContentForm extends FormBase {
+    * Get the tempstore ID.
+    *
+    * @return string
++   *   The temp store id.
+    */
+   protected function getTempstoreId() {
+     return 'page_manager.block_display';
+@@ -59,7 +55,8 @@ class VariantPluginContentForm extends FormBase {
+   /**
+    * Get the tempstore.
+    *
+-   * @return \Drupal\user\SharedTempStore
++   * @return \Drupal\Core\TempStore\SharedTempStore
++   *   The temp store.
+    */
+   protected function getTempstore() {
+     return $this->tempstore->get($this->getTempstoreId());
+diff -Naur modules/page_manager/page_manager_ui/src/Form/VariantPluginDeleteBlockForm.php modules/page_manager/page_manager_ui/src/Form/VariantPluginDeleteBlockForm.php
+--- modules/page_manager/page_manager_ui/src/Form/VariantPluginDeleteBlockForm.php
++++ modules/page_manager/page_manager_ui/src/Form/VariantPluginDeleteBlockForm.php
+@@ -1,15 +1,9 @@
+ <?php
+ 
+-/**
+- * @file
+- * Contains \Drupal\page_manager_ui\Form\VariantPluginDeleteBlockForm.
+- */
+-
+ namespace Drupal\page_manager_ui\Form;
+ 
+ use Drupal\Core\Form\ConfirmFormBase;
+ use Drupal\Core\Form\FormStateInterface;
+-use Drupal\page_manager\PageVariantInterface;
+ 
+ /**
+  * Provides a form for deleting an access condition.
+@@ -17,6 +11,8 @@ use Drupal\page_manager\PageVariantInterface;
+ class VariantPluginDeleteBlockForm extends ConfirmFormBase {
+ 
+   /**
++   * The block variant.
++   *
+    * @var \Drupal\ctools\Plugin\BlockVariantInterface
+    */
+   protected $plugin;
+@@ -32,6 +28,7 @@ class VariantPluginDeleteBlockForm extends ConfirmFormBase {
+    * Get the tempstore id.
+    *
+    * @return string
++   *   The temp store id.
+    */
+   protected function getTempstoreId() {
+     return 'page_manager.block_display';
+@@ -40,10 +37,11 @@ class VariantPluginDeleteBlockForm extends ConfirmFormBase {
+   /**
+    * Get the tempstore.
+    *
+-   * @return \Drupal\user\SharedTempStore
++   * @return \Drupal\Core\TempStore\SharedTempStore
++   *   The shared temp store.
+    */
+   protected function getTempstore() {
+-    return \Drupal::service('user.shared_tempstore')->get($this->getTempstoreId());
++    return \Drupal::service('tempstore.shared')->get($this->getTempstoreId());
+   }
+ 
+   /**
+diff -Naur modules/page_manager/page_manager_ui/src/Tests/PageManagerAdminTest.php modules/page_manager/page_manager_ui/src/Tests/PageManagerAdminTest.php
+--- modules/page_manager/page_manager_ui/src/Tests/PageManagerAdminTest.php
++++ modules/page_manager/page_manager_ui/src/Tests/PageManagerAdminTest.php
+@@ -118,7 +118,7 @@ class PageManagerAdminTest extends WebTestBase {
+       'variant_settings[status_code]' => 200,
+     ];
+     $this->drupalPostForm(NULL, $edit, 'Finish');
+-    $this->assertRaw(new FormattableMarkup('Saved the %label Page.', ['%label' => 'Foo']));
++    $this->assertRaw(new FormattableMarkup('The page %label has been added.', ['%label' => 'Foo']));
+     // We've gone from the add wizard to the edit wizard.
+     $this->drupalGet('admin/structure/page_manager/manage/foo/general');
+ 
+@@ -359,7 +359,7 @@ class PageManagerAdminTest extends WebTestBase {
+ 
+     // We're now on the content step, but we don't need to add any blocks.
+     $this->drupalPostForm(NULL, [], 'Finish');
+-    $this->assertRaw(new FormattableMarkup('Saved the %label Page.', ['%label' => 'Second']));
++    $this->assertRaw(new FormattableMarkup('The page %label has been added.', ['%label' => 'Second']));
+ 
+     // Visit both pages, make sure that they do not interfere with each other.
+     $this->drupalGet('admin/foo');
+diff -Naur modules/page_manager/page_manager_ui/src/Tests/PageParametersTest.php modules/page_manager/page_manager_ui/src/Tests/PageParametersTest.php
+--- modules/page_manager/page_manager_ui/src/Tests/PageParametersTest.php
++++ modules/page_manager/page_manager_ui/src/Tests/PageParametersTest.php
+@@ -94,7 +94,7 @@ class PageParametersTest extends WebTestBase {
+ 
+     // Finish the wizard.
+     $this->drupalPostForm(NULL, [], 'Finish');
+-    $this->assertRaw(new FormattableMarkup('Saved the %label Page.', ['%label' => 'Foo']));
++    $this->assertRaw(new FormattableMarkup('The page %label has been added.', ['%label' => 'Foo']));
+ 
+     // Check that the node's title is visible at the page.
+     $this->drupalGet('admin/foo/' . $node->id());

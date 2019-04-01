@@ -1,0 +1,19 @@
+--- core/lib/Drupal/Core/Session/SessionConfiguration.php	2017-01-17 15:04:00.000000000 +0000
++++ core/lib/Drupal/Core/Session/SessionConfiguration.php	2017-01-19 11:59:27.000000000 +0000
+@@ -119,14 +119,14 @@
+    *   The session cookie domain.
+    */
+   protected function getCookieDomain(Request $request) {
++    global $apic_cookie_domain;
+     if (isset($this->options['cookie_domain'])) {
+       $cookie_domain = $this->options['cookie_domain'];
+     }
+     else {
+-      $host = $request->getHost();
+       // To maximize compatibility and normalize the behavior across user
+       // agents, the cookie domain should start with a dot.
+-      $cookie_domain = '.' . $host;
++      $cookie_domain = '.' . $apic_cookie_domain;
+     }
+ 
+     // Cookies for domains without an embedded dot will be rejected by user

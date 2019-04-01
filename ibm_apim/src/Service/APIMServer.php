@@ -185,6 +185,8 @@ class APIMServer implements ManagementServerInterface {
     // 'username' is a Drupal field and will make the mgmt node barf so remove it
     $username = $user->getUsername();
     $user->setUsername(NULL);
+    // apim can't handle password being set here either
+    $user->setPassword(NULL);
 
     $response = ApicRest::put('/me', $this->userService->getUserJSON($user));
 

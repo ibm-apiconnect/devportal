@@ -1,0 +1,54 @@
+{% if trail %}
+  {% set complete_class = [
+  'bx--progress-step--complete',
+  ] %}
+  {% set current_class = [
+  'bx--progress-step--current',
+  ] %}
+  {% set incomplete_class = [
+  'bx--progress-step--incomplete',
+  ] %}
+
+  <div class="wizard-trail">
+    <ul data-progress data-progress-current class="bx--progress">
+      {% set classes = [
+      'bx--progress-step',
+      'bx--progress-step--complete',
+      ] %}
+      {%- set attributes = attributes.addClass(classes) -%}
+      {% for key, value in trail %}
+        {% if key is same as(step) %}
+          {%- set attributes = attributes.removeClass(complete_class) -%}
+          {%- set attributes = attributes.addClass(current_class) -%}
+          <li {{ attributes }}>
+            <svg>
+              <circle cx="12" cy="12" r="12"></circle>
+              <circle cx="12" cy="12" r="6"></circle>
+            </svg>
+            <p class="bx--progress-label">{{ value }}</p>
+            <span class="bx--progress-line"></span>
+          </li>
+          {%- set attributes = attributes.removeClass(current_class) -%}
+          {%- set attributes = attributes.addClass(incomplete_class) -%}
+        {% else %}
+          <li {{ attributes }}>
+            {% if attributes.hasClass('bx--progress-step--complete') %}
+              <svg width="24px" height="24px" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="12"></circle>
+                <polygon points="10.3 13.6 7.7 11 6.3 12.4 10.3 16.4 17.8 9 16.4 7.6"></polygon>
+              </svg>
+            {% else %}
+              <svg>
+                <circle cx="12" cy="12" r="12"></circle>
+              </svg>
+            {% endif %}
+            <p class="bx--progress-label">{{ value }}</p>
+            <span class="bx--progress-line"></span>
+          </li>
+        {% endif %}
+        {% if value is not same as(trail|last) %}
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}

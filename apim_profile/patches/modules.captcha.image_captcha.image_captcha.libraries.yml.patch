@@ -1,0 +1,11 @@
+--- modules/captcha/image_captcha/image_captcha.libraries.yml	2018-02-13 10:16:45.000000000 +0000
++++ modules/captcha/image_captcha/image_captcha.libraries.yml	2018-02-13 10:16:59.000000000 +0000
+@@ -3,7 +3,7 @@
+   js:
+     image_captcha.js: {}
+   css:
+-    all:
++    component:
+       image_captcha.css: {}
+   dependencies:
+     - core/jquery

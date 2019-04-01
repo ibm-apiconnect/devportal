@@ -1,0 +1,11 @@
+--- modules/votingapi_widgets/js/fivestars.js	2018-05-10 20:39:51.000000000 +0100
++++ modules/votingapi_widgets/js/fivestars.js	2018-05-10 20:40:58.000000000 +0100
+@@ -36,7 +36,7 @@
+         },
+       };
+ 
+-      $this.find('select').once('processed').barrating('show', options);
++      setTimeout(function(){ $this.find('select').once('processed').barrating('show', options); },500);
+       $this.find('[type=submit]').hide();
+     });
+     }

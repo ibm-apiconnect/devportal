@@ -2,7 +2,7 @@
   {
     "type": "configured_catalog_user_registry",
     "api_version": "2.0.0",
-    "id": "52e87240-ef44-4941-b108-70fcd5a9695c",
+    "id": "d57b1f6b-0816-4ca3-929e-e9e24f59c144",
     "name": "lur-registry",
     "title": "LUR User Registry",
     "summary": "Simple LUR Registry",
@@ -30,7 +30,7 @@
     "updated_at": "2018-04-13T14:03:01.958Z",
     "org_url": "/api/orgs/dbfeed01-0195-44ad-92f8-c2f0de908a64",
     "catalog_url": "/api/catalogs/dbfeed01-0195-44ad-92f8-c2f0de908a64/1ab392c3-5272-474b-90bf-c4fcfd67f110",
-    "user_registry_url": "/api/user-registries/dbfeed01-0195-44ad-92f8-c2f0de908a64/b335efd8-b1a9-417c-8d87-a155c2a08c79",
-    "url": "/api/catalogs/dbfeed01-0195-44ad-92f8-c2f0de908a64/1ab392c3-5272-474b-90bf-c4fcfd67f110/configured-catalog-user-registries/52e87240-ef44-4941-b108-70fcd5a9695c"
+    "user_registry_url": "/consumer-api/user-registries/d57b1f6b-0816-4ca3-929e-e9e24f59c144",
+    "url": "/consumer-api/user-registries/d57b1f6b-0816-4ca3-929e-e9e24f59c144"
   }
 ]

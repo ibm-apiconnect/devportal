@@ -456,9 +456,9 @@ class AdminForm extends ConfigFormBase {
       ->set('allow_clientsecret_reset', (bool) $form_state->getValue('allow_clientsecret_reset'))
       ->set('soap_codesnippets', (bool) $form_state->getValue('soap_codesnippets'))
       ->set('use_proxy', (bool) $form_state->getValue('useProxy'))
-      ->set('proxy_type', (bool) $form_state->getValue('proxyType'))
-      ->set('proxy_url', (bool) $form_state->getValue('proxyUrl'))
-      ->set('proxy_auth', (bool) $form_state->getValue('proxyAuth'))
+      ->set('proxy_type', $form_state->getValue('proxyType'))
+      ->set('proxy_url', $form_state->getValue('proxyUrl'))
+      ->set('proxy_auth', $form_state->getValue('proxyAuth'))
       ->set('categories', $categories)
       ->set('codesnippets', $codesnippets)
       ->save();

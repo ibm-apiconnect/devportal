@@ -12,6 +12,7 @@
 
 namespace Drupal\ibm_apim\Service;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
@@ -27,19 +28,41 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  */
 class UserUtils {
 
+  /**
+   * @var \Drupal\Core\Session\AccountProxy
+   */
   private $currentUser;
 
+  /**
+   * @var \Drupal\Core\TempStore\PrivateTempStore
+   */
   private $sessionStore;
 
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
   private $state;
 
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
   private $logger;
 
-  public function __construct(AccountProxy $current_user, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, LoggerInterface $logger) {
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  private $userStorage;
+
+  public function __construct(AccountProxy $current_user,
+                              PrivateTempStoreFactory $temp_store_factory,
+                              StateInterface $state,
+                              LoggerInterface $logger,
+                              EntityTypeManagerInterface $entity_type_manager) {
     $this->currentUser = $current_user;
     $this->sessionStore = $temp_store_factory->get('ibm_apim');
     $this->state = $state;
     $this->logger = $logger;
+    $this->userStorage = $entity_type_manager->getStorage('user');
   }
 
   /**
@@ -377,6 +400,38 @@ class UserUtils {
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $return);
     return $return;
+  }
+
+  /**
+   * See https://api.drupal.org/api/drupal/core!modules!user!user.module/function/user_load_by_name/8.2.x
+   * This exists to make other classes unit testable.
+   *
+   * @param $name username
+   *
+   * @return bool|mixed
+   *   FALSE if not found - or User object.
+   */
+  public function loadUserByName($name) {
+    $users = $this->userStorage->loadByProperties([
+      'name' => $name,
+    ]);
+    return $users ? reset($users) : FALSE;
+  }
+
+  /**
+   * See https://api.drupal.org/api/drupal/core%21modules%21user%21user.module/function/user_load_by_mail/8.2.x
+   * This exists to make other classes unit testable.
+   *
+   * @param $mail email address
+   *
+   * @return bool|mixed
+   *   FALSE if not found - or User object.
+   */
+  public function loadUserByMail($mail) {
+    $users = $this->userStorage->loadByProperties([
+      'mail' => $mail,
+    ]);
+    return $users ? reset($users) : FALSE;
   }
 
 }

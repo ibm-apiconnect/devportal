@@ -86,10 +86,11 @@ function product_node_access_records($node) {
 
   // Only build permissions for product nodes
   if ($type === 'product') {
-    if ($aclDebug === TRUE) {
-      \Drupal::logger('ACLDEBUG')
-        ->debug('Product Title: %title', ['%title' => var_export($node->getTitle(), TRUE)]);
-    }
+    // This is just too much debug; enable for special cases only
+//    if ($aclDebug === TRUE) {
+//      \Drupal::logger('ACLDEBUG')
+//        ->debug('Product Title: %title', ['%title' => $node->getTitle()]);
+//    }
     // Only issue grants if product_view is enabled
     if (isset($node->product_view_enabled->value) && (int) $node->product_view_enabled->value === 1) {
       // If the product is deprecated, only allow subscribers
@@ -168,8 +169,9 @@ function product_node_access_records($node) {
       if (isset($node->product_visibility_custom_tags)) {
         foreach ($node->product_visibility_custom_tags->getValue() as $customTag) {
           if ($customTag['value'] !== NULL) {
+            $url = str_replace('/', '_', $customTag['value']);
             $grants[] = [
-              'realm' => 'product_tag_' . $customTag['value'],
+              'realm' => 'product_tag_' . $url,
               'gid' => TAG_PRODUCT_GRANT,
               'grant_view' => 1,
               'grant_update' => 0,
@@ -267,7 +269,8 @@ WHERE (id.consumerorg_url_value = '" . $orgUrl . "')");
     if ($tags !== NULL && is_array($tags) && count($tags) > 0) {
       foreach ($tags as $customTag) {
         if ($customTag !== NULL) {
-          $grants['product_tag_' . $customTag] = [TAG_PRODUCT_GRANT];
+          $url = str_replace('/', '_', $customTag);
+          $grants['product_tag_' . $url] = [TAG_PRODUCT_GRANT];
         }
       }
     }
@@ -637,6 +640,18 @@ function product_process_plan($planId, $plan, $apiNodes, $apiRefs) {
   $planArray = [];
   $planArray['nodes'] = [];
   $planArray['data'] = $plan;
+
+  // check for any translated plan names and descriptions
+  $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
+  if (array_key_exists('x-ibm-languages', $planArray['data']) && array_key_exists($lang_code, $planArray['data']['x-ibm-languages'])) {
+    if (array_key_exists('title', $planArray['data']['x-ibm-languages'][$lang_code])) {
+      $planArray['data']['title'] = $planArray['data']['x-ibm-languages'][$lang_code]['title'];
+    }
+    if (array_key_exists('description', $planArray['data']['x-ibm-languages'][$lang_code])) {
+      $planArray['data']['description'] = $planArray['data']['x-ibm-languages'][$lang_code]['description'];
+    }
+  }
+
   // put a plain API list in the raw plan data so we can index it in the template
   $planArray['data']['apiList'] = [];
   if (isset($planArray['data']['apis']) && !empty($planArray['data']['apis'])) {
@@ -707,6 +722,12 @@ function product_process_plan($planId, $plan, $apiNodes, $apiRefs) {
   $planArray['planId'] = $planId;
   if (is_array($apiNodes) && count($apiNodes) > 0) {
     foreach ($apiNodes as $apiNode) {
+      // ensure use the translated version of api nodes
+      $hasTranslation = $apiNode['node']->hasTranslation($lang_code);
+      if ($hasTranslation === true) {
+        $apiNode['node'] = $apiNode['node']->getTranslation($lang_code);
+      }
+
       $apiSafeNodeRef = Html::getClass($apiNode['node']->apic_ref->value);
       $planArray['nodes'][$apiSafeNodeRef] = [];
       $planArray['nodes'][$apiSafeNodeRef]['nid'] = $apiNode['node']->id();

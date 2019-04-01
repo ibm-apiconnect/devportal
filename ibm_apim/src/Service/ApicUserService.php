@@ -173,36 +173,16 @@ class ApicUserService {
   public function getUserAccountFields(ApicUser $user): array {
     $data = [];
 
-    $userRegistry = $this->userRegistryService->get($user->getApicUserRegistryURL());
-
     $data['first_name'] = $user->getFirstname();
     $data['last_name'] = $user->getLastname();
     $data['pass'] = $user->getPassword();
     $data['email'] = $user->getMail();
     $data['mail'] = $user->getMail();
     $data['consumer_organization'] = $user->getOrganization();
-    if ($userRegistry !== NULL) {
-      $data['realm'] = $userRegistry->getRealm();
-    }
     $data['apic_url'] = $user->getUrl();
     $data['apic_user_registry_url'] = $user->getApicUserRegistryUrl();
     $data['apic_idp'] = $user->getApicIdp();
-
-    // check whether we are in a unit test env.
-    if ($userRegistry !== NULL && !isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
-      $readOnlyIdp = !$userRegistry->isUserManaged();
-    }
-    else {
-      $readOnlyIdp = FALSE;
-    }
-
-    // If using readonly IDP then the user should be activated immediately.
-    if ($readOnlyIdp === TRUE) {
-      $data['status'] = 1;
-    }
-    else {
-      $data['status'] = 0;
-    }
+    $data['apic_state'] = $user->getState();
 
     return $data;
   }

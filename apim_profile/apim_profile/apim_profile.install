@@ -1,0 +1,1062 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2019
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ * Install, update and uninstall functions for the apim_profile install profile.
+ */
+
+use Drupal\block\Entity\Block;
+use Drupal\captcha\Entity\CaptchaPoint;
+use Drupal\locale\Gettext;
+use Drupal\menu_link_content\Entity\MenuLinkContent;
+use Drupal\search_api\Entity\Index;
+use Drupal\user\Entity\Role;
+use Drupal\user\Entity\User;
+use Drupal\user\RoleInterface;
+
+
+/**
+ * Implements hook_install().
+ *
+ * Perform actions to set up the site for this profile.
+ *
+ * @see system_install()
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_install() {
+  $path = __DIR__;
+
+  // First, do everything in standard profile.
+  include_once DRUPAL_ROOT . '/core/profiles/standard/standard.install';
+  standard_install();
+
+  $core_dependencies = array(
+    'node',
+    'history',
+    'entity_reference',
+    'block',
+    'dynamic_page_cache',
+    'page_cache',
+    'filter',
+    'block_content',
+    'breakpoint',
+    'color',
+    'config',
+    'comment',
+    'contextual',
+    'datetime',
+    'contact',
+    'quickedit',
+    'help',
+    'image',
+    'options',
+    'path',
+    'taxonomy',
+    'shortcut',
+    'toolbar',
+    'field_ui',
+    'file',
+    'rdf',
+    'views',
+    'views_ui',
+    'editor',
+    'ckeditor',
+    'automated_cron',
+    'ban',
+    'book',
+    'menu_ui',
+    'link',
+    'menu_link_content',
+    'forum',
+    'tour',
+    'update',
+    'content_translation',
+    'language',
+    'locale',
+    'user',
+    'inline_form_errors',
+    'big_pipe',
+    'media'
+  );
+
+  $module_dependencies = array(
+    'acl',
+    'admin_toolbar',
+    'admin_toolbar_tools',
+    'adminimal_admin_toolbar',
+    'bootstrap_layouts',
+    'blazy',
+    'blazy_ui',
+    'blog',
+    'ctools',
+    'ctools_views',
+    'linkit',
+    'field_group',
+    'address',
+    'mailsystem',
+    'taxonomy_menu',
+    'autologout',
+    'login_security',
+    'session_limit',
+    'token',
+    'typed_data',
+    'ultimate_cron',
+    'user_pwreset_timeout',
+    'panels',
+    'panels_ipe',
+    'seckit',
+    'metatag',
+    'metatag_dc',
+    'slick',
+    'slick_extras',
+    'slick_ui',
+    'slick_views',
+    'captcha',
+    'image_captcha',
+    'recaptcha',
+    'votingapi',
+    'workbench',
+    'page_manager',
+    'page_manager_ui',
+    'votingapi_widgets',
+    'cshs',
+    'search404',
+    'change_pwd_page',
+    'libraries',
+    'responsive_image',
+    'editor_file',
+    'config_update',
+    'password_policy',
+    'password_policy_length',
+    'password_policy_character_types',
+    'password_policy_username',
+    'password_policy_consecutive',
+    'password_strength',
+    'csp',
+    'perimeter',
+    'check_dns',
+    'views_bootstrap',
+    'ckeditor_media_embed',
+    'social_media_links',
+    'linkit',
+    'health_check',
+    'editor_advanced_link',
+    'restrict_by_ip',
+    'file_upload_secure_validator',
+    'select_or_other',
+    'crop',
+    'focal_point',
+    'entity_browser',
+    'dropzonejs',
+    'dropzonejs_eb_widget',
+    'entity_browser_enhanced',
+    'file_browser',
+    'embed',
+    'content_browser',
+    'entity_embed',
+    'honeypot',
+    'masonry',
+    'masonry_views',
+    'views_ajax_history',
+    'contact_block',
+    'twig_tweak',
+    'config_translation',
+    'better_exposed_filters',
+    'search_api',
+    'search_api_db',
+    'search_api_autocomplete',
+    'robotstxt',
+    'flood_unblock',
+    'key',
+    'encrypt',
+    'real_aes',
+    'unlimited_number',
+    'avatars',
+    'letter_avatar',
+    'rules',
+    'mimemail',
+    'views_autocomplete_filters',
+    'multiple_fields_remove_button',
+    'account_field_split',
+    'eu_cookie_compliance',
+    'serialization',
+    'rules_http_client',
+    'smart_trim',
+    'r4032login',
+    'noopener_filter',
+    'session_based_temp_store',
+    'select_translation'
+  );
+
+  $our_modules = array(
+    'ghmarkdown',
+    'ibm_log_stdout',
+    'ibm_apim',
+    'ibm_apic_mail',
+    'auth_apic',
+    'apic_api',
+    'apic_app',
+    'consumerorg',
+    'product',
+    'featuredcontent',
+    'socialblock',
+    'themegenerator',
+    'mail_subscribers'
+  );
+  // enable our modules
+  $module_installer = \Drupal::service('module_installer');
+  foreach ($core_dependencies as $module) {
+    $module_installer->install([$module]);
+  }
+  foreach ($module_dependencies as $module) {
+    $module_installer->install([$module]);
+  }
+  foreach ($our_modules as $module) {
+    $module_installer->install([$module]);
+  }
+
+  // Set front page to "home".
+  \Drupal::configFactory()
+    ->getEditable('system.site')
+    ->set('page.front', '/home')
+    ->save(TRUE);
+
+  // TODO remove bartik from this list
+  $themes = array('bartik', 'seven', 'connect_theme');
+  $theme_installer = \Drupal::service('theme_installer');
+  foreach ($themes as $theme) {
+    $theme_installer->install([$theme]);
+  }
+  // set connect_theme to be default
+  \Drupal::service('theme_handler')->setDefault('connect_theme');
+
+  \Drupal::configFactory()
+    ->getEditable('node.settings')
+    ->set('use_admin_theme', FALSE)
+    ->save();
+
+  // Ensure the translation fields are created in the database.
+  \Drupal::service('entity.definition_update_manager')->applyUpdates();
+
+  // Enable default permissions for system roles.
+  user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, array(
+    'access comments',
+    'use search autocomplete'
+  ));
+  user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, array(
+    'access comments',
+    'post comments',
+    'skip comment approval',
+    'use search autocomplete',
+    'create forum content',
+    'edit own forum content',
+    'vote on node:api:apic_rating',
+    'vote on node:consumerorg:apic_rating',
+    'vote on node:product:apic_rating',
+    'clear own vote on node:api:apic_rating',
+    'clear own vote on node:consumerorg:apic_rating',
+    'clear own vote on node:product:apic_rating',
+    'edit own vote on node:api:apic_rating',
+    'edit own vote on node:consumerorg:apic_rating',
+    'edit own vote on node:product:apic_rating',
+    'avatars avatar_generator user letter_generator',
+    'avatars avatar_generator user user_upload'
+  ));
+
+  // Assign user 1 the "administrator" and "superuser" roles.
+  $user = User::load(1);
+  if ($user !== null) {
+    $user->roles[] = 'administrator';
+    $user->roles[] = 'superuser';
+    $user->save();
+  }
+
+  // load apim_profile translations in to the database
+  apim_profile_load_translations();
+
+  // create main menu links
+  apim_profile_main_menu_links();
+
+  // create login links
+  apim_profile_login_menu_links();
+
+  // create default nodes
+  require_once $path . '/apim_profile.import_nodes.inc';
+  apim_profile_create_nodes();
+
+  // put blocks in the right place
+  apim_profile_place_blocks();
+
+  // front page
+  require_once $path . '/apim_profile.homepage.inc';
+  apim_profile_create_homepage_blocks();
+
+  // We install some menu links, so we have to rebuild the router, to ensure the
+  // menu links are valid.
+  \Drupal::service('router.builder')->rebuildIfNeeded();
+
+  user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, array('access site-wide contact form'));
+  user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, array('access site-wide contact form'));
+
+  // Allow all users to use search.
+  user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, array('search content'));
+  user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, array('search content'));
+
+  // forum moderator permissions
+  user_role_grant_permissions('forum_moderator', array(
+    'delete any forum content',
+    'edit any forum content'
+  ));
+
+  // set up default APIC settings
+  apim_profile_default_apic_config();
+
+  // use private file hosting by default
+  \Drupal::configFactory()
+    ->getEditable('system.file')
+    ->set('temporary_maximum_age', 2419200)
+    ->set('default_scheme', 'private')
+    ->save();
+
+  \Drupal::configFactory()
+    ->getEditable('bootstrap.settings')
+    ->set('cdn_provider', '')
+    ->save();
+
+  // configure captcha
+  apim_profile_captcha_config();
+
+  // rebuild access permissions
+  node_access_rebuild();
+
+  // enable paranoia last to avoid it blocking other config setup
+  //$module_installer->install(['paranoia']);
+}
+
+/**
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_main_menu_links() {
+  $menu_name = 'main';
+
+  // Menu links need to be localized in all languages we support
+  $languages = \Drupal::languageManager()->getLanguages();
+
+  $home_link = MenuLinkContent::create([
+    'title' => t('Home', [], ['langcode' => 'en']),
+    'description' => t('Portal homepage', [], ['langcode' => 'en']),
+    'link' => ['uri' => 'internal:/'],
+    'menu_name' => $menu_name,
+    'expanded' => TRUE,
+    'weight' => -1
+  ]);
+
+  foreach ($languages as $language) {
+    if ($language->getId() === 'en') {
+      continue;
+    }
+    $translation = array(
+      'title' => t('Home', [], ['langcode' => $language->getId()]),
+      'description' => t('Portal homepage', [], ['langcode' => $language->getId()]),
+      'link' => ['uri' => 'internal:/'],
+      'menu_name' => $menu_name,
+      'expanded' => TRUE,
+      'weight' => -1
+    );
+    $home_link->addTranslation($language->getId(), $translation);
+  }
+
+  $home_link->save();
+
+  $link = MenuLinkContent::create([
+    'title' => t('API Products', [], ['langcode' => 'en']),
+    'description' => t('Browse available APIs', [], ['langcode' => 'en']),
+    'link' => ['uri' => 'internal:/product', [], ['langcode' => 'en']],
+    'menu_name' => $menu_name,
+    'weight' => 5,
+    'langcode' => 'en'
+  ]);
+  foreach ($languages as $language) {
+    if ($language->getId() === 'en') {
+      continue;
+    }
+    $translation = array(
+      'title' => t('API Products', [], ['langcode' => $language->getId()]),
+      'description' => t('Browse available APIs', [], ['langcode' => $language->getId()]),
+      'langcode' => $language->getId()
+    );
+    $link->addTranslation($language->getId(), $translation);
+  }
+  $link->save();
+
+  $link = MenuLinkContent::create([
+    'title' => t('Apps', [], ['langcode' => 'en']),
+    'description' => t('Create and manage your apps', [], ['langcode' => 'en']),
+    'link' => ['uri' => 'internal:/application', [], ['langcode' => 'en']],
+    'menu_name' => $menu_name,
+    'weight' => 10,
+    'langcode' => 'en'
+  ]);
+  foreach ($languages as $language) {
+    if ($language->getId() === 'en') {
+      continue;
+    }
+    $translation = array(
+      'title' => t('Apps', [], ['langcode' => $language->getId()]),
+      'description' => t('Create and manage your apps', [], ['langcode' => $language->getId()]),
+      'langcode' => $language->getId()
+    );
+    $link->addTranslation($language->getId(), $translation);
+  }
+  $link->save();
+
+  $forum_link = MenuLinkContent::create([
+    'title' => t('Forums'),
+    'description' => t('Interact with our community'),
+    'link' => ['uri' => 'internal:/forum'],
+    'menu_name' => $menu_name,
+    'expanded' => TRUE,
+    'weight' => 25
+  ]);
+
+  foreach ($languages as $language) {
+    if ($language->getId() === 'en') {
+      continue;
+    }
+    $translation = array(
+      'title' => t('Forums', [], ['langcode' => $language->getId()]),
+      'description' => t('Interact with our community', [], ['langcode' => $language->getId()]),
+      'link' => ['uri' => 'internal:/forum'],
+      'menu_name' => $menu_name,
+      'expanded' => TRUE,
+      'weight' => 25
+    );
+    $forum_link->addTranslation($language->getId(), $translation);
+  }
+
+  $forum_link->save();
+
+  // update weight of the blogs link
+  $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
+  $blog_menu_id = 'views_view:views.blog.blog_all';
+  $blogs_link = $menu_link_manager->getDefinition($blog_menu_id);
+  $blogs_link['weight'] = 21;
+  $menu_link_manager->updateDefinition($blog_menu_id, $blogs_link);
+  $cache = \Drupal::cache('menu');
+  $cache->deleteAll();
+}
+
+/**
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_login_menu_links() {
+  $menu_name = 'login';
+
+  // Menu links need to be localized in all languages we support
+  $languages = \Drupal::languageManager()->getLanguages();
+
+  $login_link = MenuLinkContent::create([
+    'title' => t('Sign in'),
+    'description' => t('Sign in to your account'),
+    'link' => ['uri' => 'internal:/user/login'],
+    'menu_name' => $menu_name,
+    'expanded' => TRUE,
+    'weight' => 20
+  ]);
+
+  foreach ($languages as $language) {
+    if ($language->getId() === 'en') {
+      continue;
+    }
+    $translation = array(
+      'title' => t('Sign in', [], ['langcode' => $language->getId()]),
+      'description' => t('Sign in to your account', [], ['langcode' => $language->getId()]),
+      'link' => ['uri' => 'internal:/user/login'],
+      'menu_name' => $menu_name,
+      'expanded' => TRUE,
+      'weight' => 20
+    );
+    $login_link->addTranslation($language->getId(), $translation);
+  }
+
+  $login_link->save();
+
+  $register_link = MenuLinkContent::create([
+    'title' => t('Create account'),
+    'description' => t('Create a new account'),
+    'link' => ['uri' => 'internal:/user/register'],
+    'menu_name' => $menu_name,
+    'expanded' => TRUE,
+    'weight' => 10
+  ]);
+
+  foreach ($languages as $language) {
+    if ($language->getId() === 'en') {
+      continue;
+    }
+    $translation = array(
+      'title' => t('Create account', [], ['langcode' => $language->getId()]),
+      'description' => t('Create a new account', [], ['langcode' => $language->getId()]),
+      'link' => ['uri' => 'internal:/user/register'],
+      'menu_name' => $menu_name,
+      'expanded' => TRUE,
+      'weight' => 10
+    );
+    $register_link->addTranslation($language->getId(), $translation);
+  }
+
+  $register_link->save();
+}
+
+/**
+ * Set default options for configuring APIC
+ */
+function apim_profile_default_apic_config() {
+  $codesnippets = array(
+    'curl' => TRUE,
+    'ruby' => TRUE,
+    'python' => TRUE,
+    'php' => TRUE,
+    'java' => TRUE,
+    'node' => TRUE,
+    'go' => TRUE,
+    'swift' => TRUE,
+    'c' => TRUE,
+    'csharp' => TRUE
+  );
+  $categories = array(
+    'enabled' => TRUE,
+    'create_taxonomies_from_categories' => FALSE
+  );
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('autocreate_apiforum', TRUE)
+    ->set('show_placeholder_images', TRUE)
+    ->set('show_register_app', TRUE)
+    ->set('show_versions', TRUE)
+    ->set('enable_api_test', TRUE)
+    ->set('autotag_with_phase', FALSE)
+    ->set('show_cors_warnings', TRUE)
+    ->set('show_analytics', TRUE)
+    ->set('render_api_schema_view', TRUE)
+    ->set('soap_swagger_download', FALSE)
+    ->set('soap_codesnippets', FALSE)
+    ->set('application_image_upload', TRUE)
+    ->set('disable_etags', FALSE)
+    ->set('entry_exit_trace', FALSE)
+    ->set('apim_rest_trace', FALSE)
+    ->set('acl_debug', FALSE)
+    ->set('webhook_debug', FALSE)
+    ->set('cron_drush', FALSE)
+    ->set('allow_consumerorg_creation', TRUE)
+    ->set('allow_consumerorg_rename', TRUE)
+    ->set('allow_consumerorg_delete', TRUE)
+    ->set('allow_consumerorg_change_owner', TRUE)
+    ->set('allow_user_delete', TRUE)
+    ->set('categories', $categories)
+    ->set('codesnippets', $codesnippets)
+    ->set('module_blacklist', array('domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer'))
+    ->save();
+
+  \Drupal::service('config.factory')
+    ->getEditable('locale.settings')
+    ->set('translation.use_source', 'local')
+    ->set('translation.path', \Drupal::service('site.path') . '/translations')
+    ->save();
+
+  \Drupal::service('config.factory')
+    ->getEditable('user.settings')
+    ->set('notify.status_activated', FALSE)
+    ->set('notify.register_admin_created', FALSE)
+    ->set('notify.register_no_approval_required', FALSE)
+    ->set('notify.register_pending_approval', FALSE)
+    ->save();
+}
+
+/**
+ * These blocks are placed programmatically since there were dependency issues doing it via YML files
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_place_blocks() {
+  $values = array(
+    'id' => 'searchiconblock',
+    'plugin' => 'ibm_apim_search_icon',
+    'provider' => NULL,
+    'region' => 'navigation_right',
+    'settings' => array(
+      'id' => 'ibm_apim_search_icon',
+      'label' => 'Search Icon Block',
+      'provider' => 'ibm_apim',
+      'label_display' => '0'
+    ),
+    'theme' => 'connect_theme',
+    'visibility' => array(),
+    'weight' => 5,
+  );
+  $block = Block::create($values);
+  $block->save();
+
+  $values = array(
+    'id' => 'consumerorganizationselection',
+    'plugin' => 'consumer_org_select',
+    'provider' => NULL,
+    'region' => 'navigation_right',
+    'settings' => array(
+      'id' => 'consumer_org_select',
+      'label' => 'Consumer organization Selection',
+      'provider' => 'consumerorg',
+      'label_display' => '0'
+    ),
+    'theme' => 'connect_theme',
+    'visibility' => array(
+      'user_role' => array(
+        'id' => 'user_role',
+        'roles' => array('authenticated' => 'authenticated'),
+        'negate' => FALSE,
+        'context_mapping' => array(
+          'user' => '@user.current_user_context:current_user'
+        )
+      )
+    ),
+    'weight' => 3,
+  );
+  $block = Block::create($values);
+  $block->save();
+
+  // add admin status messages block
+  $values = array(
+    'id' => 'adminstatusmessages',
+    'plugin' => 'ibm_apim_status_messages',
+    'provider' => NULL,
+    'region' => 'highlighted',
+    'settings' => array(
+      'id' => 'ibm_apim_status_messages',
+      'label' => 'Admin Status Messages',
+      'provider' => 'ibm_apim',
+      'label_display' => '0'
+    ),
+    'theme' => 'connect_theme',
+    'visibility' => array(),
+    'weight' => 0,
+  );
+  $block = Block::create($values);
+  $block->save();
+
+  $values = array(
+    'id' => 'contactblock',
+    'plugin' => 'contact_block',
+    'provider' => NULL,
+    'region' => 'disabled',
+    'settings' => array(
+      'id' => 'contact_block',
+      'label' => 'Contact block',
+      'provider' => 'contact_block',
+      'label_display' => '0',
+      'contact_form' => 'feedback'
+    ),
+    'theme' => 'connect_theme',
+    'visibility' => array(),
+    'weight' => 0,
+  );
+  $block = Block::create($values);
+  $block->save();
+
+  $values = array(
+    'id' => 'socialmedialinks',
+    'plugin' => 'social_media_links_block',
+    'provider' => NULL,
+    'region' => 'disabled',
+    'settings' => array(
+      'id' => 'social_media_links_block',
+      'label' => 'Social Media Link',
+      'provider' => 'social_media_links',
+      'label_display' => '0',
+      'appearance' => array('orientation' => 'h', 'show_name' => '0'),
+      'link_attributes' => array('target' => '_blank', 'rel' => 'nofollow'),
+      'iconset' => array(
+        'style' => 'fontawesome:2x',
+        'installed_iconsets' => array(
+          'fontawesome' => array('examples' => ''),
+          'elegantthemes' => array('examples' => '')
+        )
+      ),
+      'platforms' => array(
+        'instagram' => array(
+          'value' => '',
+          'description' => '',
+          'weight' => '-10'
+        ),
+        'youtube_channel' => array(
+          'value' => '',
+          'description' => '',
+          'weight' => '-10'
+        ),
+        'contact' => array(
+          'value' => '',
+          'description' => '',
+          'weight' => '-10'
+        ),
+        'googleplus' => array(
+          'value' => '',
+          'description' => '',
+          'weight' => '-10'
+        ),
+        'twitter' => array(
+          'value' => 'IBMintegration',
+          'description' => 'Follow us on Twitter',
+          'weight' => '-10'
+        ),
+        'youtube' => array(
+          'value' => 'user/IBMCloud',
+          'description' => 'Follow us on YouTube',
+          'weight' => '-10'
+        ),
+        'github' => array(
+          'value' => 'ibm-apiconnect',
+          'description' => 'Follow us on GitHub',
+          'weight' => '-10'
+        ),
+        'slideshare' => array(
+          'value' => '',
+          'description' => '',
+          'weight' => '-10'
+        ),
+        'vimeo' => array('value' => '', 'description' => '', 'weight' => '-10'),
+        'behance' => array(
+          'value' => '',
+          'description' => '',
+          'weight' => '-10'
+        ),
+        'facebook' => array(
+          'value' => '',
+          'description' => '',
+          'weight' => '-10'
+        ),
+        'bitbucket' => array(
+          'value' => '',
+          'description' => '',
+          'weight' => '-10'
+        ),
+        'drupal' => array(
+          'value' => '',
+          'description' => '',
+          'weight' => '-10'
+        ),
+        'email' => array('value' => '', 'description' => '', 'weight' => '-10'),
+        'pintrest' => array(
+          'value' => '',
+          'description' => '',
+          'weight' => '-10'
+        ),
+        'linkedin' => array(
+          'value' => '',
+          'description' => '',
+          'weight' => '-10'
+        ),
+        'tumblr' => array(
+          'value' => '',
+          'description' => '',
+          'weight' => '-10'
+        ),
+        'rss' => array('value' => '', 'description' => '', 'weight' => '-10')
+      )
+    ),
+    'theme' => 'connect_theme',
+    'visibility' => array(),
+    'weight' => 0,
+  );
+  $block = Block::create($values);
+  $block->save();
+}
+
+/**
+ * Set up captcha configuration.
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_captcha_config() {
+  \Drupal::service('config.factory')
+    ->getEditable('captcha.settings')
+    ->set('default_challenge', 'image_captcha/Image')
+    ->set('persistence', 2)
+    ->set('add_captcha_description', FALSE)
+    ->save();
+
+  _apim_profile_enable_captcha_on_form('user_register_form');
+  _apim_profile_enable_captcha_on_form('contact_message_feedback_form');
+  _apim_profile_enable_captcha_on_form('contact_message_personal_form');
+}
+
+/**
+ * Enable captcha on given form.
+ *
+ * @param $form_id
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function _apim_profile_enable_captcha_on_form($form_id) {
+
+  $query = \Drupal::entityQuery('captcha_point')->condition('formId', $form_id);
+  $ids = $query->execute();
+  if (count($ids) !== 1) {
+    throw new Error('Unexpected number of ' . $form_id . ' captcha points: ' . count($ids));
+  }
+
+  // Load the only captcha_point we have.
+  $cp = CaptchaPoint::load(reset($ids));
+  if ($cp !== null) {
+    $cp->set('status', TRUE);
+    $cp->save();
+  }
+}
+
+/**
+ * Function to load sites/all/translations/apim_profile.LANGCODE.po
+ * for every language that is enabled in the site. Translations found are loaded
+ * in to the database. These translations are later used when menu links and
+ * block content is created.
+ */
+function apim_profile_load_translations() {
+  // Load sites/all/translations/apim_profile.LANGCODE.po in to the database
+  // allowing apim_profile to later create block content and menu links using
+  // the translated strings.
+
+  $languages = \Drupal::languageManager()->getLanguages();
+
+  foreach ($languages as $language) {
+    if ($language->getId() === 'en') {
+      continue;
+    }
+    $file = new stdClass();
+    $file->langcode = $language->getId();
+    $file->uri = 'sites/all/translations/apim_profile.' . $file->langcode . '.po';
+    $options = array();
+    $options['customized'] = LOCALE_NOT_CUSTOMIZED;
+    $options['overwrite_options'] = array('customized' => TRUE, 'not_customized' => TRUE);
+
+    if (!file_exists($file->uri)) {
+      \Drupal::logger('apim_profile')
+        ->info('There is no translation file to import from for @lang. File at path @path not found.', array(
+          '@lang' => $file->langcode,
+          '@path' => $file->uri
+        ));
+    }
+    else {
+      $result = Gettext::fileToDatabase($file, $options);
+
+      // Validate that strings were loaded in properly
+      if ((isset($result->additions, $result->updates) && $result->additions === 0 && $result->updates === 0) || (!isset($result->skipped) || $result->skipped !== 0)) {
+        \Drupal::logger('apim_profile')
+          ->error('Translation import for language @lang failed to add any new strings to the database.', array('@lang' => $file->langcode));
+      }
+    }
+  }
+}
+
+// upgrade hooks, increment final digit to update the schema version.
+
+/**
+ * Upgrade to 2018.1.1
+ *
+ * disable drupal email notifications.
+ */
+function apim_profile_update_8001() {
+  \Drupal::service('config.factory')
+    ->getEditable('user.settings')
+    ->set('notify.status_activated', FALSE)
+    ->set('notify.register_admin_created', FALSE)
+    ->set('notify.register_no_approval_required', FALSE)
+    ->set('notify.register_pending_approval', FALSE)
+    ->save();
+}
+
+/**
+ * Upgrade to 2018.3.7
+ *
+ * Fix the products link in the getting started block
+ */
+function apim_profile_update_8002() {
+  $path = __DIR__;
+  require_once $path . '/apim_profile.homepage.inc';
+  update_gsg_block();
+}
+
+/**
+ * ensure default permissions for all roles are set
+ */
+function apim_profile_update_8003() {
+  $path = __DIR__;
+
+  // reset permissions to defaults from the yml files
+  foreach (array('content_author', 'forum_moderator', 'authenticated', 'administrator', 'anonymous', 'superuser') as $role_id) {
+    $info = \yaml_parse_file($path . '/config/install/user.role.' . $role_id . '.yml');
+
+    $role = Role::load($role_id);
+
+    if ($role !== null) {
+      $issueAccessPermissions = $info['permissions'];
+
+      foreach ($issueAccessPermissions as $permission) {
+        $role->grantPermission($permission);
+      }
+    }
+  }
+}
+
+/**
+ * disable instantaneous indexing of content for performance reasons - let cron handle it
+ */
+function apim_profile_update_8004() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('search_api')) {
+    $index = Index::load('default_index');
+    if (isset($index) && !empty($index)) {
+      $index->setOption('index_directly', false)->save();
+    }
+  }
+}
+
+/**
+ * update mail transport
+ */
+function apim_profile_update_8005() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('swiftmailer')) {
+    \Drupal::service('config.factory')
+      ->getEditable('swiftmailer.transport')
+      ->set('sendmail_path', '/opt/ibm/bin/sendmail')
+      ->save();
+  }
+}
+
+/**
+ * ensure have permission to change consumer org owner
+ */
+function apim_profile_update_8006() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('allow_consumerorg_change_owner', TRUE)
+    ->save();
+}
+
+/**
+ * enable additional modules
+ */
+function apim_profile_update_8007() {
+  $module_installer = \Drupal::service('module_installer');
+  foreach (['noopener_filter', 'session_based_temp_store'] as $module) {
+    $module_installer->install([$module]);
+  }
+}
+
+/**
+ * Add password policy consecutive character check
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_update_8008() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('password_policy')) {
+    $module_installer = \Drupal::service('module_installer');
+    // enable password policy consecutive character constraint
+    foreach (['password_policy_consecutive'] as $module) {
+      $module_installer->install([$module]);
+    }
+
+    $policy = password_policy_load('default');
+    $constraints = $policy->getConstraints();
+    $found = FALSE;
+    foreach ($constraints as $constraint) {
+      if ($constraint['id'] === 'consecutive') {
+        $found = TRUE;
+      }
+    }
+    if ($found !== TRUE) {
+      $constraints[] = ['id' => 'consecutive', 'max_consecutive_characters' => 3];
+      $policy->set('policy_constraints', $constraints);
+      $policy->save();
+    }
+  }
+}
+
+/**
+ * ensure bootstrap settings are not to use a CDN
+ */
+function apim_profile_update_8009() {
+  \Drupal::service('config.factory')
+    ->getEditable('bootstrap.settings')
+    ->set('cdn_provider', '')
+    ->save();
+}
+
+/**
+ * Switch to using our email provider module
+ */
+function apim_profile_update_8010() {
+  $module_installer = \Drupal::service('module_installer');
+  foreach (['ibm_apic_mail'] as $module) {
+    $module_installer->install([$module]);
+  }
+  // remove swiftmailer module
+  $module_installer->uninstall(['swiftmailer'], true);
+
+  // update config
+  $mailSystemModules = \Drupal::service('config.factory')->get('mailsystem.settings')->get('modules');
+  unset($mailSystemModules['swiftmailer']);
+  $mailSystemModules['mail_subscribers']['none']['sender'] = 'mailsystem_apicmail';
+  $mailSystemModules['mail_subscribers']['none']['formatter'] = 'mailsystem_apicmail';
+  \Drupal::service('config.factory')
+    ->getEditable('mailsystem.settings')
+    ->set('defaults', ['sender'=>'mailsystem_apicmail', 'formatter' => 'mailsystem_apicmail'])
+    ->set('modules', $mailSystemModules)
+    ->save();
+}
+
+/**
+ * Use the correct header for restrict_by_ip
+ */
+function apim_profile_update_8011() {
+  // update config
+  \Drupal::service('config.factory')
+    ->getEditable('restrict_by_ip.settings')
+    ->set('header', 'HTTP_X_FORWARDED_FOR')
+    ->save();
+}
+
+/**
+ * Enable select_translation module
+ */
+function apim_profile_update_8012() {
+  $module_installer = \Drupal::service('module_installer');
+  foreach (['select_translation'] as $module) {
+    $module_installer->install([$module]);
+  }
+}
+
+
+/**
+ * Implements hook_update_dependencies().
+ */
+function apim_profile_update_dependencies() {
+  return [
+    'apim_profile' => [
+      // block_content 8600 must run before apim_profile 8002.
+      8002 => [
+        'block_content' => 8600,
+      ],
+    ],
+  ];
+}

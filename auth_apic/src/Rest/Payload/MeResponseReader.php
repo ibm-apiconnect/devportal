@@ -93,6 +93,9 @@ class MeResponseReader extends RestResponseReader {
     $state = $data['state'] ?? NULL;
     $user->setState($state);
 
+    $idp = $data['identity_provider'] ?? NULL;
+    $user->setApicIdp($idp);
+
     if (isset($data['url'])) {
       // 'adjust' the url so it isn't fully qualified
       $url = $this->apimUtils->removeFullyQualifiedUrl($data['url']);

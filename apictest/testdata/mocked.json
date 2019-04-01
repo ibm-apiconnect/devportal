@@ -31,22 +31,22 @@
     {
       "name": "lur1",
       "title": "lur 1",
-      "url": "/registry/lur1"
+      "url": "/consumer-api/user-registries/aaaaaaaa-bbbb-cccc-dddd-111111111111"
     },
     {
       "name": "lur2",
       "title": "lur 2",
-      "url": "/registry/lur2"
+      "url": "/consumer-api/user-registries/aaaaaaaa-bbbb-cccc-dddd-222222222222"
     },
     {
       "name": "ldap1",
       "title": "ldap 1",
-      "url": "/registry/ldap1"
+      "url": "/consumer-api/user-registries/aaaaaaaa-bbbb-cccc-dddd-333333333333"
     },
     {
       "name": "oidc1",
       "title": "OIDC 1",
-      "url": "/registry/oidc1"
+      "url": "/consumer-api/user-registries/aaaaaaaa-bbbb-cccc-dddd-444444444444"
     }
   ]
 }

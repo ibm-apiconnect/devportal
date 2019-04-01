@@ -31,3 +31,8 @@ org_analytics:
     - ibm_apim/analytics
   js:
     js/org_analytics.js: {}
+
+single_click:
+  version: 1.x
+  js:
+    js/link_single_click.js: {}

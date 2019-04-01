@@ -228,7 +228,7 @@ class ApicUserPasswordResetForm extends FormBase {
       _password_policy_user_profile_form_submit($form, $form_state);
     }
 
-    $resetPasswordObject = unserialize($token, ['allowed_classes' => FALSE]);
+    $resetPasswordObject = unserialize($token, ['allowed_classes' => TRUE]);
 
     $responseCode = $this->userManager->resetPassword($resetPasswordObject, $password);
 

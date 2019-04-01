@@ -544,6 +544,10 @@ ul.analyticsAppSelector li.selected {
   margin-top:2rem;
 }
 
+a.button.disabled {
+  cursor: not-allowed;
+}
+
 .apic-user-form-subheader {
   margin: auto;
   width: 50%;

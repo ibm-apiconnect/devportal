@@ -1,0 +1,85 @@
+{#
+/**
+ * @file
+ * Default theme implementation for status messages.
+ *
+ * Displays status, error, and warning messages, grouped by type.
+ *
+ * An invisible heading identifies the messages for assistive technology.
+ * Sighted users see a colored box. See http://www.w3.org/TR/WCAG-TECHS/H69.html
+ * for info.
+ *
+ * Add an ARIA label to the contentinfo area so that assistive technology
+ * user agents will better describe this landmark.
+ *
+ * Available variables:
+ * - message_list: List of messages to be displayed, grouped by type.
+ * - status_headings: List of all status types.
+ * - display: (optional) May have a value of 'status' or 'error' when only
+ *   displaying messages of that specific type.
+ * - attributes: HTML attributes for the element, including:
+ *   - class: HTML classes.
+ *
+ * @ingroup templates
+ *
+ * @see template_preprocess_status_messages()
+ */
+#}
+{% set status_heading = {
+'status': 'Status message'|t,
+'error': 'Error message'|t,
+'warning': 'Warning message'|t,
+'info': 'Informative message'|t,
+} %}
+{% set status_classes = {
+'status': 'success',
+'error': 'danger',
+'warning': 'warning',
+'info': 'info',
+} %}
+{% set status_ico = {
+'status': '/images/ibmcarbon/svg/checkmark--glyph.svg',
+'error': '/images/ibmcarbon/svg/error--glyph.svg',
+'warning': '/images/ibmcarbon/svg/warning--glyph.svg',
+'info': '/images/ibmcarbon/svg/info--glyph.svg',
+} %}
+{% for type, messages in message_list %}
+  {% set classes = [
+  'alert',
+  'alert-' ~ status_classes[type],
+  'alert-dismissible',
+  ] %}
+
+  <div{{ attributes.addClass(classes) }} role="alert">
+    <div class="alert-details">
+
+            <span class="icon icon-{{- type -}}" aria-hidden="true">
+                {% include directory ~ status_ico[type] %}
+            </span>
+      <div class="alert-text-wrapper">
+        {% if status_headings[type] %}
+          <h4 class="sr-only">{{ status_headings[type] }}</h4>
+        {% endif %}
+        {% if messages|length > 1 %}
+
+          <ul class="item-list item-list--messages">
+            {% for message in messages %}
+              <li class="item item--message">{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          {{ messages|first }}
+        {% endif %}
+      </div>
+    </div>
+
+    <a href="#" role="button" class="close" data-dismiss="alert" aria-label="{{ 'Close'|t }}">
+      <svg class="bx--inline-notification__close-icon" aria-label="{{ 'Close'|t }}" width="10" height="10"
+           viewBox="0 0 10 10" fill-rule="evenodd">
+        <path d="M9.8 8.6L8.4 10 5 6.4 1.4 10 0 8.6 3.6 5 .1 1.4 1.5 0 5 3.6 8.6 0 10 1.4 6.4 5z"></path>
+      </svg>
+    </a>
+
+  </div>
+  {%- set attributes = attributes.removeClass(classes) -%}
+{% endfor %}

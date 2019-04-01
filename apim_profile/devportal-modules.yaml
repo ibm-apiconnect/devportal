@@ -1,0 +1,13 @@
+apic_api: 8.x-1.0.9
+apictest: 8.x-1.2.10
+apic_app: 8.x-1.4.11
+auth_apic: 8.x-1.1.22
+connect_theme: 8.x-1.1.13
+consumerorg: 8.x-1.1.12
+featuredcontent: 8.x-1.0.6
+ghmarkdown: 8.x-1.0.4
+ibm_apim: 8.x-1.2.25
+mail_subscribers: 8.x-1.0.8
+product: 8.x-1.0.14
+socialblock: 8.x-1.0.7
+themegenerator: 8.x-1.0.14

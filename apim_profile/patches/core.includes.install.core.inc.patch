@@ -1,0 +1,35 @@
+--- core/includes/install.core.inc	2017-04-03 11:08:06.000000000 +0100
++++ core/includes/install.core.inc	2017-04-03 11:11:04.000000000 +0100
+@@ -788,7 +788,7 @@
+   ];
+ 
+   // Now add any tasks defined by the installation profile.
+-  if (!empty($install_state['parameters']['profile'])) {
++  if (isset($install_state['parameters']['profile'])) {
+     // Load the profile install file, because it is not always loaded when
+     // hook_install_tasks() is invoked (e.g. batch processing).
+     $profile = $install_state['parameters']['profile'];
+@@ -818,7 +818,7 @@
+   ];
+ 
+   // Allow the installation profile to modify the full list of tasks.
+-  if (!empty($install_state['parameters']['profile'])) {
++  if (isset($install_state['parameters']['profile'])) {
+     $profile = $install_state['parameters']['profile'];
+     if ($install_state['profiles'][$profile]->load()) {
+       $function = $install_state['parameters']['profile'] . '_install_tasks_alter';
+@@ -1230,6 +1230,14 @@
+     if (isset($install_state['profiles'][$profile])) {
+       return $profile;
+     }
++    // Fail here because further usage of the
++    // "$install_state['parameters']['profile']" is unpredictable. For
++    // instance, in "install_tasks()" function, we will have the next
++    // fatal error: "Call to a member function getPath() on null".
++    throw new InstallerException(t('@profile - is not valid name of installation profile. Use one of the following: @available.', [
++      '@profile' => $profile,
++      '@available' => implode(', ', array_keys($install_state['profiles'])),
++    ]));
+   }
+   // Check for a distribution profile.
+   foreach ($install_state['profiles'] as $profile) {

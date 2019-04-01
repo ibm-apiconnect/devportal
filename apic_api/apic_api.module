@@ -90,10 +90,6 @@ function apic_api_node_access_records($node) {
   // Only build permissions for API nodes
   if ($type === 'api') {
 
-    if ($aclDebug === TRUE) {
-      \Drupal::logger('ACLDEBUG')->debug('Node Title: %title', ['%title' => var_export($node->getTitle(), TRUE)]);
-    }
-
     // Create a grant for 'edit any api content'
     $grants[] = [
       'realm' => 'api',
@@ -104,20 +100,22 @@ function apic_api_node_access_records($node) {
       'priority' => 0,
     ];
 
-    // find the list of products to which this api belongs
-    // apiref will be a string like: 'maths:1.0.0'
-    // product_apis_value will be the same string
     $apiRef = $node->apic_ref->value;
-    $query = db_query("SELECT entity_id FROM {node__product_apis} WHERE product_apis_value LIKE '%" . $apiRef . "%'");
-    $prods = $query->fetchAll();
+    if($apiRef) {
+      // find the list of products to which this api belongs
+      // apiref will be a string like: 'maths:1.0.0'
+      // product_apis_value will be the same string
+      $query = db_query("SELECT entity_id FROM {node__product_apis} WHERE product_apis_value LIKE '%" . $apiRef . "%'");
+      $prods = $query->fetchAll();
 
-    // Now go through and create grants based on each of the products, using the
-    // same scheme as in product_node_access_records (the logic is that if a user
-    // can access any of the products which contain this API, they can view the API)
-    foreach ($prods as $prod) {
-      // Pick up all of the data we need.  Left Joins are used for tables where
-      // there may not be an entry (e.g. if tags or orgs are not defined)
-      $query = db_query("SELECT pub.product_visibility_public_value AS product_visibility_public_value, auth.product_visibility_authenticated_value AS product_visibility_authenticated_value
+
+      // Now go through and create grants based on each of the products, using the
+      // same scheme as in product_node_access_records (the logic is that if a user
+      // can access any of the products which contain this API, they can view the API)
+      foreach ($prods as $prod) {
+        // Pick up all of the data we need.  Left Joins are used for tables where
+        // there may not be an entry (e.g. if tags or orgs are not defined)
+        $query = db_query("SELECT pub.product_visibility_public_value AS product_visibility_public_value, auth.product_visibility_authenticated_value AS product_visibility_authenticated_value
 , org.product_visibility_custom_orgs_value AS product_visibility_custom_orgs_value, tags.product_visibility_custom_tags_value AS product_visibility_custom_tags_value, view.product_view_enabled_value AS product_view_enabled_value, prref.apic_ref_value AS apic_ref_value
 FROM
 node__product_visibility_public pub
@@ -127,89 +125,93 @@ LEFT JOIN node__product_visibility_custom_tags tags ON pub.entity_id = tags.enti
 LEFT JOIN node__apic_ref prref ON pub.entity_id = prref.entity_id
 INNER JOIN node__product_view_enabled view ON pub.entity_id = view.entity_id
 WHERE  (pub.entity_id = " . $prod->entity_id . ")");
-      $results = $query->fetchAll();
+        $results = $query->fetchAll();
 
-      if ($aclDebug === TRUE) {
-        \Drupal::logger('apic_api')->debug('DB Search for product %id: %results', [
-          '%id' => $prod->entity_id,
-          '%results' => var_export($results, TRUE),
-        ]);
-      }
+        // This is just too much debug; enable for special cases only
+//        if ($aclDebug === TRUE) {
+//          \Drupal::logger('apic_api')->debug('API %title searching for product %id: %results', [
+//            '%title' => var_export($node->getTitle(), TRUE),
+//            '%id' => $prod->entity_id,
+//            '%results' => var_export($results, TRUE),
+//          ]);
+//        }
 
-      // The query will return multiple rows if there are multiple orgs or tags
-      // or if there are multiple products with the same API
-      // This causes duplication of the grants, which we will tidy up after
-      foreach ($results as $row) {
-        // Only create grants if the product is enabled
-        if ((int) $row->product_view_enabled_value === 1) {
-          // Create a grant for 'edit any product content'
-          $grants[] = [
-            'realm' => 'product',
-            'gid' => EDIT_ANY_PRODUCT_CONTENT_GRANT,
-            'grant_view' => 1,
-            'grant_update' => 0,
-            'grant_delete' => 0,
-            'priority' => 0,
-          ];
-          // Create a grant for public access if public is set
-          if ((int) $row->product_visibility_public_value === 1) {
+        // The query will return multiple rows if there are multiple orgs or tags
+        // or if there are multiple products with the same API
+        // This causes duplication of the grants, which we will tidy up after
+        foreach ($results as $row) {
+          // Only create grants if the product is enabled
+          if ((int) $row->product_view_enabled_value === 1) {
+            // Create a grant for 'edit any product content'
             $grants[] = [
               'realm' => 'product',
-              'gid' => PUBLIC_PRODUCT_GRANT,
+              'gid' => EDIT_ANY_PRODUCT_CONTENT_GRANT,
               'grant_view' => 1,
               'grant_update' => 0,
               'grant_delete' => 0,
               'priority' => 0,
             ];
-          }
-          // Create a grant for authenticated access if authenticated is set
-          if ((int) $row->product_visibility_authenticated_value === 1) {
-            $grants[] = [
-              'realm' => 'product',
-              'gid' => AUTHENTICATED_PRODUCT_GRANT,
-              'grant_view' => 1,
-              'grant_update' => 0,
-              'grant_delete' => 0,
-              'priority' => 0,
-            ];
-          }
-          // Create a grant for subscription based on product reference
-          if (isset($row->apic_ref_value)) {
-            $grants[] = [
-              'realm' => 'product_ref_' . $row->apic_ref_value,
-              'gid' => SUBSCRIBED_TO_PRODUCT_GRANT,
-              'grant_view' => 1,
-              'grant_update' => 0,
-              'grant_delete' => 0,
-              'priority' => 0,
-            ];
-          }
-          // Create a grant for organisations, as a separate realm based on the
-          // org uuid.  If there are multiple orgs, then multiple grants each
-          // with their own realm will be created
-          if (isset($row->product_visibility_custom_orgs_value)) {
-            $url = str_replace('/', '_', $row->product_visibility_custom_orgs_value);
-            $grants[] = [
-              'realm' => 'product_org_' . $url,
-              'gid' => ORG_PRODUCT_GRANT,
-              'grant_view' => 1,
-              'grant_update' => 0,
-              'grant_delete' => 0,
-              'priority' => 0,
-            ];
-          }
-          // Create a grant for tags, as a separate realm based on the
-          // tag string.  If there are multiple tags, then multiple grants each
-          // with their own realm will be created
-          if (isset($row->product_visibility_custom_tags_value)) {
-            $grants[] = [
-              'realm' => 'product_tag_' . $row->product_visibility_custom_tags_value,
-              'gid' => TAG_PRODUCT_GRANT,
-              'grant_view' => 1,
-              'grant_update' => 0,
-              'grant_delete' => 0,
-              'priority' => 0,
-            ];
+            // Create a grant for public access if public is set
+            if ((int) $row->product_visibility_public_value === 1) {
+              $grants[] = [
+                'realm' => 'product',
+                'gid' => PUBLIC_PRODUCT_GRANT,
+                'grant_view' => 1,
+                'grant_update' => 0,
+                'grant_delete' => 0,
+                'priority' => 0,
+              ];
+            }
+            // Create a grant for authenticated access if authenticated is set
+            if ((int) $row->product_visibility_authenticated_value === 1) {
+              $grants[] = [
+                'realm' => 'product',
+                'gid' => AUTHENTICATED_PRODUCT_GRANT,
+                'grant_view' => 1,
+                'grant_update' => 0,
+                'grant_delete' => 0,
+                'priority' => 0,
+              ];
+            }
+            // Create a grant for subscription based on product reference
+            if (isset($row->apic_ref_value)) {
+              $grants[] = [
+                'realm' => 'product_ref_' . $row->apic_ref_value,
+                'gid' => SUBSCRIBED_TO_PRODUCT_GRANT,
+                'grant_view' => 1,
+                'grant_update' => 0,
+                'grant_delete' => 0,
+                'priority' => 0,
+              ];
+            }
+            // Create a grant for organisations, as a separate realm based on the
+            // org uuid.  If there are multiple orgs, then multiple grants each
+            // with their own realm will be created
+            if (isset($row->product_visibility_custom_orgs_value)) {
+              $url = str_replace('/', '_', $row->product_visibility_custom_orgs_value);
+              $grants[] = [
+                'realm' => 'product_org_' . $url,
+                'gid' => ORG_PRODUCT_GRANT,
+                'grant_view' => 1,
+                'grant_update' => 0,
+                'grant_delete' => 0,
+                'priority' => 0,
+              ];
+            }
+            // Create a grant for tags, as a separate realm based on the
+            // tag string.  If there are multiple tags, then multiple grants each
+            // with their own realm will be created
+            if (isset($row->product_visibility_custom_tags_value)) {
+              $url = str_replace('/', '_', $row->product_visibility_custom_tags_value);
+              $grants[] = [
+                'realm' => 'product_tag_' . $url,
+                'gid' => TAG_PRODUCT_GRANT,
+                'grant_view' => 1,
+                'grant_update' => 0,
+                'grant_delete' => 0,
+                'priority' => 0,
+              ];
+            }
           }
         }
       }

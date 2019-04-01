@@ -67,6 +67,11 @@ class LoginTest extends UserManagerTestBaseClass {
     });
     $extAuth->userLoginFinalize(Argument::any(), 'abc', 'auth_apic')->willReturn($accountStub);
 
+    $this->userUtils->loadUserByName('abc')->willReturn(FALSE)->shouldBeCalled();
+    $this->userUtils->loadUserByMail('abc@me.com')->willReturn(FALSE)->shouldBeCalled();
+    $this->userUtils->setCurrentConsumerorg(Argument::any())->willReturn(['url'=>'/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
+    $this->userUtils->setOrgSessionData()->shouldBeCalled();
+
     $userManager = $this->createUserManager();
     $response = $userManager->login($user);
     $this->assertTrue($response->success());
@@ -76,7 +81,6 @@ class LoginTest extends UserManagerTestBaseClass {
 
   public function testLoginWithLocalUser(): void {
 
-    // Test starts here.
     $user = new ApicUser();
     $user->setUsername('abc');
     $user->setPassword('123');
@@ -90,6 +94,12 @@ class LoginTest extends UserManagerTestBaseClass {
     $extAuth->userLoginFinalize(Argument::any(), 'abc', 'auth_apic')->willReturn($accountStub);
 
     $extAuth->register(Argument::any())->shouldNotBeCalled();
+
+    $this->userUtils->loadUserByName('abc')->willReturn($accountStub)->shouldBeCalled();
+    $this->userUtils->loadUserByMail('abc@me.com')->willReturn($accountStub)->shouldBeCalled();
+    $this->userUtils->setCurrentConsumerorg(Argument::any())->willReturn(['url'=>'/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
+    $this->userUtils->setOrgSessionData()->shouldBeCalled();
+
     $this->database->update(Argument::any())->shouldNotBeCalled();
 
     $userManager = $this->createUserManager();
@@ -97,6 +107,42 @@ class LoginTest extends UserManagerTestBaseClass {
     $this->assertTrue($response->success());
     $this->assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
   }
+
+  public function testLoginWithLocalUserFromDifferentRegistry(): void {
+
+    $user = new ApicUser();
+    $user->setUsername('abc');
+    $user->setPassword('123');
+
+    $accountStub = $this->createAccountStubFromDifferentRegistry();
+
+    $this->primeForTest($user);
+
+    // we need to pass externalAuth into the closure so create a local var to pass through..
+    $extAuth = $this->externalAuth;
+    $extAuth->load('abc', 'auth_apic')->willReturn($accountStub);
+    $extAuth->userLoginFinalize(Argument::any(), 'abc', 'auth_apic')->willReturn($accountStub);
+
+    $extAuth->register(Argument::any())->shouldNotBeCalled();
+
+    $this->userUtils->loadUserByName('abc')->willReturn($accountStub)->shouldBeCalled();
+    $this->userUtils->loadUserByMail('abc@me.com')->willReturn($accountStub)->shouldBeCalled();
+    $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
+    $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
+
+    $this->database->update(Argument::any())->shouldNotBeCalled();
+
+    $registry = new UserRegistry();
+    $registry->setIdentityProviders([['name' => 'different']]);
+    $registry->setUrl('/registry/different');
+    $this->userRegistryService->getRegistryContainingIdentityProvider('/registry/different')->willReturn($registry);
+
+    $userManager = $this->createUserManager();
+    $response = $userManager->login($user);
+    $this->assertFalse($response->success());
+  }
+
+
 
   public function testLoginWithBlockedUser(): void {
 
@@ -129,6 +175,7 @@ class LoginTest extends UserManagerTestBaseClass {
 
     $meResponse = new MeResponse();
     $meResponse->setCode(401);
+    $meResponse->setUser($user);
 
     $tokenResponse = new TokenResponse();
     $tokenResponse->setBearerToken('aBearerToken');
@@ -208,8 +255,9 @@ class LoginTest extends UserManagerTestBaseClass {
     $meResponse->getUser()->setFirstname('abc');
     $meResponse->getUser()->setLastname('def');
     $meResponse->getUser()->setMail('abc@me.com');
-    $meResponse->getUser()->setApicUserRegistryUrl('user/registry/url');
+    $meResponse->getUser()->setApicUserRegistryUrl('/registry/idp1');
     $meResponse->getUser()->setUrl('user/url');
+    $meResponse->getUser()->setApicIdp('idp1');
     $org = new ConsumerOrg();
     $org->setUrl('/consumer-orgs/1234/5678/9abc');
     $org->setName('org1');
@@ -253,7 +301,10 @@ class LoginTest extends UserManagerTestBaseClass {
 
     $registry = new UserRegistry();
     $registry->setIdentityProviders([['name' => 'idp1']]);
+    $registry->setUrl('/registry/idp1');
     $this->userRegistryService->get(Argument::any())->willReturn($registry);
+    $this->userRegistryService->getRegistryContainingIdentityProvider('idp1')->willReturn($registry);
+
   }
 
 }

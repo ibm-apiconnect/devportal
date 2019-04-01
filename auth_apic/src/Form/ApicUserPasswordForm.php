@@ -202,6 +202,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
       }
       $form['#otherRegistries']['otherRegistries'] = $otherRegistries;
     }
+    $form['#attached']['library'][] = 'ibm_apim/single_click';
 
     // Other bits we want to put back too
     $form['mail'] = $baseForm['mail'];

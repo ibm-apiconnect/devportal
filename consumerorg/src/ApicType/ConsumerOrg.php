@@ -43,6 +43,8 @@ class ConsumerOrg {
 
   private $invites = [];
 
+  private $tags = [];
+
   /**
    * @return string
    */
@@ -195,6 +197,41 @@ class ConsumerOrg {
    */
   public function setOwnerUrl($owner_url): void {
     $this->owner_url = $owner_url;
+  }
+
+  /**
+   * @return array
+   */
+  public function getTags(): ?array {
+    return $this->tags;
+  }
+
+  /**
+   * @param array $tags
+   */
+  public function setTags($tags): void {
+    if(is_array($tags)) {
+      $this->tags = $tags;
+    } else {
+      $this->tags = array($tags);
+    }
+  }
+
+  /**
+   * Adds the specified tag to this consumer org if does not already exist
+   *
+   * @param string $tag
+   *
+   * @return bool
+   */
+  public function addTag($tag): bool {
+    foreach ($this->tags as $current_tag) {
+      if ($current_tag === $tag) {
+        return FALSE;
+      }
+    }
+    $this->tags[] = $tag;
+    return TRUE;
   }
 
   /**

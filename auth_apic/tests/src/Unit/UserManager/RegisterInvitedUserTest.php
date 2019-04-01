@@ -43,7 +43,6 @@ class RegisterInvitedUserTest extends UserManagerTestBaseClass {
     $this->externalAuth->register('andre', 'auth_apic', $accountFields)->willReturn($this->createAccountStub());
     $this->mgmtServer->orgInvitationsRegister($jwt, $user)->willReturn($invitationResponse);
 
-    $this->logger->notice('Activating @uid directly in the database.', ['@uid' => '1'])->shouldBeCalled();
     $this->logger->notice('invitation processed for @username', ['@username' => 'andre'])->shouldBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
     $this->logger->debug("Registering @username in database as new account.", ["@username" => "andre"])->shouldBeCalled();
@@ -67,15 +66,30 @@ class RegisterInvitedUserTest extends UserManagerTestBaseClass {
 
     $this->mgmtServer->orgInvitationsRegister($jwt, $user)->willReturn($invitationResponse);
 
-    $this->logger->notice('Activating @uid directly in the database.', ['@uid' => '1'])->shouldNotBeCalled();
+    $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error('Error during account registration: @error', ['@error' => 'TEST ERROR'])->shouldBeCalled();
 
     $user_manager = $this->createUserManager();
     $response = $user_manager->registerInvitedUser($jwt, $user);
 
     $this->assertFalse($response->success(), 'Expected registerInvitedUser() NOT to be successful');
+    $this->assertNull($response->getRedirect());
   }
 
+  public function testRegisterInvitedUserNoUser(): void {
+    $jwt = $this->createJWT();
+
+    $this->mgmtServer->orgInvitationsRegister(Argument::any())->shouldNotBeCalled();
+
+    $this->logger->notice(Argument::any())->shouldNotBeCalled();
+    $this->logger->error('Error during account registration: invitedUser was null')->shouldBeCalled();
+
+    $user_manager = $this->createUserManager();
+    $response = $user_manager->registerInvitedUser($jwt, NULL);
+
+    $this->assertFalse($response->success(), 'Expected registerInvitedUser() NOT to be successful');
+    $this->assertEquals('<front>', $response->getRedirect());
+  }
 
   // Helper functions:
   private function createUser(): ApicUser {

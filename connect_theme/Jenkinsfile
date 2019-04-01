@@ -1,0 +1,45 @@
+#!groovy
+
+// Load shared pipeline library
+@Library('velox') _
+
+// Clean up builds older than 14 days and set LOAD_TRANSLATIONS build param
+properties([ durabilityHint('PERFORMANCE_OPTIMIZED'),
+	[$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', daysToKeepStr: '14'] ],
+	parameters([string(defaultValue: 'false', description: '', name: 'LOAD_TRANSLATIONS')]) ])
+
+def pipelineOpts = [
+    slackChannel: '',
+    labels: 'portal-taas',
+    nodeVersion: null,
+]
+
+veloxPipeline(pipelineOpts) { p ->
+
+  def MODULE_NAME = 'connect_theme'
+  def REPO_NAME = 'devportal-connect-theme'
+  def MAIN_BRANCH = '2018.4.1'
+
+  // Get relevant info for slack notifications
+  env.GIT_COMMIT_URL = "https://github.ibm.com/apimesh/${REPO_NAME}/commit/${env.GIT_COMMIT}"
+  env.GIT_COMMIT_MSG = sh (script: 'git log --format=%B -n 1 $GIT_COMMIT | head -n 1', returnStdout: true).trim()
+  env.UP_BUILD_URL = getBuildCauses().first().BUILD_URL ?: ''
+  env.UP_BUILD_NAME = getBuildCauses().first().BUILD_NAME ?: 'build'
+
+  p.branch(~/master|\d+\.\d+|\d+\.\d+\.\d+/) {
+    if (!env.GIT_COMMIT_MSG.contains('[ci-skip')) {
+      stage('bump version') {
+        sh "git stash && git pull && git stash pop || true"
+          portal.patchModuleVersion(MODULE_NAME)
+          sh """
+            git commit -m 'bump version [ci-skip]' ${MODULE_NAME}.info.yml || true
+            git push --set-upstream origin ${MAIN_BRANCH}
+          """
+      }
+      stage('Upload module to artifactory') {
+        portal.uploadComposerPackage(MODULE_NAME)
+      }
+    }
+
+  }
+}

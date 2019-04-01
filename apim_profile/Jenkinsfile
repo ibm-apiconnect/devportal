@@ -1,0 +1,217 @@
+#!groovy
+
+// Load shared pipeline library
+@Library('velox') _
+def MAIN_BRANCH = '2018.4.1'
+def cronInterval = BRANCH_NAME == "${MAIN_BRANCH}" ? "20 */3 * * 1-5" : ""
+
+properties([
+  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '')),
+  parameters([
+    string(name: 'GIT_COMMIT', defaultValue: scm.branches.get(0).getName(), description: 'The commit/ref to build an image from'),
+    booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run Behat Tests'),
+    booleanParam(name: 'FORCE_RUN', defaultValue: false, description: 'Force run the entire build')
+  ]),
+  pipelineTriggers([cron(cronInterval)])
+])
+
+def pipelineOpts = [
+  slackChannel: '',
+  labels      : 'portal-taas',
+  nodeVersion : 8.12,
+]
+
+veloxPipeline(pipelineOpts) { p ->
+  // Get relevant info for slack notifications
+  env.GIT_COMMIT_URL = "https://github.ibm.com/apimesh/devportal-apim-profile/commit/${env.GIT_COMMIT}"
+  env.GIT_COMMIT_MSG = sh (script: 'git log --format=%B -n 1 $GIT_COMMIT | head -n 1', returnStdout: true).trim()
+  env.UP_BUILD_URL = getBuildCauses().first().BUILD_URL ?: ''
+  env.UP_BUILD_NAME = getBuildCauses().first().BUILD_NAME ?: 'build'
+  def releaseName = env.CHANGE_ID ? env.CHANGE_TARGET : env.BRANCH_NAME
+
+  p.branch(~/master|([\d]+[\.][\d]+)/) {
+    def buildInfo = Artifactory.newBuildInfo()
+    // set the primary build identifiers
+    buildInfo.setName "portal-apim-profile-${releaseName}"
+    buildInfo.setNumber currentBuild.id
+    // For easier referencing by other Jenkins builds/jobs
+    env.ARTIFACTS_BUILD = "${buildInfo.name}/${buildInfo.number}"
+  }
+
+  env.BUILD_TIMESTAMP = sh(script: 'date +%Y%m%d-%H%M', returnStdout: true).trim()
+  def DOCKER_REGISTRY = 'apic-dev-docker-local.artifactory.swg-devops.com'
+  
+  def MODULES_CHANGED = false
+  def MODULES_YAML_FILE = 'devportal-modules.yaml'
+  def FORCE_RUN = params.FORCE_RUN
+
+  // build on a apim-profile git push regardless of module versions
+  if (currentBuild.rawBuild.getCauses().toString().contains('BranchEventCause') && !env.GIT_COMMIT_MSG.contains('[ci-skip')){
+    println 'Git push detected. We will run this build regardless of a module change.'
+    FORCE_RUN = true
+  }
+
+  p.common {
+    if (!env.GIT_COMMIT_MSG.contains('[ci-skip') || FORCE_RUN == true) {
+      try {
+        stage('Check for Devportal Version Change') {
+          npmutils = library('bmxNative').jenkinsLibs.Node.new()
+          npmutils.writeDotNpmrc()
+
+          if (FORCE_RUN == false) {
+            def localPath = "${HOME}/go/src/github.ibm.com/apimesh/devportal-apim-profile"
+            def modulesYaml = readYaml file: MODULES_YAML_FILE
+            def modulesMap = portal.getModuleRepositories()
+
+            modulesMap.each{ moduleName, moduleRepoName -> 
+              sh portal.cloneGitRepo(moduleRepoName, MAIN_BRANCH, 'apimesh', null)
+            }
+            
+            modulesMap.each{ moduleName, moduleRepoName -> 
+              dir("${localPath}/${moduleRepoName}") {
+                def moduleVersion = modulesYaml[moduleName]
+                def moduleInfo = readYaml(file: "${moduleName}.info.yml")
+                def latestVersion = moduleInfo.version
+
+                println "${moduleVersion} == ${latestVersion} ?"
+                if (latestVersion != moduleVersion) {
+                  println "Module: ${moduleName} has changed it's version from ${moduleVersion} to ${latestVersion}"
+                  modulesYaml[moduleName] = latestVersion
+                  MODULES_CHANGED = true
+                } else {
+                  println "Module: ${moduleName} has not changed it's version"
+                }
+              }
+            }
+
+            if (MODULES_CHANGED == true) { 
+              println "Saving new ${MODULES_YAML_FILE} file. This will be pushed to the repo if we're on a main branch (e.g. master, 2018.x)"
+              // the file must not exist, otherwise writeYaml will fail
+              sh "rm -f ${MODULES_YAML_FILE}"
+              writeYaml file: MODULES_YAML_FILE, data: modulesYaml
+            }
+          } else {
+            println 'FORCE_RUN is set to true, therefore not checking module versions and continuing with build anyway'
+          }
+
+        }
+
+        if (MODULES_CHANGED == true || FORCE_RUN == true) {
+          stage('Build') {
+            ansiColor('xterm') {
+              sshagent(['1bd7e7a9-22d3-4ca5-b000-499bac0f7098']) {
+                withCredentials([usernamePassword(credentialsId: '328dda1a-f29d-4758-bc2a-cb79135d0e2f', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                  // We pull composer packages from artifactory so we need to create an auth.json file so we can log in
+                  writeFile(file: 'auth.json', text:
+                          """{
+    "http-basic": {
+        "na.artifactory.swg-devops.com": {
+            "username": "${USERNAME}",
+            "password": "${PASSWORD}"
+        }
+    }
+}
+""")
+                  // run the build
+                  sh './build.sh'
+                }
+              }
+            }
+          }
+
+          stage('Pull portal-site-template Image') {
+            try {
+              sh "docker pull ${DOCKER_REGISTRY}/velox/portal-site-template:${env.BRANCH_NAME}"
+              sh "docker tag ${DOCKER_REGISTRY}/velox/portal-site-template:${env.BRANCH_NAME} portal-site-template:latest"
+            } catch (Exception e) {
+              print e;
+              if ("${env.BRANCH_NAME}" != MAIN_BRANCH) {
+                try {
+                  sh "docker pull ${DOCKER_REGISTRY}/velox/portal-site-template:${MAIN_BRANCH}"
+                  sh "docker tag ${DOCKER_REGISTRY}/velox/portal-site-template:${MAIN_BRANCH} portal-site-template:latest"
+                } catch (Exception f) {
+                  print f;
+                  if ( MAIN_BRANCH != "master") {
+                    sh "docker pull ${DOCKER_REGISTRY}/velox/portal-site-template:master"
+                    sh "docker tag ${DOCKER_REGISTRY}/velox/portal-site-template:master portal-site-template:latest"
+                  } else {
+                    throw f;
+                  }
+                }
+              } else if ( MAIN_BRANCH != "master") {
+                try {
+                  sh "docker pull ${DOCKER_REGISTRY}/velox/portal-site-template:master"
+                  sh "docker tag ${DOCKER_REGISTRY}/velox/portal-site-template:master portal-site-template:latest"
+                } catch (Exception f) {
+                  throw f;
+                }
+              }
+            }
+          }
+
+          stage('Build Template') {
+            ansiColor('xterm') {
+              sshagent(['1bd7e7a9-22d3-4ca5-b000-499bac0f7098']) {
+                sh './build_site_template.sh'
+              }
+            }
+          }
+
+          stage('Test') {
+            if ((MODULES_CHANGED == true || FORCE_RUN == true) && params.RUN_TESTS == true) {
+              try {
+                ansiColor('xterm') {
+                  sshagent(['1bd7e7a9-22d3-4ca5-b000-499bac0f7098']) {
+                    sh './run_tests_in_template.sh'
+                  }
+                }
+              } finally {
+                archiveArtifacts artifacts: 'tmp/behat/**/*', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'tmp/watchdog/*', allowEmptyArchive: true
+              }
+            }
+          }
+        }
+      } catch (Exception err) {
+          if (env.BRANCH_NAME == MAIN_BRANCH && e.class.toString() != "class hudson.AbortException" && currentBuild.result != 'ABORTED') {
+            portal.sendSlackNotification(e, 'danger', REPO_NAME, 'apimesh')
+          }
+          throw err;
+      }
+    }
+  }
+
+    p.branch(~/master|\d+\.\d+|\d+\.\d+\.\d+/) {
+      if (!env.GIT_COMMIT_MSG.contains('[ci-skip') || FORCE_RUN == true) {
+        if (MODULES_CHANGED == true) {
+          // we need to change from 'detached HEAD' to MAIN_BRANCH before we can push
+          stage('bump version') {
+            sh """
+              git stash
+              git checkout ${MAIN_BRANCH}
+              git pull origin ${MAIN_BRANCH}
+              git stash pop || true
+              git add ${MODULES_YAML_FILE}
+              git commit -m 'bump module versions [ci-skip]'
+              git push --set-upstream origin ${MAIN_BRANCH}
+            """
+          }
+        }
+
+        if (MODULES_CHANGED == true || FORCE_RUN == true) {
+          stage('Upload') {
+            sh 'cd build; tar cfz platform-and-site-template-8.x-${BUILD_TIMESTAMP}.tgz *.tgz'
+            def artifactZip = findFiles(glob: 'build/platform-and-site-template-8.x-*.tgz')[0]
+            def artifactPath = "apic-dev-docker-local/portal/apim-profile/${env.BRANCH_NAME}/${env.BUILD_NUMBER}/${artifactZip.name}"
+            def uploadSpec = "{ \"files\": [ { \"pattern\": \"./${artifactZip}\", \"target\": \"${artifactPath}\" } ] }"
+            def server = Artifactory.server 'na-artifactory'
+            uploadToArtifactory("./${artifactZip}", artifactPath, server)
+          }
+
+          stage('WWW Image Build') {
+            build(job: "velox-portal/portal-www/${env.BRANCH_NAME}", propagate: true, wait: false)
+          }
+        }
+      }
+    }
+}

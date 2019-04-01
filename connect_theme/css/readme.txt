@@ -1,0 +1,1 @@
+The SCSS files from the 'scss' dir will be compiled into CSS in this directory.

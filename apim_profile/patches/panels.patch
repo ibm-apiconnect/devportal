@@ -1,0 +1,621 @@
+diff --Naur modules/panels/panels_ipe/src/Controller/PanelsIPEPageController.php modules/panels/panels_ipe/src/Controller/PanelsIPEPageController.php
+--- modules/panels/panels_ipe/src/Controller/PanelsIPEPageController.php
++++ modules/panels/panels_ipe/src/Controller/PanelsIPEPageController.php
+@@ -20,7 +20,7 @@ use Symfony\Component\HttpFoundation\Response;
+ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+ use Symfony\Component\HttpFoundation\JsonResponse;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+
+ /**
+  * Contains all JSON endpoints required for Panels IPE + Page Manager.
+@@ -52,7 +52,9 @@ class PanelsIPEPageController extends ControllerBase {
+   protected $panelsStorage;
+
+   /**
+-   * @var \Drupal\user\SharedTempStore
++   * Stores the tempstore factory.
++   *
++   * @var \Drupal\Core\TempStore\SharedTempStore
+    */
+   protected $tempStore;
+
+@@ -73,7 +75,7 @@ class PanelsIPEPageController extends ControllerBase {
+    * @param \Drupal\Core\Render\RendererInterface $renderer
+    * @param \Drupal\Core\Layout\LayoutPluginManagerInterface $layout_plugin_manager
+    * @param \Drupal\panels\Storage\PanelsStorageManagerInterface $panels_storage_manager
+-   * @param \Drupal\user\SharedTempStoreFactory $temp_store_factory
++   * @param \Drupal\Core\TempStore\SharedTempStore $temp_store_factory
+    * @param \Drupal\Core\Plugin\Context\ContextHandlerInterface $context_handler
+    */
+   public function __construct(BlockManagerInterface $block_manager, RendererInterface $renderer, LayoutPluginManagerInterface $layout_plugin_manager, PanelsStorageManagerInterface $panels_storage_manager, SharedTempStoreFactory $temp_store_factory, ContextHandlerInterface $context_handler) {
+@@ -96,7 +98,7 @@ class PanelsIPEPageController extends ControllerBase {
+       $container->get('renderer'),
+       $container->get('plugin.manager.core.layout'),
+       $container->get('panels.storage_manager'),
+-      $container->get('user.shared_tempstore'),
++      $container->get('tempstore.shared'),
+       $container->get('context.handler')
+     );
+   }
+@@ -134,7 +136,7 @@ class PanelsIPEPageController extends ControllerBase {
+    *
+    * @return \Symfony\Component\HttpFoundation\JsonResponse
+    *
+-   * @throws \Drupal\user\TempStoreException
++   * @throws \Drupal\Core\TempStore\SharedTempStore
+    */
+   public function cancel($panels_storage_type, $panels_storage_id) {
+     $panels_display = $this->loadPanelsDisplay($panels_storage_type, $panels_storage_id);
+diff --Naur modules/panels/panels_ipe/src/Form/PanelsIPEBlockPluginForm.php modules/panels/panels_ipe/src/Form/PanelsIPEBlockPluginForm.php
+--- modules/panels/panels_ipe/src/Form/PanelsIPEBlockPluginForm.php
++++ modules/panels/panels_ipe/src/Form/PanelsIPEBlockPluginForm.php
+@@ -14,7 +14,7 @@ use Drupal\Core\Render\Element;
+ use Drupal\Core\Render\RendererInterface;
+ use Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant;
+ use Drupal\panels_ipe\PanelsIPEBlockRendererTrait;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+
+ /**
+@@ -40,7 +40,7 @@ class PanelsIPEBlockPluginForm extends FormBase {
+   protected $renderer;
+
+   /**
+-   * @var \Drupal\user\SharedTempStore
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempStore;
+
+@@ -57,7 +57,7 @@ class PanelsIPEBlockPluginForm extends FormBase {
+    * @param \Drupal\Component\Plugin\PluginManagerInterface $block_manager
+    * @param \Drupal\Core\Plugin\Context\ContextHandlerInterface $context_handler
+    * @param \Drupal\Core\Render\RendererInterface $renderer
+-   * @param \Drupal\user\SharedTempStoreFactory $temp_store_factory
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $temp_store_factory
+    */
+   public function __construct(PluginManagerInterface $block_manager, ContextHandlerInterface $context_handler, RendererInterface $renderer, SharedTempStoreFactory $temp_store_factory) {
+     $this->blockManager = $block_manager;
+@@ -74,7 +74,7 @@ class PanelsIPEBlockPluginForm extends FormBase {
+       $container->get('plugin.manager.block'),
+       $container->get('context.handler'),
+       $container->get('renderer'),
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+
+@@ -228,6 +228,9 @@ class PanelsIPEBlockPluginForm extends FormBase {
+     $block_form_state = (new FormState())->setValues($form_state->getValue('settings'));
+     $block_instance->validateConfigurationForm($form, $block_form_state);
+     // Update the original form values.
++    foreach ($block_form_state->getErrors() as $name => $error) {
++      $form_state->setErrorByName($name, $error);
++    }
+     $form_state->setValue('settings', $block_form_state->getValues());
+   }
+
+diff --Naur modules/panels/panels_ipe/src/Form/PanelsIPELayoutForm.php modules/panels/panels_ipe/src/Form/PanelsIPELayoutForm.php
+--- modules/panels/panels_ipe/src/Form/PanelsIPELayoutForm.php
++++ modules/panels/panels_ipe/src/Form/PanelsIPELayoutForm.php
+@@ -11,7 +11,7 @@ use Drupal\Core\Plugin\PluginFormInterface;
+ use Drupal\Core\Render\Element;
+ use Drupal\Core\Render\RendererInterface;
+ use Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+
+ /**
+@@ -25,7 +25,7 @@ class PanelsIPELayoutForm extends FormBase {
+   protected $renderer;
+
+   /**
+-   * @var \Drupal\user\SharedTempStore
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempStore;
+
+@@ -53,7 +53,7 @@ class PanelsIPELayoutForm extends FormBase {
+    *
+    * @param \Drupal\Core\Layout\LayoutPluginManagerInterface $layout_manager
+    * @param \Drupal\Core\Render\RendererInterface $renderer
+-   * @param \Drupal\user\SharedTempStoreFactory $temp_store_factory
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $temp_store_factory
+    */
+   public function __construct(LayoutPluginManagerInterface $layout_manager, RendererInterface $renderer, SharedTempStoreFactory $temp_store_factory) {
+     $this->layoutManager = $layout_manager;
+@@ -68,7 +68,7 @@ class PanelsIPELayoutForm extends FormBase {
+     return new static(
+       $container->get('plugin.manager.core.layout'),
+       $container->get('renderer'),
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+
+diff --Naur modules/panels/panels_ipe/src/Helpers/RequestHandlerBase.php modules/panels/panels_ipe/src/Helpers/RequestHandlerBase.php
+--- modules/panels/panels_ipe/src/Helpers/RequestHandlerBase.php
++++ modules/panels/panels_ipe/src/Helpers/RequestHandlerBase.php
+@@ -7,7 +7,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
+ use Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant;
+ use Drupal\panels\Storage\PanelsStorageManagerInterface;
+ use Drupal\panels_ipe\Exception\EmptyRequestContentException;
+-use Drupal\user\SharedTempStore;
++use Drupal\Core\TempStore\SharedTempStore;
+ use Symfony\Component\HttpFoundation\JsonResponse;
+ use Symfony\Component\HttpFoundation\Request;
+
+@@ -22,7 +22,7 @@ abstract class RequestHandlerBase implements RequestHandlerInterface {
+   private $response = [];
+
+   /**
+-   * @var \Drupal\user\SharedTempStore */
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory */
+   private $tempStore;
+
+   /**
+@@ -97,7 +97,7 @@ abstract class RequestHandlerBase implements RequestHandlerInterface {
+    * @param \Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant $panels_display
+    *   The Panels display to be saved.
+    *
+-   * @throws \Drupal\user\TempStoreException
++   * @throws \Drupal\Core\TempStore\SharedTempStore
+    *   If there are any issues manipulating the entry in the temp store.
+    */
+   protected function savePanelsDisplay(PanelsDisplayVariant $panels_display) {
+@@ -110,7 +110,7 @@ abstract class RequestHandlerBase implements RequestHandlerInterface {
+    *
+    * @param \Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant $panels_display
+    *
+-   * @throws \Drupal\user\TempStoreException
++   * @throws \Drupal\Core\TempStore\SharedTempStore
+    */
+   protected function savePanelsDisplayToTempStore(PanelsDisplayVariant $panels_display) {
+     $this->tempStore->set($panels_display->getTempStoreId(), $panels_display->getConfiguration());
+@@ -121,7 +121,7 @@ abstract class RequestHandlerBase implements RequestHandlerInterface {
+    *
+    * @param \Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant $panels_display
+    *
+-   * @throws \Drupal\user\TempStoreException
++   * @throws \Drupal\Core\TempStore\SharedTempStore
+    */
+   protected function deletePanelsDisplayTempStore(PanelsDisplayVariant $panels_display) {
+     $this->tempStore->delete($panels_display->getTempStoreId());
+diff --Naur modules/panels/panels_ipe/src/Plugin/DisplayBuilder/InPlaceEditorDisplayBuilder.php modules/panels/panels_ipe/src/Plugin/DisplayBuilder/InPlaceEditorDisplayBuilder.php
+--- modules/panels/panels_ipe/src/Plugin/DisplayBuilder/InPlaceEditorDisplayBuilder.php
++++ modules/panels/panels_ipe/src/Plugin/DisplayBuilder/InPlaceEditorDisplayBuilder.php
+@@ -11,7 +11,7 @@ use Drupal\Core\Session\AccountInterface;
+ use Drupal\panels\Plugin\DisplayBuilder\StandardDisplayBuilder;
+ use Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant;
+ use Drupal\panels\Storage\PanelsStorageManagerInterface;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+
+ /**
+@@ -26,7 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
+ class InPlaceEditorDisplayBuilder extends StandardDisplayBuilder {
+
+   /**
+-   * @var \Drupal\user\SharedTempStore
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempStore;
+
+@@ -48,7 +48,7 @@ class InPlaceEditorDisplayBuilder extends StandardDisplayBuilder {
+    *   The context handler.
+    * @param \Drupal\Core\Session\AccountInterface $account
+    *   The current user.
+-   * @param \Drupal\user\SharedTempStoreFactory $temp_store_factory
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $temp_store_factory
+    *   The factory for the temp store object.
+    * @param \Drupal\panels\Storage\PanelsStorageManagerInterface
+    *   The Panels storage manager.
+@@ -70,7 +70,7 @@ class InPlaceEditorDisplayBuilder extends StandardDisplayBuilder {
+       $container->get('context.handler'),
+       $container->get('current_user'),
+       $container->get('module_handler'),
+-      $container->get('user.shared_tempstore'),
++      $container->get('tempstore.shared'),
+       $container->get('panels.storage_manager')
+     );
+   }
+diff --Naur modules/panels/src/CachedValuesGetterTrait.php modules/panels/src/CachedValuesGetterTrait.php
+--- modules/panels/src/CachedValuesGetterTrait.php
++++ modules/panels/src/CachedValuesGetterTrait.php
+@@ -2,7 +2,7 @@
+
+ namespace Drupal\panels;
+
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+
+ /**
+  * Provides a method for panels wizards cached values for non-wizard forms.
+@@ -19,7 +19,7 @@ trait CachedValuesGetterTrait {
+    * implementations are generally simpler and do not need the same degree of
+    * customization. This trait accounts for both use cases.
+    *
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore object in use for the desired cached values.
+    * @param string $tempstore_id
+    *   The tempstore identifier.
+diff --Naur modules/panels/src/Controller/Panels.php modules/panels/src/Controller/Panels.php
+--- modules/panels/src/Controller/Panels.php
++++ modules/panels/src/Controller/Panels.php
+@@ -8,7 +8,7 @@ use Drupal\Core\Controller\ControllerBase;
+ use Drupal\Core\Plugin\Context\ContextHandlerInterface;
+ use Drupal\ctools\Form\AjaxFormTrait;
+ use Drupal\panels\CachedValuesGetterTrait;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ use Symfony\Component\HttpFoundation\Request;
+
+@@ -51,7 +51,7 @@ class Panels extends ControllerBase {
+   /**
+    * Tempstore factory.
+    *
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempstore;
+
+@@ -66,7 +66,7 @@ class Panels extends ControllerBase {
+    *   The variant manager.
+    * @param \Drupal\Core\Plugin\Context\ContextHandlerInterface $context_handler
+    *   The context handler.
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore factory.
+    */
+   public function __construct(BlockManagerInterface $block_manager, PluginManagerInterface $condition_manager, PluginManagerInterface $variant_manager, ContextHandlerInterface $context_handler, SharedTempStoreFactory $tempstore) {
+@@ -86,7 +86,7 @@ class Panels extends ControllerBase {
+       $container->get('plugin.manager.condition'),
+       $container->get('plugin.manager.display_variant'),
+       $container->get('context.handler'),
+-      $container->get('user.shared_tempstore'),
++      $container->get('tempstore.shared'),
+       $container->get('plugin.manager.panels.pattern')
+     );
+   }
+diff --Naur modules/panels/src/Form/LayoutChangeRegions.php modules/panels/src/Form/LayoutChangeRegions.php
+--- modules/panels/src/Form/LayoutChangeRegions.php
++++ modules/panels/src/Form/LayoutChangeRegions.php
+@@ -5,7 +5,7 @@ namespace Drupal\panels\Form;
+ use Drupal\Core\Form\FormBase;
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\Layout\LayoutPluginManagerInterface;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+
+ /**
+@@ -23,7 +23,7 @@ class LayoutChangeRegions extends FormBase {
+   /**
+    * The tempstore factory.
+    *
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempstore;
+
+@@ -33,7 +33,7 @@ class LayoutChangeRegions extends FormBase {
+   public static function create(ContainerInterface $container) {
+     return new static(
+       $container->get('plugin.manager.core.layout'),
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+
+@@ -42,7 +42,7 @@ class LayoutChangeRegions extends FormBase {
+    *
+    * @param \Drupal\Core\Layout\LayoutPluginManagerInterface $manager
+    *   The layout plugin manager.
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore factory.
+    */
+   public function __construct(LayoutPluginManagerInterface $manager, SharedTempStoreFactory $tempstore) {
+diff --Naur modules/panels/src/Form/LayoutChangeSettings.php modules/panels/src/Form/LayoutChangeSettings.php
+--- modules/panels/src/Form/LayoutChangeSettings.php
++++ modules/panels/src/Form/LayoutChangeSettings.php
+@@ -10,7 +10,7 @@ use Drupal\Core\Layout\LayoutInterface;
+ use Drupal\Core\Layout\LayoutPluginManagerInterface;
+ use Drupal\Core\Plugin\PluginFormInterface;
+ use Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+
+ /**
+@@ -28,7 +28,7 @@ class LayoutChangeSettings extends FormBase {
+   /**
+    * The tempstore factory.
+    *
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempstore;
+
+@@ -38,7 +38,7 @@ class LayoutChangeSettings extends FormBase {
+   public static function create(ContainerInterface $container) {
+     return new static(
+       $container->get('plugin.manager.core.layout'),
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+
+@@ -47,7 +47,7 @@ class LayoutChangeSettings extends FormBase {
+    *
+    * @param \Drupal\Core\Layout\LayoutPluginManagerInterface $manager
+    *   The layout plugin manager.
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore factory.
+    */
+   public function __construct(LayoutPluginManagerInterface $manager, SharedTempStoreFactory $tempstore) {
+diff --Naur modules/panels/src/Form/LayoutPluginSelector.php modules/panels/src/Form/LayoutPluginSelector.php
+--- modules/panels/src/Form/LayoutPluginSelector.php
++++ modules/panels/src/Form/LayoutPluginSelector.php
+@@ -5,7 +5,7 @@ namespace Drupal\panels\Form;
+ use Drupal\Core\Form\FormBase;
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\Layout\LayoutPluginManagerInterface;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+
+ /**
+@@ -23,7 +23,7 @@ class LayoutPluginSelector extends FormBase {
+   /**
+    * The tempstore factory.
+    *
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempstore;
+
+@@ -33,7 +33,7 @@ class LayoutPluginSelector extends FormBase {
+   public static function create(ContainerInterface $container) {
+     return new static(
+       $container->get('plugin.manager.core.layout'),
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+
+@@ -42,7 +42,7 @@ class LayoutPluginSelector extends FormBase {
+    *
+    * @param \Drupal\Core\Layout\LayoutPluginManagerInterface $manager
+    *   The layout plugin manager.
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore factory.
+    */
+   public function __construct(LayoutPluginManagerInterface $manager, SharedTempStoreFactory $tempstore) {
+diff --Naur modules/panels/src/Form/PanelsAddBlockForm.php modules/panels/src/Form/PanelsAddBlockForm.php
+--- modules/panels/src/Form/PanelsAddBlockForm.php
++++ modules/panels/src/Form/PanelsAddBlockForm.php
+@@ -4,7 +4,7 @@ namespace Drupal\panels\Form;
+
+ use Drupal\Component\Plugin\PluginManagerInterface;
+ use Drupal\Core\Form\FormStateInterface;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ use Symfony\Component\HttpFoundation\Request;
+
+@@ -23,7 +23,7 @@ class PanelsAddBlockForm extends PanelsBlockConfigureFormBase {
+   /**
+    * PanelsAddBlockForm constructor.
+    *
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore factory.
+    * @param \Drupal\Component\Plugin\PluginManagerInterface $block_manager
+    *   The block plugin manager.
+@@ -38,7 +38,7 @@ class PanelsAddBlockForm extends PanelsBlockConfigureFormBase {
+    */
+   public static function create(ContainerInterface $container) {
+     return new static(
+-      $container->get('user.shared_tempstore'),
++      $container->get('tempstore.shared'),
+       $container->get('plugin.manager.block')
+     );
+   }
+diff --Naur modules/panels/src/Form/PanelsBlockConfigureFormBase.php modules/panels/src/Form/PanelsBlockConfigureFormBase.php
+--- modules/panels/src/Form/PanelsBlockConfigureFormBase.php
++++ modules/panels/src/Form/PanelsBlockConfigureFormBase.php
+@@ -8,7 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\Plugin\ContextAwarePluginAssignmentTrait;
+ use Drupal\Core\Plugin\ContextAwarePluginInterface;
+ use Drupal\panels\CachedValuesGetterTrait;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+
+ /**
+@@ -22,7 +22,7 @@ abstract class PanelsBlockConfigureFormBase extends FormBase {
+   /**
+    * Tempstore factory.
+    *
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected $tempstore;
+
+@@ -50,7 +50,7 @@ abstract class PanelsBlockConfigureFormBase extends FormBase {
+   /**
+    * Constructs a new VariantPluginConfigureBlockFormBase.
+    *
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore factory.
+    */
+   public function __construct(SharedTempStoreFactory $tempstore) {
+@@ -62,7 +62,7 @@ abstract class PanelsBlockConfigureFormBase extends FormBase {
+    */
+   public static function create(ContainerInterface $container) {
+     return new static(
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+
+@@ -78,7 +78,7 @@ abstract class PanelsBlockConfigureFormBase extends FormBase {
+   /**
+    * Get the tempstore.
+    *
+-   * @return \Drupal\user\SharedTempStore
++   * @return \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected function getTempstore() {
+     return $this->tempstore->get($this->getTempstoreId());
+diff --Naur modules/panels/src/Form/PanelsContentForm.php modules/panels/src/Form/PanelsContentForm.php
+--- modules/panels/src/Form/PanelsContentForm.php
++++ modules/panels/src/Form/PanelsContentForm.php
+@@ -6,7 +6,7 @@ use Drupal\Core\Form\FormBase;
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\Url;
+ use Drupal\ctools\Form\AjaxFormTrait;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+
+ /**
+@@ -19,7 +19,7 @@ class PanelsContentForm extends FormBase {
+   /**
+    * Tempstore factory.
+    *
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    */
+   protected $tempstore;
+
+@@ -33,7 +33,7 @@ class PanelsContentForm extends FormBase {
+   /**
+    * Constructs a new VariantPluginContentForm.
+    *
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore factory.
+    */
+   public function __construct(SharedTempStoreFactory $tempstore) {
+@@ -45,7 +45,7 @@ class PanelsContentForm extends FormBase {
+    */
+   public static function create(ContainerInterface $container) {
+     return new static(
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+
+@@ -61,7 +61,7 @@ class PanelsContentForm extends FormBase {
+   /**
+    * Get the tempstore.
+    *
+-   * @return \Drupal\user\SharedTempStore
++   * @return \Drupal\Core\TempStore\SharedTempStoreFactory
+    */
+   protected function getTempstore() {
+     return $this->tempstore->get($this->getTempstoreId());
+diff --Naur modules/panels/src/Form/PanelsDeleteBlockForm.php modules/panels/src/Form/PanelsDeleteBlockForm.php
+--- modules/panels/src/Form/PanelsDeleteBlockForm.php
++++ modules/panels/src/Form/PanelsDeleteBlockForm.php
+@@ -5,7 +5,7 @@ namespace Drupal\panels\Form;
+ use Drupal\Core\Form\ConfirmFormBase;
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\panels\CachedValuesGetterTrait;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+
+ /**
+@@ -18,7 +18,7 @@ class PanelsDeleteBlockForm extends ConfirmFormBase {
+   /**
+    * The tempstore factory.
+    *
+-   * @var \Drupal\user\SharedTempStoreFactory
++   * @var \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    */
+   protected $tempstore;
+
+@@ -44,7 +44,7 @@ class PanelsDeleteBlockForm extends ConfirmFormBase {
+   /**
+    * PanelsDeleteBlockForm constructor.
+    *
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore factory.
+    */
+   public function __construct(SharedTempStoreFactory $tempstore) {
+@@ -56,7 +56,7 @@ class PanelsDeleteBlockForm extends ConfirmFormBase {
+    */
+   public static function create(ContainerInterface $container) {
+     return new static(
+-      $container->get('user.shared_tempstore')
++      $container->get('tempstore.shared')
+     );
+   }
+
+diff --Naur modules/panels/src/Plugin/PanelsPattern/DefaultPattern.php modules/panels/src/Plugin/PanelsPattern/DefaultPattern.php
+--- modules/panels/src/Plugin/PanelsPattern/DefaultPattern.php
++++ modules/panels/src/Plugin/PanelsPattern/DefaultPattern.php
+@@ -7,7 +7,7 @@ use Drupal\Core\Plugin\PluginBase;
+ use Drupal\Core\Url;
+ use Drupal\ctools\ContextMapperInterface;
+ use Drupal\panels\CachedValuesGetterTrait;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+
+ /**
+diff --Naur modules/panels/src/Plugin/PanelsPattern/PanelsPatternInterface.php modules/panels/src/Plugin/PanelsPattern/PanelsPatternInterface.php
+--- modules/panels/src/Plugin/PanelsPattern/PanelsPatternInterface.php
++++ modules/panels/src/Plugin/PanelsPattern/PanelsPatternInterface.php
+@@ -3,7 +3,7 @@
+ namespace Drupal\panels\Plugin\PanelsPattern;
+
+ use Drupal\Component\Plugin\PluginInspectionInterface;
+-use Drupal\user\SharedTempStoreFactory;
++use Drupal\Core\TempStore\SharedTempStoreFactory;
+
+ /**
+  * Provides an interface for defining PanelsPatterns.
+@@ -22,7 +22,7 @@ interface PanelsPatternInterface extends PluginInspectionInterface {
+   /**
+    * Gets the array of default contexts for this panels pattern.
+    *
+-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
++   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempstore
+    *   The tempstore factory object.
+    * @param string $tempstore_id
+    *   The tempstore identifier.
+diff --Naur modules/panels/tests/src/Unit/panels_ipe/RequestHandlerTestBase.php modules/panels/tests/src/Unit/panels_ipe/RequestHandlerTestBase.php
+--- modules/panels/tests/src/Unit/panels_ipe/RequestHandlerTestBase.php
++++ modules/panels/tests/src/Unit/panels_ipe/RequestHandlerTestBase.php
+@@ -6,7 +6,7 @@ namespace Drupal\Tests\panels\Unit\panels_ipe;
+ use Drupal\Core\Extension\ModuleHandlerInterface;
+ use Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant;
+ use Drupal\panels\Storage\PanelsStorageManagerInterface;
+-use Drupal\user\SharedTempStore;
++use Drupal\Core\TempStore\SharedTempStore;
+ use PHPUnit_Framework_MockObject_MockObject;
+ use Symfony\Component\HttpFoundation\JsonResponse;
+ use Symfony\Component\HttpFoundation\Request;
+@@ -43,7 +43,7 @@ abstract class RequestHandlerTestBase extends \PHPUnit_Framework_TestCase {
+     parent::setUp();
+     $this->moduleHandler = $this->getMockForAbstractClass(ModuleHandlerInterface::class);
+     $this->panelsStore = $this->getMockForAbstractClass(PanelsStorageManagerInterface::class);
+-    $this->tempStore = $this->getMockBuilder(SharedTempstore::class)
++    $this->tempStore = $this->getMockBuilder(SharedTempStore::class)
+       ->disableOriginalConstructor()
+       ->getMock();
+ 

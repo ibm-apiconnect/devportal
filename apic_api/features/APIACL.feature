@@ -19,7 +19,23 @@ Feature: APIACL
     Given I am logged in as "andre_one"
     Then I should not see the text "Unrecognized username or password"
     And I should not see the text "Log in"
+    Given I publish a product with the name "product1_@now", id "product1_@now", apis "api1_@now" and visibility "pub" true
+    Given I publish a product with the name "product2_@now", id "product2_@now", apis "api2_@now" and visibility "auth" true
+    Given I publish a product with the name "product3_@now", id "product3_@now", apis "api3_@now" and visibility "org_urls" "/consumer-orgs/1234/5678/a18843f3e4b07631568a159d"
+    Given I publish a product with the name "product4_@now", id "product4_@now", apis "api4_@now" and visibility "tags" "testers"
     Given I publish an api with the name "api1_@now"
-# publish a product visible to andre_one's organisation containing the API
-    Given I publish a product name "product:1_@now", id "productId1_@now", apis "api1_@now" and visible to org "a18843f3e4b07631568a159d"
-    Then I should have an api name "api1_@now" visible by "andre_one"
+    Given I publish an api with the name "api2_@now"
+    Given I publish an api with the name "api3_@now"
+    Given I publish an api with the name "api4_@now"
+    Then the api named "api1_@now" should be visible
+    Then the api named "api2_@now" should be visible
+    Then the api named "api3_@now" should be visible
+    Then the api named "api4_@now" should be visible
+
+    Given I am logged in as "andre_two"
+    Then I should not see the text "Unrecognized username or password"
+    And I should not see the text "Log in"
+    Then the api named "api1_@now" should be visible
+    Then the api named "api2_@now" should be visible
+    Then the api named "api3_@now" should not be visible
+    Then the api named "api4_@now" should not be visible

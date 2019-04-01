@@ -80,10 +80,13 @@ class SocialBlock extends BlockBase {
       ],
     ];
 
-    // We need to get a list of the forums and forum topic ids
-    // These functions live in socialblock.module in the root directory
-    $this->forumVocabularies = socialblock_get_forum_vocabularies();
-    $this->forumTermIds = socialblock_get_forum_term_ids();
+    $moduleHandler = \Drupal::service('module_handler');
+    if ($moduleHandler->moduleExists('forum')) {
+      // We need to get a list of the forums and forum topic ids
+      // These functions live in socialblock.module in the root directory
+      $this->forumVocabularies = socialblock_get_forum_vocabularies();
+      $this->forumTermIds = socialblock_get_forum_term_ids();
+    }
 
     $container = \Drupal::getContainer();
 
@@ -118,15 +121,17 @@ class SocialBlock extends BlockBase {
       '#required' => TRUE,
     ];
 
-    $form['forumsList'] = [
-      '#type' => 'tableselect',
-      '#title' => $this->t('Forums to include in display'),
-      '#header' => $header,
-      '#options' => $options,
-      '#default_value' => $selectedForumDefaults,
-      '#empty' => $this->t('No forums available'),
-      '#multiple' => TRUE,
-    ];
+    if ($moduleHandler->moduleExists('forum')) {
+      $form['forumsList'] = [
+        '#type' => 'tableselect',
+        '#title' => $this->t('Forums to include in display'),
+        '#header' => $header,
+        '#options' => $options,
+        '#default_value' => $selectedForumDefaults,
+        '#empty' => $this->t('No forums available'),
+        '#multiple' => TRUE,
+      ];
+    }
 
     $form['twitterConfig'] = [
       '#type' => 'container',
@@ -174,7 +179,7 @@ class SocialBlock extends BlockBase {
   public function blockSubmit($form, FormStateInterface $form_state) {
 
     $this->configuration['numberOfTiles'] = $form_state->getValue('numberOfTiles');
-    $this->configuration['forumsList'] = $form_state->getValue('forumsList');
+    $this->configuration['forumsList'] = $form_state->getValue('forumsList') ?? NULL;
     $this->configuration['twitterSearchBy'] = $form_state->getValue(['twitterConfig', 'twitterSearchBy']);
     $this->configuration['twitterSearchParameter'] = $form_state->getValue(['twitterConfig', 'twitterSearchParameter']);
     $this->configuration['twitterTweetTypes'] = $form_state->getValue(['twitterConfig', 'twitterTweetTypes']);
@@ -222,8 +227,6 @@ class SocialBlock extends BlockBase {
     $tweets = NULL;
     $container = \Drupal::getContainer();
     if ($container !== NULL) {
-      $forumManager = $container->get('forum_manager');
-
       // First sort out tweets
       $dataInstances = \Drupal::state()->get('socialblock.data');
       if ($dataInstances !== NULL) {
@@ -237,19 +240,23 @@ class SocialBlock extends BlockBase {
         }
       }
 
-      // Next up - forums
-      $enabledForums = $this->configuration['forumsList'];
+      $moduleHandler = \Drupal::service('module_handler');
+      if ($moduleHandler->moduleExists('forum')) {
+        // Next up - forums
+        $enabledForums = $this->configuration['forumsList'];
 
-      if (sizeof($enabledForums) !== 0) {
-        foreach ($enabledForums as $enabledForum) {
+        if ($enabledForums !== NULL && sizeof($enabledForums) !== 0) {
+          $forumManager = $container->get('forum_manager');
+          foreach ($enabledForums as $enabledForum) {
 
-          $forumTopics = $forumManager->getTopics($enabledForum, $container->get('current_user'));
-          $topics = $forumTopics['topics'];
+            $forumTopics = $forumManager->getTopics($enabledForum, $container->get('current_user'));
+            $topics = $forumTopics['topics'];
 
-          foreach ($topics as $id => $forumTopic) {
-            $forumTopic->tweet = FALSE;
-            $forumTopic->id = $id;
-            $posts[] = $forumTopic;
+            foreach ($topics as $id => $forumTopic) {
+              $forumTopic->tweet = FALSE;
+              $forumTopic->id = $id;
+              $posts[] = $forumTopic;
+            }
           }
         }
       }
@@ -394,36 +401,38 @@ class SocialBlock extends BlockBase {
           $blockPosts[] = $blockPost;
         }
         else {
+          $moduleHandler = \Drupal::service('module_handler');
+          if ($moduleHandler->moduleExists('forum')) {
+            $topicNode = Node::load($post->id);
+            $forumTid = $post->forum_tid;
+            $termData = \Drupal\taxonomy\Entity\Term::load($forumTid);
+            $timestamp = '';
 
-          $topicNode = Node::load($post->id);
-          $forumTid = $post->forum_tid;
-          $termData = \Drupal\taxonomy\Entity\Term::load($forumTid);
-          $timestamp = '';
+            if ($topicNode !== NULL) {
+              $topicCreatedTime = DateTimePlus::createFromTimestamp($topicNode->created->value);
+              $now = DateTimePlus::createFromTimestamp(time());
+              $timestamp = $now->diff($topicCreatedTime);
+              $timestamp = socialblock_get_tweet_timediff($timestamp);
+            }
 
-          if ($topicNode !== NULL) {
-            $topicCreatedTime = DateTimePlus::createFromTimestamp($topicNode->created->value);
-            $now = DateTimePlus::createFromTimestamp(time());
-            $timestamp = $now->diff($topicCreatedTime);
-            $timestamp = socialblock_get_tweet_timediff($timestamp);
+            $op = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['name' => $post->name]);
+            $user = array_shift($op);
+            $forumName = '';
+            if ($termData !== NULL) {
+              $forumName = $termData->name->value;
+            }
+
+            $blockPost = [
+              'type' => 'forum_topic',
+              'url' => Url::fromUserInput('/node/' . $post->id)->toString(),
+              'handle' => $user->getDisplayName(),
+              'title' => $post->title->value,
+              'forum' => $forumName,
+              'forum_url' => Url::fromUserInput('/forum/' . $forumTid)->toString(),
+              'timestamp' => $timestamp,
+            ];
+            $blockPosts[] = $blockPost;
           }
-
-          $op = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['name' => $post->name]);
-          $user = array_shift($op);
-          $forumName = '';
-          if ($termData !== NULL) {
-            $forumName = $termData->name->value;
-          }
-
-          $blockPost = [
-            'type' => 'forum_topic',
-            'url' => Url::fromUserInput('/node/' . $post->id)->toString(),
-            'handle' => $user->getDisplayName(),
-            'title' => $post->title->value,
-            'forum' => $forumName,
-            'forum_url' => Url::fromUserInput('/forum/' . $forumTid)->toString(),
-            'timestamp' => $timestamp,
-          ];
-          $blockPosts[] = $blockPost;
         }
       }
     }

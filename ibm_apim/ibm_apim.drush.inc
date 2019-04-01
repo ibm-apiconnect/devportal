@@ -292,16 +292,7 @@ function _drush_ibm_apim_send_welcome_mail($url, $account, $language, $clientEma
     $mailManager = \Drupal::service('plugin.manager.mail');
     $ibmApimSiteUrl = \Drupal::state()->get('ibm_apim.site_url');
     // Mail one time login URL and instructions.
-    $from = $config->get('mail');
     $siteName = $config->get('name');
-
-    if (!isset($from) || empty($from)) {
-      $from = ini_get('sendmail_from');
-      drush_log(dt('Setting FROM address using PHP config file: @email', ['@email' => $from]), 'success');
-    }
-    else {
-      drush_log(dt('Setting FROM address using site config: @email', ['@email' => $from]), 'success');
-    }
 
     $loginUrl = Url::fromRoute('user.login', ['absolute' => TRUE])->toString();
     $editUrl = Url::fromRoute('user.page', ['absolute' => TRUE])->toString();
@@ -312,9 +303,7 @@ function _drush_ibm_apim_send_welcome_mail($url, $account, $language, $clientEma
     if (!isset($siteName) || empty($siteName)) {
       $siteName = 'null';
     }
-    if (!isset($from) || empty($from)) {
-      $from = 'null@example.com';
-    }
+    $from = 'null@example.com';
 
     $mailParams['variables'] = [
       '!username' => $account->getAccountName(),
@@ -1492,6 +1481,9 @@ function drush_ibm_apim_apicuser_create($apicUser, $event = 'user_create') {
       if ($apicUser['user_registry_url'] !== NULL) {
         $createUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
       }
+      if ($apicUser['state'] !== NULL) {
+        $createUser->setState($apicUser['state']);
+      }
 
       $userManager = \Drupal::service('auth_apic.usermanager');
       drush_print('Creating apic user ' . $apicUser['username']);
@@ -1684,6 +1676,9 @@ function drush_ibm_apim_apicuser_update($apicUser, $event = 'user_update') {
       }
       if ($apicUser['user_registry_url'] !== NULL) {
         $editUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
+      }
+      if ($apicUser['state'] !== NULL) {
+        $editUser->setState($apicUser['state']);
       }
 
       $userManager = \Drupal::service('auth_apic.usermanager');

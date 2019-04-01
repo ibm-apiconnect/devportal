@@ -99,13 +99,33 @@ Feature: Self Sign-up
     And I should see the link "@data(user_registries[0].title)"
 
   @api
-  Scenario: Self signup form handles invalid user registry url query parameter by using default registry
+  Scenario: Register form loads non default registry directly
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+      | lur  | @data(user_registries[1].title)   | @data(user_registries[1].url)     | yes           | no      |
+    When I am at "/user/register?registry_url=@data(user_registries[1].url)"
+    Then I should see the text "Sign up with @data(user_registries[1].title)"
+
+  @api
+  Scenario: Register form handles invalid user registry url query parameter by using default registry
     Given I am not logged in
     Given userregistries:
       | type | title                             | url                               | user_managed | default |
       | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
       | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
     When I am at "/user/register?registry_url=thisisnotvalid"
+    Then I should see the text "Sign up with @data(user_registries[0].title)"
+
+  @api
+  Scenario: Register form handles valid but incorrect user registry url query parameter by using default registry
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+    When I am at "/user/register?registry_url=/consumer-api/user-registries/aaaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
     Then I should see the text "Sign up with @data(user_registries[0].title)"
 
   Scenario: Self signup form captcha failure

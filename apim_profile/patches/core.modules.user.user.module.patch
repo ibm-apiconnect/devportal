@@ -1,0 +1,20 @@
+--- core/modules/user/user.module	2019-01-18 15:24:53.000000000 +0000
++++ core/modules/user/user.module	2019-01-18 15:30:58.000000000 +0000
+@@ -1308,7 +1308,7 @@
+ function user_cookie_save(array $values) {
+   foreach ($values as $field => $value) {
+     // Set cookie for 365 days.
+-    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), REQUEST_TIME + 31536000, '/');
++    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), REQUEST_TIME + 31536000, '/', NULL, TRUE, TRUE);
+   }
+ }
+ 
+@@ -1319,7 +1319,7 @@
+  *   A cookie name such as 'homepage'.
+  */
+ function user_cookie_delete($cookie_name) {
+-  setrawcookie('Drupal.visitor.' . $cookie_name, '', REQUEST_TIME - 3600, '/');
++  setrawcookie('Drupal.visitor.' . $cookie_name, '', REQUEST_TIME - 3600, '/',NULL, TRUE, TRUE);
+ }
+ 
+ /**

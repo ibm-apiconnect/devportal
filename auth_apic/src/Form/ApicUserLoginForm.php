@@ -339,6 +339,7 @@ class ApicUserLoginForm extends UserLoginForm {
 
       $form['main_container']['other'] = $otherRegistriesForm;
     }
+    $form['#attached']['library'][] = 'ibm_apim/single_click';
 
     // need to add cache context for the query param
     if (!isset($form['#cache'])) {
@@ -359,17 +360,17 @@ class ApicUserLoginForm extends UserLoginForm {
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $form_state->getFormObject()->validateName($form, $form_state);
-    $apicRC = $form_state->getFormObject()->validateApicAuthentication($form, $form_state);
-    if ($apicRC !== TRUE) {
+    $this->validateName($form, $form_state);
+
+    $apicAuthenticated = $this->validateApicAuthentication($form, $form_state);
+    if ($apicAuthenticated !== TRUE) {
       $user_input = $form_state->getUserInput();
       $query = isset($user_input['name']) ? ['name' => $user_input['name']] : [];
-      $this->logger('auth_apic')
-        ->notice('Login attempt for %user which failed in validateApicAuthentication.', ['%user' => $form_state->getValue('name')]);
-      $form_state->setErrorByName('usernameorpassword', $this->t('The credentials provided for authentication are invalid. Please repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
-      $form_state->setErrorByName('usernameorpassword2', $this->t('Unrecognized username or password. <a href=":password">Forgot your password?</a>', [':password' => $this->url('user.pass', [], ['query' => $query])]));
+      $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
+      $form_state->setErrorByName('usernameorpassword2', $this->t('<a href=":password">Forgot your password? Click here to reset it.</a>', [':password' => $this->url('user.pass', [], ['query' => $query])]));
     }
-    $form_state->getFormObject()->validateFinal($form, $form_state);
+
+    $this->validateFinal($form, $form_state);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
@@ -403,38 +404,94 @@ class ApicUserLoginForm extends UserLoginForm {
       }
       else {
 
-        $login_user = new ApicUser();
-        $login_user->setUsername($name);
-        $login_user->setPassword($password);
-        if (!empty($corg)) {
-          $login_user->setOrganization($corg);
-        }
-        $login_user->setApicUserRegistryURL($form_state->getValue('registry_url'));
+        $registry = $this->userRegistryService->get($form_state->getValue('registry_url'));
 
-        if ($jwt !== NULL) {
-          $response = $this->userManager->acceptInvite($jwt, $login_user);
+        if (($registry !== NULL && !$registry->isUserManaged()) || $this->validateEnabled($form_state)) {
 
-          if ($response->success() === TRUE) {
+          $login_user = new ApicUser();
+          $login_user->setUsername($name);
+          $login_user->setPassword($password);
+          if (!empty($corg)) {
+            $login_user->setOrganization($corg);
+          }
+          $login_user->setApicUserRegistryURL($form_state->getValue('registry_url'));
+
+          if ($jwt !== NULL) {
+            $response = $this->userManager->acceptInvite($jwt, $login_user);
+
+            if ($response->success() === TRUE) {
+              $response = $this->userManager->login($login_user);
+            }
+          }
+          else {
             $response = $this->userManager->login($login_user);
+          }
+
+          if ($response->success()) {
+            $this->authApicSessionStore->delete('invitation_object');
+            $form_state->set('uid', $response->getUid());
+            $returnValue = TRUE;
+          }
+          else {
+            // unsuccessful login.
+            $returnValue = FALSE;
           }
         }
         else {
-          $response = $this->userManager->login($login_user);
-        }
-
-        if ($response->success()) {
-          $this->authApicSessionStore->delete('invitation_object');
-          $form_state->set('uid', $response->getUid());
-          $returnValue = TRUE;
-        }
-        else {
+          // user is not enabled.
           $returnValue = FALSE;
         }
       }
     }
+
+    if (!$returnValue) {
+      $this->logger->notice('Login attempt for %user which failed in validateApicAuthentication.', ['%user' => $form_state->getValue('name')]);
+    }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     return $returnValue;
   }
+
+
+  /**
+   * This check is specifically for the apic_state property. Not status which is entirely drupal, that is checked by the validateName() function.
+   *
+   * Possible values are enabled, pending or disabled. Only enabled should be allowed to login.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   */
+  public function validateEnabled(FormStateInterface $form_state): bool {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $returnValue = FALSE;
+    if (!$form_state->isValueEmpty('name')) {
+      $user = user_load_by_name($form_state->getValue('name'));
+      if ($user) { // $user is false if not found
+        if (isset($user->apic_state)) {
+          $state = $user->apic_state->value;
+          if ($state === 'enabled') {
+            $returnValue = TRUE; // enabled user... all is good.
+          }
+          else {
+            $this->logger->notice('Invalid login attempt for %user, state is %state.', ['%user' => $form_state->getValue('name'), '%state' => $state]);
+          }
+        }
+        else {
+          $this->logger->notice('Invalid login attempt for %user, apic state cannot be determined.', ['%user' => $form_state->getValue('name')]);
+        }
+      }
+      else {
+        $this->logger->notice('Invalid login attempt for %user, user cannot be found to check state against.', ['%user' => $form_state->getValue('name')]);
+      }
+
+      if (!$returnValue) {
+        $this->logger->notice('Login attempt for %user which failed in validateEnabled', ['%user' => $form_state->getValue('name')]);
+      }
+
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
+    return $returnValue;
+  }
+
 
   /**
    * Taken from UserLoginForm::validateAuthentication().

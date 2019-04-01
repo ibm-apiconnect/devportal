@@ -1,0 +1,46 @@
+--- modules/views_ajax_history/js/views_ajax_history.js	2018-08-29 14:31:08.000000000 +0100
++++ modules/views_ajax_history/js/views_ajax_history.js	2018-08-29 14:33:42.000000000 +0100
+@@ -249,6 +249,21 @@
+   };
+ 
+   /**
++   * Parse a URL query string
++   *
++   * @param queryString
++   *   String containing the query to parse.
++   */
++  var parseQuery = function(queryString) {
++    var query = {};
++    $.map(queryString.split('&'), function(val) {
++      var s = val.split('=');
++      query[s[0]] = s[1];
++    });
++    return query;
++  };
++
++  /**
+    * Override beforeSend to clean up the Ajax submission URL.
+    *
+    * @param {XMLHttpRequest} xmlhttprequest
+@@ -260,11 +275,17 @@
+     var data = (typeof options.data === 'string') ? parseQuery(options.data) : {};
+ 
+     if (data.view_name && options.type !== 'GET') {
+-      // Override the URL to not contain any fields that were submitted.
+-      options.url = drupalSettings.views.ajax_path + '?' + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
++      // Check that the Ajax call is coming from a View.
++      if (typeof options.url != 'undefined' && options.url.indexOf('/views/ajax') != -1 && options.type !== 'GET') {
++        var data = (typeof options.data === 'string') ? parseQuery(options.data) : {};
++        if (data.view_name) {
++          // Override the URL to not contain any fields that were submitted.
++          options.url = drupalSettings.views.ajax_path + '?' + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
+ 
+-      // Call the original Drupal method with the right context.
+-      beforeSend.apply(this, arguments);
++          // Call the original Drupal method with the right context.
++          beforeSend.apply(this, arguments);
++        }
++      }
+     }
+   }
+ 

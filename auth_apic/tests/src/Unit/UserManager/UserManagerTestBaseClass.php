@@ -33,8 +33,6 @@ abstract class UserManagerTestBaseClass extends UnitTestCase {
 
   protected $consumerorg;
 
-  protected $state;
-
   protected $config;
 
   protected $userRegistryService;
@@ -59,7 +57,6 @@ abstract class UserManagerTestBaseClass extends UnitTestCase {
     $this->mgmtServer = $this->prophet->prophesize(\Drupal\ibm_apim\Service\APIMServer::class);
     $this->externalAuth = $this->prophet->prophesize(\Drupal\externalauth\ExternalAuth::class);
     $this->consumerorg = $this->prophet->prophesize(\Drupal\consumerorg\Service\ConsumerOrgService::class);
-    $this->state = $this->prophet->prophesize(\Drupal\Core\State\State::class);
     $this->config = $this->prophet->prophesize(\Drupal\ibm_apim\Service\SiteConfig::class);
     $this->userRegistryService = $this->prophet->prophesize(\Drupal\ibm_apim\Service\UserRegistryService::class);
     $this->userService = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserService::class);
@@ -82,7 +79,6 @@ abstract class UserManagerTestBaseClass extends UnitTestCase {
       $this->externalAuth->reveal(),
       $this->mgmtServer->reveal(),
       $this->consumerorg->reveal(),
-      $this->state->reveal(),
       $this->config->reveal(),
       $this->userRegistryService->reveal(),
       $this->userService->reveal(),
@@ -109,7 +105,7 @@ abstract class UserManagerTestBaseClass extends UnitTestCase {
     $account->get('consumer_organization')->willReturn($this->createConsumerorgArray());
     $account->get('uid')->willReturn($this->createSimpleObject('value', '1'));
     $account->get('mail')->willReturn($this->createSimpleObject('value', 'abc@me.com'));
-    $account->get('apic_user_registry_url')->willReturn($this->createSimpleObject('value', 'user/registry/url'));
+    $account->get('apic_user_registry_url')->willReturn($this->createSimpleObject('value', '/registry/idp1'));
 
     $consumerorg_url_field = $this->prophet->prophesize(\Drupal\Core\Field\FieldItemList::class);
     $consumerorg_url_field->getValue()->willReturn([['value' => '/consumer-orgs/1234/5678/9abc']]);
@@ -119,9 +115,10 @@ abstract class UserManagerTestBaseClass extends UnitTestCase {
     $account->set('last_name', 'def')->willReturn(NULL);
     $account->set('mail', 'abc@me.com')->willReturn(NULL);
     $account->set('consumerorg_url', [['value' => '/consumer-orgs/1234/5678/9abc']])->willReturn(NULL);
-    $account->set('apic_user_registry_url', 'user/registry/url')->willReturn(NULL);
+    $account->set('apic_user_registry_url', '/registry/idp1')->willReturn(NULL);
     $account->set('apic_url', 'user/url')->willReturn(NULL);
 
+    $account->hasField('apic_user_registry_url')->willReturn(TRUE);
 
     $account->setPassword(NULL)->willReturn(NULL);
     $account->save()->willReturn(NULL);
@@ -151,6 +148,14 @@ abstract class UserManagerTestBaseClass extends UnitTestCase {
     $account->get('status')->willReturn($this->createSimpleObject('value', 0));
     $account->isBlocked()->willReturn(TRUE);
 
+    return $account->reveal();
+  }
+
+  protected function createAccountStubFromDifferentRegistry() {
+    $account = $this->createAccountBase();
+    $account->set('apic_user_registry_url', '/registry/different')->willReturn(NULL);
+    $account->get('apic_user_registry_url')->willReturn($this->createSimpleObject('value', '/registry/different'));
+    $account->isBlocked()->willReturn(FALSE);
     return $account->reveal();
   }
 

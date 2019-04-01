@@ -324,8 +324,14 @@ class FeaturedContentBlock extends BlockBase {
     }
 
     if ($nids !== null && !empty($nids)) {
+      $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
       $rawNodes = Node::loadMultiple($nids);
       foreach ($rawNodes as $rawNode) {
+        $hasTranslation = $rawNode->hasTranslation($lang_code);
+        if ($hasTranslation === true) {
+          $rawNode = $rawNode->getTranslation($lang_code);
+        }
+
         $data = ['title' => $rawNode->getTitle(), 'nid' => $rawNode->id()];
         if ($rawNode->bundle() === static::TYPE_API) {
           $fid = null;

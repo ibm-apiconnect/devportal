@@ -376,6 +376,8 @@ class ApicUserRegisterForm extends RegisterForm {
     // attach custom javascript library to generate corg names from first/last name
     $form['#attached']['library'][] = 'auth_apic/generate-consumerorg-name';
 
+    $form['#attached']['library'][] = 'ibm_apim/single_click';
+
     // need to add cache context for the query param
     if (!isset($form['#cache'])) {
       $form['#cache'] = [];
@@ -497,7 +499,7 @@ class ApicUserRegisterForm extends RegisterForm {
 
       // we now have an account registered regardless of path taken, so can update with other information we need to store.
       $loaded_user = \user_load_by_name($new_user->getUsername());
-      if ($loaded_user !== NULL) {
+      if ($loaded_user) {
         $this->userManager->setDefaultLanguage($loaded_user);
         $this->userManager->saveCustomFields($loaded_user, $form_state, 'register');
       }

@@ -180,6 +180,7 @@ class ConsumerOrgService {
       $org->setId($apimResponse->getData()['id']);
       $org->setTitle($name);
       $org->setOwnerUrl($apimResponse->getData()['owner_url']);
+      $org->setTags($apimResponse->getData()['group_urls']);
 
       $this->createNode($org);
       $response->setMessage(t('Consumer organization created successfully.'));
@@ -348,11 +349,10 @@ class ConsumerOrgService {
       $node->set('consumerorg_url', $consumer->getUrl());
       $node->set('consumerorg_name', $utils->truncate_string($consumer->getName(), 128));
       $node->set('consumerorg_owner', $consumer->getOwnerUrl());
-      // TODO: consumerorg tags
-      //      if ($consumer->getTags() === NULL) {
-      //        $consumer->setTags(array());
-      //      }
-      //      $node->set('consumerorg_tags', $consumer->getTags());
+      if ($consumer->getTags() === NULL) {
+        $consumer->setTags(array());
+      }
+      $node->set('consumerorg_tags', $consumer->getTags());
 
       $roles = [];
       if ($consumer->getRoles() !== NULL) {
@@ -758,7 +758,9 @@ class ConsumerOrgService {
         $org->setInvites($invites);
       }
       // TODO: consumerorg_memberlist?
-      //TODO: $org->setTags($node->get('consumerorg_tags')->value);
+      if ($node->consumerorg_tags) {
+        $org->setTags($node->get('consumerorg_tags')->value);
+      }
     }
     ibm_apim_exit_trace(__FUNCTION__, $org);
     return $org;
@@ -1365,6 +1367,9 @@ class ConsumerOrgService {
       }
       if (isset($json['consumer_org']['owner_url'])) {
         $org->setOwnerUrl($json['consumer_org']['owner_url']);
+      }
+      if (isset($json['consumer_org']['group_urls'])) {
+        $org->setTags($json['consumer_org']['group_urls']);
       }
       $roles = [];
       foreach ($json['roles'] as $role) {

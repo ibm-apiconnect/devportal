@@ -1,0 +1,181 @@
+@@ This patch file combines patches taken from https://www.drupal.org/node/2583799#comment-10572256
+@@ with a small patch of our own (the change to UpdateManagerInstall) to allow modules and themes
+@@ to be installed in the Drupal 8 portal.
+--- core/core.services.yml
++++ core/core.services.yml
+@@ -798,7 +798,7 @@ services:
+     arguments: ['@request_stack', '@url_generator']
+   unrouted_url_assembler:
+     class: Drupal\Core\Utility\UnroutedUrlAssembler
+-    arguments: ['@request_stack', '@path_processor_manager', '%filter_protocols%']
++    arguments: ['@request_stack', '@router.request_context', '@path_processor_manager', '%filter_protocols%']
+   link_generator:
+     class: Drupal\Core\Utility\LinkGenerator
+     arguments: ['@url_generator', '@module_handler', '@renderer']
+
+--- core/lib/Drupal/Core/Routing/RequestContext.php
++++ core/lib/Drupal/Core/Routing/RequestContext.php
+@@ -27,6 +27,20 @@ class RequestContext extends SymfonyRequestContext {
+   protected $completeBaseUrl;
+ 
+   /**
++   * The base path relative to the location of index.php.
++   *
++   * This base path does not take into account the base path of the current
++   * front controller, so it points to /d8 even if /d8/core/update.php is
++   * requested.
++   *
++   * Unlike the base URL this base path will never include 'index.php' itself.
++   *
++   * @see \Symfony\Component\HttpFoundation\Request::getBaseUrl
++   * @see \Symfony\Component\HttpFoundation\Request::getBasePath
++   */
++  protected $indexPhpBasePath;
++
++  /**
+    * Populates the context from the current request from the request stack.
+    *
+    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+@@ -47,6 +61,9 @@ public function fromRequest(Request $request) {
+     if (isset($GLOBALS['base_url'])) {
+       $this->setCompleteBaseUrl($GLOBALS['base_url']);
+     }
++    if (isset($GLOBALS['base_path'])) {
++      $this->setIndexPhpBasePath($GLOBALS['base_path']);
++    }
+   }
+ 
+   /**
+@@ -69,4 +86,25 @@ public function setCompleteBaseUrl($complete_base_url) {
+     $this->completeBaseUrl = $complete_base_url;
+   }
+ 
++  /**
++   * Sets the index php base path.
++   *
++   * @param string $base_path
++   *   The base path.
++   */
++  public function setIndexPhpBasePath($base_path) {
++    $this->indexPhpBasePath = $base_path;
++  }
++
++  /**
++   * Gets the base path relative to the location of index.php
++   *
++   * Note, it always has a trailing slash.
++   *
++   * @return string
++   */
++  public function getIndexPhpBasePath() {
++    return $this->indexPhpBasePath;
++  }
++
+ }
+
+--- core/lib/Drupal/Core/Utility/UnroutedUrlAssembler.php	2017-09-01 10:55:31.010064346 +0000
++++ core/lib/Drupal/Core/Utility/UnroutedUrlAssembler.php	2017-09-01 11:41:04.368396632 +0000
+@@ -5,6 +5,7 @@
+ use Drupal\Component\Utility\UrlHelper;
+ use Drupal\Core\GeneratedUrl;
+ use Drupal\Core\PathProcessor\OutboundPathProcessorInterface;
++use Drupal\Core\Routing\RequestContext;
+ use Symfony\Component\HttpFoundation\RequestStack;
+ 
+ /**
+@@ -29,19 +30,29 @@
+   protected $pathProcessor;
+ 
+   /**
++   * The request context.
++   *
++   * @var \Drupal\Core\Routing\RequestContext
++   */
++  protected $requestContext;
++
++  /**
+    * Constructs a new unroutedUrlAssembler object.
+    *
+    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+    *   A request stack object.
++   * @param \Drupal\Core\Routing\RequestContext $request_context
++   *   The request context.
+    * @param \Drupal\Core\PathProcessor\OutboundPathProcessorInterface $path_processor
+    *   The output path processor.
+    * @param string[] $filter_protocols
+    *   (optional) An array of protocols allowed for URL generation.
+    */
+-  public function __construct(RequestStack $request_stack, OutboundPathProcessorInterface $path_processor, array $filter_protocols = ['http', 'https']) {
++  public function __construct(RequestStack $request_stack, RequestContext $request_context, OutboundPathProcessorInterface $path_processor, array $filter_protocols = ['http', 'https']) {
+     UrlHelper::setAllowedProtocols($filter_protocols);
+     $this->requestStack = $request_stack;
+     $this->pathProcessor = $path_processor;
++    $this->requestContext = $request_context;
+   }
+ 
+   /**
+@@ -123,7 +134,7 @@
+     $uri = ltrim($uri, '/');
+ 
+     // Add any subdirectory where Drupal is installed.
+-    $current_base_path = $request->getBasePath() . '/';
++    $current_base_path = $this->requestContext->getIndexPhpBasePath();
+ 
+     if ($options['absolute']) {
+       $current_base_url = $request->getSchemeAndHttpHost() . $current_base_path;
+@@ -151,6 +162,7 @@
+     $prefix = empty($uri) ? rtrim($options['prefix'], '/') : $options['prefix'];
+ 
+     $uri = str_replace('%2F', '/', rawurlencode($prefix . $uri));
++    $uri = $options['script'] && ($uri != '') ? '/' . trim($uri, '/') : $uri;
+     $query = $options['query'] ? ('?' . UrlHelper::buildQuery($options['query'])) : '';
+     $url = $base . $options['script'] . $uri . $query . $options['fragment'];
+     return $collect_bubbleable_metadata ? $generated_url->setGeneratedUrl($url) : $url;
+
+--- core/modules/system/src/Controller/DbUpdateController.php	2017-09-01 10:55:49.574285897 +0000
++++ core/modules/system/src/Controller/DbUpdateController.php	2017-09-01 11:00:48.137790953 +0000
+@@ -235,8 +235,7 @@
+       '#type' => 'link',
+       '#title' => $this->t('Continue'),
+       '#attributes' => ['class' => ['button', 'button--primary']],
+-      // @todo Revisit once https://www.drupal.org/node/2548095 is in.
+-      '#url' => Url::fromUri('base://selection'),
++      '#url' => Url::fromUri('base://update.php/selection', ['script' => '']),
+     ];
+     return $build;
+   }
+@@ -627,7 +626,7 @@
+     batch_set($batch);
+ 
+     // @todo Revisit once https://www.drupal.org/node/2548095 is in.
+-    return batch_process(Url::fromUri('base://results'), Url::fromUri('base://start'));
++    return batch_process(Url::fromUri('base://update.php/results', ['script' => '']), Url::fromUri('base://update.php/start', ['script' => '']));
+   }
+ 
+   /**
+
+--- core/modules/system/system.module
++++ core/modules/system/system.module
+@@ -423,7 +423,9 @@ function system_authorized_get_url(array $options = array()) {
+   // the correct usage for this case.
+   $url = Url::fromUri('base:core/authorize.php');
+   $url_options = $url->getOptions();
+-  $url->setOptions($options + $url_options);
++  $url_options = $options + $url_options;
++  $url_options['script'] = '';
++  $url->setOptions($url_options);
+   return $url;
+ }
+
+--- core/modules/update/src/Form/UpdateManagerInstall.php	2017-09-01 10:57:05.195182741 +0000
++++ core/modules/update/src/Form/UpdateManagerInstall.php	2017-09-01 10:58:38.740282279 +0000
+@@ -229,7 +229,8 @@
+     // install the code, there's no need to prompt for FTP/SSH credentials.
+     // Instead, we instantiate a Drupal\Core\FileTransfer\Local and invoke
+     // update_authorize_run_install() directly.
+-    if (fileowner($project_real_location) == fileowner($this->sitePath) && !$test_authorize) {
++    // Modified by IBM APIC - removed fileowner check as www-data != aegir
++    if (!$test_authorize) {
+       $this->moduleHandler->loadInclude('update', 'inc', 'update.authorize');
+       $filetransfer = new Local($this->root);
+       $response = call_user_func_array('update_authorize_run_install', array_merge([$filetransfer], $arguments));

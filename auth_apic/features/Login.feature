@@ -41,7 +41,7 @@ Feature: Login
     And I enter "invalidPassword" for "Password"
     When I press the "Sign in" button
     Then there are errors
-    And I should see the text "Unrecognized username or password"
+    And I should see the text "Forgot your password? Click here to reset it."
     And the apim user "@data(andre.mail)" is not logged in
 
 @api
@@ -78,6 +78,16 @@ Feature: Login
   And I should see the link "@data(user_registries[0].title)"
 
 @api
+Scenario: Login form loads non default registry directly
+  Given I am not logged in
+  Given userregistries:
+    | type | title                             | url                               | user_managed | default |
+    | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+    | lur  | @data(user_registries[1].title)   | @data(user_registries[1].url)     | yes           | no      |
+  When I am at "/user/login?registry_url=@data(user_registries[1].url)"
+  Then I should see the text "Sign in with @data(user_registries[1].title)"
+
+@api
   Scenario: Login form handles invalid user registry url query parameter by using default registry
   Given I am not logged in
   Given userregistries:
@@ -88,6 +98,16 @@ Feature: Login
   Then I should see the text "Sign in with @data(user_registries[0].title)"
 
 @api
+Scenario: Login form handles valid but incorrect user registry url query parameter by using default registry
+  Given I am not logged in
+  Given userregistries:
+    | type | title                             | url                               | user_managed | default |
+    | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+    | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+  When I am at "/user/login?registry_url=/consumer-api/user-registries/aaaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+  Then I should see the text "Sign in with @data(user_registries[0].title)"
+
+  @api
 Scenario: Login form loads with oidc registry link (non-default)
   Given the cache has been cleared
   Given I am not logged in

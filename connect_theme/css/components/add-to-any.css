@@ -1,0 +1,17 @@
+/**
+ * Add to Any
+ *  - styles for the Add to Any module.
+ *  - https://www.drupal.org/project/addtoany
+ ============================================================================ */
+.addtoany_list {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.addtoany_list > a {
+  padding: 0 0.125rem;
+}
+
+.addtoany_list .addtoany_share_save {
+  padding: 0 0.25rem;
+}

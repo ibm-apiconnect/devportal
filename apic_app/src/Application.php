@@ -179,7 +179,7 @@ class Application {
 
       $node->set('application_data', serialize($app));
       $node->save();
-      if ($node !== NULL) {
+      if ($node !== NULL && $event !== 'internal') {
         \Drupal::logger('apic_app')->notice('Application @app updated', ['@app' => $node->getTitle()]);
 
         // Calling all modules implementing 'hook_apic_app_update':

@@ -176,17 +176,19 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
   private function call($url, $message): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $returnValue = FALSE;
-    $site_mail = \Drupal::config('system.site')->get('mail');
 
     $to = self::parse_mailboxes($message['to']);
 
     $requestBody = [
-      'from' => $site_mail,
       'to' => implode(',', array_values($to)),
       'subject' => $message['subject'],
       'body' => $message['body'],
       'content_type' => 'html',
     ];
+    if (array_key_exists('from', $message) && $message['from'] !== 'null@example.com') {
+      $requestBody['from'] = $message['from'];
+    }
+
     if (array_key_exists('cc', $message)) {
       $requestBody['cc'] = self::parse_mailboxes($message['cc']);
     }

@@ -1,0 +1,13 @@
+--- core/modules/update/update.module	2018-03-06 09:30:44.000000000 +0000
++++ core/modules/update/update.module	2018-03-06 09:31:36.000000000 +0000
+@@ -276,7 +276,9 @@
+     // If configured time between notifications elapsed, send email about
+     // updates possibly available.
+     module_load_include('inc', 'update', 'update.fetch');
+-    _update_cron_notify();
++    // APIC comment out the actual emails since we do not allow admins to 
++    // update modules manually
++    //_update_cron_notify();
+   }
+ 
+   // Clear garbage from disk.

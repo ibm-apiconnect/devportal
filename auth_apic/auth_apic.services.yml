@@ -23,7 +23,6 @@ services:
                 '@externalauth.externalauth',
                 '@ibm_apim.mgmtserver',
                 '@ibm_apim.consumerorg',
-                '@state',
                 '@ibm_apim.site_config',
                 '@ibm_apim.user_registry',
                 '@ibm_apim.apicuser',

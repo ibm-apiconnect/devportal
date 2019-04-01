@@ -1,0 +1,13 @@
+--- core/lib/Drupal/Core/StackMiddleware/ReverseProxyMiddleware.php	2019-02-20 12:00:33.187469790 +0000
++++ core/lib/Drupal/Core/StackMiddleware/ReverseProxyMiddleware.php	2019-02-20 12:00:58.556809235 +0000
+@@ -75,7 +75,9 @@
+ 
+       $proxies = $settings->get('reverse_proxy_addresses', []);
+       if (count($proxies) > 0) {
+-        $request::setTrustedProxies($proxies, Request::HEADER_X_FORWARDED_ALL | Request::HEADER_FORWARDED);
++        // Change HEADER_X_FORWARDED_ALL to HEADER_X_FORWARDED_FOR to fix apimesh/devportal#4093
++        // $request::setTrustedProxies($proxies, Request::HEADER_X_FORWARDED_ALL | Request::HEADER_FORWARDED);
++        $request::setTrustedProxies($proxies, Request::HEADER_X_FORWARDED_FOR | Request::HEADER_FORWARDED);
+       }
+     }
+   }

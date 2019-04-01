@@ -1,1 +1,15 @@
-{"name":"drupal/ghmarkdown","description":"Allows content to be submitted using Github Markdown, a simple plain-text syntax that is transformed into valid HTML.","type":"drupal-module","homepage":"https://github.com/ibm-apiconnect/devportal","support":{"issues":"https://github.com/ibm-apiconnect/devportal","source":"https://github.com/ibm-apiconnect/devportal"},"license":"GPL-2.0+","minimum-stability":"dev","require-dev":{"phpunit/phpunit":"5.5.*"},"version":"1.0.4"}
+{
+  "name": "drupal/ghmarkdown",
+  "description": "Allows content to be submitted using Github Markdown, a simple plain-text syntax that is transformed into valid HTML.",
+  "type": "drupal-module",
+  "homepage": "https://github.com/ibm-apiconnect/devportal",
+  "support": {
+    "issues": "https://github.com/ibm-apiconnect/devportal",
+    "source": "https://github.com/ibm-apiconnect/devportal"
+  },
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
+  "require-dev": {
+    "phpunit/phpunit": "5.5.*"
+  }
+}

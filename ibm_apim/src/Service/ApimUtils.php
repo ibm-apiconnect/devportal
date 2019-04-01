@@ -125,7 +125,7 @@ class ApimUtils {
   /**
    * Sanitize registry_url parameters - used to specify which registry is active in a form.
    *
-   * Example: /api/catalogs/:uuid/:uuid/configured-catalog-user-registries/:uuid
+   * Example: /consumer-api/user-registries/:uuid
    *
    * @param $url
    *   registry url
@@ -137,7 +137,7 @@ class ApimUtils {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
     }
-    $pattern = "/^\/api\/catalogs\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\/configured-catalog-user-registries\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/";
+    $pattern = "/^\/consumer-api\/user-registries\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/";
     $result = preg_match($pattern, $url);
     if ($result === 0) {
       $this->logger->warning('invalid registry url, discarding.');

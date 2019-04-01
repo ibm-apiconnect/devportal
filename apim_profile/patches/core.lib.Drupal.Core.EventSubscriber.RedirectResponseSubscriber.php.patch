@@ -1,0 +1,16 @@
+--- core/lib/Drupal/Core/EventSubscriber/RedirectResponseSubscriber.php	2017-09-27 10:54:57.616512924 +0000
++++ core/lib/Drupal/Core/EventSubscriber/RedirectResponseSubscriber.php	2017-09-27 10:54:49.468432534 +0000
+@@ -110,6 +110,13 @@
+       // host, because the 'Location' header must be absolute.
+       if (strpos($destination, '/') === 0) {
+         $destination = $scheme_and_host . $destination;
++
++        // Patched by IBM - fix the hostname to be the real base host
++        if(!empty($GLOBALS['real_base_host'])) {
++          if(strpos($destination, $GLOBALS['real_base_host']) !== 0) {
++            $destination = str_replace($scheme_and_host, $GLOBALS['real_base_host'], $destination);
++          }
++        }
+       }
+       else {
+         // Legacy destination query parameters can be internal paths that have

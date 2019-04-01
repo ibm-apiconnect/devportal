@@ -53,7 +53,13 @@ class ProductContext extends RawDrupalContext {
     $product = new Product();
     $nid = $product->create($object);
 
-    print('Saved product ' . $name . ' as nid ' . $nid);
+    // Make sure that the call returns a number
+    if ((int)$nid >= 0) {
+      print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
+    }
+    else {
+      throw new \Exception("Failed to create product with the name $name");
+    }
   }
 
   /**
@@ -151,7 +157,12 @@ class ProductContext extends RawDrupalContext {
     $product = new Product();
     $nid = $product->create($object);
 
-    print('Saved product ' . $name . ' as nid ' . $nid);
+    if ((int)$nid >= 0) {
+      print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
+    }
+    else {
+      throw new \Exception("Failed to create product with the name $name");
+    }
   }
 
   /**
@@ -223,7 +234,7 @@ class ProductContext extends RawDrupalContext {
       case 'tags':
         // category: only people in an org with the right community string can view
         $object['catalog_product']['visibility']['view']['type'] = 'custom';
-        $object['catalog_product']['visibility']['view']['tags'] = [$data];
+        $object['catalog_product']['visibility']['view']['group_urls'] = [$data];
         break;
       case 'subs':
         // subscription: only people with an app that is subscribed to the portal can view
@@ -234,73 +245,72 @@ class ProductContext extends RawDrupalContext {
 
     $product = new Product();
     $nid = $product->create($object);
-    print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
-  }
-
-  /**
-   * @Then The product with the name :arg1 and id :arg2 should be visible to :arg3
-   */
-  public function iShouldHaveAProductWithNameIdVisisbleAs($name, $id, $switchto): void {
-    $query = \Drupal::entityQuery('node');
-    $query->condition('type', 'product');
-    $query->condition('title.value', $name);
-    $results = $query->execute();
-
-    print('Query results: ' . serialize($results) . PHP_EOL);
-    if ($results !== NULL && !empty($results)) {
-      $product = Node::load(array_shift($results));
-      if ($product->get('product_id')->value === $id && $product->get('product_name')->value === $name) {
-        print("Product with the name $name and id $id exists and was viewable by $switchto." . PHP_EOL);
-      }
-      else {
-        throw new \Exception("The returned product did not have a name of $name or an id of $id");
-      }
+    // Make sure that the call returns a number
+    if ((int)$nid >= 0) {
+      print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
     }
     else {
-      throw new \Exception("Failed to find a product with the name $name");
+      throw new \Exception("Failed to create product with the name $name");
     }
   }
 
   /**
-   * @Then The product with the name :arg1 and id :arg2 should not be visible to :arg3
+   * @Given I publish a product with the name :arg1, id :arg2, apis :arg3 and visibility :arg4 :arg5
    */
-  public function iShouldHaveAProductWithNameIdNotVisisbleAs($name, $id, $switchto): void {
+  public function iPublishAProductWithNameIdAPIVisibility($name, $id, $api, $visi, $data): void {
+    $random = new Random();
+    if ($name === NULL || empty($name)) {
+      $name = $random->name(8);
+    }
+    $incapi = $api . ':1.0.0';
+    $object = [];
+    $object['catalog_product'] = [];
+    $object['catalog_product']['info'] = [];
+    $object['catalog_product']['info']['name'] = $name;
+    $object['catalog_product']['info']['title'] = $name;
+    $object['catalog_product']['info']['version'] = '1.0.0';
+    $object['state'] = 'published';
+    $object['id'] = $id;
+    $object['url'] = 'https://localhost.com';
+    $object['catalog_product']['apis'] = [$incapi => ['name' => $incapi]];
+    $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
+    switch ($visi) {
+      case 'pub':
+        // public; anyone can view
+        $object['catalog_product']['visibility']['view']['type'] = 'public';
+        break;
+      case 'auth':
+        // authenticated: any authenticated user can view
+        $object['catalog_product']['visibility']['view']['type'] = 'authenticated';
+        break;
+      case 'org_urls':
+        // organization: only people in the given orgs can view
+        $object['catalog_product']['visibility']['view']['type'] = 'custom';
+        $object['catalog_product']['visibility']['view']['org_urls'] = [$data];
+        break;
+      case 'tags':
+        // category: only people in an org with the right community string can view
+        $object['catalog_product']['visibility']['view']['type'] = 'custom';
+        $object['catalog_product']['visibility']['view']['group_urls'] = [$data];
+        break;
+      case 'subs':
+        // subscription: only people with an app that is subscribed to the portal can view
+        // so don't add any extra visibility entries
+        break;
+      default:
+    }
 
-    $original_user = \Drupal::currentUser();
-    print('Current user uid: ' . $original_user->id() . PHP_EOL);
-
-    // Switch to the userid provided
-    $accountSwitcher = \Drupal::service('account_switcher');
-    $users = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['name' => $switchto]);
-    $user = reset($users);
-    if ($user) {
-      $accountSwitcher->switchTo(\Drupal\user\Entity\User::load($user->id()));
+    $product = new Product();
+    $nid = $product->create($object);
+    // Make sure that the call returns a number
+    if ((int)$nid >= 0) {
+      print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
     }
     else {
-      throw new \Exception("Unable to switch to user $switchto");
-    }
-
-    $new_user = \Drupal::currentUser();
-    print('Current user uid: ' . $new_user->id() . PHP_EOL);
-
-
-    $query = \Drupal::entityQuery('node')
-      ->condition('type', 'product')
-      ->condition('title.value', $name)
-      ->accessCheck(TRUE);
-    $results = $query->execute();
-    // print('Query results: ' . serialize($results) . PHP_EOL);
-    if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
-      // $product = Node::load($querynid);
-      // print('Product: ' . serialize($product) . PHP_EOL);
-      //if ($product->get('product_id')->value === $id && $product->get('product_name')->value === $name) {
-      throw new \Exception("Product with the name $name and id $id was viewable by $switchto");
-    }
-    else {
-      print("Product with the name $name and id $id was not viewable by $switchto." . PHP_EOL);
+      throw new \Exception("Failed to create product with the name $name");
     }
   }
+
 
   /**
    * @Given I publish a product name :arg1, id :arg2, apis :arg3 and visible to org :arg4
@@ -326,6 +336,69 @@ class ProductContext extends RawDrupalContext {
 
     $product = new Product();
     $nid = $product->create($object);
-    print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
+    // Make sure that the call returns a number
+    if ((int)$nid >= 0) {
+      print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
+    }
+    else {
+      throw new \Exception("Failed to create product with the name $name");
+    }
   }
+
+  /**
+   * @Then The product with the name :arg1 and id :arg2 should be visible
+   */
+  public function iShouldHaveAProductWithNameIdVisible($name, $id): void {
+
+    print('Current user uid: ' . \Drupal::currentUser()->id() . PHP_EOL);
+
+    $query = \Drupal::entityQuery('node')
+      ->condition('type', 'product')
+      ->condition('title.value', $name)
+      ->accessCheck(TRUE);
+    $results = $query->execute();
+
+    print('Query results: ' . serialize($results) . PHP_EOL);
+
+    if ($results !== NULL && !empty($results)) {
+      $product = Node::load(array_shift($results));
+      if ($product->get('product_id')->value === $id && $product->get('product_name')->value === $name) {
+        print("Product with the name $name and id $id exists and was viewable." . PHP_EOL);
+      }
+      else {
+        throw new \Exception("The returned product did not have a name of $name or an id of $id");
+      }
+    }
+    else {
+      throw new \Exception("Failed to find a product with the name $name");
+    }
+  }
+
+  /**
+   * @Then The product with the name :arg1 and id :arg2 should not be visible
+   */
+  public function iShouldHaveAProductWithNameIdNotVisible($name, $id): void {
+
+    print('Current user uid: ' . \Drupal::currentUser()->id() . PHP_EOL);
+
+    $query = \Drupal::entityQuery('node')
+      ->condition('type', 'product')
+      ->condition('title.value', $name)
+      ->accessCheck(TRUE);
+    $results = $query->execute();
+
+    print('Query results: ' . serialize($results) . PHP_EOL);
+
+    if ($results !== NULL && !empty($results)) {
+      $querynid = array_shift($results);
+      // $product = Node::load($querynid);
+      // print('Product: ' . serialize($product) . PHP_EOL);
+      //if ($product->get('product_id')->value === $id && $product->get('product_name')->value === $name) {
+      throw new \Exception("Product with the name $name and id $id was viewable");
+    }
+    else {
+      print("Product with the name $name and id $id was not viewable." . PHP_EOL);
+    }
+  }
+
 }

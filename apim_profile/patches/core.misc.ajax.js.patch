@@ -1,0 +1,10 @@
+--- core/misc/ajax.js	2019-02-06 11:48:09.000000000 +0000
++++ core/misc/ajax.js	2019-02-06 11:49:04.000000000 +0000
+@@ -187,6 +187,7 @@
+     }
+ 
+     if (!this.url) {
++      this.url = '';
+       var $element = $(this.element);
+       if ($element.is('a')) {
+         this.url = $element.attr('href');

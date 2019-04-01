@@ -1,0 +1,56 @@
+--- core/modules/file/src/Entity/File.php	2018-05-10 12:28:30.000000000 +0100
++++ core/modules/file/src/Entity/File.php	2018-05-10 12:30:28.000000000 +0100
+@@ -4,9 +4,12 @@
+ 
+ use Drupal\Core\Entity\ContentEntityBase;
+ use Drupal\Core\Entity\EntityChangedTrait;
++use Drupal\Core\Entity\EntityMalformedException;
+ use Drupal\Core\Entity\EntityStorageInterface;
+ use Drupal\Core\Entity\EntityTypeInterface;
++use Drupal\Core\Entity\Exception\UndefinedLinkTemplateException;
+ use Drupal\Core\Field\BaseFieldDefinition;
++use Drupal\Core\Url;
+ use Drupal\file\FileInterface;
+ use Drupal\user\UserInterface;
+ 
+@@ -71,12 +74,40 @@
+    * @see file_url_transform_relative()
+    */
+   public function url($rel = 'canonical', $options = []) {
++    // This method is deprecated on the interface. For file entities it is
++    // especially important not to use url() because the behavior is different
++    // from self::toUrl(). In the case where the URL for a physical file is
++    // needed (as opposed to the canonical URL for the file entity) call
++    // file_create_url($this->getFileUri()) directly.
++    // trigger_error('For file entities, it is important to use toUrl().', E_USER_DEPRECATED);
+     return file_create_url($this->getFileUri());
+   }
+ 
+   /**
+    * {@inheritdoc}
+    */
++  public function toUrl($rel = 'canonical', array $options = []) {
++    // Core does not provide any link templates for file entities and the ID is
++    // not needed to generate the URL. This function catches exceptions for both
++    // situations and creates a link if the canonical relationship is requested.
++    try {
++      return parent::toUrl($rel, $options);
++    }
++    catch (UndefinedLinkTemplateException $e) {
++      if ($rel === 'canonical') {
++        return Url::fromUri(file_create_url($this->getFileUri()), $options);
++      }
++    }
++    catch (EntityMalformedException $e) {
++      if ($rel === 'canonical') {
++        return Url::fromUri(file_create_url($this->getFileUri()), $options);
++      }
++    }
++  }
++
++  /**
++   * {@inheritdoc}
++   */
+   public function getMimeType() {
+     return $this->get('filemime')->value;
+   }

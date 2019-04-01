@@ -1,0 +1,11 @@
+--- modules/addtoany/addtoany.libraries.yml	2017-09-13 11:17:31.000000000 +0100
++++ modules/addtoany/addtoany.libraries.yml	2017-09-13 11:18:06.000000000 +0100
+@@ -1,7 +1,7 @@
+ addtoany:
+   version: VERSION
+   js:
+-    https://static.addtoany.com/menu/page.js: { attributes: { async: true }, type: external, minified: true }
++    js/page.js: {}
+     js/addtoany.js: {}
+   css:
+     theme:

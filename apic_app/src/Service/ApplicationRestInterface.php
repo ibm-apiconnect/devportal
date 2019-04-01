@@ -47,6 +47,16 @@ interface ApplicationRestInterface {
   public function deleteApplication($url);
 
   /**
+   * @param $name
+   * @param $description
+   * @param $oauthUrl
+   * @param $formState
+   *
+   * @return mixed
+   */
+  public function createApplication($name, $description, $oauthUrl, $formState);
+
+  /**
    * Promote an application in apim using the url provided
    * and the request body given
    *

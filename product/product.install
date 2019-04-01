@@ -1,0 +1,90 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2019
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+use Drupal\views\Views;
+
+/**
+ * Ensure content type is translation enabled
+ */
+function product_update_8111() {
+  \Drupal::configFactory()
+    ->getEditable('language.content_settings.node.product')
+    ->set('langcode', 'en')
+    ->set('status', TRUE)
+    ->set('dependencies', ['config' => [0 => 'node.type.product'], 'module' => [0 => 'content_translation']])
+    ->set('third_party_settings', ['content_translation' => ['enabled' => TRUE]])
+    ->set('id', 'node.product')
+    ->set('target_entity_type_id', 'node')
+    ->set('target_bundle', 'product')
+    ->set('default_langcode', 'site_default')
+    ->set('language_alterable', FALSE)
+    ->save();
+
+  $view = Views::getView('products');
+  $view->setDisplay('default');
+  $filters = $view->getDisplay()->getOption('filters');
+  if (!array_key_exists('select_translation', $filters)) {
+    $filters['select_translation'] = [
+      'id' => 'select_translation',
+      'table' => 'node_field_data',
+      'field' => 'select_translation',
+      'relationship' => 'none',
+      'group_type' => 'group',
+      'admin_label' => '',
+      'operator' => '=',
+      'value' => 'default',
+      'group' => 1,
+      'exposed' => false,
+      'expose' =>  [
+        'operator_id' => '',
+        'label' => '',
+        'description' => '',
+        'use_operator' => false,
+        'operator' => '',
+        'identifier' => '',
+        'required' => false,
+        'remember' => false,
+        'multiple' => false,
+        'remember_roles' => [
+          'authenticated' => 'authenticated'
+        ]
+      ],
+      'is_grouped' => false,
+      'group_info' => [
+        'label' => '',
+        'description' => '',
+        'identifier' => '',
+        'optional' => true,
+        'widget' => 'select',
+        'multiple' => false,
+        'remember' => false,
+        'default_group' => 'All',
+        'default_group_multiple' => [],
+        'group_items' => []
+      ],
+      'priorities' => '',
+      'default_language_only' => 0,
+      'include_content_with_unpublished_translation' => 0,
+      'entity_type' => 'node',
+      'plugin_id' => 'select_translation_filter'
+    ];
+    $view->getDisplay()->setOption('filters', $filters);
+    $view->save();
+
+    $view2 = Views::getView('products');
+    $view2->setDisplay('page_1');
+    $view2->getDisplay()->setOption('rendering_language', '***LANGUAGE_language_interface***');
+    $view2->save();
+  }
+
+}

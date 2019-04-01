@@ -12,7 +12,11 @@ services:
       - { name: ibm_apim }
   ibm_apim.user_utils:
     class: Drupal\ibm_apim\Service\Mocks\MockUserUtils
-    arguments: ['@current_user', '@tempstore.private', '@state', '@logger.channel.ibm_apim']
+    arguments: ['@current_user',
+                '@tempstore.private',
+                '@state',
+                '@logger.channel.ibm_apim',
+                '@entity_type.manager']
   ibm_apim.apim_utils:
     class: Drupal\ibm_apim\Service\Mocks\MockApimUtils
     arguments: [ '@logger.channel.ibm_apim',
