@@ -359,8 +359,8 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    * @Transform table:name,mail,pass,status
    * @Transform table:title,name,owner,id
    * @Transform table:title,name,id,owner
-   * @Transform table:name,consumerorgid,role
    * @Transform table:type,title,url,user_managed,default
+   * @Transform table:consumerorgid,username,roles
    *
    * Annoyingly, this function will only match the specifically listed
    * tables. If you need a different table processing, add another row of:
@@ -855,7 +855,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
       // Skip remote links
       if (strpos($href, $url_segment) !== 0) {
-        print "Found link with $url_segment -> $href  \n";
+        //print "Found link with $url_segment -> $href  \n";
         $foundMatch = TRUE;
         continue;
       }
@@ -865,6 +865,19 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       throw new \Exception("No link found with href including: $url_segment");
     }
 
+  }
+
+  /**
+   * @Given ibm_apim settings config boolean property :propname value is :value
+   */
+  public function ibmApimSettingsConfigBooleanPropertyValueIs($propname, $value)
+  {
+    $value = filter_var( $value, FILTER_VALIDATE_BOOLEAN);
+    $config = \Drupal::service('config.factory')->getEditable('ibm_apim.settings');
+    $config->set($propname, $value);
+    $config->save();
+
+    print " config: set $propname to $value - resulted in value of " . $config->get($propname) . "\n";
   }
 
 }

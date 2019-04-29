@@ -40,7 +40,7 @@
     "cweagans/composer-patches": "^1.6.5",
     "drupal-composer/drupal-scaffold": "^2.5",
     "drupal/console": "^1.0.2",
-    "drupal/core": "8.6.13",
+    "drupal/core": "8.6.15",
     "vlucas/phpdotenv": "^2.4",
     "webflo/drupal-finder": "^1.0.0",
     "webmozart/path-util": "^2.3",
@@ -113,7 +113,7 @@
     "drupal/bootstrap": "3.x-dev",
     "drupal/bootstrap_layouts": "^5.1",
     "drupal/social_api": "^2.0@beta",
-    "drupal/views_bootstrap": "^4.0",
+    "drupal/views_bootstrap": "^4.1",
     "drupal/social_media_links": "^2.6",
     "drupal/ckeditor_media_embed": "^1.1",
     "drupal/better_exposed_filters": "^3.0@alpha",
@@ -204,10 +204,13 @@
     "drupal/advagg": "^3.5",
     "patchwork/jsqueeze": "^2.0",
     "typo3/phar-stream-wrapper": "2.0.1",
-    "drupal/select_translation": "^1.0"
+    "drupal/select_translation": "^1.0",
+    "drupal/disable_language": "^1.0@beta",
+    "drupal/page_load_progress": "^1.4",
+    "drupal/term_csv_export_import": "^2.0@alpha"
   },
   "require-dev": {
-    "webflo/drupal-core-require-dev": "8.6.13"
+    "webflo/drupal-core-require-dev": "8.6.15"
   },
   "conflict": {
     "drupal/drupal": "*"

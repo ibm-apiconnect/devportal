@@ -75,6 +75,33 @@ class ApicTestUtils {
   }
 
   /**
+   * Create an administrator role with all relevant permissions.
+   *
+   * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
+   *
+   * @return \Drupal\consumerorg\ApicType\Role
+   */
+  public static function makeAdministratorRole(ConsumerOrg $org): Role {
+    $owner = self::makeNoPermissionsRole($org);
+    $owner->setName('administrator');
+    $owner->setTitle('Administrator');
+    $owner->setSummary('Administers the app developer organization');
+
+    // Owner gets every permission under the sun
+    $perms = \Drupal::service('ibm_apim.permissions')->getAll();
+    if ($perms !== NULL && !empty($perms)) {
+      $perms = array_keys($perms);
+    }
+    $owner->setPermissions($perms);
+    $org->addRole($owner);
+
+    // Update the org in the database
+    \Drupal::service('ibm_apim.consumerorg')->createOrUpdateNode($org, 'ApicTestUtils::makeAdministratorRole');
+
+    return $owner;
+  }
+
+  /**
    * Create a developer role for the given org.
    *
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org

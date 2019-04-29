@@ -378,6 +378,18 @@ class ApicUserRegisterForm extends RegisterForm {
 
     $form['#attached']['library'][] = 'ibm_apim/single_click';
 
+    if (\Drupal::moduleHandler()->moduleExists('page_load_progress') && \Drupal::currentUser()->hasPermission('use page load progress')) {
+
+      // Unconditionally attach assets to the page.
+      $form['#attached']['library'][] = 'auth_apic/oidc_page_load_progress';
+
+      $pjp_config = \Drupal::config('page_load_progress.settings');
+      // Attach config settings.
+      $form['#attached']['drupalSettings']['oidc_page_load_progress'] = [
+        'esc_key' => $pjp_config->get('page_load_progress_esc_key')
+      ];
+    }
+
     // need to add cache context for the query param
     if (!isset($form['#cache'])) {
       $form['#cache'] = [];

@@ -12,6 +12,7 @@
 
 use Drupal\apic_api\Api;
 use Drupal\apic_app\Application;
+use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\UserSession;
 use Drupal\Core\Url;
@@ -273,6 +274,14 @@ function ibm_apim_drush_command() {
       'type' => 'The artifact type, e.g. product',
       'url' => 'The artifact URL reference, e.g. /product/xyz/1',
     ],
+  ];
+  $items['ibm_apim-assert_config_uuids'] = [
+    'description' => 'Updates the UUIDs of any config files in the provided source dir (or /private/config/sync dir for the site by default) to match those on the running site.  This is needed to allow config from one site to be imported into another',
+    'aliases' => ['assert_config_uuids'],
+    'options' => [
+      'source' => 'Source directory containing the config to check',
+      'extended_output' => 'Log additional output about the config uuids that get set'
+    ]
   ];
 
   return $items;
@@ -1891,6 +1900,13 @@ function drush_ibm_apim_group_create($group, $event = 'group_create') {
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
+
+  $accountSwitcher = Drupal::service('account_switcher');
+  $original_user = \Drupal::currentUser();
+  if ($original_user->id() !== 1) {
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+  }
+
   if (isset($group)) {
     if (is_string($group)) {
       $group = json_decode($group, TRUE);
@@ -1901,6 +1917,10 @@ function drush_ibm_apim_group_create($group, $event = 'group_create') {
     }
     $groupService = \Drupal::service('ibm_apim.group');
     $groupService->update($group['url'], $group);
+  }
+
+  if ($original_user !== NULL && $original_user->id() !== 1) {
+    $accountSwitcher->switchBack();
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -1917,6 +1937,12 @@ function drush_ibm_apim_group_update($group, $event = 'group_update') {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
+  $accountSwitcher = Drupal::service('account_switcher');
+  $original_user = \Drupal::currentUser();
+  if ($original_user->id() !== 1) {
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+  }
+
   if (isset($group)) {
     if (is_string($group)) {
       $group = json_decode($group, TRUE);
@@ -1926,6 +1952,10 @@ function drush_ibm_apim_group_update($group, $event = 'group_update') {
     }
     $groupService = \Drupal::service('ibm_apim.group');
     $groupService->update($group['url'], $group);
+  }
+
+  if ($original_user !== NULL && $original_user->id() !== 1) {
+    $accountSwitcher->switchBack();
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -1942,6 +1972,12 @@ function drush_ibm_apim_group_delete($group, $event = 'group_del') {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
+  $accountSwitcher = Drupal::service('account_switcher');
+  $original_user = \Drupal::currentUser();
+  if ($original_user->id() !== 1) {
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+  }
+
   if (isset($group)) {
     if (is_string($group)) {
       $group = json_decode($group, TRUE);
@@ -1951,6 +1987,10 @@ function drush_ibm_apim_group_delete($group, $event = 'group_del') {
     }
     $groupService = \Drupal::service('ibm_apim.group');
     $groupService->delete($group['url']);
+  }
+
+  if ($original_user !== NULL && $original_user->id() !== 1) {
+    $accountSwitcher->switchBack();
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -2251,6 +2291,54 @@ function drush_ibm_apim_analytics_delete($analytics, $event = 'analytics_del') {
     }
     $analyticsService = \Drupal::service('ibm_apim.analytics');
     $analyticsService->delete($analytics['url']);
+  }
+
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+  }
+}
+
+/**
+ * Asserts that the config in the provided source directory
+ * (or the default site sync dir if not provided) are the same
+ * as matching config items in the running site.
+ *
+ * @return mixed
+ */
+function drush_ibm_apim_assert_config_uuids() {
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+  }
+
+  $sourceDir = drush_get_option('source', NULL);
+  $extendedOutput = drush_get_option('extended_output', NULL);
+
+  if (isset($sourceDir)) {
+    if (file_exists($sourceDir) && is_dir($sourceDir)) {
+      $sync = new FileStorage($sourceDir);
+      drush_log('Using provided source dir ' . $sourceDir, 'success');
+    } else {
+      return drush_set_error('INVALID_SOURCE_DIR', 'The provided source dir \'' . $sourceDir . '\' does not exist');
+    }
+  } else {
+    $sync = \Drupal::service('config.storage.sync');
+  }
+
+  foreach ($sync->listAll() as $name) {
+    $existing_config = \Drupal::configFactory()->get($name);
+    if (!$existing_config->isNew() && ($uuid = $existing_config->get('uuid'))) {
+      $data = $sync->read($name);
+      $data['uuid'] = $uuid;
+      $sync->write($name, $data);
+
+      if (isset($extendedOutput)) {
+        drush_log('Setting UUID of \'' . $name . '\' to \'' . $uuid . '\'', 'success');
+      }
+    } else {
+      if (isset($extendedOutput)) {
+        drush_log('The running site does not have any config with name \'' . $name . '\', not updating the UUID', 'success');
+      }
+    }
   }
 
   if (function_exists('ibm_apim_exit_trace')) {

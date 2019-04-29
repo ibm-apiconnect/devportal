@@ -30,12 +30,8 @@
             refreshRate: '1m'
           },
           user: {
-            context: {
-
-            },
-            config: {
-
-            }
+            context: {},
+            config: {}
           }
         });
 
@@ -45,55 +41,76 @@
 
         if (!drupalSettings.anv.apiStatsTimeId) {
           drupalSettings.anv.apiStatsTimeId = anv.createTime({
-            "field": "datetime", "values": ["30s", "1m", "30m", "1h", "1d", "7d", "30d"], "selectedValue": "1d"
+            "field": "datetime",
+            "values": ["30s", "1m", "30m", "1h", "1d", "7d", "30d"],
+            "selectedValue": "1d"
           });
         }
 
         if (!drupalSettings.anv.static30dTime) {
           drupalSettings.anv.static30dTime = anv.createTime({
-            "field": "datetime", "values": ["30d"], "selectedValue": "30d"
+            "field": "datetime",
+            "values": ["30d"],
+            "selectedValue": "30d"
           });
         }
 
         if (!drupalSettings.anv.static1hTime) {
           drupalSettings.anv.static1hTime = anv.createTime({
-            "field": "datetime", "values": ["1h"], "selectedValue": "1h"
+            "field": "datetime",
+            "values": ["1h"],
+            "selectedValue": "1h"
           });
         }
 
         if (!drupalSettings.anv.apiStatsWidget) {
           drupalSettings.anv.apiStatsWidget = anv.createWidget({
-            "id": "api-stats", "time": drupalSettings.anv.apiStatsTimeId, "timeType": "split", "vis": [
+            "id": "api-stats",
+            "time": drupalSettings.anv.apiStatsTimeId,
+            "timeType": "split",
+            "vis": [
               {
                 "metrics": [
                   {
-                    "field": "time_to_serve_request", "type": "average"
+                    "field": "time_to_serve_request",
+                    "type": "average"
                   }, {
-                    "field": "time_to_serve_request", "type": "maximum"
+                    "field": "time_to_serve_request",
+                    "type": "maximum"
                   }, {
-                    "field": "time_to_serve_request", "type": "minimum"
+                    "field": "time_to_serve_request",
+                    "type": "minimum"
                   }
-                ], "type": "line", "metadata": {
-                "label": drupalSettings.analytics.translations.response_time
-              }
+                ],
+                "type": "line",
+                "metadata": {
+                  "label": drupalSettings.analytics.translations.response_time
+                }
               }
             ], "metadata": {
-              "title": drupalSettings.analytics.translations.api_stats, "dateSubtitle": true
+              "title": drupalSettings.analytics.translations.api_stats,
+              "dateSubtitle": true
             }
           });
         }
 
         if (!drupalSettings.anv.totalCallsWidget) {
           drupalSettings.anv.totalCallsWidget = anv.createWidget({
-            "id": "total-calls", "time": drupalSettings.anv.static30dTime, "timeType": "single", "vis": [
+            "id": "total-calls",
+            "time": drupalSettings.anv.static30dTime,
+            "timeType": "single",
+            "vis": [
               {
-                "type": "num", "metrics": [
-                {
-                  "field": "", "type": "total"
+                "type": "num",
+                "metrics": [
+                  {
+                    "field": "",
+                    "type": "total"
+                  }
+                ], "metadata": {
+                  "title": drupalSettings.analytics.translations.total_calls,
+                  "units": "calls",
                 }
-              ], "metadata": {
-                "title": drupalSettings.analytics.translations.total_calls, "units": "calls",
-              }
               }
             ]
           });
@@ -101,37 +118,50 @@
 
         if (!drupalSettings.anv.errorFilter) {
           drupalSettings.anv.errorFilter = anv.createFilter({
-            "field": "status_code", "values": ["4*"], "selectedValue": "4*"
+            "field": "status_code",
+            "values": ["4*||5*"],
+            "selectedValue": "4*||5*"
           });
         }
 
         if (!drupalSettings.anv.totalErrorsWidget) {
           drupalSettings.anv.totalErrorsWidget = anv.createWidget({
-            "id": "total-errors", "time": drupalSettings.anv.static30dTime, "filters": [drupalSettings.anv.errorFilter], "timeType": "single", "vis": [
-              {
-                "type": "num", "metrics": [
-                {
-                  "field": "", "type": "total"
-                }
-              ], "metadata": {
-                "title": drupalSettings.analytics.translations.total_errors, "units": "errors", "unitType": "error"
+            "id": "total-errors",
+            "time": drupalSettings.anv.static30dTime,
+            "filters": [drupalSettings.anv.errorFilter],
+            "timeType": "single",
+            "vis": [{
+              "type": "num",
+              "metrics": [{
+                "type": "total"
+              }],
+              "metadata": {
+                "title": drupalSettings.analytics.translations.total_errors,
+                "units": "errors",
+                "unitType": "error"
               }
-              }
-            ]
+            }]
           });
         }
 
         if (!drupalSettings.anv.averageResponseTimeWidget) {
           drupalSettings.anv.averageResponseTimeWidget = anv.createWidget({
-            "id": "avg-response", "time": drupalSettings.anv.static30dTime, "timeType": "single", "vis": [
+            "id": "avg-response",
+            "time": drupalSettings.anv.static30dTime,
+            "timeType": "single",
+            "vis": [
               {
-                "type": "num", "metrics": [
-                {
-                  "field": "time_to_serve_request", "type": "average"
+                "type": "num",
+                "metrics": [
+                  {
+                    "field": "time_to_serve_request",
+                    "type": "average"
+                  }
+                ],
+                "metadata": {
+                  "title": drupalSettings.analytics.translations.average_response_time,
+                  "units": "ms"
                 }
-              ], "metadata": {
-                "title": drupalSettings.analytics.translations.average_response_time, "units": "ms"
-              }
               }
             ]
           });
@@ -139,51 +169,86 @@
 
         if (!drupalSettings.anv.apiCallsWidget) {
           drupalSettings.anv.apiCallsWidget = anv.createWidget({
-            "id": "api-calls", "time": drupalSettings.anv.static30dTime, "timeType": "single", "vis": [
+            "id": "api-calls",
+            "time": drupalSettings.anv.static30dTime,
+            "timeType": "single",
+            "vis": [
               {
-                "type": "info", "metrics": [
-                {
-                  "field": "", "type": "raw", "size": 100
+                "type": "info",
+                "metrics": [
+                  {
+                    "field": "",
+                    "type": "raw",
+                    "size": 100
+                  }
+                ],
+                "metadata": {
+                  "path": "_uri_path_",
+                  "date": "_datetime_",
+                  "responseCode": "_status_code_",
+                  "title": "_request_method_",
+                  "averageTime": "_time_to_serve_request_"
                 }
-              ], "metadata": {
-                "path": "_uri_path_", "date": "_datetime_", "responseCode": "_status_code_", "title": "_request_method_", "averageTime": "_time_to_serve_request_"
               }
-              }
-            ], "metadata": {
-              "scrollable": true, "title": drupalSettings.analytics.translations.calls_last_100, "height": "100%"
+            ],
+            "metadata": {
+              "scrollable": true,
+              "title": drupalSettings.analytics.translations.calls_last_100,
+              "height": "100%"
             }
           });
         }
-        
+
         if (!drupalSettings.anv.apiCallsErrorsWidget) {
           drupalSettings.anv.apiCallsErrorsWidget = anv.createWidget({
-            "id": "api-calls-errors", "time": drupalSettings.anv.static30dTime, "filters": [drupalSettings.anv.errorFilter], "timeType": "single", "vis": [
-              {
-                "type": "info", "metrics": [
-                {
-                  "field": "", "type": "raw", "size": 100
-                }
-              ], "metadata": {
-                "path": "_uri_path_", "date": "_datetime_", "responseCode": "_status_code_", "title": "_request_method_", "averageTime": "_time_to_serve_request_"
+            "id": "api-calls-errors",
+            "time": drupalSettings.anv.static30dTime,
+            "timeType": "single",
+            "filters": [drupalSettings.anv.errorFilter],
+            "vis": [{
+              "type": "info",
+              "metrics": [{
+                "type": "raw",
+                "size": 100
+              }],
+              "metadata": {
+                "path": "_uri_path_",
+                "date": "_datetime_",
+                "responseCode": "_status_code_",
+                "title": "_request_method_",
+                "averageTime": "_time_to_serve_request_"
               }
-              }
-            ], "metadata": {
-              "scrollable": true, "title": drupalSettings.analytics.translations.errors_last_100, "height": "100%"
+            }],
+            "metadata": {
+              "scrollable": true,
+              "title": drupalSettings.analytics.translations.errors_last_100,
+              "height": "100%"
             }
           });
         }
 
         // Single-stat widgets
-        anv.render(drupalSettings.anv.totalCallsWidget, document.getElementById('totalcalls'));
-        anv.render(drupalSettings.anv.totalErrorsWidget, document.getElementById('totalerrors'));
-        anv.render(drupalSettings.anv.averageResponseTimeWidget, document.getElementById('averageresponsetime'));
+        if (document.getElementById('totalcalls')) {
+          anv.render(drupalSettings.anv.totalCallsWidget, document.getElementById('totalcalls'));
+        }
+        if (document.getElementById('totalerrors')) {
+          anv.render(drupalSettings.anv.totalErrorsWidget, document.getElementById('totalerrors'));
+        }
+        if (document.getElementById('averageresponsetime')) {
+          anv.render(drupalSettings.anv.averageResponseTimeWidget, document.getElementById('averageresponsetime'));
+        }
 
         // Bar graph
-        anv.render(drupalSettings.anv.apiStatsWidget, document.getElementById('appAnalyticsSummary'));
-
+        if (document.getElementById('appAnalyticsSummary')) {
+          anv.render(drupalSettings.anv.apiStatsWidget, document.getElementById('appAnalyticsSummary'));
+        }
         // Meters
-        // anv.render(drupalSettings.anv.apiCallsErrorsWidget, '#subscriptions');
-        anv.render(drupalSettings.anv.apiCallsWidget, document.getElementById('apicalls'));
+        if (document.getElementById('apicalls')) {
+          anv.render(drupalSettings.anv.apiCallsWidget, document.getElementById('apicalls'));
+        }
+        if (document.getElementById('apicallerrors')) {
+          anv.render(drupalSettings.anv.apiCallsErrorsWidget, document.getElementById('apicallerrors'));
+        }
       } else {
         console.log("drupalSettings.analytics.proxyURL is not set");
       }

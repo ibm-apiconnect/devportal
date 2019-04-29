@@ -2,3 +2,8 @@ generate-consumerorg-name:
   version: 1.x
   js:
     js/generate-consumerorg-name.js: {}
+
+oidc_page_load_progress:
+  version: 1.x
+  js:
+    js/oidc_page_load_progress.js: {}

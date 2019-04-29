@@ -274,22 +274,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
         $app_data = $result->data;
 
-        $nid = Application::createOrUpdateReturnNid($app_data, 'create');
-        $node = Node::load($nid);
-
-        if (!empty($formState) && $node !== null) {
-          $customFields = Application::getCustomFields();
-          foreach ($customFields as $customField) {
-            $value = $formState->getValue($customField);
-            if (\is_array($value) && isset($value[0]['value'])) {
-              $value = $value[0]['value'];
-            }
-            $node->set($customField, $value);
-          }
-          if (count($customFields) > 0) {
-            $node->save();
-          }
-        }
+        $nid = Application::createOrUpdateReturnNid($app_data, 'create', $formState);
 
         // Insert nid in to results so that callers don't have to do a db query to find it
         $result->data['nid'] = $nid;

@@ -185,9 +185,7 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
       'body' => $message['body'],
       'content_type' => 'html',
     ];
-    if (array_key_exists('from', $message) && $message['from'] !== 'null@example.com') {
-      $requestBody['from'] = $message['from'];
-    }
+    // do not set a from address - use the sender address configured in the CM
 
     if (array_key_exists('cc', $message)) {
       $requestBody['cc'] = self::parse_mailboxes($message['cc']);

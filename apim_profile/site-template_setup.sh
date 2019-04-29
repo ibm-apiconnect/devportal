@@ -83,7 +83,7 @@ chown aegir:aegir /var/aegir/.drush/cache
 sed -i "s/'master_db.*/'master_db' => 'mysql:\/\/root:root@127.0.0.1',/" /var/aegir/.drush/server_localhost.alias.drushrc.php
 
 #Add the Drupal 8 platform
-su $DEVPORTAL_USER -c "PATH=$PATH:$MY_DIR/bin AEGIR_ROOT=/var/aegir $MY_DIR/bin/upgrade_devportal \! -i $MY_DIR/upgrade/$DISTRIBUTION_V8_TGZ -n"
+su $DEVPORTAL_USER -c "PATH=$PATH:$MY_DIR/bin AEGIR_ROOT=/var/aegir $MY_DIR/bin/upgrade_devportal -i $MY_DIR/upgrade/$DISTRIBUTION_V8_TGZ -n"
 
 SITE_TEMPLATE_OPTS=""
 #check whether we need to skip translation loading
@@ -104,7 +104,7 @@ fi
 
 chown aegir:aegir /opt/ibm/templates
 
-su $DEVPORTAL_USER -c "PATH=$PATH:$MY_DIR/bin AEGIR_ROOT=/var/aegir site_template \! -l -u -v $SITE_TEMPLATE_OPTS $(basename $(ls -1d /var/aegir/platforms/*8.x*))"
+su $DEVPORTAL_USER -c "PATH=$PATH:$MY_DIR/bin AEGIR_ROOT=/var/aegir site_template -l -u -v $SITE_TEMPLATE_OPTS $(basename $(ls -1d /var/aegir/platforms/*8.x*))"
 
 if ! kill -s TERM "$pid" || ! wait "$pid"; then
   echo >&2 'MySQL init process failed.'

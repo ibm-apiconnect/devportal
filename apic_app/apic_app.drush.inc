@@ -162,7 +162,7 @@ function drush_apic_app_createOrUpdate($content, $event, $func) {
       $content = json_decode($content, TRUE);
     }
     $ref = $content['id'];
-    $createdOrUpdated = Application::createOrUpdate($content, $event);
+    $createdOrUpdated = Application::createOrUpdate($content, $event, NULL);
     if ($createdOrUpdated) {
       drush_log(dt('Drush @func created application @app', [
         '@func' => $func,

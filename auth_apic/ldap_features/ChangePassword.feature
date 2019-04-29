@@ -99,7 +99,6 @@ Scenario: Change password form for andre is not available to admin (uid=1) user
 #    Then I should see the text "The current password you provided is incorrect."
 #
 #@api
-#@fullstack
 #Scenario: Wrong current password as non-admin
 #  Given users:
 #    | name              | mail              | pass                  | status |
@@ -116,7 +115,6 @@ Scenario: Change password form for andre is not available to admin (uid=1) user
 #  Then I should see the text "The old password is incorrect"
 #
 #@api
-#@fullstack
 #Scenario: Invalid new password as non-admin
 #  Given users:
 #    | name              | mail              | pass                  | status |

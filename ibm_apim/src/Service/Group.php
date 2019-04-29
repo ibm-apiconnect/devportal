@@ -97,11 +97,20 @@ class Group {
 
     if (isset($key, $data)) {
       $current_data = $this->state->get('ibm_apim.groups');
-
       if (!is_array($current_data)) {
         $current_data = [];
       }
       $current_data[$key] = $data;
+
+      // Update each consumer org in the group
+      $corgService = \Drupal::service('ibm_apim.consumerorg');
+      foreach($data['org_urls'] as $org_url) {
+        $org = $corgService->get($org_url);
+        if($org->addTag($data['url'])) {
+          $corgService->createOrUpdateNode($org, 'internal');
+        }
+      }
+
       $this->state->set('ibm_apim.groups', $current_data);
     }
 

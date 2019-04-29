@@ -62,6 +62,11 @@ app_api_call_history:
   js:
     js/app_api_call_history.js: {}
 
+app_api_call_errors:
+  version: 1.x
+  js:
+    js/app_api_call_errors.js: {}
+
 app_cost:
   version: 1.x
   js:

@@ -198,24 +198,6 @@ class ApplicationCreateStep1Form extends MultistepFormBase {
       $this->store->set('appId', $result->data['id']);
       $this->store->set('nid', $result->data['nid']);
 
-      $customFields = Application::getCustomFields();
-      if (isset($customFields) && count($customFields) > 0) {
-        $node = Node::load($result->data['nid']);
-        if ($node !== null) {
-          foreach ($customFields as $customField) {
-            $value = $form_state->getValue($customField);
-            if (is_array($value) && isset($value[0]['value'])) {
-              $value = $value[0]['value'];
-            }
-            elseif (isset($value[0])) {
-              $value = array_values($value[0]);
-            }
-            $node->set($customField, $value);
-          }
-          $node->save();
-        }
-      }
-
       $form_state->setRedirect('apic_app.create_step_two');
     }
     else {

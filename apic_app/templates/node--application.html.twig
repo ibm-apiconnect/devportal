@@ -136,9 +136,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
           {{ drupal_block('app_analytics_summary', wrapper=false) }}
           {{ drupal_block('app_totals', wrapper=false) }}
           {{ drupal_block('app_api_call_history', wrapper=false) }}
-          {% if userHasSubView %}
-            <div class="apicAppSubscriptionsSummary" id="subscriptionsWidget"></div>
-          {% endif %}
+          {{ drupal_block('app_api_call_errors', wrapper=false) }}
         </div>
       {% else %}
         {% if userHasAppManage %}

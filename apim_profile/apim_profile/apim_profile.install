@@ -197,7 +197,8 @@ function apim_profile_install() {
     'r4032login',
     'noopener_filter',
     'session_based_temp_store',
-    'select_translation'
+    'select_translation',
+    'term_csv_export_import'
   );
 
   $our_modules = array(
@@ -554,6 +555,7 @@ function apim_profile_default_apic_config() {
     ->set('soap_swagger_download', FALSE)
     ->set('soap_codesnippets', FALSE)
     ->set('application_image_upload', TRUE)
+    ->set('hide_admin_registry', FALSE)
     ->set('disable_etags', FALSE)
     ->set('entry_exit_trace', FALSE)
     ->set('apim_rest_trace', FALSE)
@@ -1046,6 +1048,15 @@ function apim_profile_update_8012() {
   }
 }
 
+/**
+ * Enable term_csv_export_import module
+ */
+function apim_profile_update_8013() {
+  $module_installer = \Drupal::service('module_installer');
+  foreach (['term_csv_export_import'] as $module) {
+    $module_installer->install([$module]);
+  }
+}
 
 /**
  * Implements hook_update_dependencies().

@@ -251,25 +251,12 @@ class ModalApplicationCreateForm extends FormBase {
       // Add the new app to the app list
       $node = Node::load($nid);
 
-      $customFields = Application::getCustomFields();
-      if ($node !== NULL & isset($customFields) && count($customFields) > 0) {
-        foreach ($customFields as $customField) {
-          $value = $form_state->getValue($customField);
-          if (is_array($value) && isset($value[0]['value'])) {
-            $value = $value[0]['value'];
-          }
-          elseif (isset($value[0])) {
-            $value = array_values($value[0]);
-          }
-          $node->set($customField, $value);
-        }
-        $node->save();
+      if ($node !== NULL) {
+        $renderArray = node_view($node, 'subscribewizard');
+        $renderer = \Drupal::service('renderer');
+        $html = $renderer->render($renderArray);
+        $response->addCommand(new InsertCommand('div.apicNewAppWrapper', $html, []));
       }
-
-      $renderArray = node_view($node, 'subscribewizard');
-      $renderer = \Drupal::service('renderer');
-      $html = $renderer->render($renderArray);
-      $response->addCommand(new InsertCommand('div.apicNewAppWrapper', $html, []));
 
       // Need to update message area on underlying form - re-check if we have suspended or subscribed apps
       $productName = 'undefined';

@@ -120,11 +120,18 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
     $drupalSettings = [
       'application' => ['id' => $node->application_id->value, 'credentials' => $credentials],
     ];
+    $config = \Drupal::config('ibm_apim.settings');
+    $allow_new_credentials = (boolean) $config->get('allow_new_credentials');
+    $allow_clientid_reset = (boolean) $config->get('allow_clientid_reset');
+    $allow_clientsecret_reset = (boolean) $config->get('allow_clientsecret_reset');
 
     return [
       '#theme' => 'app_credentials',
       '#node' => $nodeArray,
       '#userHasAppManage' => $userHasAppManage,
+      '#allowNewCredentials' => $allow_new_credentials,
+      '#allowClientidReset' => $allow_clientid_reset,
+      '#allowClientsecretReset' => $allow_clientsecret_reset,
       '#attached' => [
         'library' => ['apic_app/basic'],
         'drupalSettings' => $drupalSettings,

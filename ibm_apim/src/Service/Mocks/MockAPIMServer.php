@@ -172,8 +172,18 @@ class MockAPIMServer implements ManagementServerInterface {
    * @inheritDoc
    */
   public function createConsumerOrg(ConsumerOrg $org) {
-    \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::createConsumerOrg() is missing!');
-    return NULL;
+    $response = new RestResponse();
+
+    $response->setCode(201);
+    $data = [
+      'url' => '/org/1',
+      'id' => '123',
+      'owner_url' => '/user/1',
+      'group_urls' => '/groups/1'
+    ];
+    $response->setData($data);
+
+    return $response;
   }
 
   /**

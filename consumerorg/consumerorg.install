@@ -14,12 +14,45 @@ function consumerorg_update_8101() {
     ->condition('type', 'consumerorg')
     ->execute();
 
-  foreach($nids as $nid) {
+  foreach ($nids as $nid) {
     $node = Node::load($nid);
-    if ($node !== null) {
+    if ($node !== NULL) {
       $node->delete();
     }
 
+  }
+
+}
+
+/**
+ * As we're switching to using the proper consumerorg form mode we need to hide the fields we dont want to see
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function consumerorg_update_8102() {
+  $formDisplay = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('node.consumerorg.default');
+  if ($formDisplay !== NULL) {
+    $consumerorg_name = $formDisplay->getComponent('title');
+    if ($consumerorg_name === NULL) {
+      // ensure the title field is visible
+      $formDisplay->setComponent('title', [
+        'type' => 'string_textfield',
+        'weight' => 0,
+        'region' => 'content',
+        'settings' => [
+          'size' => 60,
+          'placeholder' => '',
+        ],
+        'third_party_settings' => [],
+      ]);
+    }
+    // hide the other fields that used to be visible by default
+    foreach (['apic_rating', 'apic_tags', 'created', 'langcode', 'uid'] as $fieldName) {
+      $formDisplay->removeComponent($fieldName);
+    }
+    $formDisplay->save();
   }
 
 }

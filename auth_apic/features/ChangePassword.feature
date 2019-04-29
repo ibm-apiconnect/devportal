@@ -12,7 +12,6 @@ Feature: Change Password
     Then I should see the "Submit" button
 
 @api
-@fullstack
   Scenario: View the change password form as non-admin
     Given users:
       | name              | mail              | pass                  | status |
@@ -29,7 +28,6 @@ Feature: Change Password
     Then I should see the "Submit" button
 
 @api
-@fullstack
 Scenario: Submit change password form as non-admin user
   Given users:
     | name              | mail              | pass                  | status |
@@ -51,15 +49,15 @@ Scenario: Submit change password form as non-admin user
 
 #  Admin users - we need to check 2 cases, uid===1 special case and a user which has the administrator role.
 #                uid===1 is a local drupal user and will use the standard form behaviour.
-  @api
-  Scenario: Submit change password form as user with administrator role
-    Given I am logged in as a user with the "Administrator" role
-    And I am at "/user/@uid/change-password"
-    When I enter "blah" for "current_pass"
-    And I enter "newPassw0rd" for "pass[pass1]"
-    And I enter "newPassw0rd" for "pass[pass2]"
-    And I press the "Submit" button
-    Then I should see the text "Password changed successfully"
+@api
+Scenario: Submit change password form as user with administrator role
+  Given I am logged in as a user with the "Administrator" role
+  And I am at "/user/@uid/change-password"
+  When I enter "blah" for "current_pass"
+  And I enter "newPassw0rd" for "pass[pass1]"
+  And I enter "newPassw0rd" for "pass[pass2]"
+  And I press the "Submit" button
+  Then I should see the text "Password changed successfully"
 
 @api
 Scenario: Submit change password form as admin user
@@ -96,7 +94,6 @@ Scenario: Submit change password form as admin user
     Then I should see the text "The current password you provided is incorrect."
 
 @api
-@fullstack
 Scenario: Wrong current password as non-admin
   Given users:
     | name              | mail              | pass                  | status |
@@ -113,7 +110,6 @@ Scenario: Wrong current password as non-admin
   Then I should see the text "The old password is incorrect"
 
 @api
-@fullstack
 Scenario: Invalid new password as non-admin
   Given users:
     | name              | mail              | pass                  | status |

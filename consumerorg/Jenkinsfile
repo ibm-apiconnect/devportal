@@ -83,7 +83,7 @@ veloxPipeline(pipelineOpts) { p ->
       }
     }
   }
-  p.branch(~/master|\d+\.\d+|\d+\.\d+\.\d+/) {
+  p.promotableBranch {
     if (!env.GIT_COMMIT_MSG.contains('[ci-skip')) {
       stage('bump version') {
           sh "git stash && git pull && git stash pop || true"

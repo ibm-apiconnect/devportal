@@ -15,8 +15,10 @@ namespace Drupal\ibm_apim\Controller;
 
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\consumerorg\ApicType\Role;
+use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicRest;
 use Drupal\ibm_apim\ApicType\ApicUser;
@@ -55,16 +57,30 @@ class MyOrgController extends ControllerBase {
    */
   protected $orgService;
 
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
+  protected $consumerOrgService;
+
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
   public function __construct(UserUtils $userUtils,
                               Billing $billingService,
                               ConfigFactory $config_factory,
                               SiteConfig $site_config,
-                              MyOrgService $org_service) {
+                              MyOrgService $org_service,
+                              ConsumerOrgService $consumerOrgService,
+                              EntityTypeManagerInterface $entityTypeManager) {
     $this->userUtils = $userUtils;
     $this->billingService = $billingService;
     $this->config = $config_factory->get('ibm_apim.settings');
     $this->siteConfig = $site_config;
     $this->orgService = $org_service;
+    $this->consumerOrgService = $consumerOrgService;
+    $this->entityTypeManager = $entityTypeManager;
   }
 
   public static function create(ContainerInterface $container) {
@@ -73,7 +89,9 @@ class MyOrgController extends ControllerBase {
       $container->get('ibm_apim.billing'),
       $container->get('config.factory'),
       $container->get('ibm_apim.site_config'),
-      $container->get('ibm_apim.myorgsvc')
+      $container->get('ibm_apim.myorgsvc'),
+      $container->get('ibm_apim.consumerorg'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -99,6 +117,12 @@ class MyOrgController extends ControllerBase {
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
       $myorg = Node::load($nid);
+      // ensure use translated version of the node (just in case - but unlikely to matter here)
+      $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
+      $hasTranslation = $myorg->hasTranslation($lang_code);
+      if ($hasTranslation === true) {
+        $myorg = $myorg->getTranslation($lang_code);
+      }
 
       $myorgOwnerUrl = $myorg->consumerorg_owner->value;
       $cOrgRoles = $myorg->consumerorg_roles->getValue();
@@ -186,6 +210,21 @@ class MyOrgController extends ControllerBase {
       }
     }
 
+    $custom_fields = [];
+    $content = [];
+    $entityView = $this->entityTypeManager->getStorage('entity_view_display')
+      ->load('node.consumerorg.default');
+    if ($entityView !== NULL) {
+      $fieldList = array_keys($entityView->getComponents());
+      $coreFields = ['title', 'vid', 'status', 'nid', 'revision_log', 'created', 'links', 'uid'];
+      $ibmFields = $this->consumerOrgService->getIBMFields();
+      $merged = array_merge($coreFields, $ibmFields);
+      $custom_fields = array_diff($fieldList, $merged);
+      foreach($custom_fields as $custom_field) {
+        $content[$custom_field] = $myorg->$custom_field->view();
+      }
+    }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return [
       '#cache' => [
@@ -205,6 +244,8 @@ class MyOrgController extends ControllerBase {
       '#myorg_can_transfer_owner' => $canTransferOwner,
       '#myorg_can_rename_org' => $canRenameOrg,
       '#myorg_can_delete_org' => $canDeleteOrg,
+      '#custom_fields' => $custom_fields,
+      '#content' => $content,
     ];
   }
 

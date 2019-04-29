@@ -55,7 +55,8 @@
   padding: 14px;
 }
 
-.analyticsWidgetContainer .apicAppSubscriptionsSummary {
+.analyticsWidgetContainer .apicAppSubscriptionsSummary,
+.analyticsWidgetContainer .apicAppAPICallErrors {
   grid-area: subscriptions;
   background-color: white;
   border: 1px solid #eee;
@@ -63,6 +64,7 @@
 }
 
 .analyticsWidgetContainer .apicAppAPICallHistory .bx--apim-list-container,
-.analyticsWidgetContainer .apicAppSubscriptionsSummary .bx--apim-list-container {
+.analyticsWidgetContainer .apicAppSubscriptionsSummary .bx--apim-list-container,
+.analyticsWidgetContainer .apicAppAPICallErrors .bx--apim-list-container{
   max-height: 100%;
 }

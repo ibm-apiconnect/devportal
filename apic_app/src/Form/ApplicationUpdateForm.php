@@ -216,7 +216,6 @@ class ApplicationUpdateForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $name = $form_state->getValue('title');
-    $oauthValues = [];
     if (is_array($name) && isset($name[0]['value'])) {
       $name = $name[0]['value'];
     }
@@ -259,7 +258,7 @@ class ApplicationUpdateForm extends FormBase {
 
         $this->node->setTitle($this->utils->truncate_string($name));
         $this->node->set('apic_summary', $summary);
-        $this->node->set('application_redirect_endpoints', $oauthValues);
+        $this->node->set('application_redirect_endpoints', $oauthEndpoints);
         $customFields = Application::getCustomFields();
         if (isset($customFields) && count($customFields) > 0) {
           foreach ($customFields as $customField) {

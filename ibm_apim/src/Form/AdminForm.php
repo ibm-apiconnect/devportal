@@ -16,6 +16,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -165,6 +166,16 @@ class AdminForm extends ConfigFormBase {
       '#default_value' => $config->get('application_image_upload'),
       '#weight' => -10,
       '#description' => t('If checked API consumers will be able to upload custom images for their applications.'),
+    ];
+
+    $form['config']['hide_admin_registry'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Hide the admin registry on the login form.'),
+      '#default_value' => $config->get('hide_admin_registry'),
+      '#weight' => -10,
+      '#description' => t('Hide the admin user registry on the login form. 
+                           The login form for admin can be found at
+                           :url', [':url' => Url::fromRoute('user.login', [], ['query' => ['registry_url' => '/admin']])->toString()]),
     ];
 
     // code snippets options
@@ -360,7 +371,7 @@ class AdminForm extends ConfigFormBase {
       '#markup' => '<p>' . t('If a proxy is required to allow communication from the portal server to the APIC Consumer API, then it is recommended to use a transparent proxy if possible. If a transparent proxy is not available then the experimental settings below can be used. These settings will only affect communication to the consumer API.') . '</p>',
       '#weight' => 0,
     ];
-    $form['proxy']['useProxy'] = [
+    $form['proxy']['use_proxy'] = [
       '#type' => 'checkbox',
       '#title' => t('Enable Proxy Support'),
       '#default_value' => $config->get('use_proxy'),
@@ -371,7 +382,7 @@ class AdminForm extends ConfigFormBase {
       $proxyTypeDefault = 'CURLPROXY_HTTP';
     }
 
-    $form['proxy']['proxyType'] = [
+    $form['proxy']['proxy_type'] = [
       '#type' => 'select',
       '#options' => [
         'CURLPROXY_HTTP' => 'CURLPROXY_HTTP',
@@ -445,6 +456,7 @@ class AdminForm extends ConfigFormBase {
       ->set('show_analytics', (bool) $form_state->getValue('show_analytics'))
       ->set('soap_swagger_download', (bool) $form_state->getValue('soap_swagger_download'))
       ->set('application_image_upload', (bool) $form_state->getValue('application_image_upload'))
+      ->set('hide_admin_registry', (bool) $form_state->getValue('hide_admin_registry'))
       ->set('render_api_schema_view', (bool) $form_state->getValue('render_api_schema_view'))
       ->set('allow_consumerorg_creation', (bool) $form_state->getValue('allow_consumerorg_creation'))
       ->set('allow_consumerorg_rename', (bool) $form_state->getValue('allow_consumerorg_rename'))
@@ -455,10 +467,10 @@ class AdminForm extends ConfigFormBase {
       ->set('allow_clientid_reset', (bool) $form_state->getValue('allow_clientid_reset'))
       ->set('allow_clientsecret_reset', (bool) $form_state->getValue('allow_clientsecret_reset'))
       ->set('soap_codesnippets', (bool) $form_state->getValue('soap_codesnippets'))
-      ->set('use_proxy', (bool) $form_state->getValue('useProxy'))
-      ->set('proxy_type', $form_state->getValue('proxyType'))
-      ->set('proxy_url', $form_state->getValue('proxyUrl'))
-      ->set('proxy_auth', $form_state->getValue('proxyAuth'))
+      ->set('use_proxy', (bool) $form_state->getValue('use_proxy'))
+      ->set('proxy_type', $form_state->getValue('proxy_type'))
+      ->set('proxy_url', $form_state->getValue('proxy_url'))
+      ->set('proxy_auth', $form_state->getValue('proxy_auth'))
       ->set('categories', $categories)
       ->set('codesnippets', $codesnippets)
       ->save();

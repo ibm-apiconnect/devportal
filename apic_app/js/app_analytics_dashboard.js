@@ -30,12 +30,8 @@
             refreshRate: '1m'
           },
           user: {
-            context: {
-
-            },
-            config: {
-
-            }
+            context: {},
+            config: {}
           }
         });
         if (!drupalSettings.anv) {
@@ -243,8 +239,8 @@
         }
 
         // Meters
-        if (document.getElementById('subscriptionsWidget')) {
-          anv.render(drupalSettings.anv.apiCallsErrorsWidget, document.getElementById('subscriptionsWidget'));
+        if (document.getElementById('apicallerrors')) {
+          anv.render(drupalSettings.anv.apiCallsErrorsWidget, document.getElementById('apicallerrors'));
         }
         if (document.getElementById('apicallhistory')) {
           anv.render(drupalSettings.anv.apiCallsWidget, document.getElementById('apicallhistory'));

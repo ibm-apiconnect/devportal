@@ -103,7 +103,7 @@ class ApicOidcAzCodeController extends ControllerBase {
 
   public function loginViaAzCode($authCode, $registryUrl): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $responseValue = '<front>';
+    $redirectTo = '<front>';
 
     $loginUser = new ApicUser();
     $loginUser->setUsername('');
@@ -120,31 +120,26 @@ class ApicOidcAzCodeController extends ControllerBase {
       if (!isset($currentCOrg)) {
         // if onboarding is enabled, we can redirect to the create org page
         if ($this->siteConfig->isSelfOnboardingEnabled()) {
-          $responseValue = 'consumerorg.create';
+          $redirectTo = 'consumerorg.create';
         }
         else {
           // we can't help the user, they need to talk to an administrator
-          $responseValue = 'ibm_apim.noperms';
+          $redirectTo = 'ibm_apim.noperms';
         }
-        $message = 'redirect to ' . $responseValue . ' as no consumer org set';
+        $message = 'redirect to ' . $redirectTo . ' as no consumer org set';
       }
       else {
-        $message = 'redirect to ' . $responseValue . ' successful';
+        $message = 'redirect to ' . $redirectTo . ' successful';
       }
     }
     else {
-      if ($apimResponse->getMessage()) {
-        drupal_set_message($apimResponse->getMessage(), 'error');
-      }
-      else {
-        drupal_set_message('Error while authenticating user. Please contact your system administrator.', 'error');
-      }
-      $message = 'redirect to <front> error from apim';
-      $responseValue = '<front>';
+      drupal_set_message(t('Error while authenticating user. Please contact your system administrator.'), 'error');
+      $message = 'redirect to front error from apim';
+      $redirectTo = '<front>';
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $message);
-    return $responseValue;
+    return $redirectTo;
   }
 
 }

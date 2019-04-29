@@ -15,6 +15,7 @@ namespace Drupal\apictest\Context;
 
 use Behat\Gherkin\Node\TableNode;
 use Drupal\apictest\ApicTestUtils;
+use Drupal\Component\Utility\Html;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\ibm_apim\ApicUser;
@@ -56,10 +57,13 @@ class ConsumerOrgContext extends RawDrupalContext {
         $org->addTag($row['tags']);
       }
 
+      // TODO: custom roles
       $ownerRole = ApicTestUtils::makeOwnerRole($org);
+      $administratorRole = ApicTestUtils::makeAdministratorRole($org);
       $devRole = ApicTestUtils::makeDeveloperRole($org);
       $viewerRole = ApicTestUtils::makeViewerRole($org);
       $org->addRole($ownerRole);
+      $org->addRole($administratorRole);
       $org->addRole($devRole);
       $org->addRole($viewerRole);
 
@@ -90,24 +94,18 @@ class ConsumerOrgContext extends RawDrupalContext {
     }
   }
 
+
   /**
-   * @Given consumerorgroles:
-   *
-   * Set up consumer organization role membership
-   *
-   * @param \Behat\Gherkin\Node\TableNode $table
+   * @Given members:
    */
-  public function assignConsumerorgRoles(TableNode $table): void {
+  public function createMembers(TableNode $table): void {
 
     // If we are not using mocks, then we are testing with live data from a management appliance
     // Under those circumstances, we should absolutely not create any consumerorg in the database!
     if ($this->useMockServices === FALSE) {
-      print "This test is running with a real management server backend. No consumerorgs will be modified in the database.\n";
+      print "This test is running with a real management server backend. No consumerorg members will be created in the database.\n";
       return;
     }
-
-    $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
-    $userService = \Drupal::service('ibm_apim.apicuser');
 
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
@@ -117,30 +115,37 @@ class ConsumerOrgContext extends RawDrupalContext {
       $accountSwitcher->switchTo(User::load(1));
     }
 
+    $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
+    $userService = \Drupal::service('ibm_apim.apicuser');
+
     foreach ($table as $row) {
-      $account = user_load_by_name($row['name']);
+
+      $account = user_load_by_name($row['username']);
       $consumerorgUrl = '/consumer-orgs/1234/5678/' . $row['consumerorgid'];
 
       if (!$consumerOrgService->isConsumerorgAssociatedWithAccount($consumerorgUrl, $account)) {
         $account->consumerorg_url[] = $consumerorgUrl;
         $account->save();
-        print('Saved user ' . $account->getUsername() . ' after adding consumerorg field ' . $consumerorgUrl . "\n");
-      }
-      $email = '';
-      if ($account !== NULL) {
-        $email = $account->get('mail')->value;
+        print('(member create) Saved user ' . $account->getUsername() . ' after adding consumerorg field ' . $consumerorgUrl . "\n");
       }
 
       // get the corg from the consumerorg service
-      $corg = \Drupal::service('ibm_apim.consumerorg')->get($consumerorgUrl);
+      $corg = $consumerOrgService->get($consumerorgUrl);
       $orgRoles = $corg->getRoles();
-      foreach ($orgRoles as $role) {
-        print($row['role']);
-        print($role->getName());
-        if ($role->getName() === $row['role']) {
-          // this is the role we wanted to add to the user
-          ApicTestUtils::addMemberToOrg($corg, $userService->parseDrupalAccount($account), [$role]);
+      $requiredRoles = \explode(',', $row['roles']);
+      $rolesToAdd = [];
+      foreach ($requiredRoles as $requiredRole) {
+        foreach ($orgRoles as $role) {
+          if ($role->getName() === $requiredRole) {
+            // this is the role we wanted to add to the user
+            print('adding ' . $role->getName() . ' to ' . $account->getUserName() . "\n");
+            $rolesToAdd[] = $role;
+            continue 2;
+          }
         }
+      }
+      if (!empty($rolesToAdd)) {
+        ApicTestUtils::addMemberToOrg($corg, $userService->parseDrupalAccount($account), $rolesToAdd);
       }
     }
 
@@ -148,5 +153,26 @@ class ConsumerOrgContext extends RawDrupalContext {
       $accountSwitcher->switchBack();
     }
   }
+
+
+  /**
+   * @Then I should see that :arg1 is an :arg2
+   */
+  public function iShouldSeeThatUserIsARole($username, $role) {
+
+    $page = $this->getSession()->getPage();
+    $css_selector = "." . Html::getClass('apicmyorgmemberrole-' . $username . '-' . $role);
+    $enabled = $page->findAll('css', $css_selector);
+
+    print 'searched for ' .  $css_selector . "\n";
+    print 'enabled ' . \sizeof($enabled);
+
+    $num = \sizeof($enabled);
+    if ($num !== 1) {
+      throw new \Exception("Unexpected response from finding " . $role . " role elements for " . $username . " user. Found " . $num . " elements, expected 1.");
+    }
+
+  }
+
 
 }

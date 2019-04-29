@@ -3,5 +3,5 @@ type: module
 description: Test framework and utilities for the API Connect Developer Portal
 package: IBM API Connect
 core: 8.x
-version: 8.x-1.2.10
+version: 8.x-1.2.16
 project: apictest

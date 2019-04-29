@@ -13,6 +13,7 @@
 namespace Drupal\auth_apic\Form;
 
 use Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface;
+use Drupal\Core\Config\Config;
 use Drupal\Core\Flood\FloodInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -51,6 +52,10 @@ class ApicUserLoginForm extends UserLoginForm {
 
   protected $authApicSessionStore;
 
+  protected $ibmSettingsConfig;
+
+  const ADMIN_ONLY_URL = '/admin';
+
   /**
    * Constructs a new UserLoginForm.
    *
@@ -67,7 +72,8 @@ class ApicUserLoginForm extends UserLoginForm {
                               UserUtils $user_utils,
                               SiteConfig $site_config,
                               OidcRegistryServiceInterface $oidc_service,
-                              SessionBasedTempStoreFactory $sessionStoreFactory) {
+                              SessionBasedTempStoreFactory $sessionStoreFactory,
+                              Config $ibm_settings_config) {
     parent::__construct($flood, $user_storage, $user_auth, $renderer);
     $this->logger = $logger;
     $this->userManager = $user_manager;
@@ -77,6 +83,7 @@ class ApicUserLoginForm extends UserLoginForm {
     $this->siteConfig = $site_config;
     $this->oidcService = $oidc_service;
     $this->authApicSessionStore = $sessionStoreFactory->get('auth_apic_invitation_token');
+    $this->ibmSettingsConfig = $ibm_settings_config;
   }
 
   /**
@@ -95,7 +102,8 @@ class ApicUserLoginForm extends UserLoginForm {
       $container->get('ibm_apim.user_utils'),
       $container->get('ibm_apim.site_config'),
       $container->get('auth_apic.oidc'),
-      $container->get('session_based_temp_store')
+      $container->get('session_based_temp_store'),
+      $container->get('config.factory')->get('ibm_apim.settings')
     );
   }
 
@@ -136,8 +144,12 @@ class ApicUserLoginForm extends UserLoginForm {
     // work out what user registries are enabled on this catalog
     $registries = $this->userRegistryService->getAll();
 
+    $chosen_registry = $this->userRegistryService->getDefaultRegistry();
+    $chosen_registry_url = \Drupal::request()->query->get('registry_url');
+    $hide_admin_registry = (bool) $this->ibmSettingsConfig->get('hide_admin_registry');
+
     // don't present admin login form on invitation flows.
-    if ($jwt === NULL) {
+    if (($jwt === NULL && !$hide_admin_registry) || $chosen_registry_url === self::ADMIN_ONLY_URL) {
       // add dummy registry for admin login to ensure we always have it there
       $this->addAdminOnlyRegistry($registries);
     }
@@ -147,10 +159,7 @@ class ApicUserLoginForm extends UserLoginForm {
       return $baseForm;
     }
 
-    $chosen_registry = $this->userRegistryService->getDefaultRegistry();
-
-    $chosen_registry_url = \Drupal::request()->query->get('registry_url');
-    if (!empty($chosen_registry_url) && array_key_exists($chosen_registry_url, $registries) && ($this->apimUtils->sanitizeRegistryUrl($chosen_registry_url) === 1 || $chosen_registry_url === '/admin/only')) {
+    if (!empty($chosen_registry_url) && array_key_exists($chosen_registry_url, $registries) && ($this->apimUtils->sanitizeRegistryUrl($chosen_registry_url) === 1 || $chosen_registry_url === self::ADMIN_ONLY_URL)) {
       $chosen_registry = $registries[$chosen_registry_url];
     }
 
@@ -235,19 +244,19 @@ class ApicUserLoginForm extends UserLoginForm {
 
     }
     else {
-      if ($chosen_registry->getUrl() === '/admin/only') {
+      // Make username and password not required as this prevents form submission if clicking one of the
+      // buttons on the right hand side
+      $baseForm['name']['#required'] = FALSE;
+      $baseForm['name']['#attributes'] = ['autocomplete' => 'off'];
+      $baseForm['pass']['#required'] = FALSE;
+      $baseForm['pass']['#attributes'] = ['autocomplete' => 'off'];
+
+      if ($chosen_registry->getUrl() === self::ADMIN_ONLY_URL) {
         $baseForm['actions']['submit']['#value'] = t('Sign in');
         unset($baseForm['actions']['submit']['#icon']);
       }
       else {
         // !oidc login so we need the username/ password + submit
-        // Make username and password not required as this prevents form submission if clicking one of the
-        // buttons on the right hand side
-        $baseForm['name']['#required'] = FALSE;
-        $baseForm['name']['#attributes'] = ['autocomplete' => 'off'];
-        $baseForm['pass']['#required'] = FALSE;
-        $baseForm['pass']['#attributes'] = ['autocomplete' => 'off'];
-
         $baseForm['actions']['submit']['#value'] = t('Sign in');
 
         // Remove all validation as this also prevents form submission. We put bits back in the validate() function.
@@ -288,7 +297,6 @@ class ApicUserLoginForm extends UserLoginForm {
       $otherRegistriesForm['#suffix'] = '</div>';
 
       $redirect_with_registry_url = Url::fromRoute('user.login')->toString() . '?registry_url=';
-
 
       foreach ($other_registries as $other_registry) {
 
@@ -340,6 +348,17 @@ class ApicUserLoginForm extends UserLoginForm {
       $form['main_container']['other'] = $otherRegistriesForm;
     }
     $form['#attached']['library'][] = 'ibm_apim/single_click';
+    if (\Drupal::moduleHandler()->moduleExists('page_load_progress') && \Drupal::currentUser()->hasPermission('use page load progress')) {
+
+      // Unconditionally attach assets to the page.
+      $form['#attached']['library'][] = 'auth_apic/oidc_page_load_progress';
+
+      $pjp_config = \Drupal::config('page_load_progress.settings');
+      // Attach config settings.
+      $form['#attached']['drupalSettings']['oidc_page_load_progress'] = [
+        'esc_key' => $pjp_config->get('page_load_progress_esc_key')
+      ];
+    }
 
     // need to add cache context for the query param
     if (!isset($form['#cache'])) {
@@ -611,7 +630,7 @@ class ApicUserLoginForm extends UserLoginForm {
     $admin_reg->setUserManaged(TRUE);
     $admin_reg->setName('admin_only');
     $admin_reg->setTitle('admin');
-    $admin_reg->setUrl('/admin/only');
+    $admin_reg->setUrl(self::ADMIN_ONLY_URL);
     if (!isset($registries)) {
       $registries = [];
     }

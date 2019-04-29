@@ -9,6 +9,7 @@ show_analytics: true
 soap_swagger_download: false
 email_as_username: true
 application_image_upload: true
+hide_admin_registry: false
 acl_debug: false
 webhook_debug: false
 entry_exit_trace: false

@@ -24,25 +24,23 @@ class ApicPathAliasConstraintValidator extends ConstraintValidator {
    * {@inheritdoc}
    */
   public function validate($items, Constraint $constraint): void {
-    if (!isset($items) || empty($items)) {
-      return NULL;
-    }
-    $first = $items->first();
-    if (isset($first)) {
-      $value = $first->getValue()['value'];
+    if (isset($items) && !empty($items)) {
+      $first = $items->first();
+      if (isset($first)) {
+        $value = $first->getValue()['value'];
 
-      if (isset($value)) {
-        // Verify that it isn't an integer as would conflict with node ids in the param converter
-        if (preg_match('/^[0-9]+$/', $value)) {
-          $this->context->addViolation($constraint->isInt);
-        }
+        if (isset($value)) {
+          // Verify that it isn't an integer as would conflict with node ids in the param converter
+          if (preg_match('/^[0-9]+$/', $value)) {
+            $this->context->addViolation($constraint->isInt);
+          }
 
-        // Check for invalid characters
-        if (!preg_match('/^[A-Za-z0-9._\-]+$/', $value)) {
-          $this->context->addViolation($constraint->invalidChars);
+          // Check for invalid characters
+          if (!preg_match('/^[A-Za-z0-9._\-]+$/', $value)) {
+            $this->context->addViolation($constraint->invalidChars);
+          }
         }
       }
     }
   }
-
 }

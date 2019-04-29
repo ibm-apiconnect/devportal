@@ -126,6 +126,7 @@ dependencies:
   - noopener_filter
   - session_based_temp_store
   - select_translation
+  - term_csv_export_import
   - ibm_apim
   - ibm_log_stdout
   - ibm_apic_mail

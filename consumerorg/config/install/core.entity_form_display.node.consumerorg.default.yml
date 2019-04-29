@@ -4,74 +4,53 @@ dependencies:
   config:
     - field.field.node.consumerorg.apic_catalog_id
     - field.field.node.consumerorg.apic_hostname
+    - field.field.node.consumerorg.apic_pathalias
     - field.field.node.consumerorg.apic_provider_id
     - field.field.node.consumerorg.apic_rating
     - field.field.node.consumerorg.apic_tags
-    - field.field.node.consumerorg.apic_pathalias
     - field.field.node.consumerorg.consumerorg_id
-    - field.field.node.consumerorg.consumerorg_url
-    - field.field.node.consumerorg.consumerorg_members
     - field.field.node.consumerorg.consumerorg_invites
+    - field.field.node.consumerorg.consumerorg_memberlist
+    - field.field.node.consumerorg.consumerorg_members
     - field.field.node.consumerorg.consumerorg_name
     - field.field.node.consumerorg.consumerorg_owner
-    - field.field.node.consumerorg.consumerorg_tags
-    - field.field.node.consumerorg.consumerorg_memberlist
     - field.field.node.consumerorg.consumerorg_roles
+    - field.field.node.consumerorg.consumerorg_tags
+    - field.field.node.consumerorg.consumerorg_url
     - node.type.consumerorg
-  module:
-    - cshs
-    - votingapi_widgets
 id: node.consumerorg.default
 targetEntityType: node
 bundle: consumerorg
 mode: default
 content:
-  apic_rating:
-    weight: 1
-    settings: {  }
-    third_party_settings: {  }
-    type: voting_api_widget
-  apic_tags:
+  title:
+    type: string_textfield
     weight: 0
+    region: content
     settings:
-      parent: 0
-      level_labels: ''
-      force_deepest: false
-    third_party_settings: {  }
-    type: cshs
-  created:
-    type: datetime_timestamp
-    weight: 3
-    settings: {  }
-    third_party_settings: {  }
-  langcode:
-    type: language_select
-    weight: 4
-    settings: {  }
-    third_party_settings: {  }
-  uid:
-    type: entity_reference_autocomplete
-    weight: 2
-    settings:
-      match_operator: CONTAINS
       size: 60
       placeholder: ''
     third_party_settings: {  }
 hidden:
   apic_catalog_id: true
   apic_hostname: true
-  apic_provider_id: true
   apic_pathalias: true
+  apic_provider_id: true
+  apic_rating: true
+  apic_tags: true
   consumerorg_id: true
-  consumerorg_url: true
-  consumerorg_members: true
   consumerorg_invites: true
+  consumerorg_memberlist: true
+  consumerorg_members: true
   consumerorg_name: true
   consumerorg_owner: true
-  consumerorg_tags: true
-  consumerorg_memberlist: true
   consumerorg_roles: true
+  consumerorg_tags: true
+  consumerorg_url: true
+  created: true
+  langcode: true
   path: true
   promote: true
+  status: true
   sticky: true
-  title: true
+  uid: true

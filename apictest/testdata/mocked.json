@@ -25,7 +25,49 @@
            ]
          }
        ]
-     }
+     },
+    {
+      "name"     : "andre_two@example.com",
+      "mail"     : "andre_two@example.com",
+      "firstName": "Andre",
+      "lastName" : "Two",
+      "password" : "Qwert123",
+      "consumerorg" : [
+        {
+          "name" : "andretwo-consumerorg",
+          "title": "Andre Two Consumerorg",
+          "id"   : "982318735",
+          "application" : [
+            {
+              "name" : "Andre Two Application",
+              "client_id" : "someotherid",
+              "client_secret" : "someothersecret"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name"     : "andre_three@example.com",
+      "mail"     : "andre_three@example.com",
+      "firstName": "Andre",
+      "lastName" : "Three",
+      "password" : "Qwert123"
+    },
+    {
+      "name"     : "andre_four@example.com",
+      "mail"     : "andre_four@example.com",
+      "firstName": "Andre",
+      "lastName" : "Four",
+      "password" : "Qwert123"
+    },
+    {
+      "name"     : "andre_five@example.com",
+      "mail"     : "andre_five@example.com",
+      "firstName": "Andre",
+      "lastName" : "Five",
+      "password" : "Qwert123"
+    }
   ],
   "user_registries": [
     {

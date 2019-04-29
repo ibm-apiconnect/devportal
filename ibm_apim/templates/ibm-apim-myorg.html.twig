@@ -20,8 +20,8 @@
                   <ul class="dropitmenu-submenu">
                     {% if myorg_can_rename_org %}
                       <li class="editOrganizationName">
-                        <a href="{{ url('consumerorg.update') }}" title="{{ 'Edit organization name'|t }}">
-                          {{ 'Edit organization name'|t }}
+                        <a href="{{ url('consumerorg.update') }}" title="{{ 'Edit organization'|t }}">
+                          {{ 'Edit organization'|t }}
                         </a>
                       </li>
                     {% endif %}
@@ -56,6 +56,16 @@
       </div>
     </header>
     <div class="field organizationMembers">
+      {% if custom_fields is defined and custom_fields is not empty %}
+        <div class="customFields">
+          {% for custom_field in custom_fields %}
+            <div class="{{ custom_field|clean_class }}">
+              {{ myorg[custom_field] }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
       <div class="apicMyOrgOwner">
         <div class="apicMyOrgMember">
           <div class="apicMyOrgMemberDetails">
@@ -144,17 +154,25 @@
                     </div>
                   </div>
                 </td>
-                {% for role in myorg_roles %}
-                  <td>
-                    {% for userrole in member.roles %}
-                      {% if userrole.name == role.name %}
-                        <span title="{{ member.username }}_{{ userrole.name }}">
-                          {% include images_path ~ '/images/checkmark.svg' %}
-                        </span>
-                      {% endif %}
-                    {% endfor %}
-                  </td>
-                {% endfor %}
+                  {% for role in myorg_roles %}
+                    <td>
+                      {% for userrole in member.roles %}
+                        {% if userrole.name == role.name %}
+                          {% set member_role_attribute = create_attribute() %}
+                          {%
+                            set enabled_role_classes = [
+                              'apicMyOrgMemberRoleEnabled',
+                              ('apicMyOrgRole-' ~ userrole.name)|clean_class,
+                              ('apicMyOrgMemberRole-' ~ member.username ~ '-' ~ userrole.name)|clean_class,
+                            ]
+                          %}
+                          <span title="{{ member.username }}_{{ userrole.name }}" {{ member_role_attribute.addClass(enabled_role_classes) }} >
+                            {% include images_path ~ '/images/checkmark.svg' %}
+                          </span>
+                        {% endif %}
+                      {% endfor %}
+                    </td>
+                  {% endfor %}
                 <td>
                   <div class="apicMyOrgStatus">
                     {% set stateUpper = member.state|upper %}

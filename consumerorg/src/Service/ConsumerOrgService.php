@@ -107,6 +107,11 @@ class ConsumerOrgService {
    */
   private $roleService;
 
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  private $entityTypeManager;
+
 
   /**
    * ConsumerOrgService constructor.
@@ -147,6 +152,7 @@ class ConsumerOrgService {
     $this->apimUtils = $apimUtils;
     $this->eventDispatcher = $event_dispatcher;
     $this->currentUser = $current_user;
+    $this->entityTypeManager = $entity_type_manager;
     $this->userQuery = $entity_type_manager->getStorage('user')->getQuery();
     $this->moduleHandler = $module_handler;
     $this->apimServer = $apim;
@@ -158,19 +164,42 @@ class ConsumerOrgService {
   }
 
   /**
-   * Create a new consumer org. Calls consumer api to create in apim and handles local nodes and state as well.
-   *
    * @param string $name
    *
    * @return \Drupal\auth_apic\UserManagerResponse
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function create(string $name): UserManagerResponse {
+    return $this->createFromArray(['title' => $name]);
+  }
+
+  /**
+   * Create a new consumer org. Calls consumer api to create in apim and handles local nodes and state as well.
+   *
+   * @param array $values
+   *
+   * @return \Drupal\auth_apic\UserManagerResponse
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   */
+  public function createFromArray(array $values): UserManagerResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $response = new UserManagerResponse();
 
     $org = new ConsumerOrg();
+
+    $name = $values['title'];
+    if (is_array($name) && isset($name[0]['value'])) {
+      $name = $name[0]['value'];
+    }
+    elseif (isset($name[0])) {
+      $name = array_values($name[0]);
+    }
     $org->setName($name);
 
     $apimResponse = $this->apimServer->createConsumerOrg($org);
@@ -182,7 +211,26 @@ class ConsumerOrgService {
       $org->setOwnerUrl($apimResponse->getData()['owner_url']);
       $org->setTags($apimResponse->getData()['group_urls']);
 
-      $this->createNode($org);
+      $nid = $this->createNode($org);
+
+      $customFields = $this->getCustomFields();
+      if (isset($customFields) && count($customFields) > 0) {
+        $node = Node::load($nid);
+        if ($node !== NULL) {
+          foreach ($customFields as $customField) {
+            $value = $values[$customField];
+            if (is_array($value) && isset($value[0]['value'])) {
+              $value = $value[0]['value'];
+            }
+            elseif (isset($value[0])) {
+              $value = array_values($value[0]);
+            }
+            $node->set($customField, $value);
+          }
+          $node->save();
+        }
+      }
+
       $response->setMessage(t('Consumer organization created successfully.'));
       $this->logger->notice('Consumer organization @orgname created by @username', [
         '@orgname' => $name,
@@ -350,7 +398,7 @@ class ConsumerOrgService {
       $node->set('consumerorg_name', $utils->truncate_string($consumer->getName(), 128));
       $node->set('consumerorg_owner', $consumer->getOwnerUrl());
       if ($consumer->getTags() === NULL) {
-        $consumer->setTags(array());
+        $consumer->setTags([]);
       }
       $node->set('consumerorg_tags', $consumer->getTags());
 
@@ -819,7 +867,7 @@ class ConsumerOrgService {
         $nid = array_shift($nids);
         $node = Node::load($nid);
         $roles = [];
-        if ($node !== null) {
+        if ($node !== NULL) {
           foreach ($node->consumerorg_roles->getValue() as $arrayValue) {
             $role = new Role();
             $role->createFromArray(unserialize($arrayValue['value'], ['allowed_classes' => FALSE]));
@@ -847,6 +895,29 @@ class ConsumerOrgService {
   public function get($url, $admin = 0): ?ConsumerOrg {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
     $result = NULL;
+    $nid = $this->getNid($url, $admin);
+    if ($nid !== null) {
+      $result = $this->getByNid($nid);
+    }
+
+    ibm_apim_exit_trace(__FUNCTION__, $nid);
+    return $result;
+  }
+
+  /**
+   * Get a single consumerorg node ID by the consumerorg url
+   *
+   * @param string $url
+   *   The APIC UID of the consumerorg to find.
+   * @param int $admin
+   *   If set to 1 then bypass the access check on the memberlist
+   *
+   * @return null|string
+   *   The Node loaded from the database that matches the consumerorg uid.
+   */
+  public function getNid($url, $admin = 0): ?string {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    $result = NULL;
     $nid = NULL;
 
     if (!$this->currentUser->isAnonymous()) {
@@ -863,11 +934,10 @@ class ConsumerOrgService {
 
       if ($results !== NULL && !empty($results)) {
         $nid = array_shift($results);
-        $result = $this->getByNid($nid);
       }
     }
     ibm_apim_exit_trace(__FUNCTION__, $nid);
-    return $result;
+    return $nid;
   }
 
   /**
@@ -945,9 +1015,32 @@ class ConsumerOrgService {
       'consumerorg_owner',
       'consumerorg_tags',
       'consumerorg_url',
+      'consumerorg_roles'
     ];
     ibm_apim_exit_trace(__FUNCTION__, $ibmfields);
     return $ibmfields;
+  }
+
+  /**
+   * Get a list of all the custom fields on this content type
+   *
+   * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  public function getCustomFields(): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $coreFields = ['title', 'vid', 'status', 'nid', 'revision_log', 'created'];
+    $components = $this->entityTypeManager
+      ->getStorage('entity_form_display')
+      ->load('node.consumerorg.default')
+      ->getComponents();
+    $keys = array_keys($components);
+    $ibmFields = $this->getIBMFields();
+    $merged = array_merge($coreFields, $ibmFields);
+    $diff = array_diff($keys, $merged);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $diff);
+    return $diff;
   }
 
   /**
@@ -1247,20 +1340,30 @@ class ConsumerOrgService {
 
   /**
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
-   * @param string $title
+   * @param array $values
    *
    * @return \Drupal\auth_apic\UserManagerResponse
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  public function editOrgTitle(ConsumerOrg $org, string $title): UserManagerResponse {
+  public function edit(ConsumerOrg $org, array $values): UserManagerResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
+    $name = $values['title'];
+    if (is_array($name) && isset($name[0]['value'])) {
+      $name = $name[0]['value'];
+    }
+    elseif (isset($name[0])) {
+      $name = array_values($name[0]);
+    }
     // update APIm
-    $newdata = ['title' => $title];
+    $newData = ['title' => $name];
 
     $response = new UserManagerResponse();
-    $apimResponse = $this->apimServer->patchConsumerOrg($org, $newdata);
+    $apimResponse = $this->apimServer->patchConsumerOrg($org, $newData);
     if ($apimResponse !== NULL && $apimResponse->getCode() === 200) {
 
       // TODO: this should be done via other functions in this service rather than explicitly here.
@@ -1271,10 +1374,26 @@ class ConsumerOrgService {
       $nids = $query->execute();
       $orgNode = NULL;
       if ($nids !== NULL && !empty($nids)) {
-        $productnid = array_shift($nids);
-        $orgNode = Node::load($productnid);
-        $orgNode->setTitle($title);
-        $orgNode->save();
+        $orgNid = array_shift($nids);
+        $orgNode = Node::load($orgNid);
+        if ($orgNode !== NULL) {
+          $orgNode->setTitle($name);
+          // update any custom fields
+          $customFields = $this->getCustomFields();
+          if (isset($customFields) && count($customFields) > 0) {
+            foreach ($customFields as $customField) {
+              $value = $values[$customField];
+              if (is_array($value) && isset($value[0]['value'])) {
+                $value = $value[0]['value'];
+              }
+              elseif (isset($value[0])) {
+                $value = array_values($value[0]);
+              }
+              $orgNode->set($customField, $value);
+            }
+          }
+          $orgNode->save();
+        }
       }
 
       $this->session->set('consumer_organizations', NULL);
@@ -1291,14 +1410,14 @@ class ConsumerOrgService {
       $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $org->getUrl()]);
 
       $this->logger->notice('Consumer organization @orgname updated by @username', [
-        '@orgname' => $title,
+        '@orgname' => $name,
         '@username' => $this->currentUser->getAccountName(),
       ]);
 
     }
     else {
       $response->setSuccess(FALSE);
-      $this->logger->error('Unable to update @orgurl to @orgname', ['@orgurl' => $org->getUrl(), '@orgname' => $title]);
+      $this->logger->error('Unable to update @orgurl to @orgname', ['@orgurl' => $org->getUrl(), '@orgname' => $name]);
     }
 
     ibm_apim_exit_trace(__FUNCTION__, NULL);

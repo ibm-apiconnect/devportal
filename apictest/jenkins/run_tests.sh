@@ -21,6 +21,7 @@ nvm use 8.12.0
 
 export PORTAL_DB_SERVICE_NAME=there.is.no.service
 export SERVICE_NAME=there.is.no.service
+export CONTAINER=admin
 
 MY_DIR=/opt/ibm
 cp /etc/devportal/nginx_ssl.conf /web/pre.d/
@@ -92,6 +93,7 @@ chmod a+x modules/apictest/runbehat.sh
 set +e
 
 export BUILD_ID=build
+export CONTAINER=admin
 echo "Running standard behat tests"
 chmod -R o+rx /root
 su aegir -c "drush @localhost upwd admin --password='Qwert123'"

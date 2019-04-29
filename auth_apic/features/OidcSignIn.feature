@@ -39,14 +39,6 @@ Feature: Sign in via an OIDC provider
 #    And I am at "/ibm_apim/oauth2/redirect?code=validauthcode&state=validstate"
 #    Then I should be on "/ibm_apim/nopermission"
 
- Scenario: Invalid - Error from apim login call with message
-   Given I am not logged in
-   And I am at "/ibm_apim/oauth2/redirect?code=failwithmessage&state=validstate"
-   Then there are errors
-   And I should see the text "Mocked error message from apim login() call"
-   And there are no messages
-   Then I should be on "/"
-
   Scenario: Invalid - Error from apim login call default message
     Given I am not logged in
     And I am at "/ibm_apim/oauth2/redirect?code=fail&state=validstate"

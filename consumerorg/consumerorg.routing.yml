@@ -10,7 +10,7 @@ consumerorg.update:
   path: '/myorg/edit'
   defaults:
     _form: '\Drupal\consumerorg\Form\OrgEditForm'
-    _title: 'Update the consumer organization name'
+    _title: 'Update the consumer organization'
   requirements:
     _consumerorg_rename_org_access_check: 'TRUE'
 

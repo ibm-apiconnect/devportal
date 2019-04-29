@@ -31,7 +31,7 @@
       <a href=" {{ path('user.pass', {'registry_url':registry_url} ) }} ">
           {% if user_managed_registry_present %}
               {{ 'Forgot password?'|t }}
-          {% else %}
+          {% elseif not hide_admin_registry %}
               {{ 'Forgot your \'admin\' password?'|t }}
           {% endif %}
       </a>

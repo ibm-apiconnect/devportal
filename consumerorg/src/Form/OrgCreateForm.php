@@ -14,6 +14,8 @@
 namespace Drupal\consumerorg\Form;
 
 use Drupal\consumerorg\Service\ConsumerOrgService;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -35,6 +37,9 @@ class OrgCreateForm extends FormBase {
 
   protected $themeHandler;
 
+  protected $entityTypeManager;
+
+  protected $entityFieldManager;
 
   /**
    * Constructs an Org Creation Form.
@@ -50,12 +55,16 @@ class OrgCreateForm extends FormBase {
     ConsumerOrgService $consumer_org_service,
     AccountInterface $account,
     LoggerInterface $logger,
-    ThemeHandler $themeHandler
+    ThemeHandler $themeHandler,
+    EntityTypeManagerInterface $entityTypeManager,
+    EntityFieldManagerInterface $entityFieldManager
   ) {
     $this->consumerOrgService = $consumer_org_service;
     $this->currentUser = $account;
     $this->logger = $logger;
     $this->themeHandler = $themeHandler;
+    $this->entityTypeManager = $entityTypeManager;
+    $this->entityFieldManager = $entityFieldManager;
   }
 
   /**
@@ -66,7 +75,9 @@ class OrgCreateForm extends FormBase {
       $container->get('ibm_apim.consumerorg'),
       $container->get('current_user'),
       $container->get('logger.channel.auth_apic'),
-      $container->get('theme_handler')
+      $container->get('theme_handler'),
+      $container->get('entity_type.manager'),
+      $container->get('entity_field.manager')
     );
   }
 
@@ -85,13 +96,44 @@ class OrgCreateForm extends FormBase {
     $form['intro'] = [
       '#markup' => '<p>' . t('A consumer organization can own one or more applications and have multiple members. It is possible to own multiple consumer organizations, use this form to create a new one.') . '</p>',
     ];
-    $form['orgname'] = [
-      '#type' => 'textfield',
-      '#title' => t('Organization name'),
-      '#size' => 25,
-      '#maxlength' => 128,
-      '#required' => TRUE,
-    ];
+
+    $form['#parents'] = [];
+    $max_weight = 500;
+
+    $entity = $this->entityTypeManager->getStorage('node')->create([
+      'type' => 'consumerorg',
+    ]);
+    $entity_form = $this->entityTypeManager->getStorage('entity_form_display')->load('node.consumerorg.default');
+
+    $definitions = $this->entityFieldManager->getFieldDefinitions('node', 'consumerorg');
+
+    if ($entity_form !== NULL) {
+      foreach ($entity_form->getComponents() as $name => $options) {
+
+        if (($configuration = $entity_form->getComponent($name)) && isset($configuration['type']) && ($definition = $definitions[$name])) {
+          $widget = \Drupal::service('plugin.manager.field.widget')->getInstance([
+            'field_definition' => $definition,
+            'form_mode' => 'default',
+            // No need to prepare, defaults have been merged in setComponent().
+            'prepare' => FALSE,
+            'configuration' => $configuration,
+          ]);
+        }
+
+        if (isset($widget)) {
+          $items = $entity->get($name);
+          $items->filterEmptyItems();
+          $form[$name] = $widget->form($items, $form, $form_state);
+          $form[$name]['#access'] = $items->access('edit');
+
+          // Assign the correct weight.
+          $form[$name]['#weight'] = $options['weight'];
+          if ($options['weight'] > $max_weight) {
+            $max_weight = $options['weight'];
+          }
+        }
+      }
+    }
 
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
@@ -104,6 +146,7 @@ class OrgCreateForm extends FormBase {
       '#url' => $this->getCancelUrl(),
       '#attributes' => ['class' => ['button', 'apicSecondary']],
     ];
+    $form['actions']['#weight'] = $max_weight + 1;
     if ($this->themeHandler->themeExists('bootstrap')) {
       $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
       $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
@@ -122,12 +165,24 @@ class OrgCreateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
+    $name = $form_state->getValue('title');
+    if (is_array($name) && isset($name[0]['value'])) {
+      $name = $name[0]['value'];
+    }
+    $name = trim($name);
+    if (!isset($name) || empty($name)) {
+      $form_state->setErrorByName('title', $this->t('Organization title is a required field.'));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $orgname = $form_state->getValue('orgname');
-
-    $response = $this->consumerOrgService->create($orgname);
+    $response = $this->consumerOrgService->createFromArray($form_state->getValues());
 
     if ($response->getMessage() !== NULL) {
       $error_arg = $response->success() ? 'status' : 'error';

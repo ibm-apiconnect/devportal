@@ -34,11 +34,12 @@ class Application {
    *
    * @param $app
    * @param string $event
+   * @param $formState
    *
    * @return int|string|null
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public static function create($app, $event = 'publish') {
+  public static function create($app, $event = 'publish', $formState = NULL) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $moduleHandler = \Drupal::service('module_handler');
 
@@ -47,7 +48,7 @@ class Application {
     ]);
 
     // get the update method to do the update for us
-    $node = self::update($node, $app, 'internal');
+    $node = self::update($node, $app, 'internal', $formState);
     if (isset($node)) {
       // Calling all modules implementing 'hook_apic_app_create':
       $moduleHandler->invokeAll('apic_app_create', [$node, $app]);
@@ -71,11 +72,14 @@ class Application {
    * @param \Drupal\node\NodeInterface $node
    * @param $app
    * @param string $event
+   * @param $formState
    *
    * @return \Drupal\node\NodeInterface|null
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public static function update(NodeInterface $node, $app, $event = 'content_refresh'): ?NodeInterface {
+  public static function update(NodeInterface $node, $app, $event = 'content_refresh', $formState = NULL): ?NodeInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $returnValue = NULL;
     if (isset($node)) {
@@ -178,6 +182,18 @@ class Application {
       }
 
       $node->set('application_data', serialize($app));
+
+      if ($formState !== NULL && !empty($formState) && $node !== null) {
+        $customFields = self::getCustomFields();
+        foreach ($customFields as $customField) {
+          $value = $formState->getValue($customField);
+          if (\is_array($value) && isset($value[0]['value'])) {
+            $value = $value[0]['value'];
+          }
+          $node->set($customField, $value);
+        }
+      }
+
       $node->save();
       if ($node !== NULL && $event !== 'internal') {
         \Drupal::logger('apic_app')->notice('Application @app updated', ['@app' => $node->getTitle()]);
@@ -209,11 +225,12 @@ class Application {
    *
    * @param $app
    * @param $event
+   * @param $formState
    *
    * @return bool
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public static function createOrUpdate($app, $event): bool {
+  public static function createOrUpdate($app, $event, $formState = NULL): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
@@ -227,7 +244,7 @@ class Application {
       if ($node !== NULL) {
         $changedTime = $node->getChangedTime();
         if (!isset($app['timestamp']) || (isset($changedTime) && ($changedTime < $app['timestamp']))) {
-          self::update($node, $app, $event);
+          self::update($node, $app, $event, $formState);
         }
         else {
           \Drupal::logger('apic_app')
@@ -237,13 +254,13 @@ class Application {
       }
       else {
         // no existing node for this App so create one
-        self::create($app, $event);
+        self::create($app, $event, $formState);
         $createdOrUpdated = TRUE;
       }
     }
     else {
       // no existing node for this App so create one
-      self::create($app, $event);
+      self::create($app, $event, $formState);
       $createdOrUpdated = TRUE;
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -253,13 +270,14 @@ class Application {
   /**
    * @param $app
    * @param $event
+   * @param $formState
    *
    * @return string|null
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public static function createOrUpdateReturnNid($app, $event): ?string {
+  public static function createOrUpdateReturnNid($app, $event, $formState): ?string {
     $nid = NULL;
-    self::createOrUpdate($app, $event);
+    self::createOrUpdate($app, $event, $formState);
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('application_id.value', $app['id']);

@@ -127,6 +127,9 @@ ibm_apim.settings:
     application_image_upload:
       type: boolean
       label: 'Allow API consumers to upload custom images for their applications'
+    hide_admin_registry:
+      type: boolean
+      label: 'Hide the admin user registry on the login form.'
     categories:
       type: mapping
       label: 'Categories'

@@ -246,7 +246,7 @@ class MailService {
 
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'application');
-      if ($planName !== NULL) {
+      if ( isset($planName) && !empty($planName) ) {  // ignore any static analysis tool complaints about this line
         $query->condition('application_subscriptions.value', $productUrl . '";s:4:"plan";s:' . \strlen($planName) . ':"' . $planName . '"', 'CONTAINS');
       }
       else {

@@ -415,6 +415,9 @@ function apic_app_theme($existing, $type, $theme, $path) {
       'variables' => [
         'node' => NULL,
         'userHasAppManage' => FALSE,
+        'allowNewCredentials' => FALSE,
+        'allowClientidReset' => FALSE,
+        'allowClientsecretReset' => FALSE,
       ],
     ],
     'app_subscriptions' => [
@@ -443,6 +446,9 @@ function apic_app_theme($existing, $type, $theme, $path) {
       'variables' => [],
     ],
     'app_api_call_history' => [
+      'variables' => [],
+    ],
+    'app_api_call_errors' => [
       'variables' => [],
     ],
     'app_cost' => [

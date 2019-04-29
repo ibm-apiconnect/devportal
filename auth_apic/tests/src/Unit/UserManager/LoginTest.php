@@ -242,6 +242,42 @@ class LoginTest extends UserManagerTestBaseClass {
 
   }
 
+  /**
+   * Tests case when we manage to get the token but that fails to authorize use of the consumer api, i.e. we get the token but it's rejected on GET /me?expand=true
+   */
+  public function testLoginWithFailedAuthToConsumerApi(): void {
+
+    $user = new ApicUser();
+    $user->setUsername('abc');
+    $user->setPassword('123');
+
+    $this->primeForTest($user);
+
+    // override the GET /me response from the happy days set up.
+    $meResponse = new MeResponse();
+    $meResponse->setCode(400);
+    $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
+
+    // we need to pass externalAuth into the closure so create a local var to pass through..
+    $extAuth = $this->externalAuth;
+    $extAuth->load('abc', 'auth_apic')->shouldNotBeCalled();
+    $extAuth->userLoginFinalize(Argument::any())->shouldNotBeCalled();
+    $extAuth->register(Argument::any())->shouldNotBeCalled();
+
+    $this->userUtils->loadUserByName(Argument::any())->shouldNotBeCalled();
+    $this->userUtils->loadUserByMail(Argument::any())->shouldNotBeCalled();
+    $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
+    $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
+
+    $this->database->update(Argument::any())->shouldNotBeCalled();
+
+    $this->logger->error('failed to authenticate with APIM server')->shouldBeCalled();
+
+    $userManager = $this->createUserManager();
+    $response = $userManager->login($user);
+    $this->assertFalse($response->success());
+  }
+
 
   // Helper Functions.
 

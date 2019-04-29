@@ -128,6 +128,8 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
         'myorg_can_transfer_owner' => NULL,
         'myorg_can_rename_org' => NULL,
         'myorg_can_delete_org' => NULL,
+        'custom_fields' => NULL,
+        'content' => NULL
       ],
     ],
     'ibm_apim_search_icon_block' => [
@@ -1066,6 +1068,8 @@ function ibm_apim_preprocess_form(&$variables) {
   }
   $variables['user_managed_registry_present'] = $userManagedRegistryPresent;
   $variables['user_unmanaged_registry_present'] = $userUnmanagedRegistryPresent;
+  $ibm_settings_config = \Drupal::service('config.factory')->get('ibm_apim.settings');
+  $variables['hide_admin_registry'] = $ibm_settings_config->get('hide_admin_registry');
 
   // set a variable for self service onboarding too
   $variables['enable_signup_link'] = \Drupal::state()->get('ibm_apim.selfSignUpEnabled', 0);

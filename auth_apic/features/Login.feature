@@ -107,7 +107,7 @@ Scenario: Login form handles valid but incorrect user registry url query paramet
   When I am at "/user/login?registry_url=/consumer-api/user-registries/aaaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
   Then I should see the text "Sign in with @data(user_registries[0].title)"
 
-  @api
+@api
 Scenario: Login form loads with oidc registry link (non-default)
   Given the cache has been cleared
   Given I am not logged in
@@ -125,3 +125,113 @@ Scenario: Login form loads with oidc registry link (non-default)
   And I should see the link "Forgot password?"
   And I should see the text "Don't have an account?"
   And I should see the link "Sign up"
+
+@api
+Scenario: Login form with admin - single user manager registry
+  Given I am not logged in
+  Given userregistries:
+    | type | title                             | url                               | user_managed | default |
+    | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+  Given ibm_apim settings config boolean property "hide_admin_registry" value is "false"
+  When I am at "/user/login"
+  Then I should see the text "Sign in with @data(user_registries[0].title)"
+  And I should see the text "Continue with"
+  And I should see the link "admin"
+  And I should see the text "Forgot password?"
+  And I should see the text "Don't have an account?"
+  And I should see the link "Sign up"
+
+@api
+Scenario: Login form with hidden admin - single user manager registry
+  Given I am not logged in
+  Given userregistries:
+    | type | title                             | url                               | user_managed | default |
+    | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+  Given ibm_apim settings config boolean property "hide_admin_registry" value is "true"
+  When I am at "/user/login"
+  Then I should see the text "Sign in with @data(user_registries[0].title)"
+  And I should not see the text "Continue with"
+  And I should not see the link "admin"
+  And I should see the text "Forgot password?"
+  And I should see the text "Don't have an account?"
+  And I should see the link "Sign up"
+
+@api
+Scenario: Login form with hidden admin - single non user manager registry
+   Given I am not logged in
+   Given userregistries:
+     | type | title                             | url                               | user_managed | default |
+     | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | yes     |
+   Given ibm_apim settings config boolean property "hide_admin_registry" value is "true"
+   When I am at "/user/login"
+   Then I should see the text "Sign in with @data(user_registries[2].title)"
+   And I should not see the text "Continue with"
+   And I should not see the link "admin"
+   And I should not see the text "Forgot password?"
+   And I should not see the text "Don't have an account?"
+   And I should not see the link "Sign up"
+
+@api
+Scenario: Login form with hidden admin - multiple registries - user managed default
+  Given I am not logged in
+  Given userregistries:
+    | type | title                             | url                               | user_managed | default |
+    | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+    | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+  Given ibm_apim settings config boolean property "hide_admin_registry" value is "true"
+  When I am at "/user/login"
+  Then I should see the text "Sign in with @data(user_registries[0].title)"
+  And I should see the text "Continue with"
+  And I should see the link "@data(user_registries[2].title)"
+  And I should not see the link "admin"
+  And I should see the text "Forgot password?"
+  And I should see the text "Don't have an account?"
+  And I should see the link "Sign up"
+
+@api
+Scenario: Login form with hidden admin - multiple registries - non user managed default
+  Given I am not logged in
+  Given userregistries:
+    | type | title                             | url                               | user_managed | default |
+    | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | yes     |
+    | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | no      |
+  Given ibm_apim settings config boolean property "hide_admin_registry" value is "true"
+  When I am at "/user/login"
+  Then I should see the text "Sign in with @data(user_registries[2].title)"
+  And I should see the text "Continue with"
+  And I should see the link "@data(user_registries[0].title)"
+  And I should not see the link "admin"
+  And I should see the text "Forgot password?"
+  And I should see the text "Don't have an account?"
+  And I should see the link "Sign up"
+
+@api
+Scenario: Login form with hidden admin - single oidc registry
+  Given I am not logged in
+  Given userregistries:
+    | type | title                             | url                               | user_managed | default |
+    | oidc | @data(user_registries[3].title)   | @data(user_registries[3].url)     | no           | yes     |
+  Given ibm_apim settings config boolean property "hide_admin_registry" value is "true"
+  When I am at "/user/login"
+  Then I should see the text "Sign in with @data(user_registries[3].title)"
+  And I should not see the text "Continue with"
+  And I should not see the link "admin"
+  And I should not see the text "Forgot password?"
+  And I should not see the text "Don't have an account?"
+  And I should not see the link "Sign up"
+
+@api
+Scenario: Login form with hidden admin - load admin form directly
+  Given I am not logged in
+  Given userregistries:
+    | type | title                             | url                               | user_managed | default |
+    | oidc | @data(user_registries[3].title)   | @data(user_registries[3].url)     | no           | yes     |
+  Given ibm_apim settings config boolean property "hide_admin_registry" value is "true"
+  When I am at "/user/login?registry_url=/admin"
+  Then I should see the text "Sign in with admin"
+  And I should see the text "Continue with"
+  And I should see the link "@data(user_registries[3].title)"
+  And I should see a link with href including "/consumer-api/oauth2/authorize"
+  And I should not see the text "Forgot password?"
+  And I should not see the text "Don't have an account?"
+  And I should not see the link "Sign up"

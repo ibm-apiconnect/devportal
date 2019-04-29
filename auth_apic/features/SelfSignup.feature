@@ -6,6 +6,9 @@ Feature: Self Sign-up
 
   Scenario: Viewing the registration form
     Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
     And I am at "/user/register"
     Then I should see the text "Create new account"
     And I should see the text "First Name"
@@ -16,6 +19,9 @@ Feature: Self Sign-up
 
   Scenario: Correctly completing the registration form
     Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
     And I am at "/user/register"
     Then print current URL
     Given I enter "Andre" for "First Name"
@@ -35,6 +41,9 @@ Feature: Self Sign-up
 
   Scenario: Trying to sign up with the same email address twice
     Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
     And I am at "/user/register"
     Given I enter "Andre" for "First Name"
     And I enter "Andreson_@now" for "Last Name"
