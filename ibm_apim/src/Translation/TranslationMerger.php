@@ -177,7 +177,7 @@ class TranslationMerger {
    * @return array
    *   PoItem array
    */
-  private function getMemoryItems(string $projectName, string $language): array {
+  private function getMemoryItems(string $projectName, string $language): ?array {
     // e.g. acl-8.x-1.0-alpha1-memories.de.po
     $filename = $this->export_files_location . '/' . $projectName . '/' . $projectName . '-memories.' . $language . '.po';
     return $this->getTranslationFileItems($filename);
@@ -232,7 +232,7 @@ class TranslationMerger {
    *
    * @return array
    */
-  private function buildCompleteTranslationFile(string $pot_file, $memory_items, $newtranslation_items) : array{
+  private function buildCompleteTranslationFile(string $pot_file, $memory_items, $newtranslation_items) : ?array{
     $reader = new TranslationFileReader($pot_file);
     $items = $reader->getItems();
     $complete_items = [];

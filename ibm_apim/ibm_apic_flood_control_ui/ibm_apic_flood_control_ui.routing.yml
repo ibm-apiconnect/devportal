@@ -1,0 +1,7 @@
+ibm_apic_flood_control_ui.ibm_apic_flood_control_ui_form:
+  path: '/admin/config/system/ibm_apic_flood_control_ui'
+  defaults:
+    _form: '\Drupal\ibm_apic_flood_control_ui\Form\FloodControlUIForm'
+    _title: 'Flood Control'
+  requirements:
+    _permission: 'administer site configuration'

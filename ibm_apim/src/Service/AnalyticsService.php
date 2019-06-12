@@ -33,15 +33,16 @@ class AnalyticsService {
   /**
    * get all the analytics service definitions
    *
-   * @return NULL|array null if an error occurs otherwise an array of the registries.
+   * @return array an array of the registries.
    */
-  public function getAll(): ?array {
+  public function getAll(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $analytics_services = $this->state->get('ibm_apim.analytics_services');
 
-    if (empty($analytics_services)) {
+    if ($analytics_services === null || empty($analytics_services)) {
       $this->logger->warning('Found no analytics services in the catalog state. Potentially missing data from APIM.');
+      $analytics_services = [];
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $analytics_services);

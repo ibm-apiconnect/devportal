@@ -33,12 +33,15 @@ class PermissionsService implements PermissionsServiceInterface {
   /**
    * get all the permissions objects
    *
-   * @return NULL|array null if an error occurs otherwise an array of the permissions objects.
+   * @return array an array of the permissions objects.
    */
-  public function getAll(): ?array {
+  public function getAll(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $perms = $this->state->get('ibm_apim.permissions_objects');
+    if ($perms === null || empty($perms)) {
+      $perms = [];
+    }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $perms);
     return $perms;

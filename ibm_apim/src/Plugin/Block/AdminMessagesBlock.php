@@ -43,6 +43,12 @@ class AdminMessagesBlock extends BlockBase {
       $user = User::load($current_user->id());
     }
 
+    $expired = \Drupal::request()->cookies->get('Drupal_visitor_ibm_apim_session_expired_on_token');
+    if ($expired === 'TRUE') {
+      \Drupal::messenger()->addError(t('Session expired. Please sign in again.'));
+      \user_cookie_delete('ibm_apim_session_expired_on_token');
+    }
+
     $status_messages = \Drupal::state()->get('ibm_apim.status_messages');
     $messages = array();
 
@@ -53,6 +59,7 @@ class AdminMessagesBlock extends BlockBase {
         }
       }
     }
+
     $errors = [];
     $config_set = (boolean) \Drupal::service('ibm_apim.site_config')->isSet();
     if ($config_set === null || $config_set === FALSE) {

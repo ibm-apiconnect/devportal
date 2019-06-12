@@ -211,15 +211,6 @@ class ApicUserService {
       $apicuser = $apicuser['user'];
     }
 
-    // check if user already exists in Drupal DB
-    $user = user_load_by_name($apicuser['username']);
-    if (isset($user)) {
-      $this->logger->notice('User exists: %user', ['%user' => $apicuser['username']]);
-    }
-    else {
-      $this->logger->notice('User does not exist: %user', ['%user' => $apicuser['username']]);
-    }
-
     $user = new ApicUser();
     $user->setFirstname($apicuser['first_name']);
     $user->setLastname($apicuser['last_name']);
@@ -228,9 +219,6 @@ class ApicUserService {
     $user->setUrl($apicuser['url']);
     $user->setApicUserRegistryUrl($apicuser['user_registry_url']);
     $user->setState($apicuser['state']);
-    //
-    //      $this->logger->notice('Creating apic user %user', array('%user' => $apicuser['username']));
-    //      $this->userManager->registerApicUser($create_user->getUsername(), $this->getUserAccountFields($create_user));
 
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $user->getUsername());

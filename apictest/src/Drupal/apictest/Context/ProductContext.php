@@ -13,12 +13,48 @@
 
 namespace Drupal\apictest\Context;
 
+use Behat\Gherkin\Node\TableNode;
 use Drupal\Component\Utility\Random;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\Entity\Node;
 use Drupal\product\Product;
+use Drupal\user\Entity\User;
 
 class ProductContext extends RawDrupalContext {
+
+  private $testDataDirectory = __DIR__ . '/../../../../testdata';
+
+  /**
+   * @Given products:
+   */
+  public function createProducts(TableNode $table): void {
+
+    // If we are not using mocks, then we are testing with live data from a management appliance
+    // Under those circumstances, we should absolutely not create any product in the database!
+    if ($this->useMockServices === FALSE) {
+      print "This test is running with a real management server backend. No products will be created in the database.\n";
+      return;
+    }
+
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(User::load(1));
+    }
+
+    foreach ($table as $row) {
+      $object = $this->createProductWithDocument($row['name'], $row['title'], $row['id'], $row['document']);
+
+      $product = new Product();
+      $nid = $product->create($object);
+
+    }
+    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+  }
 
   /**
    * @Given I publish a product with the name :arg1, id :arg2 and categories :arg3
@@ -399,6 +435,35 @@ class ProductContext extends RawDrupalContext {
     else {
       print("Product with the name $name and id $id was not viewable." . PHP_EOL);
     }
+  }
+
+  /**
+   * Creates an associative array representing a Product including the product doc
+   *
+   * @param $name
+   * @param $title
+   * @param string $id
+   * @param null $document
+   *
+   * @return array
+   */
+  private function createProductWithDocument($name, $title, $id = '12345', $document = NULL): array {
+
+    $object = [];
+    $object['id'] = $id;
+    $object['url'] = 'https://localhost.com';
+    $object['state'] = 'published';
+
+    if ($document && file_exists($this->testDataDirectory . '/products/' . $document)) {
+      $string = file_get_contents($this->testDataDirectory . '/products/' . $document);
+      $json = json_decode($string, TRUE);
+      $object['catalog_product'] = $json;
+    }
+    // overwrite what was in the document with what we were fed in
+    $object['catalog_product']['info']['name'] = $name;
+    $object['catalog_product']['info']['title'] = $title;
+
+    return $object;
   }
 
 }

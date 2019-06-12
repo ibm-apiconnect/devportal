@@ -129,7 +129,7 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
         'myorg_can_rename_org' => NULL,
         'myorg_can_delete_org' => NULL,
         'custom_fields' => NULL,
-        'content' => NULL
+        'content' => NULL,
       ],
     ],
     'ibm_apim_search_icon_block' => [
@@ -494,6 +494,15 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       if (isset($form['modules']['Migration']['migrate'])) {
         unset($form['modules']['Migration']['migrate']);
       }
+      if (isset($form['modules']['Migration']['migrate_drupal'])) {
+        unset($form['modules']['Migration']['migrate_drupal']);
+      }
+      if (isset($form['modules']['Migration']['migrate_drupal_ui'])) {
+        unset($form['modules']['Migration']['migrate_drupal_ui']);
+      }
+      if (isset($form['modules']['Migration']['migrate_drupal_multilingual'])) {
+        unset($form['modules']['Migration']['migrate_drupal_multilingual']);
+      }
       if (isset($form['modules']['Migration']['migrate_plus'])) {
         unset($form['modules']['Migration']['migrate_plus']);
       }
@@ -509,11 +518,8 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       if (isset($form['modules']['Examples']['migrate_example'])) {
         unset($form['modules']['Examples']['migrate_example']);
       }
-      if (isset($form['modules']['Core (Experimental)']['migrate_drupal'])) {
-        unset($form['modules']['Core (Experimental)']['migrate_drupal']);
-      }
-      if (isset($form['modules']['Core (Experimental)']['migrate_drupal_ui'])) {
-        unset($form['modules']['Core (Experimental)']['migrate_drupal_ui']);
+      if (isset($form['modules']['Core (Experimental)']['migrate_drupal_multilingual'])) {
+        unset($form['modules']['Core (Experimental)']['migrate_drupal_multilingual']);
       }
       // blacklist some modules
       $moduleBlacklist = \Drupal::config('ibm_apim.settings')->get('module_blacklist');
@@ -808,7 +814,7 @@ function ibm_apim_password_policy_check_constraints_password_confirm_process($el
 
   // This is part of the code needed to suppress the password policy status table.
   $element['pass1']['#ajax'] = [
-    'event' => 'change',
+    'event' => 'neverfiredevent',
     'callback' => 'ibm_apim_password_policy_check_constraints',
     'method' => 'replace',
     'wrapper' => 'ibm-apim-password-policy-status',
@@ -816,6 +822,79 @@ function ibm_apim_password_policy_check_constraints_password_confirm_process($el
   ];
 
   return $element;
+}
+
+function ibm_apim_password_policy_client_settings(array $form, FormStateInterface $form_state): array {
+  $roles = $form_state->getValue('roles');
+  if (empty($roles)) {
+    // Get if from $form; form state is always empty the first time.
+    if (isset($form['roles'])) {
+      $roles = $form['roles']['#default_value'];
+    }
+    elseif (isset($form['account']['roles'])) {
+      $roles = $form['account']['roles']['#default_value'];
+    }
+  }
+  $roles = array_combine($roles, $roles);
+
+  // Add user doesn't automatically register authenticated, so lets add it.
+  if (empty($roles)) {
+    $roles = ['authenticated' => 'authenticated'];
+  }
+
+  // Run validation.
+  $applicable_policies = [];
+  $ids = [];
+  foreach ($roles as $role_key => $role_enabled) {
+    if ($role_enabled) {
+      $role_map = ['roles.' . $role_enabled => $role_enabled];
+      $role_policies = \Drupal::entityTypeManager()->getStorage('password_policy')->loadByProperties($role_map);
+      /** @var \Drupal\password_policy\Entity\PasswordPolicy $policy */
+      foreach ($role_policies as $policy) {
+        if (!in_array($policy->id(), $ids, false)) {
+          $applicable_policies[] = $policy;
+          $ids[] = $policy->id();
+        }
+      }
+    }
+  }
+
+  $policy_constraints = [];
+  foreach ($applicable_policies as $policy_id => $policy) {
+    $policy_constraints = array_merge($policy_constraints, $policy->getConstraints());
+  }
+
+  foreach ($policy_constraints as $key => $constraint) {
+    switch ($constraint['id']) {
+      case 'character_types':
+        $policy_constraints[$key]['message'] = t('Minimum password character types: @number', ['@number' => $constraint['character_types']]);
+        break;
+      case 'password_length':
+        if (isset($constraint['character_operation']) && $constraint['character_operation'] === 'maximum') {
+          $policy_constraints[$key]['message'] = t('Password character length of at most @number', ['@number' => $constraint['character_length']]);
+        }
+        else {
+          $policy_constraints[$key]['message'] = t('Password character length of at least @number', ['@number' => $constraint['character_length']]);
+        }
+        break;
+      case 'password_username':
+        $policy_constraints[$key]['message'] = t('Password must not contain the user\'s username.');
+        // need the actual username value to check
+        if (\Drupal::currentUser()->isAuthenticated() ) {
+          $policy_constraints[$key]['username'] = \Drupal::currentUser()->getAccountName();
+        } elseif (isset($form['account']['name'])) {
+          $policy_constraints[$key]['username'] = $form['account']['name'];
+        }
+        break;
+      case 'password_strength_constraint':
+        $policy_constraints[$key]['message'] = t('Password Strength minimum score of @number', ['@number' => $constraint['strength_score']]);
+        break;
+      case 'consecutive':
+        $policy_constraints[$key]['message'] = t('Maximum consecutive identical characters: @number', ['@number' => $constraint['max_consecutive_characters']]);
+        break;
+    }
+  }
+  return $policy_constraints;
 }
 
 /**
@@ -827,36 +906,41 @@ function ibm_apim_password_policy_check_constraints_password_confirm_process($el
  * @return array
  */
 function ibm_apim_password_policy_check_constraints(array $form, FormStateInterface $form_state) {
-
+  $dataRows = NULL;
   $response = [];
 
-  // If there is no password_policy_status element, this is the first render pass of the form
-  // so we need to display an initial message rather than saying that the password is good.
-  if (!isset($form['account']['password_policy_status'])) {
-    return [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#value' => t('You must enter a password that conforms to the password policies enabled for this site.'),
-      '#prefix' => "<div id='ibm-apim-password-policy-status' class='alert alert-danger'>",
-      '#suffix' => '</div>',
-    ];
-  }
-
   // We want to work on the data from the password policy table.
-  $dataRows = $form['account']['password_policy_status']['#rows'];
+  if (array_key_exists('password_policy_status', $form['account'])) {
+    $dataRows = $form['account']['password_policy_status']['#rows'];
+  }
+  if ($dataRows === NULL || empty($dataRows)) {
+    $dataRows = _password_policy_constraints_table($form, $form_state);
+  }
   $status = [];
-
+  $failed = FALSE;
+  $force_failed = FALSE;
+  $pass = $form_state->getValue('pass');
+  if (is_array($pass) && array_key_exists('pass1', $pass)) {
+    $pass = $pass['pass1'];
+  }
+  if ($pass === '' || $pass === NULL) {
+    $force_failed = TRUE;
+  }
   // Go through each row, extract the status, check pass/fail and keep the message.
   foreach ($dataRows as $row) {
-    $passed = FALSE === strpos($row['status'], 'Fail');
-    if (!$passed) {
-      $status[] = "<i class='fa fa-times' aria-hidden='true'></i> " . substr($row['status'], strpos($row['status'], '-') + 2);
+    if ($force_failed === TRUE || strpos($row['status'], 'Fail') !== FALSE) {
+      $failed = TRUE;
+      $status[] = '<span class="failed"><span class="icon glyphicon glyphicon-remove" aria-hidden="true"></span> ' . $row['constraint'] . '</span>';
+      $status[] = '';
+    }
+    else {
+      $status[] = '<span class="passed"><span class="icon glyphicon glyphicon-ok" aria-hidden="true"></span> ' . $row['constraint'] . '</span>';
       $status[] = '';
     }
   }
 
   // If there are no fails, just return the 'div' hook point with no content.
-  if (count($status) === 0) {
+  if ($failed === FALSE) {
     $response = [
       '#type' => 'html_tag',
       '#tag' => 'div',
@@ -1134,4 +1218,27 @@ function ibm_apim_user_login($account) {
     $avatarManager->syncAvatar($account);
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
+
+/**
+ * Implementation of hook_language_switch_links_alter().
+ *
+ * This is to stop weird query parameters in the lang selection block
+ */
+function ibm_apim_language_switch_links_alter(&$links, $type, $path) {
+  $pathUrl = '';
+  if ($path->getRouteName() === '<current>' || $path->getRouteName() === '<front>') {
+    $routeObject = \Drupal::routeMatch()->getRouteObject();
+    if ($routeObject !== NULL) {
+      $pathUrl = $routeObject->getPath();
+    }
+  }
+  foreach ($links as &$link) {
+    // check the q isnt set to current path, empty string or something like fr/{currentpath} if so then remove it
+    if (isset($link['query']['q']) && ($link['query']['q'] === ltrim($pathUrl, '/') || $link['query']['q'] === '' || preg_match('@^[a-zA-Z-]+' . $pathUrl . '@', $link['query']['q']))) {
+      unset($link['query']['q']);
+    }
+  }
+  // needed to prevent weird side effects since by reference above
+  unset($link);
 }

@@ -145,8 +145,8 @@ class ApplicationUpdateForm extends FormBase {
         '#required' => FALSE,
         '#wysiwyg' => FALSE,
       ];
-      if (isset($app_data['certificate']) && !empty($app_data['certificate'])) {
-        $form['certificate']['#default_value'] = $app_data['certificate'];
+      if (isset($app_data['application_public_certificate_entry']) && !empty($app_data['application_public_certificate_entry'])) {
+        $form['certificate']['#default_value'] = $app_data['application_public_certificate_entry'];
       }
     }
 

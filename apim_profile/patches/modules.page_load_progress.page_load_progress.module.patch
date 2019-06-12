@@ -1,0 +1,10 @@
+--- modules/page_load_progress/page_load_progress.module	2019-04-25 11:25:54.000000000 +0100
++++ modules/page_load_progress/page_load_progress.module	2019-04-25 11:33:31.000000000 +0100
+@@ -72,6 +72,7 @@
+       'elements' => $config->get('page_load_progress_elements'),
+       'internal_links' => $config->get('page_load_progress_internal_links'),
+       'esc_key' => $config->get('page_load_progress_esc_key'),
++      'loading_string' => t('Loading')
+     ];
+   }
+ }

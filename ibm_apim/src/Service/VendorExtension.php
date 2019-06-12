@@ -32,12 +32,15 @@ class VendorExtension {
   /**
    * get all the vendor extensions
    *
-   * @return NULL|array an array of the extensions.
+   * @return array an array of the extensions.
    */
-  public function getAll(): ?array {
+  public function getAll(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $extensions = $this->state->get('ibm_apim.vendor_extensions');
+    if ($extensions === null || empty($extensions)) {
+      $extensions = [];
+    }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $extensions);
     return $extensions;

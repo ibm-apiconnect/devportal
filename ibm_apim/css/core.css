@@ -902,3 +902,8 @@ span.cron-description__run-cron a {
 .form-type-cshs .select-wrapper {
   width: unset;
 }
+
+/* for password field to make it full width */
+.form-type-password .input-group {
+  display: block;
+}

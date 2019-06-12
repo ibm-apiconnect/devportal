@@ -210,6 +210,12 @@ class ConsumerOrgService {
       $org->setTitle($name);
       $org->setOwnerUrl($apimResponse->getData()['owner_url']);
       $org->setTags($apimResponse->getData()['group_urls']);
+      if (isset($apimResponse->getData()['roles'])) {
+        $org->setRolesFromArray($apimResponse->getData()['roles']);
+      }
+      if (isset($apimResponse->getData()['members'])) {
+        $org->setMembersFromArray($apimResponse->getData()['members']);
+      }
 
       $nid = $this->createNode($org);
 

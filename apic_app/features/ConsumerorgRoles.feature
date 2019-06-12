@@ -14,10 +14,10 @@ Feature: ConsumerorgRoles
     Given consumerorgs:
       | title       | name        | id     | owner |
       | andreconsumerorg | andreconsumerorg | 123456 | Andre |
-    Given consumerorgroles:
-      | name  | consumerorgid | role      |
-      | Dave  | 123456   | developer |
-      | Vicky | 123456   | viewer    |
+    Given members:
+      | consumerorgid | username | roles     |
+      | 123456        | Dave     | developer |
+      | 123456        | Vicky    | viewer    |
     Given I am logged in as "Andre"
     Then print the current consumerorg
     Given I do not have any applications

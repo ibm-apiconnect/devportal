@@ -34,16 +34,17 @@ class UserRegistryService implements UserRegistryServiceInterface {
   /**
    * get all the user_registries
    *
-   * @return NULL|array an array of the registries.
+   * @return array an array of the registries.
    */
-  public function getAll(): ?array {
+  public function getAll(): array {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
     $registries = $this->state->get('ibm_apim.user_registries');
 
-    if (empty($registries)) {
+    if ($registries === null || empty($registries)) {
       $this->logger->warning('Found no user registries in the catalog config. Potentially missing data from APIM.');
+      $registries = [];
     }
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

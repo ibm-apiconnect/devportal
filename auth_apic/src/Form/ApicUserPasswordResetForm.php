@@ -166,13 +166,15 @@ class ApicUserPasswordResetForm extends FormBase {
         '#rows' => _password_policy_constraints_table($form, $form_state),
       ];
 
-      $form['auth-apic-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
+      $form['ibm-apim-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
+      $form['#attached']['drupalSettings']['ibmApimPassword'] = ibm_apim_password_policy_client_settings($form, $form_state);
     }
 
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => t('Submit'),
     ];
+    $form['#attached']['library'][] = 'ibm_apim/validate_password';
 
     return $form;
   }

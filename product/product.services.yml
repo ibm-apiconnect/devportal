@@ -10,3 +10,6 @@ services:
   product.taxonomy:
     class: Drupal\product\Service\ProductTaxonomy
     arguments: ['@ibm_apim.taxonomy']
+  product.plan:
+    class: Drupal\product\Service\ProductPlan
+    arguments: ['@language_manager', '@string_translation', '@ibm_apim.utils']

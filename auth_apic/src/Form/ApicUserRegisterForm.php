@@ -222,7 +222,9 @@ class ApicUserRegisterForm extends RegisterForm {
       }
 
       if ($showPasswordPolicy) {
-        $form['auth-apic-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
+        $form['ibm-apim-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
+        $form['ibm-apim-password-policy-status']['#weight'] = 10;
+        $form['#attached']['drupalSettings']['ibmApimPassword'] = ibm_apim_password_policy_client_settings($form, $form_state);
       }
 
       if (isset($form['account']['pass'])) {
@@ -377,6 +379,7 @@ class ApicUserRegisterForm extends RegisterForm {
     $form['#attached']['library'][] = 'auth_apic/generate-consumerorg-name';
 
     $form['#attached']['library'][] = 'ibm_apim/single_click';
+    $form['#attached']['library'][] = 'ibm_apim/validate_password';
 
     if (\Drupal::moduleHandler()->moduleExists('page_load_progress') && \Drupal::currentUser()->hasPermission('use page load progress')) {
 

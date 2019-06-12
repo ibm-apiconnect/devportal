@@ -32,12 +32,15 @@ class Billing {
   /**
    * get all the billing objects
    *
-   * @return NULL|array null if an error occurs otherwise an array of the billing objects.
+   * @return array an array of the billing objects.
    */
-  public function getAll(): ?array {
+  public function getAll(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $bills = $this->state->get('ibm_apim.billing_objects');
+    if ($bills === null || empty($bills)) {
+      $bills = [];
+    }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $bills);
     return $bills;

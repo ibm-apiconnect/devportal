@@ -686,3 +686,44 @@ section.block-go-ahead {
   }
 
 }
+// taxonomy menu block
+.block-tags {
+  margin-left: 20px;
+  .nav.menu--tags > li > a  {
+    padding: 0;
+  }
+
+  .nav.menu--tags ul,
+  .nav.menu--tags ul ul {
+    list-style-type: none;
+    background: url(../images/vline.png) repeat-y;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav.menu--tags ul ul {
+    margin-left: 10px;
+  }
+
+  .nav.menu--tags ul li {
+    margin: 0;
+    padding: 0 12px;
+    line-height: 20px;
+    background: url(../images/node.png) no-repeat;
+  }
+
+  .nav.menu--tags ul li.last {
+    background: $light-gray-01 url(../images/lastnode.png) no-repeat;
+  }
+}
+.region-collapsible .block-tags .nav.menu--tags ul li.last {
+  background: #fff url(../images/lastnode.png) no-repeat;
+}
+
+.node--view-mode-teaser,
+article.search-result {
+  background-color: white;
+  padding: 20px;
+  border: 1px solid #e7eaed;
+  margin-bottom: 10px;
+}

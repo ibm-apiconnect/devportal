@@ -55,8 +55,8 @@ function apic_api_update_8111() {
         'remember' => FALSE,
         'multiple' => FALSE,
         'remember_roles' => [
-          'authenticated' => 'authenticated'
-        ]
+          'authenticated' => 'authenticated',
+        ],
       ],
       'is_grouped' => FALSE,
       'group_info' => [
@@ -69,13 +69,13 @@ function apic_api_update_8111() {
         'remember' => FALSE,
         'default_group' => 'All',
         'default_group_multiple' => [],
-        'group_items' => []
+        'group_items' => [],
       ],
       'priorities' => '',
       'default_language_only' => 0,
       'include_content_with_unpublished_translation' => 0,
       'entity_type' => 'node',
-      'plugin_id' => 'select_translation_filter'
+      'plugin_id' => 'select_translation_filter',
     ];
     $view->getDisplay()->setOption('filters', $filters);
     $view->save();
@@ -85,4 +85,82 @@ function apic_api_update_8111() {
     $view2->getDisplay()->setOption('rendering_language', '***LANGUAGE_language_interface***');
     $view2->save();
   }
+}
+
+/**
+ * Use taxonomy search with depth
+ */
+function apic_api_update_8112() {
+
+  $view = Views::getView('apis');
+  $filters = $view->getDisplay()->getOption('filters');
+  // remove old tid based filter
+  if (array_key_exists('tid', $filters)) {
+    unset($filters['tid']);
+  }
+  // add new tid with depth
+  if (!array_key_exists('term_node_tid_depth', $filters)) {
+    $filters['term_node_tid_depth'] = [
+      'id' => 'term_node_tid_depth',
+      'table' => 'node_field_data',
+      'field' => 'term_node_tid_depth',
+      'relationship' => 'none',
+      'group_type' => 'group',
+      'admin_label' => '',
+      'operator' => 'or',
+      'value' => NULL,
+      'group' => 1,
+      'exposed' => TRUE,
+      'expose' => [
+        'operator_id' => 'term_node_tid_depth_op',
+        'label' => 'Category',
+        'description' => '',
+        'use_operator' => FALSE,
+        'operator' => 'term_node_tid_depth_op',
+        'identifier' => 'term_node_tid_depth',
+        'required' => FALSE,
+        'remember' => TRUE,
+        'multiple' => FALSE,
+        'remember_roles' => [
+          'authenticated' => 'authenticated',
+        ],
+        'reduce' => FALSE,
+      ],
+      'is_grouped' => FALSE,
+      'group_info' => [
+        'label' => '',
+        'description' => '',
+        'identifier' => '',
+        'optional' => TRUE,
+        'widget' => 'select',
+        'multiple' => FALSE,
+        'remember' => FALSE,
+        'default_group' => 'All',
+        'default_group_multiple' => [],
+        'group_items' => [],
+      ],
+      'reduce_duplicates' => FALSE,
+      'type' => 'cshs',
+      'limit' => TRUE,
+      'hierarchy' => FALSE,
+      'error_message' => TRUE,
+      'depth' => 0,
+      'vid' => 'tags',
+      'parent' => '0',
+      'level_labels' => '',
+      'force_deepest' => 0,
+      'entity_type' => 'node',
+      'plugin_id' => 'taxonomy_index_tid_depth',
+    ];
+    if (!isset($filters['type']['group'])) {
+      $filters['type']['group'] = 1;
+    }
+  }
+  $view->getDisplay()->setOption('filters', $filters);
+  $filter_groups = $view->getDisplay()->getOption('filter_groups');
+  if (!isset($filter_groups)) {
+    $filter_groups = ['operator' => 'AND', 'groups' => [1 => 'AND']];
+    $view->getDisplay()->setOption('filter_groups', $filter_groups);
+  }
+  $view->save();
 }

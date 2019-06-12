@@ -137,3 +137,49 @@ Feature: My Organization
     Then I should see the text "Delete member"
     And there are no errors
     And there are no messages
+
+  @api
+  Scenario: As an org member, role=administrator, I can view the My Org page, and see correct text options
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+      | @data(andre[1].mail) | @data(andre[1].mail) | @data(andre[1].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id                             | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+    Given members:
+      | consumerorgid                  | username             | roles                   |
+      | @data(andre[0].consumerorg.id) | @data(andre[1].mail) | administrator           |
+    Given I am logged in as "@data(andre[1].mail)"
+    When I go to "/myorg"
+    Then I should see the text "@data(andre[0].consumerorg.title)"
+    Then I should see the text "@data(andre[0].mail)"
+    Then I should see the text "@data(andre[1].mail)"
+    Then I should see that "@data(andre[1].mail)" is an "administrator"
+    Then I should see the text "Change role"
+    Then I should see the text "Delete member"
+    And there are no errors
+    And there are no messages
+
+  @api
+  Scenario: As an org member, role=developer, I can view the My Org page, and see correct text options
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+      | @data(andre[4].mail) | @data(andre[4].mail) | @data(andre[4].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id                             | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+    Given members:
+      | consumerorgid                  | username             | roles                   |
+      | @data(andre[0].consumerorg.id) | @data(andre[4].mail) | developer               |
+    Given I am logged in as "@data(andre[4].mail)"
+    When I go to "/myorg"
+    Then I should see the text "@data(andre[0].consumerorg.title)"
+    Then I should see the text "@data(andre[0].mail)"
+    Then I should see the text "@data(andre[4].mail)"
+    Then I should see that "@data(andre[4].mail)" is an "developer"
+    Then I should not see the text "Change role"
+    Then I should not see the text "Delete member"
+    And there are no errors
+    And there are no messages

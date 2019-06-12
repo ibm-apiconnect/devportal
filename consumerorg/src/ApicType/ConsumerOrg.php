@@ -249,6 +249,23 @@ class ConsumerOrg {
   }
 
   /**
+   * Sets the roles of this org. The array should be an array of arrays
+   * each one representing a role.
+   *
+   * @param array $rolesArray
+   */
+  public function setRolesFromArray(array $rolesArray): void {
+    $roles = [];
+    foreach($rolesArray as $roleArray) {
+      $role = new Role();
+      $role->createFromArray($roleArray);
+      $roles[] = $role;
+    }
+
+    $this->setRoles($roles);
+  }
+
+  /**
    * Adds the provided Role to this consumer org checking first to avoid duplicate
    * entries.
    *

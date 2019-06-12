@@ -26,9 +26,9 @@ interface UserRegistryServiceInterface {
   /**
    * get all the user_registries
    *
-   * @return NULL|array null if an error occurs otherwise an array of the registries.
+   * @return array an array of the registries.
    */
-  public function getAll(): ?array;
+  public function getAll(): array;
 
   /**
    * get a specific user_registry by url

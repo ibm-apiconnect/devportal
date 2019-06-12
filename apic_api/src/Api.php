@@ -133,7 +133,7 @@ class Api {
     // get the update method to do the update for us
     $node = $this->update($node, $api, 'internal');
 
-    if ($oldTags !== NULL && !empty($oldTags)) {
+    if ($oldTags !== NULL && !empty($oldTags) && $node !== NULL) {
       $currentTags = $node->get('apic_tags')->getValue();
       if (!\is_array($currentTags)) {
         $currentTags = [];
@@ -155,7 +155,7 @@ class Api {
       $node->save();
     }
 
-    if (!$moduleHandler->moduleExists('workbench_moderation')) {
+    if ($node !== NULL && !$moduleHandler->moduleExists('workbench_moderation')) {
       $node->setPublished(TRUE);
       $node->save();
     }
@@ -172,21 +172,25 @@ class Api {
         $eventDispatcher = \Drupal::service('event_dispatcher');
         $eventDispatcher->dispatch(ApiCreateEvent::EVENT_NAME, $event);
       }
-    }
 
-    $config = \Drupal::config('ibm_apim.settings');
-    $autoCreateForum = (boolean) $config->get('autocreate_apiforum');
-    if ($autoCreateForum === TRUE) {
-      if (!isset($api['consumer_api']['info']['description'])) {
-        $api['consumer_api']['info']['description'] = '';
+      $config = \Drupal::config('ibm_apim.settings');
+      $autoCreateForum = (boolean) $config->get('autocreate_apiforum');
+      if ($autoCreateForum === TRUE) {
+        if (!isset($api['consumer_api']['info']['description'])) {
+          $api['consumer_api']['info']['description'] = '';
+        }
+        $this->apiTaxonomy->create_api_forum($this->utils->truncate_string($api['consumer_api']['info']['title']), $api['consumer_api']['info']['description']);
       }
-      $this->apiTaxonomy->create_api_forum($this->utils->truncate_string($api['consumer_api']['info']['title']), $api['consumer_api']['info']['description']);
+
+      \Drupal::logger('apic_api')->notice('API @api created', ['@api' => $node->getTitle()]);
+
+      $nodeId = $node->id();
+    } else {
+      $nodeId = NULL;
     }
 
-    \Drupal::logger('apic_api')->notice('API @api created', ['@api' => $node->getTitle()]);
-
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
-    return $node->id();
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $nodeId);
+    return $nodeId;
   }
 
   /**
@@ -212,291 +216,298 @@ class Api {
       $config = \Drupal::config('ibm_apim.settings');
       $languageList = array_keys(\Drupal::languageManager()->getLanguages(LanguageInterface::STATE_ALL));
 
-      $node->setTitle($this->utils->truncate_string($api['consumer_api']['info']['title']));
-      if (isset($api['consumer_api']['info']['x-ibm-languages']['title']) && !empty($api['consumer_api']['info']['x-ibm-languages']['title'])) {
-        foreach ($api['consumer_api']['info']['x-ibm-languages']['title'] as $lang => $langArray) {
-          $lang = $this->utils->convert_lang_name_to_drupal($lang);
-          if (\in_array($lang, $languageList, FALSE)) {
-            if (!$node->hasTranslation($lang)) {
-              $translation = $node->addTranslation($lang, ['title' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['title'][$lang])]);
-              $translation->save();
-            }
-            else {
-              $node->getTranslation($lang)
-                ->setTitle($this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['title'][$lang]))
-                ->save();
-            }
-          }
-        }
-      }
-      $node->set('apic_hostname', $hostVariable);
-      $node->set('apic_provider_id', $configService->getOrgId());
-      $node->set('apic_catalog_id', $configService->getEnvId());
-      $node->set('api_id', $api['id']);
-      $node->set('apic_version', $api['consumer_api']['info']['version']);
-      if (isset($api['consumer_api']['info']['x-pathalias'])) {
-        $node->set('apic_pathalias', $api['consumer_api']['info']['x-pathalias']);
-      }
-
-      // if unset, default state to online
-      if (!isset($api['state']) || empty($api['state'])) {
-        $api['state'] = 'online';
-      }
-      // if set, make sure it is one of the valid options and default to online if not
-      $state = strtolower($api['state']);
-      if ($state !== 'online' && $state !== 'offline' && $state !== 'archived') {
-        $api['state'] = 'online';
-      }
-      $node->set('api_state', $state);
-
-      if (isset($api['consumer_api']['definitions']) && empty($api['consumer_api']['definitions'])) {
-        unset($api['consumer_api']['definitions']);
-      }
-
-      // ensure description is at least set to empty string
-      if (!isset($api['consumer_api']['info']['description']) || empty($api['consumer_api']['info']['description'])) {
-        $api['consumer_api']['info']['description'] = '';
-      }
-      if (isset($api['consumer_api']['info']['x-ibm-languages']['description']) && !empty($api['consumer_api']['info']['x-ibm-languages']['description'])) {
-        foreach ($api['consumer_api']['info']['x-ibm-languages']['description'] as $lang => $langArray) {
-          $lang = $this->utils->convert_lang_name_to_drupal($lang);
-          // if its one of our locales or the root of one of our locales
-          foreach ($languageList as $langListKey => $langListValue) {
-            if ($lang === $langListKey || strpos($langListKey, $lang, 0) === 0) {
+      // filter out any retired apis and remove them
+      if (array_key_exists('state', $api) && $api['state'] === 'retired') {
+        \Drupal::logger('apic_api')->error('Update api: retired API @apiName, deleting it.', ['@apiName' => $api['name']]);
+        self::deleteNode($node->id(), 'retired_api');
+        $node = NULL;
+      } else {
+        $node->setTitle($this->utils->truncate_string($api['consumer_api']['info']['title']));
+        if (isset($api['consumer_api']['info']['x-ibm-languages']['title']) && !empty($api['consumer_api']['info']['x-ibm-languages']['title'])) {
+          foreach ($api['consumer_api']['info']['x-ibm-languages']['title'] as $lang => $langArray) {
+            $lang = $this->utils->convert_lang_name_to_drupal($lang);
+            if (\in_array($lang, $languageList, FALSE)) {
               if (!$node->hasTranslation($lang)) {
-                $translation = $node->addTranslation($lang, ['apic_description' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang])]);
+                $translation = $node->addTranslation($lang, ['title' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['title'][$lang])]);
                 $translation->save();
               }
               else {
                 $node->getTranslation($lang)
-                  ->set('apic_description', $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang]))
+                  ->setTitle($this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['title'][$lang]))
                   ->save();
               }
             }
           }
         }
-      }
-      if ($moduleHandler->moduleExists('ghmarkdown')) {
-        $format = 'ghmarkdown';
-      }
-      else {
-        $format = 'full_html';
-      }
-      $node->set('apic_description', ['value' => $api['consumer_api']['info']['description'], 'format' => $format]);
-      // ensure summary is at least set to empty string
-      if (!isset($api['consumer_api']['info']['x-ibm-summary']) || empty($api['consumer_api']['info']['x-ibm-summary'])) {
-        $api['consumer_api']['info']['x-ibm-summary'] = '';
-      }
-      if (isset($api['consumer_api']['info']['x-ibm-languages']['x-ibm-summary']) && !empty($api['consumer_api']['info']['x-ibm-languages']['x-ibm-summary'])) {
-        foreach ($api['consumer_api']['info']['x-ibm-languages']['x-ibm-summary'] as $lang => $langArray) {
-          $lang = $this->utils->convert_lang_name_to_drupal($lang);
-          // if its one of our locales or the root of one of our locales
-          foreach ($languageList as $langListKey => $langListValue) {
-            if ($lang === $langListKey || strpos($langListKey, $lang, 0) === 0) {
-              if (!$node->hasTranslation($lang)) {
-                $translation = $node->addTranslation($lang, ['apic_summary' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['x-ibm-summary'][$lang], 1000)]);
-                $translation->save();
-              }
-              else {
-                $node->getTranslation($lang)
-                  ->set('apic_summary', $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['x-ibm-summary'][$lang], 1000))
-                  ->save();
-              }
-            }
-          }
+        $node->set('apic_hostname', $hostVariable);
+        $node->set('apic_provider_id', $configService->getOrgId());
+        $node->set('apic_catalog_id', $configService->getEnvId());
+        $node->set('api_id', $api['id']);
+        $node->set('apic_version', $api['consumer_api']['info']['version']);
+        if (isset($api['consumer_api']['info']['x-pathalias'])) {
+          $node->set('apic_pathalias', $api['consumer_api']['info']['x-pathalias']);
         }
-      }
-      $node->set('apic_summary', [
-        'value' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-summary'], 1000),
-        'format' => 'plaintext',
-      ]);
 
-      $apiType = 'rest';
-      if (isset($api['consumer_api']['x-ibm-configuration']['type'])) {
-        $lowerType = mb_strtolower($api['consumer_api']['x-ibm-configuration']['type']);
-        if ($lowerType === 'rest' || $lowerType === 'wsdl' || $lowerType === 'oauth') {
-          $apiType = $lowerType;
+        // if unset, default state to online
+        if (!isset($api['state']) || empty($api['state'])) {
+          $api['state'] = 'online';
         }
-      }
-      $node->set('api_protocol', $apiType);
-      $node->set('apic_url', $api['url']);
-
-      if (!isset($api['consumer_api']['x-ibm-configuration']) || empty($api['consumer_api']['x-ibm-configuration'])) {
-        $api['consumer_api']['x-ibm-configuration'] = '';
-      }
-      $node->set('api_ibmconfiguration', serialize($api['consumer_api']['x-ibm-configuration']));
-      $oaiVersion = 2;
-      if (isset($api['consumer_api']['openapi']) && $this->utils->startsWith($api['consumer_api']['openapi'], '3.')) {
-        $oaiVersion = 3;
-      }
-      $node->set('api_oaiversion', $oaiVersion);
-      $node->save();
-
-      try {
-        // if empty securityDefinitions and others then needs to be object not array
-        // for now just remove them
-        foreach (['securityDefinitions', 'responses', 'parameters', 'definitions', 'paths'] as $key) {
-          if (array_key_exists($key, $api['consumer_api']) && \is_array($api['consumer_api'][$key]) && empty($api['consumer_api'][$key])) {
-            unset($api['consumer_api'][$key]);
-          }
+        // if set, make sure it is one of the valid options and default to online if not
+        $state = strtolower($api['state']);
+        if ($state !== 'online' && $state !== 'offline' && $state !== 'archived') {
+          $api['state'] = 'online';
         }
-        $node->set('api_swagger', serialize(apic_api_remove_empty_elements($api['consumer_api'])));
+        $node->set('api_state', $state);
 
-        $node->set('api_swaggertags', []);
-        if (isset($api['consumer_api']['tags'])) {
-          $tags = [];
-          foreach ($api['consumer_api']['tags'] as $tag) {
-            if (isset($tag['name'])) {
-              $tags[] = $tag['name'];
-            }
-          }
-          if (isset($api['consumer_api']['paths'])) {
-            foreach ($api['consumer_api']['paths'] as $path) {
-              foreach ($path as $verb => $operation) {
-                if (isset($operation['tags'])) {
-                  foreach ($operation['tags'] as $tag) {
-                    $tags[] = $tag;
-                  }
+        if (isset($api['consumer_api']['definitions']) && empty($api['consumer_api']['definitions'])) {
+          unset($api['consumer_api']['definitions']);
+        }
+
+        // ensure description is at least set to empty string
+        if (!isset($api['consumer_api']['info']['description']) || empty($api['consumer_api']['info']['description'])) {
+          $api['consumer_api']['info']['description'] = '';
+        }
+        if (isset($api['consumer_api']['info']['x-ibm-languages']['description']) && !empty($api['consumer_api']['info']['x-ibm-languages']['description'])) {
+          foreach ($api['consumer_api']['info']['x-ibm-languages']['description'] as $lang => $langArray) {
+            $lang = $this->utils->convert_lang_name_to_drupal($lang);
+            // if its one of our locales or the root of one of our locales
+            foreach ($languageList as $langListKey => $langListValue) {
+              if ($lang === $langListKey || strpos($langListKey, $lang, 0) === 0) {
+                if (!$node->hasTranslation($lang)) {
+                  $translation = $node->addTranslation($lang, ['apic_description' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang])]);
+                  $translation->save();
+                }
+                else {
+                  $node->getTranslation($lang)
+                    ->set('apic_description', $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang]))
+                    ->save();
                 }
               }
             }
           }
-          $tags = array_unique($tags);
-          $node->set('api_swaggertags', $tags);
         }
-        if (isset($api['consumer_api']['info'])) {
-          if (isset($api['consumer_api']['info']['x-ibm-name'])) {
-            $xIbmName = $api['consumer_api']['info']['x-ibm-name'];
-            $node->set('api_xibmname', $xIbmName);
-          }
-          if (isset($api['consumer_api']['info']['version'])) {
-            $xVersion = $api['consumer_api']['info']['version'];
-            $node->set('apic_version', $xVersion);
-          }
-          if (isset($api['consumer_api']['info']['x-ibm-name'], $api['consumer_api']['info']['version'])) {
-            $apiRef = $api['consumer_api']['info']['x-ibm-name'] . ':' . $api['consumer_api']['info']['version'];
-            $node->set('apic_ref', $apiRef);
+        if ($moduleHandler->moduleExists('ghmarkdown')) {
+          $format = 'ghmarkdown';
+        }
+        else {
+          $format = 'full_html';
+        }
+        $node->set('apic_description', ['value' => $api['consumer_api']['info']['description'], 'format' => $format]);
+        // ensure summary is at least set to empty string
+        if (!isset($api['consumer_api']['info']['x-ibm-summary']) || empty($api['consumer_api']['info']['x-ibm-summary'])) {
+          $api['consumer_api']['info']['x-ibm-summary'] = '';
+        }
+        if (isset($api['consumer_api']['info']['x-ibm-languages']['x-ibm-summary']) && !empty($api['consumer_api']['info']['x-ibm-languages']['x-ibm-summary'])) {
+          foreach ($api['consumer_api']['info']['x-ibm-languages']['x-ibm-summary'] as $lang => $langArray) {
+            $lang = $this->utils->convert_lang_name_to_drupal($lang);
+            // if its one of our locales or the root of one of our locales
+            foreach ($languageList as $langListKey => $langListValue) {
+              if ($lang === $langListKey || strpos($langListKey, $lang, 0) === 0) {
+                if (!$node->hasTranslation($lang)) {
+                  $translation = $node->addTranslation($lang, ['apic_summary' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['x-ibm-summary'][$lang], 1000)]);
+                  $translation->save();
+                }
+                else {
+                  $node->getTranslation($lang)
+                    ->set('apic_summary', $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['x-ibm-summary'][$lang], 1000))
+                    ->save();
+                }
+              }
+            }
           }
         }
+        $node->set('apic_summary', [
+          'value' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-summary'], 1000),
+          'format' => 'plaintext',
+        ]);
+
+        $apiType = 'rest';
+        if (isset($api['consumer_api']['x-ibm-configuration']['type'])) {
+          $lowerType = mb_strtolower($api['consumer_api']['x-ibm-configuration']['type']);
+          if ($lowerType === 'rest' || $lowerType === 'wsdl' || $lowerType === 'oauth') {
+            $apiType = $lowerType;
+          }
+        }
+        $node->set('api_protocol', $apiType);
+        $node->set('apic_url', $api['url']);
+
+        if (!isset($api['consumer_api']['x-ibm-configuration']) || empty($api['consumer_api']['x-ibm-configuration'])) {
+          $api['consumer_api']['x-ibm-configuration'] = '';
+        }
+        $node->set('api_ibmconfiguration', serialize($api['consumer_api']['x-ibm-configuration']));
+        $oaiVersion = 2;
+        if (isset($api['consumer_api']['openapi']) && $this->utils->startsWith($api['consumer_api']['openapi'], '3.')) {
+          $oaiVersion = 3;
+        }
+        $node->set('api_oaiversion', $oaiVersion);
         $node->save();
-      } catch (Exception $e) {
-        \Drupal::logger('apic_api')
-          ->notice('Update of Open API document to database failed with: %data', ['%data' => $e->getMessage()]);
-      }
-      // if SOAP API then go get the wsdl too
-      if (isset($api['consumer_api']['x-ibm-configuration']['type']) && (mb_strtolower($api['consumer_api']['x-ibm-configuration']['type']) === 'wsdl')) {
-        $wsdlContentType = $api['wsdl']['content_type'];
 
-        if ($wsdlContentType === NULL) {
-          $wsdlContentType = 'application/wsdl';
+        try {
+          // if empty securityDefinitions and others then needs to be object not array
+          // for now just remove them
+          foreach (['securityDefinitions', 'responses', 'parameters', 'definitions', 'paths'] as $key) {
+            if (array_key_exists($key, $api['consumer_api']) && \is_array($api['consumer_api'][$key]) && empty($api['consumer_api'][$key])) {
+              unset($api['consumer_api'][$key]);
+            }
+          }
+          $node->set('api_swagger', serialize(apic_api_remove_empty_elements($api['consumer_api'])));
+
+          $node->set('api_swaggertags', []);
+          if (isset($api['consumer_api']['tags'])) {
+            $tags = [];
+            foreach ($api['consumer_api']['tags'] as $tag) {
+              if (isset($tag['name'])) {
+                $tags[] = $tag['name'];
+              }
+            }
+            if (isset($api['consumer_api']['paths'])) {
+              foreach ($api['consumer_api']['paths'] as $path) {
+                foreach ($path as $verb => $operation) {
+                  if (isset($operation['tags'])) {
+                    foreach ($operation['tags'] as $tag) {
+                      $tags[] = $tag;
+                    }
+                  }
+                }
+              }
+            }
+            $tags = array_unique($tags);
+            $node->set('api_swaggertags', $tags);
+          }
+          if (isset($api['consumer_api']['info'])) {
+            if (isset($api['consumer_api']['info']['x-ibm-name'])) {
+              $xIbmName = $api['consumer_api']['info']['x-ibm-name'];
+              $node->set('api_xibmname', $xIbmName);
+            }
+            if (isset($api['consumer_api']['info']['version'])) {
+              $xVersion = $api['consumer_api']['info']['version'];
+              $node->set('apic_version', $xVersion);
+            }
+            if (isset($api['consumer_api']['info']['x-ibm-name'], $api['consumer_api']['info']['version'])) {
+              $apiRef = $api['consumer_api']['info']['x-ibm-name'] . ':' . $api['consumer_api']['info']['version'];
+              $node->set('apic_ref', $apiRef);
+            }
+          }
+          $node->save();
+        } catch (Exception $e) {
+          \Drupal::logger('apic_api')
+            ->notice('Update of Open API document to database failed with: %data', ['%data' => $e->getMessage()]);
         }
+        // if SOAP API then go get the wsdl too
+        if (isset($api['consumer_api']['x-ibm-configuration']['type']) && (mb_strtolower($api['consumer_api']['x-ibm-configuration']['type']) === 'wsdl')) {
+          $wsdlContentType = $api['wsdl']['content_type'];
 
-        if (isset($api['wsdl']['content']) && !empty($api['wsdl']['content'])) {
-          $data = base64_decode($api['wsdl']['content']);
-          $fileName = $api['consumer_api']['info']['x-ibm-name'] . '_' . $api['consumer_api']['info']['version'];
-          if ($wsdlContentType === 'application/wsdl') {
-            $fileName .= '.wsdl';
+          if ($wsdlContentType === NULL) {
+            $wsdlContentType = 'application/wsdl';
           }
-          else {
-            $fileName .= '.zip';
-          }
-          $fileTemp = apic_api_save_wsdl($api['id'], $data, $fileName);
-          if ($fileTemp !== NULL) {
-            $updated = FALSE;
-            $deleteFid = -1;
-            $attachments = $node->apic_attachments->getValue();
-            if ($attachments !== NULL) {
-              foreach ($attachments as $key => $existingDoc) {
-                $existingDocFile = \Drupal\file\Entity\File::load($existingDoc['target_id']);
-                if ($existingDocFile !== NULL) {
-                  $existingDocFileUri = $existingDocFile->getFileUri();
-                  if ($existingDocFileUri !== NULL) {
-                    $parts = explode('/', $existingDocFileUri);
-                    $isWSDL = \in_array('apiwsdl', $parts, FALSE);
-                    if ($isWSDL === TRUE && (string) $fileTemp->id() !== (string) $existingDoc['target_id']) {
-                      $description = $existingDoc['description'] ?? '';
-                      if ($updated === FALSE) {
-                        $deleteFid = $existingDoc['target_id'];
-                        $attachments[$key] = [
-                          'target_id' => $fileTemp->id(),
-                          'display' => 1,
-                          'description' => $description,
-                        ];
+
+          if (isset($api['wsdl']['content']) && !empty($api['wsdl']['content'])) {
+            $data = base64_decode($api['wsdl']['content']);
+            $fileName = $api['consumer_api']['info']['x-ibm-name'] . '_' . $api['consumer_api']['info']['version'];
+            if ($wsdlContentType === 'application/wsdl') {
+              $fileName .= '.wsdl';
+            }
+            else {
+              $fileName .= '.zip';
+            }
+            $fileTemp = apic_api_save_wsdl($api['id'], $data, $fileName);
+            if ($fileTemp !== NULL) {
+              $updated = FALSE;
+              $deleteFid = -1;
+              $attachments = $node->apic_attachments->getValue();
+              if ($attachments !== NULL) {
+                foreach ($attachments as $key => $existingDoc) {
+                  $existingDocFile = \Drupal\file\Entity\File::load($existingDoc['target_id']);
+                  if ($existingDocFile !== NULL) {
+                    $existingDocFileUri = $existingDocFile->getFileUri();
+                    if ($existingDocFileUri !== NULL) {
+                      $parts = explode('/', $existingDocFileUri);
+                      $isWSDL = \in_array('apiwsdl', $parts, FALSE);
+                      if ($isWSDL === TRUE && (string) $fileTemp->id() !== (string) $existingDoc['target_id']) {
+                        $description = $existingDoc['description'] ?? '';
+                        if ($updated === FALSE) {
+                          $deleteFid = $existingDoc['target_id'];
+                          $attachments[$key] = [
+                            'target_id' => $fileTemp->id(),
+                            'display' => 1,
+                            'description' => $description,
+                          ];
+                          $updated = TRUE;
+                        }
+                      }
+                      elseif ($isWSDL === TRUE && (string) $fileTemp->id() === (string) $existingDoc['target_id']) {
                         $updated = TRUE;
                       }
                     }
-                    elseif ($isWSDL === TRUE && (string) $fileTemp->id() === (string) $existingDoc['target_id']) {
-                      $updated = TRUE;
-                    }
+                  }
+                  else {
+                    unset($attachments[$key]);
                   }
                 }
-                else {
-                  unset($attachments[$key]);
+              }
+              if ($updated === FALSE) {
+                $attachments[] = [
+                  'target_id' => $fileTemp->id(),
+                  'display' => 1,
+                ];
+              }
+              elseif ($deleteFid !== -1 && $deleteFid !== $fileTemp->id()) {
+                $fileEntity = \Drupal\file\Entity\File::load($deleteFid);
+                if ($fileEntity !== NULL) {
+                  $fileEntity->delete();
                 }
               }
+              $node->set('apic_attachments', $attachments);
+              $node->save();
             }
-            if ($updated === FALSE) {
-              $attachments[] = [
-                'target_id' => $fileTemp->id(),
-                'display' => 1,
-              ];
+
+            if ($wsdlContentType === 'application/zip') {
+              $data = apic_api_get_string_from_zip(base64_decode($api['wsdl']['content']));
             }
-            elseif ($deleteFid !== -1 && $deleteFid !== $fileTemp->id()) {
-              $fileEntity = \Drupal\file\Entity\File::load($deleteFid);
-              if ($fileEntity !== NULL) {
-                $fileEntity->delete();
+            $serialized = Xss::filter(serialize($data));
+            if (($data !== NULL && !empty($data)) && ($node->api_wsdl->value !== $serialized)) {
+              try {
+                $node->set('api_wsdl', $serialized);
+                $node->save();
+              } catch (Exception $e) {
+                \Drupal::logger('apic_api')
+                  ->notice('Save of WSDL to database failed with: %data', ['%data' => $e->getMessage()]);
               }
             }
-            $node->set('apic_attachments', $attachments);
-            $node->save();
-          }
-
-          if ($wsdlContentType === 'application/zip') {
-            $data = apic_api_get_string_from_zip(base64_decode($api['wsdl']['content']));
-          }
-          $serialized = Xss::filter(serialize($data));
-          if (($data !== NULL && !empty($data)) && ($node->api_wsdl->value !== $serialized)) {
-            try {
-              $node->set('api_wsdl', $serialized);
-              $node->save();
-            } catch (Exception $e) {
-              \Drupal::logger('apic_api')
-                ->notice('Save of WSDL to database failed with: %data', ['%data' => $e->getMessage()]);
-            }
           }
         }
-      }
 
-      // API Categories
-      $categoriesEnabled = (boolean) $config->get('categories')['enabled'];
-      if ($categoriesEnabled === TRUE && isset($api['consumer_api']['x-ibm-configuration']['categories'])) {
-        $this->apiTaxonomy->process_categories($api, $node);
-      }
-
-      $phaseTagging = (boolean) $config->get('autotag_with_phase');
-      if ($phaseTagging === TRUE && isset($api['consumer_api']['x-ibm-configuration']['phase'])) {
-        $this->apiTaxonomy->process_phase_tag($node, $api['consumer_api']['x-ibm-configuration']['phase']);
-      }
-      // enable application certificates if we find an API that uses it
-      if (isset($api['consumer_api']['x-ibm-configuration']['application-authentication']['certificate']) && (boolean) $api['consumer_api']['x-ibm-configuration']['application-authentication']['certificate'] === TRUE) {
-        \Drupal::state()->set('ibm_apim.application_certificates', TRUE);
-      }
-
-      if ($node !== NULL && $event !== 'internal') {
-        // Calling all modules implementing 'hook_apic_api_update':
-        $moduleHandler->invokeAll('apic_api_update', ['node' => $node, 'data' => $api]);
-
-        if ($moduleHandler->moduleExists('rules')) {
-          // Set the args twice on the event: as the main subject but also in the
-          // list of arguments.
-          $event = new ApiUpdateEvent($node, ['api' => $node]);
-          $eventDispatcher = \Drupal::service('event_dispatcher');
-          $eventDispatcher->dispatch(ApiUpdateEvent::EVENT_NAME, $event);
+        // API Categories
+        $categoriesEnabled = (boolean) $config->get('categories')['enabled'];
+        if ($categoriesEnabled === TRUE && isset($api['consumer_api']['x-ibm-configuration']['categories'])) {
+          $this->apiTaxonomy->process_categories($api, $node);
         }
-      }
 
-      if ($event !== 'internal') {
-        \Drupal::logger('apic_api')->notice('API @api updated', ['@api' => $node->getTitle()]);
+        $phaseTagging = (boolean) $config->get('autotag_with_phase');
+        if ($phaseTagging === TRUE && isset($api['consumer_api']['x-ibm-configuration']['phase'])) {
+          $this->apiTaxonomy->process_phase_tag($node, $api['consumer_api']['x-ibm-configuration']['phase']);
+        }
+        // enable application certificates if we find an API that uses it
+        if (isset($api['consumer_api']['x-ibm-configuration']['application-authentication']['certificate']) && (boolean) $api['consumer_api']['x-ibm-configuration']['application-authentication']['certificate'] === TRUE) {
+          \Drupal::state()->set('ibm_apim.application_certificates', TRUE);
+        }
+
+        if ($node !== NULL && $event !== 'internal') {
+          // Calling all modules implementing 'hook_apic_api_update':
+          $moduleHandler->invokeAll('apic_api_update', ['node' => $node, 'data' => $api]);
+
+          if ($moduleHandler->moduleExists('rules')) {
+            // Set the args twice on the event: as the main subject but also in the
+            // list of arguments.
+            $event = new ApiUpdateEvent($node, ['api' => $node]);
+            $eventDispatcher = \Drupal::service('event_dispatcher');
+            $eventDispatcher->dispatch(ApiUpdateEvent::EVENT_NAME, $event);
+          }
+        }
+
+        if ($event !== 'internal') {
+          \Drupal::logger('apic_api')->notice('API @api updated', ['@api' => $node->getTitle()]);
+        }
       }
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       $returnValue = $node;

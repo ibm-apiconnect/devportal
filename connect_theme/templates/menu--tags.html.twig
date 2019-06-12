@@ -1,0 +1,64 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a tags menu from the taxonomy menu block.
+ *
+ * Available variables:
+ * - classes: A list of classes to apply to the top level <ul> element.
+ * - dropdown_classes: A list of classes to apply to the dropdown <ul> element.
+ * - menu_name: The machine name of the menu.
+ * - items: A nested list of menu items. Each menu item contains:
+ *   - attributes: HTML attributes for the menu item.
+ *   - below: The menu item child items.
+ *   - title: The menu link title.
+ *   - url: The menu link url, instance of \Drupal\Core\Url
+ *   - localized_options: Menu link localized options.
+ *
+ * @ingroup templates
+ *
+ * Define a custom macro that will render all menu trees.
+ */
+#}
+{% macro menu_links(items, attributes, menu_level, classes, dropdown_classes) %}
+  {% if items %}
+    {% if menu_level == 0 %}
+      {% set ulClasses = classes %}
+    {% else  %}
+      {% set ulClasses = dropdown_classes %}
+    {% endif %}
+    {% set ulClasses = ulClasses|merge(['menu-level-'~ menu_level]) %}
+
+    <ul{{ attributes.addClass(ulClasses) }}>
+      {% set attributes = attributes.removeClass('menu-level-'~ menu_level) %}
+      {% for item in items %}
+        {%
+          set item_classes = item.url.getOption('container_attributes').class | split(" ")
+        %}
+        {%
+          set item_classes = [
+          item.is_expanded and item.below ? 'expanded',
+          item.in_active_trail ? 'active active-trail',
+          loop.first ? 'first',
+          loop.last ? 'last',
+        ]
+        %}
+        <li{{ item.attributes.addClass(item_classes) }}>
+          {% set link_title = item.title %}
+          {% set link_attributes = item.link_attributes %}
+          {# Must use link() here so it triggers hook_link_alter(). #}
+          {{ link(link_title, item.url, link_attributes.addClass(item.in_active_trail ? 'active-trail')) }}
+          {% if item.below %}
+            {{ _self.menu_links(item.below, attributes.removeClass(classes), menu_level + 1, classes, dropdown_classes) }}
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endmacro %}
+
+{#
+  Invoke the custom macro defined above. If classes were provided, use them.
+  This allows the template to be extended without having to also duplicate the
+  code above. @see http://twig.sensiolabs.org/doc/tags/macro.html
+#}
+{{ _self.menu_links(items, attributes, 0, classes ?: ['menu', 'menu--' ~ menu_name|clean_class, 'nav'], dropdown_classes ?: ['taxonomy-menu']) }}

@@ -130,6 +130,7 @@ dependencies:
   - ibm_apim
   - ibm_log_stdout
   - ibm_apic_mail
+  - ibm_apic_flood_control_ui
   - auth_apic
   - consumerorg
   - apic_app

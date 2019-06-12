@@ -189,6 +189,9 @@ ibm_apim.settings:
     proxy_auth:
       type: string
       label: 'Proxy authentication'
+    proxy_for_api:
+      type: string
+      label: 'Use Proxy for Consumer or Platform APIs'
     bgsync:
       type: mapping
       label: 'Background Sync Options'

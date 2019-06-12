@@ -32,12 +32,15 @@ class Group {
   /**
    * get all the groups
    *
-   * @return NULL|array null if an error occurs otherwise an array of the groups.
+   * @return array an array of the groups.
    */
-  public function getAll(): ?array {
+  public function getAll(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $groups = $this->state->get('ibm_apim.groups');
+    if ($groups === null || empty($groups)) {
+      $groups = [];
+    }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $groups);
     return $groups;

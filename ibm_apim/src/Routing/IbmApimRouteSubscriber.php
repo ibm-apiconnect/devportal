@@ -66,6 +66,9 @@ class IbmApimRouteSubscriber extends RouteSubscriberBase {
     // APIC has its own
     $collection->remove('entity.user.cancel_form');
 
+    // Remove the drupal DB update route
+    $collection->remove('system.db_update');
+
     // do not use admin theme for user pages
     if ($route = $collection->get('user.page')) {
       $route->setOption('_admin_route', FALSE);

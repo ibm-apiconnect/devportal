@@ -179,6 +179,18 @@ function apic_api_remove_empty_elements($yaml): array {
         }
       }
     }
+    // remove empty security requirements too
+    if (isset($yaml['security'])) {
+      foreach ($yaml['security'] as $key => $security) {
+        if (is_array($yaml['security'][$key]) && empty($yaml['security'][$key])) {
+          unset($yaml['security'][$key]);
+        }
+      }
+      // remove empty contact
+    }
+    if (isset($yaml['info']['contact']) && is_array($yaml['info']['contact']) && empty($yaml['info']['contact'])) {
+      unset($yaml['info']['contact']);
+    }
   }
   return $yaml;
 }

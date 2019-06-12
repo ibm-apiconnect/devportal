@@ -1,0 +1,16 @@
+--- modules/admin_toolbar/admin_toolbar_tools/admin_toolbar_tools.links.menu.yml	2019-04-29 15:57:59.000000000 +0100
++++ modules/admin_toolbar/admin_toolbar_tools/admin_toolbar_tools.links.menu.yml	2019-04-29 15:58:07.000000000 +0100
+@@ -19,13 +19,6 @@
+   parent: admin_toolbar_tools.help
+   weight: -8
+ 
+-system.db_update:
+-  title: 'Run updates'
+-  route_name: system.db_update
+-  menu_name: admin
+-  parent: admin_toolbar_tools.help
+-  weight: -6
+-
+ system.modules_uninstall:
+   title: 'Uninstall module'
+   route_name: system.modules_uninstall

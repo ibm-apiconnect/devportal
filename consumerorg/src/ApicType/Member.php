@@ -145,6 +145,8 @@ class Member {
     }
     if (array_key_exists('user_url', $content)) {
       $this->setUserUrl($content['user_url']);
+    } elseif (array_key_exists('user', $content) && array_key_exists('url', $content['user'])) {
+      $this->setUserUrl($content['user']['url']);
     }
     if (array_key_exists('role_urls', $content)) {
       $this->setRoleUrls($content['role_urls']);

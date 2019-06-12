@@ -145,7 +145,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
         $form['account']['roles'] = [];
       }
       if (!isset($form['account']['roles']['#default_value'])) {
-        $form['account']['roles']['#default_value'] = [];
+        $form['account']['roles']['#default_value'] = ['authenticated'];
       }
 
       // If the password policy module is enabled, modify this form to show
@@ -168,7 +168,9 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
           '#rows' => _password_policy_constraints_table($form, $form_state),
         ];
 
-        $form['auth-apic-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
+        $form['ibm-apim-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
+        $form['ibm-apim-password-policy-status']['#weight'] = 10;
+        $form['#attached']['drupalSettings']['ibmApimPassword'] = ibm_apim_password_policy_client_settings($form, $form_state);
       }
 
     }
@@ -202,7 +204,12 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
 
       $form['#form_id'] = $this->getFormId();
       $form['account']['roles'] = [];
-      $form['account']['roles']['#default_value'] = [];
+      if (!isset($form['account']['roles'])) {
+        $form['account']['roles'] = [];
+      }
+      if (!isset($form['account']['roles']['#default_value'])) {
+        $form['account']['roles']['#default_value'] = ['authenticated'];
+      }
 
       // If the password policy module is enabled, modify this form to show
       // the configured policy.
@@ -224,14 +231,16 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
           '#rows' => _password_policy_constraints_table($form, $form_state),
         ];
 
-        $form['auth-apic-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
+        $form['ibm-apim-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
+        $form['ibm-apim-password-policy-status']['#weight'] = 10;
+        $form['#attached']['drupalSettings']['ibmApimPassword'] = ibm_apim_password_policy_client_settings($form, $form_state);
       }
 
       $form['actions'] = ['#type' => 'actions'];
       $form['actions']['submit'] = ['#type' => 'submit', '#value' => $this->t('Submit')];
-
     }
 
+    $form['#attached']['library'][] = 'ibm_apim/validate_password';
     return $form;
 
   }
@@ -252,10 +261,10 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
           $form = [];
         }
         if (!isset($form['account']['roles'])) {
-          $form['account']['roles'] = [];
+          $form['account']['roles'] = ['authenticated'];
         }
         if (!isset($form['account']['roles']['#default_value'])) {
-          $form['account']['roles']['#default_value'] = [];
+          $form['account']['roles']['#default_value'] = ['authenticated'];
         }
         _password_policy_user_profile_form_validate($form, $form_state);
       }
@@ -285,10 +294,10 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
         $form = [];
       }
       if (!isset($form['account']['roles'])) {
-        $form['account']['roles'] = [];
+        $form['account']['roles'] = ['authenticated'];
       }
       if (!isset($form['account']['roles']['#default_value'])) {
-        $form['account']['roles']['#default_value'] = [];
+        $form['account']['roles']['#default_value'] = ['authenticated'];
       }
       _password_policy_user_profile_form_submit($form, $form_state);
     }

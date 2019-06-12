@@ -54,7 +54,7 @@ auth_apic.invitation:
     _controller: '\Drupal\auth_apic\Controller\ApicUserInvitationController::process'
     _title: 'Process Invitation'
   requirements:
-    _user_is_logged_in: 'FALSE'
+    _access: 'TRUE'
 
 auth_apic.activation:
   path: '/user/activation'

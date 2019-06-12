@@ -46,3 +46,4 @@ use_proxy: false
 proxy_type: 'CURLPROXY_HTTP'
 proxy_url:
 proxy_auth:
+proxy_for_api: 'BOTH'

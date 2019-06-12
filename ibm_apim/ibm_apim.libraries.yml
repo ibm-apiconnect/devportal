@@ -36,3 +36,14 @@ single_click:
   version: 1.x
   js:
     js/link_single_click.js: {}
+
+delay_validate:
+  version: 1.x
+  js:
+    js/delay_ajax_keyup.js: {}
+
+validate_password:
+  version: 1.x
+  js:
+    js/zxcvbn.js: {}
+    js/validatePassword.js: {}

@@ -135,6 +135,11 @@ class ModalApplicationCreateForm extends FormBase {
 
     $form['#prefix'] = '<div id="modal_application_create_form">';
     $form['#suffix'] = '</div>';
+    // The status messages that will contain any form errors.
+    $form['status_messages'] = [
+      '#type' => 'status_messages',
+      '#weight' => -20,
+    ];
 
     $form['title']['#required'] = TRUE;
 
@@ -202,135 +207,142 @@ class ModalApplicationCreateForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitModalFormAjax(array &$form, FormStateInterface $form_state): AjaxResponse {
-
-    $certificate = NULL;
-
-    // Get form inputs
-    $name = $form_state->getValue('title');
-    if (is_array($name) && isset($name[0]['value'])) {
-      $name = $name[0]['value'];
-    }
-    $name = trim($name);
-    $summary = $form_state->getValue('apic_summary');
-    if (is_array($summary) && isset($summary[0]['value'])) {
-      $summary = $summary[0]['value'];
-    }
-    $oauth_endpoints = [];
-    $oauth = $form_state->getValue('application_redirect_endpoints');
-    foreach ($oauth as $oauth_value) {
-      if (is_array($oauth_value) && !empty($oauth_value['value'])) {
-        $oauth_endpoints[] = trim($oauth_value['value']);
-      }
-    }
-    $ibm_apim_application_certificates = \Drupal::state()->get('ibm_apim.application_certificates');
-    if ($ibm_apim_application_certificates) {
-      $certificate = $form_state->getValue('certificate');
-    }
-
-    // Create the application
-    $restService = \Drupal::service('apic_app.rest_service');
-    $result = $restService->createApplication($name, $summary, $oauth_endpoints, $certificate, $form_state);
-
-    // Response is a set of Ajax commands to update the DOM or reload the page etc
     $response = new AjaxResponse();
-    if (isset($result->data['errors'])) {
-      $response->addCommand(new RedirectCommand(Url::fromRoute('ibm_apim.subscription_wizard.step', ['step' => 'chooseapp'])
-        ->toString()));
+
+    // If there are any form errors, re-display the form.
+    if ($form_state->hasAnyErrors()) {
+      // Remember the previous id ? Here it is
+      $response->addCommand(new ReplaceCommand('#modal_application_create_form', $form));
     }
     else {
+      $certificate = NULL;
 
-      // Swallow the create app success drupal status message
-      drupal_get_messages();
-
-      $data = $result->data;
-
-      $clientId = $data['client_id'];
-      $clientSecret = $data['client_secret'];
-      $nid = $data['nid'];
-
-      // Add the new app to the app list
-      $node = Node::load($nid);
-
-      if ($node !== NULL) {
-        $renderArray = node_view($node, 'subscribewizard');
-        $renderer = \Drupal::service('renderer');
-        $html = $renderer->render($renderArray);
-        $response->addCommand(new InsertCommand('div.apicNewAppWrapper', $html, []));
+      // Get form inputs
+      $name = $form_state->getValue('title');
+      if (is_array($name) && isset($name[0]['value'])) {
+        $name = $name[0]['value'];
       }
-
-      // Need to update message area on underlying form - re-check if we have suspended or subscribed apps
-      $productName = 'undefined';
-      $product_url = 'undefined';
-      $product_id = \Drupal::request()->query->get('productId');
-      if (isset($product_id)) {
-        $product_node = Node::load($product_id);
-        if ($product_node !== NULL) {
-          $productName = $product_node->getTitle();
-          $product_url = $product_node->apic_url->value;
+      $name = trim($name);
+      $summary = $form_state->getValue('apic_summary');
+      if (is_array($summary) && isset($summary[0]['value'])) {
+        $summary = $summary[0]['value'];
+      }
+      $oauth_endpoints = [];
+      $oauth = $form_state->getValue('application_redirect_endpoints');
+      foreach ($oauth as $oauth_value) {
+        if (is_array($oauth_value) && !empty($oauth_value['value'])) {
+          $oauth_endpoints[] = trim($oauth_value['value']);
         }
       }
-      $allApps = Application::listApplications();
-      $allApps = Node::loadMultiple($allApps);
-      $suspendedApps = [];
-      $subscribedApps = [];
+      $ibm_apim_application_certificates = \Drupal::state()->get('ibm_apim.application_certificates');
+      if ($ibm_apim_application_certificates) {
+        $certificate = $form_state->getValue('certificate');
+      }
 
-      foreach ($allApps as $nid => $nextApp) {
-        if (isset($nextApp->apic_state->value) && mb_strtoupper($nextApp->apic_state->value) === 'SUSPENDED') {
-          $suspendedApps[] = $nextApp;
+      // Create the application
+      $restService = \Drupal::service('apic_app.rest_service');
+      $result = $restService->createApplication($name, $summary, $oauth_endpoints, $certificate, $form_state);
+
+      // Response is a set of Ajax commands to update the DOM or reload the page etc
+
+      if (isset($result->data['errors'])) {
+        $response->addCommand(new RedirectCommand(Url::fromRoute('ibm_apim.subscription_wizard.step', ['step' => 'chooseapp'])
+          ->toString()));
+      }
+      else {
+
+        // Swallow the create app success drupal status message
+        drupal_get_messages();
+
+        $data = $result->data;
+
+        $clientId = $data['client_id'];
+        $clientSecret = $data['client_secret'];
+        $nid = $data['nid'];
+
+        // Add the new app to the app list
+        $node = Node::load($nid);
+
+        if ($node !== NULL) {
+          $renderArray = node_view($node, 'subscribewizard');
+          $renderer = \Drupal::service('renderer');
+          $html = $renderer->render($renderArray);
+          $response->addCommand(new InsertCommand('div.apicNewAppWrapper', $html, []));
         }
-        elseif (isset($nextApp->application_subscriptions->value)) {
-          $subs = unserialize($nextApp->application_subscriptions->value, ['allowed_classes' => FALSE]);
-          if (is_array($subs)) {
-            foreach ($subs as $sub) {
-              if (isset($sub['product_url']) && $sub['product_url'] === $product_url) {
-                $subscribedApps[] = $nextApp;
-                $appSubscribedToProduct = TRUE;
-                break;
+
+        // Need to update message area on underlying form - re-check if we have suspended or subscribed apps
+        $productName = 'undefined';
+        $product_url = 'undefined';
+        $product_id = \Drupal::request()->query->get('productId');
+        if (isset($product_id)) {
+          $product_node = Node::load($product_id);
+          if ($product_node !== NULL) {
+            $productName = $product_node->getTitle();
+            $product_url = $product_node->apic_url->value;
+          }
+        }
+        $allApps = Application::listApplications();
+        $allApps = Node::loadMultiple($allApps);
+        $suspendedApps = [];
+        $subscribedApps = [];
+
+        foreach ($allApps as $nid => $nextApp) {
+          if (isset($nextApp->apic_state->value) && mb_strtoupper($nextApp->apic_state->value) === 'SUSPENDED') {
+            $suspendedApps[] = $nextApp;
+          }
+          elseif (isset($nextApp->application_subscriptions->value)) {
+            $subs = unserialize($nextApp->application_subscriptions->value, ['allowed_classes' => FALSE]);
+            if (is_array($subs)) {
+              foreach ($subs as $sub) {
+                if (isset($sub['product_url']) && $sub['product_url'] === $product_url) {
+                  $subscribedApps[] = $nextApp;
+                  $appSubscribedToProduct = TRUE;
+                  break;
+                }
               }
             }
           }
         }
+
+        // Generate the appropriate messages div and replace the div that is already there
+        $suspendedAppMsg = t('There are %number suspended applications not displayed in this list.', ['%number' => sizeof($suspendedApps)]);
+        $subscribedAppMsg = t('There are %number applications that are already subscribed to the %product product. They are not displayed in this list.',
+          ['%number' => sizeof($subscribedApps), '%product' => $productName]);
+        $messagesHtml = '<div class="apicSubscribeInfotext">' .
+          (!empty($suspendedApps) ? $suspendedAppMsg : "") .
+          (!empty($subscribedApps) ? $subscribedAppMsg : "") .
+          '</div>';
+        $response->addCommand(new ReplaceCommand('div.apicSubscribeInfotext', $messagesHtml));
+
+        // Pop up a new modal dialog to display the client id and secret
+        $credsForm = [];
+
+        $modalHeaderHTML = '<div class="modal-header ui-dialog-titlebar ui-draggable-handle" id="drupal-modal--header"><button class="close ui-dialog-titlebar-close" aria-label="Close" data-dismiss="modal" type="button"><span aria-hidden="true">×</span></button><h4 class="modal-title ui-dialog-title">' . t('Credentials for your new application') . '</h4></div>';
+        $credsForm['intro'] = [
+          '#markup' => '<div class="modalAppResultContainer modal-dialog"><div class="modal-content">' . $modalHeaderHTML . '<div class="modal-body"><p>' . t('The API Key and Secret have been generated for your application.') . '</p>',
+          '#weight' => 0,
+          '#allowed_tags' => ['button', 'div', 'span', 'p', 'h4'],
+        ];
+
+        $credsForm['client_id'] = [
+          '#markup' => \Drupal\Core\Render\Markup::create('<div class="clientIDContainer toggleParent"><p class="field__label">' . $this->t('Key') . '</p><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_id" type="password" readonly value="' . $clientId . '"></div><div class="apicAppCheckButton">
+        <div class="password-toggle bx--form-item js-form-item form-item js-form-type-checkbox form-type-checkbox checkbox"><label title="" data-toggle="tooltip" class="bx--label option" data-original-title=""><input class="form-checkbox bx--checkbox" type="checkbox"><span class="bx--checkbox-appearance"><svg class="bx--checkbox-checkmark" width="12" height="9" viewBox="0 0 12 9" fill-rule="evenodd"><path d="M4.1 6.1L1.4 3.4 0 4.9 4.1 9l7.6-7.6L10.3 0z"></path></svg></span><span class="children"> ' . t('Show') . '</span></label></div></div></div>'),
+          '#weight' => 10,
+        ];
+
+        $credsForm['client_secret'] = [
+          '#markup' => \Drupal\Core\Render\Markup::create('<div class="clientSecretContainer toggleParent"><p class="field__label">' . $this->t('Secret') . '</p><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_secret" type="password" readonly value="' . $clientSecret . '"></div><div class="apicAppCheckButton">
+        <div class="password-toggle bx--form-item js-form-item form-item js-form-type-checkbox form-type-checkbox checkbox"><label title="" data-toggle="tooltip" class="bx--label option" data-original-title=""><input class="form-checkbox bx--checkbox" type="checkbox"><span class="bx--checkbox-appearance"><svg class="bx--checkbox-checkmark" width="12" height="9" viewBox="0 0 12 9" fill-rule="evenodd"><path d="M4.1 6.1L1.4 3.4 0 4.9 4.1 9l7.6-7.6L10.3 0z"></path></svg></span><span class="children"> ' . t('Show') . '</span></label></div></div></div>'),
+          '#weight' => 20,
+        ];
+
+        $credsForm['outro'] = [
+          '#markup' => '<p>' . t('The Secret will only be displayed here one time. Please copy your API Secret and keep it for your records.') . '</p></div></div></div>',
+          '#weight' => 30,
+        ];
+        $response->addCommand(new OpenModalDialogCommand(t('Credentials for your new application'), $credsForm));
       }
-
-      // Generate the appropriate messages div and replace the div that is already there
-      $suspendedAppMsg = t('There are %number suspended applications not displayed in this list.', ['%number' => sizeof($suspendedApps)]);
-      $subscribedAppMsg = t('There are %number applications that are already subscribed to the %product product. They are not displayed in this list.',
-        ['%number' => sizeof($subscribedApps), '%product' => $productName]);
-      $messagesHtml = '<div class="apicSubscribeInfotext">' .
-        (!empty($suspendedApps) ? $suspendedAppMsg : "") .
-        (!empty($subscribedApps) ? $subscribedAppMsg : "") .
-        '</div>';
-      $response->addCommand(new ReplaceCommand('div.apicSubscribeInfotext', $messagesHtml));
-      
-      // Pop up a new modal dialog to display the client id and secret
-      $credsForm = [];
-
-      $modalHeaderHTML = '<div class="modal-header ui-dialog-titlebar ui-draggable-handle" id="drupal-modal--header"><button class="close ui-dialog-titlebar-close" aria-label="Close" data-dismiss="modal" type="button"><span aria-hidden="true">×</span></button><h4 class="modal-title ui-dialog-title">' . t('Credentials for your new application') . '</h4></div>';
-      $credsForm['intro'] = [
-        '#markup' => '<div class="modalAppResultContainer modal-dialog"><div class="modal-content">' . $modalHeaderHTML . '<div class="modal-body"><p>' . t('The API Key and Secret have been generated for your application.') . '</p>',
-        '#weight' => 0,
-        '#allowed_tags' => ['button', 'div', 'span', 'p', 'h4'],
-      ];
-
-      $credsForm['client_id'] = [
-        '#markup' => \Drupal\Core\Render\Markup::create('<div class="clientIDContainer toggleParent"><p class="field__label">' . $this->t('Key') . '</p><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_id" type="password" readonly value="' . $clientId . '"></div><div class="apicAppCheckButton">
-        <div class="password-toggle bx--form-item js-form-item form-item js-form-type-checkbox form-type-checkbox checkbox"><label title="" data-toggle="tooltip" class="bx--label option" data-original-title=""><input class="form-checkbox bx--checkbox" type="checkbox"><span class="bx--checkbox-appearance"><svg class="bx--checkbox-checkmark" width="12" height="9" viewBox="0 0 12 9" fill-rule="evenodd"><path d="M4.1 6.1L1.4 3.4 0 4.9 4.1 9l7.6-7.6L10.3 0z"></path></svg></span><span class="children"> ' . t('Show') . '</span></label></div></div></div>'),
-        '#weight' => 10,
-      ];
-
-      $credsForm['client_secret'] = [
-        '#markup' => \Drupal\Core\Render\Markup::create('<div class="clientSecretContainer toggleParent"><p class="field__label">' . $this->t('Secret') . '</p><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_secret" type="password" readonly value="' . $clientSecret . '"></div><div class="apicAppCheckButton">
-        <div class="password-toggle bx--form-item js-form-item form-item js-form-type-checkbox form-type-checkbox checkbox"><label title="" data-toggle="tooltip" class="bx--label option" data-original-title=""><input class="form-checkbox bx--checkbox" type="checkbox"><span class="bx--checkbox-appearance"><svg class="bx--checkbox-checkmark" width="12" height="9" viewBox="0 0 12 9" fill-rule="evenodd"><path d="M4.1 6.1L1.4 3.4 0 4.9 4.1 9l7.6-7.6L10.3 0z"></path></svg></span><span class="children"> ' . t('Show') . '</span></label></div></div></div>'),
-        '#weight' => 20,
-      ];
-
-      $credsForm['outro'] = [
-        '#markup' => '<p>' . t('The Secret will only be displayed here one time. Please copy your API Secret and keep it for your records.') . '</p></div></div></div>',
-        '#weight' => 30,
-      ];
-      $response->addCommand(new OpenModalDialogCommand(t('Credentials for your new application'), $credsForm));
     }
-
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     return $response;

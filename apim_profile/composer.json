@@ -40,7 +40,7 @@
     "cweagans/composer-patches": "^1.6.5",
     "drupal-composer/drupal-scaffold": "^2.5",
     "drupal/console": "^1.0.2",
-    "drupal/core": "8.6.15",
+    "drupal/core": "8.6.16",
     "vlucas/phpdotenv": "^2.4",
     "webflo/drupal-finder": "^1.0.0",
     "webmozart/path-util": "^2.3",
@@ -151,9 +151,6 @@
     "drupal/flood_unblock": "^1.5",
     "drupal/openapi": "^1.0@alpha",
     "drupal/graphql": "^3.0@beta",
-    "drupal/migrate_plus": "^4.0",
-    "drupal/migrate_tools": "^4.0",
-    "drupal/migrate_upgrade": "^3.0",
     "drupal/facets": "^1.0@beta",
     "drupal/search_api_autocomplete": "^1.0",
     "drupal/facets_pretty_paths": "^1.0@beta",
@@ -203,14 +200,14 @@
     "drupal/contact_storage": "^1.0@beta",
     "drupal/advagg": "^3.5",
     "patchwork/jsqueeze": "^2.0",
-    "typo3/phar-stream-wrapper": "2.0.1",
     "drupal/select_translation": "^1.0",
     "drupal/disable_language": "^1.0@beta",
     "drupal/page_load_progress": "^1.4",
-    "drupal/term_csv_export_import": "^2.0@alpha"
+    "drupal/term_csv_export_import": "^2.0@alpha",
+    "drupal/node_type_count": "^1.0"
   },
   "require-dev": {
-    "webflo/drupal-core-require-dev": "8.6.15"
+    "webflo/drupal-core-require-dev": "8.6.16"
   },
   "conflict": {
     "drupal/drupal": "*"

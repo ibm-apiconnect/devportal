@@ -3,10 +3,26 @@ Feature: Invited User Registration
   I need to be able to register a new user
 
   @mocked
-  Scenario: Register a user with no token in the session
+  Scenario: Hit the user register route directly - anonymous user
     Given I am not logged in
     And I am at "/"
-    And I am at "/user/register"
+    And I am at "/user/invitation"
+    Then there are errors
+    And I should see "Missing invitation token. Unable to proceed."
+    And there are no messages
+    And there are no warnings
+
+  @api
+  Scenario: Hit the user register route directly - authenticated user
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given I am logged in as "@data(andre.mail)"
+    And I am at "/user/invitation"
+    Then there are errors
+    And I should see "Missing invitation token. Unable to proceed."
+    And there are no messages
     And there are no warnings
 
   @mocked
@@ -29,7 +45,6 @@ Feature: Invited User Registration
     And there are no messages
     And I should see "Invalid invitation token. Contact the system administrator for assistance"
 
-
   @mocked
   Scenario: Inviting a user with a valid token
     Given I am not logged in
@@ -45,3 +60,37 @@ Feature: Invited User Registration
     And the "Email address" field should contain "fake-user@example.com"
     And the "Consumer organization" field should contain ""
     And the "Password" field should contain ""
+
+  @api
+  Scenario: Inviting a user who is logged in when they open the link
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given I am logged in as "@data(andre.mail)"
+    And I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lKbFltUXpNREE1WkMwNE9URmpMVFJqTWpNdE9HRXdOeTB6TlRVNVlXSmhZVEV5TVdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVptRnJaUzExYzJWeVFHVjRZVzF3YkdVdVkyOXRJaXdpYVhOeklqb2lTVUpOSUVGUVNTQkRiMjV1WldOMElpd2lkRzlyWlc1ZmRIbHdaU0k2SW5SbGJYQnZjbUZ5ZVNJc0ltbGhkQ0k2TVRVeU1UUTJNVGd6Tml3aVpYaHdJam94TlRJeE5qTTBOak0yTENKelkyOXdaWE1pT25zaWFXNTJhWFJoZEdsdmJpSTZJaTlqYjI1emRXMWxjaTFoY0drdmIzSm5MV2x1ZG1sMFlYUnBiMjV6THpnelkyTXhZVFkyTFRObVpETXRORFF3WmkxaE0ySmpMV1F6TnpkbVl6YzFNelZqTlNJc0luVnliQ0k2SWk5amIyNXpkVzFsY2kxaGNHa3ZiM0puTFdsdWRtbDBZWFJwYjI1ekx6Z3pZMk14WVRZMkxUTm1aRE10TkRRd1ppMWhNMkpqTFdRek56ZG1ZemMxTXpWak5TSXNJbUZqZEdsdmJuTWlPbHNpY21WbmFYTjBaWElpTENKaFkyTmxjSFFpWFN3aWNtVmhiRzBpT2lKamIyNXpkVzFsY2pwaU4yTXlNMlk0T1MxbE1ESm1MVFJoTnpNdE9EZGxNQzB6TURVd09XVTNZVE5oTkRrNk1qWmlOamsyTXpVdE5tRTRNQzAwWXpsa0xXSXhNall0Tldaak9UZzRNR1UxTldKaUluMTkuTU5wYi1WODVUT3Y5cGVLbFhESU1MWUF3aUlFWEk5T2hjUmQ3QU9ZTkhuNA=="
+    Then there are errors
+    And I should see "Unable to complete the invitation process as you are logged in. Please log out and click on the invitation link again to complete the invitation process."
+    And there are no warnings
+    And there are no messages
+    And I should be on "/"
+
+  @api
+  Scenario: Inviting a user who exists
+    Given I am not logged in
+    Given users:
+      | name           | mail                        | pass     | status |
+      | invitationuser | andreinvitation@example.com | Qwert123 | 1      |
+    And I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lKbFltUXpNREE1WkMwNE9URmpMVFJqTWpNdE9HRXdOeTB6TlRVNVlXSmhZVEV5TVdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVZwYm5acGRHRjBhVzl1UUdWNFlXMXdiR1V1WTI5dElpd2lhWE56SWpvaVNVSk5JRUZRU1NCRGIyNXVaV04wSWl3aWRHOXJaVzVmZEhsd1pTSTZJblJsYlhCdmNtRnllU0lzSW1saGRDSTZNVFV5TVRRMk1UZ3pOaXdpWlhod0lqb3hOVEl4TmpNME5qTTJMQ0p6WTI5d1pYTWlPbnNpYVc1MmFYUmhkR2x2YmlJNklpOWpiMjV6ZFcxbGNpMWhjR2t2YjNKbkxXbHVkbWwwWVhScGIyNXpMemd6WTJNeFlUWTJMVE5tWkRNdE5EUXdaaTFoTTJKakxXUXpOemRtWXpjMU16VmpOU0lzSW5WeWJDSTZJaTlqYjI1emRXMWxjaTFoY0drdmIzSm5MV2x1ZG1sMFlYUnBiMjV6THpnelkyTXhZVFkyTFRObVpETXRORFF3WmkxaE0ySmpMV1F6TnpkbVl6YzFNelZqTlNJc0ltRmpkR2x2Ym5NaU9sc2ljbVZuYVhOMFpYSWlMQ0poWTJObGNIUWlYU3dpY21WaGJHMGlPaUpqYjI1emRXMWxjanBpTjJNeU0yWTRPUzFsTURKbUxUUmhOek10T0RkbE1DMHpNRFV3T1dVM1lUTmhORGs2TWpaaU5qazJNelV0Tm1FNE1DMDBZemxrTFdJeE1qWXROV1pqT1RnNE1HVTFOV0ppSW4xOS5aRURFRHQwVUtQOFFTbDc5dzRva0tncUFmZm9WdXZua1kyNTZtbUxWUXRz"
+    Then there are no errors
+    And there are no warnings
+    And there are no messages
+    And I should be on "/user/login"
+
+  Scenario: Inviting a user who does not exist
+    Given I am not logged in
+    And I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lKbFltUXpNREE1WkMwNE9URmpMVFJqTWpNdE9HRXdOeTB6TlRVNVlXSmhZVEV5TVdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVptRnJaUzExYzJWeVFHVjRZVzF3YkdVdVkyOXRJaXdpYVhOeklqb2lTVUpOSUVGUVNTQkRiMjV1WldOMElpd2lkRzlyWlc1ZmRIbHdaU0k2SW5SbGJYQnZjbUZ5ZVNJc0ltbGhkQ0k2TVRVeU1UUTJNVGd6Tml3aVpYaHdJam94TlRJeE5qTTBOak0yTENKelkyOXdaWE1pT25zaWFXNTJhWFJoZEdsdmJpSTZJaTlqYjI1emRXMWxjaTFoY0drdmIzSm5MV2x1ZG1sMFlYUnBiMjV6THpnelkyTXhZVFkyTFRObVpETXRORFF3WmkxaE0ySmpMV1F6TnpkbVl6YzFNelZqTlNJc0luVnliQ0k2SWk5amIyNXpkVzFsY2kxaGNHa3ZiM0puTFdsdWRtbDBZWFJwYjI1ekx6Z3pZMk14WVRZMkxUTm1aRE10TkRRd1ppMWhNMkpqTFdRek56ZG1ZemMxTXpWak5TSXNJbUZqZEdsdmJuTWlPbHNpY21WbmFYTjBaWElpTENKaFkyTmxjSFFpWFN3aWNtVmhiRzBpT2lKamIyNXpkVzFsY2pwaU4yTXlNMlk0T1MxbE1ESm1MVFJoTnpNdE9EZGxNQzB6TURVd09XVTNZVE5oTkRrNk1qWmlOamsyTXpVdE5tRTRNQzAwWXpsa0xXSXhNall0Tldaak9UZzRNR1UxTldKaUluMTkuTU5wYi1WODVUT3Y5cGVLbFhESU1MWUF3aUlFWEk5T2hjUmQ3QU9ZTkhuNA=="
+    #Then there are no errors - password policy is an error!
+    And there are no warnings
+    And there are no messages
+    And I should be on "/user/register"

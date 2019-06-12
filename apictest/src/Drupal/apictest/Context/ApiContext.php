@@ -13,13 +13,50 @@
 
 namespace Drupal\apictest\Context;
 
+use Behat\Gherkin\Node\TableNode;
 use Drupal\apic_api\Api;
+use Drupal\apictest\ApicTestUtils;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\Entity\Node;
+use Drupal\user\Entity\User;
 
 class ApiContext extends RawDrupalContext {
 
   private $tempObject = NULL;
+
+  private $testDataDirectory = __DIR__ . '/../../../../testdata';
+
+  /**
+   * @Given apis:
+   */
+  public function createApis(TableNode $table): void {
+
+    // If we are not using mocks, then we are testing with live data from a management appliance
+    // Under those circumstances, we should absolutely not create any api in the database!
+    if ($this->useMockServices === FALSE) {
+      print "This test is running with a real management server backend. No apis will be created in the database.\n";
+      return;
+    }
+
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(User::load(1));
+    }
+
+    foreach ($table as $row) {
+      $object = $this->createApiWithDocument($row['title'], $row['id'], $row['document']);
+
+      $api = new Api();
+      $nid = $api->create($object);
+
+    }
+    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+  }
 
   /**
    * @Given I publish an api with the name :name, id :id and categories :categories
@@ -497,7 +534,8 @@ class ApiContext extends RawDrupalContext {
       else {
         throw new \Exception("The returned api was not visible");
       }
-    } else {
+    }
+    else {
       throw new \Exception("Failed to find an api with the name $name");
     }
   }
@@ -517,13 +555,41 @@ class ApiContext extends RawDrupalContext {
     print('Query results: ' . serialize($results) . PHP_EOL);
 
     if ($results !== NULL && !empty($results)) {
-//      $querynid = array_shift($results);
-//      $api = Node::load($querynid);
-//      if ($api !== NULL && $api->get('api_xibmname')->value === $name) {
-        throw new \Exception("API $name exists and is visible");
-    } else {
-        print("The returned api was not visible");
+      //      $querynid = array_shift($results);
+      //      $api = Node::load($querynid);
+      //      if ($api !== NULL && $api->get('api_xibmname')->value === $name) {
+      throw new \Exception("API $name exists and is visible");
     }
+    else {
+      print("The returned api was not visible");
+    }
+  }
+
+  /**
+   * Creates an associative array representing an API including the API swagger doc
+   *
+   * @param $title
+   * @param string $id
+   * @param null $document
+   *
+   * @return array
+   */
+  private function createApiWithDocument($title, $id = '12345', $document = NULL): array {
+
+    $object = [];
+    $object['id'] = $id;
+    $object['url'] = 'https://localhost.com';
+
+    if ($document && file_exists($this->testDataDirectory . '/apis/' . $document)) {
+      $string = file_get_contents($this->testDataDirectory . '/apis/' . $document);
+      $json = json_decode($string, TRUE);
+      $object['consumer_api'] = $json;
+    }
+    // overwrite what was in the document with what we were fed in
+    // not currently allowing override of api name since it has to match whats in the product document
+    $object['consumer_api']['info']['title'] = $title;
+
+    return $object;
   }
 
   /**

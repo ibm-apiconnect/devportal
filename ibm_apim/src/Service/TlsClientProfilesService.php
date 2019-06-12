@@ -33,15 +33,16 @@ class TlsClientProfilesService {
   /**
    * get all the tls client profiles
    *
-   * @return NULL|array an array of the registries.
+   * @return array an array of the registries.
    */
-  public function getAll(): ?array {
+  public function getAll(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $client_profiles = $this->state->get('ibm_apim.tls_client_profiles');
 
-    if (empty($client_profiles)) {
+    if ($client_profiles === null || empty($client_profiles)) {
       $this->logger->warning('Found no tls client profiles in the catalog state. Potentially missing data from APIM.');
+      $client_profiles = [];
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $client_profiles);

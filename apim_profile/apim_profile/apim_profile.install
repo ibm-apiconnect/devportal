@@ -31,9 +31,9 @@ use Drupal\user\RoleInterface;
  *
  * Perform actions to set up the site for this profile.
  *
+ * @throws \Drupal\Core\Entity\EntityStorageException
  * @see system_install()
  *
- * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apim_profile_install() {
   $path = __DIR__;
@@ -42,7 +42,7 @@ function apim_profile_install() {
   include_once DRUPAL_ROOT . '/core/profiles/standard/standard.install';
   standard_install();
 
-  $core_dependencies = array(
+  $core_dependencies = [
     'node',
     'history',
     'entity_reference',
@@ -88,10 +88,10 @@ function apim_profile_install() {
     'user',
     'inline_form_errors',
     'big_pipe',
-    'media'
-  );
+    'media',
+  ];
 
-  $module_dependencies = array(
+  $module_dependencies = [
     'acl',
     'admin_toolbar',
     'admin_toolbar_tools',
@@ -108,7 +108,6 @@ function apim_profile_install() {
     'mailsystem',
     'taxonomy_menu',
     'autologout',
-    'login_security',
     'session_limit',
     'token',
     'typed_data',
@@ -198,14 +197,17 @@ function apim_profile_install() {
     'noopener_filter',
     'session_based_temp_store',
     'select_translation',
-    'term_csv_export_import'
-  );
+    'term_csv_export_import',
+    'page_load_progress',
+    'node_type_count'
+  ];
 
-  $our_modules = array(
+  $our_modules = [
     'ghmarkdown',
     'ibm_log_stdout',
     'ibm_apim',
     'ibm_apic_mail',
+    'ibm_apic_flood_control_ui',
     'auth_apic',
     'apic_api',
     'apic_app',
@@ -214,8 +216,8 @@ function apim_profile_install() {
     'featuredcontent',
     'socialblock',
     'themegenerator',
-    'mail_subscribers'
-  );
+    'mail_subscribers',
+  ];
   // enable our modules
   $module_installer = \Drupal::service('module_installer');
   foreach ($core_dependencies as $module) {
@@ -235,7 +237,7 @@ function apim_profile_install() {
     ->save(TRUE);
 
   // TODO remove bartik from this list
-  $themes = array('bartik', 'seven', 'connect_theme');
+  $themes = ['bartik', 'seven', 'connect_theme'];
   $theme_installer = \Drupal::service('theme_installer');
   foreach ($themes as $theme) {
     $theme_installer->install([$theme]);
@@ -252,11 +254,12 @@ function apim_profile_install() {
   \Drupal::service('entity.definition_update_manager')->applyUpdates();
 
   // Enable default permissions for system roles.
-  user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, array(
+  user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, [
     'access comments',
-    'use search autocomplete'
-  ));
-  user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, array(
+    'use search autocomplete',
+    'use page load progress',
+  ]);
+  user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, [
     'access comments',
     'post comments',
     'skip comment approval',
@@ -273,12 +276,15 @@ function apim_profile_install() {
     'edit own vote on node:consumerorg:apic_rating',
     'edit own vote on node:product:apic_rating',
     'avatars avatar_generator user letter_generator',
-    'avatars avatar_generator user user_upload'
-  ));
+    'avatars avatar_generator user user_upload',
+    'use page load progress',
+  ]);
+
+  user_role_grant_permissions('administrator', ['administer page load progress']);
 
   // Assign user 1 the "administrator" and "superuser" roles.
   $user = User::load(1);
-  if ($user !== null) {
+  if ($user !== NULL) {
     $user->roles[] = 'administrator';
     $user->roles[] = 'superuser';
     $user->save();
@@ -308,18 +314,18 @@ function apim_profile_install() {
   // menu links are valid.
   \Drupal::service('router.builder')->rebuildIfNeeded();
 
-  user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, array('access site-wide contact form'));
-  user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, array('access site-wide contact form'));
+  user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, ['access site-wide contact form']);
+  user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, ['access site-wide contact form']);
 
   // Allow all users to use search.
-  user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, array('search content'));
-  user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, array('search content'));
+  user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, ['search content']);
+  user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, ['search content']);
 
   // forum moderator permissions
-  user_role_grant_permissions('forum_moderator', array(
+  user_role_grant_permissions('forum_moderator', [
     'delete any forum content',
-    'edit any forum content'
-  ));
+    'edit any forum content',
+  ]);
 
   // set up default APIC settings
   apim_profile_default_apic_config();
@@ -361,21 +367,21 @@ function apim_profile_main_menu_links() {
     'link' => ['uri' => 'internal:/'],
     'menu_name' => $menu_name,
     'expanded' => TRUE,
-    'weight' => -1
+    'weight' => -1,
   ]);
 
   foreach ($languages as $language) {
     if ($language->getId() === 'en') {
       continue;
     }
-    $translation = array(
+    $translation = [
       'title' => t('Home', [], ['langcode' => $language->getId()]),
       'description' => t('Portal homepage', [], ['langcode' => $language->getId()]),
       'link' => ['uri' => 'internal:/'],
       'menu_name' => $menu_name,
       'expanded' => TRUE,
-      'weight' => -1
-    );
+      'weight' => -1,
+    ];
     $home_link->addTranslation($language->getId(), $translation);
   }
 
@@ -387,17 +393,17 @@ function apim_profile_main_menu_links() {
     'link' => ['uri' => 'internal:/product', [], ['langcode' => 'en']],
     'menu_name' => $menu_name,
     'weight' => 5,
-    'langcode' => 'en'
+    'langcode' => 'en',
   ]);
   foreach ($languages as $language) {
     if ($language->getId() === 'en') {
       continue;
     }
-    $translation = array(
+    $translation = [
       'title' => t('API Products', [], ['langcode' => $language->getId()]),
       'description' => t('Browse available APIs', [], ['langcode' => $language->getId()]),
-      'langcode' => $language->getId()
-    );
+      'langcode' => $language->getId(),
+    ];
     $link->addTranslation($language->getId(), $translation);
   }
   $link->save();
@@ -408,17 +414,17 @@ function apim_profile_main_menu_links() {
     'link' => ['uri' => 'internal:/application', [], ['langcode' => 'en']],
     'menu_name' => $menu_name,
     'weight' => 10,
-    'langcode' => 'en'
+    'langcode' => 'en',
   ]);
   foreach ($languages as $language) {
     if ($language->getId() === 'en') {
       continue;
     }
-    $translation = array(
+    $translation = [
       'title' => t('Apps', [], ['langcode' => $language->getId()]),
       'description' => t('Create and manage your apps', [], ['langcode' => $language->getId()]),
-      'langcode' => $language->getId()
-    );
+      'langcode' => $language->getId(),
+    ];
     $link->addTranslation($language->getId(), $translation);
   }
   $link->save();
@@ -429,21 +435,21 @@ function apim_profile_main_menu_links() {
     'link' => ['uri' => 'internal:/forum'],
     'menu_name' => $menu_name,
     'expanded' => TRUE,
-    'weight' => 25
+    'weight' => 25,
   ]);
 
   foreach ($languages as $language) {
     if ($language->getId() === 'en') {
       continue;
     }
-    $translation = array(
+    $translation = [
       'title' => t('Forums', [], ['langcode' => $language->getId()]),
       'description' => t('Interact with our community', [], ['langcode' => $language->getId()]),
       'link' => ['uri' => 'internal:/forum'],
       'menu_name' => $menu_name,
       'expanded' => TRUE,
-      'weight' => 25
-    );
+      'weight' => 25,
+    ];
     $forum_link->addTranslation($language->getId(), $translation);
   }
 
@@ -474,21 +480,21 @@ function apim_profile_login_menu_links() {
     'link' => ['uri' => 'internal:/user/login'],
     'menu_name' => $menu_name,
     'expanded' => TRUE,
-    'weight' => 20
+    'weight' => 20,
   ]);
 
   foreach ($languages as $language) {
     if ($language->getId() === 'en') {
       continue;
     }
-    $translation = array(
+    $translation = [
       'title' => t('Sign in', [], ['langcode' => $language->getId()]),
       'description' => t('Sign in to your account', [], ['langcode' => $language->getId()]),
       'link' => ['uri' => 'internal:/user/login'],
       'menu_name' => $menu_name,
       'expanded' => TRUE,
-      'weight' => 20
-    );
+      'weight' => 20,
+    ];
     $login_link->addTranslation($language->getId(), $translation);
   }
 
@@ -500,21 +506,21 @@ function apim_profile_login_menu_links() {
     'link' => ['uri' => 'internal:/user/register'],
     'menu_name' => $menu_name,
     'expanded' => TRUE,
-    'weight' => 10
+    'weight' => 10,
   ]);
 
   foreach ($languages as $language) {
     if ($language->getId() === 'en') {
       continue;
     }
-    $translation = array(
+    $translation = [
       'title' => t('Create account', [], ['langcode' => $language->getId()]),
       'description' => t('Create a new account', [], ['langcode' => $language->getId()]),
       'link' => ['uri' => 'internal:/user/register'],
       'menu_name' => $menu_name,
       'expanded' => TRUE,
-      'weight' => 10
-    );
+      'weight' => 10,
+    ];
     $register_link->addTranslation($language->getId(), $translation);
   }
 
@@ -525,7 +531,7 @@ function apim_profile_login_menu_links() {
  * Set default options for configuring APIC
  */
 function apim_profile_default_apic_config() {
-  $codesnippets = array(
+  $codesnippets = [
     'curl' => TRUE,
     'ruby' => TRUE,
     'python' => TRUE,
@@ -535,12 +541,12 @@ function apim_profile_default_apic_config() {
     'go' => TRUE,
     'swift' => TRUE,
     'c' => TRUE,
-    'csharp' => TRUE
-  );
-  $categories = array(
+    'csharp' => TRUE,
+  ];
+  $categories = [
     'enabled' => TRUE,
-    'create_taxonomies_from_categories' => FALSE
-  );
+    'create_taxonomies_from_categories' => FALSE,
+  ];
   \Drupal::service('config.factory')
     ->getEditable('ibm_apim.settings')
     ->set('autocreate_apiforum', TRUE)
@@ -569,7 +575,7 @@ function apim_profile_default_apic_config() {
     ->set('allow_user_delete', TRUE)
     ->set('categories', $categories)
     ->set('codesnippets', $codesnippets)
-    ->set('module_blacklist', array('domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer'))
+    ->set('module_blacklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer'])
     ->save();
 
   \Drupal::service('config.factory')
@@ -593,193 +599,193 @@ function apim_profile_default_apic_config() {
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apim_profile_place_blocks() {
-  $values = array(
+  $values = [
     'id' => 'searchiconblock',
     'plugin' => 'ibm_apim_search_icon',
     'provider' => NULL,
     'region' => 'navigation_right',
-    'settings' => array(
+    'settings' => [
       'id' => 'ibm_apim_search_icon',
       'label' => 'Search Icon Block',
       'provider' => 'ibm_apim',
-      'label_display' => '0'
-    ),
+      'label_display' => '0',
+    ],
     'theme' => 'connect_theme',
-    'visibility' => array(),
+    'visibility' => [],
     'weight' => 5,
-  );
+  ];
   $block = Block::create($values);
   $block->save();
 
-  $values = array(
+  $values = [
     'id' => 'consumerorganizationselection',
     'plugin' => 'consumer_org_select',
     'provider' => NULL,
     'region' => 'navigation_right',
-    'settings' => array(
+    'settings' => [
       'id' => 'consumer_org_select',
       'label' => 'Consumer organization Selection',
       'provider' => 'consumerorg',
-      'label_display' => '0'
-    ),
+      'label_display' => '0',
+    ],
     'theme' => 'connect_theme',
-    'visibility' => array(
-      'user_role' => array(
+    'visibility' => [
+      'user_role' => [
         'id' => 'user_role',
-        'roles' => array('authenticated' => 'authenticated'),
+        'roles' => ['authenticated' => 'authenticated'],
         'negate' => FALSE,
-        'context_mapping' => array(
-          'user' => '@user.current_user_context:current_user'
-        )
-      )
-    ),
+        'context_mapping' => [
+          'user' => '@user.current_user_context:current_user',
+        ],
+      ],
+    ],
     'weight' => 3,
-  );
+  ];
   $block = Block::create($values);
   $block->save();
 
   // add admin status messages block
-  $values = array(
+  $values = [
     'id' => 'adminstatusmessages',
     'plugin' => 'ibm_apim_status_messages',
     'provider' => NULL,
     'region' => 'highlighted',
-    'settings' => array(
+    'settings' => [
       'id' => 'ibm_apim_status_messages',
       'label' => 'Admin Status Messages',
       'provider' => 'ibm_apim',
-      'label_display' => '0'
-    ),
+      'label_display' => '0',
+    ],
     'theme' => 'connect_theme',
-    'visibility' => array(),
+    'visibility' => [],
     'weight' => 0,
-  );
+  ];
   $block = Block::create($values);
   $block->save();
 
-  $values = array(
+  $values = [
     'id' => 'contactblock',
     'plugin' => 'contact_block',
     'provider' => NULL,
     'region' => 'disabled',
-    'settings' => array(
+    'settings' => [
       'id' => 'contact_block',
       'label' => 'Contact block',
       'provider' => 'contact_block',
       'label_display' => '0',
-      'contact_form' => 'feedback'
-    ),
+      'contact_form' => 'feedback',
+    ],
     'theme' => 'connect_theme',
-    'visibility' => array(),
+    'visibility' => [],
     'weight' => 0,
-  );
+  ];
   $block = Block::create($values);
   $block->save();
 
-  $values = array(
+  $values = [
     'id' => 'socialmedialinks',
     'plugin' => 'social_media_links_block',
     'provider' => NULL,
     'region' => 'disabled',
-    'settings' => array(
+    'settings' => [
       'id' => 'social_media_links_block',
       'label' => 'Social Media Link',
       'provider' => 'social_media_links',
       'label_display' => '0',
-      'appearance' => array('orientation' => 'h', 'show_name' => '0'),
-      'link_attributes' => array('target' => '_blank', 'rel' => 'nofollow'),
-      'iconset' => array(
+      'appearance' => ['orientation' => 'h', 'show_name' => '0'],
+      'link_attributes' => ['target' => '_blank', 'rel' => 'nofollow'],
+      'iconset' => [
         'style' => 'fontawesome:2x',
-        'installed_iconsets' => array(
-          'fontawesome' => array('examples' => ''),
-          'elegantthemes' => array('examples' => '')
-        )
-      ),
-      'platforms' => array(
-        'instagram' => array(
+        'installed_iconsets' => [
+          'fontawesome' => ['examples' => ''],
+          'elegantthemes' => ['examples' => ''],
+        ],
+      ],
+      'platforms' => [
+        'instagram' => [
           'value' => '',
           'description' => '',
-          'weight' => '-10'
-        ),
-        'youtube_channel' => array(
+          'weight' => '-10',
+        ],
+        'youtube_channel' => [
           'value' => '',
           'description' => '',
-          'weight' => '-10'
-        ),
-        'contact' => array(
+          'weight' => '-10',
+        ],
+        'contact' => [
           'value' => '',
           'description' => '',
-          'weight' => '-10'
-        ),
-        'googleplus' => array(
+          'weight' => '-10',
+        ],
+        'googleplus' => [
           'value' => '',
           'description' => '',
-          'weight' => '-10'
-        ),
-        'twitter' => array(
+          'weight' => '-10',
+        ],
+        'twitter' => [
           'value' => 'IBMintegration',
           'description' => 'Follow us on Twitter',
-          'weight' => '-10'
-        ),
-        'youtube' => array(
+          'weight' => '-10',
+        ],
+        'youtube' => [
           'value' => 'user/IBMCloud',
           'description' => 'Follow us on YouTube',
-          'weight' => '-10'
-        ),
-        'github' => array(
+          'weight' => '-10',
+        ],
+        'github' => [
           'value' => 'ibm-apiconnect',
           'description' => 'Follow us on GitHub',
-          'weight' => '-10'
-        ),
-        'slideshare' => array(
+          'weight' => '-10',
+        ],
+        'slideshare' => [
           'value' => '',
           'description' => '',
-          'weight' => '-10'
-        ),
-        'vimeo' => array('value' => '', 'description' => '', 'weight' => '-10'),
-        'behance' => array(
+          'weight' => '-10',
+        ],
+        'vimeo' => ['value' => '', 'description' => '', 'weight' => '-10'],
+        'behance' => [
           'value' => '',
           'description' => '',
-          'weight' => '-10'
-        ),
-        'facebook' => array(
+          'weight' => '-10',
+        ],
+        'facebook' => [
           'value' => '',
           'description' => '',
-          'weight' => '-10'
-        ),
-        'bitbucket' => array(
+          'weight' => '-10',
+        ],
+        'bitbucket' => [
           'value' => '',
           'description' => '',
-          'weight' => '-10'
-        ),
-        'drupal' => array(
+          'weight' => '-10',
+        ],
+        'drupal' => [
           'value' => '',
           'description' => '',
-          'weight' => '-10'
-        ),
-        'email' => array('value' => '', 'description' => '', 'weight' => '-10'),
-        'pintrest' => array(
+          'weight' => '-10',
+        ],
+        'email' => ['value' => '', 'description' => '', 'weight' => '-10'],
+        'pintrest' => [
           'value' => '',
           'description' => '',
-          'weight' => '-10'
-        ),
-        'linkedin' => array(
+          'weight' => '-10',
+        ],
+        'linkedin' => [
           'value' => '',
           'description' => '',
-          'weight' => '-10'
-        ),
-        'tumblr' => array(
+          'weight' => '-10',
+        ],
+        'tumblr' => [
           'value' => '',
           'description' => '',
-          'weight' => '-10'
-        ),
-        'rss' => array('value' => '', 'description' => '', 'weight' => '-10')
-      )
-    ),
+          'weight' => '-10',
+        ],
+        'rss' => ['value' => '', 'description' => '', 'weight' => '-10'],
+      ],
+    ],
     'theme' => 'connect_theme',
-    'visibility' => array(),
+    'visibility' => [],
     'weight' => 0,
-  );
+  ];
   $block = Block::create($values);
   $block->save();
 }
@@ -819,7 +825,7 @@ function _apim_profile_enable_captcha_on_form($form_id) {
 
   // Load the only captcha_point we have.
   $cp = CaptchaPoint::load(reset($ids));
-  if ($cp !== null) {
+  if ($cp !== NULL) {
     $cp->set('status', TRUE);
     $cp->save();
   }
@@ -845,16 +851,16 @@ function apim_profile_load_translations() {
     $file = new stdClass();
     $file->langcode = $language->getId();
     $file->uri = 'sites/all/translations/apim_profile.' . $file->langcode . '.po';
-    $options = array();
+    $options = [];
     $options['customized'] = LOCALE_NOT_CUSTOMIZED;
-    $options['overwrite_options'] = array('customized' => TRUE, 'not_customized' => TRUE);
+    $options['overwrite_options'] = ['customized' => TRUE, 'not_customized' => TRUE];
 
     if (!file_exists($file->uri)) {
       \Drupal::logger('apim_profile')
-        ->info('There is no translation file to import from for @lang. File at path @path not found.', array(
+        ->info('There is no translation file to import from for @lang. File at path @path not found.', [
           '@lang' => $file->langcode,
-          '@path' => $file->uri
-        ));
+          '@path' => $file->uri,
+        ]);
     }
     else {
       $result = Gettext::fileToDatabase($file, $options);
@@ -862,7 +868,7 @@ function apim_profile_load_translations() {
       // Validate that strings were loaded in properly
       if ((isset($result->additions, $result->updates) && $result->additions === 0 && $result->updates === 0) || (!isset($result->skipped) || $result->skipped !== 0)) {
         \Drupal::logger('apim_profile')
-          ->error('Translation import for language @lang failed to add any new strings to the database.', array('@lang' => $file->langcode));
+          ->error('Translation import for language @lang failed to add any new strings to the database.', ['@lang' => $file->langcode]);
       }
     }
   }
@@ -903,12 +909,12 @@ function apim_profile_update_8003() {
   $path = __DIR__;
 
   // reset permissions to defaults from the yml files
-  foreach (array('content_author', 'forum_moderator', 'authenticated', 'administrator', 'anonymous', 'superuser') as $role_id) {
+  foreach (['content_author', 'forum_moderator', 'authenticated', 'administrator', 'anonymous', 'superuser'] as $role_id) {
     $info = \yaml_parse_file($path . '/config/install/user.role.' . $role_id . '.yml');
 
     $role = Role::load($role_id);
 
-    if ($role !== null) {
+    if ($role !== NULL) {
       $issueAccessPermissions = $info['permissions'];
 
       foreach ($issueAccessPermissions as $permission) {
@@ -926,7 +932,7 @@ function apim_profile_update_8004() {
   if ($moduleHandler->moduleExists('search_api')) {
     $index = Index::load('default_index');
     if (isset($index) && !empty($index)) {
-      $index->setOption('index_directly', false)->save();
+      $index->setOption('index_directly', FALSE)->save();
     }
   }
 }
@@ -1013,7 +1019,7 @@ function apim_profile_update_8010() {
     $module_installer->install([$module]);
   }
   // remove swiftmailer module
-  $module_installer->uninstall(['swiftmailer'], true);
+  $module_installer->uninstall(['swiftmailer'], TRUE);
 
   // update config
   $mailSystemModules = \Drupal::service('config.factory')->get('mailsystem.settings')->get('modules');
@@ -1022,7 +1028,7 @@ function apim_profile_update_8010() {
   $mailSystemModules['mail_subscribers']['none']['formatter'] = 'mailsystem_apicmail';
   \Drupal::service('config.factory')
     ->getEditable('mailsystem.settings')
-    ->set('defaults', ['sender'=>'mailsystem_apicmail', 'formatter' => 'mailsystem_apicmail'])
+    ->set('defaults', ['sender' => 'mailsystem_apicmail', 'formatter' => 'mailsystem_apicmail'])
     ->set('modules', $mailSystemModules)
     ->save();
 }
@@ -1057,6 +1063,30 @@ function apim_profile_update_8013() {
     $module_installer->install([$module]);
   }
 }
+
+/**
+ * Enable page_load_progress and node_type_count modules
+ */
+function apim_profile_update_8014() {
+  $module_installer = \Drupal::service('module_installer');
+  foreach (['page_load_progress', 'node_type_count'] as $module) {
+    $module_installer->install([$module]);
+  }
+  user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, ['use page load progress']);
+  user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, ['use page load progress']);
+  user_role_grant_permissions('administrator', ['administer page load progress']);
+}
+
+/**
+ * Enable ibm_apic_flood_control_ui module
+ */
+function apim_profile_update_8015() {
+  $module_installer = \Drupal::service('module_installer');
+  foreach (['ibm_apic_flood_control_ui'] as $module) {
+    $module_installer->install([$module]);
+  }
+}
+
 
 /**
  * Implements hook_update_dependencies().

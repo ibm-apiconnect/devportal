@@ -37,9 +37,13 @@ class MockPermissionsService implements PermissionsServiceInterface {
   /**
    * get all the permissions objects
    *
-   * @return NULL|array null if an error occurs otherwise an array of the permissions objects.
+   * @return array an array of the permissions objects.
    */
-  public function getAll(): ?array {
+  public function getAll(): array {
+    if ($this->permissionsMap === null) {
+      $this->permissionsMap = [];
+    }
+
     return $this->permissionsMap;
   }
 

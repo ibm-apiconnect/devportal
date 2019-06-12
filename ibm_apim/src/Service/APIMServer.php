@@ -434,9 +434,33 @@ class APIMServer implements ManagementServerInterface {
     $data = ['title' => $org->getName()];
     $response = ApicRest::post($url, json_encode($data));
     $reader = new RestResponseReader();
+    $responseObject = $reader->read($response);
+    if ($responseObject !== null) {
+      $code = $responseObject->getCode();
+      if ($code >= 200 && $code < 400) {
+        $data = $responseObject->getData();
+        if (isset($data['id'])) {
+          $roleUrl = '/orgs/' . $data['id'] . '/roles';
+          $roleResponse = ApicRest::get($roleUrl);
+          $roleReader = new RestResponseReader();
+          $roleResponseObject = $roleReader->read($roleResponse);
+          if ($roleResponseObject !== null && isset($roleResponseObject->getData()['results'])) {
+            $data['roles'] = $roleResponseObject->getData()['results'];
+          }
+          $membersUrl = '/orgs/' . $data['id'] . '/members';
+          $membersResponse = ApicRest::get($membersUrl);
+          $membersReader = new RestResponseReader();
+          $membersResponseObject = $membersReader->read($membersResponse);
+          if ($membersResponseObject !== null && isset($membersResponseObject->getData()['results'])) {
+            $data['members'] = $membersResponseObject->getData()['results'];
+          }
+          $responseObject->setData($data);
+        }
+      }
+    }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($response);
+    return $responseObject;
   }
 
   /**

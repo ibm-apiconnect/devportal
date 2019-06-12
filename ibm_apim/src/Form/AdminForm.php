@@ -377,11 +377,28 @@ class AdminForm extends ConfigFormBase {
       '#default_value' => $config->get('use_proxy'),
       '#weight' => 20,
     ];
+    $proxyAPIDefault = $config->get('proxy_for_api');
+    if ($proxyAPIDefault === null || empty($proxyAPIDefault)) {
+      $proxyAPIDefault = 'BOTH';
+    }
+    $form['proxy']['proxy_for_api'] = [
+      '#type' => 'select',
+      '#options' => [
+        'BOTH' => 'BOTH',
+        'CONSUMER' => 'CONSUMER',
+        'PLATFORM' => 'PLATFORM'
+      ],
+      '#title' => t('Use Proxy for Consumer or Platform APIs'),
+      '#description' => t('Select whether to use the proxy for the Consumer or Platform APIs, BOTH is the default.'),
+      '#default_value' => $proxyAPIDefault,
+      '#required' => FALSE,
+      '#weight' => 25,
+    ];
+
     $proxyTypeDefault = $config->get('proxy_type');
     if ($proxyTypeDefault === null || empty($proxyTypeDefault)) {
       $proxyTypeDefault = 'CURLPROXY_HTTP';
     }
-
     $form['proxy']['proxy_type'] = [
       '#type' => 'select',
       '#options' => [
@@ -468,6 +485,7 @@ class AdminForm extends ConfigFormBase {
       ->set('allow_clientsecret_reset', (bool) $form_state->getValue('allow_clientsecret_reset'))
       ->set('soap_codesnippets', (bool) $form_state->getValue('soap_codesnippets'))
       ->set('use_proxy', (bool) $form_state->getValue('use_proxy'))
+      ->set('proxy_for_api', $form_state->getValue('proxy_for_api'))
       ->set('proxy_type', $form_state->getValue('proxy_type'))
       ->set('proxy_url', $form_state->getValue('proxy_url'))
       ->set('proxy_auth', $form_state->getValue('proxy_auth'))

@@ -758,7 +758,7 @@ class Application {
               if (!isset($thisPlan['billing-model'])) {
                 $thisPlan['billing-model'] = [];
               }
-              $cost = product_parse_billing($thisPlan['billing-model']);
+              $cost = \Drupal::service('product.plan')->parseBilling($thisPlan['billing-model']);
               $planTitle = $productPlans[$sub['plan']]['title'];
             }
             if (isset($productPlans[$sub['plan']]['superseded-by'])) {

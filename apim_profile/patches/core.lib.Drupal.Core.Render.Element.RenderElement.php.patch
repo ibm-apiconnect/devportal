@@ -1,0 +1,39 @@
+--- core/lib/Drupal/Core/Render/Element/RenderElement.php	2019-04-24 12:07:17.388107928 +0000
++++ core/lib/Drupal/Core/Render/Element/RenderElement.php	2019-04-24 12:07:57.876190026 +0000
+@@ -264,11 +264,6 @@
+       return $element;
+     }
+
+-    // Add a data attribute to disable automatic refocus after ajax call.
+-    if (!empty($element['#ajax']['disable-refocus'])) {
+-      $element['#attributes']['data-disable-refocus'] = "true";
+-    }
+-
+     // Add a reasonable default event handler if none was specified.
+     if (isset($element['#ajax']) && !isset($element['#ajax']['event'])) {
+       switch ($element['#type']) {
+@@ -321,6 +316,24 @@
+       }
+     }
+
++    // Disable automatic refocus after ajax call by adding a data attribute if
++    // the disable-refocus flag has been set.
++    if (isset($element['#ajax']['event'])) {
++      switch ($element['#ajax']['event']) {
++        // Disable automatic refocus for the ajax event 'blur' on default to
++        // avoid an infinite focus loop.
++        case 'blur':
++          if (!isset($element['#ajax']['disable-refocus']) || $element['#ajax']['disable-refocus'] === 'true') {
++            $element['#attributes']['data-disable-refocus'] = "true";
++          }
++          break;
++        default:
++          if (isset($element['#ajax']['disable-refocus']) && $element['#ajax']['disable-refocus'] === 'true') {
++            $element['#attributes']['data-disable-refocus'] = "true";
++          }
++      }
++    }
++
+     // Attach JavaScript settings to the element.
+     if (isset($element['#ajax']['event'])) {
+       $element['#attached']['library'][] = 'core/jquery.form';

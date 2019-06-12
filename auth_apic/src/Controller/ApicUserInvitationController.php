@@ -14,8 +14,9 @@
 namespace Drupal\auth_apic\Controller;
 
 use Drupal\auth_apic\Service\Interfaces\TokenParserInterface;
-use Drupal\auth_apic\Service\Interfaces\UserManagerInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -26,26 +27,42 @@ class ApicUserInvitationController extends ControllerBase {
   // session store for invitation token will use a short lifetime - 15 minutes
   const INVITATION_COOKIE_TIMEOUT = 900;
 
+  /**
+   * @var \Drupal\auth_apic\Service\Interfaces\TokenParserInterface
+   */
   protected $jwtParser;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
   protected $siteConfig;
 
+  /**
+   * @var
+   */
   protected $sessionStore;
 
-  protected $userManager;
-
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
   protected $logger;
+
+  /**
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
+
 
   public function __construct(TokenParserInterface $tokenParser,
                               SiteConfig $site_config,
                               SessionBasedTempStoreFactory $tempStoreFactory,
-                              UserManagerInterface $user_manager,
-                              LoggerInterface $logger) {
+                              LoggerInterface $logger,
+                              AccountProxyInterface $current_user) {
     $this->jwtParser = $tokenParser;
     $this->siteConfig = $site_config;
     $this->sessionStore = $tempStoreFactory->get('auth_apic_invitation_token', self::INVITATION_COOKIE_TIMEOUT);
-    $this->userManager = $user_manager;
     $this->logger = $logger;
+    $this->currentUser = $current_user;
   }
 
   public static function create(ContainerInterface $container) {
@@ -53,10 +70,11 @@ class ApicUserInvitationController extends ControllerBase {
       $container->get('auth_apic.jwtparser'),
       $container->get('ibm_apim.site_config'),
       $container->get('session_based_temp_store'),
-      $container->get('auth_apic.usermanager'),
-      $container->get('logger.channel.auth_apic')
+      $container->get('logger.channel.auth_apic'),
+      $container->get('current_user')
     );
   }
+
 
   public function process(): ?\Symfony\Component\HttpFoundation\RedirectResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -64,6 +82,7 @@ class ApicUserInvitationController extends ControllerBase {
     $invitationToken = \Drupal::request()->query->get('activation');
     if (empty($invitationToken)) {
       drupal_set_message(t('Missing invitation token. Unable to proceed.'), 'error');
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'invitation error: no token.');
       return $this->redirect('<front>');
     }
 
@@ -71,7 +90,15 @@ class ApicUserInvitationController extends ControllerBase {
     if ($jwt === NULL || $jwt->getUrl() === NULL) {
       drupal_set_message(t('Invalid invitation token. Contact the system administrator for assistance'), 'error');
       $this->logger->notice('Invalid invitation Token: %token', ['%token' => $jwt]);
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'invitation error: no url to activate in token.');
+      return $this->redirect('<front>');
+    }
+
+    // if the user is logged in then we can't proceed with the accepting of any invitation.
+    if ($this->currentUser->isAuthenticated()) {
+      $logout_link = \Drupal::l(t('log out'), Url::fromRoute('user.logout'));
+      \drupal_set_message(t('Unable to complete the invitation process as you are logged in. Please @logout and click on the invitation link again to complete the invitation process.', ['@logout' => $logout_link]), 'error');
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'authenticated->request to logout');
       return $this->redirect('<front>');
     }
 
@@ -81,25 +108,27 @@ class ApicUserInvitationController extends ControllerBase {
     // that we are on this invited user flow so that the reused sign-in and create
     // account forms know to behave differently.
     if ($jwt) {
+
       $this->sessionStore->set('invitation_object', $jwt);
 
       // check the user email address and attempt to find a matching local account
       $invited_email = $jwt->getPayload()['email'];
-      $existing_account = $this->userManager->findUserInDatabase($invited_email);
+      $existing_account = \user_load_by_mail($invited_email);
 
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       // redirect based on whether we think this user has an account or needs to register
-      if (isset($existing_account) && $existing_account !== NULL) {
-        return $this->redirect('user.login');
+      if (!$existing_account) {
+        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'invitation of new user');
+        return $this->redirect('user.register');
       }
       else {
-        return $this->redirect('user.register');
+        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'invitation of existing user');
+        return $this->redirect('user.login');
       }
     }
     else {
-      $contact_link = \Drupal::l(t('contact'), \Drupal\Core\Url::fromRoute('contact.site_page'));
+      $contact_link = \Drupal::l(t('contact'), Url::fromRoute('contact.site_page'));
       drupal_set_message(t('Unable to proceed with invitation process. @contact_link the site administrator.', ['@contact_link' => $contact_link]));
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'generic invitation error.');
       return $this->redirect('<front>');
     }
 

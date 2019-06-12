@@ -504,7 +504,7 @@ function drush_consumerorg_role_delete($content, $event = 'role_delete') {
 }
 
 /**
- * @param $user
+ * @param $payload
  * @param string $event
  */
 function drush_consumerorg_member_create($payload, $event = 'member_create') {
@@ -553,6 +553,80 @@ function drush_consumerorg_member_create($payload, $event = 'member_create') {
       '@username' => $member->getUser()->getUsername(),
       '@id' => $corg->getId(),
     ]));
+  }
+
+  if ($original_user !== NULL && $original_user->id() !== 1) {
+    $accountSwitcher->switchBack();
+  }
+
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
+
+/**
+ * @param $payload
+ * @param string $event
+ */
+function drush_consumerorg_member_update($payload, $event = 'member_update') {
+  ibm_apim_entry_trace(__FUNCTION__, NULL);
+
+  // in case moderation is on we need to run as admin
+  // save the current user so we can switch back at the end
+  $accountSwitcher = Drupal::service('account_switcher');
+  $original_user = \Drupal::currentUser();
+  if ($original_user->id() !== 1) {
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+  }
+
+  $corg_service = \Drupal::service('ibm_apim.consumerorg');
+  $user_service = \Drupal::service('ibm_apim.apicuser');
+
+  if (\is_string($payload)) {
+    $payload = json_decode($payload, 1);
+  }
+
+  // first - do we have the corg that this member is being updated in?
+  $corg_url = $payload['consumer_org_url'];
+  $corg = $corg_service->get($corg_url, 1);
+
+  if (empty($corg)) {
+    drush_log(dt('Drush member-update could not find org with url @org_url', ['@org_url' => $corg_url]), 'warning');
+  }
+  elseif (empty($payload['user'])) {
+    drush_log(dt('Drush member-update no user object provided'), 'error');
+  }
+  elseif (empty($payload['role_urls'])) {
+    drush_log(dt('Drush member-update no role_urls provided'), 'error');
+  }
+  else {
+    $members = $corg->getMembers();
+    if ($members !== null && !empty($members)) {
+      foreach($members as $key=>$existingMember) {
+        if ($existingMember->getUserUrl() === $payload['user_url']) {
+          $members[$key]->setRoleUrls($payload['role_urls']);
+          $members[$key]->setState($payload['state']);
+        }
+      }
+      $corg->setMembers($members);
+      drush_log(dt('Updated member @username in consumer org @id', [
+        '@username' => $payload['user']['username'],
+        '@id' => $corg->getId(),
+      ]));
+    } else {
+      $member = new Member();
+      $member->setUrl($payload['url']);
+      $member->setUser($user_service->getUserFromJSON($payload['user']));
+      $member->setUserUrl($payload['user_url']);
+      $member->setRoleUrls($payload['role_urls']);
+      $member->setState($payload['state']);
+
+      $corg->addMember($member);
+      drush_log(dt('Added member @username to consumer org @id', [
+        '@username' => $member->getUser()->getUsername(),
+        '@id' => $corg->getId(),
+      ]));
+    }
+
+    $corg_service->createOrUpdateNode($corg, 'member_update_drush');
   }
 
   if ($original_user !== NULL && $original_user->id() !== 1) {

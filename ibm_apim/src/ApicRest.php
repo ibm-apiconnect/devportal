@@ -14,8 +14,9 @@
 namespace Drupal\ibm_apim;
 
 use Drupal\Component\Utility\Xss;
+use Drupal\Core\Url;
 use Drupal\ibm_apim\Rest\Payload\RestResponseReader;
-use Drupal\user\Controller\UserController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ApicRest implements ApicRestInterface {
 
@@ -124,11 +125,12 @@ class ApicRest implements ApicRestInterface {
    * @param null $insecure
    * @param null $providedCertificate
    * @param bool $notifyDrupal
+   * @param string $apiType
    *
    * @return \stdClass|null
    * @throws \Exception
    */
-  public static function json_http_request($url, $verb = 'GET', $headers = NULL, $data = NULL, $returnResult = FALSE, $insecure = NULL, $providedCertificate = NULL, $notifyDrupal = TRUE): ?\stdClass {
+  public static function json_http_request($url, $verb = 'GET', $headers = NULL, $data = NULL, $returnResult = FALSE, $insecure = NULL, $providedCertificate = NULL, $notifyDrupal = TRUE, $apiType = 'consumer'): ?\stdClass {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$url, $verb]);
     }
@@ -170,7 +172,8 @@ class ApicRest implements ApicRestInterface {
     // proxy settings
     if (\Drupal::hasContainer()) {
       $use_proxy = (boolean) \Drupal::config('ibm_apim.settings')->get('use_proxy');
-      if ($use_proxy === TRUE) {
+      $proxy_for_api = \Drupal::config('ibm_apim.settings')->get('proxy_for_api');
+      if ($use_proxy === TRUE && ($apiType === strtolower($proxy_for_api) || $proxy_for_api === 'BOTH')) {
         $proxy_url = \Drupal::config('ibm_apim.settings')->get('proxy_url');
         if ($proxy_url !== NULL && !empty($proxy_url)) {
           curl_setopt($resource, CURLOPT_PROXY, $proxy_url);
@@ -460,7 +463,12 @@ class ApicRest implements ApicRestInterface {
       '%url' => $url,
     ]);
 
-    $result = self::json_http_request($url, $verb, $headers, $data, $returnResult);
+    if ($auth === 'platform') {
+      $apiType = 'platform';
+    } else {
+      $apiType = 'consumer';
+    }
+    $result = self::json_http_request($url, $verb, $headers, $data, $returnResult, NULL, NULL, TRUE, $apiType);
 
     $secs = time() - $secs;
     if ($result !== NULL) {
@@ -471,6 +479,7 @@ class ApicRest implements ApicRestInterface {
         '%code' => $result->code,
       ]);
     }
+
     $expires_in = $session_store->get('expires_in');
     if ($gettingConfig && isset($result) && (int) $result->code === 204) {
       $result->data = NULL;
@@ -484,8 +493,22 @@ class ApicRest implements ApicRestInterface {
     elseif (isset($result) && (int) $result->code === 401 && $expires_in !== NULL && (int) $expires_in < time()) {
       // handle token having expired
       // force log the user out, they can login and try again
-      drupal_set_message(t('Session expired. Please sign in again.'), 'error');
-      user_logout();
+      \Drupal::logger('ibm_apim')->notice('Session expired based on token expires_in value. Forcing logout.');
+
+      // set a cookie so that we can display an error after we log the user out, picked up in AdminMessagesBlock
+      // this was supposed to be handled by building the redirectresponse from the current request in the subsequent code, however the messages
+      // were being lost, possibly because of the extra redirects in user.logout???... but this mechanism works.
+      user_cookie_save(['ibm_apim_session_expired_on_token' => 'TRUE']);
+
+      $logout_url = Url::fromRoute('user.logout');
+      $response = new RedirectResponse($logout_url->toString());
+      $request = \Drupal::request();
+      $request->getSession()->save();
+      $response->prepare($request);
+      \Drupal::service('kernel')->terminate($request, $response);
+      $response->send();
+      // force the redirect immediately.
+      exit();
     }
     elseif ($messageErrors) {
       if ($returnResult) {

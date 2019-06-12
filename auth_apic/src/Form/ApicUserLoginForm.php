@@ -119,10 +119,10 @@ class ApicUserLoginForm extends UserLoginForm {
     // if we are on the invited user flow, there will be a JWT in the session so grab that
     $jwt = $this->authApicSessionStore->get('invitation_object');
     if ($jwt !== NULL) {
-      if ( !(strpos($jwt->getUrl(), '/member-invitations/'))) {
-        $form['#message']['message'] = t("To complete your invitation, sign in to an existing account or sign up to create a new account.");
-        // and for this case we need a consumer org title as well
+      $form['#message']['message'] = t("To complete your invitation, sign in to an existing account or sign up to create a new account.");
 
+      if ( !(strpos($jwt->getUrl(), '/member-invitations/'))) {
+        // and for this case we need a consumer org title as well
         $baseForm['consumer_org'] = [
           '#type' => 'textfield',
           '#title' => t('Consumer organization'),
@@ -499,7 +499,11 @@ class ApicUserLoginForm extends UserLoginForm {
         }
       }
       else {
-        $this->logger->notice('Invalid login attempt for %user, user cannot be found to check state against.', ['%user' => $form_state->getValue('name')]);
+        // In this case the user is not in the database. This is valid and we should allow login and the user will be created and populated
+        // from data retrieved from apim.
+        $this->logger->notice('Unable to check state of %user user, as cannot find in the database. Continuing with login to get user data.',
+                               ['%user' => $form_state->getValue('name')]);
+        $returnValue = TRUE;
       }
 
       if (!$returnValue) {
@@ -581,6 +585,11 @@ class ApicUserLoginForm extends UserLoginForm {
       $first_time_login = $current_user->first_time_login->value;
       $subscription_wizard_cookie = \Drupal::request()->cookies->get('Drupal_visitor_startSubscriptionWizard');
     }
+    
+    // If this is the first login, set langauge for user to browser language.
+    if (isset($current_user) && $first_time_login != 0) {
+      $this->userManager->setDefaultLanguage($current_user);
+    }  
 
     // check if the user we just logged in is a member of at least one dev org
     $current_corg = $this->userUtils->getCurrentConsumerorg();

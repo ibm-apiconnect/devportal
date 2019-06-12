@@ -1,0 +1,84 @@
+--- modules/page_load_progress/css/page_load_progress.theme.css	2019-04-25 11:33:44.000000000 +0100
++++ modules/page_load_progress/css/page_load_progress.theme.css	2019-04-25 13:04:48.000000000 +0100
+@@ -1,18 +1,76 @@
+ .page-load-progress-lock-screen {
+-  background-color: #fff;
+-  background-color: rgba(245,245,245,0.95);
+-  height: 100%;
+-  left: 0;
++  z-index: 9998;
+   position: fixed;
+   top: 0;
++  left: 0;
++  height: 100%;
+   width: 100%;
+-  z-index: 9998;
++  background-color: hsla(0,0%,100%,.6);
++  display: -webkit-flex;
++  display: flex;
++  -webkit-justify-content: center;
++  justify-content: center;
++  -webkit-align-items: center;
++  align-items: center;
++  transition: background-color .72s cubic-bezier(.4,.14,.3,1);
+ }
+ 
+ .page-load-progress-lock-screen.page-load-progress-hidden {
+   display: none;
+ }
+ 
++.page-load-progress-lock-screen .bx--loading {
++  -webkit-animation-name: rotate;
++  animation-name: rotate;
++  -webkit-animation-duration: .69s;
++  animation-duration: .69s;
++  -webkit-animation-timing-function: linear;
++  animation-timing-function: linear;
++  -webkit-animation-fill-mode: forwards;
++  animation-fill-mode: forwards;
++  -webkit-animation-iteration-count: infinite;
++  animation-iteration-count: infinite;
++  width: 10.5rem;
++  height: 10.5rem;
++  left: calc(50% - 90px);;
++  position: fixed;
++  top: calc(50% - 90px);;
++}
++
++.page-load-progress-lock-screen .bx--loading__svg {
++  fill: transparent;
++}
++
++.page-load-progress-lock-screen .bx--loading svg circle {
++  -webkit-animation-name: init-stroke;
++  animation-name: init-stroke;
++  -webkit-animation-duration: 10ms;
++  animation-duration: 10ms;
++  -webkit-animation-timing-function: cubic-bezier(.2,0,.38,.9);
++  animation-timing-function: cubic-bezier(.2,0,.38,.9);
++}
++
++.page-load-progress-lock-screen .bx--loading__svg circle {
++  stroke-width: 8;
++  stroke-linecap: butt;
++  stroke-dasharray: 240;
++}
++.page-load-progress-lock-screen .bx--loading__stroke {
++  stroke: #5a60b8;
++  stroke-dashoffset: 40;
++}
++@keyframes rotate {
++  0% {
++    -webkit-transform: rotate(0deg);
++    transform: rotate(0deg);
++  }
++
++  100% {
++    -webkit-transform: rotate(1turn);
++    transform: rotate(1turn);
++  }
++}
++
+ .page-load-progress-throbber {
+   background-image: url('../images/loader.gif');
+   background-repeat: no-repeat;

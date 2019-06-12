@@ -16,7 +16,7 @@ then
   DEBUG_DUMP_DIR="/tmp/jenkins-build$BUILD_ID-testresults"
   # TODO: remove the paths in the jenkins output - need to get the delimiting correct on this...
   # BEHAT_OPTS=" --format junit --out behat_results --format pretty --format-settings='{\"paths\": false}' --out std "
-  BEHAT_OPTS=" --colors -vv --format junit --out /tmp/behat_results --format pretty --out std"
+  BEHAT_OPTS=" --colors -vv --format junit --out /tmp/behat_results --format pretty --out std --strict "
 
   echo Installing drupal behat extensions
   cd $BASEDIR/vendor/drupal/drupal-extension
@@ -37,7 +37,7 @@ else
   URL=${URL/http:\/\//}
   URL=`echo $URL | sed 's/\/$//g'`
 
-  BEHAT_OPTS=' --colors -vv'
+  BEHAT_OPTS=' --colors -vv --strict '
 
   DIR=/opt/ibm/bin
   # ! parameter to common.func stops taking control of stdout/err among other things i don't understand, but

@@ -25,9 +25,9 @@ interface PermissionsServiceInterface {
   /**
    * get all the permissions objects
    *
-   * @return NULL|array if an error occurs otherwise an array of the permissions objects.
+   * @return array an array of the permissions objects.
    */
-  public function getAll(): ?array;
+  public function getAll(): array;
 
   /**
    * get a specific permissions object by url

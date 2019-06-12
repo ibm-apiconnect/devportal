@@ -14,7 +14,7 @@
   ('productNodeID-' ~ node.id)|clean_class,
   ('productTitle-' ~ node.title[0].value)|clean_class,
   ('productVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
-  ('productState-' ~ content.product_state['#items'][0].value)|clean_class
+  content.product_state['#items'][0].value ? ('productState-' ~ content.product_state['#items'][0].value)|clean_class
 ] -%}
 
 <article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">

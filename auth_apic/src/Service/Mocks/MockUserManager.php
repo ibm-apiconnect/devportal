@@ -156,6 +156,13 @@ class MockUserManager implements UserManagerInterface {
       return $umResponse;
     }
 
+    // for not in database case, create dummy success response for the test
+    if ($username === 'notindatabase') {
+      $umResponse->setSuccess(TRUE);
+      $umResponse->setUid(12);
+      return $umResponse;
+    }
+
     // Search the user database for the matching user.
     $ids = \Drupal::entityQuery('user')->execute();
     $users = User::loadMultiple($ids);

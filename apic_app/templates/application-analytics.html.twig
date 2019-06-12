@@ -59,10 +59,12 @@
                         href="{{ path('apic_app.update', {'appId': node.application_id}) }}"
                         title="{{ 'Edit App'|t }}">{{ 'Edit'|t }}</a>
                   </li>
-                  <li class="uploadImage"><a
-                        href="{{ path('apic_app.image_upload', {'appId': node.application_id}) }}"
-                        title="{{ 'Upload image'|t }}">{{ 'Upload image'|t }}</a>
-                  </li>
+                  {% if appImageUploadEnabled %}
+                    <li class="uploadImage"><a
+                          href="{{ path('apic_app.image_upload', {'appId': node.application_id}) }}"
+                          title="{{ 'Upload image'|t }}">{{ 'Upload image'|t }}</a>
+                    </li>
+                  {% endif %}
                   <li class="deleteApplication"><a
                         href="{{ path('apic_app.delete', {'appId': node.application_id}) }}"
                         title="{{ 'Delete App'|t }}">{{ 'Delete'|t }}</a>

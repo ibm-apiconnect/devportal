@@ -189,7 +189,15 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
 
     if (array_key_exists('cc', $message)) {
       $requestBody['cc'] = self::parse_mailboxes($message['cc']);
+    } elseif (isset($message['headers']['Cc']) && !empty($message['headers']['Cc'])) {
+      $requestBody['cc'] = self::parse_mailboxes($message['headers']['Cc']);
     }
+    if (array_key_exists('bcc', $message)) {
+      $requestBody['bcc'] = self::parse_mailboxes($message['bcc']);
+    } elseif (isset($message['headers']['Bcc']) && !empty($message['headers']['Bcc'])) {
+      $requestBody['bcc'] = self::parse_mailboxes($message['headers']['Bcc']);
+    }
+
     try {
       $result = ApicRest::post($url, json_encode($requestBody), 'platform');
       if (isset($result) && $result->code >= 200 && $result->code < 300) {

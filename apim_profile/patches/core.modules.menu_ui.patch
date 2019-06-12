@@ -38,8 +38,8 @@
    foreach ($type_menus as $menu) {
 -    $available_menus[$menu->id()] = $menu->label();
 +    // Only menus with the language of the current node, not specified, or not applicable will be used.
-+    if (isset($type_menus[$menu]) && in_array($type_menus[$menu]->language()->getId(), array($node->language()->getId(), LanguageInterface::LANGCODE_NOT_SPECIFIED, LanguageInterface::LANGCODE_NOT_APPLICABLE))) {
-+      $available_menus[$menu->id()] = $type_menus[$menu]->label();
++    if (in_array($menu->language()->getId(), [$node->language()->getId(), LanguageInterface::LANGCODE_NOT_SPECIFIED, LanguageInterface::LANGCODE_NOT_APPLICABLE])) {
++      $available_menus[$menu->id()] = $menu->label();
 +    }
    }
    if ($defaults['id']) {

@@ -3,7 +3,7 @@
 BASEDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # if change the project name then also need to update the jenkins docker image webroot
 PROJECT_NAME="devportal"
-VERSION=2018.4.1.5
+VERSION=2018.4.1.6
 SERVICE="false"
 
 BUILD_DIR="$BASEDIR/build"

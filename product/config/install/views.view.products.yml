@@ -1,3 +1,4 @@
+uuid: 3c809347-4a4e-4bcf-9832-829f612f5ac2
 langcode: en
 status: true
 dependencies:
@@ -195,6 +196,7 @@ display:
           entity_type: node
           entity_field: type
           plugin_id: bundle
+          group: 1
         title:
           id: title
           table: node_field_data
@@ -282,10 +284,10 @@ display:
             group_items: {  }
           entity_type: node
           plugin_id: node_status
-        tid:
-          id: tid
-          table: taxonomy_index
-          field: tid
+        term_node_tid_depth:
+          id: term_node_tid_depth
+          table: node_field_data
+          field: term_node_tid_depth
           relationship: none
           group_type: group
           admin_label: ''
@@ -294,12 +296,12 @@ display:
           group: 1
           exposed: true
           expose:
-            operator_id: tid_op
+            operator_id: term_node_tid_depth_op
             label: Category
             description: ''
             use_operator: false
-            operator: tid_op
-            identifier: tid
+            operator: term_node_tid_depth_op
+            identifier: term_node_tid_depth
             required: false
             remember: true
             multiple: false
@@ -328,10 +330,12 @@ display:
           vid: tags
           hierarchy: false
           error_message: true
+          depth: 0
           parent: '0'
           level_labels: ''
           force_deepest: 0
-          plugin_id: taxonomy_index_tid
+          entity_type: node
+          plugin_id: taxonomy_index_tid_depth
         select_translation:
           id: select_translation
           table: node_field_data
@@ -463,6 +467,10 @@ display:
       display_extenders: {  }
       css_class: product-view
       use_ajax: true
+      filter_groups:
+        operator: AND
+        groups:
+          1: AND
     cache_metadata:
       max-age: -1
       contexts:

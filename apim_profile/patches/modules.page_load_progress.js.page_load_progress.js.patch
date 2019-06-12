@@ -1,0 +1,30 @@
+--- modules/page_load_progress/js/page_load_progress.js	2019-04-25 11:21:55.000000000 +0100
++++ modules/page_load_progress/js/page_load_progress.js	2019-04-25 11:33:31.000000000 +0100
+@@ -16,9 +16,15 @@
+       var elements = String(settings.page_load_progress.elements).split(',');
+       var internal_links = Boolean(settings.page_load_progress.internal_links);
+       var esc_key = Boolean(settings.page_load_progress.esc_key);
+-      var screen_lock = '<div class="page-load-progress-lock-screen page-load-progress-hidden">\n\
+-                         <div class="page-load-progress-throbber"></div>\n\
+-                         </div>';
++      var screen_lock = '<div class="bx--loading-overlay page-load-progress-lock-screen page-load-progress-hidden">\n' +
++        '<div data-loading class="bx--loading">\n' +
++        '  <svg class="bx--loading__svg" viewBox="-75 -75 150 150">\n' +
++        '    <title>' + settings.page_load_progress.loading_string + '</title>\n' +
++        '    \n' +
++        '    <circle class="bx--loading__stroke" cx="0" cy="0" r="37.5" />\n' +
++        '  </svg>\n' +
++        '</div>\n' +
++        '</div>';
+       var body = $('body', context, settings);
+ 
+       // Add the screen lock behavior for each configured element.
+@@ -84,7 +90,7 @@
+           'overflow' : 'hidden'
+         });
+         $('.page-load-progress-lock-screen').fadeIn('slow');
+-      }
++      };
+     }
+   };
+ 

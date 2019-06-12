@@ -235,3 +235,15 @@ Scenario: Login form with hidden admin - load admin form directly
   And I should not see the text "Forgot password?"
   And I should not see the text "Don't have an account?"
   And I should not see the link "Sign up"
+
+@api
+Scenario: Sign in with a user not in the database
+  Given I am not logged in
+  Given userregistries:
+    | type | title                             | url                               | user_managed | default |
+    | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+  When I am at "/user/login"
+  Given I enter "notindatabase" for "Username"
+  And I enter "Qwert123" for "Password"
+  When I press the "Sign in" button
+  Then there are no errors

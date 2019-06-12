@@ -1,0 +1,5 @@
+ibm_apic_flood_control_ui.ibm_apic_flood_control_ui_form:
+  title: 'Flood Control'
+  description: 'Configuration Form for flood control'
+  parent: system.admin_config_system
+  route_name: ibm_apic_flood_control_ui.ibm_apic_flood_control_ui_form

@@ -1,5 +1,18 @@
 --- core/modules/update/update.module	2018-03-06 09:30:44.000000000 +0000
 +++ core/modules/update/update.module	2018-03-06 09:31:36.000000000 +0000
+@@ -140,10 +140,10 @@
+
+     case 'system.modules_list':
+       if (_update_manager_access()) {
+-        $output = '<p>' . t('Regularly review and install <a href=":updates">available updates</a> to maintain a secure and current site. Always run the <a href=":update-php">update script</a> each time a module is updated.', [':update-php' => \Drupal::url('system.db_update'), ':updates' => \Drupal::url('update.status')]) . '</p>';
++        $output = '<p>' . t('Regularly review and install <a href=":updates">available updates</a> to maintain a secure and current site.', [':updates' => \Drupal::url('update.status')]) . '</p>';
+       }
+       else {
+-        $output = '<p>' . t('Regularly review <a href=":updates">available updates</a> to maintain a secure and current site. Always run the <a href=":update-php">update script</a> each time a module is updated.', [':update-php' => \Drupal::url('system.db_update'), ':updates' => \Drupal::url('update.status')]) . '</p>';
++        $output = '<p>' . t('Regularly review <a href=":updates">available updates</a> to maintain a secure and current site.', [':updates' => \Drupal::url('update.status')]) . '</p>';
+       }
+       return $output;
+   }
 @@ -276,7 +276,9 @@
      // If configured time between notifications elapsed, send email about
      // updates possibly available.

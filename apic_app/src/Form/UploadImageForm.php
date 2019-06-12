@@ -110,6 +110,9 @@ class UploadImageForm extends FormBase {
     $this->node->set('application_image', NULL);
     $this->node->save();
 
+    // Calling all modules implementing 'hook_apic_app_image_delete':
+    \Drupal::moduleHandler()->invokeAll('apic_app_image_delete', ['node' => $this->node, 'appId' => $this->node->application_id->value]);
+
     $currentUser = \Drupal::currentUser();
     \Drupal::logger('apic_app')->notice('Application @appname image has been removed by @username', [
       '@appname' => $this->node->getTitle(),
