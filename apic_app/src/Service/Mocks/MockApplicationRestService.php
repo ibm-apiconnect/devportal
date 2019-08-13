@@ -13,9 +13,6 @@
 
 namespace Drupal\apic_app\Service\Mocks;
 
-use Drupal\node\Entity\Node;
-
-use Drupal\ibm_apim\ApicRest;
 use Drupal\apic_app\Application;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 

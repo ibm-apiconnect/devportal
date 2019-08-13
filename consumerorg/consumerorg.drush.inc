@@ -78,6 +78,11 @@ function consumerorg_drush_command() {
   return $items;
 }
 
+/**
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
 function drush_consumerorg_cleanse_drush_command() {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   // in case moderation is on we need to run as admin
@@ -219,7 +224,6 @@ function drush_consumerorg_delete($content, $event = 'consumer_org_del') {
 
 function drush_consumerorg_massupdate($consumerOrgs = [], $event = 'content_refresh') {
   ibm_apim_entry_trace(__FUNCTION__, count($consumerOrgs));
-  $consumerOrgs = json_decode($consumerOrgs, TRUE);
   if (!empty($consumerOrgs)) {
     foreach ($consumerOrgs as $consumerOrg) {
       drush_consumerorg_createOrUpdateOrg('MassUpdate', $event, $consumerOrg);

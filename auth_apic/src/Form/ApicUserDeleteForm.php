@@ -12,12 +12,12 @@
 
 namespace Drupal\auth_apic\Form;
 
-use Drupal\auth_apic\Service\Interfaces\UserManagerInterface;
+use Drupal\auth_apic\UserManagement\ApicUserDeleteInterface;
 use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\Core\Url;
+use Drupal\ibm_apim\Service\UserUtils;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -42,9 +42,9 @@ class ApicUserDeleteForm extends ConfirmFormBase {
   protected $orgService;
 
   /**
-   * @var \Drupal\auth_apic\Service\Interfaces\UserManagerInterface
+   * @var \Drupal\auth_apic\UserManagement\ApicUserDeleteInterface
    */
-  protected $userManager;
+  protected $deleteService;
 
   /**
    * @var \Psr\Log\LoggerInterface
@@ -53,11 +53,11 @@ class ApicUserDeleteForm extends ConfirmFormBase {
 
   public function __construct(UserUtils $user_utils,
                               ConsumerOrgService $org_service,
-                              UserManagerInterface $user_manager,
+                              ApicUserDeleteInterface $delete_service,
                               LoggerInterface $logger) {
     $this->userUtils = $user_utils;
     $this->orgService = $org_service;
-    $this->userManager = $user_manager;
+    $this->deleteService = $delete_service;
     $this->logger = $logger;
   }
 
@@ -68,7 +68,7 @@ class ApicUserDeleteForm extends ConfirmFormBase {
     return new static(
       $container->get('ibm_apim.user_utils'),
       $container->get('ibm_apim.consumerorg'),
-      $container->get('auth_apic.usermanager'),
+      $container->get('auth_apic.delete_user'),
       $container->get('logger.channel.auth_apic')
     );
   }
@@ -181,27 +181,26 @@ class ApicUserDeleteForm extends ConfirmFormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     if ($org_url = $form_state->getValue('org_to_delete')) {
-      $this->logger->info(t('Deleting %org_url as part of user deletion', ['%org_url' => $org_url]));
+      $this->logger->info('Deleting %org_url as part of user deletion', ['%org_url' => $org_url]);
       $org_delete_response = $this->orgService->delete($this->orgService->get($org_url)); // TODO - delete by url
 
       if ($org_delete_response->success()) {
-        $this->logger->debug(t('Organization successfully deleted from ApicUserDeleteForm.'));
+        $this->logger->debug('Organization successfully deleted from ApicUserDeleteForm.');
         drupal_set_message(t('Organization successfully deleted.'));
       }
       else {
-        $msg = t('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $org_url]);
-        $this->logger->debug($msg);
-        drupal_set_message($msg, 'error');
+        $this->logger->debug('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $org_url]);
+        drupal_set_message(t('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $org_url]), 'error');
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'error deleting org');
         return;
       }
 
     }
     else {
-      $this->logger->debug(t('No org to delete as part of user deletion'));
+      $this->logger->debug('No org to delete as part of user deletion');
     }
 
-    $delete_me_response = $this->userManager->deleteUser();
+    $delete_me_response = $this->deleteService->deleteUser();
 
     if ($delete_me_response->success()) {
       $this->logger->notice('Account deleted successfully from ApicUserDeleteForm.');

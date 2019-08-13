@@ -1,6 +1,26 @@
---- core/modules/user/user.module	2019-01-18 15:24:53.000000000 +0000
-+++ core/modules/user/user.module	2019-01-18 15:30:58.000000000 +0000
-@@ -1308,7 +1308,7 @@
+--- core/modules/user/user.module	2019-05-08 16:00:55.000000000 +0000
++++ core/modules/user/user.module	2019-05-23 15:55:02.603576790 +0000
+@@ -269,8 +269,17 @@
+  */
+ function user_load_by_name($name) {
+   $users = \Drupal::entityTypeManager()->getStorage('user')
+-    ->loadByProperties(['name' => $name]);
+-  return $users ? reset($users) : FALSE;
++      ->loadByProperties(['name' => $name]);
++
++  if (sizeof($users) > 1) {
++    throw new \Exception(sprintf('Attempt to load user by name (%s) returned multiple responses (%d). Unable to continue please contact your system administrator', $name, sizeof($users)));
++  }
++  else if (sizeof($users) === 1) {
++    return reset($users);
++  }
++  else {
++    return FALSE;
++  }
+ }
+ 
+ /**
+@@ -1310,7 +1319,7 @@
  function user_cookie_save(array $values) {
    foreach ($values as $field => $value) {
      // Set cookie for 365 days.
@@ -9,7 +29,7 @@
    }
  }
  
-@@ -1319,7 +1319,7 @@
+@@ -1321,7 +1330,7 @@
   *   A cookie name such as 'homepage'.
   */
  function user_cookie_delete($cookie_name) {

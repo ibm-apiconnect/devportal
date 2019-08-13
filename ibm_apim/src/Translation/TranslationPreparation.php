@@ -183,7 +183,7 @@ class TranslationPreparation {
 
         echo 'Merging project: ' . $project . "\n";
         // if not in drupal translations, just add this.
-        if (!key_exists($project, $drupal_translations) || empty($drupal_translations[$project])) {
+        if (!array_key_exists($project, $drupal_translations) || empty($drupal_translations[$project])) {
           echo "  No drupal translations, copying straight across to merge directory.\n";
           $this->copyPoFiles($langfiles, $merge_dir);
         }

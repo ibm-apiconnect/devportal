@@ -197,7 +197,7 @@ function mail_subscribers_batch_deliver($message, &$context) {
 function mail_subscribers_batch_deliver_finished($success, $results, $operations) {
   if ($success) {
     foreach ($results as $result) {
-      drupal_set_message($result);
+      \Drupal::messenger()->addMessage($result);
     }
 
     // Redirect to summary page of wizard

@@ -6,6 +6,8 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\PreExistingConfigException;
 use Drupal\Core\Config\UnmetDependenciesException;
 use Drupal\Core\Extension\ThemeHandlerInterface;
+use Drupal\Core\Extension\ThemeInstallerInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\ibm_apim\Service\Utils;
 use Drupal\system\Controller\ThemeController;
 use Leafo\ScssPhp\Compiler;
@@ -18,12 +20,28 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  */
 class IbmApimThemeInstallController extends ThemeController {
 
+  /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
   private $utils;
+
+  /**
+   * @var \Drupal\Core\Extension\ThemeInstallerInterface
+   */
+  protected $themeInstaller;
+
+  /**
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
 
   public function __construct(Utils $utils,
                               ThemeHandlerInterface $theme_handler,
-                              ConfigFactoryInterface $config_factory) {
+                              ThemeInstallerInterface $theme_installer,
+                              ConfigFactoryInterface $config_factory, MessengerInterface $messenger) {
     $this->utils = $utils;
+    $this->themeInstaller = $theme_installer;
+    $this->messenger = $messenger;
     parent::__construct($theme_handler, $config_factory);
   }
 
@@ -31,7 +49,9 @@ class IbmApimThemeInstallController extends ThemeController {
     return new static(
       $container->get('ibm_apim.utils'),
       $container->get('theme_handler'),
-      $container->get('config.factory')
+      $container->get('theme_installer'),
+      $container->get('config.factory'),
+      $container->get('messenger')
     );
   }
 
@@ -60,15 +80,15 @@ class IbmApimThemeInstallController extends ThemeController {
       if (!empty($themes[$theme])) {
         // Do not uninstall the default or admin theme.
         if ($theme === $config->get('default') || $theme === $config->get('admin')) {
-          drupal_set_message($this->t('%theme is the default theme and cannot be disabled.', ['%theme' => $themes[$theme]->info['name']]), 'error');
+          $this->messenger->addError($this->t('%theme is the default theme and cannot be disabled.', ['%theme' => $themes[$theme]->info['name']]));
         }
         else {
-          $this->themeHandler->uninstall([$theme]);
-          drupal_set_message($this->t('The %theme theme has been disabled.', ['%theme' => $themes[$theme]->info['name']]));
+          $this->themeInstaller->uninstall([$theme]);
+          $this->messenger->addMessage($this->t('The %theme theme has been disabled.', ['%theme' => $themes[$theme]->info['name']]));
         }
       }
       else {
-        drupal_set_message($this->t('The %theme theme was not found.', ['%theme' => $theme]), 'error');
+        $this->messenger->addError($this->t('The %theme theme was not found.', ['%theme' => $theme]));
       }
 
       return $this->redirect('system.themes_page');
@@ -81,35 +101,29 @@ class IbmApimThemeInstallController extends ThemeController {
    * Installs a theme.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
-   *   A request object containing a theme name and a valid token.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse
-   *   Redirects back to the appearance admin page.
-   *
-   * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
-   *   Throws access denied when no theme or token is set in the request or when
-   *   the token is invalid.
+   * @throws \Drupal\Core\Extension\ExtensionNameLengthException
    */
   public function install(Request $request) {
     $theme = $request->query->get('theme');
 
     if (isset($theme)) {
       try {
-        if ($this->themeHandler->install([$theme])) {
+        if ($this->themeInstaller->install([$theme])) {
           $themes = $this->themeHandler->listInfo();
-          drupal_set_message($this->t('The %theme theme has been enabled.', ['%theme' => $themes[$theme]->info['name']]));
+          $this->messenger->addMessage($this->t('The %theme theme has been enabled.', ['%theme' => $themes[$theme]->info['name']]));
 
-          if(isset($themes[$theme]->info['auto_build_scss']) && $themes[$theme]->info['auto_build_scss']) {
+          if (isset($themes[$theme]->info['auto_build_scss']) && $themes[$theme]->info['auto_build_scss']) {
             $this->compile_scss($theme);
           }
         }
         else {
-          drupal_set_message($this->t('The %theme theme was not found.', ['%theme' => $theme]), 'error');
+          $this->messenger->addError($this->t('The %theme theme was not found.', ['%theme' => $theme]));
         }
-      }
-      catch (PreExistingConfigException $e) {
-        $config_objects = $e->flattenConfigObjects($e->getConfigObjects());
-        drupal_set_message(
+      } catch (PreExistingConfigException $e) {
+        $config_objects = $e::flattenConfigObjects($e->getConfigObjects());
+        $this->messenger->addError(
           $this->formatPlural(
             count($config_objects),
             'Unable to enable @extension, %config_names already exists in active configuration.',
@@ -117,12 +131,9 @@ class IbmApimThemeInstallController extends ThemeController {
             [
               '%config_names' => implode(', ', $config_objects),
               '@extension' => $theme,
-            ]),
-          'error'
-        );
-      }
-      catch (UnmetDependenciesException $e) {
-        drupal_set_message($e->getTranslatedMessage($this->getStringTranslation(), $theme), 'error');
+            ]));
+      } catch (UnmetDependenciesException $e) {
+        $this->messenger->addError($e->getTranslatedMessage($this->getStringTranslation(), $theme));
       }
 
       return $this->redirect('system.themes_page');
@@ -135,13 +146,9 @@ class IbmApimThemeInstallController extends ThemeController {
    * Set the default theme.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
-   *   A request object containing a theme name.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse
-   *   Redirects back to the appearance admin page.
-   *
-   * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
-   *   Throws access denied when no theme is set in the request.
+   * @throws \Drupal\Core\Extension\ExtensionNameLengthException
    */
   public function setDefaultTheme(Request $request) {
     $config = $this->configFactory->getEditable('system.theme');
@@ -153,10 +160,10 @@ class IbmApimThemeInstallController extends ThemeController {
 
       // Check if the specified theme is one recognized by the system.
       // Or try to install the theme.
-      if (isset($themes[$theme]) || $this->themeHandler->install([$theme])) {
+      if (isset($themes[$theme]) || $this->themeInstaller->install([$theme])) {
         $themes = $this->themeHandler->listInfo();
 
-        if(isset($themes[$theme]->info['auto_build_scss']) && $themes[$theme]->info['auto_build_scss']) {
+        if (isset($themes[$theme]->info['auto_build_scss']) && $themes[$theme]->info['auto_build_scss']) {
           $this->compile_scss($theme);
         }
 
@@ -167,18 +174,18 @@ class IbmApimThemeInstallController extends ThemeController {
         // use: a value of 0 means the admin theme is set to be the default
         // theme.
         $admin_theme = $config->get('admin');
-        if ($admin_theme != 0 && $admin_theme != $theme) {
-          drupal_set_message($this->t('Please note that the administration theme is still set to the %admin_theme theme; consequently, the theme on this page remains unchanged. All non-administrative sections of the site, however, will show the selected %selected_theme theme by default.', [
+        if ((int) $admin_theme !== 0 && $admin_theme !== $theme) {
+          $this->messenger->addMessage($this->t('Please note that the administration theme is still set to the %admin_theme theme; consequently, the theme on this page remains unchanged. All non-administrative sections of the site, however, will show the selected %selected_theme theme by default.', [
             '%admin_theme' => $themes[$admin_theme]->info['name'],
             '%selected_theme' => $themes[$theme]->info['name'],
           ]));
         }
         else {
-          drupal_set_message($this->t('%theme is now the default theme.', ['%theme' => $themes[$theme]->info['name']]));
+          $this->messenger->addMessage($this->t('%theme is now the default theme.', ['%theme' => $themes[$theme]->info['name']]));
         }
       }
       else {
-        drupal_set_message($this->t('The %theme theme was not found.', ['%theme' => $theme]), 'error');
+        $this->messenger->addError($this->t('The %theme theme was not found.', ['%theme' => $theme]));
       }
 
       return $this->redirect('system.themes_page');
@@ -207,20 +214,20 @@ class IbmApimThemeInstallController extends ThemeController {
       // Get current list of themes.
       $themes = $this->themeHandler->listInfo();
       // Check if the specified theme is disabled
-      if (!in_array($theme, $themes)) {
+      if (!in_array($theme, $themes, TRUE)) {
         $item_path = drupal_get_path('theme', $theme);
         if (isset($item_path) && !empty($item_path)) {
           $this->utils->file_delete_recursive($item_path);
           // clear all caches otherwise reinstalling the same theme will fail
           drupal_flush_all_caches();
 
-          drupal_set_message($this->t('The %theme theme has been uninstalled.', ['%theme' => $theme]));
+          $this->messenger->addMessage($this->t('The %theme theme has been uninstalled.', ['%theme' => $theme]));
         }
       }
 
     }
     else {
-      drupal_set_message($this->t('There was an error deleting the theme. Please contact your system administrator.'), 'error');
+      $this->messenger->addError($this->t('There was an error deleting the theme. Please contact your system administrator.'));
     }
     return $this->redirect('system.themes_page');
 
@@ -231,7 +238,7 @@ class IbmApimThemeInstallController extends ThemeController {
    *
    * @param $theme
    */
-  private function compile_scss($theme) {
+  private function compile_scss($theme): void {
     if (isset($theme)) {
       $themes = $this->themeHandler->listInfo();
       // this theme is using scss and may need it build into css
@@ -251,35 +258,35 @@ class IbmApimThemeInstallController extends ThemeController {
         // add specified theme paths
         $scss->addImportPath($theme_path);
 
-        $import_paths = $scss_compile_settings["import-paths"];
+        $import_paths = $scss_compile_settings['import-paths'];
 
         foreach ($import_paths as &$import_path) {
           if (preg_match('/^[a-zA-Z0-9_\-\/.]+$/', $import_path)) {
-            $scss->addImportPath(preg_replace('#/+#', '/', join('/', array($theme_path, $import_path))));
+            $scss->addImportPath(preg_replace('#/+#', '/', implode('/', [$theme_path, $import_path])));
           }
         }
 
-        $input_scss = $scss_compile_settings["input-scss"];
+        $input_scss = $scss_compile_settings['input-scss'];
         if (!preg_match('/^[a-z0-9_\-.]+$/', $input_scss)) {
-          $input_scss = "scss/overrides.scss";
+          $input_scss = 'scss/overrides.scss';
         }
 
-        $scssIn = file_get_contents(preg_replace('#/+#', '/', join('/', array($theme_path, $input_scss))));
+        $scssIn = file_get_contents(preg_replace('#/+#', '/', implode('/', [$theme_path, $input_scss])));
         $cssOut = $scss->compile($scssIn);
 
-        $output_css = $scss_compile_settings["output-css"];
+        $output_css = $scss_compile_settings['output-css'];
         if (!preg_match('/^[a-z0-9_\-.]+$/', $output_css)) {
-          $output_css = "css/style.css";
+          $output_css = 'css/style.css';
         }
 
-        $output_css_dir = preg_replace('#/+#', '/', join('/', array($theme_path, dirname($output_css))));
+        $output_css_dir = preg_replace('#/+#', '/', implode('/', [$theme_path, dirname($output_css)]));
         $output_css_file = basename($output_css);
 
         if (!is_dir($output_css_dir)) {
           mkdir($output_css_dir, 0755, TRUE);
         }
 
-        $output_file = preg_replace('#/+#', '/', join('/', array($output_css_dir, $output_css_file)));
+        $output_file = preg_replace('#/+#', '/', implode('/', [$output_css_dir, $output_css_file]));
 
         file_put_contents($output_file, $cssOut);
 

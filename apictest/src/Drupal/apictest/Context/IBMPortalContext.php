@@ -16,6 +16,7 @@ use Behat\Behat\Context\SnippetAcceptingContext;
 use Behat\Behat\Hook\Scope\AfterFeatureScope;
 use Behat\Behat\Hook\Scope\AfterStepScope;
 use Behat\Gherkin\Node\TableNode;
+use Behat\Mink\Driver\GoutteDriver;
 use Behat\Testwork\Hook\Scope\AfterSuiteScope;
 use Behat\Testwork\Hook\Scope\BeforeSuiteScope;
 use Behat\Testwork\Hook\Scope\SuiteScope;
@@ -23,6 +24,7 @@ use Drupal\apictest\MockServiceHandler;
 use Drupal\apictest\TestData\TestData;
 use Drupal\Core\Database\Database;
 use Drupal\DrupalExtension\Context\DrupalContext;
+use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\user\Entity\User;
 
 
@@ -42,8 +44,6 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   private $debugDumpDir;
 
   private $htmlDumpNumber;
-
-  private $localDrupalLoggedIn;
 
   /**
    * Initializes context.
@@ -85,7 +85,6 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
     // The data for use generally in this scenario
     $this->testData = new TestData($testDataScenario);
-    $this->localDrupalLoggedIn = FALSE;
 
     // Ensure captcha is always presented for deterministic behat tests
     // captcha persistence 0 = CAPTCHA_PERSISTENCE_SHOW_ALWAYS
@@ -148,6 +147,11 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
     // Force log out if the test scenario didn't explicitly log out at the end
     $this->assertAnonymousUser();
+
+    // reset registries
+    print "Resetting to default user registry.";
+    $this->resetToDefaultRegistry();
+
 
     // NOTE - we are not shutting down zombie here. This is a deliberate choice!
     //        We already have code that detects zombie is started so we don't get multiple instances.
@@ -310,7 +314,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
         $users = User::loadMultiple($ids);
 
         foreach ($users as $drupal_user) {
-          if ($drupal_user->getUsername() === $current_user->name) {
+          if ($drupal_user->getAccountName() === $current_user->name) {
             $current_user->uid = $drupal_user->id();
             break;
           }
@@ -341,7 +345,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       print 'searching for username: ' . $username . "\n";
 
       foreach ($users as $drupal_user) {
-        if ($drupal_user->getUsername() === $username) {
+        if ($drupal_user->getAccountName() === $username) {
           $uid = $drupal_user->id();
           break;
         }
@@ -357,10 +361,16 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   /**
    * @Transform table:name,mail,status
    * @Transform table:name,mail,pass,status
+   * @Transform table:name,mail,pass,status,registry_url
    * @Transform table:title,name,owner,id
    * @Transform table:title,name,id,owner
    * @Transform table:type,title,url,user_managed,default
    * @Transform table:consumerorgid,username,roles
+   * @Transform table:title,id,document
+   * @Transform table:name,title,id,document
+   * @Transform table:title,id,org_id
+   * @Transform table:org_id,app_id,sub_id,product,plan
+   * @Transform table:consumerorgid,mail,roles
    *
    * Annoyingly, this function will only match the specifically listed
    * tables. If you need a different table processing, add another row of:
@@ -426,6 +436,41 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       print('Setting \'acl_debug\' config to false. ');
       \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->set('acl_debug', FALSE)->save();
     }
+  }
+
+  /**
+   * @Given I have an analytics service
+   */
+  public function enableAnalytics() {
+    $analyticsService = \Drupal::service('ibm_apim.analytics');
+    $analyticsObject = [
+      'type' => 'analytics_service',
+      'api_version' => '2.0.0',
+      'id' => '5391d980-6a0a-449e-bd68-6b21abf1d826',
+      'name' => 'analytics-service-1',
+      'title' => 'Analytics Service 1',
+      'summary' => 'Analytics Service 1',
+      'client_endpoint' => 'https://9.7.7.7:4046',
+      'client_endpoint_tls_client_profile_url' => '/api/orgs/6f66dfed-e4c8-4a32-9831-a91c8d7113f3/tls-client-profiles/0f7fef97-1404-4d9f-8733-e878dc230f82',
+      'endpoint' => 'https://9.7.7.7:4046',
+      'ingestion_endpoint' => 'https://9.7.7.7:4046/ingestion',
+      'ingestion_endpoint_tls_client_profile_url' => '/api/orgs/6f66dfed-e4c8-4a32-9831-a91c8d7113f3/tls-client-profiles/b2c8fb7b-e757-47a6-a310-5c7cb33ddff1',
+      'shadow' => FALSE,
+      'metadata' => NULL,
+      'created_at' => '2018-02-26T21:51:52.246Z',
+      'updated_at' => '2018-02-26T22:32:48.979Z',
+      'org_url' => '/api/orgs/6f66dfed-e4c8-4a32-9831-a91c8d7113f3',
+      'url' => '/api/orgs/6f66dfed-e4c8-4a32-9831-a91c8d7113f3/availability-zones/f9e0d1d0-1ee9-4544-ab20-7b6788b66dac/analytics-services/5391d980-6a0a-449e-bd68-6b21abf1d826',
+    ];
+    $analyticsService->updateAll([$analyticsObject]);
+  }
+
+  /**
+   * @Given I do not have an analytics service
+   */
+  public function disableAnalytics() {
+    $analyticsService = \Drupal::service('ibm_apim.analytics');
+    $analyticsService->deleteAll();
   }
 
   /**
@@ -685,6 +730,9 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
         else {
           $basicUser->apic_url = $row['name'];
         }
+        if (isset($row['registry_url'])) {
+          $basicUser->registry_url = $row['registry_url'];
+        }
         $this->getUserManager()->addUser($basicUser);
         $this->getUserManager()->setCurrentUser($basicUser);
         $this->apicUsers[$basicUser->mail] = $basicUser;
@@ -707,8 +755,8 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       $userAlreadyExists = FALSE;
       foreach ($users as $drupal_user) {
 
-        if ($drupal_user->getUsername() === $row['name'] || $drupal_user->getEmail() === $row['mail']) {
-          print 'Found an existing user record for ' . $drupal_user->getUsername() . ' (email=' . $drupal_user->getEmail() . ') in the database.\n';
+        if ($drupal_user->getAccountName() === $row['name'] || $drupal_user->getEmail() === $row['mail']) {
+          print 'Found an existing user record for ' . $drupal_user->getAccountName() . ' (email=' . $drupal_user->getEmail() . ') in the database.\n';
           $basicUser = new \stdClass();
           $basicUser->name = $row['name'];
           $basicUser->mail = $row['mail'];
@@ -720,16 +768,25 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
           else {
             $basicUser->apic_url = $row['name'];
           }
+          if (isset($row['registry_url'])) {
+            $basicUser->registry_url = $row['registry_url'];
+          }
+          else {
+            $basicUser->registry_url = '/registry/test';
+          }
           $basicUser->uid = $drupal_user->id();
           $this->getUserManager()->addUser($basicUser);
           $this->getUserManager()->setCurrentUser($basicUser);
-          $this->apicUsers[$drupal_user->getUsername()] = $basicUser;
+          $this->apicUsers[$drupal_user->getAccountName()] = $basicUser;
           $userAlreadyExists = TRUE;
         }
       }
 
       if (!$userAlreadyExists) {
         // If we get here, we need to create the user;
+        print 'No existing user record for ' . $row['name'] . ' (email=' . $row['mail'] . ") in the database. Creating...\n";
+
+        print 'creating a user from following data: ' . serialize($row) . "\n";
 
         // Add in other fields from the database that we don't add to the Users table in the tests.
         // This is required to give valid forms (for example the edit profile form).
@@ -738,11 +795,23 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
         // Add the headers into the initial row of the table, if they aren't already there:
         $new_headers = ['first_name', 'last_name', 'apic_url'];
+        // sometimes we will be passed a registry_url, if not make sure we have one
+        if (!\in_array('registry_url', $makeUsersTableHash[0])) {
+          $new_headers[] = 'registry_url';
+        }
+
         foreach ($new_headers as $header) {
           if (!\in_array($header, $makeUsersTableHash[0])) {
             $makeUsersTableHash[0][] = $header;
           }
         }
+
+        // to mimic user registries where there is no email address - we need to add something to the db to be valid
+        if ($row['mail'] === '' || $row['mail'] === NULL) {
+          $random_prefix = \Drupal::service('ibm_apim.utils')->random_num();
+          $row['mail'] = $random_prefix . 'noemailinregistry@example.com';
+        }
+
         // Set the fields to be stored in the DB.
         $row['first_name'] = 'Andre';
         $row['last_name'] = 'Andresson';
@@ -752,6 +821,12 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
         else {
           $row['apic_url'] = $row['name'];
         }
+
+
+        if (!isset($row['registry_url'])) {
+          $row['registry_url'] = '/registry/test';
+        }
+
 
         $makeUsersTableHash[] = $row;
 
@@ -763,6 +838,17 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       $newUsersTable = new TableNode($makeUsersTableHash);
       parent::createUsers($newUsersTable);
     }
+
+//    $user_storage = \Drupal::service('entity.manager')->getStorage('user');
+//
+//    $users = $user_storage->loadByProperties([
+//      'name' => 'andre_matchingusername',
+//      'registry_url' => '/consumer-api/user-registries/aaaaaaaa-bbbb-cccc-dddd-111111111111'
+//    ]);
+//    $users = User::loadMultiple();
+//
+//    print "users at end of create users: " . serialize($users);
+
   }
 
   /**
@@ -775,55 +861,14 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    */
   public function assertLoggedInByName($name) {
 
-    // First - log in to the UI by calling the default DrupalContext login function
+    // log in to the UI by calling the default DrupalContext login function
     parent::assertLoggedInByName($name);
 
-    // Next - log in the local behat drupal API core
-    // This is a little trickier but still perfectly doable :)
-    $user = $this->getUserManager()->getUser($name);
-
-    $ids = \Drupal::entityQuery('user')->execute();
-    $users = User::loadMultiple($ids);
-    $foundMatch = FALSE;
-
-    foreach ($users as $dbuser) {
-      if ($dbuser->getUsername() === $user->name) {
-        $foundMatch = TRUE;
-        user_login_finalize($dbuser);
-        $this->localDrupalLoggedIn = TRUE;
-        break;
-      }
-    }
-    if ($foundMatch !== TRUE) {
-      throw new \Exception("No user found with name: ('$name')");
-    }
     $session = $this->getSession();
     $page = $session->getPage();
+
     if (!$page->findLink('Sign out')) {
       throw new \Exception("Log out link not found for user name: ('$name'), assuming login failed");
-    }
-  }
-
-  /**
-   * Given I am an anonymous user
-   * Given I am not logged in
-   *
-   * As with "I am logged in" above, we need to change the log out procedure
-   * so that we log out of both the UI drupal instance and the local behat
-   * drupal instance.
-   */
-  public function assertAnonymousUser() {
-
-    // Cause the site UI user to be logged out
-    parent::assertAnonymousUser();
-
-    // Also log out the local behat drupal api user
-    // A few checks needed here to prevent any code from blowing up
-    // or printing a warning (both cause test failure) if we are not
-    // actually logged in.
-    if ($this->localDrupalLoggedIn === TRUE && session_status() === PHP_SESSION_ACTIVE && \Drupal::currentUser()
-        ->isAuthenticated()) {
-      user_logout();
     }
 
   }
@@ -870,14 +915,267 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   /**
    * @Given ibm_apim settings config boolean property :propname value is :value
    */
-  public function ibmApimSettingsConfigBooleanPropertyValueIs($propname, $value)
-  {
-    $value = filter_var( $value, FILTER_VALIDATE_BOOLEAN);
+  public function ibmApimSettingsConfigBooleanPropertyValueIs($propname, $value) {
+    $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
     $config = \Drupal::service('config.factory')->getEditable('ibm_apim.settings');
     $config->set($propname, $value);
     $config->save();
 
     print " config: set $propname to $value - resulted in value of " . $config->get($propname) . "\n";
+  }
+
+  /**
+   * @Then ibm_apim settings config property :propname value should be :value
+   */
+  public function ibmApimSettingsConfigPropertyValueShouldBe($propname, $value) {
+    $config = \Drupal::service('config.factory')->get('ibm_apim.settings');
+    $actualValue = $config->get($propname);
+    print "Config: $propname is set to $actualValue";
+    if ($value !== $actualValue) {
+      throw new \Exception("Config: $propname was set to $actualValue instead of $value");
+    }
+  }
+
+  /**
+   * @Then ibm_apim settings config property :propname boolean value should be :value
+   */
+  public function ibmApimSettingsConfigPropertyBooleanValueShouldBe($propname, $value) {
+    $config = \Drupal::service('config.factory')->get('ibm_apim.settings');
+    $actualValue = $config->get($propname);
+    $value = (bool) $value;
+    print "Config: $propname is set to $actualValue";
+    if ($value !== $actualValue) {
+      throw new \Exception("Config: $propname was set to $actualValue instead of $value");
+    }
+  }
+
+  /**
+   * @Then ibm_apim settings config property :propname integer value should be :value
+   */
+  public function ibmApimSettingsConfigPropertyIntegerValueShouldBe($propname, $value) {
+    $config = \Drupal::service('config.factory')->get('ibm_apim.settings');
+    $actualValue = $config->get($propname);
+    $value = (int) $value;
+    print "Config: $propname is set to $actualValue";
+    if ($value !== $actualValue) {
+      throw new \Exception("Config: $propname was set to $actualValue instead of $value");
+    }
+  }
+
+  /**
+   * @Then restore ibm_apim settings default values
+   */
+  public function ibmApimDefaultSettings() {
+    $codesnippets = [
+      'curl' => TRUE,
+      'ruby' => TRUE,
+      'python' => TRUE,
+      'php' => TRUE,
+      'java' => TRUE,
+      'node' => TRUE,
+      'go' => TRUE,
+      'swift' => TRUE,
+      'c' => TRUE,
+      'csharp' => TRUE,
+    ];
+    $categories = [
+      'enabled' => TRUE,
+      'create_taxonomies_from_categories' => FALSE,
+    ];
+    \Drupal::service('config.factory')->getEditable('ibm_apim.settings')
+      ->set('autocreate_apiforum', TRUE)
+      ->set('show_placeholder_images', TRUE)
+      ->set('show_register_app', TRUE)
+      ->set('show_versions', TRUE)
+      ->set('enable_api_test', TRUE)
+      ->set('autotag_with_phase', FALSE)
+      ->set('show_cors_warnings', TRUE)
+      ->set('show_analytics', TRUE)
+      ->set('render_api_schema_view', TRUE)
+      ->set('soap_swagger_download', FALSE)
+      ->set('soap_codesnippets', FALSE)
+      ->set('application_image_upload', TRUE)
+      ->set('hide_admin_registry', FALSE)
+      ->set('disable_etags', FALSE)
+      ->set('entry_exit_trace', FALSE)
+      ->set('apim_rest_trace', FALSE)
+      ->set('acl_debug', FALSE)
+      ->set('webhook_debug', FALSE)
+      ->set('cron_drush', FALSE)
+      ->set('allow_consumerorg_creation', TRUE)
+      ->set('allow_consumerorg_rename', TRUE)
+      ->set('allow_consumerorg_delete', TRUE)
+      ->set('allow_consumerorg_change_owner', TRUE)
+      ->set('allow_user_delete', TRUE)
+      ->set('use_proxy', FALSE)
+      ->set('allow_user_delete', TRUE)
+      ->set('proxy_for_api', 'CONSUMER,PLATFORM,ANALYTICS')
+      ->set('proxy_type', 'CURLPROXY_HTTP')
+      ->set('proxy_url', NULL)
+      ->set('proxy_auth', NULL)
+      ->set('categories', $categories)
+      ->set('codesnippets', $codesnippets)
+      ->set('module_blacklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer'])
+      ->save();
+  }
+
+  private function resetToDefaultRegistry() {
+    $lur = new UserRegistry();
+    $lur->setName('lur1');
+    $lur->setUrl('/reg/lur1');
+    $lur->setRegistryType('lur');
+    $lur->setUserManaged(TRUE);
+    $urs = ['/reg/lur1' => $lur];
+    \Drupal::state()->set('ibm_apim.user_registries', $urs);
+
+  }
+
+  /**
+   * @Given I am viewing the :arg1 node :arg2
+   *
+   * @param $nodeType
+   * @param $nodeTitle
+   *
+   * @throws \Exception
+   */
+  public function iAmViewingNode($nodeType, $nodeTitle): void {
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', $nodeType);
+    $query->condition('title.value', $nodeTitle);
+    $results = $query->execute();
+
+    if ($results !== NULL && !empty($results)) {
+      $nid = array_shift($results);
+
+      $this->getMink()->getSession()->visit($this->locatePath('/node/' . $nid));
+    }
+    else {
+      throw new \Exception($nodeType . ' could not be found with title: ' . $nodeTitle);
+    }
+  }
+
+  /**
+   * @Given I am editing the :arg1 node :arg2
+   *
+   * @param $nodeType
+   * @param $nodeTitle
+   *
+   * @throws \Exception
+   */
+  public function iAmEditingNode($nodeType, $nodeTitle): void {
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', $nodeType);
+    $query->condition('title.value', $nodeTitle);
+    $results = $query->execute();
+
+    if ($results !== NULL && !empty($results)) {
+      $nid = array_shift($results);
+
+      $this->getMink()->getSession()->visit($this->locatePath('/node/' . $nid . '/edit'));
+    }
+    else {
+      throw new \Exception($nodeType . ' could not be found with title: ' . $nodeTitle);
+    }
+  }
+
+  /**
+   * @Given My active consumerorg is :arg1
+   *
+   * @param $orgName
+   *
+   * @throws \Exception
+   */
+  public function myActiveConsumerOrg($orgName) {
+    $page = $this->getSession()->getPage();
+    $found = $page->findAll('css', '.consumerorgSelectBlock .orgmenu li a[title="Current organization: ' . $orgName . '"]');
+    $num = \sizeof($found);
+    if ($num !== 1) {
+      throw new \Exception('Unexpected response from finding the active consumer org. Expected 1, found ' . $num);
+    }
+  }
+
+  /**
+   * check for is disabled or not
+   *
+   * @Then The field :arg1 should be disabled
+   *
+   * @param $selector
+   *
+   * @throws \Exception
+   */
+  public function isDisabled($selector) {
+    try {
+      $disabled = $this->getDisabled($selector);
+      if ($disabled !== TRUE) {
+        throw new \Exception('Field should have been disabled, it isnt. selector: ' . $selector);
+      }
+    } catch (\Exception $e) {
+      throw $e;
+    }
+  }
+
+  /**
+   * check for is disabled or not
+   *
+   * @Then The field :arg1 should not be disabled
+   *
+   * @param $selector
+   *
+   * @throws \Exception
+   */
+  public function isNotDisabled($selector) {
+    try {
+      $disabled = $this->getDisabled($selector);
+      if ($disabled !== FALSE) {
+        throw new \Exception('Field should not have been disabled, it is. selector: ' . $selector);
+      }
+    } catch (\Exception $e) {
+      throw $e;
+    }
+  }
+
+  /**
+   * @param $selector
+   *
+   * @return bool|null
+   * @throws \Exception
+   */
+  private function getDisabled($selector): ?bool {
+    $disabled = NULL;
+    $session = $this->getSession();
+    $page = $session->getPage();
+    $element = $page->find(
+      'xpath',
+      $session->getSelectorsHandler()->selectorToXpath('css', $selector) // just changed xpath to css
+    );
+    if ($element !== NULL) {
+      if ($element->getAttribute('disabled') !== NULL) {
+        $disabled = TRUE;
+      }
+      else {
+        $disabled = FALSE;
+      }
+    }
+    else {
+      throw new \Exception('No element found for selector: ' . $selector);
+    }
+    return $disabled;
+  }
+
+  /**
+   * @Given self service onboarding is enabled
+   */
+  public function selfServiceOnboardingIsEnabled() {
+    print "self service onboarding enabled \n";
+    \Drupal::state()->set('ibm_apim.selfSignUpEnabled', TRUE);
+  }
+
+  /**
+   * @Given self service onboarding is disabled
+   */
+  public function selfServiceOnboardingIsDisabled() {
+    print "self service onboarding disabled \n";
+    \Drupal::state()->set('ibm_apim.selfSignUpEnabled', FALSE);
   }
 
 }

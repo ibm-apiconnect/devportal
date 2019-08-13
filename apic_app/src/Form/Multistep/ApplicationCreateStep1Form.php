@@ -15,8 +15,6 @@ namespace Drupal\apic_app\Form\Multistep;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\node\Entity\Node;
-use Drupal\apic_app\Application;
 
 class ApplicationCreateStep1Form extends MultistepFormBase {
 
@@ -181,7 +179,7 @@ class ApplicationCreateStep1Form extends MultistepFormBase {
     }
     $ibmApimApplicationCertificates = (boolean) \Drupal::state()->get('ibm_apim.application_certificates');
     if ($ibmApimApplicationCertificates) {
-      $certificate = $form_state->getValue('certificate');
+      $certificate = \Drupal::service('apic_app.certificate')->cleanup($form_state->getValue('certificate'));
     }
 
     $restService = \Drupal::service('apic_app.rest_service');
@@ -192,7 +190,7 @@ class ApplicationCreateStep1Form extends MultistepFormBase {
         $this->store->set('creds', serialize(['client_id' => $result->data['client_id'], 'client_secret' => $result->data['client_secret']]));
       }
       else {
-        drupal_set_message(t('Error: No application credentials were returned.', []));
+        \Drupal::messenger()->addMessage(t('Error: No application credentials were returned.', []));
         $this->store->set('creds', serialize(['client_id' => NULL, 'client_secret' => NULL]));
       }
       $this->store->set('appId', $result->data['id']);

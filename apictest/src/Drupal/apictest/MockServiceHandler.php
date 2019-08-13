@@ -122,7 +122,8 @@ class MockServiceHandler {
 
     // Restore original settings from backup file
     chmod($siteDirectory, 0777);
-    if (!copy($originalSettingsPhp, $settingsPhp)) {
+    chmod($settingsPhp, 0666);
+    if (file_exists($settingsPhp) && file_exists($originalSettingsPhp) && !copy($originalSettingsPhp, $settingsPhp)) {
       print "WARNING: it was not possible to restore your site/settings.php file from a previous backup.\n";
     }
 

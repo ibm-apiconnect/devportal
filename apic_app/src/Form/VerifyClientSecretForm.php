@@ -17,6 +17,7 @@ use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\NodeInterface;
@@ -52,14 +53,21 @@ class VerifyClientSecretForm extends FormBase {
   protected $userUtils;
 
   /**
-   * ApplicationCreateForm constructor.
-   *
-   * @param ApplicationRestInterface $restService
-   * @param UserUtils $userUtils
+   * @var \Drupal\Core\Messenger\Messenger
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils) {
+  protected $messenger;
+
+  /**
+   * VerifyClientSecretForm constructor.
+   *
+   * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   */
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -67,7 +75,7 @@ class VerifyClientSecretForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     // Load the service required to construct this class
-    return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'));
+    return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'), $container->get('messenger'));
   }
 
   /**
@@ -151,7 +159,7 @@ class VerifyClientSecretForm extends FormBase {
     $data = ['client_secret' => $secret, 'client_id' => $clientid];
     $result = $this->restService->postClientSecret($url, json_encode($data));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
-      drupal_set_message(t('Application secret verified successfully.'));
+      $this->messenger->addMessage(t('Application secret verified successfully.'));
       $current_user = \Drupal::currentUser();
       \Drupal::logger('apic_app')->notice('Application @appname client secret verified by @username', [
         '@appname' => $this->node->getTitle(),

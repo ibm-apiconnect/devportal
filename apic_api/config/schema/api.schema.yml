@@ -26,6 +26,10 @@ field.field.node.api.api_swagger:
   type: ibm_apim_config_object
   label: 'Open API Document'
 
+field.field.node.api.api_encodedswagger:
+  type: ibm_apim_config_object
+  label: 'Encoded Open API Document'
+
 field.field.node.api.api_swaggertags:
   type: ibm_apim_config_object
   label: 'Open API Tags'

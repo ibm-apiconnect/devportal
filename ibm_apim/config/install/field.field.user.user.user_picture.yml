@@ -2,7 +2,7 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.user.picture
+    - field.storage.user.user_picture
   module:
     - image
     - user

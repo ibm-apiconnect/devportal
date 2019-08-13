@@ -67,7 +67,18 @@ services:
     arguments: ['@state', '@logger.channel.ibm_apim']
   ibm_apim.site_config:
     class: Drupal\ibm_apim\Service\SiteConfig
-    arguments: ['@state', '@config.factory', '@logger.channel.ibm_apim', '@ibm_apim.user_registry', '@ibm_apim.billing', '@ibm_apim.permissions', '@ibm_apim.analytics', '@ibm_apim.tls_client_profiles', '@ibm_apim.group', '@ibm_apim.vendor_extension', '@plugin.manager.menu.link']
+    arguments: ['@state',
+                '@config.factory',
+                '@logger.channel.ibm_apim',
+                '@ibm_apim.user_registry',
+                '@ibm_apim.billing',
+                '@ibm_apim.permissions',
+                '@ibm_apim.analytics',
+                '@ibm_apim.tls_client_profiles',
+                '@ibm_apim.group',
+                '@ibm_apim.vendor_extension',
+                '@plugin.manager.menu.link',
+                '@messenger']
   ibm_apim.node_type_checker:
     class: Drupal\ibm_apim\Access\IbmNodeTypeCheck
     tags:
@@ -114,8 +125,10 @@ services:
                 '@ibm_apim.site_config',
                 '@logger.channel.ibm_apim',
                 '@ibm_apim.apicuser',
-                '@ibm_apim.user_registry'
-               ]
+                '@ibm_apim.user_registry',
+                '@ibm_apim.restresponse_reader',
+                '@ibm_apim.tokenresponse_reader',
+                '@ibm_apim.meresponse_reader']
     tags:
       - { name: ibm_apim }
   ibm_apim.apim_utils:
@@ -130,5 +143,50 @@ services:
       - { name: ibm_apim }
   ibm_apim.myorgsvc:
     class: Drupal\ibm_apim\Service\MyOrgService
+    tags:
+      - { name: ibm_apim }
+  ibm_apim.db_usersfielddata:
+    class: Drupal\ibm_apim\Service\UsersFieldDataService
+    arguments: ['@database',
+                '@logger.channel.ibm_apim',
+                '@entity_type.manager',
+                '@ibm_apim.user_registry'
+               ]
+    tags:
+      - { name: ibm_apim }
+  ibm_apim.restresponse_reader:
+    class: Drupal\ibm_apim\Rest\Payload\RestResponseReader
+    arguments: ['@module_handler',
+                '@config.factory',
+                '@messenger'
+               ]
+  ibm_apim.meresponse_reader:
+    class: Drupal\ibm_apim\Rest\Payload\MeResponseReader
+    arguments: ['@module_handler',
+                '@config.factory',
+                '@messenger',
+                '@logger.channel.ibm_apim',
+                '@ibm_apim.apim_utils',
+                '@ibm_apim.utils',
+                '@ibm_apim.user_registry']
+  ibm_apim.tokenresponse_reader:
+    class: Drupal\ibm_apim\Rest\Payload\TokenResponseReader
+    arguments: ['@module_handler',
+                '@config.factory',
+                '@messenger']
+  ibm_apim.user_storage:
+    class: Drupal\ibm_apim\Service\ApicUserStorage
+    arguments: ['@entity.manager',
+                '@ibm_apim.user_registry',
+                '@ibm_apim.apicuser',
+                '@logger.channel.ibm_apim']
+  ibm_apim.account:
+    class: Drupal\ibm_apim\UserManagement\ApicAccountService
+    arguments: ['@logger.channel.ibm_apim',
+                '@ibm_apim.mgmtserver',
+                '@ibm_apim.apicuser',
+                '@language_manager',
+                '@ibm_apim.user_storage'
+    ]
     tags:
       - { name: ibm_apim }

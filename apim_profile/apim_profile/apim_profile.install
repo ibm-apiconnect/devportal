@@ -199,7 +199,15 @@ function apim_profile_install() {
     'select_translation',
     'term_csv_export_import',
     'page_load_progress',
-    'node_type_count'
+    'node_type_count',
+    'advagg',
+    'advagg_css_minify',
+    'advagg_js_minify',
+    'warmer',
+    'warmer_cdn',
+    'warmer_entity',
+    'svg_image_field',
+    'views_taxonomy_term_name_depth',
   ];
 
   $our_modules = [
@@ -545,7 +553,7 @@ function apim_profile_default_apic_config() {
   ];
   $categories = [
     'enabled' => TRUE,
-    'create_taxonomies_from_categories' => FALSE,
+    'create_taxonomies_from_categories' => TRUE,
   ];
   \Drupal::service('config.factory')
     ->getEditable('ibm_apim.settings')
@@ -559,6 +567,7 @@ function apim_profile_default_apic_config() {
     ->set('show_analytics', TRUE)
     ->set('render_api_schema_view', TRUE)
     ->set('soap_swagger_download', FALSE)
+    ->set('optimise_oauth_ux', TRUE)
     ->set('soap_codesnippets', FALSE)
     ->set('application_image_upload', TRUE)
     ->set('hide_admin_registry', FALSE)
@@ -573,6 +582,8 @@ function apim_profile_default_apic_config() {
     ->set('allow_consumerorg_delete', TRUE)
     ->set('allow_consumerorg_change_owner', TRUE)
     ->set('allow_user_delete', TRUE)
+    ->set('certificate_strip_newlines', TRUE)
+    ->set('certificate_strip_prefix', TRUE)
     ->set('categories', $categories)
     ->set('codesnippets', $codesnippets)
     ->set('module_blacklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer'])
@@ -1087,6 +1098,167 @@ function apim_profile_update_8015() {
   }
 }
 
+/**
+ * Set the new settings for application certificates
+ */
+function apim_profile_update_8016() {
+  $categories = [
+    'enabled' => TRUE,
+    'create_taxonomies_from_categories' => TRUE,
+  ];
+
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('certificate_strip_newlines', TRUE)
+    ->set('certificate_strip_prefix', TRUE)
+    ->set('optimise_oauth_ux', TRUE)
+    ->set('categories', $categories)
+    ->save();
+}
+
+/**
+ * Enable Advanced Aggregation of JS and CSS
+ */
+function apim_profile_update_8017() {
+  $module_installer = \Drupal::service('module_installer');
+  foreach ([
+             'advagg',
+             'advagg_css_minify',
+             'advagg_js_minify',
+           ] as $module) {
+    $module_installer->install([$module]);
+  }
+
+  \Drupal::service('config.factory')
+    ->getEditable('advagg.settings')
+    ->set('css', ['brotli' => TRUE, 'combine_media' => FALSE, 'fix_type' => TRUE, 'preserve_external' => FALSE])
+    ->set('dns_prefetch', FALSE)
+    ->set('path', ['convert' => ['absolute_to_protocol_relative' => TRUE, 'absolute' => FALSE, 'force_https' => FALSE]])
+    ->set('cache_level', 2)
+    ->set('cron_frequency', 86400)
+    ->set('enabled', TRUE)
+    ->set('global_counter', 0)
+    ->set('immutable', TRUE)
+    ->set('js', ['brotli' => TRUE, 'fix_type' => TRUE, 'preserve_external' => FALSE])
+    ->set('skip_enabled_preprocess_check', FALSE)
+    ->set('show_bypass_cookie_message', TRUE)
+    ->set('symlinks', FALSE)
+    ->set('symlinksifownermatch', FALSE)
+    ->save();
+
+  \Drupal::service('config.factory')
+    ->getEditable('advagg_css_minify.settings')
+    ->set('minifier', 2)
+    ->set('add_license', FALSE)
+    ->save();
+
+  \Drupal::service('config.factory')
+    ->getEditable('advagg_js_minify.settings')
+    ->set('minifier', 0)
+    ->set('add_license', FALSE)
+    ->set('ratio_max', 0.9)
+    ->set('ratio_min', 0.1)
+    ->save();
+}
+
+/**
+ * Ensure disabled blocks are left sitting in header region
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_update_8018() {
+  \Drupal::service('entity.definition_update_manager')->applyUpdates();
+
+  $categoriesBlock = Block::load('tags');
+  if ($categoriesBlock !== NULL) {
+    $categoriesBlock->set('region', 'collapse_left');
+    $categoriesBlock->set('status', FALSE);
+    $categoriesBlock->save();
+  }
+
+  $breadcrumbsBlock = Block::load('connect_theme_breadcrumbs');
+  if ($breadcrumbsBlock !== NULL) {
+    $breadcrumbsBlock->set('region', 'disabled');
+    $breadcrumbsBlock->save();
+  }
+
+  $toolsBlock = Block::load('connect_theme_tools');
+  if ($toolsBlock !== NULL) {
+    $toolsBlock->set('region', 'disabled');
+    $toolsBlock->save();
+  }
+}
+
+function apim_profile_update_8019() {
+
+  $module_installer = \Drupal::service('module_installer');
+  foreach ([
+             'warmer',
+             'warmer_cdn',
+             'warmer_entity',
+           ] as $module) {
+    $module_installer->install([$module]);
+  }
+  \Drupal::service('config.factory')
+    ->getEditable('warmer.settings')
+    ->set('entity', [
+      'id' => 'entity',
+      'frequency' => '300',
+      'batchSize' => '50',
+      'entity_types' => [
+        'block:block' => 'block:block',
+        'configurable_language:configurable_language' => 'configurable_language:configurable_language',
+        'node:api' => 'node:api',
+        'node:application' => 'node:application',
+        'node:article' => 'node:article',
+        'node:blog_post' => 'node:blog_post',
+        'node:book' => 'node:book',
+        'node:consumerorg' => 'node:consumerorg',
+        'node:faq' => 'node:faq',
+        'node:forum' => 'node:forum',
+        'node:page' => 'node:page',
+        'node:product' => 'node:product',
+        'node_type:node_type' => 'node_type:node_type',
+        'page:page' => 'page:page',
+        'page_variant:page_variant' => 'page_variant:page_variant',
+        'menu:menu' => 'menu:menu',
+        'user:user' => 'user:user',
+        'user_role:user_role' => 'user_role:user_role',
+        'view:view' => 'view:view',
+      ],
+    ])
+    ->save();
+}
+
+/**
+ * Update the proxy settings for new analytics option
+ */
+function apim_profile_update_8020() {
+  $proxy_for_api = \Drupal::config('ibm_apim.settings')->get('proxy_for_api');
+  if ($proxy_for_api === 'BOTH') {
+    \Drupal::service('config.factory')
+      ->getEditable('ibm_apim.settings')
+      ->set('proxy_for_api', 'CONSUMER,PLATFORM,ANALYTICS')->save();
+  }
+}
+
+function apim_profile_update_8021() {
+  $disagree_label = \Drupal::config('eu_cookie_compliance.settings')->get('disagree_button_label');
+  if (!isset($disagree_label)) {
+    \Drupal::configFactory()
+      ->getEditable('eu_cookie_compliance.settings')
+      ->set('disagree_button_label', 'No thank you')
+      ->save();
+  }
+
+  $module_installer = \Drupal::service('module_installer');
+  foreach ([
+             'svg_image_field',
+             'views_taxonomy_term_name_depth',
+           ] as $module) {
+    $module_installer->install([$module]);
+  }
+}
 
 /**
  * Implements hook_update_dependencies().
@@ -1097,6 +1269,16 @@ function apim_profile_update_dependencies() {
       // block_content 8600 must run before apim_profile 8002.
       8002 => [
         'block_content' => 8600,
+      ],
+      // taxonomy_update 8502 update must have run in order to create the taxonomy_term__parent table
+      8015 => [
+        'taxonomy_update' => 8502,
+      ],
+    ],
+    'eu_cookie_compliance_update' => [
+      // need apim_profile_update_8021 to have run before the latest eu_cookie_compliance_update update
+      8114 => [
+        'apim_profile' => 8021,
       ],
     ],
   ];

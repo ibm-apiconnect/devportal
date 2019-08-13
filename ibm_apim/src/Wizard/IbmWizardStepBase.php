@@ -31,13 +31,13 @@ abstract class IbmWizardStepBase extends FormBase {
     if (\Drupal::currentUser()->isAnonymous()) {
       // The user needs to log in / sign up first but we need to make note that they want to start the subscription wizard
       user_cookie_save(['startSubscriptionWizard' => \Drupal::request()->get('productId')]);
-      drupal_set_message(t('Sign in or create an account to subscribe to products and start using our APIs'), 'error');
+      \Drupal::messenger()->addError(t('Sign in or create an account to subscribe to products and start using our APIs'));
       $this->redirect('user.page')->send();
       $return_value = FALSE;
     }
 
     if (!$user_utils->checkHasPermission('subscription:manage')) {
-      drupal_set_message(t('Only users with the required permissions can access the subscription wizard'), 'error');
+      \Drupal::messenger()->addError(t('Only users with the required permissions can access the subscription wizard'));
       $this->redirect('<front>')->send();
       $return_value = FALSE;
     }

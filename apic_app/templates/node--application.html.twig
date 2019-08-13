@@ -112,8 +112,12 @@
         {% if apic_state|lower|clean_class == 'suspended' %}
           <div class="alert alert-warning" role="alert">
             <div class="alert-details">
-              {{ 'Warning: This application is suspended. '|t }} <a
-                  href="{{ path('contact.site_page') }}"> {{ 'Contact us for more information'|t }} </a>
+              {{ 'Warning: This application is suspended. '|t }}
+              {% if contact %}
+                <a href="{{ path('contact.site_page') }}"> {{ 'Contact us for more information'|t }} </a>
+              {% else %}
+                <a href="mailto:{{ site_admin_email }}"> {{ 'Contact us for more information'|t }} </a>
+              {% endif %}
             </div>
           </div>
         {% endif %}

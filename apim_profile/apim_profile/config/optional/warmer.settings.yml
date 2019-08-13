@@ -1,0 +1,61 @@
+warmers:
+  sitemap:
+    id: sitemap
+    frequency: '300'
+    batchSize: '50'
+    sitemaps: {  }
+    minPriority: '0'
+    headers: {  }
+  cdn:
+    id: cdn
+    frequency: '300'
+    batchSize: '50'
+    urls: {  }
+    headers: {  }
+  entity:
+    id: entity
+    frequency: 300
+    batchSize: 50
+    entity_types:
+      'block:block': 'block:block'
+      'block_content:basic': 'block_content:basic'
+      'block_content_type:block_content_type': 'block_content_type:block_content_type'
+      'captcha_point:captcha_point': 'captcha_point:captcha_point'
+      'comment_type:comment_type': 'comment_type:comment_type'
+      'comment:comment': 'comment:comment'
+      'comment:comment_forum': 'comment:comment_forum'
+      'contact_form:contact_form': 'contact_form:contact_form'
+      'contact_message:feedback': 'contact_message:feedback'
+      'crop:focal_point': 'crop:focal_point'
+      'crop_type:crop_type': 'crop_type:crop_type'
+      'editor:editor': 'editor:editor'
+      'field_config:field_config': 'field_config:field_config'
+      'field_storage_config:field_storage_config': 'field_storage_config:field_storage_config'
+      'filter_format:filter_format': 'filter_format:filter_format'
+      'configurable_language:configurable_language': 'configurable_language:configurable_language'
+      'node:api': 'node:api'
+      'node:application': 'node:application'
+      'node:article': 'node:article'
+      'node:blog_post': 'node:blog_post'
+      'node:book': 'node:book'
+      'node:consumerorg': 'node:consumerorg'
+      'node:faq': 'node:faq'
+      'node:forum': 'node:forum'
+      'node:page': 'node:page'
+      'node:product': 'node:product'
+      'node_type:node_type': 'node_type:node_type'
+      'page:page': 'page:page'
+      'page_variant:page_variant': 'page_variant:page_variant'
+      'password_policy:password_policy': 'password_policy:password_policy'
+      'menu:menu': 'menu:menu'
+      'taxonomy_vocabulary:taxonomy_vocabulary': 'taxonomy_vocabulary:taxonomy_vocabulary'
+      'ultimate_cron_job:ultimate_cron_job': 'ultimate_cron_job:ultimate_cron_job'
+      'user_role:user_role': 'user_role:user_role'
+      'user:user': 'user:user'
+      'view:view': 'view:view'
+      'date_format:date_format': 'date_format:date_format'
+      'entity_form_mode:entity_form_mode': 'entity_form_mode:entity_form_mode'
+      'entity_form_display:entity_form_display': 'entity_form_display:entity_form_display'
+      'entity_view_display:entity_view_display': 'entity_view_display:entity_view_display'
+      'entity_view_mode:entity_view_mode': 'entity_view_mode:entity_view_mode'
+proxy_for_api: {  }

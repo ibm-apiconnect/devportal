@@ -70,7 +70,7 @@ class SubscribeSummary extends IbmWizardStepBase {
           if (isset($fid[0]['target_id'])) {
             $file = File::load($fid[0]['target_id']);
             if ($file !== NULL) {
-              $application_image = $file->toUrl();
+              $application_image = $file->createFileUrl();
             }
           }
           elseif ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
@@ -87,7 +87,7 @@ class SubscribeSummary extends IbmWizardStepBase {
           if (isset($fid[0]['target_id'])) {
             $file = File::load($fid[0]['target_id']);
             if ($file !== NULL) {
-              $product_image = $file->toUrl();
+              $product_image = $file->createFileUrl();
             }
           }
           elseif ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('product')) {

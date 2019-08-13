@@ -9,3 +9,17 @@ apic_api.view:
     parameters:
       apiNode:
         type: 'apic_api.nidorpath'
+
+apic_api.retrievewsdl:
+  path: '/api/retrievewsdl/{api}/{endpoint}'
+  defaults:
+    _controller: '\Drupal\apic_api\Controller\WSDLRetrieverController::retrieveWSDL'
+    _title: 'IBM APIC WSDL Retriever'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      api:
+        type: 'string'
+      endpoint:
+        type: 'string'

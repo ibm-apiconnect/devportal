@@ -12,6 +12,7 @@
 
 namespace Drupal\auth_apic\Form;
 
+use Drupal\auth_apic\UserManagement\ApicPasswordInterface;
 use Drupal\change_pwd_page\Form\ChangePasswordForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
@@ -20,10 +21,9 @@ use Drupal\Core\Password\PasswordInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Routing\UrlGeneratorTrait;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\user\Entity\User;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\auth_apic\Service\Interfaces\UserManagerInterface;
+use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -39,9 +39,9 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   protected $moduleHandler;
 
   /**
-   * @var \Drupal\auth_apic\Service\Interfaces\UserManagerInterface
+   * @var \Drupal\auth_apic\UserManagement\ApicPasswordInterface
    */
-  protected $userManager;
+  protected $apicPassword;
 
   /**
    * @var \Drupal\Core\Entity\EntityManagerInterface
@@ -73,8 +73,8 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
    *   Url generator - for redirect handling.
    * @param \Drupal\Core\Password\PasswordInterface $password_hasher
    *   The password hasher.
-   * @param \Drupal\auth_apic\Service\Interfaces\UserManagerInterface $user_manager
-   *   User manager.
+   * @param \Drupal\auth_apic\UserManagement\ApicPasswordInterface $apic_password
+   *   Password service.
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    */
   public function __construct(AccountInterface $account,
@@ -83,7 +83,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
                               TranslationInterface $string_translation,
                               UrlGeneratorInterface $url_generator,
                               PasswordInterface $password_hasher,
-                              UserManagerInterface $user_manager,
+                              ApicPasswordInterface $apic_password,
                               EntityManagerInterface $entity_manager) {
     parent::__construct($password_hasher, $account);
     $this->account = $account;
@@ -92,7 +92,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
     $this->stringTranslation = $string_translation;
     $this->urlGenerator = $url_generator;
     $this->password_hasher = $password_hasher;
-    $this->userManager = $user_manager;
+    $this->apicPassword = $apic_password;
     $this->entityManager = $entity_manager;
   }
 
@@ -107,7 +107,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       $container->get('string_translation'),
       $container->get('url_generator'),
       $container->get('password'),
-      $container->get('auth_apic.usermanager'),
+      $container->get('auth_apic.password'),
       $container->get('entity.manager')
     );
   }
@@ -312,7 +312,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       $user = $this->entityManager->getStorage('user')->load($this->currentUser()->id());
       if ($user !== NULL) {
         $this->logger->notice('change password form submit for non-admin user');
-        $success = $this->userManager->changePassword($user, $form_state->getValue('current_pass'), $form_state->getValue('pass'));
+        $success = $this->apicPassword->changePassword($user, $form_state->getValue('current_pass'), $form_state->getValue('pass'));
       }
       if ($success) {
         drupal_set_message(t('Password changed successfully'));

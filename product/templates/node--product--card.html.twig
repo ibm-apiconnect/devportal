@@ -34,7 +34,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
       </div>
     {% endif %}
     <div class="apicProductCardMain">
-      <div class="bx--about__title--name">
+      <div class="bx--about__title--name" data-toggle="tooltip" data-placement="bottom" title="{{- node.title[0].value -}}">
         <a href="{{- path('product.view', {'prodNode': prodNode}) -}}" rel="bookmark">
           <span class="apicProductName apicTruncate">{{- label -}}</span>
           {% if showVersions %}
@@ -77,7 +77,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
           {% else %}
             {% set apiNode = api.node.id %}
           {% endif %}
-          <div class="apicProductCardApi apicTruncate">
+          <div class="apicProductCardApi apicTruncate" data-toggle="tooltip" data-placement="bottom" title="{{- api.node.title[0].value -}}">
             <a href="{{- path('product.api', {'prodNode': prodNode, 'apiNode': apiNode}) -}}" rel="bookmark">
               {{ api.node.title[0].value }}
               {% if showVersions %}

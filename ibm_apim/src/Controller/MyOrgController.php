@@ -98,15 +98,7 @@ class MyOrgController extends ControllerBase {
   public function content(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $myorg = NULL;
-    $owner = NULL;
-    $members = [];
-    $orgRoles = [];
-    $hasMemberManagePerm = FALSE;
-    $hasSettingsManagePerm = FALSE;
-    $canTransferOwner = FALSE;
-    $canRenameOrg = FALSE;
-    $canDeleteOrg = FALSE;
+    $nid = NULL;
 
     $org = $this->userUtils->getCurrentConsumerorg();
     // load the current consumerorg node to pass through to the twig template
@@ -116,86 +108,9 @@ class MyOrgController extends ControllerBase {
     $nids = $query->execute();
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
-      $myorg = Node::load($nid);
-      // ensure use translated version of the node (just in case - but unlikely to matter here)
-      $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
-      $hasTranslation = $myorg->hasTranslation($lang_code);
-      if ($hasTranslation === true) {
-        $myorg = $myorg->getTranslation($lang_code);
-      }
-
-      $myorgOwnerUrl = $myorg->consumerorg_owner->value;
-      $cOrgRoles = $myorg->consumerorg_roles->getValue();
-      if ($cOrgRoles !== NULL) {
-        $whitelist = [Role::class];
-        foreach ($cOrgRoles as $arrayValue) {
-          // Owner and member are special cases that we handle separately in the org page.
-          $role = new Role();
-          $role->createFromArray(unserialize($arrayValue['value'], ['allowed_classes' => $whitelist]));
-          if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
-            $orgRoles[] = $role;
-          }
-        }
-      }
-
-      $cOrgMembers = $myorg->consumerorg_members->getValue();
-      if ($cOrgMembers !== NULL) {
-        $whitelist = [Member::class, ApicUser::class];
-        foreach ($cOrgMembers as $arrayValue) {
-          $orgMember = new Member();
-          $orgMember->createFromArray(unserialize($arrayValue['value'], ['allowed_classes' => $whitelist]));
-
-          $memberUserUrl = $orgMember->getUserUrl();
-          if ($myorgOwnerUrl === $memberUserUrl) {
-            $owner = $this->orgService->prepareOrgMemberForDisplay($orgMember);
-          }
-          else {
-            $members[] = $this->orgService->prepareOrgMemberForDisplay($orgMember);
-          }
-        }
-      }
-
-      // add pending invitations into the list of members.
-      $cOrgInvites = $myorg->consumerorg_invites->getValue();
-      if ($cOrgInvites !== NULL) {
-        foreach ($cOrgInvites as $invites_array) {
-          $invite = unserialize($invites_array['value'], ['allowed_classes' => FALSE]);
-          $invitedMember = [];
-          $invitedMember['details'] = $invite['email'];
-          $invitedMember['state'] = 'Pending';
-          $invitedMember['id'] = basename($invite['url']);
-          $invitedMember['role_urls'] = $invite['role_urls'];
-          $members[] = $invitedMember;
-        }
-      }
-
-      foreach ($members as &$member) {
-        $roles = [];
-        foreach ($member['role_urls'] as $role_url) {
-          $role = $orgRoles[array_search($role_url, array_column($orgRoles, 'url'))];
-          $roles[] = $role;
-        }
-        $member['roles'] = $roles;
-        // needed otherwise we will keep the reference to $member
-        unset($member);
-      }
-
-      // TODO: sort members so we are consistent
-
-      $hasMemberManagePerm = $this->userUtils->checkHasPermission('member:manage');
-      $hasSettingsManagePerm = $this->userUtils->checkHasPermission('settings:manage');
-
-      $allowConsumerorgChangeOwner = (boolean) $this->config->get('allow_consumerorg_change_owner');
-      $allowConsumerorgRename = (boolean) $this->config->get('allow_consumerorg_rename');
-      $allowConsumerorgDelete = (boolean) $this->config->get('allow_consumerorg_delete');
-
-      $canTransferOwner = $hasSettingsManagePerm && $allowConsumerorgChangeOwner;
-      $canRenameOrg = $hasSettingsManagePerm && $allowConsumerorgRename;
-      $canDeleteOrg = $hasSettingsManagePerm && $allowConsumerorgDelete;
-
     }
 
-    if ($myorg === NULL || empty($myorg)) {
+    if ($nid === NULL || empty($nid)) {
       // the user is not in any orgs. send them somewhere else.
       // if onboarding is enabled, we can redirect to the create org page
       if ($this->siteConfig->isSelfOnboardingEnabled()) {
@@ -209,43 +124,17 @@ class MyOrgController extends ControllerBase {
         $response->send();
       }
     }
+    $nodeArray = ['id' => $nid];
 
-    $custom_fields = [];
-    $content = [];
-    $entityView = $this->entityTypeManager->getStorage('entity_view_display')
-      ->load('node.consumerorg.default');
-    if ($entityView !== NULL) {
-      $fieldList = array_keys($entityView->getComponents());
-      $coreFields = ['title', 'vid', 'status', 'nid', 'revision_log', 'created', 'links', 'uid'];
-      $ibmFields = $this->consumerOrgService->getIBMFields();
-      $merged = array_merge($coreFields, $ibmFields);
-      $custom_fields = array_diff($fieldList, $merged);
-      foreach($custom_fields as $custom_field) {
-        $content[$custom_field] = $myorg->$custom_field->view();
-      }
-    }
+    $current_user = \Drupal::currentUser();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return [
       '#cache' => [
-        'tags' => ['myorg:url:' . $org['url']],
+        'tags' => ['myorg:url:' . $org['url'], 'user:' . $current_user->id()],
       ],
       '#theme' => 'ibm_apim_myorg',
-      '#images_path' => drupal_get_path('module', 'ibm_apim'),
-      '#myorg_title' => $myorg->getTitle(),
-      '#myorg_name' => $myorg->consumerorg_name->value,
-      '#myorg_url' => $myorg->consumerorg_url->value,
-      '#myorg_owner' => $owner,
-      '#myorg_members' => $members,
-      '#myorg_roles' => $orgRoles,
-      '#myorg' => $myorg,
-      '#myorg_has_member_manage_perm' => $hasMemberManagePerm,
-      '#myorg_has_settings_manage_perm' => $hasSettingsManagePerm,
-      '#myorg_can_transfer_owner' => $canTransferOwner,
-      '#myorg_can_rename_org' => $canRenameOrg,
-      '#myorg_can_delete_org' => $canDeleteOrg,
-      '#custom_fields' => $custom_fields,
-      '#content' => $content,
+      '#node' => $nodeArray,
     ];
   }
 
@@ -379,7 +268,7 @@ class MyOrgController extends ControllerBase {
     $url = '/' . $consumerOrg['url'] . '/payment-gateways';
     $result = ApicRest::put($url, json_encode($data));
     if (isset($result, $result->data) && !isset($result->data['errors'])) {
-      drupal_set_message(t('Billing information updated successfully'));
+      $this->messenger->addMessage(t('Billing information updated successfully'));
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }

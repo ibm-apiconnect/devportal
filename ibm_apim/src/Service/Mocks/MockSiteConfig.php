@@ -14,6 +14,7 @@ namespace Drupal\ibm_apim\Service\Mocks;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Menu\MenuLinkManagerInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\State\StateInterface;
 use Drupal\ibm_apim\Service\Billing;
 use Drupal\ibm_apim\Service\Interfaces\PermissionsServiceInterface;
@@ -48,14 +49,15 @@ class MockSiteConfig extends SiteConfig {
    * @param \Drupal\ibm_apim\Service\Group $groupService
    * @param \Drupal\ibm_apim\Service\VendorExtension $vendorExtService
    * @param \Drupal\Core\Menu\MenuLinkManagerInterface $menuLinkManager
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    *
    * @throws \Exception
    */
   public function __construct(StateInterface $state, ConfigFactoryInterface $config_factory,
                               LoggerInterface $logger, UserRegistryServiceInterface $urService, Billing $billService,
                               PermissionsServiceInterface $permsService, AnalyticsService $analyticsService,
-                              TlsClientProfilesService $tlsProfilesService, Group $groupService, VendorExtension $vendorExtService, MenuLinkManagerInterface $menuLinkManager) {
-    parent::__construct($state, $config_factory, $logger, $urService, $billService, $permsService, $analyticsService, $tlsProfilesService, $groupService, $vendorExtService, $menuLinkManager);
+                              TlsClientProfilesService $tlsProfilesService, Group $groupService, VendorExtension $vendorExtService, MenuLinkManagerInterface $menuLinkManager, Messenger $messenger) {
+    parent::__construct($state, $config_factory, $logger, $urService, $billService, $permsService, $analyticsService, $tlsProfilesService, $groupService, $vendorExtService, $menuLinkManager, $messenger);
     $this->state = $state;
     $this->updateFromSnapshotFile();
   }
@@ -80,11 +82,15 @@ class MockSiteConfig extends SiteConfig {
   }
 
   protected function get(): array {
-    return $this->state->get('ibm_apim.mock_site_config');
+    $catalog_config = $this->state->get('ibm_apim.mock_site_config');
+    if (!isset($catalog_config)) {
+      $catalog_config = [];
+    }
+    return $catalog_config;
   }
 
   public function isSet(): bool {
-    $catalog_config = $this->state->get('ibm_apim.mock_site_config');
+    $catalog_config = $this->get();
     return !empty($catalog_config);
   }
 
@@ -94,7 +100,7 @@ class MockSiteConfig extends SiteConfig {
       unset($config['catalog_setting']);
     }
 
-    $current_config = $this->state->get('ibm_apim.mock_site_config');
+    $current_config = $this->get();
     if (!isset($current_config) || $current_config !== $config) {
       $this->state->set('ibm_apim.mock_site_config', $config);
       $this->getCheckAndStore();

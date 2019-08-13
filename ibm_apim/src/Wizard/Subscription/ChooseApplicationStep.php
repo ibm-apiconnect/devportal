@@ -167,10 +167,11 @@ class ChooseApplicationStep extends IbmWizardStepBase {
     $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
     $application = Node::load($form_state->getUserInput()['selectedApplication']);
-
-    $temp_store->set('applicationUrl', $application->get('apic_url')->value);
-    $temp_store->set('applicationName', $application->getTitle());
-    $temp_store->set('applicationNodeId', $form_state->getUserInput()['selectedApplication']);
+    if ($application !== null) {
+      $temp_store->set('applicationUrl', $application->get('apic_url')->value);
+      $temp_store->set('applicationName', $application->getTitle());
+      $temp_store->set('applicationNodeId', $form_state->getUserInput()['selectedApplication']);
+    }
   }
 
 }

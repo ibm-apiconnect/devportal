@@ -1,5 +1,5 @@
 langcode: en
-status: true
+status: false
 dependencies:
   config:
     - system.menu.tags
@@ -9,7 +9,7 @@ dependencies:
     - connect_theme
 id: tags
 theme: connect_theme
-region: '-1'
+region: collapse_left
 weight: 0
 provider: null
 plugin: 'system_menu_block:tags'
@@ -20,6 +20,7 @@ settings:
   label_display: visible
   level: 1
   depth: 0
+  expand_all_items: false
 visibility:
   request_path:
     id: request_path

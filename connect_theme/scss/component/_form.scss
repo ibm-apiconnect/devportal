@@ -597,7 +597,8 @@ input[type="checkbox"].bx--checkbox {
   margin: 0 0 5px 1rem;
 }
 .bx--global-light-ui.route-entityuseredit-form .button.apicSecondary#edit-delete {
-  margin-right: 145px;
+  margin-right: auto;
+  margin-left: 0;
 }
 
 .bx--global-light-ui  button.bx--toast-notification__close-button,

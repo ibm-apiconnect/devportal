@@ -41,10 +41,10 @@ class JWTParser implements TokenParserInterface {
    * @param string $token
    *  JWT token.
    *
-   * @return \Drupal\auth_apic\JWTToken|null
+   * @return JWTToken|null
    * @throws \Exception
    */
-  public function parse($token) {
+  public function parse($token): ?JWTToken {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $token);
     }

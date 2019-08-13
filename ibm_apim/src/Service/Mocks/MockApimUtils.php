@@ -29,8 +29,7 @@ class MockApimUtils extends ApimUtils {
    *   0 = not valid, 1 = valid
    */
   public function sanitizeRegistryUrl($url): int {
-    \drupal_set_message('in MockApimUtils::sanitizeRegistryUrl() with ' . $url);
-    \Drupal::logger('mock_apim_utils')->debug('in MockApimUtils::sanitizeRegistryUrl() with ' . $url);
+    \Drupal::logger('mock_apim_utils')->debug('in MockApimUtils::sanitizeRegistryUrl() with %url', ['%url' => $url]);
     return parent::sanitizeRegistryUrl($url);
   }
 

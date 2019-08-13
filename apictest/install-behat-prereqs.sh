@@ -13,7 +13,7 @@ mkdir /var/log
 # dpkg --configure cpp
 
 # update package definitions or the install won't find anything to install
-apt-get update
+yum update -y
 
 # install the required packages
-apt-get install make g++ python
+yum groupinstall -y 'Development Tools'

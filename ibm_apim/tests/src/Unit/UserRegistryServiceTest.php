@@ -169,6 +169,60 @@ class UserRegistryServiceTest extends UnitTestCase {
 
   }
 
+  // updateAll tests - check we handle either an array of arrays (i.e. from webhook/snapshot) or array of objects.
+  public function testUpdateAllAsArrays(): void {
+
+
+    $urs = [
+      '/reg/1' => $this->createRegistryAsArray('1'),
+      '/reg/2' => $this->createRegistryAsArray('2')
+    ];
+
+    $expected_ur1 = new UserRegistry();
+    $expected_ur1->setValues($urs['/reg/1']);
+
+    $expected_ur2 = new UserRegistry();
+    $expected_ur2->setValues($urs['/reg/2']);
+
+    $expected = [
+      '/reg/1' => $expected_ur1,
+      '/reg/2' => $expected_ur2
+    ];
+
+    $this->state->set('ibm_apim.user_registries', $expected)->shouldBeCalled();
+
+    $service = new UserRegistryService($this->state->reveal(), $this->logger->reveal());
+    $success = $service->updateAll($urs);
+    $this->assertTrue($success);
+
+  }
+
+
+  public function testUpdateAllAsObjects(): void {
+
+    $urs = [
+      '/reg/1' => $this->createLURReg('/reg/1'),
+      '/reg/2' => $this->createLURReg('/reg/2')
+    ];
+
+    $this->state->set('ibm_apim.user_registries', $urs)->shouldBeCalled();
+
+    $service = new UserRegistryService($this->state->reveal(), $this->logger->reveal());
+    $success = $service->updateAll($urs);
+    $this->assertTrue($success);
+
+  }
+
+  public function testUpdateAllNoInput(): void {
+
+    $this->state->set('ibm_apim.user_registries', Argument::any())->shouldNotBeCalled();
+
+    $service = new UserRegistryService($this->state->reveal(), $this->logger->reveal());
+    $success = $service->updateAll(NULL);
+    $this->assertFalse($success);
+
+  }
+
   private function createLURReg($url): UserRegistry {
     $reg = new UserRegistry();
     $reg->setUrl($url);
@@ -181,6 +235,22 @@ class UserRegistryServiceTest extends UnitTestCase {
     $reg->setUrl($url);
     $reg->setUserManaged(FALSE);
     return $reg;
+  }
+
+  private function createRegistryAsArray($id): array  {
+    return [
+      'id' => $id,
+      'name' => 'lur' . $id,
+      'url' => '/reg/' . $id,
+      'title' => $id,
+      'summary' => $id,
+      'registry_type' => 'lur',
+      'user_managed' => TRUE,
+      'user_registry_managed' => FALSE,
+      'onboarding' => TRUE,
+      'case_sensitive' => TRUE,
+      'identity_providers' => []
+    ];
   }
 
 

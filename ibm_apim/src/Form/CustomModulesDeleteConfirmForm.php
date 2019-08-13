@@ -16,6 +16,7 @@ namespace Drupal\ibm_apim\Form;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\Utils;
 use Psr\Log\LoggerInterface;
@@ -32,6 +33,11 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
   protected $utils;
 
   /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * An array of modules to delete.
    *
    * @var array
@@ -41,11 +47,13 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
   public function __construct(KeyValueStoreExpirableInterface $key_value_expirable,
                               LoggerInterface $logger,
                               string $site_path,
-                              Utils $utils) {
+                              Utils $utils,
+                              Messenger $messenger) {
     $this->keyValueExpirable = $key_value_expirable;
     $this->logger = $logger;
     $this->sitePath = $site_path;
     $this->utils = $utils;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -56,7 +64,8 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
       $container->get('keyvalue.expirable')->get('ibm_apim_custommodule_delete'),
       $container->get('logger.channel.ibm_apim'),
       $container->get('site.path'),
-      $container->get('ibm_apim.utils')
+      $container->get('ibm_apim.utils'),
+      $container->get('messenger')
     );
   }
 
@@ -106,7 +115,7 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
 
     // Prevent this page from showing when the module list is empty.
     if (empty($this->modules)) {
-      drupal_set_message($this->t('The selected modules could not be deleted, either due to a website problem or due to the delete confirmation form timing out. Please try again.'), 'error');
+      $this->messenger->addError($this->t('The selected modules could not be deleted, either due to a website problem or due to the delete confirmation form timing out. Please try again.'));
       return $this->redirect('ibm_apim.custommodules_delete');
     }
 
@@ -132,10 +141,10 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
     // Uninstall the modules.
     $result = $this->deleteModulesOnFileSystem($this->modules);
     if ($result) {
-      drupal_set_message($this->t('The selected modules have been deleted.'));
+      $this->messenger->addMessage($this->t('The selected modules have been deleted.'));
     }
     else {
-      drupal_set_message($this->t('There was a problem deleting the specified modules.'), 'error');
+      $this->messenger->addError($this->t('There was a problem deleting the specified modules.'));
     }
     $form_state->setRedirectUrl($this->getCancelUrl());
   }

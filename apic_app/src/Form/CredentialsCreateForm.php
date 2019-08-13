@@ -17,6 +17,7 @@ use Drupal\apic_app\Event\CredentialCreateEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\NodeInterface;
@@ -45,14 +46,21 @@ class CredentialsCreateForm extends FormBase {
   protected $userUtils;
 
   /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * ApplicationCreateForm constructor.
    *
    * @param ApplicationRestInterface $restService
    * @param UserUtils $userUtils
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils) {
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -60,7 +68,7 @@ class CredentialsCreateForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     // Load the service required to construct this class
-    return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'));
+    return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'), $container->get('messenger'));
   }
 
   /**
@@ -157,14 +165,14 @@ class CredentialsCreateForm extends FormBase {
       $clientIDHtml = '<div class="toggleParent"><div id="app_id" class="appID bx--form-item js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_id" type="password" readonly value="' . $data['client_id'] . '"></div>
         <div class="password-toggle bx--form-item js-form-item form-item js-form-type-checkbox form-type-checkbox checkbox"><label title="" data-toggle="tooltip" class="bx--label option" data-original-title=""><input class="form-checkbox bx--checkbox" type="checkbox"><span class="bx--checkbox-appearance"><svg class="bx--checkbox-checkmark" width="12" height="9" viewBox="0 0 12 9" fill-rule="evenodd"><path d="M4.1 6.1L1.4 3.4 0 4.9 4.1 9l7.6-7.6L10.3 0z"></path></svg></span><span class="children"> ' . t('Show') . '</span></label></div></div>';
       $clientIDHtml = \Drupal\Core\Render\Markup::create($clientIDHtml);
-      drupal_set_message(t('Your client ID is: @html', [
+      $this->messenger->addMessage(t('Your client ID is: @html', [
         '@html' => $clientIDHtml,
       ]));
 
       $clientSecretHtml = '<div class="toggleParent"><div id="app_secret" class="appSecret bx--form-item js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="clientSecret" type="password" readonly value="' . $data['client_secret'] . '"></div>
         <div class="password-toggle bx--form-item js-form-item form-item js-form-type-checkbox form-type-checkbox checkbox"><label title="" data-toggle="tooltip" class="bx--label option" data-original-title=""><input class="form-checkbox bx--checkbox" type="checkbox"><span class="bx--checkbox-appearance"><svg class="bx--checkbox-checkmark" width="12" height="9" viewBox="0 0 12 9" fill-rule="evenodd"><path d="M4.1 6.1L1.4 3.4 0 4.9 4.1 9l7.6-7.6L10.3 0z"></path></svg></span><span class="children"> ' . t('Show') . '</span></label></div></div>';
       $clientSecretHtml = \Drupal\Core\Render\Markup::create($clientSecretHtml);
-      drupal_set_message(t('Your client secret is: @html', [
+      $this->messenger->addMessage(t('Your client secret is: @html', [
         '@html' => $clientSecretHtml,
       ]));
 

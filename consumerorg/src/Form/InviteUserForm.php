@@ -14,10 +14,10 @@
 namespace Drupal\consumerorg\Form;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\SafeMarkup;
 use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
@@ -61,28 +61,33 @@ class InviteUserForm extends FormBase {
   protected $state;
 
   /**
-   * Constructs an Org User Invitation Form.
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+  /**
+   * InviteUserForm constructor.
    *
-   * {@inheritdoc}
-   *
-   * @param ConsumerOrgService $consumer_org_service
-   * @param AccountInterface $account
-   *   Current user.
-   * @param LoggerInterface $logger
-   *   Logger.
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
+   * @param \Drupal\Core\Session\AccountInterface $account
+   * @param \Psr\Log\LoggerInterface $logger
+   * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
+   * @param \Drupal\Core\State\StateInterface $state
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
   public function __construct(
     ConsumerOrgService $consumer_org_service,
     AccountInterface $account,
     LoggerInterface $logger,
     UserUtils $user_utils,
-    StateInterface $state
+    StateInterface $state,
+    Messenger $messenger
   ) {
     $this->consumerOrgService = $consumer_org_service;
     $this->currentUser = $account;
     $this->logger = $logger;
     $this->userUtils = $user_utils;
     $this->state = $state;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -92,9 +97,10 @@ class InviteUserForm extends FormBase {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('current_user'),
-      $container->get('logger.channel.auth_apic'),
+      $container->get('logger.channel.consumerorg'),
       $container->get('ibm_apim.user_utils'),
-      $container->get('state')
+      $container->get('state'),
+      $container->get('messenger')
     );
   }
 
@@ -111,8 +117,7 @@ class InviteUserForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if (!$this->userUtils->checkHasPermission('member:manage')) {
-      $message = t('Permission denied.');
-      drupal_set_message($message, 'error');
+      $this->messenger->addError(t('Permission denied.'));
 
       $form = [];
       $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
@@ -144,7 +149,21 @@ class InviteUserForm extends FormBase {
         $default_role = NULL;
         foreach ($roles as $role) {
           if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
-            $roles_array[$role->getUrl()] = $role->getTitle();
+            // use translated role names if possible
+            switch($role->getTitle()) {
+              case 'Administrator':
+                $roles_array[$role->getUrl()] = t('Administrator');
+                break;
+              case 'Developer':
+                $roles_array[$role->getUrl()] = t('Developer');
+                break;
+              case 'Viewer':
+                $roles_array[$role->getUrl()] = t('Viewer');
+                break;
+              default:
+                $roles_array[$role->getUrl()] = $role->getTitle();
+                break;
+            }
           }
           if ($role->getName() === 'developer') {
             $default_role = $role->getUrl();
@@ -203,7 +222,7 @@ class InviteUserForm extends FormBase {
     $moduleHandler = \Drupal::service('module_handler');
     if ($moduleHandler->moduleExists('check_dns') && $mail !== NULL && 2 < \strlen($mail)) {
       // Get the email.
-      $mail2 = SafeMarkup::checkPlain($mail);
+      $mail2 = Html::escape($mail);
       $mail2 = explode('@', $mail2);
       // Fetch DNS Resource Records associated with a hostname.
       $result = checkdnsrr(end($mail2));
@@ -217,8 +236,8 @@ class InviteUserForm extends FormBase {
     $org = $this->userUtils->getCurrentConsumerorg();
     $members = $this->consumerOrgService->getMembers($org['url']);
     $consumerorgOwnerUrl = $this->consumerOrgService->getConsumerOrgAsObject($org['url'])->getOwnerUrl();
-    $consumerorgOwnerAccount = \Drupal::service('auth_apic.usermanager')
-      ->findUserByUrl($consumerorgOwnerUrl);
+    $consumerorgOwnerAccount = \Drupal::service('ibm_apim.user_storage')
+      ->loadUserByUrl($consumerorgOwnerUrl);
     if ($consumerorgOwnerAccount !== NULL && $consumerorgOwnerAccount->getEmail() === $mail) {
       $form_state->setErrorByName('new_email', t('That email address is already a member of this consumer organization. Please enter a valid email id.'));
     }
@@ -248,14 +267,14 @@ class InviteUserForm extends FormBase {
     if (!empty($email)) {
       $response = $this->consumerOrgService->inviteMember($this->currentOrg, $email, $role);
       if ($response->success()) {
-        drupal_set_message(t('Invitation sent successfully.'));
+        $this->messenger->addMessage(t('Invitation sent successfully.'));
       }
       else {
-        drupal_set_message(t('Error sending invitation. Contact the system administrator.'), 'error');
+        $this->messenger->addError(t('Error sending invitation. Contact the system administrator.'));
       }
     }
     else {
-      drupal_set_message(t('No user specified.'), 'error');
+      $this->messenger->addError(t('No user specified.'));
     }
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

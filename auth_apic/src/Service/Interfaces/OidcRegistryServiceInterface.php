@@ -25,8 +25,8 @@ interface OidcRegistryServiceInterface {
    * @param \Drupal\ibm_apim\ApicType\UserRegistry $registry
    * @param \Drupal\auth_apic\JWTToken $invitation_object
    *
-   * @return array Associative array, keys az_url and image;
+   * @return ?array Associative array, keys az_url and image or NULL;
    */
-  public function getOidcMetadata(UserRegistry $registry, JWTToken $invitation_object);
+  public function getOidcMetadata(UserRegistry $registry, JWTToken $invitation_object): ?array;
 
 }

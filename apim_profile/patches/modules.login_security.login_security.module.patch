@@ -1,0 +1,63 @@
+--- modules/login_security/login_security.module	2019-05-22 16:27:53.000000000 +0100
++++ modules/login_security/login_security.module	2019-05-22 16:29:04.000000000 +0100
+@@ -11,6 +11,7 @@
+ use Drupal\Core\Url;
+ use Drupal\user\Entity\User;
+ use Drupal\user\UserInterface;
++use Drupal\ibm_apim\ApicType\ApicUser;
+ 
+ /**
+  * Implements hook_cron().
+@@ -118,7 +119,7 @@
+ function login_security_soft_block_validate(array $form, FormStateInterface $form_state) {
+   $config = \Drupal::config('login_security.settings');
+ 
+-  $variables = _login_security_get_variables_by_name($form_state->getValue('name'));
++  $variables = _login_security_get_variables_by_name($form_state->getValue('name'), $form_state->getValue('registry_url'));
+   // Check for host login attempts: Soft.
+   if ($variables['@soft_block_attempts'] >= 1) {
+     if ($variables['@ip_current_count'] >= $variables['@soft_block_attempts']) {
+@@ -135,9 +136,9 @@
+  */
+ function login_security_validate(array $form, FormStateInterface $form_state) {
+   $conf = \Drupal::config('login_security.settings');
+-
+   // Sanitize user input.
+   $name = $form_state->getValue('name');
++  $registry_url = $form_state->getValue('registry_url');
+   // Null username should not be tracked.
+   if (!strlen($name)) {
+     return;
+@@ -147,7 +148,7 @@
+   _login_security_remove_events();
+ 
+   // Populate variables to be used in any module message or login operation.
+-  $variables = _login_security_get_variables_by_name($name);
++  $variables = _login_security_get_variables_by_name($name, $registry_url);
+   // First, check if administrator should be notified of unexpected login
+   // activity.
+   // Only process if configured threshold > 1.
+@@ -397,11 +398,21 @@
+ /**
+  * Helper function to get the variable array for the messages.
+  */
+-function _login_security_get_variables_by_name($name) {
++function _login_security_get_variables_by_name($name, $registry=NULL) {
+   global $base_url;
+ 
+   $config = \Drupal::config('login_security.settings');
+-  $account = user_load_by_name($name);
++  $apicUserStorage = \Drupal::service('ibm_apim.user_storage');
++  if ($registry !== NULL) {
++    $login_user = new ApicUser();
++    $login_user->setUsername($name);
++    $login_user->setApicUserRegistryUrl($registry);
++    $account = $apicUserStorage->load($login_user);
++  }
++  else {
++    // fall through to the more risky user_load_by_name - this will fail if there are more than 1 matching user by name
++    $account = user_load_by_name($name);
++  }
+   // https://drupal.org/node/1744704
+   if (empty($account)) {
+     $account = User::load(0);

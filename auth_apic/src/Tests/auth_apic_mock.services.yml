@@ -1,6 +1,14 @@
 services:
-  auth_apic.usermanager:
-    class: Drupal\auth_apic\Service\Mocks\MockUserManager
-    arguments: ['@externalauth.externalauth', '@externalauth.authmap', '@tempstore.private', '@ibm_apim.mgmtserver', '@state']
-    tags:
-      - { name: auth_apic }
+  auth_apic.login:
+    class: Drupal\auth_apic\UserManagement\Mocks\MockApicLoginService
+    arguments: ['@ibm_apim.mgmtserver',
+                '@ibm_apim.account',
+                '@ibm_apim.user_utils',
+                '@ibm_apim.user_storage',
+                '@tempstore.private',
+                '@logger.channel.auth_apic']
+  auth_apic.password:
+    class: Drupal\auth_apic\UserManagement\Mocks\MockApicPasswordService
+    arguments: ['@ibm_apim.mgmtserver',
+                '@messenger',
+                '@logger.channel.auth_apic']

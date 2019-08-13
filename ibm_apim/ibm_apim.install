@@ -11,6 +11,9 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
+
+use Drupal\Core\Field\BaseFieldDefinition;
+
 /**
  * @file
  * Install, update and uninstall functions for the ibm_apim module.
@@ -84,6 +87,12 @@ function ibm_apim_install() {
     ->removeComponent('consumerorg_url')
     ->removeComponent('field_last_password_reset')
     ->save();
+
+  // add a unique key across username and registry url
+  $db_service = \Drupal::service('ibm_apim.db_usersfielddata');
+  $db_service->addNameAndRegistryUniqueKey();
+  $db_service->setAdminRegistryUrl();
+
 }
 
 /**
@@ -103,3 +112,20 @@ function ibm_apim_update_8101() {
     ->save();
 
 }
+
+function ibm_apim_update_8102() {
+
+  \Drupal::logger('ibm_apim_update')->notice('creating registry_url_field on user entity.');
+
+  $storage_definition = BaseFieldDefinition::create('registry_url_field')
+    ->setLabel(t('APIC User Registry URL'));
+
+  \Drupal::entityDefinitionUpdateManager()->installFieldStorageDefinition('registry_url', 'user', 'user', $storage_definition);
+
+  $db_service = \Drupal::service('ibm_apim.db_usersfielddata');
+  $db_service->addNameAndRegistryUniqueKey();
+  $db_service->setAdminRegistryUrl();
+
+}
+
+

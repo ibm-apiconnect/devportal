@@ -125,7 +125,7 @@ class ApplicationController extends ControllerBase {
         $application_image_url = NULL;
         if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
           $file = File::load($fid[0]['target_id']);
-          $application_image_url = $file->toUrl()->toUriString();
+          $application_image_url = $file->createFileUrl()->toUriString();
         }
         else {
           if ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
@@ -161,15 +161,15 @@ class ApplicationController extends ControllerBase {
     $translations = $this->utils->analytics_translations();
 
     $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString();
-    $drupalSettings = array(
-      'anv'=> array(),
-      'analytics' => array(
+    $drupalSettings = [
+      'anv' => [],
+      'analytics' => [
         'proxyURL' => $url,
         'translations' => $translations,
         'analyticsDir' => base_path() . drupal_get_path('module', 'ibm_apim') . '/analytics',
-      ),
-      'application' => array('id' => $node->application_id->value)
-    );
+      ],
+      'application' => ['id' => $node->application_id->value],
+    ];
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, [
       'theme' => $theme,
@@ -267,7 +267,7 @@ class ApplicationController extends ControllerBase {
         $application_image_url = NULL;
         if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
           $file = File::load($fid[0]['target_id']);
-          $application_image_url = $file->toUrl()->toUriString();
+          $application_image_url = $file->createFileUrl()->toUriString();
         }
         else {
           if ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
@@ -323,7 +323,7 @@ class ApplicationController extends ControllerBase {
                 $cost = t('Free');
                 if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
                   $file = File::load($fid[0]['target_id']);
-                  $product_image_url = $file->toUrl()->toUriString();
+                  $product_image_url = $file->createFileUrl()->toUriString();
                 }
                 elseif ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('product')) {
                   $rawImage = Product::getRandomImageName($product->getTitle());

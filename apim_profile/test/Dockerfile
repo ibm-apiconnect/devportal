@@ -1,7 +1,6 @@
 FROM portal-site-template-with-site
 
-RUN apt-get update && \
-	apt-get install -y python build-essential git
+RUN yum install bison byacc cscope ctags diffstat doxygen elfutils flex gcc gcc-c++ gcc-gfortran gettext indent intltool libtool patchutils rcs rpm-build rpm-sign subversion swig systemtap 
 
 RUN mkdir /tmp/nvm \
         && curl -o- https://codeload.github.com/creationix/nvm/tar.gz/v0.33.8 | tar xfz - --strip-components=1 -C /tmp/nvm \

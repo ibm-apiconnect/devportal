@@ -5,6 +5,7 @@ Feature: CredentialsCRUD
   # needs to run in zombie driver cos goutte seems to cache the webpage meaning the updated node is not shown
   @api
   Scenario: Add, update and delete application credentials
+    Given I am not logged in
     Given users:
       | name  | pass     | mail              | status |
       | Andre | Qwert123 | andre@example.com | 1      |

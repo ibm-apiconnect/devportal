@@ -22,6 +22,9 @@ use Psr\Log\LoggerInterface;
  */
 class UserRegistryService implements UserRegistryServiceInterface {
 
+  // injected registry url for admin user. This does not represent a user registry in apim or anywhere else.
+  private $admin_registry_url = '/admin';
+
   protected $state;
 
   protected $logger;
@@ -91,24 +94,32 @@ class UserRegistryService implements UserRegistryServiceInterface {
    *
    * @param $data array of UserRegistries keyed on url
    */
-  public function updateAll($data): void {
+  public function updateAll($data): bool {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
 
+    $success = FALSE;
     if (isset($data)) {
       $user_registries = [];
       foreach ($data as $ur) {
-        $registry_object = new UserRegistry();
-        $registry_object->setValues($ur);
-        $user_registries[$ur['url']] = $registry_object;
+        if (gettype($ur) === 'object' && $ur instanceof UserRegistry) {
+          $user_registries[$ur->getUrl()] = $ur;
+        }
+        else {
+          $registry_object = new UserRegistry();
+          $registry_object->setValues($ur);
+          $user_registries[$ur['url']] = $registry_object;
+        }
       }
       $this->state->set('ibm_apim.user_registries', $user_registries);
+      $success = TRUE;
     }
 
     if (function_exists('ibm_apim_exit_trace')) {
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $success);
     }
+    return $success;
   }
 
   /**
@@ -235,7 +246,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
     else {
       $default = $this->get($default_url);
       if (!$default) {
-        $this->logger->debug('Unexpected result while retrieving default registry - not found: ' . $default_url);
+        $this->logger->debug('Unexpected result while retrieving default registry - not found: %defaultUrl', ['%defaultUrl' => $default_url]);
         $fallback_required = TRUE;
       }
     }
@@ -308,5 +319,11 @@ class UserRegistryService implements UserRegistryServiceInterface {
     }
   }
 
+  /**
+   * @inheritdoc
+   */
+  public function getAdminRegistryUrl(): string {
+    return $this->admin_registry_url;
+  }
 
 }

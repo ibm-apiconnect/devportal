@@ -118,6 +118,10 @@ class ApicUserService {
       $user->setPassword($account->get('pass')->getValue()[0]['value']);
     }
 
+    if (isset($account->get('registry_url')->getValue()[0]['value']) && $account->get('registry_url')->getValue()[0]['value'] !== NULL) {
+      $user->setApicUserRegistryUrl($account->get('registry_url')->getValue()[0]['value']);
+    }
+
     if (isset($account->apic_url->value)) {
       $user->setUrl($account->apic_url->value);
     }
@@ -181,6 +185,7 @@ class ApicUserService {
     $data['consumer_organization'] = $user->getOrganization();
     $data['apic_url'] = $user->getUrl();
     $data['apic_user_registry_url'] = $user->getApicUserRegistryUrl();
+    $data['registry_url'] = $user->getApicUserRegistryUrl();
     $data['apic_idp'] = $user->getApicIdp();
     $data['apic_state'] = $user->getState();
 
@@ -236,64 +241,75 @@ class ApicUserService {
    */
   public function getCustomUserFields($viewMode = 'default'): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $components = \Drupal::entityTypeManager()
-      ->getStorage('entity_form_display')
-      ->load('user.user.' . $viewMode)
-      ->getComponents();
-    $keys = array_keys($components);
-    $coreFields = [
-      'nid',
-      'uuid',
-      'vid',
-      'langcode',
-      'type',
-      'revision_timestamp',
-      'revision_uid',
-      'revision_log',
-      'status',
-      'title',
-      'uid',
-      'created',
-      'changed',
-      'promote',
-      'sticky',
-      'default_langcode',
-      'revision_default',
-      'revision_translation_affected',
-      'metatag',
-      'path',
-      'menu_link',
-      'content_translation_source',
-      'content_translation_outdated',
-      'mail',
-      'name',
-      'pass',
-      'roles',
-      'current_pass',
-      'account',
-      'notify',
-    ];
-    $ibmFields = [
-      'consumer_organization',
-      'first_name',
-      'last_name',  'apic_catalog_id',
-      'apic_hostname',
-      'apic_pathalias',
-      'apic_provider_id',
-      'apic_rating',
-      'apic_tags',
-      'consumerorg_id',
-      'consumerorg_invites',
-      'consumerorg_memberlist',
-      'consumerorg_members',
-      'consumerorg_name',
-      'consumerorg_owner',
-      'consumerorg_roles',
-      'consumerorg_tags',
-      'consumerorg_url',
-    ];
-    $merged = array_merge($coreFields, $ibmFields);
-    $fields = array_diff($keys, $merged);
+    $fields = [];
+    $entity = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('user.user.' . $viewMode);
+    if ($entity !== NULL) {
+      $components = $entity->getComponents();
+      $keys = array_keys($components);
+      $coreFields = [
+        'nid',
+        'uuid',
+        'vid',
+        'langcode',
+        'language',
+        'timezone',
+        'type',
+        'revision_timestamp',
+        'revision_uid',
+        'revision_log',
+        'status',
+        'title',
+        'uid',
+        'created',
+        'changed',
+        'promote',
+        'sticky',
+        'default_langcode',
+        'revision_default',
+        'revision_translation_affected',
+        'metatag',
+        'path',
+        'menu_link',
+        'content_translation_source',
+        'content_translation_outdated',
+        'mail',
+        'name',
+        'pass',
+        'roles',
+        'current_pass',
+        'account',
+        'notify',
+        'registry_url',
+        'avatars_avatar_generator',
+        'avatars_user_picture',
+        'field_last_password_reset',
+        'field_password_expiration'
+      ];
+      $ibmFields = [
+        'consumer_organization',
+        'first_name',
+        'last_name',
+        'apic_catalog_id',
+        'apic_hostname',
+        'apic_pathalias',
+        'apic_provider_id',
+        'apic_rating',
+        'apic_tags',
+        'consumerorg_id',
+        'consumerorg_invites',
+        'consumerorg_memberlist',
+        'consumerorg_members',
+        'consumerorg_name',
+        'consumerorg_owner',
+        'consumerorg_roles',
+        'consumerorg_tags',
+        'consumerorg_url',
+        'codesnippet'
+      ];
+      $merged = array_merge($coreFields, $ibmFields);
+      $fields = array_diff($keys, $merged);
+    }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $fields);
     return $fields;
   }

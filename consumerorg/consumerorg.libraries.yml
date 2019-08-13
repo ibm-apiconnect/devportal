@@ -1,0 +1,5 @@
+basic:
+  version: 1.x
+  css:
+    component:
+      css/consumerorg.css: {}

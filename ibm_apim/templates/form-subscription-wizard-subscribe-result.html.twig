@@ -9,7 +9,11 @@
 #}
 {%- set errorClass = element['#error'] ? 'form-error' : '' -%}
 <div class="apicForm {{ errorClass }}">
-    <div class="apicFormHeader">{{ 'Subscription Complete'|t }}</div>
+    {% if element['#error'] %}
+        <div class="apicFormHeader error">{{ 'Subscription Error'|t }}</div>
+    {% else %}
+        <div class="apicFormHeader success">{{ 'Subscription Complete'|t }}</div>
+    {% endif %}
     <div class="apicFormText">{{ element['#messages'].statusText }}</div>
     {% if element['#subscriptionDetails'] %}
         <div class="apicSubscribeSummary">

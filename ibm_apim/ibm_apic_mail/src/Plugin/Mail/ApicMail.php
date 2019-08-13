@@ -13,7 +13,7 @@ namespace Drupal\ibm_apic_mail\Plugin\Mail;
 
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Mail\MailInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -53,16 +53,23 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
   protected $moduleHandler;
 
   /**
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
    * ApicMail constructor.
    *
    * @param \Psr\Log\LoggerInterface $logger
    * @param \Drupal\Core\Render\RendererInterface $renderer
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    */
-  public function __construct(LoggerInterface $logger, RendererInterface $renderer, ModuleHandlerInterface $module_handler) {
+  public function __construct(LoggerInterface $logger, RendererInterface $renderer, ModuleHandlerInterface $module_handler, MessengerInterface $messenger) {
     $this->logger = $logger;
     $this->renderer = $renderer;
     $this->moduleHandler = $module_handler;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -72,7 +79,8 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
     return new static(
       $container->get('logger.channel.ibm_apic_mail'),
       $container->get('renderer'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('messenger')
     );
   }
 
@@ -85,7 +93,7 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
    * @return array
    *   The message as it should be sent.
    */
-  public function format(array $message) {
+  public function format(array $message): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $message = $this->massageMessageBody($message);
 
@@ -97,8 +105,13 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
       $converter = new Html2Text($message['body']);
       $message['plain'] = $converter->getText();
 
-      $message['body'] = $message['body']->__toString();
+      if ($message['body'] === NULL) {
+        $message['body'] = '';
+      } else {
+        $message['body'] = $message['body']->__toString();
+      }
     }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $message;
   }
@@ -109,18 +122,19 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
    *
    * @return bool
    */
-  public function mail(array $message) {
+  public function mail(array $message): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $site_config = \Drupal::service('ibm_apim.site_config');
     $platformApiEndpoint = $site_config->getPlatformApimEndpoint();
     $orgId = $site_config->getOrgId();
     $catId = $site_config->getEnvId();
-    if ($orgId === null || $orgId === '' || $catId === null || $catId === '' || $platformApiEndpoint === NULL) {
-      drupal_set_message(t('APIC Hostname, catalog ID or organization ID are not set. Aborting'), 'warning');
+    if ($orgId === NULL || $orgId === '' || $catId === NULL || $catId === '' || $platformApiEndpoint === NULL || $platformApiEndpoint === '') {
+      $this->messenger->addWarning(t('APIC Hostname, catalog ID or organization ID are not set. Aborting'));
       // return true so that site creation doesnt fail when trying to send the admin email
       $returnValue = TRUE;
-    } else {
+    }
+    else {
       $url = $platformApiEndpoint . '/catalogs/' . $orgId . '/' . $catId . '/send-email';
 
       $returnValue = $this->call($url, $message);
@@ -148,7 +162,7 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
     $message['body'] = Markup::create(implode($line_endings, array_map(function ($body) use ($applicable_format, $filter_format) {
       // If the body contains no html tags but the applicable format is HTML,
       // we can assume newlines will need be converted to <br>.
-      if ($applicable_format === 'text/html' && Unicode::strlen(strip_tags($body)) === Unicode::strlen($body)) {
+      if ($applicable_format === 'text/html' && mb_strlen(strip_tags($body)) === mb_strlen($body)) {
         // The default fallback format is 'plain_text', which escapes markup,
         // converts new lines to <br> and converts URLs to links.
         $build = [
@@ -192,9 +206,15 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
     } elseif (isset($message['headers']['Cc']) && !empty($message['headers']['Cc'])) {
       $requestBody['cc'] = self::parse_mailboxes($message['headers']['Cc']);
     }
+    elseif (isset($message['headers']['Cc']) && !empty($message['headers']['Cc'])) {
+      $requestBody['cc'] = self::parse_mailboxes($message['headers']['Cc']);
+    }
     if (array_key_exists('bcc', $message)) {
       $requestBody['bcc'] = self::parse_mailboxes($message['bcc']);
     } elseif (isset($message['headers']['Bcc']) && !empty($message['headers']['Bcc'])) {
+      $requestBody['bcc'] = self::parse_mailboxes($message['headers']['Bcc']);
+    }
+    elseif (isset($message['headers']['Bcc']) && !empty($message['headers']['Bcc'])) {
       $requestBody['bcc'] = self::parse_mailboxes($message['headers']['Bcc']);
     }
 

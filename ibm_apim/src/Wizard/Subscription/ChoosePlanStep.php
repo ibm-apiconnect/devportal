@@ -13,6 +13,8 @@
 namespace Drupal\ibm_apim\Wizard\Subscription;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 use Drupal\ibm_apim\Wizard\IbmWizardStepBase;
 use Drupal\node\Entity\Node;
 
@@ -49,8 +51,9 @@ class ChoosePlanStep extends IbmWizardStepBase {
         // If someone pushed "previous" from the choose app page, we need the productId out of the wizard context
         $product_id = $temp_store->get('productId');
         if (empty($product_id)) {
-          $products_url = \Drupal::l(t('API Products'), \Drupal\Core\Url::fromRoute('view.products.page_1'));
-          drupal_set_message(t('Subscription wizard was invoked with no productId. Start the wizard again from the %apiproducts page.', ['%apiproducts' => $products_url]), 'error');
+          $products_url = Link::fromTextAndUrl(t('API Products'), Url::fromRoute('view.products.page_1'));
+          \Drupal::messenger()
+            ->addError(t('Subscription wizard was invoked with no productId. Start the wizard again from the %apiproducts page.', ['%apiproducts' => $products_url]));
           $this->redirect('<front>')->send();
           return $form;
         }

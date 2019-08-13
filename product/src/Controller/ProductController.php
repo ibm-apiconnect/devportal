@@ -15,6 +15,7 @@ namespace Drupal\product\Controller;
 
 use Drupal\apic_api\Api;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
@@ -37,13 +38,19 @@ class ProductController extends ControllerBase {
   public $request;
 
   /**
-   * Class constructor.
-   *
-   * @param RequestStack $request
-   *   Request stack.
+   * @var \Drupal\Core\Messenger\Messenger
    */
-  public function __construct(RequestStack $request) {
+  protected $messenger;
+
+  /**
+   * ProductController constructor.
+   *
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   */
+  public function __construct(RequestStack $request, Messenger $messenger) {
     $this->request = $request;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -52,7 +59,7 @@ class ProductController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     // Instantiates this form class.
     return new static(// Load the service required to construct this class.
-      $container->get('request_stack'));
+      $container->get('request_stack'), $container->get('messenger'));
   }
 
   /**
@@ -69,7 +76,7 @@ class ProductController extends ControllerBase {
     }
     else {
       \Drupal::logger('product')->error('productView: not a valid product.', []);
-      drupal_set_message(t('The specified arguments were not correct.'), 'warning');
+      $this->messenger->addWarning(t('The specified arguments were not correct.'));
       $url = Url::fromRoute('<front>')->toString();
       $returnValue = new RedirectResponse($url);
     }
@@ -87,7 +94,7 @@ class ProductController extends ControllerBase {
     }
     else {
       \Drupal::logger('product')->error('productView: not a valid product.', []);
-      drupal_set_message(t('The specified arguments were not correct.'), 'warning');
+      $this->messenger->addWarning(t('The specified arguments were not correct.'));
       $returnValue = 'ERROR';
     }
     return $returnValue;
@@ -150,7 +157,7 @@ class ProductController extends ControllerBase {
         if (isset($fid[0]['target_id'])) {
           $file = File::load($fid[0]['target_id']);
           if (isset($file)) {
-            $apiImageUrl = $file->toUrl()->toUriString();
+            $apiImageUrl = $file->createFileUrl();
           }
         }
         elseif ($ibmApimShowPlaceholderImages === TRUE) {
@@ -169,17 +176,17 @@ class ProductController extends ControllerBase {
 
         if (!$found) {
           \Drupal::logger('product')->error('productApi: product does not contain the specified API.', []);
-          drupal_set_message(t('The specified arguments were not correct.'), 'warning');
+          $this->messenger->addWarning(t('The specified arguments were not correct.'));
         }
       }
       else {
         \Drupal::logger('product')->error('productApi: not a valid API.', []);
-        drupal_set_message(t('The specified arguments were not correct.'), 'warning');
+        $this->messenger->addWarning(t('The specified arguments were not correct.'));
       }
     }
     else {
       \Drupal::logger('product')->error('productApi: not a valid product.', []);
-      drupal_set_message(t('The specified arguments were not correct.'), 'warning');
+      $this->messenger->addWarning(t('The specified arguments were not correct.'));
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $found);
@@ -206,7 +213,7 @@ class ProductController extends ControllerBase {
           '%api' => $apiNode->id(),
           '%product' => $prodNode->id(),
         ]);
-      drupal_set_message(t('The specified arguments were not correct.'), 'warning');
+      $this->messenger->addWarning(t('The specified arguments were not correct.'));
       $url = Url::fromRoute('<front>')->toString();
       return new RedirectResponse($url);
     }
@@ -223,7 +230,7 @@ class ProductController extends ControllerBase {
     }
     else {
       \Drupal::logger('product')->error('productApi: not a valid api.', []);
-      drupal_set_message(t('The specified arguments were not correct.'), 'warning');
+      $this->messenger->addWarning(t('The specified arguments were not correct.'));
       $returnValue = 'ERROR';
     }
     return $returnValue;

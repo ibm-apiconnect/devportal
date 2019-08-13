@@ -35,14 +35,14 @@ class MockUserRegistryService extends UserRegistryService {
       $registry = $this->createMockRegistry();
     }
 
-    $this->logger->debug("MockUserRegistryService::get($key) returning " . $registry->getName());
+    $this->logger->debug('MockUserRegistryService::get(%key) returning %registryName' ,['%key' => $key, '%registryName' => $registry->getName()]);
 
     return $registry;
   }
 
-  public function updateAll($data): void {
-    $this->logger->debug('MockUserRegistryService::updateAll() with ' . serialize($data));
-    parent::updateAll($data);
+  public function updateAll($data): bool {
+    $this->logger->debug('MockUserRegistryService::updateAll() with %data', ['%data' => serialize($data)]);
+    return parent::updateAll($data);
   }
 
   /**

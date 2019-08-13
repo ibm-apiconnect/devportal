@@ -14,7 +14,7 @@
 namespace Drupal\auth_apic\Controller;
 
 use Drupal\auth_apic\Service\Interfaces\TokenParserInterface;
-use Drupal\auth_apic\Service\Interfaces\UserManagerInterface;
+use Drupal\auth_apic\UserManagement\ApicActivationInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -25,21 +25,21 @@ class ApicUserActivationController extends ControllerBase {
 
   protected $siteConfig;
 
-  protected $userManager;
+  protected $activation;
 
   public function __construct(TokenParserInterface $tokenParser,
                               SiteConfig $site_config,
-                              UserManagerInterface $user_manager) {
+                              ApicActivationInterface $activation_service) {
     $this->jwtParser = $tokenParser;
     $this->siteConfig = $site_config;
-    $this->userManager = $user_manager;
+    $this->activation = $activation_service;
   }
 
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('auth_apic.jwtparser'),
       $container->get('ibm_apim.site_config'),
-      $container->get('auth_apic.usermanager')
+      $container->get('auth_apic.activation')
     );
   }
 
@@ -53,8 +53,7 @@ class ApicUserActivationController extends ControllerBase {
     }
 
     $jwttoken = $this->jwtParser->parse($activationToken);
-
-    $this->userManager->activateFromActivationToken($jwttoken);
+    $this->activation->activate($jwttoken);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $this->redirect('<front>');

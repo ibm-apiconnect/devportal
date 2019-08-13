@@ -19,6 +19,7 @@ use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
@@ -48,14 +49,21 @@ class CredentialsDeleteForm extends ConfirmFormBase {
   protected $userUtils;
 
   /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * ApplicationCreateForm constructor.
    *
    * @param ApplicationRestInterface $restService
    * @param UserUtils $userUtils
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils) {
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -63,7 +71,9 @@ class CredentialsDeleteForm extends ConfirmFormBase {
    */
   public static function create(ContainerInterface $container) {
     // Load the service required to construct this class
-    return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'));
+    return new static($container->get('apic_app.rest_service'),
+      $container->get('ibm_apim.user_utils'),
+      $container->get('messenger'));
   }
 
   /**
@@ -168,7 +178,7 @@ class CredentialsDeleteForm extends ConfirmFormBase {
         $eventDispatcher->dispatch(CredentialDeleteEvent::EVENT_NAME, $event);
       }
 
-      drupal_set_message($this->t('Credentials deleted successfully.'));
+      $this->messenger->addMessage($this->t('Credentials deleted successfully.'));
       $currentUser = \Drupal::currentUser();
       \Drupal::logger('apic_app')->notice('Application @appName credentials deleted by @username', [
         '@appName' => $this->node->getTitle(),

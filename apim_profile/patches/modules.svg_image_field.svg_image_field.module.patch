@@ -1,0 +1,28 @@
+--- modules/svg_image_field/svg_image_field.module	2019-08-01 14:37:19.000000000 +0100
++++ modules/svg_image_field/svg_image_field.module	2019-08-01 14:38:41.000000000 +0100
+@@ -8,6 +8,7 @@
+ use Drupal\Core\Routing\RouteMatchInterface;
+ use Drupal\Core\Url;
+ use Drupal\file\FileInterface;
++use Drupal\media_library\Form\FileUploadForm;
+ 
+ /**
+  * Implements hook_help().
+@@ -119,3 +120,17 @@
+   }
+   return $errors;
+ }
++
++/**
++ * Implements hook_media_source_info_alter().
++ */
++function svg_image_field_media_source_info_alter(array &$sources) {
++  $sources['svg']['forms']['media_library_add'] = FileUploadForm::class;
++}
++
++/**
++ * Prepares variables for `media--media-library.html.twig`
++ */
++function svg_image_field_preprocess_media__media_library(&$variables) {
++  $variables['#attached']['library'][] =  'svg_image_field/media_library';
++}

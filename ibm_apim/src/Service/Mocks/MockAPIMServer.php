@@ -14,7 +14,7 @@
 namespace Drupal\ibm_apim\Service\Mocks;
 
 use Drupal\auth_apic\JWTToken;
-use Drupal\auth_apic\Rest\MeResponse;
+use Drupal\ibm_apim\Rest\MeResponse;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
@@ -22,7 +22,6 @@ use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Rest\Payload\RestResponseReader;
 use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
-use Drupal\ibm_apim\Service\SiteConfig;
 
 
 /**
@@ -37,6 +36,11 @@ class MockAPIMServer implements ManagementServerInterface {
    */
   protected $sessionStore;
 
+  /**
+   * @var \Drupal\ibm_apim\Rest\Payload\RestResponseReader
+   */
+  protected $restResponseReader;
+
 
   /**
    * Store the username for this apim.
@@ -48,10 +52,15 @@ class MockAPIMServer implements ManagementServerInterface {
   protected $username;
 
   /**
-   * @inheritdoc
+   * MockAPIMServer constructor.
+   *
+   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
+   * @param \Drupal\ibm_apim\Rest\Payload\RestResponseReader $rest_response_reader
    */
-  public function __construct(PrivateTempStoreFactory $temp_store_factory, SiteConfig $config) {
+  public function __construct(PrivateTempStoreFactory $temp_store_factory,
+                              RestResponseReader $rest_response_reader) {
     $this->sessionStore = $temp_store_factory->get('ibm_apim');
+    $this->restResponseReader = $rest_response_reader;
   }
 
   /**
@@ -97,7 +106,7 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * @inheritdoc
    */
-  public function deleteMe() {
+  public function deleteMe(): ?RestResponse {
     // TODO: Implement deleteMe() method.
   }
 
@@ -158,9 +167,8 @@ class MockAPIMServer implements ManagementServerInterface {
     $response->code = 204;
     $response->data = $data;
     $response->headers = ['X-ApicTest' => 'FakeHeader'];
-    $reader = new RestResponseReader();
 
-    return $reader->read($response);
+    return $this->restResponseReader->read($response);
   }
 
   public function acceptInvite(JWTToken $token, ApicUser $acceptingUser, $orgTitle) {
@@ -179,7 +187,37 @@ class MockAPIMServer implements ManagementServerInterface {
       'url' => '/org/1',
       'id' => '123',
       'owner_url' => '/user/1',
-      'group_urls' => '/groups/1'
+      'group_urls' => '/groups/1',
+      'members' => [[
+        'type' => 'member',
+        'api_version' => '2.0.0',
+        'id' => 'cfc5ecd8-342d-4ae6-a1b9-0e49cb836c1b',
+        'name' => 'andremember',
+        'title' => 'andremember',
+        'state' => 'enabled',
+        'user' => [
+            'type' => 'user',
+            'api_version' => '2.0.0',
+            'id' => '9bfd584a-b907-4209-869e-9ef481f470ad',
+            'name' => 'andremember',
+            'title' => 'andremember',
+            'url' => 'https://apimdev0133.hursley.ibm.com/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029/users/9bfd584a-b907-4209-869e-9ef481f470ad',
+            'state' => 'enabled',
+            'identity_provider' => 'dev-idp',
+            'username' => 'andremember',
+            'email' => 'andremember@example.com',
+            'first_name' => 'andremember',
+            'last_name' => 'andresson',
+            'user_registry_url' => 'https://apimdev0133.hursley.ibm.com/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029',
+          ],
+        'role_urls' => [
+            'https://apimdev0133.hursley.ibm.com/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/roles/b8b957dc-15fb-4420-805a-3a7db9eb0fe9',
+          ],
+        'created_at' => '2019-07-03T10:10:20.403Z',
+        'updated_at' => '2019-07-03T10:10:20.403Z',
+        'org_url' => 'https://apimdev0133.hursley.ibm.com/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958',
+        'url' => 'https://apimdev0133.hursley.ibm.com/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/members/cfc5ecd8-342d-4ae6-a1b9-0e49cb836c1b',
+      ]],
     ];
     $response->setData($data);
 
@@ -224,8 +262,9 @@ class MockAPIMServer implements ManagementServerInterface {
    * @inheritDoc
    */
   public function patchConsumerOrg(ConsumerOrg $org, array $data) {
-    \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::patchConsumerOrg() is missing!');
-    return NULL;
+      $response = new RestResponse();
+      $response->setCode(200);
+      return $response;
   }
 
   /**
@@ -249,6 +288,14 @@ class MockAPIMServer implements ManagementServerInterface {
    */
   public function deleteMember(Member $member) {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::deleteMember() is missing!');
+    return NULL;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function activateFromJWT(JWTToken $jwt): RestResponse {
+    \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::activateFromJWT() is missing!');
     return NULL;
   }
 }

@@ -19,6 +19,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\ibm_apim\ApicUser;
+use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
 
 class ConsumerOrgContext extends RawDrupalContext {
@@ -76,7 +77,7 @@ class ConsumerOrgContext extends RawDrupalContext {
       $users = User::loadMultiple($ids);
 
       foreach ($users as $drupalUser) {
-        if ($drupalUser->getUsername() === $row['owner'] && !$consumerOrgService->isConsumerorgAssociatedWithAccount($org->getUrl(), $drupalUser)) {
+        if ($drupalUser->getAccountName() === $row['owner'] && !$consumerOrgService->isConsumerorgAssociatedWithAccount($org->getUrl(), $drupalUser)) {
           $drupalUser->consumer_organization[] = $org->getUrl();
           $drupalUser->consumerorg_url[] = $org->getUrl();
           $drupalUser->save();
@@ -84,7 +85,7 @@ class ConsumerOrgContext extends RawDrupalContext {
           $user = $userService->parseDrupalAccount($drupalUser);
           ApicTestUtils::addMemberToOrg($org, $user, [$ownerRole]);
 
-          print('Saved user ' . $drupalUser->getUsername() . ' after adding consumerorg field ' . $org->getUrl() . "\n");
+          print('Saved user ' . $drupalUser->getAccountName() . ' after adding consumerorg field ' . $org->getUrl() . "\n");
         }
       }
       $consumerOrgService->createOrUpdateNode($org, 'test');
@@ -126,7 +127,7 @@ class ConsumerOrgContext extends RawDrupalContext {
       if (!$consumerOrgService->isConsumerorgAssociatedWithAccount($consumerorgUrl, $account)) {
         $account->consumerorg_url[] = $consumerorgUrl;
         $account->save();
-        print('(member create) Saved user ' . $account->getUsername() . ' after adding consumerorg field ' . $consumerorgUrl . "\n");
+        print('(member create) Saved user ' . $account->getAccountName() . ' after adding consumerorg field ' . $consumerorgUrl . "\n");
       }
 
       // get the corg from the consumerorg service
@@ -138,7 +139,7 @@ class ConsumerOrgContext extends RawDrupalContext {
         foreach ($orgRoles as $role) {
           if ($role->getName() === $requiredRole) {
             // this is the role we wanted to add to the user
-            print('adding ' . $role->getName() . ' to ' . $account->getUserName() . "\n");
+            print('adding ' . $role->getName() . ' to ' . $account->getAccountName() . "\n");
             $rolesToAdd[] = $role;
             continue 2;
           }
@@ -156,22 +157,99 @@ class ConsumerOrgContext extends RawDrupalContext {
 
 
   /**
-   * @Then I should see that :arg1 is an :arg2
+   * @Given invitations:
+   */
+  public function createInvitation(TableNode $table): void {
+
+    // If we are not using mocks, then we are testing with live data from a management appliance
+    // Under those circumstances, we should absolutely not create any consumerorg in the database!
+    if ($this->useMockServices === FALSE) {
+      print "This test is running with a real management server backend. No consumerorg members will be created in the database.\n";
+      return;
+    }
+
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(User::load(1));
+    }
+
+    $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
+
+    foreach ($table as $row) {
+
+      $consumerorgUrl = '/consumer-orgs/1234/5678/' . $row['consumerorgid'];
+
+
+      // get the corg from the consumerorg service
+      $corg = $consumerOrgService->get($consumerorgUrl);
+      $orgRoles = $corg->getRoles();
+      $requiredRoles = \explode(',', $row['roles']);
+      $rolesToAdd = [];
+      foreach ($requiredRoles as $requiredRole) {
+        foreach ($orgRoles as $role) {
+          if ($role->getName() === $requiredRole) {
+            // this is the role we wanted to add to the user
+            print('adding ' . $role->getName() . ' to invitation for ' . $row['mail'] . "\n");
+            $rolesToAdd[] = $role;
+            continue 2;
+          }
+        }
+      }
+      if (!empty($rolesToAdd)) {
+        ApicTestUtils::addInvitationToOrg($corg, $row['mail'], $rolesToAdd);
+      }
+    }
+
+    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+  }
+
+
+  /**
+   * @Then I should see that :arg1 is a(n) :arg2
    */
   public function iShouldSeeThatUserIsARole($username, $role) {
 
-    $page = $this->getSession()->getPage();
-    $css_selector = "." . Html::getClass('apicmyorgmemberrole-' . $username . '-' . $role);
-    $enabled = $page->findAll('css', $css_selector);
-
-    print 'searched for ' .  $css_selector . "\n";
-    print 'enabled ' . \sizeof($enabled);
-
-    $num = \sizeof($enabled);
+    $num = $this->getNumberOfUserRoleElements($username, $role);
     if ($num !== 1) {
       throw new \Exception("Unexpected response from finding " . $role . " role elements for " . $username . " user. Found " . $num . " elements, expected 1.");
     }
 
+  }
+
+
+  /**
+   * @Then I should not see that :arg1 is a(n) :arg2
+   */
+  public function iShouldSeeThatUserIsNotARole($username, $role) {
+
+    $num = $this->getNumberOfUserRoleElements($username, $role);
+    if ($num !== 0) {
+      throw new \Exception("Unexpected response from finding " . $role . " role elements for " . $username . " user. Found " . $num . " elements, expected 0.");
+    }
+
+  }
+
+  /**
+   * @param $username
+   * @param $role
+   *
+   * @return int
+   */
+  private function getNumberOfUserRoleElements($username, $role): int {
+    $page = $this->getSession()->getPage();
+    $css_selector = "." . Html::getClass('apicmyorgmemberrole-' . $username . '-' . $role);
+    $enabled = $page->findAll('css', $css_selector);
+
+    print 'searched for ' . $css_selector . "\n";
+    print 'enabled ' . \sizeof($enabled);
+
+    $num = \sizeof($enabled);
+    return $num;
   }
 
 

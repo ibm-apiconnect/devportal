@@ -1,0 +1,11 @@
+--- core/core.libraries.yml	2019-07-29 15:03:11.000000000 +0100
++++ core/core.libraries.yml	2019-07-29 15:03:30.000000000 +0100
+@@ -152,7 +152,7 @@
+ drupal.debounce:
+   version: VERSION
+   js:
+-    misc/debounce.js: {}
++    misc/debounce.js: { preprocess: false, minified: true }
+   dependencies:
+     # @todo Remove Drupal dependency.
+     - core/drupal

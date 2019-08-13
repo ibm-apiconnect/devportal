@@ -15,7 +15,6 @@ namespace Drupal\apictest\Context;
 
 use Behat\Gherkin\Node\TableNode;
 use Drupal\apic_api\Api;
-use Drupal\apictest\ApicTestUtils;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
@@ -483,10 +482,11 @@ class ApiContext extends RawDrupalContext {
    */
   public function iShouldHaveAnApiNameVisibleBy($name, $switchto): void {
     $accountSwitcher = \Drupal::service('account_switcher');
+    $original_user = \Drupal::currentUser();
     $users = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['name' => $switchto]);
     $user = reset($users);
     if ($user) {
-      $accountSwitcher->switchTo(\Drupal\user\Entity\User::load($user->id()));
+      $accountSwitcher->switchTo(User::load($user->id()));
     }
     else {
       throw new \Exception("Unable to switch to user $switchto");
@@ -506,6 +506,9 @@ class ApiContext extends RawDrupalContext {
       else {
         throw new \Exception("The returned api did not have a name of $name");
       }
+    }
+    if ($original_user !== NULL) {
+      $accountSwitcher->switchBack();
     }
   }
 
@@ -584,6 +587,7 @@ class ApiContext extends RawDrupalContext {
       $string = file_get_contents($this->testDataDirectory . '/apis/' . $document);
       $json = json_decode($string, TRUE);
       $object['consumer_api'] = $json;
+      $object['encoded_consumer_api'] = base64_encode($string);
     }
     // overwrite what was in the document with what we were fed in
     // not currently allowing override of api name since it has to match whats in the product document
@@ -612,6 +616,7 @@ class ApiContext extends RawDrupalContext {
     $object['consumer_api']['info']['x-ibm-name'] = $name;
     $object['consumer_api']['info']['version'] = '1.0.0';
     $object['consumer_api']['info']['description'] = 'This is a test API';
+    $object['consumer_api']['info']['x-pathalias'] = $name;
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';
     $object['consumer_api']['x-ibm-configuration'] = [];
@@ -623,6 +628,7 @@ class ApiContext extends RawDrupalContext {
     if ($phase) {
       $object['consumer_api']['x-ibm-configuration']['phase'] = $phase;
     }
+    $object['encoded_consumer_api'] = base64_encode(json_encode($object['consumer_api']));
 
     return $object;
   }

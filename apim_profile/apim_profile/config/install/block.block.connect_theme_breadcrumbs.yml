@@ -7,7 +7,7 @@ dependencies:
     - connect_theme
 id: connect_theme_breadcrumbs
 theme: connect_theme
-region: '-1'
+region: disabled
 weight: 0
 provider: null
 plugin: system_breadcrumb_block

@@ -14,13 +14,14 @@
 namespace Drupal\consumerorg\Form;
 
 use Drupal\consumerorg\Service\ConsumerOrgService;
+use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
-use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\ibm_apim\Service\ApimUtils;
+use Drupal\ibm_apim\Service\UserUtils;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Extension\ThemeHandler;
 
 /**
  * Form to change the role of a consumerorg member.
@@ -59,23 +60,31 @@ class ChangeMemberRoleForm extends FormBase {
   protected $currentOrg;
 
   /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * ChangeMemberRoleForm constructor.
    *
    * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
    * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
    * @param \Drupal\ibm_apim\Service\ApimUtils $apim_utils
    * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
   public function __construct(
     ConsumerOrgService $consumer_org_service,
     UserUtils $user_utils,
     ApimUtils $apim_utils,
-    ThemeHandler $themeHandler
+    ThemeHandler $themeHandler,
+    Messenger $messenger
   ) {
     $this->consumerOrgService = $consumer_org_service;
     $this->userUtils = $user_utils;
     $this->apimUtils = $apim_utils;
     $this->themeHandler = $themeHandler;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -86,7 +95,8 @@ class ChangeMemberRoleForm extends FormBase {
       $container->get('ibm_apim.consumerorg'),
       $container->get('ibm_apim.user_utils'),
       $container->get('ibm_apim.apim_utils'),
-      $container->get('theme_handler')
+      $container->get('theme_handler'),
+      $container->get('messenger')
     );
   }
 
@@ -103,8 +113,7 @@ class ChangeMemberRoleForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, $memberId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if (!$this->userUtils->checkHasPermission('settings:manage')) {
-      $message = t('Permission denied.');
-      drupal_set_message($message, 'error');
+      $this->messenger->addError(t('Permission denied.'));
 
       $form = [];
       $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
@@ -126,10 +135,10 @@ class ChangeMemberRoleForm extends FormBase {
 
       $members = $this->currentOrg->getMembers();
       if ($members) {
-        $values = [];
+        $roles_array = [];
         // If there is only one member, do not allow change
         if (count($members) === 1) {
-          drupal_set_message(t('Cannot change role: no other members in developer organization %org', ['%org' => $this->currentOrg->getTitle()]), 'error');
+          $this->messenger->addError(t('Cannot change role: no other members in developer organization %org', ['%org' => $this->currentOrg->getTitle()]));
         }
         else {
           foreach ($members as $member) {
@@ -144,14 +153,28 @@ class ChangeMemberRoleForm extends FormBase {
             foreach ($roles as $role) {
               // owner and member are special cases - ignore them
               if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
-                $values[$role->getUrl()] = $role->getTitle();
+                // use translated role names if possible
+                switch($role->getTitle()) {
+                  case 'Administrator':
+                    $roles_array[$role->getUrl()] = t('Administrator');
+                    break;
+                  case 'Developer':
+                    $roles_array[$role->getUrl()] = t('Developer');
+                    break;
+                  case 'Viewer':
+                    $roles_array[$role->getUrl()] = t('Viewer');
+                    break;
+                  default:
+                    $roles_array[$role->getUrl()] = $role->getTitle();
+                    break;
+                }
               }
             }
             $form['new_role'] = [
               '#title' => t('New Role'),
               '#type' => 'radios',
               '#description' => t('Select the new role for this member.'),
-              '#options' => $values,
+              '#options' => $roles_array,
             ];
 
             $form['actions']['#type'] = 'actions';
@@ -173,12 +196,12 @@ class ChangeMemberRoleForm extends FormBase {
             }
           }
           else {
-            drupal_set_message(t('Cannot change role: could not find more than 1 role for developer organization %org', ['%org' => $this->currentOrg->getTitle()]), 'error');
+            $this->messenger->addError(t('Cannot change role: could not find more than 1 role for developer organization %org', ['%org' => $this->currentOrg->getTitle()]));
           }
         }
       }
       else {
-        drupal_set_message(t('Failed to retrieve member list for developer organization %org', ['%org' => $this->currentOrg->getTitle()]), 'error');
+        $this->messenger->addError(t('Failed to retrieve member list for developer organization %org', ['%org' => $this->currentOrg->getTitle()]));
 
         $form = [];
         $form['description'] = ['#markup' => '<p>' . t('Could not get member list for this organization.') . '</p>'];
@@ -228,19 +251,19 @@ class ChangeMemberRoleForm extends FormBase {
     $member = $this->member;
 
     if ($new_role === NULL || empty($new_role)) {
-      drupal_set_message(t('A new role is required.'), 'error');
+      $this->messenger->addError(t('A new role is required.'));
     }
     elseif ($member === NULL) {
-      drupal_set_message(t('Member is not set.'), 'error');
+      $this->messenger->addError(t('Member is not set.'));
     }
     else {
       $selected_role_url = $this->apimUtils->createFullyQualifiedUrl($new_role);
       $response = $this->consumerOrgService->changeMemberRole($member, $selected_role_url);
       if ($response->success()) {
-        drupal_set_message(t('Member role updated.'));
+        $this->messenger->addMessage(t('Member role updated.'));
       }
       else {
-        drupal_set_message(t('Error during member role update. Contact the system administrator.'), 'error');
+        $this->messenger->addError(t('Error during member role update. Contact the system administrator.'));
       }
 
     }

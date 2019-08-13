@@ -15,7 +15,6 @@ namespace Drupal\ibm_apim;
 
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Url;
-use Drupal\ibm_apim\Rest\Payload\RestResponseReader;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ApicRest implements ApicRestInterface {
@@ -28,7 +27,7 @@ class ApicRest implements ApicRestInterface {
    * @param bool $returnResult
    *
    * @return \stdClass|null
-   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Exception
    */
   public static function get($url, $auth = 'user', $gettingConfig = FALSE, $messageErrors = TRUE, $returnResult = FALSE): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
@@ -45,7 +44,7 @@ class ApicRest implements ApicRestInterface {
    * @param bool $returnResult
    *
    * @return \stdClass|null
-   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Exception
    */
   public static function raw($url, $auth = 'user', $gettingConfig = FALSE, $messageErrors = TRUE, $returnResult = TRUE): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
@@ -61,7 +60,7 @@ class ApicRest implements ApicRestInterface {
    * @param string $auth
    *
    * @return \stdClass|null
-   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Exception
    */
   public static function post($url, $data, $auth = 'user'): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
@@ -76,7 +75,7 @@ class ApicRest implements ApicRestInterface {
    * @param string $auth
    *
    * @return \stdClass|null
-   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Exception
    */
   public static function put($url, $data, $auth = 'user'): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
@@ -93,7 +92,7 @@ class ApicRest implements ApicRestInterface {
    * @param bool $returnResult
    *
    * @return \stdClass|null
-   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Exception
    */
   public static function patch($url, $data, $auth = 'user', $messageErrors = TRUE, $returnResult = FALSE): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
@@ -107,7 +106,7 @@ class ApicRest implements ApicRestInterface {
    * @param string $auth
    *
    * @return \stdClass|null
-   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Exception
    */
   public static function delete($url, $auth = 'user'): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
@@ -144,7 +143,7 @@ class ApicRest implements ApicRestInterface {
       }
       else {
         if ($notifyDrupal) {
-          drupal_set_message(t('APIC Hostname not set. Aborting'), 'error');
+          \Drupal::messenger()->addError(t('APIC Hostname not set. Aborting'));
         }
         return NULL;
       }
@@ -173,7 +172,7 @@ class ApicRest implements ApicRestInterface {
     if (\Drupal::hasContainer()) {
       $use_proxy = (boolean) \Drupal::config('ibm_apim.settings')->get('use_proxy');
       $proxy_for_api = \Drupal::config('ibm_apim.settings')->get('proxy_for_api');
-      if ($use_proxy === TRUE && ($apiType === strtolower($proxy_for_api) || $proxy_for_api === 'BOTH')) {
+      if ($use_proxy === TRUE && in_array(strtoupper($apiType), explode(',', $proxy_for_api), TRUE)) {
         $proxy_url = \Drupal::config('ibm_apim.settings')->get('proxy_url');
         if ($proxy_url !== NULL && !empty($proxy_url)) {
           curl_setopt($resource, CURLOPT_PROXY, $proxy_url);
@@ -250,7 +249,7 @@ class ApicRest implements ApicRestInterface {
       // a return code of zero mostly likely means there has been a certificate error
       // so make sure we surface this in the UI
       if ($notifyDrupal) {
-        drupal_set_message(t('Could not communicate with server. Reason: ') . serialize($error), 'error');
+        \Drupal::messenger()->addError(t('Could not communicate with server. Reason: ') . serialize($error));
         \Drupal::logger('ibm_apim')->error('Failed to communicate with remote server. URL was @url. Error was @error', [
           '@url' => $url,
           '@error' => $error,
@@ -408,7 +407,7 @@ class ApicRest implements ApicRestInterface {
         $url = $hostPieces['url'] . $url;
       }
       else {
-        drupal_set_message(t('APIC Hostname not set. Aborting'), 'error');
+        \Drupal::messenger()->addError(t('APIC Hostname not set. Aborting'));
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
         return NULL;
       }
@@ -453,7 +452,7 @@ class ApicRest implements ApicRestInterface {
         $headers[] = 'Authorization: Bearer ' . $apiToken['access_token'];
       }
     }
-    elseif ($auth !== NULL) {
+    elseif ($auth !== NULL && $auth !== 'platformtoken') {
       $headers[] = 'Authorization: Bearer ' . $auth;
     }
 
@@ -463,7 +462,7 @@ class ApicRest implements ApicRestInterface {
       '%url' => $url,
     ]);
 
-    if ($auth === 'platform') {
+    if ($auth === 'platform' || $auth === 'platformtoken') {
       $apiType = 'platform';
     } else {
       $apiType = 'consumer';
@@ -503,7 +502,10 @@ class ApicRest implements ApicRestInterface {
       $logout_url = Url::fromRoute('user.logout');
       $response = new RedirectResponse($logout_url->toString());
       $request = \Drupal::request();
-      $request->getSession()->save();
+      $session = $request->getSession();
+      if ($session !== null) {
+        $session->save();
+      }
       $response->prepare($request);
       \Drupal::service('kernel')->terminate($request, $response);
       $response->send();
@@ -516,13 +518,13 @@ class ApicRest implements ApicRestInterface {
         // will not have done it
         $result->data = self::get_json($result->data);
       }
-      $response_reader = new RestResponseReader();
+      $response_reader = \Drupal::service('ibm_apim.restresponse_reader');
       $json_result = $response_reader->read($result);
       if ($json_result !== NULL) {
         $errors = $json_result->getErrors();
         if ($errors) {
           foreach ($errors as $error) {
-            drupal_set_message(Xss::filter($error), 'error');
+            \Drupal::messenger()->addError(Xss::filter($error));
             $returnValue = $result;
           }
         }
@@ -558,7 +560,7 @@ class ApicRest implements ApicRestInterface {
     $config = \Drupal::service('ibm_apim.site_config');
 
     if (empty($url)) {
-      drupal_set_message(t('URL not specified. Specify a valid URL and try again.'), 'error');
+      \Drupal::messenger()->addError(t('URL not specified. Specify a valid URL and try again.'));
       return NULL;
     }
     if (mb_strpos($url, 'https://') !== 0) {
@@ -569,7 +571,7 @@ class ApicRest implements ApicRestInterface {
         $url = $hostPieces['url'] . $url;
       }
       else {
-        drupal_set_message(t('APIC Hostname not set. Aborting'), 'error');
+        \Drupal::messenger()->addError(t('APIC Hostname not set. Aborting'));
         return NULL;
       }
     }
@@ -614,8 +616,12 @@ class ApicRest implements ApicRestInterface {
     }
     // proxy settings
     if (\Drupal::hasContainer()) {
+      // so far proxy() is only used by analytics and so can be hardcoded
+      $apiType = 'analytics';
+
       $use_proxy = (boolean) \Drupal::config('ibm_apim.settings')->get('use_proxy');
-      if ($use_proxy === TRUE) {
+      $proxy_for_api = \Drupal::config('ibm_apim.settings')->get('proxy_for_api');
+      if ($use_proxy === TRUE && in_array(strtoupper($apiType), explode(',', $proxy_for_api), TRUE)) {
         $proxy_url = \Drupal::config('ibm_apim.settings')->get('proxy_url');
         if ($proxy_url !== NULL && !empty($proxy_url)) {
           curl_setopt($ch, CURLOPT_PROXY, $proxy_url);
@@ -627,6 +633,7 @@ class ApicRest implements ApicRestInterface {
           if ($proxy_auth !== NULL && !empty($proxy_auth)) {
             curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxy_auth);
           }
+          curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
           $apim_rest_trace = (boolean) \Drupal::config('ibm_apim.settings')->get('apim_rest_trace');
           if ($apim_rest_trace === TRUE) {
             \Drupal::logger('ibm_apim_rest')->debug('Proxy URL: %data', ['%data' => $proxy_url]);
@@ -745,10 +752,10 @@ class ApicRest implements ApicRestInterface {
   }
 
   /**
-   * @return array|null
+   * @return array
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  private static function getPlatformToken(): ?array {
+  private static function getPlatformToken(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $token = [];
     $site_config = \Drupal::service('ibm_apim.site_config');
@@ -758,9 +765,9 @@ class ApicRest implements ApicRestInterface {
       $url = $platformApiEndpoint . $url;
     }
     else {
-      drupal_set_message(t('APIC Hostname not set. Aborting'), 'error');
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return NULL;
+      \Drupal::messenger()->addError(t('APIC Hostname not set. Aborting'));
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $token);
+      return $token;
     }
     $clientId = $site_config->getClientId() ?? '';
     $clientSecret = $site_config->getClientSecret() ?? '';
@@ -770,7 +777,7 @@ class ApicRest implements ApicRestInterface {
       'client_secret' => $clientSecret,
       'grant_type' => 'client_credentials',
     ];
-    $result = self::post($url, json_encode($requestBody), NULL);
+    $result = self::post($url, json_encode($requestBody), 'platformtoken');
     if (isset($result) && (int) $result->code >= 200 && (int) $result->code < 300) {
       $data = $result->data;
       if (isset($data['access_token'])) {

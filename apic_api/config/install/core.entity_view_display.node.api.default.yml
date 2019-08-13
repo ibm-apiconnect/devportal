@@ -9,6 +9,7 @@ dependencies:
     - field.field.node.api.api_protocol
     - field.field.node.api.api_soapversion
     - field.field.node.api.api_swagger
+    - field.field.node.api.api_encodedswagger
     - field.field.node.api.api_swaggertags
     - field.field.node.api.api_wsdl
     - field.field.node.api.api_xibmname
@@ -123,6 +124,13 @@ content:
     region: content
   api_swagger:
     weight: 12
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  api_encodedswagger:
+    weight: 14
     label: above
     settings: {  }
     third_party_settings: {  }

@@ -13,14 +13,16 @@
 namespace Drupal\consumerorg\Form;
 
 use Drupal\Component\Utility\Html;
+use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
-use Drupal\consumerorg\Service\ConsumerOrgService;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Delete user invitation form for consumerorg members.
@@ -34,13 +36,27 @@ class DeleteInviteForm extends ConfirmFormBase {
    */
   protected $invite;
 
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
   protected $consumerOrgService;
 
   protected $currentOrg;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
+  /**
+   * @var \Drupal\Core\Extension\ThemeHandler
+   */
   protected $themeHandler;
+
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
 
   /**
    * DeleteInviteForm constructor.
@@ -48,15 +64,18 @@ class DeleteInviteForm extends ConfirmFormBase {
    * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
    * @param \Drupal\ibm_apim\Service\UserUtils; $user_utils
    * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
   public function __construct(
     ConsumerOrgService $consumer_org_service,
     UserUtils $user_utils,
-    ThemeHandler $themeHandler
+    ThemeHandler $themeHandler,
+    Messenger $messenger
   ) {
     $this->consumerOrgService = $consumer_org_service;
     $this->userUtils = $user_utils;
     $this->themeHandler = $themeHandler;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -66,7 +85,8 @@ class DeleteInviteForm extends ConfirmFormBase {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('ibm_apim.user_utils'),
-      $container->get('theme_handler')
+      $container->get('theme_handler'),
+      $container->get('messenger')
     );
   }
 
@@ -83,8 +103,7 @@ class DeleteInviteForm extends ConfirmFormBase {
   public function buildForm(array $form, FormStateInterface $form_state, $inviteId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if (!$this->userUtils->checkHasPermission('member:manage')) {
-      $message = t('Permission denied.');
-      drupal_set_message($message, 'error');
+      $this->messenger->addError(t('Permission denied.'));
 
       $form = [];
       $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
@@ -134,21 +153,21 @@ class DeleteInviteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
+  public function getDescription(): TranslatableMarkup {
     return $this->t('Are you sure you want to delete the invitation to this user?');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfirmText() {
+  public function getConfirmText(): TranslatableMarkup {
     return $this->t('Delete');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getQuestion() {
+  public function getQuestion(): TranslatableMarkup {
     return $this->t('Are you sure you want to delete the invitation to this user?');
   }
 
@@ -168,14 +187,14 @@ class DeleteInviteForm extends ConfirmFormBase {
     if ($this->invite !== NULL) {
       $response = $this->consumerOrgService->cancelInvitation($this->currentOrg, $this->invite);
       if ($response->success()) {
-        drupal_set_message(t('Invitation deleted.'));
+        $this->messenger->addMessage(t('Invitation deleted.'));
       }
       else {
-        drupal_set_message(t('Error deleting invitation. Contact the system administrator.'), 'error');
+        $this->messenger->addError(t('Error deleting invitation. Contact the system administrator.'));
       }
     }
     else {
-      drupal_set_message(t('No invitation specified.'), 'error');
+      $this->messenger->addError(t('No invitation specified.'));
     }
 
     $form_state->setRedirectUrl($this->getCancelUrl());

@@ -12,12 +12,13 @@
 
 namespace Drupal\auth_apic\Form;
 
+use Drupal\auth_apic\Service\Interfaces\TokenParserInterface;
+use Drupal\auth_apic\UserManagement\ApicPasswordInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Session\AccountProxy;
-use Drupal\auth_apic\Service\Interfaces\TokenParserInterface;
-use Drupal\auth_apic\Service\Interfaces\UserManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -37,9 +38,9 @@ class ApicUserPasswordResetForm extends FormBase {
   protected $languageManager;
 
   /**
-   * @var \Drupal\auth_apic\Service\Interfaces\UserManagerInterface
+   * @var \Drupal\auth_apic\UserManagement\ApicPasswordInterface
    */
-  protected $userManager;
+  protected $apicPassword;
 
   /**
    * @var \Drupal\Core\Session\AccountProxy|\Drupal\Core\Session\AccountProxy
@@ -52,27 +53,32 @@ class ApicUserPasswordResetForm extends FormBase {
   protected $tokenParser;
 
   /**
-   * Constructs an ApicPasswordResetForm object.
-   *
-   * {@inheritdoc}
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * ApicUserPasswordResetForm constructor.
    *
    * @param \Psr\Log\LoggerInterface $logger
-   *   Logger.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
-   *   Language Manager.
-   * @param \Drupal\auth_apic\Service\Interfaces\UserManagerInterface $user_manager
-   *   User Manager.
+   * @param \Drupal\auth_apic\UserManagement\ApicPasswordInterface $apic_password
    * @param \Drupal\Core\Session\AccountProxy $current_user
-   *   Current User.
-   * @param \Drupal\auth_apic\Service\Interfaces\TokenParserInterface $tokenParser
-   *   Activation/ Reset password token parser.
+   * @param \Drupal\auth_apic\Service\Interfaces\TokenParserInterface $token_parser
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    */
-  public function __construct(LoggerInterface $logger, LanguageManagerInterface $language_manager, UserManagerInterface $user_manager, AccountProxy $current_user, TokenParserInterface $token_parser) {
+  public function __construct(LoggerInterface $logger,
+                              LanguageManagerInterface $language_manager,
+                              ApicPasswordInterface $apic_password,
+                              AccountProxy $current_user,
+                              TokenParserInterface $token_parser,
+                              ModuleHandlerInterface $module_handler) {
     $this->logger = $logger;
     $this->languageManager = $language_manager;
-    $this->userManager = $user_manager;
+    $this->apicPassword = $apic_password;
     $this->currentUser = $current_user;
     $this->tokenParser = $token_parser;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -81,9 +87,10 @@ class ApicUserPasswordResetForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static($container->get('logger.channel.auth_apic'),
       $container->get('language_manager'),
-      $container->get('auth_apic.usermanager'),
+      $container->get('auth_apic.password'),
       $container->get('current_user'),
-      $container->get('auth_apic.jwtparser'));
+      $container->get('auth_apic.jwtparser'),
+      $container->get('module_handler'));
   }
 
   /**
@@ -121,7 +128,7 @@ class ApicUserPasswordResetForm extends FormBase {
     }
     else {
       $resetPasswordObject = $this->tokenParser->parse($token);
-      if (empty($resetPasswordObject)) {
+      if ($resetPasswordObject === null || empty($resetPasswordObject)) {
         drupal_set_message(t('Invalid token. Contact the system administrator for assistance.'), 'error');
         $this->logger->notice('Invalid token: %token', ['%token' => $token]);
         return $this->redirect('<front>');
@@ -141,10 +148,9 @@ class ApicUserPasswordResetForm extends FormBase {
 
     // If the password policy module is enabled, modify this form to show
     // the configured policy.
-    $moduleService = \Drupal::service('module_handler');
     $showPasswordPolicy = FALSE;
 
-    if ($moduleService->moduleExists('password_policy')) {
+    if ($this->moduleHandler->moduleExists('password_policy')) {
       $showPasswordPolicy = _password_policy_show_policy();
     }
 
@@ -184,8 +190,7 @@ class ApicUserPasswordResetForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $moduleService = \Drupal::service('module_handler');
-    if ($moduleService->moduleExists('password_policy')) {
+    if ($this->moduleHandler->moduleExists('password_policy')) {
       $show_password_policy_status = _password_policy_show_policy();
 
       // add validator if relevant.
@@ -222,8 +227,7 @@ class ApicUserPasswordResetForm extends FormBase {
       return;
     }
 
-    $moduleService = \Drupal::service('module_handler');
-    if ($moduleService->moduleExists('password_policy')) {
+    if ($this->moduleHandler->moduleExists('password_policy')) {
       if (!isset($form)) {
         $form = [];
       }
@@ -232,7 +236,7 @@ class ApicUserPasswordResetForm extends FormBase {
 
     $resetPasswordObject = unserialize($token, ['allowed_classes' => TRUE]);
 
-    $responseCode = $this->userManager->resetPassword($resetPasswordObject, $password);
+    $responseCode = $this->apicPassword->resetPassword($resetPasswordObject, $password);
 
     if ($responseCode >= 200 && $responseCode < 300) {
       drupal_set_message(t('Password successfully updated.'));

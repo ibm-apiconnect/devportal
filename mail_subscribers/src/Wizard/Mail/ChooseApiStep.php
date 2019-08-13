@@ -12,8 +12,8 @@
 
 namespace Drupal\mail_subscribers\Wizard\Mail;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
 
 class ChooseApiStep extends FormBase {
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+#!/bin/bash
 APICTESTDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 BASEDIR=$APICTESTDIR/../..
 
@@ -10,13 +11,13 @@ BASEDIR=$APICTESTDIR/../..
 
 if [[ $1 == 'jenkins' ]]
 then
-  URL=localhost
+  URL=127.0.0.1
   SITE_PATH=/home/jenkins/workspace/build/devportal/sites/default
   ROOT_PATH=/home/jenkins/workspace/build/devportal
   DEBUG_DUMP_DIR="/tmp/jenkins-build$BUILD_ID-testresults"
   # TODO: remove the paths in the jenkins output - need to get the delimiting correct on this...
   # BEHAT_OPTS=" --format junit --out behat_results --format pretty --format-settings='{\"paths\": false}' --out std "
-  BEHAT_OPTS=" --colors -vv --format junit --out /tmp/behat_results --format pretty --out std --strict "
+  BEHAT_OPTS=" --colors -vv --format junit --out /tmp/test_results --format pretty --out std --strict "
 
   echo Installing drupal behat extensions
   cd $BASEDIR/vendor/drupal/drupal-extension
@@ -37,7 +38,12 @@ else
   URL=${URL/http:\/\//}
   URL=`echo $URL | sed 's/\/$//g'`
 
-  BEHAT_OPTS=' --colors -vv --strict '
+  if [[ ! -d /tmp/test_results ]]
+  then
+    mkdir /tmp/test_results
+    chown aegir:aegir /tmp/test_results
+  fi
+  BEHAT_OPTS=' --colors -vv --strict --format junit --out /tmp/test_results --format pretty --out std '
 
   DIR=/opt/ibm/bin
   # ! parameter to common.func stops taking control of stdout/err among other things i don't understand, but
@@ -92,7 +98,7 @@ cd $SITE_PATH
 drush pm-uninstall big_pipe honeypot check_dns r4032login
 
 echo "Enabling errors and warnings level debug"
-drush config-set system.logging error_level some
+drush config-set system.logging error_level verbose
 
 cd $APICTESTDIR
 

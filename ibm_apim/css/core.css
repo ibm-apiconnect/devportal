@@ -893,6 +893,7 @@ span.cron-description__run-cron a {
 .path-node .tabs,
 .path-node form {
   padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .path-node .vertical-tabs-list > li > a {

@@ -62,10 +62,13 @@ class ApicTestUtils {
 
     // Owner gets every permission under the sun
     $perms = \Drupal::service('ibm_apim.permissions')->getAll();
+    $permURLs = [];
     if ($perms !== NULL && !empty($perms)) {
-      $perms = array_keys($perms);
+      foreach($perms as $permission) {
+        $permURLs[] = $permission['url'];
+      }
     }
-    $owner->setPermissions($perms);
+    $owner->setPermissions($permURLs);
     $org->addRole($owner);
 
     // Update the org in the database
@@ -89,10 +92,13 @@ class ApicTestUtils {
 
     // Owner gets every permission under the sun
     $perms = \Drupal::service('ibm_apim.permissions')->getAll();
+    $permURLs = [];
     if ($perms !== NULL && !empty($perms)) {
-      $perms = array_keys($perms);
+      foreach($perms as $permission) {
+        $permURLs[] = $permission['url'];
+      }
     }
-    $owner->setPermissions($perms);
+    $owner->setPermissions($permURLs);
     $org->addRole($owner);
 
     // Update the org in the database
@@ -116,13 +122,13 @@ class ApicTestUtils {
 
     // Developers have a handful of view and manage permissions
     $developer->setPermissions([
-      'member:view',
-      'view',
-      'product:view',
-      'app:view',
-      'app-dev:manage',
-      'app:manage',
-      'app-analytics:view',
+      '/consumer-api/consumer/permissions/org/3e1652f1-e2f5-4d4f-9f58-2e11c312a148', //member:view
+      '/consumer-api/consumer/permissions/org/e120f488-5921-45a8-a936-d34d4686ab8c', //view
+      '/consumer-api/consumer/permissions/consumer/2c9d4ee3-9348-4159-972f-69ea1ffda5ab', //product:view
+      '/consumer-api/consumer/permissions/consumer/e20ca0b3-a2f0-419f-9a99-177c6050c98d', //app:view
+      '/consumer-api/consumer/permissions/consumer/e63e4ebc-8787-4901-8f42-16dba9aa8edd', //app-dev:manage
+      '/consumer-api/consumer/permissions/consumer/47d90d81-5080-4882-b270-778334fdbf50', //app:manage
+      '/consumer-api/consumer/permissions/consumer/81c86a24-c9e1-4fb5-a4e2-a137eef079c7', //app-analytics:view
     ]);
     $org->addRole($developer);
 
@@ -147,13 +153,13 @@ class ApicTestUtils {
 
     // Viewers only have a set of view permissions and can't manage / change stuff
     $viewer->setPermissions([
-      'member:view',
-      'settings:view',
-      'view',
-      'product:view',
-      'app:view',
-      'subscription:view',
-      'app-analytics:view',
+      '/consumer-api/consumer/permissions/org/3e1652f1-e2f5-4d4f-9f58-2e11c312a148', //member:view
+      '/consumer-api/consumer/permissions/org/b0e7b96f-f49b-4c3b-a0c5-d72042eb4372', //settings:view
+      '/consumer-api/consumer/permissions/org/e120f488-5921-45a8-a936-d34d4686ab8c', //view
+      '/consumer-api/consumer/permissions/consumer/2c9d4ee3-9348-4159-972f-69ea1ffda5ab', //product:view
+      '/consumer-api/consumer/permissions/consumer/e20ca0b3-a2f0-419f-9a99-177c6050c98d', //app:view
+      '/consumer-api/consumer/permissions/consumer/04ee1b04-4f3a-4061-8b99-5fce9a4f346c', //subscription:view
+      '/consumer-api/consumer/permissions/consumer/81c86a24-c9e1-4fb5-a4e2-a137eef079c7', //app-analytics:view
     ]);
     $org->addRole($viewer);
 
@@ -172,6 +178,9 @@ class ApicTestUtils {
    */
   public static function addMemberToOrg(ConsumerOrg $org, ApicUser $user, array $roles): void {
     $member = new Member();
+    if ($user->getApicUserRegistryUrl() === NULL) {
+      $user->setApicUserRegistryUrl('/registry/test');
+    }
     $member->setUser($user);
     $member->setUserUrl($user->getUrl());
     $member->setUrl('/generated-member/' . self::makeId());
@@ -188,4 +197,34 @@ class ApicTestUtils {
     // Update the org in the database
     \Drupal::service('ibm_apim.consumerorg')->createOrUpdateNode($org, 'ApicTestUtils::addMember');
   }
+
+    public static function addInvitationToOrg(ConsumerOrg $org, string $email, array $roles): void {
+
+
+        $invitations = $org->getInvites();
+
+        $id = self::makeId();
+        $invitation = [
+            'type' => 'member_invitation',
+            'api_version' => '2.0.0',
+            'email' => $email,
+            'id' => $id,
+            'url' => $org->getUrl() . '/member-invitations/' . $id,
+        ];
+
+        $roleUrls = [];
+        foreach ($roles as $role) {
+            $roleUrls[] = $role->getUrl();
+        }
+        //$member->setRoleUrls($roleUrls);
+        $invitation['role_urls'] = $roleUrls;
+
+        $invitations[] = $invitation;
+        $org->setInvites($invitations);
+
+        // Update the org in the database
+        \Drupal::service('ibm_apim.consumerorg')->createOrUpdateNode($org, 'ApicTestUtils::setInvites');
+    }
+
+
 }

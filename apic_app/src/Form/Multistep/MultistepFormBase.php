@@ -15,10 +15,8 @@ namespace Drupal\apic_app\Form\Multistep;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Session\SessionManagerInterface;
-use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\ibm_apim\Service\UserUtils;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 abstract class MultistepFormBase extends FormBase {

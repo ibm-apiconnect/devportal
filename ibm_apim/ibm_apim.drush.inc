@@ -13,6 +13,7 @@
 use Drupal\apic_api\Api;
 use Drupal\apic_app\Application;
 use Drupal\Core\Config\FileStorage;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\UserSession;
 use Drupal\Core\Url;
@@ -28,6 +29,13 @@ function ibm_apim_drush_command() {
     'aliases' => ['ucon'],
     'arguments' => [
       'config' => 'The JSON config payload',
+    ],
+  ];
+  $items['ibm_apim-updateconfigfile'] = [
+    'description' => 'Updates the site config from a file',
+    'aliases' => ['uconfile'],
+    'arguments' => [
+      'filename' => 'The JSON config filename',
     ],
   ];
   $items['ibm_apim-setcreds'] = [
@@ -635,12 +643,12 @@ function drush_ibm_apim_request_refresh() {
     echo 'Caught exception: ', $e->getMessage(), "\n";
 
     $failures = [
-      7 => 'Could not communicate with server. Reason: SSL certificate problem: unable to get local issuer certificate',
-      6 => 'Could not communicate with server. Reason: SSL certificate problem: self signed certificate',
-      5 => 'SSL: certificate verification failed (result: 5)',
-      4 => 'Could not communicate with server. Reason: Could not resolve host:',
       2 => 'Could not communicate with server. Reason: SSL: no alternative certificate subject name matches target host name',
       3 => 'Could not communicate with server.',
+      4 => 'Could not communicate with server. Reason: Could not resolve host:',
+      5 => 'SSL: certificate verification failed (result: 5)',
+      6 => 'Could not communicate with server. Reason: SSL certificate problem: self signed certificate',
+      7 => 'Could not communicate with server. Reason: SSL certificate problem: unable to get local issuer certificate'
     ];
 
     $message = '';
@@ -743,7 +751,11 @@ function drush_ibm_apim_content_refresh() {
             if (!isset($orgList)) {
               $orgList = [];
             }
-            $orgList[] = $content['url'];
+            if (isset($content['consumer_org']['url'])) {
+              $orgList[] = $content['consumer_org']['url'];
+            } else {
+              $orgList[] = '/consumer-api/orgs/' . $content['id'];
+            }
             \Drupal::state()->set('ibm_apim.content_refresh_consumerorgs', $orgList);
             drush_consumerorg_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
             break;
@@ -782,7 +794,7 @@ function drush_ibm_apim_content_refresh() {
               $groupList = [];
             }
             $groupList[] = $content['url'];
-            \Drupal::state()->set('ibm_apim.content_refresh_extensions', $groupList);
+            \Drupal::state()->set('ibm_apim.content_refresh_groups', $groupList);
             drush_ibm_apim_group_update($content, 'content_refresh');
             break;
           case 'subscription':
@@ -956,29 +968,21 @@ function drush_ibm_apim_clearup() {
   if (!is_array($current_consumerorgs)) {
     $current_consumerorgs = [];
   }
-  // TODO need to handle tidying up consumerorgs once know we're getting the right webhooks - see TODO below
-  // commenting out entire section for now since doing a pointless loadMultiple is silly
-  //  $query = \Drupal::entityQuery('node');
-  //  $query->condition('type', 'consumerorg');
-  //  $nids = $query->execute();
-  //  if (isset($nids) && !empty($nids)) {
-  //    $consumernodes = Node::loadMultiple($nids);
-  //    foreach ($consumernodes as $orgnode) {
-  //      if (isset($orgnode)) {
-  //        $found = FALSE;
-  //        foreach ($current_consumerorgs as $org_url) {
-  //          if ($orgnode->consumerorg_url->value == $org_url) {
-  //            $found = TRUE;
-  //          }
-  //        }
-  //        if ($found != TRUE) {
-  //          $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
-  //          // TODO : don't delete these due to a webhooks giving us different urls than /me response does
-  //          //$consumerOrgService->deleteNode($orgnode->id(), 'content_refresh');
-  //        }
-  //      }
-  //    }
-  //  }
+  $query = \Drupal::entityQuery('node');
+  $query->condition('type', 'consumerorg');
+  if (!empty($current_consumerorgs)) {
+    $group = $query->orConditionGroup()
+      ->condition('consumerorg_url', NULL, 'IS NULL')
+      ->condition('consumerorg_url', $current_consumerorgs, 'NOT IN');
+    $query->condition($group);
+  }
+  $results = $query->execute();
+  if ($results !== NULL && !empty($results)) {
+    $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
+    foreach ($results as $nid) {
+      $consumerOrgService->deleteNode($nid);
+    }
+  }
 
   // remove any apps in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up applications'), 'success');
@@ -1202,6 +1206,19 @@ function drush_ibm_apim_updateconfig($config) {
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param $filename
+ */
+function drush_ibm_apim_updateconfigfile($filename) {
+  ibm_apim_entry_trace(__FUNCTION__, $filename);
+  drush_log(dt('Updating site config using file: @filename', ['@filename' => $filename]), 'success');
+  if ($filename !== null && file_exists(drupal_get_path('module', 'apictest') . '/' . $filename)) {
+    $string = file_get_contents(drupal_get_path('module', 'apictest') . '/' . $filename);
+    drush_ibm_apim_updateconfig($string);
+  }
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
+
 function drush_ibm_apim_deleteconfig() {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   $siteConfig = \Drupal::service('ibm_apim.site_config');
@@ -1251,12 +1268,12 @@ function drush_ibm_apim_checkapimcert($url, $insecure, $provided_cert) {
     echo 'Caught exception: ', $e->getMessage(), "\n";
 
     $failures = [
-      7 => 'Could not communicate with server. Reason: SSL certificate problem: unable to get local issuer certificate',
-      6 => 'Could not communicate with server. Reason: SSL certificate problem: self signed certificate',
-      5 => 'SSL: certificate verification failed (result: 5)',
-      4 => 'Could not communicate with server. Reason: Could not resolve host:',
       2 => 'Could not communicate with server. Reason: SSL: no alternative certificate subject name matches target host name',
       3 => 'Could not communicate with server.',
+      4 => 'Could not communicate with server. Reason: Could not resolve host:',
+      5 => 'SSL: certificate verification failed (result: 5)',
+      6 => 'Could not communicate with server. Reason: SSL certificate problem: self signed certificate',
+      7 => 'Could not communicate with server. Reason: SSL certificate problem: unable to get local issuer certificate'
     ];
 
     $message = '';
@@ -1284,7 +1301,9 @@ function drush_ibm_apim_checkapimcert($url, $insecure, $provided_cert) {
 function drush_ibm_apim_set_admin_timestamps() {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   $time = \Drupal::time()->getCurrentTime();
-  $result = db_update('users_field_data')->fields(['created' => $time])->condition('uid', 1)->execute();
+
+  $options = ['target' => 'default'];
+  $result = Database::getConnection($options['target'])->update('users_field_data', $options)->fields(['created' => $time])->condition('uid', 1)->execute();
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
@@ -1407,7 +1426,7 @@ function drush_ibm_apim_createkey($clientId = NULL) {
   // if dont pass in a client id then try and get the stored site one
   if ($clientId === NULL) {
     drush_print('Using site client ID');
-    $clientId = \Drupal::state()->get('ibm_apim.client_id');
+    $clientId = \Drupal::state()->get('ibm_apim.site_client_id');
   }
 
   if ($clientId !== NULL) {
@@ -1496,31 +1515,62 @@ function drush_ibm_apim_apicuser_create($apicUser, $event = 'user_create') {
       $apicUser = $apicUser['user'];
     }
 
+    // if there is an email address and it is already in database we shouldn't create a new user, so bail out now.
+    // note - no email address is possible so if it isn't present we continue as normal.
+    if(isset($apicUser['email']) && $apicUser['email'] !== '') {
+      $matchingEmailAddress = \Drupal::entityQuery('user')
+                              ->condition('mail', $apicUser['email'])
+                              ->execute();
+
+      if(sizeof($matchingEmailAddress) > 0) {
+        drush_log(dt('user_create: Skipping user @name - a user with the same email address (@mail) already exists.', [
+          '@name' => $apicUser['username'],
+          '@mail' => $apicUser['email']
+        ]), 'warning');
+
+        if (function_exists('ibm_apim_exit_trace')) {
+          ibm_apim_exit_trace(__FUNCTION__, 'skip - email address in use');
+        }
+        return;
+      }
+    }
+
     // check if user already exists in Drupal DB
-    $user = user_load_by_name($apicUser['username']);
-    if ($user !== NULL && $user !== FALSE) {
-      drush_print('User already exists: ' . $apicUser['username']);
+    $createUser = new ApicUser();
+    $createUser->setUsername($apicUser['username']);
+    $createUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
+
+    if ($createUser->getUsername() === NULL || $createUser->getApicUserRegistryUrl() === NULL) {
+      drush_print('Unable to check if user already exists because of missing data. Skipping user create.');
     }
     else {
-      $createUser = new ApicUser();
-      $createUser->setFirstname($apicUser['first_name']);
-      $createUser->setLastname($apicUser['last_name']);
-      $createUser->setMail($apicUser['email']);
-      $createUser->setUsername($apicUser['username']);
-      if ($apicUser['url'] !== NULL) {
-        $createUser->setUrl($apicUser['url']);
+      $userStorage = \Drupal::service('ibm_apim.user_storage');
+      $user = $userStorage->load($createUser);
+      if ($user !== NULL && $user !== FALSE) {
+        drush_print('User already exists: ' . $apicUser['username']);
       }
-      if ($apicUser['user_registry_url'] !== NULL) {
-        $createUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
-      }
-      if ($apicUser['state'] !== NULL) {
-        $createUser->setState($apicUser['state']);
-      }
+      else {
+        $createUser->setFirstname($apicUser['first_name']);
+        $createUser->setLastname($apicUser['last_name']);
 
-      $userManager = \Drupal::service('auth_apic.usermanager');
-      drush_print('Creating apic user ' . $apicUser['username']);
-      $userService = \Drupal::service('ibm_apim.apicuser');
-      $userManager->registerApicUser($createUser->getUsername(), $userService->getUserAccountFields($createUser));
+        if(isset($apicUser['email']) && $apicUser['email'] !== '') {
+          $createUser->setMail($apicUser['email']);
+        }
+
+        if ($apicUser['url'] !== NULL) {
+          $createUser->setUrl($apicUser['url']);
+        }
+        if ($apicUser['user_registry_url'] !== NULL) {
+          $createUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
+        }
+        if ($apicUser['state'] !== NULL) {
+          $createUser->setState($apicUser['state']);
+        }
+
+        $userManager = \Drupal::service('ibm_apim.account');
+        drush_print('Creating apic user ' . $apicUser['username']);
+        $userManager->registerApicUser($createUser);
+      }
     }
     if (isset($originalUser) && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
@@ -1553,28 +1603,33 @@ function drush_ibm_apim_apicuser_delete($apicUser, $event = 'user_delete') {
       $apicUser = json_decode($apicUser, TRUE);
     }
 
-    // check if user exists in Drupal DB
-    $user = user_load_by_name($apicUser['username']);
-    if ($user === NULL || $user === FALSE) {
-      drush_print('Nothing to delete as user does not exist: ' . $apicUser['username']);
+    // check if user already exists in Drupal DB
+    $deleteUser = new ApicUser();
+    $deleteUser->setUsername($apicUser['username']);
+    $deleteUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
+
+    if ($deleteUser->getUsername() === NULL || $deleteUser->getApicUserRegistryUrl() === NULL) {
+      drush_print('Unable to check if user already exists because of missing data. Skipping user delete.');
     }
     else {
-
-      $deleteUser = new ApicUser();
-      $deleteUser->setFirstname($apicUser['first_name']);
-      $deleteUser->setLastname($apicUser['last_name']);
-      $deleteUser->setMail($apicUser['email']);
-      $deleteUser->setUsername($apicUser['username']);
-      if ($apicUser['url'] !== NULL) {
-        $deleteUser->setUrl($apicUser['url']);
+      $userStorage = \Drupal::service('ibm_apim.user_storage');
+      $user = $userStorage->load($deleteUser);
+      if ($user === NULL || $user === FALSE) {
+        drush_print('Nothing to delete as user does not exist: ' . $apicUser['username']);
       }
-      if ($apicUser['user_registry_url'] !== NULL) {
-        $deleteUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
-      }
+      else {
 
-      $userManager = \Drupal::service('auth_apic.usermanager');
-      drush_print('Deleting apic user ' . $apicUser['username']);
-      $userManager->deleteLocalAccount($deleteUser);
+        $deleteUser->setFirstname($apicUser['first_name']);
+        $deleteUser->setLastname($apicUser['last_name']);
+        $deleteUser->setMail($apicUser['email']);
+        if ($apicUser['url'] !== NULL) {
+          $deleteUser->setUrl($apicUser['url']);
+        }
+
+        $delete_service = \Drupal::service('auth_apic.delete_user');
+        drush_print('Deleting apic user ' . $apicUser['username']);
+        $delete_service->deleteLocalAccount($deleteUser);
+      }
     }
     if (isset($originalUser) && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
@@ -1607,18 +1662,29 @@ function drush_ibm_apim_apicuser_block($apicUser, $event = 'user_block') {
       $apicUser = json_decode($apicUser, TRUE);
     }
 
-    $user = user_load_by_name($apicUser['username']);
+    // check if user already exists in Drupal DB
+    $blockUser = new ApicUser();
+    $blockUser->setUsername($apicUser['username']);
+    $blockUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
 
-    if ($user === NULL || $user === FALSE) {
-      drush_print('User does not exist: ' . $apicUser['username']);
-    }
-    elseif ((int) $user->get('uid')->value === 1) {
-      drush_print('admin so won\'t block this');
+    if ($blockUser->getUsername() === NULL || $blockUser->getApicUserRegistryUrl() === NULL) {
+      drush_print('Unable to check if user already exists because of missing data. Skipping user block.');
     }
     else {
-      drush_print('Blocking apic user ' . $apicUser['username']);
-      $user->set('status', 0);
-      $user->save();
+      $userStorage = \Drupal::service('ibm_apim.user_storage');
+      $user = $userStorage->load($blockUser);
+
+      if ($user === NULL || $user === FALSE) {
+        drush_print('User does not exist: ' . $apicUser['username']);
+      }
+      elseif ((int) $user->get('uid')->value === 1) {
+        drush_print('admin so won\'t block this');
+      }
+      else {
+        drush_print('Blocking apic user ' . $apicUser['username']);
+        $user->set('status', 0);
+        $user->save();
+      }
     }
     if (isset($originalUser) && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
@@ -1651,15 +1717,25 @@ function drush_ibm_apim_apicuser_unblock($apicUser, $event = 'user_unblock') {
       $apicUser = json_decode($apicUser, TRUE);
     }
 
-    $user = user_load_by_name($apicUser['username']);
+    // check if user already exists in Drupal DB
+    $unblockUser = new ApicUser();
+    $unblockUser->setUsername($apicUser['username']);
+    $unblockUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
 
-    if ($user === NULL || $user === FALSE) {
-      drush_print('User does not exist: ' . $apicUser['username']);
+    if ($unblockUser->getUsername() === NULL || $unblockUser->getApicUserRegistryUrl() === NULL) {
+      drush_print('Unable to check if user already exists because of missing data. Skipping user unblock.');
     }
     else {
-      drush_print('Unblocking apic user ' . $apicUser['username']);
-      $user->set('status', 1);
-      $user->save();
+      $userStorage = \Drupal::service('ibm_apim.user_storage');
+      $user = $userStorage->load($unblockUser);
+      if ($user === NULL || $user === FALSE) {
+        drush_print('User does not exist: ' . $apicUser['username']);
+      }
+      else {
+        drush_print('Unblocking apic user ' . $apicUser['username']);
+        $user->set('status', 1);
+        $user->save();
+      }
     }
     if (isset($originalUser) && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
@@ -1692,30 +1768,38 @@ function drush_ibm_apim_apicuser_update($apicUser, $event = 'user_update') {
       $apicUser = json_decode($apicUser, TRUE);
     }
 
+
     // check if user already exists in Drupal DB
-    $user = user_load_by_name($apicUser['username']);
-    if ($user === NULL || $user === FALSE) {
-      drush_print('User does not exist: ' . $apicUser['username']);
+    $editUser = new ApicUser();
+    $editUser->setUsername($apicUser['username']);
+    $editUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
+
+    if ($editUser->getUsername() === NULL || $editUser->getApicUserRegistryUrl() === NULL) {
+      drush_print('Unable to check if user already exists because of missing data. Skipping user update.');
     }
     else {
-      $editUser = new ApicUser();
-      $editUser->setFirstname($apicUser['first_name']);
-      $editUser->setLastname($apicUser['last_name']);
-      $editUser->setMail($apicUser['email']);
-      $editUser->setUsername($apicUser['username']);
-      if ($apicUser['url'] !== NULL) {
-        $editUser->setUrl($apicUser['url']);
+      $userStorage = \Drupal::service('ibm_apim.user_storage');
+      $user = $userStorage->load($editUser);
+      if ($user === NULL || $user === FALSE) {
+        drush_print('User does not exist: ' . $apicUser['username']);
       }
-      if ($apicUser['user_registry_url'] !== NULL) {
-        $editUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
-      }
-      if ($apicUser['state'] !== NULL) {
-        $editUser->setState($apicUser['state']);
-      }
+      else {
+        $editUser->setFirstname($apicUser['first_name']);
+        $editUser->setLastname($apicUser['last_name']);
+        if(isset($apicUser['email']) && $apicUser['email'] !== '') {
+          $editUser->setMail($apicUser['email']);
+        }
+        if ($apicUser['url'] !== NULL) {
+          $editUser->setUrl($apicUser['url']);
+        }
+        if ($apicUser['state'] !== NULL) {
+          $editUser->setState($apicUser['state']);
+        }
 
-      $userManager = \Drupal::service('auth_apic.usermanager');
-      drush_print('Updating apic user ' . $apicUser['username']);
-      $userManager->updateLocalAccount($editUser);
+        $accountService = \Drupal::service('ibm_apim.account');
+        drush_print('Updating apic user ' . $apicUser['username']);
+        $accountService->updateLocalAccount($editUser);
+      }
     }
     if (isset($originalUser) && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
@@ -1742,12 +1826,22 @@ function drush_ibm_apim_user_createOrUpdate($apicUser, $event = 'user_update') {
     }
 
     // check if user already exists in Drupal DB
-    $user = user_load_by_name($apicUser['username']);
-    if ($user !== NULL && $user !== FALSE) {
-      drush_ibm_apim_apicuser_update($apicUser, $event);
+    $createOrUpdateUser = new ApicUser();
+    $createOrUpdateUser->setUsername($apicUser['username']);
+    $createOrUpdateUser->setApicUserRegistryUrl($apicUser['user_registry_url']);
+
+    if ($createOrUpdateUser->getUsername() === NULL || $createOrUpdateUser->getApicUserRegistryUrl() === NULL) {
+      drush_print('Unable to check if user already exists because of missing data. Skipping user createOrUpdate.');
     }
     else {
-      drush_ibm_apim_apicuser_create($apicUser, $event);
+      $userStorage = \Drupal::service('ibm_apim.user_storage');
+      $user = $userStorage->load($createOrUpdateUser);
+      if ($user !== NULL && $user !== FALSE) {
+        drush_ibm_apim_apicuser_update($apicUser, $event);
+      }
+      else {
+        drush_ibm_apim_apicuser_create($apicUser, $event);
+      }
     }
   }
 
@@ -2439,7 +2533,7 @@ function drush_ibm_apim_manage_memory_usage() {
   if (isset($memoryLimit) && $memoryLimit > 0) {
     $pctMem = $memUsage / $memoryLimit;
     if ($pctMem > $memThreshold) {
-      drush_log(dt('Memory usage reached &mem % of max, resetting statics', ['&mem' => $memThreshold * 100], 'warning'));
+      drush_log(dt('Memory usage reached %mem % of max, resetting statics', ['%mem' => $memThreshold * 100], 'warning'));
       drupal_static_reset();
     }
   }

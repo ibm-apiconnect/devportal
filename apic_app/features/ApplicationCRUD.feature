@@ -10,6 +10,7 @@ Feature: ApplicationCRUD
   @mocked
   @api
   Scenario: Create an application
+    Given I am not logged in
     Given users:
       | name  | pass     | mail              | status |
       | Andre | Qwert123 | andre@example.com | 1      |
@@ -23,6 +24,7 @@ Feature: ApplicationCRUD
   @mocked
   @api
   Scenario: Update an application
+    Given I am not logged in
     Given users:
       | name  | pass     | mail              | status |
       | Andre | Qwert123 | andre@example.com | 1      |
@@ -38,6 +40,7 @@ Feature: ApplicationCRUD
   @mocked
   @api
   Scenario: Test createOrUpdate for an application
+    Given I am not logged in
     Given users:
       | name  | pass     | mail              | status |
       | Andre | Qwert123 | andre@example.com | 1      |
@@ -56,6 +59,7 @@ Feature: ApplicationCRUD
   @mocked
   @api
   Scenario: Delete an application
+    Given I am not logged in
     Given users:
       | name  | pass     | mail              | status |
       | Andre | Qwert123 | andre@example.com | 1      |
@@ -67,3 +71,35 @@ Feature: ApplicationCRUD
     Then I should have an application named "myapp_@now" id "myid_@now"
     When I delete the application named "myapp_@now"
     Then I should not have an application named "mynewapp_@now"
+
+  @api
+  Scenario: Admin cannot edit the Application
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+      | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.mail) |
+    Given applications:
+      | title    | id    | org_id      |
+      | MyNewApp | 1234567@now | @data(andre.consumerorg.id) |
+    Given I am logged in as "@data(admin.name)"
+    And I am editing the "application" node "MyNewApp"
+    Then The field "#edit-title-0-value" should be disabled
+    Then The field "#edit-apic-summary-0-value" should be disabled
+    Then The field "#edit-application-image-0-upload" should be disabled
+    Then The field "#edit-application-redirect-endpoints-0-value" should be disabled
+    And I should not see the text "APIC Catalog ID"
+    And I should not see the text "APIC Hostname"
+    And I should not see the text "APIC Provider ID"
+    And I should not see the text "Client type"
+    And I should not see the text "Consumer organization URL"
+    And I should not see the text "Credentials"
+    And I should not see the text "Application Data"
+    And I should not see the text "Application ID"
+    And I should not see the text "Pending Lifecycle State"
+    And I should not see the text "Lifecycle State"
+    And I should not see the text "Subscriptions"
+    And there are no errors

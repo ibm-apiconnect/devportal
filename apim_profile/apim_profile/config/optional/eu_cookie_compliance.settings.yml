@@ -13,7 +13,7 @@ popup_agreed:
 popup_agree_button_message: 'OK, I agree'
 popup_agreed_enabled: false
 popup_bg_hex: ''
-popup_clicking_confirmation: true
+popup_clicking_confirmation: false
 popup_scrolling_confirmation: false
 popup_delay: 1000
 show_disagree_button: true
@@ -43,4 +43,24 @@ cookie_name: ''
 exclude_uid_1: false
 better_support_for_screen_readers: false
 use_mobile_message: false
-
+popup_info_template: new
+cookie_session: 0
+domain_all_sites: false
+method: null
+disagree_button_label: 'No thank you'
+whitelisted_cookies: ''
+disabled_javascripts: ''
+consent_storage_method: null
+withdraw_message:
+  value: ''
+  format: restricted_html
+withdraw_action_button_label: ''
+withdraw_tab_button_label: ''
+withdraw_enabled: false
+withdraw_button_on_info_popup: false
+cookie_categories: ''
+enable_save_preferences_button: false
+save_preferences_button_label: ''
+accept_all_categories_button_label: ''
+fix_first_cookie_category: false
+select_all_categories_by_default: false

@@ -1,0 +1,13 @@
+/* Match core Media Library styles for SVGs */
+.media-library-item--grid .field--type-svg-image-field {
+  overflow: hidden;
+  text-align: center;
+  background-color: #ebebeb;
+}
+
+.media-library-item--grid .field--type-svg-image-field svg,
+.media-library-item--grid .field--type-svg-image-field img {
+  height: 180px;
+  object-fit: contain;
+  object-position: center center;
+}

@@ -21,7 +21,7 @@ use Symfony\Component\EventDispatcher\Event;
  */
 class ConsumerorgDeleteEvent extends Event {
 
-  const EVENT_NAME = 'consumerorg_delete';
+  public const EVENT_NAME = 'consumerorg_delete';
 
   /**
    * The consumer organization.

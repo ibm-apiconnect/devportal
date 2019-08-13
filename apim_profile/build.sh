@@ -3,7 +3,7 @@
 BASEDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # if change the project name then also need to update the jenkins docker image webroot
 PROJECT_NAME="devportal"
-VERSION=2018.4.1.6
+VERSION=2018.4.1.7
 SERVICE="false"
 
 BUILD_DIR="$BASEDIR/build"
@@ -40,6 +40,16 @@ if [[ -z ${BUILD_TIMESTAMP:-} ]]; then
   echo "BUILD_TIMESTAMP is unset. We need this to tag the template tgz"
   exit 1
 fi
+
+# Get NodeJS
+mkdir /tmp/node
+cd /tmp/node
+tar xfz $BASEDIR/portal-common/data/node-v*-linux-x64.tar.gz --strip 1
+mkdir -p /home/jenkins/node
+cp -r /tmp/node/* /home/jenkins/node
+rm -rf /tmp/node /tmp/data/node-*
+
+export PATH=/home/jenkins/node:$PATH
 
 mkdir -p $BUILD_DIR
 
@@ -166,6 +176,20 @@ remove_internal_files themegenerator
 remove_internal_files apictest
 remove_internal_files mail_subscribers
 remove_internal_files_theme connect_theme
+
+# remove auth file now no longer needed
+if [[ -f "$BASEDIR/auth.json" ]]
+then
+  rm -f $BASEDIR/auth.json
+fi
+if [[ -f "$BUILD_DIR/$PROJECT_NAME/auth.json" ]]
+then
+  rm -f $BUILD_DIR/$PROJECT_NAME/auth.json
+fi
+
+# Remove artifactory from the list of repos
+jq 'del(.repositories[0])' $BUILD_DIR/$PROJECT_NAME/composer.json > $BUILD_DIR/$PROJECT_NAME/temp.json
+mv -f $BUILD_DIR/$PROJECT_NAME/temp.json $BUILD_DIR/$PROJECT_NAME/composer.json
 
 cd $BUILD_DIR
 cp ../sqlexports/translations.sql devportal/

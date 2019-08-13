@@ -16,33 +16,67 @@ services:
     class: Drupal\auth_apic\Service\JWTParser
     arguments: ['@logger.channel.auth_apic',
                 '@ibm_apim.utils']
-  auth_apic.usermanager:
-    class: Drupal\auth_apic\Service\ApicUserManager
-    arguments: ['@logger.channel.auth_apic',
-                '@database',
-                '@externalauth.externalauth',
-                '@ibm_apim.mgmtserver',
-                '@ibm_apim.consumerorg',
-                '@ibm_apim.site_config',
-                '@ibm_apim.user_registry',
-                '@ibm_apim.apicuser',
-                '@ibm_apim.user_utils',
-                '@module_handler',
-                '@language_manager',
-                '@tempstore.private'
-                ]
-    tags:
-      - { name: auth_apic }
   auth_apic.oidc_state:
-      class: Drupal\auth_apic\Service\OidcStateService
-      arguments: ['@state',
-                  '@encryption',
-                  '@logger.channel.auth_apic',
-                  '@session']
+    class: Drupal\auth_apic\Service\OidcStateService
+    arguments: ['@state',
+                '@encryption',
+                '@encrypt.encryption_profile.manager',
+                '@logger.channel.auth_apic',
+                '@session',
+                '@datetime.time']
   auth_apic.oidc:
-      class: Drupal\auth_apic\Service\OidcRegistryService
-      arguments: ['@state',
-                  '@logger.channel.ibm_apim',
-                  '@ibm_apim.utils',
-                  '@ibm_apim.apim_utils',
-                  '@auth_apic.oidc_state']
+    class: Drupal\auth_apic\Service\OidcRegistryService
+    arguments: ['@state',
+                '@logger.channel.ibm_apim',
+                '@ibm_apim.utils',
+                '@ibm_apim.apim_utils',
+                '@auth_apic.oidc_state']
+  auth_apic.usermanaged_signup:
+    class: Drupal\auth_apic\UserManagement\UserManagedSignUp
+    arguments: ['@ibm_apim.mgmtserver',
+                '@ibm_apim.account',
+                '@ibm_apim.apicuser',
+                '@logger.channel.auth_apic']
+  auth_apic.nonusermanaged_signup:
+    class: Drupal\auth_apic\UserManagement\NonUserManagedSignUp
+    arguments: ['@ibm_apim.mgmtserver',
+                '@logger.channel.auth_apic']
+  auth_apic.login:
+    class: Drupal\auth_apic\UserManagement\ApicLoginService
+    arguments: ['@ibm_apim.mgmtserver',
+                '@ibm_apim.account',
+                '@ibm_apim.user_utils',
+                '@ibm_apim.user_storage',
+                '@tempstore.private',
+                '@logger.channel.auth_apic',
+                '@ibm_apim.site_config',
+                '@current_user',
+                '@entity.manager',
+                '@consumerorg.login'
+                ]
+  auth_apic.activation:
+    class: Drupal\auth_apic\UserManagement\ApicActivationService
+    arguments: ['@ibm_apim.mgmtserver',
+                '@ibm_apim.user_storage',
+                '@link_generator',
+                '@messenger',
+                '@logger.channel.auth_apic',
+                '@module_handler']
+  auth_apic.invitation:
+    class: Drupal\auth_apic\UserManagement\ApicInvitationService
+    arguments: ['@ibm_apim.mgmtserver',
+                '@ibm_apim.account',
+                '@logger.channel.auth_apic']
+  auth_apic.password:
+    class: Drupal\auth_apic\UserManagement\ApicPasswordService
+    arguments: ['@ibm_apim.mgmtserver',
+                '@messenger',
+                '@logger.channel.auth_apic',
+                '@ibm_apim.user_storage',
+                '@entity.manager']
+  auth_apic.delete_user:
+    class: Drupal\auth_apic\UserManagement\ApicUserDeleteService
+    arguments: ['@ibm_apim.mgmtserver',
+                '@ibm_apim.user_storage',
+                '@logger.channel.auth_apic',
+                '@current_user']

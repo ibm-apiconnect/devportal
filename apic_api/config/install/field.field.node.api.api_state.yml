@@ -2,7 +2,7 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.node.api.api_state
+    - field.storage.node.api_state
     - node.type.api
 id: node.api.api_state
 field_name: api_state

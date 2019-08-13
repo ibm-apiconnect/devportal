@@ -44,8 +44,8 @@ function auth_apic_upgrade_8121() {
   $save_needed = FALSE;
 
   foreach( $properties as $property ) {
-    if(isset($admin->$property) && $admin->$property->value !== NULL) {
-      \Drupal::logger('auth_apic.upgrade')->notice( 'Unsetting ' . $property . ' on admin user.');
+    if($admin !== null && isset($admin->$property) && $admin->$property->value !== NULL) {
+      \Drupal::logger('auth_apic.upgrade')->notice( 'Unsetting @property on admin user.', ['@property' => $property]);
       $admin->set($property, NULL);
       $save_needed = TRUE;
     }
@@ -55,4 +55,16 @@ function auth_apic_upgrade_8121() {
     $admin->save();
   }
 
+}
+
+/**
+ * Update the field storage id for user_picture to correct for a typo in early fixpacks
+ */
+function auth_apic_upgrade_8122() {
+  $fieldConfig = \Drupal\field\Entity\FieldConfig::loadByName('user', 'user', 'user_picture');
+  $storage = $fieldConfig->getFieldStorageDefinition();
+  if ($storage !== null) {
+    $storage->set('id', 'user.user_picture');
+    $storage->save();
+  }
 }

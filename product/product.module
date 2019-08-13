@@ -16,17 +16,18 @@
  * Provides the product integration with APIC.
  */
 
-use Drupal\product\Product;
-use Drupal\Core\Access\AccessResultForbidden;
-use Drupal\Core\Access\AccessResultNeutral;
-use Drupal\Core\Access\AccessResultAllowed;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\node\NodeInterface;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\node\Entity\Node;
-use Drupal\file\Entity\File;
 use Drupal\apic_api\Api;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Access\AccessResultAllowed;
+use Drupal\Core\Access\AccessResultForbidden;
+use Drupal\Core\Access\AccessResultNeutral;
+use Drupal\Core\Database\Database;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\file\Entity\File;
+use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
+use Drupal\product\Product;
 
 /* Permissions that can be granted */
 define('EDIT_ANY_PRODUCT_CONTENT_GRANT', 1);
@@ -87,10 +88,10 @@ function product_node_access_records($node) {
   // Only build permissions for product nodes
   if ($type === 'product') {
     // This is just too much debug; enable for special cases only
-//    if ($aclDebug === TRUE) {
-//      \Drupal::logger('ACLDEBUG')
-//        ->debug('Product Title: %title', ['%title' => $node->getTitle()]);
-//    }
+    //    if ($aclDebug === TRUE) {
+    //      \Drupal::logger('ACLDEBUG')
+    //        ->debug('Product Title: %title', ['%title' => $node->getTitle()]);
+    //    }
     // Only issue grants if product_view is enabled
     if (isset($node->product_view_enabled->value) && (int) $node->product_view_enabled->value === 1) {
       // If the product is deprecated, only allow subscribers
@@ -242,13 +243,15 @@ function product_node_grants($account, $op) {
 
     // Check for subscriptions, if they exist add a SUBSCRIBED_TO_PRODUCT_GRANT
     // for each subscription to a product-specific realm
-    $query = db_query("SELECT subs.application_subscriptions_value as application_subscriptions_value
+    $options = ['target' => 'default'];
+    $query = Database::getConnection($options['target'])
+      ->query("SELECT subs.application_subscriptions_value as application_subscriptions_value
 FROM `node__application_subscriptions` subs
 INNER JOIN `node__application_consumer_org_url` apps ON apps.entity_id = subs.entity_id
-WHERE (apps.application_consumer_org_url_value = '" . $orgUrl . "')");
+WHERE (apps.application_consumer_org_url_value = '" . $orgUrl . "')", [], $options);
     $subResults = $query->fetchAll();
     foreach ($subResults as $sub) {
-      $sub = unserialize($sub->application_subscriptions_value, ['allowed_classes' => false]);
+      $sub = unserialize($sub->application_subscriptions_value, ['allowed_classes' => FALSE]);
       if ($sub !== NULL && is_array($sub) && $sub['product_url'] !== NULL) {
         $pref = str_replace('/', '_', $sub['product_url']);
         $grants['product_ref_' . $pref] = [SUBSCRIBED_TO_PRODUCT_GRANT];
@@ -257,10 +260,11 @@ WHERE (apps.application_consumer_org_url_value = '" . $orgUrl . "')");
 
     // Check for custom tags, if they exist add a TAG_PRODUCT_GRANT for
     // each tag in a tag-specific realm
-    $query = db_query("SELECT tags.consumerorg_tags_value as consumerorg_tags_value
+    $query = Database::getConnection($options['target'])
+      ->query("SELECT tags.consumerorg_tags_value as consumerorg_tags_value
 FROM `node__consumerorg_url` id
 INNER JOIN `node__consumerorg_tags` tags ON id.entity_id = tags.entity_id
-WHERE (id.consumerorg_url_value = '" . $orgUrl . "')");
+WHERE (id.consumerorg_url_value = '" . $orgUrl . "')", [], $options);
     $doResults = $query->fetchAll();
     $tags = [];
     foreach ($doResults as $do) {
@@ -415,7 +419,7 @@ function product_preprocess_node(&$variables) {
     $productApis = [];
 
     foreach ($variables['node']->product_apis->getValue() as $arrayValue) {
-      $productApis[] = unserialize($arrayValue['value'], ['allowed_classes' => false]);
+      $productApis[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
     }
     if ($productApis !== NULL && is_array($productApis)) {
       $variables['apiCount'] = count($productApis);
@@ -448,7 +452,7 @@ function product_preprocess_node(&$variables) {
           if ($fid !== NULL && !empty($fid) && isset($fid[0]['target_id'])) {
             $file = File::load($fid[0]['target_id']);
             if ($file !== NULL) {
-              $apiImageUrl = $file->toUrl();
+              $apiImageUrl = $file->createFileUrl();
             }
           }
 
@@ -458,7 +462,7 @@ function product_preprocess_node(&$variables) {
           }
           $swagger = NULL;
           if (isset($api->api_swagger->value)) {
-            $swagger = unserialize($api->api_swagger->value, ['allowed_classes' => false]);
+            $swagger = unserialize($api->api_swagger->value, ['allowed_classes' => FALSE]);
           }
           $listEntry = [
             'node' => $api,
@@ -476,7 +480,7 @@ function product_preprocess_node(&$variables) {
         $planArray = [];
         $productPlans = [];
         foreach ($variables['node']->product_plans->getValue() as $arrayValue) {
-          $productPlans[] = unserialize($arrayValue['value'], ['allowed_classes' => false]);
+          $productPlans[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
         }
         if ($productPlans !== NULL && is_array($productPlans) && count($productPlans) > 0) {
           foreach ($productPlans as $plan) {
@@ -564,13 +568,22 @@ function product_preprocess_node(&$variables) {
  * @param $form_id
  */
 function product_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  if ($form_id === 'node_type_edit_form') {
+  switch ($form_id) {
     // remove link to delete our content type
-    if ($form['type']['#default_value'] !== NULL && $form['type']['#default_value'] === 'product') {
-      if ($form['actions']['delete'] !== NULL) {
+    case 'node_type_edit_form' :
+      if (isset($form['type']['#default_value'], $form['actions']['delete']) && $form['type']['#default_value'] === 'product') {
         unset($form['actions']['delete']);
       }
-    }
+      break;
+    case 'node_product_edit_form':
+      // if anyone has made our internal fields visible, then lets make them readonly
+      $internal_field_list = Product::getIBMFields();
+      foreach ($internal_field_list as $fieldName) {
+        if ($fieldName !== 'apic_pathalias' && $fieldName !== 'apic_tags' && $fieldName !== 'apic_rating' && $fieldName !== 'apic_image' && $fieldName !== 'apic_attachments' && isset($form[$fieldName])) {
+          $form[$fieldName]['#disabled'] = TRUE;
+        }
+      }
+      break;
   }
 }
 
@@ -611,7 +624,7 @@ function product_check_product_subscribe($node) {
             $myOrg = $userUtils->getCurrentConsumerOrg();
             $visibility = [[]];
             foreach ($node->product_visibility->getValue() as $arrayValue) {
-              $visibility[] = unserialize($arrayValue['value'], ['allowed_classes' => false]);
+              $visibility[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
             }
             $visibility = array_merge(...$visibility);
             if ($visibility !== NULL && $visibility['subscribe']['type'] !== NULL) {

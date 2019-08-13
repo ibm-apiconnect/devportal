@@ -278,6 +278,8 @@ nav.block-login ul.menu li+li:before {
   .navbar-nav {
     > li svg.bx--overflow-menu__icon {
       fill: $navbar-default-link-color;
+      max-height:1rem;
+      padding: 0;
       &:hover,
       &:focus {
         fill: $navbar-default-link-hover-color;

@@ -13,8 +13,6 @@
 namespace Drupal\ibm_apim\ApicType;
 
 
-use Drupal\Core\Url;
-
 class UserRegistry {
 
   private $id;
@@ -272,52 +270,6 @@ class UserRegistry {
     else {
       return NULL;
     }
-  }
-
-  /**
-   * Get the url which initiates the OIDC authentication.
-   *
-   * // TODO - too complicated for a type class, move somewhere we can inject dependencies - UserRegistryService probably
-   */
-  public function getOIDCauthUrl(): ?string {
-    if (function_exists('ibm_apim_exit_trace')) {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    }
-
-    if ($this->getRegistryType() !== 'oidc') {
-      \Drupal::logger('ibm_apim')->warning('attempt to get oidc authentication URL from non-oidc registry');
-      return NULL;
-    }
-
-    $state = \Drupal::service('state');
-    $client_id = $state->get('ibm_apim.site_client_id');
-
-    if ($client_id === NULL) {
-      \Drupal::logger('ibm_apim')->warning('unable to retrieve site client id to build oidc authentication url');
-      return NULL;
-    }
-
-    $utils = \Drupal::service('ibm_apim.utils');
-    $state_param = $utils->base64_url_encode($this->getUrl());
-    $apim_utils = \Drupal::service('ibm_apim.apim_utils');
-    $host = $apim_utils->getHostUrl();
-    $route = URL::fromRoute('auth_apic.azcode')->toString();
-
-    $redirect_uri = $host . $route;
-
-    $url = $apim_utils->createFullyQualifiedUrl('/consumer-api/oauth2/authorize');
-
-    $url = $url . '?client_id=' . $client_id;
-    $url = $url . '&state=' . $state_param;
-    $url = $url . '&redirect_uri=' . $redirect_uri;
-    $url = $url . '&realm=' . $this->getRealm(); // TODO: need to support multiple IDPS.
-    $url = $url . '&response_type=code';
-
-    if (function_exists('ibm_apim_exit_trace')) {
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $url);
-    }
-    return $url;
-
   }
 
   /**

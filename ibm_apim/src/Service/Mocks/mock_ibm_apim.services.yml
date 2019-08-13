@@ -1,13 +1,16 @@
 services:
   ibm_apim.permissions:
     class: Drupal\ibm_apim\Service\Mocks\MockPermissionsService
-    arguments: ['@state', '@logger.channel.ibm_apim']
+    arguments: ['@state',
+                '@logger.channel.ibm_apim']
   ibm_apim.user_registry:
     class: Drupal\ibm_apim\Service\Mocks\MockUserRegistryService
-    arguments: ['@state', '@logger.channel.ibm_apim']
+    arguments: ['@state',
+                '@logger.channel.ibm_apim']
   ibm_apim.mgmtserver:
     class:  Drupal\ibm_apim\Service\Mocks\MockAPIMServer
-    arguments: ['@tempstore.private', '@ibm_apim.site_config']
+    arguments: ['@tempstore.private',
+                '@ibm_apim.restresponse_reader']
     tags:
       - { name: ibm_apim }
   ibm_apim.user_utils:
@@ -21,3 +24,11 @@ services:
     class: Drupal\ibm_apim\Service\Mocks\MockApimUtils
     arguments: [ '@logger.channel.ibm_apim',
                  '@ibm_apim.site_config']
+  ibm_apim.account:
+    class: Drupal\ibm_apim\UserManagement\Mocks\MockApicAccountService
+    arguments: ['@tempstore.private',
+                '@ibm_apim.mgmtserver',
+                '@state',
+                '@ibm_apim.user_storage']
+    tags:
+      - { name: ibm_apim }

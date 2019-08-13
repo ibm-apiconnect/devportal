@@ -1,6 +1,6 @@
---- core/modules/locale/src/Form/ImportForm.php	2017-09-28 14:50:51.046115592 +0000
-+++ core/modules/locale/src/Form/ImportForm.php	2017-09-28 14:50:13.494019373 +0000
-@@ -94,8 +94,16 @@
+--- core/modules/locale/src/Form/ImportForm.php	2019-05-09 08:49:36.000000000 +0100
++++ core/modules/locale/src/Form/ImportForm.php	2019-05-09 08:50:40.000000000 +0100
+@@ -98,8 +98,16 @@
        ];
      }
  
@@ -15,6 +15,6 @@
      $validators = [
 -      'file_validate_extensions' => ['po'],
 +      'file_validate_extensions' => [$valid_extensions],
-       'file_validate_size' => [file_upload_max_size()],
+       'file_validate_size' => [Environment::getUploadMaxSize()],
      ];
      $form['file'] = [

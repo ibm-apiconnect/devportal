@@ -42,6 +42,7 @@ class IbmUserFieldCheck implements AccessInterface {
             'apic_state',
             'apic_url',
             'apic_user_registry_url',
+            'registry_url'
           ];
           if (in_array($config_parts[2], $customfields, FALSE)) {
             $allowed = FALSE;

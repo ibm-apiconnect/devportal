@@ -15,6 +15,7 @@ namespace Drupal\apic_app\Form;
 
 use Drupal\apic_app\Application;
 use Drupal\apic_app\Service\ApplicationRestInterface;
+use Drupal\apic_app\Service\CertificateService;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\InsertCommand;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
@@ -22,6 +23,8 @@ use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\Entity\Node;
@@ -43,16 +46,29 @@ class ModalApplicationCreateForm extends FormBase {
   protected $userUtils;
 
   /**
-   * ApplicationCreateForm constructor.
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
+   * @var \Drupal\apic_app\Service\CertificateService
+   */
+  protected $certService;
+
+  /**
+   * ModalApplicationCreateForm constructor.
    *
-   * @param ApplicationRestInterface $restService
-   * @param UserUtils $userUtils
+   * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\apic_app\Service\CertificateService $certService
    */
   public function __construct(
-    ApplicationRestInterface $restService,
-    UserUtils $userUtils) {
+    ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger, CertificateService $certService) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
+    $this->messenger = $messenger;
+    $this->certService = $certService;
   }
 
   /**
@@ -62,7 +78,9 @@ class ModalApplicationCreateForm extends FormBase {
     // Load the service required to construct this class
     return new static(
       $container->get('apic_app.rest_service'),
-      $container->get('ibm_apim.user_utils')
+      $container->get('ibm_apim.user_utils'),
+      $container->get('messenger'),
+      $container->get('apic_app.certificate')
     );
   }
 
@@ -236,7 +254,7 @@ class ModalApplicationCreateForm extends FormBase {
       }
       $ibm_apim_application_certificates = \Drupal::state()->get('ibm_apim.application_certificates');
       if ($ibm_apim_application_certificates) {
-        $certificate = $form_state->getValue('certificate');
+        $certificate = $this->certService->cleanup($form_state->getValue('certificate'));
       }
 
       // Create the application
@@ -252,7 +270,7 @@ class ModalApplicationCreateForm extends FormBase {
       else {
 
         // Swallow the create app success drupal status message
-        drupal_get_messages();
+        $this->messenger->deleteAll();
 
         $data = $result->data;
 
@@ -325,13 +343,13 @@ class ModalApplicationCreateForm extends FormBase {
         ];
 
         $credsForm['client_id'] = [
-          '#markup' => \Drupal\Core\Render\Markup::create('<div class="clientIDContainer toggleParent"><p class="field__label">' . $this->t('Key') . '</p><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_id" type="password" readonly value="' . $clientId . '"></div><div class="apicAppCheckButton">
+          '#markup' => Markup::create('<div class="clientIDContainer toggleParent"><p class="field__label">' . $this->t('Key') . '</p><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_id" type="password" readonly value="' . $clientId . '"></div><div class="apicAppCheckButton">
         <div class="password-toggle bx--form-item js-form-item form-item js-form-type-checkbox form-type-checkbox checkbox"><label title="" data-toggle="tooltip" class="bx--label option" data-original-title=""><input class="form-checkbox bx--checkbox" type="checkbox"><span class="bx--checkbox-appearance"><svg class="bx--checkbox-checkmark" width="12" height="9" viewBox="0 0 12 9" fill-rule="evenodd"><path d="M4.1 6.1L1.4 3.4 0 4.9 4.1 9l7.6-7.6L10.3 0z"></path></svg></span><span class="children"> ' . t('Show') . '</span></label></div></div></div>'),
           '#weight' => 10,
         ];
 
         $credsForm['client_secret'] = [
-          '#markup' => \Drupal\Core\Render\Markup::create('<div class="clientSecretContainer toggleParent"><p class="field__label">' . $this->t('Secret') . '</p><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_secret" type="password" readonly value="' . $clientSecret . '"></div><div class="apicAppCheckButton">
+          '#markup' => Markup::create('<div class="clientSecretContainer toggleParent"><p class="field__label">' . $this->t('Secret') . '</p><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_secret" type="password" readonly value="' . $clientSecret . '"></div><div class="apicAppCheckButton">
         <div class="password-toggle bx--form-item js-form-item form-item js-form-type-checkbox form-type-checkbox checkbox"><label title="" data-toggle="tooltip" class="bx--label option" data-original-title=""><input class="form-checkbox bx--checkbox" type="checkbox"><span class="bx--checkbox-appearance"><svg class="bx--checkbox-checkmark" width="12" height="9" viewBox="0 0 12 9" fill-rule="evenodd"><path d="M4.1 6.1L1.4 3.4 0 4.9 4.1 9l7.6-7.6L10.3 0z"></path></svg></span><span class="children"> ' . t('Show') . '</span></label></div></div></div>'),
           '#weight' => 20,
         ];

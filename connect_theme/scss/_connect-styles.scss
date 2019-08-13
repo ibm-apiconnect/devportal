@@ -167,8 +167,7 @@ a {
 }
 
 // padding for titles and blocks on front page
-.path-frontpage .apicMainContent.container h2.block-title,
-.path-frontpage .apicMainContent.container div.region-content section.block>div{
+.path-frontpage .apicMainContent.container h2.block-title{
   padding-left: 15px;
   padding-right: 15px;
 }
@@ -496,7 +495,7 @@ header h1,
 }
 
 .ibmapimGetStarted header .homepageLink svg {
-  fill: $brand-01;
+  fill: $interactive-01;
 }
 
 .ibmapimGetStarted .getStartedContentWrapper .exploreDiv ,
@@ -609,6 +608,16 @@ header h1,
 .bx--global-light-ui .apiconnect-explorer .explorer-toc a.selected span
 {
   font-size:0.875rem;
+}
+
+.bx--global-light-ui .apiconnect-explorer .definitionRow .bx--table-expand-v2__button {
+  height: unset;
+  background-color: unset;
+  border: unset;
+}
+
+.bx--global-light-ui .apiconnect-explorer .apiconnect-explorer-menu button.iconOnlyButton {
+  height:unset;
 }
 
 //** Home page colour settings
@@ -727,3 +736,23 @@ article.search-result {
   border: 1px solid #e7eaed;
   margin-bottom: 10px;
 }
+
+.tutorial_block_1 {
+  background-color: #44488d;
+  color: #fff;
+}
+
+.tutorial_block_2 {
+  background-color: #fff;
+}
+
+.tutorial_block_3 {
+  padding: 5rem;
+}
+
+.tutorial_block_frontpage {
+  height: 300px;
+  padding: 5rem 0 0 2rem;
+}
+
+

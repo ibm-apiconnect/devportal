@@ -1,6 +1,6 @@
 --- core/themes/seven/css/components/system-status-report-general-info.css	2017-07-24 10:22:15.968554829 +0000
 +++ core/themes/seven/css/components/system-status-report-general-info.css	2017-07-24 11:37:04.300308326 +0000
-@@ -45,6 +45,10 @@
+@@ -45,6 +45,26 @@
  .system-status-general-info__item-icon--d8:before {
    background-image: url(../../images/icons/cccccc/d8-logo.svg);
  }
@@ -8,10 +8,39 @@
 +  background-image: url(../../../../../modules/ibm_apim/images/apic.svg);
 +  background-size: 48px;
 +}
++.system-status-general-info__item-icon--userfields:before {
++  background-image: url(../../../../../modules/ibm_apim/images/identification.svg);
++  background-size: 48px;
++}
++.system-status-general-info__item-icon--nodefields:before {
++  background-image: url(../../../../../modules/ibm_apim/images/document.svg);
++  background-size: 48px;
++}
++.system-status-general-info__item-icon--modules:before {
++  background-image: url(../../../../../modules/ibm_apim/images/development.svg);
++  background-size: 48px;
++}
++.system-status-general-info__item-icon--themes:before {
++  background-image: url(../../../../../modules/ibm_apim/images/template.svg);
++  background-size: 48px;
++}
  .system-status-general-info__item-icon--clock:before {
    background-image: url(../../images/icons/cccccc/clock.svg);
  }
-@@ -103,13 +107,11 @@
+@@ -90,6 +110,12 @@
+ .system-status-general-info__run-cron {
+   margin: 1em 0 0;
+ }
++.system-status-general-info__item-details .description .nodetypetitle {
++  font-weight: bold;
++}
++.system-status-general-info__item-details .description .nonefound {
++  margin-left: 10px;
++}
+
+ @media screen and (min-width: 48em) {
+   .system-status-general-info__items {
+@@ -103,13 +129,12 @@
      flex-basis: 33%;
      width: 33%;
    }
@@ -25,15 +54,20 @@
 +  .system-status-general-info__item:nth-child(3),
 +  .system-status-general-info__item:nth-child(5),
 +  .system-status-general-info__item:nth-child(6),
-+  .system-status-general-info__item:nth-child(8) {
++  .system-status-general-info__item:nth-child(8),
++  .system-status-general-info__item:nth-child(9) {
      border-left: 1px solid #ccc; /* LTR */
    }
    [dir="rtl"] .system-status-general-info__item:nth-child(1),
-@@ -134,6 +135,9 @@
+@@ -134,6 +159,13 @@
    .system-status-general-info__item-icon:before {
      background-size: 35px;
    }
-+  .system-status-general-info__item-icon--apic:before {
++  .system-status-general-info__item-icon--apic:before,
++  .system-status-general-info__item-icon--modules:before
++  .system-status-general-info__item-icon--themes:before
++  .system-status-general-info__item-icon--nodefields:before
++  .system-status-general-info__item-icon--userfields:before {
 +    background-size: 48px;
 +  }
    .system-status-general-info__item-icon--php:before {

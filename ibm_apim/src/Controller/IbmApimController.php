@@ -15,28 +15,60 @@ namespace Drupal\ibm_apim\Controller;
 
 use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\node\Entity\Node;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class IbmApimController extends ControllerBase {
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
+
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
   protected $consumerOrgService;
 
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
+   * IbmApimController constructor.
+   *
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   */
   public function __construct(UserUtils $userUtils,
-                              ConsumerOrgService $consumer_org_service) {
+                              ConsumerOrgService $consumer_org_service, Messenger $messenger) {
     $this->userUtils = $userUtils;
     $this->consumerOrgService = $consumer_org_service;
+    $this->messenger = $messenger;
   }
 
+  /**
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *
+   * @return \Drupal\Core\Controller\ControllerBase|\Drupal\ibm_apim\Controller\IbmApimController
+   */
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('ibm_apim.user_utils'),
-      $container->get('ibm_apim.consumerorg')
+      $container->get('ibm_apim.consumerorg'),
+      $container->get('messenger')
     );
   }
 
-  public function version() {
+  /**
+   * @return array
+   */
+  public function version(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $version = '';
 
@@ -50,49 +82,72 @@ class IbmApimController extends ControllerBase {
         $version .= '( ' . $yaml['build'] . ' )';
       }
     }
-    $markup = '<p>' . t('IBM API Connect Developer Portal version %ver', array('%ver' => $version)) . '</p>';
+    $markup = '<p>' . t('IBM API Connect Developer Portal version %ver', ['%ver' => $version]) . '</p>';
     $moduleHandler = \Drupal::service('module_handler');
     if ($moduleHandler->moduleExists('apic_api')) {
       $filename = drupal_get_path('module', 'apic_api') . '/explorer/app/version.json';
       if (file_exists($filename)) {
         $contents = file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app/version.json');
         $json = json_decode($contents, TRUE);
-        $markup .= '<p>' . t('API Explorer version %ver (%build)', array(
+        $markup .= '<p>' . t('API Explorer version %ver (%build)', [
             '%ver' => $json['version']['version'],
-            '%build' => $json['version']['buildDate']
-          )) . '</p>';
+            '%build' => $json['version']['buildDate'],
+          ]) . '</p>';
       }
     }
 
-    $build = array(
+    $build = [
       '#type' => 'markup',
       '#markup' => $markup,
-    );
+    ];
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $version);
     return $build;
   }
 
-  public function setConsumerorg($orgUrl = NULL) {
+  /**
+   * @param null $orgUrl
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   */
+  public function setConsumerorg($orgUrl = NULL): RedirectResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $orgUrl);
 
-    // orgUrl may have been escaped by us previous so convert it back
-    if(strpos($orgUrl,"_") !== false) {
-        $orgUrl = str_replace("_","/", $orgUrl);
+    if ($orgUrl === NULL) {
+      $this->messenger->addError(t('No consumer organization provided. Aborting'));
     }
+    else {
+      // orgUrl may have been escaped by us previous so convert it back
+      if (strpos($orgUrl, '_') !== FALSE) {
+        $orgUrl = str_replace('_', '/', $orgUrl);
+      }
+      $success = FALSE;
+      $title = '';
+      // check the specified org ID is actually one we're a member of
+      $orgs = $this->consumerOrgService->getList();
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'consumerorg');
+      $query->condition('consumerorg_url.value', $orgUrl);
 
-    // check the specified org ID is actually one we're a member of
-    $orgs = $this->consumerOrgService->getList();
-    $query = \Drupal::entityQuery('node');
-    $query->condition('type', 'consumerorg');
-    $query->condition('consumerorg_url.value', $orgUrl);
-
-    $nids = $query->execute();
-    if (isset($nids) && !empty($nids)) {
-      $nid = array_shift($nids);
-      if (in_array($nid, $orgs)) {
-        $this->userUtils->setCurrentConsumerorg($orgUrl);
-        $this->userUtils->setOrgSessionData();
+      $nids = $query->execute();
+      if (isset($nids) && !empty($nids)) {
+        $nid = array_shift($nids);
+        $node = Node::load($nid);
+        if ($node !== NULL) {
+          $title = $node->getTitle();
+          if (in_array($nid, $orgs, FALSE)) {
+            $this->userUtils->setCurrentConsumerorg($orgUrl);
+            $this->userUtils->setOrgSessionData();
+            $success = TRUE;
+          }
+        }
+      }
+      if ($success === TRUE) {
+        $this->messenger->addMessage(t('Switched consumer organization to @title.', ['@title' => $title]));
+      }
+      else {
+        $this->messenger->addError(t('An error occurred switching consumer organization.'));
       }
     }
 
@@ -100,7 +155,10 @@ class IbmApimController extends ControllerBase {
     return $this->redirect('<front>');
   }
 
-  public function getStarted() {
+  /**
+   * @return array
+   */
+  public function getStarted(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $userHasAppManage = $userUtils->checkHasPermission('app:manage');
@@ -108,43 +166,49 @@ class IbmApimController extends ControllerBase {
     $show_register_app = (boolean) $config->get('show_register_app');
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return array(
+    return [
       '#theme' => 'ibm_apim_get_started',
       '#userHasAppManage' => $userHasAppManage,
       '#show_register_app' => $show_register_app,
-      '#attached' => array(
+      '#attached' => [
         'library' => 'ibm_apim/core',
-      ),
-    );
+      ],
+    ];
   }
 
-  public function support() {
+  /**
+   * @return array
+   */
+  public function support(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $moduleHandler = \Drupal::service('module_handler');
 
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return array(
+    return [
       '#theme' => 'ibm_apim_support',
       '#forum' => $moduleHandler->moduleExists('forum'),
       '#contact' => $moduleHandler->moduleExists('contact_block'),
       '#social' => $moduleHandler->moduleExists('social_media_links'),
-      '#attached' => array(
+      '#attached' => [
         'library' => 'ibm_apim/core',
-      ),
-    );
+      ],
+    ];
   }
 
-  public function noperms() {
+  /**
+   * @return array
+   */
+  public function noperms(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return array(
+    return [
       '#theme' => 'ibm_apim_noperms',
-      '#attached' => array(
+      '#attached' => [
         'library' => 'ibm_apim/core',
-      ),
-    );
+      ],
+    ];
   }
 }

@@ -12,47 +12,96 @@ Feature: Forgot Password
     And I should see the "Submit" button
 
   @api
-  Scenario: Request new password for andre user (non-admin)
+  Scenario: Request new password for andre user (non-admin) - via username
     Given I am not logged in
     Given users:
-      | name           | mail                     | status |
-      | Forgot PW Test | forgotpwtest@example.com | 1      |
+      | name           | mail                     | pass     | status |
+      | forgotpwtest   | forgotpwtest@example.com | Qwert123 | 1      |
     Given consumerorgs:
-      | title          | name           | id    | owner          |
-      | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | Forgot PW Test |
+      | title               | name                | id    | owner        |
+      | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | forgotpwtest |
+    Given I am at "/user/password"
+    And I enter "forgotpwtest" for "name"
+    When I press the "Submit" button
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
+    And I am at "/user/login"
+
+  @api
+  Scenario: Request new password for andre user (non-admin) - via email address
+    Given I am not logged in
+    Given users:
+      | name           | mail                     | pass     | status |
+      | forgotpwtest   | forgotpwtest@example.com | Qwert123 | 1      |
+    Given consumerorgs:
+      | title               | name                | id    | owner        |
+      | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | forgotpwtest |
     Given I am at "/user/password"
     And I enter "forgotpwtest@example.com" for "name"
     When I press the "Submit" button
-    # This is odd but this is the only string that both travis and full site installs have in common!
-    #Then I should see the text "been sent"
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
     And I am at "/user/login"
 
-   Scenario: Request new password for admin user
+   @api
+   Scenario: Request new password for admin user - username
      Given I am not logged in
+     Given users:
+       | name              | mail              | pass                  | status |
+       | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
      And I am at "/user/password"
      And I enter "admin" for "name"
      When I press the "Submit" button
-     # This is odd but this is the only string that both travis and full site installs have in common!
-     #Then I should see the text "been sent"
+     Then there are no errors
+     And there are no warnings
+     And there are messages
+     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
      And I am at "/user/login"
 
   @api
-  Scenario: Request new password for non-existent user
-  This scenario covers when a site is recreated by the user has forgotten their password.
+  Scenario: Request new password for admin user - email address
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
+    And I am at "/user/password"
+    And I enter "@data(admin.mail)" for "name"
+    When I press the "Submit" button
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
+    And I am at "/user/login"
+
+  @api
+  Scenario: Request new password for non-existent user - via username
+  This scenario covers when a site is recreated but the user has forgotten their password.
   The management server knows the password but drupal doesn't have a record.
   For this reason, in any case other than admin, we always call the management node for a forgotten password.
     Given I am not logged in
-    Given users:
-      | name           | mail                     | status |
-      | Forgot PW Test | forgotpwtest@example.com | 1      |
-   Given consumerorgs:
-      | title          | name           | id    | owner          |
-      | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | Forgot PW Test |
     Given I am at "/user/password"
     And I enter "this_is_not_a_user" for "name"
     When I press the "Submit" button
-    # This is odd but this is the only string that both travis and full site installs have in common!
-    #Then I should see the text "been sent"
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
+    And I am at "/user/login"
+
+  @api
+  Scenario: Request new password for non-existent user - email address
+    Given I am not logged in
+    Given I am at "/user/password"
+    And I enter "this_is_not_a_user@example.com" for "name"
+    When I press the "Submit" button
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
     And I am at "/user/login"
 
   @api
@@ -99,3 +148,31 @@ Feature: Forgot Password
     And I should see the text "@data(user_registries[2].title)"
     And I should see the text "If you have forgotten your 'admin' password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your authentication provider."
     And I should see the link "@data(user_registries[0].title)"
+
+  @api
+  Scenario: Forgot password form for multiple users with the same name
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+    Given users:
+      | name           | mail                   | pass     |status | registry_url                  |
+      | andre          | andre_lur@example.com  | Qwert123 | 1     | @data(user_registries[0].url) |
+      | andre          | andre_ldap@example.com | Qwert123 | 1     | @data(user_registries[2].url) |
+    When I am at "/user/password"
+    And I enter "andre" for "name"
+    And I press the "Submit" button
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
+    And I am at "/user/password?registry_url=@data(user_registries[2].url)"
+    And I enter "andre" for "name"
+    And I press the "Submit" button
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
+
+

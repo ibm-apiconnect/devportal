@@ -12,10 +12,8 @@
 
 namespace Drupal\mail_subscribers\Wizard\Mail;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
-
-use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\Core\Form\FormStateInterface;
 
 class ChooseProductStep extends FormBase {
 

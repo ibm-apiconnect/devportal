@@ -7,6 +7,7 @@ Feature: ApplicationACL
   Scenario: Create Applications as a specific user and test that they can be accessed
 # Hard coding these for now.  For full stack testing, substitute with real users/consumerorgs
 # in the And clause below
+    Given I am not logged in
     Given users:
       | name      | mail                  | pass     | status |
       | andre_one | andre_one@example.com | Qwert123 | 1      |

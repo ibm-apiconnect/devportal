@@ -17,7 +17,6 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 
 /**
  * Implements hook_form_alter().
@@ -75,7 +74,8 @@ function auth_apic_entity_type_alter(array &$entity_types) {
  * Implementation of hook_form_FORM_ID_alter() to alter the account settings form
  *
  * @param $form
- * @param $form_state
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ * @param $form_id
  */
 function auth_apic_form_user_admin_settings_alter(&$form, FormStateInterface $form_state, $form_id) {
   if (isset($form['registration_cancellation']['user_register'])) {

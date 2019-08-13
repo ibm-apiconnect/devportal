@@ -10,4 +10,4 @@ docker build $* -t portal-site-template-with-site-tests test
 
 rm -rf $TMP_DIR/behat $TMP_DIR/watchdog
 mkdir $TMP_DIR/behat $TMP_DIR/watchdog
-docker run --privileged -v $TMP_DIR/behat:/tmp/behat -v $TMP_DIR/watchdog:/tmp/watchdog --rm portal-site-template-with-site-tests /tmp/site-template_test.sh
+docker run --privileged -v $TMP_DIR/behat:/tmp/behat -v $TMP_DIR/watchdog:/tmp/watchdog --rm portal-site-template-with-site-tests scl enable rh-php72 rh-python36 -- bash /tmp/site-template_test.sh

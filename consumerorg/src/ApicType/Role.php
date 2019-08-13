@@ -110,30 +110,16 @@ class Role {
 
   /**
    * Can be either strings like "member:manage" or urls. If urls are given
-   * they will be translated to strings.
+   * they will be translated to strings when stored in the session by setOrgSessionData().
    *
    * @param array $permissions
    */
   public function setPermissions($permissions = NULL): void {
-    $permission_names = [];
-    if ($permissions !== NULL && !empty($permissions)) {
-      foreach ($permissions as $permission) {
-        if (strpos($permission, '/') > -1) {
-          $permission_name = \Drupal::service('ibm_apim.permissions')->get($permission)['name'];
-          if (empty($permission_name)) {
-            \Drupal::logger('consumerorg_role')->warning('No permission found for %url', ['%url' => $permission]);
-          }
-          else {
-            $permission_names[] = $permission_name;
-          }
-
-        }
-        else {
-          $permission_names[] = $permission;
-        }
-      }
+    if ($permissions === NULL) {
+      $permissions = [];
     }
-    $this->permissions = $permission_names;
+
+    $this->permissions = $permissions;
   }
 
   /**

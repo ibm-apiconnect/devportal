@@ -16,6 +16,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\UserSession;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -158,6 +159,14 @@ class AdminForm extends ConfigFormBase {
       '#default_value' => $config->get('soap_swagger_download'),
       '#weight' => -10,
       '#description' => t('If checked API consumers will be able to download the Open API documents for SOAP APIs as well as REST APIs.'),
+    ];
+
+    $form['config']['optimise_oauth_ux'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Optimise OAuth experience in test tool'),
+      '#default_value' => $config->get('optimise_oauth_ux'),
+      '#weight' => -10,
+      '#description' => t('If checked then certain OAuth flows (such as implicit or access code) which cannot be completed from the test tool for technical reasons are optimised to improve usability.'),
     ];
 
     $form['config']['application_image_upload'] = [
@@ -361,6 +370,28 @@ class AdminForm extends ConfigFormBase {
       '#weight' => 10,
     ];
 
+    // code snippets options
+    $form['certificates'] = [
+      '#type' => 'fieldset',
+      '#title' => t('Application Certificates'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    ];
+    $form['certificates']['certificate_strip_newlines'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Automatically strip newline characters from application certificates'),
+      '#default_value' => $config->get('certificate_strip_newlines'),
+      '#weight' => -15,
+      '#description' => t('If checked then any new line characters within the application certificates will be automatically removed when the certificate is uploaded.'),
+    ];
+    $form['certificates']['certificate_strip_prefix'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Automatically strip prefix and suffixes from application certificates'),
+      '#default_value' => $config->get('certificate_strip_prefix'),
+      '#weight' => -14,
+      '#description' => t('If checked then the \'-----BEGIN CERTIFICATE-----\' prefix and suffixes will be automatically removed from application certificates when uploaded.'),
+    ];
+
     $form['proxy'] = [
       '#type' => 'fieldset',
       '#title' => t('Proxy Configuration (Experimental)'),
@@ -377,26 +408,28 @@ class AdminForm extends ConfigFormBase {
       '#default_value' => $config->get('use_proxy'),
       '#weight' => 20,
     ];
-    $proxyAPIDefault = $config->get('proxy_for_api');
-    if ($proxyAPIDefault === null || empty($proxyAPIDefault)) {
-      $proxyAPIDefault = 'BOTH';
+    $defaults_for_api = $config->get('proxy_for_api.');
+    if ($defaults_for_api === null) {
+      $defaults_for_api = ['CONSUMER', 'PLATFORM', 'ANALYTICS'];
+    } else {
+      $defaults_for_api = explode(',', $config->get('proxy_for_api.'));
     }
     $form['proxy']['proxy_for_api'] = [
-      '#type' => 'select',
+      '#type' => 'checkboxes',
       '#options' => [
-        'BOTH' => 'BOTH',
-        'CONSUMER' => 'CONSUMER',
-        'PLATFORM' => 'PLATFORM'
+        'CONSUMER' => t('Consumer'),
+        'PLATFORM' => t('Platform'),
+        'ANALYTICS' => t('Analytics')
       ],
-      '#title' => t('Use Proxy for Consumer or Platform APIs'),
-      '#description' => t('Select whether to use the proxy for the Consumer or Platform APIs, BOTH is the default.'),
-      '#default_value' => $proxyAPIDefault,
+      '#title' => t('If enabled, use the Proxy for Consumer, Platform or Analytics APIs'),
+      '#description' => t('Select whether to use the proxy for the Consumer, Platform or Analytics APIs. All are selected by default.'),
+      '#default_value' => $defaults_for_api,
       '#required' => FALSE,
       '#weight' => 25,
     ];
 
     $proxyTypeDefault = $config->get('proxy_type');
-    if ($proxyTypeDefault === null || empty($proxyTypeDefault)) {
+    if ($proxyTypeDefault === NULL || empty($proxyTypeDefault)) {
       $proxyTypeDefault = 'CURLPROXY_HTTP';
     }
     $form['proxy']['proxy_type'] = [
@@ -408,7 +441,7 @@ class AdminForm extends ConfigFormBase {
         'CURLPROXY_SOCKS4' => 'CURLPROXY_SOCKS4',
         'CURLPROXY_SOCKS4A' => 'CURLPROXY_SOCKS4A',
         'CURLPROXY_SOCKS5' => 'CURLPROXY_SOCKS5',
-        'CURLPROXY_SOCKS5_HOSTNAME' => 'CURLPROXY_SOCKS5_HOSTNAME'
+        'CURLPROXY_SOCKS5_HOSTNAME' => 'CURLPROXY_SOCKS5_HOSTNAME',
       ],
       '#title' => t('Proxy type'),
       '#description' => t('Select what type of proxy to use, CURLPROXY_HTTP is the default.'),
@@ -444,6 +477,8 @@ class AdminForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $currentCategories = $this->config('ibm_apim.settings')->get('categories');
+
     $codesnippets = [
       'curl' => (bool) $form_state->getValue('codesnippets_curl'),
       'ruby' => (bool) $form_state->getValue('codesnippets_ruby'),
@@ -472,6 +507,7 @@ class AdminForm extends ConfigFormBase {
       ->set('show_cors_warnings', (bool) $form_state->getValue('show_cors_warnings'))
       ->set('show_analytics', (bool) $form_state->getValue('show_analytics'))
       ->set('soap_swagger_download', (bool) $form_state->getValue('soap_swagger_download'))
+      ->set('optimise_oauth_ux', (bool) $form_state->getValue('optimise_oauth_ux'))
       ->set('application_image_upload', (bool) $form_state->getValue('application_image_upload'))
       ->set('hide_admin_registry', (bool) $form_state->getValue('hide_admin_registry'))
       ->set('render_api_schema_view', (bool) $form_state->getValue('render_api_schema_view'))
@@ -484,14 +520,62 @@ class AdminForm extends ConfigFormBase {
       ->set('allow_clientid_reset', (bool) $form_state->getValue('allow_clientid_reset'))
       ->set('allow_clientsecret_reset', (bool) $form_state->getValue('allow_clientsecret_reset'))
       ->set('soap_codesnippets', (bool) $form_state->getValue('soap_codesnippets'))
+      ->set('certificate_strip_newlines', (bool) $form_state->getValue('certificate_strip_newlines'))
+      ->set('certificate_strip_prefix', (bool) $form_state->getValue('certificate_strip_prefix'))
       ->set('use_proxy', (bool) $form_state->getValue('use_proxy'))
-      ->set('proxy_for_api', $form_state->getValue('proxy_for_api'))
+      ->set('proxy_for_api', implode(',', $form_state->getValue('proxy_for_api')))
       ->set('proxy_type', $form_state->getValue('proxy_type'))
       ->set('proxy_url', $form_state->getValue('proxy_url'))
       ->set('proxy_auth', $form_state->getValue('proxy_auth'))
       ->set('categories', $categories)
       ->set('codesnippets', $codesnippets)
       ->save();
+
+    // If we're just enabling categories then we should go process all the apis & products in our db to check them for categories
+    if ((bool) $form_state->getValue('enabled') === TRUE && ($currentCategories['enabled'] !== (bool) $form_state->getValue('enabled') ||
+        $currentCategories['create_taxonomies_from_categories'] !== (bool) $form_state->getValue('create_taxonomies_from_categories'))) {
+      $accountSwitcher = \Drupal::service('account_switcher');
+      $originalUser = \Drupal::currentUser();
+      if ((int) $originalUser->id() !== 1) {
+        $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+      }
+      $batch = [
+        'title' => t('Processing categories...'),
+        'operations' => [],
+        'init_message' => t('Commencing'),
+        'progress_message' => t('Processed @current out of @total.'),
+        'error_message' => t('An error occurred during processing'),
+      ];
+      // APIs
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'api');
+      $query->condition('status', 1);
+      $nids = $query->execute();
+      if ($nids !== NULL && !empty($nids)) {
+        foreach ($nids as $key => $nid) {
+          $batch['operations'][] = ['\Drupal\apic_api\Api::processCategoriesForNode', [$nid]];
+        }
+      }
+
+      // Products
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'product');
+      $query->condition('status', 1);
+      $nids = $query->execute();
+      if ($nids !== NULL && !empty($nids)) {
+        foreach ($nids as $key => $nid) {
+          $batch['operations'][] = ['\Drupal\product\Product::processCategoriesForNode', [$nid]];
+        }
+      }
+
+      if (!empty($batch['operations'])) {
+        batch_set($batch);
+      }
+
+      if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+        $accountSwitcher->switchBack();
+      }
+    }
 
     parent::submitForm($form, $form_state);
   }

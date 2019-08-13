@@ -13,29 +13,51 @@
 namespace Drupal\consumerorg\Form;
 
 use Drupal\consumerorg\Service\ConsumerOrgService;
+use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Extension\ThemeHandler;
 
 /**
  * Remove form for consumerorgs.
  */
 class OrgDeleteForm extends ConfirmFormBase {
 
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
   protected $consumerOrgService;
 
+  /**
+   * @var
+   */
   protected $currentOrg;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
+  /**
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
   protected $currentUser;
 
+  /**
+   * @var \Drupal\Core\Extension\ThemeHandler
+   */
   protected $themeHandler;
+
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
 
   /**
    * OrgDeleteForm constructor.
@@ -44,12 +66,14 @@ class OrgDeleteForm extends ConfirmFormBase {
    * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
-  public function __construct(ConsumerOrgService $consumer_org_service, UserUtils $user_utils, AccountProxyInterface $current_user, ThemeHandler $themeHandler) {
+  public function __construct(ConsumerOrgService $consumer_org_service, UserUtils $user_utils, AccountProxyInterface $current_user, ThemeHandler $themeHandler, Messenger $messenger) {
     $this->consumerOrgService = $consumer_org_service;
     $this->userUtils = $user_utils;
     $this->currentUser = $current_user;
     $this->themeHandler = $themeHandler;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -60,7 +84,8 @@ class OrgDeleteForm extends ConfirmFormBase {
       $container->get('ibm_apim.consumerorg'),
       $container->get('ibm_apim.user_utils'),
       $container->get('current_user'),
-      $container->get('theme_handler')
+      $container->get('theme_handler'),
+      $container->get('messenger')
     );
   }
 
@@ -78,8 +103,7 @@ class OrgDeleteForm extends ConfirmFormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     if (!$this->userUtils->checkHasPermission('settings:manage')) {
-      $message = t('Permission denied.');
-      drupal_set_message($message, 'error');
+      $this->messenger->addError(t('Permission denied.'));
 
       $form = [];
       $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
@@ -96,8 +120,7 @@ class OrgDeleteForm extends ConfirmFormBase {
 
     }
     elseif (sizeof($this->userUtils->loadConsumerorgs()) === 1) {
-      $message = t('You cannot delete your organization because you are not a member of any other organizations.');
-      drupal_set_message($message, 'error');
+      $this->messenger->addError(t('You cannot delete your organization because you are not a member of any other organizations.'));
 
       $form = [];
       $form['description'] = ['#markup' => '<p>' . t('You cannot delete your organization because this is your only organization and you must be a member of at least one organization.') . '</p>'];
@@ -118,8 +141,7 @@ class OrgDeleteForm extends ConfirmFormBase {
 
       $current_user_node = User::load($this->currentUser->id());
       if ($current_user_node === NULL || $current_user_node->apic_url->value !== $this->currentOrg->getOwnerUrl()) {
-        $message = t('You cannot delete this organization as you are not the owner.');
-        drupal_set_message($message, 'error');
+        $this->messenger->addError(t('You cannot delete this organization as you are not the owner.'));
 
         $form = [];
         $form['description'] = ['#markup' => '<p>' . t('You cannot delete an organization that you do not own.') . '</p>'];
@@ -153,21 +175,21 @@ class OrgDeleteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
+  public function getDescription(): TranslatableMarkup {
     return $this->t('This action will permanently remove access to the organization, and all of its applications and subscriptions, for all members of the organization. Please note that once an organization has been deleted, it cannot be reactivated.');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfirmText() {
+  public function getConfirmText(): TranslatableMarkup {
     return $this->t('Delete');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getQuestion() {
+  public function getQuestion(): TranslatableMarkup {
     return $this->t('Are you sure you want to delete this organization?');
   }
 
@@ -186,10 +208,10 @@ class OrgDeleteForm extends ConfirmFormBase {
 
     $apim_response = $this->consumerOrgService->delete($this->currentOrg);
     if ($apim_response->success()) {
-      drupal_set_message(t('Organization deleted successfully.'));
+      $this->messenger->addMessage(t('Organization deleted successfully.'));
     }
     else {
-      drupal_set_message(t('Error deleting organization. Please contact the system administrator'), 'error');
+      $this->messenger->addError(t('Error deleting organization. Please contact the system administrator'));
     }
 
     $form_state->setRedirectUrl($this->getCancelUrl());

@@ -1,0 +1,13 @@
+--- core/lib/Drupal/Core/Form/ConfirmFormHelper.php	2019-06-19 13:04:05.000000000 +0100
++++ core/lib/Drupal/Core/Form/ConfirmFormHelper.php	2019-06-19 13:08:18.000000000 +0100
+@@ -29,6 +29,10 @@
+     // If a destination is specified, that serves as the cancel link.
+     if ($query->has('destination')) {
+       $options = UrlHelper::parse($query->get('destination'));
++      // ensure we dont end up with double base_path
++      if (strpos($options['path'], base_path()) === 0) {
++        $options['path'] = substr($options['path'], strlen(base_path()));
++      }
+       // @todo Revisit this in https://www.drupal.org/node/2418219.
+       try {
+         $url = Url::fromUserInput('/' . ltrim($options['path'], '/'), $options);

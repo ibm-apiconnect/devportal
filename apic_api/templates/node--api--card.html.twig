@@ -35,7 +35,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
       </div>
     {% endif %}
     <div class="apicApiCardMain">
-      <div class="bx--about__title--name">
+      <div class="bx--about__title--name" data-toggle="tooltip" data-placement="bottom" title="{{- node.title[0].value -}}">
         <a href="{{- path('apic_api.view', {'apiNode': apiNode}) -}}" rel="bookmark">
           <span class="apicApiName apicTruncate">{{- label -}}</span>
           {% if showVersions %}

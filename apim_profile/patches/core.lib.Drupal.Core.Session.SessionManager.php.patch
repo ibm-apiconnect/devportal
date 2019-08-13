@@ -1,0 +1,21 @@
+--- core/lib/Drupal/Core/Session/SessionManager.php	2019-06-06 16:35:28.000000000 +0100
++++ core/lib/Drupal/Core/Session/SessionManager.php	2019-06-06 16:36:30.000000000 +0100
+@@ -340,4 +340,18 @@
+       ->execute();
+   }
+ 
++  /**
++   * Checks if the session is started.
++   *
++   * Beginning with symfony/http-foundation 3.4.24, the session will no longer
++   * save unless this method returns true. The parent method returns true if
++   * $this->started is true, but we need the session to also save if we lazy
++   * started, so we override isStarted() here.
++   *
++   * @return bool
++   *   True if started, false otherwise
++   */
++  public function isStarted() {
++    return parent::isStarted() || $this->startedLazy;
++  }
+ }

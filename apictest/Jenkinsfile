@@ -7,6 +7,9 @@
 properties([
   durabilityHint('PERFORMANCE_OPTIMIZED'),
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '14', numToKeepStr: '')),
+  parameters([
+          booleanParam(name: 'FORCE_RUN', defaultValue: false, description: 'Force run the entire build')
+  ]),
 ])
 
 def pipelineOpts = [
@@ -28,7 +31,7 @@ veloxPipeline(pipelineOpts) { p ->
   env.UP_BUILD_NAME = getBuildCauses().first().BUILD_NAME ?: 'build'
 
   p.promotableBranch {
-    if (!env.GIT_COMMIT_MSG.contains('[ci-skip')) {
+    if (!env.GIT_COMMIT_MSG.contains('[ci-skip') || params.FORCE_RUN == true) {
       stage('bump version') {
         sh "git stash && git pull && git stash pop || true"
           portal.patchModuleVersion(MODULE_NAME)

@@ -11,6 +11,7 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
+use \Drupal\Core\Site\Settings;
 /**
  * @param $tagName
  *
@@ -60,7 +61,7 @@ function apic_api_random_image($apiName): string {
 function apic_api_get_string_from_zip($data): string {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   $draft = '';
-  $file = \Drupal::service('file_system')->realpath(file_unmanaged_save_data($data, \Drupal\Core\Site\Settings::get('file_public_path')));
+  $file = \Drupal::service('file_system')->realpath(file_unmanaged_save_data($data, Settings::get('file_public_path')));
   $tempDir = apic_api_tempdir(file_directory_temp());
   $zip = new ZipArchive();
   if ($zip->open($file) === TRUE) {
@@ -186,8 +187,8 @@ function apic_api_remove_empty_elements($yaml): array {
           unset($yaml['security'][$key]);
         }
       }
-      // remove empty contact
     }
+    // remove empty contact
     if (isset($yaml['info']['contact']) && is_array($yaml['info']['contact']) && empty($yaml['info']['contact'])) {
       unset($yaml['info']['contact']);
     }

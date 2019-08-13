@@ -18,11 +18,14 @@
  * Adds the Consumer organization node content type to Drupal for representing consumer organizations from IBM APIC
  */
 
+use Drupal\consumerorg\ApicType\Member;
+use Drupal\consumerorg\ApicType\Role;
 use Drupal\Core\Access\AccessResultAllowed;
 use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Access\AccessResultNeutral;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 
@@ -36,6 +39,7 @@ define('CONSUMERORG_GRANT', 1);
  * and require a permission of CONSUMERORG_GRANT to view that node
  *
  * @param $node
+ *
  * @return array
  *
  * Note: hook is called when rebuilding permissions
@@ -48,25 +52,25 @@ function consumerorg_node_access_records($node) {
   $acl_debug = (boolean) $config->get('acl_debug');
 
   $type = is_string($node) ? $node : $node->getType();
-  $grants = array();
+  $grants = [];
 
   // Only build permissions for consumerorg nodes
   if ($type === 'consumerorg') {
     $orgUrl = $node->consumerorg_url->value;
     $escapedOrgUrl = str_replace('/', '_', $orgUrl);
-    $grants[] = array(
+    $grants[] = [
       'realm' => 'consumerorg_' . $escapedOrgUrl,
       'gid' => CONSUMERORG_GRANT,
       'grant_view' => 1,
       'grant_update' => 0,
       'grant_delete' => 0,
       'priority' => 0,
-    );
+    ];
     if ($acl_debug === TRUE) {
       foreach ($grants as $grant) {
         \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
           '@realm' => $grant['realm'],
-          '@grant' => 'CONSUMERORG_GRANT'
+          '@grant' => 'CONSUMERORG_GRANT',
         ]);
       }
     }
@@ -83,6 +87,7 @@ function consumerorg_node_access_records($node) {
  *
  * @param $account
  * @param $op
+ *
  * @return array
  *
  * Note: hook is not called at all when admin logged in
@@ -95,24 +100,26 @@ function consumerorg_node_grants($account, $op) {
   $config = \Drupal::config('ibm_apim.settings');
   $acl_debug = (boolean) $config->get('acl_debug');
 
-  $grants = array();
+  $grants = [];
   if ($op === 'view' && \Drupal::currentUser()->isAuthenticated()) {
+    $userOrgs = [];
 
     $user = User::load(\Drupal::currentUser()->id());
-    $userOrgs = $user->consumerorg_url->getValue();
-
+    if ($user !== NULL) {
+      $userOrgs = $user->consumerorg_url->getValue();
+    }
     foreach ($userOrgs as $index => $values) {
       $userOrgUrl = $values['value'];
       $escapedOrgUrl = str_replace('/', '_', $userOrgUrl);
-      $grants['consumerorg_' . $escapedOrgUrl] = array(CONSUMERORG_GRANT);
+      $grants['consumerorg_' . $escapedOrgUrl] = [CONSUMERORG_GRANT];
     }
 
-    if ($acl_debug !== null && $acl_debug === TRUE) {
+    if ($acl_debug !== NULL && $acl_debug === TRUE) {
       foreach ($grants as $realm => $perms) {
         foreach ($perms as $grant) {
           \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
             '@realm' => $realm,
-            '@grant' => 'CONSUMERORG_GRANT'
+            '@grant' => 'CONSUMERORG_GRANT',
           ]);
         }
       }
@@ -129,6 +136,7 @@ function consumerorg_node_grants($account, $op) {
  * @param \Drupal\node\NodeInterface $node
  * @param $operation
  * @param \Drupal\Core\Session\AccountInterface $account
+ *
  * @return \Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultForbidden|\Drupal\Core\Access\AccessResultNeutral
  */
 function consumerorg_node_access(NodeInterface $node, $operation, AccountInterface $account) {
@@ -168,7 +176,7 @@ function consumerorg_preprocess(&$variables, $hook, &$info) {
       //Is the view mode defined for nodes?
       if (\array_key_exists($viewModeToUse, $allViewModes)) {
         //Is there a template file for the view modes in the module?
-        if ($viewModeToUse === 'full') {
+        if ($viewModeToUse === 'full' || $viewModeToUse === 'default') {
           $templateFileName = 'node--' . $contentTypeToShow;
         }
         else {
@@ -180,11 +188,13 @@ function consumerorg_preprocess(&$variables, $hook, &$info) {
           $info['theme path'] = drupal_get_path('theme', $theme_name);
           $info['path'] = drupal_get_path('theme', $theme_name) . '/templates/node';
           $info['template'] = $templateFileName;
-        } elseif (\file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
+        }
+        elseif (\file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
           $info['theme path'] = drupal_get_path('theme', $theme_name);
           $info['path'] = drupal_get_path('theme', $theme_name) . '/templates';
           $info['template'] = $templateFileName;
-        } else {
+        }
+        else {
           $templateFilePath = drupal_get_path('module', 'consumerorg') . '/templates/' . $templateFileName . '.html.twig';
           if (\file_exists($templateFilePath)) {
             $info['theme path'] = drupal_get_path('module', 'consumerorg');
@@ -192,6 +202,166 @@ function consumerorg_preprocess(&$variables, $hook, &$info) {
             $info['template'] = $templateFileName;
           }
         }
+      }
+      ibm_apim_exit_trace(__FUNCTION__, NULL);
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ *
+ * @param $variables
+ */
+function consumerorg_preprocess_node(&$variables): void {
+  if (isset($variables['node']) && $variables['node']->getType() === 'consumerorg') {
+    if ($variables['view_mode'] === 'full' || $variables['view_mode'] === 'default') {
+      ibm_apim_entry_trace(__FUNCTION__, NULL);
+
+      $owner = NULL;
+      $members = [];
+      $orgRoles = [];
+      $editMode = FALSE;
+
+      $userUtils = \Drupal::service('ibm_apim.user_utils');
+      $config = \Drupal::config('ibm_apim.settings');
+      $orgService = \Drupal::service('ibm_apim.myorgsvc');
+      $cOrgService = \Drupal::service('ibm_apim.consumerorg');
+      $entityTypeManager = \Drupal::service('entity_type.manager');
+
+      // only enable edit mode for users looking at their currently active consumerorg
+      $org = $userUtils->getCurrentConsumerorg();
+      if (isset($org['url']) && $org['url'] === $variables['node']->consumerorg_url->value) {
+        $editMode = TRUE;
+      }
+
+      $myorgOwnerUrl = $variables['node']->consumerorg_owner->value;
+      $cOrgRoles = $variables['node']->consumerorg_roles->getValue();
+      if ($cOrgRoles !== NULL) {
+        $whitelist = [Role::class];
+        foreach ($cOrgRoles as $arrayValue) {
+          // Owner and member are special cases that we handle separately in the org page.
+          $role = new Role();
+          $role->createFromArray(unserialize($arrayValue['value'], ['allowed_classes' => $whitelist]));
+          if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
+            $orgRoles[] = $role;
+          }
+        }
+      }
+
+      $cOrgMembers = $variables['node']->consumerorg_members->getValue();
+      if ($cOrgMembers !== NULL) {
+        $whitelist = [Member::class, ApicUser::class];
+        foreach ($cOrgMembers as $arrayValue) {
+          $orgMember = new Member();
+          $orgMember->createFromArray(unserialize($arrayValue['value'], ['allowed_classes' => $whitelist]));
+
+          $memberUserUrl = $orgMember->getUserUrl();
+          if ($myorgOwnerUrl === $memberUserUrl) {
+            $owner = $orgService->prepareOrgMemberForDisplay($orgMember);
+          }
+          else {
+            $newMember = $orgService->prepareOrgMemberForDisplay($orgMember);
+            $members[$newMember['username']] = $newMember;
+          }
+        }
+      }
+
+      // add pending invitations into the list of members.
+      $cOrgInvites = $variables['node']->consumerorg_invites->getValue();
+      if ($cOrgInvites !== NULL) {
+        foreach ($cOrgInvites as $invites_array) {
+          $invite = unserialize($invites_array['value'], ['allowed_classes' => FALSE]);
+          $invitedMember = [];
+          $invitedMember['details'] = $invite['email'];
+          $invitedMember['state'] = 'Pending';
+          $invitedMember['id'] = basename($invite['url']);
+          $invitedMember['role_urls'] = $invite['role_urls'];
+          $members[] = $invitedMember;
+        }
+      }
+
+      foreach ($members as &$member) {
+        $roles = [];
+        foreach ($member['role_urls'] as $role_url) {
+          $role = $orgRoles[array_search($role_url, array_column($orgRoles, 'url'), FALSE)];
+          // use translated role names if possible
+          switch ($role->getTitle()) {
+            case 'Administrator':
+              $role->setTitle(t('Administrator'));
+              break;
+            case 'Developer':
+              $role->setTitle(t('Developer'));
+              break;
+            case 'Viewer':
+              $role->setTitle(t('Viewer'));
+              break;
+          }
+          $roles[] = $role;
+        }
+        $member['roles'] = $roles;
+      }
+      // needed otherwise we will keep the reference to $member
+      unset($member);
+
+      // TODO: sort members so we are consistent
+
+      $hasMemberManagePerm = $userUtils->checkHasPermission('member:manage');
+      $hasSettingsManagePerm = $userUtils->checkHasPermission('settings:manage');
+
+      $allowConsumerorgChangeOwner = (boolean) $config->get('allow_consumerorg_change_owner');
+      $allowConsumerorgRename = (boolean) $config->get('allow_consumerorg_rename');
+      $allowConsumerorgDelete = (boolean) $config->get('allow_consumerorg_delete');
+
+      $canTransferOwner = $hasSettingsManagePerm && $allowConsumerorgChangeOwner && $editMode;
+      $canRenameOrg = $hasSettingsManagePerm && $allowConsumerorgRename && $editMode;
+      $canDeleteOrg = $hasSettingsManagePerm && $allowConsumerorgDelete && $editMode;
+
+      $custom_fields = [];
+      $entityView = $entityTypeManager->getStorage('entity_view_display')->load('node.consumerorg.default');
+      if ($entityView !== NULL) {
+        $fieldList = array_keys($entityView->getComponents());
+        $coreFields = ['title', 'vid', 'status', 'nid', 'revision_log', 'created', 'links', 'uid'];
+        $ibmFields = $cOrgService->getIBMFields();
+        $merged = array_merge($coreFields, $ibmFields);
+        $custom_fields = array_diff($fieldList, $merged);
+      }
+      $variables['edit_mode'] = $editMode;
+      $variables['images_path'] = drupal_get_path('module', 'ibm_apim');
+      $variables['myorg_title'] = $variables['node']->getTitle();
+      $variables['myorg_name'] = $variables['node']->consumerorg_name->value;
+      $variables['myorg_url'] = $variables['node']->consumerorg_url->value;
+      $variables['myorg_owner'] = $owner;
+      $variables['myorg_members'] = $members;
+      $variables['myorg_roles'] = $orgRoles;
+      $variables['myorg'] = $variables['node'];
+      $variables['myorg_has_member_manage_perm'] = $hasMemberManagePerm;
+      $variables['myorg_has_settings_manage_perm'] = $hasSettingsManagePerm;
+      $variables['myorg_can_transfer_owner'] = $canTransferOwner;
+      $variables['myorg_can_rename_org'] = $canRenameOrg;
+      $variables['myorg_can_delete_org'] = $canDeleteOrg;
+      $variables['custom_fields'] = $custom_fields;
+
+      // display a suitable message to explain why the user does not have edit access
+      $currentUser = \Drupal::currentUser();
+      if ($editMode !== TRUE) {
+        $currentAccountName = $currentUser->getAccountName();
+        if (array_key_exists($currentAccountName, $members) || $currentAccountName === $owner['username']) {
+          // is a member of the org (or the owner) but not the current active org
+          \Drupal::service('messenger')
+            ->addMessage(t('Consumer organization displayed as read only as this is not your active consumer org. Switch using the organization menu to the top right of the screen.'));
+        }
+        else {
+          // we pass the node ACL check but aren't a member so must be an administrator
+          \Drupal::service('messenger')
+            ->addMessage(t('Consumer organization displayed as read only as you are not a member of this consumer organization.'));
+        }
+      }
+      if ($currentUser->isAuthenticated()) {
+        if (!isset($variables['#cache']['contexts'])) {
+          $variables['#cache']['contexts'] = [];
+        }
+        $variables['#cache']['contexts'][] = 'user:' . $currentUser->id();
       }
       ibm_apim_exit_trace(__FUNCTION__, NULL);
     }
@@ -209,9 +379,21 @@ function consumerorg_form_alter(array &$form, FormStateInterface $form_state, $f
   switch ($form_id) {
     // remove link to delete our content type
     case 'node_type_edit_form' :
-      if (isset($form['type']['#default_value']) && $form['type']['#default_value'] === 'consumerorg') {
-        if (isset($form['actions']['delete'])) {
-          unset($form['actions']['delete']);
+      if (isset($form['type']['#default_value'], $form['actions']['delete']) && $form['type']['#default_value'] === 'consumerorg') {
+        unset($form['actions']['delete']);
+      }
+      break;
+    case 'node_consumerorg_edit_form':
+      // disable fields to stop admin editing applications
+      $currentUser = \Drupal::currentUser();
+      if ((int) $currentUser->id() === 1) {
+        $form['title']['#disabled'] = TRUE;
+      }
+      // if anyone has made our internal fields visible, then lets make them readonly
+      $internal_field_list = \Drupal::service('ibm_apim.consumerorg')->getIBMFields();
+      foreach ($internal_field_list as $fieldName) {
+        if (isset($form[$fieldName])) {
+          $form[$fieldName]['#disabled'] = TRUE;
         }
       }
       break;
@@ -256,16 +438,17 @@ function consumerorg_menu_links_discovered_alter(&$links) {
  * @param $type
  * @param $theme
  * @param $path
+ *
  * @return array
  */
 function consumerorg_theme($existing, $type, $theme, $path) {
-  return array(
-    'consumerorg_select_block' => array(
-      'variables' => array(
-        'orgs' => array(),
+  return [
+    'consumerorg_select_block' => [
+      'variables' => [
+        'orgs' => [],
         'selected_name' => NULL,
-        'create_allowed' => FALSE
-      ),
-    ),
-  );
+        'create_allowed' => FALSE,
+      ],
+    ],
+  ];
 }

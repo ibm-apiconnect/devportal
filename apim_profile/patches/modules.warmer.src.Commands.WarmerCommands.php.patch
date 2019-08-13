@@ -1,0 +1,57 @@
+--- modules/warmer/src/Commands/WarmerCommands.php	2019-06-26 15:52:20.000000000 +0100
++++ modules/warmer/src/Commands/WarmerCommands.php	2019-06-26 16:32:59.000000000 +0100
+@@ -11,6 +11,7 @@
+ use Drupal\warmer\QueueManager;
+ use Drush\Commands\DrushCommands;
+ use Drush\Drupal\Commands\core\QueueCommands;
++use Drupal\warmer\QueueCommandDrush8Wrapper;
+ use Drush\Utils\StringUtils;
+ 
+ /**
+@@ -48,14 +49,15 @@
+    *   The warmer manager.
+    * @param \Drupal\warmer\QueueManager $queue_manager
+    *   The queue manager.
+-   * @param \Drush\Drupal\Commands\core\QueueCommands $queue_commands
++   * @param \Drupal\warmer\QueueCommandDrush8Wrapper $queue_commands
+    *   The service related to queue commands.
+    */
+-  public function __construct(WarmerPluginManager $warmer_manager, QueueManager $queue_manager, QueueCommands $queue_commands) {
++  public function __construct(WarmerPluginManager $warmer_manager, QueueManager $queue_manager, QueueCommandDrush8Wrapper $queue_commands) {
+     parent::__construct();
+     $this->warmerManager = $warmer_manager;
+     $this->queueManager = $queue_manager;
+     $this->queueCommands = $queue_commands;
++    $this->logger = \Drupal::service('logger.channel.warmer');
+   }
+ 
+   /**
+@@ -87,7 +89,7 @@
+    * @throws \Exception
+    */
+   public function enqueue(array $warmer_ids, $options = ['run-queue' => FALSE]) {
+-    $warmer_ids = array_unique(StringUtils::csvToArray($warmer_ids));
++    $warmer_ids = array_unique($warmer_ids);
+     $warmers = $this->warmerManager->getWarmers($warmer_ids);
+     $count_list = array_map(function (WarmerPluginBase $warmer) {
+       $count = 0;
+@@ -99,16 +101,16 @@
+       return $count;
+     }, $warmers);
+     $total = array_sum($count_list);
+-    $this->logger()->success(
++    $this->logger->info(
+       dt('@total items enqueued for cache warming.', ['@total' => $total])
+     );
+     if (!$options['run-queue']) {
+-      $this->logger()->notice(
++      $this->logger->notice(
+         dt('If you need your items into cache right away you can run "drush queue-run warmer".')
+       );
+       return;
+     }
+-    $this->logger()->success(dt('Warming caches in batches from the "warmer" queue.', ['@count' => $count]));
++    $this->logger->info(dt('Warming caches in batches from the "warmer" queue.', ['@count' => $count]));
+     $this->queueCommands->run('warmer', ['time-limit' => static::VERY_HIGH_NUMBER]);
+     return;
+   }

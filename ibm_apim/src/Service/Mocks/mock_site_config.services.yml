@@ -9,4 +9,15 @@ services:
     arguments: ['@current_user', '@tempstore.private', '@state', '@logger.channel.ibm_apim']
   ibm_apim.site_config:
       class: Drupal\ibm_apim\Service\Mocks\MockSiteConfig
-      arguments: ['@state', '@config.factory', '@module_installer', '@logger.channel.ibm_apim', '@ibm_apim.user_registry', '@ibm_apim.billing', '@ibm_apim.permissions']
+      arguments: ['@state',
+                  '@config.factory',
+                  '@logger.channel.ibm_apim',
+                  '@ibm_apim.user_registry',
+                  '@ibm_apim.billing',
+                  '@ibm_apim.permissions',
+                  '@ibm_apim.analytics',
+                  '@ibm_apim.tls_client_profiles',
+                  '@ibm_apim.group',
+                  '@ibm_apim.vendor_extension',
+                  '@plugin.manager.menu.link',
+                  '@messenger']

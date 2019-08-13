@@ -1,0 +1,270 @@
+{#
+/**
+ * @file
+ * Default full view theme implementation for consumer orgs.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+  'node',
+  'node--id-' ~ node.id,
+  ('node--type-' ~ node.bundle)|clean_class,
+  view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
+] -%}
+{{ attach_library('consumerorg/basic') }}
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  <div class="apicMyOrg">
+    <header class="titleSection apicMyOrgHeader">
+      <div class="titleInnerWrapper">
+        <div class="leftTitle">
+          <h1 class="orgName">{{- myorg_title -}}</h1>
+        </div>
+        {% if edit_mode and (myorg_can_rename_org or myorg_can_delete_org or myorg_can_transfer_owner) %}
+          <div class="rightTitle">
+            <div class="extraMenu apicMyOrgActions">
+              <ul class="overflow-menu organizationMenu dropitmenu">
+                <li title="{{ 'Manage organization'|t }}"><a href="#" class="trigger">
+                  <span class="dropit-icon">
+                  <svg width="4px" height="20px" viewBox="0 0 4 20" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                       xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd">
+                    <circle id="Oval" cx="2" cy="2" r="2"></circle>
+                    <circle id="Oval" cx="2" cy="10" r="2"></circle>
+                    <circle id="Oval" cx="2" cy="18" r="2"></circle>
+                  </svg></span></a>
+                  <ul class="dropitmenu-submenu">
+                    {% if myorg_can_rename_org %}
+                      <li class="editOrganizationName">
+                        <a href="{{ url('consumerorg.update') }}" title="{{ 'Edit organization'|t }}">
+                          {{ 'Edit organization'|t }}
+                        </a>
+                      </li>
+                    {% endif %}
+                    {% if myorg_can_transfer_owner and myorg_members|length > 0 %}
+                      <li class="changeOrganizationOwner">
+                        <a href="{{ url('consumerorg.changeowner') }}" title="{{ 'Change organization owner'|t }}">
+                          {{ 'Change organization owner'|t }}</a>
+                      </li>
+                    {% endif %}
+                    {% if myorg_can_delete_org %}
+                      <li class="deleteOrganization">
+                        <a href="{{ url('consumerorg.delete') }}" title="{{ 'Delete organization'|t }}">
+                          {{ 'Delete organization'|t }}</a>
+                      </li>
+                    {% endif %}
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+        {% endif %}
+        {% if edit_mode and analytics_access %}
+          <div class="organizationTabs">
+            <ul>
+              <li class="selected"><a href="#">{{ 'Manage'|t }}</a></li>
+              <li class="orgAnalytics">
+                <a href="{{- path('ibm_apim.analytics') -}}">{{ 'Analytics'|t }}</a>
+              </li>
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+    </header>
+    <div class="field organizationMembers">
+      {% if custom_fields is defined and custom_fields is not empty %}
+        <div class="customFields">
+          {% for custom_field in custom_fields %}
+            <div class="{{ custom_field|clean_class }}">
+              {{ myorg[custom_field] }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="apicMyOrgOwner">
+        <div class="apicMyOrgMember">
+          <div class="apicMyOrgMemberDetails">
+            <div class="memberIcon">
+              <span title="{{ myorg_owner.name }}">
+                {% if myorg_owner.user_picture is defined %}
+                  <img src="{{ myorg_owner.user_picture }}" alt="{{ myorg_owner.name }}"
+                       title="{{ myorg_owner.name }}"/>
+                {% else %}
+                  {% include images_path ~ '/images/user.svg' %}
+                {% endif %}
+              </span>
+            </div>
+            <div class="orgApicUser">
+              <h5 class="apicUserFirstLastName">
+                {{ myorg_owner.name }}
+                <mark class="ownerTag">{{ 'Owner'|t }}</mark>
+              </h5>
+              <span class="apicUserMail">{{ myorg_owner.details }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="memberHeader">
+        <h3>{{ 'Members'|t }}</h3>
+        {% if edit_mode and myorg_has_member_manage_perm %}
+          <div class="apicNewUserWrapper">
+            <a class="button apicNewUser orgInvite" href="{{ url('consumerorg.invite') }}"
+               title="{{ 'Invite other users to join your consumer organization'|t }}">
+              <span>{{ 'Invite'|t }}</span>
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="apicMyOrgMembers">
+        <table>
+          <thead>
+          <tr>
+            <th>{{ 'Name'|t }}</th>
+            {% for role in myorg_roles %}
+              <th>{{ role.title }}</th>
+            {% endfor %}
+            <th>{{ 'State'|t }}</th>
+            <th></th>
+          </tr>
+          </thead>
+          <tbody>
+          {% if myorg_members is empty %}
+            <tr class="member-even">
+              <td colspan="7">
+                <div class="apicMyOrgNoMembers">
+                  <span>
+                    {% include images_path ~ '/images/members-placeholder.svg' %}
+                  </span>
+                  {{ 'Members will be listed here'|t }}
+                </div>
+              </td>
+            </tr>
+          {% else %}
+
+            {% for member in myorg_members %}
+              <tr class="member-{% if loop.index is divisibleby(2) %}even{% else %}odd{% endif %}">
+                <td>
+                  <div class="apicMyOrgMember">
+                    <div class="apicMyOrgMemberDetails">
+                      <div class="memberIcon">
+                        <span title="{{ member.name }}">
+                          {% if member.user_picture is defined %}
+                            <img src="{{ member.user_picture }}" alt="{{ member.name }}" title="{{ member.name }}"/>
+                          {% else %}
+                            {% include images_path ~ '/images/user.svg' %}
+                          {% endif %}
+                        </span>
+                      </div>
+                      <div class="orgApicUser">
+                        {% if member.state == 'Pending' %}
+                          <span class="apicUserMail">{{ member.details }}</span>
+                        {% else %}
+                          <h5 class="apicUserFirstLastName">
+                            {{ member.name }}
+                          </h5>
+                          <span class="apicUserMail">{{ member.details }}</span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                {% for role in myorg_roles %}
+                  <td>
+                    {% for userrole in member.roles %}
+                      {% if userrole.name == role.name %}
+                        {% set member_role_attribute = create_attribute() %}
+                        {% if member.username %}
+                          {% set name_identifier = member.username %}
+                        {% else %}
+                          {% set name_identifier = member.details %}
+                        {% endif %}
+                        {%
+                          set enabled_role_classes = [
+                          'apicMyOrgMemberRoleEnabled',
+                          ('apicMyOrgRole-' ~ userrole.name)|clean_class,
+                          ('apicMyOrgMemberRole-' ~ name_identifier ~ '-' ~ userrole.name)|clean_class,
+                        ]
+                        %}
+                        <span title="{{ name_identifier }}_{{ userrole.name }}" {{ member_role_attribute.addClass(enabled_role_classes) }} >
+                            {% include images_path ~ '/images/checkmark.svg' %}
+                          </span>
+                      {% endif %}
+                    {% endfor %}
+                  </td>
+                {% endfor %}
+                <td>
+                  <div class="apicMyOrgStatus">
+                    {% set stateUpper = member.state|upper %}
+                    {% if stateUpper == 'ENABLED' %}
+                      {{ 'Active'|t }}
+                    {% elseif stateUpper == 'DISABLED' %}
+                      {{ 'Disabled'|t }}
+                    {% elseif stateUpper == 'PENDING' %}
+                      {{ 'Pending'|t }}
+                    {% else %}
+                      {{ member.state }}
+                    {% endif %}
+                  </div>
+                </td>
+                <td>
+                  {% if edit_mode and myorg_has_member_manage_perm %}
+                    <div class="extraMenu apicMyOrgActions">
+                      <ul class="overflow-menu dropitmenu">
+                        <li title="{{ 'Manage organization user'|t }}">
+                          <a href="#" class="trigger">
+                            <span class="dropit-icon">
+                              <svg width="4px" height="20px" viewBox="0 0 4 20" version="1.1"
+                                   xmlns="http://www.w3.org/2000/svg"
+                                   xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd">
+                                <circle id="Oval" cx="2" cy="2" r="2"></circle>
+                                <circle id="Oval" cx="2" cy="10" r="2"></circle>
+                                <circle id="Oval" cx="2" cy="18" r="2"></circle>
+                              </svg>
+                            </span>
+                          </a>
+                          <ul class="dropitmenu-submenu">
+                            {% if member.state != 'Pending' %}
+                              <li class="changeMemberRole">
+                                <a href="{{ url('consumerorg.change_member_role', {'memberId': member.id}) }}"
+                                   title="{{ 'Change role'|t }}">
+                                  {{ 'Change role'|t }}
+                                </a>
+                              </li>
+                              <li class="removeOrganizationUser">
+                                <a href="{{ url('consumerorg.remove_user', {'memberId': member.id}) }}"
+                                   title="{{ 'Delete member'|t }}">
+                                  {{ 'Delete member'|t }}
+                                </a>
+                              </li>
+                            {% endif %}
+
+                            {% if member.state == 'Pending' %}
+                              <li class="resendInvitation">
+                                <a href="{{ url('consumerorg.resend_invite', {'inviteId': member.id}) }}"
+                                   title="{{ 'Resend invitation'|t }}">
+                                  {{ 'Resend invitation'|t }}
+                                </a>
+                              </li>
+                              <li class="removeInvitation">
+                                <a href="{{ url('consumerorg.delete_invite', {'inviteId': member.id}) }}"
+                                   title="{{ 'Delete invitation'|t }}">
+                                  {{ 'Delete invitation'|t }}
+                                </a>
+                              </li>
+                            {% endif %}
+                          </ul>
+                        </li>
+                      </ul>
+                    </div>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</article>

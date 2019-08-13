@@ -19,6 +19,7 @@ use Drupal\apic_app\Subscription;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
@@ -56,14 +57,21 @@ class UnsubscribeForm extends ConfirmFormBase {
   protected $userUtils;
 
   /**
-   * ApplicationCreateForm constructor.
-   *
-   * @param ApplicationRestInterface $restService
-   * @param UserUtils $userUtils
+   * @var \Drupal\Core\Messenger\Messenger
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils) {
+  protected $messenger;
+
+  /**
+   * UnsubscribeForm constructor.
+   *
+   * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   */
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -71,7 +79,7 @@ class UnsubscribeForm extends ConfirmFormBase {
    */
   public static function create(ContainerInterface $container) {
     // Load the service required to construct this class
-    return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'));
+    return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'), $container->get('messenger'));
   }
 
   /**
@@ -190,7 +198,7 @@ class UnsubscribeForm extends ConfirmFormBase {
 
       Subscription::delete($this->node->apic_url->value, $this->subId);
 
-      drupal_set_message(t('Application unsubscribed successfully.'));
+      $this->messenger->addMessage(t('Application unsubscribed successfully.'));
       $currentUser = \Drupal::currentUser();
       \Drupal::logger('apic_app')->notice('Application @appName unsubscribed from @product @plan plan by @username', [
         '@appName' => $this->node->getTitle(),

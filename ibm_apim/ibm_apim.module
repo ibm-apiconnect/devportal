@@ -18,6 +18,7 @@
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
@@ -114,22 +115,7 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
   return [
     'ibm_apim_myorg' => [
       'variables' => [
-        'images_path' => NULL,
-        'myorg' => NULL,
-        'myorg_title' => NULL,
-        'myorg_name' => NULL,
-        'myorg_id' => NULL,
-        'myorg_url' => NULL,
-        'myorg_owner' => NULL,
-        'myorg_members' => NULL,
-        'myorg_roles' => NULL,
-        'myorg_has_member_manage_perm' => NULL,
-        'myorg_has_settings_manage_perm' => NULL,
-        'myorg_can_transfer_owner' => NULL,
-        'myorg_can_rename_org' => NULL,
-        'myorg_can_delete_org' => NULL,
-        'custom_fields' => NULL,
-        'content' => NULL,
+        'node' => [],
       ],
     ],
     'ibm_apim_search_icon_block' => [
@@ -298,7 +284,10 @@ function ibm_apim_theme_registry_alter(&$theme_registry) {
 }
 
 /**
- * @param array $variables
+ * @param $variables
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  */
 function template_preprocess_status_report_general_info(&$variables) {
   $fileName = drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml';
@@ -343,6 +332,26 @@ function template_preprocess_status_report_general_info(&$variables) {
   }
   $variables['custom_modules'] = $customModules;
   $variables['custom_themes'] = $customThemes;
+
+  $userFields = [];
+  $nodeFields = ['api' => [], 'product' => [], 'application' => [], 'consumerorg' => []];
+  if ($moduleHandler->moduleExists('apic_app')) {
+    $nodeFields['application'] = \Drupal\apic_app\Application::getCustomFields();
+  }
+  if ($moduleHandler->moduleExists('apic_api')) {
+    $nodeFields['api'] = \Drupal\apic_api\Api::getCustomFields();
+  }
+  if ($moduleHandler->moduleExists('product')) {
+    $nodeFields['product'] = \Drupal\product\Product::getCustomFields();
+  }
+  if ($moduleHandler->moduleExists('consumerorg')) {
+    $cOrgService = \Drupal::service('ibm_apim.consumerorg');
+    $nodeFields['consumerorg'] = $cOrgService->getCustomFields();
+  }
+  $userService = \Drupal::service('ibm_apim.apicuser');
+  $userFields = $userService->getCustomUserFields();
+  $variables['user_fields'] = $userFields;
+  $variables['node_fields'] = $nodeFields;
 }
 
 /**
@@ -451,6 +460,13 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         $form['auth-apic-password-policy-status']['#weight'] = 7;
         $form['account']['password_policy_status']['#access'] = FALSE;
       }
+      break;
+    case 'user_multiple_cancel_confirm' :
+      $form['apic_intro'] = [
+        '#markup' => '<br/><br/><p>' . t('Note: Cancelling another user\'s account in the portal will NOT delete their account from IBM API Connect, the user\'s record in the Portal database will simply be recreated when they next login. 
+        Users must delete their own accounts from their \'Edit Profile\' page for them to be completely deleted from IBM API Connect. Administrators may delete users via the toolkit, refer to the IBM API Connect Knowledge Center.') . '</p>',
+        '#weight' => 20,
+      ];
       break;
     case 'user_form':
       $form['account']['password_policy_status']['#access'] = FALSE;
@@ -851,7 +867,7 @@ function ibm_apim_password_policy_client_settings(array $form, FormStateInterfac
       $role_policies = \Drupal::entityTypeManager()->getStorage('password_policy')->loadByProperties($role_map);
       /** @var \Drupal\password_policy\Entity\PasswordPolicy $policy */
       foreach ($role_policies as $policy) {
-        if (!in_array($policy->id(), $ids, false)) {
+        if (!in_array($policy->id(), $ids, FALSE)) {
           $applicable_policies[] = $policy;
           $ids[] = $policy->id();
         }
@@ -880,9 +896,10 @@ function ibm_apim_password_policy_client_settings(array $form, FormStateInterfac
       case 'password_username':
         $policy_constraints[$key]['message'] = t('Password must not contain the user\'s username.');
         // need the actual username value to check
-        if (\Drupal::currentUser()->isAuthenticated() ) {
+        if (\Drupal::currentUser()->isAuthenticated()) {
           $policy_constraints[$key]['username'] = \Drupal::currentUser()->getAccountName();
-        } elseif (isset($form['account']['name'])) {
+        }
+        elseif (isset($form['account']['name'])) {
           $policy_constraints[$key]['username'] = $form['account']['name'];
         }
         break;
@@ -928,13 +945,20 @@ function ibm_apim_password_policy_check_constraints(array $form, FormStateInterf
   }
   // Go through each row, extract the status, check pass/fail and keep the message.
   foreach ($dataRows as $row) {
-    if ($force_failed === TRUE || strpos($row['status'], 'Fail') !== FALSE) {
+    // this check is to handle 2 different versions of the password policy module, we can remove the else case later.
+    if (isset($row['data']['constraint'], $row['data']['status'])) {
+      $data = $row['data'];
+    }
+    else {
+      $data = $row;
+    }
+    if ($force_failed === TRUE || strpos($data['status'], 'Fail') !== FALSE) {
       $failed = TRUE;
-      $status[] = '<span class="failed"><span class="icon glyphicon glyphicon-remove" aria-hidden="true"></span> ' . $row['constraint'] . '</span>';
+      $status[] = '<span class="failed"><span class="icon glyphicon glyphicon-remove" aria-hidden="true"></span> ' . $data['constraint'] . '</span>';
       $status[] = '';
     }
     else {
-      $status[] = '<span class="passed"><span class="icon glyphicon glyphicon-ok" aria-hidden="true"></span> ' . $row['constraint'] . '</span>';
+      $status[] = '<span class="passed"><span class="icon glyphicon glyphicon-ok" aria-hidden="true"></span> ' . $data['constraint'] . '</span>';
       $status[] = '';
     }
   }
@@ -1241,4 +1265,13 @@ function ibm_apim_language_switch_links_alter(&$links, $type, $path) {
   }
   // needed to prevent weird side effects since by reference above
   unset($link);
+}
+
+function ibm_apim_entity_base_field_info(EntityTypeInterface $entity_type) {
+  if ($entity_type->id() === 'user') {
+    $fields['registry_url'] = BaseFieldDefinition::create('registry_url_field')
+      ->setLabel(t('APIC User Registry URL'));
+
+    return $fields;
+  }
 }

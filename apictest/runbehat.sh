@@ -40,10 +40,9 @@ done
 shift $((OPTIND-1))
 
 echo "Command to run : ${APICTEST_PREFIX} $APICTEST_BASEDIR/vendor/bin/behat $APICTEST_BEHAT_OPTS --config=$APICTEST_BASEDIR/behat.yml $PROFILE $TAGS $@"
-${APICTEST_PREFIX} $APICTEST_BASEDIR/vendor/bin/behat $APICTEST_BEHAT_OPTS --config=$APICTEST_BASEDIR/behat.yml $PROFILE $TAGS $@
+scl enable rh-python36 rh-php72 -- ${APICTEST_PREFIX} $APICTEST_BASEDIR/vendor/bin/behat $APICTEST_BEHAT_OPTS --config=$APICTEST_BASEDIR/behat.yml $PROFILE $TAGS $@
 
 RESULT=$?
 
 echo "Test run finished"
 exit $RESULT
-

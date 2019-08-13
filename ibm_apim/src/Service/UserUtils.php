@@ -167,7 +167,7 @@ class UserUtils {
       $this->logger->notice('Setting current consumerorg to %data', ['%data' => json_encode($org, JSON_PRETTY_PRINT)]);
     }
     else {
-      $this->logger->notice('Cannot set current consumerorg for anonymous users or admin');
+      $this->logger->warning('Cannot set current consumerorg for anonymous users or admin');
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $org);
     return $org;
@@ -182,70 +182,68 @@ class UserUtils {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $this->sessionStore->set('permissions', []);
     if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
-      if (!isset($this->getCurrentConsumerorg()['url'])) {
+
+      $current_org = $this->getCurrentConsumerorg();
+      if (!isset($current_org['url'])) {
+        $this->logger->debug('there is no current organization so attempting to set one.');
         // if current consumerorg not set then invoke it and try again
-        $this->setCurrentConsumerorg();
+        $current_org = $this->setCurrentConsumerorg();
       }
-      if (isset($this->getCurrentConsumerorg()['url'])) {
-        $consumerorg_url = $this->getCurrentConsumerorg()['url'];
+
+      if (isset($current_org['url'])) {
+
+        $consumerorg_url = $current_org['url'];
         $org_urls = $this->loadConsumerorgs();
+
         if ($org_urls && !empty($org_urls) && isset($consumerorg_url) && in_array($consumerorg_url, $org_urls, FALSE)) {
           $consumerOrg = \Drupal::service('ibm_apim.consumerorg')->get($consumerorg_url);
           // store the current consumerorg in the session
           if (isset($consumerOrg)) {
             $org = ['url' => $consumerOrg->getUrl(), 'name' => $consumerOrg->getName()];
+            $this->logger->debug('storing current org in session: ' . serialize($org));
             $this->sessionStore->set('current_consumer_organization', $org);
 
             // total permissions for user is all permissions of all roles that the user has
-            $perms = [[]];
+            $perms = [];
             $user = User::load($this->currentUser->id());
             if ($user !== NULL) {
               $roles = $consumerOrg->getRolesForMember($user->get('apic_url')->value);
+
               foreach ($roles as $role) {
-                if ($role) {
-                  $perms[] = $role->getPermissions();
+                $permURLs = $role->getPermissions();
+                foreach($permURLs as $permission) {
+                  if (strpos($permission, '/') > -1) {
+                    $permission_name = \Drupal::service('ibm_apim.permissions')->get($permission)['name'];
+                    if (empty($permission_name)) {
+                      $this->logger->warning('No permission found for %url', ['%url' => $permission]);
+                    }
+                    else {
+                      $perms[] = $permission_name;
+                    }
+                  }
+                  else {
+                    $perms[] = $permission;
+                  }
                 }
               }
-              // weird construct done to avoid doing CPU intensive array_merge in a loop
-              // see https://github.com/kalessil/phpinspectionsea/blob/master/docs/performance.md#slow-array-function-used-in-loop
-              $perms = array_merge(...$perms);
+              $perms = array_unique($perms);
             }
+            else {
+              $this->logger->warning('unable to load current user so cannot update roles and permissions');
+            }
+            $this->logger->debug('storing permissions in session: ' . \serialize($perms));
             $this->sessionStore->set('permissions', $perms);
+          }
+          else {
+            $this->logger->warning('no consumerorg retrieved for ' . $consumerorg_url);
           }
         }
       }
       else {
-        $this->logger->notice('setOrgSessionData: Current consumer organization could not be set.');
+        $this->logger->warning('Current consumer organization could not be set.');
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-  }
-
-  /**
-   * update the cached user data (orgs list, roles, etc.)
-   *
-   * @return mixed
-   * @throws \Drupal\Core\TempStore\TempStoreException
-   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
-   */
-  public function refreshUserData() {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $return = NULL;
-    if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
-      $result = ApicRest::get('/me?expand=true');
-
-      $this->sessionStore->set('userdata', NULL);
-
-      if (isset($result) && ((int) $result->code === 200) && $result->data !== '') {
-        $this->sessionStore->set('userdata', $result->data);
-        if (isset($result->data['id'])) {
-          $this->sessionStore->set('memberid', $result->data['id']);
-        }
-        $return = $result->data;
-      }
-    }
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $return);
-    return $return;
   }
 
   /**
@@ -361,6 +359,7 @@ class UserUtils {
       }
       else {
         // the user has no permissions at all. send them away.
+        $this->logger->debug('user has no permissions set - redirecting to no perms page');
         $response = new RedirectResponse(Url::fromRoute('ibm_apim.noperms')->toString());
         $response->send();
       }
@@ -400,38 +399,6 @@ class UserUtils {
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $return);
     return $return;
-  }
-
-  /**
-   * See https://api.drupal.org/api/drupal/core!modules!user!user.module/function/user_load_by_name/8.2.x
-   * This exists to make other classes unit testable.
-   *
-   * @param $name username
-   *
-   * @return bool|mixed
-   *   FALSE if not found - or User object.
-   */
-  public function loadUserByName($name) {
-    $users = $this->userStorage->loadByProperties([
-      'name' => $name,
-    ]);
-    return $users ? reset($users) : FALSE;
-  }
-
-  /**
-   * See https://api.drupal.org/api/drupal/core%21modules%21user%21user.module/function/user_load_by_mail/8.2.x
-   * This exists to make other classes unit testable.
-   *
-   * @param $mail email address
-   *
-   * @return bool|mixed
-   *   FALSE if not found - or User object.
-   */
-  public function loadUserByMail($mail) {
-    $users = $this->userStorage->loadByProperties([
-      'mail' => $mail,
-    ]);
-    return $users ? reset($users) : FALSE;
   }
 
 }

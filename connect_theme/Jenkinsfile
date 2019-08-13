@@ -6,7 +6,10 @@
 // Clean up builds older than 14 days and set LOAD_TRANSLATIONS build param
 properties([ durabilityHint('PERFORMANCE_OPTIMIZED'),
 	[$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', daysToKeepStr: '14'] ],
-	parameters([string(defaultValue: 'false', description: '', name: 'LOAD_TRANSLATIONS')]) ])
+	parameters([
+      string(defaultValue: 'false', description: '', name: 'LOAD_TRANSLATIONS'),
+      booleanParam(name: 'FORCE_RUN', defaultValue: false, description: 'Force run the entire build')
+    ]) ])
 
 def pipelineOpts = [
     slackChannel: '',
@@ -27,7 +30,7 @@ veloxPipeline(pipelineOpts) { p ->
   env.UP_BUILD_NAME = getBuildCauses().first().BUILD_NAME ?: 'build'
 
   p.promotableBranch {
-    if (!env.GIT_COMMIT_MSG.contains('[ci-skip')) {
+    if (!env.GIT_COMMIT_MSG.contains('[ci-skip') || params.FORCE_RUN == true) {
       stage('bump version') {
         sh "git stash && git pull && git stash pop || true"
           portal.patchModuleVersion(MODULE_NAME)

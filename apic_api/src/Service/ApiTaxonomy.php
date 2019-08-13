@@ -41,6 +41,10 @@ class ApiTaxonomy {
    *
    * @param $api
    * @param $node
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function process_categories($api, $node): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $api['consumer_api']['x-ibm-configuration']['categories']);

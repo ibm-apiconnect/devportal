@@ -45,7 +45,7 @@ if [ "$i" = 0 ]; then
 fi
 mysql -e "set global pxc_strict_mode=DISABLED; set global show_compatibility_56=ON; set global pxc_maint_transition_period=0;"
 
-bash /tmp/data/portal.sql.sh
+bash /etc/devportal/portal.sql.sh
 rm -f /var/devportal/store
 mkdir -p /var/devportal/store
 chown -R aegir:aegir /var/devportal

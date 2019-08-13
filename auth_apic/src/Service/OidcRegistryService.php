@@ -71,7 +71,7 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
   /**
    * @inheritdoc
    */
-  public function getOidcMetadata(UserRegistry $registry, JWTToken $invitation_object = NULL) {
+  public function getOidcMetadata(UserRegistry $registry, JWTToken $invitation_object = NULL): ?array {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -103,7 +103,7 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
    *
    * @return string|null
    */
-  private function getOidcUrl(UserRegistry $registry, JWTToken $invitation_object = NULL) {
+  private function getOidcUrl(UserRegistry $registry, JWTToken $invitation_object = NULL): ?string {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -132,7 +132,13 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
     }
 
     $host = $this->apimUtils->getHostUrl();
-    $route = URL::fromRoute('auth_apic.azcode')->toString();
+
+    if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      $route = URL::fromRoute('auth_apic.azcode')->toString();
+    }
+    else {
+      $route = '/test/env';
+    }
 
     $redirect_uri = $host . $route;
 
@@ -161,7 +167,7 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
    *
    * @return string
    */
-  private function getImageAsSvg(UserRegistry $registry) {
+  private function getImageAsSvg(UserRegistry $registry) : ?string {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }

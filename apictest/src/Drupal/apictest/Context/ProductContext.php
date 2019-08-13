@@ -73,7 +73,7 @@ class ProductContext extends RawDrupalContext {
     $object['catalog_product']['info']['categories'] = [$categories];
     $object['state'] = 'published';
     $object['id'] = $id;
-    $object['url'] = 'https://localhost.com';
+    $object['url'] = '/catalogs/1234/5678/products/' . $id;
     $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
     $object['catalog_product']['visibility']['subscribe']['enabled'] = TRUE;
     $object['catalog_product']['visibility']['view']['type'] = 'public';
@@ -90,7 +90,7 @@ class ProductContext extends RawDrupalContext {
     $nid = $product->create($object);
 
     // Make sure that the call returns a number
-    if ((int)$nid >= 0) {
+    if ((int) $nid >= 0) {
       print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
     }
     else {
@@ -193,7 +193,7 @@ class ProductContext extends RawDrupalContext {
     $product = new Product();
     $nid = $product->create($object);
 
-    if ((int)$nid >= 0) {
+    if ((int) $nid >= 0) {
       print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
     }
     else {
@@ -249,6 +249,7 @@ class ProductContext extends RawDrupalContext {
     $object['catalog_product']['info']['name'] = $name;
     $object['catalog_product']['info']['title'] = $name;
     $object['catalog_product']['info']['version'] = '1.0';
+    $object['catalog_product']['info']['x-pathalias'] = $name;
     $object['state'] = 'published';
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';
@@ -282,7 +283,7 @@ class ProductContext extends RawDrupalContext {
     $product = new Product();
     $nid = $product->create($object);
     // Make sure that the call returns a number
-    if ((int)$nid >= 0) {
+    if ((int) $nid >= 0) {
       print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
     }
     else {
@@ -339,7 +340,7 @@ class ProductContext extends RawDrupalContext {
     $product = new Product();
     $nid = $product->create($object);
     // Make sure that the call returns a number
-    if ((int)$nid >= 0) {
+    if ((int) $nid >= 0) {
       print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
     }
     else {
@@ -373,7 +374,7 @@ class ProductContext extends RawDrupalContext {
     $product = new Product();
     $nid = $product->create($object);
     // Make sure that the call returns a number
-    if ((int)$nid >= 0) {
+    if ((int) $nid >= 0) {
       print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
     }
     else {
@@ -451,7 +452,7 @@ class ProductContext extends RawDrupalContext {
 
     $object = [];
     $object['id'] = $id;
-    $object['url'] = 'https://localhost.com';
+    $object['url'] = '/catalogs/1234/5678/products/' . $id;
     $object['state'] = 'published';
 
     if ($document && file_exists($this->testDataDirectory . '/products/' . $document)) {

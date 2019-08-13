@@ -13,13 +13,11 @@
 
 namespace Drupal\apic_app\Service;
 
-use Drupal\apic_app\Event\SubscriptionCreateEvent;
-use Drupal\node\Entity\Node;
-
-use Drupal\ibm_apim\ApicRest;
 use Drupal\apic_app\Application;
+use Drupal\apic_app\Event\SubscriptionCreateEvent;
 use Drupal\apic_app\Subscription;
-use Drupal\apic_app\Event\ApplicationCreateEvent;
+use Drupal\ibm_apim\ApicRest;
+use Drupal\node\Entity\Node;
 
 class ApplicationRestService implements ApplicationRestInterface {
 
@@ -210,7 +208,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
 
     if ($name === null || empty($name)) {
-      drupal_set_message(t('ERROR: Title is a required field.'), 'error');
+      \Drupal::messenger()->addError(t('ERROR: Title is a required field.'));
     }
     else {
       $url = $org_url . '/apps';
@@ -265,7 +263,7 @@ class ApplicationRestService implements ApplicationRestInterface {
         $result->data['client_id'] = $data['client_id'];
         $result->data['client_secret'] = $data['client_secret'];
 
-        drupal_set_message(t('Application created successfully.'));
+        \Drupal::messenger()->addMessage(t('Application created successfully.'));
         $current_user = \Drupal::currentUser();
         \Drupal::logger('apic_app')->notice('Application @appName created by @username', array(
           '@appName' => $name,
@@ -389,7 +387,7 @@ class ApplicationRestService implements ApplicationRestInterface {
         }
       }
     } else {
-      drupal_set_message(t('ERROR: Both the application URL and plan ID must be specified.'), 'error');
+      \Drupal::messenger()->addError(t('ERROR: Both the application URL and plan ID must be specified.'));
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

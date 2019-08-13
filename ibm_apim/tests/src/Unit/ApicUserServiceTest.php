@@ -19,7 +19,6 @@ use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\ibm_apim\Service\ApicUserService;
 use Drupal\ibm_apim\Service\UserRegistryService;
 use Drupal\Tests\UnitTestCase;
-use Prophecy\Argument;
 use Prophecy\Prophet;
 use Psr\Log\LoggerInterface;
 

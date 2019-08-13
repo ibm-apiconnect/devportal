@@ -35,7 +35,7 @@ class Member {
    *
    * @return \Drupal\ibm_apim\ApicType\ApicUser
    */
-  public function getUser(): \Drupal\ibm_apim\ApicType\ApicUser {
+  public function getUser(): ApicUser {
     return $this->user;
   }
 

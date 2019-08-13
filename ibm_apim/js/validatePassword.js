@@ -21,6 +21,7 @@
 
       if ($passwordInput.length) {
 
+        var wrapper = $(context).find('#ibm-apim-password-policy-status');
         var statusBox = $(context).find('#ibm-apim-password-policy-status div');
 
         var passwordCheck = function passwordCheck() {
@@ -57,6 +58,13 @@
             }
           });
 
+          // switch wrapper class
+          var failedElements = $(statusBox).find('span.failed');
+          if (failedElements.length === 0) {
+            wrapper.removeClass('alert-danger').addClass('alert-success');
+          } else {
+            wrapper.removeClass('alert-success').addClass('alert-danger');
+          }
         };
 
         $passwordInput.on('input', passwordCheck);

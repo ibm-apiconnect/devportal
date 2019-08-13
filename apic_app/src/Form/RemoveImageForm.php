@@ -16,6 +16,7 @@ namespace Drupal\apic_app\Form;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
@@ -45,14 +46,22 @@ class RemoveImageForm extends ConfirmFormBase {
   protected $userUtils;
 
   /**
-   * ApplicationCreateForm constructor.
-   *
-   * @param ApplicationRestInterface $restService
-   * @param UserUtils $userUtils
+   * @var \Drupal\Core\Messenger\Messenger
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils) {
+  protected $messenger;
+
+  /**
+   * RemoveImageForm constructor.
+   *
+   * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   */
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils,
+                              Messenger $messenger) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -60,7 +69,8 @@ class RemoveImageForm extends ConfirmFormBase {
    */
   public static function create(ContainerInterface $container) {
     // Load the service required to construct this class
-    return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'));
+    return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'),
+      $container->get('messenger'));
   }
 
   /**
@@ -132,7 +142,7 @@ class RemoveImageForm extends ConfirmFormBase {
     // Calling all modules implementing 'hook_apic_app_image_delete':
     \Drupal::moduleHandler()->invokeAll('apic_app_image_delete', ['node' => $this->node, 'appId' => $appId]);
 
-    drupal_set_message(t('Application image removed.'));
+    $this->messenger->addMessage(t('Application image removed.'));
     $currentUser = \Drupal::currentUser();
     \Drupal::logger('apic_app')->notice('Image for application @appName removed by @username', [
       '@appName' => $this->node->getTitle(),

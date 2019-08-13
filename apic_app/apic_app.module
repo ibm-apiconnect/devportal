@@ -20,12 +20,12 @@ use Drupal\apic_app\Application;
 use Drupal\Core\Access\AccessResultAllowed;
 use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Access\AccessResultNeutral;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\node\NodeInterface;
 use Drupal\node\Entity\Node;
-use Drupal\Core\Cache\Cache;
+use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 
 /* Define a single permission to be granted */
@@ -229,6 +229,9 @@ function apic_app_preprocess_node(&$variables) {
       $variables['userHasSubView'] = $userUtils->checkHasPermission('subscription:view');
       $variables['userHasSubManage'] = $userUtils->checkHasPermission('subscription:manage');
       $variables['appImageUploadEnabled'] = (boolean) $config->get('application_image_upload');
+      $moduleHandler = \Drupal::service('module_handler');
+      $variables['contact'] = $moduleHandler->moduleExists('contact');
+      $variables['site_admin_email'] = \Drupal::config('system.site')->get('mail');
       $ibmApimShowVersions = (boolean) $config->get('showVersions');
       if ($ibmApimShowVersions === NULL) {
         $ibmApimShowVersions = TRUE;
@@ -334,6 +337,13 @@ function apic_app_form_alter(array &$form, FormStateInterface $form_state, $form
         $form['apic_summary']['#disabled'] = TRUE;
         $form['application_image']['#disabled'] = TRUE;
         $form['application_redirect_endpoints']['#disabled'] = TRUE;
+      }
+      // if anyone has made our internal fields visible, then lets make them readonly
+      $internal_field_list = Application::getIBMFields();
+      foreach ($internal_field_list as $fieldName) {
+        if ($fieldName !== 'application_image' && $fieldName !== 'apic_summary' && $fieldName !== 'application_redirect_endpoints' && $fieldName !== 'application_client_type' && isset($form[$fieldName])) {
+          $form[$fieldName]['#disabled'] = TRUE;
+        }
       }
       break;
   }

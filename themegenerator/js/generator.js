@@ -47,7 +47,7 @@
               imagePath = drupalSettings.themegenerator.adminform.connect_theme_path + '/screenshot.png';
             }
             label.parent().children('.theme_screenshot').remove();
-            label.parent().append('<img class="theme_screenshot" src="' + escapeHtml(imagePath) + '" />')
+            label.parent().append('<img class="theme_screenshot" alt="" src="' + escapeHtml(imagePath) + '" />')
           }
         }
       });

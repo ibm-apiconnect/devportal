@@ -14,10 +14,13 @@ namespace Drupal\ibm_apim\Service;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Menu\MenuLinkManagerInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\State\StateInterface;
 use Drupal\ibm_apim\Service\Interfaces\PermissionsServiceInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
+use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
+use Drupal\ibm_apim\External\Json;
 
 /**
  * Functionality for handling configuration updates
@@ -79,10 +82,16 @@ class SiteConfig {
    */
   private $menuLinkManager;
 
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  private $messenger;
+
   public function __construct(StateInterface $state, ConfigFactoryInterface $config_factory,
                               LoggerInterface $logger, UserRegistryServiceInterface $urService, Billing $billService,
                               PermissionsServiceInterface $permsService, AnalyticsService $analyticsService,
-                              TlsClientProfilesService $tlsProfilesService, Group $groupService, VendorExtension $vendorExtService, MenuLinkManagerInterface $menuLinkManager) {
+                              TlsClientProfilesService $tlsProfilesService, Group $groupService, VendorExtension $vendorExtService, MenuLinkManagerInterface $menuLinkManager,
+                              Messenger $messenger) {
     $this->state = $state;
     $this->configFactory = $config_factory;
     $this->logger = $logger;
@@ -94,19 +103,23 @@ class SiteConfig {
     $this->groupService = $groupService;
     $this->vendorExtService = $vendorExtService;
     $this->menuLinkManager = $menuLinkManager;
+    $this->messenger = $messenger;
   }
 
   /**
    * Get the APIm config. This function should only be called from inside this class.
    *
-   * @return NULL|array null if an error occurs otherwise an array of the apim config.
+   * @return array empty if an error occurs otherwise an array of the apim config.
    */
-  protected function get(): ?array {
+  protected function get(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $catalog_config = $this->state->get('ibm_apim.site_config');
+    if (!isset($catalog_config)) {
+      $catalog_config = [];
+    }
 
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $catalog_config);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, !empty($catalog_config));
     return $catalog_config;
   }
 
@@ -118,9 +131,9 @@ class SiteConfig {
   public function isSet(): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $catalog_config = $this->state->get('ibm_apim.site_config');
+    $catalog_config = $this->get();
 
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $catalog_config);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, !empty($catalog_config));
     return !empty($catalog_config);
   }
 
@@ -128,14 +141,17 @@ class SiteConfig {
    * get the APIm catalog info
    *
    *
-   * @return NULL|array null if an error occurs otherwise an array of the catalog info.
+   * @return array empty if an error occurs otherwise an array of the catalog info.
    */
-  public function getCatalog(): ?array {
+  public function getCatalog(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $catalog_info = $this->state->get('ibm_apim.catalog_info');
+    if (!isset($catalog_info)) {
+      $catalog_info = [];
+    }
 
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $catalog_info);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, !empty($catalog_info));
     return $catalog_info;
   }
 
@@ -145,11 +161,11 @@ class SiteConfig {
    * @throws \Exception
    */
   public function updateCatalog($catalog = NULL): void {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $catalog);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     if (isset($catalog)) {
       if (is_string($catalog)) {
-        $catalog = json_decode($catalog, TRUE);
+        $catalog = Json::decode($catalog, TRUE);
       }
 
       $this->state->set('ibm_apim.catalog_info', $catalog);
@@ -292,9 +308,10 @@ class SiteConfig {
   public function update($config = NULL): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $config);
 
-    if (isset($config)) {
+    $updated = false;
+    if ($config !== NULL) {
       if (is_string($config)) {
-        $config = json_decode($config, TRUE);
+        $config = Json::decode($config, true);
       }
 
       // TODO : temporary workaround until refactoring work is complete
@@ -306,13 +323,15 @@ class SiteConfig {
 
       // clear caches if config different to previous requests
       $current_config = $this->state->get('ibm_apim.site_config');
-      if (!isset($current_config) || $current_config !== $config) {
+
+      if ($current_config === NULL || empty($current_config) || $current_config !== $config) {
         $this->state->set('ibm_apim.site_config', $config);
         $this->getCheckAndStore();
         drupal_flush_all_caches();
+        $updated = true;
       }
     }
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $updated);
   }
 
   /**
@@ -384,13 +403,13 @@ class SiteConfig {
       // if selfSignUpEnabled is disabled then disable user registration
       if ($config_data['consumer_self_service_onboarding'] !== NULL && (boolean) $config_data['consumer_self_service_onboarding'] === FALSE) {
         $this->state->set('ibm_apim.selfSignUpEnabled', FALSE);
-        $this->configFactory->getEditable('user.settings')->set('register', USER_REGISTER_ADMINISTRATORS_ONLY)->save();
+        $this->configFactory->getEditable('user.settings')->set('register', UserInterface::REGISTER_ADMINISTRATORS_ONLY)->save();
         $this->setCreateAccountLinkEnabled(FALSE);
         // TODO hide create new org link
       }
       elseif ($config_data['consumer_self_service_onboarding'] !== NULL && (boolean) $config_data['consumer_self_service_onboarding'] === TRUE) {
         $this->state->set('ibm_apim.selfSignUpEnabled', TRUE);
-        $this->configFactory->getEditable('user.settings')->set('register', USER_REGISTER_VISITORS)->save();
+        $this->configFactory->getEditable('user.settings')->set('register', UserInterface::REGISTER_VISITORS)->save();
         $this->setCreateAccountLinkEnabled(TRUE);
         // TODO show create new org link
       }
@@ -437,7 +456,7 @@ class SiteConfig {
     }
     else {
       // Clear any other messages as until this problem is fixed they will just muddy the water
-      drupal_get_messages();
+      $this->messenger->deleteAll();
 
       // Throw an exception with a useful message so that we stop processing the request here
       throw new \Exception(t('Could not retrieve portal configuration. Please contact your system administrator.', []));
@@ -603,5 +622,4 @@ class SiteConfig {
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
-
 }

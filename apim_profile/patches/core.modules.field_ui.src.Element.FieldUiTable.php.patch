@@ -1,0 +1,11 @@
+--- core/modules/field_ui/src/Element/FieldUiTable.php	2019-06-13 14:08:48.000000000 +0100
++++ core/modules/field_ui/src/Element/FieldUiTable.php	2019-06-13 14:09:06.000000000 +0100
+@@ -225,7 +225,7 @@
+    */
+   public static function reduceOrder($array, $a) {
+     $array = !$array ? [] : $array;
+-    if ($a['name']) {
++    if (array_key_exists('name', $a) && $a['name']) {
+       $array[] = $a['name'];
+     }
+     if (!empty($a['children'])) {

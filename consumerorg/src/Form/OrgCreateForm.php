@@ -16,40 +16,65 @@ namespace Drupal\consumerorg\Form;
 use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Extension\ThemeHandler;
 
 /**
  * Form to create a new consumerorg.
  */
 class OrgCreateForm extends FormBase {
 
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
   protected $consumerOrgService;
 
+  /**
+   * @var \Drupal\Core\Session\AccountInterface
+   */
   protected $currentUser;
 
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
   protected $logger;
 
+  /**
+   * @var \Drupal\Core\Extension\ThemeHandler
+   */
   protected $themeHandler;
 
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
 
+  /**
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
   protected $entityFieldManager;
 
   /**
-   * Constructs an Org Creation Form.
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
+   * OrgCreateForm constructor.
    *
-   * {@inheritdoc}
-   *
-   * @param AccountInterface $account
-   *   Current user.
-   * @param LoggerInterface $logger
-   *   Logger.
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
+   * @param \Drupal\Core\Session\AccountInterface $account
+   * @param \Psr\Log\LoggerInterface $logger
+   * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
   public function __construct(
     ConsumerOrgService $consumer_org_service,
@@ -57,7 +82,8 @@ class OrgCreateForm extends FormBase {
     LoggerInterface $logger,
     ThemeHandler $themeHandler,
     EntityTypeManagerInterface $entityTypeManager,
-    EntityFieldManagerInterface $entityFieldManager
+    EntityFieldManagerInterface $entityFieldManager,
+    Messenger $messenger
   ) {
     $this->consumerOrgService = $consumer_org_service;
     $this->currentUser = $account;
@@ -65,6 +91,7 @@ class OrgCreateForm extends FormBase {
     $this->themeHandler = $themeHandler;
     $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -74,10 +101,11 @@ class OrgCreateForm extends FormBase {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('current_user'),
-      $container->get('logger.channel.auth_apic'),
+      $container->get('logger.channel.consumerorg'),
       $container->get('theme_handler'),
       $container->get('entity_type.manager'),
-      $container->get('entity_field.manager')
+      $container->get('entity_field.manager'),
+      $container->get('messenger')
     );
   }
 
@@ -185,8 +213,11 @@ class OrgCreateForm extends FormBase {
     $response = $this->consumerOrgService->createFromArray($form_state->getValues());
 
     if ($response->getMessage() !== NULL) {
-      $error_arg = $response->success() ? 'status' : 'error';
-      drupal_set_message($response->getMessage(), $error_arg);
+      if ($response->success()) {
+        $this->messenger->addMessage($response->getMessage());
+      } else {
+        $this->messenger->addError($response->getMessage());
+      }
     }
 
     if ($response->getRedirect() !== NULL) {

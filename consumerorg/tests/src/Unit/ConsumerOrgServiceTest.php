@@ -11,9 +11,10 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
-namespace Drupal\Tests\ibm_apim\Unit;
+namespace Drupal\Tests\consumerorg\Unit;
 
 
+use Drupal\ibm_apim\UserManagement\ApicAccountService;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\consumerorg\Service\ConsumerOrgService;
@@ -22,10 +23,9 @@ use Drupal\consumerorg\Service\RoleService;
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\ibm_apim\Service\ApimUtils;
@@ -33,8 +33,6 @@ use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\Tests\UnitTestCase;
-use Drupal\Core\TempStore\PrivateTempStoreFactory;
-use Drupal\user\Entity\User;
 use Prophecy\Argument;
 use Prophecy\Prophet;
 use Psr\Log\LoggerInterface;
@@ -43,7 +41,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 /**
  * @coversDefaultClass \Drupal\consumerorg\Service\ConsumerOrgService
  *
- * @group ibm_apim
+ * @group consumerorg
  */
 class ConsumerOrgServiceTest extends UnitTestCase {
 
@@ -51,18 +49,32 @@ class ConsumerOrgServiceTest extends UnitTestCase {
 
   // dependencies of ConsumerOrgService
   private $logger;
+
   private $siteconfig;
+
   private $apimUtils;
+
   private $eventDispatcher;
+
   private $currentUser;
+
   private $userQuery;
+
   private $moduleHandler;
+
   private $apimServer;
+
   private $session;
+
   private $userUtils;
+
   private $cacheTagsInvalidator;
+
   private $memberService;
+
   private $roleService;
+
+  private $apicAccountService;
 
   protected function setup() {
     $this->prophet = new Prophet();
@@ -80,6 +92,7 @@ class ConsumerOrgServiceTest extends UnitTestCase {
     $this->cacheTagsInvalidator = $this->prophet->prophesize(CacheTagsInvalidatorInterface::class);
     $this->memberService = $this->prophet->prophesize(MemberService::class);
     $this->roleService = $this->prophet->prophesize(RoleService::class);
+    $this->apicAccountService = $this->prophet->prophesize(ApicAccountService::class);
 
     $userStorage = $this->prophet->prophesize(EntityStorageInterface::class);
     $this->userQuery->getStorage('user')->willReturn($userStorage->reveal());
@@ -94,7 +107,7 @@ class ConsumerOrgServiceTest extends UnitTestCase {
 
 
   // deleteMember
-  public function testDeleteMemberValid() {
+  public function testDeleteMemberValid(): void {
 
     $org = new ConsumerOrg();
     $org->setName('testorg');
@@ -121,11 +134,11 @@ class ConsumerOrgServiceTest extends UnitTestCase {
     $response = $service->deleteMember($org, $member2);
 
     $this->assertNotNull($response);
-    $this->assertTrue($response->success() );
+    $this->assertTrue($response->success());
 
   }
 
-  public function testDeleteMemberErrorResponseFromApim() {
+  public function testDeleteMemberErrorResponseFromApim(): void {
 
     $org = new ConsumerOrg();
     $org->setName('testorg');
@@ -151,7 +164,7 @@ class ConsumerOrgServiceTest extends UnitTestCase {
     $response = $service->deleteMember($org, $member2);
 
     $this->assertNotNull($response);
-    $this->assertFalse($response->success() );
+    $this->assertFalse($response->success());
 
   }
 
@@ -172,7 +185,7 @@ class ConsumerOrgServiceTest extends UnitTestCase {
   /**
    * @return \Drupal\consumerorg\Service\ConsumerOrgService
    */
-  private function createService(): \Drupal\consumerorg\Service\ConsumerOrgService {
+  private function createService(): ConsumerOrgService {
     $service = new ConsumerOrgService($this->logger->reveal(),
       $this->siteconfig->reveal(),
       $this->apimUtils->reveal(),
@@ -185,7 +198,8 @@ class ConsumerOrgServiceTest extends UnitTestCase {
       $this->userUtils->reveal(),
       $this->cacheTagsInvalidator->reveal(),
       $this->memberService->reveal(),
-      $this->roleService->reveal());
+      $this->roleService->reveal(),
+      $this->apicAccountService->reveal());
     return $service;
   }
 

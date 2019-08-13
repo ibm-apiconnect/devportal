@@ -145,5 +145,44 @@
         {% endif %}
       </div>
     </div>
+    <div class="system-status-general-info__item">
+      <span class="system-status-general-info__item-icon system-status-general-info__item-icon--userfields"></span>
+      <div class="system-status-general-info__item-details">
+        <h3 class="system-status-general-info__item-title">{{ 'Custom User Fields'|t }}</h3>
+        {% if user_fields|length > 0 %}
+          <div class="description">
+            <ul class="fieldlist">
+              {% for user_field in user_fields %}
+                <li class="fieldlist-item">{{ user_field }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% else %}
+          <div class="description">{{ 'None installed'|t }}</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="system-status-general-info__item">
+      <span class="system-status-general-info__item-icon system-status-general-info__item-icon--nodefields"></span>
+      <div class="system-status-general-info__item-details">
+        <h3 class="system-status-general-info__item-title">{{ 'Custom Node Fields'|t }}</h3>
+        <div class="description">
+          {% for node_type in ['product','api','application','consumerorg'] %}
+            <div class="nodetype">
+              <span class="nodetypetitle">{{ node_type }}: </span><br/>
+              {% if node_fields.node_type|length > 0 %}
+                <ul class="fieldlist">
+                  {% for field in node_fields.node_type %}
+                    <li class="fieldlist-item">{{ field }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <div class="nonefound">{{ 'None installed'|t }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
   </div>
 </div>

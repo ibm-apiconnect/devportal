@@ -13,9 +13,10 @@
 namespace Drupal\auth_apic\Service;
 
 use Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface;
+use Drupal\Component\Datetime\Time;
 use Drupal\Core\State\StateInterface;
+use Drupal\encrypt\EncryptionProfileManagerInterface;
 use Drupal\encrypt\EncryptServiceInterface;
-use Drupal\encrypt\Entity\EncryptionProfile;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Session\Session;
 
@@ -24,12 +25,14 @@ class OidcStateService implements OidcStateServiceInterface {
   private $state;
 
   private $encryptService;
-
+  private $encryptionProfileManager;
   private $logger;
 
   private $session;
+  private $time;
 
   private $encryptionProfile = NULL;
+
 
   public const STATE_KEY = 'auth_apic.oidc_state';
 
@@ -37,12 +40,16 @@ class OidcStateService implements OidcStateServiceInterface {
 
   public function __construct(StateInterface $state,
                               EncryptServiceInterface $encrypt_service,
+                              EncryptionProfileManagerInterface $encrypt_profile_manager,
                               LoggerInterface $logger,
-                              Session $session) {
+                              Session $session,
+                              Time $time){
     $this->state = $state;
     $this->encryptService = $encrypt_service;
+    $this->encryptionProfileManager = $encrypt_profile_manager;
     $this->logger = $logger;
     $this->session = $session;
+    $this->time = $time;
   }
 
   /**
@@ -55,9 +62,9 @@ class OidcStateService implements OidcStateServiceInterface {
 
     $key = NULL;
     // we need a registry url to generate a key
-    if (isset($data['registry_url'])) {
+    if (isset($data) && isset($data['registry_url'])) {
       // KEY = created_time:registry_url:sessionid
-      $key = time() . ':' . $data['registry_url'] . ':' . $this->session->getId();
+      $key = $this->time->getCurrentTime() . ':' . $data['registry_url'] . ':' . $this->session->getId();
     }
     else {
       $this->logger->error('unable to establish unique key');
@@ -163,21 +170,24 @@ class OidcStateService implements OidcStateServiceInterface {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
 
+    $prune_count = 0;
     $all_state = $this->getAllOidcState();
-    $now = time();
+    $now = $this->time->getCurrentTime();
     $TTL = 86400; # 24hrs
     foreach ($all_state as $key => $encrypted_value) {
       // TODO: $key contains timestamp
       $value = $this->encryptService->decrypt($encrypted_value, $this->getEncryptionProfile());
       if (isset($value['created']) && ($now > ((int) $value['created'] + $TTL))) {
         unset($all_state[$key]);
+        $prune_count++;
       }
     }
     $this->saveAllOidcState($all_state);
 
     if (\function_exists('ibm_apim_exit_trace')) {
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $prune_count);
     }
+    return $prune_count;
   }
 
 
@@ -186,12 +196,12 @@ class OidcStateService implements OidcStateServiceInterface {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
     if (!$this->encryptionProfile) {
-      $profile = EncryptionProfile::load(self::ENCRYPTION_PROFILE_NAME);
+      $profile = $this->encryptionProfileManager->getEncryptionProfile(self::ENCRYPTION_PROFILE_NAME);
       if (isset($profile)) {
         $this->encryptionProfile = $profile;
       }
       else {
-        $this->logger->error(t('Unable to locate %profile_name encryption profile.', ['%profile_name' => self::ENCRYPTION_PROFILE_NAME]));
+        $this->logger->error('Unable to locate %profile_name encryption profile.', array('%profile_name' => self::ENCRYPTION_PROFILE_NAME));
         if (function_exists('ibm_apim_exit_trace')) {
           ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
         }
@@ -210,7 +220,7 @@ class OidcStateService implements OidcStateServiceInterface {
     }
     $all_state = $this->state->get(self::STATE_KEY);
     if (!isset($all_state)) {
-      $this->logger->debug(t('Unable to retrieve %key from state, initializing.', ['%key' => self::STATE_KEY]));
+      $this->logger->debug('Unable to retrieve %key from state, initializing.', array('%key' => self::STATE_KEY));
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'initialized array');
       }

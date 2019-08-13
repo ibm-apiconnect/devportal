@@ -1,0 +1,58 @@
+.apicCOrgTeaser {
+  display: flex;
+}
+
+.apicCOrgTeaserMain {
+  flex: 1;
+}
+
+.apicCOrgTeaserMain h2 {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.apicCOrgTeaserMain h2 a {
+  display: flex;
+  padding-right: 10px;
+}
+
+.apicCOrgTeaserMain h2 a span:first-of-type {
+  padding-right: 4px;
+  margin-bottom: 0;
+}
+
+.apicCOrgTeaserMain .field {
+  margin-bottom: 0;
+}
+
+.apicCOrgName {
+  max-width: 500px;
+}
+
+@media screen and (max-width: 1024px) {
+  .apicCOrgName {
+    max-width: 300px;
+  }
+}
+
+@media screen and (max-width: 640px) {
+  .apicCOrgTeaser {
+    flex-direction: column;
+  }
+
+  .apicCOrgTeaserMain {
+    -ms-flex: 1 0 auto;
+  }
+
+  .apicCOrgTeaserMain h2 {
+    flex-direction: column;
+  }
+
+  .apicCOrgTeaserMain h2 a {
+    flex-direction: column;
+  }
+
+  .apicCOrgName {
+    max-width: 500px;
+  }
+}

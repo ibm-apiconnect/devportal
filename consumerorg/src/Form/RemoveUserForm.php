@@ -13,27 +13,42 @@
 namespace Drupal\consumerorg\Form;
 
 use Drupal\Component\Utility\Html;
-use Drupal\consumerorg\ApicType\Member;
 use Drupal\consumerorg\Service\ConsumerOrgService;
+use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Drupal\Core\Extension\ThemeHandler;
 
 /**
  * Remove form for consumerorg members.
  */
 class RemoveUserForm extends ConfirmFormBase {
 
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
   protected $consumerOrgService;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
+  /**
+   * @var \Drupal\Core\Extension\ThemeHandler
+   */
   protected $themeHandler;
+
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
 
   /**
    * The node representing the consumerorg.
@@ -59,15 +74,18 @@ class RemoveUserForm extends ConfirmFormBase {
    * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
    * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
    * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
   public function __construct(
     ConsumerOrgService $consumer_org_service,
     UserUtils $user_utils,
-    ThemeHandler $themeHandler
+    ThemeHandler $themeHandler,
+    Messenger $messenger
   ) {
     $this->consumerOrgService = $consumer_org_service;
     $this->userUtils = $user_utils;
     $this->themeHandler = $themeHandler;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -77,7 +95,8 @@ class RemoveUserForm extends ConfirmFormBase {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('ibm_apim.user_utils'),
-      $container->get('theme_handler')
+      $container->get('theme_handler'),
+      $container->get('messenger')
     );
   }
 
@@ -95,8 +114,7 @@ class RemoveUserForm extends ConfirmFormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $current_user = \Drupal::currentUser();
     if (!$this->userUtils->checkHasPermission('member:manage')) {
-      $message = t('Permission denied.');
-      drupal_set_message($message, 'error');
+      $this->messenger->addError(t('Permission denied.'));
 
       $form = [];
       $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
@@ -151,7 +169,7 @@ class RemoveUserForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
+  public function getDescription(): TranslatableMarkup {
     return $this->t('Are you sure you want to remove the user <em>@user?</em>', [
       '@user' => $this->member->getUser()->getUsername(),
     ]);
@@ -160,14 +178,14 @@ class RemoveUserForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getConfirmText() {
+  public function getConfirmText(): TranslatableMarkup {
     return $this->t('Remove');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getQuestion() {
+  public function getQuestion(): TranslatableMarkup {
     return $this->t('Are you sure you want to remove the user <em>@user?</em>', [
       '@user' => $this->member->getUser()->getUsername(),
     ]);
@@ -188,7 +206,7 @@ class RemoveUserForm extends ConfirmFormBase {
 
     $response = $this->consumerOrgService->deleteMember($this->currentOrg, $this->member);
     if ($response->success()) {
-      drupal_set_message(t('User removed successfully.'));
+      $this->messenger->addMessage(t('User removed successfully.'));
 
       $current_user = \Drupal::currentUser();
       \Drupal::logger('consumerorg')

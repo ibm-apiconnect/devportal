@@ -36,17 +36,17 @@ class IbmApimNodeController extends NodeController {
     $build = [
       '#theme' => 'node_add_list',
       '#cache' => [
-        'tags' => $this->entityManager()->getDefinition('node_type')->getListCacheTags(),
+        'tags' => $this->getEntityTypeManager()->getDefinition('node_type')->getListCacheTags(),
       ],
     ];
 
     $content = array();
 
     // Only use node types the user has access to.
-    foreach ($this->entityManager()->getStorage('node_type')->loadMultiple() as $type) {
+    foreach ($this->getEntityTypeManager()->getStorage('node_type')->loadMultiple() as $type) {
       // Block access to APIC content types
       if (!in_array($type->get('type'), array('consumerorg', 'api', 'application', 'product'))) {
-        $access = $this->entityManager()->getAccessControlHandler('node')->createAccess($type->id(), NULL, [], TRUE);
+        $access = $this->getEntityTypeManager()->getAccessControlHandler('node')->createAccess($type->id(), NULL, [], TRUE);
         if ($access->isAllowed()) {
           $content[$type->id()] = $type;
         }
@@ -55,7 +55,7 @@ class IbmApimNodeController extends NodeController {
     }
 
     // Bypass the node/add listing if only one content type is available.
-    if (count($content) == 1) {
+    if (count($content) === 1) {
       $type = array_shift($content);
       return $this->redirect('node.add', array('node_type' => $type->id()));
     }

@@ -12,7 +12,7 @@
 
 namespace Drupal\product\Event;
 
-use Drupal\core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Symfony\Component\EventDispatcher\Event;
 
 /**
@@ -27,14 +27,14 @@ class ProductDeleteEvent extends Event {
   /**
    * The product.
    *
-   * @var \Drupal\core\Entity\EntityInterface
+   * @var \Drupal\Core\Entity\EntityInterface
    */
   public $product;
 
   /**
    * Constructs the object.
    *
-   * @param \Drupal\core\Entity\EntityInterface $product
+   * @param \Drupal\Core\Entity\EntityInterface $product
    *   The product that was deleted.
    */
   public function __construct(EntityInterface $product) {

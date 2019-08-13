@@ -127,6 +127,9 @@ dependencies:
   - session_based_temp_store
   - select_translation
   - term_csv_export_import
+  - warmer
+  - warmer_cdn
+  - warmer_entity
   - ibm_apim
   - ibm_log_stdout
   - ibm_apic_mail

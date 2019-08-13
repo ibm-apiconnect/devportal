@@ -13,9 +13,9 @@ set -o nounset
 
 # BUILD_TEMPLATE - in case we need to merge back with apim_profile script.
 export BUILD_TEMPLATE=$1
-
 export PORTAL_DB_SERVICE_NAME=there.is.no.service
 export SERVICE_NAME=there.is.no.service
+export WEB_HOST=127.0.0.1
 export CONTAINER=admin
 mkdir -p /var/devportal/storenosync
 echo "localhost:127.0.0.1" > /var/devportal/storenosync/cluster_member_list
@@ -49,7 +49,7 @@ fi
 
 mysql -e "set global pxc_strict_mode=DISABLED; set global show_compatibility_56=ON; set global pxc_maint_transition_period=0;"
 
-bash /tmp/data/portal.sql.sh
+bash /etc/devportal/portal.sql.sh
 rm -f /var/devportal/store
 mkdir -p /var/devportal/store
 chown -R aegir:aegir /var/devportal
@@ -159,7 +159,7 @@ else
   touch /var/devportal/storenosync/hosts
   chown $DEVPORTAL_USER:$DEVPORTAL_USER  /var/devportal/storenosync/hosts
   su $DEVPORTAL_USER -c "PATH=$PATH:$MY_DIR/bin AEGIR_ROOT=/var/aegir set_apim_host https://test.mgmt"
-  su $DEVPORTAL_USER -c "PATH=$PATH:$MY_DIR/bin AEGIR_ROOT=/var/aegir create_site a.b https://localhost email@is.invalid clientid clientsecret" || true
+  su $DEVPORTAL_USER -c "PATH=$PATH:$MY_DIR/bin AEGIR_ROOT=/var/aegir create_site -t -n a.b 127.0.0.1 email@is.invalid clientid clientsecret" || true
   echo "Site creation complete."
 fi
 

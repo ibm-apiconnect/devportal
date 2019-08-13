@@ -19,7 +19,7 @@ class IbmApimThemeController extends SystemController {
           foreach ($buildComponent['#theme_groups']['installed'] as $installedKey => $theme_group) {
             if (isset($theme_group->operations) && !empty($theme_group->operations)) {
               foreach ($theme_group->operations as $operationKey => $operation) {
-                if (isset($operation['url']) && $operation['url']->getRouteName() == 'system.theme_uninstall') {
+                if (isset($operation['url']) && $operation['url']->getRouteName() === 'system.theme_uninstall') {
                   $build[$buildKey]['#theme_groups']['installed'][$installedKey]->operations[$operationKey]['title'] = t('Disable');
                   $arguments = $build[$buildKey]['#theme_groups']['installed'][$installedKey]->operations[$operationKey]['attributes']['title']->getArguments();
                   $build[$buildKey]['#theme_groups']['installed'][$installedKey]->operations[$operationKey]['attributes']['title'] = t('Disable @theme theme', $arguments);
@@ -32,12 +32,12 @@ class IbmApimThemeController extends SystemController {
           foreach ($buildComponent['#theme_groups']['uninstalled'] as $installedKey => $theme_group) {
             if (isset($theme_group->operations) && !empty($theme_group->operations)) {
               foreach ($theme_group->operations as $operationKey => $operation) {
-                if (isset($operation['url']) && $operation['url']->getRouteName() == 'system.theme_install') {
+                if (isset($operation['url']) && $operation['url']->getRouteName() === 'system.theme_install') {
                   $build[$buildKey]['#theme_groups']['uninstalled'][$installedKey]->operations[$operationKey]['title'] = t('Enable');
                   $arguments = $build[$buildKey]['#theme_groups']['uninstalled'][$installedKey]->operations[$operationKey]['attributes']['title']->getArguments();
                   $build[$buildKey]['#theme_groups']['uninstalled'][$installedKey]->operations[$operationKey]['attributes']['title'] = t('Enable @theme theme', $arguments);
                 }
-                if (isset($operation['url']) && $operation['url']->getRouteName() == 'system.theme_set_default') {
+                if (isset($operation['url']) && $operation['url']->getRouteName() === 'system.theme_set_default') {
                   $build[$buildKey]['#theme_groups']['uninstalled'][$installedKey]->operations[$operationKey]['title'] = t('Enable and set as default');
                   $arguments = $build[$buildKey]['#theme_groups']['uninstalled'][$installedKey]->operations[$operationKey]['attributes']['title']->getArguments();
                   $build[$buildKey]['#theme_groups']['uninstalled'][$installedKey]->operations[$operationKey]['attributes']['title'] = t('Enable @theme as default theme', $arguments);
@@ -61,9 +61,11 @@ class IbmApimThemeController extends SystemController {
         }
 
         if (isset($buildComponent['#theme_group_titles'])) {
-          $build[$buildKey]['#theme_group_titles']['installed'] = $this->formatPlural(count($build[$buildKey]['#theme_groups']['installed']), 'Enabled theme', 'Enabled themes');
-          if (!empty($build[$buildKey]['#theme_groups']['uninstalled'])) {
-            $build[$buildKey]['#theme_group_titles']['uninstalled'] = $this->formatPlural(count($build[$buildKey]['#theme_groups']['uninstalled']), 'Disabled theme', 'Disabled themes');
+          // this is to avoid 'Cannot use string offset as an array' errors in php
+          $array = &$build[$buildKey];
+          $array['#theme_group_titles']['installed'] = $this->formatPlural(count($build[$buildKey]['#theme_groups']['installed']), 'Enabled theme', 'Enabled themes');
+          if (!empty($array['#theme_groups']['uninstalled'])) {
+            $array['#theme_group_titles']['uninstalled'] = $this->formatPlural(count($build[$buildKey]['#theme_groups']['uninstalled']), 'Disabled theme', 'Disabled themes');
           }
         }
       }

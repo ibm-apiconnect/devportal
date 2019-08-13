@@ -14,8 +14,9 @@
 namespace Drupal\ibm_apim\Service;
 
 use Drupal\auth_apic\JWTToken;
-use Drupal\auth_apic\Rest\Payload\MeResponseReader;
-use Drupal\auth_apic\Rest\Payload\TokenResponseReader;
+use Drupal\ibm_apim\Rest\MeResponse;
+use Drupal\ibm_apim\Rest\Payload\MeResponseReader;
+use Drupal\ibm_apim\Rest\Payload\TokenResponseReader;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
@@ -23,6 +24,7 @@ use Drupal\ibm_apim\ApicRest;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Rest\Exception\RestResponseParseException;
 use Drupal\ibm_apim\Rest\Payload\RestResponseReader;
+use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Psr\Log\LoggerInterface;
@@ -32,41 +34,75 @@ use Psr\Log\LoggerInterface;
  */
 class APIMServer implements ManagementServerInterface {
 
+  /**
+   * @var \Drupal\Core\TempStore\PrivateTempStore
+   */
   protected $sessionStore;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
   protected $siteConfig;
 
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
   protected $logger;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\ApicUserService
+   */
   protected $userService;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
+   */
   protected $registryService;
 
   /**
-   * Apic Management Server Service.
+   * @var \Drupal\ibm_apim\Rest\Payload\RestResponseReader
+   */
+  protected $restResponseReader;
+
+  /**
+   * @var \Drupal\auth_apic\Rest\Payload\TokenResponseReader
+   */
+  protected $tokenResponseReader;
+
+  /**
+   * @var \Drupal\auth_apic\Rest\Payload\MeResponseReader
+   */
+  protected $meResponseReader;
+
+  /**
+   * APIMServer constructor.
    *
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
-   *   Tempstore factory interface for session data..
    * @param \Drupal\ibm_apim\Service\SiteConfig $config
-   *   Site config.
-   * @param LoggerInterface $logger
-   *   Logger
-   * @param ApicUserService $user_service
-   *   Apic User service.
-   * @param UserRegistryServiceInterface $registry_service
-   *   User registry service.
+   * @param \Psr\Log\LoggerInterface $logger
+   * @param \Drupal\ibm_apim\Service\ApicUserService $user_service
+   * @param \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface $registry_service
+   * @param \Drupal\ibm_apim\Rest\Payload\RestResponseReader $rest_response_reader
+   * @param \Drupal\ibm_apim\Rest\Payload\TokenResponseReader $token_response_reader
+   * @param \Drupal\ibm_apim\Rest\Payload\MeResponseReader $me_response_reader
    */
   public function __construct(PrivateTempStoreFactory $temp_store_factory,
                               SiteConfig $config,
                               LoggerInterface $logger,
                               ApicUserService $user_service,
-                              UserRegistryServiceInterface $registry_service
+                              UserRegistryServiceInterface $registry_service,
+                              RestResponseReader $rest_response_reader,
+                              TokenResponseReader $token_response_reader,
+                              MeResponseReader $me_response_reader
   ) {
     $this->sessionStore = $temp_store_factory->get('ibm_apim');
     $this->siteConfig = $config;
     $this->logger = $logger;
     $this->userService = $user_service;
     $this->registryService = $registry_service;
+    $this->restResponseReader = $rest_response_reader;
+    $this->tokenResponseReader = $token_response_reader;
+    $this->meResponseReader = $me_response_reader;
   }
 
   /**
@@ -98,11 +134,11 @@ class APIMServer implements ManagementServerInterface {
     $user_registry_url = $user->getApicUserRegistryUrl();
     $user_registry = $this->registryService->get($user_registry_url);
 
-    if (empty($user_registry)) {
+    if ($user_registry === null || empty($user_registry)) {
       \Drupal::logger('auth_apic')
         ->error('Failed to find user registry with URL @regurl for user @username.',
           ['@regurl' => $user_registry_url, '@username' => $user->getUsername()]);
-      drupal_set_message(t('Unable to authorize your request. Contact the site administrator.'), 'error');
+      \Drupal::messenger()->addError(t('Unable to authorize your request. Contact the site administrator.'));
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       return NULL;
     }
@@ -140,14 +176,13 @@ class APIMServer implements ManagementServerInterface {
       return NULL;
     }
     else {
-      $reader = new TokenResponseReader();
       $token_response = NULL;
 
       try {
-        $token_response = $reader->read($response);
+        $token_response = $this->tokenResponseReader->read($response);
 
       } catch (RestResponseParseException $exception) {
-        $this->logger->error('failure parsing POST /token response: ' . $exception->getMessage());
+        $this->logger->error('failure parsing POST /token response: %message', ['%message' => $exception->getMessage()]);
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
         return NULL;
       }
@@ -160,26 +195,25 @@ class APIMServer implements ManagementServerInterface {
   /**
    * @param null|string $auth
    *
-   * @return \Drupal\auth_apic\Rest\MeResponse
+   * @return \Drupal\ibm_apim\Rest\MeResponse
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  public function getMe($auth = NULL): \Drupal\auth_apic\Rest\MeResponse {
+  public function getMe($auth = NULL): MeResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $response = ApicRest::get('/me?expand=true', $auth);
-    $meResponseReader = new MeResponseReader($this->logger);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $meResponseReader->read($response);
+    return $this->meResponseReader->read($response);
   }
 
   /**
    * @param \Drupal\ibm_apim\ApicType\ApicUser $user
    *
-   * @return \Drupal\auth_apic\Rest\MeResponse
+   * @return \Drupal\ibm_apim\Rest\MeResponse
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  public function updateMe(ApicUser $user): \Drupal\auth_apic\Rest\MeResponse {
+  public function updateMe(ApicUser $user): MeResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     // 'username' is a Drupal field and will make the mgmt node barf so remove it
@@ -187,28 +221,29 @@ class APIMServer implements ManagementServerInterface {
     $user->setUsername(NULL);
     // apim can't handle password being set here either
     $user->setPassword(NULL);
+    $registry_url = $user->getApicUserRegistryUrl();
+    $user->setApicUserRegistryUrl(NULL);
 
     $response = ApicRest::put('/me', $this->userService->getUserJSON($user));
 
     $user->setUsername($username);
-    $meResponseReader = new MeResponseReader($this->logger);
+    $user->setApicUserRegistryUrl($registry_url);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $meResponseReader->read($response);
+    return $this->meResponseReader->read($response);
   }
 
   /**
    * @return \Drupal\ibm_apim\Rest\RestResponse|null
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  public function deleteMe(): ?\Drupal\ibm_apim\Rest\RestResponse {
+  public function deleteMe(): ?RestResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $url = '/me';
     $result = ApicRest::delete($url);
-    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($result);
+    return $this->restResponseReader->read($result);
   }
 
   /**
@@ -222,10 +257,9 @@ class APIMServer implements ManagementServerInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $result = ApicRest::post('/users/register', $this->userService->getUserJSON($user), $auth);
-    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($result);
+    return $this->restResponseReader->read($result);
   }
 
   /**
@@ -251,19 +285,18 @@ class APIMServer implements ManagementServerInterface {
 
     if (empty($invitedUser->getOrganization())) {
       // This is andre invited by another andre and obviously the request body is therefore completely different
-      $data = json_decode($this->userService->getUserJSON($invitedUser));
+      $data = json_decode($this->userService->getUserJSON($invitedUser), false);
     }
     else {
-      $data['user'] = json_decode($this->userService->getUserJSON($invitedUser));
+      $data['user'] = json_decode($this->userService->getUserJSON($invitedUser), false);
       $data['org'] = ['title' => $invitedUser->getOrganization()];
     }
 
     $post_body = json_encode($data);
 
     $result = ApicRest::json_http_request($token->getUrl() . '/register', 'POST', $headers, $post_body);
-    $reader = new RestResponseReader();
 
-    $restResponse = $reader->read($result);
+    $restResponse = $this->restResponseReader->read($result);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $restResponse);
 
@@ -300,7 +333,7 @@ class APIMServer implements ManagementServerInterface {
       $data['password'] = $acceptingUser->getPassword();
     }
     else {
-      $data['user'] = json_decode($this->userService->getUserJSON($acceptingUser));
+      $data['user'] = json_decode($this->userService->getUserJSON($acceptingUser), false);
       if ($orgTitle !== NULL) {
         $data['org'] = ['title' => $orgTitle];
       }
@@ -309,9 +342,8 @@ class APIMServer implements ManagementServerInterface {
     $post_body = json_encode($data);
 
     $result = ApicRest::json_http_request($token->getUrl() . '/accept', 'POST', $headers, $post_body);
-    $reader = new RestResponseReader();
 
-    $restResponse = $reader->read($result);
+    $restResponse = $this->restResponseReader->read($result);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $restResponse);
 
@@ -335,10 +367,8 @@ class APIMServer implements ManagementServerInterface {
     ];
     $response = ApicRest::post($url, json_encode($data));
 
-    $reader = new RestResponseReader();
-
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($response);
+    return $this->restResponseReader->read($response);
   }
 
   /**
@@ -366,10 +396,9 @@ class APIMServer implements ManagementServerInterface {
     $body = json_encode($data);
 
     $response = ApicRest::json_http_request($jwt->getUrl(), 'POST', $headers, $body);
-    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($response);
+    return $this->restResponseReader->read($response);
   }
 
   /**
@@ -386,10 +415,9 @@ class APIMServer implements ManagementServerInterface {
 
     $data = ['password' => $new_password, 'current_password' => $old_password];
     $response = ApicRest::post($url, json_encode($data), 'user');
-    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($response);
+    return $this->restResponseReader->read($response);
   }
 
   /**
@@ -415,10 +443,9 @@ class APIMServer implements ManagementServerInterface {
     $data['org'] = $new_user->getOrganization();
 
     $response = ApicRest::post($url, json_encode($data), 'clientid');
-    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($response);
+    return $this->restResponseReader->read($response);
   }
 
   /**
@@ -433,8 +460,7 @@ class APIMServer implements ManagementServerInterface {
     $url = '/orgs';
     $data = ['title' => $org->getName()];
     $response = ApicRest::post($url, json_encode($data));
-    $reader = new RestResponseReader();
-    $responseObject = $reader->read($response);
+    $responseObject = $this->restResponseReader->read($response);
     if ($responseObject !== null) {
       $code = $responseObject->getCode();
       if ($code >= 200 && $code < 400) {
@@ -442,15 +468,14 @@ class APIMServer implements ManagementServerInterface {
         if (isset($data['id'])) {
           $roleUrl = '/orgs/' . $data['id'] . '/roles';
           $roleResponse = ApicRest::get($roleUrl);
-          $roleReader = new RestResponseReader();
-          $roleResponseObject = $roleReader->read($roleResponse);
+          $roleResponseObject = $this->restResponseReader->read($roleResponse);
           if ($roleResponseObject !== null && isset($roleResponseObject->getData()['results'])) {
             $data['roles'] = $roleResponseObject->getData()['results'];
           }
           $membersUrl = '/orgs/' . $data['id'] . '/members';
           $membersResponse = ApicRest::get($membersUrl);
-          $membersReader = new RestResponseReader();
-          $membersResponseObject = $membersReader->read($membersResponse);
+
+          $membersResponseObject = $this->restResponseReader->read($membersResponse);
           if ($membersResponseObject !== null && isset($membersResponseObject->getData()['results'])) {
             $data['members'] = $membersResponseObject->getData()['results'];
           }
@@ -481,10 +506,9 @@ class APIMServer implements ManagementServerInterface {
       $data['role_urls'] = [$apim_utils->createFullyQualifiedUrl($role)];
     }
     $response = ApicRest::post($org->getUrl() . '/member-invitations', json_encode($data));
-    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($response);
+    return $this->restResponseReader->read($response);
   }
 
   /**
@@ -498,10 +522,9 @@ class APIMServer implements ManagementServerInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $response = ApicRest::delete($org->getUrl() . '/member-invitations/' . $inviteId);
-    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($response);
+    return $this->restResponseReader->read($response);
   }
 
   /**
@@ -515,10 +538,9 @@ class APIMServer implements ManagementServerInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $response = ApicRest::post($org->getUrl() . '/member-invitations/' . $inviteId . '/regenerate', json_encode(['notify' => TRUE]));
-    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($response);
+    return $this->restResponseReader->read($response);
   }
 
   /**
@@ -532,10 +554,9 @@ class APIMServer implements ManagementServerInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $response = ApicRest::patch($org->getUrl(), json_encode($data));
-    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($response);
+    return $this->restResponseReader->read($response);
   }
 
   /**
@@ -548,10 +569,9 @@ class APIMServer implements ManagementServerInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $response = ApicRest::delete($org->getUrl());
-    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($response);
+    return $this->restResponseReader->read($response);
   }
 
   /**
@@ -565,10 +585,9 @@ class APIMServer implements ManagementServerInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $response = ApicRest::patch($member->getUrl(), json_encode($data));
-    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($response);
+    return $this->restResponseReader->read($response);
   }
 
   /**
@@ -581,10 +600,9 @@ class APIMServer implements ManagementServerInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $response = ApicRest::delete($member->getUrl());
-    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($response);
+    return $this->restResponseReader->read($response);
   }
 
   /**
@@ -603,10 +621,32 @@ class APIMServer implements ManagementServerInterface {
     }
 
     $response = ApicRest::post($org->getUrl() . '/transfer-owner', json_encode($data));
-    $reader = new RestResponseReader();
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $reader->read($response);
+    return $this->restResponseReader->read($response);
   }
+
+  /**
+   * @inheritDoc
+   */
+  public function activateFromJWT(JWTToken $jwt): RestResponse {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $headers = [
+      'Content-Type: application/json',
+      'Accept: application/json',
+      'Authorization: Bearer ' . $jwt->getDecodedJwt(),
+      'X-IBM-Consumer-Context: ' . $this->siteConfig->getOrgId() . '.' . $this->siteConfig->getEnvId(),
+      'X-IBM-Client-Id: ' . $this->siteConfig->getClientId(),
+      'X-IBM-Client-Secret: ' . $this->siteConfig->getClientSecret(),
+    ];
+
+    $mgmt_result = ApicRest::json_http_request($jwt->getUrl(), 'POST', $headers, '');
+    $result = $this->restResponseReader->read($mgmt_result);
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $result->getCode());
+    return $result;
+  }
+
 
 }

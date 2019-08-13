@@ -14,21 +14,26 @@
 namespace Drupal\auth_apic\Form;
 
 use Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface;
-use Drupal\auth_apic\Service\Interfaces\UserManagerInterface;
+use Drupal\auth_apic\UserManagement\ApicInvitationInterface;
+use Drupal\auth_apic\UserManagement\SignUpInterface;
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
+use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\ibm_apim\Service\ApicUserService;
-use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\ibm_apim\Service\ApimUtils;
+use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
+use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
+use Drupal\session_based_temp_store\SessionBasedTempStoreFactory;
 use Drupal\user\RegisterForm;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\ibm_apim\Service\ApimUtils;
-use Drupal\session_based_temp_store\SessionBasedTempStoreFactory;
 
 /**
  * Self sign up / create new user form.
@@ -41,9 +46,9 @@ class ApicUserRegisterForm extends RegisterForm {
   protected $logger;
 
   /**
-   * @var \Drupal\auth_apic\Service\Interfaces\UserManagerInterface
+   * @var \Drupal\ibm_apim\UserManagement\ApicAccountInterface
    */
-  protected $userManager;
+  protected $accountService;
 
   protected $userRegistries;
 
@@ -67,7 +72,35 @@ class ApicUserRegisterForm extends RegisterForm {
    */
   protected $oidcService;
 
+  /**
+   * @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory
+   */
   protected $authApicSessionStore;
+
+  /**
+   * @var \Drupal\auth_apic\UserManagement\SignUpInterface
+   */
+  protected $userManagedSignUp;
+
+  /**
+   * @var \Drupal\auth_apic\UserManagement\SignUpInterface
+   */
+  protected $nonUserManagedSignUp;
+
+  /**
+   * @var \Drupal\auth_apic\UserManagement\ApicInvitationInterface
+   */
+  protected $invitationService;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface
+   */
+  protected $userStorage;
+
+  /**
+   * @var \Drupal\Core\Cache\CacheBackendInterface
+   */
+  protected $cacheBackend;
 
   /**
    * {@inheritdoc}
@@ -75,22 +108,32 @@ class ApicUserRegisterForm extends RegisterForm {
   public function __construct(EntityManagerInterface $entity_manager,
                               LanguageManagerInterface $language_manager,
                               LoggerInterface $logger,
-                              UserManagerInterface $user_manager,
+                              ApicAccountInterface $account_service,
                               UserRegistryServiceInterface $userRegistryService,
                               ApicUserService $userService,
                               EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL,
                               TimeInterface $time = NULL,
                               ApimUtils $apim_utils,
                               OidcRegistryServiceInterface $oidc_service,
-                              SessionBasedTempStoreFactory $sessionStoreFactory) {
+                              SessionBasedTempStoreFactory $sessionStoreFactory,
+                              SignUpInterface $user_managed_signup,
+                              SignUpInterface $non_user_managed_signup,
+                              ApicInvitationInterface $invitation_service,
+                              ApicUserStorageInterface $user_storage,
+                              CacheBackendInterface $cache_backend) {
     parent::__construct($entity_manager, $language_manager, $entity_type_bundle_info, $time);
     $this->logger = $logger;
-    $this->userManager = $user_manager;
+    $this->accountService = $account_service;
     $this->userRegistryService = $userRegistryService;
     $this->userService = $userService;
     $this->apimUtils = $apim_utils;
     $this->oidcService = $oidc_service;
     $this->authApicSessionStore = $sessionStoreFactory->get('auth_apic_invitation_token');
+    $this->userManagedSignUp = $user_managed_signup;
+    $this->nonUserManagedSignUp = $non_user_managed_signup;
+    $this->invitationService = $invitation_service;
+    $this->userStorage = $user_storage;
+    $this->cacheBackend = $cache_backend;
   }
 
   /**
@@ -101,14 +144,19 @@ class ApicUserRegisterForm extends RegisterForm {
       $container->get('entity.manager'),
       $container->get('language_manager'),
       $container->get('logger.channel.auth_apic'),
-      $container->get('auth_apic.usermanager'),
+      $container->get('ibm_apim.account'),
       $container->get('ibm_apim.user_registry'),
       $container->get('ibm_apim.apicuser'),
       $container->get('entity_type.bundle.info'),
       $container->get('datetime.time'),
       $container->get('ibm_apim.apim_utils'),
       $container->get('auth_apic.oidc'),
-      $container->get('session_based_temp_store')
+      $container->get('session_based_temp_store'),
+      $container->get('auth_apic.usermanaged_signup'),
+      $container->get('auth_apic.nonusermanaged_signup'),
+      $container->get('auth_apic.invitation'),
+      $container->get('ibm_apim.user_storage'),
+      $container->get('cache.default')
     );
   }
 
@@ -118,7 +166,7 @@ class ApicUserRegisterForm extends RegisterForm {
   public function form(array $form, FormStateInterface $form_state) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $invited_andre = FALSE;
+    $member_invitation = FALSE;
 
     $form = parent::form($form, $form_state);
 
@@ -145,15 +193,11 @@ class ApicUserRegisterForm extends RegisterForm {
     // we can use this to pre-populate the email field
     $jwt = $this->authApicSessionStore->get('invitation_object');
     if ($jwt !== NULL) {
-      $form['#message']['message'] = t("To complete your invitation, fill out any required fields below.");
+      $form['#message']['message'] = t('To complete your invitation, fill out any required fields below.');
 
       // for andre inviting another andre, we won't need the consumer org field
-      if (strpos($jwt->getPayload()['scopes']['url'], '/member-invitations/') !== FALSE) {
-        $invited_andre = TRUE;
-        $form['invited_andre'] = [
-          '#type' => 'value',
-          '#value' => TRUE,
-        ];
+      if (strpos($jwt->getPayload()['scopes']['url'], '/member-invitations/')) {
+        $member_invitation = TRUE;
       }
     }
 
@@ -188,7 +232,7 @@ class ApicUserRegisterForm extends RegisterForm {
     // The rest of the fields depend on whether this is LUR, LDAP etc
     if ($chosen_registry->isUserManaged()) {
 
-      if (!$invited_andre) {
+      if (!$member_invitation) {
         // override multi select consumer org panel with just a textfield
         $form['consumerorg'] = [
           '#type' => 'textfield',
@@ -306,7 +350,7 @@ class ApicUserRegisterForm extends RegisterForm {
         ];
       }
       // here we are invited from apim, we need to specify a consumer org.
-      if (!empty($jwt) && $chosen_registry->getRegistryType() !== 'oidc') {
+      if (!empty($jwt) && !$member_invitation && $chosen_registry->getRegistryType() !== 'oidc') {
         $form['consumerorg'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Consumer organization'),
@@ -402,6 +446,9 @@ class ApicUserRegisterForm extends RegisterForm {
     }
     $form['#cache']['contexts'][] = 'url.query_args:registry_url';
 
+    // and clear the cache for captcha placement
+    $this->cacheBackend->delete('captcha_placement_map_cache');
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $form;
   }
@@ -441,8 +488,13 @@ class ApicUserRegisterForm extends RegisterForm {
 
   /**
    * {@inheritdoc}
+   *
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $registry_url = $form_state->getValue('registry_url');
@@ -460,26 +512,51 @@ class ApicUserRegisterForm extends RegisterForm {
     // no-op on save as we save account via the user manager service.
   }
 
-  private function validateUniqueUser(FormStateInterface $form_state, UserRegistry $registry) {
+  private function validateUniqueUser(FormStateInterface $form_state, UserRegistry $registry) : bool{
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if ($registry !== NULL && $registry->isUserManaged()) {
       // we need to check for existing usernames and email addresses.
       $emailAddress = $form_state->getValue('mail');
       $username = $form_state->getValue('name');
 
-      if (user_load_by_name($username) || user_load_by_mail($emailAddress)) {
+      $user_with_same_email = $this->userStorage->loadUserByEmailAddress($emailAddress);
+
+      $testUser = new ApicUser();
+      $testUser->setUsername($username);
+      $testUser->setApicUserRegistryUrl($registry->getUrl());
+      $username_in_same_registry = $this->userStorage->load($testUser);
+
+      if ($this->isBannedName($username) || $user_with_same_email !== NULL || $username_in_same_registry !== NULL) {
         $signInLink = Url::fromRoute('user.login')->toString();
         $form_state->setErrorByName('',
           t('A problem occurred while attempting to create your account. If you already have an account then please use that to <a href="@link">Sign in</a>.',
             ['@link' => $signInLink])
         );
+        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, FALSE);
         return FALSE;
       }
 
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, TRUE);
     return TRUE;
   }
 
-  private function submitToApim(FormStateInterface $form_state, UserRegistry $registry) {
+  private function isBannedName(string $username) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $username);
+    // explicitly ban some usernames.
+    $banned_usernames = ['admin', 'anonymous'];
+
+    $result = in_array(strtolower($username), $banned_usernames, true);
+
+    if ($result) {
+      $this->logger->warning('username is banned from registering: %name', ['%name' => $username]);
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $result);
+    return $result;
+  }
+
+  private function submitToApim(FormStateInterface $form_state, UserRegistry $registry) : void{
 
     $new_user = $this->userService->parseRegisterForm($form_state->getUserInput());
     if (empty($new_user->getMail())) {
@@ -491,32 +568,31 @@ class ApicUserRegisterForm extends RegisterForm {
 
     if ($jwt !== NULL) {
       // this is an invited user for which we are gathering more information.
-      $new_user->setApicUserRegistryURL($registry->getUrl());
       if ($registry->isUserManaged()) {
-        $response = $this->userManager->registerInvitedUser($jwt, $new_user, $registry);
+        $response = $this->invitationService->registerInvitedUser($jwt, $new_user);
       }
       else {
-        $response = $this->userManager->acceptInvite($jwt, $new_user);
+        $response = $this->invitationService->acceptInvite($jwt, $new_user);
       }
     }
     // this is self signup, which is processed differently depending on the user registry.
     elseif ($registry->isUserManaged()) {
-      $response = $this->userManager->userManagedSignUp($new_user);
+      $response = $this->userManagedSignUp->signUp($new_user);
     }
     else {
-      $response = $this->userManager->nonUserManagedSignUp($new_user, $registry);
+      $response = $this->nonUserManagedSignUp->signUp($new_user, $registry);
     }
 
-    if ($response == NULL) {
+    if ($response === NULL) {
       $form_state->setRedirect('user.register');
     }
     elseif ($response->success()) {
 
       // we now have an account registered regardless of path taken, so can update with other information we need to store.
-      $loaded_user = \user_load_by_name($new_user->getUsername());
+      $loaded_user = $this->userStorage->load($new_user);
       if ($loaded_user) {
-        $this->userManager->setDefaultLanguage($loaded_user);
-        $this->userManager->saveCustomFields($loaded_user, $form_state, 'register');
+        $this->accountService->setDefaultLanguage($loaded_user);
+        $this->accountService->saveCustomFields($loaded_user, $form_state, 'register');
       }
 
       drupal_set_message($response->getMessage());

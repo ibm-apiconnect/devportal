@@ -13,9 +13,9 @@
 namespace Drupal\auth_apic\Access;
 
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Access\AccessResult;
 use Drupal\user\Entity\User;
 
 /**
@@ -43,7 +43,7 @@ class WritableUserRegistryAccessCheck implements AccessInterface {
     else {
       $user = User::load($account->id());
       if ($user !== NULL) {
-        $registry_url = $user->get('apic_user_registry_url')->value;
+        $registry_url = $user->get('registry_url')->value;
         $registryService = \Drupal::service('ibm_apim.user_registry');
         $registry = $registryService->get($registry_url);
 

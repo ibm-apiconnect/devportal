@@ -1,11 +1,18 @@
+$css--font-face: true !default;
+$css--helpers: true !default;
+$css--body: true !default;
+$css--use-layer: true !default;
+$css--reset: false !default;
+$css--typography: true !default;
 $css--plex: true !default;
 
-// Carbon variables.
 @import "carbon/colors";
 @import "carbon/vars";
+
 @import "carbon/css--reset";
 @import 'carbon/css--font-face';
 @import "carbon/css--body";
+@import 'carbon/css--typography';
 @import "carbon/layer";
 
 /**

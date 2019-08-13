@@ -14,12 +14,36 @@ namespace Drupal\themegenerator\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\themegenerator\Generator;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Self sign up / create new user form.
  */
 class GenerateTheme extends FormBase {
+
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
+   * GenerateTheme constructor.
+   *
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   */
+  public function __construct(Messenger $messenger) {
+    $this->messenger = $messenger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    // Load the service required to construct this class
+    return new static($container->get('messenger'));
+  }
 
   /**
    * {@inheritdoc}
@@ -136,12 +160,12 @@ class GenerateTheme extends FormBase {
       $url = file_create_url($theme['zipPath']);
       $messageHtml = '<a href="' . $url . '">' . $name . '.zip</a>';
       $messageHtml = \Drupal\Core\Render\Markup::create($messageHtml);
-      drupal_set_message(t('Success. Your sub-theme can be downloaded here: @htmlLink. This download will be available for 24 hours.', [
+      $this->messenger->addMessage(t('Success. Your sub-theme can be downloaded here: @htmlLink. This download will be available for 24 hours.', [
         '@htmlLink' => $messageHtml,
       ]));
     }
     else {
-      drupal_set_message(t('An error has occurred.'), 'error');
+      $this->messenger->addError(t('An error has occurred.'));
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

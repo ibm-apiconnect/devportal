@@ -25,6 +25,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Access\AccessResultAllowed;
 use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Access\AccessResultNeutral;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
@@ -32,6 +33,7 @@ use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\product\Product;
+use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /* Permissions that can be granted
@@ -101,11 +103,13 @@ function apic_api_node_access_records($node) {
     ];
 
     $apiRef = $node->apic_ref->value;
-    if($apiRef) {
+    if ($apiRef) {
       // find the list of products to which this api belongs
       // apiref will be a string like: 'maths:1.0.0'
       // product_apis_value will be the same string
-      $query = db_query("SELECT entity_id FROM {node__product_apis} WHERE product_apis_value LIKE '%" . $apiRef . "%'");
+      $options = ['target' => 'default'];
+      $query = Database::getConnection($options['target'])
+        ->query("SELECT entity_id FROM {node__product_apis} WHERE product_apis_value LIKE '%" . $apiRef . "%'", [], $options);
       $prods = $query->fetchAll();
 
 
@@ -115,7 +119,7 @@ function apic_api_node_access_records($node) {
       foreach ($prods as $prod) {
         // Pick up all of the data we need.  Left Joins are used for tables where
         // there may not be an entry (e.g. if tags or orgs are not defined)
-        $query = db_query("SELECT pub.product_visibility_public_value AS product_visibility_public_value, auth.product_visibility_authenticated_value AS product_visibility_authenticated_value
+        $query = Database::getConnection($options['target'])->query('SELECT pub.product_visibility_public_value AS product_visibility_public_value, auth.product_visibility_authenticated_value AS product_visibility_authenticated_value
 , org.product_visibility_custom_orgs_value AS product_visibility_custom_orgs_value, tags.product_visibility_custom_tags_value AS product_visibility_custom_tags_value, view.product_view_enabled_value AS product_view_enabled_value, prref.apic_ref_value AS apic_ref_value
 FROM
 node__product_visibility_public pub
@@ -124,17 +128,18 @@ LEFT JOIN node__product_visibility_custom_orgs org ON pub.entity_id = org.entity
 LEFT JOIN node__product_visibility_custom_tags tags ON pub.entity_id = tags.entity_id
 LEFT JOIN node__apic_ref prref ON pub.entity_id = prref.entity_id
 INNER JOIN node__product_view_enabled view ON pub.entity_id = view.entity_id
-WHERE  (pub.entity_id = " . $prod->entity_id . ")");
+WHERE  (pub.entity_id = ' . $prod->entity_id . ')', [], $options);
+
         $results = $query->fetchAll();
 
         // This is just too much debug; enable for special cases only
-//        if ($aclDebug === TRUE) {
-//          \Drupal::logger('apic_api')->debug('API %title searching for product %id: %results', [
-//            '%title' => var_export($node->getTitle(), TRUE),
-//            '%id' => $prod->entity_id,
-//            '%results' => var_export($results, TRUE),
-//          ]);
-//        }
+        //        if ($aclDebug === TRUE) {
+        //          \Drupal::logger('apic_api')->debug('API %title searching for product %id: %results', [
+        //            '%title' => var_export($node->getTitle(), TRUE),
+        //            '%id' => $prod->entity_id,
+        //            '%results' => var_export($results, TRUE),
+        //          ]);
+        //        }
 
         // The query will return multiple rows if there are multiple orgs or tags
         // or if there are multiple products with the same API
@@ -228,7 +233,7 @@ WHERE  (pub.entity_id = " . $prod->entity_id . ")");
           '@realm' => $grant['realm'],
           '@grant' => api_permission_value($grant['gid']),
         ]);
-      };
+      }
     }
   }
   ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $uniqueGrants);
@@ -269,7 +274,7 @@ function apic_api_node_grants($account, $op) {
             '@realm' => $realm,
             '@grant' => api_permission_value($grant),
           ]);
-        };
+        }
       }
     }
   }
@@ -362,7 +367,14 @@ function apic_api_preprocess(&$variables, $hook, &$info) {
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  */
-function apic_api_preprocess_node(&$variables) {
+/**
+ * @param $variables
+ *
+ * @return void
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ */
+function apic_api_preprocess_node(&$variables): void {
   if ($variables['node']->getType() === 'api') {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
     // get global settings first
@@ -418,6 +430,9 @@ function apic_api_preprocess_node(&$variables) {
       $showCorsWarnings = (boolean) $config->get('show_cors_warnings');
       $soapSwaggerDownload = (boolean) $config->get('soap_swagger_download');
       $soapCodeSnippets = (boolean) $config->get('soap_codesnippets');
+      $optimiseOauthUX = (boolean) $config->get('optimise_oauth_ux');
+      $certificateStripNewlines = (boolean) $config->get('certificate_strip_newlines');
+      $certificateStripPrefix = (boolean) $config->get('certificate_strip_prefix');
       $codeSnippetLangs = [];
       $codeSnippets = $config->get('codesnippets');
       $firstEnabled = NULL;
@@ -433,6 +448,9 @@ function apic_api_preprocess_node(&$variables) {
       $applications = [];
       $defaultCodeSnippetLang = NULL;
       $currentUser = \Drupal::currentUser();
+      if (!$currentUser->isAnonymous()) {
+        $currentUser = User::load($currentUser->id());
+      }
       if (isset($currentUser->codesnippet->value) && $currentUser->isAuthenticated()) {
         $defaultCodeSnippetLang = $currentUser->codesnippet->value;
       }
@@ -452,7 +470,7 @@ function apic_api_preprocess_node(&$variables) {
         }
         $response = new RedirectResponse($path);
         $response->send();
-        return NULL;
+        return;
       }
 
       // if user's default lang not set or is not one of the enabled ones then default to first enabled
@@ -588,16 +606,24 @@ function apic_api_preprocess_node(&$variables) {
 
       $variables['#attached']['library'][] = 'apic_api/explorer';
       $variables['#attached']['drupalSettings']['api']['explorer']['apis'] = [unserialize($variables['node']->api_swagger->value, ['allowed_classes' => FALSE])];
+      $encodedSwagger = $variables['node']->api_encodedswagger->value;
+      if ($encodedSwagger !== NULL && !empty($encodedSwagger)) {
+        $variables['#attached']['drupalSettings']['api']['explorer']['encodedApis'] = [$encodedSwagger];
+      }
       $variables['#attached']['drupalSettings']['api']['explorer']['apps'] = $applications;
       $variables['#attached']['drupalSettings']['api']['explorer']['options'] = [
         'showApiVersion' => $ibmApimShowVersions,
         'showCorsWarnings' => $showCorsWarnings,
         'showSoapSwaggerDownload' => $soapSwaggerDownload,
+        'optimiseOauthUX' => $optimiseOauthUX,
+        'certificateStripPrefix' => $certificateStripPrefix,
+        'certificateStripNewlines' => $certificateStripNewlines,
         'showSoapCodeSnippets' => $soapCodeSnippets,
         'languages' => $codeSnippetLangs,
         'defaultLanguage' => $defaultCodeSnippetLang,
         'tryIt' => $enableApiTest,
         'onReady' => 'portalExplorerReady',
+        'wsdlRetrieverURL' => Url::fromRoute('apic_api.retrievewsdl', ['api' => $variables['node']->apic_ref->value, 'endpoint' => 'REPLACE_THIS_VALUE'])->setAbsolute()->toString(),
         'explorerDir' => base_path() . drupal_get_path('module', 'apic_api') . '/explorer/app/',
         'locale' => $utils->convert_lang_name(\Drupal::languageManager()->getCurrentLanguage()->getId()),
         'loggedIn' => !$currentUser->isAnonymous(),
@@ -634,9 +660,16 @@ function apic_api_form_alter(array &$form, FormStateInterface $form_state, $form
   switch ($form_id) {
     // remove link to delete our content type
     case 'node_type_edit_form' :
-      if (isset($form['type']['#default_value']) && $form['type']['#default_value'] === 'api') {
-        if (isset($form['actions']['delete'])) {
-          unset($form['actions']['delete']);
+      if (isset($form['type']['#default_value'], $form['actions']['delete']) && $form['type']['#default_value'] === 'api') {
+        unset($form['actions']['delete']);
+      }
+      break;
+    case 'node_api_edit_form':
+      // if anyone has made our internal fields visible, then lets make them readonly
+      $internal_field_list = Api::getIBMFields();
+      foreach ($internal_field_list as $fieldName) {
+        if ($fieldName !== 'apic_pathalias' && $fieldName !== 'apic_tags' && $fieldName !== 'apic_rating' && $fieldName !== 'apic_image' && $fieldName !== 'apic_attachments' && isset($form[$fieldName])) {
+          $form[$fieldName]['#disabled'] = TRUE;
         }
       }
       break;

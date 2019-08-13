@@ -12,7 +12,7 @@ Feature: APIACL
       | andre_one | andre_one@example.com | Qwert123 | 1      |
       | andre_two | andre_two@example.com | Qwert123 | 1      |
     Given consumerorgs:
-      | title     | name      | id                       | owner     | tags    |
+      | title          | name           | id                       | owner     | tags    |
       | a1_consumerorg | a1-consumerorg | a18843f3e4b07631568a159d | andre_one | testers |
       | a2_consumerorg | a2-consumerorg | a28843f3e4b07631568a159d | andre_two | others  |
 # For this to work, we need to create an API and then include it in a product
@@ -27,15 +27,25 @@ Feature: APIACL
     Given I publish an api with the name "api2_@now"
     Given I publish an api with the name "api3_@now"
     Given I publish an api with the name "api4_@now"
-    Then the api named "api1_@now" should be visible
-    Then the api named "api2_@now" should be visible
-    Then the api named "api3_@now" should be visible
-    Then the api named "api4_@now" should be visible
+    # note we rely on x-pathalias being set in the api to hit it.
+    Given I am on "/api/api1_@now"
+    Then the response status code should be 200
+    Given I am on "/api/api2_@now"
+    Then the response status code should be 200
+    Given I am on "/api/api3_@now"
+    Then the response status code should be 200
+    Given I am on "/api/api4_@now"
+    Then the response status code should be 200
 
+    Given I am not logged in
     Given I am logged in as "andre_two"
     Then I should not see the text "Unrecognized username or password"
     And I should not see the text "Log in"
-    Then the api named "api1_@now" should be visible
-    Then the api named "api2_@now" should be visible
-    Then the api named "api3_@now" should not be visible
-    Then the api named "api4_@now" should not be visible
+    Given I am on "/api/api1_@now"
+    Then the response status code should be 200
+    Given I am on "/api/api2_@now"
+    Then the response status code should be 200
+    Given I am on "/api/api3_@now"
+    Then the response status code should be 404
+    Given I am on "/api/api4_@now"
+    Then the response status code should be 404

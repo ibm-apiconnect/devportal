@@ -1,0 +1,15 @@
+--- modules/autologout/config/schema/autologout.schema.yml	2019-07-29 11:29:46.000000000 +0100
++++ modules/autologout/config/schema/autologout.schema.yml	2019-07-29 11:30:02.000000000 +0100
+@@ -20,10 +20,10 @@
+       type: boolean
+       label: 'Integer label'
+     message:
+-      type: string
++      type: label
+       label: 'Message to display'
+     inactivity_message:
+-      type: string
++      type: label
+       label: 'Message displayed after logging out'
+     enforce_admin:
+       type: boolean

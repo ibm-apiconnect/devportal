@@ -55,7 +55,7 @@ class ApimUtils {
       // Should start with a /
       if (strpos($url, '/') !== 0) {
         $url = '/' . $url;
-        $this->logger->debug('createFullyQualifiedUrl: url does not start with / so updated to ' . $url);
+        $this->logger->debug('createFullyQualifiedUrl: url does not start with / so updated to %url', ['%url' => $url]);
       }
 
       $hostname = $this->siteconfig->getApimHost();
@@ -97,7 +97,7 @@ class ApimUtils {
     // Should start with a /
     if (strpos($redacted_url, '/') !== 0) {
       $redacted_url = '/' . $redacted_url;
-      $this->logger->debug('removeFullyQualifiedUrl: url does not start with / so updated to ' . $redacted_url);
+      $this->logger->debug('removeFullyQualifiedUrl: url does not start with / so updated to %redacted_url', ['%redacted_url' => $redacted_url]);
     }
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $redacted_url);

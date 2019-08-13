@@ -13,40 +13,41 @@
 
 namespace Drupal\auth_apic\Controller;
 
-use Drupal\auth_apic\Service\Interfaces\UserManagerInterface;
 use Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface;
-use Drupal\ibm_apim\Service\SiteConfig;
-use Drupal\ibm_apim\Service\UserUtils;
-use Drupal\ibm_apim\Service\Utils;
+use Drupal\auth_apic\UserManagement\ApicLoginServiceInterface;
 use Drupal\Core\Controller\ControllerBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\ibm_apim\ApicType\ApicUser;
+use Drupal\ibm_apim\Service\Utils;
 use Drupal\session_based_temp_store\SessionBasedTempStoreFactory;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ApicOidcAzCodeController extends ControllerBase {
 
+  /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
   protected $utils;
 
-  protected $userManager;
+  /**
+   * @var \Drupal\auth_apic\UserManagement\ApicLoginServiceInterface
+   */
+  protected $loginService;
 
-  protected $userUtils;
-
-  protected $siteConfig;
-
+  /**
+   * @var \Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface
+   */
   protected $oidcStateService;
 
+  /**
+   * @var
+   */
   protected $authApicSessionStore;
 
   public function __construct(Utils $utils,
-                              UserManagerInterface $user_manager,
-                              UserUtils $user_utils,
-                              SiteConfig $site_config,
+                              ApicLoginServiceInterface $login_service,
                               OidcStateServiceInterface $oidc_state_service,
                               SessionBasedTempStoreFactory $sessionStoreFactory) {
     $this->utils = $utils;
-    $this->userManager = $user_manager;
-    $this->userUtils = $user_utils;
-    $this->siteConfig = $site_config;
+    $this->loginService = $login_service;
     $this->oidcStateService = $oidc_state_service;
     $this->authApicSessionStore = $sessionStoreFactory->get('auth_apic_invitation_token');
   }
@@ -54,9 +55,7 @@ class ApicOidcAzCodeController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('ibm_apim.utils'),
-      $container->get('auth_apic.usermanager'),
-      $container->get('ibm_apim.user_utils'),
-      $container->get('ibm_apim.site_config'),
+      $container->get('auth_apic.login'),
       $container->get('auth_apic.oidc_state'),
       $container->get('session_based_temp_store')
     );
@@ -86,7 +85,11 @@ class ApicOidcAzCodeController extends ControllerBase {
         // Clear the JWT from the session as we're done with it now
         $this->authApicSessionStore->delete('invitation_object');
 
-        $redirect_location = $this->loginViaAzCode($authCode, $stateObj['registry_url']);
+        $redirect_location = $this->loginService->loginViaAzCode($authCode, $stateObj['registry_url']);
+        if ($redirect_location === 'ERROR') {
+          drupal_set_message(t('Error while authenticating user. Please contact your system administrator.'), 'error');
+          $redirect_location = '<front>';
+        }
         return $this->redirect($redirect_location);
       }
       else {
@@ -96,50 +99,17 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     else {
       $stateObj = $stateReceived;
-      $redirectLocation = $this->loginViaAzCode($authCode, $stateObj['registry_url']);
+      $redirectLocation = $this->loginService->loginViaAzCode($authCode, $stateObj['registry_url']);
+      if ($redirectLocation === 'ERROR') {
+        drupal_set_message(t('Error while authenticating user. Please contact your system administrator.'), 'error');
+        $redirectLocation = '<front>';
+      }
       return $this->redirect($redirectLocation);
     }
   }
 
-  public function loginViaAzCode($authCode, $registryUrl): string {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $redirectTo = '<front>';
-
-    $loginUser = new ApicUser();
-    $loginUser->setUsername('');
-    $loginUser->setPassword('');
-    $loginUser->setApicUserRegistryUrl($registryUrl);
-    $loginUser->setAuthcode($authCode);
-
-    $apimResponse = $this->userManager->login($loginUser);
-
-    if ($apimResponse->success()) {
-
-      // check if the user we just logged in is a member of at least one dev org
-      $currentCOrg = $this->userUtils->getCurrentConsumerorg();
-      if (!isset($currentCOrg)) {
-        // if onboarding is enabled, we can redirect to the create org page
-        if ($this->siteConfig->isSelfOnboardingEnabled()) {
-          $redirectTo = 'consumerorg.create';
-        }
-        else {
-          // we can't help the user, they need to talk to an administrator
-          $redirectTo = 'ibm_apim.noperms';
-        }
-        $message = 'redirect to ' . $redirectTo . ' as no consumer org set';
-      }
-      else {
-        $message = 'redirect to ' . $redirectTo . ' successful';
-      }
-    }
-    else {
-      drupal_set_message(t('Error while authenticating user. Please contact your system administrator.'), 'error');
-      $message = 'redirect to front error from apim';
-      $redirectTo = '<front>';
-    }
-
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $message);
-    return $redirectTo;
-  }
-
 }
+
+
+
+

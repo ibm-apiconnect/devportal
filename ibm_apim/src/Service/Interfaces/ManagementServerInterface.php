@@ -17,6 +17,7 @@ use Drupal\auth_apic\JWTToken;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\ibm_apim\ApicType\ApicUser;
+use Drupal\ibm_apim\Rest\RestResponse;
 
 interface ManagementServerInterface {
 
@@ -66,7 +67,7 @@ interface ManagementServerInterface {
    * @return \Drupal\ibm_apim\Rest\RestReponse
    *   Response from the call.
    */
-  public function deleteMe();
+  public function deleteMe(): ?RestResponse;
 
   /**
    * POST /users/register.
@@ -246,4 +247,11 @@ interface ManagementServerInterface {
    * @return mixed
    */
   public function postTransferConsumerOrg(ConsumerOrg $org, string $newOwnerUrl, $role);
+
+  /**
+   * @param \Drupal\auth_apic\JWTToken $jwt
+   *
+   * @return \Drupal\ibm_apim\Rest\RestResponse
+   */
+  public function activateFromJWT(JWTToken $jwt): RestResponse;
 }

@@ -105,13 +105,20 @@ Feature: My Organization
     When I go to "/myorg"
     Then I should see the text "@data(andre[1].mail)"
     Then I should see that "@data(andre[1].mail)" is an "administrator"
+    Then I should not see that "@data(andre[1].mail)" is a "developer"
+    Then I should not see that "@data(andre[1].mail)" is a "viewer"
     Then I should see the text "@data(andre[2].mail)"
     Then I should see that "@data(andre[2].mail)" is an "administrator"
     Then I should see that "@data(andre[2].mail)" is an "developer"
+    Then I should not see that "@data(andre[2].mail)" is a "viewer"
     Then I should see the text "@data(andre[3].mail)"
     Then I should see that "@data(andre[3].mail)" is an "viewer"
+    Then I should not see that "@data(andre[3].mail)" is an "administrator"
+    Then I should not see that "@data(andre[3].mail)" is a "developer"
     Then I should see the text "@data(andre[4].mail)"
     Then I should see that "@data(andre[4].mail)" is an "developer"
+    Then I should not see that "@data(andre[4].mail)" is an "administrator"
+    Then I should not see that "@data(andre[4].mail)" is a "viewer"
     Then I should see the text "Change role"
     Then I should see the text "Delete member"
     And there are no errors
@@ -183,3 +190,100 @@ Feature: My Organization
     Then I should not see the text "Delete member"
     And there are no errors
     And there are no messages
+
+  @api
+  Scenario: As an org member, role=viewer, I can view the My Org page, and see correct text options
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+      | @data(andre[3].mail) | @data(andre[3].mail) | @data(andre[3].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id                             | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+    Given members:
+      | consumerorgid                  | username             | roles                   |
+      | @data(andre[0].consumerorg.id) | @data(andre[3].mail) | viewer                  |
+    Given I am logged in as "@data(andre[3].mail)"
+    When I go to "/myorg"
+    Then I should see the text "@data(andre[0].consumerorg.title)"
+    Then I should see the text "@data(andre[0].mail)"
+    Then I should see the text "@data(andre[3].mail)"
+    Then I should see that "@data(andre[3].mail)" is an "viewer"
+    Then I should not see the text "Change role"
+    Then I should not see the text "Delete member"
+    And there are no errors
+    And there are no messages
+
+
+  @api
+  Scenario: As an org owner, I see correct text options for a pending administrator invitation on the My Org page
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id                             | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+    Given invitations:
+      | consumerorgid                  | mail                 | roles          |
+      | @data(andre[0].consumerorg.id) | @data(andre[1].mail) | administrator  |
+    Given I am logged in as "@data(andre[0].mail)"
+    When I go to "/myorg"
+    Then I should see the text "@data(andre[0].consumerorg.title)"
+    Then I should see the text "@data(andre[0].mail)"
+    Then I should see the text "@data(andre[1].mail)"
+    Then I should see that "@data(andre[1].mail)" is an "administrator"
+    Then I should see the text "Pending"
+    Then I should see the text "Resend invitation"
+    Then I should see the text "Delete invitation"
+    Then I should not see the text "Change role"
+    Then I should not see the text "Delete member"
+# I'm not checking for the success message, as this is part of the invitation flow & tested separately
+    And there are no errors
+
+  @api
+  Scenario: As an org owner, I see correct text options for a pending developer invitation on the My Org page
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id                             | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+    Given invitations:
+      | consumerorgid                  | mail                 | roles          |
+      | @data(andre[0].consumerorg.id) | @data(andre[2].mail) | developer      |
+    Given I am logged in as "@data(andre[0].mail)"
+    When I go to "/myorg"
+    Then I should see the text "@data(andre[0].consumerorg.title)"
+    Then I should see the text "@data(andre[0].mail)"
+    Then I should see the text "@data(andre[2].mail)"
+    Then I should see that "@data(andre[2].mail)" is a "developer"
+    Then I should see the text "Pending"
+    Then I should see the text "Resend invitation"
+    Then I should see the text "Delete invitation"
+    Then I should not see the text "Change role"
+    Then I should not see the text "Delete member"
+    And there are no errors
+
+  @api
+  Scenario: As an org owner, I see correct text options for a pending viewer invitation on the My Org page
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id                             | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+    Given invitations:
+      | consumerorgid                  | mail                 | roles          |
+      | @data(andre[0].consumerorg.id) | @data(andre[3].mail) | viewer         |
+    Given I am logged in as "@data(andre[0].mail)"
+    When I go to "/myorg"
+    Then I should see the text "@data(andre[0].consumerorg.title)"
+    Then I should see the text "@data(andre[0].mail)"
+    Then I should see the text "@data(andre[3].mail)"
+    Then I should see that "@data(andre[3].mail)" is a "viewer"
+    Then I should see the text "Pending"
+    Then I should see the text "Resend invitation"
+    Then I should see the text "Delete invitation"
+    Then I should not see the text "Change role"
+    Then I should not see the text "Delete member"
+    And there are no errors

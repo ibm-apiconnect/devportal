@@ -250,7 +250,7 @@ h3.field__label.label
 }
 
 .apicApiTeaser h4 {
-  margin-bottom: 0;
+  margin: 0;
 }
 
 .apicProductApiVersion {
@@ -737,17 +737,16 @@ div[class*="planColumn"]:not(:last-of-type)
 
 .bx--card .apicProductCardMain .bx--about__title--name {
   width: 13rem;
-  line-height: 2rem;
   padding-bottom: 0;
-}
-
-.bx--card .apicProductCardMain .bx--about__title--name a{
-  display: inline-flex;
 }
 
 .bx--card .apicProductCardMain .apicProductName {
   padding-right: 0.625rem;
   max-width: 10rem;
+}
+
+.bx--card .apicProductCardVersion {
+  font-size: 0.875rem;
 }
 
 .bx--card .apicProductDesc,

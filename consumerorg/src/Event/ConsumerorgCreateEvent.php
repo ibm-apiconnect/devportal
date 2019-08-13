@@ -21,7 +21,7 @@ use Symfony\Component\EventDispatcher\Event;
  */
 class ConsumerorgCreateEvent extends Event {
 
-  const EVENT_NAME = 'consumerorg_create';
+  public const EVENT_NAME = 'consumerorg_create';
 
   /**
    * The consumer organization.

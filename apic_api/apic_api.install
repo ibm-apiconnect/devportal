@@ -11,6 +11,8 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\views\Views;
 
 /**
@@ -163,4 +165,75 @@ function apic_api_update_8112() {
     $view->getDisplay()->setOption('filter_groups', $filter_groups);
   }
   $view->save();
+}
+
+/**
+ * Changes :
+ *  - add api_encodedswagger to api
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_api_update_8113() {
+
+  // check if new field exists, skip if it does
+  // it shouldn't, but better safe than sorry
+  $newFieldConfig = FieldConfig::loadByName('node', 'api', 'api_encodedswagger');
+  if (!isset($newFieldConfig) || empty($newFieldConfig)) {
+
+    // Create a new field storage 'api_encodedswagger'
+    $fieldStorageConfig = FieldStorageConfig::create([
+      'field_name' => 'api_encodedswagger',
+      'entity_type' => 'node',
+      'type' => 'string_long',
+      'required' => FALSE,
+      'cardinality' => 1,
+    ]);
+    $fieldStorageConfig->save();
+
+    // Create a new field for the api module
+    $fieldConfig = FieldConfig::create([
+      'field_name' => 'api_encodedswagger',
+      'entity_type' => 'node',
+      'bundle' => 'api',
+      'label' => t('Encoded Open API Document'),
+    ]);
+    $fieldConfig->save();
+
+    // Modify entity form display modes to show application_image field
+    $formDisplay = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('node.api.default');
+    if ($formDisplay !== NULL) {
+      $values = $formDisplay->getComponent('api_swagger');
+      if ($values !== null) {
+        $formDisplay->setComponent('api_encodedswagger', $values); // copy all existing settings across from api_swagger field
+        $formDisplay->save();
+      }
+    }
+
+    // Do the same for the view display modes
+    $displayModes = ['default', 'card', 'teaser'];
+    foreach ($displayModes as $displayMode) {
+      $viewDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.' . $displayMode);
+      if ($viewDisplay !== NULL) {
+        $values = $viewDisplay->getComponent('api_swagger');
+        if ($values !== null) {
+          $viewDisplay->setComponent('api_encodedswagger', $values); // copy all existing settings across from api_swagger field
+          $viewDisplay->save();
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Update the field storage id for api_state to correct for a typo in early fixpacks
+ */
+function apic_api_update_8114() {
+  $fieldConfig = \Drupal\field\Entity\FieldConfig::loadByName('node', 'api', 'api_state');
+  $storage = $fieldConfig->getFieldStorageDefinition();
+  if ($storage !== null) {
+    $storage->set('id', 'node.api_state');
+    $storage->save();
+  }
 }

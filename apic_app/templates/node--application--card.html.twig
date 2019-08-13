@@ -29,9 +29,9 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
       </div>
     {% endif %}
     <div class="apicAppCardMain">
-      <div class="bx--about__title--name">
+      <div class="bx--about__title--name" data-toggle="tooltip" data-placement="bottom" title="{{ node.title.value|striptags }}">
 
-          <span class="apicAppName apicTruncate" title="{{ node.title.value|striptags }}">{{- label -}}</span>
+          <span class="apicAppName apicTruncate">{{- label -}}</span>
 
       </div>
 

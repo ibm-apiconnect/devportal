@@ -13,11 +13,8 @@
 
 namespace Drupal\consumerorg\Access;
 
-use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Access\AccessResult;
-use Symfony\Component\Routing\Route;
-use Symfony\Component\HttpFoundation\Request;
-use Drupal\node\NodeInterface;
+use Drupal\Core\Routing\Access\AccessInterface;
 
 /**
  * Checks whether the user has permission to invite new org members

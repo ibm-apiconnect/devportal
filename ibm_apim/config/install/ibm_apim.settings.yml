@@ -7,6 +7,7 @@ autotag_with_phase: false
 show_cors_warnings: true
 show_analytics: true
 soap_swagger_download: false
+optimise_oauth_ux: false
 email_as_username: true
 application_image_upload: true
 hide_admin_registry: false
@@ -42,8 +43,10 @@ bgsync:
   email_subject: '[site:name] - Background sync has failed'
   email_body: "<p>The background sync process has failed for your site [site:name].</p>\r\n\r\n<p>&nbsp;</p>\r\n\r\n<p>A short summary of the status of background sync is below. You can find more information in the logs for your site and on the management appliance.</p>\r\n\r\n<p>&nbsp;</p>\r\n\r\n<p>Number of failures : [ibmapim:bgsync_failures]<br />\r\nLast Success : [ibmapim:bgsync_lastsuccess]<br />\r\nGet Config : [ibmapim:bgsync_config]<br />\r\nGet Catalog : [ibmapim:bgsync_catalog]<br />\r\nGet APIs : [ibmapim:bgsync_api]<br />\r\nGet Products : [ibmapim:bgsync_product]<br />\r\nGet Consumerorgs : [ibmapim:bgsync_consumerorg]<br />\r\nGet Applications : [ibmapim:bgsync_app]<br />\r\nGet Subscriptions : [ibmapim:bgsync_sub]<br />\r\nMode : [ibmapim:bgsync_mode]</p>\r\n"
   email_format: full_html
+certificate_strip_newlines: false
+certificate_strip_prefix: false
 use_proxy: false
 proxy_type: 'CURLPROXY_HTTP'
 proxy_url:
 proxy_auth:
-proxy_for_api: 'BOTH'
+proxy_for_api: 'CONSUMER,PLATFORM,ANALYTICS'

@@ -48,7 +48,7 @@ class Generator {
         mkdir(DRUPAL_ROOT . '/' . $tempDir . '/themegenerator/' . $sessionId);
       }
       if (is_dir($targetDir)) {
-        Generator::delTree($targetDir);
+        self::delTree($targetDir);
       }
       mkdir($targetDir);
       self::recursiveCopy(DRUPAL_ROOT . '/' . drupal_get_path('module', 'themegenerator') . '/stub/' . $type, $targetDir, $name);

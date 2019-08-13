@@ -8,6 +8,7 @@ dependencies:
     - field.field.node.api.api_protocol
     - field.field.node.api.api_soapversion
     - field.field.node.api.api_swagger
+    - field.field.node.api.api_encodedswagger
     - field.field.node.api.api_swaggertags
     - field.field.node.api.api_wsdl
     - field.field.node.api.api_xibmname
@@ -110,6 +111,7 @@ hidden:
   api_protocol: true
   api_soapversion: true
   api_swagger: true
+  api_encodedswagger: true
   api_swaggertags: true
   api_wsdl: true
   api_xibmname: true

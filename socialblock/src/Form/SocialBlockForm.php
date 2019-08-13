@@ -18,11 +18,38 @@
 
 namespace Drupal\socialblock\Form;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\encrypt\Entity\EncryptionProfile;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class SocialBlockForm extends ConfigFormBase {
+
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
+   * SocialBlockForm constructor.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   */
+  public function __construct(ConfigFactoryInterface $config_factory, Messenger $messenger) {
+    ConfigFormBase::__construct($config_factory);
+    $this->messenger = $messenger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    // Load the service required to construct this class
+    return new static($container->get('config.factory'), $container->get('messenger'));
+  }
 
   /**
    * {@inheritdoc}
@@ -154,7 +181,7 @@ class SocialBlockForm extends ConfigFormBase {
       $encrypted = \Drupal::service('encryption')->encrypt(serialize($credentials), $encryptionProfile);
     }
     else {
-      drupal_set_message(t('The "socialblock" encryption profile is missing.'), 'error');
+      $this->messenger->addError(t('The "socialblock" encryption profile is missing.'));
       $encrypted = [];
     }
 

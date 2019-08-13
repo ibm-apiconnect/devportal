@@ -43,6 +43,10 @@
   max-width: 500px;
 }
 
+.apicApiCardVersion {
+  font-size: 0.875rem;
+}
+
 .apicApiRating {
   flex: 0.05 0 auto;
   -ms-flex: 0.05 0 100px;

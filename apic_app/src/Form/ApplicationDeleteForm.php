@@ -18,6 +18,7 @@ use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
@@ -63,6 +64,11 @@ class ApplicationDeleteForm extends ConfirmFormBase {
   protected $moduleHandler;
 
   /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * ApplicationDeleteForm constructor.
    *
    * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
@@ -70,13 +76,15 @@ class ApplicationDeleteForm extends ConfirmFormBase {
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
    * @param \Drupal\Core\Extension\ModuleHandler $moduleHandler
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, AccountProxyInterface $current_user, ThemeHandler $themeHandler, ModuleHandler $moduleHandler) {
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, AccountProxyInterface $current_user, ThemeHandler $themeHandler, ModuleHandler $moduleHandler, Messenger $messenger) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->currentUser = $current_user;
     $this->themeHandler = $themeHandler;
     $this->moduleHandler = $moduleHandler;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -89,7 +97,8 @@ class ApplicationDeleteForm extends ConfirmFormBase {
       $container->get('ibm_apim.user_utils'),
       $container->get('current_user'),
       $container->get('theme_handler'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('messenger')
     );
   }
 
@@ -175,7 +184,7 @@ class ApplicationDeleteForm extends ConfirmFormBase {
         'appId' => $appId,
       ]);
 
-      drupal_set_message($this->t('Application deleted successfully.'));
+      $this->messenger->addMessage($this->t('Application deleted successfully.'));
       $form_state->setRedirectUrl(Url::fromRoute('view.applications.page_1'));
     }
     else {

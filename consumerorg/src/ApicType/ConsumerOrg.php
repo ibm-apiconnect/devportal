@@ -210,10 +210,11 @@ class ConsumerOrg {
    * @param array $tags
    */
   public function setTags($tags): void {
-    if(is_array($tags)) {
+    if (is_array($tags)) {
       $this->tags = $tags;
-    } else {
-      $this->tags = array($tags);
+    }
+    else {
+      $this->tags = [$tags];
     }
   }
 
@@ -256,7 +257,7 @@ class ConsumerOrg {
    */
   public function setRolesFromArray(array $rolesArray): void {
     $roles = [];
-    foreach($rolesArray as $roleArray) {
+    foreach ($rolesArray as $roleArray) {
       $role = new Role();
       $role->createFromArray($roleArray);
       $roles[] = $role;
@@ -276,7 +277,7 @@ class ConsumerOrg {
   public function addRole(Role $role): bool {
     foreach ($this->roles as $existing_role) {
       $newRoleName = $role->getName();
-      if ($newRoleName === null || $existing_role->getName() === $newRoleName) {
+      if ($newRoleName === NULL || $existing_role->getName() === $newRoleName) {
         return FALSE;
       }
     }
@@ -284,6 +285,7 @@ class ConsumerOrg {
     $this->roles[] = $role;
     return TRUE;
   }
+
   /**
    * Adds the provided Role to this consumer org checking first to avoid duplicate
    * entries.
@@ -317,7 +319,7 @@ class ConsumerOrg {
    */
   public function getRoleFromUrl($url): ?Role {
     foreach ($this->roles as $existing_role) {
-      if ($url !== null && $existing_role->getUrl() === $url) {
+      if ($url !== NULL && $existing_role->getUrl() === $url) {
         return $existing_role;
       }
     }
@@ -354,7 +356,7 @@ class ConsumerOrg {
    */
   public function setMembersFromArray(array $membersArray): void {
     $members = [];
-    foreach($membersArray as $memberArray) {
+    foreach ($membersArray as $memberArray) {
       $member = new Member();
       $member->createFromArray($memberArray);
       $members[] = $member;
@@ -499,9 +501,22 @@ class ConsumerOrg {
 
     $roles = $this->getRolesForMember($userUrl);
     foreach ($roles as $role) {
-      if (\in_array($permissionName, $role->getPermissions())) {
-        $returnValue = TRUE;
-        break;
+      if ($role) {
+        $permURLs = $role->getPermissions();
+        foreach ($permURLs as $permission) {
+          if (strpos($permission, '/') > -1) {
+            $permission_name = \Drupal::service('ibm_apim.permissions')->get($permission)['name'];
+            if (empty($permission_name)) {
+              \Drupal::logger('consumerorg')->warning('No permission found for %url', ['%url' => $permission]);
+            }
+          }
+          else {
+            $permission_name = $permission;
+          }
+          if ($permission_name === $permissionName) {
+            $returnValue = TRUE;
+          }
+        }
       }
     }
 

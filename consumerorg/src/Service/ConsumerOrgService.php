@@ -13,6 +13,7 @@
 
 namespace Drupal\consumerorg\Service;
 
+use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\auth_apic\UserManagerResponse;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\ApicType\Member;
@@ -112,6 +113,10 @@ class ConsumerOrgService {
    */
   private $entityTypeManager;
 
+  /**
+   * @var \Drupal\ibm_apim\UserManagement\ApicAccountInterface
+   */
+  private $accountService;
 
   /**
    * ConsumerOrgService constructor.
@@ -129,6 +134,7 @@ class ConsumerOrgService {
    * @param \Drupal\Core\Cache\CacheTagsInvalidatorInterface $invalidator
    * @param \Drupal\consumerorg\Service\MemberService $member_service
    * @param \Drupal\consumerorg\Service\RoleService $role_service
+   * @param \Drupal\ibm_apim\UserManagement\ApicAccountInterface $account_service
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
@@ -145,7 +151,8 @@ class ConsumerOrgService {
                               UserUtils $user_utils,
                               CacheTagsInvalidatorInterface $invalidator,
                               MemberService $member_service,
-                              RoleService $role_service
+                              RoleService $role_service,
+                              ApicAccountInterface $account_service
   ) {
     $this->logger = $logger;
     $this->siteconfig = $site_config;
@@ -161,6 +168,7 @@ class ConsumerOrgService {
     $this->cacheTagsInvalidator = $invalidator;
     $this->memberService = $member_service;
     $this->roleService = $role_service;
+    $this->accountService = $account_service;
   }
 
   /**
@@ -313,11 +321,12 @@ class ConsumerOrgService {
    * Create a new consumer organization node
    *
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $consumer
+   * @param string $event
    *
-   * @return int|null|string
+   * @return int|string|null
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function createNode(ConsumerOrg $consumer) {
+  public function createNode(ConsumerOrg $consumer, $event = 'internal') {
     ibm_apim_entry_trace(__FUNCTION__, $consumer->getUrl());
     $oldNode = NULL;
     if ($consumer->getUrl() !== NULL) {
@@ -370,8 +379,8 @@ class ConsumerOrgService {
       if ($this->moduleHandler->moduleExists('rules')) {
         // Set the args twice on the event: as the main subject but also in the
         // list of arguments.
-        $event = new ConsumerorgCreateEvent($node, ['consumerorg' => $node]);
-        $this->eventDispatcher->dispatch(ConsumerorgCreateEvent::EVENT_NAME, $event);
+        $createEvent = new ConsumerorgCreateEvent($node, ['consumerorg' => $node]);
+        $this->eventDispatcher->dispatch(ConsumerorgCreateEvent::EVENT_NAME, $createEvent);
       }
     }
     ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -395,10 +404,11 @@ class ConsumerOrgService {
       $utils = \Drupal::service('ibm_apim.utils');
       $hostvariable = $this->siteconfig->getApimHost();
       $node->setTitle($utils->truncate_string($consumer->getTitle()));
-      $node->setPromoted(NODE_NOT_PROMOTED);
-      $node->set("apic_hostname", $hostvariable);
-      $node->set("apic_provider_id", $this->siteconfig->getOrgId());
-      $node->set("apic_catalog_id", $this->siteconfig->getEnvId());
+      $node->setPromoted(NodeInterface::NOT_PROMOTED);
+      $node->setPublished(NodeInterface::PUBLISHED);
+      $node->set('apic_hostname', $hostvariable);
+      $node->set('apic_provider_id', $this->siteconfig->getOrgId());
+      $node->set('apic_catalog_id', $this->siteconfig->getEnvId());
       $node->set('consumerorg_id', $consumer->getId());
       $node->set('consumerorg_url', $consumer->getUrl());
       $node->set('consumerorg_name', $utils->truncate_string($consumer->getName(), 128));
@@ -455,19 +465,25 @@ class ConsumerOrgService {
         }
       }
 
+      // TODO: refactor needed - injecting this service creates circular dependency :(
+      $userStorage = \Drupal::service('ibm_apim.user_storage');
+
       if ($consumer->getMembers() !== NULL) {
         foreach ($consumer->getMembers() as $member) {
           $memberlist[] = $member->getUserUrl();
-          //          $new_member = new Member();rray(
-          //            'url' => $member->getUrl(),
-          //            'user_url' => $member->getUserUrl(),
-          //            'state' => $member->getState(),
-          //            'roles' => $member->getRoleUrls()
-          //          );
           $members[] = serialize($member->toArray());
 
-          if ($member->getUser() !== NULL && $member->getUser()->getUsername() !== NULL) {
-            $account = user_load_by_name($member->getUser()->getUsername());
+          $user = $member->getUser();
+          if ($user !== NULL && $user->getUsername() !== NULL) {
+
+            $account = $userStorage->load($user);
+
+            // if there isn't an account for this user then we have enough information to create and use it at this point.
+            if ($account === NULL) {
+              $this->logger->notice('registering new account for %username based on member data.', ['%username' => $user->getUsername()]);
+              $account = $this->accountService->registerApicUser($user);
+            }
+
             if ($account) {
               // consumerorg_id is a multi value field which Drupal represents using a FieldItemList class
               // this causes headaches as seen below....
@@ -549,8 +565,10 @@ class ConsumerOrgService {
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
         $node = Node::load($nid);
-        $this->updateNode($node, $consumer, $event);
-        $createdOrUpdated = FALSE;
+        if ($node !== null) {
+          $this->updateNode($node, $consumer, $event);
+          $createdOrUpdated = FALSE;
+        }
       }
       else {
         // no existing node for this consumerorg so create one
@@ -816,7 +834,7 @@ class ConsumerOrgService {
         $org->setTags($node->get('consumerorg_tags')->value);
       }
     }
-    ibm_apim_exit_trace(__FUNCTION__, $org);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $org !== NULL ? $org->getUrl() : NULL);
     return $org;
   }
 
@@ -1037,14 +1055,18 @@ class ConsumerOrgService {
   public function getCustomFields(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $coreFields = ['title', 'vid', 'status', 'nid', 'revision_log', 'created'];
-    $components = $this->entityTypeManager
+    $diff = [];
+    $entity = $this->entityTypeManager
       ->getStorage('entity_form_display')
-      ->load('node.consumerorg.default')
-      ->getComponents();
-    $keys = array_keys($components);
-    $ibmFields = $this->getIBMFields();
-    $merged = array_merge($coreFields, $ibmFields);
-    $diff = array_diff($keys, $merged);
+      ->load('node.consumerorg.default');
+    if ($entity !== null) {
+      $components = $entity->getComponents();
+      $keys = array_keys($components);
+      $ibmFields = $this->getIBMFields();
+      $merged = array_merge($coreFields, $ibmFields);
+      $diff = array_diff($keys, $merged);
+    }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $diff);
     return $diff;
   }
@@ -1101,13 +1123,13 @@ class ConsumerOrgService {
     $apimResponse = $this->apimServer->postMemberInvitation($org, $email_address, $role);
     if ($apimResponse !== NULL && $apimResponse->getCode() === 201) {
       $data = $apimResponse->getData();
-      if ($data['id'] !== NULL) {
+      if (array_key_exists('id', $data) && $data['id'] !== NULL) {
         $invitationId = $data['id'];
       }
       else {
         $invitationId = 'temp';
       }
-      if ($data['url'] !== NULL) {
+      if (array_key_exists('url', $data) && $data['url'] !== NULL) {
         $invitationUrl = $this->apimUtils->removeFullyQualifiedUrl($data['url']);
       }
       else {
@@ -1333,7 +1355,6 @@ class ConsumerOrgService {
 
       $this->session->set('consumer_organizations', NULL);
 
-      $this->userUtils->refreshUserData();
       $this->userUtils->setCurrentConsumerorg($org->getUrl());
       $this->cacheTagsInvalidator->invalidateTags(['config:block.block.consumerorganizationselection']);
       // invalidate myorg page cache
@@ -1404,7 +1425,6 @@ class ConsumerOrgService {
 
       $this->session->set('consumer_organizations', NULL);
 
-      $this->userUtils->refreshUserData();
       $this->userUtils->setCurrentConsumerorg($org->getUrl());
       $this->cacheTagsInvalidator->invalidateTags(['config:block.block.consumerorganizationselection']);
 
@@ -1521,57 +1541,7 @@ class ConsumerOrgService {
 
   }
 
-  /**
-   * Create a ConsumerOrg object from a JSON string representation
-   * e.g. as returned by GET /me
-   * Note, this doesn't handle roles, permissions or members as they are a different format in that response.
-   *
-   * @param $json
-   *
-   * @return ConsumerOrg
-   */
-  public function createFromMeResponseJSON($json): ConsumerOrg {
 
-    ibm_apim_entry_trace(__FUNCTION__, $json);
-
-    $org = new ConsumerOrg();
-
-    if (\is_string($json)) {
-      $json = json_decode($json, 1);
-    }
-
-    if (isset($json['org']['name'])) {
-      $org->setName($json['org']['name']);
-    }
-    if (isset($json['org']['title'])) {
-      $org->setTitle($json['org']['title']);
-    }
-    if (isset($json['org']['summary'])) {
-      $org->setSummary($json['org']['summary']);
-    }
-    if (isset($json['org']['id'])) {
-      $org->setId($json['org']['id']);
-    }
-    if (isset($json['org']['state'])) {
-      $org->setState($json['org']['state']);
-    }
-    if (isset($json['org']['created_at'])) {
-      $org->setCreatedAt($json['org']['created_at']);
-    }
-    if (isset($json['org']['updated_at'])) {
-      $org->setUpdatedAt($json['org']['updated_at']);
-    }
-    if (isset($json['org']['url'])) {
-      $org->setUrl($this->apimUtils->removeFullyQualifiedUrl($json['org']['url']));
-    }
-    if (isset($json['org']['owner_url'])) {
-      $org->setOwnerUrl($this->apimUtils->removeFullyQualifiedUrl($json['org']['owner_url']));
-    }
-
-    ibm_apim_exit_trace(__FUNCTION__, $org);
-    return $org;
-
-  }
 
   /**
    * Returns a JSON representation of a consumer organization
@@ -1630,4 +1600,5 @@ class ConsumerOrgService {
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $output;
   }
+
 }

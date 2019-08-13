@@ -59,7 +59,8 @@ class MyOrgService {
     // file_create_url is not available as a service yet: https://www.drupal.org/project/drupal/issues/2669074
     // don't use it for unit tests.
     if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
-      $entity = $user->getDrupalUser();
+      $userStorage = \Drupal::service('ibm_apim.user_storage');
+      $entity = $userStorage->load($user);
       if (!empty($entity->user_picture) && $entity->user_picture->isEmpty() === FALSE) {
         $image = $entity->user_picture;
         $uri = $image->entity->getFileUri();

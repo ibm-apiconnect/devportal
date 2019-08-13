@@ -1004,6 +1004,28 @@ class Product {
   }
 
   /**
+   * Get a list of all the custom fields on this content type
+   *
+   * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  public static function getCustomFields(): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $coreFields = ['title', 'vid', 'status', 'nid', 'revision_log', 'created'];
+    $components = \Drupal::entityTypeManager()
+      ->getStorage('entity_form_display')
+      ->load('node.product.default')
+      ->getComponents();
+    $keys = array_keys($components);
+    $ibmFields = self::getIBMFields();
+    $merged = array_merge($coreFields, $ibmFields);
+    $diff = array_diff($keys, $merged);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $diff);
+    return $diff;
+  }
+
+  /**
    * Get all the doc pages that are listed as being linked to a given Product NID
    *
    * @param $nid
@@ -1104,5 +1126,24 @@ class Product {
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $output;
+  }
+
+  /**
+   * Used by the batch API from the AdminForm
+   *
+   * @param $nid
+   */
+  public function processCategoriesForNode($nid): void {
+    $config = \Drupal::config('ibm_apim.settings');
+    $categoriesEnabled = (boolean) $config->get('categories')['enabled'];
+    if ($categoriesEnabled === TRUE) {
+      $node = Node::load($nid);
+      if ($node !== NULL) {
+        $product = yaml_parse($node->product_data->value);
+        if (isset($product['info']['categories'])) {
+          $this->productTaxonomy->process_categories($product, $node);
+        }
+      }
+    }
   }
 }

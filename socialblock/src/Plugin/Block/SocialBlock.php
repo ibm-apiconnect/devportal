@@ -212,7 +212,7 @@ class SocialBlock extends BlockBase {
     if ($configInstances === NULL) {
       $configInstances = [];
     }
-    if ($configInstances[$uuid] === NULL) {
+    if (!array_key_exists($uuid, $configInstances) || $configInstances[$uuid] === NULL) {
       $configInstances[$uuid] = [
         'numberOfTiles' => $this->configuration['numberOfTiles'],
         'forumsList' => $this->configuration['forumsList'],

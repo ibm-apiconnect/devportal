@@ -13,10 +13,8 @@
 
 namespace Drupal\apic_app\Access;
 
-use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Access\AccessResult;
-use Symfony\Component\Routing\Route;
-use Symfony\Component\HttpFoundation\Request;
+use Drupal\Core\Routing\Access\AccessInterface;
 
 /**
  * Checks whether client ID reset is allowed.

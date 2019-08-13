@@ -67,16 +67,6 @@
 .applicationType.production {
   background-color: #80b723;
 }
-.apicAppHeader {
-  display: flex;
-  margin-bottom: 10px;
-}
-.apicAppHeader div:nth-of-type(2) {
-  flex: 1;
-}
-.apicAppHeader h1 {
-  margin-bottom: 6px;
-}
 
 .apicAppActions a {
   padding: 0 4px 0 8px;
@@ -85,60 +75,18 @@
 .apicAppActions span + a {
   border-left: 1px solid #ccc;
 }
-.apicAppActions a i,
-.apicAppCredAdd a i {
+.apicAppActions a i{
   margin-right: 4px;
 }
-.apicAppCredAdd {
-  padding-left: 8px;
-  border-left: 1px solid #ccc;
-}
-.apicAppCredList {
-  padding: 0;
-}
-.apicAppCredList li {
-  box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.1);
-  list-style-type: none;
-  padding: 8px 16px;
-  margin-bottom: 8px;
-}
+
 .apicAppCredential h4 {
   font-size: 16px;
   font-weight: bold;
   flex: 1;
   margin-bottom: 0;
 }
-.apicAppCredHeading {
-  display: flex;
-}
-.apicAppCredHeading {
-  padding-bottom: 4px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #ddd;
-}
 .apicAppCredential .field__label {
   font-weight: normal;
-}
-.apicAppInputRow {
-  display: flex;
-}
-.apicAppInputRow div:first-of-type {
-  padding-right: 20px;
-  width: 35em;
-}
-.apicAppInputRow div:first-of-type.password-toggle {
-  width: auto;
-  padding-right: 10px;
-}
-.bx--global-light-ui .bx--form-item.form-type-checkbox label {
-  margin-bottom: 0;
-  padding-top: 3px;
-}
-.apicAppInputRow div:first-of-type input {
-  width: 35em;
-}
-.apicAppInputRow div:first-of-type input[type="checkbox"] {
-  width: inherit;
 }
 
 .password-toggle .children {
@@ -191,24 +139,6 @@
 .apicAppCheckButton label {
   font-weight: normal;
   display: inline-block;
-}
-.apicAppSubList {
-  padding: 0;
-}
-.apicAppSubList li {
-  box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.1);
-  list-style-type: none;
-  padding: 8px 16px;
-  margin-bottom: 8px;
-}
-.apicAppSubName {
-  font-weight: bold;
-}
-.apicAppSubscription {
-  display: flex;
-}
-.apicAppSubscription .apicAppSubName {
-  flex: 1;
 }
 .applicationWrapper header.titleSection {
   background-color: #fff;
@@ -266,10 +196,8 @@
 .applicationWrapper .titleSection .applicationTabs li,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li {
   list-style: none;
-  padding: 0.725rem 0 0.625rem;
   color: #000;
-  padding-right: 30px;
-  padding-bottom: 0;
+  padding: 0.725rem 30px 0 0;
   font-size: 0.875rem;
 }
 .applicationWrapper .titleSection .applicationTabs li a,

@@ -1,0 +1,12 @@
+--- core/modules/menu_link_content/src/Plugin/Menu/MenuLinkContent.php	2019-06-10 16:34:19.000000000 +0100
++++ core/modules/menu_link_content/src/Plugin/Menu/MenuLinkContent.php	2019-06-10 16:34:56.000000000 +0100
+@@ -234,6 +234,9 @@
+     if ($persist) {
+       $entity = $this->getEntity();
+       foreach ($overrides as $key => $value) {
++        if (!isset($entity->{$key})) {
++          $entity->{$key} = new \stdClass();
++        }
+         $entity->{$key}->value = $value;
+       }
+       $entity->save();

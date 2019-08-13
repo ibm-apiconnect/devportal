@@ -44,7 +44,7 @@ interface UserRegistryServiceInterface {
    *
    * @param $data array of user_registries keyed on url
    */
-  public function updateAll($data);
+  public function updateAll($data): bool;
 
   /**
    * Update a specific user_registry
@@ -93,5 +93,13 @@ interface UserRegistryServiceInterface {
    */
   public function setDefaultRegistry($url);
 
+
+  /**
+   * Get the registry url which is used for the admin user.
+   * This is not a real user registry that exists in apim or elsewhere.
+   *
+   * @return string
+   */
+  public function getAdminRegistryUrl(): string;
 
 }

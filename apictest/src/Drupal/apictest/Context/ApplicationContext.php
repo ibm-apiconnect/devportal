@@ -12,10 +12,13 @@
 
 namespace Drupal\apictest\Context;
 
+use Behat\Gherkin\Node\TableNode;
 use Drupal\apic_app\Application;
+use Drupal\apic_app\Subscription;
 use Drupal\Component\Utility\Random;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\Entity\Node;
+use Drupal\user\Entity\User;
 
 /**
  * Defines application features from the specific context.
@@ -23,6 +26,75 @@ use Drupal\node\Entity\Node;
 class ApplicationContext extends RawDrupalContext {
 
   private $createOrUpdateResult;
+
+  /**
+   * @Given applications:
+   */
+  public function createApps(TableNode $table): void {
+
+    // If we are not using mocks, then we are testing with live data from a management appliance
+    // Under those circumstances, we should absolutely not create any application in the database!
+    if ($this->useMockServices === FALSE) {
+      print "This test is running with a real management server backend. No applications will be created in the database.\n";
+      return;
+    }
+
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(User::load(1));
+    }
+
+    foreach ($table as $row) {
+      $this->createApplication($row['title'], $row['id'], '/consumer-orgs/1234/5678/' . $row['org_id']);
+    }
+    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+  }
+
+  /**
+   * @Given subscriptions:
+   */
+  public function createSubs(TableNode $table): void {
+
+    // If we are not using mocks, then we are testing with live data from a management appliance
+    // Under those circumstances, we should absolutely not create any subscription in the database!
+    if ($this->useMockServices === FALSE) {
+      print "This test is running with a real management server backend. No subscriptions will be created in the database.\n";
+      return;
+    }
+
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(User::load(1));
+    }
+
+    foreach ($table as $row) {
+      $this->createSubscription($row['org_id'], $row['app_id'], $row['sub_id'], $row['product'], $row['plan']);
+    }
+    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+  }
+
+  /**
+   * @param $org_id
+   * @param $app_id
+   * @param $sub_id
+   * @param $product
+   * @param $plan
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function createSubscription($org_id, $app_id, $sub_id, $product, $plan): void {
+    Subscription::create('/apps/1234/5678/' . $org_id . '/apps/' . $app_id, $sub_id, '/catalogs/1234/5678/products/' . $product, $plan, 'enabled', NULL);
+  }
 
   /**
    * @Given I create an application named :name id :id consumerorgurl :consumerorgurl
@@ -39,7 +111,7 @@ class ApplicationContext extends RawDrupalContext {
     $object['redirect_urls'] = [$name];
     $object['enabled'] = TRUE;
     $object['id'] = $id;
-    $object['url'] = 'https://localhost.com';
+    $object['url'] = str_replace('consumer-orgs', 'apps', $consumerorgurl) . '/apps/' . $id;
     $object['state'] = 'published';
     $object['app_credentials'] = [
       [
@@ -56,7 +128,7 @@ class ApplicationContext extends RawDrupalContext {
 
     $nid = Application::create($object);
 
-    print('Saved application ' . $name . ' as nid ' . $nid);
+    print('Saved application ' . $name . ' (url=' . $object['url'] . ') as nid ' . $nid);
 
   }
 

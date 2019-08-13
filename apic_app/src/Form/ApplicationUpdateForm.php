@@ -16,8 +16,10 @@ namespace Drupal\apic_app\Form;
 use Drupal\apic_app\Application;
 use Drupal\apic_app\Event\ApplicationUpdateEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
+use Drupal\apic_app\Service\CertificateService;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\ibm_apim\Service\Utils;
@@ -51,21 +53,37 @@ class ApplicationUpdateForm extends FormBase {
    */
   protected $utils;
 
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
 
   /**
-   * ApplicationCreateForm constructor.
+   * @var \Drupal\apic_app\Service\CertificateService
+   */
+  protected $certService;
+
+
+  /**
+   * ApplicationUpdateForm constructor.
    *
-   * @param ApplicationRestInterface $restService
-   * @param UserUtils $userUtils
-   * @param Utils $utils
+   * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   * @param \Drupal\ibm_apim\Service\Utils $utils
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\apic_app\Service\CertificateService $certService
    */
   public function __construct(
     ApplicationRestInterface $restService,
     UserUtils $userUtils,
-    Utils $utils) {
+    Utils $utils,
+    Messenger $messenger,
+    CertificateService $certService) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->utils = $utils;
+    $this->messenger = $messenger;
+    $this->certService = $certService;
   }
 
   /**
@@ -76,7 +94,9 @@ class ApplicationUpdateForm extends FormBase {
     return new static(
       $container->get('apic_app.rest_service'),
       $container->get('ibm_apim.user_utils'),
-      $container->get('ibm_apim.utils')
+      $container->get('ibm_apim.utils'),
+      $container->get('messenger'),
+      $container->get('apic_app.certificate')
     );
   }
 
@@ -233,7 +253,7 @@ class ApplicationUpdateForm extends FormBase {
     }
 
     if (!isset($name) || empty($name)) {
-      drupal_set_message(t('ERROR: Title is a required field.'), 'error');
+      $this->messenger->addError(t('ERROR: Title is a required field.'));
       $form_state->setRedirectUrl(Url::fromRoute('apic_app.create'));
     }
     else {
@@ -245,7 +265,7 @@ class ApplicationUpdateForm extends FormBase {
       $data['redirect_endpoints'] = $oauthEndpoints;
       $ibmApimApplicationCertificates = (boolean) \Drupal::state()->get('ibm_apim.application_certificates');
       if ($ibmApimApplicationCertificates === TRUE) {
-        $certificate = trim($form_state->getValue('certificate'));
+        $certificate = $this->certService->cleanup($form_state->getValue('certificate'));
         if (isset($certificate)) {
           $data['application_public_certificate_entry'] = $certificate;
         }
@@ -274,7 +294,7 @@ class ApplicationUpdateForm extends FormBase {
         }
         $this->node->save();
 
-        drupal_set_message(t('Application updated successfully.'));
+        $this->messenger->addMessage(t('Application updated successfully.'));
         $currentUser = \Drupal::currentUser();
         \Drupal::logger('apic_app')->notice('Application @appName updated by @username', [
           '@appName' => $this->node->getTitle(),

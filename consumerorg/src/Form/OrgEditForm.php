@@ -19,6 +19,7 @@ use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -29,35 +30,63 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class OrgEditForm extends FormBase {
 
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
   protected $consumerOrgService;
 
+  /**
+   * @var
+   */
   protected $currentOrg;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
+  /**
+   * @var \Drupal\Core\Extension\ThemeHandler
+   */
   protected $themeHandler;
 
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManager
+   */
   protected $entityTypeManager;
 
+  /**
+   * @var \Drupal\Core\Entity\EntityFieldManager
+   */
   protected $entityFieldManager;
 
   /**
-   * Constructs an Org User Invitation Form.
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
+   * OrgEditForm constructor.
    *
-   * {@inheritdoc}
-   *
-   * @param ConsumerOrgService $consumerOrgService
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
+   * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
+   * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
+   * @param \Drupal\Core\Entity\EntityTypeManager $entityTypeManager
+   * @param \Drupal\Core\Entity\EntityFieldManager $entityFieldManager
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
   public function __construct(ConsumerOrgService $consumer_org_service,
                               UserUtils $user_utils,
                               ThemeHandler $themeHandler,
                               EntityTypeManager $entityTypeManager,
-                              EntityFieldManager $entityFieldManager) {
+                              EntityFieldManager $entityFieldManager,
+                              Messenger $messenger) {
     $this->consumerOrgService = $consumer_org_service;
     $this->userUtils = $user_utils;
     $this->themeHandler = $themeHandler;
     $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -69,7 +98,8 @@ class OrgEditForm extends FormBase {
       $container->get('ibm_apim.user_utils'),
       $container->get('theme_handler'),
       $container->get('entity_type.manager'),
-      $container->get('entity_field.manager')
+      $container->get('entity_field.manager'),
+      $container->get('messenger')
     );
   }
 
@@ -87,8 +117,7 @@ class OrgEditForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if (!$this->userUtils->checkHasPermission('settings:manage')) {
-      $message = t('Permission denied.');
-      drupal_set_message($message, 'error');
+      $this->messenger->addError(t('Permission denied.'));
 
       $form = [];
       $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
@@ -195,16 +224,16 @@ class OrgEditForm extends FormBase {
     $orgname = $form_state->getValue('title');
 
     if (empty($orgname)) {
-      drupal_set_message(t('An organization title is required.'), 'error');
+      $this->messenger->addError(t('An organization title is required.'));
     }
     else {
 
       $response = $this->consumerOrgService->edit($this->currentOrg, $form_state->getValues());
       if ($response->success()) {
-        drupal_set_message(t('Organization updated.'));
+        $this->messenger->addMessage(t('Organization updated.'));
       }
       else {
-        drupal_set_message(t('Error during organization update. Contact the system administrator.'), 'error');
+        $this->messenger->addError(t('Error during organization update. Contact the system administrator.'));
       }
 
     }

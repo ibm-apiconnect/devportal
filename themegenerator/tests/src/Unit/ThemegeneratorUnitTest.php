@@ -22,7 +22,7 @@ use Drupal\Tests\UnitTestCase;
  */
 class ThemegeneratorUnitTest extends UnitTestCase {
 
-  public function testTrue() {
+  public function testTrue(): void {
     $found = TRUE;
 
     $this->assertTrue($found, 'True is not true');

@@ -18,6 +18,7 @@ use Drupal\apic_app\Subscription;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\ApimUtils;
@@ -74,22 +75,30 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
   protected $utils;
 
   /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * MigrateSubscriptionForm constructor.
    *
    * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
    * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
    * @param \Drupal\ibm_apim\Service\ApimUtils $apimUtils
    * @param \Drupal\ibm_apim\Service\Utils $utils
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
   public function __construct(
     ApplicationRestInterface $restService,
     UserUtils $userUtils,
     ApimUtils $apimUtils,
-    Utils $utils) {
+    Utils $utils,
+    Messenger $messenger) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->apimUtils = $apimUtils;
     $this->utils = $utils;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -101,7 +110,8 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
       $container->get('apic_app.rest_service'),
       $container->get('ibm_apim.user_utils'),
       $container->get('ibm_apim.apim_utils'),
-      $container->get('ibm_apim.utils')
+      $container->get('ibm_apim.utils'),
+      $container->get('messenger')
     );
   }
 
@@ -197,7 +207,7 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
 
     $result = $this->restService->patchSubscription($url, json_encode($data));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
-      drupal_set_message(t('Application subscription migrated successfully.'));
+      $this->messenger->addMessage(t('Application subscription migrated successfully.'));
       // Calling all modules implementing 'hook_apic_app_migrate':
       \Drupal::moduleHandler()->invokeAll('apic_app_migrate', [
         'node' => $this->node,

@@ -1,0 +1,9 @@
+--- modules/warmer/warmer.services.yml	2019-06-26 16:40:00.000000000 +0100
++++ modules/warmer/warmer.services.yml	2019-06-26 16:26:09.000000000 +0100
+@@ -11,3 +11,6 @@
+   plugin.manager.warmer:
+     class: Drupal\warmer\Plugin\WarmerPluginManager
+     parent: default_plugin_manager
++  warmer.drush8queuecommand:
++    class: Drupal\warmer\QueueCommandDrush8Wrapper
++    arguments: ['@plugin.manager.queue_worker', '@queue']

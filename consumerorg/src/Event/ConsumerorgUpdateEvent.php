@@ -21,7 +21,7 @@ use Symfony\Component\EventDispatcher\Event;
  */
 class ConsumerorgUpdateEvent extends Event {
 
-  const EVENT_NAME = 'consumerorg_update';
+  public const EVENT_NAME = 'consumerorg_update';
 
   /**
    * The consumer organization.

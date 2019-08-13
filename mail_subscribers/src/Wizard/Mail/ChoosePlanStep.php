@@ -15,11 +15,36 @@ namespace Drupal\mail_subscribers\Wizard\Mail;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\node\Entity\Node;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ChoosePlanStep extends FormBase {
 
   protected $plans;
+
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
+   * ChoosePlanStep constructor.
+   *
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   */
+  public function __construct(Messenger $messenger) {
+    $this->messenger = $messenger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    // Load the service required to construct this class
+    return new static($container->get('messenger'));
+  }
+
 
   /**
    * {@inheritdoc}
@@ -42,7 +67,7 @@ class ChoosePlanStep extends FormBase {
 
     if (empty($product)) {
       $wizardUrl = Link::fromTextAndUrl(t('Plan subscription wizard'), \Drupal\Core\Url::fromRoute('mail_subscribers.plan_wizard'));
-      drupal_set_message(t('Email wizard was invoked with no product. Start the wizard again from the %wizardurl page.', ['%wizardurl' => $wizardUrl]), 'error');
+      $this->messenger->addError(t('Email wizard was invoked with no product. Start the wizard again from the %wizardurl page.', ['%wizardurl' => $wizardUrl]));
       $this->redirect('<front>')->send();
       return NULL;
     }
@@ -55,8 +80,8 @@ class ChoosePlanStep extends FormBase {
       $productPlans[] = unserialize($arrayValue['value'], ['allowed_classes' => false]);
     }
     if ($productPlans === NULL || empty($productPlans)) {
-      $wizard_url = \Drupal::l(t('Plan subscription wizard'), \Drupal\Core\Url::fromRoute('mail_subscribers.plan_wizard'));
-      drupal_set_message(t('No plans found for this product. Start the wizard again from the %wizardurl page.', ['%wizardurl' => $wizard_url]), 'error');
+      $wizard_url = Link::fromTextAndUrl(t('Plan subscription wizard'), \Drupal\Core\Url::fromRoute('mail_subscribers.plan_wizard'));
+      $this->messenger->addError(t('No plans found for this product. Start the wizard again from the %wizardurl page.', ['%wizardurl' => $wizard_url]));
       $this->redirect('<front>')->send();
       return NULL;
     }

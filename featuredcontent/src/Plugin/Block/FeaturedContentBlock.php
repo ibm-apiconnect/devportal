@@ -361,7 +361,7 @@ class FeaturedContentBlock extends BlockBase {
           if ($fid !== null && !empty($fid)) {
             $file = \Drupal\file\Entity\File::load($fid);
             if ($file !== null) {
-              $imageUrl = $file->toUrl();
+              $imageUrl = $file->createFileUrl();
             }
           }
           elseif ($ibmApimShowPlaceholderImages === TRUE && $moduleHandler->moduleExists('apic_api')) {
@@ -397,7 +397,7 @@ class FeaturedContentBlock extends BlockBase {
           if ($fid !== NULL && !empty($fid)) {
             $file = \Drupal\file\Entity\File::load($fid);
             if ($file !== NULL) {
-              $imageUrl = $file->toUrl();
+              $imageUrl = $file->createFileUrl();
             }
           }
           if ($imageUrl === NULL && $ibmApimShowPlaceholderImages === TRUE && $moduleHandler->moduleExists('product')) {

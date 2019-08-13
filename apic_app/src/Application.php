@@ -30,13 +30,13 @@ use Drupal\node\NodeInterface;
 class Application {
 
   /**
-   * Create a new Application
-   *
    * @param $app
    * @param string $event
-   * @param $formState
+   * @param null $formState
    *
    * @return int|string|null
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public static function create($app, $event = 'publish', $formState = NULL) {
@@ -62,7 +62,7 @@ class Application {
         $event_dispatcher->dispatch(ApplicationCreateEvent::EVENT_NAME, $event);
       }
     }
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
     return $node->id();
   }
 
@@ -196,18 +196,35 @@ class Application {
 
       $node->save();
       if ($node !== NULL && $event !== 'internal') {
-        \Drupal::logger('apic_app')->notice('Application @app updated', ['@app' => $node->getTitle()]);
-
-        // Calling all modules implementing 'hook_apic_app_update':
         $moduleHandler = \Drupal::service('module_handler');
-        $moduleHandler->invokeAll('apic_app_update', [$node, $app]);
+        // we have support for calling create hook here as well because of timing issues with webhooks coming in and sending us down
+        // the update path in createOrUpdate even when the initial user action was create
+        if ($event === 'create') {
+          \Drupal::logger('apic_app')->notice('Application @app created', ['@app' => $node->getTitle()]);
 
-        if ($moduleHandler->moduleExists('rules')) {
-          // Set the args twice on the event: as the main subject but also in the
-          // list of arguments.
-          $event = new ApplicationUpdateEvent($node, ['application' => $node]);
-          $event_dispatcher = \Drupal::service('event_dispatcher');
-          $event_dispatcher->dispatch(ApplicationUpdateEvent::EVENT_NAME, $event);
+          // Calling all modules implementing 'hook_apic_app_create':
+          $moduleHandler->invokeAll('apic_app_create', [$node, $app]);
+
+          if ($moduleHandler->moduleExists('rules')) {
+            // Set the args twice on the event: as the main subject but also in the
+            // list of arguments.
+            $event = new ApplicationCreateEvent($node, ['application' => $node]);
+            $event_dispatcher = \Drupal::service('event_dispatcher');
+            $event_dispatcher->dispatch(ApplicationCreateEvent::EVENT_NAME, $event);
+          }
+        } else {
+          \Drupal::logger('apic_app')->notice('Application @app updated', ['@app' => $node->getTitle()]);
+
+          // Calling all modules implementing 'hook_apic_app_update':
+          $moduleHandler->invokeAll('apic_app_update', [$node, $app]);
+
+          if ($moduleHandler->moduleExists('rules')) {
+            // Set the args twice on the event: as the main subject but also in the
+            // list of arguments.
+            $event = new ApplicationUpdateEvent($node, ['application' => $node]);
+            $event_dispatcher = \Drupal::service('event_dispatcher');
+            $event_dispatcher->dispatch(ApplicationUpdateEvent::EVENT_NAME, $event);
+          }
         }
       }
       $returnValue = $node;
@@ -449,11 +466,11 @@ class Application {
       if (isset($nids) && !empty($nids)) {
         $nid = array_shift($nids);
         self::deleteNode($nid, $event);
-        drupal_set_message(t('Deleted application @app', ['@app' => $id]), 'success');
+        \Drupal::messenger()->addMessage(t('Deleted application @app', ['@app' => $id]));
         $returnValue = TRUE;
       }
       else {
-        drupal_set_message(t('DeleteApplication could not find application @app', ['@app' => $id]), 'warning');
+        \Drupal::messenger()->addWarning(t('DeleteApplication could not find application @app', ['@app' => $id]));
         $returnValue = FALSE;
       }
     }
@@ -483,11 +500,11 @@ class Application {
       if (isset($nids) && !empty($nids)) {
         $nid = array_shift($nids);
         self::deleteNode($nid, $event);
-        drupal_set_message(t('Deleted application @app', ['@app' => $url]), 'success');
+        \Drupal::messenger()->addMessage(t('Deleted application @app', ['@app' => $url]));
         $returnValue = TRUE;
       }
       else {
-        drupal_set_message(t('DeleteApplication could not find application @app', ['@app' => $url]), 'warning');
+        \Drupal::messenger()->addWarning(t('DeleteApplication could not find application @app', ['@app' => $url]));
         $returnValue = FALSE;
       }
     }
@@ -514,7 +531,7 @@ class Application {
     $consumerOrg = $org['url'];
 
     if (!isset($consumerOrg)) {
-      drupal_set_message('Consumer organization not set.', 'error');
+      \Drupal::messenger()->addError('Consumer organization not set.');
       return NULL;
     }
 
@@ -587,7 +604,7 @@ class Application {
       $file = File::load($fid[0]['target_id']);
 
       if (isset($file)) {
-        $returnValue = $file->toUrl()->toUriString();
+        $returnValue = $file->createFileUrl()->toUriString();
       }
     }
     if (!isset($returnValue) && (boolean) $config->get('show_placeholder_images')) {
@@ -737,7 +754,7 @@ class Application {
             if (isset($fid[0]['target_id'])) {
               $file = File::load($fid[0]['target_id']);
               if ($file !== NULL) {
-                $productImageUrl = $file->toUrl()->toUriString();
+                $productImageUrl = $file->createFileUrl()->toUriString();
               }
             }
             elseif ($ibmApimShowPlaceholderImages === TRUE && $moduleHandler->moduleExists('product')) {
@@ -747,6 +764,7 @@ class Application {
           }
           $supersedingProduct = NULL;
           $planTitle = NULL;
+          $planService = \Drupal::service('product.plan');
           if ($moduleHandler->moduleExists('product')) {
             $productPlans = [];
             foreach ($product->product_plans->getValue() as $arrayValue) {
@@ -758,7 +776,7 @@ class Application {
               if (!isset($thisPlan['billing-model'])) {
                 $thisPlan['billing-model'] = [];
               }
-              $cost = \Drupal::service('product.plan')->parseBilling($thisPlan['billing-model']);
+              $cost = $planService->parseBilling($thisPlan['billing-model']);
               $planTitle = $productPlans[$sub['plan']]['title'];
             }
             if (isset($productPlans[$sub['plan']]['superseded-by'])) {

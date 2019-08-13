@@ -16,8 +16,10 @@ namespace Drupal\apic_app\Form;
 use Drupal\Core\File\File;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form to upload an application image.
@@ -31,6 +33,27 @@ class UploadImageForm extends FormBase {
    */
   protected $node;
 
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
+   * UploadImageForm constructor.
+   *
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   */
+  public function __construct(Messenger $messenger) {
+    $this->messenger = $messenger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    // Load the service required to construct this class
+    return new static($container->get('messenger'));
+  }
 
   /**
    * {@inheritdoc}
@@ -119,7 +142,7 @@ class UploadImageForm extends FormBase {
       '@username' => $currentUser->getAccountName(),
     ]);
 
-    drupal_set_message(t('Application image has been removed.'));
+    $this->messenger->addMessage(t('Application image has been removed.'));
 
     return $form_state->setRedirectUrl($this->getCancelUrl());
   }
@@ -140,7 +163,7 @@ class UploadImageForm extends FormBase {
     ], $appImgDir, FILE_EXISTS_RENAME); // Validate extensions.
 
     if (empty($fileTemp)) {
-      drupal_set_message(t('Failed to retrieve uploaded file.'), 'error');
+      $this->messenger->addError(t('Failed to retrieve uploaded file.'));
     }
     else {
       // Make it a permanent file so it doesn't get deleted by cron.
@@ -160,7 +183,7 @@ class UploadImageForm extends FormBase {
         '@appname' => $this->node->getTitle(),
         '@username' => $currentUser->getAccountName(),
       ]);
-      drupal_set_message(t('Application image updated.'));
+      $this->messenger->addMessage(t('Application image updated.'));
     }
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

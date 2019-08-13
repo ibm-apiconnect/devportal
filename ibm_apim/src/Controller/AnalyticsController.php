@@ -29,8 +29,11 @@ use Symfony\Component\HttpFoundation\Response;
 class AnalyticsController extends ControllerBase {
 
   protected $userUtils;
+
   protected $siteConfig;
+
   protected $utils;
+
   private $requestStack;
 
   /**
@@ -59,20 +62,18 @@ class AnalyticsController extends ControllerBase {
    * Display graphs of analytics for the current consumer organization
    *
    * @return array
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
-  public function analytics() {
-    if (isset($node)) {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
-    }
-    else {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    }
+  public function analytics(): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $consumer_org = $this->userUtils->getCurrentConsumerorg();
 
     $catalogId = $this->siteConfig->getEnvId();
     $catalogName = $this->siteConfig->getCatalog()['title'];
     $pOrgId = $this->siteConfig->getOrgId();
+    $consumerorgId = NULL;
+    $consumerorgTitle = NULL;
     if (isset($consumer_org['url'])) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
@@ -81,71 +82,66 @@ class AnalyticsController extends ControllerBase {
       if (isset($consumerorgresults) && !empty($consumerorgresults)) {
         $first = array_shift($consumerorgresults);
         $consumerorg = Node::load($first);
-        $consumerorgId = $consumerorg->consumerorg_id->value;
-        $consumerorgTitle = $consumerorg->getTitle();
+        if ($consumerorg !== null) {
+          $consumerorgId = $consumerorg->consumerorg_id->value;
+          $consumerorgTitle = $consumerorg->getTitle();
+        }
       }
-      else {
-        $consumerorgId = NULL;
-        $consumerorgTitle = NULL;
-      }
-    }
-    else {
-      $consumerorgId = NULL;
-      $consumerorgTitle = NULL;
     }
 
     $theme = 'ibm_apim_analytics';
-    $libraries = array('ibm_apim/analytics', 'ibm_apim/org_analytics');
+    $libraries = ['ibm_apim/analytics', 'ibm_apim/org_analytics'];
     $translations = $this->utils->analytics_translations();
 
     $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString();
-    $drupalSettings = array(
-      'anv' => array(),
-      'analytics' => array(
+    $drupalSettings = [
+      'anv' => [],
+      'analytics' => [
         'proxyURL' => $url,
         'translations' => $translations,
-        'analyticsDir' => base_path() . drupal_get_path('module', 'ibm_apim') . '/analytics'
-      ),
-    );
+        'analyticsDir' => base_path() . drupal_get_path('module', 'ibm_apim') . '/analytics',
+      ],
+    ];
 
     $portal_analytics = $this->analyticsService->getDefaultService();
     if (!isset($portal_analytics)) {
-      drupal_set_message(t('No analytics service was found.'), 'error');
+      \Drupal::messenger()->addError(t('No analytics service was found.'));
     }
     else {
       $analyticsClientUrl = $portal_analytics->getClientEndpoint();
       if (!isset($analyticsClientUrl)) {
-        drupal_set_message(t('Analytics client URL is not set.'), 'error');
+        \Drupal::messenger()->addError(t('Analytics client URL is not set.'));
       }
     }
 
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, array(
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, [
       'theme' => $theme,
       'consumerorgId' => $consumerorgId,
       'catalogId' => $catalogId,
       'catalogName' => $catalogName,
       'porgId' => $pOrgId,
-      'consumerorgTitle' => $consumerorgTitle
-    ));
+      'consumerorgTitle' => $consumerorgTitle,
+    ]);
 
-    return array(
+    return [
       '#theme' => $theme,
       '#consumerorgId' => $consumerorgId,
       '#catalogId' => $catalogId,
       '#catalogName' => urlencode($catalogName),
       '#porgId' => $pOrgId,
       '#consumerorgTitle' => $consumerorgTitle,
-      '#attached' => array(
+      '#attached' => [
         'library' => $libraries,
-        'drupalSettings' => $drupalSettings
-      ),
-    );
+        'drupalSettings' => $drupalSettings,
+      ],
+    ];
   }
 
   /**
    * proxy handling substitutions necessary for the analytics
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
+   *
    * @return \Symfony\Component\HttpFoundation\Response
    */
   public function analyticsProxy(Request $request) {
@@ -154,6 +150,7 @@ class AnalyticsController extends ControllerBase {
     // disable caching for this page
     \Drupal::service('page_cache_kill_switch')->trigger();
     $consumer_org = $this->userUtils->getCurrentConsumerorg();
+    $consumerorgId = NULL;
 
     if (isset($consumer_org) && isset($consumer_org['url'])) {
       $portal_analytics_service = $this->analyticsService->getDefaultService();
@@ -167,7 +164,9 @@ class AnalyticsController extends ControllerBase {
           if (isset($consumerOrgResults) && !empty($consumerOrgResults)) {
             $first = array_shift($consumerOrgResults);
             $consumerorg = Node::load($first);
-            $consumerorgId = $consumerorg->consumerorg_id->value;
+            if ($consumerorg !== null) {
+              $consumerorgId = $consumerorg->consumerorg_id->value;
+            }
 
             $pOrgId = $this->siteConfig->getOrgId();
             $catalogId = $this->siteConfig->getEnvId();
@@ -180,9 +179,9 @@ class AnalyticsController extends ControllerBase {
             $url = $url . '?org_id=' . $pOrgId . '&catalog_id=' . $catalogId . '&developer_org_id=' . $consumerorgId . '&manage=true&dashboard=true';
 
             \Drupal::logger('ibm_apim')->info('Analytics proxy URL is: %url, verb is %verb', [
-                '%url' => $url,
-                '%verb' => $verb
-              ]);
+              '%url' => $url,
+              '%verb' => $verb,
+            ]);
 
             $headers = [];
 
@@ -194,7 +193,7 @@ class AnalyticsController extends ControllerBase {
               $tls_profiles = \Drupal::service('ibm_apim.tls_client_profiles')->getAll();
               if (isset($tls_profiles) && !empty($tls_profiles)) {
                 foreach ($tls_profiles as $tls_profile) {
-                  if ($tls_profile->getUrl() == $client_endpoint_tls_client_profile_url) {
+                  if ($tls_profile->getUrl() === $client_endpoint_tls_client_profile_url) {
                     $keyfile = $tls_profile->getKeyFile();
                     if (isset($keyfile)) {
                       $mutualAuth['keyFile'] = $keyfile;

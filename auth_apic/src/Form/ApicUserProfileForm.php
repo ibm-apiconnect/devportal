@@ -20,17 +20,17 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\State\State;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicType\ApicUser;
-use Drupal\auth_apic\Service\Interfaces\UserManagerInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
+use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\user\ProfileForm;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ApicUserProfileForm extends ProfileForm {
 
   /**
-   * @var \Drupal\auth_apic\Service\Interfaces\UserManagerInterface
+   * @var \Drupal\ibm_apim\UserManagement\ApicAccountInterface
    */
-  protected $userManager;
+  protected $accountService;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
@@ -44,12 +44,12 @@ class ApicUserProfileForm extends ProfileForm {
 
   public function __construct(EntityManagerInterface $entity_manager,
                               LanguageManagerInterface $language_manager,
-                              UserManagerInterface $user_manager,
+                              ApicAccountInterface $account_service,
                               UserRegistryServiceInterface $registry_service,
                               State $state,
                               EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL,
                               TimeInterface $time = NULL) {
-    $this->userManager = $user_manager;
+    $this->accountService = $account_service;
     $this->state = $state;
     $this->registryService = $registry_service;
     parent::__construct($entity_manager, $language_manager, $entity_type_bundle_info, $time);
@@ -59,7 +59,7 @@ class ApicUserProfileForm extends ProfileForm {
     return new static(
       $container->get('entity.manager'),
       $container->get('language_manager'),
-      $container->get('auth_apic.usermanager'),
+      $container->get('ibm_apim.account'),
       $container->get('ibm_apim.user_registry'),
       $container->get('state'),
       $container->get('entity_type.bundle.info'),
@@ -78,7 +78,7 @@ class ApicUserProfileForm extends ProfileForm {
     $form['consumer_organization']['#access'] = FALSE;
 
     $formForUser = (int) $this->entity->get('uid')->value;
-    $registryUrl = $this->entity->get('apic_user_registry_url')->value;
+    $registryUrl = $this->entity->get('registry_url')->value;
     $registry = $this->registryService->get($registryUrl);
 
     /* If the user is admin and they are editing another non-admin user, we need to prevent changes being made
@@ -193,6 +193,9 @@ class ApicUserProfileForm extends ProfileForm {
       $form['last_name']['#disabled'] = TRUE;
       $form['last_name']['#required'] = FALSE;
 
+      $form['emailaddress']['#disabled'] = TRUE;
+      $form['emailaddress']['#required'] = FALSE;
+
       $form['consumer_organization']['#access'] = FALSE;
       $form['consumer_organization']['widget']['#required'] = FALSE;
 
@@ -273,6 +276,8 @@ class ApicUserProfileForm extends ProfileForm {
   }
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
     if ($form_state->getValue('registry_type') !== NULL && $form_state->getValue('registry_type') === 'lur') {
       $firstName = $form_state->getValue(['first_name', '0', 'value']);
       if (empty($firstName)) {
@@ -283,10 +288,12 @@ class ApicUserProfileForm extends ProfileForm {
         $form_state->setErrorByName('last_name', $this->t('Last Name is required.'));
       }
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'calling parent validateForm');
     return parent::validateForm($form, $form_state);
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $password = NULL;
     $firstNameValue = $form_state->getValue(['first_name', '0', 'value']);
     $lastNameValue = $form_state->getValue(['last_name', '0', 'value']);
@@ -305,34 +312,36 @@ class ApicUserProfileForm extends ProfileForm {
     if ($password !== NULL) {
       $editUser->setPassword($password);
     }
+    $editUser->setApicUserRegistryUrl($this->entity->get('registry_url')->value);
 
     // We need to call different functions on the user manager
     // depending on who we are and who we edited.
     if (((int) $this->currentUser()->id() === 1) || ($this->currentUser()->getEmail() !== $editUser->getMail())) {
       // local admin user should only be updated in drupal db
       // if an admin is editing someone else, those changes should be made to drupal only as well
-      $this->userManager->updateLocalAccount($editUser);
+      $this->accountService->updateLocalAccount($editUser);
     }
     else {
       // everyone else needs updating in the mgmt appliance too
-      $updatedMgmtAppliance = $this->userManager->updateApicAccount($editUser);
+      $updatedMgmtAppliance = $this->accountService->updateApicAccount($editUser);
 
       if ($updatedMgmtAppliance) {
-        $this->userManager->updateLocalAccount($editUser);
+        $this->accountService->updateLocalAccount($editUser);
       }
     }
 
     // If the user editing the form has admin permissions, there may be role updates to make
     if (in_array('administrator', $this->currentUser()->getRoles(), FALSE)) {
-      $this->userManager->updateLocalAccountRoles($editUser, $form_state->getValue('roles'));
+      $this->accountService->updateLocalAccountRoles($editUser, $form_state->getValue('roles'));
     }
 
     parent::submitForm($form, $form_state);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
   }
 
   private function knownEmptyEmailAddress($accountEmail, $knownValue = 'noemailinregistry@example.com'): bool {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $accountEmail);
     $length = strlen($knownValue);
     if ($length === 0) {
       $returnValue = TRUE;
@@ -404,6 +413,9 @@ class ApicUserProfileForm extends ProfileForm {
   /**
    * Provides a submit handler for the 'Cancel' button.
    * Note, this is cancel the edit form not cancel account which was on the drupal core form.
+   *
+   * @param $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
    */
   public function editCancelSubmit($form, FormStateInterface $form_state): void {
     $form_state->setRedirect(

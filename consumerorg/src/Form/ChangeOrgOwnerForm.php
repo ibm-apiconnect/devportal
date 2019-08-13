@@ -17,11 +17,11 @@ use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\UserUtils;
-use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -31,15 +31,35 @@ class ChangeOrgOwnerForm extends FormBase {
 
   protected $currentOrg;
 
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
   protected $consumerOrgService;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
   protected $userUtils;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\ApimUtils
+   */
   protected $apimUtils;
 
+  /**
+   * @var \Drupal\Core\Extension\ThemeHandler
+   */
   protected $themeHandler;
 
+  /**
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
   protected $currentUser;
+
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
 
   /**
    * ChangeOrgOwnerForm constructor.
@@ -49,13 +69,15 @@ class ChangeOrgOwnerForm extends FormBase {
    * @param \Drupal\ibm_apim\Service\ApimUtils $apim_utils
    * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
-  public function __construct(ConsumerOrgService $consumer_org_service, UserUtils $user_utils, ApimUtils $apim_utils, ThemeHandler $themeHandler, AccountProxyInterface $current_user) {
+  public function __construct(ConsumerOrgService $consumer_org_service, UserUtils $user_utils, ApimUtils $apim_utils, ThemeHandler $themeHandler, AccountProxyInterface $current_user, Messenger $messenger) {
     $this->consumerOrgService = $consumer_org_service;
     $this->userUtils = $user_utils;
     $this->apimUtils = $apim_utils;
     $this->themeHandler = $themeHandler;
     $this->currentUser = $current_user;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -67,7 +89,8 @@ class ChangeOrgOwnerForm extends FormBase {
       $container->get('ibm_apim.user_utils'),
       $container->get('ibm_apim.apim_utils'),
       $container->get('theme_handler'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('messenger')
     );
   }
 
@@ -88,8 +111,7 @@ class ChangeOrgOwnerForm extends FormBase {
     $this->currentOrg = $this->consumerOrgService->get($org['url']);
 
     if (!$this->userUtils->checkHasPermission('settings:manage')) {
-      $message = t('Permission denied.');
-      drupal_set_message($message, 'error');
+      $this->messenger->addError(t('Permission denied.'));
 
       $form = [];
       $form['description'] = ['#markup' => '<p>' . t('You do not have sufficient access to perform this action.') . '</p>'];
@@ -111,7 +133,7 @@ class ChangeOrgOwnerForm extends FormBase {
         $values = [];
         // If there is only one member, do not allow change
         if (count($members) === 1) {
-          drupal_set_message(t('Cannot change ownership: only one user in developer organization %org', ['%org' => $this->currentOrg->getTitle()]), 'error');
+          $this->messenger->addError(t('Cannot change ownership: only one user in developer organization %org', ['%org' => $this->currentOrg->getTitle()]));
         }
         else {
 
@@ -135,7 +157,21 @@ class ChangeOrgOwnerForm extends FormBase {
             $default_role = NULL;
             foreach ($roles as $role) {
               if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
-                $roles_array[$role->getUrl()] = $role->getTitle();
+                // use translated role names if possible
+                switch($role->getTitle()) {
+                  case 'Administrator':
+                    $roles_array[$role->getUrl()] = t('Administrator');
+                    break;
+                  case 'Developer':
+                    $roles_array[$role->getUrl()] = t('Developer');
+                    break;
+                  case 'Viewer':
+                    $roles_array[$role->getUrl()] = t('Viewer');
+                    break;
+                  default:
+                    $roles_array[$role->getUrl()] = $role->getTitle();
+                    break;
+                }
               }
               if ($role->getName() === 'developer') {
                 $default_role = $role->getUrl();
@@ -169,7 +205,7 @@ class ChangeOrgOwnerForm extends FormBase {
         }
       }
       else {
-        drupal_set_message(t('Failed to retrieve member list for developer organization %org', ['%org' => $this->currentOrg->getTitle()]), 'error');
+        $this->messenger->addError(t('Failed to retrieve member list for developer organization %org', ['%org' => $this->currentOrg->getTitle()]));
 
         $form = [];
         $form['description'] = ['#markup' => '<p>' . t('Could not get member list for this organization so can not transfer ownership.') . '</p>'];
@@ -206,7 +242,7 @@ class ChangeOrgOwnerForm extends FormBase {
     $role = $form_state->getValue('role');
 
     if (empty($new_owner)) {
-      drupal_set_message(t('A new owner is required.'), 'error');
+      $this->messenger->addError(t('A new owner is required.'));
     }
     else {
       // update APIm
@@ -214,14 +250,14 @@ class ChangeOrgOwnerForm extends FormBase {
       $roleUrl = $this->apimUtils->createFullyQualifiedUrl($role);
       $response = $this->consumerOrgService->changeOrgOwner($this->currentOrg, $newUserUrl, $roleUrl);
       if ($response->success()) {
-        drupal_set_message(t('Organization owner updated.'));
+        $this->messenger->addMessage(t('Organization owner updated.'));
         \Drupal::logger('consumerorg')->notice('Consumer organization owner for @orgname changed by @username', [
           '@orgname' => $this->currentOrg->getTitle(),
           '@username' => $this->currentUser->getAccountName(),
         ]);
       }
       else {
-        drupal_set_message(t('Error updating the organization owner. Contact the system administrator.'), 'error');
+        $this->messenger->addError(t('Error updating the organization owner. Contact the system administrator.'));
       }
     }
     $form_state->setRedirectUrl($this->getCancelUrl());

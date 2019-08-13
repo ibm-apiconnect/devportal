@@ -77,7 +77,7 @@ do
        URL="http://ftp.drupal.org/files/translations/8.x/$PROJECT_NAME/$PROJECT_NAME-$PROJECT_VERSION.$LANG.po"
 
        #echo "Attempting to download from $URL to $LANG.po in $PWD"
-       wget -q $URL && RC=$? || RC=$?
+       wget -q $URL --no-check-certificate && RC=$? || RC=$?
        if [[ $RC -ne 0 ]]
        then
          echo "  $LANG - NO DOWNLOAD AVAILABLE"
@@ -111,7 +111,7 @@ do
    URL="http://ftp.drupal.org/files/translations/8.x/$CORE_PROJECT_NAME/$CORE_PROJECT_NAME-$CORE_PROJECT_VERSION.$LANG.po"
 
 #   #echo "Attempting to download from $URL to $LANG.po in $PWD"
-   wget -q $URL && RC=$? || RC=$?
+   wget -q $URL --no-check-certificate && RC=$? || RC=$?
    if [[ $RC -ne 0 ]]
    then
      echo "  $LANG - FAILED"

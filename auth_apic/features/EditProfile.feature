@@ -171,3 +171,55 @@ Scenario: View another users edit profile form as admin user (uid==1)
     And I should see the text "Cancel"
     And I should see the text "Save"
     And I should not see the text "Delete account"
+
+  @api
+  Scenario: View edit profile form as LDAP (!user_managed) user
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | yes     |
+    Given users:
+      | name              | mail              | pass                  | status | registry_url                  |
+      | @data(andre.name) |                   | @data(andre.password) | 1      | @data(user_registries[2].url) |
+    Given I am logged in as "@data(andre.name)"
+    When I am at "/user/@uid/edit"
+    Then I should see the text "First Name"
+    And the element "first_name[0][value]" is disabled
+    And the "first_name[0][value]" field should contain "Andre"
+    And I should see the text "Last Name"
+    And the element "last_name[0][value]" is disabled
+    And the "last_name[0][value]" field should contain "Andresson"
+    And I should see the text "Email Address"
+    And the element "emailaddress" is disabled
+    And the "emailaddress" field should contain ""
+    And I should see the text "Picture"
+    And I should see the text "Code Snippet language"
+    And I should see the text "Time zone"
+    And I should not see the text "Current Password"
+    And I should not see the text "Username"
+    And I should not see the text "Cancel account"
+    And I should see the text "Cancel"
+    And I should see the text "Save"
+    And I should see the text "Delete account"
+
+  @api
+  Scenario: Change profile preferred language as LDAP (!user_managed) user
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | yes     |
+    Given users:
+      | name              | mail              | pass                  | status | registry_url                  |
+      | @data(andre.name) |                   | @data(andre.password) | 1      | @data(user_registries[2].url) |
+    Given I am logged in as "@data(andre.name)"
+    When I am at "/user/@uid/edit"
+    When I select "es" from "preferred_langcode"
+    When I press the "Save" button
+    And there are messages
+    And I should see the text "Your account has been updated."
+    And the "first_name[0][value]" field should contain "Andre"
+    And the "last_name[0][value]" field should contain "Andresson"
+    And there are no errors
+    And there are no warnings
+
+

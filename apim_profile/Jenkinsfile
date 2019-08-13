@@ -102,6 +102,13 @@ veloxPipeline(pipelineOpts) { p ->
 
     try {
       if (MODULES_CHANGED == true || FORCE_RUN == true) {
+        stage('Check out portal-common') {
+          MODULE_BRANCH = 'master'
+          if (env.BRANCH_NAME == '2018.4.1') {
+            MODULE_BRANCH = '2018.4.1'
+          }
+          portal.cloneGitRepoOrMaster('portal-common', env.BRANCH_NAME, 'apimesh', null, true)
+        }
         stage('Build') {
           ansiColor('xterm') {
             sshagent(['1bd7e7a9-22d3-4ca5-b000-499bac0f7098']) {
@@ -177,12 +184,11 @@ veloxPipeline(pipelineOpts) { p ->
       // we need to change from 'detached HEAD' to env.BRANCH_NAME before we can push
       stage('bump version') {
         sh """
-          git stash
           git checkout ${env.BRANCH_NAME}
-          git pull origin ${env.BRANCH_NAME}
-          git stash pop || true
           git add ${MODULES_YAML_FILE}
           git commit -m 'bump module versions [ci-skip]'
+          git fetch origin ${env.BRANCH_NAME}
+          git rebase -X ours || true
           git push --set-upstream origin ${env.BRANCH_NAME}
         """
       }

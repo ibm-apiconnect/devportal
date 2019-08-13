@@ -13,10 +13,10 @@
 namespace Drupal\auth_apic\Access;
 
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\user\Entity\User;
-use Drupal\Core\Access\AccessResult;
 
 class CurrentUserProfileAccessCheck implements AccessInterface {
 

@@ -41,5 +41,11 @@ services:
                 '@ibm_apim.user_utils',
                 '@cache_tags.invalidator',
                 '@consumerorg.member',
-                '@consumerorg.role'
+                '@consumerorg.role',
+                '@ibm_apim.account'
                ]
+  consumerorg.login:
+    class: Drupal\consumerorg\Service\ConsumerOrgLoginService
+    arguments: ['@ibm_apim.consumerorg',
+                '@logger.channel.consumerorg'
+                ]

@@ -6,6 +6,7 @@ Feature: ApplicationUpdate
 
   @api
   Scenario: Edit application name
+    Given I am not logged in
     Given users:
       | name  | pass     | mail              | status |
       | Andre | Qwert123 | andre@example.com | 1      |

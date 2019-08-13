@@ -263,35 +263,18 @@ class ApicUser {
   }
 
   /**
-   * @return bool|object
-   */
-  public function getDrupalUser() {
-    return user_load_by_name($this->getUsername());
-  }
-
-  /**
-   * @return string|null
-   */
-  public function getDrupalUid(): ?string {
-    $return = NULL;
-    $user = user_load_by_name($this->getUsername());
-    if (isset($user)) {
-      $return = $user->id();
-    }
-    return $return;
-  }
-
-  /**
    * convert array to object
    *
    * @param array $content
    */
   public function createFromArray(array $content): void {
+    $apimUtils = \Drupal::service('ibm_apim.apim_utils');
+
     if (array_key_exists('username', $content)) {
       $this->setUsername($content['username']);
     }
     if (array_key_exists('url', $content)) {
-      $this->setUrl($content['url']);
+      $this->setUrl($apimUtils->removeFullyQualifiedUrl($content['url']));
     }
     if (array_key_exists('password', $content)) {
       $this->setPassword($content['password']);
@@ -308,9 +291,22 @@ class ApicUser {
     if (array_key_exists('state', $content)) {
       $this->setState($content['state']);
     }
-    if (array_key_exists('apic_user_registry_url', $content)) {
-      $this->setApicUserRegistryUrl($content['apic_user_registry_url']);
+
+    // TODO: from create consumer org response
+    // TODO: we have a user_registry_url at this point - we should be on a createFromJson flow?
+    // doing this first so it is overridden if other paths through use something else
+    if (array_key_exists('user_registry_url', $content)) {
+      $this->setApicUserRegistryUrl($apimUtils->removeFullyQualifiedUrl($content['user_registry_url']));
     }
+
+    if (array_key_exists('apic_user_registry_url', $content)) {
+      $this->setApicUserRegistryUrl($apimUtils->removeFullyQualifiedUrl($content['apic_user_registry_url']));
+    }
+    // override with registry_url - apic_user_registry_url will be removed.
+    if (array_key_exists('registry_url', $content)) {
+      $this->setApicUserRegistryUrl($apimUtils->removeFullyQualifiedUrl($content['registry_url']));
+    }
+
     if (array_key_exists('organization', $content)) {
       $this->setOrganization($content['organization']);
     }
@@ -361,6 +357,7 @@ class ApicUser {
     }
     if ($this->apic_user_registry_url !== NULL) {
       $content['apic_user_registry_url'] = $this->apic_user_registry_url;
+      $content['registry_url'] = $this->apic_user_registry_url;
     }
     if ($this->organization !== NULL) {
       $content['organization'] = $this->organization;

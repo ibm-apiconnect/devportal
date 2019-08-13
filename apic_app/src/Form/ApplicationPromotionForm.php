@@ -16,6 +16,7 @@ namespace Drupal\apic_app\Form;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
@@ -45,14 +46,21 @@ class ApplicationPromotionForm extends ConfirmFormBase {
   protected $userUtils;
 
   /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * ApplicationCreateForm constructor.
    *
    * @param ApplicationRestInterface $restService
    * @param UserUtils $userUtils
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils) {
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -60,7 +68,9 @@ class ApplicationPromotionForm extends ConfirmFormBase {
    */
   public static function create(ContainerInterface $container) {
     // Load the service required to construct this class
-    return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'));
+    return new static($container->get('apic_app.rest_service'),
+      $container->get('ibm_apim.user_utils'),
+      $container->get('messenger'));
   }
 
   /**
@@ -128,7 +138,7 @@ class ApplicationPromotionForm extends ConfirmFormBase {
     $url = $this->node->apic_url->value;
     $result = $this->restService->promoteApplication($url, json_encode(['lifecycle_state_pending' => 'production']));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
-      drupal_set_message($this->t('Application upgrade requested.'));
+      $this->messenger->addMessage($this->t('Application upgrade requested.'));
 
       $currentUser = \Drupal::currentUser();
       \Drupal::logger('apic_app')->notice('Application @appName requested promotion by @username', [

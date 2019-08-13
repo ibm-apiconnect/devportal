@@ -1,8 +1,0 @@
---- modules/page_manager/page_manager_ui/page_manager_ui.libraries.yml	2018-04-14 02:41:42.000000000 +0100
-+++ modules/page_manager/page_manager_ui/page_manager_ui.libraries.yml	2019-01-17 13:55:32.000000000 +0000
-@@ -11,4 +11,4 @@
-   js:
-     js/page-manager-ui-page-variants.js: {}
-   dependencies:
--    - core/jquery
-+    - core/jquery.once

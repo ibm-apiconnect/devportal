@@ -9,7 +9,7 @@
   display: flex;
   font-size: 0.875rem;
   margin: 0 0 0.75rem 0;
-  &:first-of-type {
+  &:nth-child(2) {
     margin-top: 0.75rem;
   }
 

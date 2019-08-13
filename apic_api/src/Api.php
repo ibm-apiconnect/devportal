@@ -13,15 +13,12 @@
 
 namespace Drupal\apic_api;
 
-use Drupal\apic_api\ApiTags\ApiTags;
 use Drupal\apic_api\Event\ApiCreateEvent;
 use Drupal\apic_api\Event\ApiDeleteEvent;
 use Drupal\apic_api\Event\ApiUpdateEvent;
 use Drupal\Component\Utility\Xss;
-use Drupal\consumerorg\ApicType\Member;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
-use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\product\Product;
@@ -117,6 +114,7 @@ class Api {
       $node->set('api_ibmconfiguration', NULL);
       $node->set('api_wsdl', NULL);
       $node->set('api_swagger', NULL);
+      $node->set('api_encodedswagger', NULL);
       $node->set('api_swaggertags', NULL);
       $node->set('api_state', NULL);
     }
@@ -351,6 +349,12 @@ class Api {
             }
           }
           $node->set('api_swagger', serialize(apic_api_remove_empty_elements($api['consumer_api'])));
+
+          // stored as base64 encoded string so can be passed through to explorer without PHP messing up empty objects / arrays
+          if (!array_key_exists('encoded_consumer_api', $api) || empty($api['encoded_consumer_api'])) {
+            $api['encoded_consumer_api'] = base64_encode(json_encode($api['consumer_api']));
+          }
+          $node->set('api_encodedswagger', $api['encoded_consumer_api']);
 
           $node->set('api_swaggertags', []);
           if (isset($api['consumer_api']['tags'])) {
@@ -668,13 +672,9 @@ class Api {
     $productNodes = Node::loadMultiple($productNids);
     $found = FALSE;
     foreach ($productNodes as $productNode) {
-      $apis = [];
       foreach ($productNode->product_apis->getValue() as $arrayValue) {
-        $apis[] = json_decode($arrayValue['value']);
-      }
-      if (!empty($apis)) {
-        $prodRefs = unserialize($apis, ['allowed_classes' => FALSE]);
-        foreach ($prodRefs as $prodRef) {
+        $apis = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+        foreach ($apis as $prodRef) {
           if ($prodRef['name'] === $node->apic_ref->value) {
             $found = TRUE;
           }
@@ -709,13 +709,9 @@ class Api {
       $productNodes = Node::loadMultiple($productNids);
       $refArray = [];
       foreach ($productNodes as $productNode) {
-        $apis = [];
         foreach ($productNode->product_apis->getValue() as $arrayValue) {
-          $apis[] = json_decode($arrayValue['value']);
-        }
-        if (!empty($apis)) {
-          $prodRefs = unserialize($apis, ['allowed_classes' => FALSE]);
-          foreach ($prodRefs as $prodRef) {
+          $apis = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+          foreach ($apis as $prodRef) {
             $refArray[] = $prodRef['name'];
           }
         }
@@ -734,6 +730,28 @@ class Api {
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $nids);
     return $nids;
+  }
+
+  /**
+   * Get a list of all the custom fields on this content type
+   *
+   * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  public static function getCustomFields(): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $coreFields = ['title', 'vid', 'status', 'nid', 'revision_log', 'created'];
+    $components = \Drupal::entityTypeManager()
+      ->getStorage('entity_form_display')
+      ->load('node.api.default')
+      ->getComponents();
+    $keys = array_keys($components);
+    $ibmFields = self::getIBMFields();
+    $merged = array_merge($coreFields, $ibmFields);
+    $diff = array_diff($keys, $merged);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $diff);
+    return $diff;
   }
 
   /**
@@ -764,6 +782,7 @@ class Api {
       'api_soapversion',
       'api_state',
       'api_swagger',
+      'api_encodedswagger',
       'api_swaggertags',
       'api_wsdl',
       'api_xibmname',
@@ -848,5 +867,24 @@ class Api {
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $output;
+  }
+
+  /**
+   * Used by the batch API from the AdminForm
+   *
+   * @param $nid
+   */
+  public function processCategoriesForNode($nid): void {
+    $config = \Drupal::config('ibm_apim.settings');
+    $categoriesEnabled = (boolean) $config->get('categories')['enabled'];
+    if ($categoriesEnabled === TRUE) {
+      $node = Node::load($nid);
+      if ($node !== NULL) {
+        $api = unserialize($node->api_swagger->value, ['allowed_classes' => FALSE]);
+        if (isset($api['x-ibm-configuration']['categories'])) {
+          $this->apiTaxonomy->process_categories($api, $node);
+        }
+      }
+    }
   }
 }

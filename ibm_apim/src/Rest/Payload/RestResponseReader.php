@@ -13,9 +13,17 @@
 
 namespace Drupal\ibm_apim\Rest\Payload;
 
+use Drupal\Core\Config\Config;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Messenger\Messenger;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\ibm_apim\Rest\Exception\RestResponseParseException;
 use Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface;
 use Drupal\ibm_apim\Rest\RestResponse;
+use Drupal\Core\Url;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Create a new object to represent the response from an API call.
@@ -23,9 +31,33 @@ use Drupal\ibm_apim\Rest\RestResponse;
 class RestResponseReader {
 
   /**
-   * Constructor.
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  public function __construct() {
+  protected $moduleHandler;
+
+  /**
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $system_site_config;
+
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
+   * RestResponseReader constructor.
+   *
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $system_site_config
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   */
+  public function __construct(ModuleHandlerInterface $moduleHandler,
+                              ConfigFactoryInterface $system_site_config,
+                              MessengerInterface $messenger) {
+    $this->moduleHandler = $moduleHandler;
+    $this->system_site_config = $system_site_config->get('system.site');
+    $this->messenger = $messenger;
   }
 
   /**
@@ -52,8 +84,15 @@ class RestResponseReader {
       }
     } catch (RestResponseParseException $exception) {
       if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
-        $contact_link = \Drupal::l(t('contact'), \Drupal\Core\Url::fromRoute('contact.site_page'));
-        drupal_set_message(t('We appear to be having trouble processing your request. Please try again later or @contact_link the owner of this site if the problem persists.', ['@contact_link' => $contact_link]), 'warning');
+        if ($this->moduleHandler->moduleExists('contact')) {
+          $contact_link = Link::fromTextAndUrl(t('contact'), Url::fromRoute('contact.site_page'));
+        }
+        else {
+          $contact_link = Link::fromTextAndUrl(t('contact'), Url::fromUri('mailto:' . $this->system_site_config->get('mail')));
+        }
+
+        $this->messenger
+          ->addWarning(t('We appear to be having trouble processing your request. Please try again later or @contact_link the owner of this site if the problem persists.', ['@contact_link' => $contact_link]));
       }
       \Drupal::logger('auth_apic')
         ->error('Exception occurred while parsing response from management appliance. Exception was: @exception', ['@exception' => $exception->getMessage()]);

@@ -133,7 +133,7 @@ function drush_apic_api_createOrUpdate($api, $event, $func) {
       ]), 'success');
     }
     $moduleHandler = \Drupal::service('module_handler');
-    if ($moduleHandler->moduleExists('views') && $func !== 'MassUpdate') {
+    if ($func !== 'MassUpdate' && $moduleHandler->moduleExists('views')) {
       views_invalidate_cache();
     }
     if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
@@ -260,10 +260,6 @@ function drush_apic_api_delete($api, $event = 'api_delete') {
 function drush_apic_api_massupdate($apis = [], $event = 'api_massupdate') {
   ibm_apim_entry_trace(__FUNCTION__, count($apis));
 
-  if (is_string($apis)) {
-    $apis = json_decode($apis, TRUE);
-  }
-
   if (!empty($apis)) {
     foreach ($apis as $api) {
       drush_apic_api_createOrUpdate($api, $event, 'MassUpdate');
@@ -283,9 +279,7 @@ function drush_apic_api_massupdate($apis = [], $event = 'api_massupdate') {
  */
 function drush_apic_api_tidy($apiRefs = []) {
   ibm_apim_entry_trace(__FUNCTION__, count($apiRefs));
-  if (is_string($apiRefs)) {
-    $apiRefs = json_decode($apiRefs, TRUE);
-  }
+
   if (!empty($apiRefs)) {
     $nids = [];
     $query = \Drupal::entityQuery('node');

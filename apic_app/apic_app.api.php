@@ -10,8 +10,8 @@
  * @{
  */
 
-use Drupal\node\NodeInterface;
 use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
 
 /**
  * Triggered when an application is created

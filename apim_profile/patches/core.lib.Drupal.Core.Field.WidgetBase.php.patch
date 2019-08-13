@@ -1,0 +1,13 @@
+--- core/lib/Drupal/Core/Field/WidgetBase.php	2019-06-13 11:10:50.000000000 +0100
++++ core/lib/Drupal/Core/Field/WidgetBase.php	2019-06-13 11:11:18.000000000 +0100
+@@ -376,6 +376,10 @@
+           return SortArray::sortByKeyInt($a, $b, '_weight');
+         });
+       }
++      // $values must be an array
++      if (!is_array($values)) {
++        $values = [$values];
++      }
+ 
+       // Let the widget massage the submitted values.
+       $values = $this->massageFormValues($values, $form, $form_state);
