@@ -60,7 +60,10 @@ class IbmApimRouteSubscriber extends RouteSubscriberBase {
       );
     }
     // Remove the admin create new user route.
-    $collection->remove('user.admin_create');
+    if ($collection->get('user.admin_create') !== null) {
+      $collection->remove('user.admin_create');
+    }
+
 
     // remove access to drupal's user cancel form (where users can cancel their own accounts)
     // APIC has its own

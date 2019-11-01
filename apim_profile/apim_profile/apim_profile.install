@@ -1270,9 +1270,13 @@ function apim_profile_update_dependencies() {
       8002 => [
         'block_content' => 8600,
       ],
-      // taxonomy_update 8502 update must have run in order to create the taxonomy_term__parent table
-      8015 => [
-        'taxonomy_update' => 8502,
+      // taxonomy 8502 update must have run in order to create the taxonomy_term__parent table
+      8007 => [
+        'taxonomy' => 8502,
+      ],
+      // block_content 8600 *also* must run before apim_profile 8018 - for cases where we start later than 8002.
+      8018 => [
+        'block_content' => 8600,
       ],
     ],
     'eu_cookie_compliance_update' => [

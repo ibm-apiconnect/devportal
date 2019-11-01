@@ -115,6 +115,8 @@ class TestData {
    */
   private function processPlaceholder($placeholder, $partsCollectedSoFar = array()) {
 
+    #print "process placeholder for " . $placeholder . \PHP_EOL;
+
     // The @data string is basically of the form :
     //  object.property
     //  object.object.property

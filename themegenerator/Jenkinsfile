@@ -8,7 +8,8 @@ properties([
   durabilityHint('PERFORMANCE_OPTIMIZED'),
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '14', numToKeepStr: '')),
   parameters([
-          booleanParam(name: 'FORCE_RUN', defaultValue: false, description: 'Force run the entire build')
+          booleanParam(name: 'FORCE_RUN', defaultValue: false, description: 'Force run the entire build'),
+          booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip tests')
   ]),
 ])
 
@@ -55,23 +56,23 @@ veloxPipeline(pipelineOpts) { p ->
           }
 
           stage("Create site and test") {
-
-            try {
-              ansiColor('xterm') {
-                sshagent(['1bd7e7a9-22d3-4ca5-b000-499bac0f7098']) {
-                  sh './build_container_for_tests.sh '
+            if (params.SKIP_TESTS != true) {
+              try {
+                ansiColor('xterm') {
+                  sshagent(['1bd7e7a9-22d3-4ca5-b000-499bac0f7098']) {
+                    sh './build_container_for_tests.sh '
+                  }
                 }
               }
+              catch (err) {
+                echo "${err}"
+                throw err
+              }
+              finally {
+                archiveArtifacts artifacts: 'tmp/behat/**/*', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'tmp/watchdog/*', allowEmptyArchive: true
+              }
             }
-            catch (err) {
-              echo "${err}"
-              throw err
-            }
-            finally {
-              archiveArtifacts artifacts: 'tmp/behat/**/*', allowEmptyArchive: true
-              archiveArtifacts artifacts: 'tmp/watchdog/*', allowEmptyArchive: true
-            }
-
           }
 
         }
@@ -90,10 +91,11 @@ veloxPipeline(pipelineOpts) { p ->
     if (!env.GIT_COMMIT_MSG.contains('[ci-skip') || params.FORCE_RUN == true) {
       stage('bump version') {
         sh "git stash && git pull && git stash pop || true"
+          portal.logChanges(MODULE_NAME)
           portal.patchModuleVersion(MODULE_NAME)
           sh """
-            git commit -m 'bump version [ci-skip]' ${MODULE_NAME}.info.yml || true
-            git push --set-upstream origin ${MAIN_BRANCH}
+            git commit -m 'bump version [ci-skip]' || true
+            git push --set-upstream origin ${BRANCH_NAME}
           """
       }
       stage('Upload module to artifactory') {

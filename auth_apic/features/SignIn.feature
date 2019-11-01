@@ -139,8 +139,8 @@ Feature: Sign in
   Scenario: Sign in as a non-admin user
     Given I am not logged in
     Given users:
-      | name              | mail              | pass                  | status |
-      | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+      | name              | mail              | pass                  | status | registry_url                  |
+      | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      | @data(user_registries[0].url) |
     Given consumerorgs:
       | title                     | name                     | id                     | owner             |
       | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.mail) |
@@ -280,6 +280,26 @@ Scenario: Login form loads with oidc registry link (non-default)
   And I should see the link "Sign up"
 
 @api
+Scenario: Login form loads with oidc registry link (default)
+  Given the cache has been cleared
+  Given I am not logged in
+  Given userregistries:
+    | type | title                             | url                               | user_managed | default |
+    | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | no      |
+    | oidc | @data(user_registries[3].title)   | @data(user_registries[3].url)     | no           | yes     |
+  When I am at "/user/login"
+  Then I should see the text "Sign in with @data(user_registries[3].title)"
+  And I should see a link with href including "/consumer-api/oauth2/authorize"
+  And I should not see the text "Sign in with @data(user_registries[0].title)"
+  And I should not see the "Sign up" button
+  And I should see "or" in the ".apic-user-form-or" element
+  And I should see the text "or"
+  And I should see the text "Continue with"
+  And I should see the link "@data(user_registries[0].title)"
+  And I should see the link "Forgot password?"
+  And I should see the text "Don't have an account?"
+
+@api
 Scenario: Login form with admin - single user manager registry
   Given I am not logged in
   Given userregistries:
@@ -400,3 +420,82 @@ Scenario: Sign in with a user not in the database
   And I enter "Qwert123" for "Password"
   When I press the "Sign in" button
   Then there are no errors
+
+@api
+Scenario: Sign in without a consumer org
+  Given I am not logged in
+  Given users:
+    | name              | mail              | pass                  | status |
+    | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+  When I am at "/user/login"
+  Given I enter "@data(andre.mail)" for "Username"
+  And I enter "@data(andre.password)" for "Password"
+  When I press the "Sign in" button
+  Then I should be on "/myorg/create"
+  Then there are no errors
+  And there are no messages
+  And there are no warnings
+
+@api
+Scenario: Sign in for the first time
+  Given I am not logged in
+  Given users:
+    | name              | mail              | pass                  | status | first_time_login |
+    | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      | 1                |
+  Given consumerorgs:
+    | title                          | name                          | id                          | owner             |
+    | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+  When I am at "/user/login"
+  Given I enter "@data(andre.mail)" for "Username"
+  And I enter "@data(andre.password)" for "Password"
+  When I press the "Sign in" button
+  Then I should be on "/start"
+  And I should see the text "Get Started"
+  And I should see the text "Explore API Products"
+  And I should see the link "Start Exploring"
+  And I should see the text "Create a new App"
+  And I should see the link "Create an App"
+  And I should see the link "Take me to the homepage"
+  Then there are no errors
+  And there are no messages
+  And there are no warnings
+  And the apim user "@data(andre.mail)" is logged in
+
+@api
+Scenario: Sign in users from different user registries with the same username
+  Given I am not logged in
+  Given userregistries:
+    | type | title                             | url                               | user_managed | default |
+    | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+    | lur  | @data(user_registries[1].title)   | @data(user_registries[1].url)     | yes          | no      |
+  Given users:
+    | uid    | name       | mail                    | pass     | registry_url                  |
+    | 123456 | portaluser | portaluser1@example.com | Qwert123 | @data(user_registries[0].url) |
+    | 654321 | portaluser | portaluser2@example.com | Qwert246 | @data(user_registries[1].url) |
+  Given consumerorgs:
+    | title | name | id   | owner_uid |
+    | org1  | org1 | org1 | 123456    |
+    | org2  | org2 | org2 | 654321    |
+  When I am at "/user/login"
+  Given I enter "portaluser" for "Username"
+  And I enter "Qwert123" for "Password"
+  When I press the "Sign in" button
+  # go to edit own profile page to check we are who we think we are
+  When I am at "/user/123456/edit"
+  Then there are no errors
+  And there are no messages
+  And there are no warnings
+  # logout first user
+  Then I am at "/user/logout"
+  # login second user
+  When I am at "/user/login?registry_url=@data(user_registries[1].url)"
+  Given I enter "portaluser" for "Username"
+  And I enter "Qwert246" for "Password"
+  When I press the "Sign in" button
+  # go to edit own profile page to check we are who we think we are
+  When I am at "/user/654321/edit"
+  Then there are no errors
+  And there are no messages
+  And there are no warnings
+
+

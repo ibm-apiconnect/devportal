@@ -237,3 +237,19 @@ function apic_api_update_8114() {
     $storage->save();
   }
 }
+
+/**
+ * Update the field storage for the protocol field to include graphql
+ */
+function apic_api_update_8115() {
+  $fieldConfig = \Drupal\field\Entity\FieldConfig::loadByName('node', 'api', 'api_protocol');
+  $storage = $fieldConfig->getFieldStorageDefinition();
+  if ($storage !== null) {
+    $allowed_values = $storage->getSetting('allowed_values');
+    if (!array_key_exists('graphql', $allowed_values)) {
+      $allowed_values['graphql'] = 'GraphQL';
+      $storage->setSetting('allowed_values', $allowed_values);
+      $storage->save();
+    }
+  }
+}

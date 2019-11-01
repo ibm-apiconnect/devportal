@@ -1,0 +1,5 @@
+changes:
+  8.x-1.2.101: null
+  8.x-1.2.100:
+  - Resetting change log
+  - forgot password: handle empty string in response

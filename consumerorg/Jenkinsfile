@@ -91,10 +91,11 @@ veloxPipeline(pipelineOpts) { p ->
     if (!env.GIT_COMMIT_MSG.contains('[ci-skip') || params.FORCE_RUN == true) {
       stage('bump version') {
           sh "git stash && git pull && git stash pop || true"
+          portal.logChanges(MODULE_NAME)
           portal.patchModuleVersion(MODULE_NAME)
           sh """
-            git commit -m 'bump version [ci-skip]' ${MODULE_NAME}.info.yml || true
-            git push --set-upstream origin ${MAIN_BRANCH}
+            git commit -m 'bump version [ci-skip]' || true
+            git push --set-upstream origin ${BRANCH_NAME}
           """
       }
       stage('Upload module to artifactory') {

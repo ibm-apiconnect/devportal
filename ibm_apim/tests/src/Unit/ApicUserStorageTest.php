@@ -179,7 +179,7 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
   /**
    * @expectedException \Exception
-   * @expectedExceptionMessage Multiple users (2) returned matching username "andre" in "/reg/url"
+   * @expectedExceptionMessage Multiple users (2) returned matching username "andre" in registry_url "/reg/url"
    */
   public function testLoadFailMultiple() {
 
@@ -193,6 +193,7 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     ])->willReturn([$this->prophet->prophesize(User::class), $this->prophet->prophesize(User::class)]);
 
     $this->logger->debug('loading %name in registry %registry', ['%name'=> 'andre', '%registry' => '/reg/url'])->shouldBeCalled();
+    $this->logger->debug('loaded %num users', ['%num'=> 2])->shouldBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 

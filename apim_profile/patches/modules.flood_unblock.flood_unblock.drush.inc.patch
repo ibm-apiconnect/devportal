@@ -1,0 +1,50 @@
+--- modules/flood_unblock/flood_unblock.drush.inc	2019-07-23 12:56:04.793859652 +0000
++++ modules/flood_unblock/flood_unblock.drush.inc	2019-07-23 15:47:23.703104580 +0000
+@@ -36,6 +36,7 @@
+     'all' => 'flood_unblock_drush_clear',
+     'ip' => 'flood_unblock_drush_clear',
+     'user' => 'flood_unblock_drush_clear',
++    'query' => 'flood_unblock_drush_query',
+   ];
+
+   if (!isset($type)) {
+@@ -57,15 +58,19 @@
+   switch ($type) {
+     case 'ip':
+       $flood_manager->flood_unblock_clear_event('user.failed_login_ip', NULL);
++      $flood_manager->flood_unblock_clear_event('user.password_request_ip', NULL);
+       break;
+
+     case 'user':
+       $flood_manager->flood_unblock_clear_event('user.failed_login_user', NULL);
++      $flood_manager->flood_unblock_clear_event('user.password_request_user', NULL);
+       break;
+-
++
+     default:
+       $flood_manager->flood_unblock_clear_event('user.failed_login_ip', NULL);
+       $flood_manager->flood_unblock_clear_event('user.failed_login_user', NULL);
++      $flood_manager->flood_unblock_clear_event('user.password_request_ip', NULL);
++      $flood_manager->flood_unblock_clear_event('user.password_request_user', NULL);
+       break;
+
+   }
+@@ -77,3 +82,18 @@
+     drush_print(dt('Flood cleared for all events.'));
+   }
+ }
++
++/**
++ * Return contents of flood table
++ */
++function flood_unblock_drush_query($type) {
++  $flood_manager = \Drupal::service('flood_unblock.flood_unblock_manager');
++  drush_print(dt('IP Entries'));
++  drush_print_r($flood_manager->get_blocked_ip_entries());
++  drush_print(dt('User Entries'));
++  $entries=$flood_manager->get_blocked_user_entries();
++  foreach ($entries as $key => $value) {
++    drush_print(dt('UID: '.$value['uid'].'  IP Address: '.$value['ip'] ));
++  }
++}
++

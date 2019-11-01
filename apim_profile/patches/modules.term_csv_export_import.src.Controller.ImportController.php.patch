@@ -1,0 +1,13 @@
+--- modules/term_csv_export_import/src/Controller/ImportController.php	2019-07-11 08:56:51.000000000 +0100
++++ modules/term_csv_export_import/src/Controller/ImportController.php	2019-07-11 09:00:39.000000000 +0100
+@@ -22,8 +22,8 @@
+     fwrite($temp, $data);
+     rewind($temp);
+     $csvArray = [];
+-    while (!feof($temp)) {
+-      if ($csvRow = fgetcsv($temp)) {
++    while (($csvRow = fgetcsv($temp)) !== FALSE) {
++      if ([NULL] !== $csvRow && array_filter($csvRow)) { // ignore blank lines
+         $csvArray[] = $csvRow;
+       }
+     }

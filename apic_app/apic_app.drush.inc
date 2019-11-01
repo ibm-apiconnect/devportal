@@ -11,7 +11,7 @@
  ********************************************************** {COPYRIGHT-END} **/
 
 use Drupal\apic_app\Application;
-use Drupal\apic_app\Subscription;
+use Drupal\apic_app\SubscriptionService;
 use Drupal\Core\Session\UserSession;
 use Drupal\node\Entity\Node;
 
@@ -151,36 +151,46 @@ function drush_apic_app_cleanse_drush_command() {
 function drush_apic_app_createOrUpdate($content, $event, $func) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   if ($content !== NULL) {
-    // in case moderation is on we need to run as admin
-    // save the current user so we can switch back at the end
-    $accountSwitcher = Drupal::service('account_switcher');
-    $originalUser = \Drupal::currentUser();
-    if ((int) $originalUser->id() !== 1) {
-      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
-    }
-    if (is_string($content)) {
-      $content = json_decode($content, TRUE);
-    }
-    $ref = $content['id'];
-    $createdOrUpdated = Application::createOrUpdate($content, $event, NULL);
-    if ($createdOrUpdated) {
-      drush_log(dt('Drush @func created application @app', [
-        '@func' => $func,
-        '@app' => $ref,
-      ]), 'success');
+
+    // if we receive an application  with no credentials it is invalid. This is likely because we receive an
+    // app_update webhook on application delete, which is superfluous so we can just drop this.
+    if (isset($content['app_credentials']) && \sizeof($content['app_credentials']) === 0) {
+      drush_log(dt('Drush app_createOrUpdate - no credentials in application @app, skipping', [
+        '@app' => $content['id']
+      ]), 'warning');
     }
     else {
-      drush_log(dt('Drush @func updated existing application @app', [
-        '@func' => $func,
-        '@app' => $ref,
-      ]), 'success');
-    }
-    $moduleHandler = \Drupal::service('module_handler');
-    if ($func !== 'MassUpdate' && $moduleHandler->moduleExists('views')) {
-      views_invalidate_cache();
-    }
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
-      $accountSwitcher->switchBack();
+      // in case moderation is on we need to run as admin
+      // save the current user so we can switch back at the end
+      $accountSwitcher = Drupal::service('account_switcher');
+      $originalUser = \Drupal::currentUser();
+      if ((int) $originalUser->id() !== 1) {
+        $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+      }
+      if (is_string($content)) {
+        $content = json_decode($content, TRUE);
+      }
+      $ref = $content['id'];
+      $createdOrUpdated = Application::createOrUpdate($content, $event, NULL);
+      if ($createdOrUpdated) {
+        drush_log(dt('Drush @func created application @app', [
+          '@func' => $func,
+          '@app' => $ref,
+        ]), 'success');
+      }
+      else {
+        drush_log(dt('Drush @func updated existing application @app', [
+          '@func' => $func,
+          '@app' => $ref,
+        ]), 'success');
+      }
+      $moduleHandler = \Drupal::service('module_handler');
+      if ($func !== 'MassUpdate' && $moduleHandler->moduleExists('views')) {
+        views_invalidate_cache();
+      }
+      if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+        $accountSwitcher->switchBack();
+      }
     }
   }
   else {
@@ -251,7 +261,7 @@ function drush_apic_app_createOrUpdatesub($subInput, $event, $func) {
       $subInput = json_decode($subInput, TRUE);
     }
     $ref = $subInput['id'];
-    $createdOrUpdated = Subscription::createOrUpdate($subInput);
+    $createdOrUpdated = SubscriptionService::createOrUpdate($subInput);
     if ($createdOrUpdated) {
       drush_log(dt('Drush @func created subscription @sub', [
         '@func' => $func,
@@ -298,7 +308,7 @@ function drush_apic_app_deletesub($subInput, $event = 'delete_sub') {
     if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
-    Subscription::delete($appUrl, $subId);
+    SubscriptionService::delete($appUrl, $subId);
     drush_log(dt('Subscription deleted.'), 'success');
     if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
@@ -419,7 +429,20 @@ function drush_apic_app_deletecred($cred, $event = 'cred_del') {
     }
 
     if (isset($cred['app_url'], $cred['id'])) {
-      Application::deleteCredential($cred['app_url'], $cred['id']);
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'application');
+      $query->condition('apic_url.value', $cred['app_url']);
+
+      $nids = $query->execute();
+
+      if (isset($nids) && !empty($nids)) {
+        $credsService = Drupal::service('apic_app.credentials');
+        $nid = array_shift($nids);
+        $node = Node::load($nid);
+        $credsService->deleteCredentials($node, $cred['id']);
+      } else {
+        drush_log(dt('Drush @func Node not found for @app_url', ['@func' => 'drush_apic_app_deletecred', '@app_url' => $cred['app_url']]), 'error');
+      }
     }
     else {
       drush_log(dt('Drush @func app_url or id missing', ['@func' => 'drush_apic_app_deletecred']), 'error');
@@ -436,6 +459,13 @@ function drush_apic_app_deletecred($cred, $event = 'cred_del') {
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param $cred
+ * @param $event
+ * @param $func
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
 function drush_apic_app_createOrUpdateCred($cred, $event, $func) {
   ibm_apim_entry_trace(__FUNCTION__, $cred);
   // in case moderation is on we need to run as admin
@@ -449,12 +479,24 @@ function drush_apic_app_createOrUpdateCred($cred, $event, $func) {
     if (is_string($cred)) {
       $cred = json_decode($cred, TRUE);
     }
-
     if (isset($cred['app_url'], $cred['id'])) {
-      Application::createOrUpdateCredential($cred['app_url'], $cred);
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'application');
+      $query->condition('apic_url.value', $cred['app_url']);
+
+      $nids = $query->execute();
+
+      if (isset($nids) && !empty($nids)) {
+        $credsService = Drupal::service('apic_app.credentials');
+        $nid = array_shift($nids);
+        $node = Node::load($nid);
+        $credsService->createOrUpdateSingleCredential($node, $cred);
+      } else {
+        drush_log(dt('Drush @func Node not found for @app_url', ['@func' => 'drush_apic_app_createOrUpdateCred', '@app_url' => $cred['app_url']]), 'error');
+      }
     }
     else {
-      drush_log(dt('Drush @func app_url or id missing', ['@func' => 'drush_apic_app_deletecred']), 'error');
+      drush_log(dt('Drush @func app_url or id missing', ['@func' => 'drush_apic_app_createOrUpdateCred']), 'error');
     }
   }
   else {

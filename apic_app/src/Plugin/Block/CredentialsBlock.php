@@ -106,10 +106,10 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $node = \Drupal::routeMatch()->getParameter('node');
     $userHasAppManage = $userUtils->checkHasPermission('app:manage');
-
     $credentials = [];
-    foreach ($node->application_credentials->getValue() as $arrayValue) {
-      $credentials[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+    $credsArray = $node->application_credentials_refs->referencedEntities();
+    foreach($credsArray as $cred) {
+      $credentials[] = $cred->toArray();
     }
     $nodeArray = [
       'application_id' => ['value' => $node->application_id->value],

@@ -366,6 +366,20 @@ class ConsumerOrg {
   }
 
   /**
+   * Returns an array of the members in the org
+   *
+   * @return array|null
+   */
+  public function getMemberEmails(): ?array {
+    $members = $this->members;
+    $emailList = [];
+    foreach($members as $member) {
+      $emailList[] = $member->getUser()->getMail();
+    }
+    return array_unique($emailList);
+  }
+
+  /**
    * Gets the invites of this org.
    *
    * @return array

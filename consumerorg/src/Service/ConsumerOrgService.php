@@ -13,6 +13,7 @@
 
 namespace Drupal\consumerorg\Service;
 
+use Drupal\ibm_apim\ApicRest;
 use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\auth_apic\UserManagerResponse;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
@@ -84,7 +85,7 @@ class ConsumerOrgService {
   private $apimServer;
 
   /**
-   * @var Drupal\Core\TempStore\PrivateTempStoreFactory
+   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory
    */
   private $session;
 
@@ -213,7 +214,7 @@ class ConsumerOrgService {
     $apimResponse = $this->apimServer->createConsumerOrg($org);
 
     if ($apimResponse !== NULL && $apimResponse->getCode() === 201) {
-      $org->setUrl($this->apimUtils->removeFullyQualifiedUrl($apimResponse->getData()['url']));
+      $org->setUrl($apimResponse->getData()['url']);
       $org->setId($apimResponse->getData()['id']);
       $org->setTitle($name);
       $org->setOwnerUrl($apimResponse->getData()['owner_url']);
@@ -252,14 +253,20 @@ class ConsumerOrgService {
       ]);
 
       $this->session->set('consumer_organizations', NULL);
+      $this->userUtils->addConsumerOrgToUser($apimResponse->getData()['url'], NULL);
       $this->userUtils->loadConsumerorgs();
       $this->cacheTagsInvalidator->invalidateTags(['config:block.block.consumerorganizationselection']);
+
+      $this->userUtils->setCurrentConsumerorg($org->getUrl());
+      $this->userUtils->setOrgSessionData();
+
       $response->setSuccess(TRUE);
       // invalidate the devorg select block cache
       $this->cacheTagsInvalidator->invalidateTags(['consumer_org_select_block:uid:' . $this->currentUser->id()]);
     }
     else {
-      $response->setMessage(t('Failed to create consumer organization.'), 'error');
+      $response->setMessage(t('Failed to create consumer organization.'));
+      $response->setSuccess(false);
       $this->logger->error('Failed to create consumer organization. response: @response', ['@response' => serialize($apimResponse->getData())]);
 
       // If user is not in an org, log them out.
@@ -269,7 +276,7 @@ class ConsumerOrgService {
       }
     }
     $response->setRedirect('<front>');
-    ibm_apim_exit_trace(__FUNCTION__, $response->success());
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $response->success());
     return $response;
   }
 
@@ -280,6 +287,7 @@ class ConsumerOrgService {
    *
    * @return \Drupal\auth_apic\UserManagerResponse
    * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function delete(ConsumerOrg $org): UserManagerResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -299,8 +307,12 @@ class ConsumerOrgService {
         $this->deleteNode(array_shift($nids));
       }
       // invalidate the devorg select block cache
-      $this->cacheTagsInvalidator->invalidateTags(['consumer_org_select_block:uid:' . $this->currentUser->id()]);
-
+      $this->userUtils->removeConsumerOrgFromUser($org->getUrl(), NULL);
+      $this->userUtils->resetCurrentConsumerorg();
+      $this->userUtils->setOrgSessionData();
+      if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
+        $this->cacheTagsInvalidator->invalidateTags(['consumer_org_select_block:uid:' . $this->currentUser->id()]);
+      }
       $this->logger->notice('Organization @orgname deleted by @username', [
         '@orgname' => $org->getName(),
         '@username' => $this->currentUser->getAccountName(),
@@ -327,7 +339,7 @@ class ConsumerOrgService {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function createNode(ConsumerOrg $consumer, $event = 'internal') {
-    ibm_apim_entry_trace(__FUNCTION__, $consumer->getUrl());
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $consumer->getUrl());
     $oldNode = NULL;
     if ($consumer->getUrl() !== NULL) {
       // find if there is an existing node for this consumerorg
@@ -383,7 +395,7 @@ class ConsumerOrgService {
         $this->eventDispatcher->dispatch(ConsumerorgCreateEvent::EVENT_NAME, $createEvent);
       }
     }
-    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $node->id();
   }
 
@@ -398,7 +410,7 @@ class ConsumerOrgService {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function updateNode(NodeInterface $node, ConsumerOrg $consumer, $event = 'content_refresh'): ?NodeInterface {
-    ibm_apim_entry_trace(__FUNCTION__, $consumer->getUrl());
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $consumer->getUrl());
     $returnValue = NULL;
     if ($node !== NULL) {
       $utils = \Drupal::service('ibm_apim.utils');
@@ -465,9 +477,6 @@ class ConsumerOrgService {
         }
       }
 
-      // TODO: refactor needed - injecting this service creates circular dependency :(
-      $userStorage = \Drupal::service('ibm_apim.user_storage');
-
       if ($consumer->getMembers() !== NULL) {
         foreach ($consumer->getMembers() as $member) {
           $memberlist[] = $member->getUserUrl();
@@ -476,12 +485,28 @@ class ConsumerOrgService {
           $user = $member->getUser();
           if ($user !== NULL && $user->getUsername() !== NULL) {
 
-            $account = $userStorage->load($user);
+            // $account = $userStorage->load($user);
+            $this->logger->debug('loading @name in registry @registry', [
+              '@name' => $user->getUsername(),
+              '@registry' => $user->getApicUserRegistryUrl(),
+            ]);
+            $query = \Drupal::entityQuery('node');
+            $query->condition('type', 'user');
+            if (!empty($current_apps)) {
+              $group = $query->orConditionGroup()
+                ->condition('user_id', NULL, 'IS NULL')
+                ->condition('user_id', $user->getId());
+              $query->condition($group);
+            }
+            $results = $query->execute();
+            $this->logger->debug('loaded @num users', ['@num' => \sizeof($results)]);
 
             // if there isn't an account for this user then we have enough information to create and use it at this point.
-            if ($account === NULL) {
+            if (!isset($results) && $results != NULL) {
               $this->logger->notice('registering new account for %username based on member data.', ['%username' => $user->getUsername()]);
               $account = $this->accountService->registerApicUser($user);
+            }else{
+              $account = array_shift($results);
             }
 
             if ($account) {
@@ -536,7 +561,7 @@ class ConsumerOrgService {
     }
     else {
       $this->logger->error('Update consumerorg: no node provided.', []);
-      ibm_apim_exit_trace(__FUNCTION__, NULL);
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
     return $returnValue;
   }
@@ -553,7 +578,7 @@ class ConsumerOrgService {
    */
   public function createOrUpdateNode(ConsumerOrg $consumer, $event): bool {
     if (\function_exists('ibm_apim_entry_trace')) {
-      ibm_apim_entry_trace(__FUNCTION__, $consumer->getUrl());
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $consumer->getUrl());
     }
 
     if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
@@ -565,7 +590,7 @@ class ConsumerOrgService {
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
         $node = Node::load($nid);
-        if ($node !== null) {
+        if ($node !== NULL) {
           $this->updateNode($node, $consumer, $event);
           $createdOrUpdated = FALSE;
         }
@@ -581,7 +606,7 @@ class ConsumerOrgService {
       $createdOrUpdated = FALSE;
     }
     if (\function_exists('ibm_apim_exit_trace')) {
-      ibm_apim_exit_trace(__FUNCTION__, $createdOrUpdated);
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $createdOrUpdated);
     }
     return $createdOrUpdated;
   }
@@ -597,7 +622,7 @@ class ConsumerOrgService {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function createOrUpdateInvitation($invitation, $event): ?bool {
-    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $createdOrUpdated = NULL;
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
@@ -636,7 +661,7 @@ class ConsumerOrgService {
         $createdOrUpdated = !$found;
       }
     }
-    ibm_apim_exit_trace(__FUNCTION__, $createdOrUpdated);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $createdOrUpdated);
     return $createdOrUpdated;
   }
 
@@ -674,7 +699,7 @@ class ConsumerOrgService {
     // invalidate myorg page cache
     $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $org->getUrl()]);
 
-    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $response;
   }
 
@@ -688,7 +713,7 @@ class ConsumerOrgService {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function deleteInvitation($invitation, $event = 'internal'): void {
-    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $invitation['consumer_org_url']);
@@ -715,7 +740,7 @@ class ConsumerOrgService {
         $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $invitation['consumer_org_url']]);
       }
     }
-    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 
   /**
@@ -728,7 +753,7 @@ class ConsumerOrgService {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function deleteNode($nid): void {
-    ibm_apim_entry_trace(__FUNCTION__, $nid);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $nid);
     $node = Node::load($nid);
     if ($node !== NULL) {
       $consumerorg_url = $node->consumerorg_url->value;
@@ -772,7 +797,7 @@ class ConsumerOrgService {
       $node->delete();
       unset($node);
     }
-    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 
   /**
@@ -784,7 +809,7 @@ class ConsumerOrgService {
    * @return \Drupal\consumerorg\ApicType\ConsumerOrg
    */
   public function getByNid($nid): ?ConsumerOrg {
-    ibm_apim_entry_trace(__FUNCTION__, $nid);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $nid);
     $org = NULL;
     $node = Node::load($nid);
     if ($node !== NULL) {
@@ -846,7 +871,7 @@ class ConsumerOrgService {
    * @return array|null
    */
   public function getMembers($orgUrl): ?array {
-    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $returnValue = NULL;
     if ($orgUrl !== NULL) {
       $query = \Drupal::entityQuery('node');
@@ -868,7 +893,7 @@ class ConsumerOrgService {
         $returnValue = $members;
       }
     }
-    ibm_apim_exit_trace(__FUNCTION__, $returnValue);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     return $returnValue;
   }
 
@@ -880,7 +905,7 @@ class ConsumerOrgService {
    * @return array|null
    */
   public function getRoles($orgUrl): ?array {
-    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $returnValue = NULL;
     if ($orgUrl !== NULL) {
       $query = \Drupal::entityQuery('node');
@@ -901,7 +926,7 @@ class ConsumerOrgService {
         $returnValue = $roles;
       }
     }
-    ibm_apim_exit_trace(__FUNCTION__, $returnValue);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     return $returnValue;
   }
 
@@ -917,14 +942,14 @@ class ConsumerOrgService {
    *   The Node loaded from the database that matches the consumerorg uid.
    */
   public function get($url, $admin = 0): ?ConsumerOrg {
-    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $result = NULL;
     $nid = $this->getNid($url, $admin);
-    if ($nid !== null) {
+    if ($nid !== NULL) {
       $result = $this->getByNid($nid);
     }
 
-    ibm_apim_exit_trace(__FUNCTION__, $nid);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $nid);
     return $result;
   }
 
@@ -940,7 +965,7 @@ class ConsumerOrgService {
    *   The Node loaded from the database that matches the consumerorg uid.
    */
   public function getNid($url, $admin = 0): ?string {
-    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $result = NULL;
     $nid = NULL;
 
@@ -960,7 +985,7 @@ class ConsumerOrgService {
         $nid = array_shift($results);
       }
     }
-    ibm_apim_exit_trace(__FUNCTION__, $nid);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $nid);
     return $nid;
   }
 
@@ -974,7 +999,7 @@ class ConsumerOrgService {
    *   The Node loaded from the database that matches the consumerorg uid.
    */
   public function getConsumerOrgAsNode($url): Node {
-    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $result = NULL;
     $nid = NULL;
 
@@ -990,7 +1015,7 @@ class ConsumerOrgService {
         $result = Node::load($nid);
       }
     }
-    ibm_apim_exit_trace(__FUNCTION__, $nid);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $nid);
     return $result;
   }
 
@@ -1000,7 +1025,7 @@ class ConsumerOrgService {
    * @return array
    */
   public function getList(): array {
-    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $list = [];
     $account = User::load($this->currentUser->id());
     if ($account !== NULL && !$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
@@ -1013,7 +1038,7 @@ class ConsumerOrgService {
         $list = array_values($results);
       }
     }
-    ibm_apim_exit_trace(__FUNCTION__, $list);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $list;
   }
 
@@ -1023,7 +1048,7 @@ class ConsumerOrgService {
    * @return array
    */
   public function getIBMFields(): array {
-    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $ibmfields = [
       'apic_hostname',
       'apic_provider_id',
@@ -1039,9 +1064,9 @@ class ConsumerOrgService {
       'consumerorg_owner',
       'consumerorg_tags',
       'consumerorg_url',
-      'consumerorg_roles'
+      'consumerorg_roles',
     ];
-    ibm_apim_exit_trace(__FUNCTION__, $ibmfields);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $ibmfields);
     return $ibmfields;
   }
 
@@ -1059,7 +1084,7 @@ class ConsumerOrgService {
     $entity = $this->entityTypeManager
       ->getStorage('entity_form_display')
       ->load('node.consumerorg.default');
-    if ($entity !== null) {
+    if ($entity !== NULL) {
       $components = $entity->getComponents();
       $keys = array_keys($components);
       $ibmFields = $this->getIBMFields();
@@ -1082,10 +1107,10 @@ class ConsumerOrgService {
    */
   public function isConsumerorgAssociatedWithAccount($consumerorg_url, $account): bool {
     if ($account !== NULL) {
-      ibm_apim_entry_trace(__FUNCTION__, [$consumerorg_url, $account->getUsername()]);
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$consumerorg_url, $account->getUsername()]);
     }
     else {
-      ibm_apim_entry_trace(__FUNCTION__, [$consumerorg_url]);
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$consumerorg_url]);
     }
 
     $returnValue = FALSE;
@@ -1101,7 +1126,7 @@ class ConsumerOrgService {
       }
     }
 
-    ibm_apim_exit_trace(__FUNCTION__, $returnValue);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     return $returnValue;
   }
 
@@ -1167,7 +1192,7 @@ class ConsumerOrgService {
     // invalidate myorg page cache
     $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $org->getUrl()]);
 
-    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $response;
 
   }
@@ -1195,7 +1220,7 @@ class ConsumerOrgService {
       ]);
     }
 
-    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $response;
   }
 
@@ -1233,6 +1258,18 @@ class ConsumerOrgService {
 
       // invalidate myorg page cache
       $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $org->getUrl()]);
+      // invalidate that user's consumerorg block cache & remove the org from their list
+      $memberUser = $member->getUser();
+      if ($memberUser !== NULL) {
+        $userid = $memberUser->getId();
+        if ($userid !== NULL && $userid !== '') {
+          $drupalUser = User::load($userid);
+          if ($drupalUser !== NULL) {
+            $this->userUtils->removeConsumerOrgFromUser($org->getUrl(), $drupalUser);
+          }
+          $this->cacheTagsInvalidator->invalidateTags(['consumer_org_select_block:uid:' . $userid]);
+        }
+      }
     }
     else {
       $response->setSuccess(FALSE);
@@ -1243,7 +1280,7 @@ class ConsumerOrgService {
     }
 
     if (\function_exists('ibm_apim_exit_trace')) {
-      ibm_apim_exit_trace(__FUNCTION__, NULL);
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
     return $response;
   }
@@ -1299,7 +1336,7 @@ class ConsumerOrgService {
       ]);
     }
 
-    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $response;
   }
 
@@ -1312,7 +1349,7 @@ class ConsumerOrgService {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function changeOrgOwner(ConsumerOrg $org, $newOwnerUrl, $newRole = NULL): UserManagerResponse {
-
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $response = new UserManagerResponse();
     $apimResponse = $this->apimServer->postTransferConsumerOrg($org, $newOwnerUrl, $newRole);
     if ($apimResponse !== NULL && $apimResponse->getCode() === 200) {
@@ -1356,12 +1393,13 @@ class ConsumerOrgService {
       $this->session->set('consumer_organizations', NULL);
 
       $this->userUtils->setCurrentConsumerorg($org->getUrl());
+      $this->userUtils->setOrgSessionData();
       $this->cacheTagsInvalidator->invalidateTags(['config:block.block.consumerorganizationselection']);
       // invalidate myorg page cache
       $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $org->getUrl()]);
     }
 
-    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $response;
   }
 
@@ -1426,6 +1464,7 @@ class ConsumerOrgService {
       $this->session->set('consumer_organizations', NULL);
 
       $this->userUtils->setCurrentConsumerorg($org->getUrl());
+      $this->userUtils->setOrgSessionData();
       $this->cacheTagsInvalidator->invalidateTags(['config:block.block.consumerorganizationselection']);
 
       $response->setSuccess(TRUE);
@@ -1446,7 +1485,7 @@ class ConsumerOrgService {
       $this->logger->error('Unable to update @orgurl to @orgname', ['@orgurl' => $org->getUrl(), '@orgname' => $name]);
     }
 
-    ibm_apim_exit_trace(__FUNCTION__, NULL);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $response;
 
   }
@@ -1461,7 +1500,7 @@ class ConsumerOrgService {
    */
   public function createFromJSON($json): ?ConsumerOrg {
 
-    ibm_apim_entry_trace(__FUNCTION__, NULL);
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $org = NULL;
 
@@ -1536,11 +1575,10 @@ class ConsumerOrgService {
       }
     }
 
-    ibm_apim_exit_trace(__FUNCTION__, $org);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $org);
     return $org;
 
   }
-
 
 
   /**
@@ -1602,3 +1640,4 @@ class ConsumerOrgService {
   }
 
 }
+

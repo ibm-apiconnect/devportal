@@ -171,9 +171,14 @@ class Role {
     if (array_key_exists('summary', $content)) {
       $this->setSummary($content['summary']);
     }
+
+    // TODO: permissions has changed to permissions_urls, can this be cleaned up. Leaving for backwards compatability for the time being.
     if (array_key_exists('permissions', $content)) {
       $this->setPermissions($content['permissions']);
+    } elseif (array_key_exists('permission_urls', $content)) {
+      $this->setPermissions($content['permission_urls']);
     }
+
     if (array_key_exists('scope', $content)) {
       $this->setScope($content['scope']);
     }

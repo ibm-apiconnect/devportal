@@ -160,7 +160,14 @@ class RestResponseReader {
    * @return mixed
    */
   protected function parseData($response) {
-    return $response->data;
+    // in some cases response->data is an empty string in this case just return a NULL
+    if (isset($response->data) && $response->data === '') {
+      $data = NULL;
+    }
+    else {
+      $data = $response->data;
+    }
+    return $data;
   }
 
 }

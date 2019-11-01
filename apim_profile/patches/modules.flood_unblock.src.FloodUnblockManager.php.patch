@@ -1,0 +1,30 @@
+--- modules/flood_unblock/src/FloodUnblockManager.php	2019-07-11 09:56:01.000000000 +0100
++++ modules/flood_unblock/src/FloodUnblockManager.php	2019-07-11 10:01:08.000000000 +0100
+@@ -61,7 +61,7 @@
+       $query->addField('f', 'identifier');
+       $query->addField('f', 'identifier', 'ip');
+       $query->addExpression('count(*)', 'count');
+-      $query->condition('f.event', '%failed_login_ip', 'LIKE');
++      $query->condition('f.event', '%_ip', 'LIKE');
+       $query->groupBy('identifier');
+       $results = $query->execute();
+
+@@ -102,7 +102,7 @@
+       $query = $this->database->select('flood', 'f');
+       $query->addField('f', 'identifier');
+       $query->addExpression('count(*)', 'count');
+-      $query->condition('f.event', '%failed_login_user', 'LIKE');
++      $query->condition('f.event', '%_user', 'LIKE');
+       $query->groupBy('identifier');
+       $results = $query->execute();
+
+@@ -118,7 +118,8 @@
+           $location_string = '';
+         }
+ 
+-        $blocked = !$this->flood->isAllowed('user.failed_login_user', $this->config->get('user_limit'), $this->config->get('user_window'), $result->identifier);
++        $blocked = (!$this->flood->isAllowed('user.failed_login_user', $this->config->get('user_limit'), $this->config->get('user_window'), $result->identifier) &&
++          !$this->flood->isAllowed('user.password_request_user', $this->config->get('user_limit'), $this->config->get('user_window'), $result->identifier));
+ 
+         /** @var \Drupal\user\Entity\User $user */
+         $user = $this->entityTypeManager->getStorage('user')

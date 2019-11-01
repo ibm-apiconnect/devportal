@@ -3,13 +3,13 @@
 BASEDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # if change the project name then also need to update the jenkins docker image webroot
 PROJECT_NAME="devportal"
-VERSION=2018.4.1.7
+VERSION=2018.4.1.8
 SERVICE="false"
 
 BUILD_DIR="$BASEDIR/build"
 TMP_DIR="$BASEDIR/tmp"
 
-if [[ "$BRANCH_NAME" == 2018.* ]]
+if [[ "$BRANCH_NAME" == 2018.* || "$BRANCH_NAME" == "cd" ]]
 then
   SERVICE="true"
 fi
@@ -109,7 +109,21 @@ rm -rf $PROJECT_NAME/vendor/youshido/graphql/examples/js-relay
 cd $PROJECT_NAME
 
 # Add our modules
-php ../composer.phar -n require --prefer-dist drupal/apictest:1.2.* drupal/ghmarkdown:1.0.* drupal/socialblock:1.0.* drupal/featuredcontent:1.0.* drupal/ibm_apim:1.2.* drupal/mail_subscribers:1.0.* drupal/auth_apic:1.1.* drupal/apic_api:1.0.* drupal/apic_app:1.4.* drupal/consumerorg:1.1.* drupal/product:1.0.* drupal/themegenerator:1.0.* drupal/connect_theme:1.0.*
+APICTEST_VERSION='1.2.*'
+GHMARKDOWN_VERSION='1.0.*'
+SOCIALBLOCK_VERSION='1.0.*'
+FEATUREDCONTENT_VERSION='1.0.*'
+IBM_APIM_VERSION='1.2.*'
+APIC_APP_VERSION='1.4.*'
+APIC_API_VERSION='1.0.*'
+CONSUMERORG_VERSION='1.1.*'
+PRODUCT_VERSION='1.0.*'
+AUTH_APIC_VERSION='1.1.*'
+MAIL_SUBSCRIBERS_VERSION='1.0.*'
+THEMEGENERATOR_VERSION='1.0.*'
+CONNECT_THEME_VERSION='1.0.*'
+
+php ../composer.phar -n require --prefer-dist drupal/apictest:${APICTEST_VERSION} drupal/ghmarkdown:${GHMARKDOWN_VERSION} drupal/socialblock:${SOCIALBLOCK_VERSION} drupal/featuredcontent:${FEATUREDCONTENT_VERSION} drupal/ibm_apim:${IBM_APIM_VERSION} drupal/mail_subscribers:${MAIL_SUBSCRIBERS_VERSION} drupal/auth_apic:${AUTH_APIC_VERSION} drupal/apic_api:${APIC_API_VERSION} drupal/apic_app:${APIC_APP_VERSION} drupal/consumerorg:${CONSUMERORG_VERSION} drupal/product:${PRODUCT_VERSION} drupal/themegenerator:${THEMEGENERATOR_VERSION} drupal/connect_theme:${CONNECT_THEME_VERSION}
 
 # copy installation profile
 mkdir -p $BUILD_DIR/$PROJECT_NAME/profiles

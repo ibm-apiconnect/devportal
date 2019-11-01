@@ -164,6 +164,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
           'class' => ['username'],
           'autocorrect' => 'off',
           'autocapitalize' => 'off',
+          'autocomplete' => 'off',
           'spellcheck' => 'false',
         ],
       ];

@@ -14,7 +14,7 @@ namespace Drupal\apictest\Context;
 
 use Behat\Gherkin\Node\TableNode;
 use Drupal\apic_app\Application;
-use Drupal\apic_app\Subscription;
+use Drupal\apic_app\SubscriptionService;
 use Drupal\Component\Utility\Random;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\Entity\Node;
@@ -93,7 +93,7 @@ class ApplicationContext extends RawDrupalContext {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function createSubscription($org_id, $app_id, $sub_id, $product, $plan): void {
-    Subscription::create('/apps/1234/5678/' . $org_id . '/apps/' . $app_id, $sub_id, '/catalogs/1234/5678/products/' . $product, $plan, 'enabled', NULL);
+    SubscriptionService::create('/apps/1234/5678/' . $org_id . '/apps/' . $app_id, $sub_id, '/catalogs/1234/5678/products/' . $product, $plan, '/apps/1234/5678/' . $org_id, 'enabled', NULL);
   }
 
   /**
@@ -117,12 +117,22 @@ class ApplicationContext extends RawDrupalContext {
       [
         'client_id' => '11111111-78f0-48d1-a015-6a803fd64e8f',
         'client_secret' => 'fkvO2qWJQbtNB8zqcOMs2p1DPqhI0EuRB7Gfi1/tMrQ=',
-        'id' => 'cred-1234567',
+        'id' => $id . 'cred-1234567',
+        'url'  => $object['url']  . '/credentials/' . $id . 'cred-1234567',
+        'title'  => 'cred-1234567',
+        'summary'  => 'cred-1234567',
+        'name'  => 'cred-1234567',
+        'app_url' => $object['url'],
       ],
       [
         'client_id' => '22222222-78f0-48d1-a015-6a803fd64e8f',
         'client_secret' => 'fkvO2qWJQbtNB8zqcOMs2p1DPqhI0EuRB7Gfi1/tMrQ=',
-        'id' => 'cred-2345678',
+        'id' => $id . 'cred-2345678',
+        'url'  => $object['url']  . '/credentials/' . $id . 'cred-2345678',
+        'title'  => 'cred-2345678',
+        'summary'  => 'cred-2345678',
+        'name'  => 'cred-2345678',
+        'app_url' => $object['url'],
       ],
     ];
 
@@ -300,10 +310,22 @@ class ApplicationContext extends RawDrupalContext {
    * @Given I do not have any applications
    */
   public function iDoNotHaveAnyApplications() {
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(User::load(1));
+    }
+
     $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties(['type' => 'application']);
 
     foreach ($nodes as $node) {
       $node->delete();
+    }
+
+    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
     }
   }
 

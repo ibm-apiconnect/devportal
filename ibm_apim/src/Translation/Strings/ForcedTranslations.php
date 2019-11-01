@@ -100,6 +100,9 @@ class ForcedTranslations {
     $retired = t('Retired');
     $oauth_provider = t('OAuth Provider');
     $login_failure = t('The credentials provided for authentication are invalid. Please repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.');
+    $r4032login_message = t('Access denied. You must log in to view this page.');
+    $autologout_message = t('Your session is about to expire. Do you want to reset it?');
+    $autologout_inactivity_message = t('You have been logged out due to inactivity.');
   }
 
 

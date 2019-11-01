@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.application_subscription_refs
+    - node.type.application
+id: node.application.application_subscription_refs
+field_name: application_subscription_refs
+entity_type: node
+bundle: application
+label: 'Subscription References'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:apic_app_subscription'
+  handler_settings:
+    target_bundles: null
+    auto_create: false
+field_type: entity_reference

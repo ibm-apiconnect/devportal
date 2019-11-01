@@ -143,15 +143,12 @@ nav.block-login .menu.nav {
 
 .navbar .dropitmenu .dropit-icon {
   color: $brand-primary-light;
-  vertical-align: text-top;
+  vertical-align: bottom;
   font-size: 0.625rem;
 }
 
 .navbar .account-menu.dropitmenu  {
   margin: 0.5rem 1rem;
-  .dropit-icon {
-    vertical-align: baseline;
-  }
 
   .dropit-submenu {
     margin-top: 8px;
@@ -203,7 +200,7 @@ nav.block-login .menu.nav {
   }
 
   .currentOrg{
-    line-height:1.2;
+    line-height:1.1;
     font-size: 1rem;
     white-space: nowrap;
     overflow: hidden;

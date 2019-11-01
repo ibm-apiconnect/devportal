@@ -14,7 +14,7 @@
 namespace Drupal\apic_app\Form;
 
 use Drupal\apic_app\Service\ApplicationRestInterface;
-use Drupal\apic_app\Subscription;
+use Drupal\apic_app\SubscriptionService;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -224,7 +224,7 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
       ]);
 
       // Update the subscription
-      Subscription::createOrUpdate($result->data);
+      SubscriptionService::createOrUpdate($result->data);
 
     }
     $form_state->setRedirectUrl($this->getCancelUrl());

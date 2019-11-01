@@ -204,22 +204,9 @@ class ApicLoginService implements ApicLoginServiceInterface {
     else {
       // If this is the first sign in for this user, user_consumerorg_url will not be populated.
       // We rely on this field to be able to set the current dev org and populate the consumerorg selector.
-      $consumerorg_urls = $account->get('consumerorg_url')->getValue();
-
+      $consumerorg_urls = [];
       foreach ($apicMeConsumerorgs as $nextApicConsumerorg) {
-
-        $org_is_new = TRUE;
-        foreach ($consumerorg_urls as $index => $valueArray) {
-          $nextExistingConsumerorgUrl = $valueArray['value'];
-          if ($nextExistingConsumerorgUrl === $nextApicConsumerorg->getUrl()) {
-            // Already in the list, don't add it again.
-            $org_is_new = FALSE;
-          }
-        }
-
-        if ($org_is_new) {
-          $consumerorg_urls[] = ['value' => $nextApicConsumerorg->getUrl()];
-        }
+        $consumerorg_urls[] = ['value' => $nextApicConsumerorg->getUrl()];
       }
 
       // Update field and save

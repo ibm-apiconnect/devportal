@@ -148,10 +148,10 @@ class VerifyClientSecretForm extends FormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $secret = $form_state->getValue('secret');
     $clientid = NULL;
-    foreach ($this->node->application_credentials->getValue() as $arrayValue) {
-      $unserialized = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-      if (isset($unserialized['id']) && (string) $unserialized['id'] === (string) $this->credId) {
-        $clientid = $unserialized['client_id'];
+    $credentials = $this->node->application_credentials_refs->referencedEntities();
+    foreach ($credentials as $cred) {
+      if ((string) $cred->id() === (string) $this->credId) {
+        $clientid = $cred->client_id();
       }
     }
     $url = $this->node->apic_url->value . '/credentials/' . $this->credId . '/verify-client-secret';

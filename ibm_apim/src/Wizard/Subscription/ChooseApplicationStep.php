@@ -82,20 +82,18 @@ class ChooseApplicationStep extends IbmWizardStepBase {
           $suspendedApps[] = $nextApp;
         }
         else {
-          if (isset($nextApp->application_subscriptions->value)) {
-            $subs = unserialize($nextApp->application_subscriptions->value, ['allowed_classes' => FALSE]);
-            if (is_array($subs)) {
-              $appSubscribedToProduct = FALSE;
-              foreach ($subs as $sub) {
-                if (isset($sub['product_url']) && $sub['product_url'] === $product_url) {
-                  $subscribedApps[] = $nextApp;
-                  $appSubscribedToProduct = TRUE;
-                  break;
-                }
+          $subs = $nextApp->application_subscription_refs->referencedEntities();
+          if (is_array($subs) && !empty($subs)) {
+            $appSubscribedToProduct = FALSE;
+            foreach ($subs as $sub) {
+              if ($sub->product_url() === $product_url) {
+                $subscribedApps[] = $nextApp;
+                $appSubscribedToProduct = TRUE;
+                break;
               }
-              if (!$appSubscribedToProduct) {
-                $validApps[] = $nextApp;
-              }
+            }
+            if (!$appSubscribedToProduct) {
+              $validApps[] = $nextApp;
             }
           }
           else {
@@ -105,15 +103,20 @@ class ChooseApplicationStep extends IbmWizardStepBase {
       }
 
       if (!empty($suspendedApps)) {
-        $form['#messages']['suspendedAppsNotice'] = t('There are %number suspended applications not displayed in this list.', ['%number' => sizeof($suspendedApps)]);
+        $form['#messages']['suspendedAppsNotice'] = \Drupal::translation()
+          ->formatPlural(sizeof($suspendedApps), 'There is %number suspended application not displayed in this list.', 'There are %number suspended applications not displayed in this list.',
+            ['%number' => sizeof($suspendedApps)]);
       }
 
       if (!empty($subscribedApps)) {
-        $form['#messages']['subscribedAppsNotice'] = t('There are %number applications that are already subscribed to the %product product. They are not displayed in this list.',
-          ['%number' => sizeof($subscribedApps), '%product' => $productName]);
+        $form['#messages']['subscribedAppsNotice'] = \Drupal::translation()
+          ->formatPlural(sizeof($subscribedApps), 'There is %number application that is already subscribed to the %product product. It is not displayed in this list.', 'There are %number applications that are already subscribed to the %product product. They are not displayed in this list.', [
+            '%number' => sizeof($subscribedApps),
+            '%product' => $productName,
+          ]);
       }
 
-      $form['createNewApp'] = [
+      $form['#createNewApp'] = [
         '#type' => 'link',
         '#title' => $this->t('Create New'),
         '#url' => Url::fromRoute('apic_app.create_modal'),
@@ -123,9 +126,12 @@ class ChooseApplicationStep extends IbmWizardStepBase {
             'button',
           ],
         ],
-        '#prefix' => '<div class="apicNewAppWrapper">',
+        '#prefix' => '<div class="apicNewAppButton">',
         '#suffix' => '</div>',
       ];
+
+      // this empty div is used to put the new apps in
+      $form['newApps'] = ['#markup' => "<div class='apicNewAppsList'></div>"];
 
       if (!empty($validApps)) {
         $form['apps'] = node_view_multiple($validApps, 'subscribewizard');
@@ -167,7 +173,7 @@ class ChooseApplicationStep extends IbmWizardStepBase {
     $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
     $application = Node::load($form_state->getUserInput()['selectedApplication']);
-    if ($application !== null) {
+    if ($application !== NULL) {
       $temp_store->set('applicationUrl', $application->get('apic_url')->value);
       $temp_store->set('applicationName', $application->getTitle());
       $temp_store->set('applicationNodeId', $form_state->getUserInput()['selectedApplication']);

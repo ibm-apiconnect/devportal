@@ -80,7 +80,7 @@ class ProductPlan {
 
     $planArray['rateLimit'] = $parsedRateLimit['planRateLimit'];
     if ($parsedRateLimit['tooltip'] !== NULL) {
-      $planArray['rateData'] = json_encode($parsedRateLimit['tooltip'] !== NULL, JSON_UNESCAPED_UNICODE);
+      $planArray['rateData'] = json_encode($parsedRateLimit['tooltip'], JSON_UNESCAPED_UNICODE);
     }
     $planArray['requiresApproval'] = $plan['approval'] ?? FALSE;
     $planArray['planId'] = $planId;
@@ -103,7 +103,7 @@ class ProductPlan {
         $planArray['nodes'][$apiSafeNodeRef]['version'] = $apiNode['node']->apic_version->getValue();
         $planArray['nodes'][$apiSafeNodeRef]['resources'] = [];
         $swagger = unserialize($apiNode['node']->api_swagger->value, ['allowed_classes' => FALSE]);
-        if ($swagger !== NULL && $swagger['paths'] !== NULL && is_array($swagger['paths'])) {
+        if ($swagger !== NULL && isset($swagger['paths']) && is_array($swagger['paths'])) {
           // build up list of resources
           foreach ($swagger['paths'] as $pathName => $path) {
             $planArray['nodes'][$apiSafeNodeRef]['resources'][$pathName] = [];

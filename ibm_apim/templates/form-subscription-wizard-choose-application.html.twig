@@ -8,21 +8,25 @@
  */
 #}
 <div class="apicWizardMain apicSubscribeChooseApp">
-    <div class="apicWizardHeader apicSubscribeHeader">{{ 'Select Application'|t }}</div>
+  <div class="apicWizardHeader apicSubscribeHeader">{{ 'Select Application'|t }}</div>
+  <div class="apicSubscribeInfoRow">
     <div class="apicSubscribeInfotext">
-        {% if element['#messages'].subscribedAppsNotice %}
-            {{ element['#messages'].subscribedAppsNotice }}
-        {% endif %}
-        {% if element['#messages'].suspendedAppsNotice %}
-            {{ element['#messages'].suspendedAppsNotice }}
-        {% endif %}
-        {% if element['#messages'].noAppsNotice %}
-            {{ element['#messages'].noAppsNotice }}
-        {% endif %}
+      {% if element['#messages'].subscribedAppsNotice %}
+        {{ element['#messages'].subscribedAppsNotice }}
+      {% endif %}
+      {% if element['#messages'].suspendedAppsNotice %}
+        {{ element['#messages'].suspendedAppsNotice }}
+      {% endif %}
+      {% if element['#messages'].noAppsNotice %}
+        {{ element['#messages'].noAppsNotice }}
+      {% endif %}
     </div>
-    <div class="apicSubscribeAppForm">
-        <form {{ attributes }}>
-            {{ children }}
-        </form>
-    </div>
+    <div class="apicSubscribeNewAppWrapper">{{ element['#createNewApp'] }}</div>
+  </div>
+  <div class="apicNewAppWrapper"></div>
+  <div class="apicSubscribeAppForm">
+    <form {{ attributes }}>
+      {{ children }}
+    </form>
+  </div>
 </div>

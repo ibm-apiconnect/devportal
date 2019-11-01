@@ -296,7 +296,6 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    * @return mixed
    */
   private function processUid($argument) {
-
     $parameter_check = '@uid(';
 
     $uid = NULL;
@@ -309,12 +308,28 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       // if this is a real stack test, the user->id field may not be set yet
       // so we need to go and get if from the db.
       $current_user = $this->getUserManager()->getCurrentUser();
+
       if (!isset($current_user->uid) || $current_user->uid === NULL) {
         $ids = \Drupal::entityQuery('user')->execute();
         $users = User::loadMultiple($ids);
 
+        if (isset($current_user->registry_url)) {
+          $current_user_registry_url = $current_user->registry_url;
+        }
+        else {
+          $current_user_registry_url = NULL;
+        }
+
+
         foreach ($users as $drupal_user) {
-          if ($drupal_user->getAccountName() === $current_user->name) {
+          if ($drupal_user->get('registry_url') !== NULL) {
+            $drupal_user_registry_url = $drupal_user->get('registry_url')->value;
+          }
+          else {
+            $drupal_user_registry_url = NULL;
+          }
+
+          if ($drupal_user->getAccountName() === $current_user->name && $current_user_registry_url === $drupal_user_registry_url) {
             $current_user->uid = $drupal_user->id();
             break;
           }
@@ -361,9 +376,12 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   /**
    * @Transform table:name,mail,status
    * @Transform table:name,mail,pass,status
+   * @Transform table:name,mail,pass,status,first_time_login
    * @Transform table:name,mail,pass,status,registry_url
+   * @Transform table:uid,name,mail,pass,registry_url
    * @Transform table:title,name,owner,id
    * @Transform table:title,name,id,owner
+   * @Transform table:title,name,id,owner_uid
    * @Transform table:type,title,url,user_managed,default
    * @Transform table:consumerorgid,username,roles
    * @Transform table:title,id,document
@@ -735,58 +753,71 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
         }
         $this->getUserManager()->addUser($basicUser);
         $this->getUserManager()->setCurrentUser($basicUser);
-        $this->apicUsers[$basicUser->mail] = $basicUser;
+        $this->apicUsers[$basicUser->name] = $basicUser;
       }
 
       return;
     }
 
-    // Users from the database
-    $ids = \Drupal::entityQuery('user')->execute();
-    $users = User::loadMultiple($ids);
+    // running with mocks, but we still need to be aware of what is in our database ...
 
     // We may need to create some users and not others so we should create a new TableNode
     // that we can pass to the parent::createUsers() function if needed
     $makeUsersTableHash = [];
     $makeUsersTableHash[] = $table->getRows()[0]; // row[0] are the column headers
 
-    // For each user we were given in the table, we need to look for a match in the database
     foreach ($table as $row) {
-      $userAlreadyExists = FALSE;
-      foreach ($users as $drupal_user) {
+      if ($user = $this->checkDatabaseForUser($row)) {
 
-        if ($drupal_user->getAccountName() === $row['name'] || $drupal_user->getEmail() === $row['mail']) {
-          print 'Found an existing user record for ' . $drupal_user->getAccountName() . ' (email=' . $drupal_user->getEmail() . ') in the database.\n';
-          $basicUser = new \stdClass();
-          $basicUser->name = $row['name'];
-          $basicUser->mail = $row['mail'];
-          $basicUser->pass = $row['pass'];
-          $basicUser->status = $row['status'];
-          if (isset($row['url'])) {
-            $basicUser->apic_url = $row['url'];
-          }
-          else {
-            $basicUser->apic_url = $row['name'];
-          }
-          if (isset($row['registry_url'])) {
-            $basicUser->registry_url = $row['registry_url'];
-          }
-          else {
-            $basicUser->registry_url = '/registry/test';
-          }
-          $basicUser->uid = $drupal_user->id();
-          $this->getUserManager()->addUser($basicUser);
-          $this->getUserManager()->setCurrentUser($basicUser);
-          $this->apicUsers[$drupal_user->getAccountName()] = $basicUser;
-          $userAlreadyExists = TRUE;
+        if ($user->getAccountName() === 'admin') {
+          print 'Admin user - loaded uid from the database' . \PHP_EOL;
         }
+        else if (isset($row['registry_url'])) {
+          print 'Found an existing user record for ' . $user->getAccountName() . ' (mail=' . $user->getEmail() . ', registry_url=' . $user->get('registry_url')->value . ') in the database.' . \PHP_EOL;
+        }
+        else {
+          print 'Found an existing user record for ' . $user->getAccountName() . ' (mail=' . $user->getEmail() . ') in the database.' . \PHP_EOL;
+        }
+
+        $basicUser = new \stdClass();
+        $basicUser->name = $row['name'];
+        $basicUser->mail = $row['mail'];
+        $basicUser->pass = $row['pass'];
+        if (isset($row['status'])) {
+          $basicUser->status = $row['status'];
+        }
+        else {
+          $basicUser->status = 1;
+        }
+        if (isset($row['url'])) {
+          $basicUser->apic_url = $row['url'];
+        }
+        else {
+          $basicUser->apic_url = $row['name'];
+        }
+        if (isset($row['registry_url'])) {
+          $basicUser->registry_url = $row['registry_url'];
+        }
+        else {
+          $basicUser->registry_url = '/registry/test';
+        }
+
+        if (!isset($row['first_time_login'])) {
+          $row['first_time_login'] = 0;
+        }
+        $basicUser->uid = $user->id();
+        $this->getUserManager()->addUser($basicUser);
+        $this->getUserManager()->setCurrentUser($basicUser);
+        $this->apicUsers[$user->getAccountName()] = $basicUser;
       }
-
-      if (!$userAlreadyExists) {
+      else {
+        if (isset($row['registry_url'])) {
+          print 'No existing user record for ' . $row['name'] . ' (mail=' . $row['mail'] . ", registry_url=" . $row['registry_url'] . ") in the database. Creating...\n";
+        }
+        else {
+          print 'No existing user record for ' . $row['name'] . ' (mail=' . $row['mail'] . ") in the database. Creating...\n";
+        }
         // If we get here, we need to create the user;
-        print 'No existing user record for ' . $row['name'] . ' (email=' . $row['mail'] . ") in the database. Creating...\n";
-
-        print 'creating a user from following data: ' . serialize($row) . "\n";
 
         // Add in other fields from the database that we don't add to the Users table in the tests.
         // This is required to give valid forms (for example the edit profile form).
@@ -794,7 +825,8 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
         // and this code can be removed.
 
         // Add the headers into the initial row of the table, if they aren't already there:
-        $new_headers = ['first_name', 'last_name', 'apic_url'];
+        $new_headers = ['first_name', 'last_name', 'apic_url', 'first_time_login'];
+        
         // sometimes we will be passed a registry_url, if not make sure we have one
         if (!\in_array('registry_url', $makeUsersTableHash[0])) {
           $new_headers[] = 'registry_url';
@@ -822,16 +854,21 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
           $row['apic_url'] = $row['name'];
         }
 
+        if (!isset($row['first_time_login'])) {
+          $row['first_time_login'] = 0;
+        }
 
         if (!isset($row['registry_url'])) {
           $row['registry_url'] = '/registry/test';
         }
 
+        print 'creating a user from following data: ' . serialize($row) . "\n";
 
         $makeUsersTableHash[] = $row;
-
       }
     }
+
+
 
     if (sizeof($makeUsersTableHash) !== 1) {
       // Call DrupalContext::createUsers with our potentially cut-down table
@@ -839,25 +876,43 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       parent::createUsers($newUsersTable);
     }
 
-//    $user_storage = \Drupal::service('entity.manager')->getStorage('user');
-//
-//    $users = $user_storage->loadByProperties([
-//      'name' => 'andre_matchingusername',
-//      'registry_url' => '/consumer-api/user-registries/aaaaaaaa-bbbb-cccc-dddd-111111111111'
-//    ]);
-//    $users = User::loadMultiple();
-//
-//    print "users at end of create users: " . serialize($users);
+  }
+
+
+  private function checkDatabaseForUser($row): ?User {
+
+    $query_for = ['name'];
+
+    if($row['name'] === 'admin') {
+      $users = [1 => User::load(1)];
+    }
+    else {
+      $user_storage = \Drupal::service('entity.manager')->getStorage('user');
+
+
+//      $query = ['name' => $row['name'], 'mail' => $row['mail']];
+      // constraint on user with matching username + registry_url - ignoring email
+      $query = ['name' => $row['name']];
+
+      if (isset($row['registry_url'])) {
+        $query_for[] = 'registry_url';
+        $query['registry_url'] = $row['registry_url'];
+      }
+
+      $users = $user_storage->loadByProperties($query);
+    }
+
+    print __FUNCTION__ . ': query for ' . \serialize($query_for) . ' returning ' . serialize($users) . \PHP_EOL;
+
+    return \sizeof($users) > 0 ? reset($users) : NULL;
 
   }
+
 
   /**
    * "Given I am logged in as :name"
    *
-   * Overrides DrupalContext::assertLoggedInByName. We need to extend the behaviour of
-   * this function so that it doesn't just log in against the web UI but also logs in
-   * the local drupal API instance so that we can run database queries from behat
-   * as the user that we just logged in as.
+   * Overrides DrupalContext::assertLoggedInByName.
    */
   public function assertLoggedInByName($name) {
 
@@ -872,6 +927,106 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     }
 
   }
+
+
+  /**
+   * @When I am logged in as :name from :registry with :password
+   *
+   * Overrides DrupalContext::assertLoggedInByName. We need to extend the behaviour of
+   * this function so that it doesn't just log in against the web UI but also logs in
+   * the local drupal API instance so that we can run database queries from behat
+   * as the user that we just logged in as.
+   */
+  public function assertLoggedInByNameFromRegistry($name, $registry, $password) {
+
+    $manager = $this->getUserManager();
+
+    // Change internal current user.
+    $basicUser = $this->createBehatUserFromDBUser($name, $registry, $password);
+    $manager->addUser($basicUser);
+    $manager->setCurrentUser($basicUser);
+
+    // Login.
+    $this->loginViaRegistry($basicUser, $registry);
+
+    $session = $this->getSession();
+    $page = $session->getPage();
+
+    if (!$page->findLink('Sign out')) {
+      throw new \Exception("Log out link not found for user name: ('$name'), assuming login failed");
+    }
+
+  }
+
+  private function createBehatUserFromDBUser($name, $registry_url, $password) {
+
+    $user_storage = \Drupal::service('entity.manager')->getStorage('user');
+    $query = ['name' => $name, 'registry_url' => $registry_url];
+    $users = $user_storage->loadByProperties($query);
+
+    $user = \sizeof($users) > 0 ? reset($users) : NULL;
+
+    if($user !== NULL) {
+      $basicUser = new \stdClass();
+      $basicUser->name = $name;
+      $basicUser->registry_url = $registry_url;
+
+      $basicUser->mail = $user->get('mail')->value;
+      $basicUser->pass = $password;
+      //$basicUser->status = $row['status'];
+      if ($user->get('apic_url') !== NULL) {
+        $basicUser->apic_url = $user->get('apic_url')->value;
+      }
+      else {
+        $basicUser->apic_url = $user->getUsername();
+      }
+
+    }
+    return $basicUser;
+  }
+
+  /**
+   * Log-in the given user in a specific registry.
+   * Updated version of RawDrupalContext::login()
+   *
+   * @param \stdClass $user
+   *   The user to log in.
+   * @param string $registry_url
+   *   registry to log in to.
+   *
+   */
+  private function loginViaRegistry(\stdClass $user, string $registry_url) {
+    $manager = $this->getUserManager();
+
+    // Check if logged in.
+    if ($this->loggedIn()) {
+      $this->logout();
+    }
+
+    $this->getSession()->visit($this->locatePath('/user/login?registry_url=' . $registry_url));
+    $element = $this->getSession()->getPage();
+    $element->fillField($this->getDrupalText('username_field'), $user->name);
+    $element->fillField($this->getDrupalText('password_field'), $user->pass);
+    $submit = $element->findButton('op');
+    if (empty($submit)) {
+      throw new \Exception(sprintf("No submit button at %s", $this->getSession()->getCurrentUrl()));
+    }
+
+    // Log in.
+    $submit->click();
+
+    if (!$this->loggedIn()) {
+      if (isset($user->role)) {
+        throw new \Exception(sprintf("Unable to determine if logged in because 'log_out' link cannot be found for user '%s' with role '%s'", $user->name, $user->role));
+      }
+      else {
+        throw new \Exception(sprintf("Unable to determine if logged in because 'log_out' link cannot be found for user '%s'", $user->name));
+      }
+    }
+
+    $manager->setCurrentUser($user);
+  }
+
 
   /**
    * Check whether a link on the page has a link with a specific href location.

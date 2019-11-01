@@ -158,17 +158,17 @@ Feature: Forgot Password
       | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
     Given users:
       | name           | mail                   | pass     |status | registry_url                  |
-      | andre          | andre_lur@example.com  | Qwert123 | 1     | @data(user_registries[0].url) |
-      | andre          | andre_ldap@example.com | Qwert123 | 1     | @data(user_registries[2].url) |
+      | forgotpw       | andre_lur@example.com  | Qwert123 | 1     | @data(user_registries[0].url) |
+      | forgotpw       | andre_ldap@example.com | Qwert123 | 1     | @data(user_registries[2].url) |
     When I am at "/user/password"
-    And I enter "andre" for "name"
+    And I enter "forgotpw" for "name"
     And I press the "Submit" button
     Then there are no errors
     And there are no warnings
     And there are messages
     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
     And I am at "/user/password?registry_url=@data(user_registries[2].url)"
-    And I enter "andre" for "name"
+    And I enter "forgotpw" for "name"
     And I press the "Submit" button
     Then there are no errors
     And there are no warnings

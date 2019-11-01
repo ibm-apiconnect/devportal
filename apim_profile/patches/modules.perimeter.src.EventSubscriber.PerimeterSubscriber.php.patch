@@ -1,0 +1,21 @@
+--- modules/perimeter/src/EventSubscriber/PerimeterSubscriber.php	2019-07-11 09:26:09.304172808 +0000
++++ modules/perimeter/src/EventSubscriber/PerimeterSubscriber.php	2019-07-11 09:28:26.736656971 +0000
+@@ -9,6 +9,7 @@
+ use Drupal\Component\Utility\Xss;
+ use Drupal\Core\Database\Database;
+ use Drupal\ban\BanIpManager;
++use Drupal\Core\Site\Settings;
+ 
+ /**
+  * On page not found events, ban the IP if the request is suspicious.
+@@ -49,6 +50,10 @@
+    * On page not found events, ban the IP if the request is suspicious.
+    */
+   public function handleBannedUrls(Event $event) {
++    $whitelist = Settings::get('reverse_proxy_addresses', []) ;
++    if (in_array($event->getRequest()->getClientIp(), $whitelist)){
++       return;
++    }
+     $exception = $event->getException();
+     if ($exception instanceof NotFoundHttpException) {
+       $request_path = $event->getRequest()->getPathInfo();

@@ -29,7 +29,7 @@ class MockApicLoginService implements ApicLoginServiceInterface {
         return $this->oidcLogin($user);
       }
 
-      \Drupal::logger('mock_auth_apic')->debug('MOCKED: MockApicLoginService->login()');
+      \Drupal::logger('mock_auth_apic')->debug('MOCKED: MockApicLoginService->login() with ' . \serialize($user));
       //drupal_set_message('MOCKED: MockApicLoginService->login()');
       // otherwise we are a non-oidc user.
       $password = $user->getPassword();
@@ -51,30 +51,60 @@ class MockApicLoginService implements ApicLoginServiceInterface {
         return $umResponse;
       }
 
-      // Search the user database for the matching user.
-      $ids = \Drupal::entityQuery('user')->execute();
-      $users = User::loadMultiple($ids);
+      $loginuser = NULL;
+      $userStorage = \Drupal::service('entity.manager')->getStorage('user');
 
-      // Return the id of the user if the user account is found.
-      foreach ($users as $listUser) {
-        if ($listUser->getUsername() === $username) {
-          user_login_finalize($listUser);
-          $umResponse->setSuccess(TRUE);
-          $umResponse->setUid($listUser->id());
-
-          if ((int) $listUser->id() !== 1) {
-            \Drupal::service('ibm_apim.user_utils')->setCurrentConsumerorg();
-            \Drupal::service('ibm_apim.user_utils')->setOrgSessionData();
-          }
-
-          return $umResponse;
-        }
+      $searchProperties = ['name' => $user->getUsername()];
+      $apicUserRegistryUrl = $user->getApicUserRegistryUrl();
+      if ($apicUserRegistryUrl !== NULL && $apicUserRegistryUrl !== '/mock/user/registry') {
+        $searchProperties['registry_url'] = $apicUserRegistryUrl;
       }
 
-      // Return an invalid user id if the user doesn't exist.
-      $umResponse->setSuccess(FALSE);
-      $umResponse->setUid(0);
-      return $umResponse;
+      $users = $userStorage->loadByProperties($searchProperties);
+
+      if (\sizeof($users) > 0) {
+        // Return the id of the user if the user account is found.
+        $loginuser = reset($users);
+      }
+      else if (\sizeof($users) === 0) {
+        // some methods that users are created will not add the registry url yet we will still
+        // search on it because of the login form functionality in these cases we will fall
+        // back to older logic and do a more crude search on username.
+
+        $ids = \Drupal::entityQuery('user')->execute();
+        $users = User::loadMultiple($ids);
+
+        foreach ($users as $listUser) {
+          if ($listUser->getUsername() === $username) {
+            $loginuser = $listUser;
+            break;
+          }
+        }
+
+      }
+
+      if($loginuser !== NULL) {
+        user_login_finalize($loginuser);
+        $umResponse->setSuccess(TRUE);
+        $umResponse->setUid($loginuser->id());
+
+        if ((int) $loginuser->id() !== 1) {
+          \Drupal::service('ibm_apim.user_utils')->setCurrentConsumerorg();
+          \Drupal::service('ibm_apim.user_utils')->setOrgSessionData();
+        }
+        \Drupal::logger('mock_auth_apic')->debug('login from mock successful');
+        return $umResponse;
+      }
+      else {
+
+        $umResponse->setSuccess(FALSE);
+        $umResponse->setUid(0);
+        \Drupal::logger('mock_auth_apic')->debug('login from mock unsuccessful - no user found.');
+        return $umResponse;
+      }
+
+
+
     }
 
     private function oidcLogin(ApicUser $user): UserManagerResponse {
@@ -101,7 +131,7 @@ class MockApicLoginService implements ApicLoginServiceInterface {
    */
   public function loginViaAzCode($authCode, $registryUrl): string {
 
-    if ($authCode === 'noorgenabledonboarding' || $authCode == 'noorgdisabledonboarding') {
+    if ($authCode === 'noorgenabledonboarding' || $authCode == 'noorgdisabledonboarding' || $authCode == 'firsttimelogin') {
       $user = new ApicUser();
       $user->setUsername('oidcandre');
       $user->setPassword('oidcoidc');
@@ -116,6 +146,9 @@ class MockApicLoginService implements ApicLoginServiceInterface {
     }
     else if ($authCode === 'noorgdisabledonboarding') {
       return 'ibm_apim.noperms';
+    }
+    else if ($authCode === 'firsttimelogin') {
+      return 'ibm_apim.get_started';
     }
     else if ($authCode === 'routetoerror') {
       return 'ERROR';

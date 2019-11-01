@@ -70,6 +70,7 @@ Feature: My Organization
     And there are no errors
     And there are no messages
 
+
   @api
   # Note that this a negative test for an admin user (uid=1) that manually sets their url to the /myorg page
   Scenario: Sign in as the admin user (uid==1) and try to view the My Organization page
@@ -287,3 +288,164 @@ Feature: My Organization
     Then I should not see the text "Change role"
     Then I should not see the text "Delete member"
     And there are no errors
+
+
+  @api
+  Scenario: As an org member, role=administrator, I can click Invite and be taken to the myorg/invite form
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+      | @data(andre[1].mail) | @data(andre[1].mail) | @data(andre[1].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id                             | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+    Given members:
+      | consumerorgid                  | username             | roles                   |
+      | @data(andre[0].consumerorg.id) | @data(andre[1].mail) | administrator           |
+    Given I am logged in as "@data(andre[1].mail)"
+    And I am at "/myorg"
+    Then I should see the text "Invite"
+    When I click "Invite"
+    Then I should be on "/myorg/invite"
+    And there are no errors
+    And there are no messages
+
+  @api
+  Scenario: As an org member, role=developer, I cannot invite new members
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+      | @data(andre[4].mail) | @data(andre[4].mail) | @data(andre[4].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id                             | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+    Given members:
+      | consumerorgid                  | username             | roles                   |
+      | @data(andre[0].consumerorg.id) | @data(andre[4].mail) | developer               |
+    Given I am logged in as "@data(andre[4].mail)"
+    And I am at "/myorg"
+    Then I should not see the text "Invite"
+    When I go to "/myorg/invite"
+    Then I should see the text "Access denied"
+    And I should see the text "You are not authorized to access this page."
+
+  @api
+  Scenario: As an org member, role=viewer, I cannot invite new members
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+      | @data(andre[3].mail) | @data(andre[3].mail) | @data(andre[3].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id                             | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+    Given members:
+      | consumerorgid                  | username             | roles                   |
+      | @data(andre[0].consumerorg.id) | @data(andre[3].mail) | viewer                  |
+    Given I am logged in as "@data(andre[3].mail)"
+    And I am at "/myorg"
+    Then I should not see the text "Invite"
+    When I go to "/myorg/invite"
+    Then I should see the text "Access denied"
+    And I should see the text "You are not authorized to access this page."
+
+  @api
+  Scenario: As the org owner, with multiple members with different roles, I can click Invite and be taken to the myorg/invite form
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+      | @data(andre[1].mail) | @data(andre[1].mail) | @data(andre[1].password) | 1      |
+      | @data(andre[2].mail) | @data(andre[2].mail) | @data(andre[2].password) | 1      |
+      | @data(andre[3].mail) | @data(andre[3].mail) | @data(andre[3].password) | 1      |
+      | @data(andre[4].mail) | @data(andre[4].mail) | @data(andre[4].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id                             | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+    Given members:
+      | consumerorgid                  | username             | roles                   |
+      | @data(andre[0].consumerorg.id) | @data(andre[1].mail) | administrator           |
+      | @data(andre[0].consumerorg.id) | @data(andre[2].mail) | administrator,developer |
+      | @data(andre[0].consumerorg.id) | @data(andre[3].mail) | viewer                  |
+      | @data(andre[0].consumerorg.id) | @data(andre[4].mail) | developer               |
+    Given I am logged in as "@data(andre[0].mail)"
+    And I am at "/myorg"
+    Then I should see the text "Invite"
+    When I click "Invite"
+    Then I should be on "/myorg/invite"
+    And there are no errors
+    And there are no messages
+
+  @api
+  Scenario: As an admin member of an org with multiple members with different roles, I can click Invite and be taken to the myorg/invite form
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+      | @data(andre[1].mail) | @data(andre[1].mail) | @data(andre[1].password) | 1      |
+      | @data(andre[2].mail) | @data(andre[2].mail) | @data(andre[2].password) | 1      |
+      | @data(andre[3].mail) | @data(andre[3].mail) | @data(andre[3].password) | 1      |
+      | @data(andre[4].mail) | @data(andre[4].mail) | @data(andre[4].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id                             | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+    Given members:
+      | consumerorgid                  | username             | roles                   |
+      | @data(andre[0].consumerorg.id) | @data(andre[1].mail) | administrator           |
+      | @data(andre[0].consumerorg.id) | @data(andre[2].mail) | administrator,developer |
+      | @data(andre[0].consumerorg.id) | @data(andre[3].mail) | viewer                  |
+      | @data(andre[0].consumerorg.id) | @data(andre[4].mail) | developer               |
+    Given I am logged in as "@data(andre[2].mail)"
+    And I am at "/myorg"
+    Then I should see the text "Invite"
+    When I click "Invite"
+    Then I should be on "/myorg/invite"
+    And there are no errors
+    And there are no messages
+
+  @api
+  Scenario: As a developer member of an org with multiple members with different roles, I cannot invite new members
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+      | @data(andre[1].mail) | @data(andre[1].mail) | @data(andre[1].password) | 1      |
+      | @data(andre[2].mail) | @data(andre[2].mail) | @data(andre[2].password) | 1      |
+      | @data(andre[3].mail) | @data(andre[3].mail) | @data(andre[3].password) | 1      |
+      | @data(andre[4].mail) | @data(andre[4].mail) | @data(andre[4].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id                             | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+    Given members:
+      | consumerorgid                  | username             | roles                   |
+      | @data(andre[0].consumerorg.id) | @data(andre[1].mail) | administrator           |
+      | @data(andre[0].consumerorg.id) | @data(andre[2].mail) | administrator,developer |
+      | @data(andre[0].consumerorg.id) | @data(andre[3].mail) | viewer                  |
+      | @data(andre[0].consumerorg.id) | @data(andre[4].mail) | developer               |
+    Given I am logged in as "@data(andre[4].mail)"
+    And I am at "/myorg"
+    Then I should not see the text "Invite"
+    When I go to "/myorg/invite"
+    Then I should see the text "Access denied"
+    And I should see the text "You are not authorized to access this page."
+
+  @api
+  Scenario: As a viewer member of an org with multiple members with different roles, I cannot invite new members
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+      | @data(andre[1].mail) | @data(andre[1].mail) | @data(andre[1].password) | 1      |
+      | @data(andre[2].mail) | @data(andre[2].mail) | @data(andre[2].password) | 1      |
+      | @data(andre[3].mail) | @data(andre[3].mail) | @data(andre[3].password) | 1      |
+      | @data(andre[4].mail) | @data(andre[4].mail) | @data(andre[4].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id                             | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+    Given members:
+      | consumerorgid                  | username             | roles                   |
+      | @data(andre[0].consumerorg.id) | @data(andre[1].mail) | administrator           |
+      | @data(andre[0].consumerorg.id) | @data(andre[2].mail) | administrator,developer |
+      | @data(andre[0].consumerorg.id) | @data(andre[3].mail) | viewer                  |
+      | @data(andre[0].consumerorg.id) | @data(andre[4].mail) | developer               |
+    Given I am logged in as "@data(andre[3].mail)"
+    And I am at "/myorg"
+    Then I should not see the text "Invite"
+    When I go to "/myorg/invite"
+    Then I should see the text "Access denied"
+    And I should see the text "You are not authorized to access this page."

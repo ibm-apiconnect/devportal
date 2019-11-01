@@ -70,3 +70,57 @@ field.field.node.application.application_subscriptions:
   type: ibm_apim_config_object
   label: 'Subscriptions'
 
+apic_app.apic_app_subscription.*:
+  type: config_entity
+  label: 'Subscription'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    app_url:
+      type: string
+      label: 'Application URL'
+    product_url:
+      type: string
+      label: 'Product URL'
+    plan:
+      type: string
+      label: 'Plan name'
+    state:
+      type: string
+      label: 'State'
+    billing_url:
+      type: string
+      label: 'Billing URL'
+    consumerorg_url:
+      type: string
+      label: 'Consumer organization URL'
+
+apic_app.apic_app_credentials.*:
+  type: config_entity
+  label: 'Credentials'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    app_url:
+      type: string
+      label: 'Application URL'
+    client_id:
+      type: string
+      label: 'Client ID'
+    name:
+      type: string
+      label: 'Name'
+    title:
+      type: string
+      label: 'Title'
+    summary:
+      type: string
+      label: 'Summary'
+    consumerorg_url:
+      type: string
+      label: 'Consumer organization URL'
+    cred_url:
+      type: string
+      label: 'Credentials URL'

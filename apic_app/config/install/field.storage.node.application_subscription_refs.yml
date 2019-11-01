@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - apic_app
+id: node.application_subscription_refs
+field_name: application_subscription_refs
+entity_type: node
+type: entity_reference
+settings:
+  target_type: apic_app_subscription
+module: core
+locked: false
+cardinality: -1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

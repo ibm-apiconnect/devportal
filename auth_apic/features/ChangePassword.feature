@@ -46,6 +46,7 @@ Scenario: Submit change password form as non-admin user
   And I enter "@data(andre.password)" for "Password"
   And I enter "@data(andre.password)" for "Confirm password"
   And I press the "Submit" button
+  #TODO: verify things are good!!!!!!!
 
 #  Admin users - we need to check 2 cases, uid===1 special case and a user which has the administrator role.
 #                uid===1 is a local drupal user and will use the standard form behaviour.
@@ -131,5 +132,41 @@ Scenario: Form not available if not logged in
   Then the response status code should be 403
   And I should see the text "You are not authorized to access this page."
 
-
+@api
+Scenario: Change password for users with the same username
+  Given I am not logged in
+  Given userregistries:
+    | type | title                             | url                               | user_managed | default |
+    | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+    | lur  | @data(user_registries[1].title)   | @data(user_registries[1].url)     | yes          | no      |
+  Given users:
+    | uid    | name         | mail                    | pass     | registry_url                  |
+    | 234567 | changepwuser | changepw1@example.com | Qwert123 | @data(user_registries[0].url) |
+    | 765432 | changepwuser | changepw2@example.com | Qwert246 | @data(user_registries[1].url) |
+  Given consumerorgs:
+    | title | name | id   | owner_uid |
+    | org1  | org1 | org1 | 234567    |
+    | org2  | org2 | org2 | 765432    |
+  When I am logged in as "changepwuser" from "@data(user_registries[0].url)" with "Qwert123"
+  And I am at "/user/@uid/change-password"
+  And I enter "Qwert123" for "Current password"
+  And I enter "newPassw0rd" for "Password"
+  And I enter "newPassw0rd" for "Confirm password"
+  And I press the "Submit" button
+  Then dump the current html
+  #And I am on "/myorg"
+  Then there are no errors
+  And there are no warnings
+  And there are messages
+  And I should see the text "Password changed successfully"
+  And I am logged in as "changepwuser" from "@data(user_registries[1].url)" with "Qwert246"
+  When I am at "/user/@uid/change-password"
+  When I enter "Qwert246" for "Current password"
+  And I enter "newPassw0rd" for "Password"
+  And I enter "newPassw0rd" for "Confirm password"
+  And I press the "Submit" button
+  Then there are no errors
+  And there are no warnings
+  And there are messages
+  And I should see the text "Password changed successfully"
 

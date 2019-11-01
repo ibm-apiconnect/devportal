@@ -12,6 +12,7 @@ dependencies:
     - field.field.node.application.application_client_type
     - field.field.node.application.application_consumer_org_url
     - field.field.node.application.application_credentials
+    - field.field.node.application.application_credentials_refs
     - field.field.node.application.application_data
     - field.field.node.application.application_enabled
     - field.field.node.application.application_id
@@ -20,6 +21,7 @@ dependencies:
     - field.field.node.application.application_name
     - field.field.node.application.application_redirect_endpoints
     - field.field.node.application.application_subscriptions
+    - field.field.node.application.application_subscription_refs
     - image.style.icon
     - node.type.application
   module:
@@ -100,12 +102,13 @@ content:
     third_party_settings: {  }
     type: string
     region: content
-  application_credentials:
+  application_credentials_refs:
     weight: 113
     label: above
-    settings: {  }
+    settings:
+      link: true
     third_party_settings: {  }
-    type: basic_string
+    type: entity_reference_label
     region: content
   application_data:
     weight: 112
@@ -161,12 +164,13 @@ content:
     third_party_settings: {  }
     type: string
     region: content
-  application_subscriptions:
-    weight: 114
+  application_subscription_refs:
+    weight: 118
     label: above
-    settings: {  }
+    settings:
+      link: true
     third_party_settings: {  }
-    type: basic_string
+    type: entity_reference_label
     region: content
   links:
     weight: 100
@@ -175,4 +179,6 @@ content:
     region: content
 hidden:
   application_client_type: true
+  application_subscriptions: true
+  application_credentials: true
   langcode: true

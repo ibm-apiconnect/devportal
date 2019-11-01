@@ -144,6 +144,7 @@ class ApicUserPasswordResetForm extends FormBase {
       '#type' => 'password_confirm',
       '#required' => TRUE,
       '#description' => $this->t('Provide a password.'),
+      '#attributes' => ['autocomplete' => 'off'],
     ];
 
     // If the password policy module is enabled, modify this form to show

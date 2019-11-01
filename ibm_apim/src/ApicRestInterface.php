@@ -51,11 +51,14 @@ interface ApicRestInterface {
    * @param string $auth
    *          The authorization string to use, the default is the current user
    *
+   * @param bool $messageErrors
+   *          If you need to hide the message errors on a post, set to FALSE
+   *
    * @return null|\stdClass
    *
    * @see _ibm_apim_call_base()
    */
-  public static function post($url, $data, $auth = 'user'): ?\stdClass;
+  public static function post($url, $data, $auth = 'user', $messageErrors = TRUE): ?\stdClass;
 
   /**
    * A helper function to use when submitting an IBM API PUT call

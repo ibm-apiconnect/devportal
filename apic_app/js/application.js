@@ -27,11 +27,11 @@
   Drupal.behaviors.showPassword = {
     attach: function (context) {
       // Find the checkbox.
-      var showPassword = $(context).find('.password-toggle.checkbox');
+      const showPassword = $(context).find('.password-toggle.checkbox');
 
       // Add click handler to checkboxes.
       $(':checkbox', showPassword).click(function () {
-        var password_field = $(this).closest('.toggleParent').find('.toggle')[0];
+        const password_field = $(this).closest('.toggleParent').find('.toggle')[0];
         if (!password_field.value.length > 0) {
           return;
         }
@@ -55,26 +55,26 @@
   Drupal.behaviors.multipleCredentials = {
     attach: function (context) {
       // Find the tabs list.
-      var tabsList = $(context).find('.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs ul');
+      const tabsList = $(context).find('.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs ul');
 
-      var clientIDField = $(context).find('.applicationCredentials .credentialsTable .credentialsContent .credentialsData #clientIDInput');
+      const clientIDField = $(context).find('.applicationCredentials .credentialsTable .credentialsContent .credentialsData #clientIDInput');
 
-      var summaryDiv = $(context).find('.applicationCredentials .credentialsTable .credentialsContent .credentialsData .credentialSummary');
+      const summaryDiv = $(context).find('.applicationCredentials .credentialsTable .credentialsContent .credentialsData .credentialSummary');
 
       function updateLinkTarget(linkClass, credid) {
-        var currentLink = $(context).find(linkClass + ' a');
-        var currentValue = currentLink.prop("href");
-        var the_arr = currentValue.split('/');
+        const currentLink = $(context).find(linkClass + ' a');
+        const currentValue = currentLink.prop("href");
+        const the_arr = currentValue.split('/');
         the_arr.pop();
-        var newLink = ( the_arr.join('/') );
+        const newLink = (the_arr.join('/'));
         currentLink.prop("href", newLink + "/" + credid);
       }
 
       // Add click handler to li.
       $('li', tabsList).click(function () {
-        var client_id = '';
-        var summary = '';
-        var credid = $(this).attr('data-credid');
+        let client_id = '';
+        let summary = '';
+        const credid = $(this).attr('data-credid');
         // remove selected from all other tabs
         $('li', tabsList).removeClass("selected");
         // add it to this one
@@ -104,9 +104,9 @@
         }
 
         // force disable show client id
-        var showPassword = $(context).find('.password-toggle.checkbox');
+        const showPassword = $(context).find('.password-toggle.checkbox');
         $(':checkbox', showPassword).prop("checked", false);
-        var password_field = $(':checkbox', showPassword).closest('.toggleParent').find('.toggle')[0];
+        const password_field = $(':checkbox', showPassword).closest('.toggleParent').find('.toggle')[0];
         password_field.type = "password";
       });
     }

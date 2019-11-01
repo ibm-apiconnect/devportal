@@ -50,3 +50,5 @@ services:
     class: Drupal\apic_app\Service\CertificateService
     arguments: ['@ibm_apim.utils',
                 '@config.factory']
+  apic_app.credentials:
+    class: Drupal\apic_app\Service\CredentialsService

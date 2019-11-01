@@ -186,19 +186,34 @@ class ApplicationCreateStep1Form extends MultistepFormBase {
     $result = $restService->createApplication($name, $summary, $oauthEndpoints, $certificate, $form_state);
 
     if (empty($result->data['errors']) && $result->code < 300) {
-      if (isset($result->data['client_id'], $result->data['client_secret'])) {
-        $this->store->set('creds', serialize(['client_id' => $result->data['client_id'], 'client_secret' => $result->data['client_secret']]));
+      if (isset($result->data['id'])) {
+        if (isset($result->data['client_id'], $result->data['client_secret'])) {
+          $this->store->set('creds', serialize(['client_id' => $result->data['client_id'], 'client_secret' => $result->data['client_secret']]));
+        }
+        else {
+          \Drupal::messenger()->addMessage(t('Error: No application credentials were returned.', []));
+          $this->store->set('creds', serialize(['client_id' => NULL, 'client_secret' => NULL]));
+        }
+        $this->store->set('appId', $result->data['id']);
+        $this->store->set('nid', $result->data['nid']);
+
+        $form_state->setRedirect('apic_app.create_step_two');
       }
       else {
-        \Drupal::messenger()->addMessage(t('Error: No application credentials were returned.', []));
-        $this->store->set('creds', serialize(['client_id' => NULL, 'client_secret' => NULL]));
+        \Drupal::logger('apic_app')->notice('Application ID missing in response to application create request for @appName by @username', [
+          '@appName' => $name,
+          '@username' => \Drupal::currentUser()->getAccountName(),
+        ]);
+        \Drupal::service('messenger')->addError($this->t('Application creation failed.'));
+        $form_state->setRedirectUrl(Url::fromRoute('apic_app.create'));
       }
-      $this->store->set('appId', $result->data['id']);
-      $this->store->set('nid', $result->data['nid']);
-
-      $form_state->setRedirect('apic_app.create_step_two');
     }
     else {
+      \Drupal::logger('apic_app')->notice('Error in response to application create request for @appName by @username', [
+        '@appName' => $name,
+        '@username' => \Drupal::currentUser()->getAccountName(),
+      ]);
+      \Drupal::service('messenger')->addError($this->t('Application creation failed.'));
       $form_state->setRedirectUrl(Url::fromRoute('apic_app.create'));
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

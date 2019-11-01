@@ -50,8 +50,8 @@
        );
        return;
      }
--    $this->logger()->success(dt('Warming caches in batches from the "warmer" queue.', ['@count' => $count]));
-+    $this->logger->info(dt('Warming caches in batches from the "warmer" queue.', ['@count' => $count]));
+-    $this->logger()->success(dt('Warming caches in @count batches from the "warmer" queue.', ['@count' => $batch_count]));
++    $this->logger->info(dt('Warming caches in @count batches from the "warmer" queue.', ['@count' => $batch_count]));
      $this->queueCommands->run('warmer', ['time-limit' => static::VERY_HIGH_NUMBER]);
      return;
    }

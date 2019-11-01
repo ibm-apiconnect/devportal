@@ -127,6 +127,33 @@ class UserUtils {
     return $rc;
   }
 
+
+  /**
+   * Resets the current consumer org object from a session variable.
+   *
+   * This is used when deleting the current consumer org.
+   *
+   * @return null|array
+   *    The the current consumer org object or NULL if a user does not
+   *    belong to a consumer org or one is not set.
+   *
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   */
+  public function resetCurrentConsumerorg(): ?array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $rc = NULL;
+    if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
+      $this->sessionStore->set('current_consumer_organization', NULL);
+      $rc = $this->getCurrentConsumerorg();
+    }
+    else {
+      // Anonymous user, return empty array.
+      $rc = ['url' => NULL];
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
+    return $rc;
+  }
+
   /**
    * Sets the current consumer org in a session variable.
    *
@@ -298,6 +325,55 @@ class UserUtils {
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $owned);
     return $owned;
+  }
+
+  public function addConsumerOrgToUser($orgUrl, $account = NULL): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $orgUrl);
+    $return = NULL;
+    if ($account === NULL && !$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
+      $account = User::load($this->currentUser->id());
+    }
+    if (!$this->currentUser->isAnonymous() && (int) $account->id() !== 1) {
+      // update the consumerorg urls list set on the user object
+      if ($account !== NULL && !empty($account->consumerorg_url->getValue())) {
+        $org_urls = $account->consumerorg_url->getValue();
+        $found = false;
+        foreach ($org_urls as $index => $valueArray) {
+          if ($valueArray['value'] === $orgUrl) {
+            $found = true;
+          }
+        }
+        if (!$found) {
+          $org_urls[] = ['value' => $orgUrl];
+          $account->set('consumerorg_url', $org_urls);
+          $account->save();
+        }
+      }
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+  public function removeConsumerOrgFromUser($orgUrl, $account = NULL): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $orgUrl);
+    $return = NULL;
+    if ($account === NULL && !$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
+      $account = User::load($this->currentUser->id());
+    }
+    if (!$this->currentUser->isAnonymous() && (int) $account->id() !== 1) {
+      // update the consumerorg urls list set on the user object
+      if ($account !== NULL && !empty($account->consumerorg_url->getValue())) {
+        $org_urls = $account->consumerorg_url->getValue();
+        $new_org_urls = [];
+        foreach ($org_urls as $index => $valueArray) {
+          if ($valueArray['value'] !== $orgUrl) {
+            $new_org_urls[] = $valueArray;
+          }
+        }
+        $account->set('consumerorg_url', $new_org_urls);
+        $account->save();
+      }
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 
   /**

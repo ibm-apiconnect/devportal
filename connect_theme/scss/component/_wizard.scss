@@ -194,12 +194,13 @@
       padding: 0.5rem 0;
     }
 
-    .apicNewAppWrapper {
+    .apicNewAppsList {
       display: flex;
       flex-direction: row-reverse;
-      .button {
-        margin-top: 1rem;
-        margin-left: 0.5rem;
+      flex-wrap: wrap-reverse;
+      .apicSubAppCard {
+        margin: 0.5%;
+        padding: 0.7%;
       }
     }
 
@@ -209,7 +210,7 @@
     }
 
     .apicSubscribeAppForm .apicNewAppWrapper > div {
-      width: 50%;
+      width: 0.5%;
     }
 
     .form-control[disabled] {

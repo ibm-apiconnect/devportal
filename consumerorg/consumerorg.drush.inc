@@ -226,7 +226,7 @@ function drush_consumerorg_massupdate($consumerOrgs = [], $event = 'content_refr
   ibm_apim_entry_trace(__FUNCTION__, count($consumerOrgs));
   if (!empty($consumerOrgs)) {
     foreach ($consumerOrgs as $consumerOrg) {
-      drush_consumerorg_createOrUpdateOrg('MassUpdate', $event, $consumerOrg);
+      drush_consumerorg_createOrUpdate('MassUpdate', $event, $consumerOrg);
     }
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -603,8 +603,8 @@ function drush_consumerorg_member_update($payload, $event = 'member_update') {
   }
   else {
     $members = $corg->getMembers();
-    if ($members !== null && !empty($members)) {
-      foreach($members as $key=>$existingMember) {
+    if ($members !== NULL && !empty($members)) {
+      foreach ($members as $key => $existingMember) {
         if ($existingMember->getUserUrl() === $payload['user_url']) {
           $members[$key]->setRoleUrls($payload['role_urls']);
           $members[$key]->setState($payload['state']);
@@ -615,7 +615,8 @@ function drush_consumerorg_member_update($payload, $event = 'member_update') {
         '@username' => $payload['user']['username'],
         '@id' => $corg->getId(),
       ]));
-    } else {
+    }
+    else {
       $member = new Member();
       $member->setUrl($payload['url']);
       $member->setUser($user_service->getUserFromJSON($payload['user']));

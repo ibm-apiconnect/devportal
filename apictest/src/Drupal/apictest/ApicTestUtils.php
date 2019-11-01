@@ -61,7 +61,8 @@ class ApicTestUtils {
     $owner->setSummary('Owns and administers the app developer organization');
 
     // Owner gets every permission under the sun
-    $perms = \Drupal::service('ibm_apim.permissions')->getAll();
+    $perms = self::getAllPermissionsFromMock();
+
     $permURLs = [];
     if ($perms !== NULL && !empty($perms)) {
       foreach($perms as $permission) {
@@ -91,7 +92,7 @@ class ApicTestUtils {
     $owner->setSummary('Administers the app developer organization');
 
     // Owner gets every permission under the sun
-    $perms = \Drupal::service('ibm_apim.permissions')->getAll();
+    $perms = self::getAllPermissionsFromMock();
     $permURLs = [];
     if ($perms !== NULL && !empty($perms)) {
       foreach($perms as $permission) {
@@ -224,6 +225,23 @@ class ApicTestUtils {
 
         // Update the org in the database
         \Drupal::service('ibm_apim.consumerorg')->createOrUpdateNode($org, 'ApicTestUtils::setInvites');
+    }
+
+  /**
+   * When running with mocks we read all of the data from disk. This is done in the mock permissions service so we need to do likewise.
+   * TODO: check for mocks parameter - is this code even called if not using mocks?
+   *
+   * @return array
+   */
+    private static function getAllPermissionsFromMock() {
+      $all_perms = json_decode(file_get_contents(drupal_get_path('module', 'ibm_apim') . '/src/Service/Mocks/MockData/permissions.json'), TRUE);
+      $permissions = [];
+      foreach ($all_perms as $perm) {
+        $permissions[$perm['url']] = $perm;
+      }
+
+      //\Drupal::logger('PERMISSIONS DEBUG')->debug('getAllPermissionsFromMock returning: ' . \serialize($permissions));
+      return $permissions;
     }
 
 

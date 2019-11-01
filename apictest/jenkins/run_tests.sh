@@ -38,7 +38,13 @@ sed -i -e 's/4443/443/' -e '/ssl_dhparam/d' -e 's/gulag/limreq/' -e 's/brotli_st
 
 sed -i -e 's/gulag/limreq/' -e 's/more_set_headers/#more_set_headers/' /etc/nginx/conf.d/aegir.conf
 
+echo "dump of /etc/nginx/conf.d/aegir.conf"
 cat /etc/nginx/conf.d/aegir.conf
+echo "dump of /var/aegir/config/server_master/nginx/pre.d/nginx_ssl.conf"
+cat /var/aegir/config/server_master/nginx/pre.d/nginx_ssl.conf
+echo "dump of /etc/nginx/nginx.conf"
+cat /etc/nginx/nginx.conf
+
 
 mkdir /web/ssl
 openssl req -batch -x509 -nodes -days 365000 -newkey rsa:2048 -keyout /etc/nginx/ssl/hostmaster.key -out /etc/nginx/ssl/hostmaster.crt -sha256
@@ -72,6 +78,7 @@ sed -i '/log_format/,+4d' /etc/nginx/conf.d/aegir.conf
 
 /usr/sbin/nginx &
 npid=$!
+
 
 su aegir -c "scl enable rh-php72 -- php-fpm -OF" &
 ppid=$!
@@ -122,6 +129,8 @@ curl -O -L https://github.com/mglaman/drupal-check/releases/latest/download/drup
 mv drupal-check.phar /var/aegir/platforms/drupal-check
 chmod +x /var/aegir/platforms/drupal-check
 /var/aegir/platforms/drupal-check ./modules/$MODULE_NAME || true
+
+/usr/sbin/nginx -T
 
 if [ -d modules/$MODULE_NAME/features ]; then
 

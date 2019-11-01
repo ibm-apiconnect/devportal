@@ -868,11 +868,6 @@ span.registry-name {
   line-height: 1;
 }
 
-.apicNewAppWrapper {
-  display: flex;
-  flex-direction: row-reverse;
-}
-
 .apicNewAppWrapper .button {
   margin-top: 1rem;
   margin-left: 0.5rem;

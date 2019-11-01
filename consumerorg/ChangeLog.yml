@@ -1,0 +1,15 @@
+changes:
+
+    8.x-1.1.40:
+      - Update ChangeLog.yml
+      - Update ChangeLog.yml
+    8.x-1.1.41:
+      - add newly created orgs to the org menu
+    8.x-1.1.42:
+      - force reload of current org permissions after changing owner
+    8.x-1.1.43:
+      - if delete cOrg need to select next one
+    8.x-1.1.44:
+      - use envelope glyph icon
+      - need to ensure org data set correctly
+    8.x-1.1.45:

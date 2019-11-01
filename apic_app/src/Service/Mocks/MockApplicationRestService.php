@@ -28,7 +28,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
       'orgID' => '123456',
       'id' => '12345',
       'url' => 'https://example.com/apps/123456/12345',
-      'name' => 'app12345',
+      'name' => 'app12345xyz',
       'oauthRedirectURI' => '',
       'promoteTo' => '',
       'description' => 'some text',
@@ -38,7 +38,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
         [
           'client_id' => 'myclientid',
           'client_secret' => 'myclientsecret',
-          'id' => '1234567890',
+          'id' => '12345-1234567890',
           'description' => '',
         ],
       ],
@@ -63,13 +63,13 @@ class MockApplicationRestService implements ApplicationRestInterface {
         [
           'client_id' => 'myclientid',
           'client_secret' => 'myclientsecret',
-          'id' => '1234567890',
+          'id' => '23456-1234567890',
           'description' => 'first creds',
         ],
         [
           'client_id' => 'myclientid2',
           'client_secret' => 'myclientsecret2',
-          'id' => '2345678901',
+          'id' => '23456-2345678901',
           'description' => 'second creds',
         ]
       ],
@@ -92,7 +92,30 @@ class MockApplicationRestService implements ApplicationRestInterface {
         [
           'client_id' => 'myclientid',
           'client_secret' => 'myclientsecret',
-          'id' => '1234567890',
+          'id' => '34567-1234567890',
+          'description' => '',
+        ],
+      ],
+      'public' => TRUE,
+      'enabled' => TRUE,
+      'consumer_org_url' => '/consumer-orgs/1234/5678/123456',
+      'org_url' => '/consumer-orgs/1234/5678/123456'
+    ],
+    '45678' => [
+      'orgID' => '123456',
+      'id' => '45678',
+      'url' => 'https://example.com/apps/123456/45678',
+      'oauthRedirectURI' => '',
+      'promoteTo' => '',
+      'type' => 'PRODUCTION',
+      'state' => 'PUBLISHED',
+      'name' => 'app45678',
+      'description' => 'some text',
+      'app_credentials' => [
+        [
+          'client_id' => 'myclientid',
+          'client_secret' => 'myclientsecret',
+          'id' => '45678-1234567890',
           'description' => '',
         ],
       ],

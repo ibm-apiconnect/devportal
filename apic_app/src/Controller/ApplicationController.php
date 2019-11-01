@@ -125,7 +125,7 @@ class ApplicationController extends ControllerBase {
         $application_image_url = NULL;
         if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
           $file = File::load($fid[0]['target_id']);
-          $application_image_url = $file->createFileUrl()->toUriString();
+          $application_image_url = $file->createFileUrl();
         }
         else {
           if ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
@@ -267,7 +267,7 @@ class ApplicationController extends ControllerBase {
         $application_image_url = NULL;
         if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
           $file = File::load($fid[0]['target_id']);
-          $application_image_url = $file->createFileUrl()->toUriString();
+          $application_image_url = $file->createFileUrl();
         }
         else {
           if ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
@@ -290,28 +290,16 @@ class ApplicationController extends ControllerBase {
           'application_lifecycle_state' => $node->application_lifecycle_state->value,
         ];
 
-        foreach ($node->application_credentials->getValue() as $arrayValue) {
-          $unserialized = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-          // ensure the credential ID is set since its used for routing and drupal goes bang otherwise
-          // should purely be a safety net
-          if (!isset($unserialized['id']) || empty($unserialized['id'])) {
-            $unserialized['id'] = 1;
-          }
-          $credentials[] = $unserialized;
-
-        }
+        $credentials = $node->application_credentials_refs->referencedEntities();
         $appnode['credentials'] = $credentials;
 
-        $subscriptions = [];
-        foreach ($node->application_subscriptions->getValue() as $appSub) {
-          $subscriptions[] = unserialize($appSub['value'], ['allowed_classes' => FALSE]);
-        }
+        $subscriptions = $node->application_subscription_refs->referencedEntities();
 
         if (isset($subscriptions) && is_array($subscriptions)) {
           foreach ($subscriptions as $sub) {
             $query = \Drupal::entityQuery('node');
             $query->condition('type', 'product');
-            $query->condition('apic_url.value', $sub['product_url']);
+            $query->condition('apic_url.value', $sub->product_url());
             $nids = $query->execute();
 
             if (isset($nids) && !empty($nids)) {
@@ -323,7 +311,7 @@ class ApplicationController extends ControllerBase {
                 $cost = t('Free');
                 if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
                   $file = File::load($fid[0]['target_id']);
-                  $product_image_url = $file->createFileUrl()->toUriString();
+                  $product_image_url = $file->createFileUrl();
                 }
                 elseif ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('product')) {
                   $rawImage = Product::getRandomImageName($product->getTitle());
@@ -336,27 +324,27 @@ class ApplicationController extends ControllerBase {
                     $product_plan = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
                     $productPlans[$product_plan['name']] = $product_plan;
                   }
-                  if (isset($productPlans[$sub['plan']])) {
-                    $thisPlan = $productPlans[$sub['plan']];
+                  if (isset($productPlans[$sub->plan()])) {
+                    $thisPlan = $productPlans[$sub->plan()];
                     if (!isset($thisPlan['billing-model'])) {
                       $thisPlan['billing-model'] = [];
                     }
                     $cost = \Drupal::service('product.plan')->parseBilling($thisPlan['billing-model']);
-                    $plan_title = $productPlans[$sub['plan']]['title'];
+                    $plan_title = $productPlans[$sub->plan()]['title'];
                   }
                 }
                 if (!isset($plan_title) || empty($plan_title)) {
-                  $plan_title = Html::escape($sub['plan']);
+                  $plan_title = Html::escape($sub->plan());
                 }
                 $subarray[] = [
                   'product_title' => Html::escape($product->getTitle()),
                   'product_version' => Html::escape($product->apic_version->value),
                   'product_nid' => $nid,
                   'product_image' => $product_image_url,
-                  'plan_name' => Html::escape($sub['plan']),
+                  'plan_name' => Html::escape($sub->plan()),
                   'plan_title' => Html::escape($plan_title),
-                  'state' => Html::escape($sub['state']),
-                  'subId' => Html::escape($sub['id']),
+                  'state' => Html::escape($sub->state()),
+                  'subId' => Html::escape($sub->id()),
                   'cost' => $cost,
                 ];
               }

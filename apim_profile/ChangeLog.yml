@@ -1,0 +1,211 @@
+changes:
+  8.x-20191004-0421:
+    commits:
+    - use more explicit file name
+    modules:
+      ibm_apim:
+        8.x-1.2.101: null
+        8.x-1.2.100:
+        - Resetting change log
+        - forgot password: handle empty string in response
+  8.x-20190913-1644-base:
+    commits:
+    - add new translations sql dump
+    - added new translation files and updated versions.
+    - Deleted old translation files
+    - Update ChangeLog.yml
+    modules:
+      socialblock:
+        8.x-1.0.12:
+        - Update ChangeLog.yml
+        8.x-1.0.13: null
+        8.x-1.0.14:
+        - Update ChangeLog.yml
+      product:
+        8.x-1.0.31:
+        - Update ChangeLog.yml
+        8.x-1.0.32:
+        - Update ChangeLog.yml
+        - Update ChangeLog.yml
+      ghmarkdown:
+        8.x-1.0.8:
+        - Update ChangeLog.yml
+        - Update ChangeLog.yml
+        8.x-1.0.9: null
+      auth_apic:
+        8.x-1.1.55:
+        - Update ChangeLog.yml
+        - Update ChangeLog.yml
+      mail_subscribers:
+        8.x-1.0.16:
+        - Update ChangeLog.yml
+        8.x-1.0.17:
+        - Update ChangeLog.yml
+        8.x-1.0.18: null
+      themegenerator:
+        8.x-1.0.19:
+        - Update ChangeLog.yml
+        8.x-1.0.20: null
+        8.x-1.0.21:
+        - Update ChangeLog.yml
+      featuredcontent:
+        8.x-1.0.12:
+        - Update ChangeLog.yml
+        8.x-1.0.13:
+        - Update ChangeLog.yml
+      apic_api:
+        8.x-1.0.28:
+        - Update ChangeLog.yml
+        8.x-1.0.29:
+        - Update ChangeLog.yml
+      apic_app:
+        8.x-1.4.37:
+        - Update ChangeLog.yml
+        - Tempmerge (#144)
+      ibm_apim:
+        8.x-1.2.93:
+        - Update ChangeLog.yml
+        8.x-1.2.94:
+        - Update ChangeLog.yml
+      consumerorg:
+        8.x-1.1.40:
+        - Update ChangeLog.yml
+        - Update ChangeLog.yml
+      apictest:
+        8.x-1.2.49:
+        - Update ChangeLog.yml
+        8.x-1.2.50:
+        - Update ChangeLog.yml
+  8.x-20190913-1644:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.0.30: null
+  8.x-20190916-0610:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.4.38: null
+        8.x-1.4.50: null
+  8.x-20190923-0900:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.4.51:
+        - Skip no creds (#148)
+  8.x-20190923-1921:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.0.31:
+        - fix application list for apis
+  8.x-20190926-0748:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.2.95:
+        - add newly created orgs to the org menu
+      consumerorg:
+        8.x-1.1.41:
+        - add newly created orgs to the org menu
+  8.x-20190926-0940:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.4.52:
+        - fix up credentials and subscriptions entity issues
+      apictest:
+        8.x-1.2.51:
+        - credentials need to have urls
+        8.x-1.2.52:
+        - fully fleshed credentials objects
+  8.x-20190926-1828:
+    commits:
+    - update patch
+    - drupal module updates
+    - typo in comment
+    - upgrade - force block_content before 8018
+    - run taxonomy 8502 upgrade before apim_profile 8007
+    modules:
+      product:
+        8.x-1.0.33:
+        - fix check
+        8.x-1.0.34:
+        - fix multi-plan tooltip
+      apic_app:
+        8.x-1.4.53:
+        - ensure cred url is set
+      apictest:
+        8.x-1.2.53:
+        - not needed
+  8.x-20190927-1155:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.0.32:
+        - wrong field name
+      apic_app:
+        8.x-1.4.54:
+        - Cred url fix 2018.4.1 (#150)
+  8.x-20190927-1626:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.4.55:
+        - need to use the correctly named field
+        - ensure credentials array is set
+        - do not create duplicate subscriptions
+      consumerorg:
+        8.x-1.1.42:
+        - force reload of current org permissions after changing owner
+  8.x-20190928-0740:
+    commits:
+    - 4.1.8
+    - force images to be saved in public dir
+    modules:
+      apic_api:
+        8.x-1.0.33:
+        - set allowed_values for api protocol in upgrade
+      ibm_apim:
+        8.x-1.2.96:
+        - drupal coding standards
+        - only load in published and deprecated products
+  8.x-20190930-1021:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.2.97:
+        - if delete cOrg need to select next one
+      consumerorg:
+        8.x-1.1.43:
+        - if delete cOrg need to select next one
+  8.x-20190930-1153:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-1.1.44:
+        - use envelope glyph icon
+        - need to ensure org data set correctly
+        8.x-1.1.45: null
+  8.x-20190930-1622:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.0.34:
+        - fix api upgrade
+      ibm_apim:
+        8.x-1.2.98:
+        - Issue
+  8.x-20191001-1405:
+    commits:
+    - include git commit file
+    modules:
+      apic_app:
+        8.x-1.4.56:
+        - handle sub being created before the app
+        - be more defensive to  handle the app not existing when create sub
+        - need to add new apps within the form element
+      ibm_apim:
+        8.x-1.2.99:
+        - need to add new apps within the form element
+  8.x-20191010-1712:

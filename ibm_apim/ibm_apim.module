@@ -1257,9 +1257,20 @@ function ibm_apim_language_switch_links_alter(&$links, $type, $path) {
       $pathUrl = $routeObject->getPath();
     }
   }
+
+  $language_manager = \Drupal::service('language_manager');
+  $languages = $language_manager->getLanguages();
+
   foreach ($links as &$link) {
-    // check the q isnt set to current path, empty string or something like fr/{currentpath} if so then remove it
-    if (isset($link['query']['q']) && ($link['query']['q'] === ltrim($pathUrl, '/') || $link['query']['q'] === '' || preg_match('@^[a-zA-Z-]+' . $pathUrl . '@', $link['query']['q']))) {
+    // check whether the q query parameter is superfluous, if it is just drop it.
+    // NOTE, when it is just a lang code this is side effect of running url negotiation via the language switcher running with nginx.
+
+    $is_currentpath = $link['query']['q'] === ltrim($pathUrl, '/');
+    $is_empty = $link['query']['q'] === '';
+    $is_lang_prefix =  preg_match('@^[a-zA-Z-]+' . $pathUrl . '@', $link['query']['q']);
+    $is_langcode = array_key_exists($link['query']['q'], $languages);
+
+    if (isset($link['query']['q']) && ($is_currentpath || $is_empty || $is_lang_prefix || $is_langcode)) {
       unset($link['query']['q']);
     }
   }

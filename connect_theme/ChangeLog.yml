@@ -1,0 +1,10 @@
+changes:
+    8.x-1.0.14:
+      - Update ChangeLog.yml
+
+    8.x-1.0.15:
+      - Update ChangeLog.yml
+    8.x-1.0.16:
+      - dropit styling tweak
+    8.x-1.0.17:
+      - tweak new app styling in subscribe wizard

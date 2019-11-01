@@ -15,7 +15,7 @@ namespace Drupal\apic_app\Form;
 
 use Drupal\apic_app\Event\SubscriptionDeleteEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
-use Drupal\apic_app\Subscription;
+use Drupal\apic_app\SubscriptionService;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -161,19 +161,15 @@ class UnsubscribeForm extends ConfirmFormBase {
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       $planName = '';
       // get details of the subscription before removing it
-      if (!empty($this->node->application_subscriptions->getValue())) {
-        $existingSubs = [];
-        foreach ($this->node->application_subscriptions->getValue() as $nextSub) {
-          $existingSubs[] = unserialize($nextSub['value'], ['allowed_classes' => FALSE]);
-        }
-        if (is_array($existingSubs)) {
-          foreach ($existingSubs as $sub) {
-            if (isset($sub['id']) && (string) $sub['id'] === (string) $this->subId) {
-              // found the one we want
-              $productUrl = $sub['product_url'];
-              $planName = $sub['plan'];
-              break;
-            }
+      $existingSubs = $this->node->application_subscription_refs->referencedEntities();
+
+      if (is_array($existingSubs)) {
+        foreach ($existingSubs as $sub) {
+          if ((string) $sub->id() === (string) $this->subId) {
+            // found the one we want
+            $productUrl = $sub->product_url();
+            $planName = $sub->plan();
+            break;
           }
         }
       }
@@ -196,7 +192,7 @@ class UnsubscribeForm extends ConfirmFormBase {
         $productTitle = $theProduct->getTitle();
       }
 
-      Subscription::delete($this->node->apic_url->value, $this->subId);
+      SubscriptionService::delete($this->node->apic_url->value, $this->subId);
 
       $this->messenger->addMessage(t('Application unsubscribed successfully.'));
       $currentUser = \Drupal::currentUser();
@@ -218,7 +214,7 @@ class UnsubscribeForm extends ConfirmFormBase {
 
       // Rules
       $moduleHandler = \Drupal::service('module_handler');
-      if ($moduleHandler->moduleExists('rules')) {
+      if ($theProduct !== NULL && $moduleHandler->moduleExists('rules')) {
         // Set the args twice on the event: as the main subject but also in the
         // list of arguments.
         $event = new SubscriptionDeleteEvent($this->node, $theProduct, $planName, [

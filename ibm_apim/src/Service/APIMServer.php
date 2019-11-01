@@ -365,10 +365,31 @@ class APIMServer implements ManagementServerInterface {
       'email' => $name,
       'realm' => $realm,
     ];
-    $response = ApicRest::post($url, json_encode($data));
+
+    // APIM returns a 400 and a specific error message if you submit a username
+    // instead of an email address and that username is not a valid user.  This
+    // can be used to enumerate valid users.  So, we hide the fact that we got
+    // this error message and return a 204 instead (which is what APIM returns
+    // if you submit an email address and that email is not a valid user).
+    // To save ourselves future hassle, we will actually remove all error
+    // messages from the data field (since we never want a message to display
+    // to the end user enabling future enumeration vulnerabilities).
+    $response = ApicRest::post($url, json_encode($data), 'user',FALSE);
+    $responseObject = $this->restResponseReader->read($response);
+
+    $code = $responseObject->getCode();
+    $data = $responseObject->getData();
+    if ($code === 400) {
+      $code = 204;
+      $responseObject->setCode($code);
+      $data['status'] = 204;
+    }
+    $data['message'] = array();
+    $responseObject->setData($data);
+    $responseObject->setErrors(array());
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $this->restResponseReader->read($response);
+    return $responseObject;
   }
 
   /**
@@ -461,23 +482,51 @@ class APIMServer implements ManagementServerInterface {
     $data = ['title' => $org->getName()];
     $response = ApicRest::post($url, json_encode($data));
     $responseObject = $this->restResponseReader->read($response);
+    $apim_utils = \Drupal::service('ibm_apim.apim_utils');
+
     if ($responseObject !== null) {
       $code = $responseObject->getCode();
       if ($code >= 200 && $code < 400) {
         $data = $responseObject->getData();
+
+        $data['url'] = $apim_utils->removeFullyQualifiedUrl($data['url']);
+        $data['owner_url'] = $apim_utils->removeFullyQualifiedUrl($data['owner_url']);
+
         if (isset($data['id'])) {
           $roleUrl = '/orgs/' . $data['id'] . '/roles';
           $roleResponse = ApicRest::get($roleUrl);
           $roleResponseObject = $this->restResponseReader->read($roleResponse);
           if ($roleResponseObject !== null && isset($roleResponseObject->getData()['results'])) {
-            $data['roles'] = $roleResponseObject->getData()['results'];
+            $rolesArray = $roleResponseObject->getData()['results'];
+
+            foreach($rolesArray as $key => $role) {
+              $rolesArray[$key]['url'] = $apim_utils->removeFullyQualifiedUrl($rolesArray[$key]['url']);
+              $rolesArray[$key]['org_url'] = $apim_utils->removeFullyQualifiedUrl($rolesArray[$key]['org_url']);
+              foreach ($rolesArray[$key]['permission_urls'] as $permKey => $perm) {
+                $rolesArray[$key]['permission_urls'][$permKey] = $apim_utils->removeFullyQualifiedUrl($rolesArray[$key]['permission_urls'][$permKey]);
+              }
+            }
+            $data['roles'] = $rolesArray;
           }
+
           $membersUrl = '/orgs/' . $data['id'] . '/members';
           $membersResponse = ApicRest::get($membersUrl);
 
           $membersResponseObject = $this->restResponseReader->read($membersResponse);
           if ($membersResponseObject !== null && isset($membersResponseObject->getData()['results'])) {
-            $data['members'] = $membersResponseObject->getData()['results'];
+            $membersArray = $membersResponseObject->getData()['results'];
+            foreach($membersArray as $key => $member) {
+              $membersArray[$key]['url'] = $apim_utils->removeFullyQualifiedUrl($membersArray[$key]['url']);
+              $membersArray[$key]['org_url'] = $apim_utils->removeFullyQualifiedUrl($membersArray[$key]['org_url']);
+              foreach ($membersArray[$key]['role_urls'] as $urlKey => $url) {
+                $membersArray[$key]['role_urls'][$urlKey] = $apim_utils->removeFullyQualifiedUrl($membersArray[$key]['role_urls'][$urlKey]);
+              }
+
+              $membersArray[$key]['user']['url'] = $apim_utils->removeFullyQualifiedUrl($membersArray[$key]['user']['url']);
+              $membersArray[$key]['user']['user_registry_url'] = $apim_utils->removeFullyQualifiedUrl($membersArray[$key]['user']['user_registry_url']);
+            }
+
+            $data['members'] = $membersArray;
           }
           $responseObject->setData($data);
         }

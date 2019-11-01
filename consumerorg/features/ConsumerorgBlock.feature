@@ -50,3 +50,101 @@ Feature: Consumer Organization Block
     And I should see the text "Create organization"
     And I should see the text "Select organization"
     And there are no errors
+
+
+  @api
+  Scenario: As owner of one con org, I can click on my con org and be taken to the myorg page
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.mail) |
+    Given I am logged in as "@data(andre.mail)"
+    Given I am on the homepage
+    Then I should see the text "@data(andre.consumerorg.title)"
+    And I should see the text "My organization"
+    When I click "My organization"
+    Then I should be on "/myorg"
+    And I should see the text "@data(andre.consumerorg.title)"
+    And I should see the text "@data(andre.mail)"
+    And I should see the text "Edit organization"
+    And I should see the text "Delete organization"
+    And I should see the text "Invite"
+    And there are no errors
+
+
+  @api
+  Scenario: As owner of multiple con orgs, I can click my con org and be taken to the myorg page
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+      | @data(andre[1].consumerorg.title) | @data(andre[1].consumerorg.name) | @data(andre[1].consumerorg.id) | @data(andre[0].mail) |
+    Given I am logged in as "@data(andre[0].mail)"
+    Given I am on the homepage
+    Then I should see the text "@data(andre[0].consumerorg.title)"
+    And I should see the text "@data(andre[1].consumerorg.title)"
+    And I should see the text "My organization"
+    When I click "My organization"
+    Then I should be on "/myorg"
+    And I should see the text "@data(andre[0].consumerorg.title)"
+    And I should see the text "@data(andre[0].mail)"
+    And I should see the text "Edit organization"
+    And I should see the text "Delete organization"
+    And I should see the text "Invite"
+    And there are no errors
+
+
+  @api
+  Scenario: As a con org owner of multiple orgs, I can switch to a different org from the conorg block, and view changed org in /myorg page
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+      | @data(andre[1].consumerorg.title) | @data(andre[1].consumerorg.name) | @data(andre[1].consumerorg.id) | @data(andre[0].mail) |
+    Given I am logged in as "@data(andre[0].mail)"
+    Given I am on the homepage
+    Then I should see the text "@data(andre[0].consumerorg.title)"
+    And I should see the text "@data(andre[1].consumerorg.title)"
+    When I click "@data(andre[1].consumerorg.title)"
+    When I go to "/myorg"
+    Then I should see the text "@data(andre[1].consumerorg.title)"
+#   But this doesn't really verify that the conorg has changed... as you can see both conorg titles on this page (apimesh/devportal#4688)
+    And I should see the text "Switched consumer organization to @data(andre[1].consumerorg.title)"
+#   You only see this message here because of the caching issue with behat tests (it should be seen on the homepage apimesh/devportal#4657)
+    And I should see the text "Edit organization"
+    And I should see the text "Delete organization"
+    And I should see the text "Invite"
+    And there are no errors
+
+
+#Commenting out this test - it doesn't work due to the caching issue: apimesh/devportal#4657
+#  @api
+#  Scenario: As a con org owner of multiple orgs, I can switch to a different org from the conorg block, and view changed org on the homepage
+#    Given users:
+#      | name              | mail              | pass                  | status |
+#      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+#    Given consumerorgs:
+#      | title                     | name                     | id                     | owner             |
+#      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
+#      | @data(andre[1].consumerorg.title) | @data(andre[1].consumerorg.name) | @data(andre[1].consumerorg.id) | @data(andre[0].mail) |
+#    Given I am logged in as "@data(andre[0].mail)"
+#    Given I am on the homepage
+#    Then I should see the text "@data(andre[0].consumerorg.title)"
+#    And I should see the text "@data(andre[1].consumerorg.title)"
+#    When I click "@data(andre[1].consumerorg.title)"
+#    Then print the current consumerorg
+#    Then I should be on "/"
+#    Given I am at "/ibm_apim/org/_consumer-orgs_1234_5678_982318735"
+#    Then dump the current html
+#    And there are messages
+#    And I should see the text "Switched consumer organization to @data(andre[1].consumerorg.title)"
+#    And I should see the text "My organization"
+#    And I should see the text "Create organization"
+#    And I should see the text "Select organization"
+#    And there are no errors

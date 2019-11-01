@@ -1,0 +1,12 @@
+changes:
+    8.x-1.2.49:
+      - Update ChangeLog.yml
+
+    8.x-1.2.50:
+      - Update ChangeLog.yml
+    8.x-1.2.51:
+      - credentials need to have urls
+    8.x-1.2.52:
+      - fully fleshed credentials objects
+    8.x-1.2.53:
+      - not needed

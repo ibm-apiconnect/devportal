@@ -35,4 +35,13 @@ interface UsersFieldDataServiceInterface {
    */
   public function setAdminRegistryUrl(): void;
 
+  /**
+   * used in upgrade code to support moving from apic_user_registry_url to registry_url
+   * update the (new) registry_url field with the value from (old) apic_user_registry_url field.
+   *
+   * load all users which have an empty registry_url field.
+   * if there is an apic_user_registry_url field with a value then use this to set registry_url.
+   */
+  public function updateRegistryUrlFieldIfEmpty(): void;
+
 }

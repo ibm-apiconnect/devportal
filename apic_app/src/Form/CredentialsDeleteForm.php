@@ -16,6 +16,7 @@ namespace Drupal\apic_app\Form;
 use Drupal\apic_app\Application;
 use Drupal\apic_app\Event\CredentialDeleteEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
+use Drupal\apic_app\Service\CredentialsService;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -54,16 +55,23 @@ class CredentialsDeleteForm extends ConfirmFormBase {
   protected $messenger;
 
   /**
-   * ApplicationCreateForm constructor.
-   *
-   * @param ApplicationRestInterface $restService
-   * @param UserUtils $userUtils
-   * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @var \Drupal\apic_app\Service\CredentialsService
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger) {
+  protected $credsService;
+
+  /**
+   * CredentialsDeleteForm constructor.
+   *
+   * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\apic_app\Service\CredentialsService $credsService
+   */
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger, CredentialsService $credsService) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->messenger = $messenger;
+    $this->credsService = $credsService;
   }
 
   /**
@@ -73,7 +81,8 @@ class CredentialsDeleteForm extends ConfirmFormBase {
     // Load the service required to construct this class
     return new static($container->get('apic_app.rest_service'),
       $container->get('ibm_apim.user_utils'),
-      $container->get('messenger'));
+      $container->get('messenger'),
+      $container->get('apic_app.credentials'));
   }
 
   /**
@@ -157,7 +166,7 @@ class CredentialsDeleteForm extends ConfirmFormBase {
     $result = $this->restService->deleteCredentials($url);
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       // update the stored app
-      Application::deleteCredential($appUrl, $this->credId);
+      $this->node = $this->credsService->deleteCredentials($this->node, $this->credId);
 
       // Calling all modules implementing 'hook_apic_app_creds_delete':
       $moduleHandler = \Drupal::moduleHandler();

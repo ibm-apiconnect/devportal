@@ -123,6 +123,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, UserInterface $user = NULL): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $this->user_profile = $account = $user;
     $user = $this->account;
@@ -241,6 +242,8 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
     }
 
     $form['#attached']['library'][] = 'ibm_apim/validate_password';
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
     return $form;
 
   }
@@ -249,6 +252,8 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
     $user = $this->currentUser();
 
     $moduleService = \Drupal::service('module_handler');
@@ -279,12 +284,16 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       $this->logger->notice('change password form validation for non-admin user');
       // no-op for non-admin
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
     // redirect to the home page regardless of outcome.
     $form_state->setRedirect('<front>');
 
@@ -319,6 +328,8 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
         //$form_state->setRedirect('user.logout');
       }
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
   }
 
   /**

@@ -48,3 +48,27 @@ Feature: Create consumer organization
     And I should see the text "Access denied"
     And I should see the text "You are not authorized to access this page."
     And there are no errors
+
+
+#This test is half done - cannot check display of org name until cache issue fixed: apimesh/devportal#4657
+  @api
+  Scenario: As Andre I can create a new consumer organization with ,&-! in the title
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+    And I am logged in as "@data(andre.name)"
+    And I am at "/myorg/create"
+    When I enter "New org1,&-!" for "title[0][value]"
+    And I press the "Submit" button
+    Then I should be on the homepage
+    And there are messages
+    And I should see the text "Consumer organization created successfully."
+#    Given the cache has been cleared
+#    When I go to "/myorg"
+#    Then I should see the text "New org1,&-!"
+#    Then dump the current html
+    And there are no errors

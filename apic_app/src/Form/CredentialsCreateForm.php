@@ -15,6 +15,7 @@ namespace Drupal\apic_app\Form;
 
 use Drupal\apic_app\Event\CredentialCreateEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
+use Drupal\apic_app\Service\CredentialsService;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
@@ -51,16 +52,23 @@ class CredentialsCreateForm extends FormBase {
   protected $messenger;
 
   /**
-   * ApplicationCreateForm constructor.
-   *
-   * @param ApplicationRestInterface $restService
-   * @param UserUtils $userUtils
-   * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @var \Drupal\apic_app\Service\CredentialsService
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger) {
+  protected $credsService;
+
+  /**
+   * CredentialsCreateForm constructor.
+   *
+   * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\apic_app\Service\CredentialsService $credsService
+   */
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger, CredentialsService $credsService) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->messenger = $messenger;
+    $this->credsService = $credsService;
   }
 
   /**
@@ -68,7 +76,10 @@ class CredentialsCreateForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     // Load the service required to construct this class
-    return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'), $container->get('messenger'));
+    return new static($container->get('apic_app.rest_service'),
+      $container->get('ibm_apim.user_utils'),
+      $container->get('messenger'),
+      $container->get('apic_app.credentials'));
   }
 
   /**
@@ -177,15 +188,6 @@ class CredentialsCreateForm extends FormBase {
       ]));
 
       // update the stored app with the additional creds
-      $existingCreds = [];
-      if (!empty($this->node->application_credentials->getValue())) {
-        foreach ($this->node->application_credentials->getValue() as $arrayValue) {
-          $unserialized = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-          if (!isset($unserialized['id']) || !isset($data['id']) || (string) $unserialized['id'] !== (string) $data['id']) {
-            $existingCreds[] = $unserialized;
-          }
-        }
-      }
       $newCred = [
         'id' => $data['id'],
         'client_id' => $data['client_id'],
@@ -199,17 +201,16 @@ class CredentialsCreateForm extends FormBase {
       if (isset($data['app_url'])) {
         $newCred['app_url'] = \Drupal::service('ibm_apim.apim_utils')->removeFullyQualifiedUrl($data['app_url']);
       }
-      if (isset($data['consumer_org_url'])) {
-        $newCred['consumer_org_url'] = \Drupal::service('ibm_apim.apim_utils')
-          ->removeFullyQualifiedUrl($data['consumer_org_url']);
+      if (isset($data['org_url'])) {
+        $newCred['consumerorg_url'] = \Drupal::service('ibm_apim.apim_utils')
+          ->removeFullyQualifiedUrl($data['org_url']);
       }
-      $existingCreds[] = $newCred;
-      $newCreds = [];
-      foreach ($existingCreds as $nextCred) {
-        $newCreds[] = serialize($nextCred);
+      else {
+        $org = $this->userUtils->getCurrentConsumerorg();
+        $newCred['consumerorg_url'] = $org['url'];
       }
-      $this->node->set('application_credentials', $newCreds);
-      $this->node->save();
+      $this->node = $this->credsService->createOrUpdateSingleCredential($this->node, $newCred);
+
       // Calling all modules implementing 'hook_apic_app_creds_create':
       $moduleHandler = \Drupal::moduleHandler();
       $moduleHandler->invokeAll('apic_app_creds_create', [

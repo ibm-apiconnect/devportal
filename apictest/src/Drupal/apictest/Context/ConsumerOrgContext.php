@@ -17,6 +17,7 @@ use Behat\Gherkin\Node\TableNode;
 use Drupal\apictest\ApicTestUtils;
 use Drupal\Component\Utility\Html;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
+use Drupal\consumerorg\ApicType\Role;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\ibm_apim\ApicUser;
 use Drupal\node\Entity\Node;
@@ -50,7 +51,13 @@ class ConsumerOrgContext extends RawDrupalContext {
       $org->setTitle($row['title']);
       $org->setName($row['name']);
       $org->setId($row['id']);
-      $org->setOwnerUrl($row['owner']);
+      if (isset($row['owner_uid'])) {
+        $user = User::load($row['owner_uid']);
+        $org->setOwnerUrl($user->get('apic_url')->value);
+      }
+      else {
+        $org->setOwnerUrl($row['owner']);
+      }
       $org->setOrgUrl('/orgs/1234');
       $org->setCatalogUrl('/catalogs/1234/5678');
       $org->setUrl('/consumer-orgs/1234/5678/' . $row['id']);
@@ -70,22 +77,20 @@ class ConsumerOrgContext extends RawDrupalContext {
 
       $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
       $consumerOrgService->createOrUpdateNode($org, 'test');
-      $userService = \Drupal::service('ibm_apim.apicuser');
 
-      // Need to update the user record with a consumerorg_url as well
-      $ids = \Drupal::entityQuery('user')->execute();
-      $users = User::loadMultiple($ids);
+      if (isset($row['owner_uid'])) {
+        $user = User::load($row['owner_uid']);
+        $this->linkUserAndOrg($org, $user, $ownerRole);
+      }
+      else {
+        // Need to update the user record with a consumerorg_url as well
+        $ids = \Drupal::entityQuery('user')->execute();
+        $users = User::loadMultiple($ids);
 
-      foreach ($users as $drupalUser) {
-        if ($drupalUser->getAccountName() === $row['owner'] && !$consumerOrgService->isConsumerorgAssociatedWithAccount($org->getUrl(), $drupalUser)) {
-          $drupalUser->consumer_organization[] = $org->getUrl();
-          $drupalUser->consumerorg_url[] = $org->getUrl();
-          $drupalUser->save();
-
-          $user = $userService->parseDrupalAccount($drupalUser);
-          ApicTestUtils::addMemberToOrg($org, $user, [$ownerRole]);
-
-          print('Saved user ' . $drupalUser->getAccountName() . ' after adding consumerorg field ' . $org->getUrl() . "\n");
+        foreach ($users as $drupalUser) {
+          if ($drupalUser->getAccountName() === $row['owner'] && !$consumerOrgService->isConsumerorgAssociatedWithAccount($org->getUrl(), $drupalUser)) {
+            $this->linkUserAndOrg($org, $drupalUser, $ownerRole);
+          }
         }
       }
       $consumerOrgService->createOrUpdateNode($org, 'test');
@@ -250,6 +255,28 @@ class ConsumerOrgContext extends RawDrupalContext {
 
     $num = \sizeof($enabled);
     return $num;
+  }
+
+  /**
+   * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
+   * @param $user
+   * @param $userService
+   * @param \Drupal\consumerorg\ApicType\Role $ownerRole
+   *
+   * @return mixed
+   */
+  private function linkUserAndOrg(ConsumerOrg $org, $user, Role $ownerRole) {
+
+    $userService = \Drupal::service('ibm_apim.apicuser');
+
+    $user->consumer_organization[] = $org->getUrl();
+    $user->consumerorg_url[] = $org->getUrl();
+    $user->save();
+
+    $apic_user = $userService->parseDrupalAccount($user);
+    ApicTestUtils::addMemberToOrg($org, $apic_user, [$ownerRole]);
+
+    print('Saved user ' . $user->getAccountName() . '(uid=' . $user->id() .') after adding consumerorg field ' . $org->getUrl() . "\n");
   }
 
 

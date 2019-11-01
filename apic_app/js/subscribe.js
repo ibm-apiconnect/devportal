@@ -14,9 +14,9 @@
       $(window).on("dialog:aftercreate", function (event, ui) {
         setTimeout(function () {
           // cache reference to all radio buttons.
-          var radioButtons = $('input[type="radio"]', "#drupal-modal .modal-dialog .application-subscription-form");
+          const radioButtons = $('input[type="radio"]', "#drupal-modal .modal-dialog .application-subscription-form");
 
-          var checkRadios = function (radioButtons) {
+          const checkRadios = function (radioButtons) {
             var anyRadioButtonHasValue = false;
             // iterate through all radio buttons
             radioButtons.each(function () {
@@ -32,8 +32,7 @@
             if (anyRadioButtonHasValue) {
               // enable submit button.
               $("button.form-submit", ".modal-dialog").removeAttr("disabled");
-            }
-            else {
+            } else {
               // disable submit button.
               $("button.form-submit", ".modal-dialog").attr("disabled", "");
             }

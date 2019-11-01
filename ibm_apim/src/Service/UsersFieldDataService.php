@@ -17,6 +17,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\ibm_apim\Service\Interfaces\UsersFieldDataServiceInterface;
 use Psr\Log\LoggerInterface;
+use \Drupal\user\Entity\User;
 
 class UsersFieldDataService implements UsersFieldDataServiceInterface {
 
@@ -30,12 +31,24 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
 
   private $user_name_registry_index_fields = ['name', 'registry_url', 'langcode'];
 
+  /**
+   * @var \Drupal\Core\Database\Schema
+   */
   protected $schema;
 
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
   protected $logger;
 
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
+   */
   protected $userRegistryService;
 
   public function __construct(Connection $database,
@@ -101,6 +114,38 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
     }
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $url);
+    }
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function updateRegistryUrlFieldIfEmpty(): void {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
+
+    $storage = $this->entityTypeManager->getStorage('user');
+    $entity_ids = $storage->getQuery()
+      ->condition('uid', [0,1], 'NOT IN')
+      ->condition('registry_url', NULL, 'IS NULL')
+      ->execute();
+
+    foreach ($entity_ids as $user_id) {
+      $user = User::load($user_id);
+
+      if ($user->hasField('apic_user_registry_url') && $user->get('apic_user_registry_url')->value !== NULL) {
+
+        $this->logger->notice('updating user %uid registry_url with %apic_user_registry_url', [
+          '%uid' =>$user->id(),
+          '%apic_user_registry_url' => $user->get('apic_user_registry_url')->value
+        ]);
+        $user->set('registry_url', $user->get('apic_user_registry_url')->value);
+        $user->save();
+      }
+    }
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
   }
 

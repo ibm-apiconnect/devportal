@@ -27,7 +27,7 @@ Feature: ConsumerorgRoles
     And I should see a "#edit-apic-summary-0-value" element
     And I should see a "#edit-application-redirect-endpoints-0-value" element
     And I should see a "#edit-submit" element
-    Given I enter "app12345" for "edit-title-0-value"
+    Given I enter "app34567" for "edit-title-0-value"
     And I enter "this is some text" for "edit-apic-summary-0-value"
     When I press the "Submit" button
     When I press the "Continue" button
@@ -36,8 +36,8 @@ Feature: ConsumerorgRoles
     Given I am logged in as "Dave"
     Then print the current consumerorg
     Given I am at "/application"
-    And I should see "app12345"
-    When I click "app12345"
+    And I should see "app34567"
+    When I click "app34567"
     When I click on element ".applicationMenu .editApplication a"
     Then I should see a "#edit-title-0-value" element
     Given I am not logged in
@@ -45,9 +45,10 @@ Feature: ConsumerorgRoles
     Given I am logged in as "Vicky"
     Then print the current consumerorg
     Given I am at "/application"
-    And I should see "app12345"
+    And I should see "app34567"
     # Intentional use of "Given I am on" as opposed to "Given I am at" as it skips the HTTP code check
-    Given I am on "/application/12345/edit"
+    Given I am on "/application/34567/edit"
     Then I should see "Access denied"
     Given I am on "/application/new"
     Then I should see "Access denied"
+    And I do not have any applications

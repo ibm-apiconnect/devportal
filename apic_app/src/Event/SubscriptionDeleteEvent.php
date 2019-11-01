@@ -17,7 +17,7 @@ use Symfony\Component\EventDispatcher\Event;
 /**
  * Event that is fired when a subscription is deleted.
  *
- * @see Subscription::deleteNode()
+ * @see SubscriptionService::deleteNode()
  */
 class SubscriptionDeleteEvent extends Event {
 

@@ -107,7 +107,11 @@ class MockAPIMServer implements ManagementServerInterface {
    * @inheritdoc
    */
   public function deleteMe(): ?RestResponse {
-    // TODO: Implement deleteMe() method.
+    $response = new RestResponse();
+
+    $response->setCode(200);
+
+    return $response;
   }
 
   /**
@@ -201,22 +205,22 @@ class MockAPIMServer implements ManagementServerInterface {
             'id' => '9bfd584a-b907-4209-869e-9ef481f470ad',
             'name' => 'andremember',
             'title' => 'andremember',
-            'url' => 'https://apimdev0133.hursley.ibm.com/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029/users/9bfd584a-b907-4209-869e-9ef481f470ad',
+            'url' => '/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029/users/9bfd584a-b907-4209-869e-9ef481f470ad',
             'state' => 'enabled',
             'identity_provider' => 'dev-idp',
             'username' => 'andremember',
             'email' => 'andremember@example.com',
             'first_name' => 'andremember',
             'last_name' => 'andresson',
-            'user_registry_url' => 'https://apimdev0133.hursley.ibm.com/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029',
+            'user_registry_url' => '/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029',
           ],
         'role_urls' => [
-            'https://apimdev0133.hursley.ibm.com/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/roles/b8b957dc-15fb-4420-805a-3a7db9eb0fe9',
+            '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/roles/b8b957dc-15fb-4420-805a-3a7db9eb0fe9',
           ],
         'created_at' => '2019-07-03T10:10:20.403Z',
         'updated_at' => '2019-07-03T10:10:20.403Z',
-        'org_url' => 'https://apimdev0133.hursley.ibm.com/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958',
-        'url' => 'https://apimdev0133.hursley.ibm.com/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/members/cfc5ecd8-342d-4ae6-a1b9-0e49cb836c1b',
+        'org_url' => '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958',
+        'url' => '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/members/cfc5ecd8-342d-4ae6-a1b9-0e49cb836c1b',
       ]],
     ];
     $response->setData($data);
@@ -271,8 +275,11 @@ class MockAPIMServer implements ManagementServerInterface {
    * @inheritDoc
    */
   public function deleteConsumerOrg(ConsumerOrg $org) {
-    \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::deleteConsumerOrg() is missing!');
-    return NULL;
+    $response = new RestResponse();
+
+    $response->setCode(200);
+
+    return $response;
   }
 
   /**

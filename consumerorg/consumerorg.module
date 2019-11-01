@@ -270,14 +270,21 @@ function consumerorg_preprocess_node(&$variables): void {
       // add pending invitations into the list of members.
       $cOrgInvites = $variables['node']->consumerorg_invites->getValue();
       if ($cOrgInvites !== NULL) {
+        $cOrgObject = $cOrgService->getConsumerOrgAsObject($variables['node']->consumerorg_url->value);
+        $memberEmails = $cOrgObject->getMemberEmails();
+        if ($memberEmails === NULL) {
+          $memberEmails = [];
+        }
         foreach ($cOrgInvites as $invites_array) {
           $invite = unserialize($invites_array['value'], ['allowed_classes' => FALSE]);
-          $invitedMember = [];
-          $invitedMember['details'] = $invite['email'];
-          $invitedMember['state'] = 'Pending';
-          $invitedMember['id'] = basename($invite['url']);
-          $invitedMember['role_urls'] = $invite['role_urls'];
-          $members[] = $invitedMember;
+          if (!in_array($invite['email'], $memberEmails, FALSE)) {
+            $invitedMember = [];
+            $invitedMember['details'] = $invite['email'];
+            $invitedMember['state'] = 'Pending';
+            $invitedMember['id'] = basename($invite['url']);
+            $invitedMember['role_urls'] = $invite['role_urls'];
+            $members[] = $invitedMember;
+          }
         }
       }
 
@@ -325,6 +332,11 @@ function consumerorg_preprocess_node(&$variables): void {
         $ibmFields = $cOrgService->getIBMFields();
         $merged = array_merge($coreFields, $ibmFields);
         $custom_fields = array_diff($fieldList, $merged);
+      }
+      $variables['analytics_access'] = FALSE;
+      $analyticsAccessCheck = \Drupal::service('ibm_apim.analytics_access_checker')->access();
+      if (isset($analyticsAccessCheck)) {
+        $variables['analytics_access'] = $analyticsAccessCheck->isAllowed();
       }
       $variables['edit_mode'] = $editMode;
       $variables['images_path'] = drupal_get_path('module', 'ibm_apim');

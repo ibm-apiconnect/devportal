@@ -178,7 +178,7 @@ class AnalyticsController extends ControllerBase {
             $verb = 'POST';
             $url = $url . '?org_id=' . $pOrgId . '&catalog_id=' . $catalogId . '&developer_org_id=' . $consumerorgId . '&manage=true&dashboard=true';
 
-            \Drupal::logger('ibm_apim')->info('Analytics proxy URL is: %url, verb is %verb', [
+            \Drupal::logger('ibm_apim')->debug('Analytics proxy URL is: %url, verb is %verb', [
               '%url' => $url,
               '%verb' => $verb,
             ]);

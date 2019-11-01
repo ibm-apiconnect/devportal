@@ -128,4 +128,11 @@ function ibm_apim_update_8102() {
 
 }
 
+function ibm_apim_update_8103() {
 
+  \Drupal::logger('ibm_apim_update')->notice('copying apic_user_registry_url to registry_url for users.');
+
+  $db_service = \Drupal::service('ibm_apim.db_usersfielddata');
+  $db_service->updateRegistryUrlFieldIfEmpty();
+
+}

@@ -15,7 +15,7 @@ namespace Drupal\apic_app\Service;
 
 use Drupal\apic_app\Application;
 use Drupal\apic_app\Event\SubscriptionCreateEvent;
-use Drupal\apic_app\Subscription;
+use Drupal\apic_app\SubscriptionService;
 use Drupal\ibm_apim\ApicRest;
 use Drupal\node\Entity\Node;
 
@@ -379,7 +379,8 @@ class ApplicationRestService implements ApplicationRestInterface {
 
               // TODO set billingUrl correctly
               $billingUrl = NULL;
-              Subscription::create($appUrl, $sub['id'], $productUrl, $sub['plan'], $state, $billingUrl);
+              $org_url = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerOrg()['url'];
+              SubscriptionService::create($appUrl, $sub['id'], $productUrl, $sub['plan'], $org_url, $state, $billingUrl);
             } catch (\Exception $e) {
 
             }

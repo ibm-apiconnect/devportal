@@ -44,7 +44,7 @@ Feature: Application Rendering
       | MyApp2 | 1234567@now | @data(andre.consumerorg.id) |
     Given subscriptions:
       | org_id                      | app_id  | sub_id | product   | plan    |
-      | @data(andre.consumerorg.id) | 1234567@now | abcde  | 123456 | default |
+      | @data(andre.consumerorg.id) | 1234567@now | abcde@now  | 123456 | default |
     And I am at "/application"
     Then I should see the text "MyApp2"
     And there are no errors
@@ -77,7 +77,7 @@ Feature: Application Rendering
       | MyApp2 | 1234567@now | @data(andre.consumerorg.id) |
     Given subscriptions:
       | org_id                      | app_id  | sub_id | product   | plan    |
-      | @data(andre.consumerorg.id) | 1234567@now | abcde  | 123456 | default |
+      | @data(andre.consumerorg.id) | 1234567@now | abcde@now  | 123456 | default |
     And I am at "/application"
     Then I should see the text "MyApp2"
     And there are no errors

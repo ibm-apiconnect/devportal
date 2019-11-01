@@ -492,6 +492,11 @@ tfoot .apicFixedColumn {
   line-height: 2.5rem;
 }
 
+.apicTableFixedColumn tr .planDescription {
+  line-height: 1.2rem;
+  padding-bottom: 0.5rem;
+}
+
 .apicTableFixedColumn tfoot td {
   border-bottom: none;
   padding: 20px 0;
@@ -737,6 +742,7 @@ div[class*="planColumn"]:not(:last-of-type)
 
 .bx--card .apicProductCardMain .bx--about__title--name {
   width: 13rem;
+  height: 3rem;
   padding-bottom: 0;
 }
 

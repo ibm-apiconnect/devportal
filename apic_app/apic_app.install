@@ -17,6 +17,8 @@
  */
 
 use Drupal\node\Entity\Node;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 
 /**
  * Changes from 8.x-1.0 to 8.x-1.1 :
@@ -31,7 +33,7 @@ function apic_app_update_8101() {
 
   // check if new field exists, skip if it does
   // it shouldn't, but better safe than sorry
-  $newFieldConfig = \Drupal\field\Entity\FieldConfig::loadByName('node', 'application', 'application_image');
+  $newFieldConfig = FieldConfig::loadByName('node', 'application', 'application_image');
   if (!isset($newFieldConfig) || empty($newFieldConfig)) {
     /**
      * 1. Gather all apic_image values for applications and store for later
@@ -60,7 +62,7 @@ function apic_app_update_8101() {
     }
 
     // Create a new field storage 'application_image'
-    $fieldStorageConfig = \Drupal\field\Entity\FieldStorageConfig::create([
+    $fieldStorageConfig = FieldStorageConfig::create([
       'field_name' => 'application_image',
       'entity_type' => 'node',
       'type' => 'image',
@@ -70,7 +72,7 @@ function apic_app_update_8101() {
     $fieldStorageConfig->save();
 
     // Create a new field for the application module
-    $fieldConfig = \Drupal\field\Entity\FieldConfig::create([
+    $fieldConfig = FieldConfig::create([
       'field_name' => 'application_image',
       'entity_type' => 'node',
       'bundle' => 'application',
@@ -105,7 +107,7 @@ function apic_app_update_8101() {
     }
 
     // Remove the old apic_image field from application
-    $fieldConfig = \Drupal\field\Entity\FieldConfig::loadByName('node', 'application', 'apic_image');
+    $fieldConfig = FieldConfig::loadByName('node', 'application', 'apic_image');
     $fieldConfig->delete();
   }
 }
@@ -115,7 +117,7 @@ function apic_app_update_8101() {
  *  - change field length for application_redirect_endpoints
  */
 function apic_app_update_8102() {
-  $fieldStorageConfig = \Drupal\field\Entity\FieldStorageConfig::loadByName('node', 'application_redirect_endpoints');
+  $fieldStorageConfig = FieldStorageConfig::loadByName('node', 'application_redirect_endpoints');
   $length = $fieldStorageConfig->getSetting('max_length');
   if (!isset($length) || !is_int($length) || $length < 999) {
     $length = 999;
@@ -145,4 +147,118 @@ function apic_app_update_8103() {
     }
     $formDisplay->save();
   }
+}
+
+/**
+ * Changes from 8.x-1.4 to 8.x-1.5 :
+ *  - add subscription_refs field
+ *  - add credentials_refs field
+ */
+function apic_app_update_8104() {
+  // Create a new field storage 'application_image'
+  $fieldStorageConfig = FieldStorageConfig::create([
+    'field_name' => 'application_subscription_refs',
+    'entity_type' => 'node',
+    'type' => 'entity_reference',
+    'required' => FALSE,
+    'translatable' => FALSE,
+    'cardinality' => -1,
+    'settings' => ['target_type' => 'apic_app_subscription'],
+  ]);
+  $fieldStorageConfig->save();
+
+  $fieldStorageConfig = FieldStorageConfig::create([
+    'field_name' => 'application_credentials_refs',
+    'entity_type' => 'node',
+    'type' => 'entity_reference',
+    'required' => FALSE,
+    'translatable' => FALSE,
+    'cardinality' => -1,
+    'settings' => ['target_type' => 'apic_app_credentials'],
+  ]);
+  $fieldStorageConfig->save();
+
+  // Create a new field for the application module
+  $fieldConfig = FieldConfig::create([
+    'field_name' => 'application_subscription_refs',
+    'entity_type' => 'node',
+    'bundle' => 'application',
+    'translatable' => FALSE,
+    'field_type' => 'entity_reference',
+    'label' => t('Subscription References'),
+    'settings' => ['handler' => 'default:apic_app_subscription', 'handler_settings' => ['target_bundles' => NULL, 'auto_create' => FALSE]],
+  ]);
+  $fieldConfig->save();
+
+  // Create a new field for the application module
+  $fieldConfig = FieldConfig::create([
+    'field_name' => 'application_credentials_refs',
+    'entity_type' => 'node',
+    'bundle' => 'application',
+    'translatable' => FALSE,
+    'field_type' => 'entity_reference',
+    'label' => t('Credentials References'),
+    'settings' => ['handler' => 'default:apic_app_credentials', 'handler_settings' => ['target_bundles' => NULL, 'auto_create' => FALSE]],
+  ]);
+  $fieldConfig->save();
+
+  // Modify entity form display modes to show application_image field
+  $viewDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.application.default');
+  if ($viewDisplay !== NULL) {
+    // ensure we can handle this existing already too
+    $component = $viewDisplay->getComponent('application_subscription_refs');
+    if (isset($component)) {
+      $viewDisplay->removeComponent('application_subscription_refs');
+    }
+    // remove old subscriptions field
+    $component = $viewDisplay->getComponent('application_subscriptions');
+    if (isset($component)) {
+      $viewDisplay->removeComponent('application_subscriptions');
+    }
+    // add our new field
+    $viewDisplay->setComponent('application_subscription_refs', [
+      'weight' => 118,
+      'label' => 'above',
+      'settings' => ['link' => TRUE],
+      'region' => 'content',
+      'type' => 'entity_reference_label',
+    ]);
+    // ensure we can handle this existing already too
+    $component = $viewDisplay->getComponent('application_credentials_refs');
+    if (isset($component)) {
+      $viewDisplay->removeComponent('application_credentials_refs');
+    }
+    // remove old credentials field
+    $component = $viewDisplay->getComponent('application_credentials');
+    if (isset($component)) {
+      $viewDisplay->removeComponent('application_credentials');
+    }
+    // add our new field
+    $viewDisplay->setComponent('application_credentials_refs', [
+      'weight' => 113,
+      'label' => 'above',
+      'settings' => ['link' => TRUE],
+      'region' => 'content',
+      'type' => 'entity_reference_label',
+    ]);
+    $viewDisplay->save();
+  }
+
+  // Modify entity form display modes to hide the old subscriptions and credentials fields (and new ones)
+  $formDisplay = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('node.application.default');
+  if ($formDisplay !== NULL) {
+    foreach ([
+               'application_subscriptions',
+               'application_subscription_refs',
+               'application_credentials',
+               'application_credentials_refs',
+             ] as $field_name) {
+      $component = $formDisplay->getComponent($field_name);
+      if (isset($component)) {
+        $formDisplay->removeComponent($field_name);
+      }
+    }
+    $formDisplay->save();
+  }
+
 }

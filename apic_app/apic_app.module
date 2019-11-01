@@ -237,10 +237,8 @@ function apic_app_preprocess_node(&$variables) {
         $ibmApimShowVersions = TRUE;
       }
       $variables['showVersions'] = $ibmApimShowVersions;
-      $credentials = [];
-      foreach ($variables['node']->application_credentials->getValue() as $arrayValue) {
-        $credentials[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-      }
+      $credentials = $variables['node']->application_credentials_refs->referencedEntities();
+
       if ($credentials !== NULL && is_array($credentials)) {
         $variables['credentials'] = $credentials;
         $variables['#attached']['drupalSettings']['application']['credentials'] = $credentials;

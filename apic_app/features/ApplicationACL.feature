@@ -19,6 +19,8 @@ Feature: ApplicationACL
     Given I am logged in as "andre_one"
     Then I should not see the text "Unrecognized username or password"
     And I should not see the text "Log in"
+    Given I do not have any applications
     Given I create an application named "app1_@now" id "app1Id_@now" consumerorgurl "/consumer-orgs/1234/5678/a18843f3e4b07631568a159d"
     Then I should have an application named "app1_@now" id "app1Id_@now"
     And The application with the name "app1_@now" and id "app1Id_@now" should not be visible to "andre_two"
+    And I do not have any applications

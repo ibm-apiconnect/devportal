@@ -322,7 +322,7 @@ class Api {
         $apiType = 'rest';
         if (isset($api['consumer_api']['x-ibm-configuration']['type'])) {
           $lowerType = mb_strtolower($api['consumer_api']['x-ibm-configuration']['type']);
-          if ($lowerType === 'rest' || $lowerType === 'wsdl' || $lowerType === 'oauth') {
+          if ($lowerType === 'rest' || $lowerType === 'wsdl' || $lowerType === 'oauth' || $lowerType === 'graphql') {
             $apiType = $lowerType;
           }
         }

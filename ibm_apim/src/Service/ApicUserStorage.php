@@ -21,6 +21,7 @@ use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
+use Drupal\user\Entity\User;
 
 class ApicUserStorage implements ApicUserStorageInterface {
 
@@ -109,7 +110,7 @@ class ApicUserStorage implements ApicUserStorageInterface {
     return $account;
   }
 
-  public function load(ApicUser $user): ?EntityInterface {
+  public function load(ApicUser $user, bool $check_legacy_field = FALSE): ?EntityInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -125,10 +126,39 @@ class ApicUserStorage implements ApicUserStorageInterface {
       'name' => $user->getUsername(),
       'registry_url' => $user->getApicUserRegistryUrl()
     ]);
-    if (\sizeof($users) > 1) {
-      throw new \Exception(sprintf('Multiple users (%d) returned matching username "%s" in "%s"', \sizeof($users), $user->getUsername(), $user->getApicUserRegistryUrl()));
-    }
     $this->logger->debug('loaded %num users', ['%num'=> \sizeof($users)]);
+
+
+    if (\sizeof($users) > 1) {
+      throw new \Exception(sprintf('Multiple users (%d) returned matching username "%s" in registry_url "%s"', \sizeof($users), $user->getUsername(), $user->getApicUserRegistryUrl()));
+    }
+    elseif ($check_legacy_field && \sizeof($users) === 0) {
+      $this->logger->debug('no users found based on name and registry_url, trying name and apic_user_registry_url');
+      $users = $this->userStorage->loadByProperties([
+        'name' => $user->getUsername(),
+        'apic_user_registry_url' => $user->getApicUserRegistryUrl()
+      ]);
+      $this->logger->debug('loaded %num users using name and apic_user_registry_url', ['%num'=> \sizeof($users)]);
+
+      if (\sizeof($users) > 1) {
+        throw new \Exception(sprintf('Multiple users (%d) returned matching username "%s" in apic_user_registry_url "%s"', \sizeof($users), $user->getUsername(), $user->getApicUserRegistryUrl()));
+      }
+      elseif (\sizeof($users) === 1){
+        $this->logger->debug('updating registry_url based on apic_user_registry_url');
+        $account = \reset($users);
+        $user_to_update = User::load($account->id());
+        if ($user_to_update->hasField('apic_user_registry_url') && $user_to_update->get('apic_user_registry_url')->value !== NULL) {
+          $this->logger->notice('updating user %uid registry_url with %apic_user_registry_url', [
+            '%uid' =>$user_to_update->id(),
+            '%apic_user_registry_url' => $user_to_update->get('apic_user_registry_url')->value
+          ]);
+          $user_to_update->set('registry_url', $user_to_update->get('apic_user_registry_url')->value);
+          $user_to_update->save();
+        }
+        $users = [$account];
+      }
+
+    }
     $returnValue = \sizeof($users) === 1 ? reset($users) : NULL;
 
     if (\function_exists('ibm_apim_exit_trace')) {

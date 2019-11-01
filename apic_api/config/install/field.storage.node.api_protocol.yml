@@ -19,6 +19,9 @@ settings:
     -
       value: oauth
       label: 'OAuth Provider'
+    -
+      value: graphql
+      label: GraphQL
   allowed_values_function: ''
 module: options
 locked: false

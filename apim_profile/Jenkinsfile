@@ -2,7 +2,7 @@
 
 // Load shared pipeline library
 @Library('velox') _
-def cronInterval = env.BRANCH_NAME =~ /^master$|^cd$|^\d+\.\d+$|^\d+\.\d+\.\d+$/ ? "20 */3 * * 1-5" : ""
+def cronInterval = isPromotableBranch(env.BRANCH_NAME) || env.BRANCH_NAME == "develop-2018.4.1" ? "20 */3 * * 1-5" : ""
 
 properties([
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '')),
@@ -27,7 +27,14 @@ veloxPipeline(pipelineOpts) { p ->
   env.GIT_COMMIT_MSG = sh (script: 'git log --format=%B -n 1 $GIT_COMMIT | head -n 1', returnStdout: true).trim()
   env.UP_BUILD_URL = getBuildCauses().first().BUILD_URL ?: ''
   env.UP_BUILD_NAME = getBuildCauses().first().BUILD_NAME ?: 'build'
-  def releaseName = env.CHANGE_ID ? env.CHANGE_TARGET : env.BRANCH_NAME
+  def releaseName = env.CHANGE_ID ? env.CHANGE_BRANCH : env.BRANCH_NAME
+  def LOCAL_BRANCH_NAME = env.BRANCH_NAME
+  def buildResult
+
+  p.PR {
+    LOCAL_BRANCH_NAME = releaseName
+    buildResult = portal.getLatestBranchBuildResult(LOCAL_BRANCH_NAME)
+  }
 
   p.promotableBranch {
     def buildInfo = Artifactory.newBuildInfo()
@@ -57,115 +64,69 @@ veloxPipeline(pipelineOpts) { p ->
     }
   }
 
-  p.common {
+  p.promotableBranch {
     stage('Check for Devportal Version Change') {
-      npmutils = library('bmxNative').jenkinsLibs.Node.new()
-      npmutils.writeDotNpmrc()
-
       def localPath = "${HOME}/go/src/github.ibm.com/apimesh/devportal-apim-profile"
       def modulesYaml = readYaml file: MODULES_YAML_FILE
-      def modulesMap = portal.getModuleRepositories()
       MODULE_BRANCH = 'master'
-      if (env.BRANCH_NAME == '2018.4.1') {
+      if (LOCAL_BRANCH_NAME == '2018.4.1' || LOCAL_BRANCH_NAME == 'cd') {
         MODULE_BRANCH = '2018.4.1'
       }
 
-      modulesMap.each{ moduleName, moduleRepoName -> 
-        sh portal.cloneGitRepo(moduleRepoName, MODULE_BRANCH, 'apimesh', null)
-      }
-      
-      modulesMap.each{ moduleName, moduleRepoName -> 
-        dir("${localPath}/${moduleRepoName}") {
-          def moduleVersion = modulesYaml[moduleName]
-          def moduleInfo = readYaml(file: "${moduleName}.info.yml")
-          def latestVersion = moduleInfo.version
+      portal.cloneAllModuleRepos(MODULE_BRANCH)
+      def updatedModulesYaml = portal.updateYamlWithNewModuleVersions(localPath, modulesYaml)
 
-          println "${moduleVersion} == ${latestVersion} ?"
-          if (latestVersion != moduleVersion) {
-            println "Module: ${moduleName} has changed it's version from ${moduleVersion} to ${latestVersion}"
-            modulesYaml[moduleName] = latestVersion
-            MODULES_CHANGED = true
-          } else {
-            println "Module: ${moduleName} has not changed it's version"
-          }
-        }
-      }
-
-      if (MODULES_CHANGED == true) { 
-        println "Saving new ${MODULES_YAML_FILE} file. This will be pushed to the repo if we're on a main branch (e.g. master, 2018.x)"
+      if (updatedModulesYaml != null) { 
+        MODULES_CHANGED = true
+        println "Saving new ${MODULES_YAML_FILE} file. This will be pushed to the repo if we're on a promotable branch"
         // the file must not exist, otherwise writeYaml will fail
         sh "rm -f ${MODULES_YAML_FILE}"
         writeYaml file: MODULES_YAML_FILE, data: modulesYaml
       }
+    }
+  }
 
+  p.common {
+    // end build immediately if this is a PR build and the branch build completed with SUCCESS or FAILIURE
+    if (buildResult == 'SUCCESS' || buildResult == 'FAILURE') {
+      currentBuild.result = buildResult
+      return
     }
 
     try {
-      if (MODULES_CHANGED == true || FORCE_RUN == true) {
-        stage('Check out portal-common') {
-          MODULE_BRANCH = 'master'
-          if (env.BRANCH_NAME == '2018.4.1') {
-            MODULE_BRANCH = '2018.4.1'
+      ansiColor('xterm') {
+        npmutils = library('bmxNative').jenkinsLibs.Node.new()
+        npmutils.writeDotNpmrc()
+        if (MODULES_CHANGED == true || FORCE_RUN == true) {
+          stage('Check out portal-common') {
+            MODULE_BRANCH = 'master'
+            if (env.BRANCH_NAME == '2018.4.1' || env.BRANCH_NAME == 'cd') {
+              MODULE_BRANCH = '2018.4.1'
+            }
+            portal.cloneGitRepoOrMaster('portal-common', env.BRANCH_NAME, 'apimesh', null, true)
           }
-          portal.cloneGitRepoOrMaster('portal-common', env.BRANCH_NAME, 'apimesh', null, true)
-        }
-        stage('Build') {
-          ansiColor('xterm') {
-            sshagent(['1bd7e7a9-22d3-4ca5-b000-499bac0f7098']) {
-              withCredentials([usernamePassword(credentialsId: '328dda1a-f29d-4758-bc2a-cb79135d0e2f', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                // We pull composer packages from artifactory so we need to create an auth.json file so we can log in
-                writeFile(file: 'auth.json', text:
-"""
-{
-  "http-basic": {
-    "na.artifactory.swg-devops.com": {
-      "username": "${USERNAME}",
-      "password": "${PASSWORD}"
-    }
-  }
-}
-""")
-                // run the build
-                sh './build.sh'
+
+          stage('Build') {
+            portal.writeAuthJsonFile();
+            sh './build.sh'
+          }
+
+          stage('Pull portal-site-template Image') {
+            portal.pullSiteTemplateImage(env.BRANCH_NAME, "master")
+          }
+
+          stage('Build Template') {
+            sh './build_site_template.sh'
+          }
+
+          stage('Test') {
+            if ((MODULES_CHANGED == true || FORCE_RUN == true) && params.RUN_TESTS == true) {
+              try {
+                sh './run_tests_in_template.sh'
+              } finally {
+                archiveArtifacts artifacts: 'tmp/behat/**/*', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'tmp/watchdog/*', allowEmptyArchive: true
               }
-            }
-          }
-        }
-
-        stage('Pull portal-site-template Image') {
-          try {
-            sh "docker pull ${DOCKER_REGISTRY}/velox/portal-site-template:${env.BRANCH_NAME}"
-            sh "docker tag ${DOCKER_REGISTRY}/velox/portal-site-template:${env.BRANCH_NAME} portal-site-template:latest"
-          } catch (Exception e) {
-            print e;
-            try {
-              sh "docker pull ${DOCKER_REGISTRY}/velox/portal-site-template:master"
-              sh "docker tag ${DOCKER_REGISTRY}/velox/portal-site-template:master portal-site-template:latest"
-            } catch (Exception f) {
-              throw f;
-            }
-          }
-        }
-
-        stage('Build Template') {
-          ansiColor('xterm') {
-            sshagent(['1bd7e7a9-22d3-4ca5-b000-499bac0f7098']) {
-              sh './build_site_template.sh'
-            }
-          }
-        }
-
-        stage('Test') {
-          if ((MODULES_CHANGED == true || FORCE_RUN == true) && params.RUN_TESTS == true) {
-            try {
-              ansiColor('xterm') {
-                sshagent(['1bd7e7a9-22d3-4ca5-b000-499bac0f7098']) {
-                  sh './run_tests_in_template.sh'
-                }
-              }
-            } finally {
-              archiveArtifacts artifacts: 'tmp/behat/**/*', allowEmptyArchive: true
-              archiveArtifacts artifacts: 'tmp/watchdog/*', allowEmptyArchive: true
             }
           }
         }
@@ -185,7 +146,7 @@ veloxPipeline(pipelineOpts) { p ->
       stage('bump version') {
         sh """
           git checkout ${env.BRANCH_NAME}
-          git add ${MODULES_YAML_FILE}
+          git add ${MODULES_YAML_FILE} ChangeLog.yml
           git commit -m 'bump module versions [ci-skip]'
           git fetch origin ${env.BRANCH_NAME}
           git rebase -X ours || true
@@ -196,12 +157,12 @@ veloxPipeline(pipelineOpts) { p ->
 
     if (MODULES_CHANGED == true || FORCE_RUN == true) {
       stage('Upload') {
-        sh 'cd build; tar cfz platform-and-site-template-8.x-${BUILD_TIMESTAMP}.tgz *.tgz'
+        sh 'git rev-parse HEAD > apim-profile-git-commit.sha1'
+        sh 'cd build; tar cfz platform-and-site-template-8.x-${BUILD_TIMESTAMP}.tgz *.tgz ../ChangeLog.yml ../apim-profile-git-commit.sha1'
         def artifactZip = findFiles(glob: 'build/platform-and-site-template-8.x-*.tgz')[0]
         def artifactPath = "apic-dev-docker-local/portal/apim-profile/${env.BRANCH_NAME}/${env.BUILD_NUMBER}/${artifactZip.name}"
-        def uploadSpec = "{ \"files\": [ { \"pattern\": \"./${artifactZip}\", \"target\": \"${artifactPath}\" } ] }"
-        def server = Artifactory.server 'na-artifactory'
-        uploadToArtifactory("./${artifactZip}", artifactPath, server)
+        portal.uploadArtifactToArtifactory("./${artifactZip}", artifactPath)
+
         def fullArtifactUrl = "https://na.artifactory.swg-devops.com/artifactory/" + artifactPath
         currentBuild.description = "<a href=${fullArtifactUrl}>${env.BUILD_NUMBER}/${artifactZip.name}</a>"
       }

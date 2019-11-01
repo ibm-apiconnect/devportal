@@ -364,12 +364,6 @@ function apic_api_preprocess(&$variables, $hook, &$info) {
 /**
  * @param $variables
  *
- * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
- * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
- */
-/**
- * @param $variables
- *
  * @return void
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
@@ -482,17 +476,13 @@ function apic_api_preprocess_node(&$variables): void {
         foreach ($apps as $app) {
           $application = Node::load($app);
           $credentials = [];
-          // add credentials in unserialized form too as easier to parse in JS
-          $appCredentials = [];
           if ($application !== NULL) {
-            foreach ($application->application_credentials->getValue() as $arrayValue) {
-              $appCredentials[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-            }
-            if ($appCredentials !== NULL && !empty($appCredentials)) {
+            $appCredentials = $application->application_credentials_refs->referencedEntities();
+            if ($appCredentials !== NULL && is_array($appCredentials)) {
               foreach ($appCredentials as $cred) {
                 $credentials[] = [
-                  'client_id' => $cred['client_id'],
-                  'description' => $cred['summary'],
+                  'client_id' => $cred->client_id(),
+                  'description' => $cred->summary(),
                 ];
               }
               $redirectUris = [];
@@ -501,7 +491,7 @@ function apic_api_preprocess_node(&$variables): void {
               }
               $applications[] = [
                 'name' => $application->getTitle(),
-                'summary' => $application->application_summary->value,
+                'summary' => $application->apic_summary->value,
                 'redirectUri' => $redirectUris,
                 'credentials' => $credentials,
               ];
@@ -569,7 +559,7 @@ function apic_api_preprocess_node(&$variables): void {
             $fieldConfig = \Drupal::entityTypeManager()->getStorage('field_config')->load('node.api.' . $fieldName);
             $location = 'OVERVIEW';
             $infoSectionEntries[] = [
-              'class' => $fieldConfig->get('label'),
+              'class' => $fieldConfig->get('label') . ' ' . $fieldName,
               'html' => $html,
               'location' => $location,
             ];

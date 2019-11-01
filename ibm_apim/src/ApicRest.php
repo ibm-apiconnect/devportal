@@ -53,20 +53,20 @@ class ApicRest implements ApicRestInterface {
     return self::call_base($url, 'GET', $auth, NULL, $messageErrors, $returnResult, $gettingConfig);
   }
 
-
   /**
    * @param string $url
    * @param string $data
    * @param string $auth
+   * @param bool $messageErrors
    *
    * @return \stdClass|null
    * @throws \Exception
    */
-  public static function post($url, $data, $auth = 'user'): ?\stdClass {
+  public static function post($url, $data, $auth = 'user', $messageErrors = TRUE): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
     $returnValue = NULL;
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return self::call_base($url, 'POST', $auth, $data);
+    return self::call_base($url, 'POST', $auth, $data, $messageErrors);
   }
 
   /**
@@ -512,7 +512,7 @@ class ApicRest implements ApicRestInterface {
       // force the redirect immediately.
       exit();
     }
-    elseif ($messageErrors) {
+    else {
       if ($returnResult) {
         // Need to convert to json if return_result was true as json_http_request()
         // will not have done it
@@ -522,11 +522,13 @@ class ApicRest implements ApicRestInterface {
       $json_result = $response_reader->read($result);
       if ($json_result !== NULL) {
         $errors = $json_result->getErrors();
-        if ($errors) {
+        if ($errors && $messageErrors) {
           foreach ($errors as $error) {
             \Drupal::messenger()->addError(Xss::filter($error));
             $returnValue = $result;
           }
+        } else {
+          $returnValue = $result;
         }
       }
     }

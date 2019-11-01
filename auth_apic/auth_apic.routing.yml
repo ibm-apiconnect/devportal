@@ -6,6 +6,8 @@ user.register:
     _title: 'Create new account'
   requirements:
     _access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
 
 user.login:
   path: '/user/login'
@@ -14,6 +16,8 @@ user.login:
     _title: 'Login'
   requirements:
     _user_is_logged_in: 'FALSE'
+  options:
+    no_cache: 'TRUE'
 
 user.pass:
   path: '/user/password'
@@ -55,6 +59,8 @@ auth_apic.invitation:
     _title: 'Process Invitation'
   requirements:
     _access: 'TRUE'
+  options:
+    no_cache: 'TRUE'
 
 auth_apic.activation:
   path: '/user/activation'
@@ -63,6 +69,8 @@ auth_apic.activation:
     _title: 'Activation'
   requirements:
     _user_is_logged_in: 'FALSE'
+  options:
+    no_cache: 'TRUE'
 
 auth_apic.azcode:
   path: '/ibm_apim/oauth2/redirect'
@@ -71,6 +79,8 @@ auth_apic.azcode:
     _title: 'OIDC redirect'
   requirements:
     _user_is_logged_in: 'FALSE'
+  options:
+    no_cache: 'TRUE'
 
 auth_apic.deleteuser:
   path: '/user/delete'

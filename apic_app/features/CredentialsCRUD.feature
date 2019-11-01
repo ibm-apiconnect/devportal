@@ -19,7 +19,7 @@ Feature: CredentialsCRUD
     And I should see a "#edit-apic-summary-0-value" element
     And I should see a "#edit-application-redirect-endpoints-0-value" element
     And I should see a "#edit-submit" element
-    Given I enter "app12345" for "edit-title-0-value"
+    Given I enter "app45678" for "edit-title-0-value"
     And I enter "this is some text" for "edit-apic-summary-0-value"
     When I press the "Submit" button
     When I press the "Continue" button
@@ -35,8 +35,8 @@ Feature: CredentialsCRUD
 #    Given I am not logged in
 #    Given I am logged in as "Andre"
 #    Given I am at "/application"
-#    And I should see "app12345"
-#    When I click "app12345"
+#    And I should see "app45678"
+#    When I click "app45678"
 #    When I click on element "li a.subscriptionsApplication"
 #    Then there are no errors
 #    Then I should see "newcred"
@@ -50,3 +50,4 @@ Feature: CredentialsCRUD
 #    When I press the "Submit" button
 #    Then I should see the text "Application credentials updated."
 #    And I should see "newcred2"
+    And I do not have any applications

@@ -15,6 +15,7 @@ namespace Drupal\apic_app\Form;
 
 use Drupal\apic_app\Event\CredentialClientIDResetEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
+use Drupal\apic_app\Service\CredentialsService;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -60,16 +61,23 @@ class ResetClientIDForm extends ConfirmFormBase {
   protected $messenger;
 
   /**
+   * @var \Drupal\apic_app\Service\CredentialsService
+   */
+  protected $credsService;
+
+  /**
    * ResetClientIDForm constructor.
    *
    * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
    * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
    * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\apic_app\Service\CredentialsService $credsService
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger) {
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger, CredentialsService $credsService) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->messenger = $messenger;
+    $this->credsService = $credsService;
   }
 
   /**
@@ -77,7 +85,10 @@ class ResetClientIDForm extends ConfirmFormBase {
    */
   public static function create(ContainerInterface $container) {
     // Load the service required to construct this class
-    return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'), $container->get('messenger'));
+    return new static($container->get('apic_app.rest_service'),
+      $container->get('ibm_apim.user_utils'),
+      $container->get('messenger'),
+      $container->get('apic_app.credentials'));
   }
 
   /**
@@ -174,19 +185,8 @@ class ResetClientIDForm extends ConfirmFormBase {
         '@html' => $clientSecretHtml,
       ]));
 
-      // update the stored app
-      if (!empty($this->node->application_credentials->getValue())) {
-        $existingCreds = $this->node->application_credentials->getValue();
-        foreach ($existingCreds as $key => $arrayValue) {
-          $unserialized = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-          if (isset($unserialized['id']) && (string) $unserialized['id'] === (string) $this->credId) {
-            $unserialized['client_id'] = $data['client_id'];
-            $existingCreds[$key] = serialize($unserialized);
-          }
-        }
-        $this->node->set('application_credentials', $existingCreds);
-      }
-      $this->node->save();
+      // update the credential entity
+      $this->credsService->updateClientId($this->credId, $data['client_id']);
 
       // Calling all modules implementing 'hook_apic_app_clientid_reset':
       $moduleHandler = \Drupal::service('module_handler');

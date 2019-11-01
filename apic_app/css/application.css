@@ -7,10 +7,7 @@
   border: 0;
   background: none;
 }
-.apicNewAppWrapper {
-  display: flex;
-  flex-direction: row-reverse;
-}
+
 .apicNewAppWrapper .button {
   margin-top: 1rem;
   margin-left: 0.5rem;
@@ -424,8 +421,7 @@
 .node--type-application.bx--card .apicAppCardMain .bx--about__title--name {
   width: auto;
   font-size: 1.5rem;
-  padding: 0;
-  padding-bottom: 1rem;
+  padding: 0 0 1rem;
 }
 .node--type-application.bx--card .apicAppCardMain .applicationType {
   margin: 0 0 10px 0;

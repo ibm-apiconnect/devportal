@@ -10,7 +10,7 @@ COPY node-v*-linux-x64.tar.gz /tmp/data/
 
 RUN bash /tmp/create_test_site.sh FALSE
 
-RUN yum install bison byacc cscope ctags diffstat doxygen elfutils flex gcc gcc-c++ gcc-gfortran gettext indent intltool libtool patchutils rcs rpm-build rpm-sign subversion swig systemtap
+RUN yum install --tolerant --skip-broken bison byacc cscope ctags diffstat doxygen elfutils flex gcc gcc-c++ gcc-gfortran gettext indent intltool libtool patchutils rcs rpm-build rpm-sign subversion swig systemtap
 
 RUN mkdir /tmp/node \
 	&& cd /tmp/node \

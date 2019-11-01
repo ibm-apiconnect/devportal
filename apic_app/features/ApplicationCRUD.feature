@@ -18,8 +18,10 @@ Feature: ApplicationCRUD
       | title       | name        | id     | owner |
       | andreconsumerorg | andreconsumerorg | 123456 | Andre |
     Given I am logged in as "Andre"
+    Given I do not have any applications
     Given I create an application named "myapp_@now" id "myid_@now" consumerorgurl "/consumer-orgs/1234/5678/123456"
     Then I should have an application named "myapp_@now" id "myid_@now"
+    And I do not have any applications
 
   @mocked
   @api
@@ -32,10 +34,12 @@ Feature: ApplicationCRUD
       | title       | name        | id     | owner |
       | andreconsumerorg | andreconsumerorg | 123456 | Andre |
     Given I am logged in as "Andre"
+    Given I do not have any applications
     Given I create an application named "myapp_@now" id "myid_@now" consumerorgurl "/consumer-orgs/1234/5678/123456"
     Then I should have an application named "myapp_@now" id "myid_@now"
     When I update the application named "myapp_@now" to be called "mynewapp_@now"
     Then I should have an application named "mynewapp_@now" id "myid_@now"
+    And I do not have any applications
 
   @mocked
   @api
@@ -48,6 +52,7 @@ Feature: ApplicationCRUD
       | title       | name        | id     | owner |
       | andreconsumerorg | andreconsumerorg | 123456 | Andre |
     Given I am logged in as "Andre"
+    Given I do not have any applications
     Given I do not have an application named "myapp_@now"
     When I createOrUpdate an application named "myapp_@now" id "myid_@now" consumerorgurl "/consumer-orgs/1234/5678/123456"
     Then The createOrUpdate output should be "1"
@@ -55,6 +60,7 @@ Feature: ApplicationCRUD
     When I createOrUpdate an application named "myapp_@now" id "myid_@now" consumerorgurl "/consumer-orgs/1234/5678/123456"
     Then The createOrUpdate output should be "0"
     Then I should have an application named "mynewapp_@now" id "myid_@now"
+    And I do not have any applications
 
   @mocked
   @api
@@ -67,10 +73,12 @@ Feature: ApplicationCRUD
       | title       | name        | id     | owner |
       | andreconsumerorg | andreconsumerorg | 123456 | Andre |
     Given I am logged in as "Andre"
+    Given I do not have any applications
     Given I create an application named "myapp_@now" id "myid_@now" consumerorgurl "/consumer-orgs/1234/5678/123456"
     Then I should have an application named "myapp_@now" id "myid_@now"
     When I delete the application named "myapp_@now"
     Then I should not have an application named "mynewapp_@now"
+    And I do not have any applications
 
   @api
   Scenario: Admin cannot edit the Application

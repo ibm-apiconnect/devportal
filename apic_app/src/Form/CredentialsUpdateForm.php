@@ -15,6 +15,7 @@ namespace Drupal\apic_app\Form;
 
 use Drupal\apic_app\Event\CredentialUpdateEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
+use Drupal\apic_app\Service\CredentialsService;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -44,6 +45,13 @@ class CredentialsUpdateForm extends FormBase {
   protected $credId;
 
   /**
+   * This represents the existing credentials
+   *
+   * @var array
+   */
+  protected $existingCred;
+
+  /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
    */
   protected $restService;
@@ -59,16 +67,23 @@ class CredentialsUpdateForm extends FormBase {
   protected $messenger;
 
   /**
+   * @var \Drupal\apic_app\Service\CredentialsService
+   */
+  protected $credsService;
+
+  /**
    * CredentialsUpdateForm constructor.
    *
    * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
    * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
    * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\apic_app\Service\CredentialsService $credsService
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger) {
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger, CredentialsService $credsService) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->messenger = $messenger;
+    $this->credsService = $credsService;
   }
 
   /**
@@ -76,8 +91,10 @@ class CredentialsUpdateForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     // Load the service required to construct this class
-    return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'),
-      $container->get('messenger'));
+    return new static($container->get('apic_app.rest_service'),
+      $container->get('ibm_apim.user_utils'),
+      $container->get('messenger'),
+      $container->get('apic_app.credentials'));
   }
 
   /**
@@ -96,17 +113,11 @@ class CredentialsUpdateForm extends FormBase {
     $this->credId = Html::escape($credId);
 
     $form['intro'] = ['#markup' => '<p>' . t('Use this form to update an existing set of credentials for this application.') . '</p>'];
-    $title = '';
-    $summary = '';
-    $creds = [];
-
-    foreach ($this->node->application_credentials->getValue() as $arrayValue) {
-      $creds[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-    }
-    foreach ($creds as $key => $existingCred) {
-      if (isset($existingCred['id']) && (string) $existingCred['id'] === (string) $this->credId) {
-        $summary = $existingCred['summary'];
-        $title = $existingCred['title'];
+    $this->existingCred = ['title' => '', 'summary' => ''];
+    $credentials = $this->node->application_credentials_refs->referencedEntities();
+    foreach ($credentials as $key => $existingCred) {
+      if ((string) $existingCred->id() === (string) $this->credId) {
+        $this->existingCred = $existingCred->toArray();
       }
     }
 
@@ -114,14 +125,14 @@ class CredentialsUpdateForm extends FormBase {
       '#type' => 'textfield',
       '#title' => t('Title'),
       '#required' => FALSE,
-      '#default_value' => $title,
+      '#default_value' => $this->existingCred['title'],
     ];
 
     $form['summary'] = [
       '#type' => 'textfield',
       '#title' => t('Summary'),
       '#required' => FALSE,
-      '#default_value' => $summary,
+      '#default_value' => $this->existingCred['summary'],
     ];
 
     $form['actions']['#type'] = 'actions';
@@ -177,23 +188,10 @@ class CredentialsUpdateForm extends FormBase {
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       $this->messenger->addMessage(t('Application credentials updated.'));
       // update the stored app with the new creds
-      if (!empty($this->node->application_credentials->getValue())) {
-        $existingCreds = [];
-        foreach ($this->node->application_credentials->getValue() as $arrayValue) {
-          $existingCreds[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-        }
-        $this->node->set('application_credentials', []);
-        foreach ($existingCreds as $existingCred) {
-          if (isset($existingCred['id']) && (string) $existingCred['id'] === (string) $this->credId) {
-            $existingCred['summary'] = $summary;
-            $existingCred['title'] = $title;
-          }
-          $this->node->application_credentials[] = serialize($existingCred);
-        }
-        if (!empty($existingCreds)) {
-          $this->node->save();
-        }
-      }
+      $this->existingCred['summary'] = $summary;
+      $this->existingCred['title'] = $title;
+      $this->node = $this->credsService->updateCredentials($this->node, $this->existingCred);
+
       $currentUser = \Drupal::currentUser();
       \Drupal::logger('apic_app')->notice('Application @appName credentials updated by @username', [
         '@appName' => $this->node->getTitle(),

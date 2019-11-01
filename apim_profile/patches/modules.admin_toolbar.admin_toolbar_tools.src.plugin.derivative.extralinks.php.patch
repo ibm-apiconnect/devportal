@@ -1,0 +1,14 @@
+--- ./modules/admin_toolbar/admin_toolbar_tools/src/Plugin/Derivative/ExtraLinks.php	2019-08-30 14:56:40.000000000 +0100
++++ ./modules/admin_toolbar/admin_toolbar_tools/src/Plugin/Derivative/ExtraLinks.php	2019-09-10 15:30:33.000000000 +0100
+@@ -185,11 +185,6 @@
+     }
+ 
+     // Adds user links.
+-    $links['user.admin_create'] = [
+-      'title' => $this->t('Add user'),
+-      'route_name' => 'user.admin_create',
+-      'parent' => 'entity.user.collection',
+-    ] + $base_plugin_definition;
+     $links['user.admin_permissions'] = [
+       'title' => t('Permissions'),
+       'route_name' => 'user.admin_permissions',

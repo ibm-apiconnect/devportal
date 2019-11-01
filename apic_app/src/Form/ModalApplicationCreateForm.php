@@ -285,52 +285,8 @@ class ModalApplicationCreateForm extends FormBase {
           $renderArray = node_view($node, 'subscribewizard');
           $renderer = \Drupal::service('renderer');
           $html = $renderer->render($renderArray);
-          $response->addCommand(new InsertCommand('div.apicNewAppWrapper', $html, []));
+          $response->addCommand(new InsertCommand('div.apicNewAppsList', $html, []));
         }
-
-        // Need to update message area on underlying form - re-check if we have suspended or subscribed apps
-        $productName = 'undefined';
-        $product_url = 'undefined';
-        $product_id = \Drupal::request()->query->get('productId');
-        if (isset($product_id)) {
-          $product_node = Node::load($product_id);
-          if ($product_node !== NULL) {
-            $productName = $product_node->getTitle();
-            $product_url = $product_node->apic_url->value;
-          }
-        }
-        $allApps = Application::listApplications();
-        $allApps = Node::loadMultiple($allApps);
-        $suspendedApps = [];
-        $subscribedApps = [];
-
-        foreach ($allApps as $nid => $nextApp) {
-          if (isset($nextApp->apic_state->value) && mb_strtoupper($nextApp->apic_state->value) === 'SUSPENDED') {
-            $suspendedApps[] = $nextApp;
-          }
-          elseif (isset($nextApp->application_subscriptions->value)) {
-            $subs = unserialize($nextApp->application_subscriptions->value, ['allowed_classes' => FALSE]);
-            if (is_array($subs)) {
-              foreach ($subs as $sub) {
-                if (isset($sub['product_url']) && $sub['product_url'] === $product_url) {
-                  $subscribedApps[] = $nextApp;
-                  $appSubscribedToProduct = TRUE;
-                  break;
-                }
-              }
-            }
-          }
-        }
-
-        // Generate the appropriate messages div and replace the div that is already there
-        $suspendedAppMsg = t('There are %number suspended applications not displayed in this list.', ['%number' => sizeof($suspendedApps)]);
-        $subscribedAppMsg = t('There are %number applications that are already subscribed to the %product product. They are not displayed in this list.',
-          ['%number' => sizeof($subscribedApps), '%product' => $productName]);
-        $messagesHtml = '<div class="apicSubscribeInfotext">' .
-          (!empty($suspendedApps) ? $suspendedAppMsg : "") .
-          (!empty($subscribedApps) ? $subscribedAppMsg : "") .
-          '</div>';
-        $response->addCommand(new ReplaceCommand('div.apicSubscribeInfotext', $messagesHtml));
 
         // Pop up a new modal dialog to display the client id and secret
         $credsForm = [];

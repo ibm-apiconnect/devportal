@@ -137,7 +137,7 @@ class ResendInviteForm extends ConfirmFormBase {
       $form = parent::buildForm($form, $form_state);
       if ($this->themeHandler->themeExists('bootstrap')) {
         if (isset($form['actions']['submit'])) {
-          $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
+          $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('envelope');
         }
         if (isset($form['actions']['cancel'])) {
           $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');

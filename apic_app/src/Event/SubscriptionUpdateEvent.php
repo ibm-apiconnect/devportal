@@ -17,7 +17,7 @@ use Symfony\Component\EventDispatcher\Event;
 /**
  * Event that is fired when a subscription is updated.
  *
- * @see Subscription::update()
+ * @see SubscriptionService::update()
  */
 class SubscriptionUpdateEvent extends Event {
 

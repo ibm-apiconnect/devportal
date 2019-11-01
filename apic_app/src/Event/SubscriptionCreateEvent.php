@@ -17,7 +17,7 @@ use Symfony\Component\EventDispatcher\Event;
 /**
  * Event that is fired when a subscription is created.
  *
- * @see Subscription::create()
+ * @see SubscriptionService::create()
  */
 class SubscriptionCreateEvent extends Event {
 

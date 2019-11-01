@@ -223,14 +223,26 @@ class Product {
       $hostVariable = $siteConfig->getApimHost();
       $config = \Drupal::config('ibm_apim.settings');
       $languageList = array_keys(\Drupal::languageManager()->getLanguages(LanguageInterface::STATE_ALL));
-
-      if ($product !== NULL && isset($product['catalog_product']['info']['name'], $product['catalog_product']['info']['version']) && \strlen($product['catalog_product']['info']['name'] . ':' . $product['catalog_product']['info']['version']) > 254) {
+      // filter out any retired products and remove them (and other invalid states)
+      if (array_key_exists('state', $product) && ($product['state'] === 'retired' || $product['state'] === 'archived' || $product['state'] === 'staged' || $product['state'] === 'pending')) {
+        \Drupal::logger('product')
+          ->error('Update product: product @productName is in an invalid state: @state, deleting it.', [
+            '@productName' => $product['name'],
+            '@state' => $product['state'],
+          ]);
+        self::deleteNode($node->id(), 'invalid_product_state');
+        $node = NULL;
+        $returnValue = NULL;
+      }
+      elseif ($product !== NULL && isset($product['catalog_product']['info']['name'], $product['catalog_product']['info']['version']) && \strlen($product['catalog_product']['info']['name'] . ':' . $product['catalog_product']['info']['version']) > 254) {
         // if product reference is too long then bomb out
         \Drupal::logger('product')
           ->error('ERROR: Cannot update product. The "name:version" for this product is greater than 254 characters: %name %version', [
             '%name' => $product['catalog_product']['info']['name'],
             '%version' => $product['catalog_product']['info']['version'],
           ]);
+        self::deleteNode($node->id(), 'invalid_product_name_version');
+        $node = NULL;
         $returnValue = NULL;
       }
       else {
@@ -661,9 +673,9 @@ class Product {
   }
 
   /**
-   * @return string - product icon for a given name
-   *
    * @param $name
+   *
+   * @return string - product icon for a given name
    *
    * @return string
    */
@@ -685,9 +697,9 @@ class Product {
   }
 
   /**
-   * @return string - path to placeholder image for a given name
-   *
    * @param $name
+   *
+   * @return string - path to placeholder image for a given name
    *
    * @return string
    */
@@ -701,9 +713,9 @@ class Product {
   }
 
   /**
-   * @return string - path to placeholder image for a given name
-   *
    * @param $name
+   *
+   * @return string - path to placeholder image for a given name
    *
    * @return string
    */
