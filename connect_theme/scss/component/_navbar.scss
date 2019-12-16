@@ -72,13 +72,14 @@ nav.block-login .menu.nav {
   margin-right: -($grid-gutter-width / 2);
   padding-left: ($grid-gutter-width / 2);
   padding-right: ($grid-gutter-width / 2);
+  display:none;
   @media #{$grid-breakpoint} {
     margin-right: 0;
     padding-left: 0;
     padding-right: 0;
   }
-  @media (max-width: $grid-float-breakpoint) {
-    display: none;
+  @media (min-width: $grid-float-breakpoint) {
+    display: block;
   }
 }
 
@@ -99,6 +100,7 @@ nav.block-login .menu.nav {
 .navbar .region-navigation-right {
   display: flex;
   flex-direction: row-reverse;
+  white-space: nowrap;
 }
 
 .navbar .nav > li > a {

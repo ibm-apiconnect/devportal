@@ -7,3 +7,8 @@ Feature: Basic site verification
     And I am at "/"
     Then there are no errors
     And there are no messages
+
+  Scenario: Verify site does not contain certain response headers
+    Given I am not logged in
+    And I am at "/"
+    Then there is no "x-powered-by" response header

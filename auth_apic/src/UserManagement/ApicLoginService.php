@@ -260,7 +260,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
         try {
           $existingUserByMail = $this->userStorage->loadUserByEmailAddress($meuser->getMail());
         } catch (\Exception $e) {
-          $this->logger->error('Login failed because there was a problem searching for users based on email.');
+          $this->logger->error('Login failed because there was a problem searching for users based on email: %message', ['%message' => $e->getMessage()]);
           $permitted = FALSE;
         }
 

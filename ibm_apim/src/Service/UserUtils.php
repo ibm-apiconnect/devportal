@@ -13,7 +13,7 @@
 namespace Drupal\ibm_apim\Service;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Session\AccountProxy;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
@@ -29,7 +29,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 class UserUtils {
 
   /**
-   * @var \Drupal\Core\Session\AccountProxy
+   * @var \Drupal\Core\Session\AccountProxyInterface
    */
   private $currentUser;
 
@@ -53,7 +53,7 @@ class UserUtils {
    */
   private $userStorage;
 
-  public function __construct(AccountProxy $current_user,
+  public function __construct(AccountProxyInterface $current_user,
                               PrivateTempStoreFactory $temp_store_factory,
                               StateInterface $state,
                               LoggerInterface $logger,
@@ -330,27 +330,39 @@ class UserUtils {
   public function addConsumerOrgToUser($orgUrl, $account = NULL): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $orgUrl);
     $return = NULL;
+    $account_id = NULL;
+
     if ($account === NULL && !$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
       $account = User::load($this->currentUser->id());
     }
-    if (!$this->currentUser->isAnonymous() && (int) $account->id() !== 1) {
-      // update the consumerorg urls list set on the user object
-      if ($account !== NULL && !empty($account->consumerorg_url->getValue())) {
+
+    if ($account !== NULL) {
+      $account_id = (int) $account->id();
+    }
+
+    if (!$this->currentUser->isAnonymous() && (int) $account_id !== 1) {
+
+      if ($account !== NULL) {
         $org_urls = $account->consumerorg_url->getValue();
         $found = false;
-        foreach ($org_urls as $index => $valueArray) {
-          if ($valueArray['value'] === $orgUrl) {
-            $found = true;
+        if(!empty($org_urls)) {
+          // update the consumerorg urls list set on the user object
+          $this->logger->debug('updating consumerorg urls list set on the user object');
+          foreach ($org_urls as $index => $valueArray) {
+            if ($valueArray['value'] === $orgUrl) {
+              $found = TRUE;
+            }
           }
         }
         if (!$found) {
+          $this->logger->debug('adding org to consumerorg urls list '.$orgUrl);
           $org_urls[] = ['value' => $orgUrl];
           $account->set('consumerorg_url', $org_urls);
           $account->save();
         }
       }
     }
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $account_id);
   }
 
   public function removeConsumerOrgFromUser($orgUrl, $account = NULL): void {

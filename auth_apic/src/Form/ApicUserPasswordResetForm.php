@@ -18,7 +18,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\Session\AccountProxy;
+use Drupal\Core\Session\AccountProxyInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -43,7 +43,7 @@ class ApicUserPasswordResetForm extends FormBase {
   protected $apicPassword;
 
   /**
-   * @var \Drupal\Core\Session\AccountProxy|\Drupal\Core\Session\AccountProxy
+   * @var \Drupal\Core\Session\AccountProxyInterface|\Drupal\Core\Session\AccountProxyInterface
    */
   protected $currentUser;
 
@@ -63,14 +63,14 @@ class ApicUserPasswordResetForm extends FormBase {
    * @param \Psr\Log\LoggerInterface $logger
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    * @param \Drupal\auth_apic\UserManagement\ApicPasswordInterface $apic_password
-   * @param \Drupal\Core\Session\AccountProxy $current_user
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    * @param \Drupal\auth_apic\Service\Interfaces\TokenParserInterface $token_parser
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    */
   public function __construct(LoggerInterface $logger,
                               LanguageManagerInterface $language_manager,
                               ApicPasswordInterface $apic_password,
-                              AccountProxy $current_user,
+                              AccountProxyInterface $current_user,
                               TokenParserInterface $token_parser,
                               ModuleHandlerInterface $module_handler) {
     $this->logger = $logger;
@@ -253,9 +253,9 @@ class ApicUserPasswordResetForm extends FormBase {
   }
 
   /**
-   * @return \Drupal\Core\Session\AccountProxy
+   * @return \Drupal\Core\Session\AccountProxyInterface
    */
-  public function getEntity(): AccountProxy {
+  public function getEntity(): AccountProxyInterface {
     return $this->currentUser;
   }
 }

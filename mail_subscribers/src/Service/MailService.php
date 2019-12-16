@@ -13,18 +13,15 @@
 
 namespace Drupal\mail_subscribers\Service;
 
-use Drupal\consumerorg\ApicType\Member;
+use Drupal\Component\Utility\EmailValidator;
 use Drupal\Core\Database\Database;
-use Drupal\Core\Mail\MailFormatHelper;
-use Drupal\ibm_apim\ApicType\ApicUser;
-use Egulias\EmailValidator\EmailValidator;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Mail\MailFormatHelper;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\mail_subscribers\Event\AllMailAddedEvent;
 use Drupal\mail_subscribers\Event\MailAddedEvent;
 use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
-use Egulias\EmailValidator\Validation\RFCValidation;
 
 class MailService {
 
@@ -334,7 +331,7 @@ class MailService {
               $consumerorgOwner = NULL;
               $consumerorgOwnerUrl = $node->get('consumerorg_owner')->value;
               $consumerorgOwnerAccount = $this->userStorage->loadUserByUrl($consumerorgOwnerUrl);
-              if ($consumerorgOwnerAccount !== NULL && $this->emailValidator->isValid($consumerorgOwnerAccount->getEmail(), new RFCValidation())) {
+              if ($consumerorgOwnerAccount !== NULL && $this->emailValidator->isValid($consumerorgOwnerAccount->getEmail())) {
                 $consumerorgOwner = $consumerorgOwnerAccount->getEmail();
               }
               if ($consumerorgOwner !== NULL && !empty($consumerorgOwner)) {
@@ -453,7 +450,7 @@ class MailService {
               $consumerorgOwner = NULL;
               $consumerorgOwnerUrl = $node->get('consumerorg_owner')->value;
               $consumerorgOwnerAccount = $this->userStorage->loadUserByUrl($consumerorgOwnerUrl);
-              if ($consumerorgOwnerAccount !== NULL && $this->emailValidator->isValid($consumerorgOwnerAccount->getEmail(), new RFCValidation()) ){
+              if ($consumerorgOwnerAccount !== NULL && $this->emailValidator->isValid($consumerorgOwnerAccount->getEmail()) ){
                 $consumerorgOwner = $consumerorgOwnerAccount->getEmail();
               }
               if ($consumerorgOwner !== NULL && !empty($consumerorgOwner)) {
@@ -531,7 +528,7 @@ class MailService {
           $consumerorgOwner = NULL;
           $consumerorgOwnerUrl = $node->get('consumerorg_owner')->value;
           $consumerorgOwnerAccount = $this->userStorage->loadUserByUrl($consumerorgOwnerUrl);
-          if ($consumerorgOwnerAccount !== NULL && $this->emailValidator->isValid($consumerorgOwnerAccount->getEmail(), new RFCValidation())) {
+          if ($consumerorgOwnerAccount !== NULL && $this->emailValidator->isValid($consumerorgOwnerAccount->getEmail())) {
             $consumerorgOwner = $consumerorgOwnerAccount->getEmail();
           }
           if ($consumerorgOwner !== NULL && !empty($consumerorgOwner)) {

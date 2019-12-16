@@ -1,25 +1,6 @@
 changes:
-
-    8.x-1.4.37:
-      - Update ChangeLog.yml
-      - Tempmerge (#144)
-    8.x-1.4.38:
-
-    8.x-1.4.50:
-
-    8.x-1.4.51:
-      - Skip no creds (#148)
-    8.x-1.4.52:
-      - fix up credentials and subscriptions entity issues
-    8.x-1.4.53:
-      - ensure cred url is set
-    8.x-1.4.54:
-      - Cred url fix 2018.4.1 (#150)
-    8.x-1.4.55:
-      - need to use the correctly named field
-      - ensure credentials array is set
-      - do not create duplicate subscriptions
-    8.x-1.4.56:
-      - handle sub being created before the app
-      - be more defensive to  handle the app not existing when create sub
-      - need to add new apps within the form element
+  8.x-1.6.58: null
+  8.x-1.6.57:
+  - clear out change log
+  - update apic_app version to avoid clash
+  - update version: 8.x-1.4.57 -> 8.x-1.5.57

@@ -600,6 +600,12 @@ function drush_ibm_apim_listen() {
       }
       $attempt = 0;
     } catch (Exception $e) {
+
+      drush_log(dt('Attempt @attempt. Caught exception in drush_ibm_apim_listen: @message', [
+        '@attempt' => $attempt,
+        '@message' => $e->getMessage(),
+      ]), 'warning');
+
       $errors = \Drupal::state()->get('ibm_apim.sync_errors');
       if ($errors === NULL) {
         $errors = [];
@@ -613,10 +619,6 @@ function drush_ibm_apim_listen() {
       ];
       \Drupal::state()->set('ibm_apim.sync_errors', $errors);
 
-      drush_log(dt('Attempt @attempt. Caught exception: @message', [
-        '@attempt' => $attempt,
-        '@message' => $e->getMessage(),
-      ]), 'warning');
       $attempt++;
 
       if ($attempt > 2) {
@@ -918,6 +920,10 @@ function drush_ibm_apim_content_refresh() {
           drush_log(dt('No content provided for webhook', []), 'warning');
         }
       } catch (Exception $e) {
+        drush_log(dt('Caught exception in drush_ibm_apim_content_refresh: @message', [
+          '@message' => $e->getMessage(),
+        ]), 'warning');
+
         $errors = \Drupal::state()->get('ibm_apim.sync_errors');
         if ($errors === NULL) {
           $errors = [];
@@ -930,9 +936,7 @@ function drush_ibm_apim_content_refresh() {
           'timestamp' => time(),
         ];
         \Drupal::state()->set('ibm_apim.sync_errors', $errors);
-        drush_log(dt('Caught exception: @message', [
-          '@message' => $e->getMessage(),
-        ]), 'warning');
+
       }
     }
   }

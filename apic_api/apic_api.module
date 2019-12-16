@@ -425,6 +425,7 @@ function apic_api_preprocess_node(&$variables): void {
       $soapSwaggerDownload = (boolean) $config->get('soap_swagger_download');
       $soapCodeSnippets = (boolean) $config->get('soap_codesnippets');
       $optimiseOauthUX = (boolean) $config->get('optimise_oauth_ux');
+      $showMTLSHeader = (boolean) $config->get('show_mtls_header');
       $certificateStripNewlines = (boolean) $config->get('certificate_strip_newlines');
       $certificateStripPrefix = (boolean) $config->get('certificate_strip_prefix');
       $codeSnippetLangs = [];
@@ -606,6 +607,7 @@ function apic_api_preprocess_node(&$variables): void {
         'showCorsWarnings' => $showCorsWarnings,
         'showSoapSwaggerDownload' => $soapSwaggerDownload,
         'optimiseOauthUX' => $optimiseOauthUX,
+        'showMTLSHeader' => $showMTLSHeader,
         'certificateStripPrefix' => $certificateStripPrefix,
         'certificateStripNewlines' => $certificateStripNewlines,
         'showSoapCodeSnippets' => $soapCodeSnippets,

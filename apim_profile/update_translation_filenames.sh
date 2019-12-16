@@ -1,15 +1,19 @@
-#!/usr/local/bin/bash
-#TODO update to /bin/bash ... but this will fail on mac default systems.
+#!/bin/bash
 
+# Running on Mac locally, you will need a bash v4+, install latest bash by running 'brew install bash' on your terminal
 if (( ${BASH_VERSION%%.*} < 4 ))
 then
-#You need to be running at least bash 4, not installed by default on a mac. Use homebrew to install bash to /usr/local/bin/bash
-#https://coderwall.com/p/dmuxma/upgrade-bash-on-your-mac-os
-  echo "Minimum of bash v4 required."
-  exit 1
+  if [[ -f /usr/local/bin/bash ]]; 
+  then
+      /usr/local/bin/bash $0 $1
+      exit
+    else
+      echo "Minimum of bash v4 required."
+      exit 1
+    fi
 fi
 
-DRUPAL_CORE_VERSION="8.7.7"
+DRUPAL_CORE_VERSION="8.7.9"
 
 TGZ_UNPACK_DIR=$1
 

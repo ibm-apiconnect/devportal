@@ -1,7 +1,7 @@
 changes:
-
-
-    8.x-1.0.8:
-      - Update ChangeLog.yml
-      - Update ChangeLog.yml
-    8.x-1.0.9:
+  8.x-1.2.1: null
+  8.x-1.2.0:
+  - update version to 8.x-1.2.0
+  8.x-1.1.10:
+  - clear change log
+  - update version: 8.x-1.0.10 -> 8.x-1.1.10

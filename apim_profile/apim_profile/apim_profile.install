@@ -568,6 +568,7 @@ function apim_profile_default_apic_config() {
     ->set('render_api_schema_view', TRUE)
     ->set('soap_swagger_download', FALSE)
     ->set('optimise_oauth_ux', TRUE)
+    ->set('show_mtls_header', TRUE)
     ->set('soap_codesnippets', FALSE)
     ->set('application_image_upload', TRUE)
     ->set('hide_admin_registry', FALSE)
@@ -1258,6 +1259,16 @@ function apim_profile_update_8021() {
            ] as $module) {
     $module_installer->install([$module]);
   }
+}
+
+/**
+ * Set the new settings for mtls certificate headers
+ */
+function apim_profile_update_8022() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('show_mtls_header', TRUE)
+    ->save();
 }
 
 /**

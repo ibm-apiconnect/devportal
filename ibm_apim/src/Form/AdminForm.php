@@ -169,6 +169,14 @@ class AdminForm extends ConfigFormBase {
       '#description' => t('If checked then certain OAuth flows (such as implicit or access code) which cannot be completed from the test tool for technical reasons are optimised to improve usability.'),
     ];
 
+    $form['config']['show_mtls_header'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Show certificate in header for APIs secured with mutual TLS'),
+      '#default_value' => $config->get('show_mtls_header'),
+      '#weight' => -10,
+      '#description' => t('If checked then the x-client-certificate header will be shown in an API when mutual TLS is configured.'),
+    ];
+
     $form['config']['application_image_upload'] = [
       '#type' => 'checkbox',
       '#title' => t('Allow upload of custom images for applications'),
@@ -417,9 +425,9 @@ class AdminForm extends ConfigFormBase {
     $form['proxy']['proxy_for_api'] = [
       '#type' => 'checkboxes',
       '#options' => [
-        'CONSUMER' => t('Consumer'),
-        'PLATFORM' => t('Platform'),
-        'ANALYTICS' => t('Analytics')
+        'CONSUMER' => t('Consumer API'),
+        'PLATFORM' => t('Platform API'),
+        'ANALYTICS' => t('Analytics API')
       ],
       '#title' => t('If enabled, use the Proxy for Consumer, Platform or Analytics APIs'),
       '#description' => t('Select whether to use the proxy for the Consumer, Platform or Analytics APIs. All are selected by default.'),
@@ -508,6 +516,7 @@ class AdminForm extends ConfigFormBase {
       ->set('show_analytics', (bool) $form_state->getValue('show_analytics'))
       ->set('soap_swagger_download', (bool) $form_state->getValue('soap_swagger_download'))
       ->set('optimise_oauth_ux', (bool) $form_state->getValue('optimise_oauth_ux'))
+      ->set('show_mtls_header', (bool) $form_state->getValue('show_mtls_header'))
       ->set('application_image_upload', (bool) $form_state->getValue('application_image_upload'))
       ->set('hide_admin_registry', (bool) $form_state->getValue('hide_admin_registry'))
       ->set('render_api_schema_view', (bool) $form_state->getValue('render_api_schema_view'))

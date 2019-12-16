@@ -1,0 +1,404 @@
+diff -Naur modules/restrict_by_ip/restrict_by_ip.module modules/restrict_by_ip/restrict_by_ip.module
+--- modules/restrict_by_ip/restrict_by_ip.module	2019-10-29 17:32:23.000000000 +0000
++++ modules/restrict_by_ip/restrict_by_ip.module	2019-10-30 10:09:39.000000000 +0000
+@@ -168,3 +168,26 @@
+     }
+   }
+ }
++
++/**
++ * When loading the current users account, remove any roles that are restricted based on
++ * IP whitelists.
++ *
++ * @param \Drupal\user\Entity\User[] $users
++ *   Array of user entities keyed by entity ID.
++ */
++function restrict_by_ip_user_load($users) {
++  /* @var \Drupal\Core\Session\AccountProxyInterface $current_user */
++  $current_user = \Drupal::service('current_user');
++  /* @var \Drupal\restrict_by_ip\RoleFirewallInterface $role_firewall */
++  $role_firewall = \Drupal::service('restrict_by_ip.role_firewall');
++  $remove_roles = $role_firewall->rolesToRemove();
++
++  foreach ($users as $user) {
++    if ($current_user->id() == $user->id()) {
++      foreach ($remove_roles as $role) {
++        $user->removeRole($role);
++      }
++    }
++  }
++}
+\ No newline at end of file
+diff -Naur modules/restrict_by_ip/restrict_by_ip.services.yml modules/restrict_by_ip/restrict_by_ip.services.yml
+--- modules/restrict_by_ip/restrict_by_ip.services.yml	2019-10-29 17:32:23.000000000 +0000
++++ modules/restrict_by_ip/restrict_by_ip.services.yml	2019-10-30 10:09:39.000000000 +0000
+@@ -10,3 +10,6 @@
+     arguments: ["@restrict_by_ip.login_firewall","@current_user"]
+     tags:
+       - { name: event_subscriber }
++  restrict_by_ip.role_firewall:
++      class: Drupal\restrict_by_ip\RoleFirewall
++      arguments: ["@restrict_by_ip.ip_tools","@config.factory","@entity_type.manager"]
+\ No newline at end of file
+diff -Naur modules/restrict_by_ip/src/RestrictByIpServiceProvider.php modules/restrict_by_ip/src/RestrictByIpServiceProvider.php
+--- modules/restrict_by_ip/src/RestrictByIpServiceProvider.php	1970-01-01 01:00:00.000000000 +0100
++++ modules/restrict_by_ip/src/RestrictByIpServiceProvider.php	2019-10-30 10:09:39.000000000 +0000
+@@ -0,0 +1,35 @@
++<?php
++
++/**
++ * @file
++ * Contains Drupal\restrict_by_ip\RestrictByIpServiceProvider
++ */
++
++namespace Drupal\restrict_by_ip;
++
++use Symfony\Component\DependencyInjection\Definition;
++use Symfony\Component\DependencyInjection\Reference;
++use Drupal\Core\DependencyInjection\ServiceProviderBase;
++use Drupal\Core\DependencyInjection\ContainerBuilder;
++
++/**
++ * Rename current_user service and replace with one provided by restrict_by_ip
++ * module.
++ */
++class RestrictByIpServiceProvider extends ServiceProviderBase {
++
++  /**
++   * {@inheritdoc}
++   */
++  public function alter(ContainerBuilder $container) {
++    // Rename current_user service.
++    $coreService = $container->getDefinition('current_user');
++    $container->setDefinition('restrict_by_ip.current_user', $coreService);
++
++    // Register this modules class as default for current_user service.
++    $newService = new Definition('Drupal\restrict_by_ip\Session\AccountProxy');
++    $newService->addArgument(new Reference('restrict_by_ip.current_user'));
++    $newService->addArgument(new Reference('restrict_by_ip.role_firewall'));
++    $container->setDefinition('current_user', $newService);
++  }
++}
+\ No newline at end of file
+diff -Naur modules/restrict_by_ip/src/RoleFirewall.php modules/restrict_by_ip/src/RoleFirewall.php
+--- modules/restrict_by_ip/src/RoleFirewall.php	1970-01-01 01:00:00.000000000 +0100
++++ modules/restrict_by_ip/src/RoleFirewall.php	2019-10-30 10:09:39.000000000 +0000
+@@ -0,0 +1,89 @@
++<?php
++
++/**
++ * @file
++ * Contains Drupal\restrict_by_ip\RoleFirewall.
++ */
++
++namespace Drupal\restrict_by_ip;
++
++use Drupal\Core\Config\ConfigFactoryInterface;
++use Drupal\Core\Entity\EntityTypeManagerInterface;
++use Drupal\restrict_by_ip\IPToolsInterface;
++use Drupal\restrict_by_ip\Exception\IPOutOfRangeException;
++
++/**
++ * Class RoleFirewall.
++ *
++ * @package Drupal\restrict_by_ip
++ */
++class RoleFirewall implements RoleFirewallInterface {
++
++  protected $ipTools;
++  protected $config;
++  protected $entityManager;
++
++  public function __construct(
++    IPToolsInterface $ip_tools,
++    ConfigFactoryInterface $config_factory,
++    EntityTypeManagerInterface $entity_manager) {
++
++    $this->ipTools = $ip_tools;
++    $this->config = $config_factory->get('restrict_by_ip.settings');
++    $this->entityManager = $entity_manager;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function rolesToRemove() {
++    $roles = $this->getAllRoles();
++    $user_ip = $this->ipTools->getUserIP();
++    $remove_roles = [];
++
++    foreach ($roles as $name) {
++      $role_data = $this->config->get('role.' . $name);
++
++      if (strlen($role_data) == 0) {
++        continue;
++      }
++
++      $ranges = explode(';', $role_data);
++
++      $range_valid = FALSE;
++      foreach ($ranges as $range) {
++        try {
++          $this->ipTools->validateCIDR($user_ip, $range);
++        } catch (IPOutOfRangeException $e) {
++          continue;
++        }
++
++        $range_valid = TRUE;
++      }
++
++      if (!$range_valid) {
++        $remove_roles[] = $name;
++      }
++    }
++
++    return $remove_roles;
++  }
++
++  /**
++   * Get list of all available roles.
++   *
++   * @return array
++   *   Array of role IDs.
++   */
++  private function getAllRoles() {
++    $entities = $this->entityManager->getStorage('user_role')->loadMultiple();
++    $roles = [];
++
++    foreach ($entities as $role) {
++      $roles[] = $role->id();
++    }
++
++    return $roles;
++  }
++
++}
+diff -Naur modules/restrict_by_ip/src/RoleFirewallInterface.php modules/restrict_by_ip/src/RoleFirewallInterface.php
+--- modules/restrict_by_ip/src/RoleFirewallInterface.php	1970-01-01 01:00:00.000000000 +0100
++++ modules/restrict_by_ip/src/RoleFirewallInterface.php	2019-10-30 10:09:39.000000000 +0000
+@@ -0,0 +1,25 @@
++<?php
++
++/**
++ * @file
++ * Contains Drupal\restrict_by_ip\RoleFirewallInterface.
++ */
++
++namespace Drupal\restrict_by_ip;
++
++/**
++ * Interface RoleFirewallInterface.
++ *
++ * @package Drupal\restrict_by_ip
++ */
++interface RoleFirewallInterface {
++
++  /**
++   * Checks which roles should be removed based on IP whitelists.
++   *
++   * @return array
++   *   Array of role IDs that should be removed from user.
++   */
++  public function rolesToRemove();
++
++}
+diff -Naur modules/restrict_by_ip/src/Session/AccountProxy.php modules/restrict_by_ip/src/Session/AccountProxy.php
+--- modules/restrict_by_ip/src/Session/AccountProxy.php	1970-01-01 01:00:00.000000000 +0100
++++ modules/restrict_by_ip/src/Session/AccountProxy.php	2019-10-30 10:09:39.000000000 +0000
+@@ -0,0 +1,174 @@
++<?php
++
++/**
++ * @file
++ * Contains \Drupal\restrict_by_ip\Session\AccountProxy.
++ */
++
++namespace Drupal\restrict_by_ip\Session;
++
++use Drupal\Core\Session\AccountProxyInterface;
++use Drupal\Core\Session\AccountInterface;
++use Drupal\restrict_by_ip\RoleFirewallInterface;
++
++/**
++ * When the current user is loaded, remove any roles that are restricted based
++ * on IP whitelists. Proxy all other method calls to the original current_user
++ * service.
++ */
++class AccountProxy implements AccountProxyInterface {
++
++  /**
++   * The original current_user service.
++   *
++   * @var \Drupal\Core\Session\AccountProxyInterface
++   */
++  protected $original;
++
++  protected $roleFirewall;
++
++  public function __construct(
++    AccountProxyInterface $original,
++    RoleFirewallInterface $role_firewall) {
++
++    $this->original = $original;
++    $this->roleFirewall = $role_firewall;
++  }
++
++  /**
++   * Return roles for this user, less any that are restricted.
++   *
++   * @param bool $exclude_locked_roles
++   *   (optional) If TRUE, locked roles (anonymous/authenticated) are not returned.
++   *
++   * @return array
++   *   List of role IDs.
++   */
++  public function getRoles($exclude_locked_roles = FALSE) {
++    $roles = $this->original->getRoles($exclude_locked_roles);
++    $remove_roles = $this->roleFirewall->rolesToRemove();
++
++    return array_diff($roles, $remove_roles);
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function hasPermission($permission) {
++    // User #1 has all privileges.
++    if ((int) $this->id() === 1) {
++      return TRUE;
++    }
++
++    return $this->getRoleStorage()->isPermissionInRoles($permission, $this->getRoles());
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function setAccount(AccountInterface $account) {
++    $this->original->setAccount($account);
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getAccount() {
++    return $this->original->getAccount();
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function id() {
++    return $this->original->id();
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function isAuthenticated() {
++    return $this->original->isAuthenticated();
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function isAnonymous() {
++    return $this->original->isAnonymous();
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getPreferredLangcode($fallback_to_default = TRUE) {
++    return $this->original->getPreferredLangcode($fallback_to_default);
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getPreferredAdminLangcode($fallback_to_default = TRUE) {
++    return $this->original->getPreferredAdminLangcode($fallback_to_default);
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getUsername() {
++    return $this->original->getUsername();
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getAccountName() {
++    return $this->original->getAccountName();
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getDisplayName() {
++    return $this->original->getDisplayName();
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getEmail() {
++    return $this->original->getEmail();
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getTimeZone() {
++    return $this->original->getTimeZone();
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getLastAccessedTime() {
++    return $this->original->getLastAccessedTime();
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function setInitialAccountId($account_id) {
++    $this->original->setInitialAccountId($account_id);
++  }
++
++  /**
++   * Returns the role storage object.
++   *
++   * @return \Drupal\user\RoleStorageInterface
++   *   The role storage object.
++   */
++  protected function getRoleStorage() {
++    return \Drupal::entityManager()->getStorage('user_role');
++  }
++
++}
+diff -Naur modules/restrict_by_ip/src/Tests/RoleTest.php modules/restrict_by_ip/src/Tests/RoleTest.php
+--- modules/restrict_by_ip/src/Tests/RoleTest.php	2019-10-29 17:32:23.000000000 +0000
++++ modules/restrict_by_ip/src/Tests/RoleTest.php	2019-10-30 10:09:39.000000000 +0000
+@@ -78,4 +78,18 @@
+     $ip = variable_get('restrict_by_ip_role_' . _restrict_by_ip_hash_role_name($this->role['name']), 'ip default');
+     $this->assertEqual($ip, 'ip default', 'IP restriction deleted');
+   }
++
++  /**
++   * @todo Make sure roles aren't modified when editing another users account.
++   */
++  public function testRoleRemovedForCurrentUserOnly() {
++
++  }
++
++  /**
++   * @todo Make sure that a list of ranges are evaluated as OR.
++   */
++  public function testRoleRangesOR() {
++
++  }
+ }

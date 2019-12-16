@@ -1,5 +1,9 @@
 changes:
-
-    8.x-1.1.55:
-      - Update ChangeLog.yml
-      - Update ChangeLog.yml
+  8.x-1.3.1:
+  - Making use of AccountProxyInterface to improve compatibility.
+  8.x-1.3.0:
+  - update version to 8.x.1.3.0
+  8.x-1.2.57: null
+  8.x-1.2.56:
+  - clear change log
+  - update version: 8.x-1.1.56 -> 8.x-1.2.56

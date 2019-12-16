@@ -36,6 +36,8 @@ sed -i -e 's/4443/443/' -e '/ssl_dhparam/d' -e 's/gulag/limreq/' -e 's/brotli_st
 
 sed -i -e 's/gulag/limreq/' -e 's/more_set_headers/#more_set_headers/' /etc/nginx/conf.d/aegir.conf
 
+sed -i 's/expose_php =.*/expose_php = Off/g' /etc/opt/rh/rh-php72/php.ini
+
 mkdir /web/ssl
 openssl req -batch -x509 -nodes -days 365000 -newkey rsa:2048 -keyout /etc/nginx/ssl/hostmaster.key -out /etc/nginx/ssl/hostmaster.crt -sha256
 

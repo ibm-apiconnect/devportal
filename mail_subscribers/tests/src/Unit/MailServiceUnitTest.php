@@ -15,7 +15,6 @@ namespace Drupal\Tests\mail_subscribers\Unit;
 
 use Drupal\mail_subscribers\Service\MailService;
 use Drupal\Tests\UnitTestCase;
-use Egulias\EmailValidator\Validation\RFCValidation;
 use Prophecy\Prophet;
 
 /**
@@ -76,7 +75,7 @@ class MailServiceUnitTest extends UnitTestCase {
 
   protected function setup() {
     $this->prophet = new Prophet();
-    $this->emailValidator = $this->prophet->prophesize(\Egulias\EmailValidator\EmailValidator::class);
+    $this->emailValidator = $this->prophet->prophesize(\Drupal\Component\Utility\EmailValidator::class);
 
     $this->entityTypeManager = $this->prophet->prophesize(\Drupal\Core\Entity\EntityTypeManagerInterface::class);
 
@@ -109,8 +108,6 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->account1 = $this->prophet->prophesize(\Drupal\Core\Session\AccountInterface::class);
     $this->account2 = $this->prophet->prophesize(\Drupal\Core\Session\AccountInterface::class);
     $this->entityNodeStorage->getQuery()->willReturn($this->entityQuery->reveal());
-
-    $this->emailValidation = new RFCValidation();
   }
 
   protected function tearDown() {
@@ -130,7 +127,7 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->entityQuery->condition('type', 'consumerorg')->willReturn(NULL);
     $this->entityQuery->condition('consumerorg_url.value', "consorg1")->willReturn(NULL);
     $this->account1->getEmail()->willReturn("fdh@test.com");
-    $this->emailValidator->isValid("fdh@test.com", $this->emailValidation)->willReturn(TRUE);
+    $this->emailValidator->isValid("fdh@test.com")->willReturn(TRUE);
     $this->userStorageInterface->loadUserByUrl('/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e')
       ->willReturn($this->account1);
 
@@ -159,7 +156,7 @@ class MailServiceUnitTest extends UnitTestCase {
       ->willReturn($this->createSimpleObject('value', '/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e'));
     $this->consorg1->get(0)->willReturn($this->consorgString1);
     $this->account1->getEmail()->willReturn("fdh@test.com");
-    $this->emailValidator->isValid("fdh@test.com", $this->emailValidation)->willReturn(TRUE);
+    $this->emailValidator->isValid("fdh@test.com")->willReturn(TRUE);
     $this->userStorageInterface->loadUserByUrl('/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e')
       ->willReturn($this->account1);
 
@@ -193,8 +190,8 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->entityQuery->condition('consumerorg_url.value', "consorg2")->willReturn(NULL);
     $this->account1->getEmail()->willReturn("fdh@test.com");
     $this->account2->getEmail()->willReturn("fdh2@test.com");
-    $this->emailValidator->isValid("fdh@test.com", $this->emailValidation)->willReturn(TRUE);
-    $this->emailValidator->isValid("fdh2@test.com", $this->emailValidation)->willReturn(TRUE);
+    $this->emailValidator->isValid("fdh@test.com")->willReturn(TRUE);
+    $this->emailValidator->isValid("fdh2@test.com")->willReturn(TRUE);
     $this->userStorageInterface->loadUserByUrl('/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e')
       ->willReturn($this->account1);
     $this->userStorageInterface->loadUserByUrl('/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e2')
@@ -232,7 +229,7 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->entityQuery->condition('type', 'consumerorg')->willReturn(NULL);
     $this->entityQuery->condition('consumerorg_url.value', "consorg1")->willReturn(NULL);
     $this->account1->getEmail()->willReturn("fdh@test.com");
-    $this->emailValidator->isValid("fdh@test.com", $this->emailValidation)->willReturn(TRUE);
+    $this->emailValidator->isValid("fdh@test.com")->willReturn(TRUE);
     $this->userStorageInterface->loadUserByUrl('/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e')
       ->willReturn($this->account1);
 
@@ -267,7 +264,7 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->memberString1->getValue()->willReturn([['value' => 'a:1:{s:4:"user";a:1:{s:4:"mail";s:12:"fdh@test.com";}}']]);
     $this->appNode2->get('consumerorg_members')->willReturn($this->memberString1);
     $this->account1->getEmail()->willReturn("fdh@test.com");
-    $this->emailValidator->isValid("fdh@test.com", $this->emailValidation)->willReturn(TRUE);
+    $this->emailValidator->isValid("fdh@test.com")->willReturn(TRUE);
     $this->userStorageInterface->loadUserByUrl('/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e')
       ->willReturn($this->account1);
     $this->entityQuery->condition('type', 'consumerorg')->willReturn(NULL);
@@ -298,8 +295,8 @@ class MailServiceUnitTest extends UnitTestCase {
       ->willReturn($this->createSimpleObject('value', '/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05d'));
     $this->account1->getEmail()->willReturn("fdh@test.com");
     $this->account2->getEmail()->willReturn("fdh2@test.com");
-    $this->emailValidator->isValid("fdh@test.com", $this->emailValidation)->willReturn(TRUE);
-    $this->emailValidator->isValid("fdh2@test.com", $this->emailValidation)->willReturn(TRUE);
+    $this->emailValidator->isValid("fdh@test.com")->willReturn(TRUE);
+    $this->emailValidator->isValid("fdh2@test.com")->willReturn(TRUE);
     $this->userStorageInterface->loadUserByUrl('/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e')
       ->willReturn($this->account1);
     $this->userStorageInterface->loadUserByUrl('/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05d')
@@ -325,7 +322,7 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->memberString1->getValue()->willReturn([['value' => 'a:1:{s:4:"user";a:1:{s:4:"mail";s:12:"fdh@test.com";}}']]);
     $this->consorgNode1->get('consumerorg_members')->willReturn($this->memberString1);
     $this->account1->getEmail()->willReturn("fdh@test.com");
-    $this->emailValidator->isValid("fdh@test.com", $this->emailValidation)->willReturn(TRUE);
+    $this->emailValidator->isValid("fdh@test.com")->willReturn(TRUE);
     $this->userStorageInterface->loadUserByUrl('/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e')
       ->willReturn($this->account1);
 

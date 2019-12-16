@@ -1,0 +1,38 @@
+--- modules/disable_language/src/EventSubscriber/DisabledLanguagesEventSubscriber.php	2019-10-30 13:59:03.000000000 +0000
++++ modules/disable_language/src/EventSubscriber/DisabledLanguagesEventSubscriber.php	2019-10-30 14:21:07.000000000 +0000
+@@ -6,7 +6,7 @@
+ use Drupal\Core\Condition\ConditionManager;
+ use Drupal\Core\Config\ConfigFactoryInterface;
+ use Drupal\Core\Routing\RouteMatch;
+-use Drupal\Core\Session\AccountProxy;
++use Drupal\Core\Session\AccountProxyInterface;
+ use Drupal\Core\StreamWrapper\StreamWrapperManager;
+ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+ // This class contains the event we want to subscribe to.
+@@ -31,7 +31,7 @@
+   /**
+    * Contains current_user service.
+    *
+-   * @var \Drupal\Core\Session\AccountProxy
++   * @var \Drupal\Core\Session\AccountProxyInterface
+    */
+   protected $currentUser;
+ 
+@@ -61,7 +61,7 @@
+    *
+    * @param \Drupal\disable_language\DisableLanguageManager $disableLanguageManager
+    *   Class DisableLanguageManager.
+-   * @param \Drupal\Core\Session\AccountProxy $currentUser
++   * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
+    *   A proxied implementation of AccountInterface.
+    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+    *   Config factory.
+@@ -69,7 +69,7 @@
+    *   A plugin manager for conditions plugins.
+    * @param \Drupal\Core\StreamWrapper\StreamWrapperManager $streamWrapperManager
+    */
+-  public function __construct(DisableLanguageManager $disableLanguageManager, AccountProxy $currentUser, ConfigFactoryInterface $configFactory, ConditionManager $conditionManager,StreamWrapperManager $streamWrapperManager) {
++  public function __construct(DisableLanguageManager $disableLanguageManager, AccountProxyInterface $currentUser, ConfigFactoryInterface $configFactory, ConditionManager $conditionManager,StreamWrapperManager $streamWrapperManager) {
+     $this->currentUser = $currentUser;
+     $this->disableLanguageManager = $disableLanguageManager;
+     $this->config = $configFactory->get('disable_language.settings');

@@ -908,6 +908,20 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
   }
 
+  /**
+   * @Then there is no :arg1 response header
+   */
+  public function thereIsNoResponseHeader($arg1) {
+    $session = $this->getSession();
+    $responseHeaders = $session->getResponseHeaders();
+    $responseHeaders = array_change_key_case($responseHeaders, CASE_LOWER);
+    $responseHeader = strtolower($arg1);
+    
+    if (array_key_exists($responseHeader,$responseHeaders)) {
+      throw new \Exception("Response header $arg1 found but not expected");
+    }
+  }
+
 
   /**
    * "Given I am logged in as :name"

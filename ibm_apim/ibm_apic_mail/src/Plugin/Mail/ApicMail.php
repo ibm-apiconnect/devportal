@@ -202,20 +202,20 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
     // do not set a from address - use the sender address configured in the CM
 
     if (array_key_exists('cc', $message)) {
-      $requestBody['cc'] = self::parse_mailboxes($message['cc']);
+      $requestBody['cc'] = implode(',', self::parse_mailboxes($message['cc']));
     } elseif (isset($message['headers']['Cc']) && !empty($message['headers']['Cc'])) {
-      $requestBody['cc'] = self::parse_mailboxes($message['headers']['Cc']);
+      $requestBody['cc'] = implode(',', self::parse_mailboxes($message['headers']['Cc']));
     }
     elseif (isset($message['headers']['Cc']) && !empty($message['headers']['Cc'])) {
-      $requestBody['cc'] = self::parse_mailboxes($message['headers']['Cc']);
+      $requestBody['cc'] = implode(',', self::parse_mailboxes($message['headers']['Cc']));
     }
     if (array_key_exists('bcc', $message)) {
-      $requestBody['bcc'] = self::parse_mailboxes($message['bcc']);
+      $requestBody['bcc'] = implode(',', self::parse_mailboxes($message['bcc']));
     } elseif (isset($message['headers']['Bcc']) && !empty($message['headers']['Bcc'])) {
-      $requestBody['bcc'] = self::parse_mailboxes($message['headers']['Bcc']);
+      $requestBody['bcc'] = implode(',', self::parse_mailboxes($message['headers']['Bcc']));
     }
     elseif (isset($message['headers']['Bcc']) && !empty($message['headers']['Bcc'])) {
-      $requestBody['bcc'] = self::parse_mailboxes($message['headers']['Bcc']);
+      $requestBody['bcc'] = implode(',', self::parse_mailboxes($message['headers']['Bcc']));
     }
 
     try {

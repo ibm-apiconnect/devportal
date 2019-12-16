@@ -1,5 +1,5 @@
---- modules/adminimal_admin_toolbar/css/font.css	2018-05-31 11:33:56.000000000 +0100
-+++ modules/adminimal_admin_toolbar/css/font.css	2018-05-31 11:36:18.000000000 +0100
+--- modules/adminimal_admin_toolbar/css/font.css     	2019-11-08 18:01:15.000000000 +0000
++++ modules/adminimal_admin_toolbar/css/font.css	2019-11-08 18:09:21.000000000 +0000
 @@ -1,23 +1,23 @@
 -/* Import the Open Sans webfont from Google CDN */
 +/* Use local Plex instead of using Open Sans webfont from Google CDN */
@@ -30,6 +30,6 @@
  }
  
  .adminimal-admin-toolbar .toolbar {
--  font-family: "Open Sans";
+-  font-family: "Open Sans", sans-serif;
 +  font-family: "IBM Plex";
  }

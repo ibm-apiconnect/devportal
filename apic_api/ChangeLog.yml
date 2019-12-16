@@ -1,16 +1,7 @@
 changes:
-    8.x-1.0.28:
-      - Update ChangeLog.yml
-
-    8.x-1.0.29:
-      - Update ChangeLog.yml
-    8.x-1.0.30:
-
-    8.x-1.0.31:
-      - fix application list for apis
-    8.x-1.0.32:
-      - wrong field name
-    8.x-1.0.33:
-      - set allowed_values for api protocol in upgrade
-    8.x-1.0.34:
-      - fix api upgrade
+  8.x-1.2.0:
+  - Update version to 8.x-1.2.0
+  8.x-1.1.36: null
+  8.x-1.1.35:
+  - clearing change log
+  - update version: 8.x-1.0.35 -> 8.x-1.1.35

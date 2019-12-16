@@ -1,11 +1,11 @@
 changes:
-    8.x-1.0.31:
-      - Update ChangeLog.yml
-
-    8.x-1.0.32:
-      - Update ChangeLog.yml
-      - Update ChangeLog.yml
-    8.x-1.0.33:
-      - fix check
-    8.x-1.0.34:
-      - fix multi-plan tooltip
+  8.x-1.2.1:
+  - Revert "Product view improved"
+  - Product view label
+  - Product view improved
+  8.x-1.2.0:
+  - Update version to 8.x-1.2.0
+  8.x-1.1.36: null
+  8.x-1.1.35:
+  - reset change log
+  - update version: 8.x-1.0.35 -> 8.x-1.1.35

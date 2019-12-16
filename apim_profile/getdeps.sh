@@ -34,8 +34,8 @@ else
     npm --verbose pack @apic/analytics-native-vis@latest
   fi
   cd ${TMP_DIR}/explorer
-  echo "Downloading apiconnect-explorer node module from: https://na.artifactory.swg-devops.com/artifactory/api/npm/apic-prod-npm/"
-  npm --registry https://na.artifactory.swg-devops.com/artifactory/api/npm/apic-prod-npm/ pack apiconnect-explorer
+  echo "Downloading apiconnect-explorer node module from: npmjs/"
+  npm pack apiconnect-explorer
 fi
 
 cd ${TMP_DIR}/explorer

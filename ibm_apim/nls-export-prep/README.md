@@ -11,11 +11,11 @@ and more detail can be seen below.
 
 | Script/ Command  | Purpose | 
 | ---------------- | ------- | 
-| download_existing_translations.sh |  Download all existing translations for modules/ themes the portal uses. |
+| download_public_drupal_translations.sh |  Download all existing translations for modules/ themes the portal uses. |
 | export_pots.sh | Export all of the current translatable strings from the modules/ themes the portal uses. |
 | drush nlsexport | Generate the content for translation, including the raw .pot files (templates === English only scripts), .po files for existing translations (which become translation memories), .po files which contain just the set of strings which still require translation. | 
 
-### download_existing_translations.sh
+### download_public_drupal_translations.sh
 
 Lists all of the modules known about (both enabled and not) then attempts to download the existing translations from ftp.drupal.org (translation site to browse is https://localize.drupal.org/).
 

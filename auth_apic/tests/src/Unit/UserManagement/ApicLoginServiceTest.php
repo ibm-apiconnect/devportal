@@ -553,6 +553,39 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->assertEquals('ibm_apim.noperms', $response);
     }
 
+    public function testLoginFailMoreThanOneUserAlreadyInDBWithEmailAddress(): void {
+
+      $user = $this->generateLoginUser();
+
+      $tokenResponse = $this->generateTokenResponse();
+
+      $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
+      $this->mgmtServer->setAuth(Argument::any())->shouldNotBeCalled();
+      $meResponse = $this->createMeResponse($user);
+      $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
+
+      $multipleEmailHitsException = new \Exception('Multiple users (2) returned matching email "andre@example.com" unable to continue.');
+      $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willThrow($multipleEmailHitsException);
+
+      $this->accountService->createOrUpdateLocalAccount(Argument::any())->shouldNotBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
+
+      $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
+      $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
+
+      $this->userStorage->userLoginFinalize(Argument::any())->shouldNotBeCalled();
+
+      $this->logger->notice('@username [UID=@uid] logged in.', ['@username' => 'abc', '@uid' => '1'])->shouldNotBeCalled();
+      $this->logger->error( 'Login failed because there was a problem searching for users based on email: %message',
+        ["%message" => 'Multiple users (2) returned matching email "andre@example.com" unable to continue.'])->shouldBeCalled();
+      $this->logger->error( "Login failed - login is not permitted.")->shouldBeCalled();
+
+      $service = $this->generateServiceUnderTest();
+      $response = $service->login($user);
+      $this->assertFalse($response->success());
+
+    }
+
 
     // Helper Functions for login().
 

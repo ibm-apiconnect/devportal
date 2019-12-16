@@ -91,6 +91,9 @@ ibm_apim.settings:
     optimise_oauth_ux:
       type: boolean
       label: 'Optimise OAuth test tool user experience'
+    show_mtls_header:
+      type: boolean
+      label: 'Show certificate in header for APIs secured with mutual TLS'
     email_as_username:
       type: boolean
       label: 'Usernames are email addresses'

@@ -1,7 +1,9 @@
 changes:
-    8.x-1.0.16:
-      - Update ChangeLog.yml
-
-    8.x-1.0.17:
-      - Update ChangeLog.yml
-    8.x-1.0.18:
+  8.x-1.2.1: null
+  8.x-1.2.0:
+  - update version to 8.x-1.2.0
+  8.x-1.1.20:
+  - use drupal core email validator
+  8.x-1.1.19:
+  - reset change log
+  - update version: 8.x-1.0.19 -> 8.x-1.1.19

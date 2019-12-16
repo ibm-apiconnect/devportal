@@ -403,3 +403,24 @@ Feature: Sign-up
     And there are no warnings
 
 
+  Scenario: View the sign up form with a writable ldap registry
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | no     |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes          | yes     |
+    And I am at "/user/register"
+    Then I should see the text "Sign up with @data(user_registries[2].title)"
+    And I should see the text "Sign Up"
+    And I should see the text "Username"
+    And I should see the text "Email address"
+    And I should see the text "First Name"
+    And I should see the text "Last Name"
+    And I should see the text "Consumer organization"
+    And I should see the text "Password"
+    And I should see the text "Confirm password"
+    And I should see the text "What code is in the image?"
+    And I should see the button "Sign up"
+    #And there are no errors - can't use this step as password policy box is treated as an error!
+    And there are no warnings
+    And there are no messages
