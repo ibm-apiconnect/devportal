@@ -903,3 +903,9 @@ span.cron-description__run-cron a {
 .form-type-password .input-group {
   display: block;
 }
+
+/* for product detail page */
+.apicProductApiList.view-product-content .masonry-layout .masonry-item {
+  border: 0;
+  background: inherit;
+}

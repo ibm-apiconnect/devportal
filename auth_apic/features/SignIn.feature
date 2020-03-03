@@ -499,3 +499,177 @@ Scenario: Sign in users from different user registries with the same username
   And there are no warnings
 
 
+  #writableLDAP tests - should see link to sign up and forgot password
+  Scenario: View the sign in form - writable ldap with admin not hidden (default case)
+    Given I am not logged in
+    And ibm_apim settings config boolean property "hide_admin_registry" value is "false"
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes          | yes     |
+    And I am at "/user/login"
+    Then I should see the text "Sign in with @data(user_registries[2].title)"
+    And I should see the text "Sign in"
+    And I should see the text "Username"
+    And I should see the text "Password"
+    And I should see the text "Continue with"
+    And I should see the link "admin"
+    And I should see the link "Forgot password?"
+    And I should see the text "Don't have an account?"
+    And I should see the link "Sign up"
+    And there are no messages
+    And there are no warnings
+    And there are no errors
+
+  Scenario: View the sign in form - writable ldap with admin hidden (single registry)
+    Given I am not logged in
+    And ibm_apim settings config boolean property "hide_admin_registry" value is "true"
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes          | yes     |
+    And I am at "/user/login"
+    Then I should see the text "Sign in with @data(user_registries[2].title)"
+    Then I should see the text "Sign in"
+    And I should see the text "Username"
+    And I should see the text "Password"
+    And I should not see the text "Continue with"
+    And I should not see the link "admin"
+    And I should see the link "Forgot password?"
+    And I should see the text "Don't have an account?"
+    And I should see the link "Sign up"
+    And there are no messages
+    And there are no warnings
+    And there are no errors
+
+
+  @api
+  Scenario: Sign in form loads with writable ldap registry link (non-default)
+    Given the cache has been cleared
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes          | no     |
+    When I am at "/user/login"
+    Then I should see the text "Sign in with @data(user_registries[0].title)"
+    Then I should see the text "Sign in"
+    And I should see the text "Username"
+    And I should see the text "Password"
+    And I should see "or" in the ".apic-user-form-or" element
+    And I should see the text "or"
+    And I should see the text "Continue with"
+    And I should see the link "@data(user_registries[2].title)"
+    Then I should see the button "Sign in"
+    And I should see the link "Forgot password?"
+    And I should see the text "Don't have an account?"
+    And I should see the link "Sign up"
+    And there are no messages
+    And there are no warnings
+    And there are no errors
+
+
+  @api
+  Scenario: Sign in form loads with writable ldap registry link (default)
+    Given the cache has been cleared
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | no     |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes          | yes     |
+    When I am at "/user/login"
+    Then I should see the text "Sign in with @data(user_registries[2].title)"
+    Then I should see the text "Sign in"
+    And I should see the text "Username"
+    And I should see the text "Password"
+    And I should see "or" in the ".apic-user-form-or" element
+    And I should see the text "or"
+    And I should see the text "Continue with"
+    And I should see the link "@data(user_registries[0].title)"
+    Then I should see the button "Sign in"
+    And I should see the link "Forgot password?"
+    And I should see the text "Don't have an account?"
+    And I should see the link "Sign up"
+    And there are no messages
+    And there are no warnings
+    And there are no errors
+
+#wLDAP sign in tests - note new user sign in authenticates with ldap db, creates a consumer
+#org on the fly, & takes user to /start page. However, current test framework doesn't support this behaviour,
+#rather it takes the user to /myorg/create form to create an organization. Test will need updating if framework changes.
+  @api
+  Scenario: Sign in for the first time without completing sign up form but already exists in a wLDAP registry
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status | first_time_login |
+      | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      | 1                |
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes          | yes     |
+    When I am at "/user/login"
+    Then I should see the text "Sign in with @data(user_registries[2].title)"
+    Given I enter "@data(andre.mail)" for "Username"
+    And I enter "@data(andre.password)" for "Password"
+    When I press the "Sign in" button
+    Then I should be on "/myorg/create"
+    Then there are no errors
+    And there are no messages
+    And there are no warnings
+
+
+  @api
+  Scenario: Sign in for the first time after completing a sign up form with a wLDAP registry
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status | first_time_login |
+      | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      | 1                |
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes          | yes     |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+    When I am at "/user/login"
+    Given I enter "@data(andre.mail)" for "Username"
+    And I enter "@data(andre.password)" for "Password"
+    When I press the "Sign in" button
+    Then I should be on "/start"
+    And I should see the text "Get Started"
+    And I should see the text "Explore API Products"
+    And I should see the link "Start Exploring"
+    And I should see the text "Create a new App"
+    And I should see the link "Create an App"
+    And I should see the link "Take me to the homepage"
+    Then there are no errors
+    And there are no messages
+    And there are no warnings
+    And the apim user "@data(andre.mail)" is logged in
+
+
+  @api
+  Scenario: Sign in as a wLDAP user (not the first time)
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status | first_time_login |
+      | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      | 0                |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.mail) |
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes          | yes     |
+    When I am at "/user/login"
+    Given I enter "@data(andre.mail)" for "Username"
+    And I enter "@data(andre.password)" for "Password"
+    When I press the "Sign in" button
+#    Then I should be on the homepage - this is where the user should be, but current test framework doesn't support this
+    Then I should be on "/start"
+    And I should see the text "Get Started"
+    And I should see the text "Explore API Products"
+    And I should see the link "Start Exploring"
+    And I should see the text "Create a new App"
+    And I should see the link "Create an App"
+    And I should see the link "Take me to the homepage"
+    Then there are no errors
+    And there are no messages
+    And there are no warnings
+    And the apim user "@data(andre.mail)" is logged in
+

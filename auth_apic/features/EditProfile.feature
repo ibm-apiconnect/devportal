@@ -223,3 +223,61 @@ Scenario: View another users edit profile form as admin user (uid==1)
     And there are no warnings
 
 
+  @api
+  Scenario: View edit profile form as a writable LDAP user
+    Given the cache has been cleared
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes           | yes     |
+    Given users:
+      | name              | mail              | pass                  | status | registry_url                  |
+      | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      | @data(user_registries[2].url) |
+    Given I am logged in as "@data(andre.name)"
+    When I am at "/user/@uid/edit"
+    Then I should see the text "First Name"
+    And the element "first_name[0][value]" is enabled
+    And the "first_name[0][value]" field should contain "Andre"
+    And I should see the text "Last Name"
+    And the element "last_name[0][value]" is enabled
+    And the "last_name[0][value]" field should contain "Andresson"
+    And I should see the text "Email Address"
+    And the element "emailaddress" is disabled
+    And the "emailaddress" field should contain "@data(andre.mail)"
+    And I should see the text "Code Snippet language"
+    And I should see the text "Time zone"
+    And I should see the text "Site language"
+    And I should see the text "Status"
+    And I should see the text "Roles"
+    And I should see the text "Avatar Generator"
+    And I should see the text "User picture upload"
+    And I should not see the text "Current Password"
+    And I should not see an "#edit-name" element
+    And I should not see an "#edit-consumer-organization-0-value" element
+    And I should not see the text "Cancel account"
+    And I should see the text "Cancel"
+    And I should see the text "Save"
+    And I should see the text "Delete account"
+
+  @api
+  Scenario: Change profile first name and last name as a writable LDAP user
+    Given the cache has been cleared
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes           | yes     |
+    Given users:
+      | name              | mail              | pass                  | status | registry_url                  |
+      | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      | @data(user_registries[2].url) |
+    Given I am logged in as "@data(andre.name)"
+    When I am at "/user/@uid/edit"
+    And I enter "Changed Name" for "First Name"
+    And I enter "Changed Last Name" for "Last Name"
+    When I press the "Save" button
+    And there are messages
+    And I should see the text "Your account has been updated."
+    And the "First Name" field should contain "Changed Name"
+    And the "Last Name" field should contain "Changed Last Name"
+    And there are no errors
+    And there are no warnings
+

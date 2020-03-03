@@ -1,7 +1,7 @@
 <?php
-require_once '../../vendor/leafo/scssphp/scss.inc.php';
+require_once '../../vendor/scssphp/scssphp/scss.inc.php';
 
-use Leafo\ScssPhp\Compiler;
+use ScssPhp\ScssPhp\Compiler;
 
 $scss = new Compiler();
 $scss->addImportPath('bootstrap/assets/stylesheets');

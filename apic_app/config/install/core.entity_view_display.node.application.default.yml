@@ -11,7 +11,6 @@ dependencies:
     - field.field.node.application.apic_url
     - field.field.node.application.application_client_type
     - field.field.node.application.application_consumer_org_url
-    - field.field.node.application.application_credentials
     - field.field.node.application.application_credentials_refs
     - field.field.node.application.application_data
     - field.field.node.application.application_enabled
@@ -20,7 +19,6 @@ dependencies:
     - field.field.node.application.application_lifecycle_state
     - field.field.node.application.application_name
     - field.field.node.application.application_redirect_endpoints
-    - field.field.node.application.application_subscriptions
     - field.field.node.application.application_subscription_refs
     - image.style.icon
     - node.type.application
@@ -179,6 +177,4 @@ content:
     region: content
 hidden:
   application_client_type: true
-  application_subscriptions: true
-  application_credentials: true
   langcode: true

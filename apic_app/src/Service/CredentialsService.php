@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,8 +13,7 @@
 
 namespace Drupal\apic_app\Service;
 
-use Drupal\apic_app\Entity\Credentials;
-use Drupal\apic_app\Entity\Subscription;
+use Drupal\apic_app\Entity\ApplicationCredentials;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 
@@ -58,11 +57,11 @@ class CredentialsService {
   public function deleteCredentials($node, $credId): NodeInterface {
     if (isset($node, $credId)) {
       // delete the credential entities
-      $query = \Drupal::entityQuery('apic_app_credentials');
+      $query = \Drupal::entityQuery('apic_app_application_creds');
       $query->condition('id', $credId);
       $entityIds = $query->execute();
       if (isset($entityIds) && !empty($entityIds)) {
-        $credEntities = Subscription::loadMultiple($entityIds);
+        $credEntities = ApplicationCredentials::loadMultiple($entityIds);
         foreach ($credEntities as $credEntity) {
           $credEntity->delete();
         }
@@ -91,13 +90,17 @@ class CredentialsService {
    */
   private function createOrUpdateACredential($cred) {
     if ($cred !== NULL) {
-
-      $query = \Drupal::entityQuery('apic_app_credentials');
+      if (isset($cred['consumer_org_url'])) {
+        $cred['consumerorg_url'] = $cred['consumer_org_url'];
+      }
+      if (isset($cred['cred_url'])) {
+        $cred['url'] = $cred['cred_url'];
+      }
+      $query = \Drupal::entityQuery('apic_app_application_creds');
       $query->condition('id', $cred['id']);
-
       $entityIds = $query->execute();
       if (isset($entityIds) && !empty($entityIds)) {
-        $credEntities = Credentials::loadMultiple($entityIds);
+        $credEntities = ApplicationCredentials::loadMultiple($entityIds);
         $credEntity = array_shift($credEntities);
         $credEntity->set('name', $cred['name']);
         $credEntity->set('title', $cred['title']);
@@ -115,7 +118,7 @@ class CredentialsService {
         }
       }
       else {
-        $newCred = Credentials::create([
+        $newCred = ApplicationCredentials::create([
           'id' => $cred['id'],
           'client_id' => $cred['client_id'],
           'name' => $cred['name'],
@@ -194,7 +197,7 @@ class CredentialsService {
    */
   public function updateClientId($credId, $client_id) : void {
     if ($credId !== NULL && $client_id !== NULL) {
-      $cred = Credentials::load($credId);
+      $cred = ApplicationCredentials::load($credId);
       if ($cred !== null) {
         $cred->set('client_id', $client_id);
         $cred->save();

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -125,7 +125,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   public function buildForm(array $form, FormStateInterface $form_state, UserInterface $user = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $this->user_profile = $account = $user;
+    $this->userProfile = $account = $user;
     $user = $this->account;
 
     if ($this->getRequest()->get('pass-reset-token')) {

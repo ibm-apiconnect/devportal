@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -17,6 +17,7 @@
  */
 
 use Drupal\block\Entity\Block;
+use Drupal\block_content\Entity\BlockContent;
 use Drupal\captcha\Entity\CaptchaPoint;
 use Drupal\locale\Gettext;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
@@ -366,9 +367,6 @@ function apim_profile_install() {
 function apim_profile_main_menu_links() {
   $menu_name = 'main';
 
-  // Menu links need to be localized in all languages we support
-  $languages = \Drupal::languageManager()->getLanguages();
-
   $home_link = MenuLinkContent::create([
     'title' => t('Home', [], ['langcode' => 'en']),
     'description' => t('Portal homepage', [], ['langcode' => 'en']),
@@ -377,25 +375,10 @@ function apim_profile_main_menu_links() {
     'expanded' => TRUE,
     'weight' => -1,
   ]);
-
-  foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
-      continue;
-    }
-    $translation = [
-      'title' => t('Home', [], ['langcode' => $language->getId()]),
-      'description' => t('Portal homepage', [], ['langcode' => $language->getId()]),
-      'link' => ['uri' => 'internal:/'],
-      'menu_name' => $menu_name,
-      'expanded' => TRUE,
-      'weight' => -1,
-    ];
-    $home_link->addTranslation($language->getId(), $translation);
-  }
-
   $home_link->save();
+  add_home_link_translations($home_link);
 
-  $link = MenuLinkContent::create([
+  $apis_link = MenuLinkContent::create([
     'title' => t('API Products', [], ['langcode' => 'en']),
     'description' => t('Browse available APIs', [], ['langcode' => 'en']),
     'link' => ['uri' => 'internal:/product', [], ['langcode' => 'en']],
@@ -403,20 +386,10 @@ function apim_profile_main_menu_links() {
     'weight' => 5,
     'langcode' => 'en',
   ]);
-  foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
-      continue;
-    }
-    $translation = [
-      'title' => t('API Products', [], ['langcode' => $language->getId()]),
-      'description' => t('Browse available APIs', [], ['langcode' => $language->getId()]),
-      'langcode' => $language->getId(),
-    ];
-    $link->addTranslation($language->getId(), $translation);
-  }
-  $link->save();
+  $apis_link->save();
+  add_apis_link_translations($apis_link);
 
-  $link = MenuLinkContent::create([
+  $apps_link = MenuLinkContent::create([
     'title' => t('Apps', [], ['langcode' => 'en']),
     'description' => t('Create and manage your apps', [], ['langcode' => 'en']),
     'link' => ['uri' => 'internal:/application', [], ['langcode' => 'en']],
@@ -424,18 +397,8 @@ function apim_profile_main_menu_links() {
     'weight' => 10,
     'langcode' => 'en',
   ]);
-  foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
-      continue;
-    }
-    $translation = [
-      'title' => t('Apps', [], ['langcode' => $language->getId()]),
-      'description' => t('Create and manage your apps', [], ['langcode' => $language->getId()]),
-      'langcode' => $language->getId(),
-    ];
-    $link->addTranslation($language->getId(), $translation);
-  }
-  $link->save();
+  $apps_link->save();
+  add_apps_link_translations($apps_link);
 
   $forum_link = MenuLinkContent::create([
     'title' => t('Forums'),
@@ -445,23 +408,8 @@ function apim_profile_main_menu_links() {
     'expanded' => TRUE,
     'weight' => 25,
   ]);
-
-  foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
-      continue;
-    }
-    $translation = [
-      'title' => t('Forums', [], ['langcode' => $language->getId()]),
-      'description' => t('Interact with our community', [], ['langcode' => $language->getId()]),
-      'link' => ['uri' => 'internal:/forum'],
-      'menu_name' => $menu_name,
-      'expanded' => TRUE,
-      'weight' => 25,
-    ];
-    $forum_link->addTranslation($language->getId(), $translation);
-  }
-
   $forum_link->save();
+  add_forum_link_translations($forum_link);
 
   // update weight of the blogs link
   $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
@@ -471,6 +419,110 @@ function apim_profile_main_menu_links() {
   $menu_link_manager->updateDefinition($blog_menu_id, $blogs_link);
   $cache = \Drupal::cache('menu');
   $cache->deleteAll();
+}
+
+/**
+ * @param string $menu_name
+ * @param $forum_link
+ */
+function add_forum_link_translations($link): void {
+
+  $languages = \Drupal::languageManager()->getLanguages();
+  foreach ($languages as $language) {
+    $lang = $language->getId();
+    if ($lang === 'en') {
+      continue;
+    }
+    if($link->hasTranslation($lang)) {
+      $link->removeTranslation($lang);
+    }
+    $translation = [
+      'title' => t('Forums', [], ['langcode' => $lang]),
+      'description' => t('Interact with our community', [], ['langcode' => $lang]),
+      'link' => ['uri' => 'internal:/forum'],
+      'menu_name' => 'main',
+      'expanded' => TRUE,
+      'weight' => 25,
+    ];
+    $link->addTranslation($lang, $translation);
+  }
+
+  $link->save();
+}
+
+/**
+ * @param $link
+ */
+function add_apps_link_translations($link): void {
+
+  $languages = \Drupal::languageManager()->getLanguages();
+  foreach ($languages as $language) {
+    $lang = $language->getId();
+    if ($lang === 'en') {
+      continue;
+    }
+    if($link->hasTranslation($lang)) {
+      $link->removeTranslation($lang);
+    }
+    $translation = [
+      'title' => t('Apps', [], ['langcode' => $lang]),
+      'description' => t('Create and manage your apps', [], ['langcode' => $lang]),
+      'langcode' => $lang,
+    ];
+    $link->addTranslation($lang, $translation);
+  }
+  $link->save();
+}
+
+/**
+ * @param $link
+ */
+function add_apis_link_translations($link): void {
+  $languages = \Drupal::languageManager()->getLanguages();
+  foreach ($languages as $language) {
+    $lang = $language->getId();
+    if ($lang === 'en') {
+      continue;
+    }
+    if($link->hasTranslation($lang)) {
+      $link->removeTranslation($lang);
+    }
+    $translation = [
+      'title' => t('API Products', [], ['langcode' => $lang]),
+      'description' => t('Browse available APIs', [], ['langcode' => $lang]),
+      'langcode' => $lang,
+    ];
+    $link->addTranslation($lang, $translation);
+  }
+  $link->save();
+}
+
+/**
+ * @param string $menu_name
+ * @param $link
+ */
+function add_home_link_translations( $link): void {
+  $languages = \Drupal::languageManager()->getLanguages();
+  foreach ($languages as $language) {
+    $lang = $language->getId();
+    if ($lang === 'en') {
+      continue;
+    }
+    if($link->hasTranslation($lang)) {
+      $link->removeTranslation($lang);
+    }
+    $translation = [
+      'title' => t('Home', [], ['langcode' => $lang]),
+      'description' => t('Portal homepage', [], ['langcode' => $lang]),
+      'link' => ['uri' => 'internal:/'],
+      'menu_name' => 'main',
+      'expanded' => TRUE,
+      'weight' => -1,
+    ];
+    $link->addTranslation($lang, $translation);
+  }
+
+  $link->save();
 }
 
 /**
@@ -490,23 +542,10 @@ function apim_profile_login_menu_links() {
     'expanded' => TRUE,
     'weight' => 20,
   ]);
-
-  foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
-      continue;
-    }
-    $translation = [
-      'title' => t('Sign in', [], ['langcode' => $language->getId()]),
-      'description' => t('Sign in to your account', [], ['langcode' => $language->getId()]),
-      'link' => ['uri' => 'internal:/user/login'],
-      'menu_name' => $menu_name,
-      'expanded' => TRUE,
-      'weight' => 20,
-    ];
-    $login_link->addTranslation($language->getId(), $translation);
-  }
-
   $login_link->save();
+  add_sign_in_link_translations($login_link);
+
+
 
   $register_link = MenuLinkContent::create([
     'title' => t('Create account'),
@@ -516,23 +555,63 @@ function apim_profile_login_menu_links() {
     'expanded' => TRUE,
     'weight' => 10,
   ]);
+  $register_link->save();
+  add_create_account_link_translations($register_link);
+}
 
+/**
+ * @param array $languages
+ * @param string $menu_name
+ * @param $link
+ */
+function add_create_account_link_translations($link): void {
+  $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
+    $lang = $language->getId();
+    if ($lang === 'en') {
       continue;
     }
+    if($link->hasTranslation($lang)) {
+      $link->removeTranslation($lang);
+    }
     $translation = [
-      'title' => t('Create account', [], ['langcode' => $language->getId()]),
-      'description' => t('Create a new account', [], ['langcode' => $language->getId()]),
+      'title' => t('Create account', [], ['langcode' => $lang]),
+      'description' => t('Create a new account', [], ['langcode' => $lang]),
       'link' => ['uri' => 'internal:/user/register'],
-      'menu_name' => $menu_name,
+      'menu_name' => 'login',
       'expanded' => TRUE,
       'weight' => 10,
     ];
-    $register_link->addTranslation($language->getId(), $translation);
+    $link->addTranslation($lang, $translation);
   }
 
-  $register_link->save();
+  $link->save();
+}
+
+/**
+ * @param $link
+ */
+function add_sign_in_link_translations($link): void {
+  $languages = \Drupal::languageManager()->getLanguages();
+  foreach ($languages as $language) {
+    $lang = $language->getId();
+    if ($lang === 'en') {
+      continue;
+    }
+    if($link->hasTranslation($lang)) {
+      $link->removeTranslation($lang);
+    }
+    $translation = [
+      'title' => t('Sign in', [], ['langcode' => $lang]),
+      'description' => t('Sign in to your account', [], ['langcode' => $lang]),
+      'link' => ['uri' => 'internal:/user/login'],
+      'menu_name' => 'login',
+      'expanded' => TRUE,
+      'weight' => 20,
+    ];
+    $link->addTranslation($lang, $translation);
+  }
+  $link->save();
 }
 
 /**
@@ -587,7 +666,7 @@ function apim_profile_default_apic_config() {
     ->set('certificate_strip_prefix', TRUE)
     ->set('categories', $categories)
     ->set('codesnippets', $codesnippets)
-    ->set('module_blacklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer'])
+    ->set('module_blacklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
     ->save();
 
   \Drupal::service('config.factory')
@@ -1269,6 +1348,146 @@ function apim_profile_update_8022() {
     ->getEditable('ibm_apim.settings')
     ->set('show_mtls_header', TRUE)
     ->save();
+}
+
+/**
+ * Sets the feedback form recipient to the site email if not yet set
+ */
+function apim_profile_update_8023() {
+  if (!\Drupal::config('contact.form.feedback')->isNew()) {
+    $updated = FALSE;
+    $recipients = \Drupal::config('contact.form.feedback')->get('recipients');
+    $siteEmail = \Drupal::config('system.site')->get('mail');
+    foreach ($recipients as $key => $recipient) {
+      if ($recipient == "admin@example.com") {
+        $recipients[$key] = $siteEmail;
+        $updated = TRUE;
+      }
+    }
+    if ($updated) {
+      \Drupal::service('config.factory')->getEditable('contact.form.feedback')
+        ->set('recipients', $recipients)
+        ->save();
+    }
+  }
+}
+
+function apim_profile_update_8024() {
+  // force removal of the php module
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('php')) {
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->uninstall(['php']);
+  }
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('module_blacklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
+    ->save();
+}
+
+/*
+ * Add back in missing apim_profile translations
+ */
+function apim_profile_update_8025() {
+
+  // update block contents on homepage
+  // welcome page is managed by page_manager
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('page_manager')) {
+    $page = \Drupal::entityTypeManager()->getStorage('page')->load('welcome');
+    if ($page !== NULL) {
+      $variants_array = $page->getVariants();
+      $variant = reset($variants_array);
+      $content = $variant->calculateDependencies()['content'];
+      $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
+      module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
+
+      foreach ($content as $block_content_id) {
+        // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
+        // we just need the uuid from this.
+        $raw_block_content_id = explode(':', $block_content_id)[2];
+
+        $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
+        $block_content = reset($block_content_array);
+
+        if ($block_content !== NULL) {
+          // we have to match on the label of the block as we don't have anything else
+          $label = $block_content->get('info')->value;
+          switch ($label) {
+            case 'Go Ahead [en]':
+              add_go_ahead_block_content_translations($block_content);
+              break;
+            case 'Get Help [en]':
+              add_get_help_block_content_translations($block_content);
+              break;
+            case 'Getting Started [en]':
+              add_getting_started_block_content_translations($block_content);
+              break;
+            case 'Welcome Banner [en]':
+              add_welcome_block_translations($block_content);
+              break;
+          }
+        }
+
+      }
+    }
+  }
+
+  // update node translations (FAQ, privacy, t&cs)
+  module_load_include('inc', 'apim_profile', 'apim_profile.import_nodes');
+
+  $terms_node = \Drupal::entityTypeManager()->getStorage('node')->load(1);
+  if ($terms_node !== NULL && $terms_node->getTitle() === 'Terms of use' && $terms_node->getType() === 'page') {
+    add_terms_node_translations($terms_node);
+  }
+
+  $privacy_node = \Drupal::entityTypeManager()->getStorage('node')->load(2);
+  if ($privacy_node !== NULL && $privacy_node->getTitle() === 'Privacy Policy' && $privacy_node->getType() === 'page') {
+    add_privacy_node_translations($privacy_node);
+  }
+
+  $api_faq_node = \Drupal::entityTypeManager()->getStorage('node')->load(3);
+  if ($api_faq_node !== NULL && $api_faq_node->getTitle() === 'Using our APIs' && $api_faq_node->getType() === 'faq') {
+    add_api_faq_node_translations($api_faq_node);
+  }
+
+  $app_faq_node = \Drupal::entityTypeManager()->getStorage('node')->load(4);
+  if ($app_faq_node !== NULL && $app_faq_node->getTitle() === 'Apps' && $app_faq_node->getType() === 'faq') {
+    add_app_faq_node_translations($app_faq_node);
+  }
+
+  // menu links
+  $menu_links = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadMultiple();
+  foreach ($menu_links as $link) {
+    $title = $link->getTitle();
+    switch($title) {
+      case 'API Products':
+        add_apis_link_translations($link);
+        break;
+      case 'Apps':
+        add_apps_link_translations($link);
+        break;
+      case 'Forums':
+        add_forum_link_translations($link);
+        break;
+      case 'Sign in':
+        add_sign_in_link_translations($link);
+        break;
+      case 'Create account':
+        add_create_account_link_translations($link);
+        break;
+      case 'Contact':
+        add_contact_menu_translations($link);
+        break;
+      case 'Terms and Conditions':
+        add_terms_menu_translations($link);
+        break;
+      case 'Privacy Policy':
+        add_privacy_menu_translations($link);
+        break;
+    }
+  }
+
 }
 
 /**

@@ -654,6 +654,26 @@ section.block-go-ahead {
 .ibmapimGetStarted .getStartedContentWrapper .createAppDiv {
   background-color: $default-bg-light;
   border: 1px solid $default-border;
+  position:relative;
+}
+
+@media (max-width:$screen-sm-min) {
+  .ibmapimGetStarted .getStartedContentWrapper .exploreDiv {
+    margin-bottom:20px;
+  }
+}
+
+@media (min-width:$screen-sm-min) {
+  .ibmapimGetStarted .getStartedContentWrapper .getStartedText {
+    margin-bottom: 72px;
+  }
+
+  .ibmapimGetStarted .getStartedContentWrapper .getStartedText .linkWrap {
+    bottom: 40px;
+    position: absolute;
+    left: 0;
+    right: 0;
+  }
 }
 
 .gsstep h3,

@@ -166,6 +166,8 @@ nav.block-login .menu.nav {
   line-height: 2.25rem;
   margin-top: 7px;
   margin-right: -1rem;
+  max-height: 16rem;
+  overflow-y: auto;
   .selectorg {
     font-size: 0.75rem;
     color: $navbar-default-link-color;

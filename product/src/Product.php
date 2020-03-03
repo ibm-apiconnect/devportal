@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -17,7 +17,6 @@ use Drupal\consumerorg\ApicType\Member;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicType\ApicUser;
-use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\product\Event\ProductPublishEvent;
 use Drupal\product\Event\ProductDeleteEvent;
@@ -81,7 +80,7 @@ class Product {
       $nids = $query->execute();
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
-        $oldNode = Node::load($nid);
+        $oldNode = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
       }
     }
 
@@ -126,11 +125,12 @@ class Product {
       $node->set('product_billing_url', NULL);
       $node->set('product_state', NULL);
       $node->set('product_plans', NULL);
+      $node->set('product_api_nids', NULL);
       $node->set('product_apis', NULL);
       $node->set('product_data', NULL);
     }
     else {
-      $node = Node::create([
+      $node = \Drupal::entityTypeManager()->getStorage('node')->create([
         'type' => 'product',
         'title' => $product['catalog_product']['info']['name'],
         'apic_hostname' => $hostVariable,
@@ -516,7 +516,6 @@ class Product {
         // need to trigger save of all apis in order to build up ACL
         if (isset($product['catalog_product']['apis']) && !empty($product['catalog_product']['apis'])) {
           $apiRefs = [];
-          $apiNids = [];
           foreach ($product['catalog_product']['apis'] as $key => $prodref) {
             $apiRefs[$key] = $prodref['name'];
           }
@@ -527,11 +526,18 @@ class Product {
           $results = $query->execute();
           if ($results !== NULL && !empty($results)) {
             $apiNids = array_values($results);
-          }
-          if (count($apiNids) > 0) {
-            $apis = Node::loadMultiple($apiNids);
-            foreach ($apis as $api) {
-              $api->save();
+            if (count($apiNids) > 0) {
+              $node->set('product_api_nids', []);
+              $product_api_nids = [];
+              foreach (array_chunk($apiNids, 50) as $chunk) {
+                $apis = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($chunk);
+                foreach ($apis as $api) {
+                  $product_api_nids[] = $api->id();
+                  $api->save();
+                }
+              }
+              $node->set('product_api_nids', $product_api_nids);
+              $node->save();
             }
           }
         }
@@ -613,7 +619,7 @@ class Product {
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
-      $node = Node::load($nid);
+      $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
       if ($node !== NULL) {
         $this->update($node, $product, $event);
         $createdOrUpdated = FALSE;
@@ -645,7 +651,7 @@ class Product {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $nid);
     $moduleHandler = \Drupal::service('module_handler');
 
-    $node = Node::load($nid);
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
     if ($node !== NULL) {
       // Calling all modules implementing 'hook_product_delete':
@@ -660,6 +666,19 @@ class Product {
         $eventDispatcher = \Drupal::service('event_dispatcher');
         $eventDispatcher->dispatch(ProductDeleteEvent::EVENT_NAME, $event);
       }
+
+      //Delete all subscriptions for the product
+      $query = \Drupal::entityQuery('apic_app_application_subs');
+      $query->condition('product_url', $node->apic_url->value);
+      $subIds = $query->execute();
+      
+      foreach (array_chunk($subIds, 50) as $chunk) {
+        $subEntities = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->loadMultiple($chunk);
+        if (!empty($subEntities)) {
+          \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->delete($subEntities);
+        }
+      }
+
       $node->delete();
       unset($node);
 
@@ -753,31 +772,15 @@ class Product {
       }
       elseif (isset($myorg['url'])) {
         // if we're subscribed then allowed access
-        $query = \Drupal::entityQuery('node');
-        $query->condition('type', 'application');
-        $query->condition('application_consumer_org_url.value', $myorg['url']);
-
-        $appResults = $query->execute();
-
-        if ($appResults !== NULL && !empty($appResults)) {
-          $nids = [];
-          foreach ($appResults as $item) {
-            $nids[] = $item;
-          }
-          $nodes = Node::loadMultiple($nids);
-          if ($nodes) {
-            foreach ($nodes as $app) {
-              $subs = NULL;
-              foreach ($app->application_subscriptions->getValue() as $nextSub) {
-                $subs[] = unserialize($nextSub['value'], ['allowed_classes' => FALSE]);
-              }
-              if ($subs !== NULL && \is_array($subs)) {
-                foreach ($subs as $sub) {
-                  if (isset($sub['product']) && $sub['product'] === $node->apic_ref->value) {
-                    $found = TRUE;
-                  }
-                }
-              }
+        $query = \Drupal::entityQuery('apic_app_application_subs');
+        $query->condition('consumerorg_url', $myorg['url']);
+        $entityIds = $query->execute();
+        if (isset($entityIds) && !empty($entityIds)) {
+          foreach ($entityIds as $entityId) {
+            $sub = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->load($entityId);
+            if ($sub->product_url() === $node->apic_url->value) {
+              $found = TRUE;
+              break;
             }
           }
         }
@@ -807,7 +810,7 @@ class Product {
           $consumerOrgResults = $query->execute();
           if ($consumerOrgResults !== NULL && !empty($consumerOrgResults)) {
             $nid = array_shift($consumerOrgResults);
-            $consumerOrg = Node::load($nid);
+            $consumerOrg = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
             if ($consumerOrg !== NULL) {
               $tags = $consumerOrg->consumerorg_tags->getValue();
               if ($tags !== NULL && \is_array($tags) && count($tags) > 0) {
@@ -903,7 +906,7 @@ class Product {
             $consumerOrgNid = array_shift($consumerOrgResults);
 
             if (!empty($consumerOrgNid)) {
-              $consumerOrg = Node::load($consumerOrgNid);
+              $consumerOrg = \Drupal::entityTypeManager()->getStorage('node')->load($consumerOrgNid);
               if ($consumerOrg !== NULL) {
                 $tags = $consumerOrg->consumerorg_tags->getValue();
                 if ($tags !== NULL && \is_array($tags) && count($tags) > 0) {
@@ -926,41 +929,24 @@ class Product {
           }
 
           // also grab any products we're subscribed to in order to include deprecated products
-          $query = \Drupal::entityQuery('node');
-          $query->condition('type', 'application');
-          $query->condition('application_orgid.value', $myorg['id']);
-          $results = $query->execute();
-          if ($results !== NULL && !empty($results)) {
-            $nids = array_values($results);
-            $nodes = Node::loadMultiple($nids);
-            if ($nodes) {
-              $additional = [[]];
-              foreach ($nodes as $app) {
-                $subs = [];
-                foreach ($app->application_subscriptions->getValue() as $nextSub) {
-                  $subs[] = unserialize($nextSub['value'], ['allowed_classes' => FALSE]);
-                }
-                if ($subs !== NULL) {
-
-                  foreach ($subs as $sub) {
-                    if (isset($sub['product'])) {
-                      $query = \Drupal::entityQuery('node');
-                      $query->condition('type', 'product');
-                      $query->condition('status', 1);
-                      $query->condition('apic_ref.value', $sub['product']);
-                      $results = $query->execute();
-                      if ($results !== NULL && !empty($results)) {
-                        $nids = array_values($results);
-                        $additional[] = $nids;
-                      }
-                    }
-                  }
-                }
+          $query = \Drupal::entityQuery('apic_app_application_subs');
+          $query->condition('consumerorg_url', $myorg['url']);
+          $entityIds = $query->execute();
+          if (isset($entityIds) && !empty($entityIds)) {
+            $additional = [[]];
+            foreach ($entityIds as $entityId) {
+              $sub = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->load($entityId);
+              $query = \Drupal::entityQuery('node');
+              $query->condition('type', 'product');
+              $query->condition('apic_url.value', $sub->product_url());
+              $results = $query->execute();
+              if ($results !== NULL && !empty($results)) {
+                $nids = array_values($results);
+                $additional[] = $nids;
               }
-              // this flattens the array and avoids doing array_merge in a for loop which is very CPU intensive
-              $additional = array_merge(...$additional);
-              $returnNids = array_merge($returnNids, $additional);
             }
+            $additional = array_merge(...$additional);
+            $returnNids = array_merge($returnNids, $additional);
           }
         }
       }
@@ -991,6 +977,7 @@ class Product {
       'apic_ref',
       'apic_image',
       'apic_attachments',
+      'product_api_nids',
       'product_apis',
       'product_contact_email',
       'product_contact_name',
@@ -1068,7 +1055,7 @@ class Product {
     // process the nodes and build an array of the info we need
     $finalNids = array_unique($finalNids, SORT_NUMERIC);
     if ($finalNids !== NULL && !empty($finalNids)) {
-      $nodes = Node::loadMultiple($finalNids);
+      $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($finalNids);
       if ($nodes !== NULL) {
         foreach ($nodes as $node) {
           $docs[] = [
@@ -1126,7 +1113,7 @@ class Product {
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
-      $node = Node::load($nid);
+      $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
       $moduleHandler = \Drupal::service('module_handler');
       if ($moduleHandler->moduleExists('serialization')) {
         $serializer = \Drupal::service('serializer');
@@ -1149,7 +1136,7 @@ class Product {
     $config = \Drupal::config('ibm_apim.settings');
     $categoriesEnabled = (boolean) $config->get('categories')['enabled'];
     if ($categoriesEnabled === TRUE) {
-      $node = Node::load($nid);
+      $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
       if ($node !== NULL) {
         $product = yaml_parse($node->product_data->value);
         if (isset($product['info']['categories'])) {

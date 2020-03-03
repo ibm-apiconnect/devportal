@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -29,10 +29,10 @@ function ibm_apim_install() {
   // High module weight allows our form_alter calls to be run after every other module ensuring that we win
   module_set_weight('ibm_apim', 998);
 
-  $module_dependencies = array(
+  $module_dependencies = [
     'externalauth',
     'telephone',
-  );
+  ];
 
   // Enable modules.
   $module_installer = \Drupal::service('module_installer');
@@ -54,10 +54,10 @@ function ibm_apim_install() {
   }
 
   $userFormDisplay->setComponent('first_name', [
-      'type' => 'string_textfield',
-      'weight' => -50,
-      'settings' => [],
-    ])
+    'type' => 'string_textfield',
+    'weight' => -50,
+    'settings' => [],
+  ])
     ->setComponent('last_name', [
       'type' => 'string_textfield',
       'weight' => -45,
@@ -134,5 +134,28 @@ function ibm_apim_update_8103() {
 
   $db_service = \Drupal::service('ibm_apim.db_usersfielddata');
   $db_service->updateRegistryUrlFieldIfEmpty();
+
+}
+
+/**
+ * Create new entity view mode if it doesn't already exist
+ */
+function ibm_apim_update_8104() {
+
+  $entity_type = 'node';
+  $view_mode = 'embedded';
+  $view_id = $entity_type . '.' . $view_mode;
+  $view_label = 'Embedded';
+  if (\Drupal::entityTypeManager()->getStorage('entity_view_mode')->load($view_id) == NULL) {
+
+    \Drupal::logger('ibm_apim_update')->notice('creating entity_view_mode embedded');
+    $settings = [];
+    $settings['id'] = $view_id;
+    $settings['label'] = $view_label;
+    $settings['targetEntityType'] = $entity_type;
+
+    $viewmode = Drupal\Core\Entity\Entity\EntityViewMode::create($settings);
+    $viewmode->save();
+  }
 
 }

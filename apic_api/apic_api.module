@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -635,6 +635,11 @@ function apic_api_preprocess_node(&$variables): void {
       }
       if ($renderApiSchemaView === TRUE) {
         $variables['#attached']['drupalSettings']['api']['explorer']['options']['renderSchemaView'] = TRUE;
+      }
+    } else if ($variables['view_mode'] === 'embedded') {
+      $prodNode = \Drupal::routeMatch()->getRawParameter('prodNode');
+      if (isset($prodNode)) {
+        $variables['prodNode'] = $prodNode;
       }
     }
     ibm_apim_exit_trace(__FUNCTION__, NULL);

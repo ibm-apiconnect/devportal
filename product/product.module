@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -28,6 +28,8 @@ use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\product\Product;
+use Drupal\views\ViewExecutable;
+use Drupal\views\Plugin\views\query\QueryPluginBase;
 
 /* Permissions that can be granted */
 define('EDIT_ANY_PRODUCT_CONTENT_GRANT', 1);
@@ -230,7 +232,7 @@ function product_node_grants($account, $op) {
   if ($userUtils->explicitUserAccess('edit any product content')) {
     $grants['product'][] = EDIT_ANY_PRODUCT_CONTENT_GRANT;
   }
-
+ 
   // Subscriptions and tags are only set for orgs, so only run that code
   // if the user is in a development organisation
   $myOrg = $userUtils->getCurrentConsumerOrg();
@@ -245,15 +247,11 @@ function product_node_grants($account, $op) {
     // for each subscription to a product-specific realm
     $options = ['target' => 'default'];
     $query = Database::getConnection($options['target'])
-      ->query("SELECT subs.application_subscriptions_value as application_subscriptions_value
-FROM `node__application_subscriptions` subs
-INNER JOIN `node__application_consumer_org_url` apps ON apps.entity_id = subs.entity_id
-WHERE (apps.application_consumer_org_url_value = '" . $orgUrl . "')", [], $options);
+      ->query("SELECT * FROM apic_app_application_subs WHERE consumerorg_url = '". $orgUrl . "'", [], $options);
     $subResults = $query->fetchAll();
     foreach ($subResults as $sub) {
-      $sub = unserialize($sub->application_subscriptions_value, ['allowed_classes' => FALSE]);
-      if ($sub !== NULL && is_array($sub) && $sub['product_url'] !== NULL) {
-        $pref = str_replace('/', '_', $sub['product_url']);
+      if ($sub !== NULL && $sub->product_url !== NULL) {
+        $pref = str_replace('/', '_', $sub->product_url);
         $grants['product_ref_' . $pref] = [SUBSCRIBED_TO_PRODUCT_GRANT];
       }
     }
@@ -370,6 +368,36 @@ function product_preprocess(&$variables, $hook, &$info) {
       ibm_apim_exit_trace(__FUNCTION__, NULL);
     }
   }
+}
+
+/**
+ * Implements hook_views_query_alter().
+ */
+function product_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
+
+  if ($view->id() === 'product_content') {
+    foreach ($query->where as &$condition_group) {
+          foreach ($condition_group['conditions'] as &$condition) {
+            if ($condition['field'] === 'node_field_data.nid = :node_field_data_nid') {
+              $condition['field'] = 'node__product_api_nids.entity_id = :node_field_data_nid';
+            }
+          }
+        }
+    $configuration = array(
+              'type'       => 'LEFT',
+              'table'      => 'node__product_api_nids',
+              'field'      => 'product_api_nids_value',
+              'left_table' => 'node_field_data',
+              'left_field' => 'nid',
+              'operator'   => '=',
+            );
+
+    $join = \Drupal\views\Views::pluginManager('join')
+          ->createInstance('standard', $configuration);
+    $rel = $query->addRelationship('node__product_api_nids', $join, 'node_field_data');
+    $query->addTable('node__product_api_nids', $rel, $join, 'node__product_api_nids');
+  }
+
 }
 
 /**

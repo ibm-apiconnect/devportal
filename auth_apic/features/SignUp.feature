@@ -424,3 +424,26 @@ Feature: Sign-up
     #And there are no errors - can't use this step as password policy box is treated as an error!
     And there are no warnings
     And there are no messages
+
+
+  Scenario: Correctly completing the registration form with writable ldap
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes          | yes     |
+    And I am at "/user/register"
+    Then I should see the text "Sign up with @data(user_registries[2].title)"
+    Given I enter "Andre" for "First Name"
+    And I enter "Andreson_@now" for "Last Name"
+    And I enter "andre_org_@now" for "Consumer organization"
+    And I enter "andre_@now@example.com" for "Email address"
+    And I enter "andre_@now@example.com" for "Username"
+    And I enter "Qwert123" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And if the field "captcha_response" is present, enter the value "@captcha"
+    When I press the "Sign up" button
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should not see the text "There was an error creating your account"
+    And I should see the text "Your account was created successfully"

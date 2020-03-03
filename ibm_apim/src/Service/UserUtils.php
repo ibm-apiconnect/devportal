@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -17,7 +17,6 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
-use Drupal\ibm_apim\ApicRest;
 use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
 use Psr\Log\LoggerInterface;
@@ -327,9 +326,11 @@ class UserUtils {
     return $owned;
   }
 
-  public function addConsumerOrgToUser($orgUrl, $account = NULL): void {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $orgUrl);
-    $return = NULL;
+  public function addConsumerOrgToUser($orgUrl, $account = NULL): bool {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $orgUrl);
+    }
+    $found = FALSE;
     $account_id = NULL;
 
     if ($account === NULL && !$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
@@ -343,8 +344,8 @@ class UserUtils {
     if (!$this->currentUser->isAnonymous() && (int) $account_id !== 1) {
 
       if ($account !== NULL) {
-        $org_urls = $account->consumerorg_url->getValue();
-        $found = false;
+        $org_urls = $account->get('consumerorg_url')->getValue();
+
         if(!empty($org_urls)) {
           // update the consumerorg urls list set on the user object
           $this->logger->debug('updating consumerorg urls list set on the user object');
@@ -359,10 +360,14 @@ class UserUtils {
           $org_urls[] = ['value' => $orgUrl];
           $account->set('consumerorg_url', $org_urls);
           $account->save();
+          $found = TRUE;
         }
       }
     }
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $account_id);
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $account_id);
+    }
+    return $found;
   }
 
   public function removeConsumerOrgFromUser($orgUrl, $account = NULL): void {
@@ -438,7 +443,9 @@ class UserUtils {
    * @return bool
    */
   public function checkHasPermission($perm = NULL): bool {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $perm);
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $perm);
+    }
     $return = FALSE;
     if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1 && isset($perm) && !empty($perm)) {
       $perms = $this->sessionStore->get('permissions');
@@ -452,7 +459,9 @@ class UserUtils {
         $response->send();
       }
     }
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $return);
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $return);
+    }
     return $return;
   }
 

@@ -170,3 +170,27 @@ Scenario: Change password for users with the same username
   And there are messages
   And I should see the text "Password changed successfully"
 
+
+  @api
+  Scenario: Change password for a user on writable ldap
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes          | yes     |
+    Given users:
+      | uid    | name         | mail                    | pass     | registry_url                  |
+      | 123456 | changepwuser | changepw1@example.com | Qwert123 | @data(user_registries[2].url) |
+    Given consumerorgs:
+      | title | name | id   | owner_uid |
+      | org1  | org1 | org1 | 123456    |
+    When I am logged in as "changepwuser" from "@data(user_registries[2].url)" with "Qwert123"
+    And I am at "/user/@uid/change-password"
+    And I enter "Qwert123" for "Current password"
+    And I enter "newPassw0rd" for "Password"
+    And I enter "newPassw0rd" for "Confirm password"
+    And I press the "Submit" button
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should see the text "Password changed successfully"
+

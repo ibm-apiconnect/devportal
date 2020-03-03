@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,14 +13,12 @@
 
 use Drupal\apic_api\Api;
 use Drupal\apic_app\Application;
-use Drupal\apic_app\Entity\Subscription;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\UserSession;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicType\ApicUser;
-use Drupal\node\Entity\Node;
 use Drupal\product\Product;
 use Drupal\search_api\Entity\Index;
 
@@ -1677,6 +1675,10 @@ function drush_ibm_apim_apicuser_delete($apicUser, $event = 'user_delete') {
         if ($apicUser['url'] !== NULL) {
           $deleteUser->setUrl($apicUser['url']);
         }
+
+        // ensure they have been removed from all corg membership
+        $corg_service = \Drupal::service('ibm_apim.consumerorg');
+        $corg_service->deleteUserFromAllCOrgs($apicUser['url']);
 
         $delete_service = \Drupal::service('auth_apic.delete_user');
         drush_print('Deleting apic user ' . $apicUser['username']);

@@ -4,10 +4,15 @@
     text-align: center;
   }
 
+  &.modal-open {
+    pointer-events: none;
+  }
+
   .modal-dialog {
     display: inline-block;
     text-align: left;
     width:auto;
+    pointer-events: auto;
   }
 
   .modal-header {

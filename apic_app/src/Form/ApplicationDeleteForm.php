@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -178,7 +178,11 @@ class ApplicationDeleteForm extends ConfirmFormBase {
       // also delete the node from the drupal DB too
       Application::deleteNode($this->node->id(), 'delete');
       // Calling all modules implementing 'hook_apic_app_delete':
-      $this->moduleHandler->invokeAll('apic_app_delete', [
+      // NOTE: This hook is being deprecated in favour of apic_app_pre_delete and
+      //       apic_app_post_delete. This is being done because this happens too late
+      //       and is not called consistently, i.e. not from webhooks only the ui.
+      $description = 'The apic_app_delete hook is deprecated and will be removed. Please use the apic_app_pre_delete or apic_app_post_delete hook instead.';
+      $this->moduleHandler->invokeAllDeprecated($description, 'apic_app_delete', [
         'node' => $node,
         'data' => $result->data,
         'appId' => $appId,

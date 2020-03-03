@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -29,7 +29,6 @@ function apim_profile_create_nodes() {
 }
 
 function apim_profile_create_terms_page() {
-  $languages = \Drupal::languageManager()->getLanguages();
   $node = Node::create(array(
     'type' => 'page',
     'status' => TRUE,
@@ -46,22 +45,7 @@ function apim_profile_create_terms_page() {
   ));
   $node->enforceIsNew();
   $node->save();
-  foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
-      continue;
-    }
-    $translation = array(
-      'title' => t('Terms of use', [], ['langcode' => $language->getId()]),
-      'body' => array(
-        'value' => get_localized_terms_content($language->getId()),
-        'format' => 'full_html',
-      ),
-      'summary' => t('This is the terms of use page', [], ['langcode' => $language->getId()]),
-      'langcode' => $language->getId()
-    );
-    $node->addTranslation($language->getId(), $translation);
-  }
-  $node->save();
+  add_terms_node_translations($node);
 
   $source = '/node/' . $node->id();
   \Drupal::service('path.alias_storage')->save($source, '/tsandcs');
@@ -75,22 +59,64 @@ function apim_profile_create_terms_page() {
     'langcode' => 'en'
   ]);
   $link->save();
+  add_terms_menu_translations($link);
+}
+
+/**
+ * @param $link
+ */
+function add_terms_menu_translations( $link): void {
+
+  $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
+    $lang = $language->getId();
+    if ($lang === 'en') {
       continue;
     }
-    $translation = array(
-      'title' => t('Terms and Conditions', [], ['langcode' => $language->getId()]),
-      'description' => t('Terms and Conditions', [], ['langcode' => $language->getId()]),
-      'langcode' => $language->getId()
-    );
-    $link->addTranslation($language->getId(), $translation);
+    if($link->hasTranslation($lang)) {
+      $link->removeTranslation($lang);
+    }
+    $translation = [
+      'title' => t('Terms and Conditions', [], ['langcode' => $lang]),
+      'description' => t('Terms and Conditions', [], ['langcode' => $lang]),
+      'langcode' => $lang
+    ];
+    $link->addTranslation($lang, $translation);
   }
   $link->save();
 }
 
-function apim_profile_create_privacy_page() {
+/**
+ * @param $node
+ */
+function add_terms_node_translations($node): void {
   $languages = \Drupal::languageManager()->getLanguages();
+
+  foreach ($languages as $language) {
+    $lang = $language->getId();
+    if ($lang === 'en') {
+      continue;
+    }
+
+    if($node->hasTranslation($lang)) {
+      $node->removeTranslation($lang);
+    }
+    $translation = [
+      'title' => t('Terms of use', [], ['langcode' => $lang]),
+      'body' => [
+        'value' => get_localized_terms_content($lang),
+        'format' => 'full_html',
+      ],
+      'summary' => t('This is the terms of use page', [], ['langcode' => $lang]),
+      'langcode' => $lang
+    ];
+    $node->addTranslation($lang, $translation);
+  }
+  $node->save();
+}
+
+function apim_profile_create_privacy_page() {
+
   $node = Node::create(array(
     'type' => 'page',
     'status' => TRUE,
@@ -107,22 +133,7 @@ function apim_profile_create_privacy_page() {
   ));
   $node->enforceIsNew();
   $node->save();
-  foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
-      continue;
-    }
-    $translation = array(
-      'title' => t('Privacy Policy', [], ['langcode' => $language->getId()]),
-      'body' => array(
-        'value' => get_localized_privacy_content($language->getId()),
-        'format' => 'full_html',
-      ),
-      'summary' => t('This is the privacy policy page', [], ['langcode' => $language->getId()]),
-      'langcode' => $language->getId()
-    );
-    $node->addTranslation($language->getId(), $translation);
-  }
-  $node->save();
+  add_privacy_node_translations($node);
 
   $source = '/node/' . $node->id();
   \Drupal::service('path.alias_storage')->save($source, '/privacy');
@@ -136,18 +147,58 @@ function apim_profile_create_privacy_page() {
     'langcode' => 'en'
   ]);
   $link->save();
+  add_privacy_menu_translations($link);
+}
+
+/**
+ * @param $link
+ */
+function add_privacy_menu_translations($link): void {
+
+  $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
+    $lang = $language->getId();
+    if ($lang === 'en') {
       continue;
     }
-    $translation = array(
-      'title' => t('Privacy Policy', [], ['langcode' => $language->getId()]),
-      'description' => t('Privacy Policy', [], ['langcode' => $language->getId()]),
-      'langcode' => $language->getId()
-    );
-    $link->addTranslation($language->getId(), $translation);
+    if($link->hasTranslation($lang)) {
+      $link->removeTranslation($lang);
+    }
+    $translation = [
+      'title' => t('Privacy Policy', [], ['langcode' => $lang]),
+      'description' => t('Privacy Policy', [], ['langcode' => $lang]),
+      'langcode' => $lang
+    ];
+    $link->addTranslation($lang, $translation);
   }
   $link->save();
+}
+
+/**
+ * @param $node
+ */
+function add_privacy_node_translations($node): void {
+  $languages = \Drupal::languageManager()->getLanguages();
+  foreach ($languages as $language) {
+    $lang = $language->getId();
+    if ($lang === 'en') {
+      continue;
+    }
+    if($node->hasTranslation($lang)) {
+      $node->removeTranslation($lang);
+    }
+    $translation = [
+      'title' => t('Privacy Policy', [], ['langcode' => $lang]),
+      'body' => [
+        'value' => get_localized_privacy_content($lang),
+        'format' => 'full_html',
+      ],
+      'summary' => t('This is the privacy policy page', [], ['langcode' => $lang]),
+      'langcode' => $lang
+    ];
+    $node->addTranslation($lang, $translation);
+  }
+  $node->save();
 }
 
 function apim_profile_create_footerlinks() {
@@ -158,7 +209,6 @@ function apim_profile_create_footerlinks() {
   $contact_link['enabled'] = FALSE;
   $menu_link_manager->updateDefinition('contact.site_page', $contact_link);
 
-  $languages = \Drupal::languageManager()->getLanguages();
   $link = MenuLinkContent::create([
     'title' => t('Contact', [], ['langcode' => 'en']),
     'description' => t('Contact us', [], ['langcode' => 'en']),
@@ -168,22 +218,33 @@ function apim_profile_create_footerlinks() {
     'langcode' => 'en'
   ]);
   $link->save();
+  add_contact_menu_translations($link);
+}
+
+/**
+ * @param $link
+ */
+function add_contact_menu_translations($link): void {
+  $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
+    $lang = $language->getId();
+    if ($lang === 'en') {
       continue;
     }
-    $translation = array(
-      'title' => t('Contact', [], ['langcode' => $language->getId()]),
-      'description' => t('Contact us', [], ['langcode' => $language->getId()]),
-      'langcode' => $language->getId()
-    );
-    $link->addTranslation($language->getId(), $translation);
+    if($link->hasTranslation($lang)) {
+      $link->removeTranslation($lang);
+    }
+    $translation = [
+      'title' => t('Contact', [], ['langcode' => $lang]),
+      'description' => t('Contact us', [], ['langcode' => $lang]),
+      'langcode' => $lang
+    ];
+    $link->addTranslation($lang, $translation);
   }
   $link->save();
 }
 
 function apim_profile_create_faqs() {
-  $languages = \Drupal::languageManager()->getLanguages();
 
   $node = Node::create(array(
     'type' => 'faq',
@@ -197,18 +258,7 @@ function apim_profile_create_faqs() {
   ));
   $node->enforceIsNew();
   $node->save();
-  foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
-      continue;
-    }
-    $translation = array(
-      'title' => t('Using our APIs', [], ['langcode' => $language->getId()]),
-      'faqs' => get_localized_apis_content($language->getId()),
-      'langcode' => $language->getId()
-    );
-    $node->addTranslation($language->getId(), $translation);
-  }
-  $node->save();
+  add_api_faq_node_translations($node);
 
   $node = Node::create(array(
     'type' => 'faq',
@@ -222,16 +272,52 @@ function apim_profile_create_faqs() {
   ));
   $node->enforceIsNew();
   $node->save();
+  add_app_faq_node_translations($node);
+}
+
+/**
+ * @param $node
+ */
+function add_app_faq_node_translations($node): void {
+
+  $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
+    $lang = $language->getId();
+    if ($lang === 'en') {
       continue;
     }
-    $translation = array(
-      'title' => t('Apps', [], ['langcode' => $language->getId()]),
-      'faqs' => get_localized_apps_content($language->getId()),
-      'langcode' => $language->getId()
-    );
-    $node->addTranslation($language->getId(), $translation);
+    if($node->hasTranslation($lang)) {
+      $node->removeTranslation($lang);
+    }
+    $translation = [
+      'title' => t('Apps', [], ['langcode' => $lang]),
+      'faqs' => get_localized_apps_content($lang),
+      'langcode' => $lang
+    ];
+    $node->addTranslation($lang, $translation);
+  }
+  $node->save();
+}
+
+/**
+ * @param $node
+ */
+function add_api_faq_node_translations($node): void {
+  $languages = \Drupal::languageManager()->getLanguages();
+  foreach ($languages as $language) {
+    $lang = $language->getId();
+    if ($lang === 'en') {
+      continue;
+    }
+    if($node->hasTranslation($lang)) {
+      $node->removeTranslation($lang);
+    }
+    $translation = [
+      'title' => t('Using our APIs', [], ['langcode' => $lang]),
+      'faqs' => get_localized_apis_content($lang),
+      'langcode' => $lang
+    ];
+    $node->addTranslation($lang, $translation);
   }
   $node->save();
 }

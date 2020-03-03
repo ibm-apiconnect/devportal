@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.product_api_nids
+    - node.type.product
+id: node.product.product_api_nids
+field_name: product_api_nids
+entity_type: node
+bundle: product
+label: API Node IDs
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

@@ -15,7 +15,7 @@ translatable: false
 default_value: {  }
 default_value_callback: ''
 settings:
-  handler: 'default:apic_app_subscription'
+  handler: 'default:apic_app_application_subs'
   handler_settings:
     target_bundles: null
     auto_create: false

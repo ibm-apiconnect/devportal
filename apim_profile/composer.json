@@ -40,7 +40,7 @@
     "cweagans/composer-patches": "^1.6.5",
     "drupal-composer/drupal-scaffold": "^2.5",
     "drupal/console": "^1.0.2",
-    "drupal/core": "^8.7.9",
+    "drupal/core": "^8.8.1",
     "vlucas/phpdotenv": "^4.0",
     "webflo/drupal-finder": "^1.0.0",
     "webmozart/path-util": "^2.3",
@@ -210,10 +210,14 @@
     "drupal/warmer": "^1.0@RC",
     "drupal/views_taxonomy_term_name_depth": "6.x-dev",
     "drupal/svg_image_field": "^1.2",
-    "drupal/intense": "^2.1"
+    "drupal/intense": "^2.1",
+    "drupal/back_to_top": "^1.1",
+    "bjeavons/zxcvbn-php": "0.4",
+    "drupal/autocomplete_deluxe": "^1.0@beta",
+    "drupal/menu_item_role_access": "^1.0"
   },
   "require-dev": {
-    "webflo/drupal-core-require-dev": "^8.7.9"
+    "drupal/core-dev": "^8.8.1"
   },
   "conflict": {
     "drupal/drupal": "*"

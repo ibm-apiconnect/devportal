@@ -1,4 +1,31 @@
 changes:
+  8.x-1.3.12:
+  - save product apis
+  8.x-1.3.11:
+  - logic all wrong for setting the product nids
+  8.x-1.3.10:
+  - code style
+  8.x-1.3.9:
+  - make product_api_nids visible on view displays
+  - add new product api nids field
+  8.x-1.3.8:
+  - try and fix phpunit requriements
+  8.x-1.3.7:
+  - copyright date
+  8.x-1.3.6:
+  - Missed Changes (#113) (#114)
+  8.x-1.3.5:
+  - use blazy to avoid masonry meddling with css
+  8.x-1.3.4:
+  - remove debug
+  8.x-1.3.3:
+  - Content entity (#109)
+  8.x-1.3.2:
+  - wrong field name
+  - wrong view ID
+  8.x-1.3.1: null
+  8.x-1.3.0:
+  - update version: 8.x-1.2.2 -> 8.x-1.3.0
   8.x-1.2.1:
   - Revert "Product view improved"
   - Product view label

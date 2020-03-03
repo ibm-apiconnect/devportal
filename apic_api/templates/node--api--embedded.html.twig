@@ -1,0 +1,52 @@
+{#
+/**
+ * @file
+ * Default embedded theme implementation for apis.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+'node',
+'node--id-' ~ node.id,
+('node--type-' ~ node.bundle)|clean_class,
+view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
+('apitNodeID-' ~ node.id)|clean_class,
+('apiTitle-' ~ node.title[0].value)|clean_class,
+('apiVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
+'bx--card'
+] -%}
+{{ attach_library('ibm_apim/core') }}
+{{ attach_library('apic_api/basic') }}
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  {% if content.apic_pathalias['#items'][0].value is defined and content.apic_pathalias['#items'][0].value is not empty %}
+    {% set apiNode = content.apic_pathalias['#items'][0].value %}
+  {% else %}
+    {% set apiNode = node.id %}
+  {% endif %}
+  <div class="apicApiCard apicApiEmbedded">
+    {% if content.apic_image is defined and content.apic_image|render|trim is not empty %}
+      <div class="apicCardIcon bx--about__icon">
+        {{ content.apic_image }}
+      </div>
+    {% elseif showPlaceholders %}
+      <div class="apicCardIcon">
+        <img class="bx--about__icon" src="{{- placeholderUrl -}}" alt=""/>
+      </div>
+    {% endif %}
+    <div class="apicApiCardMain">
+      <div class="bx--about__title--name" data-toggle="tooltip" data-placement="bottom" title="{{- node.title[0].value -}}">
+        {% if prodNode %}
+          <a href="{{- path('product.api', {'prodNode': prodNode, 'apiNode': apiNode}) -}}" rel="bookmark">
+        {% else %}
+          <a href="{{- path('apic_api.view', {'apiNode': apiNode}) -}}" rel="bookmark">
+        {% endif %}
+          <span class="apicApiName apicTruncate">{{- label -}}</span>
+          {% if showVersions %}
+            <div class="apicApiCardVersion">{{- content.apic_version -}}</div>
+          {% endif %}
+        </a>
+      </div>
+    </div>
+  </div>
+</article>

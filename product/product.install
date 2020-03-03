@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -12,6 +12,8 @@
  ********************************************************** {COPYRIGHT-END} **/
 
 use Drupal\views\Views;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 
 /**
  * Ensure content type is translation enabled
@@ -165,4 +167,54 @@ function product_update_8112() {
     $view->getDisplay()->setOption('filter_groups', $filter_groups);
   }
   $view->save();
+}
+
+/**
+ * Create new fields and update form and view displays
+ */
+function product_update_8113() {
+  // check for field storage object and create if it doesn't exist
+  $fieldStorageConfig = FieldStorageConfig::loadByName('node', 'product_api_nids');
+  if ($fieldStorageConfig === NULL) {
+    $fieldStorageConfig = FieldStorageConfig::create([
+      'field_name' => 'product_api_nids',
+      'entity_type' => 'node',
+      'type' => 'string_long',
+      'settings' => [
+        'case_sensitive' => FALSE,
+      ],
+      'cardinality' => 1,
+    ]);
+    $fieldStorageConfig->save();
+  }
+
+  // check for field config object and create if it doesn't exists
+  $fieldConfig = FieldConfig::loadByName('node', 'product', 'product_api_nids');
+  if ($fieldConfig === NULL) {
+    $fieldConfig = FieldConfig::create([
+      'field_name' => 'product_api_nids',
+      'entity_type' => 'node',
+      'bundle' => 'product',
+      'label' => 'API Node IDs',
+      'required' => FALSE,
+      'translatable' => FALSE,
+      'settings' => [],
+      'field_type' => 'string_long',
+    ]);
+    $fieldConfig->save();
+  }
+
+  // add created field to all of the form and view display for product
+
+  // entity form display will pick up the field config, it should be hidden on there.
+
+  // however for view display modes it needs setting so it is visible.
+  $displayModes = ['default', 'card', 'subscribewizard', 'teaser'];
+  foreach ($displayModes as $displayMode) {
+    $viewDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.product.' . $displayMode);
+    if ($viewDisplay !== NULL) {
+      $viewDisplay->setComponent($fieldConfig->getName());
+      $viewDisplay->save();
+    }
+  }
 }

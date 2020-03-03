@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -39,6 +39,8 @@ class MailServiceUnitTest extends UnitTestCase {
 
   protected $entityQuery;
 
+  protected $subscriptionQuery;
+
   protected $consorgNode1;
 
   protected $consorgNode2;
@@ -54,6 +56,10 @@ class MailServiceUnitTest extends UnitTestCase {
   protected $appNode1;
 
   protected $appNode2;
+
+  protected $sub1;
+
+  protected $sub2;
 
   protected $consorg1;
 
@@ -82,10 +88,13 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->userStorageInterface = $this->prophet->prophesize(\Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface::class);
 
     $this->entityNodeStorage = $this->prophet->prophesize(\Drupal\Core\Entity\EntityStorageInterface::class);
+    $this->entitySubscriptionStorage = $this->prophet->prophesize(\Drupal\Core\Entity\EntityStorageInterface::class);
 
     $this->entityTypeManager->getStorage('node')->willReturn($this->entityNodeStorage->reveal());
+    $this->entityTypeManager->getStorage('apic_app_application_subs')->willReturn($this->entitySubscriptionStorage->reveal());
 
     $this->entityQuery = $this->prophet->prophesize(\Drupal\Core\Entity\Query\QueryInterface::class);
+    $this->subscriptionQuery = $this->prophet->prophesize(\Drupal\Core\Entity\Query\QueryInterface::class);
 
     $this->consorgNode1 = $this->prophet->prophesize(\Drupal\node\Entity\Node::class);
     $this->consorgNode2 = $this->prophet->prophesize(\Drupal\node\Entity\Node::class);
@@ -95,6 +104,9 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->prodNode1 = $this->prophet->prophesize(\Drupal\node\Entity\Node::class);
     $this->appNode1 = $this->prophet->prophesize(\Drupal\node\Entity\Node::class);
     $this->appNode2 = $this->prophet->prophesize(\Drupal\node\Entity\Node::class);
+
+    $this->sub1 = $this->prophet->prophesize(\Drupal\apic_app\Entity\ApplicationSubscription::class);
+    $this->sub2 = $this->prophet->prophesize(\Drupal\apic_app\Entity\ApplicationSubscription::class);
 
     $this->consorg1 = $this->prophet->prophesize(\Drupal\Core\TypedData\Plugin\DataType\ItemList::class);
     $this->consorg2 = $this->prophet->prophesize(\Drupal\Core\TypedData\Plugin\DataType\ItemList::class);
@@ -108,6 +120,7 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->account1 = $this->prophet->prophesize(\Drupal\Core\Session\AccountInterface::class);
     $this->account2 = $this->prophet->prophesize(\Drupal\Core\Session\AccountInterface::class);
     $this->entityNodeStorage->getQuery()->willReturn($this->entityQuery->reveal());
+    $this->entitySubscriptionStorage->getQuery()->willReturn($this->subscriptionQuery->reveal());
   }
 
   protected function tearDown() {
@@ -115,12 +128,16 @@ class MailServiceUnitTest extends UnitTestCase {
   }
 
   public function testGetProductSubscribingOwnersNoPlan(): void {
-    $this->entityQuery->execute()->willReturn(['id1'], ['app1']);
-    $this->entityQuery->condition('type', 'application')->willReturn(NULL);
-    $this->entityQuery->condition('application_subscriptions.value', "", 'CONTAINS')->willReturn(NULL);
-    $this->entityNodeStorage->loadMultiple(['id1'])->willReturn([$this->consorgNode1]);
-    $this->entityNodeStorage->loadMultiple(['app1'])->willReturn([$this->consorgNode2]);
-    $this->consorgNode2->get('consumerorg_owner')
+
+    $this->subscriptionQuery->condition('product_url', "prod1url")->willReturn(NULL);
+    $this->subscriptionQuery->execute()->willReturn(['sub1']);
+    $this->entitySubscriptionStorage->load("sub1")->willReturn($this->sub1);
+    $this->sub1->consumerorg_url()->willReturn("consorg1");
+
+
+    $this->entityQuery->execute()->willReturn(['consorg1']);
+    $this->entityNodeStorage->loadMultiple(['consorg1'])->willReturn([$this->consorgNode1]);
+    $this->consorgNode1->get('consumerorg_owner')
       ->willReturn($this->createSimpleObject('value', '/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e'));
     $this->consorg1->get(0)->willReturn($this->consorgString1);
     $this->consorgNode1->get('application_consumer_org_url')->willReturn($this->createSimpleObject('value', 'consorg1'));
@@ -134,18 +151,22 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->consorgNode1->reveal();
     $this->consorgNode2->reveal();
     $this->account1->reveal();
+    $this->sub1->reveal();
 
     $mailService = new MailService($this->userStorageInterface->reveal(), $this->entityTypeManager->reveal(), $this->emailValidator->reveal());
-    $recipients = $mailService->getProductSubscribers('', 'owners');
+    $recipients = $mailService->getProductSubscribers('prod1url', 'owners');
 
     $this->assertEquals($recipients, ['fdh@test.com']);
   }
 
   public function testGetProductSubscribingMembersNoPlan(): void {
-    $this->entityQuery->condition('type', 'application')->willReturn(NULL);
-    $this->entityQuery->condition('application_subscriptions.value', "", 'CONTAINS')->willReturn(NULL);
-    $this->entityQuery->execute()->willReturn(['id1'], ['consorg1']);
-    $this->entityNodeStorage->loadMultiple(['id1'])->willReturn([$this->consorgNode1]);
+    $this->subscriptionQuery->condition('product_url', "prod1url")->willReturn(NULL);
+    $this->subscriptionQuery->execute()->willReturn(['sub1']);
+    $this->entitySubscriptionStorage->load("sub1")->willReturn($this->sub1);
+    $this->sub1->consumerorg_url()->willReturn("consorg1");
+    
+    $this->entityQuery->execute()->willReturn(['consorg1']);
+    $this->entityNodeStorage->loadMultiple(['consorg1'])->willReturn([$this->consorgNode1]);
     $this->consorgNode1->get('application_consumer_org_url')->willReturn($this->createSimpleObject('value', 'consorg1'));
     $this->entityQuery->condition('type', 'consumerorg')->willReturn(NULL);
     $this->entityQuery->condition('consumerorg_url.value', "consorg1")->willReturn(NULL);
@@ -166,22 +187,25 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->account1->reveal();
 
     $mailService = new MailService($this->userStorageInterface->reveal(), $this->entityTypeManager->reveal(), $this->emailValidator->reveal());
-    $recipients = $mailService->getProductSubscribers('', 'members');
+    $recipients = $mailService->getProductSubscribers('prod1url', 'members');
 
     $this->assertEquals($recipients, ['fdh@test.com']);
   }
 
   public function testGetProductSubscribingOwnersWithPlan(): void {
-    $this->entityQuery->condition('type', 'application')->willReturn(NULL);
-    $this->entityQuery->condition('application_subscriptions.value', '/consumer-api/products/c025bc00-92ab-413a-af78-34eabdecacac";s:4:"plan";s:12:"default-plan"', 'CONTAINS')
-      ->willReturn(NULL);
-    $this->entityQuery->execute()->willReturn(['id1', 'id2'], ['app1', 'app2']);
-    $this->entityQuery->condition('application_subscriptions.value', "", 'CONTAINS')->willReturn(NULL);
-    $this->entityNodeStorage->loadMultiple(['id1', 'id2'])->willReturn([$this->consorgNode1, $this->consorgNode2]);
-    $this->entityNodeStorage->loadMultiple(['app1', 'app2'])->willReturn([$this->consorgNode3, $this->consorgNode4]);
-    $this->consorgNode3->get('consumerorg_owner')
+    $this->subscriptionQuery->condition('product_url', "/consumer-api/products/c025bc00-92ab-413a-af78-34eabdecacac")->willReturn(NULL);
+    $this->subscriptionQuery->condition('plan', "default-plan")->willReturn(NULL);
+    $this->subscriptionQuery->execute()->willReturn(['sub1','sub2']);
+    $this->entitySubscriptionStorage->load("sub1")->willReturn($this->sub1);
+    $this->entitySubscriptionStorage->load("sub2")->willReturn($this->sub2);
+    $this->sub1->consumerorg_url()->willReturn("consorg1");
+    $this->sub2->consumerorg_url()->willReturn("consorg2");
+    
+    $this->entityQuery->execute()->willReturn(["consorg1","consorg2"]);
+    $this->entityNodeStorage->loadMultiple(['consorg1', 'consorg2'])->willReturn([$this->consorgNode1, $this->consorgNode2]);
+    $this->consorgNode1->get('consumerorg_owner')
       ->willReturn($this->createSimpleObject('value', '/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e'));
-    $this->consorgNode4->get('consumerorg_owner')
+    $this->consorgNode2->get('consumerorg_owner')
       ->willReturn($this->createSimpleObject('value', '/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e2'));
     $this->consorgNode1->get('application_consumer_org_url')->willReturn($this->createSimpleObject('value', 'consorg1'));
     $this->consorgNode2->get('application_consumer_org_url')->willReturn($this->createSimpleObject('value', 'consorg2'));
@@ -211,17 +235,17 @@ class MailServiceUnitTest extends UnitTestCase {
   }
 
   public function testGetProductSubscribingMembersWithPlan(): void {
-    $this->entityQuery->condition('type', 'application')->willReturn(NULL);
-    $this->entityQuery->condition('application_subscriptions.value', '/consumer-api/products/c025bc00-92ab-413a-af78-34eabdecacac";s:4:"plan";s:12:"default-plan"', 'CONTAINS')
-      ->willReturn(NULL);
-    $this->entityQuery->execute()->willReturn(['id1'], ['app1']);
-    $this->entityQuery->condition('type', 'application')->willReturn(NULL);
-    $this->entityQuery->condition('application_subscriptions.value', "", 'CONTAINS')->willReturn(NULL);
-    $this->entityNodeStorage->loadMultiple(['id1'])->willReturn([$this->consorgNode1]);
-    $this->entityNodeStorage->loadMultiple(['app1'])->willReturn([$this->consorgNode2]);
+    $this->subscriptionQuery->condition('product_url', "/consumer-api/products/c025bc00-92ab-413a-af78-34eabdecacac")->willReturn(NULL);
+    $this->subscriptionQuery->condition('plan', "default-plan")->willReturn(NULL);
+    $this->subscriptionQuery->execute()->willReturn(['sub1']);
+    $this->entitySubscriptionStorage->load("sub1")->willReturn($this->sub1);
+    $this->sub1->consumerorg_url()->willReturn("consorg1");
+
+    $this->entityQuery->execute()->willReturn(["consorg1"]);
+    $this->entityNodeStorage->loadMultiple(['consorg1'])->willReturn([$this->consorgNode1]);
     $this->memberString1->getValue()->willReturn([['value' => 'a:1:{s:4:"user";a:1:{s:4:"mail";s:12:"fdh@test.com";}}']]);
-    $this->consorgNode2->get('consumerorg_members')->willReturn($this->memberString1);
-    $this->consorgNode2->get('consumerorg_owner')
+    $this->consorgNode1->get('consumerorg_members')->willReturn($this->memberString1);
+    $this->consorgNode1->get('consumerorg_owner')
       ->willReturn($this->createSimpleObject('value', '/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e'));
     $this->consorg1->get(0)->willReturn($this->consorgString1);
     $this->consorgNode1->get('application_consumer_org_url')->willReturn($this->createSimpleObject('value', 'consorg1'));
@@ -247,17 +271,25 @@ class MailServiceUnitTest extends UnitTestCase {
   public function testGetApiSubscribersMembers(): void {
     $this->entityNodeStorage->load("100")->willReturn($this->apiNode1);
     $this->entityNodeStorage->load("prodnid1")->willReturn($this->prodNode1);
-    $this->entityQuery->execute()->willReturn(['prodnid1'], ['appnid1'], ['consorg1'], ['consorg3']);
+
+
+    $this->entityQuery->execute()->willReturn(['prodnid1'], ['consorg1']);
     $this->entityQuery->condition('type', 'product')->willReturn(NULL);
     $this->entityQuery->condition('type', 'application')->willReturn(NULL);
-    $this->apiNode1->get('apic_ref')->willReturn($this->createSimpleObject('value', 'api1'));
     $this->entityQuery->condition('product_apis.value', 'api1', 'CONTAINS')->willReturn(NULL);
+
+
+    $this->subscriptionQuery->condition('product_url','url1')->willReturn(NULL);
+    $this->subscriptionQuery->execute()->willReturn(['sub1']);
+    $this->entitySubscriptionStorage->load("sub1")->willReturn($this->sub1);
+    $this->sub1->consumerorg_url()->willReturn("org1");
+
+
+    $this->apiNode1->get('apic_ref')->willReturn($this->createSimpleObject('value', 'api1'));
     $this->prodNode1->get('apic_url')->willReturn($this->createSimpleObject('value', 'url1'));
-    $this->entityQuery->condition('application_subscriptions.value', 'url1', 'CONTAINS')->willReturn(NULL);
     $this->entityNodeStorage->loadMultiple(['appnid1'])->willReturn([$this->appNode1]);
     $this->entityNodeStorage->loadMultiple(["consorg1"])->willReturn([$this->appNode2]);
-    $this->appNode1->get('application_consumer_org_url')->willReturn($this->createSimpleObject('value', 'org1'));
-    $this->appNode2->get('application_consumer_org_url')->willReturn($this->createSimpleObject('value', 'org1'));
+
     $this->appNode2->get('consumerorg_owner')
       ->willReturn($this->createSimpleObject('value', '/consumer-api/user-registries/3b115f76-6cfa-4486-9637-80a8d3e50c58/users/8294239d-3301-4cf6-b012-7aab7efbf05e'));
     $this->entityQuery->condition('consumerorg_url.value', 'org1')->willReturn(NULL);
@@ -274,12 +306,12 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->prodNode1->reveal();
     $this->appNode1->reveal();
     $this->appNode2->reveal();
+    $this->sub1->reveal();
     $this->memberString1->reveal();
     $this->account1->reveal();
 
     $mailService = new MailService($this->userStorageInterface->reveal(), $this->entityTypeManager->reveal(), $this->emailValidator->reveal());
     $recipients = $mailService->getAPISubscribers(100, 'members');
-
     $this->assertEquals($recipients, ['fdh@test.com']);
   }
 

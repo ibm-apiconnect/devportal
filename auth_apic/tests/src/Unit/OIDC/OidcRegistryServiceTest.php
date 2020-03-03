@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -73,7 +73,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
 
     $this->logger->warning(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
-    $this->oidcStateService->store(Argument::any())->shouldNotBeCalled();
+    $this->oidcStateService->store(Argument::any())->shouldBeCalled();
 
     $this->assertNotNull($response, 'unexpected NULL response when gathering oidc metadata.');
     $this->assertNotNull($response['az_url'], 'unexpected NULL az_url when gathering oidc metadata.');

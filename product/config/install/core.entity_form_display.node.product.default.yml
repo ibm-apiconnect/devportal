@@ -17,6 +17,7 @@ dependencies:
     - field.field.node.product.apic_attachments
     - field.field.node.product.comment
     - field.field.node.product.product_apis
+    - field.field.node.product.product_api_nids
     - field.field.node.product.product_billing_url
     - field.field.node.product.product_contact_email
     - field.field.node.product.product_contact_name
@@ -139,6 +140,7 @@ hidden:
   apic_url: true
   apic_version: true
   apic_ref: true
+  product_api_nids: true
   product_apis: true
   product_contact_email: true
   product_contact_name: true

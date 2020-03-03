@@ -1,4 +1,41 @@
 changes:
+  8.x-1.7.15:
+  - Show the the link (#179)
+  8.x-1.7.14:
+  - update hook documentation
+  - update data passed to delete hooks
+  - add pre and post delete hooks
+  8.x-1.7.13:
+  - change check for config entities (#172)
+  8.x-1.7.12: null
+  8.x-1.7.11:
+  - needs to be more defensive to handle them not existing
+  8.x-1.7.10:
+  - Removed html dump
+  - Fix conorg id
+  - OAuth redirect tests
+  8.x-1.7.9:
+  - add update to clean up old fields and entity types
+  - delete old entities + fields
+  8.x-1.7.8:
+  - dont display migrate link if already sub'd to the target
+  8.x-1.7.7:
+  - copyright date
+  - Create app tests
+  8.x-1.7.6:
+  - upgrade entity performance improvements
+  8.x-1.7.5:
+  - performance optimisation in the upgrade code
+  8.x-1.7.4:
+  - Small fix for credentials (#159) (#160)
+  8.x-1.7.3:
+  - Content entity (#155)
+  8.x-1.7.2:
+  - coding style tidy up
+  8.x-1.7.1:
+  - pending approval state acknowledged.
+  8.x-1.7.0:
+  - update version: 8.x-1.6.59 -> 8.x-1.7.0
   8.x-1.6.58: null
   8.x-1.6.57:
   - clear out change log

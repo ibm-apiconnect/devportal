@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -16,6 +16,8 @@
  * Installation and upgrade logic for the apic_app module.
  */
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Core\Session\UserSession;
 use Drupal\node\Entity\Node;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -261,4 +263,129 @@ function apic_app_update_8104() {
     $formDisplay->save();
   }
 
+}
+
+
+/**
+ * Updates for the new subscription and credential entities
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_app_update_8105() {
+
+  // we need to load nodes so need to be admin to pass ACL checks.
+  $accountSwitcher = Drupal::service('account_switcher');
+  $originalUser = \Drupal::currentUser();
+  if ((int) $originalUser->id() !== 1) {
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+  }
+
+  \Drupal::logger('apic_app.upgrade')->debug('Switching credentials and subscriptions from config to content entities.');
+
+  \Drupal::entityDefinitionUpdateManager()->installEntityType(\Drupal::entityTypeManager()->getDefinition('apic_app_application_creds'));
+  \Drupal::entityDefinitionUpdateManager()->installEntityType(\Drupal::entityTypeManager()->getDefinition('apic_app_application_subs'));
+
+  $field_storage_config = FieldStorageConfig::loadByName('node', 'application_credentials_refs');
+  $field_storage_config->setSetting('target_type', 'apic_app_application_creds');
+  $field_storage_config->save();
+  
+  $field_storage_config = FieldStorageConfig::loadByName('node', 'application_subscription_refs');
+  $field_storage_config->setSetting('target_type', 'apic_app_application_subs');
+  $field_storage_config->save();
+  
+  $field_config = FieldConfig::loadByName('node','application', 'application_credentials_refs');
+  $field_config->setSetting('handler', 'default:apic_app_application_creds');
+  $field_config->save();
+  
+  $field_config = FieldConfig::loadByName('node','application', 'application_subscription_refs');
+  $field_config->setSetting('handler', 'default:apic_app_application_subs');
+  $field_config->save();
+
+  \Drupal::logger('apic_app.upgrade')->debug('Deleting all apic_app.apic_app_credentials from config');
+
+  $query = \Drupal::entityQuery('apic_app_credentials');
+  $credEntityIds = $query->execute();
+  if (isset($credEntityIds) && !empty($credEntityIds)) {
+    foreach ($credEntityIds as $credEntityId) {
+      \Drupal::service('config.factory')->getEditable('apic_app.apic_app_credentials.' . $credEntityId)->delete();
+    }
+  }
+
+  \Drupal::logger('apic_app.upgrade')->debug('Deleting all apic_app.apic_app_subscription from config');
+
+  $query = \Drupal::entityQuery('apic_app_subscription');
+  $subEntityIds = $query->execute();
+  if (isset($subEntityIds) && !empty($subEntityIds)) {
+    foreach ($subEntityIds as $subEntityId) {
+      \Drupal::service('config.factory')->getEditable('apic_app.apic_app_subscription.' . $subEntityId)->delete();
+    }
+  }
+
+  \Drupal::logger('apic_app.upgrade')->debug('Deletion of all config entities complete.');
+
+  $nodeStorage = \Drupal::entityTypeManager()->getStorage('node');
+  $query = \Drupal::entityQuery('node');
+  $query->condition('type', 'application');
+  $nids = $query->execute();
+
+  \Drupal::logger('apic_app.upgrade')->debug('Resetting subscription and credential fields on %num apps.', ['%num' => sizeof($nids)]);
+
+  if (isset($nids) && !empty($nids)) {
+    foreach (array_chunk($nids, 50) as $chunk) {
+      $nodes = $nodeStorage->loadMultiple($chunk);
+      foreach ($nodes as $node) {
+        $node->set('application_credentials_refs', []);
+        $node->set('application_subscription_refs', []);
+        $node->save();
+      }
+    }
+  }
+
+  \Drupal::logger('apic_app.upgrade')->debug('Switching credentials and subscriptions done (ready for content refresh).');
+
+  if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    $accountSwitcher->switchBack();
+  }
+}
+
+
+/**
+ * In apic_app_update_8105 configentities for credentials and subscriptions were converted to contententities.
+ * This function completes the job by deleting the fields used before things were converted to entities and the configEntity types.
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_app_update_8106() {
+
+  // delete the pre-entity fields
+  $old_creds_field = FieldStorageConfig::loadByName('node', 'application_credentials');
+  if ($old_creds_field) {
+    $old_creds_field->delete();
+  }
+
+  $old_subs_field = FieldStorageConfig::loadByName('node', 'application_subscriptions');
+  if ($old_subs_field) {
+    $old_subs_field->delete();
+  }
+
+  // uninstall the credentials and subscription configEntities if they exist
+  if (\Drupal::entityTypeManager()->hasDefinition('apic_app_credentials')) {
+    try {
+      \Drupal::entityDefinitionUpdateManager()->uninstallEntityType(\Drupal::entityTypeManager()->getDefinition('apic_app_credentials'));
+    }
+    catch (PluginNotFoundException $e) {
+      \Drupal::logger('apic_app_update')->error('unable to uninstall old apic_app_credentials entity.');
+    }
+  }
+
+  if (\Drupal::entityTypeManager()->hasDefinition('apic_app_subscription')) {
+    try {
+      \Drupal::entityDefinitionUpdateManager()->uninstallEntityType(\Drupal::entityTypeManager()->getDefinition('apic_app_subscription'));
+    }
+    catch (PluginNotFoundException $e) {
+      \Drupal::logger('apic_app_update')->error('unable to uninstall old apic_app_subscription entity.');
+    }
+  }
 }

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -16,7 +16,6 @@ use Drupal\apic_app\Application;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Wizard\IbmWizardStepBase;
-use Drupal\node\Entity\Node;
 
 class ChooseApplicationStep extends IbmWizardStepBase {
 
@@ -51,23 +50,27 @@ class ChooseApplicationStep extends IbmWizardStepBase {
       $plan_id = \Drupal::request()->query->get('planId');
       $productName = '';
 
-      if (isset($product_id, $plan_title, $plan_id)) {
-        $product_node = Node::load($product_id);
+      if (isset($product_id, $plan_title, $plan_id)) { 
         $temp_store->set('productId', $product_id);
         $temp_store->set('planName', $plan_title);
         $temp_store->set('planId', $plan_id);
-        if ($product_node !== NULL) {
-          $temp_store->set('productName', $product_node->getTitle());
-          $temp_store->set('productUrl', $product_node->get('apic_url')->value);
-          $productName = $product_node->getTitle();
-        }
+      } else {
+        $plan_title = $temp_store->get('planName');
+        $plan_id = $temp_store->get('planId');
+        $product_id = $temp_store->get('productId');
+      }
+      $product_node = \Drupal::entityTypeManager()->getStorage('node')->load($product_id);
+      if ($product_node !== NULL) {
+        $temp_store->set('productName', $product_node->getTitle());
+        $temp_store->set('productUrl', $product_node->get('apic_url')->value);
+        $productName = $product_node->getTitle();
       }
 
       $parts = explode(':', $plan_id);
       $product_url = $parts[0];
 
       $allApps = Application::listApplications();
-      $allApps = Node::loadMultiple($allApps);
+      $allApps = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($allApps);
       $validApps = [];
       $suspendedApps = [];
       $subscribedApps = [];
@@ -172,7 +175,7 @@ class ChooseApplicationStep extends IbmWizardStepBase {
     /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
     $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
-    $application = Node::load($form_state->getUserInput()['selectedApplication']);
+    $application = \Drupal::entityTypeManager()->getStorage('node')->load($form_state->getUserInput()['selectedApplication']);
     if ($application !== NULL) {
       $temp_store->set('applicationUrl', $application->get('apic_url')->value);
       $temp_store->set('applicationName', $application->getTitle());

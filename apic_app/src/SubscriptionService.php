@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,7 +13,7 @@
 
 namespace Drupal\apic_app;
 
-use Drupal\apic_app\Entity\Subscription;
+use Drupal\apic_app\Entity\ApplicationSubscription;
 use Drupal\apic_app\Event\SubscriptionCreateEvent;
 use Drupal\apic_app\Event\SubscriptionDeleteEvent;
 use Drupal\apic_app\Event\SubscriptionUpdateEvent;
@@ -49,18 +49,18 @@ class SubscriptionService {
     $plan = Html::escape($plan);
     $consumerOrgUrl = Html::escape($consumerOrgUrl);
 
-    // only allow state to be enabled or disabled
-    if ($state !== 'enabled' && $state !== 'disabled') {
+    // only allow state to be enabled, disabled or pending
+    if (!in_array($state, ['enabled', 'disabled', 'pending'], true)) {
       $state = 'enabled';
     }
 
-    $query = \Drupal::entityQuery('apic_app_subscription');
+    $query = \Drupal::entityQuery('apic_app_application_subs');
     $query->condition('id', $subId);
 
     $entityIds = $query->execute();
     if (isset($entityIds) && !empty($entityIds)) {
       $entityId = array_shift($entityIds);
-      $subEntity = Subscription::load($entityId);
+      $subEntity = ApplicationSubscription::load($entityId);
       if ($subEntity !== NULL) {
         $subEntity->set('billing_url', $billingUrl);
         $subEntity->set('state', $state);
@@ -79,7 +79,7 @@ class SubscriptionService {
       $entityIds = [];
     }
     if ($createdOrUpdated !== FALSE) {
-      $newSub = Subscription::create([
+      $newSub = ApplicationSubscription::create([
         'id' => $subId,
         'billing_url' => $billingUrl,
         'product_url' => $product,
@@ -90,7 +90,7 @@ class SubscriptionService {
       ]);
       $newSub->enforceIsNew();
       $newSub->save();
-      $entityIds[] = $newSub->id();
+      $entityIds[] = $newSub->get("id")->value;
     }
 
     // load the application
@@ -172,7 +172,6 @@ class SubscriptionService {
       ]);
     }
 
-
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $createdOrUpdated);
     return $createdOrUpdated;
   }
@@ -201,7 +200,6 @@ class SubscriptionService {
       $state = $subscription['state'];
       $consumer_org_url = $subscription['consumer_org_url'] ?? NULL;
       $billingUrl = $subscription['billing_url'] ?? NULL;
-
       $returnValue = self::create($appId, $subId, $product, $plan, $consumer_org_url, $state, $billingUrl);
 
     }
@@ -220,12 +218,12 @@ class SubscriptionService {
   public static function delete($appUrl, $subId): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$appUrl, $subId]);
 
-    $query = \Drupal::entityQuery('apic_app_subscription');
+    $query = \Drupal::entityQuery('apic_app_application_subs');
     $query->condition('id', $subId);
 
     $entityIds = $query->execute();
     if (isset($entityIds) && !empty($entityIds)) {
-      $subEntities = Subscription::loadMultiple($entityIds);
+      $subEntities = ApplicationSubscription::loadMultiple($entityIds);
       foreach ($subEntities as $subEntity) {
         $subEntity->delete();
       }

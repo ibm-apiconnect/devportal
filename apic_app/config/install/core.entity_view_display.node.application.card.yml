@@ -10,7 +10,6 @@ dependencies:
     - field.field.node.application.apic_url
     - field.field.node.application.application_image
     - field.field.node.application.apic_state
-    - field.field.node.application.application_credentials
     - field.field.node.application.application_credentials_refs
     - field.field.node.application.application_data
     - field.field.node.application.application_enabled
@@ -19,7 +18,6 @@ dependencies:
     - field.field.node.application.application_redirect_endpoints
     - field.field.node.application.application_consumer_org_url
     - field.field.node.application.application_lifecycle_pending
-    - field.field.node.application.application_subscriptions
     - field.field.node.application.application_subscription_refs
     - field.field.node.application.application_lifecycle_state
     - field.field.node.application.application_client_type
@@ -71,7 +69,6 @@ hidden:
   apic_hostname: true
   apic_provider_id: true
   apic_url: true
-  application_credentials: true
   application_credentials_refs: true
   application_data: true
   application_enabled: true
@@ -80,7 +77,6 @@ hidden:
   application_redirect_endpoints: true
   application_consumer_org_url: true
   application_lifecycle_pending: true
-  application_subscriptions: true
   application_subscription_refs: true
   application_client_type: true
   langcode: true

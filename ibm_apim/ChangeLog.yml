@@ -1,4 +1,25 @@
 changes:
+  8.x-1.5.9:
+  - code style
+  8.x-1.5.8:
+  - Hides apps that are already subscribed in api form (#515)
+  8.x-1.5.7:
+  - be more defensive and check if mode exists
+  - label needed for view mode
+  - add embedded view mode
+  8.x-1.5.6:
+  - copyright date
+  8.x-1.5.5:
+  - use new args for constructor in drupal 8.8
+  8.x-1.5.4:
+  - add embedded view mode
+  8.x-1.5.3:
+  - remove border
+  8.x-1.5.2:
+  - Changed reference, could possibly be deleted? (#510)
+  8.x-1.5.1: null
+  8.x-1.5.0:
+  - update version: 8.x-1.4.5 -> 8.x-1.5.0
   8.x-1.4.4:
   - review updates
   - apimesh/devportal#5015

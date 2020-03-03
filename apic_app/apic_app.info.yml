@@ -3,7 +3,7 @@ type: module
 description: Provides the Application node content type
 package: IBM API Connect
 core: 8.x
-version: 8.x-1.6.59
+version: 8.x-1.7.16
 project: apic_app
 dependencies:
 - path

@@ -125,3 +125,7 @@ apiconnect-explorer .signInMessage {
     max-width: 500px;
   }
 }
+
+.node--type-api.node--view-mode-embedded.bx--card {
+  min-height: 7rem;
+}

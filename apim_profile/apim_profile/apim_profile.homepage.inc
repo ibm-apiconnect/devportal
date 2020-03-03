@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -17,8 +17,6 @@ use Drupal\page_manager\Entity\Page;
 
 function apim_profile_create_homepage_blocks() {
 
-  $languages = \Drupal::languageManager()->getLanguages();
-
   // welcome banner
   $welcome_block_content = BlockContent::create(array(
     'info' => 'Welcome Banner [en]',
@@ -29,25 +27,7 @@ function apim_profile_create_homepage_blocks() {
     ),
     'langcode' => 'en'
   ));
-
-  // add translations for the welcomebanner
-  foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
-      continue;
-    }
-    $translation = array(
-      'info' => t('Welcome Banner', [], ['langcode' => $language->getId()]) . ' [' . $language->getId() . ']',
-      'type' => 'basic',
-      'body' => array(
-        'value' => get_localized_welcomebanner_content($language->getId()),
-        'format' => 'full_html',
-      ),
-      'langcode' => $language->getId()
-    );
-    $welcome_block_content->addTranslation($language->getId(), $translation);
-  }
-
-  $welcome_block_content->save();
+  add_welcome_block_translations($welcome_block_content);
 
   $welcome_values = array(
     'id' => 'welcomebanner',
@@ -77,25 +57,8 @@ function apim_profile_create_homepage_blocks() {
     ),
     'langcode' => 'en'
   ));
+  add_getting_started_block_content_translations($gsg_block_content);
 
-  // add translations for the getting started block
-  foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
-      continue;
-    }
-    $translation = array(
-      'info' => t('Getting Started', [], ['langcode' => $language->getId()]) . ' [' . $language->getId() . ']',
-      'type' => 'basic',
-      'body' => array(
-        'value' => get_localized_gsb_content($language->getId()),
-        'format' => 'full_html',
-      ),
-      'langcode' => $language->getId()
-    );
-    $gsg_block_content->addTranslation($language->getId(), $translation);
-  }
-
-  $gsg_block_content->save();
   $gsg_values = array(
     'id' => 'getting_started',
     'plugin' => 'block_content:' . $gsg_block_content->uuid(),
@@ -123,23 +86,8 @@ function apim_profile_create_homepage_blocks() {
       'format' => 'full_html',
     ),
   ));
-  foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
-      continue;
-    }
-    $translation = array(
-      'info' => t('Go Ahead', [], ['langcode' => $language->getId()]) . ' [' . $language->getId() . ']',
-      'type' => 'basic',
-      'body' => array(
-        'value' => get_localized_goahead_content($language->getId()),
-        'format' => 'full_html',
-      ),
-      'langcode' => $language->getId()
-    );
-    $goahead_block_content->addTranslation($language->getId(), $translation);
-  }
+  add_go_ahead_block_content_translations($goahead_block_content);
 
-  $goahead_block_content->save();
   $goahead_values = array(
     'id' => 'go_ahead',
     'plugin' => 'block_content:' . $goahead_block_content->uuid(),
@@ -166,22 +114,7 @@ function apim_profile_create_homepage_blocks() {
       'format' => 'full_html',
     ),
   ));
-  foreach ($languages as $language) {
-    if ($language->getId() === 'en') {
-      continue;
-    }
-    $translation = array(
-      'info' => t('Get Help', [], ['langcode' => $language->getId()]) . ' [' . $language->getId() . ']',
-      'type' => 'basic',
-      'body' => array(
-        'value' => get_localized_gethelp_content($language->getId()),
-        'format' => 'full_html',
-      ),
-      'langcode' => $language->getId()
-    );
-    $gethelp_block_content->addTranslation($language->getId(), $translation);
-  }
-  $gethelp_block_content->save();
+  add_get_help_block_content_translations($gethelp_block_content);
   $gethelp_values = array(
     'id' => 'get_help',
     'plugin' => 'block_content:' . $gethelp_block_content->uuid(),
@@ -298,6 +231,135 @@ function apim_profile_create_homepage_blocks() {
   );
   $variant_plugin->addBlock($add_gettinghelp_block);
   $page_variant->save();
+}
+
+/**
+ * @param \Drupal\block_content\Entity\BlockContent $gethelp_block_content
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function add_get_help_block_content_translations(BlockContent $gethelp_block_content): void {
+  $languages = \Drupal::languageManager()->getLanguages();
+
+  foreach ($languages as $language) {
+    $lang = $language->getId();
+    if ($lang === 'en') {
+      continue;
+    }
+
+    if($gethelp_block_content->hasTranslation($lang)) {
+      $gethelp_block_content->removeTranslation($lang);
+    }
+    $translation = [
+      'info' => t('Get Help', [], ['langcode' => $lang]) . ' [' . $lang . ']',
+      'type' => 'basic',
+      'body' => [
+        'value' => get_localized_gethelp_content($lang),
+        'format' => 'full_html',
+      ],
+      'langcode' => $lang
+    ];
+    $gethelp_block_content->addTranslation($lang, $translation);
+  }
+  $gethelp_block_content->save();
+}
+
+/**
+ * @param \Drupal\block_content\Entity\BlockContent $goahead_block_content
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function add_go_ahead_block_content_translations(BlockContent $goahead_block_content): void {
+  $languages = \Drupal::languageManager()->getLanguages();
+
+  foreach ($languages as $language) {
+    $lang = $language->getId();
+    if ($lang === 'en') {
+      continue;
+    }
+
+    if($goahead_block_content->hasTranslation($lang)) {
+      $goahead_block_content->removeTranslation($lang);
+    }
+    $translation = [
+      'info' => t('Go Ahead', [], ['langcode' => $lang]) . ' [' . $lang . ']',
+      'type' => 'basic',
+      'body' => [
+        'value' => get_localized_goahead_content($lang),
+        'format' => 'full_html',
+      ],
+      'langcode' => $lang
+    ];
+    $goahead_block_content->addTranslation($lang, $translation);
+  }
+
+  $goahead_block_content->save();
+}
+
+/**
+ * @param \Drupal\block_content\Entity\BlockContent $gsg_block_content
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function add_getting_started_block_content_translations(BlockContent $gsg_block_content): void {
+  $languages = \Drupal::languageManager()->getLanguages();
+  // add translations for the getting started block
+  foreach ($languages as $language) {
+    $lang = $language->getId();
+    if ($lang === 'en') {
+      continue;
+    }
+
+    if($gsg_block_content->hasTranslation($lang)) {
+      $gsg_block_content->removeTranslation($lang);
+    }
+
+    $translation = [
+      'info' => t('Getting Started', [], ['langcode' => $lang]) . ' [' . $lang . ']',
+      'type' => 'basic',
+      'body' => [
+        'value' => get_localized_gsb_content($lang),
+        'format' => 'full_html',
+      ],
+      'langcode' => $lang
+    ];
+    $gsg_block_content->addTranslation($lang, $translation);
+  }
+
+  $gsg_block_content->save();
+}
+
+/**
+ * @param \Drupal\block_content\Entity\BlockContent $welcome_block_content
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function add_welcome_block_translations(BlockContent $welcome_block_content): void {
+  $languages = \Drupal::languageManager()->getLanguages();
+
+  // add translations for the welcomebanner
+  foreach ($languages as $language) {
+    $lang = $language->getId();
+    if ($language->getId() === 'en') {
+      continue;
+    }
+    if($welcome_block_content->hasTranslation($lang)) {
+      $welcome_block_content->removeTranslation($lang);
+    }
+
+    $translation = [
+      'info' => t('Welcome Banner', [], ['langcode' => $lang]) . ' [' . $lang . ']',
+      'type' => 'basic',
+      'body' => [
+        'value' => get_localized_welcomebanner_content($lang),
+        'format' => 'full_html',
+      ],
+      'langcode' => $lang
+    ];
+    $welcome_block_content->addTranslation($lang, $translation);
+  }
+
+  $welcome_block_content->save();
 }
 
 function get_localized_welcomebanner_content($langcode) {

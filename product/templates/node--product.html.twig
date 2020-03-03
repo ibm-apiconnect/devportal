@@ -91,41 +91,7 @@
       <div class="field apis">
         <h3 class="field__label label">{{ 'APIs'|t }}</h3>
         <ul class="apicProductApiList">
-          {% if content.apic_pathalias['#items'][0].value is defined and content.apic_pathalias['#items'][0].value is not empty %}
-            {% set prodNode = content.apic_pathalias['#items'][0].value %}
-          {% else %}
-            {% set prodNode = node.id %}
-          {% endif %}
-          {% for api in apiList %}
-            {% if api.node.apic_pathalias['#items'][0].value is defined and api.node.apic_pathalias['#items'][0].value is not empty %}
-              {% set apiNode = api.node.apic_pathalias['#items'][0].value %}
-            {% else %}
-              {% set apiNode = api.node.id %}
-            {% endif %}
-            <li class="apicProductApiListItem apiNodeID-{{ api.node.id|clean_class }} apiTitle-{{ api.node.title[0].value|clean_class }} apiVersion-{{ api.node.apic_version[0].value|clean_class }}">
-              <div class="apicApiTeaser">
-                {% if api.icon is defined and api.icon|render|trim is not empty %}
-                  <div class="apicProductIcon">
-                    <img src="{{- api.icon }}" alt=""/>
-                  </div>
-                {% elseif showPlaceholders %}
-                  <div class="apicProductIcon">
-                    <img src="{{- api.placeholderUrl -}}" alt=""/>
-                  </div>
-                {% endif %}
-                <a href="{{- path('product.api', {'prodNode': prodNode, 'apiNode': apiNode}) -}}" rel="bookmark">
-                  <h4>
-                    {{ api.node.title[0].value }}
-                    {% if showVersions %}
-                      <span class="apicProductApiVersion">{{ api.node.apic_version[0].value }}</span>
-                    {% endif %}
-                  </h4>
-
-                </a>
-
-              </div>
-            </li>
-          {% endfor %}
+          {{ drupal_view('product_content', 'page_1', node.id) }}
         </ul>
       </div>
       {% set multipleRates = false %}
@@ -206,6 +172,7 @@
                   </tr>
                   </thead>
                   <tbody class="apicPlansTableBody hidden">
+                  {% if apiList is defined and apiList is not empty %}
                   {% for api in apiList %}
                     <tr class="api-{% if loop.index is divisibleby(2) %}even{% else %}odd{% endif %}">
                       <th class="apicFixedColumn">
@@ -283,10 +250,48 @@
                       {% endfor %}
                     </tr>
                   {% endfor %}
+                  {% else %}
+                    {% for planid, plan in planList %}
+                        <td>
+                          <div class="apicTableStandardCell"
+                               data-api="{{ api.node.title[0].value }}{% if showVersions %} {{ api.node.apic_version[0].value }}{% endif %}">
+                            {% if plan.data.apiList is empty or api.node.api_xibmname[0].value in plan.data.apiList %}
+                              {% if plan.rateData is defined %}
+                                {% set multipleRates = true %}
+                                <span class="multiRateLimits"
+                                      data-ratelimits="{{ plan.rateData }}">{{ plan.rateLimit }}</span>
+                              {% else %}
+                                {{ plan.rateLimit }}
+                              {% endif %}
+                            {% else %}
+                              &#x2014;
+                            {% endif %}
+                          </div>
+                        </td>
+                      {% endfor %}
+                    </tr>
+                    <tr class="apicTwistieRow api-{% if loop.index is divisibleby(2) %}even{% else %}odd{% endif %}">
+                      <th class="apicFixedColumn">
+                        {% for pathSegment, path in api.swagger.paths %}
+                          {% for verb, operation in path %}
+                            {% if verb|upper in ['PUT', 'POST', 'GET', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH'] %}
+                              <div class="apicApiOperation apicTruncate apicSecondaryRow {{ verb|lower }}"
+                                   title="{{ verb|upper }} {{ pathSegment }}">
+                                <span class="verb">{{ verb|upper }}</span>
+                                <span class="path">{{ pathSegment }}</span>
+
+                              </div>
+                            {% endif %}
+                          {% endfor %}
+                        {% endfor %}
+                      </th>
+                    {% endif %}
                   </tbody>
                   <tfoot>
                   </tfoot>
                 </table>
+
+                {% if apiList is defined and apiList is not empty %}
                 <div class="planTableSelector">
                    <span class="hideDetails">
                   <a class="showComparisonTable" title="{{ 'Show a table comparing the available plans'|t }}"
@@ -302,6 +307,7 @@
                     </a>
                   </span>
                 </div>
+                {% endif %}
               </div>
             </div>
           </div>

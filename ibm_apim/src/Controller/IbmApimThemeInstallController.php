@@ -7,10 +7,11 @@ use Drupal\Core\Config\PreExistingConfigException;
 use Drupal\Core\Config\UnmetDependenciesException;
 use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Extension\ThemeInstallerInterface;
+use Drupal\Core\Extension\ThemeExtensionList;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\ibm_apim\Service\Utils;
 use Drupal\system\Controller\ThemeController;
-use Leafo\ScssPhp\Compiler;
+use ScssPhp\ScssPhp\Compiler;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -35,20 +36,40 @@ class IbmApimThemeInstallController extends ThemeController {
    */
   protected $messenger;
 
+  /**
+   * An extension discovery instance.
+   *
+   * @var \Drupal\Core\Extension\ThemeExtensionList
+   */
+  protected $themeList;
+
+  /**
+   * IbmApimThemeInstallController constructor.
+   *
+   * @param \Drupal\ibm_apim\Service\Utils $utils
+   * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
+   * @param \Drupal\Core\Extension\ThemeExtensionList $theme_list
+   * @param \Drupal\Core\Extension\ThemeInstallerInterface $theme_installer
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   */
   public function __construct(Utils $utils,
                               ThemeHandlerInterface $theme_handler,
+                              ThemeExtensionList $theme_list,
                               ThemeInstallerInterface $theme_installer,
                               ConfigFactoryInterface $config_factory, MessengerInterface $messenger) {
     $this->utils = $utils;
     $this->themeInstaller = $theme_installer;
+    $this->themeList = $theme_list;
     $this->messenger = $messenger;
-    parent::__construct($theme_handler, $config_factory);
+    parent::__construct($theme_handler, $theme_list, $config_factory, $theme_installer);
   }
 
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('ibm_apim.utils'),
       $container->get('theme_handler'),
+      $container->get('extension.list.theme'),
       $container->get('theme_installer'),
       $container->get('config.factory'),
       $container->get('messenger')
@@ -247,7 +268,7 @@ class IbmApimThemeInstallController extends ThemeController {
       if (file_exists($filename)) {
         $scss_compile_settings = yaml_parse_file($filename);
 
-        require_once DRUPAL_ROOT . '/vendor/leafo/scssphp/scss.inc.php';
+        require_once DRUPAL_ROOT . '/vendor/scssphp/scssphp/scss.inc.php';
 
         $scss = new Compiler();
         // add the base_theme scss paths

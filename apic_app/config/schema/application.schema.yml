@@ -30,10 +30,6 @@ field.field.node.application.application_consumer_org_url:
   type: ibm_apim_config_object
   label: 'Consumer organization URL'
 
-field.field.node.application.application_credentials:
-  type: ibm_apim_config_object
-  label: 'Credentials'
-
 field.field.node.application.application_data:
   type: ibm_apim_config_object
   label: 'Application Data'
@@ -70,9 +66,9 @@ field.field.node.application.application_subscriptions:
   type: ibm_apim_config_object
   label: 'Subscriptions'
 
-apic_app.apic_app_subscription.*:
-  type: config_entity
-  label: 'Subscription'
+apic_app.apic_app_application_subs.*:
+  type: content_entity
+  label: 'Application Subscription'
   mapping:
     id:
       type: string
@@ -96,9 +92,9 @@ apic_app.apic_app_subscription.*:
       type: string
       label: 'Consumer organization URL'
 
-apic_app.apic_app_credentials.*:
-  type: config_entity
-  label: 'Credentials'
+apic_app.apic_app_application_creds.*:
+  type: content_entity
+  label: 'Application Credentials'
   mapping:
     id:
       type: string

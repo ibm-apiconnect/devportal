@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -14,6 +14,7 @@
 namespace Drupal\mail_subscribers\Service;
 
 use Drupal\Component\Utility\EmailValidator;
+use Drupal\apic_app\Entity\ApplicationSubscription;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Mail\MailFormatHelper;
@@ -35,6 +36,7 @@ class MailService {
                               EntityTypeManagerInterface $entityTypeManager,
                               EmailValidator $email_validator) {
     $this->nodeStorage = $entityTypeManager->getStorage('node');
+    $this->subscriptionStorage = $entityTypeManager->getStorage('apic_app_application_subs');
     $this->userStorage = $user_storage;
     $this->emailValidator = $email_validator;
   }
@@ -274,7 +276,6 @@ class MailService {
     }
 
     $orgs = [];
-    // get subscribed apps
     if ($plan !== NULL) {
       $planName = NULL;
       $parts = explode(':', $plan);
@@ -283,23 +284,19 @@ class MailService {
         $planName = $parts[1];
       }
 
-      $query = $this->nodeStorage->getQuery();
-      $query->condition('type', 'application');
+      $query = $query = $this->subscriptionStorage->getQuery();
+      $query->condition('product_url', $productUrl);
       if ( isset($planName) && !empty($planName) ) {  // ignore any static analysis tool complaints about this line
-        $query->condition('application_subscriptions.value', $productUrl . '";s:4:"plan";s:' . \strlen($planName) . ':"' . $planName . '"', 'CONTAINS');
+        $query->condition('plan',$planName);
       }
-      else {
-        $query->condition('application_subscriptions.value', $productUrl, 'CONTAINS');
-      }
-      $nids = $query->execute();
-      if ($nids !== NULL && !empty($nids)) {
-        $nodes = $this->nodeStorage->loadMultiple($nids);
-        if ($nodes !== NULL) {
-          foreach ($nodes as $node) {
-            $orgs[] = $node->get('application_consumer_org_url')->value;
-          }
+      $entityIds = $query->execute();
+      if ($entityIds !== NULL && !empty($entityIds)) {
+        foreach ($entityIds as $entityId) {
+          $sub = $this->subscriptionStorage->load($entityId);
+          $orgs[] = $sub->consumerorg_url();
         }
       }
+      
     }
     // this is a more performant way to avoid doing array_merge in a loop
     // the inner empty array covers cases when no loops were made
@@ -402,16 +399,13 @@ class MailService {
           foreach ($prodNids as $prodNid) {
             $product = $this->nodeStorage->load($prodNid);
             if ($product !== NULL) {
-              $query = $this->nodeStorage->getQuery();
-              $query->condition('type', 'application');
-              $query->condition('application_subscriptions.value', $product->get('apic_url')->value, 'CONTAINS');
-              $appNids = $query->execute();
-              if ($appNids !== NULL) {
-                $appNodes = $this->nodeStorage->loadMultiple($appNids);
-                if ($appNodes !== NULL) {
-                  foreach ($appNodes as $app) {
-                    $orgs[] = $app->get('application_consumer_org_url')->value;
-                  }
+              $query = $this->subscriptionStorage->getQuery();
+              $query->condition('product_url', $product->get('apic_url')->value);
+              $entityIds = $query->execute();
+              if ($entityIds !== NULL && !empty($entityIds)) {
+                foreach ($entityIds as $entityId) {
+                  $sub = $this->subscriptionStorage->load($entityId);
+                  $orgs[] = $sub->consumerorg_url();
                 }
               }
             }

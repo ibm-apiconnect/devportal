@@ -18,6 +18,7 @@ dependencies:
     - field.field.node.product.apic_attachments
     - field.field.node.product.comment
     - field.field.node.product.product_apis
+    - field.field.node.product.product_api_nids
     - field.field.node.product.product_billing_url
     - field.field.node.product.product_contact_email
     - field.field.node.product.product_contact_name
@@ -124,6 +125,13 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
+  product_api_nids:
+    weight: 23
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
   product_apis:
     weight: 23
     label: above

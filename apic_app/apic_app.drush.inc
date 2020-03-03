@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -127,6 +127,18 @@ function apic_app_drush_command() {
   return $items;
 }
 
+/**
+ * This function is a blunt tool that deletes all applications in a site and is probably not the function
+ * you are looking for! See drush_apic_app_delete or other functions to delete applications in a
+ * controlled manner.
+ *
+ * It deletes the nodes directly and will not trigger hooks or roles.
+ *
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
 function drush_apic_app_cleanse_drush_command() {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   // in case moderation is on we need to run as admin
@@ -356,50 +368,7 @@ function drush_apic_app_tidy($appUrls = []) {
     }
 
     foreach ($nids as $nid) {
-      Application::deleteNode($nid, 'content_refresh');
-    }
-  }
-  ibm_apim_exit_trace(__FUNCTION__, NULL);
-}
-
-function drush_apic_app_sub_tidy($appUrls) {
-  ibm_apim_entry_trace(__FUNCTION__, count($appUrls));
-  $appUrls = json_decode($appUrls, TRUE);
-  if (!empty($appUrls)) {
-
-    // Any applications that exist in the database that were not mentioned in the list of apps=>subscriptions
-    // must have no subscriptions at all. Insert empty arrays to record this
-    $query = \Drupal::entityQuery('node');
-    $query->condition('type', 'application')->condition('apic_url.value', array_keys($appUrls), 'NOT IN');
-    $results = $query->execute();
-
-    if ($results !== NULL) {
-      foreach ($results as $nid) {
-        $node = Node::load($nid);
-        if ($node !== NULL) {
-          $appUrls[$node->apic_url->value] = '';
-        }
-      }
-    }
-
-    foreach ($appUrls as $appUrl => $appSub) {
-      $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'application')->condition('apic_url.value', $appUrl);
-      $results = $query->execute();
-
-      if ($results !== NULL) {
-        foreach ($results as $nid) {
-          $node = Node::load($nid);
-          if ($node !== NULL) {
-            $newSubs = [];
-            foreach ($appSub as $sub) {
-              $newSubs[] = serialize($sub);
-            }
-            $node->set('application_subscriptions', $newSubs);
-            $node->save();
-          }
-        }
-      }
+      Application::deleteNode($nid, 'content_refresh_tidy');
     }
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);

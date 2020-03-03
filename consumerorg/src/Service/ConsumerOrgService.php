@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -14,6 +14,7 @@
 namespace Drupal\consumerorg\Service;
 
 use Drupal\ibm_apim\ApicRest;
+use Drupal\apic_app\Application;
 use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\auth_apic\UserManagerResponse;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
@@ -266,7 +267,7 @@ class ConsumerOrgService {
     }
     else {
       $response->setMessage(t('Failed to create consumer organization.'));
-      $response->setSuccess(false);
+      $response->setSuccess(FALSE);
       $this->logger->error('Failed to create consumer organization. response: @response', ['@response' => serialize($apimResponse->getData())]);
 
       // If user is not in an org, log them out.
@@ -477,6 +478,9 @@ class ConsumerOrgService {
         }
       }
 
+      // TODO: refactor needed - injecting this service creates circular dependency :(
+      $userStorage = \Drupal::service('ibm_apim.user_storage');
+
       if ($consumer->getMembers() !== NULL) {
         foreach ($consumer->getMembers() as $member) {
           $memberlist[] = $member->getUserUrl();
@@ -485,28 +489,12 @@ class ConsumerOrgService {
           $user = $member->getUser();
           if ($user !== NULL && $user->getUsername() !== NULL) {
 
-            // $account = $userStorage->load($user);
-            $this->logger->debug('loading @name in registry @registry', [
-              '@name' => $user->getUsername(),
-              '@registry' => $user->getApicUserRegistryUrl(),
-            ]);
-            $query = \Drupal::entityQuery('node');
-            $query->condition('type', 'user');
-            if (!empty($current_apps)) {
-              $group = $query->orConditionGroup()
-                ->condition('user_id', NULL, 'IS NULL')
-                ->condition('user_id', $user->getId());
-              $query->condition($group);
-            }
-            $results = $query->execute();
-            $this->logger->debug('loaded @num users', ['@num' => \sizeof($results)]);
+            $account = $userStorage->load($user);
 
             // if there isn't an account for this user then we have enough information to create and use it at this point.
-            if (!isset($results) && $results != NULL) {
+            if ($account === NULL) {
               $this->logger->notice('registering new account for %username based on member data.', ['%username' => $user->getUsername()]);
               $account = $this->accountService->registerApicUser($user);
-            }else{
-              $account = array_shift($results);
             }
 
             if ($account) {
@@ -727,14 +715,10 @@ class ConsumerOrgService {
         foreach ($node->consumerorg_invites->getValue() as $arrayValue) {
           $unserialized = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
           if ($unserialized['url'] !== $invitation['url']) {
-            $invites[] = $unserialized;
+            $invites[] = $arrayValue['value'];
           }
         }
-        $serialized_invites = [];
-        foreach ($invites as $key => $invite) {
-          $serialized_invites[] = serialize($invite);
-        }
-        $node->set('consumerorg_invites', $serialized_invites);
+        $node->set('consumerorg_invites', $invites);
         $node->save();
         // invalidate myorg page cache
         $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $invitation['consumer_org_url']]);
@@ -756,7 +740,25 @@ class ConsumerOrgService {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $nid);
     $node = Node::load($nid);
     if ($node !== NULL) {
+      $hookData = $this->createOrgHookData($node);
+      $this->moduleHandler->invokeAll('consumerorg_pre_delete',
+        [
+          'node' => $node,
+          'data' => $hookData,
+        ]);
+
       $consumerorg_url = $node->consumerorg_url->value;
+      // remove applications that belong to the consumer org
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'application');
+      $query->condition('application_consumer_org_url.value', $consumerorg_url);
+      $results = $query->execute();
+      if (isset($results) && !empty($results)) {
+        $appNids = array_values($results);
+        foreach ($appNids as $appNid) {
+          Application::deleteNode((int) $appNid, 'comsumerorg_cascade');
+        }
+      }
       // remove the consumerorg assignment from all users since we're deleting it
       $query = $this->userQuery;
       $query->condition('consumerorg_url.value', $consumerorg_url, 'CONTAINS');
@@ -784,7 +786,10 @@ class ConsumerOrgService {
       }
 
       // Calling all modules implementing 'hook_consumerorg_delete':
-      $this->moduleHandler->invokeAll('consumerorg_delete', ['node' => $node]);
+      $description = 'The consumerorg_delete hook is deprecated and will be removed. Please use the consumerorg_pre_delete or consumerorg_post_delete hook instead.';
+      $this->moduleHandler->invokeAllDeprecated($description, 'consumerorg_delete', ['node' => $node]);
+
+      $node->delete();
       if ($this->moduleHandler->moduleExists('rules')) {
         // Set the args twice on the event: as the main subject but also in the
         // list of arguments.
@@ -792,9 +797,13 @@ class ConsumerOrgService {
 
         $this->eventDispatcher->dispatch(ConsumerorgDeleteEvent::EVENT_NAME, $event);
       }
+
+      $this->moduleHandler->invokeAll('consumerorg_post_delete',
+        [
+          'data' => $hookData,
+        ]);
       $this->logger->notice('Consumer organization @consumerorg deleted', ['@consumerorg' => $node->getTitle()]);
 
-      $node->delete();
       unset($node);
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -1491,6 +1500,58 @@ class ConsumerOrgService {
   }
 
   /**
+   * Remove a given user from all consumer orgs
+   * This is called when a user deletes their account.
+   *
+   * @param string $userUrl
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function deleteUserFromAllCOrgs(string $userUrl): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['userUrl' => $userUrl]);
+
+    if ($userUrl !== NULL) {
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'consumerorg');
+      $query->condition('consumerorg_memberlist.value', $userUrl, 'CONTAINS');
+
+      $nids = $query->execute();
+
+      if ($nids !== NULL && !empty($nids)) {
+        $nodes = Node::loadMultiple($nids);
+        foreach ($nodes as $node) {
+          if ($node !== NULL) {
+            $memberlist = $node->consumerorg_memberlist->value;
+            if (($key = array_search($userUrl, $memberlist, TRUE)) !== FALSE) {
+              unset($memberlist[$key]);
+            }
+            $node->set('consumerorg_memberlist', $memberlist);
+            if ($node->consumerorg_members) {
+              $members = [];
+              $whitelist = [Member::class, ApicUser::class];
+              foreach ($node->consumerorg_members->getValue() as $arrayValue) {
+                $member = unserialize($arrayValue['value'], ['allowed_classes' => $whitelist]);
+                if ($member->getUserUrl() !== $userUrl) {
+                  $members[] = $arrayValue['value'];
+                }
+              }
+              $node->set('consumerorg_members', $members);
+            }
+            $node->save();
+          }
+        }
+      }
+      else {
+        $this->logger->notice('deleteUserFromAllCOrgs: No consumer organization memberships found for user URL %userUrl', ['%userUrl' => $userUrl]);
+      }
+    }
+    else {
+      $this->logger->notice('deleteUserFromAllCOrgs: ERROR. NULL value provided for user URL', []);
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+  /**
    * Create a ConsumerOrg object from a JSON string representation
    * e.g. as returned by a call to the consumer-api or provided in webhooks/snapshots.
    *
@@ -1637,6 +1698,30 @@ class ConsumerOrgService {
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $output;
+  }
+
+  /**
+   * Create array of useful consumerorg data for use in hooks.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *
+   * @return array
+   */
+  private function createOrgHookData(NodeInterface $node) {
+    $data = [];
+
+    $data['nid'] = $node->id();
+    if ($node->hasField('consumerorg_id') && !$node->get('consumerorg_id')->isEmpty()) {
+      $data['id'] = $node->get('consumerorg_id')->value;
+    }
+    if ($node->hasField('consumerorg_name') && !$node->get('consumerorg_name')->isEmpty()) {
+      $data['name'] = $node->get('consumerorg_name')->value;
+    }
+    if ($node->hasField('consumerorg_url') && !$node->get('consumerorg_url')->isEmpty()) {
+      $data['url'] = $node->get('consumerorg_url')->value;
+    }
+
+    return $data;
   }
 
 }

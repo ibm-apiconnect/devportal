@@ -176,3 +176,49 @@ Feature: Forgot Password
     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
 
 
+  @api
+  Scenario: Forgot password form loads for writable ldap
+    Given the cache has been cleared
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | no     |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes           | yes      |
+    When I am at "/user/password"
+    Then I should see the text "Reset Password"
+    And I should see the text "@data(user_registries[2].title)"
+    And I should see the text "If you have forgotten the password for your @data(user_registries[2].title) account or 'admin', you can reset it here."
+    And I should see the text "Username or email address"
+    And I should see the text "Password reset instructions will be sent to your registered email address."
+    And I should see the button "Submit"
+    And I should see "or" in the ".apic-user-form-or" element
+    And I should see the text "or"
+    And I should see the text "Select a different registry"
+    And I should see the link "@data(user_registries[0].title)"
+    And I should see the link "Back to Sign in"
+
+
+  @api
+  Scenario: Request new password for a writable ldap andre user
+    Given the cache has been cleared
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | no     |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes           | yes      |
+    Given users:
+      | name           | mail                     | pass     | status |
+      | forgotpwtest   | forgotpwtest@example.com | Qwert123 | 1      |
+    Given consumerorgs:
+      | title               | name                | id    | owner        |
+      | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | forgotpwtest |
+    Given I am at "/user/password"
+    And I enter "forgotpwtest" for "name"
+    When I press the "Submit" button
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
+    And I am at "/user/login"
+    And I should see the text "Sign in with @data(user_registries[2].title)"
+

@@ -1,4 +1,28 @@
 changes:
+  8.x-1.3.11:
+  - set status of entity view display on upgrade
+  8.x-1.3.10:
+  - api module needs the display mode to have been created first
+  8.x-1.3.9:
+  - create new view using apis
+  - add new api entity view display
+  8.x-1.3.8:
+  - copyright date
+  8.x-1.3.7:
+  - need to link to api in context of product
+  8.x-1.3.6: null
+  8.x-1.3.5:
+  - handle translated apis
+  8.x-1.3.4:
+  - require blazy
+  8.x-1.3.3:
+  - change default number of items per page
+  - use blazy to avoid masonry meddling with css
+  8.x-1.3.2:
+  - use embedded view mode
+  8.x-1.3.1: null
+  8.x-1.3.0:
+  - update version: 8.x-1.2.1 -> 8.x-1.3.0
   8.x-1.2.0:
   - Update version to 8.x-1.2.0
   8.x-1.1.36: null

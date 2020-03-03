@@ -112,3 +112,33 @@ Feature: Delete user
     And there are no messages
     And there are no warnings
 
+  @api
+  Scenario: Andre org owner with writable LDAP - click delete
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes           | yes     |
+    Given users:
+      | name              | mail              | pass                  | status | registry_url                  |
+      | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      | @data(user_registries[2].url) |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+    Given I am logged in as "@data(andre.mail)"
+    When I am at "/user/@uid/edit"
+    And I should see the link "Delete account"
+    When I click "Delete account"
+    Then I am at "/user/delete"
+    And I should see the text "Are you sure you want to delete your account?"
+    And I should see the text "This action cannot be undone."
+    And I should see the link "Cancel"
+    And I should see the "Delete" button
+    When I press the "Delete" button
+    Then I am at "/"
+    And there are messages
+    And I should see the text "Organization successfully deleted."
+    And I should see the text "The update has been performed."
+    # the following doesn't appear while using mocks.
+      # And I should see the text "andre has been deleted."
+    And there are no warnings
+    And there are no errors

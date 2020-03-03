@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -121,15 +121,12 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
     $state_obj['registry_url'] = $registry->getUrl();
 
     if (isset($invitation_object)) {
-      // if we need to pass potentially sensitive information then store it in state and send a key.
+      // add invitation information to state object (potentially sensitive)
       $state_obj['invitation_object'] = serialize($invitation_object);
       $state_obj['created'] = time();
-      $state_param = $this->utils->base64_url_encode(serialize($this->oidcStateService->store($state_obj)));
     }
-    else {
-      // otherwise just send the minimum information required.
-      $state_param = $this->utils->base64_url_encode(serialize($state_obj));
-    }
+    // store the state object and send a key as the parameter
+    $state_param = $this->utils->base64_url_encode(serialize($this->oidcStateService->store($state_obj)));
 
     $host = $this->apimUtils->getHostUrl();
 

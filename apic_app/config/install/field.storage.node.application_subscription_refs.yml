@@ -9,7 +9,7 @@ field_name: application_subscription_refs
 entity_type: node
 type: entity_reference
 settings:
-  target_type: apic_app_subscription
+  target_type: apic_app_application_subs
 module: core
 locked: false
 cardinality: -1

@@ -1,4 +1,364 @@
 changes:
+  8.x-20200213-2251:
+    commits:
+    - lockdown apiconnect-explorer versionfp10 (#325)
+    modules:
+      apic_app:
+        8.x-1.7.15:
+        - Show the the link (#179)
+  8.x-20200213-1541:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.7.14:
+        - update hook documentation
+        - update data passed to delete hooks
+        - add pre and post delete hooks
+      consumerorg:
+        8.x-1.4.3:
+        - update hook documentation
+        - update data passed to delete hooks
+        - add pre and post delete hooks
+  8.x-20200211-1954:
+    commits: null
+    modules:
+      product:
+        8.x-1.3.12:
+        - save product apis
+  8.x-20200211-1535:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.3.11:
+        - set status of entity view display on upgrade
+  8.x-20200211-1319:
+    commits: null
+    modules:
+      product:
+        8.x-1.3.11:
+        - logic all wrong for setting the product nids
+        8.x-1.3.10:
+        - code style
+  8.x-20200211-0822:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.3.10:
+        - api module needs the display mode to have been created first
+      ibm_apim:
+        8.x-1.5.9:
+        - code style
+  8.x-20200207-1826:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.5.8:
+        - Hides apps that are already subscribed in api form (#515)
+  8.x-20200207-1600:
+    commits: null
+    modules:
+      product:
+        8.x-1.3.9:
+        - make product_api_nids visible on view displays
+        - add new product api nids field
+  8.x-20200204-1748:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.3.9:
+        - create new view using apis
+        - add new api entity view display
+      ibm_apim:
+        8.x-1.5.7:
+        - be more defensive and check if mode exists
+        - label needed for view mode
+        - add embedded view mode
+  8.x-20200131-1945:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.7.13:
+        - change check for config entities (#172)
+  8.x-20200131-1547:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.7.12: null
+        8.x-1.7.11:
+        - needs to be more defensive to handle them not existing
+  8.x-20200130-2022:
+    commits:
+    - pull in back_to_top module and update others (#321)
+    modules:
+      socialblock:
+        8.x-1.3.3:
+        - try and fix phpunit requriements
+      product:
+        8.x-1.3.8:
+        - try and fix phpunit requriements
+      featuredcontent:
+        8.x-1.3.3:
+        - try and fix phpunit requriements
+      apictest:
+        8.x-1.5.4:
+        - need drupal-extension
+        - try and fix phpunit requriements
+  8.x-20200129-1723:
+    commits:
+    - new translations.sql
+    - New po files with updated versions added.
+    - Deleted 3346 old po files
+    modules:
+      auth_apic:
+        8.x-1.4.3:
+        - Always use server side state storage with encrypted key (fix for APAR LI81210)
+        - Always use server side state storage with encrypted key (fix for APAR LI81210)
+      apic_app:
+        8.x-1.7.10:
+        - Removed html dump
+        - Fix conorg id
+        - OAuth redirect tests
+  8.x-20200127-2022:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.7.9:
+        - add update to clean up old fields and entity types
+        - delete old entities + fields
+  8.x-20200124-2022:
+    commits:
+    - copyright date
+    modules:
+      apic_api:
+        8.x-1.3.8:
+        - copyright date
+      apic_app:
+        8.x-1.7.8:
+        - dont display migrate link if already sub'd to the target
+        8.x-1.7.7:
+        - copyright date
+        - Create app tests
+      ibm_apim:
+        8.x-1.5.6:
+        - copyright date
+      consumerorg:
+        8.x-1.4.2:
+        - copyright date
+      apictest:
+        8.x-1.5.3:
+        - copyright date
+  8.x-20200124-1734:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.4.2:
+        - copyright date
+      mail_subscribers:
+        8.x-1.3.3:
+        - copyright date
+      featuredcontent:
+        8.x-1.3.2:
+        - copyright date
+  8.x-20200124-1422:
+    commits: null
+    modules:
+      socialblock:
+        8.x-1.3.2:
+        - copyright date
+      product:
+        8.x-1.3.7:
+        - copyright date
+      themegenerator:
+        8.x-1.3.2:
+        - copyright date
+  8.x-20200122-1723:
+    commits: null
+    modules:
+      apictest:
+        8.x-1.5.2:
+        - Add annotation
+  8.x-20200120-1422:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.7.6:
+        - upgrade entity performance improvements
+      ibm_apim:
+        8.x-1.5.5:
+        - use new args for constructor in drupal 8.8
+  8.x-20200118-0222:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.7.5:
+        - performance optimisation in the upgrade code
+  8.x-20200111-0222:
+    commits:
+    - update translations.sql
+    - update .po versions in filenames
+    - add latest apim_profile .po files
+    - use getTitle() and getType() for nodes
+    - add link and node translation upgrade code
+    - make block upgrade code more defensive
+    - upgrade welcome page block translations
+    modules:
+      apic_api:
+        8.x-1.3.7:
+        - need to link to api in context of product
+  8.x-20200110-1422:
+    commits: null
+    modules:
+      product:
+        8.x-1.3.6:
+        - Missed Changes (#113) (#114)
+      mail_subscribers:
+        8.x-1.3.2:
+        - Updated mail subscribers to use entities
+      apic_api:
+        8.x-1.3.6: null
+      apic_app:
+        8.x-1.7.4:
+        - Small fix for credentials (#159) (#160)
+  8.x-20200109-2022:
+    commits:
+    - add uncompressed blazy file
+    modules:
+      apic_api:
+        8.x-1.3.5:
+        - handle translated apis
+  8.x-20200109-1122:
+    commits: null
+    modules:
+      product:
+        8.x-1.3.5:
+        - use blazy to avoid masonry meddling with css
+      apic_api:
+        8.x-1.3.4:
+        - require blazy
+        8.x-1.3.3:
+        - change default number of items per page
+        - use blazy to avoid masonry meddling with css
+  8.x-20200109-0222:
+    commits: null
+    modules:
+      product:
+        8.x-1.3.4:
+        - remove debug
+      apic_api:
+        8.x-1.3.2:
+        - use embedded view mode
+      ibm_apim:
+        8.x-1.5.4:
+        - add embedded view mode
+        8.x-1.5.3:
+        - remove border
+  8.x-20200108-2022:
+    commits: null
+    modules:
+      product:
+        8.x-1.3.3:
+        - Content entity (#109)
+  8.x-20200108-1644:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.7.3:
+        - Content entity (#155)
+      ibm_apim:
+        8.x-1.5.2:
+        - Changed reference, could possibly be deleted? (#510)
+  8.x-20200108-0522:
+    commits: null
+    modules:
+      product:
+        8.x-1.3.2:
+        - wrong field name
+        - wrong view ID
+      apic_app:
+        8.x-1.7.2:
+        - coding style tidy up
+  8.x-20191219-0222:
+    commits:
+    - Update modules and switch use of abandoned drupal core dev pkg
+    - update modules - core->8.8.1
+    modules:
+      apic_app:
+        8.x-1.7.1:
+        - pending approval state acknowledged.
+  8.x-20191218-1723:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-1.4.1:
+        - remove fall through case for account
+        - use ApicUserStorage service to check members
+        - Tempmerge (#169)
+  8.x-20191218-1310:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.4.1: null
+  8.x-20191217-1421:
+    commits: null
+    modules:
+      socialblock:
+        8.x-1.3.1: null
+      product:
+        8.x-1.3.1: null
+      ghmarkdown:
+        8.x-1.3.1: null
+      mail_subscribers:
+        8.x-1.3.1: null
+      themegenerator:
+        8.x-1.3.1: null
+      featuredcontent:
+        8.x-1.3.1: null
+      apic_api:
+        8.x-1.3.1: null
+      ibm_apim:
+        8.x-1.5.1: null
+      apictest:
+        8.x-1.5.1: null
+  8.x-20191206-1805:
+    commits:
+    - Update version for 2018.4.1.10
+    modules:
+      socialblock:
+        8.x-1.3.0:
+        - update version: 8.x-1.2.2 -> 8.x-1.3.0
+      product:
+        8.x-1.3.0:
+        - update version: 8.x-1.2.2 -> 8.x-1.3.0
+      ghmarkdown:
+        8.x-1.3.0:
+        - update version: 8.x-1.2.2 -> 8.x-1.3.0
+      auth_apic:
+        8.x-1.4.0:
+        - update version: 8.x-1.3.2 -> 8.x-1.4.0
+      mail_subscribers:
+        8.x-1.3.0:
+        - update version: 8.x-1.2.2 -> 8.x-1.3.0
+      themegenerator:
+        8.x-1.3.0:
+        - update version: 8.x-1.2.2 -> 8.x-1.3.0
+      featuredcontent:
+        8.x-1.3.0:
+        - update version: 8.x-1.2.2 -> 8.x-1.3.0
+      apic_api:
+        8.x-1.3.0:
+        - update version: 8.x-1.2.1 -> 8.x-1.3.0
+      apic_app:
+        8.x-1.7.0:
+        - update version: 8.x-1.6.59 -> 8.x-1.7.0
+      ibm_apim:
+        8.x-1.5.0:
+        - update version: 8.x-1.4.5 -> 8.x-1.5.0
+      consumerorg:
+        8.x-1.4.0:
+        - update version: 8.x-1.3.2 -> 8.x-1.4.0
+      apictest:
+        8.x-1.5.0:
+        - update version: 8.x-1.4.1 -> 8.x-1.5.0
   8.x-20191113-2021:
     commits:
     - need to update phpdotenv
@@ -122,4 +482,4 @@ changes:
         - update version: 8.x-1.1.46 -> 8.x-1.2.46
       apictest:
         8.x-1.3.55: null
-  8.x-20191206-1805:
+  8.x-20200219-1834:

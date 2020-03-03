@@ -10,6 +10,7 @@
  * @{
  */
 
+use Drupal\apic_app\Entity\ApplicationCredentials;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 
@@ -40,6 +41,9 @@ function hook_apic_app_update(NodeInterface $node, $app) {
 /**
  * Triggered when an application is deleted
  *
+ * @deprecated this hook will be removed. Please use hook_apic_app_pre_delete
+ *             or hook_apic_app_post_delete instead.
+ *
  * @param NodeInterface $node
  *   The Drupal node representing this application
  * @param array $data
@@ -50,6 +54,56 @@ function hook_apic_app_update(NodeInterface $node, $app) {
 function hook_apic_app_delete(NodeInterface $node, $data, $appId) {
 
 }
+
+/**
+ * Triggered on application deletion before the node deletion or cascade has happened.
+ *
+ * @param \Drupal\node\NodeInterface $node
+ *   The Drupal node representing this application
+ * @param array $data
+ *   Data related to the application, if present the following is available:
+ *      $data['nid'] - the node id
+ *      $data['id'] - the application_id field of the application
+ *      $data['url'] - the apic_url field of the application
+ *      $data['name'] - the application_name field of the application
+ *      $data['consumerorg_url'] - the application_consumer_org_url field from the application
+ *      $data['application_credentials_refs'] - the entity reference ids of credentials on the application
+ */
+function hook_apic_app_pre_delete(NodeInterface $node, $data) {
+
+  // In this example we are gathering the client id's for all credentials on this application
+  $clientids = [];
+
+  if(isset($data['application_credentials_refs'])) {
+    foreach ($data['application_credentials_refs'] as $ref) {
+      $credEntity = ApplicationCredentials::load($ref);
+      if ($credEntity !== NULL) {
+        $clientids[] = $ref;
+      }
+    }
+  }
+
+  // $clientids now contains all of the client ids loaded from the referenced entities
+
+}
+
+
+/**
+ * Triggered on application deletion before the node deletion or cascade has happened.
+ *
+ * @param array $data
+ *   Data related to the application, if present the following is available:
+ *      $data['nid'] - the node id
+ *      $data['id'] - the application_id field of the application
+ *      $data['url'] - the apic_url field of the application
+ *      $data['name'] - the application_name field of the application
+ *      $data['consumerorg_url'] - the application_consumer_org_url field from the application
+ *      $data['application_credentials_refs'] - the entity reference ids of credentials on the application
+ */
+function hook_apic_app_post_delete($data) {
+
+}
+
 
 /**
  * Triggered when an application is promoted

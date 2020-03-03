@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2019
+ * (C) Copyright IBM Corporation 2018, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,8 +13,8 @@
 
 namespace Drupal\apic_app;
 
-use Drupal\apic_app\Entity\Credentials;
-use Drupal\apic_app\Entity\Subscription;
+use Drupal\apic_app\Entity\ApplicationCredentials;
+use Drupal\apic_app\Entity\ApplicationSubscription;
 use Drupal\apic_app\Event\ApplicationCreateEvent;
 use Drupal\apic_app\Event\ApplicationDeleteEvent;
 use Drupal\apic_app\Event\ApplicationUpdateEvent;
@@ -230,7 +230,7 @@ class Application {
       }
 
       // ensure this application links to all its subscriptions
-      $query = \Drupal::entityQuery('apic_app_subscription');
+      $query = \Drupal::entityQuery('apic_app_application_subs');
       $query->condition('app_url', $app['url']);
       $entityIds = $query->execute();
       $newArray = [];
@@ -327,8 +327,6 @@ class Application {
     return $createdOrUpdated;
   }
 
-
-
   /**
    * @param $app
    * @param $event
@@ -367,30 +365,42 @@ class Application {
 
     $node = Node::load($nid);
     if ($node !== NULL) {
+
+      $moduleHandler = \Drupal::service('module_handler');
+
+      // Calling all modules implementing 'hook_apic_app_pre_delete':
+      $hookData = self::createAppHookData($node);
+      $moduleHandler->invokeAll('apic_app_pre_delete', [
+          'node' => $node,
+          'data' => $hookData,
+        ]);
+      // TODO: invoke pre delete rule here
+
       // Delete all subscription entities for this application
-      $query = \Drupal::entityQuery('apic_app_subscription');
+      $query = \Drupal::entityQuery('apic_app_application_subs');
       $query->condition('app_url.value', $node->apic_url->value);
 
       $entityIds = $query->execute();
       if (isset($entityIds) && !empty($entityIds)) {
-        $subEntities = Subscription::loadMultiple($entityIds);
+        $subEntities = ApplicationSubscription::loadMultiple($entityIds);
         foreach ($subEntities as $subEntity) {
           $subEntity->delete();
         }
       }
       // Delete all credentials entities for this application
-      $query = \Drupal::entityQuery('apic_app_credentials');
+      $query = \Drupal::entityQuery('apic_app_application_creds');
       $query->condition('app_url.value', $node->apic_url->value);
 
       $entityIds = $query->execute();
       if (isset($entityIds) && !empty($entityIds)) {
-        $subEntities = Credentials::loadMultiple($entityIds);
+        $subEntities = ApplicationCredentials::loadMultiple($entityIds);
         foreach ($subEntities as $subEntity) {
           $subEntity->delete();
         }
       }
 
-      $moduleHandler = \Drupal::service('module_handler');
+      $node->delete();
+
       if ($moduleHandler->moduleExists('rules')) {
         // Set the args twice on the event: as the main subject but also in the
         // list of arguments.
@@ -398,8 +408,11 @@ class Application {
         $event_dispatcher = \Drupal::service('event_dispatcher');
         $event_dispatcher->dispatch(ApplicationDeleteEvent::EVENT_NAME, $event);
       }
+      // Calling all modules implementing 'hook_apic_app_post_delete':
+      $moduleHandler->invokeAll('apic_app_post_delete', [
+          'data' => $hookData
+        ]);
 
-      $node->delete();
       \Drupal::logger('apic_app')->notice('Application @app deleted', ['@app' => $node->getTitle()]);
       unset($node);
     }
@@ -646,7 +659,6 @@ class Application {
       'application_enabled',
       'application_redirect_endpoints',
       'application_data',
-      'application_credentials',
       'application_credentials_refs',
       'application_subscriptions',
       'application_subscription_refs',
@@ -743,48 +755,52 @@ class Application {
             if (isset($productPlans[$sub->plan()]['superseded-by'])) {
               $supersededByProductUrl = $productPlans[$sub->plan()]['superseded-by']['product_url'];
               $supersededByPlan = $productPlans[$sub->plan()]['superseded-by']['plan'];
-              $utils = \Drupal::service('ibm_apim.utils');
-              $supersededByRef = $utils->base64_url_encode($supersededByProductUrl . ':' . $supersededByPlan);
-              $supersededByTitle = NULL;
-              $supersededByVersion = NULL;
+              // dont display a link for superseded-by targets that are what we're already subscribed to
+              // apim shouldn't really allow that, but it does, so try to handle it best we can
+              if ($supersededByProductUrl !== $sub->product_url() || $supersededByPlan !== $sub->plan() ) {
+                $utils = \Drupal::service('ibm_apim.utils');
+                $supersededByRef = $utils->base64_url_encode($supersededByProductUrl . ':' . $supersededByPlan);
+                $supersededByTitle = NULL;
+                $supersededByVersion = NULL;
 
-              $query = \Drupal::entityQuery('node');
-              $query->condition('type', 'product');
-              $query->condition('status', 1);
-              $query->condition('apic_url.value', $supersededByProductUrl);
-              $results = $query->execute();
-              $fullPlanTitle = NULL;
-              if (isset($results) && !empty($results)) {
-                $nid = array_shift($results);
-                $fullProduct = Node::load($nid);
-                if ($fullProduct !== NULL) {
-                  $productYaml = yaml_parse($fullProduct->product_data->value);
-                  $supersededByTitle = $productYaml['info']['title'];
-                  $supersededByVersion = $productYaml['info']['version'];
-                  $fullProductPlans = [];
-                  $fullProductPlan = '';
+                $query = \Drupal::entityQuery('node');
+                $query->condition('type', 'product');
+                $query->condition('status', 1);
+                $query->condition('apic_url.value', $supersededByProductUrl);
+                $results = $query->execute();
+                $fullPlanTitle = NULL;
+                if (isset($results) && !empty($results)) {
+                  $nid = array_shift($results);
+                  $fullProduct = Node::load($nid);
                   if ($fullProduct !== NULL) {
-                    foreach ($fullProduct->product_plans->getValue() as $arrayValue) {
-                      $fullProductPlan = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-                      $fullProductPlans[$fullProductPlan['name']] = $fullProductPlan;
+                    $productYaml = yaml_parse($fullProduct->product_data->value);
+                    $supersededByTitle = $productYaml['info']['title'];
+                    $supersededByVersion = $productYaml['info']['version'];
+                    $fullProductPlans = [];
+                    $fullProductPlan = '';
+                    if ($fullProduct !== NULL) {
+                      foreach ($fullProduct->product_plans->getValue() as $arrayValue) {
+                        $fullProductPlan = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+                        $fullProductPlans[$fullProductPlan['name']] = $fullProductPlan;
+                      }
+                    }
+                    if (isset($fullProductPlans[$fullProductPlan])) {
+                      $fullPlanTitle = $fullProductPlans[$fullProductPlan]['title'];
                     }
                   }
-                  if (isset($fullProductPlans[$fullProductPlan])) {
-                    $fullPlanTitle = $fullProductPlans[$fullProductPlan]['title'];
-                  }
                 }
-              }
-              if (!isset($fullPlanTitle) || empty($fullPlanTitle)) {
-                $fullPlanTitle = Html::escape($supersededByPlan);
-              }
+                if (!isset($fullPlanTitle) || empty($fullPlanTitle)) {
+                  $fullPlanTitle = Html::escape($supersededByPlan);
+                }
 
-              $supersedingProduct = [
-                'product_ref' => $supersededByRef,
-                'plan' => $supersededByPlan,
-                'plan_title' => $fullPlanTitle,
-                'product_title' => $supersededByTitle,
-                'product_version' => $supersededByVersion,
-              ];
+                $supersedingProduct = [
+                  'product_ref' => $supersededByRef,
+                  'plan' => $supersededByPlan,
+                  'plan_title' => $fullPlanTitle,
+                  'product_title' => $supersededByTitle,
+                  'product_version' => $supersededByVersion,
+                ];
+              }
             }
           }
           if (!isset($planTitle) || empty($planTitle)) {
@@ -844,6 +860,45 @@ class Application {
     // Calling all modules implementing 'hook_apic_app_create':
     $moduleHandler->invokeAll('apic_app_create', [$node, $app]);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+  /**
+   * Build an array of useful data from an application node.
+   *
+   * @param NodeInterface $node
+   *
+   * @return array
+   */
+  private static function createAppHookData(NodeInterface $node): array {
+
+    $data = [];
+    $data['nid'] = $node->id();
+
+    if ($node->hasField('application_id') && !$node->get('application_id')->isEmpty()) {
+      $data['id'] = $node->get('application_id')->value;
+    }
+
+    if ($node->hasField('application_name') && !$node->get('application_name')->isEmpty()) {
+      $data['name'] = $node->get('application_name')->value;
+    }
+
+    if ($node->hasField('apic_url') && !$node->get('apic_url')->isEmpty()) {
+      $data['url'] = $node->get('apic_url')->value;
+    }
+
+    if ($node->hasField('application_consumer_org_url') && !$node->get('application_consumer_org_url')->isEmpty()) {
+      $data['consumerorg_url'] = $node->get('application_consumer_org_url')->value;
+    }
+
+    if ($node->hasField('application_credentials_refs') && !$node->get('application_credentials_refs')->isEmpty()) {
+      $data['application_credentials_refs'] = [];
+      foreach ($node->get('application_credentials_refs') as  $ref) {
+        $data['application_credentials_refs'][] = $ref->target_id;
+      }
+    }
+
+    return $data;
+
   }
 
   /**
