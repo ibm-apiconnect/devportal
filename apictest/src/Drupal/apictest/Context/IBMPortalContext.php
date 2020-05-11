@@ -1347,4 +1347,36 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     \Drupal::state()->set('ibm_apim.selfSignUpEnabled', FALSE);
   }
 
+  /**
+   * @Given application certificates are enabled
+   */
+  public function appCertificatesAreEnabled() {
+      print "application certificates enabled \n";
+      \Drupal::state()->set('ibm_apim.application_certificates', TRUE);
+  }
+
+  /**
+   * @Given application certificates are disabled
+   */
+  public function appCertificatesAreDisabled() {
+      print "application certificates disabled \n";
+      \Drupal::state()->set('ibm_apim.application_certificates', FALSE);
+  }
+
+    /**
+     * Check whether a tooltip on the page contains the following text.
+     *
+     * @Then I should see the tooltip text :arg1
+     */
+    public function iShouldSeeTheTooltipText($arg1) {
+        $page = $this->getSession()->getPage();
+        $tooltip = $page->findAll('css', '[data-original-title*="' . $arg1 . '"]');
+
+        if ($tooltip === NULL) {
+            throw new Exception('cannot find expected tooltip');
+        }
+
+    }
+
+
 }

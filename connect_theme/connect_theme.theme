@@ -120,8 +120,13 @@ function connect_theme_preprocess_node(&$variables) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  $variables['title_attributes']['id'] = 'node-' . $variables['node']->id() . '-title';
-  $variables['attributes']['aria-labelledby'] = 'node-' . $variables['node']->id() . '-title';
+  if ($variables['node']->getType() === 'page'){
+    $variables['attributes']['aria-labelledby'] = 'page-node-title';
+    $variables['title_attributes']['id'] = 'page-node-title';
+  } else {
+    $variables['attributes']['aria-labelledby'] = 'node-' . $variables['node']->id() . '-title';
+    $variables['title_attributes']['id'] = 'node-' . $variables['node']->id() . '-title';
+  }
 
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_exit_trace(__FUNCTION__, NULL);

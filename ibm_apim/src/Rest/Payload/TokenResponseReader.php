@@ -75,6 +75,13 @@ class TokenResponseReader extends RestResponseReader {
     }
     $token_response->setExpiresIn(time() + (int)$data['expires_in']);
 
+    if (isset($data['refresh_token'])) {
+      $token_response->setRefreshToken($data['refresh_token']);
+    }
+
+    if (isset($data['refresh_expires_in'])) {
+      $token_response->setRefreshExpiresIn(time() + (int)$data['refresh_expires_in']);
+    }
     return $token_response;
   }
 

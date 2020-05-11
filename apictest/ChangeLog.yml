@@ -1,4 +1,9 @@
 changes:
+  8.x-1.6.2:
+  - php upgrade (#172)
+  8.x-1.6.1: null
+  8.x-1.6.0:
+  - update version: 8.x-1.5.5 -> 8.x-1.6.0
   8.x-1.5.4:
   - need drupal-extension
   - try and fix phpunit requriements

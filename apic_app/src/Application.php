@@ -338,7 +338,21 @@ class Application {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public static function createOrUpdateReturnNid($app, $event, $formState): ?string {
+    $apimUtils = \Drupal::service('ibm_apim.apim_utils');
     $nid = NULL;
+
+    if (isset($app['url'])) {
+      $app['url'] = $apimUtils->removeFullyQualifiedUrl($app['url']);
+    }
+    if (isset($app['org_url'])) {
+      $app['org_url'] = $apimUtils->removeFullyQualifiedUrl($app['org_url']);
+    }
+    if (isset($app['app_credential_urls'])) {
+      foreach ($app['app_credential_urls'] as $key => $url){
+        $app['app_credential_urls'][$key] = $apimUtils->removeFullyQualifiedUrl($url);
+      }
+    }
+
     self::createOrUpdate($app, $event, $formState);
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');

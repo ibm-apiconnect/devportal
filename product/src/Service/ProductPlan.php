@@ -60,12 +60,13 @@ class ProductPlan {
 
     // check for any translated plan names and descriptions
     $lang_code = $this->languageManager->getCurrentLanguage()->getId();
-    if (array_key_exists('x-ibm-languages', $planArray['data']) && array_key_exists($lang_code, $planArray['data']['x-ibm-languages'])) {
-      if (array_key_exists('title', $planArray['data']['x-ibm-languages'][$lang_code])) {
-        $planArray['data']['title'] = $planArray['data']['x-ibm-languages'][$lang_code]['title'];
+    if (array_key_exists('x-ibm-languages', $planArray['data'])) {
+      if (array_key_exists('title', $planArray['data']['x-ibm-languages']) && array_key_exists($lang_code, $planArray['data']['x-ibm-languages']['title'])) {
+        $planArray['data']['title'] = $planArray['data']['x-ibm-languages']['title'][$lang_code];
       }
-      if (array_key_exists('description', $planArray['data']['x-ibm-languages'][$lang_code])) {
-        $planArray['data']['description'] = $planArray['data']['x-ibm-languages'][$lang_code]['description'];
+
+      if (array_key_exists('description', $planArray['data']['x-ibm-languages']) && array_key_exists($lang_code, $planArray['data']['x-ibm-languages']['description'])) {
+        $planArray['data']['description'] = $planArray['data']['x-ibm-languages']['description'][$lang_code];
       }
     }
 

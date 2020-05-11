@@ -72,7 +72,7 @@ class WSDLRetrieverController extends ControllerBase {
       [$apiname, $apiver] = $apidata;
       // Check the format of the name ([A-Za-z0-9]+) and version ([A-Za-z0-9\.\-\_]+)
       // Do this before trying to load the node, to prevent attacks directed at drupal
-      if (!preg_match('/^([A-Za-z0-9]+)$/', $apiname)) {
+      if (!preg_match('/^([A-Za-z0-9\.\-\_]+)$/', $apiname)) {
         \Drupal::logger('apic_api')->error('WSDLRetrieverController: invalid APINAME in request', []);
         throw new AccessDeniedHttpException();
       }

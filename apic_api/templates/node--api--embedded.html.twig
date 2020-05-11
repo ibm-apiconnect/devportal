@@ -41,7 +41,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
         {% else %}
           <a href="{{- path('apic_api.view', {'apiNode': apiNode}) -}}" rel="bookmark">
         {% endif %}
-          <span class="apicApiName apicTruncate">{{- label -}}</span>
+          <span id="node-{{ node.id }}-title" class="apicApiName apicTruncate">{{- label -}}</span>
           {% if showVersions %}
             <div class="apicApiCardVersion">{{- content.apic_version -}}</div>
           {% endif %}

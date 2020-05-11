@@ -87,7 +87,8 @@ Feature: Edit Profile
 @api
   # This is a user with administrator role, not uid==1 admin user.
   Scenario: Editing user details as a user with administrator role
-   Given I am logged in as a user with the "Administrator" role
+   Given I am logged in as a user with the "Administrator" role and I have the following fields:
+     |registry_url | /mock/registry |
    When I am at "/user/@uid/edit"
    And I enter "Changed Name Admin" for "First Name"
    And I enter "Changed Last Name Admin" for "Last Name"
@@ -280,4 +281,40 @@ Scenario: View another users edit profile form as admin user (uid==1)
     And the "Last Name" field should contain "Changed Last Name"
     And there are no errors
     And there are no warnings
+
+  @api
+  Scenario: Edit profile by users with the same username
+    Given I am not logged in
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+      | lur  | @data(user_registries[1].title)   | @data(user_registries[1].url)     | yes          | no      |
+    Given users:
+      | uid    | name            | mail                     | pass     | registry_url                  |
+      | 345678 | editprofileuser | editprofile1@example.com | Qwert123 | @data(user_registries[0].url) |
+      | 876543 | editprofileuser | editprofile2@example.com | Qwert246 | @data(user_registries[1].url) |
+    Given consumerorgs:
+      | title | name | id   | owner_uid |
+      | org1  | org1 | org1 | 345678    |
+      | org2  | org2 | org2 | 876543    |
+    When I am logged in as "editprofileuser" from "@data(user_registries[0].url)" with "Qwert123"
+    And I am at "/user/@uid/edit"
+    And I enter "USER ONE FIRST NAME" for "First Name"
+    When I press the "Save" button
+    And there are messages
+    And I should see the text "Your account has been updated."
+    And the "First Name" field should contain "USER ONE FIRST NAME"
+    Then there are no errors
+    And there are no warnings
+    And I am logged in as "editprofileuser" from "@data(user_registries[1].url)" with "Qwert246"
+    When I am at "/user/@uid/edit"
+    And I enter "USER TWO FIRST NAME" for "First Name"
+    When I press the "Save" button
+    And there are messages
+    And I should see the text "Your account has been updated."
+    And the "First Name" field should contain "USER TWO FIRST NAME"
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should see the text "Your account has been updated."
 

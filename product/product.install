@@ -218,3 +218,30 @@ function product_update_8113() {
     }
   }
 }
+
+// Making sure that product description is translatable
+function product_update_8114() {
+
+  $apicDescriptionFieldStorageConfig = FieldStorageConfig::loadByName('node', 'apic_description');
+  if ($apicDescriptionFieldStorageConfig !== NULL) {
+    $apicDescriptionFieldStorageConfig->set('translatable', TRUE);
+    $apicDescriptionFieldStorageConfig->save();
+  }
+
+  $apicDescriptionFieldConfig = FieldConfig::loadByName('node', 'product', 'apic_description');
+  if ($apicDescriptionFieldConfig !== NULL) {
+    $apicDescriptionFieldConfig->set('translatable', TRUE);
+    $apicDescriptionFieldConfig->save();
+  }
+
+}
+
+// ensure cardinality of product_api_nids is -1
+function product_update_8115() {
+  // check for field storage object and create if it doesn't exist
+  $fieldStorageConfig = FieldStorageConfig::loadByName('node', 'product_api_nids');
+  if ($fieldStorageConfig !== NULL) {
+    $fieldStorageConfig->set('cardinality' , -1);
+    $fieldStorageConfig->save();
+  }
+}

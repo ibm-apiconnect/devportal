@@ -931,7 +931,11 @@ function ibm_apim_password_policy_check_constraints(array $form, FormStateInterf
     $dataRows = $form['account']['password_policy_status']['#rows'];
   }
   if ($dataRows === NULL || empty($dataRows)) {
-    $dataRows = _password_policy_constraints_table($form, $form_state);
+    $dataRows = \Drupal::service('password_policy.validator')
+    ->buildPasswordPolicyConstraintsTableRows(
+      $form_state->getValue('pass', ''),
+      $form_state->getFormObject()->getEntity(),
+      _password_policy_get_edited_user_roles($form, $form_state));
   }
   $status = [];
   $failed = FALSE;

@@ -1,4 +1,15 @@
 changes:
+  8.x-1.5.5:
+  - Fix password reset (#554)
+  8.x-1.5.4: null
+  8.x-1.5.3: null
+  8.x-1.5.2:
+  - Fixes password policy (#551)
+  8.x-1.5.1:
+  - remove constraint hook
+  - add multiple users edit profile test
+  8.x-1.5.0:
+  - update version: 8.x-1.4.4 -> 8.x-1.5.0
   8.x-1.4.3:
   - Always use server side state storage with encrypted key (fix for APAR LI81210)
   - Always use server side state storage with encrypted key (fix for APAR LI81210)

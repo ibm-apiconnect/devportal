@@ -1,4 +1,203 @@
 changes:
+  8.x-20200501-1322:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.8.7:
+        - add title to the a href
+      ibm_apim:
+        8.x-1.6.6: null
+        8.x-1.6.5:
+        - missing alt tag
+        - dont need to use article here
+  8.x-20200430-1624:
+    commits: null
+    modules:
+      product:
+        8.x-1.4.6:
+        - ensure paramconverters use translated nodes
+      apic_api:
+        8.x-1.4.5:
+        - ensure paramconverters use translated nodes
+  8.x-20200424-1323:
+    commits:
+    - Merge pull request
+    modules:
+      product:
+        8.x-1.4.5:
+        - fix missing id on title
+      apic_api:
+        8.x-1.4.4:
+        - fix missing id on title
+      apic_app:
+        8.x-1.8.6:
+        - fix missing id on title
+  8.x-20200422-1323:
+    commits:
+    - Updated patch file
+    - Added patch
+    modules:
+      auth_apic:
+        8.x-1.5.5:
+        - Fix password reset (#554)
+  8.x-20200422-0829:
+    commits: null
+    modules:
+      themegenerator:
+        8.x-1.4.2:
+        - fix sample acme svg display issue
+  8.x-20200421-1923:
+    commits: null
+    modules:
+      product:
+        8.x-1.4.4:
+        - product_api_nids set to -1 after upgrade
+  8.x-20200417-2250:
+    commits:
+    - Fixed translations (#354) (#356)
+    modules:
+      product:
+        8.x-1.4.3:
+        - ensure use translated variant of the node
+  8.x-20200417-1708:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.5.4: null
+        8.x-1.5.3: null
+      apic_app:
+        8.x-1.8.5:
+        - temporarily disable test
+  8.x-20200417-1230:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.5.2:
+        - Fixes password policy (#551)
+      ibm_apim:
+        8.x-1.6.4:
+        - php fix
+  8.x-20200324-2223:
+    commits:
+    - Php upgrade 2018.4.1 (#353)
+    - Resolved conflicts
+    - New po files with updated versions added.
+    - Deleted 168 old po files
+    modules:
+      ibm_apim:
+        8.x-1.6.3:
+        - block access to create nodes of our content types
+      apictest:
+        8.x-1.6.2:
+        - php upgrade (#172)
+  8.x-20200317-1322:
+    commits:
+    - specify v4 of explorer for v2018
+    - Merge pull request
+    modules:
+      apic_app:
+        8.x-1.8.4:
+        - Added back old entities and deprecated them (#186) (#187)
+  8.x-20200316-1622:
+    commits: null
+    modules:
+      product:
+        8.x-1.4.2:
+        - fixed translations for plans title and description
+  8.x-20200316-1322:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.4.3:
+        - Updated apic_description field config to be translatable
+      apic_app:
+        8.x-1.8.3:
+        - Updated apic_summary field config to be translatable (#185)
+  8.x-20200313-1322:
+    commits: null
+    modules:
+      product:
+        8.x-1.4.1:
+        - Updated apic_description field config to be translatable
+  8.x-20200309-1843:
+    commits:
+    - Tc2dev/20200302 (#339)
+    - add another upgrade dependency
+    modules:
+      ibm_apim:
+        8.x-1.6.2:
+        - Merge pull request
+  8.x-20200309-1557:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.8.2:
+        - mandate enitity update before system 8803
+  8.x-20200305-2022:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.4.2:
+        - set upgrade dependency for view update
+      apic_app:
+        8.x-1.8.1:
+        - check for creds and subs entities (#183)
+  8.x-20200305-1723:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.6.1:
+        - honour name+reg_url in  MockApicAccountService
+  8.x-20200303-1722:
+    commits:
+    - Tc2dev/20200204 (#334) (#335)
+    modules:
+      auth_apic:
+        8.x-1.5.1:
+        - remove constraint hook
+        - add multiple users edit profile test
+  8.x-20200303-1426:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.4.1:
+        - Allow WSDL files download for SOAP APIs with non-alphanumberic characters names
+  8.x-20200219-1834:
+    commits:
+    - Tempmerge (#331)
+    - Update version for 2018.4.1.11
+    modules:
+      socialblock:
+        8.x-1.4.1: null
+      product:
+        8.x-1.4.0:
+        - update version: 8.x-1.3.13 -> 8.x-1.4.0
+      ghmarkdown:
+        8.x-1.4.0:
+        - update version: 8.x-1.3.2 -> 8.x-1.4.0
+      auth_apic:
+        8.x-1.5.0:
+        - update version: 8.x-1.4.4 -> 8.x-1.5.0
+      mail_subscribers:
+        8.x-1.4.1: null
+      themegenerator:
+        8.x-1.4.1: null
+      featuredcontent:
+        8.x-1.4.1: null
+      apic_api:
+        8.x-1.4.0:
+        - update version: 8.x-1.3.12 -> 8.x-1.4.0
+      apic_app:
+        8.x-1.8.0:
+        - update version: 8.x-1.7.16 -> 8.x-1.8.0
+      ibm_apim:
+        8.x-1.6.0:
+        - update version: 8.x-1.5.10 -> 8.x-1.6.0
+      consumerorg:
+        8.x-1.5.0:
+        - update version: 8.x-1.4.4 -> 8.x-1.5.0
+      apictest:
+        8.x-1.6.1: null
   8.x-20200213-2251:
     commits:
     - lockdown apiconnect-explorer versionfp10 (#325)
@@ -482,4 +681,4 @@ changes:
         - update version: 8.x-1.1.46 -> 8.x-1.2.46
       apictest:
         8.x-1.3.55: null
-  8.x-20200219-1834:
+  8.x-20200501-1624:

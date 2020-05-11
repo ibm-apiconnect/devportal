@@ -18,19 +18,26 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
-use Drupal\ibm_apim\Service\Utils;
+use Drupal\ibm_apim\Service\Interfaces\ApicModuleInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
 
+  /**
+   * @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface
+   */
   protected $keyValueExpirable;
 
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
   protected $logger;
 
-  protected $sitePath;
-
-  protected $utils;
+  /**
+   * @var \Drupal\ibm_apim\Service\Interfaces\ApicModuleInterface
+   */
+  protected $moduleService;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -46,13 +53,11 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
 
   public function __construct(KeyValueStoreExpirableInterface $key_value_expirable,
                               LoggerInterface $logger,
-                              string $site_path,
-                              Utils $utils,
+                              ApicModuleInterface $module_service,
                               Messenger $messenger) {
     $this->keyValueExpirable = $key_value_expirable;
     $this->logger = $logger;
-    $this->sitePath = $site_path;
-    $this->utils = $utils;
+    $this->moduleService = $module_service;
     $this->messenger = $messenger;
   }
 
@@ -63,8 +68,7 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
     return new static(
       $container->get('keyvalue.expirable')->get('ibm_apim_custommodule_delete'),
       $container->get('logger.channel.ibm_apim'),
-      $container->get('site.path'),
-      $container->get('ibm_apim.utils'),
+      $container->get('ibm_apim.module'),
       $container->get('messenger')
     );
   }
@@ -108,6 +112,9 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
 
     // Retrieve the list of modules from the key value store.
     $account = $this->currentUser()->id();
@@ -116,6 +123,11 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
     // Prevent this page from showing when the module list is empty.
     if (empty($this->modules)) {
       $this->messenger->addError($this->t('The selected modules could not be deleted, either due to a website problem or due to the delete confirmation form timing out. Please try again.'));
+      $this->logger->error('The selected modules could not be deleted, either due to a website problem or due to the delete confirmation form timing out.');
+
+      if (function_exists('ibm_apim_exit_trace')) {
+        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'empty modules');
+      }
       return $this->redirect('ibm_apim.custommodules_delete');
     }
 
@@ -126,6 +138,9 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
       '#items' => $this->modules,
     ];
 
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
     return parent::buildForm($form, $form_state);
   }
 
@@ -133,59 +148,29 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
 
     // Clear the key value store entry.
     $account = $this->currentUser()->id();
     $this->keyValueExpirable->delete($account);
 
     // Uninstall the modules.
-    $result = $this->deleteModulesOnFileSystem($this->modules);
+    $result = $this->moduleService->deleteModulesOnFileSystem($this->modules);
     if ($result) {
       $this->messenger->addMessage($this->t('The selected modules have been deleted.'));
+      $this->logger->notice('CustomModuleDeleteConfirmForm: modules deleted successfully');
     }
     else {
       $this->messenger->addError($this->t('There was a problem deleting the specified modules.'));
+      $this->logger->error('CustomModuleDeleteConfirmForm: error deleting modules');
     }
     $form_state->setRedirectUrl($this->getCancelUrl());
-  }
 
-  /**
-   * @param array $modules
-   *
-   * @return bool
-   */
-  private function deleteModulesOnFileSystem(array $modules): bool {
-    $paths = [];
-    $error_found = FALSE;
-    foreach ($modules as $module) {
-      $path = \DRUPAL_ROOT . '/' . $this->sitePath . '/modules/' . $module;
-      $this->logger->debug('Delete modules: checking existence of %path', ['%path' => $path]);
-      if (is_dir($path)) {
-        $paths[] = $path;
-      }
-      else {
-        $this->logger->error('%path is not a directory, exitting.', ['%path' => $path]);
-        $error_found = TRUE;
-      }
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-
-    if ($error_found) {
-      $this->logger->error('Errors found while checking module directories to delete, so cancelling processing.');
-      $return = FALSE;
-    }
-    elseif (!empty($paths)) {
-      foreach ($paths as $path) {
-        $this->logger->debug('Delete modules: recursively deleting %path', ['%path' => $path]);
-        $this->utils->file_delete_recursive($path);
-      }
-      $return = TRUE;
-    }
-    else {
-      $this->logger->error('Empty list of paths to delete.');
-      $return = FALSE;
-    }
-
-    return $return;
   }
 
 }

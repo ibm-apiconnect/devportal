@@ -1,4 +1,18 @@
 changes:
+  8.x-1.6.6: null
+  8.x-1.6.5:
+  - missing alt tag
+  - dont need to use article here
+  8.x-1.6.4:
+  - php fix
+  8.x-1.6.3:
+  - block access to create nodes of our content types
+  8.x-1.6.2:
+  - Merge pull request
+  8.x-1.6.1:
+  - honour name+reg_url in  MockApicAccountService
+  8.x-1.6.0:
+  - update version: 8.x-1.5.10 -> 8.x-1.6.0
   8.x-1.5.9:
   - code style
   8.x-1.5.8:

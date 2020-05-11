@@ -297,15 +297,17 @@ class ApicAccountService implements ApicAccountInterface {
 
     if ($user !== NULL && isset($customFields) && count($customFields) > 0) {
       foreach ($customFields as $customField) {
-        $this->logger->info('saving custom field: @customfield', ['@customfield' => $customField]);
-        $value = $form_state->getValue($customField);
-        if (is_array($value) && isset($value[0]['value'])) {
-          $value = $value[0]['value'];
+        if ($user->hasField($customField)) {
+          $this->logger->info('saving custom field: @customfield', ['@customfield' => $customField]);
+          $value = $form_state->getValue($customField);
+          if (is_array($value) && isset($value[0]['value'])) {
+            $value = $value[0]['value'];
+          }
+          elseif (isset($value[0])) {
+            $value = array_values($value[0]);
+          }
+          $user->set($customField, $value);
         }
-        elseif (isset($value[0])) {
-          $value = array_values($value[0]);
-        }
-        $user->set($customField, $value);
       }
       $user->save();
     }

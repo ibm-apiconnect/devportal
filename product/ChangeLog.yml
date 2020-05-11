@@ -1,4 +1,18 @@
 changes:
+  8.x-1.4.6:
+  - ensure paramconverters use translated nodes
+  8.x-1.4.5:
+  - fix missing id on title
+  8.x-1.4.4:
+  - product_api_nids set to -1 after upgrade
+  8.x-1.4.3:
+  - ensure use translated variant of the node
+  8.x-1.4.2:
+  - fixed translations for plans title and description
+  8.x-1.4.1:
+  - Updated apic_description field config to be translatable
+  8.x-1.4.0:
+  - update version: 8.x-1.3.13 -> 8.x-1.4.0
   8.x-1.3.12:
   - save product apis
   8.x-1.3.11:

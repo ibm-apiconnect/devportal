@@ -1,0 +1,6 @@
+apic_type_count.description:
+  title: Node Type Count
+  parent: system.admin_reports
+  description: 'Count the number of node in the Node .'
+  route_name: apic_type_count_description
+  weight: -1

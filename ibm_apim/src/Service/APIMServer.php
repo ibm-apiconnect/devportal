@@ -14,7 +14,11 @@
 namespace Drupal\ibm_apim\Service;
 
 use Drupal\auth_apic\JWTToken;
+
+
 use Drupal\ibm_apim\Rest\MeResponse;
+use \Drupal\Core\Session\AccountProxyInterface;
+use \Drupal\Core\Messenger\MessengerInterface;
 use Drupal\ibm_apim\Rest\Payload\MeResponseReader;
 use Drupal\ibm_apim\Rest\Payload\TokenResponseReader;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
@@ -28,6 +32,7 @@ use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Psr\Log\LoggerInterface;
+use \Drupal\user\Entity\User;
 
 /**
  * API Connect Management Server REST apis.
@@ -65,14 +70,29 @@ class APIMServer implements ManagementServerInterface {
   protected $restResponseReader;
 
   /**
-   * @var \Drupal\auth_apic\Rest\Payload\TokenResponseReader
+   * @var \Drupal\ibm_apim\Rest\Payload\TokenResponseReader
    */
   protected $tokenResponseReader;
 
   /**
-   * @var \Drupal\auth_apic\Rest\Payload\MeResponseReader
+   * @var \Drupal\ibm_apim\Rest\Payload\MeResponseReader
    */
   protected $meResponseReader;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\ApimUtils
+   */
+  protected $apim_utils;
+
+  /**
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $current_user;
+
+  /**
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
 
   /**
    * APIMServer constructor.
@@ -85,6 +105,9 @@ class APIMServer implements ManagementServerInterface {
    * @param \Drupal\ibm_apim\Rest\Payload\RestResponseReader $rest_response_reader
    * @param \Drupal\ibm_apim\Rest\Payload\TokenResponseReader $token_response_reader
    * @param \Drupal\ibm_apim\Rest\Payload\MeResponseReader $me_response_reader
+   * @param \Drupal\ibm_apim\Service\ApimUtils $apim_utils
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    */
   public function __construct(PrivateTempStoreFactory $temp_store_factory,
                               SiteConfig $config,
@@ -93,7 +116,10 @@ class APIMServer implements ManagementServerInterface {
                               UserRegistryServiceInterface $registry_service,
                               RestResponseReader $rest_response_reader,
                               TokenResponseReader $token_response_reader,
-                              MeResponseReader $me_response_reader
+                              MeResponseReader $me_response_reader,
+                              ApimUtils $apim_utils,
+                              AccountProxyInterface $current_user,
+                              MessengerInterface $messenger
   ) {
     $this->sessionStore = $temp_store_factory->get('ibm_apim');
     $this->siteConfig = $config;
@@ -103,24 +129,11 @@ class APIMServer implements ManagementServerInterface {
     $this->restResponseReader = $rest_response_reader;
     $this->tokenResponseReader = $token_response_reader;
     $this->meResponseReader = $me_response_reader;
+    $this->apim_utils = $apim_utils;
+    $this->current_user = $current_user;
+    $this->messenger = $messenger;
   }
 
-  /**
-   * @param \Drupal\ibm_apim\ApicType\ApicUser $user
-   *
-   * @return bool
-   */
-  public function setAuth(ApicUser $user): bool {
-
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $user);
-
-    //$token = $this->getAuth($user);
-    $token = $user->getBearerToken();
-    \Drupal::service('tempstore.private')->get('ibm_apim')->set('auth', $token);
-
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return TRUE;
-  }
 
   /**
    * @param \Drupal\ibm_apim\ApicType\ApicUser $user
@@ -135,10 +148,9 @@ class APIMServer implements ManagementServerInterface {
     $user_registry = $this->registryService->get($user_registry_url);
 
     if ($user_registry === null || empty($user_registry)) {
-      \Drupal::logger('auth_apic')
-        ->error('Failed to find user registry with URL @regurl for user @username.',
-          ['@regurl' => $user_registry_url, '@username' => $user->getUsername()]);
-      \Drupal::messenger()->addError(t('Unable to authorize your request. Contact the site administrator.'));
+      $this->logger->error('Failed to find user registry with URL @regurl for user @username.',
+        ['@regurl' => $user_registry_url, '@username' => $user->getUsername()]);
+      $this->messenger->addError(t('Unable to authorize your request. Contact the site administrator.'));
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       return NULL;
     }
@@ -190,6 +202,102 @@ class APIMServer implements ManagementServerInterface {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       return $token_response;
     }
+  }
+
+  /**
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $user
+   *
+   * @return mixed|null
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   */
+  public function refreshAuth() {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $refresh = $this->sessionStore->get('refresh');
+    $refresh_expires_in = $this->sessionStore->get('refresh_expires_in');
+
+    $this->sessionStore->delete('auth');
+    $this->sessionStore->delete('expires_in');
+    $this->sessionStore->delete('refresh');
+    $this->sessionStore->delete('refresh_expires_in');
+
+
+    if (!isset($refresh) || isset($refresh_expires_in) && (int) $refresh_expires_in < time()) {
+      $this->logger->error('Invalid refresh token: @refresh expires @expiry',
+        ['@refresh' => $refresh, '@expiry' => $refresh_expires_in]);
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      return false;
+    }
+    
+    //Get User Registry
+    $user_registry_url = User::load($this->current_user->id())->get('registry_url')->value;
+    $user_registry = $this->registryService->get($user_registry_url);
+    if ($user_registry === null || empty($user_registry)) {
+      $this->logger->error('Failed to find user registry with URL @regurl.',
+        ['@regurl' => $user_registry_url]);
+      $this->messenger->addError(t('Unable to authorize your request. Contact the site administrator.'));
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      return false;
+    }
+
+    //Generate Request Data
+    $token_request = [
+      'realm' => $user_registry->getRealm(),
+      'client_id' => $this->siteConfig->getClientId(),
+      'client_secret' => $this->siteConfig->getClientSecret(),
+      'grant_type' => 'refresh_token',
+      'refresh_token' => $refresh,
+    ];
+
+    //Generate Headers
+    $headers = [
+      'Content-Type: application/json',
+      'Accept: application/json',
+      'X-IBM-Client-Id: ' . $this->siteConfig->getClientId(),
+      'X-IBM-Client-Secret: ' . $this->siteConfig->getClientSecret(),
+      'X-IBM-Consumer-Context: ' . $this->siteConfig->getOrgId() . '.' . $this->siteConfig->getEnvId(),
+    ];
+
+    $response = ApicRest::json_http_request('/token', 'POST', $headers, json_encode($token_request), false, NULL, NULL, TRUE, 'consumer');
+    if (!isset($response)) {
+      $this->logger->error('Failed to refresh token');
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      return false;
+    } elseif ((int) $response->code < 200 || (int) $response->code >= 300) {
+      $this->logger->error('Refresh token request received @code response',
+      ['@code' => $response->code]);
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      return false;
+    }
+    try {
+      $token_response = $this->tokenResponseReader->read($response);
+
+      $auth = $token_response->getBearerToken();
+      $expires_in = $token_response->getExpiresIn();
+      $refresh = $token_response->getRefreshToken();
+      $refresh_expires_in = $token_response->getRefreshExpiresIn();
+
+      if (isset($auth)) {
+        $this->sessionStore->set('auth', $auth);
+      }
+      if (isset($expires_in)) {
+        $this->sessionStore->set('expires_in', (int) $expires_in);
+      }
+      if (isset($refresh)) {
+        $this->sessionStore->set('refresh', $refresh);
+      }
+      if (isset($refresh_expires_in)) {
+        $this->sessionStore->set('refresh_expires_in', (int) $refresh_expires_in);
+      }
+    } catch (RestResponseParseException $exception) {
+      $this->logger->error('RefreshAuth: failure parsing POST /token response: %message', ['%message' => $exception->getMessage()]);
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      return false;
+    }
+    
+    $this->logger->notice('Successfully refreshed the token');
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return true;
   }
 
   /**
@@ -402,15 +510,13 @@ class APIMServer implements ManagementServerInterface {
   public function resetPassword(JWTToken $jwt, $password): ?\Drupal\ibm_apim\Rest\RestResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $site_config = \Drupal::service('ibm_apim.site_config');
-
     $headers = [
       'Content-Type: application/json',
       'Accept: application/json',
       'Authorization: Bearer ' . $jwt->getDecodedJwt(),
-      'X-IBM-Consumer-Context: ' . $site_config->getOrgId() . '.' . $site_config->getEnvId(),
-      'X-IBM-Client-Id: ' . $site_config->getClientId(),
-      'X-IBM-Client-Secret: ' . $site_config->getClientSecret(),
+      'X-IBM-Consumer-Context: ' . $this->siteConfig->getOrgId() . '.' . $this->siteConfig->getEnvId(),
+      'X-IBM-Client-Id: ' . $this->siteConfig->getClientId(),
+      'X-IBM-Client-Secret: ' . $this->siteConfig->getClientSecret(),
     ];
 
     $data = ['password' => $password];
@@ -452,10 +558,8 @@ class APIMServer implements ManagementServerInterface {
 
     $url = '/sign-up';
 
-    $registry_service = \Drupal::service('ibm_apim.user_registry');
-
     $data = [];
-    $data['realm'] = $registry_service->get($new_user->getApicUserRegistryUrl())->getRealm();
+    $data['realm'] = $this->registryService->get($new_user->getApicUserRegistryUrl())->getRealm();
     $data['username'] = $new_user->getUsername();
     $data['password'] = $new_user->getPassword();
     $data['email'] = $new_user->getMail();
@@ -482,15 +586,14 @@ class APIMServer implements ManagementServerInterface {
     $data = ['title' => $org->getName()];
     $response = ApicRest::post($url, json_encode($data));
     $responseObject = $this->restResponseReader->read($response);
-    $apim_utils = \Drupal::service('ibm_apim.apim_utils');
 
     if ($responseObject !== null) {
       $code = $responseObject->getCode();
       if ($code >= 200 && $code < 400) {
         $data = $responseObject->getData();
 
-        $data['url'] = $apim_utils->removeFullyQualifiedUrl($data['url']);
-        $data['owner_url'] = $apim_utils->removeFullyQualifiedUrl($data['owner_url']);
+        $data['url'] = $this->apim_utils->removeFullyQualifiedUrl($data['url']);
+        $data['owner_url'] = $this->apim_utils->removeFullyQualifiedUrl($data['owner_url']);
 
         if (isset($data['id'])) {
           $roleUrl = '/orgs/' . $data['id'] . '/roles';
@@ -500,10 +603,10 @@ class APIMServer implements ManagementServerInterface {
             $rolesArray = $roleResponseObject->getData()['results'];
 
             foreach($rolesArray as $key => $role) {
-              $rolesArray[$key]['url'] = $apim_utils->removeFullyQualifiedUrl($rolesArray[$key]['url']);
-              $rolesArray[$key]['org_url'] = $apim_utils->removeFullyQualifiedUrl($rolesArray[$key]['org_url']);
+              $rolesArray[$key]['url'] = $this->apim_utils->removeFullyQualifiedUrl($rolesArray[$key]['url']);
+              $rolesArray[$key]['org_url'] = $this->apim_utils->removeFullyQualifiedUrl($rolesArray[$key]['org_url']);
               foreach ($rolesArray[$key]['permission_urls'] as $permKey => $perm) {
-                $rolesArray[$key]['permission_urls'][$permKey] = $apim_utils->removeFullyQualifiedUrl($rolesArray[$key]['permission_urls'][$permKey]);
+                $rolesArray[$key]['permission_urls'][$permKey] = $this->apim_utils->removeFullyQualifiedUrl($rolesArray[$key]['permission_urls'][$permKey]);
               }
             }
             $data['roles'] = $rolesArray;
@@ -516,14 +619,14 @@ class APIMServer implements ManagementServerInterface {
           if ($membersResponseObject !== null && isset($membersResponseObject->getData()['results'])) {
             $membersArray = $membersResponseObject->getData()['results'];
             foreach($membersArray as $key => $member) {
-              $membersArray[$key]['url'] = $apim_utils->removeFullyQualifiedUrl($membersArray[$key]['url']);
-              $membersArray[$key]['org_url'] = $apim_utils->removeFullyQualifiedUrl($membersArray[$key]['org_url']);
+              $membersArray[$key]['url'] = $this->apim_utils->removeFullyQualifiedUrl($membersArray[$key]['url']);
+              $membersArray[$key]['org_url'] = $this->apim_utils->removeFullyQualifiedUrl($membersArray[$key]['org_url']);
               foreach ($membersArray[$key]['role_urls'] as $urlKey => $url) {
-                $membersArray[$key]['role_urls'][$urlKey] = $apim_utils->removeFullyQualifiedUrl($membersArray[$key]['role_urls'][$urlKey]);
+                $membersArray[$key]['role_urls'][$urlKey] = $this->apim_utils->removeFullyQualifiedUrl($membersArray[$key]['role_urls'][$urlKey]);
               }
 
-              $membersArray[$key]['user']['url'] = $apim_utils->removeFullyQualifiedUrl($membersArray[$key]['user']['url']);
-              $membersArray[$key]['user']['user_registry_url'] = $apim_utils->removeFullyQualifiedUrl($membersArray[$key]['user']['user_registry_url']);
+              $membersArray[$key]['user']['url'] = $this->apim_utils->removeFullyQualifiedUrl($membersArray[$key]['user']['url']);
+              $membersArray[$key]['user']['user_registry_url'] = $this->apim_utils->removeFullyQualifiedUrl($membersArray[$key]['user']['user_registry_url']);
             }
 
             $data['members'] = $membersArray;
@@ -550,9 +653,8 @@ class APIMServer implements ManagementServerInterface {
     $data = [
       'email' => $email_address,
     ];
-    $apim_utils = \Drupal::service('ibm_apim.apim_utils');
     if ($role !== NULL) {
-      $data['role_urls'] = [$apim_utils->createFullyQualifiedUrl($role)];
+      $data['role_urls'] = [$this->apim_utils->createFullyQualifiedUrl($role)];
     }
     $response = ApicRest::post($org->getUrl() . '/member-invitations', json_encode($data));
 

@@ -45,8 +45,6 @@ class ApicUser {
 
   private $apic_idp;
 
-  private $bearer_token;
-
   private $authcode;
 
   /**
@@ -236,21 +234,6 @@ class ApicUser {
   /**
    * @return mixed
    */
-  public function getBearerToken() {
-    return $this->bearer_token;
-  }
-
-  /**
-   * @param mixed $bearer_token
-   */
-  public function setBearerToken($bearer_token): void {
-    $this->bearer_token = $bearer_token;
-  }
-
-
-  /**
-   * @return mixed
-   */
   public function getOrganization() {
     return $this->organization;
   }
@@ -319,9 +302,6 @@ class ApicUser {
     if (array_key_exists('apic_idp', $content)) {
       $this->setApicIdp($content['apic_idp']);
     }
-    if (array_key_exists('bearer_token', $content)) {
-      $this->setBearerToken($content['bearer_token']);
-    }
     if (array_key_exists('authcode', $content)) {
       $this->setAuthcode($content['authcode']);
     }
@@ -370,9 +350,6 @@ class ApicUser {
     }
     if ($this->apic_idp !== NULL) {
       $content['apic_idp'] = $this->apic_idp;
-    }
-    if ($this->bearer_token !== NULL) {
-      $content['bearer_token'] = $this->bearer_token;
     }
     if ($this->authcode !== NULL) {
       $content['authcode'] = $this->authcode;

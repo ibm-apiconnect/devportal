@@ -1,0 +1,26 @@
+# Menu items corresponding to these URLs are defined separately in the
+# apic_type_count.menu_links.yml file.
+
+apic_type_count_description:
+  path: 'admin/reports/apic-type-count'
+  defaults:
+    _controller: '\Drupal\apic_type_count\Controller\ApicTypeCountController::nodeTypeCountPublished'
+    _title: 'Node Type Count'
+  requirements:
+    _permission: 'administer modules'
+
+apic_type_count_description_user:
+  path: 'admin/reports/apic-type-count/user'
+  defaults:
+    _controller: '\Drupal\apic_type_count\Controller\ApicTypeCountController::userRoleCount'
+    _title: 'User Count'
+  requirements:
+     _permission: 'administer modules'
+
+apic_type_count_description_entity:
+  path: 'admin/reports/apic-type-count/entities'
+  defaults:
+    _controller: '\Drupal\apic_type_count\Controller\ApicTypeCountController::entityRoleCount'
+    _title: 'Entity Count'
+  requirements:
+    _permission: 'administer modules'

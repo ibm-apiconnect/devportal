@@ -30,7 +30,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
     {% endif %}
     <div class="apicAppCardMain">
       <div class="bx--about__title--name">
-          <span class="apicAppName apicTruncate" title="{{ node.title.value|striptags }}">{{- label -}}</span>
+          <span id="node-{{ node.id }}-title" class="apicAppName apicTruncate" title="{{ node.title.value|striptags }}">{{- label -}}</span>
       </div>
       <div class="apicAppDesc apicFade"
            title="{{- content.apic_summary['#items'][0].value|striptags -}}">{{ content.apic_summary }}</div>

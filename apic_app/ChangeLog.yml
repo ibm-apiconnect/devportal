@@ -1,4 +1,20 @@
 changes:
+  8.x-1.8.7:
+  - add title to the a href
+  8.x-1.8.6:
+  - fix missing id on title
+  8.x-1.8.5:
+  - temporarily disable test
+  8.x-1.8.4:
+  - Added back old entities and deprecated them (#186) (#187)
+  8.x-1.8.3:
+  - Updated apic_summary field config to be translatable (#185)
+  8.x-1.8.2:
+  - mandate enitity update before system 8803
+  8.x-1.8.1:
+  - check for creds and subs entities (#183)
+  8.x-1.8.0:
+  - update version: 8.x-1.7.16 -> 8.x-1.8.0
   8.x-1.7.15:
   - Show the the link (#179)
   8.x-1.7.14:

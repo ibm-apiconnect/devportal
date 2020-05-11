@@ -23,6 +23,7 @@ class ProdIdParamConverter implements ParamConverterInterface {
   public function convert($value, $definition, $name, array $defaults): ?NodeInterface {
     $returnValue = NULL;
     if (!empty($value)) {
+      $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product');
       $query->condition('status', 1);
@@ -32,6 +33,13 @@ class ProdIdParamConverter implements ParamConverterInterface {
       if (isset($nids) && !empty($nids)) {
         $nid = array_shift($nids);
         $returnValue = Node::load($nid);
+        if ($returnValue !== null) {
+          // ensure use the translated version of api nodes
+          $hasTranslation = $returnValue->hasTranslation($lang_code);
+          if ($hasTranslation === TRUE) {
+            $returnValue = $returnValue->getTranslation($lang_code);
+          }
+        }
       }
     }
     return $returnValue;

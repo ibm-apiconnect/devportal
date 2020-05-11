@@ -153,7 +153,6 @@ Scenario: Change password for users with the same username
   And I enter "newPassw0rd" for "Password"
   And I enter "newPassw0rd" for "Confirm password"
   And I press the "Submit" button
-  Then dump the current html
   #And I am on "/myorg"
   Then there are no errors
   And there are no warnings

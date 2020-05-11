@@ -1,6 +1,6 @@
 ## API Connect Portal NLS Export Scripts
 
-There are several parts to generating the content which is to be translated for the API Connect portal. This directory 
+There are several steps to generate the Drupal strings which need to be translated for the API Connect developer portal. This directory 
 contains the scripts which provide the inputs to a drush command which will produce the final set of files which 
 represent the complete set of files which need to be translated.
 
@@ -14,6 +14,13 @@ and more detail can be seen below.
 | download_public_drupal_translations.sh |  Download all existing translations for modules/ themes the portal uses. |
 | export_pots.sh | Export all of the current translatable strings from the modules/ themes the portal uses. |
 | drush nlsexport | Generate the content for translation, including the raw .pot files (templates === English only scripts), .po files for existing translations (which become translation memories), .po files which contain just the set of strings which still require translation. | 
+
+All of the scripts rely on running drush so you should run them from within the site directory, i.e.:
+
+```
+cd ~aegir/platforms/<platform>/sites/<site>
+./modules/ibm_apim/nls-export-prep/download_public_drupal_translations.sh
+```
 
 ### download_public_drupal_translations.sh
 
@@ -63,4 +70,4 @@ Notes:
 
 ### Subsequent steps
 
-Zip up the complete contents of the /tmp/translation_files/output directory, this is the file which needs to be sent off for translation.
+The contents of the /tmp/translation_files/output directory need to be added to the https://github.ibm.com/apimesh/devportal-translation-files repository under the dev2tc subdirectory and the translation centres informed that it is available.

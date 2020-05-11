@@ -1,0 +1,18 @@
+<?php
+/**
+ * @file
+ * Module file for node_type_count_module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function apic_type_count_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.apic_type_count':
+      // Help text for the admin section, using the module name in the path.
+      return '<p>' . t("This Module is used to count the number Published and Unpublished nodes in all content types and Count number of User in Every User Role") . '</p>';
+  }
+}

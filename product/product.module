@@ -473,8 +473,14 @@ function product_preprocess_node(&$variables) {
       $apiCount = count($apiNids);
       if ($apiCount > 0 && $apiCount < 100) {
         $apis = Node::loadMultiple($apiNids);
-
-        foreach ($apis as $api) {
+        $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
+        foreach ($apis as $key=>$api) {
+          // ensure use the translated version of api nodes
+          $hasTranslation = $api->hasTranslation($lang_code);
+          if ($hasTranslation === TRUE) {
+            $api = $api->getTranslation($lang_code);
+            $apis[$key] = $api;
+          }
           $fid = $api->apic_image->getValue();
           $apiImageUrl = NULL;
           if ($fid !== NULL && !empty($fid) && isset($fid[0]['target_id'])) {

@@ -52,6 +52,8 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
     protected $consumerOrgLogin;
 
+    protected $sessionStore;
+
     protected function setup() {
       parent::setup();
 
@@ -60,6 +62,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->userUtils = $this->prophet->prophesize(\Drupal\ibm_apim\Service\UserUtils::class);
       $this->userStorage = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserStorage::class);
       $this->tempStore = $this->prophet->prophesize(\Drupal\Core\TempStore\PrivateTempStoreFactory::class);
+      $this->sessionStore = $this->prophet->prophesize(\Drupal\Core\TempStore\PrivateTempStore::class);
       $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
       $this->siteConfig = $this->prophet->prophesize(\Drupal\ibm_apim\Service\SiteConfig::class);
       $this->currentUser = $this->prophet->prophesize(\Drupal\Core\Session\AccountProxyInterface::class);
@@ -69,6 +72,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->drupalUser = $this->prophet->prophesize(\Drupal\user\UserStorageInterface::class);
 
       $this->entityTypeManager->getStorage('user')->willReturn($this->drupalUser->reveal());
+      $this->tempStore->get('ibm_apim')->willReturn($this->sessionStore);
 
     }
 
@@ -82,7 +86,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->assertNotEmpty($service);
     }
 
-    public function testLoginSuccess(): void {
+    public function testLoginSuccessNoRefreshToken(): void {
 
       $user = $this->generateLoginUser();
 
@@ -91,7 +95,6 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $tokenResponse = $this->generateTokenResponse();
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
-      $this->mgmtServer->setAuth(Argument::any())->shouldBeCalled();
       $meResponse = $this->createMeResponse($user);
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
@@ -108,13 +111,49 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->logger->notice('attempted login by blocked user: @username [UID=@uid].', Argument::any())->shouldNotBeCalled();
       $this->logger->error(Argument::any())->shouldNotBeCalled();
 
-      // TODO: fix this: $this->tempStore->set('expires_in', 12345)->shouldBeCalled();
+
+      $this->sessionStore->set('auth', 'aBearerToken')->shouldBeCalled();
+      $this->sessionStore->set('refresh', Argument::any())->shouldNotBeCalled();
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
       $this->assertTrue($response->success());
       $this->assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
+    }
 
+    public function testLoginSuccessWithRefreshToken(): void {
+
+      $user = $this->generateLoginUser();
+
+      $accountStub = $this->createAccountStub();
+
+      $tokenResponse = $this->generateTokenResponse(true);
+
+      $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
+      $meResponse = $this->createMeResponse($user);
+      $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
+      $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
+
+      $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())->shouldBeCalled();
+
+      $this->userUtils->setCurrentConsumerorg(Argument::any())->willReturn(['url' => '/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
+      $this->userUtils->setOrgSessionData()->shouldBeCalled();
+
+      $this->userStorage->userLoginFinalize($accountStub)->shouldBeCalled();
+
+      $this->logger->notice('@username [UID=@uid] logged in.', ['@username' => 'abc', '@uid' => '1'])->shouldBeCalled();
+      $this->logger->notice('attempted login by blocked user: @username [UID=@uid].', Argument::any())->shouldNotBeCalled();
+      $this->logger->error(Argument::any())->shouldNotBeCalled();
+
+
+      $this->sessionStore->set('auth', 'aBearerToken')->shouldBeCalled();
+      $this->sessionStore->set('refresh', 'aRefreshToken')->shouldBeCalled();
+
+      $service = $this->generateServiceUnderTest();
+      $response = $service->login($user);
+      $this->assertTrue($response->success());
+      $this->assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
     }
 
     public function testLoginFailNoBearerToken(): void {
@@ -182,7 +221,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
 
-      $this->mgmtServer->setAuth(Argument::any())->shouldNotBeCalled();
+      $this->sessionStore->set('auth', Argument::any())->shouldNotBeCalled();
       $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
       $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
       $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
@@ -207,7 +246,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $tokenResponse = $this->generateTokenResponse();
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
-      $this->mgmtServer->setAuth(Argument::any())->shouldBeCalled();
+      $this->sessionStore->set('auth', Argument::any())->shouldBeCalled();
       $meResponse = $this->createMeResponse($user);
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
 
@@ -245,7 +284,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $tokenResponse = $this->generateTokenResponse();
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
-      $this->mgmtServer->setAuth(Argument::any())->shouldNotBeCalled();
+      $this->sessionStore->set('auth', Argument::any())->shouldNotBeCalled();
       $meResponse = $this->createMeResponse($user);
       $meResponse->getUser()->setState('pending');
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
@@ -280,7 +319,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $tokenResponse = $this->generateTokenResponse();
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
-      $this->mgmtServer->setAuth(Argument::any())->shouldNotBeCalled();
+      $this->sessionStore->set('auth', Argument::any())->shouldNotBeCalled();
       $meResponse = $this->createMeResponse($user);
       $meResponse->getUser()->setState(NULL);
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
@@ -315,7 +354,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $tokenResponse = $this->generateTokenResponse();
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
-      $this->mgmtServer->setAuth(Argument::any())->shouldNotBeCalled();
+      $this->sessionStore->set('auth', Argument::any())->shouldNotBeCalled();
       $meResponse = $this->createMeResponse($user);
       $meResponse->getUser()->setUsername(NULL);
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
@@ -350,7 +389,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $tokenResponse = $this->generateTokenResponse();
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
-      $this->mgmtServer->setAuth(Argument::any())->shouldNotBeCalled();
+      $this->sessionStore->set('auth', Argument::any())->shouldNotBeCalled();
       $meResponse = $this->createMeResponse($user);
       $meResponse->getUser()->setApicUserRegistryUrl(NULL);
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
@@ -385,7 +424,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $tokenResponse = $this->generateTokenResponse();
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
-      $this->mgmtServer->setAuth(Argument::any())->shouldBeCalled();
+      $this->sessionStore->set('auth', Argument::any())->shouldBeCalled();
       $meResponse = $this->createMeResponse($user);
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn(NULL);
@@ -420,7 +459,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $tokenResponse = $this->generateTokenResponse();
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
-      $this->mgmtServer->setAuth(Argument::any())->shouldNotBeCalled();
+      $this->sessionStore->set('auth', Argument::any())->shouldNotBeCalled();
       $meResponse = $this->createMeResponse($user);
       $meResponse->getUser()->setUsername('admin');
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
@@ -453,7 +492,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $tokenResponse = $this->generateTokenResponse();
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
-      $this->mgmtServer->setAuth(Argument::any())->shouldNotBeCalled();
+      $this->sessionStore->set('auth', Argument::any())->shouldNotBeCalled();
       $meResponse = $this->createMeResponse($user);
       $meResponse->getUser()->setUsername('Anonymous');
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
@@ -494,7 +533,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $badUser->setApicUserRegistryUrl('/reg/oidc1');
 
       $this->mgmtServer->getAuth($badUser)->willReturn(FALSE);
-      $this->mgmtServer->setAuth(Argument::any())->shouldNotBeCalled();
+      $this->sessionStore->set('auth', Argument::any())->shouldNotBeCalled();
 
       $service = $this->generateServiceUnderTest();
       $response = $service->loginViaAzCode('bad', '/reg/oidc1');
@@ -560,7 +599,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $tokenResponse = $this->generateTokenResponse();
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
-      $this->mgmtServer->setAuth(Argument::any())->shouldNotBeCalled();
+      $this->sessionStore->set('auth', Argument::any())->shouldNotBeCalled();
       $meResponse = $this->createMeResponse($user);
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
 
@@ -647,7 +686,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $tokenResponse = $this->generateTokenResponse();
 
       $this->mgmtServer->getAuth($loginUser)->willReturn($tokenResponse);
-      $this->mgmtServer->setAuth(Argument::any())->shouldBeCalled();
+      $this->sessionStore->set('auth', Argument::any())->shouldBeCalled();
       $meResponse = new MeResponse();
       $apicUser = new ApicUser();
       $apicUser->setUsername('oidcandre');
@@ -699,10 +738,13 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
     /**
      * @return \Drupal\ibm_apim\Rest\TokenResponse
      */
-    private function generateTokenResponse(): \Drupal\ibm_apim\Rest\TokenResponse {
+    private function generateTokenResponse($addRefreshToken = false): \Drupal\ibm_apim\Rest\TokenResponse {
       $tokenResponse = new TokenResponse();
       $tokenResponse->setBearerToken('aBearerToken');
       $tokenResponse->setExpiresIn('12345');
+      if ($addRefreshToken) {
+        $tokenResponse->setRefreshToken('aRefreshToken');
+      }
       return $tokenResponse;
     }
 

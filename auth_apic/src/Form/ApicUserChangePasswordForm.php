@@ -166,7 +166,12 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
           '#weight' => '400',
           '#prefix' => '<div id="password-policy-status" class="hidden">',
           '#suffix' => '</div>',
-          '#rows' => _password_policy_constraints_table($form, $form_state),
+          '#rows' => \Drupal::service('password_policy.validator')
+          ->buildPasswordPolicyConstraintsTableRows(
+            $form_state->getValue('pass', ''),
+            $form_state->getFormObject()->getEntity(),
+            _password_policy_get_edited_user_roles($form, $form_state)
+          ),
         ];
 
         $form['ibm-apim-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
@@ -229,7 +234,12 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
           '#weight' => '400',
           '#prefix' => '<div id="password-policy-status" class="hidden">',
           '#suffix' => '</div>',
-          '#rows' => _password_policy_constraints_table($form, $form_state),
+          '#rows' => \Drupal::service('password_policy.validator')
+          ->buildPasswordPolicyConstraintsTableRows(
+            $form_state->getValue('pass', ''),
+            $form_state->getFormObject()->getEntity(),
+            _password_policy_get_edited_user_roles($form, $form_state)
+          ),
         ];
 
         $form['ibm-apim-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);

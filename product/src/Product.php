@@ -85,8 +85,19 @@ class Product {
     }
 
     if ($oldNode !== NULL && $oldNode->id()) {
-      $existingProductTags = $oldNode->apic_tags->getValue();
-      if ($existingProductTags !== NULL && \is_array($existingProductTags)) {
+      $existingCategories = [];
+      $oldYaml = yaml_parse($oldNode->product_data->value);
+      if (isset($oldYaml['info']['categories'])) {
+        $existingCategories = $oldYaml['info']['categories'];
+      }
+      $totalTags = $oldNode->apic_tags->getValue();
+      if ($totalTags === NULL) {
+        $totalTags = [];
+      }
+
+      $existingProductTags = $this->productTaxonomy->separate_categories($totalTags, $existingCategories);
+      $oldTags = [];
+      if (is_array($existingProductTags) && !empty($existingProductTags)) {
         foreach ($existingProductTags as $tag) {
           if (isset($tag['target_id'])) {
             $oldTags[] = $tag['target_id'];
@@ -147,7 +158,7 @@ class Product {
       \Drupal::logger('product')->error('Create product: initial node not set.', []);
     }
 
-    if ($node !== NULL && $oldTags !== NULL) {
+    if ($node !== NULL && $oldTags !== NULL && !empty($oldTags)) {
       $currentTags = $node->get('apic_tags')->getValue();
       if (!\is_array($currentTags)) {
         $currentTags = [];
@@ -533,6 +544,7 @@ class Product {
                 $apis = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($chunk);
                 foreach ($apis as $api) {
                   $product_api_nids[] = $api->id();
+                  // this save is needed to trigger the update of the API's node access permissions
                   $api->save();
                 }
               }

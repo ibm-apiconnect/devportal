@@ -22,18 +22,20 @@
     * Override beforeSend to clean up the Ajax submission URL.
     *
     * @param {XMLHttpRequest} xmlhttprequest
-@@ -294,11 +309,17 @@
+@@ -294,12 +309,18 @@
      var data = (typeof options.data === 'string') ? parseQuery(options.data) : {};
 
      if (data.view_name && options.type !== 'GET') {
 -      // Override the URL to not contain any fields that were submitted.
--      options.url = drupalSettings.views.ajax_path + '?' + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
+-      var delimiter = drupalSettings.views.ajax_path.indexOf('?') === -1 ? '?' : '&';
+-      options.url = drupalSettings.views.ajax_path + delimiter + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
 +      // Check that the Ajax call is coming from a View.
 +      if (typeof options.url != 'undefined' && options.url.indexOf('/views/ajax') != -1 && options.type !== 'GET') {
 +        var data = (typeof options.data === 'string') ? parseQuery(options.data) : {};
 +        if (data.view_name) {
 +          // Override the URL to not contain any fields that were submitted.
-+          options.url = drupalSettings.views.ajax_path + '?' + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
++          var delimiter = drupalSettings.views.ajax_path.indexOf('?') === -1 ? '?' : '&';
++          options.url = drupalSettings.views.ajax_path + delimiter + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
 +          // Call the original Drupal method with the right context.
 +          beforeSend.apply(this, arguments);
 +        }

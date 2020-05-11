@@ -29,6 +29,7 @@ class TranslationPreparation {
     'apim_profile',
     'apic_api',
     'apic_app',
+    'apic_type_count',
     'auth_apic',
     'connect_theme',
     'consumerorg',

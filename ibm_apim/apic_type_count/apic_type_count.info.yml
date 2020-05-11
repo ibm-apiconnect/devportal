@@ -1,0 +1,8 @@
+name: APIC Node Type Count
+type: module
+description: 'This Module is used to count the number published and Unpublished in all content types and Count number of User in Every User Role.'
+package: Development
+core: 8.x
+version: 8.x-1.0.1
+project: apic_type_count
+interface translation project: apic_type_count

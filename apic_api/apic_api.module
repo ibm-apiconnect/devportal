@@ -120,7 +120,7 @@ function apic_api_node_access_records($node) {
         // Pick up all of the data we need.  Left Joins are used for tables where
         // there may not be an entry (e.g. if tags or orgs are not defined)
         $query = Database::getConnection($options['target'])->query('SELECT pub.product_visibility_public_value AS product_visibility_public_value, auth.product_visibility_authenticated_value AS product_visibility_authenticated_value
-, org.product_visibility_custom_orgs_value AS product_visibility_custom_orgs_value, tags.product_visibility_custom_tags_value AS product_visibility_custom_tags_value, view.product_view_enabled_value AS product_view_enabled_value, prref.apic_ref_value AS apic_ref_value
+, org.product_visibility_custom_orgs_value AS product_visibility_custom_orgs_value, tags.product_visibility_custom_tags_value AS product_visibility_custom_tags_value, view.product_view_enabled_value AS product_view_enabled_value, prref.apic_ref_value AS apic_ref_value, state.product_state_value AS product_state_value, url.apic_url_value AS apic_url_value
 FROM
 node__product_visibility_public pub
 INNER JOIN node__product_visibility_authenticated auth ON pub.entity_id = auth.entity_id
@@ -128,6 +128,8 @@ LEFT JOIN node__product_visibility_custom_orgs org ON pub.entity_id = org.entity
 LEFT JOIN node__product_visibility_custom_tags tags ON pub.entity_id = tags.entity_id
 LEFT JOIN node__apic_ref prref ON pub.entity_id = prref.entity_id
 INNER JOIN node__product_view_enabled view ON pub.entity_id = view.entity_id
+INNER JOIN node__product_state state ON prref.entity_id = state.entity_id
+INNER JOIN node__apic_url url ON prref.entity_id = state.entity_id
 WHERE  (pub.entity_id = ' . $prod->entity_id . ')', [], $options);
 
         $results = $query->fetchAll();
@@ -156,16 +158,33 @@ WHERE  (pub.entity_id = ' . $prod->entity_id . ')', [], $options);
               'grant_delete' => 0,
               'priority' => 0,
             ];
-            // Create a grant for public access if public is set
+            
             if ((int) $row->product_visibility_public_value === 1) {
-              $grants[] = [
-                'realm' => 'product',
-                'gid' => PUBLIC_PRODUCT_GRANT,
-                'grant_view' => 1,
-                'grant_update' => 0,
-                'grant_delete' => 0,
-                'priority' => 0,
-              ];
+
+              // Create a grant for subscription base on the apic_url if the API's product is depcrecated 
+              if ($row->product_state_value === 'deprecated' && isset($row->apic_url_value)) {
+                $apic_url = str_replace('/', '_', $row->apic_url_value);
+                $grants[] = [
+                  'realm' => 'product_ref_' . $apic_url,
+                  'gid' => SUBSCRIBED_TO_PRODUCT_GRANT,
+                  'grant_view' => 1,
+                  'grant_update' => 0,
+                  'grant_delete' => 0,
+                  'priority' => 0,
+                ];
+              }
+
+              // Create a grant for public access if public is set and the API's product is not deprecated
+              else {
+                $grants[] = [
+                  'realm' => 'product',
+                  'gid' => PUBLIC_PRODUCT_GRANT,
+                  'grant_view' => 1,
+                  'grant_update' => 0,
+                  'grant_delete' => 0,
+                  'priority' => 0,
+                ];
+              }
             }
             // Create a grant for authenticated access if authenticated is set
             if ((int) $row->product_visibility_authenticated_value === 1) {

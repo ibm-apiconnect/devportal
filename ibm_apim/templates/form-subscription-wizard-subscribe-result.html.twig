@@ -20,7 +20,7 @@
             <div class="apicSubscribedProduct">
                 <div class="apicCardIcon">
                     <a href="{{ path('product.view', {'prodNode': element['#subscriptionDetails'].productNodeId}) }}">
-                        <img class="bx--about__icon"
+                        <img class="bx--about__icon" alt="{{ element['#subscriptionDetails'].productName }}"
                              src="{{ element['#subscriptionDetails'].productIcon }}"/>
                     </a>
                 </div>
@@ -40,7 +40,7 @@
             <div class="apicSubscribedApp">
                 <div class="apicCardIcon">
                     <a href="{{ path('entity.node.canonical', {'node' : element['#subscriptionDetails'].applicationNodeId}) }}">
-                        <img class="bx--about__icon"
+                        <img class="bx--about__icon" alt="{{ element['#subscriptionDetails'].applicationName }}"
                              src="{{ element['#subscriptionDetails'].applicationIcon }}"/>
                     </a>
                 </div>

@@ -76,8 +76,6 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->logger->notice('Password changed successfully.')->shouldBeCalled();
       $this->logger->error(Argument::any())->shouldNotBeCalled();
 
-      $this->mgmtServer->setAuth(Argument::any())->shouldBeCalled();
-
       $service = $this->getApicPasswordService();
       $result = $service->changePassword($account, 'oldun', 'newun');
       $this->assertTrue($result, 'positive result expected from change password.');
@@ -92,7 +90,6 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->mgmtServer->changePassword('oldun', 'newun')->willReturn($badResponse);
       $this->logger->notice('changePassword called for @username', ['@username' => 'andre'])->shouldBeCalled();
       $this->logger->error('Password change failure.')->shouldBeCalled();
-      $this->mgmtServer->setAuth(Argument::any())->shouldNotBeCalled();
 
       $service = $this->getApicPasswordService();
 

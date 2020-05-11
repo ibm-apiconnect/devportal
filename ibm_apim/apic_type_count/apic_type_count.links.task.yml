@@ -1,0 +1,31 @@
+apic_type_count_description:
+  title: Node Type Count
+  description: 'Count the number of node in the Node .'
+  route_name: apic_type_count_description
+  base_route: apic_type_count_description
+
+#make menutest.home route the base tab
+#to which other tabs will attach
+apic_type_count_description.node: #give it the same name as the route to make it clear
+  title: Node
+  route_name: apic_type_count_description #route defined in .routing.yml
+  parent_id: apic_type_count_description
+  weight: 0
+
+#add another tab next to the home tab
+apic_type_count_description_user: #name it same as route to avoid confusion
+  title: User
+  #route defined in .routing.yml
+  route_name: apic_type_count_description_user #link to tab1 route
+  #route defined in .routing.yml
+  parent_id: apic_type_count_description
+  weight: 1
+
+#add another tab next to the home tab
+apic_type_count_description_entity: #name it same as route to avoid confusion
+  title: Entity
+  #route defined in .routing.yml
+  route_name: apic_type_count_description_entity #link to tab1 route
+  #route defined in .routing.yml
+  parent_id: apic_type_count_description
+  weight: 2

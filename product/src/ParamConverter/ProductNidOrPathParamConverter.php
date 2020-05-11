@@ -23,11 +23,20 @@ class ProductNidOrPathParamConverter implements ParamConverterInterface {
   public function convert($value, $definition, $name, array $defaults): ?NodeInterface {
     $returnValue = NULL;
     if ($value !== NULL && !empty($value)) {
+      $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
       if ((int) $value > 0) {
         $node = Node::load($value);
+        if ($node !== null) {
+          // ensure use the translated version of api nodes
+          $hasTranslation = $node->hasTranslation($lang_code);
+          if ($hasTranslation === TRUE) {
+            $node = $node->getTranslation($lang_code);
+          }
+        }
         $returnValue = $node;
       }
       else {
+        // try x-pathalias value
         $query = \Drupal::entityQuery('node');
         $query->condition('type', 'product');
         $query->condition('status', 1);
@@ -37,7 +46,34 @@ class ProductNidOrPathParamConverter implements ParamConverterInterface {
         if ($nids !== NULL && !empty($nids)) {
           $nid = array_shift($nids);
           $node = Node::load($nid);
+          if ($node !== null) {
+            // ensure use the translated version of api nodes
+            $hasTranslation = $node->hasTranslation($lang_code);
+            if ($hasTranslation === TRUE) {
+              $node = $node->getTranslation($lang_code);
+            }
+          }
           $returnValue = $node;
+        } else {
+          // try name:version
+          $query = \Drupal::entityQuery('node');
+          $query->condition('type', 'product');
+          $query->condition('status', 1);
+          $query->condition('apic_ref.value', $value);
+          $nids = $query->execute();
+
+          if ($nids !== NULL && !empty($nids)) {
+            $nid = array_shift($nids);
+            $node = Node::load($nid);
+            if ($node !== null) {
+              // ensure use the translated version of api nodes
+              $hasTranslation = $node->hasTranslation($lang_code);
+              if ($hasTranslation === TRUE) {
+                $node = $node->getTranslation($lang_code);
+              }
+            }
+            $returnValue = $node;
+          }
         }
       }
     }

@@ -31,6 +31,11 @@ class IbmApimRouteSubscriber extends RouteSubscriberBase {
         '_controller' => '\Drupal\ibm_apim\Controller\IbmApimNodeController::addPage',
       ]);
     }
+    // add a requirement for create node to ensure it isn't one of our node types
+    if ($route = $collection->get('node.add')) {
+      // (second argument must be a string)
+      $route->addRequirements(['_ibm_create_node_type_check' => 'TRUE']);
+    }
     if ($route = $collection->get('system.themes_page')) {
       // Override the themes list controller with an extended version of it
       $route->setDefault(

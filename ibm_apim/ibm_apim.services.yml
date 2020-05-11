@@ -83,6 +83,10 @@ services:
     class: Drupal\ibm_apim\Access\IbmNodeTypeCheck
     tags:
       - { name: access_check, applies_to: _ibm_node_type_check }
+  ibm_apim.create_node_type_checker:
+    class: Drupal\ibm_apim\Access\IbmCreateNodeTypeCheck
+    tags:
+      - { name: access_check, applies_to: _ibm_create_node_type_check }
   ibm_apim.field_type_checker:
     class: Drupal\ibm_apim\Access\IbmFieldTypeCheck
     tags:
@@ -128,7 +132,10 @@ services:
                 '@ibm_apim.user_registry',
                 '@ibm_apim.restresponse_reader',
                 '@ibm_apim.tokenresponse_reader',
-                '@ibm_apim.meresponse_reader']
+                '@ibm_apim.meresponse_reader',
+                '@ibm_apim.apim_utils',
+                '@current_user',
+                '@messenger']
     tags:
       - { name: ibm_apim }
   ibm_apim.apim_utils:
@@ -190,3 +197,11 @@ services:
     ]
     tags:
       - { name: ibm_apim }
+  ibm_apim.module:
+    class: Drupal\ibm_apim\Service\ApicModuleService
+    arguments: ['@ibm_apim.utils',
+                '@site.path',
+                '@module_handler',
+                '@module_installer',
+                '@config.factory',
+                '@logger.channel.ibm_apim']

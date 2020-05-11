@@ -843,6 +843,16 @@ function apic_api_update_8116() {
   }
 }
 
+// Making sure that product description is translatable
+function apic_api_update_8117() {
+
+  $apicDescriptionFieldConfig = FieldConfig::loadByName('node', 'api', 'apic_description');
+  if ($apicDescriptionFieldConfig !== NULL) {
+    $apicDescriptionFieldConfig->set('translatable', TRUE);
+    $apicDescriptionFieldConfig->save();
+  }
+}
+
 /**
  * Implements hook_update_dependencies().
  */
@@ -850,8 +860,10 @@ function apic_api_update_dependencies() {
   return [
     'apic_api' => [
       // ibm_apim 8104 must run before apic_api 8116.
+      // apic_app 8106 is removing old config entities and they need removal before view update in 8116
       8116 => [
         'ibm_apim' => 8104,
+        'apic_app' => 8106,
       ],
     ],
   ];

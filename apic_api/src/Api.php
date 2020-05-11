@@ -83,8 +83,19 @@ class Api {
     }
 
     if ($oldNode !== NULL && $oldNode->id()) {
-      $existingApiTags = $oldNode->get('apic_tags')->getValue();
-      if ($existingApiTags && \is_array($existingApiTags)) {
+      $existingCategories = [];
+      $oldApiData = unserialize($oldNode->api_swagger->value, ['allowed_classes' => FALSE]);
+      if (isset($oldApiData['x-ibm-configuration']['categories'])) {
+        $existingCategories = $oldApiData['x-ibm-configuration']['categories'];
+      }
+      $totalTags = $oldNode->apic_tags->getValue();
+      if ($totalTags === NULL) {
+        $totalTags = [];
+      }
+
+      $existingApiTags = $this->apiTaxonomy->separate_categories($totalTags, $existingCategories);
+      $oldTags = [];
+      if (is_array($existingApiTags) && !empty($existingApiTags)) {
         foreach ($existingApiTags as $tag) {
           if (isset($tag['target_id'])) {
             $oldTags[] = $tag['target_id'];
@@ -131,7 +142,7 @@ class Api {
     // get the update method to do the update for us
     $node = $this->update($node, $api, 'internal');
 
-    if ($oldTags !== NULL && !empty($oldTags) && $node !== NULL) {
+    if ($node !==NULL && $oldTags !== NULL && !empty($oldTags)) {
       $currentTags = $node->get('apic_tags')->getValue();
       if (!\is_array($currentTags)) {
         $currentTags = [];
@@ -270,7 +281,7 @@ class Api {
             $lang = $this->utils->convert_lang_name_to_drupal($lang);
             // if its one of our locales or the root of one of our locales
             foreach ($languageList as $langListKey => $langListValue) {
-              if ($lang === $langListKey || strpos($langListKey, $lang, 0) === 0) {
+              if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
                   $translation = $node->addTranslation($lang, ['apic_description' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang])]);
                   $translation->save();
@@ -300,7 +311,7 @@ class Api {
             $lang = $this->utils->convert_lang_name_to_drupal($lang);
             // if its one of our locales or the root of one of our locales
             foreach ($languageList as $langListKey => $langListValue) {
-              if ($lang === $langListKey || strpos($langListKey, $lang, 0) === 0) {
+              if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
                   $translation = $node->addTranslation($lang, ['apic_summary' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['x-ibm-summary'][$lang], 1000)]);
                   $translation->save();

@@ -1,4 +1,16 @@
 changes:
+  8.x-1.4.5:
+  - ensure paramconverters use translated nodes
+  8.x-1.4.4:
+  - fix missing id on title
+  8.x-1.4.3:
+  - Updated apic_description field config to be translatable
+  8.x-1.4.2:
+  - set upgrade dependency for view update
+  8.x-1.4.1:
+  - Allow WSDL files download for SOAP APIs with non-alphanumberic characters names
+  8.x-1.4.0:
+  - update version: 8.x-1.3.12 -> 8.x-1.4.0
   8.x-1.3.11:
   - set status of entity view display on upgrade
   8.x-1.3.10:

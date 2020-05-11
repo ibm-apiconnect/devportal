@@ -200,7 +200,6 @@ function apim_profile_install() {
     'select_translation',
     'term_csv_export_import',
     'page_load_progress',
-    'node_type_count',
     'advagg',
     'advagg_css_minify',
     'advagg_js_minify',
@@ -217,6 +216,7 @@ function apim_profile_install() {
     'ibm_apim',
     'ibm_apic_mail',
     'ibm_apic_flood_control_ui',
+    'apic_type_count',
     'auth_apic',
     'apic_api',
     'apic_app',
@@ -421,12 +421,12 @@ function apim_profile_main_menu_links() {
   $cache->deleteAll();
 }
 
+
 /**
  * @param string $menu_name
  * @param $forum_link
  */
 function add_forum_link_translations($link): void {
-
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
@@ -1491,6 +1491,18 @@ function apim_profile_update_8025() {
 }
 
 /**
+ * Remove node_type_count and use apic_type_count modules
+ */
+function apim_profile_update_8026() {
+  $module_installer = \Drupal::service('module_installer');
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('node_type_count')) {
+    $module_installer->uninstall(['node_type_count']);
+  }
+  $module_installer->install(['apic_type_count']);
+}
+
+/**
  * Implements hook_update_dependencies().
  */
 function apim_profile_update_dependencies() {
@@ -1507,6 +1519,10 @@ function apim_profile_update_dependencies() {
       // block_content 8600 *also* must run before apim_profile 8018 - for cases where we start later than 8002.
       8018 => [
         'block_content' => 8600,
+      ],
+      // system 8803 must run before apim_profile 8025
+      8025 => [
+        'system'=> 8803,
       ],
     ],
     'eu_cookie_compliance_update' => [

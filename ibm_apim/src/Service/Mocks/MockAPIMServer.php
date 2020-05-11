@@ -64,13 +64,6 @@ class MockAPIMServer implements ManagementServerInterface {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function setAuth(ApicUser $user) : void{
-    $this->sessionStore->set('auth', 'this.is.a.mock.bearer.token');
-  }
-
-  /**
    * @inheritdoc
    */
   public function getAuth(ApicUser $user) {

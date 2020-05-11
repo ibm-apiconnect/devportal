@@ -23,6 +23,7 @@ class ApiRefParamConverter implements ParamConverterInterface {
   public function convert($value, $definition, $name, array $defaults) {
     $returnValue = NULL;
     $ref = Html::escape(\Drupal::service('ibm_apim.utils')->base64_url_decode($value));
+    $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'api');
     $query->condition('status', 1);
@@ -32,6 +33,13 @@ class ApiRefParamConverter implements ParamConverterInterface {
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
       $node = Node::load($nid);
+      if ($node !== null) {
+        // ensure use the translated version of api nodes
+        $hasTranslation = $node->hasTranslation($lang_code);
+        if ($hasTranslation === TRUE) {
+          $node = $node->getTranslation($lang_code);
+        }
+      }
       $returnValue = $node;
     }
     return $returnValue;

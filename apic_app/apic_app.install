@@ -305,21 +305,29 @@ function apic_app_update_8105() {
 
   \Drupal::logger('apic_app.upgrade')->debug('Deleting all apic_app.apic_app_credentials from config');
 
-  $query = \Drupal::entityQuery('apic_app_credentials');
-  $credEntityIds = $query->execute();
-  if (isset($credEntityIds) && !empty($credEntityIds)) {
-    foreach ($credEntityIds as $credEntityId) {
-      \Drupal::service('config.factory')->getEditable('apic_app.apic_app_credentials.' . $credEntityId)->delete();
+  if (\Drupal::entityTypeManager()->hasDefinition('apic_app_credentials')) {
+    $query = \Drupal::entityQuery('apic_app_credentials');
+    $credEntityIds = $query->execute();
+    if (isset($credEntityIds) && !empty($credEntityIds)) {
+      foreach ($credEntityIds as $credEntityId) {
+        \Drupal::service('config.factory')
+          ->getEditable('apic_app.apic_app_credentials.' . $credEntityId)
+          ->delete();
+      }
     }
   }
 
   \Drupal::logger('apic_app.upgrade')->debug('Deleting all apic_app.apic_app_subscription from config');
 
-  $query = \Drupal::entityQuery('apic_app_subscription');
-  $subEntityIds = $query->execute();
-  if (isset($subEntityIds) && !empty($subEntityIds)) {
-    foreach ($subEntityIds as $subEntityId) {
-      \Drupal::service('config.factory')->getEditable('apic_app.apic_app_subscription.' . $subEntityId)->delete();
+  if (\Drupal::entityTypeManager()->hasDefinition('apic_app_subscription')) {
+    $query = \Drupal::entityQuery('apic_app_subscription');
+    $subEntityIds = $query->execute();
+    if (isset($subEntityIds) && !empty($subEntityIds)) {
+      foreach ($subEntityIds as $subEntityId) {
+        \Drupal::service('config.factory')
+          ->getEditable('apic_app.apic_app_subscription.' . $subEntityId)
+          ->delete();
+      }
     }
   }
 
@@ -388,4 +396,33 @@ function apic_app_update_8106() {
       \Drupal::logger('apic_app_update')->error('unable to uninstall old apic_app_subscription entity.');
     }
   }
+}
+
+// Making sure that application summary is translatable
+function apic_app_update_8107() {
+
+  $apicSummaryFieldStorageConfig = FieldStorageConfig::loadByName('node', 'apic_summary');
+  if ($apicSummaryFieldStorageConfig !== NULL) {
+    $apicSummaryFieldStorageConfig->set('translatable', TRUE);
+    $apicSummaryFieldStorageConfig->save();
+  }
+
+  $apicSummaryFieldConfig = FieldConfig::loadByName('node', 'application', 'apic_summary');
+  if ($apicSummaryFieldConfig !== NULL) {
+    $apicSummaryFieldConfig->set('translatable', TRUE);
+    $apicSummaryFieldConfig->save();
+  }
+}
+
+/**
+ * Implements hook_update_dependencies().
+ */
+function apic_app_update_dependencies() {
+  return [
+    'system' => [
+      8803 => [
+        'apic_app' => 8106,
+      ],
+    ],
+  ];
 }

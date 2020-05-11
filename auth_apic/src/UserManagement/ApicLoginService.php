@@ -159,10 +159,18 @@ class ApicLoginService implements ApicLoginServiceInterface {
 
           // Now we have called userLoginFinalize we are logged in to drupal and
           // have a new private tempstore for this user so we need to setAuth again
-          $user->setBearerToken($token_retrieved->getBearerToken());
-          $this->mgmtServer->setAuth($user);
+          $refresh = $token_retrieved->getRefreshToken();
+          $refresh_expires_in = $token_retrieved->getRefreshExpiresIn();
+
+          $this->tempStore->set('auth', $token_retrieved->getBearerToken());
           if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
             $this->tempStore->set('expires_in', (int) $token_retrieved->getExpiresIn());
+          }
+          if (isset($refresh)) {
+            $this->tempStore->set('refresh', $refresh);
+          }
+          if (isset($refresh_expires_in)) {
+            $this->tempStore->set('refresh_expires_in', $refresh_expires_in);
           }
 
           $this->processMeConsumerOrgs($meuser, $account);

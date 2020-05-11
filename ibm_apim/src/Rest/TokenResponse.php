@@ -22,6 +22,10 @@ class TokenResponse extends RestResponse {
 
   private $expires_in;
 
+  private $refresh_token;
+
+  private $refresh_expires_in;
+
   /**
    * @return mixed
    */
@@ -49,4 +53,33 @@ class TokenResponse extends RestResponse {
   public function setExpiresIn($expires_in): void {
     $this->expires_in = $expires_in;
   }
+
+  /**
+   * @return mixed
+   */
+  public function getRefreshToken() {
+    return $this->refresh_token;
+  }
+
+  /**
+   * @param mixed $refresh_token
+   */
+  public function setRefreshToken($refresh_token): void {
+    $this->refresh_token = $refresh_token;
+  }
+
+   /**
+   * @return mixed
+   */
+  public function getRefreshExpiresIn() {
+    return $this->refresh_expires_in;
+  }
+
+  /**
+   * @param mixed $refresh_expires_in
+   */
+  public function setRefreshExpiresIn($refresh_expires_in): void {
+    $this->refresh_expires_in = $refresh_expires_in;
+  }
+  
 }

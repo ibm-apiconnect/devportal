@@ -16,6 +16,9 @@
  * Provides user management integration with APIC.
  */
 
+use Drupal\auth_apic\Form\ApicUserProfileForm;
+use Drupal\auth_apic\Form\ApicUserRegisterForm;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -66,8 +69,8 @@ function auth_apic_form_alter(&$form, FormStateInterface $form_state, $form_id) 
  * @param array $entity_types
  */
 function auth_apic_entity_type_alter(array &$entity_types) {
-  $entity_types['user']->setFormClass('default', \Drupal\auth_apic\Form\ApicUserProfileForm::class);
-  $entity_types['user']->setFormClass('register', \Drupal\auth_apic\Form\ApicUserRegisterForm::class);
+  $entity_types['user']->setFormClass('default', ApicUserProfileForm::class);
+  $entity_types['user']->setFormClass('register', ApicUserRegisterForm::class);
 }
 
 /**
@@ -198,3 +201,6 @@ function auth_apic_cron() {
     ibm_apim_exit_trace(__FUNCTION__, NULL);
   }
 }
+
+
+

@@ -294,6 +294,10 @@ function ibm_apim_drush_command() {
       'extended_output' => 'Log additional output about the config uuids that get set',
     ],
   ];
+  $items['ibm_apim-purge_blacklist_modules'] = [
+    'description' => 'Purge any blacklisted modules (uninstall + delete).',
+    'aliases' => ['purge_blacklist']
+  ];
 
   return $items;
 }
@@ -549,12 +553,6 @@ function drush_ibm_apim_listen() {
           case 'member_update':
             drush_consumerorg_member_update($content);
             break;
-          case 'user_update':
-            drush_ibm_apim_user_createOrUpdate($content, 'user_update');
-            break;
-          case 'user_create':
-            drush_ibm_apim_user_createOrUpdate($content, 'user_create');
-            break;
           case 'user_del':
             drush_ibm_apim_apicuser_delete($content);
             break;
@@ -801,9 +799,6 @@ function drush_ibm_apim_content_refresh() {
               }
               file_put_contents("/tmp/snapshot.$UUID/content_refresh_consumerorgs.$UUID.json", json_encode($orgList));
               drush_consumerorg_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
-              break;
-            case 'user':
-              drush_ibm_apim_user_createOrUpdate($content, 'ContentRefresh');
               break;
             case 'catalog_setting':
               drush_ibm_apim_updateconfig($content);
@@ -1093,6 +1088,19 @@ function drush_ibm_apim_clearup($UUID) {
       }
     }
   }
+
+  // remove any users from the db that do not have a consumerorg
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up users'), 'success');
+  $query = \Drupal::entityQuery('user');
+  $query->condition('consumerorg_url', NULL, 'IS NULL');
+  $query->condition('uid',0,'<>');
+  $query->condition('uid',1,'<>');
+  $uids = $query->execute();
+
+  foreach ($uids as $uid) {
+      user_delete($uid);
+  }
+
   // remove any vendor extensions in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up extensions'), 'success');
   if (file_exists("/tmp/snapshot.$UUID/content_refresh_extensions.$UUID.json")) {
@@ -2677,6 +2685,27 @@ function drush_ibm_apim_index_directly($indexDirectly, $count) {
         drush_log(t('index_directly value @value matched, no action needed', ['@value' => $indexDirectly ? 'true' : 'false']));
       }
     }
+  }
+}
+
+/**
+ * Purge all blacklisted modules installed in a site.
+ * The modules will be uninstalled then deleted from the file system.
+ */
+function drush_ibm_apim_purge_blacklist_modules() {
+  if (function_exists('ibm_apim_entry_trace')) {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+  }
+  $moduleService = \Drupal::service('ibm_apim.module');
+  $result = $moduleService->purgeBlackListedModules();
+  if ($result) {
+    drush_log(t('All blacklisted modules purged.'), 'success');
+  }
+  else {
+    drush_log(t('Error purging blacklisted modules.'), 'error');
+  }
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
   }
 }
 

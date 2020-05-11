@@ -22,14 +22,6 @@ use Drupal\ibm_apim\Rest\RestResponse;
 interface ManagementServerInterface {
 
   /**
-   * Set up authentication for this management server by saving the credentials in a session variable.
-   *
-   * @param ApicUser $user
-   *   user to authenticate for calls to this mgmt server.
-   */
-  public function setAuth(ApicUser $user);
-
-  /**
    * Get an authentication token from the management server without storing it in
    * the private tempstore for the user.
    *

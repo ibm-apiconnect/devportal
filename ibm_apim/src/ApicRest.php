@@ -434,7 +434,6 @@ class ApicRest implements ApicRestInterface {
 
     if ($auth === 'user') {
       $bearer_token = $session_store->get('auth');
-
       if (isset($bearer_token)) {
         $headers[] = 'Authorization: Bearer ' . $bearer_token;
       }
@@ -467,52 +466,84 @@ class ApicRest implements ApicRestInterface {
     } else {
       $apiType = 'consumer';
     }
+
+    $expires_in = $session_store->get('expires_in');
+    $refresh_expires_in = $session_store->get('refresh_expires_in');
+
     $result = self::json_http_request($url, $verb, $headers, $data, $returnResult, NULL, NULL, TRUE, $apiType);
+
+    if (isset($result) && (int) $result->code === 401 && $expires_in !== NULL && (int) $expires_in < time()) {
+
+      if ($session_store->get('refresh') !== null && !isset($refresh_expires_in) || (int) $refresh_expires_in > time()) {
+        \Drupal::logger('ibm_apim')->notice('Refreshing token with @refresh',
+        ['@refresh' => $session_store->get('refresh')]);
+        $refreshed = \Drupal::service('ibm_apim.mgmtserver')->refreshAuth();
+        if ($refreshed) {
+          $newHeaders = [];
+          foreach ($headers as $header) {
+            if (strpos($header, 'Authorization: Bearer ') !== false) {
+              $newHeaders[] = 'Authorization: Bearer ' . $session_store->get('auth');
+            } else {
+              $newHeaders[] = $header;
+            }
+          }
+          $result = self::json_http_request($url, $verb, $newHeaders, $data, $returnResult, NULL, NULL, TRUE, $apiType);
+          $expires_in = $session_store->get('expires_in');
+        }
+      }
+      if (isset($result) && (int) $result->code === 401 && $expires_in !== NULL && (int) $expires_in < time()) {
+        // handle token having expired
+        // force log the user out, they can login and try again
+        \Drupal::logger('ibm_apim')->notice('Session expired based on token expires_in value. Forcing logout.');
+
+        // set a cookie so that we can display an error after we log the user out, picked up in AdminMessagesBlock
+        // this was supposed to be handled by building the redirectresponse from the current request in the subsequent code, however the messages
+        // were being lost, possibly because of the extra redirects in user.logout???... but this mechanism works.
+        user_cookie_save(['ibm_apim_session_expired_on_token' => 'TRUE']);
+
+        $logout_url = Url::fromRoute('user.logout');
+        $response = new RedirectResponse($logout_url->toString());
+        $request = \Drupal::request();
+        $session = $request->getSession();
+        if ($session !== null) {
+          $session->save();
+        }
+        $response->prepare($request);
+        \Drupal::service('kernel')->terminate($request, $response);
+        $response->send();
+        // force the redirect immediately.
+        exit();
+      }
+    }
 
     $secs = time() - $secs;
     if ($result !== NULL) {
-      \Drupal::logger('ibm_apim')->info('call_base: %secs secs duration. END: %verb %url %code', [
-        '%secs' => $secs,
-        '%verb' => $verb,
-        '%url' => $url,
-        '%code' => $result->code,
-      ]);
+        if (isset($result->headers['X-Request-ID'])) {
+        \Drupal::logger('ibm_apim')->info('call_base: %secs secs duration. END: %verb %url %code (X-Request-ID=%request_id)', [
+          '%secs' => $secs,
+          '%verb' => $verb,
+          '%url' => $url,
+          '%code' => $result->code,
+          '%request_id' => $result->headers['X-Request-ID'],
+        ]);
+      } else {
+        \Drupal::logger('ibm_apim')->info('call_base: %secs secs duration. END: %verb %url %code', [
+          '%secs' => $secs,
+          '%verb' => $verb,
+          '%url' => $url,
+          '%code' => $result->code,
+        ]);
+      }
     }
 
-    $expires_in = $session_store->get('expires_in');
     if ($gettingConfig && isset($result) && (int) $result->code === 204) {
       $result->data = NULL;
       $returnValue = $result;
-    }
-    elseif (isset($result) && (int) $result->code >= 200 && (int) $result->code < 300) {
+    } elseif (isset($result) && (int) $result->code >= 200 && (int) $result->code < 300) {
       if ($returnResult !== TRUE) {
         $returnValue = $result;
       }
-    }
-    elseif (isset($result) && (int) $result->code === 401 && $expires_in !== NULL && (int) $expires_in < time()) {
-      // handle token having expired
-      // force log the user out, they can login and try again
-      \Drupal::logger('ibm_apim')->notice('Session expired based on token expires_in value. Forcing logout.');
-
-      // set a cookie so that we can display an error after we log the user out, picked up in AdminMessagesBlock
-      // this was supposed to be handled by building the redirectresponse from the current request in the subsequent code, however the messages
-      // were being lost, possibly because of the extra redirects in user.logout???... but this mechanism works.
-      user_cookie_save(['ibm_apim_session_expired_on_token' => 'TRUE']);
-
-      $logout_url = Url::fromRoute('user.logout');
-      $response = new RedirectResponse($logout_url->toString());
-      $request = \Drupal::request();
-      $session = $request->getSession();
-      if ($session !== null) {
-        $session->save();
-      }
-      $response->prepare($request);
-      \Drupal::service('kernel')->terminate($request, $response);
-      $response->send();
-      // force the redirect immediately.
-      exit();
-    }
-    else {
+    } else {
       if ($returnResult) {
         // Need to convert to json if return_result was true as json_http_request()
         // will not have done it

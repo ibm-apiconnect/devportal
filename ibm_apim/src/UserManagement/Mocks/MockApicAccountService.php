@@ -82,18 +82,7 @@ class MockApicAccountService implements ApicAccountInterface {
 
       // The code inside this if statement isn't valid in the unit test environment where we have no Drupal instance
       if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
-
-        // Check if the account already exists before creating it
-        // This supports the ibmsocial_login case where users are created in drupal before
-        // we register them with the mgmt appliance (this is out of our control)
-        $ids = \Drupal::entityQuery('user')->execute();
-        $users = User::loadMultiple($ids);
-
-        foreach ($users as $user) {
-          if ($user->getUsername() === $apicUser->getUsername()) {
-            $returnValue = $user;
-          }
-        }
+        $returnValue = $this->loadUserFromDatabase($apicUser);
       }
       if ($returnValue === NULL) {
         $account = $this->userStorage->register($apicUser);
@@ -121,21 +110,12 @@ class MockApicAccountService implements ApicAccountInterface {
    * @inheritDoc
    */
   public function updateLocalAccount(ApicUser $user): ?UserInterface {
-    // Update the user directly in drupal db
-    $ids = \Drupal::entityQuery('user')->execute();
-    $users = User::loadMultiple($ids);
 
-    // TODO: this is risky at the moment, as we can have multiple users with the same username - we need to extend to check on
-    // TODO: registry_url as well.
-    foreach ($users as $dbuser) {
-      if ($dbuser->getUsername() === $user->getUsername()) {
-        $dbuser->set('first_name', $user->getFirstname());
-        $dbuser->set('last_name', $user->getLastname());
-        $dbuser->set('mail', $user->getMail());
-        $dbuser->save();
-        break;
-      }
-    }
+    $dbuser = $this->loadUserFromDatabase($user);
+    $dbuser->set('first_name', $user->getFirstname());
+    $dbuser->set('last_name', $user->getLastname());
+    $dbuser->set('mail', $user->getMail());
+    $dbuser->save();
 
     drupal_set_message('MOCKED SERVICE:: Your account has been updated.');
     return NULL;
@@ -146,27 +126,22 @@ class MockApicAccountService implements ApicAccountInterface {
    * @inheritDoc
    */
   public function updateLocalAccountRoles(ApicUser $user, $roles): bool {
-    // Update the user directly in drupal db
-    $ids = \Drupal::entityQuery('user')->execute();
-    $users = User::loadMultiple($ids);
 
-    foreach ($users as $dbuser) {
-      if ($dbuser->getUsername() === $user->getUsername()) {
-        // Splat all of the old roles
-        $existingRoles = $dbuser->getRoles();
-        foreach ($existingRoles as $role) {
-          $dbuser->removeRole($role);
-        }
+    $dbuser = $this->loadUserFromDatabase($user);
+    // Splat all of the old roles
+    $existingRoles = $dbuser->getRoles();
+    foreach ($existingRoles as $role) {
+      $dbuser->removeRole($role);
+    }
 
-        // Add all of the new roles
-        unset($roles['authenticated']);          // This isn't a 'proper' role so remove it
-        foreach ($roles as $role) {
-          if ($role !== 'authenticated') {
-            $dbuser->addRole($role);
-          }
-        }
+    // Add all of the new roles
+    unset($roles['authenticated']);          // This isn't a 'proper' role so remove it
+    foreach ($roles as $role) {
+      if ($role !== 'authenticated') {
+        $dbuser->addRole($role);
       }
     }
+
     return TRUE;
   }
 
@@ -185,5 +160,12 @@ class MockApicAccountService implements ApicAccountInterface {
     \Drupal::logger('ibm_apim_mocks')->error('MockApicAccountService::createOrUpdateLocalAccount not implemented');
   }
 
+  /**
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $user
+   */
+  private function loadUserFromDatabase(ApicUser $user) {
+    $user = $this->userStorage->load($user);
+    return $user;
+  }
 
 }

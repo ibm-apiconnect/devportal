@@ -215,7 +215,7 @@ class CustomModulesDeleteForm extends FormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $info_yml);
     $info = \yaml_parse_file($info_yml);
     $hidden = FALSE;
-    if ($info['hidden'] !== NULL && (boolean) $info['hidden'] === TRUE) {
+    if (\array_key_exists('hidden', $info) && $info['hidden'] !== NULL && (boolean) $info['hidden'] === TRUE) {
       $this->logger->debug('Delete form, module marked as hidden in %info_yml', ['%info_yml' => basename($info_yml)]);
       $hidden = TRUE;
     }

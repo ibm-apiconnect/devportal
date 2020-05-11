@@ -1,4 +1,6 @@
 changes:
+  8.x-1.5.0:
+  - update version: 8.x-1.4.4 -> 8.x-1.5.0
   8.x-1.4.3:
   - update hook documentation
   - update data passed to delete hooks

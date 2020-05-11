@@ -105,11 +105,6 @@ class ApicPasswordService implements ApicPasswordInterface {
     $mgmtResponse = $this->mgmtServer->changePassword($old_password, $new_password);
     if ((int) $mgmtResponse->getCode() === 204) {
       $this->logger->notice('Password changed successfully.');
-      $apic_user = new ApicUser();
-      $apic_user->setUsername($user->get('name')->value);
-      $apic_user->setPassword($new_password);
-      $apic_user->setApicUserRegistryUrl($user->get('registry_url')->value);
-      $this->mgmtServer->setAuth($apic_user);
       $returnValue = TRUE;
     }
     else {
