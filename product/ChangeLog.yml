@@ -1,52 +1,84 @@
 changes:
-  8.x-1.4.6:
-  - ensure paramconverters use translated nodes
-  8.x-1.4.5:
+  8.x-2.0.36: null
+  8.x-2.0.35:
+  - Maybe fix for putting corgs into groups
+  8.x-2.0.34: null
+  8.x-2.0.33:
+  - fix Product ToS and License swap
+  8.x-2.0.32:
+  - Show migration link after superseding (#127) (#128)
+  8.x-2.0.31: null
+  8.x-2.0.30:
   - fix missing id on title
-  8.x-1.4.4:
+  8.x-2.0.29:
   - product_api_nids set to -1 after upgrade
-  8.x-1.4.3:
-  - ensure use translated variant of the node
-  8.x-1.4.2:
+  8.x-2.0.28: null
+  8.x-2.0.27:
+  - AVT & GraphQL css changes
+  8.x-2.0.26:
+  - tidy up api explorer view
+  8.x-2.0.25:
   - fixed translations for plans title and description
-  8.x-1.4.1:
+  8.x-2.0.24:
   - Updated apic_description field config to be translatable
-  8.x-1.4.0:
-  - update version: 8.x-1.3.13 -> 8.x-1.4.0
-  8.x-1.3.12:
+  8.x-2.0.23: null
+  8.x-2.0.22:
+  - ensure use translated variant of the node
+  - ensure paramconverters use translated nodes
+  8.x-2.0.21: null
+  8.x-2.0.20:
+  - add explanatory comment
+  - rethink of logic
+  - logic bug when array not set
+  - logic bug when array not set
+  - logic bug when categories doesnt exist
   - save product apis
-  8.x-1.3.11:
+  - Separating the categories from the manually added tags to avoid tags duplication
+  8.x-2.0.19:
   - logic all wrong for setting the product nids
-  8.x-1.3.10:
+  8.x-2.0.18:
   - code style
-  8.x-1.3.9:
+  8.x-2.0.17:
+  - Delete subscriptions on product delete (#115)
+  8.x-2.0.16:
   - make product_api_nids visible on view displays
   - add new product api nids field
-  8.x-1.3.8:
+  8.x-2.0.15:
   - try and fix phpunit requriements
-  8.x-1.3.7:
+  8.x-2.0.14:
+  - allow use of name:version in param
+  8.x-2.0.13:
   - copyright date
-  8.x-1.3.6:
-  - Missed Changes (#113) (#114)
-  8.x-1.3.5:
+  8.x-2.0.12:
+  - Missed Changes (#113)
+  8.x-2.0.11:
   - use blazy to avoid masonry meddling with css
-  8.x-1.3.4:
+  8.x-2.0.10:
   - remove debug
-  8.x-1.3.3:
+  8.x-2.0.9:
   - Content entity (#109)
-  8.x-1.3.2:
+  8.x-2.0.8:
   - wrong field name
   - wrong view ID
-  8.x-1.3.1: null
-  8.x-1.3.0:
-  - update version: 8.x-1.2.2 -> 8.x-1.3.0
-  8.x-1.2.1:
-  - Revert "Product view improved"
-  - Product view label
-  - Product view improved
-  8.x-1.2.0:
-  - Update version to 8.x-1.2.0
-  8.x-1.1.36: null
-  8.x-1.1.35:
-  - reset change log
-  - update version: 8.x-1.0.35 -> 8.x-1.1.35
+  8.x-2.0.7: null
+  8.x-2.0.6:
+  - product view removed
+  - product view implemented
+  - product view implemented
+  - product view implemented
+  8.x-2.0.5:
+  - ChangeLogs flipped upside down.
+  8.x-2.0.4:
+  - fix multi-plan tooltip
+  8.x-2.0.3:
+  - fix check
+  8.x-2.0.2: null
+  8.x-2.0.1:
+  - skip tests
+  - Bump Major version in master to differentiate from the service stream
+  8.x-1.1.52:
+  - ensure we do not load retired products
+  8.x-1.1.51:
+  - Merge pull request
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted
+  - styling updates

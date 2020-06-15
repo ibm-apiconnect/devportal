@@ -1,18 +1,16 @@
 --- modules/workbench/src/Controller/WorkbenchContentController.php	2019-04-25 20:24:46.000000000 +0100
 +++ modules/workbench/src/Controller/WorkbenchContentController.php	2019-04-25 20:25:06.000000000 +0100
-@@ -6,13 +6,14 @@
+@@ -6,11 +6,12 @@
  use Drupal\views\Views;
  use Drupal\views\Plugin\Block\ViewsBlock;
  use Drupal\views\Plugin\views\display\Embed;
 +use Drupal\ibm_apim\Controller\IbmApimNodeController;
- 
+
  /**
-  * Class WorkbenchContentController.
-  *
-  * @package Drupal\workbench\Controller
+  * Generates the pages defined by Workbench.
   */
 -class WorkbenchContentController extends NodeController {
 +class WorkbenchContentController extends IbmApimNodeController {
- 
+
    /**
     * Simple page to show list of content type to create.

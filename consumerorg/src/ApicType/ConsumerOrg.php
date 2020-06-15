@@ -219,6 +219,22 @@ class ConsumerOrg {
   }
 
   /**
+   * Removes the specified tag from this consumer org if it exist
+   *
+   * @param string $tag
+   *
+   * @return bool
+   */
+  public function removeTag($tag) {
+    $key = array_search($tag, $this->tags);
+    if ($key !== false) {
+      unset($this->tags[$key]);
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
    * Adds the specified tag to this consumer org if does not already exist
    *
    * @param string $tag
@@ -226,10 +242,8 @@ class ConsumerOrg {
    * @return bool
    */
   public function addTag($tag): bool {
-    foreach ($this->tags as $current_tag) {
-      if ($current_tag === $tag) {
-        return FALSE;
-      }
+    if (in_array($tag, $this->tags)) {
+      return FALSE;
     }
     $this->tags[] = $tag;
     return TRUE;

@@ -22,6 +22,7 @@ use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Rest\Payload\RestResponseReader;
 use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
+use Drupal\Core\Url;
 
 
 /**
@@ -177,6 +178,7 @@ class MockAPIMServer implements ManagementServerInterface {
    * @inheritDoc
    */
   public function createConsumerOrg(ConsumerOrg $org) {
+
     $response = new RestResponse();
 
     $response->setCode(201);
@@ -297,5 +299,36 @@ class MockAPIMServer implements ManagementServerInterface {
   public function activateFromJWT(JWTToken $jwt): RestResponse {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::activateFromJWT() is missing!');
     return NULL;
+  }
+
+
+  public function get($url) {
+    $host = \Drupal::service('ibm_apim.apim_utils')->getHostUrl();
+    $exp = '/consumer-api/oauth2/authorize?client_id=clientId' .
+      '&state=czozOiJrZXkiOw==' .
+      '&redirect_uri=/ibm_apim/oauth2/redirect' .
+      '&realm=consumer:orgId:envId/trueRealm' .
+      '&response_type=code';
+    if ($url == $exp) {
+      $loc = $host . URL::fromRoute('auth_apic.azredir')->toString(TRUE)->getGeneratedUrl() .
+        '?state=czozOiJrZXkiOw==_apimstate&' .
+        'code=valid&' . 
+        'scope=scope';
+      return ['code' => 302, 'headers' => ['Location' => $loc]];
+    }
+
+    $exp = '/consumer-api/oauth2/redirect?state=apimstate' .
+      '&code=valid' .
+      '&scope=scope' .
+      '&redirect_uri=';
+
+      
+    $utils = \Drupal::service('ibm_apim.utils');
+    if ($utils->startsWith($url, $exp) && $utils->endsWith($url,'%2Fibm_apim%2Foidcredirect')) {
+      $loc = $host . URL::fromRoute('auth_apic.azcode')->toString(TRUE)->getGeneratedUrl() .
+        '?code=valid&' . 
+        'state=czozOiJrZXkiOw==';
+      return ['code' => 302, 'headers' => ['Location' => $loc]];
+    }
   }
 }

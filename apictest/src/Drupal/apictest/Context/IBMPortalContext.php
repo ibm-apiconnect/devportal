@@ -16,7 +16,6 @@ use Behat\Behat\Context\SnippetAcceptingContext;
 use Behat\Behat\Hook\Scope\AfterFeatureScope;
 use Behat\Behat\Hook\Scope\AfterStepScope;
 use Behat\Gherkin\Node\TableNode;
-use Behat\Mink\Driver\GoutteDriver;
 use Behat\Testwork\Hook\Scope\AfterSuiteScope;
 use Behat\Testwork\Hook\Scope\BeforeSuiteScope;
 use Behat\Testwork\Hook\Scope\SuiteScope;
@@ -103,7 +102,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   public static function setup(BeforeSuiteScope $scope) {
     $params = self::getContextParameters($scope, 'Drupal\apictest\Context\IBMPortalContext');
     if ($params['useMockServices'] === TRUE) {
-      MockServiceHandler::install($params['siteDirectory'], $params['modulesDirectory'], $params['userRegistry'], $params['mockSiteConfig']);
+      MockServiceHandler::install($params['siteDirectory'], $params['modulesDirectory'], $params['userRegistry'], true);
     }
   }
 
@@ -180,7 +179,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     $page = $this->getSession()->getPage();
     $field = $page->find('named', ['id_or_name', $elementIdOrName]);
 
-    if ($field !== NULL || sizeof($field) !== 0) {
+    if ($field !== NULL || ((is_array($field) || is_countable($field)) && sizeof($field) !== 0)) {
       return $field;
     }
     elseif ($failIfNotFound) {
@@ -554,10 +553,14 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    *   vice-versa), this step definition allows a scenario to function in both cases.
    */
   public function ifTheFieldIsPresentEnterTheValue($fieldIdOrName, $value) {
-    $result = $this->findElementsByIdOrName($fieldIdOrName, FALSE);
+    try {
+      $result = $this->findElementsByIdOrName($fieldIdOrName, FALSE);
 
-    if ($result !== NULL) {
-      $this->minkContext->assertEnterField($fieldIdOrName, $value);
+      if ($result !== NULL) {
+        $this->minkContext->assertEnterField($fieldIdOrName, $value);
+      }
+    } catch(\Exception $exception) {
+      // do nothing
     }
   }
 
@@ -826,7 +829,6 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
         // Add the headers into the initial row of the table, if they aren't already there:
         $new_headers = ['first_name', 'last_name', 'apic_url', 'first_time_login'];
-        
         // sometimes we will be passed a registry_url, if not make sure we have one
         if (!\in_array('registry_url', $makeUsersTableHash[0])) {
           $new_headers[] = 'registry_url';
@@ -861,6 +863,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
         if (!isset($row['registry_url'])) {
           $row['registry_url'] = '/registry/test';
         }
+
 
         print 'creating a user from following data: ' . serialize($row) . "\n";
 

@@ -191,7 +191,7 @@
 }
 
 .apicUserMail {
- opacity: 0.5;
+ opacity: 0.7;
 }
 
 .apicMyOrgOwner {
@@ -479,15 +479,31 @@ ul.analyticsAppSelector li.selected {
 
 .apic-user-form .apic-portal-title {
   font-size: 0.875rem;
-  padding-left: 1.5rem;
+  padding-left: 3rem;
   padding-bottom: .75rem;
 }
 
 .apic-user-form-header
 {
   font-size: 1.75rem;
-  padding-left: 1.5rem;
+  padding-left: 3rem;
   font-weight: lighter;
+}
+
+@media(max-width:992px){
+  .apic-user-form .apic-portal-title,
+  .apic-user-form-header
+  {
+    padding-left: 2rem;
+  }
+}
+
+.apic-user-form-register.ur-count-1 .apic-portal-title,
+.apic-user-form-reset-pwd.ur-count-1 .apic-portal-title,
+.apic-user-form-register.ur-count-1 .apic-user-form-header,
+.apic-user-form-reset-pwd.ur-count-1 .apic-user-form-header
+{
+  padding-left: 1.25rem;
 }
 
 .apic-user-form-text {
@@ -549,9 +565,6 @@ a.button.disabled {
 }
 
 .apic-user-form-subheader {
-  margin: auto;
-  width: 50%;
-  text-align: center;
   font-weight: 600;
   padding: 1rem 0;
   word-wrap: break-word;

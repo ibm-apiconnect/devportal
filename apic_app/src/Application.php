@@ -236,7 +236,7 @@ class Application {
       $newArray = [];
       if (isset($entityIds) && !empty($entityIds)) {
         foreach ($entityIds as $entityId) {
-          $newArray = ['target_id' => $entityId];
+          $newArray[] = ['target_id' => $entityId];
         }
       }
       $node->set('application_subscription_refs', $newArray);

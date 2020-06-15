@@ -108,4 +108,20 @@ class MockSiteConfig extends SiteConfig {
     }
   }
 
+  public function getOrgId(): ?string {
+    return "orgId";
+  }
+
+  /**
+   * Get current catalog ID
+   *
+   * @return string|null
+   */
+  public function getEnvId(): ?string {
+    return "envId";
+  }
+
+  public function getClientId() {
+    return "clientId";
+  }
 }

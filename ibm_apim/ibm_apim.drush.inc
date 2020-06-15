@@ -590,6 +590,7 @@ function drush_ibm_apim_listen() {
             drush_log(dt('There is no drush code to handle the webhook command @cmd', ['@cmd' => $command]), 'warning');
             break;
         }
+        drush_log(dt('listen_done: @cmd', ['@cmd' => $command]), 'success');
       }
       else {
         drush_log(dt('No content provided for webhook command @cmd', ['@cmd' => $command]), 'warning');
@@ -1100,6 +1101,9 @@ function drush_ibm_apim_clearup($UUID) {
   foreach ($uids as $uid) {
       user_delete($uid);
   }
+
+  // Delete all users from db with duplicate emails
+  \Drupal::service('ibm_apim.db_usersfielddata')->deleteUsersWithDuplicateEmails();
 
   // remove any vendor extensions in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up extensions'), 'success');

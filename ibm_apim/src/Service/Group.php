@@ -97,16 +97,27 @@ class Group {
    */
   public function update($key, $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
+    $corgService = \Drupal::service('ibm_apim.consumerorg');
 
     if (isset($key, $data)) {
       $current_data = $this->state->get('ibm_apim.groups');
       if (!is_array($current_data)) {
         $current_data = [];
       }
+
+      //Remove old consumer orgs from this group
+      if (isset($current_data[$key]['org_urls'])) {
+        foreach($current_data[$key]['org_urls'] as $org_url) {
+          $org = $corgService->get($org_url);
+          if (isset($org) && $org->removeTag($data['url'])) {
+            $corgService->createOrUpdateNode($org, 'internal');
+          }
+        }
+      }
+
       $current_data[$key] = $data;
 
       // Update each consumer org in the group
-      $corgService = \Drupal::service('ibm_apim.consumerorg');
       foreach($data['org_urls'] as $org_url) {
         $org = $corgService->get($org_url);
         if($org->addTag($data['url'])) {

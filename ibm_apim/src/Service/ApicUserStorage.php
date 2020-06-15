@@ -71,10 +71,18 @@ class ApicUserStorage implements ApicUserStorageInterface {
 
     $name = $user->getUsername();
     $registry = $user->getApicUserRegistryUrl();
+    $mail = $user->getMail();
 
     $account_search = $this->userStorage->loadByProperties(['name' => $name, 'registry_url' => $registry]);
     if ($account = reset($account_search)) {
       throw new \Exception(sprintf('User could not be registered. There is already an account with username "%1s" in "%2s" registry.', $name, $registry));
+    }
+
+    if (!empty($mail)) { 
+      $account_search = $this->userStorage->loadByProperties(['mail' => $mail]);
+      if ($account = reset($account_search)) {
+        throw new \Exception(sprintf('User could not be registered. There is already an account with email "%1s".', $mail));
+      }
     }
 
     $fields = $this->userService->getUserAccountFields($user);

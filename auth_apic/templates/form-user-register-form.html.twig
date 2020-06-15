@@ -30,21 +30,21 @@
           {% set registry_title = element['#registry_title']['registry_title'] %}
           {% trans %} Sign up with {{ registry_title }} {% endtrans %}
         </div>
-        {% if element['#otherRegistries'] and element['#otherRegistries']['otherRegistries'] %}
-          <div class='apic-user-form-subheader'>{{ 'Select a different registry' | t }}</div>
-        {% endif %}
+
       </div>
       <div class='apic-user-form-container'>
         <div class='apic-user-form-inner-wrapper'>
         {{ children }}
         </div>
         {% if element['#otherRegistries'] and element['#otherRegistries']['otherRegistries'] %}
+
           <div class='apic-user-form-or-container'>
             <div class='apic-user-form-line'></div>
             <div class='apic-user-form-or'>{{ 'or'|t }}</div>
             <div class='apic-user-form-line'></div>
           </div>
           <div class='apic-user-form-inner-wrapper apic-user-form-registries'>
+            <div class='apic-user-form-subheader'>{{ 'Select a different registry' | t }}</div>
             {{ element['#otherRegistries']['otherRegistries'] }}
           </div>
         {% endif %}

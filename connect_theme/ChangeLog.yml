@@ -1,27 +1,43 @@
 changes:
-  8.x-1.4.5:
+  8.x-2.0.19:
+  - Added default type for status messages (#180)
+  8.x-2.0.18:
+  - Show checkmark in high contrast mode (#177)
+  8.x-2.0.17:
+  - Fixed accessibility outlines for firefox
+  - More accessibility fixes
+  - Fixed outline for firefox
+  8.x-2.0.16: null
+  8.x-2.0.15:
   - fix page template twig
-  8.x-1.4.4:
+  8.x-2.0.14:
   - a11y fix
-  8.x-1.4.3:
+  8.x-2.0.13:
   - fix missing id on title
-  8.x-1.4.2:
-  - padding for create button in wizard
-  8.x-1.4.1: null
-  8.x-1.4.0:
-  - update version: 8.x-1.3.5 -> 8.x-1.4.0
-  8.x-1.3.4:
+  8.x-2.0.12: null
+  8.x-2.0.11:
   - copyright date
-  8.x-1.3.3:
+  8.x-2.0.10:
   - prevent clicking outaide create app modal
-  8.x-1.3.2:
+  8.x-2.0.9:
   - add scrolling to org dropitmenu
-  8.x-1.3.1: null
-  8.x-1.3.0:
-  - update version: 8.x-1.2.1 -> 8.x-1.3.0
-  8.x-1.2.0:
-  - update version to 8.x-1.2.0
-  8.x-1.1.19: null
-  8.x-1.1.18:
-  - update version from 8.x-1.0.18 to 8.x-1.1.18
-  - clear change log
+  8.x-2.0.8:
+  - upgrade to Scssphp instead of leafo
+  8.x-2.0.7:
+  - Updated to variable build label
+  8.x-2.0.6:
+  - Update _connect-styles.scss
+  - Aligned buttons and also added spacing between sections on mobile
+  8.x-2.0.5:
+  - Updated navbar css to fix a couple bugs
+  8.x-2.0.4:
+  - ChangeLogs flipped upside down.
+  8.x-2.0.3:
+  - tweak new app styling in subscribe wizard
+  8.x-2.0.2:
+  - dropit styling tweak
+  8.x-2.0.1:
+  - Bump Major version in master to differentiate from the service stream
+  8.x-1.1.25:
+  - Merge pull request
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

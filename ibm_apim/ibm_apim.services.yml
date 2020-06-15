@@ -38,6 +38,14 @@ services:
     class: Drupal\ibm_apim\EventSubscriber\RemoveXGeneratorSubscriber
     tags:
       - { name: event_subscriber }
+  refresh_token_subscriber:
+    class: Drupal\ibm_apim\EventSubscriber\RefreshTokenSubscriber
+    tags:
+      - { name: event_subscriber }
+    arguments: ['@tempstore.private',
+                '@ibm_apim.mgmtserver',
+                '@logger.channel.ibm_apim',
+                ]
   ibm_apim.vendor_extension:
     class: Drupal\ibm_apim\Service\VendorExtension
     arguments: ['@state', '@logger.channel.ibm_apim']

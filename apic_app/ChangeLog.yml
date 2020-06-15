@@ -1,59 +1,110 @@
 changes:
-  8.x-1.8.7:
+  8.x-2.0.49: null
+  8.x-2.0.48:
+  - Show credential name when deleting (#194) (#195)
+  8.x-2.0.47:
+  - Append id (#191) (#192)
+  8.x-2.0.46:
+  - Accessibility fixes (#189) (#190)
+  8.x-2.0.45: null
+  8.x-2.0.44:
   - add title to the a href
-  8.x-1.8.6:
+  8.x-2.0.43:
   - fix missing id on title
-  8.x-1.8.5:
+  8.x-2.0.42: null
+  8.x-2.0.41:
   - temporarily disable test
-  8.x-1.8.4:
-  - Added back old entities and deprecated them (#186) (#187)
-  8.x-1.8.3:
+  8.x-2.0.40: null
+  8.x-2.0.39:
+  - Added back old entities and deprecated them (#186)
+  8.x-2.0.38:
   - Updated apic_summary field config to be translatable (#185)
-  8.x-1.8.2:
+  8.x-2.0.37:
   - mandate enitity update before system 8803
-  8.x-1.8.1:
   - check for creds and subs entities (#183)
-  8.x-1.8.0:
-  - update version: 8.x-1.7.16 -> 8.x-1.8.0
-  8.x-1.7.15:
-  - Show the the link (#179)
-  8.x-1.7.14:
+  8.x-2.0.36: null
+  8.x-2.0.35:
+  - fix up some phpdoc
+  - minor coding best practice
+  8.x-2.0.34:
+  - Urls consistent with webhook for apic_app_create hook (#180)
+  8.x-2.0.33:
+  - Two app oauth url tests
+  8.x-2.0.32:
+  - Show the the link (#178)
+  8.x-2.0.31: null
+  8.x-2.0.30: null
+  8.x-2.0.29:
   - update hook documentation
   - update data passed to delete hooks
   - add pre and post delete hooks
-  8.x-1.7.13:
-  - change check for config entities (#172)
-  8.x-1.7.12: null
-  8.x-1.7.11:
+  8.x-2.0.28:
+  - App edit role tests
+  - Update andre test
+  8.x-2.0.27:
+  - change check for config entities (#171)
+  8.x-2.0.26:
   - needs to be more defensive to handle them not existing
-  8.x-1.7.10:
+  8.x-2.0.25:
+  - Updated/added render tests
+  8.x-2.0.24:
   - Removed html dump
   - Fix conorg id
   - OAuth redirect tests
-  8.x-1.7.9:
+  8.x-2.0.23:
   - add update to clean up old fields and entity types
   - delete old entities + fields
-  8.x-1.7.8:
+  8.x-2.0.22:
   - dont display migrate link if already sub'd to the target
-  8.x-1.7.7:
+  8.x-2.0.21:
   - copyright date
-  - Create app tests
-  8.x-1.7.6:
+  8.x-2.0.20: null
+  8.x-2.0.19:
   - upgrade entity performance improvements
-  8.x-1.7.5:
+  8.x-2.0.18:
   - performance optimisation in the upgrade code
-  8.x-1.7.4:
-  - Small fix for credentials (#159) (#160)
-  8.x-1.7.3:
+  8.x-2.0.17:
+  - Small fix for credentials (#159)
+  8.x-2.0.16:
   - Content entity (#155)
-  8.x-1.7.2:
+  8.x-2.0.15:
   - coding style tidy up
-  8.x-1.7.1:
+  8.x-2.0.14:
   - pending approval state acknowledged.
-  8.x-1.7.0:
-  - update version: 8.x-1.6.59 -> 8.x-1.7.0
-  8.x-1.6.58: null
-  8.x-1.6.57:
-  - clear out change log
-  - update apic_app version to avoid clash
-  - update version: 8.x-1.4.57 -> 8.x-1.5.57
+  8.x-2.0.13:
+  - Update Jenkinsfile
+  8.x-2.0.12:
+  - ChangeLogs flipped upside down.
+  8.x-2.0.11:
+  - handle sub being created before the app
+  8.x-2.0.10:
+  - be more defensive to  handle the app not existing when create sub
+  8.x-2.0.9:
+  - need to add new apps within the form element
+  8.x-2.0.8:
+  - need to use the correctly named field
+  - ensure credentials array is set
+  - do not create duplicate subscriptions
+  8.x-2.0.7:
+  - fix url property name on credential
+  - Revert "ensure cred url is set"
+  8.x-2.0.6: null
+  8.x-2.0.5:
+  - ensure cred url is set
+  8.x-2.0.4:
+  - fix up credentials and subscriptions entity issues
+  8.x-2.0.3:
+  - Skip no creds (#148)
+  8.x-2.0.2: null
+  8.x-2.0.1:
+  - skip tests
+  - Bump Major version in master to differentiate from the service stream
+  8.x-1.5.67:
+  - possible timing issue updating apps
+  8.x-1.5.66:
+  - drupal 8.7 seems to have broken file urls... now theyre strings
+  - issue
+  - issue
+  8.x-1.5.65:
+  - Merge pull request
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

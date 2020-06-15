@@ -17,7 +17,6 @@
  */
 
 use Drupal\block\Entity\Block;
-use Drupal\block_content\Entity\BlockContent;
 use Drupal\captcha\Entity\CaptchaPoint;
 use Drupal\locale\Gettext;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
@@ -185,14 +184,12 @@ function apim_profile_install() {
     'unlimited_number',
     'avatars',
     'letter_avatar',
-    'rules',
     'mimemail',
     'views_autocomplete_filters',
     'multiple_fields_remove_button',
     'account_field_split',
     'eu_cookie_compliance',
     'serialization',
-    'rules_http_client',
     'smart_trim',
     'r4032login',
     'noopener_filter',
@@ -421,12 +418,12 @@ function apim_profile_main_menu_links() {
   $cache->deleteAll();
 }
 
-
 /**
  * @param string $menu_name
  * @param $forum_link
  */
 function add_forum_link_translations($link): void {
+
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();

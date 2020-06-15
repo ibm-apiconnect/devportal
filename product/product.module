@@ -675,20 +675,14 @@ function product_check_product_subscribe($node) {
                   }
                 }
                 if ($returnValue === FALSE) {
-                  $query = \Drupal::entityQuery('node');
-                  $query->condition('type', 'consumerorg');
-                  $query->condition('consumerorg_url.value', $myOrg['url']);
-                  $consumerOrgResults = $query->execute();
-                  if ($consumerOrgResults !== NULL && !empty($consumerOrgResults)) {
-                    $first = array_shift($consumerOrgResults);
-                    $consumerOrg = Node::load($first);
-                    if ($consumerOrg !== NULL) {
-                      $tags = $consumerOrg->consumerorg_tags->getValue();
-                      if ($tags !== NULL && is_array($tags) && count($tags) > 0) {
-                        foreach ($visibility['subscribe']['tags'] as $customTag) {
-                          if ($customTag !== NULL && !empty($customTag) && in_array($customTag, $tags, TRUE)) {
-                            $returnValue = TRUE;
-                          }
+                  $corgService = \Drupal::service('ibm_apim.consumerorg');
+                  $consumerOrg = $corgService->get($myOrg['url']); 
+                  if (isset($consumerOrg)) {
+                    $tags = $consumerOrg->getTags();
+                    if ($tags !== NULL && is_array($tags) && count($tags) > 0) {
+                      foreach ($visibility['subscribe']['group_urls'] as $customTag) {
+                        if ($customTag !== NULL && !empty($customTag) && in_array($customTag, $tags, TRUE)) {
+                          $returnValue = TRUE;
                         }
                       }
                     }

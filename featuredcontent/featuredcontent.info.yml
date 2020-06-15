@@ -3,7 +3,7 @@ type: module
 description: Block for featured Products or APIs
 package: IBM API Connect
 core: 8.x
-version: 8.x-1.4.2
+version: 8.x-2.0.10
 project: featuredcontent
 dependencies:
 - block

@@ -1,43 +1,73 @@
 changes:
-  8.x-1.4.5:
-  - ensure paramconverters use translated nodes
-  8.x-1.4.4:
+  8.x-2.0.34: null
+  8.x-2.0.33:
   - fix missing id on title
-  8.x-1.4.3:
+  8.x-2.0.32:
+  - few graphql css necessary tweaks
+  8.x-2.0.31:
+  - tidy up api explorer view
+  8.x-2.0.30:
   - Updated apic_description field config to be translatable
-  8.x-1.4.2:
+  8.x-2.0.29:
+  - ensure paramconverters use translated nodes
+  8.x-2.0.28:
   - set upgrade dependency for view update
-  8.x-1.4.1:
+  8.x-2.0.27:
   - Allow WSDL files download for SOAP APIs with non-alphanumberic characters names
-  8.x-1.4.0:
-  - update version: 8.x-1.3.12 -> 8.x-1.4.0
-  8.x-1.3.11:
+  8.x-2.0.26: null
+  8.x-2.0.25:
+  - wrong file name
+  8.x-2.0.24:
+  - Separating the categories from the manually added tags to avoid tags duplication
+  8.x-2.0.23:
   - set status of entity view display on upgrade
-  8.x-1.3.10:
+  8.x-2.0.22:
   - api module needs the display mode to have been created first
-  8.x-1.3.9:
+  8.x-2.0.21:
   - create new view using apis
   - add new api entity view display
-  8.x-1.3.8:
+  8.x-2.0.20:
+  - allow use of name:version in param
+  8.x-2.0.19:
   - copyright date
-  8.x-1.3.7:
+  8.x-2.0.18:
   - need to link to api in context of product
-  8.x-1.3.6: null
-  8.x-1.3.5:
+  8.x-2.0.17: null
+  8.x-2.0.16:
   - handle translated apis
-  8.x-1.3.4:
+  8.x-2.0.15:
   - require blazy
-  8.x-1.3.3:
+  8.x-2.0.14:
   - change default number of items per page
   - use blazy to avoid masonry meddling with css
-  8.x-1.3.2:
+  8.x-2.0.13:
   - use embedded view mode
-  8.x-1.3.1: null
-  8.x-1.3.0:
-  - update version: 8.x-1.2.1 -> 8.x-1.3.0
-  8.x-1.2.0:
-  - Update version to 8.x-1.2.0
-  8.x-1.1.36: null
-  8.x-1.1.35:
-  - clearing change log
-  - update version: 8.x-1.0.35 -> 8.x-1.1.35
+  8.x-2.0.12:
+  - Update Jenkinsfile
+  8.x-2.0.11:
+  - product view implemented
+  8.x-2.0.10:
+  - add option to show mtls header of an api
+  8.x-2.0.9:
+  - ChangeLogs flipped upside down.
+  8.x-2.0.8:
+  - fix api upgrade
+  8.x-2.0.7:
+  - set allowed_values for api protocol in upgrade
+  8.x-2.0.6:
+  - wrong field name
+  8.x-2.0.5:
+  - fix application list for apis
+  8.x-2.0.4: null
+  8.x-2.0.3: null
+  8.x-2.0.2: null
+  8.x-2.0.1:
+  - skip tests
+  - Bump Major version in master to differentiate from the service stream
+  8.x-1.1.66:
+  - use field name instead of translatable key
+  8.x-1.1.65:
+  - handle other languages
+  8.x-1.1.64:
+  - Merge pull request
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

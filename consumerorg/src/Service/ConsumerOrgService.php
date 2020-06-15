@@ -865,7 +865,7 @@ class ConsumerOrgService {
       }
       // TODO: consumerorg_memberlist?
       if ($node->consumerorg_tags) {
-        $org->setTags($node->get('consumerorg_tags')->value);
+        $org->setTags(array_column($node->get('consumerorg_tags')->getValue(),"value"));
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $org !== NULL ? $org->getUrl() : NULL);

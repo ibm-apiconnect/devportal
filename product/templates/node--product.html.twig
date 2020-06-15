@@ -378,15 +378,6 @@
         </div>
       {% endif %}
       {% if content.product_terms_of_service['#items'][0].value is defined %}
-        <div class="field apicProductLicense">
-          <h3 class="field__label label">{{ 'License'|t }}</h3>
-          <div class="licenseName"><a href="{{- content.product_license_url['#items'][0].value -}}"
-                                      target="_blank"
-                                      rel="noopener">{{ content.product_license_name['#items'][0].value }}</a>
-          </div>
-        </div>
-      {% endif %}
-      {% if content.product_license_url['#items'][0].value is defined %}
         <div class="field apicProductTermsOfService">
           <h3 class="field__label label">{{ 'Terms of Service'|t }}</h3>
           <div class="tosContainer">
@@ -396,7 +387,15 @@
                aria-controls="collapseTos"></a>
           </div>
         </div>
-
+      {% endif %}
+      {% if content.product_license_url['#items'][0].value is defined %}
+        <div class="field apicProductLicense">
+          <h3 class="field__label label">{{ 'License'|t }}</h3>
+          <div class="licenseName"><a href="{{- content.product_license_url['#items'][0].value -}}"
+                                      target="_blank"
+                                      rel="noopener">{{ content.product_license_name['#items'][0].value }}</a>
+          </div>
+        </div>
       {% endif %}
       <div class="comments">{{ content.comment }}</div>
     </div>

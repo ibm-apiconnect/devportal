@@ -13,6 +13,7 @@
 
 namespace Drupal\apic_app\Form;
 
+use Drupal\apic_app\Entity\ApplicationCredentials;
 use Drupal\apic_app\Application;
 use Drupal\apic_app\Event\CredentialDeleteEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
@@ -59,6 +60,14 @@ class CredentialsDeleteForm extends ConfirmFormBase {
    */
   protected $credsService;
 
+
+  /**
+   * This represents the credential ID
+   *
+   * @var string
+   */
+  protected $credId;
+
   /**
    * CredentialsDeleteForm constructor.
    *
@@ -84,13 +93,6 @@ class CredentialsDeleteForm extends ConfirmFormBase {
       $container->get('messenger'),
       $container->get('apic_app.credentials'));
   }
-
-  /**
-   * This represents the credential ID
-   *
-   * @var string
-   */
-  protected $credId;
 
   /**
    * {@inheritdoc}
@@ -139,7 +141,17 @@ class CredentialsDeleteForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion(): TranslatableMarkup {
-    return $this->t('Delete credentials for %title?', ['%title' => $this->node->title->value]);
+    $question = $this->t('Delete credentials for %title?', ['%title' => $this->node->title->value]);
+    $query = \Drupal::entityQuery('apic_app_application_creds');
+    $query->condition('id', $this->credId);
+    $entityIds = $query->execute();
+    if (isset($entityIds) && !empty($entityIds)) {
+      $cred = ApplicationCredentials::load(array_pop($entityIds));
+      if (isset($cred)) {
+        $question =  $this->t('Delete credentials %credentials for %title?', ['%credentials' => $cred->name(),'%title' => $this->node->title->value]);
+      }
+    }
+    return $question;
   }
 
   /**

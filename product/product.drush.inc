@@ -255,6 +255,7 @@ function drush_product_supersede($content) {
     if (sizeof($content['products']) === 2) {
       foreach ($content['products'] as $product) {
         if ($product['state'] === 'deprecated') {
+          $deprecatedProdUrl = $product['url'];
           drush_product_update(['product' => $product], 'product_supersede');
         }
         elseif ($product['state'] === 'published') {
@@ -267,6 +268,26 @@ function drush_product_supersede($content) {
       }
       // process apis
       drush_apic_api_massupdate($content['consumer_apis'], 'product_supersede');
+
+      // update all subscribed apps
+      if (isset($deprecatedProdUrl)) {
+        $query = \Drupal::entityQuery('apic_app_application_subs');
+        $query->condition('product_url', $deprecatedProdUrl);
+        $subIds = $query->execute();
+        if (isset($subIds) && !empty($subIds)) {
+          foreach (array_chunk($subIds, 50) as $chunk) {
+            $subEntities = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->loadMultiple($chunk);
+            foreach($subEntities as $sub) {
+              $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties(['apic_url' => $sub->get('app_url')->value]);
+              if (count($nodes) == 1) {
+                array_pop($nodes)->save();
+              } else {
+                drush_log(dt('Drush product supersede : incorrect number of applications with url \'@url\' found. Should be 1 but was @count.', ['@url' => $deprecatedProdUrl,'@count' => count($nodes)]), 'error');
+              }
+            }
+          }
+        }
+      }
     }
     else {
       drush_log(dt('Drush product supersede : incorrect number of products found. Should be 2 but was @count.', ['@count' => sizeof($content['products'])]), 'error');

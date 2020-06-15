@@ -22,6 +22,14 @@ use Drupal\ibm_apim\Rest\RestResponse;
 interface ManagementServerInterface {
 
   /**
+   *
+   * @param string $url
+   *
+   * @return mixed
+   */
+  public function get(string $url);
+
+  /**
    * Get an authentication token from the management server without storing it in
    * the private tempstore for the user.
    *

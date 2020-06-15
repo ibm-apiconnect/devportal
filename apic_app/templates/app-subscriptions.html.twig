@@ -8,12 +8,12 @@
         <table>
           <thead>
           <tr>
-            <th class="product">{{ 'Product'|t }}</th>
-            <th class="plan">{{ 'Plan'|t }}</th>
+            <th id="product" class="product">{{ 'Product'|t }}</th>
+            <th id="plan" class="plan">{{ 'Plan'|t }}</th>
             {% if billing_enabled == true %}
-              <th class="cost">{{ 'Monthly Cost'|t }}</th>
+              <th id="cost" class="cost">{{ 'Monthly Cost'|t }}</th>
             {% endif %}
-            <th class="action">&nbsp;</th>
+            <th id="action" class="action">&nbsp;</th>
           </tr>
           </thead>
           <tbody>
@@ -67,7 +67,7 @@
             {% endfor %}
           {% else %}
             <tr>
-              <td colspan="5" class="noSubsFound">{{ 'No subscriptions found.'|t }} <a
+              <td headers="product action {% if billing_enabled == true %} cost {% endif %} plan " colspan="5" class="noSubsFound">{{ 'No subscriptions found.'|t }} <a
                     href="{{ path('view.products.page_1') }}"
                     title="{{ 'Browse available APIs'|t }}">{{ 'Why not browse the available APIs?'|t }}</a>
               </td>
