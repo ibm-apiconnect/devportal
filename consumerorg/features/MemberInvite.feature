@@ -30,6 +30,7 @@ Feature: Org member invitation
     And I am logged in as "@data(andre.name)"
     And I am at "/myorg/invite"
     When I enter "inviteduser@example.com" for "Email"
+    And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Submit" button
     Then I should be on "/myorg"
     And there are messages
@@ -65,6 +66,7 @@ Feature: Org member invitation
     And I am at "/myorg/invite"
     When I enter "inviteduser@example.com" for "Email"
     And I select the radio button "Administrator"
+    And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Submit" button
     Then I should be on "/myorg"
     And there are messages
@@ -92,6 +94,7 @@ Feature: Org member invitation
     And I am at "/myorg/invite"
     When I enter "inviteduser@example.com" for "Email"
     And I select the radio button "Viewer"
+    And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Submit" button
     Then I should be on "/myorg"
     And there are messages
@@ -117,6 +120,7 @@ Feature: Org member invitation
     And I am at "/myorg/invite"
     When I enter "inviteduser@example.com" for "Email"
     #Role=Developer radio button is selected by default
+    And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Submit" button
     Then I should be on "/myorg"
     And there are messages

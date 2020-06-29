@@ -1,0 +1,6 @@
+langcode: en
+status: true
+dependencies: {  }
+formId: consumerorg_invite_user_form
+captchaType: default
+label: consumerorg_invite_user_form

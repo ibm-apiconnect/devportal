@@ -1,4 +1,153 @@
 changes:
+  8.x-20200529-1025:
+    commits:
+    - disable rules if not being actively used
+    modules:
+      product:
+        8.x-1.5.4:
+        - Maybe fix for putting corgs into groups (#133)
+      ibm_apim:
+        8.x-1.7.6:
+        - Added removal of consumer orgs from groups (#555)
+      consumerorg:
+        8.x-1.6.5:
+        - Fix for group visibility 2018.4.1 (#182)
+  8.x-20200525-0422:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.6.2:
+        - Validate input (#564) (#566)
+  8.x-20200523-1002:
+    commits: null
+    modules:
+      product:
+        8.x-1.5.3: null
+      auth_apic:
+        8.x-1.6.1: null
+      apic_app:
+        8.x-1.9.3: null
+      ibm_apim:
+        8.x-1.7.5: null
+  8.x-20200521-1624:
+    commits:
+    - see if setting this back to null helps ?
+    - php 7.3
+    modules:
+      apictest:
+        8.x-1.7.5:
+        - see if setting this back to null helps ?
+        8.x-1.7.4:
+        - php 7.3
+  8.x-20200518-1624:
+    commits:
+    - check_dns patch no longer needed
+    - update drupal core
+    modules:
+      apic_app:
+        8.x-1.9.2:
+        - Show credential name when deleting (#194) (#196)
+      ibm_apim:
+        8.x-1.7.4:
+        - Fixed login bugs caused by wrong password (#542)
+  8.x-20200515-1323:
+    commits:
+    - update core version in translation code
+    - need drupal 8.8.5
+    - update patch for new externalauth mod
+    - fix patch
+    - update patch for new workbench module
+    - composer update
+    modules:
+      consumerorg:
+        8.x-1.6.4:
+        - handle captcha not being enabled
+        - add upgrade code to add the captchas
+  8.x-20200515-1023:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-1.6.3:
+        - add captcha support into the invitation form tests
+  8.x-20200515-0923:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.7.3: null
+        8.x-1.7.2:
+        - Refresh tokens periodically (#536) (#539)
+        - Multiple users 2018.4.1 (#538)
+  8.x-20200512-0833:
+    commits: null
+    modules:
+      product:
+        8.x-1.5.2:
+        - fix Product ToS and License swap
+        8.x-1.5.1:
+        - Show migration link after superseding (#127) (#129)
+      apic_app:
+        8.x-1.9.1:
+        - Append id (#191) (#193)
+      ibm_apim:
+        8.x-1.7.1:
+        - Refresh token logging improvements (#529) (#535)
+      consumerorg:
+        8.x-1.6.2:
+        - add honeypot and captcha to invite user form
+      apictest:
+        8.x-1.7.3:
+        - handle field not existing
+        8.x-1.7.2:
+        - oops need captcha after all
+  8.x-20200511-1922:
+    commits: null
+    modules:
+      apictest:
+        8.x-1.7.1:
+        - need to disable captcha for tests too
+  8.x-20200501-1624:
+    commits:
+    - Update version for 2018.4.1.12
+    modules:
+      socialblock:
+        8.x-1.5.0:
+        - update version: 8.x-1.4.2 -> 8.x-1.5.0
+      product:
+        8.x-1.5.0:
+        - update version: 8.x-1.4.7 -> 8.x-1.5.0
+      ghmarkdown:
+        8.x-1.5.0:
+        - update version: 8.x-1.4.1 -> 8.x-1.5.0
+      auth_apic:
+        8.x-1.6.0:
+        - update version: 8.x-1.5.6 -> 8.x-1.6.0
+      mail_subscribers:
+        8.x-1.5.0:
+        - update version: 8.x-1.4.2 -> 8.x-1.5.0
+      themegenerator:
+        8.x-1.5.0:
+        - update version: 8.x-1.4.3 -> 8.x-1.5.0
+      featuredcontent:
+        8.x-1.5.0:
+        - update version: 8.x-1.4.2 -> 8.x-1.5.0
+      apic_api:
+        8.x-1.5.0:
+        - update version: 8.x-1.4.6 -> 8.x-1.5.0
+      apic_app:
+        8.x-1.9.0:
+        - update version: 8.x-1.8.8 -> 8.x-1.9.0
+      ibm_apim:
+        8.x-1.7.0:
+        - update version: 8.x-1.6.7 -> 8.x-1.7.0
+      consumerorg:
+        8.x-1.6.1:
+        - comment out unreliable test
+        - make captcha optional
+        - add honeypot for the resend invitation form
+        - add captcha for the resend invitation form
+      apictest:
+        8.x-1.7.0:
+        - update version: 8.x-1.6.3 -> 8.x-1.7.0
   8.x-20200501-1322:
     commits: null
     modules:
@@ -681,4 +830,4 @@ changes:
         - update version: 8.x-1.1.46 -> 8.x-1.2.46
       apictest:
         8.x-1.3.55: null
-  8.x-20200501-1624:
+  8.x-20200603-0931:

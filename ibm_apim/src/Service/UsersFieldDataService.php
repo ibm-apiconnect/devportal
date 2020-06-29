@@ -51,11 +51,17 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
    */
   protected $userRegistryService;
 
+  /**
+   * @var \Drupal\Core\Database\Connection
+   */
+  protected $database;
+
   public function __construct(Connection $database,
                               LoggerInterface $logger,
                               EntityTypeManagerInterface $entity_type_manager,
                               UserRegistryServiceInterface $user_registry_service) {
     $this->schema = $database->schema();
+    $this->database = $database;
     $this->logger = $logger;
     $this->entityTypeManager = $entity_type_manager;
     $this->userRegistryService = $user_registry_service;
@@ -149,5 +155,19 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
     }
   }
 
+  public function deleteUsersWithDuplicateEmails(): void {
+    $this->logger->notice('Deleting users with duplicated emails');
+    $options = ['target' => 'default'];
+    $query = $this->database->query("SELECT uid, mail FROM users_field_data WHERE uid <> 0 AND uid <> 1 AND
+      mail IN (SELECT mail FROM users_field_data GROUP BY mail HAVING COUNT(mail) > 1)", [], $options);
+    $uids = $query->fetchAll();
+    foreach ($uids as $uid) {
+      $user = $this->entityTypeManager->getStorage('user')->load($uid->uid);
+      //Only delete users who've never logged in
+      if ($user->first_time_login->value == 1) {
+        user_delete($uid->uid);
+      }
+    }
+  }
 
 }

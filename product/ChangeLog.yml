@@ -1,4 +1,13 @@
 changes:
+  8.x-1.5.4:
+  - Maybe fix for putting corgs into groups (#133)
+  8.x-1.5.3: null
+  8.x-1.5.2:
+  - fix Product ToS and License swap
+  8.x-1.5.1:
+  - Show migration link after superseding (#127) (#129)
+  8.x-1.5.0:
+  - update version: 8.x-1.4.7 -> 8.x-1.5.0
   8.x-1.4.6:
   - ensure paramconverters use translated nodes
   8.x-1.4.5:

@@ -1,4 +1,17 @@
 changes:
+  8.x-1.7.6:
+  - Added removal of consumer orgs from groups (#555)
+  8.x-1.7.5: null
+  8.x-1.7.4:
+  - Fixed login bugs caused by wrong password (#542)
+  8.x-1.7.3: null
+  8.x-1.7.2:
+  - Refresh tokens periodically (#536) (#539)
+  - Multiple users 2018.4.1 (#538)
+  8.x-1.7.1:
+  - Refresh token logging improvements (#529) (#535)
+  8.x-1.7.0:
+  - update version: 8.x-1.6.7 -> 8.x-1.7.0
   8.x-1.6.6: null
   8.x-1.6.5:
   - missing alt tag

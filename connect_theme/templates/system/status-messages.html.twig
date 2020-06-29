@@ -44,6 +44,9 @@
 'info': '/images/ibmcarbon/svg/info--glyph.svg',
 } %}
 {% for type, messages in message_list %}
+  {% if type is empty %}
+    {% set type = 'status'  %}
+  {% endif %}
   {% set classes = [
   'alert',
   'alert-' ~ status_classes[type],

@@ -17,7 +17,6 @@
  */
 
 use Drupal\block\Entity\Block;
-use Drupal\block_content\Entity\BlockContent;
 use Drupal\captcha\Entity\CaptchaPoint;
 use Drupal\locale\Gettext;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
@@ -185,14 +184,12 @@ function apim_profile_install() {
     'unlimited_number',
     'avatars',
     'letter_avatar',
-    'rules',
     'mimemail',
     'views_autocomplete_filters',
     'multiple_fields_remove_button',
     'account_field_split',
     'eu_cookie_compliance',
     'serialization',
-    'rules_http_client',
     'smart_trim',
     'r4032login',
     'noopener_filter',
@@ -1500,6 +1497,22 @@ function apim_profile_update_8026() {
     $module_installer->uninstall(['node_type_count']);
   }
   $module_installer->install(['apic_type_count']);
+}
+
+/**
+ * If the rules module is not in use then disable it
+ */
+function apim_profile_update_8027() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('rules')) {
+    // if there are still rules then leave them, else disable the modules
+    $query = \Drupal::entityQuery('rules_reaction_rule');
+    $result = $query->count()->execute();
+    if (!isset($result) || (int)$result < 1) {
+      $module_installer = \Drupal::service('module_installer');
+      $module_installer->uninstall(['rules', 'rules_http_client']);
+    }
+  }
 }
 
 /**

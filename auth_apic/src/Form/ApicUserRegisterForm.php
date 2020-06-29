@@ -476,6 +476,22 @@ class ApicUserRegisterForm extends RegisterForm {
 
     $registry_url = $form_state->getValue('registry_url');
     $registry = $this->userRegistryService->get($registry_url);
+    $valuesToValidate = [
+      $form_state->getValue('name'),
+      $form_state->getValue('mail'),
+      $form_state->getValue('first_name'),
+      $form_state->getValue('last_name'),
+      $form_state->getValue('consumerorg')
+    ];
+    foreach($valuesToValidate as $val) {
+      while (is_array($val) && !empty($val)) {
+        $val = array_shift($val);
+      }
+      if (strlen($val) > 255 || strpos($val, 'http://') !== false || strpos($val, 'https://') !== false) {
+        $form_state->setErrorByName('', t('A problem occurred while attempting to create your account. Inputs cannot exceed max length or include URLs'));
+      }
+    }
+
 
     $this->validateUniqueUser($form_state, $registry);
 

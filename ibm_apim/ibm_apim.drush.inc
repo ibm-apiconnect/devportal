@@ -1101,6 +1101,9 @@ function drush_ibm_apim_clearup($UUID) {
       user_delete($uid);
   }
 
+  // Delete all users from db with duplicate emails
+  \Drupal::service('ibm_apim.db_usersfielddata')->deleteUsersWithDuplicateEmails();
+
   // remove any vendor extensions in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up extensions'), 'success');
   if (file_exists("/tmp/snapshot.$UUID/content_refresh_extensions.$UUID.json")) {

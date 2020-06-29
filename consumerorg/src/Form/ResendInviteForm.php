@@ -135,6 +135,11 @@ class ResendInviteForm extends ConfirmFormBase {
         throw new NotFoundHttpException(t('Specified invite not found in this consumer organization.'));
       }
       $form = parent::buildForm($form, $form_state);
+      $moduleHandler = \Drupal::service('module_handler');
+      if ($moduleHandler->moduleExists('honeypot')) {
+        // add honeypot to this form to prevent it being used to spam user's mailboxes
+        honeypot_add_form_protection($form, $form_state, ['honeypot', 'time_restriction']);
+      }
       if ($this->themeHandler->themeExists('bootstrap')) {
         if (isset($form['actions']['submit'])) {
           $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('envelope');

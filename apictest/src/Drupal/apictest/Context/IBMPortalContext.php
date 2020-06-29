@@ -180,7 +180,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     $page = $this->getSession()->getPage();
     $field = $page->find('named', ['id_or_name', $elementIdOrName]);
 
-    if ($field !== NULL || sizeof($field) !== 0) {
+    if ($field !== NULL || ((is_array($field) || is_countable($field)) && sizeof($field) !== 0)) {
       return $field;
     }
     elseif ($failIfNotFound) {
@@ -554,10 +554,14 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    *   vice-versa), this step definition allows a scenario to function in both cases.
    */
   public function ifTheFieldIsPresentEnterTheValue($fieldIdOrName, $value) {
-    $result = $this->findElementsByIdOrName($fieldIdOrName, FALSE);
+    try {
+      $result = $this->findElementsByIdOrName($fieldIdOrName, FALSE);
 
-    if ($result !== NULL) {
-      $this->minkContext->assertEnterField($fieldIdOrName, $value);
+      if ($result !== NULL) {
+        $this->minkContext->assertEnterField($fieldIdOrName, $value);
+      }
+    } catch(\Exception $exception) {
+      // do nothing
     }
   }
 

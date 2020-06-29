@@ -1,4 +1,16 @@
 changes:
+  8.x-1.7.5:
+  - see if setting this back to null helps ?
+  8.x-1.7.4:
+  - php 7.3
+  8.x-1.7.3:
+  - handle field not existing
+  8.x-1.7.2:
+  - oops need captcha after all
+  8.x-1.7.1:
+  - need to disable captcha for tests too
+  8.x-1.7.0:
+  - update version: 8.x-1.6.3 -> 8.x-1.7.0
   8.x-1.6.2:
   - php upgrade (#172)
   8.x-1.6.1: null

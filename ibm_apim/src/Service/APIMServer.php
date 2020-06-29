@@ -14,8 +14,6 @@
 namespace Drupal\ibm_apim\Service;
 
 use Drupal\auth_apic\JWTToken;
-
-
 use Drupal\ibm_apim\Rest\MeResponse;
 use \Drupal\Core\Session\AccountProxyInterface;
 use \Drupal\Core\Messenger\MessengerInterface;
@@ -213,69 +211,83 @@ class APIMServer implements ManagementServerInterface {
   public function refreshAuth() {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $refresh = $this->sessionStore->get('refresh');
-    $refresh_expires_in = $this->sessionStore->get('refresh_expires_in');
-
-    $this->sessionStore->delete('auth');
-    $this->sessionStore->delete('expires_in');
-    $this->sessionStore->delete('refresh');
-    $this->sessionStore->delete('refresh_expires_in');
-
-
-    if (!isset($refresh) || isset($refresh_expires_in) && (int) $refresh_expires_in < time()) {
-      $this->logger->error('Invalid refresh token: @refresh expires @expiry',
-        ['@refresh' => $refresh, '@expiry' => $refresh_expires_in]);
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return false;
-    }
-    
-    //Get User Registry
-    $user_registry_url = User::load($this->current_user->id())->get('registry_url')->value;
-    $user_registry = $this->registryService->get($user_registry_url);
-    if ($user_registry === null || empty($user_registry)) {
-      $this->logger->error('Failed to find user registry with URL @regurl.',
-        ['@regurl' => $user_registry_url]);
-      $this->messenger->addError(t('Unable to authorize your request. Contact the site administrator.'));
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return false;
+    //Check if it's already refreshing
+    if ($this->sessionStore->get('isRefreshing')) {
+      sleep(1);
+      if ($this->sessionStore->get('isRefreshing') !== true && $this->sessionStore->get('auth') !== NULL && 
+      $this->sessionStore->get('expires_in') !== NULL && (int) $this->sessionStore->get('expires_in') > time()) {
+        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+        return true;
+      } else {
+        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+        return false;
+      }
     }
 
-    //Generate Request Data
-    $token_request = [
-      'realm' => $user_registry->getRealm(),
-      'client_id' => $this->siteConfig->getClientId(),
-      'client_secret' => $this->siteConfig->getClientSecret(),
-      'grant_type' => 'refresh_token',
-      'refresh_token' => $refresh,
-    ];
-
-    //Generate Headers
-    $headers = [
-      'Content-Type: application/json',
-      'Accept: application/json',
-      'X-IBM-Client-Id: ' . $this->siteConfig->getClientId(),
-      'X-IBM-Client-Secret: ' . $this->siteConfig->getClientSecret(),
-      'X-IBM-Consumer-Context: ' . $this->siteConfig->getOrgId() . '.' . $this->siteConfig->getEnvId(),
-    ];
-
-    $response = ApicRest::json_http_request('/token', 'POST', $headers, json_encode($token_request), false, NULL, NULL, TRUE, 'consumer');
-    if (!isset($response)) {
-      $this->logger->error('Failed to refresh token');
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return false;
-    } elseif ((int) $response->code < 200 || (int) $response->code >= 300) {
-      $this->logger->error('Refresh token request received @code response',
-      ['@code' => $response->code]);
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      return false;
-    }
     try {
+      $this->sessionStore->set('isRefreshing', true);
+      $success = false;
+      
+      \Drupal::logger('ibm_apim')->notice('Refreshing token with @refresh',
+      ['@refresh' => $this->sessionStore->get('refresh')]);
+
+      $refresh = $this->sessionStore->get('refresh');
+      $refresh_expires_in = $this->sessionStore->get('refresh_expires_in');
+
+      if (!isset($refresh) || isset($refresh_expires_in) && (int) $refresh_expires_in < time()) {
+        $this->logger->error('Invalid refresh token: @refresh expires @expiry',
+        ['@refresh' => $refresh, '@expiry' => $refresh_expires_in]);
+        return false;
+      }
+
+      //Get User Registry
+      $user_registry_url = User::load($this->current_user->id())->get('registry_url')->value;
+      $user_registry = $this->registryService->get($user_registry_url);
+      if ($user_registry === null || empty($user_registry)) {
+        $this->logger->error('Failed to find user registry with URL @regurl.',
+        ['@regurl' => $user_registry_url]);
+        $this->messenger->addError(t('Unable to authorize your request. Contact the site administrator.'));
+        return false;
+      }
+    
+    //Generate Request Data
+      $token_request = [
+        'realm' => $user_registry->getRealm(),
+        'client_id' => $this->siteConfig->getClientId(),
+        'client_secret' => $this->siteConfig->getClientSecret(),
+        'grant_type' => 'refresh_token',
+        'refresh_token' => $refresh,
+      ];
+
+      //Generate Headers
+      $headers = [
+        'Content-Type: application/json',
+        'Accept: application/json',
+        'X-IBM-Client-Id: ' . $this->siteConfig->getClientId(),
+        'X-IBM-Client-Secret: ' . $this->siteConfig->getClientSecret(),
+        'X-IBM-Consumer-Context: ' . $this->siteConfig->getOrgId() . '.' . $this->siteConfig->getEnvId(),
+      ];
+
+      $response = ApicRest::json_http_request('/token', 'POST', $headers, json_encode($token_request), false, NULL, NULL, TRUE, 'consumer');
+      if (!isset($response)) {
+        $this->logger->error('Failed to refresh token');
+        return false;
+      } elseif ((int) $response->code < 200 || (int) $response->code >= 300) {
+        $this->logger->error('Refresh token request received @code response',
+        ['@code' => $response->code]);
+        return false;
+      }
       $token_response = $this->tokenResponseReader->read($response);
 
       $auth = $token_response->getBearerToken();
       $expires_in = $token_response->getExpiresIn();
       $refresh = $token_response->getRefreshToken();
       $refresh_expires_in = $token_response->getRefreshExpiresIn();
+
+      $this->sessionStore->delete('auth');
+      $this->sessionStore->delete('expires_in');
+      $this->sessionStore->delete('refresh');
+      $this->sessionStore->delete('refresh_expires_in');
 
       if (isset($auth)) {
         $this->sessionStore->set('auth', $auth);
@@ -289,14 +301,22 @@ class APIMServer implements ManagementServerInterface {
       if (isset($refresh_expires_in)) {
         $this->sessionStore->set('refresh_expires_in', (int) $refresh_expires_in);
       }
+      $success = true; 
     } catch (RestResponseParseException $exception) {
       $this->logger->error('RefreshAuth: failure parsing POST /token response: %message', ['%message' => $exception->getMessage()]);
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       return false;
+    } finally {
+      $this->sessionStore->delete('isRefreshing');
+      if ($success) {
+        $this->logger->notice('Successfully refreshed the token');
+      } else {  
+        $this->sessionStore->delete('auth');
+        $this->sessionStore->delete('expires_in');
+        $this->sessionStore->delete('refresh');
+        $this->sessionStore->delete('refresh_expires_in');
+      }
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-    
-    $this->logger->notice('Successfully refreshed the token');
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return true;
   }
 

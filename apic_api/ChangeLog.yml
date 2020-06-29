@@ -1,4 +1,6 @@
 changes:
+  8.x-1.5.0:
+  - update version: 8.x-1.4.6 -> 8.x-1.5.0
   8.x-1.4.5:
   - ensure paramconverters use translated nodes
   8.x-1.4.4:

@@ -1,4 +1,11 @@
 changes:
+  8.x-1.9.3: null
+  8.x-1.9.2:
+  - Show credential name when deleting (#194) (#196)
+  8.x-1.9.1:
+  - Append id (#191) (#193)
+  8.x-1.9.0:
+  - update version: 8.x-1.8.8 -> 8.x-1.9.0
   8.x-1.8.7:
   - add title to the a href
   8.x-1.8.6:

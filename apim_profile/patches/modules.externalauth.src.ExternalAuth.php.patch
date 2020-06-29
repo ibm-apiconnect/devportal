@@ -22,8 +22,8 @@
      // If a mapping (for the same provider) to this account already exists, we
      // silently skip saving this auth mapping.
      if (!$this->authmap->get($account->id(), $provider)) {
--      $username = $provider . '_' . $authname;
-+      $username = $authname;
-       $authmap_event = $this->eventDispatcher->dispatch(ExternalAuthEvents::AUTHMAP_ALTER, new ExternalAuthAuthmapAlterEvent($provider, $authname, $username, NULL));
+-      $authmap_event = $this->eventDispatcher->dispatch(ExternalAuthEvents::AUTHMAP_ALTER, new ExternalAuthAuthmapAlterEvent($provider, $authname, $account->getAccountName(), NULL));
++      $authmap_event = $this->eventDispatcher->dispatch(ExternalAuthEvents::AUTHMAP_ALTER, new ExternalAuthAuthmapAlterEvent($provider, $authname, $authname, NULL));
        $this->authmap->save($account, $provider, $authmap_event->getAuthname(), $authmap_event->getData());
      }
+   }

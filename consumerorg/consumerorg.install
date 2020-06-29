@@ -56,3 +56,33 @@ function consumerorg_update_8102() {
   }
 
 }
+
+/**
+ * Enable captcha for invite and reinvite forms
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function consumerorg_update_8103() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('captcha')) {
+    $captcha_point = \Drupal::entityTypeManager()->getStorage('captcha_point')->load('consumerorg_invite_user_form');
+    if (!isset($captcha_point)) {
+      $captcha_point = new \Drupal\captcha\Entity\CaptchaPoint([
+        'formId' => 'consumerorg_invite_user_form',
+        'captchaType' => 'default',
+      ], 'captcha_point');
+      $captcha_point->enable()->save();
+    }
+
+    $captcha_point2 = \Drupal::entityTypeManager()->getStorage('captcha_point')->load('consumerorg_resend_invitation_form');
+    if (!isset($captcha_point2)) {
+      $captcha_point2 = new \Drupal\captcha\Entity\CaptchaPoint([
+        'formId' => 'consumerorg_resend_invitation_form',
+        'captchaType' => 'default',
+      ], 'captcha_point');
+      $captcha_point2->enable()->save();
+    }
+  }
+}

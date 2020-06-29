@@ -69,6 +69,7 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $fields['registry_url'] = $user->getApicUserRegistryUrl();
 
     $this->userStorage->loadByProperties(['name' => 'andre', 'registry_url' => '/reg/url'])->willReturn([]);
+    $this->userStorage->loadByProperties(['mail' => 'andre@example.com'])->willReturn([]);
     $this->userService->getUserAccountFields($user)->willReturn([$fields]);
     $new_account = $this->prophet->prophesize(User::class);
     $this->userStorage->create(Argument::type('array'))->willReturn($new_account)->shouldBeCalled();
@@ -100,6 +101,33 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $user->setMail('andre@example.com');
 
     $this->userStorage->loadByProperties(['name' => 'andre', 'registry_url' => '/reg/url'])->willReturn([$this->prophet->prophesize(User::class)]);
+    $this->userStorage->loadByProperties(['mail' => 'andre@example.com'])->willReturn([]);
+    $this->userService->getUserAccountFields(Argument::any())->shouldNotBeCalled();
+    $this->userStorage->create(Argument::any())->shouldNotBeCalled();
+
+    $this->logger->notice(Argument::any())->shouldNotBeCalled();
+
+    $service = new ApicUserStorage($this->entityTypeManager->reveal(),
+      $this->registryService->reveal(),
+      $this->userService->reveal(),
+      $this->logger->reveal());
+
+    $service->register($user);
+  }
+
+    /**
+   * @expectedException \Exception
+   * @expectedExceptionMessage User could not be registered. There is already an account with email "andre@example.com"
+   */
+  public function testRegisterWithExistingEmail() {
+
+    $user = new ApicUser();
+    $user->setApicUserRegistryUrl('/reg/url');
+    $user->setUsername('andre');
+    $user->setMail('andre@example.com');
+
+    $this->userStorage->loadByProperties(['name' => 'andre', 'registry_url' => '/reg/url'])->willReturn([]);
+    $this->userStorage->loadByProperties(['mail' => 'andre@example.com'])->willReturn([$this->prophet->prophesize(User::class)]);
     $this->userService->getUserAccountFields(Argument::any())->shouldNotBeCalled();
     $this->userStorage->create(Argument::any())->shouldNotBeCalled();
 
