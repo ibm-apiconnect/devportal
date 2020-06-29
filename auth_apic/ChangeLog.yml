@@ -1,33 +1,63 @@
 changes:
-  8.x-1.6.2:
-  - Validate input (#564) (#566)
-  8.x-1.6.1: null
-  8.x-1.6.0:
-  - update version: 8.x-1.5.6 -> 8.x-1.6.0
-  8.x-1.5.5:
-  - Fix password reset (#554)
-  8.x-1.5.4: null
-  8.x-1.5.3: null
-  8.x-1.5.2:
+  8.x-2.1.0:
+  - update version: 8.x-2.0.26 -> 8.x-2.1.0
+  8.x-2.0.25:
+  - Validate input (#564) (#567)
+  8.x-2.0.24:
+  - Added a test for ports and made it more defensive (#563)
+  - Generalised oidc v10.0.0 (#562)
+  8.x-2.0.23:
+  - Add port to redirect (#558) (#559)
+  8.x-2.0.22:
+  - user design form finesse
+  8.x-2.0.21:
+  - Improved logs (#556)
+  8.x-2.0.20: null
+  8.x-2.0.19:
   - Fixes password policy (#551)
-  8.x-1.5.1:
+  - Oidc proxy (#549)
+  8.x-2.0.18: null
+  8.x-2.0.17:
   - remove constraint hook
   - add multiple users edit profile test
-  8.x-1.5.0:
-  - update version: 8.x-1.4.4 -> 8.x-1.5.0
-  8.x-1.4.3:
-  - Always use server side state storage with encrypted key (fix for APAR LI81210)
-  - Always use server side state storage with encrypted key (fix for APAR LI81210)
-  8.x-1.4.2:
+  8.x-2.0.16:
+  - minor tidy up services.yml and behat tests
+  8.x-2.0.15:
+  - Refresh tokens (#546)
+  8.x-2.0.14: null
+  8.x-2.0.13:
   - copyright date
-  8.x-1.4.1: null
-  8.x-1.4.0:
-  - update version: 8.x-1.3.2 -> 8.x-1.4.0
-  8.x-1.3.1:
+  8.x-2.0.12:
+  - Update Jenkinsfile
+  8.x-2.0.11:
+  - fix inherited variable case
+  8.x-2.0.10: null
+  8.x-2.0.9:
+  - User invite wldap tests
+  - Delete wldap user test
+  - Edit profile tests
+  8.x-2.0.8:
+  - Forgot password for writable ldap
+  - Change password for writable ldap
+  8.x-2.0.7:
+  - sign in tests
+  8.x-2.0.6:
   - Making use of AccountProxyInterface to improve compatibility.
-  8.x-1.3.0:
-  - update version to 8.x.1.3.0
-  8.x-1.2.57: null
-  8.x-1.2.56:
-  - clear change log
-  - update version: 8.x-1.1.56 -> 8.x-1.2.56
+  8.x-2.0.5:
+  - view wldap sign up_in forms
+  8.x-2.0.4:
+  - view wldap sign up form
+  8.x-2.0.3:
+  - ChangeLogs flipped upside down.
+  8.x-2.0.2: null
+  8.x-2.0.1:
+  - Bump Major version in master to differentiate from the service stream
+  8.x-1.2.109:
+  - Update password reset form to not use autocomplete
+  8.x-1.2.108:
+  - need to update the user when remove them from org
+  8.x-1.2.107:
+  - disable caching entirely for the core user invitation / activation routes
+  8.x-1.2.106:
+  - Merge pull request
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

@@ -26,7 +26,7 @@ Feature: Sign-up
     And self service onboarding is disabled
     When I go to "/user/register"
     Then the response status code should be 403
-    Then there are errors
+    And there are errors
     And I should see "Self-service onboarding is disabled for this site."
     And there are no messages
     And there are no warnings

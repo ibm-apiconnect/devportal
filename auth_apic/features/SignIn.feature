@@ -8,7 +8,7 @@ Feature: Sign in
     Given userregistries:
       | type | title                             | url                               | user_managed | default |
       | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-    And I am at "/user/login"
+    When I am at "/user/login"
     Then I should see the text "Sign in"
     And I should see the text "Create new account"
     And I should see the text "Reset your password"

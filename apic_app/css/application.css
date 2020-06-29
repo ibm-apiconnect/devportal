@@ -254,6 +254,7 @@
   font-weight: 600;
   margin-bottom: 0.625rem;
   color: #152935;
+  display:block;
 }
 .applicationCredentials .credentialsTable .credentialsContent .apicAppCheckButton {
   display: inline-block;

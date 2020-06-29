@@ -401,6 +401,13 @@ input[type="checkbox"].bx--checkbox {
   border-radius: 2px;
   border: 2px solid $check-radio-border;
 }
+
+.bx--global-light-ui .bx--checkbox:focus + .bx--checkbox-appearance, 
+.bx--global-light-ui .bx--checkbox:focus + .bx--checkbox-label .bx--checkbox-appearance {
+  outline: auto;
+  outline-width: 5px;
+  outline-color: -webkit-focus-ring-color;
+}
 .bx--global-light-ui .bx--checkbox-appearance svg {
   display: none;
 }
@@ -421,7 +428,8 @@ input[type="checkbox"].bx--checkbox {
 
 .bx--global-light-ui .bx--checkbox-checkmark {
   display: none;
-  fill: $check-radio-color-checked;
+  fill: currentColor;
+  color: $check-radio-color-checked;
   width: 0.9375rem;
   height: 0.9375rem;
 }
@@ -484,8 +492,9 @@ input[type="checkbox"].bx--checkbox {
 
 .bx--global-light-ui .block-main-content .form-item  input:focus {
   outline: 1px dotted;
-  outline: auto 5px -webkit-focus-ring-color;
-  outline: auto 2px -webkit-focus-ring-color;
+  outline: auto 5px;
+  outline: auto 2px;
+  outline-color: -webkit-focus-ring-color;
 }
 
 .bx--global-light-ui .button,

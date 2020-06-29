@@ -120,18 +120,18 @@
         <table>
           <thead>
           <tr>
-            <th>{{ 'Name'|t }}</th>
+            <th id="name">{{ 'Name'|t }}</th>
             {% for role in myorg_roles %}
-              <th>{{ role.title }}</th>
+              <th id="{{ role.title }}">{{ role.title }}</th>
             {% endfor %}
-            <th>{{ 'State'|t }}</th>
-            <th></th>
+            <th id="state">{{ 'State'|t }}</th>
+            <th id="space"></th>
           </tr>
           </thead>
           <tbody>
           {% if myorg_members is empty %}
             <tr class="member-even">
-              <td colspan="7">
+              <td colspan="7" headers="name {% for role in myorg_roles %} {{ role.title }} {% endfor %} state space">
                 <div class="apicMyOrgNoMembers">
                   <span>
                     {% include images_path ~ '/images/members-placeholder.svg' %}

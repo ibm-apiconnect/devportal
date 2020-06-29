@@ -12,3 +12,6 @@ services:
     arguments: ['@ibm_apim.mgmtserver',
                 '@messenger',
                 '@logger.channel.auth_apic']
+  auth_apic.oidc_state:
+    class: Drupal\auth_apic\Service\Mocks\MockOidcStateService
+

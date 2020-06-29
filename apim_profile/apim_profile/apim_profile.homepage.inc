@@ -421,7 +421,7 @@ function get_localized_gsb_content($langcode) {
 
 function get_localized_gethelp_content($langcode) {
   $forward_svg = '<?xml version="1.0" encoding="iso-8859-1"?>
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 viewBox="0 0 32 32" width="24" height="24" style="enable-background:new 0 0 32 32;" xml:space="preserve">
 <g>
 	<polygon  points="15.293,10.707 19.586,15 8,15 8,17 19.586,17 15.293,21.293 16.707,22.707 23.414,16 16.707,9.293 	"/>
