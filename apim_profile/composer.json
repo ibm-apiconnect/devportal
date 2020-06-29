@@ -77,7 +77,7 @@
     "drupal/contact_block": "^1.4",
     "drupal/contact_storage": "^1.0@beta",
     "drupal/content_browser": "^1.0@alpha",
-    "drupal/core": "8.8.6",
+    "drupal/core": "8.9.*",
     "drupal/crop": "^2.0",
     "drupal/cshs": "^1.0@beta",
     "drupal/csp": "^1.0@alpha",
@@ -216,7 +216,7 @@
     "webmozart/path-util": "^2.3"
   },
   "require-dev": {
-    "drupal/core-dev": "8.8.6"
+    "drupal/core-dev": "8.9.*"
   },
   "conflict": {
     "drupal/drupal": "*"

@@ -62,14 +62,10 @@
 .explorerWrapper {
   position: relative;
   min-height: calc(100vh - 148px);
+  margin-top: 1rem;
 }
-
 body.adminimal-admin-toolbar .explorerWrapper{
   min-height: calc(100vh - 228px);
-}
-
-.productApiWrapper #innerWrapper > article:not(.apiprotocol-graphql)  {
-  border-top: 1px solid #dfe3e6;
 }
 
 apiconnect-explorer h1 .apiImage {

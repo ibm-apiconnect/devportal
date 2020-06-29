@@ -69,9 +69,13 @@ class MockServiceHandler {
     $contents = file_get_contents($settingsPhp);
     $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/auth_apic/src/Tests/auth_apic_mock.services.yml\';';
     $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/apic_app/src/Tests/application_mock.services.yml\';';
-    $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/ibm_apim/src/Service/Mocks/mock_ibm_apim.services.yml\';';
 
-    if ($mockSiteConfig) {
+    if (!$mockSiteConfig) {
+      // Use either these mocks ...
+      $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/ibm_apim/src/Service/Mocks/mock_ibm_apim.services.yml\';';
+    }
+    else {
+      // ... or just mock the whole of the site config service
       $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/ibm_apim/src/Service/Mocks/mock_site_config.services.yml\';';
     }
 

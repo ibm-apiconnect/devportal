@@ -819,8 +819,5 @@ class APIMServer implements ManagementServerInterface {
     return $result;
   }
 
-  public function get($url) {
-    return ApicRest::get($url,NULL);
-  }
 
 }

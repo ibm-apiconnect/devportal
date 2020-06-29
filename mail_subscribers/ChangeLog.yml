@@ -1,22 +1,21 @@
 changes:
-  8.x-2.0.9: null
-  8.x-2.0.8: null
-  8.x-2.0.7: null
-  8.x-2.0.6:
+  8.x-1.5.0:
+  - update version: 8.x-1.4.2 -> 8.x-1.5.0
+  8.x-1.4.1: null
+  8.x-1.4.0:
+  - update version: 8.x-1.3.4 -> 8.x-1.4.0
+  8.x-1.3.3:
   - copyright date
-  8.x-2.0.5:
+  8.x-1.3.2:
   - Updated mail subscribers to use entities
-  8.x-2.0.4:
-  - Updated to variable build label
-  8.x-2.0.3:
+  8.x-1.3.1: null
+  8.x-1.3.0:
+  - update version: 8.x-1.2.2 -> 8.x-1.3.0
+  8.x-1.2.1: null
+  8.x-1.2.0:
+  - update version to 8.x-1.2.0
+  8.x-1.1.20:
   - use drupal core email validator
-  8.x-2.0.2:
-  - ChangeLogs flipped upside down.
-  8.x-2.0.1:
-  - Bump Major version in master to differentiate from the service stream
-  8.x-1.1.32:
-  - Merge pull request
-  - Updated the Jenkins file to use promotableBranch again
-  8.x-1.1.31:
-  - Changed promotableBranch to p.common for the test reason
-  - Logging all the changes between the two successfull build. all the commits since the last saccessfull build are fetched and stored and the changes-log.yml file. Commits are also filtered before logging them. commits with the text INT or bump version are ommited.
+  8.x-1.1.19:
+  - reset change log
+  - update version: 8.x-1.0.19 -> 8.x-1.1.19

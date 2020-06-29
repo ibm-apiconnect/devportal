@@ -74,17 +74,15 @@
   padding:0;
 }
 
-.apicProduct .apicProductHeader {
-  border-bottom: 1px solid #dfe3e6;
-}
-
 .apicProduct .apicProductHeader,
 .productApiWrapper header.titleSection {
+  border-bottom: 1px solid #dfe3e6;
   background: white;
   padding: 0.625rem 3rem;
 }
 
-.apicProduct .apicProductBody {
+.apicProduct .apicProductBody,
+.productApiWrapper #innerWrapper {
   padding: 0 3rem;
 }
 
@@ -528,10 +526,9 @@ th .apicTableStandardCell {
 }
 
 .planTableSelector {
-  display: flex;
+  display:flex;
   justify-content: center;
-  background-color: #F0F3F6;
-  border: 1px solid #dfe3e6;
+  background-color: #dfe3e6;
 }
 
 .planTableSelector .viewDetails,

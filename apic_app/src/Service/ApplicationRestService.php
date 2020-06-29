@@ -129,7 +129,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param $url
    *
    * @return \stdClass|null
-   * @throws \Exception
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
   private function doGet($url) : ?\stdClass{
     return ApicRest::get($url);
@@ -142,7 +142,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param $requestBody
    *
    * @return \stdClass|null
-   * @throws \Exception
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
   private function doPost($url, $requestBody) : ?\stdClass{
     return ApicRest::post($url, $requestBody);
@@ -155,7 +155,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param $requestBody
    *
    * @return \stdClass|null
-   * @throws \Exception
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
   private function doPut($url, $requestBody) : ?\stdClass{
     return ApicRest::put($url, $requestBody);
@@ -167,7 +167,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param $url
    *
    * @return \stdClass|null
-   * @throws \Exception
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
   private function doDelete($url) : ?\stdClass{
     return ApicRest::delete($url);
@@ -180,7 +180,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param $requestBody
    *
    * @return \stdClass|null
-   * @throws \Exception
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
   private function doPatch($url, $requestBody) : ?\stdClass{
     return ApicRest::patch($url, $requestBody);
@@ -303,7 +303,8 @@ class ApplicationRestService implements ApplicationRestInterface {
       $url = $appUrl . '/subscriptions';
 
       $parts = explode(':', $planId);
-      [$productUrl, $planName] = $parts;
+      $productUrl = $parts[0];
+      $planName = $parts[1];
 
       // 'adjust' the product url if it isn't in the format that the consumer-api expects
       $fullProductUrl = \Drupal::service('ibm_apim.apim_utils')->createFullyQualifiedUrl($productUrl);

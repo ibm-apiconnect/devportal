@@ -1,155 +1,66 @@
 changes:
-  8.x-2.0.62:
-  - Consistency changes (#554)
-  8.x-2.0.61:
-  - Wipe corg from group before refilling
-  - Added removal of consumer orgs from groups
-  8.x-2.0.60:
-  - Reverted change
-  8.x-2.0.59:
-  - Updated tests
-  - fixed undefined function
-  - Made test work for any site
-  8.x-2.0.58: null
-  8.x-2.0.57:
-  - Fixed behat tests for oidc (#543) (#544)
-  8.x-2.0.56: null
-  8.x-2.0.55:
-  - Fixed login bugs caused by wrong password (#541)
-  8.x-2.0.54:
-  - Refresh tokens periodically (#536) (#537)
-  8.x-2.0.53:
-  - Accessibility fixes (#534)
-  8.x-2.0.52:
-  - a little more userform padding
-  8.x-2.0.51:
-  - user design form finesse
-  8.x-2.0.50: null
-  8.x-2.0.49: null
-  8.x-2.0.48:
+  8.x-1.7.6:
+  - Added removal of consumer orgs from groups (#555)
+  8.x-1.7.5: null
+  8.x-1.7.4:
+  - Fixed login bugs caused by wrong password (#542)
+  8.x-1.7.3: null
+  8.x-1.7.2:
+  - Refresh tokens periodically (#536) (#539)
+  - Multiple users 2018.4.1 (#538)
+  8.x-1.7.1:
+  - Refresh token logging improvements (#529) (#535)
+  8.x-1.7.0:
+  - update version: 8.x-1.6.7 -> 8.x-1.7.0
+  8.x-1.6.6: null
+  8.x-1.6.5:
   - missing alt tag
   - dont need to use article here
-  8.x-2.0.47:
+  8.x-1.6.4:
   - php fix
-  - missing mock data
-  8.x-2.0.46:
-  - Updated Interface
-  - Behat test working
-  - Store proxy_redirect
-  8.x-2.0.45:
+  8.x-1.6.3:
   - block access to create nodes of our content types
-  8.x-2.0.44:
-  - Update TranslationPreparation.php
-  - Update TranslationPreparation.php
-  8.x-2.0.43:
+  8.x-1.6.2:
+  - Merge pull request
+  8.x-1.6.1:
   - honour name+reg_url in  MockApicAccountService
-  8.x-2.0.42:
-  - add some extra data to the node list output
-  8.x-2.0.41:
-  - Users must now be part of a consumerorg (#517)
-  8.x-2.0.40:
-  - add ability to list content in the portal db via drush
-  8.x-2.0.39:
-  - minor sanity check
-  - add support for entities in the type output
-  8.x-2.0.38: null
-  8.x-2.0.37:
-  - be more defensive - dont try to save fields that dont exist
-  8.x-2.0.36:
-  - check hidden key exists before checking it
-  8.x-2.0.35:
-  - Log Request ID (#516)
-  8.x-2.0.34:
+  8.x-1.6.0:
+  - update version: 8.x-1.5.10 -> 8.x-1.6.0
+  8.x-1.5.9:
   - code style
-  8.x-2.0.33:
+  8.x-1.5.8:
   - Hides apps that are already subscribed in api form (#515)
-  8.x-2.0.32:
-  - Refresh tokens (#512)
-  8.x-2.0.31:
-  - Update README.md
-  8.x-2.0.30:
+  8.x-1.5.7:
   - be more defensive and check if mode exists
   - label needed for view mode
   - add embedded view mode
-  8.x-2.0.29:
-  - update nls-export-prep README.md
-  8.x-2.0.28:
+  8.x-1.5.6:
   - copyright date
-  8.x-2.0.27:
+  8.x-1.5.5:
   - use new args for constructor in drupal 8.8
-  8.x-2.0.26:
+  8.x-1.5.4:
   - add embedded view mode
-  8.x-2.0.25:
+  8.x-1.5.3:
   - remove border
-  8.x-2.0.24:
+  8.x-1.5.2:
   - Changed reference, could possibly be deleted? (#510)
-  8.x-2.0.23:
-  - Emails request body are stringified, to be accepted by the back-end API.
-  8.x-2.0.22:
-  - upgrade to Scssphp instead of leafo
-  8.x-2.0.21:
-  - Updated to variable build label
-  8.x-2.0.20:
-  - when delete user also delete their memberships
-  8.x-2.0.19:
-  - add tests for addConsumerOrgToUser
-  8.x-2.0.18: null
-  8.x-2.0.17:
+  8.x-1.5.1: null
+  8.x-1.5.0:
+  - update version: 8.x-1.4.5 -> 8.x-1.5.0
+  8.x-1.4.4:
   - review updates
-  8.x-2.0.16:
-  - allow for new account shared registry
-  8.x-2.0.15:
+  - apimesh/devportal#5015
+  8.x-1.4.3:
   - Making use of AccountProxyIterface to improve compatibility.
-  8.x-2.0.14:
+  8.x-1.4.2:
   - Emails request body are stringified, to be accepted by the back-end API.
-  8.x-2.0.13: null
-  8.x-2.0.12:
-  - Update README.md
-  - log exception before storing to state
-  8.x-2.0.11:
-  - add option to show mtls header of an api
-  8.x-2.0.10: null
-  8.x-2.0.9:
-  - add response header test
-  8.x-2.0.8:
-  - ChangeLogs flipped upside down.
-  8.x-2.0.7:
-  - need to add new apps within the form element
-  - update proxy api strings in admin form
-  8.x-2.0.6: null
-  8.x-2.0.5:
-  - Issue
-  8.x-2.0.4:
-  - if delete cOrg need to select next one
-  8.x-2.0.3:
-  - drupal coding standards
-  - only load in published and deprecated products
-  8.x-2.0.2:
-  - add newly created orgs to the org menu
-  8.x-2.0.1:
-  - Bump Major version in master to differentiate from the service stream
-  - drop needless query param on lang switcher
-  8.x-1.3.208:
-  - add tests for the add content page
-  8.x-1.3.207:
-  - entity type manager function wrong
-  8.x-1.3.206:
-  - removeFullyQualifiedUrls on org create response
-  8.x-1.3.205:
-  - issue
-  - issue
-  - Drupal styling removed
-  - Drupal styling applied
-  - issue
-  8.x-1.3.204:
-  - typo - wrong service name
-  8.x-1.3.203:
-  - fix user storage unit test
-  - check apic_user_registry_url if needed
-  - if there is no registry_url then check old field
-  8.x-1.3.202:
-  - be more defensive to handle the route not existing
-  - set registry_url on upgrade if it is null
-  8.x-1.3.201:
-  - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.
+  8.x-1.4.1: null
+  8.x-1.4.0:
+  - update version to 8.x-1.4.0
+  8.x-1.3.103: null
+  8.x-1.3.102:
+  - update version: 8.x-1.2.102 -> 8.x-1.3.102
+  8.x-1.2.101: null
+  8.x-1.2.100:
+  - Resetting change log
+  - forgot password: handle empty string in response

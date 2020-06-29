@@ -56,7 +56,7 @@ class MockUserRegistryService extends UserRegistryService {
     $registry->setRegistryType('lur');
     $registry->setUserRegistryManaged(FALSE);
     $registry->setUrl('/mock/user/registry');
-    $registry->setIdentityProviders([["name" => "trueRealm"]]);
+    $registry->setIdentityProviders([]);
     $registry->setOnboarding(TRUE);
     $registry->setCaseSensitive(TRUE);
     return $registry;

@@ -39,8 +39,6 @@ class UserRegistry {
 
   private $provider_type;
 
-  private $redirect_enabled = FALSE;
-
   /**
    * @return null|string
    */
@@ -196,21 +194,6 @@ class UserRegistry {
   }
 
   /**
-   * @return bool
-   */
-  public function isRedirectEnabled(): bool {
-    return $this->redirect_enabled;
-  }
-
-  /**
-   * @param bool $case_sensitive
-   */
-  public function setRedirectEnabled(bool $redirect_enabled): void {
-    $this->redirect_enabled = $redirect_enabled;
-  }
-
-
-  /**
    * @return array
    */
   public function getIdentityProviders(): array {
@@ -334,11 +317,6 @@ class UserRegistry {
     $this->setIdentityProviders($registryJson['identity_providers']);
     if (isset($registryJson['configuration']['provider_type'])) {
       $this->setProviderType($registryJson['configuration']['provider_type']);
-    }
-    if (isset($registryJson['configuration']['features']) && in_array("proxy_redirect", $registryJson['configuration']['features'])) {
-      $this->setRedirectEnabled(TRUE);
-    } else {
-      $this->setRedirectEnabled(FALSE);
     }
 
   }

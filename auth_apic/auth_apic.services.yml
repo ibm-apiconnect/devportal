@@ -6,18 +6,12 @@ services:
     class: Drupal\auth_apic\Access\WritableUserRegistryAccessCheck
     arguments: ['@current_user']
     tags:
-      - {
-          name: access_check,
-          applies_to: _auth_apic_writableregistry_access_check
-      }
+      - { name: access_check, applies_to: _auth_apic_writableregistry_access_check }
   auth_apic.currentuserprofile_access_checker:
     class: Drupal\auth_apic\Access\CurrentUserProfileAccessCheck
     arguments: ['@current_user']
     tags:
-      - {
-          name: access_check,
-          applies_to: _auth_apic_currentuserprofile_access_check
-      }
+      - { name: access_check, applies_to: _auth_apic_currentuserprofile_access_check }
   auth_apic.jwtparser:
     class: Drupal\auth_apic\Service\JWTParser
     arguments: ['@logger.channel.auth_apic',

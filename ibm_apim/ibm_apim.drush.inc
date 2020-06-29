@@ -590,7 +590,6 @@ function drush_ibm_apim_listen() {
             drush_log(dt('There is no drush code to handle the webhook command @cmd', ['@cmd' => $command]), 'warning');
             break;
         }
-        drush_log(dt('listen_done: @cmd', ['@cmd' => $command]), 'success');
       }
       else {
         drush_log(dt('No content provided for webhook command @cmd', ['@cmd' => $command]), 'warning');

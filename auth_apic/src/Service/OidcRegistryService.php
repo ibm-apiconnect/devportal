@@ -139,12 +139,7 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
 
     $redirect_uri = $host . $route;
 
-    $url = null;
-    if ($registry->isRedirectEnabled()) {
-      $url = $host . URL::fromRoute('auth_apic.az')->toString();
-    } else {
-      $url = $this->apimUtils->createFullyQualifiedUrl('/consumer-api/oauth2/authorize');
-    }
+    $url = $this->apimUtils->createFullyQualifiedUrl('/consumer-api/oauth2/authorize');
 
     $url .= '?client_id=' . $client_id;
     $url .= '&state=' . $state_param;

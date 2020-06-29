@@ -418,12 +418,12 @@ function apim_profile_main_menu_links() {
   $cache->deleteAll();
 }
 
+
 /**
  * @param string $menu_name
  * @param $forum_link
  */
 function add_forum_link_translations($link): void {
-
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
@@ -1497,6 +1497,22 @@ function apim_profile_update_8026() {
     $module_installer->uninstall(['node_type_count']);
   }
   $module_installer->install(['apic_type_count']);
+}
+
+/**
+ * If the rules module is not in use then disable it
+ */
+function apim_profile_update_8027() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('rules')) {
+    // if there are still rules then leave them, else disable the modules
+    $query = \Drupal::entityQuery('rules_reaction_rule');
+    $result = $query->count()->execute();
+    if (!isset($result) || (int)$result < 1) {
+      $module_installer = \Drupal::service('module_installer');
+      $module_installer->uninstall(['rules', 'rules_http_client']);
+    }
+  }
 }
 
 /**

@@ -82,26 +82,6 @@ auth_apic.azcode:
   options:
     no_cache: 'TRUE'
 
-auth_apic.azredir:
-  path: '/ibm_apim/oidcredirect'
-  defaults:
-    _controller: '\Drupal\auth_apic\Controller\ApicOidcAzCodeController::processApimOidcRedirect'
-    _title: 'OIDC APIM redirect'
-  requirements:
-    _user_is_logged_in: 'FALSE'
-  options:
-    no_cache: 'TRUE'
-
-auth_apic.az:
-  path: '/ibm_apim/oauth2/authorize'
-  defaults:
-    _controller: '\Drupal\auth_apic\Controller\ApicOidcAzCodeController::processApimOidcAz'
-    _title: 'OIDC APIM authorize'
-  requirements:
-    _user_is_logged_in: 'FALSE'
-  options:
-    no_cache: 'TRUE'
-
 auth_apic.deleteuser:
   path: '/user/delete'
   defaults:

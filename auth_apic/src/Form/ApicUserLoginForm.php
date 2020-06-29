@@ -235,6 +235,17 @@ class ApicUserLoginForm extends UserLoginForm {
       '#weight' => -1000,
     ];
 
+    if (!empty($other_registries)) {
+      // Explain the extra buttons
+      $form['headers_container']['other_registries_label'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => t('Continue with'),
+        '#attributes' => ['class' => ['apic-user-form-subheader']],
+        '#weight' => -1000,
+      ];
+    }
+
     // Build the form by embedding the other forms
     // Wrap everything in a container so we can set flex display
     $form['main_container'] = [
@@ -327,15 +338,6 @@ class ApicUserLoginForm extends UserLoginForm {
       // Wrap the whole form in a div that we can style.
       $otherRegistriesForm['#prefix'] = '<div class="apic-user-form-inner-wrapper apic-user-form-registries">';
       $otherRegistriesForm['#suffix'] = '</div>';
-
-      // explain the extra buttons
-      $otherRegistriesForm['headers_container']['other_registries_label'] = [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => t('Continue with'),
-        '#attributes' => ['class' => ['apic-user-form-subheader']],
-        '#weight' => -1000,
-      ];
 
       $redirect_with_registry_url = Url::fromRoute('user.login')->toString() . '?registry_url=';
 

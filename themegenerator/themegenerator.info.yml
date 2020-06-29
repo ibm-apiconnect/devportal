@@ -3,7 +3,7 @@ type: module
 description: Generate an IBM API Connect sub-theme
 package: IBM API Connect
 core: 8.x
-version: 8.x-2.0.10
+version: 8.x-1.5.1
 project: themegenerator
 dependencies:
 - ibm_apim:ibm_apim

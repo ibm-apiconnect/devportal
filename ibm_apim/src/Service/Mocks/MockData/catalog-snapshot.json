@@ -273,7 +273,6 @@
       "hash_client_secret": true,
       "portal_endpoint": "https://localhost:3003/orgs/08a14782-26af-49da-8373-7618116062e9/availability-zones/b75864ad-688f-4c13-973e-f94a5a94c009/portal-services/68efe835-2008-4cfc-bf9a-be2aa195c513/climbon/sandbox",
       "spaces_enabled": false,
-      "consumer_self_service_onboarding": true,
       "space_urls": [],
       "invitation_ttl": 172800,
       "consumer_org_self_service_onboarding": true,

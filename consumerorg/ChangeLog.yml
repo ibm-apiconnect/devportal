@@ -1,77 +1,37 @@
 changes:
-  8.x-2.0.25:
-  - Allow multiple groups for a corg (#181)
-  8.x-2.0.24:
-  - Added a method for removing tags (#178) (#179)
-  8.x-2.0.23:
+  8.x-1.6.5:
+  - Fix for group visibility 2018.4.1 (#182)
+  8.x-1.6.4:
   - handle captcha not being enabled
   - add upgrade code to add the captchas
-  8.x-2.0.22:
+  8.x-1.6.3:
   - add captcha support into the invitation form tests
-  8.x-2.0.21:
+  8.x-1.6.2:
   - add honeypot and captcha to invite user form
-  8.x-2.0.20:
+  8.x-1.6.1:
   - comment out unreliable test
-  8.x-2.0.19:
   - make captcha optional
   - add honeypot for the resend invitation form
   - add captcha for the resend invitation form
-  8.x-2.0.18:
-  - Accessibility fixes (#176) (#177)
-  8.x-2.0.17: null
-  8.x-2.0.16: null
-  8.x-2.0.15: null
-  8.x-2.0.14:
+  8.x-1.6.0:
+  - update version: 8.x-1.5.1 -> 8.x-1.6.0
+  8.x-1.5.0:
+  - update version: 8.x-1.4.4 -> 8.x-1.5.0
+  8.x-1.4.3:
   - update hook documentation
   - update data passed to delete hooks
   - add pre and post delete hooks
-  8.x-2.0.13:
+  8.x-1.4.2:
   - copyright date
-  8.x-2.0.12:
+  8.x-1.4.1:
   - remove fall through case for account
   - use ApicUserStorage service to check members
-  - Update Jenkinsfile
-  - bug 5082
-  8.x-2.0.11:
-  - tiny perf optimisation to delete invitation (#165)
-  8.x-2.0.10:
-  - when delete user also delete their memberships
-  - when delete user also delete their memberships
-  8.x-2.0.9:
-  - Deletes consumer orgs apps when consumer org is deleted
-  8.x-2.0.8: null
-  8.x-2.0.7:
-  - ChangeLogs flipped upside down!
-  8.x-2.0.6: null
-  8.x-2.0.5: null
-  8.x-2.0.4:
-  - use envelope glyph icon
-  - need to ensure org data set correctly
-  - if delete cOrg need to select next one
-  8.x-2.0.3:
-  - force reload of current org permissions after changing owner
-  8.x-2.0.2:
-  - add newly created orgs to the org menu
-  8.x-2.0.1:
-  - Bump Major version in master to differentiate from the service stream
-  8.x-1.2.94:
-  - link to org level analytics missing
-  8.x-1.2.93:
-  - need to update the user when remove them from org
-  8.x-1.2.92:
-  - set sessions permissions on myorg create
-  8.x-1.2.91:
-  - delete resend code since it wont work
-  8.x-1.2.90:
-  - little more defensive
-  - invalidate org menu cache when remove user from org
-  - invalidate org menu cache when remove user from org
-  - removeFullyQualifiedUrls on org create response
-  8.x-1.2.89:
-  - add ability to resend owner invites too and filter out those aleady accepted
-  8.x-1.2.88: null
-  8.x-1.2.87:
-  - add drush command to be able to resend all invitations
-  8.x-1.2.86:
-  - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.
+  - Tempmerge (#169)
+  8.x-1.4.0:
+  - update version: 8.x-1.3.2 -> 8.x-1.4.0
+  8.x-1.3.1: null
+  8.x-1.3.0:
+  - update version to  8.x-1.3.0
+  8.x-1.2.46:
+  - clear change log
+  - update version: 8.x-1.1.46 -> 8.x-1.2.46

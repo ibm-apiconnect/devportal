@@ -107,8 +107,8 @@ class Group {
 
       //Remove old consumer orgs from this group
       if (isset($current_data[$key]['org_urls'])) {
-        foreach($current_data[$key]['org_urls'] as $org_url) {
-          $org = $corgService->get($org_url);
+        foreach($current_data[$key]['org_urls'] as $consumerorg_url) {
+          $org = $corgService->get($consumerorg_url);
           if (isset($org) && $org->removeTag($data['url'])) {
             $corgService->createOrUpdateNode($org, 'internal');
           }

@@ -407,8 +407,7 @@ class SiteConfig {
         $this->setCreateAccountLinkEnabled(FALSE);
         // TODO hide create new org link
       }
-      // default to enabled if not explicitly set
-      elseif (!array_key_exists('consumer_self_service_onboarding', $config_data) || ($config_data['consumer_self_service_onboarding'] !== NULL && (boolean) $config_data['consumer_self_service_onboarding'] === TRUE)) {
+      elseif ($config_data['consumer_self_service_onboarding'] !== NULL && (boolean) $config_data['consumer_self_service_onboarding'] === TRUE) {
         $this->state->set('ibm_apim.selfSignUpEnabled', TRUE);
         $this->configFactory->getEditable('user.settings')->set('register', UserInterface::REGISTER_VISITORS)->save();
         $this->setCreateAccountLinkEnabled(TRUE);
