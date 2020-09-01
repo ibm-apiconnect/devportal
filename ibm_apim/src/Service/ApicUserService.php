@@ -18,6 +18,7 @@ use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\user\Entity\User;
 use Psr\Log\LoggerInterface;
+use Drupal\Core\Messenger\Messenger;
 
 /**
  * Factory for ApicUser objects.
@@ -29,6 +30,8 @@ class ApicUserService {
   private $state;
 
   private $userRegistryService;
+
+  protected $messenger;
 
   /**
    * ApicUserManager constructor.
@@ -42,24 +45,27 @@ class ApicUserService {
    */
   public function __construct(LoggerInterface $logger,
                               State $state,
-                              UserRegistryServiceInterface $user_registry_service) {
+                              UserRegistryServiceInterface $user_registry_service,
+                              Messenger $messenger) {
     $this->logger = $logger;
     $this->state = $state;
     $this->userRegistryService = $user_registry_service;
+    $this->messenger = $messenger;
   }
 
   /**
    * Create an ApicUser from a user registration form.
    *
-   * @param array $form_values
-   *   Values from form state.
+   * @param $form_state
+   *   The form state.
    *
    * @return ApicUser
    *   ApicUser.
    */
-  public function parseRegisterForm($form_values): ApicUser {
+  public function parseRegisterForm($form_state): ApicUser {
 
     $user = new ApicUser();
+    $form_values = $form_state->getUserInput();
 
     if (isset($form_values['name'])) {
       $user->setUsername($form_values['name']);
@@ -126,6 +132,13 @@ class ApicUserService {
       $user->setUrl($account->apic_url->value);
     }
 
+    $customFields = $this->getCustomUserFields();
+    foreach ($customFields as $field) {
+      $value = $account->get($field)->getValue();
+      if (isset($value)) {
+        $user->addCustomField($field,$value);
+      }
+    }
     return $user;
 
   }
@@ -138,7 +151,7 @@ class ApicUserService {
    * @return string
    *        JSON representation of the user.
    */
-  public function getUserJSON(ApicUser $user): string {
+  public function getUserJSON(ApicUser $user, $auth = 'user'): string {
     $data = [];
 
     if ($user->getApicUserRegistryUrl() !== NULL) {
@@ -162,6 +175,22 @@ class ApicUserService {
     }
     if ($user->getUrl() !== NULL) {
       $data['url'] = $user->getUrl();
+    }
+
+    $customFields = $user->getCustomFields();
+    if (!empty($customFields)) {
+      foreach ($customFields as $customField => $value) {
+        $customFields[$customField] = json_encode($value);  
+      }
+
+      $apic_me = \Drupal::service('ibm_apim.mgmtserver')->getMe($auth);
+      $getMeUser = $apic_me->getUser();
+      if (isset($getMeUser)) {
+        $data['metadata'] = array_merge($getMeUser->getMetadata(),$customFields);
+      } else {
+        $this->messenger->addError(t('Your account was created/updated with errors. Please make sure your information was correctly saved in your account.'));
+        $this->logger->error((int) $apic_me->getCode() . ' code received while trying to retrieve user metadata.');
+      }
     }
 
     return json_encode($data);
@@ -188,6 +217,13 @@ class ApicUserService {
     $data['registry_url'] = $user->getApicUserRegistryUrl();
     $data['apic_idp'] = $user->getApicIdp();
     $data['apic_state'] = $user->getState();
+    //Currently only sets known fields, null fields wont be included
+    $customFields = $user->getCustomFields();
+    if (isset($customFields)) {
+      foreach($customFields as $field => $value) {
+        $data[$field] = $value;
+      }
+    }
 
     return $data;
   }
@@ -224,7 +260,11 @@ class ApicUserService {
     $user->setUrl($apicuser['url']);
     $user->setApicUserRegistryUrl($apicuser['user_registry_url']);
     $user->setState($apicuser['state']);
-
+    $customFields = $this->getCustomUserFields();
+    foreach ($customFields as $field) {
+      $value = $apicuser['metadata'][$field];
+      $user->addCustomField($field, json_decode($value,  true));
+    }
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $user->getUsername());
     }

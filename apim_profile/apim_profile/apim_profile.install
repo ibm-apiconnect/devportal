@@ -430,7 +430,7 @@ function add_forum_link_translations($link): void {
     if ($lang === 'en') {
       continue;
     }
-    if($link->hasTranslation($lang)) {
+    if ($link->hasTranslation($lang)) {
       $link->removeTranslation($lang);
     }
     $translation = [
@@ -458,7 +458,7 @@ function add_apps_link_translations($link): void {
     if ($lang === 'en') {
       continue;
     }
-    if($link->hasTranslation($lang)) {
+    if ($link->hasTranslation($lang)) {
       $link->removeTranslation($lang);
     }
     $translation = [
@@ -481,7 +481,7 @@ function add_apis_link_translations($link): void {
     if ($lang === 'en') {
       continue;
     }
-    if($link->hasTranslation($lang)) {
+    if ($link->hasTranslation($lang)) {
       $link->removeTranslation($lang);
     }
     $translation = [
@@ -498,14 +498,14 @@ function add_apis_link_translations($link): void {
  * @param string $menu_name
  * @param $link
  */
-function add_home_link_translations( $link): void {
+function add_home_link_translations($link): void {
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
     if ($lang === 'en') {
       continue;
     }
-    if($link->hasTranslation($lang)) {
+    if ($link->hasTranslation($lang)) {
       $link->removeTranslation($lang);
     }
     $translation = [
@@ -543,7 +543,6 @@ function apim_profile_login_menu_links() {
   add_sign_in_link_translations($login_link);
 
 
-
   $register_link = MenuLinkContent::create([
     'title' => t('Create account'),
     'description' => t('Create a new account'),
@@ -568,7 +567,7 @@ function add_create_account_link_translations($link): void {
     if ($lang === 'en') {
       continue;
     }
-    if($link->hasTranslation($lang)) {
+    if ($link->hasTranslation($lang)) {
       $link->removeTranslation($lang);
     }
     $translation = [
@@ -595,7 +594,7 @@ function add_sign_in_link_translations($link): void {
     if ($lang === 'en') {
       continue;
     }
-    if($link->hasTranslation($lang)) {
+    if ($link->hasTranslation($lang)) {
       $link->removeTranslation($lang);
     }
     $translation = [
@@ -663,7 +662,7 @@ function apim_profile_default_apic_config() {
     ->set('certificate_strip_prefix', TRUE)
     ->set('categories', $categories)
     ->set('codesnippets', $codesnippets)
-    ->set('module_blacklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
+    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
     ->save();
 
   \Drupal::service('config.factory')
@@ -1153,11 +1152,11 @@ function apim_profile_update_8013() {
 }
 
 /**
- * Enable page_load_progress and node_type_count modules
+ * Enable page_load_progress and apic_type_count modules
  */
 function apim_profile_update_8014() {
   $module_installer = \Drupal::service('module_installer');
-  foreach (['page_load_progress', 'node_type_count'] as $module) {
+  foreach (['page_load_progress', 'apic_type_count'] as $module) {
     $module_installer->install([$module]);
   }
   user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, ['use page load progress']);
@@ -1378,7 +1377,7 @@ function apim_profile_update_8024() {
   }
   \Drupal::service('config.factory')
     ->getEditable('ibm_apim.settings')
-    ->set('module_blacklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
+    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
     ->save();
 }
 
@@ -1457,7 +1456,7 @@ function apim_profile_update_8025() {
   $menu_links = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadMultiple();
   foreach ($menu_links as $link) {
     $title = $link->getTitle();
-    switch($title) {
+    switch ($title) {
       case 'API Products':
         add_apis_link_translations($link);
         break;
@@ -1494,7 +1493,17 @@ function apim_profile_update_8026() {
   $module_installer = \Drupal::service('module_installer');
   $moduleHandler = \Drupal::service('module_handler');
   if ($moduleHandler->moduleExists('node_type_count')) {
-    $module_installer->uninstall(['node_type_count']);
+    try {
+      // try deleting the module if we can
+      $module_installer->uninstall(['node_type_count']);
+    } catch (\Exception $e) {
+      // if deleting the module fails (and it might since we've deleted the files), then just purge it from the db
+      \Drupal::database()->delete('key_value')
+        ->condition('collection', 'system.schema')
+        ->condition('name', ['node_type_count'], 'IN')
+        ->execute();
+    }
+
   }
   $module_installer->install(['apic_type_count']);
 }
@@ -1508,11 +1517,21 @@ function apim_profile_update_8027() {
     // if there are still rules then leave them, else disable the modules
     $query = \Drupal::entityQuery('rules_reaction_rule');
     $result = $query->count()->execute();
-    if (!isset($result) || (int)$result < 1) {
+    if (!isset($result) || (int) $result < 1) {
       $module_installer = \Drupal::service('module_installer');
       $module_installer->uninstall(['rules', 'rules_http_client']);
     }
   }
+}
+
+/**
+ * Add blocklist variable
+ */
+function apim_profile_update_8028() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
+    ->save();
 }
 
 /**
@@ -1535,7 +1554,7 @@ function apim_profile_update_dependencies() {
       ],
       // system 8803 must run before apim_profile 8025
       8025 => [
-        'system'=> 8803,
+        'system' => 8803,
       ],
     ],
     'eu_cookie_compliance_update' => [

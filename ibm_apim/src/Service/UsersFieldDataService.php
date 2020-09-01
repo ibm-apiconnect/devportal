@@ -165,7 +165,7 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
       $user = $this->entityTypeManager->getStorage('user')->load($uid->uid);
       //Only delete users who've never logged in
       if ($user->first_time_login->value == 1) {
-        user_delete($uid->uid);
+        $this->entityTypeManager->getStorage('user')->delete([$user]);
       }
     }
   }

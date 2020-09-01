@@ -6,4 +6,4 @@ featuredcontent:
   js:
     js/featuredcontent.js: {}
   dependencies:
-    - masonry/layout
+    - 'masonry/masonry.layout'

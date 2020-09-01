@@ -6,7 +6,7 @@ Feature: Sign in/ Sign up via an OIDC provider
 
   Scenario: Valid sign in using oidc provider.
     Given I am not logged in
-    And I am at "/ibm_apim/oauth2/redirect?code=validauthcode&state=YToxOntzOjEyOiJyZWdpc3RyeV91cmwiO3M6NToidmFsaWQiO30="
+    And I am at "/ibm_apim/oauth2/redirect?code=validauthcode&state=czozOiJrZXkiOw=="
     Then I should be on "/"
     And there are no errors
     And there are no warnings
@@ -14,7 +14,7 @@ Feature: Sign in/ Sign up via an OIDC provider
 
   Scenario: Invalid - no authcode in params
     Given I am not logged in
-    And I am at "/ibm_apim/oauth2/redirect?state=YToxOntzOjEyOiJyZWdpc3RyeV91cmwiO3M6NToidmFsaWQiO30="
+    And I am at "/ibm_apim/oauth2/redirect?state=czozOiJrZXkiOw=="
     Then I should be on "/"
     And there are errors
     And I should see the text "Error: Missing authorization code parameter. Contact your system administrator."
@@ -23,7 +23,7 @@ Feature: Sign in/ Sign up via an OIDC provider
 
   Scenario: Invalid - no state in params
     Given I am not logged in
-    And I am at "/ibm_apim/oauth2/redirect?code=YToxOntzOjEyOiJyZWdpc3RyeV91cmwiO3M6NToidmFsaWQiO30="
+    And I am at "/ibm_apim/oauth2/redirect?code=czozOiJrZXkiOw=="
     Then I should be on "/"
     And there are errors
     And I should see the text "Error: Missing state parameter. Contact your system administrator."
@@ -36,7 +36,7 @@ Feature: Sign in/ Sign up via an OIDC provider
     Given users:
       | name      | mail                  | pass     | status |
       | oidcandre | oidcandre@example.com | oidcoidc | 1      |
-    And I am at "/ibm_apim/oauth2/redirect?code=noorgenabledonboarding&state=YToxOntzOjEyOiJyZWdpc3RyeV91cmwiO3M6NToidmFsaWQiO30="
+    And I am at "/ibm_apim/oauth2/redirect?code=noorgenabledonboarding&state=czozOiJrZXkiOw=="
     Then I should be on "/myorg/create"
     And there are no errors
     And there are no warnings
@@ -48,7 +48,7 @@ Feature: Sign in/ Sign up via an OIDC provider
     Given users:
       | name      | mail                  | pass     | status |
       | oidcandre | oidcandre@example.com | oidcoidc | 1      |
-    And I am at "/ibm_apim/oauth2/redirect?code=noorgdisabledonboarding&state=YToxOntzOjEyOiJyZWdpc3RyeV91cmwiO3M6NToidmFsaWQiO30="
+    And I am at "/ibm_apim/oauth2/redirect?code=noorgdisabledonboarding&state=czozOiJrZXkiOw=="
     Then I should be on "/ibm_apim/nopermission"
     And there are no errors
     And there are no warnings
@@ -56,7 +56,7 @@ Feature: Sign in/ Sign up via an OIDC provider
 
   Scenario: Sign in - generic error
     Given I am not logged in
-    And I am at "/ibm_apim/oauth2/redirect?code=routetoerror&state=YToxOntzOjEyOiJyZWdpc3RyeV91cmwiO3M6NToidmFsaWQiO30="
+    And I am at "/ibm_apim/oauth2/redirect?code=routetoerror&state=czozOiJrZXkiOw=="
     Then I should be on "/"
     And there are errors
     And I should see the text "Error while authenticating user. Please contact your system administrator."
@@ -65,7 +65,7 @@ Feature: Sign in/ Sign up via an OIDC provider
 
   Scenario: Invalid - Error from apim login call default message
     Given I am not logged in
-    And I am at "/ibm_apim/oauth2/redirect?code=fail&state=YToxOntzOjEyOiJyZWdpc3RyeV91cmwiO3M6NToidmFsaWQiO30="
+    And I am at "/ibm_apim/oauth2/redirect?code=fail&state=czozOiJrZXkiOw=="
     Then there are errors
     And I should see the text "Error while authenticating user. Please contact your system administrator."
     And there are no messages
@@ -80,7 +80,7 @@ Feature: Sign in/ Sign up via an OIDC provider
     Given consumerorgs:
       | title                          | name                          | id                          | owner     |
       | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | oidcandre |
-    And I am at "/ibm_apim/oauth2/redirect?code=firsttimelogin&state=YToxOntzOjEyOiJyZWdpc3RyeV91cmwiO3M6NToidmFsaWQiO30="
+    And I am at "/ibm_apim/oauth2/redirect?code=firsttimelogin&state=czozOiJrZXkiOw=="
     Then I should be on "/start"
     And I should see the text "Get Started"
     And I should see the text "Explore API Products"

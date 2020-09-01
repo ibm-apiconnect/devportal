@@ -408,7 +408,7 @@
   align-self: center;
 }
 
-.node--type-application.bx--card .apicCardIcon .bx--about__icon {
+.node--type-application.bx--card .apicCardIcon img, .node--type-application.bx--card .apicCardIcon.bx--about__icon {
   width: 4rem;
   height: 4rem;
   margin: 1rem 0;

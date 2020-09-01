@@ -13,14 +13,15 @@
 namespace Drupal\ibm_apim\Service;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Menu\MenuLinkManagerInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\State\StateInterface;
+use Drupal\ibm_apim\External\Json;
 use Drupal\ibm_apim\Service\Interfaces\PermissionsServiceInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
-use Drupal\ibm_apim\External\Json;
 
 /**
  * Functionality for handling configuration updates
@@ -186,7 +187,8 @@ class SiteConfig {
       if (!preg_match('/^http[s]?:\/\//', $platformApimEndpoint)) {
         $platformApimEndpoint = 'https://' . $platformApimEndpoint;
       }
-    } else {
+    }
+    else {
       $platformApiEndpoint = NULL;
     }
 
@@ -308,10 +310,10 @@ class SiteConfig {
   public function update($config = NULL): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $config);
 
-    $updated = false;
+    $updated = FALSE;
     if ($config !== NULL) {
       if (is_string($config)) {
-        $config = Json::decode($config, true);
+        $config = Json::decode($config, TRUE);
       }
 
       // TODO : temporary workaround until refactoring work is complete
@@ -328,7 +330,7 @@ class SiteConfig {
         $this->state->set('ibm_apim.site_config', $config);
         $this->getCheckAndStore();
         drupal_flush_all_caches();
-        $updated = true;
+        $updated = TRUE;
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $updated);
@@ -621,5 +623,99 @@ class SiteConfig {
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+  /**
+   * This function allows the changing of the site client id and so re-encrypts all the data in the socialblock encryption profile
+   *
+   * @param $newClientId
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function updateEncryptionKey($newClientId) {
+    $deleteOldKey = NULL;
+    if ($newClientId !== NULL) {
+      // create new encryption key
+      $moduleHandler = \Drupal::service('module_handler');
+      if (!$moduleHandler->moduleExists('key') || !$moduleHandler->moduleExists('encrypt') || !$moduleHandler->moduleExists('real_aes')) {
+        // Enabling required encryption modules
+        $moduleInstaller = \Drupal::service('module_installer');
+        $moduleInstaller->install(['key', 'encrypt', 'real_aes']);
+      }
+      $keyName = 'client_id';
+      $value = str_replace(['_', '-'], '', $newClientId);
+
+      // key must be 32bytes/256bits in length for an AES profile
+      $value = str_pad($value, 32, 'x');
+      $key = \Drupal::service('key.repository')->getKey($keyName);
+      if (isset($key) && !empty($key)) {
+        // key exists
+        $deleteOldKey = $keyName;
+        $keyName .= '_new';
+      }
+
+      try {
+        $key = \Drupal\key\Entity\Key::create([
+          'id' => $keyName,
+          'label' => $keyName,
+          'key_type' => 'encryption',
+          'key_type_settings' => ['key_size' => 256],
+          'key_provider' => 'config',
+          'key_provider_settings' => [
+            'base64_encoded' => FALSE,
+            'key_value' => $value,
+          ],
+          'key_input' => 'text_field',
+          'key_input_settings' => ['base64_encoded' => FALSE],
+        ]);
+        $key->save();
+      } catch (EntityStorageException $e) {
+      }
+
+      $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load('socialblock');
+      $encryptionKey = \Drupal::service('key.repository')->getKey($keyName);
+
+      if ($encryptionProfile !== NULL && $encryptionKey !== NULL) {
+        $encryptionService = \Drupal::service('encryption');
+
+        // decrypt socialblock config
+        $socialBlockConfig = \Drupal::config('socialblock.settings');
+        $data = $socialBlockConfig->get('credentials');
+        $socialBlockSettings = unserialize($encryptionService->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
+
+        // decrypt OIDC state service data
+        $oidcStateService = \Drupal::service('auth_apic.oidc_state');
+        $all_state = $oidcStateService->getAllOidcState();
+        $decryptedState = [];
+        foreach ($all_state as $key => $encrypted_value) {
+          $value = $encryptionService->decrypt($encrypted_value, $encryptionProfile);
+          $decryptedState[$key] = $value;
+        }
+
+        // update encryption profile to use new key
+        $encryptionProfile->setEncryptionKey($encryptionKey);
+        $encryptionProfile->save();
+
+        // re-encrypt socialblock config
+        $encryptedSocialBlockSettings = $encryptionService->encrypt(serialize($socialBlockSettings), $encryptionProfile);
+        $this->configFactory->getEditable('socialblock.settings')->set('credentials', $encryptedSocialBlockSettings)->save();
+
+        // re-encrypt OIDC state service data
+        $encryptedState = [];
+        foreach ($decryptedState as $key => $decrypted_value) {
+          $encrypted_value = $encryptionService->encrypt($decrypted_value, $encryptionProfile);
+          $encryptedState[$key] = $encrypted_value;
+        }
+        $oidcStateService->saveAllOidcState($encryptedState);
+
+        // delete old key
+        if ($deleteOldKey !== NULL) {
+          $oldKey = \Drupal\key\Entity\Key::load($deleteOldKey);
+          if ($oldKey !== NULL) {
+            $oldKey->delete();
+          }
+        }
+      }
+    }
   }
 }

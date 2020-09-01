@@ -1,4 +1,11 @@
 changes:
+  8.x-1.6.3: null
+  8.x-1.6.2:
+  - masonry library has a new name
+  8.x-1.6.1:
+  - small design tweak
+  8.x-1.6.0:
+  - update version: 8.x-1.5.1 -> 8.x-1.6.0
   8.x-1.5.0:
   - update version: 8.x-1.4.2 -> 8.x-1.5.0
   8.x-1.4.1: null

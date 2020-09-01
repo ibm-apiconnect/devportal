@@ -1,4 +1,14 @@
 changes:
+  8.x-1.8.3:
+  - fix patch for 2018.4.1
+  8.x-1.8.2:
+  - patch the files after they exist!
+  - cant create sites right now in module builds
+  8.x-1.8.1:
+  - blacklist -> blocklist
+  - Removed use of deprecated functions
+  8.x-1.8.0:
+  - update version: 8.x-1.7.6 -> 8.x-1.8.0
   8.x-1.7.5:
   - see if setting this back to null helps ?
   8.x-1.7.4:

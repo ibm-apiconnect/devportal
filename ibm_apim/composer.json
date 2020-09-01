@@ -11,5 +11,8 @@
   "minimum-stability": "dev",
   "require-dev": {
     "phpunit/phpunit": "5.5.*"
+  },
+  "require": {
+    "salsify/json-streaming-parser": "^8.2"
   }
 }

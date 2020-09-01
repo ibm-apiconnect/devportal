@@ -28,6 +28,7 @@ use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
+use Drupal\Core\Messenger\Messenger;
 
 /**
  * Service to link ApicAuth authentication with Drupal users.
@@ -64,6 +65,11 @@ class ApicAccountService implements ApicAccountInterface {
   protected $userStorage;
 
   /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * ApicAccountService constructor.
    *
    * @param \Psr\Log\LoggerInterface|\Psr\Log\LoggerInterface $logger
@@ -71,18 +77,21 @@ class ApicAccountService implements ApicAccountInterface {
    * @param ApicUserService $user_service
    * @param LanguageManagerInterface $language_manager
    * @param ApicUserStorageInterface $user_storage
+   * @param Messenger $messenger
    *
    */
   public function __construct(LoggerInterface $logger,
                               ManagementServerInterface $mgmt_interface,
                               ApicUserService $user_service,
                               LanguageManagerInterface $language_manager,
-                              ApicUserStorageInterface $user_storage) {
+                              ApicUserStorageInterface $user_storage,
+                              Messenger $messenger) {
     $this->logger = $logger;
     $this->mgmtServer = $mgmt_interface;
     $this->userService = $user_service;
     $this->languageManager = $language_manager;
     $this->userStorage = $user_storage;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -133,7 +142,10 @@ class ApicAccountService implements ApicAccountInterface {
       $account = $this->userStorage->register($user);
     }
 
-    $this->updateLocalAccount($user);
+    $returnedAccount = $this->updateLocalAccount($user);
+    if (isset($returnedAccount)) {
+      $account = $returnedAccount;
+    }
 
 
     if (\function_exists('ibm_apim_exit_trace')) {
@@ -164,7 +176,7 @@ class ApicAccountService implements ApicAccountInterface {
       ]);
 
       if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
-        drupal_set_message(t('Failed to update your account data. Contact your site administrator.'), 'error');
+        $this->messenger->addError(t('Failed to update your account data. Contact your site administrator.'));
       }
 
       $this->logger->error("Failed to update local account data for username '@username'.", [
@@ -186,6 +198,17 @@ class ApicAccountService implements ApicAccountInterface {
       $account->set('apic_user_registry_url', $user->getApicUserRegistryUrl());
       $account->set('registry_url', $user->getApicUserRegistryUrl());
       $account->set('apic_url', $user->getUrl());
+
+      //Add the custom fields to the user
+      $customFields = $this->userService->getCustomUserFields();
+      if (!empty($customFields)) {
+        $metadata = $user->getMetadata();
+        foreach($customFields as $customField) {
+          if (isset($metadata[$customField])) {
+            $account->set($customField, json_decode($metadata[$customField],true));
+          }
+        }
+      }
 
       // For all non-admin users, don't store their password in our database.
       if ((int) $account->id() !== 1) {
@@ -252,7 +275,7 @@ class ApicAccountService implements ApicAccountInterface {
 
       // The management server rejected our update. Log the error.
       if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
-        drupal_set_message(t('There was an error while saving your account data. Contact your site administrator.'), 'error');
+        $this->messenger->addError(t('There was an error while saving your account data. Contact your site administrator.'));
       }
 
       $errors = $apic_me->getErrors();
@@ -281,6 +304,7 @@ class ApicAccountService implements ApicAccountInterface {
   /**
    * @{inheritdoc}
    *
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $apic_user
    * @param \Drupal\user\Entity\User $user
    * @param \Drupal\user\Entity\User $form_state
    * @param string $view_mode
@@ -289,24 +313,21 @@ class ApicAccountService implements ApicAccountInterface {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function saveCustomFields($user, $form_state, $view_mode = 'register'): void {
+  public function saveCustomFields($apic_user, $user, $form_state, $view_mode = 'register'): void {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
     $customFields = $this->userService->getCustomUserFields($view_mode);
+    $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $form_state);
 
-    if ($user !== NULL && isset($customFields) && count($customFields) > 0) {
-      foreach ($customFields as $customField) {
+    if (isset($apic_user) && $user !== NULL && !empty($customFieldValues)) {
+      foreach ($customFieldValues as $customField => $value) {
         if ($user->hasField($customField)) {
           $this->logger->info('saving custom field: @customfield', ['@customfield' => $customField]);
-          $value = $form_state->getValue($customField);
-          if (is_array($value) && isset($value[0]['value'])) {
-            $value = $value[0]['value'];
+          if (isset($apic_user)) {
+            $apic_user->addCustomField($customField, $value);
           }
-          elseif (isset($value[0])) {
-            $value = array_values($value[0]);
-          }
-          $user->set($customField, $value);
+          $user->set($customField,$value);
         }
       }
       $user->save();

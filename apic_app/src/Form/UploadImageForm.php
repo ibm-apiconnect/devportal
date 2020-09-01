@@ -13,7 +13,7 @@
 
 namespace Drupal\apic_app\Form;
 
-use Drupal\Core\File\File;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
@@ -130,6 +130,13 @@ class UploadImageForm extends FormBase {
    */
   public function removeImage(array &$form, FormStateInterface $form_state) {
     // clear the image
+    $fid = $this->node->get("application_image")->getValue();
+    if (isset($fid[0]['target_id'])) {
+      $img = \Drupal::entityTypeManager()->getStorage('file')->load($fid[0]['target_id']);
+      if (isset($img)) {
+        $img->delete();
+      }
+    }
     $this->node->set('application_image', NULL);
     $this->node->save();
 
@@ -155,12 +162,12 @@ class UploadImageForm extends FormBase {
     $appId = $this->node->application_id->value;
     // Get name of the file that was left by form validate function.
     $appImgDir = 'private://application';
-    file_prepare_directory($appImgDir, FILE_CREATE_DIRECTORY);
+    \Drupal::service('file_system')->prepareDirectory($appImgDir, FileSystemInterface::CREATE_DIRECTORY);
     $fileTemp = file_save_upload('image', [
       'file_validate_is_image' => [], // Validates file is really an image.
       'file_validate_size' => [2 * 1024 * 1024], // file size less than 2mb
       'file_validate_extensions' => ['png gif jpg jpeg'],
-    ], $appImgDir, FILE_EXISTS_RENAME); // Validate extensions.
+    ], $appImgDir, FileSystemInterface::EXISTS_RENAME); // Validate extensions.
 
     if (empty($fileTemp)) {
       $this->messenger->addError(t('Failed to retrieve uploaded file.'));
@@ -170,6 +177,15 @@ class UploadImageForm extends FormBase {
       $fileTemp->status = FILE_STATUS_PERMANENT;
       // Save.
       $fileTemp->save();
+
+      //delete old image
+      $fid = $this->node->get("application_image")->getValue();
+      if (isset($fid[0]['target_id'])) {
+        $img = \Drupal::entityTypeManager()->getStorage('file')->load($fid[0]['target_id']);
+        if (isset($img)) {
+          $img->delete();
+        }
+      }
 
       // update local db
       $this->node->set('application_image', $fileTemp);

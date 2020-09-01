@@ -30,7 +30,7 @@ class MockApicLoginService implements ApicLoginServiceInterface {
       }
 
       \Drupal::logger('mock_auth_apic')->debug('MOCKED: MockApicLoginService->login() with ' . \serialize($user));
-      //drupal_set_message('MOCKED: MockApicLoginService->login()');
+      //\Drupal::messenger()->addStatus('MOCKED: MockApicLoginService->login()');
       // otherwise we are a non-oidc user.
       $password = $user->getPassword();
       $username = $user->getUsername();
@@ -139,7 +139,7 @@ class MockApicLoginService implements ApicLoginServiceInterface {
     }
 
     if ($authCode === 'fail') {
-      \drupal_set_message('Error while authenticating user. Please contact your system administrator.', 'error');
+      \Drupal::messenger()->addError('Error while authenticating user. Please contact your system administrator.');
     }
     else if ($authCode === 'noorgenabledonboarding') {
       return 'consumerorg.create';

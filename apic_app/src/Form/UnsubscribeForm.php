@@ -212,19 +212,6 @@ class UnsubscribeForm extends ConfirmFormBase {
         'subId' => $this->subId,
       ]);
 
-      // Rules
-      $moduleHandler = \Drupal::service('module_handler');
-      if ($theProduct !== NULL && $moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new SubscriptionDeleteEvent($this->node, $theProduct, $planName, [
-          'application' => $this->node,
-          'product' => $theProduct,
-          'planName' => $planName,
-        ]);
-        $event_dispatcher = \Drupal::service('event_dispatcher');
-        $event_dispatcher->dispatch(SubscriptionDeleteEvent::EVENT_NAME, $event);
-      }
     }
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

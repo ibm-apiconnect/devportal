@@ -61,7 +61,7 @@ class ApicModule extends Module {
     }
 
     // APIC check for our functions
-    $files = file_scan_directory($directory, '/(.*\.php$|.*\.module$|.*\.install$|.*\.inc$)/');
+    $files = \Drupal::service('file_system')->scanDirectory($directory, '/(.*\.php$|.*\.module$|.*\.install$|.*\.inc$)/');
     foreach ($files as $file) {
       $rc = self::checkFunctionNames($file->uri);
       if ($rc !== TRUE) {

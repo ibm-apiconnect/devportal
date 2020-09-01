@@ -9,6 +9,7 @@ namespace Drupal\apic_type_count\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Component\Utility\Html;
+use Drupal\node\NodeInterface;
 
 /**
  * Controller routines for page example routes.
@@ -38,8 +39,8 @@ class ApicTypeCountController extends ControllerBase {
         // Get the value as key and value pair.
         $result_arr['title'] = Html::escape($content_type_title);
         $result_arr['machine_name'] = $node_type_machine_name;
-        $result_arr['published'] = self::nodeCountState(NODE_PUBLISHED, $node_type_machine_name);
-        $result_arr['unpublished'] = self::nodeCountState(NODE_NOT_PUBLISHED, $node_type_machine_name);
+        $result_arr['published'] = self::nodeCountState(NodeInterface::PUBLISHED, $node_type_machine_name);
+        $result_arr['unpublished'] = self::nodeCountState(NodeInterface::NOT_PUBLISHED, $node_type_machine_name);
         $result_final[$node_type_machine_name] = $result_arr;
       }
     }

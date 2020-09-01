@@ -7,7 +7,7 @@ core:
   js:
     js/frontpage.js: {}
   dependencies:
-    - masonry/layout
+    - 'masonry/masonry.layout'
 
 billing:
   version: 1.x

@@ -15,13 +15,13 @@ namespace Drupal\ibm_apim;
 use Drupal\Core\Extension\ModuleInstaller;
 
 /**
- * Class ModuleBlacklistModuleInstaller.
+ * Class ModuleBlocklistModuleInstaller.
  *
- * Based on the module_blacklist module
+ * Based on the module_blocklist module
  *
  * @package Drupal\ibm_apim
  */
-class ModuleBlacklistModuleInstaller extends ModuleInstaller {
+class ModuleBlocklistModuleInstaller extends ModuleInstaller {
 
   /**
    * Performs module pre-install rollback operations.

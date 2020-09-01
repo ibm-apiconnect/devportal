@@ -269,8 +269,9 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
     // Replace @captcha with the correct captcha solution from the database
     if (strpos($argument, '@captcha') !== FALSE) {
-      if (Database::getConnection()->schema()->tableExists("captcha_sessions")) {
-        $captchaSolution = db_query("SELECT `solution`, `csid` FROM `captcha_sessions` ORDER BY csid DESC LIMIT 1;")->fetchField();
+      $db = Database::getConnection();
+      if ($db->schema()->tableExists("captcha_sessions")) {
+        $captchaSolution = $db->query("SELECT `solution`, `csid` FROM `captcha_sessions` ORDER BY csid DESC LIMIT 1;")->fetchField();
         print "The captcha solution is $captchaSolution\n";
         $argument = str_replace('@captcha', $captchaSolution, $argument);
       }
@@ -1188,7 +1189,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       ->set('proxy_auth', NULL)
       ->set('categories', $categories)
       ->set('codesnippets', $codesnippets)
-      ->set('module_blacklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer'])
+      ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer'])
       ->save();
   }
 

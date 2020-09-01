@@ -11,6 +11,8 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
+use Drupal\Core\File\FileSystemInterface;
+
 /**
  * Save the WSDL data as a file on the fs for serving up to clients
  *
@@ -24,7 +26,7 @@ function apic_api_save_wsdl($apiId, $data, $fileName = NULL) {
   ibm_apim_entry_trace(__FUNCTION__, $apiId);
   try {
     $apiImgDir = 'private://apiwsdl';
-    file_prepare_directory($apiImgDir, FILE_CREATE_DIRECTORY);
+    \Drupal::service('file_system')->prepareDirectory($apiImgDir, FileSystemInterface::CREATE_DIRECTORY);
 
     if ($data === NULL) {
       $fileTemp = NULL;
@@ -38,10 +40,10 @@ function apic_api_save_wsdl($apiId, $data, $fileName = NULL) {
         $fileName = 'API.wsdl';
       }
       $apiDir = $apiImgDir . '/' . $apiId;
-      file_prepare_directory($apiDir, FILE_CREATE_DIRECTORY);
+      \Drupal::service('file_system')->prepareDirectory($apiDir, FileSystemInterface::CREATE_DIRECTORY);
 
       // Saves a file to the specified destination and creates a database entry.
-      $fileTemp = file_save_data($data, $apiImgDir . '/' . $apiId . '/' . $fileName, FILE_EXISTS_REPLACE);
+      $fileTemp = file_save_data($data, $apiImgDir . '/' . $apiId . '/' . $fileName, FileSystemInterface::EXISTS_REPLACE);
     }
     if ($fileTemp !== NULL) {
       \Drupal::logger('apic_api')->notice('Saved WSDL to filesystem for apiID: %apiID, filename: %filename', [

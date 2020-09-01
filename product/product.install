@@ -11,9 +11,9 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
-use Drupal\views\Views;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\views\Views;
 
 /**
  * Ensure content type is translation enabled
@@ -243,5 +243,20 @@ function product_update_8115() {
   if ($fieldStorageConfig !== NULL) {
     $fieldStorageConfig->set('cardinality' , -1);
     $fieldStorageConfig->save();
+  }
+}
+
+/**
+ * update the gutter width for latest masonry views
+ */
+function product_update_8116() {
+  $view = Views::getView('products');
+  if ($view !== null) {
+    $style = $view->getDisplay()->getOption('style');
+    if ((int) $style['options']['gutterWidth'] === 0) {
+      $style['options']['gutterWidth'] = "20";
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
   }
 }

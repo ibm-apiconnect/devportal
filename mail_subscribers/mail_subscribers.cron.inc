@@ -20,8 +20,7 @@
 
 use Drupal\Component\Utility\Timer;
 use Drupal\Core\Database\Database;
-use Drupal\mail_subscribers\Event\MailSentEvent;
- 
+
 /**
  * Process the spool queue at cron run.
  */
@@ -51,11 +50,6 @@ function mail_subscribers_send_from_spool() {
       Database::getConnection($options['target'])->query("UPDATE {mail_subscribers_spool} SET status = :status WHERE eid = :eid", array(':status' => 1, ':eid' => $message->eid), $options);
       if ((boolean) \Drupal::config('mail_subscribers.settings')->get('debug')) {
         \Drupal::logger('mail_subscribers')->notice('Message sent to %mail.', array('%mail' => $message->to_mail));
-      }
-      if (\Drupal::moduleHandler()->moduleExists('rules')) {
-        $event = new MailSentEvent($message);
-        $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(MailSentEvent::EVENT_NAME, $event);
       }
       $ok++;
     }

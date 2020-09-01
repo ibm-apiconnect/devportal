@@ -13,7 +13,7 @@
 namespace Drupal\ibm_apim\Exception;
 
 /**
- * Exception class to throw when a blacklisted module is being installed.
+ * Exception class to throw when a blocklisted module is being installed.
  */
 class ModuleInstallationBlocked extends \Exception {
 

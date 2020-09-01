@@ -13,20 +13,16 @@
 
 namespace Drupal\ibm_apim\Controller;
 
-use Drupal\consumerorg\ApicType\Member;
-use Drupal\consumerorg\ApicType\Role;
 use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicRest;
-use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\Billing;
 use Drupal\ibm_apim\Service\MyOrgService;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
-use Drupal\node\Entity\Node;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -246,7 +242,7 @@ class MyOrgController extends ControllerBase {
   public function billingSubmit($input): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $token = json_decode(ibm_apim_base64_url_decode($input), TRUE);
+    $token = json_decode(\Drupal::service('ibm_apim.utils')->base64_url_decode($input), TRUE);
     $consumerOrg = $this->userUtils->getCurrentConsumerorg();
 
     if (!isset($token['card']['name'])) {

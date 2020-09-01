@@ -120,36 +120,36 @@ class ApicModuleService implements ApicModuleInterface {
   /**
    * @inheritDoc
    */
-  public function purgeBlackListedModules(): bool {
-    $black_list =   $this->ibmSettingsConfig->get('module_blacklist');
+  public function purgeBlockListedModules(): bool {
+    $block_list =   $this->ibmSettingsConfig->get('module_blocklist');
     $uninstall_success = TRUE;
 
     // initially check if any of the modules are running, and uninstall if so.
-    foreach ($black_list as $module) {
+    foreach ($block_list as $module) {
       // moduleExists returns TRUE if the module is enabled.
       if ($this->moduleHandler->moduleExists($module)) {
-        $this->logger->notice('Blacklisted module ' . $module . ' found. Forcing uninstall.');
+        $this->logger->notice('Blocklisted module ' . $module . ' found. Forcing uninstall.');
         // uninstalling module but not dependencies.
         try {
           $this->moduleInstaller->uninstall([$module], FALSE);
         }
         catch(\Throwable $e) {
-          $this->logger->warning('Exception while deleting blacklist module: ' . $module);
+          $this->logger->warning('Exception while deleting blocklist module: ' . $module);
           $this->logger->debug($module . ' uninstall exception message : ' . $e->getMessage());
           $uninstall_success = FALSE;
           // don't stop processing because uninstall of one module has failed.
         }
         finally {
-          $this->logger->notice('Blacklisted module ' . $module . ': forced uninstall complete.');
+          $this->logger->notice('Blocklisted module ' . $module . ': forced uninstall complete.');
         }
       }
       else {
-        $this->logger->debug('Blacklisted module ' . $module . ' not found.');
+        $this->logger->debug('Blocklisted module ' . $module . ' not found.');
       }
     }
 
-    // regardless of whether we have attempted to uninstall any modules, try to delete all blacklisted modules
-    $delete_success = $this->deleteModulesOnFileSystem($black_list, FALSE);
+    // regardless of whether we have attempted to uninstall any modules, try to delete all blocklisted modules
+    $delete_success = $this->deleteModulesOnFileSystem($block_list, FALSE);
 
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $uninstall_success && $delete_success);

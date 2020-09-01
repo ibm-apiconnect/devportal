@@ -1,4 +1,18 @@
 changes:
+  8.x-1.7.6:
+  - User custom fields 2018.4.1 (#202)
+  8.x-1.7.5:
+  - clear cache when change role
+  8.x-1.7.4:
+  - Custom fields 2018.4.1 (#190)
+  8.x-1.7.3:
+  - remove Rules support from our code
+  8.x-1.7.2: null
+  8.x-1.7.1:
+  - Allow multiple groups for a corg (#180)
+  - Added a method for removing tags (#178)
+  8.x-1.7.0:
+  - update version: 8.x-1.6.6 -> 8.x-1.7.0
   8.x-1.6.5:
   - Fix for group visibility 2018.4.1 (#182)
   8.x-1.6.4:

@@ -1,4 +1,8 @@
 changes:
+  8.x-1.6.1:
+  - add copyright statement
+  8.x-1.6.0:
+  - update version: 8.x-1.5.2 -> 8.x-1.6.0
   8.x-1.5.1:
   - Added default type for status messages (#181)
   8.x-1.5.0:

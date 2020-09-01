@@ -409,6 +409,7 @@ class ApicRest implements ApicRestInterface {
     $utils = \Drupal::service('ibm_apim.utils');
     $session_store = \Drupal::service('tempstore.private')->get('ibm_apim');
     $site_config = \Drupal::service('ibm_apim.site_config');
+    $current_user = \Drupal::currentUser();
 
     $returnValue = NULL;
     if (mb_strpos($url, 'https://') !== 0) {
@@ -443,9 +444,14 @@ class ApicRest implements ApicRestInterface {
     }
 
     if ($auth === 'user') {
-      $bearer_token = $session_store->get('auth');
-      if (isset($bearer_token)) {
-        $headers[] = 'Authorization: Bearer ' . $bearer_token;
+      // except anonymous and admin      
+      if (!$current_user->isAnonymous() && (int) $current_user->id() !== 1) {	        
+        $bearer_token = $session_store->get('auth');
+        if (isset($bearer_token)) {
+          $headers[] = 'Authorization: Bearer ' . $bearer_token;
+        }
+      } else {
+        \Drupal::logger('ibm_apim')->info('call_base: Calling consumer API as admin or anonymous, not including bearer token.');
       }
     }
     elseif ($auth === 'clientid') {
@@ -531,7 +537,7 @@ class ApicRest implements ApicRestInterface {
         $returnValue = $result;
       }
     }
-    elseif (\Drupal::currentUser()->isAuthenticated() && (isset($result) && (int) $result->code === 401 || $expires_in !== NULL && (int) $expires_in < time())) {
+    elseif ($current_user->isAuthenticated() && (int) $current_user->id() !== 1 && (isset($result) && ((int) $result->code === 401 || ($expires_in !== NULL && (int) $expires_in < time())))) {
       // handle token having expired
       // force log the user out, they can login and try again
       \Drupal::logger('ibm_apim')->notice('Session expired based on token expires_in value. Forcing logout.');

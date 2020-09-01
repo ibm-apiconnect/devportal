@@ -219,17 +219,6 @@ class CredentialsCreateForm extends FormBase {
         'credId' => $data['id'],
       ]);
 
-      if ($moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new CredentialCreateEvent($this->node, $result->data, $data['id'], [
-          'application' => $this->node,
-          'data' => $result->data,
-          'credId' => $data['id'],
-        ]);
-        $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(CredentialCreateEvent::EVENT_NAME, $event);
-      }
     }
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

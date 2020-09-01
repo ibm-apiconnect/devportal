@@ -51,4 +51,16 @@ interface OidcStateServiceInterface {
    */
   public function prune();
 
+  /**
+   * get all state from the service
+   * needed to by the updateEncryptionKey function
+   */
+  public function getAllOidcState();
+
+  /**
+   * save all state from the service
+   * needed to by the updateEncryptionKey function
+   */
+  public function saveAllOidcState($state);
+
 }

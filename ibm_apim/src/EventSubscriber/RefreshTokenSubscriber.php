@@ -15,9 +15,12 @@ namespace Drupal\ibm_apim\EventSubscriber;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Symfony\Component\HttpKernel\Event\PostResponseEvent;
+use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Psr\Log\LoggerInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class RefreshTokenSubscriber implements EventSubscriberInterface {
 
@@ -62,12 +65,50 @@ class RefreshTokenSubscriber implements EventSubscriberInterface {
     $expires_in = $this->sessionStore->get('expires_in');
     $refresh_expires_in = $this->sessionStore->get('refresh_expires_in');
 
+
     if (isset($refresh) && isset($expires_in) && (int) $expires_in < time()) {
+      $refreshed = false;
       if (!isset($refresh_expires_in) || (int) $refresh_expires_in > time()) {
-        $this->mgmtServer->refreshAuth();
-      } else {
-        $this->logger->notice('Refresh token has expired.');
+        $refreshed = $this->mgmtServer->refreshAuth();
       }
+      if (!$refreshed) {
+        $this->sessionStore->set('logout',true);
+      }
+    }
+  }
+
+   /**
+   * @param \Symfony\Component\HttpKernel\Event\FilterResponseEvent $event
+   */
+  public function forceLogOut(FilterResponseEvent $event) : void{
+    if (\Drupal::currentUser()->id() == 0 || \Drupal::currentUser()->id() == 1) {
+      return;
+    }
+
+    $refresh = $this->sessionStore->get('refresh');
+    $expires_in = $this->sessionStore->get('expires_in');
+    $refresh_expires_in = $this->sessionStore->get('refresh_expires_in');
+    $logout = $this->sessionStore->get('logout');
+
+    if (\Drupal::currentUser()->isAuthenticated() &&
+    ($logout ||  (isset($expires_in) && (int) $expires_in < time() && (!isset($refresh) || (isset($refresh_expires_in) && (int) $refresh_expires_in < time()))))) {
+      if ($logout) {
+        $logout = $this->sessionStore->delete('logout');
+        $this->logger->notice('Failed to refresh access token. Forcing logout.');
+      } else {
+        $this->logger->notice('Session expired based on token expires_in value. Forcing logout.');
+      }
+      // set a cookie so that we can display an error after we log the user out, picked up in AdminMessagesBlock
+      // this was supposed to be handled by building the redirectresponse from the current request in the subsequent code, however the messages
+      // were being lost, possibly because of the extra redirects in user.logout???... but this mechanism works.
+      user_cookie_save(['ibm_apim_session_expired_on_token' => 'TRUE']);
+      $logout_url = Url::fromRoute('user.logout');
+      $response = new RedirectResponse($logout_url->toString());
+      $request = \Drupal::request();
+      $session_manager = \Drupal::service('session_manager');
+      $session_manager->delete(\Drupal::currentUser()->id());
+      $response->prepare($request);
+      $event->setResponse($response);
     }
   }
 
@@ -76,6 +117,7 @@ class RefreshTokenSubscriber implements EventSubscriberInterface {
    */
   public static function getSubscribedEvents() {
     $events[KernelEvents::TERMINATE][] = ['refreshAccessToken'];
+    $events[KernelEvents::RESPONSE][] = ['forceLogOut'];
     return $events;
   }
 }

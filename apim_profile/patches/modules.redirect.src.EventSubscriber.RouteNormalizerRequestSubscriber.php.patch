@@ -1,0 +1,23 @@
+--- modules/redirect/src/EventSubscriber/RouteNormalizerRequestSubscriber.php
++++ modules/redirect/src/EventSubscriber/RouteNormalizerRequestSubscriber.php
+@@ -124,8 +124,18 @@ class RouteNormalizerRequestSubscriber implements EventSubscriberInterface {
+       $original_uri = $request->getSchemeAndHttpHost() . $request->getRequestUri();
+       $original_uri = urldecode($original_uri);
+       $redirect_uri = urldecode($redirect_uri);
+-      if ($redirect_uri != $original_uri) {
+-        $response = new TrustedRedirectResponse($redirect_uri, $this->config->get('default_status_code'));
++      $original_uri_parsed = parse_url($original_uri);
++      $redirect_uri_parsed = parse_url($redirect_uri);
++      $original_uri_host = $original_uri_parsed['host'];
++      $redirect_uri_host = $redirect_uri_parsed['host'];
++      $original_uri_path = $original_uri_parsed['path'];
++      $redirect_uri_path = $redirect_uri_parsed['path'];
++      if ($original_uri_path != $redirect_uri_path) {
++        $new_redirect_uri = $redirect_uri;
++        if ($original_uri_host != $redirect_uri_host){
++          $new_redirect_uri = str_replace($redirect_uri_host,$original_uri_host,$new_redirect_uri);
++        }
++        $response = new TrustedRedirectResponse($new_redirect_uri, $this->config->get('default_status_code'));
+         $response->headers->set('X-Drupal-Route-Normalizer', 1);
+         $event->setResponse($response);
+       }

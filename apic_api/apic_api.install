@@ -854,6 +854,21 @@ function apic_api_update_8117() {
 }
 
 /**
+ * update the gutter width for latest masonry views
+ */
+function apic_api_update_8118() {
+  $view = Views::getView('apis');
+  if ($view !== null) {
+    $style = $view->getDisplay()->getOption('style');
+    if ((int) $style['options']['gutterWidth'] === 0) {
+      $style['options']['gutterWidth'] = "20";
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
+  }
+}
+
+/**
  * Implements hook_update_dependencies().
  */
 function apic_api_update_dependencies() {

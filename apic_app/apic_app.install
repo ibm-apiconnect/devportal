@@ -18,9 +18,10 @@
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Session\UserSession;
-use Drupal\node\Entity\Node;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\node\Entity\Node;
+use Drupal\views\Views;
 
 /**
  * Changes from 8.x-1.0 to 8.x-1.1 :
@@ -411,6 +412,21 @@ function apic_app_update_8107() {
   if ($apicSummaryFieldConfig !== NULL) {
     $apicSummaryFieldConfig->set('translatable', TRUE);
     $apicSummaryFieldConfig->save();
+  }
+}
+
+/**
+ * update the gutter width for latest masonry views
+ */
+function apic_app_update_8108() {
+  $view = Views::getView('applications');
+  if ($view !== null) {
+    $style = $view->getDisplay()->getOption('style');
+    if ((int) $style['options']['gutterWidth'] === 0) {
+      $style['options']['gutterWidth'] = "20";
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
   }
 }
 

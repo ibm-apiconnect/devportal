@@ -282,7 +282,7 @@ class ModalApplicationCreateForm extends FormBase {
         $node = Node::load($nid);
 
         if ($node !== NULL) {
-          $renderArray = node_view($node, 'subscribewizard');
+          $renderArray = \Drupal::entityTypeManager()->getViewBuilder('node')->view($node, 'subscribewizard');
           $renderer = \Drupal::service('renderer');
           $html = $renderer->render($renderArray);
           $response->addCommand(new InsertCommand('div.apicNewAppsList', $html, []));

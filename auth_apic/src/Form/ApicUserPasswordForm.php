@@ -17,6 +17,7 @@ use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Flood\FloodInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\ibm_apim\Service\ApimUtils;
@@ -69,6 +70,10 @@ class ApicUserPasswordForm extends UserPasswordForm {
    */
   protected $password;
 
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
 
   /**
    * ApicUserPasswordForm constructor.
@@ -82,6 +87,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
    * @param \Drupal\Core\Config\ConfigFactory $config_factory
    * @param \Drupal\Core\Flood\FloodInterface $flood
    * @param \Drupal\auth_apic\UserManagement\ApicPasswordInterface $password_service
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
   public function __construct(UserStorageInterface $user_storage,
                               LanguageManagerInterface $language_manager,
@@ -91,7 +97,8 @@ class ApicUserPasswordForm extends UserPasswordForm {
                               ApimUtils $apim_utils,
                               ConfigFactory $config_factory,
                               FloodInterface $flood,
-                              ApicPasswordInterface $password_service) {
+                              ApicPasswordInterface $password_service,
+                              Messenger $messenger) {
     parent::__construct($user_storage, $language_manager);
     $this->mgmtServer = $mgmtServer;
     $this->logger = $logger;
@@ -100,6 +107,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
     $this->configFactory = $config_factory;
     $this->flood = $flood;
     $this->password = $password_service;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -107,7 +115,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity.manager')->getStorage('user'),
+      $container->get('entity_type.manager')->getStorage('user'),
       $container->get('language_manager'),
       $container->get('ibm_apim.mgmtserver'),
       $container->get('logger.channel.auth_apic'),
@@ -115,7 +123,8 @@ class ApicUserPasswordForm extends UserPasswordForm {
       $container->get('ibm_apim.apim_utils'),
       $container->get('config.factory'),
       $container->get('flood'),
-      $container->get('auth_apic.password')
+      $container->get('auth_apic.password'),
+      $container->get('messenger')
     );
   }
 
@@ -344,7 +353,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
 
     // avoid disclosing any information about whether the account exists or not.
     if ($result !== NULL && ($result instanceof RestResponse) && $result->getCode() !== 500) {
-      drupal_set_message(t('If the account exists, an email has been sent with further instructions to reset the password.'));
+      $this->messenger->addMessage(t('If the account exists, an email has been sent with further instructions to reset the password.'));
       $form_state->setRedirect('user.page');
     }
     else {

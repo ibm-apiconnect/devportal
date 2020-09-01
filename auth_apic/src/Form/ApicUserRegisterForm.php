@@ -18,10 +18,11 @@ use Drupal\auth_apic\UserManagement\ApicInvitationInterface;
 use Drupal\auth_apic\UserManagement\SignUpInterface;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\ApicType\UserRegistry;
@@ -103,9 +104,14 @@ class ApicUserRegisterForm extends RegisterForm {
   protected $cacheBackend;
 
   /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(EntityManagerInterface $entity_manager,
+  public function __construct(EntityRepositoryInterface $entity_repository,
                               LanguageManagerInterface $language_manager,
                               LoggerInterface $logger,
                               ApicAccountInterface $account_service,
@@ -120,8 +126,9 @@ class ApicUserRegisterForm extends RegisterForm {
                               SignUpInterface $non_user_managed_signup,
                               ApicInvitationInterface $invitation_service,
                               ApicUserStorageInterface $user_storage,
-                              CacheBackendInterface $cache_backend) {
-    parent::__construct($entity_manager, $language_manager, $entity_type_bundle_info, $time);
+                              CacheBackendInterface $cache_backend,
+                              Messenger $messenger) {
+    parent::__construct($entity_repository, $language_manager, $entity_type_bundle_info, $time);
     $this->logger = $logger;
     $this->accountService = $account_service;
     $this->userRegistryService = $userRegistryService;
@@ -134,6 +141,7 @@ class ApicUserRegisterForm extends RegisterForm {
     $this->invitationService = $invitation_service;
     $this->userStorage = $user_storage;
     $this->cacheBackend = $cache_backend;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -141,7 +149,7 @@ class ApicUserRegisterForm extends RegisterForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity.manager'),
+      $container->get('entity.repository'),
       $container->get('language_manager'),
       $container->get('logger.channel.auth_apic'),
       $container->get('ibm_apim.account'),
@@ -156,7 +164,8 @@ class ApicUserRegisterForm extends RegisterForm {
       $container->get('auth_apic.nonusermanaged_signup'),
       $container->get('auth_apic.invitation'),
       $container->get('ibm_apim.user_storage'),
-      $container->get('cache.default')
+      $container->get('cache.default'),
+      $container->get('messenger')
     );
   }
 
@@ -181,7 +190,7 @@ class ApicUserRegisterForm extends RegisterForm {
     // if there are no registries on the catalog then bail out.
     $all_registries = $this->userRegistryService->getAll();
     if (empty($all_registries)) {
-      drupal_set_message(t('Self-service onboarding not possible: No user registries defined.'), 'error');
+      $this->messenger->addError(t('Self-service onboarding not possible: No user registries defined.'), 'error');
       throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
     }
 
@@ -203,7 +212,7 @@ class ApicUserRegisterForm extends RegisterForm {
 
     // If self onboarding is disabled and this is not the invited user flow then bail out.
     if ((boolean) \Drupal::state()->get('ibm_apim.selfSignUpEnabled', TRUE) === FALSE && empty($jwt)) {
-      drupal_set_message(t('Self-service onboarding is disabled for this site.'), 'error');
+      $this->messenger->addError(t('Self-service onboarding is disabled for this site.'), 'error');
       throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
     }
 
@@ -574,7 +583,7 @@ class ApicUserRegisterForm extends RegisterForm {
 
   private function submitToApim(FormStateInterface $form_state, UserRegistry $registry) : void{
 
-    $new_user = $this->userService->parseRegisterForm($form_state->getUserInput());
+    $new_user = $this->userService->parseRegisterForm($form_state);
     if (empty($new_user->getMail())) {
       $new_user->setMail($form_state->getValue('mail'));
     }
@@ -608,10 +617,10 @@ class ApicUserRegisterForm extends RegisterForm {
       $loaded_user = $this->userStorage->load($new_user);
       if ($loaded_user) {
         $this->accountService->setDefaultLanguage($loaded_user);
-        $this->accountService->saveCustomFields($loaded_user, $form_state, 'register');
+        $this->accountService->saveCustomFields($new_user, $loaded_user, $form_state, 'register');
       }
 
-      drupal_set_message($response->getMessage());
+      $this->messenger->addStatus($response->getMessage());
       $form_state->setRedirect($response->getRedirect());
     }
     elseif (strpos($response->getMessage(), 'Passwords must')) {
@@ -621,7 +630,7 @@ class ApicUserRegisterForm extends RegisterForm {
     }
     else {
       $form_state->setRedirect('user.register');
-      drupal_set_message($response->getMessage(), 'error');
+      $this->messenger->addError($response->getMessage());
     }
   }
 

@@ -47,6 +47,10 @@ class ApicUser {
 
   private $authcode;
 
+  private $custom_fields;
+
+  private $metadata;
+
   /**
    * Constructor.
    */
@@ -245,6 +249,53 @@ class ApicUser {
     $this->organization = $organization;
   }
 
+    /**
+   * @return mixed
+   */
+  public function getCustomFields() {
+    if (!isset($this->custom_fields)) {
+      $this->custom_fields = [];
+    }
+    return $this->custom_fields;
+  }
+
+  /**
+   * @param mixed $customFields
+   */
+  public function setCustomFields($customFields): void {
+    if (empty($customFields)) {
+      $this->custom_fields = [];
+    } else {
+      $this->custom_fields = $customFields;
+    }
+  }
+
+  public function addCustomField($field, $value): void {
+    if (!isset($this->custom_fields)) {
+      $this->custom_fields = [];
+    }
+    $this->custom_fields[$field] = $value;
+  }
+
+  public function getMetadata() {
+    if (!isset($this->metadata)) {
+      $this->metadata = [];
+    }
+    return $this->metadata;
+  }
+
+  /**
+   * @param mixed $metadata
+   */
+  public function setMetadata($metadata): void {
+    if (empty($metadata)) {
+      $this->metadata = [];
+    } else {
+      $this->metadata = $metadata;
+    }
+  }
+
+
   /**
    * convert array to object
    *
@@ -305,6 +356,13 @@ class ApicUser {
     if (array_key_exists('authcode', $content)) {
       $this->setAuthcode($content['authcode']);
     }
+
+    $customFields = \Drupal::service('ibm_apim.apicuser')->getCustomUserFields();
+    foreach($customFields as $field) {
+      if (array_key_exists($field, $content)) {
+        $this->addCustomField($field, json_decode($content[$field], true));
+      }
+    }
   }
 
   /**
@@ -353,6 +411,12 @@ class ApicUser {
     }
     if ($this->authcode !== NULL) {
       $content['authcode'] = $this->authcode;
+    }
+    $customFields = \Drupal::service('ibm_apim.apicuser')->getCustomUserFields();
+    foreach($customFields as $field) {
+      if (isset($this->custom_fields[$field])) {
+        $content[$field] = json_encode($this->custom_fields[$field]);
+      }
     }
     return $content;
   }

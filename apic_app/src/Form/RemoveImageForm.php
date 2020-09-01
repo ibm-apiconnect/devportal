@@ -136,8 +136,15 @@ class RemoveImageForm extends ConfirmFormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appId = $this->node->application_id->value;
     // delete the file from drupal fs and db
-    $fid = $this->node->application_image->value;
-    file_delete($fid);
+    $fid = $this->node->get("application_image")->getValue();
+    if (isset($fid[0]['target_id'])) {
+      $img = \Drupal::entityTypeManager()->getStorage('file')->load($fid[0]['target_id']);
+      if (isset($img)) {
+        $img->delete();
+      }
+    }
+    $this->node->set('application_image', NULL);
+    $this->node->save();
 
     // Calling all modules implementing 'hook_apic_app_image_delete':
     \Drupal::moduleHandler()->invokeAll('apic_app_image_delete', ['node' => $this->node, 'appId' => $appId]);

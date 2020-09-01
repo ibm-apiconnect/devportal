@@ -19,8 +19,10 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\UserSession;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicType\ApicUser;
+use Drupal\ibm_apim\JsonStreamingParser\CollectionListener;
 use Drupal\product\Product;
 use Drupal\search_api\Entity\Index;
+use JsonStreamingParser\Parser;
 
 function ibm_apim_drush_command() {
 
@@ -294,11 +296,15 @@ function ibm_apim_drush_command() {
       'extended_output' => 'Log additional output about the config uuids that get set',
     ],
   ];
-  $items['ibm_apim-purge_blacklist_modules'] = [
-    'description' => 'Purge any blacklisted modules (uninstall + delete).',
-    'aliases' => ['purge_blacklist']
+  $items['ibm_apim-purge_blocklist_modules'] = [
+    'description' => 'Purge any blocklisted modules (uninstall + delete).',
+    'aliases' => ['purge_blocklist']
   ];
 
+  $items['ibm_apim-delete_tokens'] = [
+    'description' => 'Delete any saved OIDC tokens',
+    'aliases' => ['deletetokens']
+  ];
   return $items;
 }
 
@@ -590,6 +596,7 @@ function drush_ibm_apim_listen() {
             drush_log(dt('There is no drush code to handle the webhook command @cmd', ['@cmd' => $command]), 'warning');
             break;
         }
+        drush_log(dt('listen_done: @cmd', ['@cmd' => $command]), 'success');
       }
       else {
         drush_log(dt('No content provided for webhook command @cmd', ['@cmd' => $command]), 'warning');
@@ -708,237 +715,255 @@ function drush_ibm_apim_content_refresh() {
   $handle = @fopen("/tmp/snapshot.$UUID/snapshot.stream.$UUID.file", "r");
   //$input = trim(fgets(STDIN));
 
-  if ($handle) {
-    while (!feof($handle)) {
-      $input = fgets($handle);
-      $content = json_decode($input, TRUE);
-      // defensive error handling
-      if (!isset($content)) {
-        $content = serialize($input);
-        $type = 'error';
-      }
-      else {
-        $type = $content['type'];
-      }
-      if (!isset($type)) {
-        $type = 'error';
-      }
-      $webhookDebug = (bool) \Drupal::config('ibm_apim.settings')
-        ->get('webhook_debug');
-      if ($webhookDebug === TRUE) {
-        $webhookPayloads = \Drupal::state()
-          ->get('ibm_apim.snapshot_webhook_payloads');
-        $webhookPayloads[] = [
-          'content' => $content,
-          'type' => $type,
-          'timestamp' => time(),
-        ];
-        \Drupal::state()
-          ->set('ibm_apim.snapshot_webhook_payloads', $webhookPayloads);
-      }
-
-      drush_log(dt('Got type: @type', ['@type' => $type]), 'success');
-
-      // checking memory
-      drush_ibm_apim_manage_memory_usage();
-
-      // assert that the index_directly value of the search_api module's default_index is
-      // set correctly according to the number of nodes in the site
-      drush_ibm_apim_assert_index_directly_value();
-
-      try {
-        if ($type !== NULL && $type !== 'error' && $content !== NULL) {
-          switch ($type) {
-            case 'product':
-              $prodList = [];
-              if (file_exists("/tmp/snapshot.$UUID/content_refresh_products.$UUID.json")) {
-                $prodList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_products.$UUID.json"), TRUE);
-              }
-              // we don't care about staged, retired, or whatever other state products might be in. we only want published products in the portal.
-              $stateToLower = strtolower($content['state']);
-              if ($stateToLower === 'published' || $stateToLower === 'deprecated') {
-                $prodList[] = $content['name'] . ':' . $content['version'];
-                file_put_contents("/tmp/snapshot.$UUID/content_refresh_products.$UUID.json", json_encode($prodList));
-                drush_product_createOrUpdate(['product' => $content], 'ContentRefresh', 'content_refresh');
-              }
-              else {
-                drush_log(dt('Ignoring product in invalid state %state: %product', [
-                  '%state' => $stateToLower,
-                  '%product' => $content['name'],
-                ]), 'warning');
-              }
-              break;
-            case 'api':
-              $apiList = [];
-              if (file_exists("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json")) {
-                $apiList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json"), TRUE);
-              }
-              $apiList[] = $content['name'] . ':' . $content['version'];
-              file_put_contents("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json", json_encode($apiList));
-              drush_apic_api_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
-              break;
-            case 'app':
-              $appList = [];
-              if (file_exists("/tmp/snapshot.$UUID/content_refresh_apps.$UUID.json")) {
-                $appList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_apps.$UUID.json"), TRUE);
-              }
-              $appList[] = $content['id'];
-              file_put_contents("/tmp/snapshot.$UUID/content_refresh_apps.$UUID.json", json_encode($appList));
-              drush_apic_app_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
-              break;
-            case 'consumer_org':
-              $orgList = [];
-              if (file_exists("/tmp/snapshot.$UUID/content_refresh_consumerorgs.$UUID.json")) {
-                $orgList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_consumerorgs.$UUID.json"), TRUE);
-              }
-              if (isset($content['consumer_org']['url'])) {
-                $orgList[] = $content['consumer_org']['url'];
-              }
-              else {
-                $orgList[] = '/consumer-api/orgs/' . $content['id'];
-              }
-              file_put_contents("/tmp/snapshot.$UUID/content_refresh_consumerorgs.$UUID.json", json_encode($orgList));
-              drush_consumerorg_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
-              break;
-            case 'catalog_setting':
-              drush_ibm_apim_updateconfig($content);
-              // set message that we have correctly received a config payload to disable intro warning message
-              \Drupal::state()->set('ibm_apim.content_refresh_status', 1);
-              break;
-            case 'catalog':
-              drush_ibm_apim_updatecatalog($content);
-              break;
-            case 'configured_catalog_user_registry':
-              if (file_exists("/tmp/snapshot.$UUID/content_refresh_user_registries.$UUID.json")) {
-                $urList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_user_registries.$UUID.json"), TRUE);
-              }
-              $urList[] = $content['url'];
-              file_put_contents("/tmp/snapshot.$UUID/content_refresh_user_registries.$UUID.json", json_encode($urList));
-              drush_ibm_apim_user_registry_update($content, 'content_refresh');
-              break;
-            case 'extension':
-              $extList = [];
-              if (file_exists("/tmp/snapshot.$UUID/content_refresh_extensions.$UUID.json")) {
-                $extList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_extensions.$UUID.json"), TRUE);
-              }
-              $extList[] = $content['name'];
-              file_put_contents("/tmp/snapshot.$UUID/content_refresh_extensions.$UUID.json", json_encode($extList));
-              drush_ibm_apim_vendor_extension_update($content, 'content_refresh');
-              break;
-            case 'group':
-              $groupList = [];
-              if (file_exists("/tmp/snapshot.$UUID/content_refresh_groups.$UUID.json")) {
-                $groupList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_groups.$UUID.json"), TRUE);
-              }
-              $groupList[] = $content['url'];
-              file_put_contents("/tmp/snapshot.$UUID/content_refresh_groups.$UUID.json", json_encode($groupList));
-              drush_ibm_apim_group_update($content, 'content_refresh');
-              break;
-            case 'subscription':
-              $subList = [];
-              if (file_exists("/tmp/snapshot.$UUID/content_refresh_subs.$UUID.json")) {
-                $subList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_subs.$UUID.json"), TRUE);
-              }
-              if (!isset($subList[$content['app_url']]) || !is_array($subList[$content['app_url']])) {
-                $subList[$content['app_url']] = [];
-              }
-              $subList[$content['app_url']][] = $content['id'];
-              drush_apic_app_createOrUpdatesub($content, 'create_sub', 'snapshot');
-
-              file_put_contents("/tmp/snapshot.$UUID/content_refresh_subs.$UUID.json", json_encode($subList));
-              break;
-            case 'tls_client_profile':
-              $tlsList = [];
-              if (file_exists("/tmp/snapshot.$UUID/content_refresh_tlsprofile_objects.$UUID.json")) {
-                $tlsList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_tlsprofile_objects.$UUID.json"), TRUE);
-              }
-              $tlsList[] = $content['url'];
-              file_put_contents("/tmp/snapshot.$UUID/content_refresh_tlsprofile_objects.$UUID.json", json_encode($tlsList));
-              drush_ibm_apim_tlsprofile_update($content, 'content_refresh');
-              break;
-            case 'oauth_provider':
-              break;
-            case 'role':
-              drush_consumerorg_role_create($content);
-              break;
-            case 'member':
-              drush_ibm_apim_user_createOrUpdate($content, 'ContentRefresh');
-              break;
-            case 'member_invitation':
-              drush_consumerorg_invitation_createOrUpdate($content, 'ContentRefresh');
-              break;
-            case 'billing':
-              $billList = [];
-              if (file_exists("/tmp/snapshot.$UUID/content_refresh_billing_objects.$UUID.json")) {
-                $billList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_billing_objects.$UUID.json"), TRUE);
-              }
-              $billList[] = $content['url'];
-              file_put_contents("/tmp/snapshot.$UUID/content_refresh_billing_objects.$UUID.json", json_encode($billList));
-              drush_ibm_apim_billing_update($content, 'content_refresh');
-              break;
-            case 'permission':
-              $permList = [];
-              if (file_exists("/tmp/snapshot.$UUID/content_refresh_permission_objects.$UUID.json")) {
-                $permList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_permission_objects.$UUID.json"), TRUE);
-              }
-              $permList[] = $content['url'];
-              file_put_contents("/tmp/snapshot.$UUID/content_refresh_permission_objects.$UUID.json", json_encode($permList));
-              drush_ibm_apim_permission_update($content, 'content_refresh');
-              break;
-            case 'analytics_service':
-              $analyticsList = [];
-              if (file_exists("/tmp/snapshot.$UUID/content_refresh_analytics_objects.$UUID.json")) {
-                $analyticsList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_analytics_objects.$UUID.json"), TRUE);
-              }
-              $analyticsList[] = $content['url'];
-              file_put_contents("/tmp/snapshot.$UUID/content_refresh_analytics_objects.$UUID.json", json_encode($analyticsList));
-              drush_ibm_apim_analytics_update($content, 'content_refresh');
-              break;
-            case 'close_stream':
-              // reached the end of the snapshot payload
-              drush_ibm_apim_clearup($UUID);
-
-              // assert that the index_directly value of the search_api module's default_index is
-              // set correctly according to the number of nodes in the site
-              drush_ibm_apim_assert_index_directly_value();
-
-              break;
-            default:
-              drush_log(dt('There is no drush code to handle the payload type @type', ['@type' => $type]), 'warning');
-              break;
-          }
-          unset($content);
-        }
-        else {
-          drush_log(dt('No content provided for webhook', []), 'warning');
-        }
-      } catch (Exception $e) {
-        drush_log(dt('Caught exception in drush_ibm_apim_content_refresh: @message', [
-          '@message' => $e->getMessage(),
-        ]), 'warning');
-
-        $errors = \Drupal::state()->get('ibm_apim.sync_errors');
-        if ($errors === NULL) {
-          $errors = [];
-        }
-        $errors[] = [
-          'type' => 'exception',
-          'message' => $e->getMessage(),
-          'code' => $e->getCode(),
-          'trace' => $e->getTrace(),
-          'timestamp' => time(),
-        ];
-        \Drupal::state()->set('ibm_apim.sync_errors', $errors);
-
-      }
-    }
+  $listener = new CollectionListener('processContent', $UUID);
+  try {
+    $parser = new Parser($handle, $listener);
+    $parser->parse();
+    fclose($handle);
+  } catch (Exception $e) {
+    fclose($handle);
+    throw $e;
   }
-  fclose($handle);
   drush_log(dt('Drush ibm_apim_content_refresh exiting'), 'success');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
   exitClean();
 }
 
+function processContent($content, $UUID) {
+
+    $type = $content['type'];
+    if (!isset($type)) {
+      $type = 'error';
+    }
+    $webhookDebug = (bool) \Drupal::config('ibm_apim.settings')
+      ->get('webhook_debug');
+    if ($webhookDebug === TRUE) {
+      $webhookPayloads = \Drupal::state()
+        ->get('ibm_apim.snapshot_webhook_payloads');
+      $webhookPayloads[] = [
+        'content' => $content,
+        'type' => $type,
+        'timestamp' => time(),
+      ];
+      \Drupal::state()
+        ->set('ibm_apim.snapshot_webhook_payloads', $webhookPayloads);
+    }
+
+    drush_log(dt('Got type: @type', ['@type' => $type]), 'success');
+
+    // checking memory
+    drush_ibm_apim_manage_memory_usage();
+
+    // assert that the index_directly value of the search_api module's default_index is
+    // set correctly according to the number of nodes in the site
+    drush_ibm_apim_assert_index_directly_value();
+
+    try {
+      if ($type !== NULL && $type !== 'error' && $content !== NULL) {
+        switch ($type) {
+          case 'product':
+            $prodList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_products.$UUID.json")) {
+              $prodList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_products.$UUID.json"), TRUE);
+            }
+            // we don't care about staged, retired, or whatever other state products might be in. we only want published products in the portal.
+            $stateToLower = strtolower($content['state']);
+            if ($stateToLower === 'published' || $stateToLower === 'deprecated') {
+              $prodList[] = $content['name'] . ':' . $content['version'];
+              file_put_contents("/tmp/snapshot.$UUID/content_refresh_products.$UUID.json", json_encode($prodList));
+              drush_product_createOrUpdate(['product' => $content], 'ContentRefresh', 'content_refresh');
+            }
+            else {
+              drush_log(dt('Ignoring product in invalid state %state: %product', [
+                '%state' => $stateToLower,
+                '%product' => $content['name'],
+              ]), 'warning');
+            }
+            break;
+          case 'api':
+            $apiList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json")) {
+              $apiList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json"), TRUE);
+            }
+            $apiList[] = $content['name'] . ':' . $content['version'];
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json", json_encode($apiList));
+            drush_apic_api_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
+            break;
+          case 'app':
+            $appList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_apps.$UUID.json")) {
+              $appList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_apps.$UUID.json"), TRUE);
+            }
+            $appList[] = $content['id'];
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_apps.$UUID.json", json_encode($appList));
+            drush_apic_app_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
+            break;
+          case 'consumer_org':
+            $orgList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_consumerorgs.$UUID.json")) {
+              $orgList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_consumerorgs.$UUID.json"), TRUE);
+            }
+            if (isset($content['consumer_org']['url'])) {
+              $orgList[] = $content['consumer_org']['url'];
+            }
+            else {
+              $orgList[] = '/consumer-api/orgs/' . $content['id'];
+            }
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_consumerorgs.$UUID.json", json_encode($orgList));
+            drush_consumerorg_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
+            break;
+          case 'catalog_setting':
+            drush_ibm_apim_updateconfig($content);
+            // set message that we have correctly received a config payload to disable intro warning message
+            \Drupal::state()->set('ibm_apim.content_refresh_status', 1);
+            break;
+          case 'catalog':
+            drush_ibm_apim_updatecatalog($content);
+            break;
+          case 'configured_catalog_user_registry':
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_user_registries.$UUID.json")) {
+              $urList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_user_registries.$UUID.json"), TRUE);
+            }
+            $urList[] = $content['url'];
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_user_registries.$UUID.json", json_encode($urList));
+            drush_ibm_apim_user_registry_update($content, 'content_refresh');
+            break;
+          case 'extension':
+            $extList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_extensions.$UUID.json")) {
+              $extList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_extensions.$UUID.json"), TRUE);
+            }
+            $extList[] = $content['name'];
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_extensions.$UUID.json", json_encode($extList));
+            drush_ibm_apim_vendor_extension_update($content, 'content_refresh');
+            break;
+          case 'group':
+            $groupList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_groups.$UUID.json")) {
+              $groupList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_groups.$UUID.json"), TRUE);
+            }
+            $groupList[] = $content['url'];
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_groups.$UUID.json", json_encode($groupList));
+            drush_ibm_apim_group_update($content, 'content_refresh');
+            break;
+          case 'subscription':
+            $subList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_subs.$UUID.json")) {
+              $subList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_subs.$UUID.json"), TRUE);
+            }
+            if (!isset($subList[$content['app_url']]) || !is_array($subList[$content['app_url']])) {
+              $subList[$content['app_url']] = [];
+            }
+            $subList[$content['app_url']][] = $content['id'];
+            drush_apic_app_createOrUpdatesub($content, 'create_sub', 'snapshot');
+
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_subs.$UUID.json", json_encode($subList));
+            break;
+          case 'tls_client_profile':
+            $tlsList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_tlsprofile_objects.$UUID.json")) {
+              $tlsList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_tlsprofile_objects.$UUID.json"), TRUE);
+            }
+            $tlsList[] = $content['url'];
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_tlsprofile_objects.$UUID.json", json_encode($tlsList));
+            drush_ibm_apim_tlsprofile_update($content, 'content_refresh');
+            break;
+          case 'oauth_provider':
+            break;
+          case 'role':
+            drush_consumerorg_role_create($content);
+            break;
+          case 'member':
+            drush_ibm_apim_user_createOrUpdate($content, 'ContentRefresh');
+            break;
+          case 'member_invitation':
+            drush_consumerorg_invitation_createOrUpdate($content, 'ContentRefresh');
+            break;
+          case 'configured_billing':
+            $billList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_billing_objects.$UUID.json")) {
+              $billList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_billing_objects.$UUID.json"), TRUE);
+            }
+            $billList[] = $content['billing_url'];
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_billing_objects.$UUID.json", json_encode($billList));
+            drush_ibm_apim_billing_update($content, 'content_refresh');
+            break;
+          case 'permission':
+            $permList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_permission_objects.$UUID.json")) {
+              $permList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_permission_objects.$UUID.json"), TRUE);
+            }
+            $permList[] = $content['url'];
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_permission_objects.$UUID.json", json_encode($permList));
+            drush_ibm_apim_permission_update($content, 'content_refresh');
+            break;
+          case 'analytics_service':
+            $analyticsList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_analytics_objects.$UUID.json")) {
+              $analyticsList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_analytics_objects.$UUID.json"), TRUE);
+            }
+            $analyticsList[] = $content['url'];
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_analytics_objects.$UUID.json", json_encode($analyticsList));
+            drush_ibm_apim_analytics_update($content, 'content_refresh');
+            break;
+          case 'close_stream':
+            // reached the end of the snapshot payload
+            drush_ibm_apim_clearup($UUID);
+
+            // assert that the index_directly value of the search_api module's default_index is
+            // set correctly according to the number of nodes in the site
+            drush_ibm_apim_assert_index_directly_value();
+
+            break;
+          default:
+            drush_log(dt('There is no drush code to handle the payload type @type', ['@type' => $type]), 'warning');
+            break;
+        }
+        unset($content);
+      }
+      else {
+        drush_log(dt('No content provided for webhook', []), 'warning');
+      }
+    } catch (Exception $e) {
+      drush_log(dt('Caught exception in drush_ibm_apim_content_refresh: @message', [
+        '@message' => $e->getMessage(),
+      ]), 'warning');
+
+      $errors = \Drupal::state()->get('ibm_apim.sync_errors');
+      if ($errors === NULL) {
+        $errors = [];
+      }
+      $errors[] = [
+        'type' => 'exception',
+        'message' => $e->getMessage(),
+        'code' => $e->getCode(),
+        'trace' => $e->getTrace(),
+        'timestamp' => time(),
+      ];
+      \Drupal::state()->set('ibm_apim.sync_errors', $errors);
+
+    }
+}
+
+
+/**
+ * This function is used to wipe the OIDC state service and platform API token
+ * This is used when doing backup / restore operations since the content won't be valid for the new site
+ */
+function drush_ibm_apim_delete_tokens() {
+  ibm_apim_entry_trace(__FUNCTION__, NULL);
+  drush_log(dt('Drush drush_ibm_apim_delete_tokens delete saved OIDC tokens'), 'success');
+
+  // set to empty array
+  $oidcStateService = \Drupal::service('auth_apic.oidc_state');
+  $oidcStateService->saveAllOidcState([]);
+
+  // delete the Mail Platform API token
+  \Drupal::state()->delete('ibm_apic_mail.token');
+
+  drush_log(dt('Drush drush_ibm_apim_delete_tokens exiting'), 'success');
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
 /**
  * Used for the streamed objects from content refresh snapshot payload
  */
@@ -1034,7 +1059,7 @@ function drush_ibm_apim_clearup($UUID) {
     $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
     foreach ($results as $nid) {
       $consumerOrgService->deleteNode($nid);
-      // \Drupal::entityManager()->getStorage('node')->resetCache(array($nid));
+      // \Drupal::entityTypeManager()->getStorage('node')->resetCache(array($nid));
     }
   }
   unset($current_consumerorgs);
@@ -1063,7 +1088,7 @@ function drush_ibm_apim_clearup($UUID) {
   if ($results !== NULL && !empty($results)) {
     foreach ($results as $nid) {
       Application::deleteNode($nid, 'content_refresh');
-      // \Drupal::entityManager()->getStorage('node')->resetCache(array($nid));
+      // \Drupal::entityTypeManager()->getStorage('node')->resetCache(array($nid));
     }
   }
 
@@ -1098,7 +1123,7 @@ function drush_ibm_apim_clearup($UUID) {
   $uids = $query->execute();
 
   foreach ($uids as $uid) {
-      user_delete($uid);
+    \Drupal::entityTypeManager()->getStorage('user')->load($uid)->delete();
   }
 
   // Delete all users from db with duplicate emails
@@ -1502,7 +1527,8 @@ function drush_ibm_apim_createkey($clientId = NULL) {
 
     $key = Drupal::service('key.repository')->getKey($keyName);
     if (isset($key) && !empty($key)) {
-      drush_print('Key already exists, refusing to update value as it would break existing encrypted content');
+      drush_print('Key already exists, so decrypting existing content and re-encrypting using the new client id');
+      Drupal::service('ibm_apim.site_config')->updateEncryptionKey($clientId);
     }
     else {
       drush_print('Creating new key');
@@ -1520,26 +1546,26 @@ function drush_ibm_apim_createkey($clientId = NULL) {
         'key_input_settings' => ['base64_encoded' => FALSE],
       ]);
       $key->save();
-    }
 
-    // check there is an encryption profile
-    $profileName = 'socialblock';
-    $profile = Drupal::service('encrypt.encryption_profile.manager')
-      ->getEncryptionProfile($profileName);
-    if (isset($profile) && !empty($profile)) {
-      drush_print('Encryption profile already exists');
-      // dont think there is anything to do if already exists
-    }
-    else {
-      drush_print('Creating new encryption profile');
-      $profile = \Drupal\encrypt\Entity\EncryptionProfile::create([
-        'id' => $profileName,
-        'label' => $profileName,
-        'encryption_method' => 'real_aes',
-        'encryption_key' => $keyName,
-        'encryption_method_configuration' => [],
-      ]);
-      $profile->save();
+      // check there is an encryption profile
+      $profileName = 'socialblock';
+      $profile = Drupal::service('encrypt.encryption_profile.manager')
+        ->getEncryptionProfile($profileName);
+      if (isset($profile) && !empty($profile)) {
+        drush_print('Encryption profile already exists');
+        // dont think there is anything to do if already exists
+      }
+      else {
+        drush_print('Creating new encryption profile');
+        $profile = \Drupal\encrypt\Entity\EncryptionProfile::create([
+          'id' => $profileName,
+          'label' => $profileName,
+          'encryption_method' => 'real_aes',
+          'encryption_key' => $keyName,
+          'encryption_method_configuration' => [],
+        ]);
+        $profile->save();
+      }
     }
   }
   else {
@@ -2164,7 +2190,7 @@ function drush_ibm_apim_group_delete($group, $event = 'group_del') {
     if (is_string($group)) {
       $group = json_decode($group, TRUE);
     }
-    if (!isset($vx['url'])) {
+    if (!isset($group['url'])) {
       $group['url'] = 'unknown';
     }
     $groupService = \Drupal::service('ibm_apim.group');
@@ -2193,11 +2219,11 @@ function drush_ibm_apim_billing_create($bill, $event = 'billing_create') {
       $bill = json_decode($bill, TRUE);
     }
 
-    if (!isset($bill['url'])) {
-      $bill['url'] = 'unknown';
+    if (!isset($bill['billing_url'])) {
+      $bill['billing_url'] = 'unknown';
     }
     $billService = \Drupal::service('ibm_apim.billing');
-    $billService->update($bill['url'], $bill);
+    $billService->update($bill['billing_url'], $bill);
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -2218,11 +2244,11 @@ function drush_ibm_apim_billing_update($bill, $event = 'billing_update') {
     if (is_string($bill)) {
       $bill = json_decode($bill, TRUE);
     }
-    if (!isset($bill['url'])) {
-      $bill['url'] = 'unknown';
+    if (!isset($bill['billing_url'])) {
+      $bill['billing_url'] = 'unknown';
     }
     $billService = \Drupal::service('ibm_apim.billing');
-    $billService->update($bill['url'], $bill);
+    $billService->update($bill['billing_url'], $bill);
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -2243,11 +2269,11 @@ function drush_ibm_apim_billing_delete($bill, $event = 'billing_del') {
     if (is_string($bill)) {
       $bill = json_decode($bill, TRUE);
     }
-    if (!isset($vx['url'])) {
-      $bill['url'] = 'unknown';
+    if (!isset($bill['billing_url'])) {
+      $bill['billing_url'] = 'unknown';
     }
     $billService = \Drupal::service('ibm_apim.billing');
-    $billService->delete($bill['url']);
+    $billService->delete($bill['billing_url']);
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
@@ -2692,20 +2718,20 @@ function drush_ibm_apim_index_directly($indexDirectly, $count) {
 }
 
 /**
- * Purge all blacklisted modules installed in a site.
+ * Purge all blocklisted modules installed in a site.
  * The modules will be uninstalled then deleted from the file system.
  */
-function drush_ibm_apim_purge_blacklist_modules() {
+function drush_ibm_apim_purge_blocklist_modules() {
   if (function_exists('ibm_apim_entry_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
   $moduleService = \Drupal::service('ibm_apim.module');
-  $result = $moduleService->purgeBlackListedModules();
+  $result = $moduleService->purgeBlockListedModules();
   if ($result) {
-    drush_log(t('All blacklisted modules purged.'), 'success');
+    drush_log(t('All blocklisted modules purged.'), 'success');
   }
   else {
-    drush_log(t('Error purging blacklisted modules.'), 'error');
+    drush_log(t('Error purging blocklisted modules.'), 'error');
   }
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_exit_trace(__FUNCTION__, NULL);

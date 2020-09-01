@@ -1,4 +1,12 @@
 changes:
+  8.x-1.6.3:
+  - increase gutter for latest masonry views
+  8.x-1.6.2:
+  - remove Rules support from our code
+  8.x-1.6.1:
+  - log the product version when we create/delete/update (#134)
+  8.x-1.6.0:
+  - update version: 8.x-1.5.5 -> 8.x-1.6.0
   8.x-1.5.4:
   - Maybe fix for putting corgs into groups (#133)
   8.x-1.5.3: null

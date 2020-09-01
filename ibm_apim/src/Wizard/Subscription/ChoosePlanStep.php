@@ -61,7 +61,7 @@ class ChoosePlanStep extends IbmWizardStepBase {
 
       $product_node = Node::load($product_id);
       if ($product_node !== NULL) {
-        $product_node_build = node_view($product_node, 'subscribewizard');
+        $product_node_build = \Drupal::entityTypeManager()->getViewBuilder('node')->view($product_node, 'subscribewizard');
 
         $form['product'] = $product_node_build;
 

@@ -3,7 +3,7 @@ type: module
 description: Core IBM API Connect integration
 package: IBM API Connect
 core: 8.x
-version: 8.x-1.7.7
+version: 8.x-1.8.14
 project: ibm_apim
 dependencies:
 - telephone

@@ -13,18 +13,9 @@
 
 namespace Drupal\product;
 
-use Drupal\consumerorg\ApicType\Member;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
-use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\node\NodeInterface;
-use Drupal\product\Event\ProductPublishEvent;
-use Drupal\product\Event\ProductDeleteEvent;
-use Drupal\product\Event\ProductUpdateEvent;
-use Drupal\product\Event\ProductDeprecateEvent;
-use Drupal\product\Event\ProductSupersedeEvent;
-use Drupal\product\Event\ProductReplaceEvent;
-use Drupal\product\Event\ProductRestageEvent;
 
 /**
  * Class to work with the Product content type, takes input from the JSON returned by
@@ -192,16 +183,8 @@ class Product {
         'node' => $node,
         'data' => $product,
       ]);
-      // invoke rules
-      if ($moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new ProductPublishEvent($node, ['product' => $node]);
-        $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(ProductPublishEvent::EVENT_NAME, $event);
-      }
 
-      \Drupal::logger('product')->notice('Product @product created', ['@product' => $node->getTitle()]);
+      \Drupal::logger('product')->notice('Product @product @version created', ['@product' => $node->getTitle(), '@version' => $node->apic_version->value]);
     }
     if ($node !== NULL) {
       $returnId = $node->id();
@@ -237,8 +220,9 @@ class Product {
       // filter out any retired products and remove them (and other invalid states)
       if (array_key_exists('state', $product) && ($product['state'] === 'retired' || $product['state'] === 'archived' || $product['state'] === 'staged' || $product['state'] === 'pending')) {
         \Drupal::logger('product')
-          ->error('Update product: product @productName is in an invalid state: @state, deleting it.', [
+          ->error('Update product: product @productName @version is in an invalid state: @state, deleting it.', [
             '@productName' => $product['name'],
+            '@version' => $product['catalog_product']['info']['version'],
             '@state' => $product['state'],
           ]);
         self::deleteNode($node->id(), 'invalid_product_state');
@@ -563,40 +547,12 @@ class Product {
         // if invoked from the create code then don't invoke the update event - will be invoked from create instead
         if ($node !== NULL) {
           if ($event !== 'internal') {
-            \Drupal::logger('product')->notice('Product @product updated', ['@product' => $node->getTitle()]);
-
+            \Drupal::logger('product')->notice('Product @product @version updated', ['@product' => $node->getTitle(),'@version' => $node->apic_version->value]);
             // Calling all modules implementing 'hook_product_update':
             $moduleHandler->invokeAll('product_update', [
               'node' => $node,
               'data' => $product,
             ]);
-            // invoke rules
-            if ($moduleHandler->moduleExists('rules')) {
-
-              $eventDispatcher = \Drupal::service('event_dispatcher');
-              // Set the args twice on the event: as the main subject but also in the
-              // list of arguments.
-              if ($event !== NULL && $utils->endsWith($event, 'replace')) {
-                $event = new ProductReplaceEvent($node, ['product' => $node]);
-                $eventDispatcher->dispatch(ProductReplaceEvent::EVENT_NAME, $event);
-              }
-              elseif ($event !== NULL && $utils->endsWith($event, 'supersede')) {
-                $event = new ProductSupersedeEvent($node, ['product' => $node]);
-                $eventDispatcher->dispatch(ProductSupersedeEvent::EVENT_NAME, $event);
-              }
-              elseif ($event !== NULL && $utils->endsWith($event, 'restageFromDraft')) {
-                $event = new ProductRestageEvent($node, ['product' => $node]);
-                $eventDispatcher->dispatch(ProductRestageEvent::EVENT_NAME, $event);
-              }
-              elseif ($event !== NULL && $utils->endsWith($event, 'deprecate')) {
-                $event = new ProductDeprecateEvent($node, ['product' => $node]);
-                $eventDispatcher->dispatch(ProductDeprecateEvent::EVENT_NAME, $event);
-              }
-              elseif ($event !== NULL || $utils->endsWith($event, 'update')) {
-                $event = new ProductUpdateEvent($node, ['product' => $node]);
-                $eventDispatcher->dispatch(ProductUpdateEvent::EVENT_NAME, $event);
-              }
-            }
           }
           ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
           $returnValue = $node;
@@ -668,16 +624,7 @@ class Product {
     if ($node !== NULL) {
       // Calling all modules implementing 'hook_product_delete':
       $moduleHandler->invokeAll('product_delete', ['node' => $node]);
-      \Drupal::logger('product')->notice('Product @product deleted', ['@product' => $node->getTitle()]);
-
-      // invoke rules
-      if ($moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new ProductDeleteEvent($node, ['product' => $node]);
-        $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(ProductDeleteEvent::EVENT_NAME, $event);
-      }
+      \Drupal::logger('product')->notice('Product @product:@version deleted', ['@product' => $node->getTitle(), '@version' => $node->apic_version->value]);
 
       //Delete all subscriptions for the product
       $query = \Drupal::entityQuery('apic_app_application_subs');

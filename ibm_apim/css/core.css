@@ -616,6 +616,16 @@ form[class*='apic-resetpw'] .form-item input:focus {
   display: none;
 }
 
+.context-user-login.bx--global-light-ui .form-actions {
+  display: flex;
+  flex-direction: column;
+}
+
+.context-user-login.bx--global-light-ui .form-actions .form-submit
+{
+  margin-left: 0;
+}
+
 .context-user-login .form-submit,
 .context-user-password .form-submit,
 .context-ibm-apim-activate-x .form-submit,

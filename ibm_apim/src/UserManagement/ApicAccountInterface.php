@@ -73,12 +73,13 @@ interface ApicAccountInterface {
   public function updateApicAccount(ApicUser $user): bool;
 
   /**
+   * @param $apic_user ApicUser
    * @param $user user account
    * @param $form_state user.register form state
    * @param $view_mode entity view mode
    *
    */
-  public function saveCustomFields($user, $form_state, $view_mode): void;
+  public function saveCustomFields($apic_user, $user, $form_state, $view_mode): void;
 
   /**
    * @param $user user account

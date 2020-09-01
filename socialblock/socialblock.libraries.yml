@@ -6,4 +6,4 @@ socialblock:
   js:
     js/socialblock.js: {}
   dependencies:
-    - masonry/layout
+    - 'masonry/masonry.layout'

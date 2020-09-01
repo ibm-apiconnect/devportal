@@ -1,4 +1,18 @@
 changes:
+  8.x-1.10.6:
+  - increase gutter for latest masonry views
+  8.x-1.10.5:
+  - comment out test for now
+  8.x-1.10.4: null
+  8.x-1.10.3:
+  - pass formState through to the alter hook
+  - Custom fields 2018.4.1 (#201)
+  8.x-1.10.2:
+  - remove Rules support from our code
+  8.x-1.10.1:
+  - Removed use of deprecated functions (#197)
+  8.x-1.10.0:
+  - update version: 8.x-1.9.4 -> 8.x-1.10.0
   8.x-1.9.3: null
   8.x-1.9.2:
   - Show credential name when deleting (#194) (#196)

@@ -137,7 +137,7 @@ class ChooseApplicationStep extends IbmWizardStepBase {
       $form['newApps'] = ['#markup' => "<div class='apicNewAppsList'></div>"];
 
       if (!empty($validApps)) {
-        $form['apps'] = node_view_multiple($validApps, 'subscribewizard');
+        $form['apps'] = \Drupal::entityTypeManager()->getViewBuilder('node')->viewMultiple($validApps, 'subscribewizard');
         $form['apps']['#prefix'] = "<div class='apicSubscribeAppsList'>";
         $form['apps']['#suffix'] = '</div>';
       }

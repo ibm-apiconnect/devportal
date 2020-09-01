@@ -38,7 +38,7 @@ class MeResponse extends RestResponse {
   /**
    * @return ApicUser
    */
-  public function getUser(): ApicUser {
+  public function getUser(): ?ApicUser {
     return $this->user;
   }
 

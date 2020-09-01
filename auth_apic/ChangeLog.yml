@@ -1,4 +1,24 @@
 changes:
+  8.x-1.7.5:
+  - User custom fields 2018.4.1 (#582)
+  8.x-1.7.4: null
+  8.x-1.7.3: null
+  8.x-1.7.2:
+  - Custom fields 2018.4.1 (#576)
+  8.x-1.7.1:
+  - Removed portal redirect code (#572)
+  - Revert "comment out tests that arent working"
+  - comment out tests that arent working
+  - try to see why unit tests failing
+  - fix test
+  - Make checks case insensitive
+  - update interface
+  - change funcs to be public
+  - updated test
+  - Removed use of deprecated functions
+  - Replaced drupal set message and entity manager
+  8.x-1.7.0:
+  - update version: 8.x-1.6.3 -> 8.x-1.7.0
   8.x-1.6.2:
   - Validate input (#564) (#566)
   8.x-1.6.1: null

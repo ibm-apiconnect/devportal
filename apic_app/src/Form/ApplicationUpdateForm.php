@@ -273,24 +273,27 @@ class ApplicationUpdateForm extends FormBase {
       $imageURL = Application::getImageForApp($this->node, $name);
       $data['image_endpoint'] = $imageURL;
 
+      $customFields = Application::getCustomFields();
+      $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $form_state);
+      if (!empty($customFieldValues) && isset($this->node->get("application_data")->getValue()[0]['value'])) {
+        $appData = unserialize($this->node->get("application_data")->getValue()[0]['value']);
+        $metadata = [];
+        if (isset($appData['metadata'])) {
+          $metadata = $appData['metadata'];
+        }
+        foreach($customFieldValues as $customField => $value) {
+          $metadata[$customField] = json_encode($value);
+        }
+        $data['metadata'] = $metadata;
+      }
       $result = $this->restService->patchApplication($url, json_encode($data));
       if (isset($result) && $result->code >= 200 && $result->code < 300) {
 
         $this->node->setTitle($this->utils->truncate_string($name));
         $this->node->set('apic_summary', $summary);
         $this->node->set('application_redirect_endpoints', $oauthEndpoints);
-        $customFields = Application::getCustomFields();
-        if (isset($customFields) && count($customFields) > 0) {
-          foreach ($customFields as $customField) {
-            $value = $form_state->getValue($customField);
-            if (is_array($value) && isset($value[0]['value'])) {
-              $value = $value[0]['value'];
-            }
-            elseif (isset($value[0])) {
-              $value = array_values($value[0]);
-            }
-            $this->node->set($customField, $value);
-          }
+        foreach($customFieldValues as $customField => $value) {
+          $this->node->set($customField, $value);
         }
         $this->node->save();
 
@@ -305,13 +308,6 @@ class ApplicationUpdateForm extends FormBase {
         $moduleHandler = \Drupal::service('module_handler');
         $moduleHandler->invokeAll('apic_app_update', [$this->node, $result->data]);
 
-        if ($moduleHandler->moduleExists('rules')) {
-          // Set the args twice on the event: as the main subject but also in the
-          // list of arguments.
-          $event = new ApplicationUpdateEvent($this->node, ['application' => $this->node]);
-          $eventDispatcher = \Drupal::service('event_dispatcher');
-          $eventDispatcher->dispatch(ApplicationUpdateEvent::EVENT_NAME, $event);
-        }
       }
       $form_state->setRedirectUrl($this->getCancelUrl());
     }

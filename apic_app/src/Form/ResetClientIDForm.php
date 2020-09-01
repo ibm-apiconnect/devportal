@@ -197,13 +197,6 @@ class ResetClientIDForm extends ConfirmFormBase {
         'credId' => $this->credId,
       ]);
 
-      if ($moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new CredentialClientIDResetEvent($this->node, ['application' => $this->node]);
-        $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(CredentialClientIDResetEvent::EVENT_NAME, $event);
-      }
     }
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

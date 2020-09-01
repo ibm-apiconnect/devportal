@@ -1,4 +1,267 @@
 changes:
+  8.x-20200818-1624:
+    commits:
+    - remove leading slashes from path
+    modules:
+      auth_apic:
+        8.x-1.7.5:
+        - User custom fields 2018.4.1 (#582)
+      ibm_apim:
+        8.x-1.8.13:
+        - User custom fields 2018.4.1 (#596)
+      consumerorg:
+        8.x-1.7.6:
+        - User custom fields 2018.4.1 (#202)
+  8.x-20200817-1322:
+    commits:
+    - composer module update
+    modules:
+      socialblock:
+        8.x-1.6.5:
+        - fix link to tweets
+  8.x-20200813-1023:
+    commits: null
+    modules:
+      socialblock:
+        8.x-1.6.4:
+        - change default
+        - change default
+        - fix socialblock
+  8.x-20200804-1322:
+    commits:
+    - drupal core update
+    - Update file names
+    - Tc2dev/20200721 (#386)
+    modules:
+      product:
+        8.x-1.6.3:
+        - increase gutter for latest masonry views
+      apic_api:
+        8.x-1.6.3:
+        - increase gutter for latest masonry views
+      apic_app:
+        8.x-1.10.6:
+        - increase gutter for latest masonry views
+  8.x-20200803-0921:
+    commits:
+    - pull in the hierarchical_taxonomy_menu
+    - use node 12
+    - new major versions of some modules
+    modules:
+      ibm_apim:
+        8.x-1.8.12:
+        - Dupe fix 2018.4.1 (#585)
+  8.x-20200803-0423:
+    commits:
+    - remove references to source maps
+    modules:
+      socialblock:
+        8.x-1.6.3: null
+      featuredcontent:
+        8.x-1.6.3: null
+  8.x-20200802-1103:
+    commits: null
+    modules:
+      socialblock:
+        8.x-1.6.2:
+        - masonry library has a new name
+      auth_apic:
+        8.x-1.7.4: null
+      featuredcontent:
+        8.x-1.6.2:
+        - masonry library has a new name
+      ibm_apim:
+        8.x-1.8.11:
+        - masonry library has a new name
+  8.x-20200731-1655:
+    commits: null
+    modules:
+      apictest:
+        8.x-1.8.3:
+        - fix patch for 2018.4.1
+  8.x-20200724-1023:
+    commits:
+    - warmer has a major version update
+    - add query functions to drush file
+    - Composer fp13 updates (#383)
+    - Fix patches
+    - Add a slash to keep docker happy
+    - Turn off SSL for the profile build as we have no certs
+    modules:
+      apictest:
+        8.x-1.8.2:
+        - patch the files after they exist!
+        - cant create sites right now in module builds
+  8.x-20200720-1023:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.8.10:
+        - Force user log out on token expiry (#574) (#576)
+  8.x-20200717-2223:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.7.3: null
+  8.x-20200717-1332:
+    commits:
+    - composer update
+    modules:
+      apic_app:
+        8.x-1.10.5:
+        - comment out test for now
+        8.x-1.10.4: null
+        8.x-1.10.3:
+        - pass formState through to the alter hook
+        - Custom fields 2018.4.1 (#201)
+  8.x-20200715-1323:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.7.2:
+        - Custom fields 2018.4.1 (#576)
+      ibm_apim:
+        8.x-1.8.9:
+        - Custom fields 2018.4.1 (#571)
+      consumerorg:
+        8.x-1.7.5:
+        - clear cache when change role
+        8.x-1.7.4:
+        - Custom fields 2018.4.1 (#190)
+  8.x-20200710-1924:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.8.8:
+        - Added unit test (#566) (#569)
+  8.x-20200706-1023:
+    commits:
+    - Merge pull request
+    - Merge pull request
+    modules:
+      ibm_apim:
+        8.x-1.8.7:
+        - apimesh/devportal#5177
+  8.x-20200703-0929:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.8.6:
+        - create deletetokens drush command
+  8.x-20200701-1256:
+    commits: null
+    modules:
+      product:
+        8.x-1.6.2:
+        - remove Rules support from our code
+      mail_subscribers:
+        8.x-1.6.1:
+        - remove Rules support from our code
+      apic_api:
+        8.x-1.6.2:
+        - remove Rules support from our code
+      apic_app:
+        8.x-1.10.2:
+        - remove Rules support from our code
+      ibm_apim:
+        8.x-1.8.5:
+        - Revert "remove Rules support from our code"
+        8.x-1.8.4:
+        - remove Rules support from our code
+      consumerorg:
+        8.x-1.7.3:
+        - remove Rules support from our code
+  8.x-20200630-1450:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.7.1:
+        - Removed portal redirect code (#572)
+        - Revert "comment out tests that arent working"
+        - comment out tests that arent working
+        - try to see why unit tests failing
+        - fix test
+        - Make checks case insensitive
+        - update interface
+        - change funcs to be public
+        - updated test
+        - Removed use of deprecated functions
+        - Replaced drupal set message and entity manager
+  8.x-20200630-1145:
+    commits: null
+    modules:
+      mail_subscribers:
+        8.x-1.6.0:
+        - update version: 8.x-1.5.1 -> 8.x-1.6.0
+      ibm_apim:
+        8.x-1.8.3:
+        - fix mock
+        8.x-1.8.2:
+        - fix issue with immutable config
+  8.x-20200603-0931:
+    commits:
+    - whitespace - coding style
+    - removing a module that doesnt exist doesnt work
+    - for old installs dont try to install a module we dont have anymore
+    - blacklist -> blocklist
+    - fix paths
+    - rename patch file
+    - Add patch for endless redirect module loop
+    - Update version for 2018.4.1.13
+    modules:
+      socialblock:
+        8.x-1.6.1:
+        - Removed use of deprecated functions
+      product:
+        8.x-1.6.1:
+        - log the product version when we create/delete/update (#134)
+      ghmarkdown:
+        8.x-1.6.0:
+        - update version: 8.x-1.5.1 -> 8.x-1.6.0
+      auth_apic:
+        8.x-1.7.0:
+        - update version: 8.x-1.6.3 -> 8.x-1.7.0
+      mail_subscribers:
+        8.x-1.5.0:
+        - update version: 8.x-1.4.2 -> 8.x-1.5.0
+      themegenerator:
+        8.x-1.6.1:
+        - Removed use of deprecated functions
+      featuredcontent:
+        8.x-1.6.1:
+        - small design tweak
+      apic_api:
+        8.x-1.6.1:
+        - fix api version in log message
+        - typo
+        - handle admin and anon calling consumer apis
+        - dont use platform auth for consumer apis
+        - Removed use of deprecated functions
+        - log the api version when we create/delete/update (#95)
+        - few graphql css necessary tweaks
+        - tidy up api explorer view
+      apic_app:
+        8.x-1.10.1:
+        - Removed use of deprecated functions (#197)
+      ibm_apim:
+        8.x-1.8.1:
+        - blacklist -> blocklist
+        - Stream snapshot content
+        - fix missing function
+        - Some cleanup to stop JSON Parse error.
+        - put anon back
+        - Handle admin user calling the consumer APIs.
+        - need to load user before deleting it
+        - allow changing of client id
+        - updated test
+        - Removed use of deprecated functions
+        - Replaced drupal set message and entity manager
+      consumerorg:
+        8.x-1.7.2: null
+      apictest:
+        8.x-1.8.1:
+        - blacklist -> blocklist
+        - Removed use of deprecated functions
   8.x-20200529-1025:
     commits:
     - disable rules if not being actively used
@@ -830,4 +1093,4 @@ changes:
         - update version: 8.x-1.1.46 -> 8.x-1.2.46
       apictest:
         8.x-1.3.55: null
-  8.x-20200603-0931:
+  8.x-20200824-1550:

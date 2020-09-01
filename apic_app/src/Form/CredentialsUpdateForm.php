@@ -206,17 +206,6 @@ class CredentialsUpdateForm extends FormBase {
         'credId' => $this->credId,
       ]);
 
-      if ($moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new CredentialUpdateEvent($this->node, $result->data, $this->credId, [
-          'application' => $this->node,
-          'data' => $result->data,
-          'credId' => $this->credId,
-        ]);
-        $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(CredentialUpdateEvent::EVENT_NAME, $event);
-      }
     }
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

@@ -1,4 +1,42 @@
 changes:
+  8.x-1.8.13:
+  - User custom fields 2018.4.1 (#596)
+  8.x-1.8.12:
+  - Dupe fix 2018.4.1 (#585)
+  8.x-1.8.11:
+  - masonry library has a new name
+  8.x-1.8.10:
+  - Force user log out on token expiry (#574) (#576)
+  8.x-1.8.9:
+  - Custom fields 2018.4.1 (#571)
+  8.x-1.8.8:
+  - Added unit test (#566) (#569)
+  8.x-1.8.7:
+  - apimesh/devportal#5177
+  8.x-1.8.6:
+  - create deletetokens drush command
+  8.x-1.8.5:
+  - Revert "remove Rules support from our code"
+  8.x-1.8.4:
+  - remove Rules support from our code
+  8.x-1.8.3:
+  - fix mock
+  8.x-1.8.2:
+  - fix issue with immutable config
+  8.x-1.8.1:
+  - blacklist -> blocklist
+  - Stream snapshot content
+  - fix missing function
+  - Some cleanup to stop JSON Parse error.
+  - put anon back
+  - Handle admin user calling the consumer APIs.
+  - need to load user before deleting it
+  - allow changing of client id
+  - updated test
+  - Removed use of deprecated functions
+  - Replaced drupal set message and entity manager
+  8.x-1.8.0:
+  - update version: 8.x-1.7.7 -> 8.x-1.8.0
   8.x-1.7.6:
   - Added removal of consumer orgs from groups (#555)
   8.x-1.7.5: null

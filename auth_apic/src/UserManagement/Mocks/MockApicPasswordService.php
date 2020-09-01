@@ -25,12 +25,12 @@ class MockApicPasswordService implements ApicPasswordInterface {
    */
   public function resetPassword(JWTToken $obj, $password): int {
 
-      drupal_set_message('MOCKED SERVICE:: In resetPassword, returned:' . $obj->getOrg() . ':' . $obj->getEnv());
-      if ($obj->getOrg() === 'testorg' && $obj->getEnv() === 'testcatalog') {
-        drupal_set_message('MOCKED SERVICE:: In resetPassword return 200');
-        return 200;
-      }
+    \Drupal::messenger()->addStatus('MOCKED SERVICE:: In resetPassword, returned:' . $obj->getOrg() . ':' . $obj->getEnv());
+    if ($obj->getOrg() === 'testorg' && $obj->getEnv() === 'testcatalog') {
+      \Drupal::messenger()->addStatus('MOCKED SERVICE:: In resetPassword return 200');
+      return 200;
     }
+  }
 
   /**
    * @inheritDoc
@@ -39,11 +39,11 @@ class MockApicPasswordService implements ApicPasswordInterface {
     if ($old_password === 'thisiswrong') {
       // In the real form we rely on the message we get back from the management server to inform the user that the
       // pw is incorrect, we'll put the message out ourselves.
-      drupal_set_message('MOCKED SERVICE:: The old password is incorrect');
+      \Drupal::messenger()->addStatus('MOCKED SERVICE:: The old password is incorrect');
       return FALSE;
     }
     elseif ($new_password === 'thisisinvalid') {
-      drupal_set_message('MOCKED SERVICE:: Password must contain characters from 3 of the 4 following categories: 1. upper-case, 2. lower-case, 3. numeric, and 4. punctuation (for example, !, $, #, %)');
+      \Drupal::messenger()->addStatus('MOCKED SERVICE:: Password must contain characters from 3 of the 4 following categories: 1. upper-case, 2. lower-case, 3. numeric, and 4. punctuation (for example, !, $, #, %)');
       return FALSE;
     }
     return TRUE;

@@ -45,6 +45,8 @@ class ConsumerOrg {
 
   private $tags = [];
 
+  private $custom_fields = [];
+
   /**
    * @return string
    */
@@ -550,5 +552,34 @@ class ConsumerOrg {
 
     return $returnValue;
   }
+
+  /**
+   * @return array
+   */
+  public function getCustomFields() {
+    if (!isset($this->custom_fields)) {
+      $this->custom_fields = [];
+    }
+    return $this->custom_fields;
+  }
+
+  /**
+   * @param array $customFields
+   */
+  public function setCustomFields($customFields): void {
+    if (empty($customFields)) {
+      $this->custom_fields = [];
+    } else {
+      $this->custom_fields = $customFields;
+    }
+  }
+
+  public function addCustomField($field, $value): void {
+    if (!isset($this->custom_fields)) {
+      $this->custom_fields = [];
+    }
+    $this->custom_fields[$field] = $value;
+  }
+
 
 }

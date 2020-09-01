@@ -122,7 +122,7 @@ display:
           uses_fields: false
           layoutColumnWidth: ''
           layoutColumnWidthUnit: px
-          gutterWidth: '0'
+          gutterWidth: '20'
           stampSelector: ''
           isLayoutResizable: 1
           isLayoutAnimated: 1

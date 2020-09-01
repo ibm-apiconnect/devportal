@@ -227,8 +227,13 @@ class OrgEditForm extends FormBase {
       $this->messenger->addError(t('An organization title is required.'));
     }
     else {
-
-      $response = $this->consumerOrgService->edit($this->currentOrg, $form_state->getValues());
+      $customFields = $this->consumerOrgService->getCustomFields();
+      $values = $form_state->getValues();
+      if (!empty($customFields)) {
+        $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $form_state);
+        $values = array_replace($values, $customFieldValues);
+      }
+      $response = $this->consumerOrgService->edit($this->currentOrg, $values);
       if ($response->success()) {
         $this->messenger->addMessage(t('Organization updated.'));
       }

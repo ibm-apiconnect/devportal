@@ -416,7 +416,7 @@ class FeaturedContentBlock extends BlockBase {
     $build['#algorithm'] = strtolower($this->configuration['selectionType']);
     $build['#showPlaceholders'] = $ibmApimShowPlaceholderImages;
     $build['#showVersions'] = $ibmApimShowVersions;
-    $build['#attached']['library'][] = 'masonry/layout';
+    $build['#attached']['library'][] = 'masonry/masonry.layout';
     $build['#attached']['library'][] = 'featuredcontent/featuredcontent';
     $build['#cache']['contexts'] = ['session'];
     if (\function_exists('ibm_apim_exit_trace')) {

@@ -253,13 +253,23 @@ class ApplicationRestService implements ApplicationRestInterface {
         $application_image_url = '';
       }
       $data['image_endpoint'] = $application_image_url;
+
+      $customFields = Application::getCustomFields();
+      $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $formState);
+      if (!empty($customFieldValues)) {
+        foreach($customFieldValues as $customField => $value) {
+          $customFieldValues[$customField] = json_encode($value);
+        }
+        $data['metadata'] = $customFieldValues;
+      }
+
       $result = $this->postApplication($url, json_encode($data));
 
       if ($result !== null && $result->code >= 200 && $result->code < 300) {
         $data = array('client_id' => $result->data['client_id'], 'client_secret' => $result->data['client_secret']);
         // alter hook (pre-invoke)
         $moduleHandler = \Drupal::moduleHandler();
-        $moduleHandler->alter('apic_app_modify_create', $data, $result->data['id']);
+        $moduleHandler->alter('apic_app_modify_create', $data, $result->data['id'], $formState);
         $result->data['client_id'] = $data['client_id'];
         $result->data['client_secret'] = $data['client_secret'];
 
@@ -362,21 +372,6 @@ class ApplicationRestService implements ApplicationRestInterface {
             $sub = $result->data;
             $state = $sub['state'] ?? 'enabled';
             try {
-              // Rules
-              $moduleHandler = \Drupal::service('module_handler');
-              if ($moduleHandler->moduleExists('rules')) {
-                // Set the args twice on the event: as the main subject but also in the
-                // list of arguments.
-                $event = new SubscriptionCreateEvent($node, $productNode, $planName, $state, [
-                  'application' => $node,
-                  'product' => $productNode,
-                  'planName' => $planName,
-                  'state' => $state
-                ]);
-                $eventDispatcher = \Drupal::service('event_dispatcher');
-                $eventDispatcher->dispatch(SubscriptionCreateEvent::EVENT_NAME, $event);
-              }
-
               // TODO set billingUrl correctly
               $billingUrl = NULL;
               $org_url = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerOrg()['url'];

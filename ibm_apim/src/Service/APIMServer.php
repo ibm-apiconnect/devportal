@@ -341,7 +341,7 @@ class APIMServer implements ManagementServerInterface {
    * @return \Drupal\ibm_apim\Rest\MeResponse
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
-  public function updateMe(ApicUser $user): MeResponse {
+  public function updateMe(ApicUser $user, $auth = 'user'): MeResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     // 'username' is a Drupal field and will make the mgmt node barf so remove it
@@ -352,7 +352,7 @@ class APIMServer implements ManagementServerInterface {
     $registry_url = $user->getApicUserRegistryUrl();
     $user->setApicUserRegistryUrl(NULL);
 
-    $response = ApicRest::put('/me', $this->userService->getUserJSON($user));
+    $response = ApicRest::put('/me', $this->userService->getUserJSON($user, $auth),$auth);
 
     $user->setUsername($username);
     $user->setApicUserRegistryUrl($registry_url);
@@ -586,7 +586,6 @@ class APIMServer implements ManagementServerInterface {
     $data['first_name'] = $new_user->getFirstname();
     $data['last_name'] = $new_user->getLastname();
     $data['org'] = $new_user->getOrganization();
-
     $response = ApicRest::post($url, json_encode($data), 'clientid');
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -604,6 +603,14 @@ class APIMServer implements ManagementServerInterface {
 
     $url = '/orgs';
     $data = ['title' => $org->getName()];
+
+    $customFields = $org->getCustomFields();
+    if (!empty($customFields)) {
+      $data['metadata'] = [];
+      foreach ($customFields as $customField => $value) {
+        $data['metadata'][$customField] = json_encode($value);
+      }
+    }
     $response = ApicRest::post($url, json_encode($data));
     $responseObject = $this->restResponseReader->read($response);
 
@@ -819,5 +826,8 @@ class APIMServer implements ManagementServerInterface {
     return $result;
   }
 
+  public function get($url) {
+    return $this->restResponseReader->read(ApicRest::get($url));
+  }
 
 }

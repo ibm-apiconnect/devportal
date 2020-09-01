@@ -210,7 +210,13 @@ class OrgCreateForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $response = $this->consumerOrgService->createFromArray($form_state->getValues());
+    $customFields = $this->consumerOrgService->getCustomFields();
+    $values = $form_state->getValues();
+    if (!empty($customFields)) {
+      $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $form_state);
+      $values = array_replace($values, $customFieldValues);
+    }
+    $response = $this->consumerOrgService->createFromArray($values);
 
     if ($response->getMessage() !== NULL) {
       if ($response->success()) {

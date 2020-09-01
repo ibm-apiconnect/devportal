@@ -29,6 +29,7 @@ services:
     arguments: ['@tempstore.private',
                 '@ibm_apim.mgmtserver',
                 '@state',
-                '@ibm_apim.user_storage']
+                '@ibm_apim.user_storage',
+                '@messenger']
     tags:
       - { name: ibm_apim }

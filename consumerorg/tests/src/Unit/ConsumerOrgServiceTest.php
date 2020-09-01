@@ -76,6 +76,8 @@ class ConsumerOrgServiceTest extends UnitTestCase {
 
   private $apicAccountService;
 
+  protected $userService;
+
   protected function setup() {
     $this->prophet = new Prophet();
     $this->logger = $this->prophet->prophesize(LoggerInterface::class);
@@ -93,6 +95,7 @@ class ConsumerOrgServiceTest extends UnitTestCase {
     $this->memberService = $this->prophet->prophesize(MemberService::class);
     $this->roleService = $this->prophet->prophesize(RoleService::class);
     $this->apicAccountService = $this->prophet->prophesize(ApicAccountService::class);
+    $this->userService = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserService::class);
 
     $userStorage = $this->prophet->prophesize(EntityStorageInterface::class);
     $this->userQuery->getStorage('user')->willReturn($userStorage->reveal());
@@ -199,7 +202,8 @@ class ConsumerOrgServiceTest extends UnitTestCase {
       $this->cacheTagsInvalidator->reveal(),
       $this->memberService->reveal(),
       $this->roleService->reveal(),
-      $this->apicAccountService->reveal());
+      $this->apicAccountService->reveal(),
+      $this->userService->reveal());
     return $service;
   }
 

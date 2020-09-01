@@ -154,10 +154,15 @@ class WSDLRetrieverController extends ControllerBase {
       \Drupal::logger('apic_api')->error('WSDLRetrieverController: invalid base64 data supplied for ENDPOINT', []);
       throw new AccessDeniedHttpException();
     }
+    $current_user = \Drupal::currentUser();
+    if ($current_user->isAnonymous() || (int) $current_user->id() === 1) {
+      // Special access for admin and anon, calling the public API as this works without a token.
+      // note this will only work for APIs with public visibility, others will get a 40x.
+      $url = str_replace("/apis/", "/public-apis/", $url);
+    }
 
     // Invoke the consumer-api
-    // Default auth is user, need to tell it to use platform auth
-    $result = (array) ApicRest::get($url, 'platform');
+    $result = (array) ApicRest::get($url);
 
     // Response should be a response object rather than a render array
     $response = new Response();

@@ -1,4 +1,19 @@
 changes:
+  8.x-1.6.3:
+  - increase gutter for latest masonry views
+  8.x-1.6.2:
+  - remove Rules support from our code
+  8.x-1.6.1:
+  - fix api version in log message
+  - typo
+  - handle admin and anon calling consumer apis
+  - dont use platform auth for consumer apis
+  - Removed use of deprecated functions
+  - log the api version when we create/delete/update (#95)
+  - few graphql css necessary tweaks
+  - tidy up api explorer view
+  8.x-1.6.0:
+  - update version: 8.x-1.5.1 -> 8.x-1.6.0
   8.x-1.5.0:
   - update version: 8.x-1.4.6 -> 8.x-1.5.0
   8.x-1.4.5:

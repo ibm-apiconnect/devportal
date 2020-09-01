@@ -1,0 +1,102 @@
+--- modules/flood_unblock/src/Commands/FloodUnblockCommands.php	2020-03-19 07:47:09.000000000 +0000
++++ modules/flood_unblock/src/Commands/FloodUnblockCommands.php	2020-07-30 10:31:38.000000000 +0100
+@@ -36,11 +36,82 @@
+    */
+   public function unblockIp($ip = NULL) {
+     $this->manager->flood_unblock_clear_event('user.failed_login_ip', $ip);
++    $this->manager->flood_unblock_clear_event('user.password_request_ip', NULL);
+
+     $this->output()->writeln('Done');
+   }
+
+   /**
++   * Query existing flood control table for IP entries.
++   *
++   * @command flood_unblock:queryip
++   * @usage flood_unblock:queryip
++   *
++   * @field-labels
++   *   identifier: Identifier
++   *   type: Type
++   *   ip: IP Address
++   *   count: Count
++   *   location: Location
++   *   blocked: Blocked
++   * @default-fields identifier,type,ip,count,location,blocked
++   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
++   *  Source fields of the IP entries formatted as a table.
++   */
++  public function queryIP() {
++    $source = $this->manager->get_blocked_ip_entries();
++    $table = [];
++    foreach($source as $key => $entry) {
++      $table[] = [
++          'identifier' => $key
++          'type' => $entry['type'],
++          'ip' => $entry['ip'],
++          'count' => $entry['count'],
++          'location' => $entry['location'],
++          'blocked' =>  $entry['blocked']
++        ];
++    }
++    return new RowsOfFields($table);
++  }
++
++  /**
++   * Query existing flood control table for user entries.
++   *
++   * @command flood_unblock:queryuser
++   * @usage flood_unblock:queryuser
++   *
++   * @field-labels
++   *   identifier: Identifier
++   *   type: Type
++   *   uid: User ID
++   *   ip: IP Address
++   *   username: Username
++   *   count: Count
++   *   location: Location
++   *   blocked: Blocked
++   * @default-fields identifier,type,uid,ip,username,count,location,blocked
++   * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
++   *  Source fields of the user entries formatted as a table.
++   */
++  public function queryUser() {
++    $source = $this->manager->get_blocked_user_entries();
++    $table = [];
++    foreach($source as $key => $entry) {
++      $table[] = [
++          'identifier' => $key
++          'type' => $entry['type'],
++          'uid' => $entry['uid'],
++          'ip' => $entry['ip'],
++          'username' => $entry['username'],
++          'count' => $entry['count'],
++          'location' => $entry['location'],
++          'blocked' =>  $entry['blocked']
++        ];
++    }
++    return new RowsOfFields($table);
++  }
++
++  /**
+    * Clears the floods based on user.
+    *
+    * @param string $user
+@@ -51,6 +122,7 @@
+    */
+   public function unblockUser($user = NULL) {
+     $this->manager->flood_unblock_clear_event('user.failed_login_user', $user);
++    $this->manager->flood_unblock_clear_event('user.password_request_user', NULL);
+
+     $this->output()->writeln('Done');
+   }
+@@ -64,6 +136,8 @@
+   public function unblockAll() {
+     $this->manager->flood_unblock_clear_event('user.failed_login_ip', NULL);
+     $this->manager->flood_unblock_clear_event('user.failed_login_user', NULL);
++    $this->manager->flood_unblock_clear_event('user.password_request_ip', NULL);
++    $this->manager->flood_unblock_clear_event('user.password_request_user', NULL);
+     $this->manager->flood_unblock_clear_event('user.http_login', NULL);
+     $this->output()->writeln('Done');
+   }

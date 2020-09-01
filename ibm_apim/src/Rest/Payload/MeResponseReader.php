@@ -121,6 +121,9 @@ class MeResponseReader extends RestResponseReader {
     $state = $data['state'] ?? NULL;
     $user->setState($state);
 
+    $metadata = $data['metadata'] ?? NULL;
+    $user->setMetadata($metadata);
+    
     $idp = $data['identity_provider'] ?? NULL;
     $user->setApicIdp($idp);
     if ($idp !== NULL) {

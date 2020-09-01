@@ -13,8 +13,9 @@
 namespace Drupal\auth_apic\Form;
 
 use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\State\State;
@@ -42,7 +43,13 @@ class ApicUserProfileForm extends ProfileForm {
    */
   protected $state;
 
-  public function __construct(EntityManagerInterface $entity_manager,
+ /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  public function __construct(EntityRepositoryInterface $entity_repository,
+                              EntityTypeManagerInterface $entity_type_manager,
                               LanguageManagerInterface $language_manager,
                               ApicAccountInterface $account_service,
                               UserRegistryServiceInterface $registry_service,
@@ -52,12 +59,14 @@ class ApicUserProfileForm extends ProfileForm {
     $this->accountService = $account_service;
     $this->state = $state;
     $this->registryService = $registry_service;
-    parent::__construct($entity_manager, $language_manager, $entity_type_bundle_info, $time);
+    $this->entityTypeManager = $entity_type_manager;
+    parent::__construct($entity_repository, $language_manager, $entity_type_bundle_info, $time);
   }
 
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity.manager'),
+      $container->get('entity.repository'),
+      $container->get('entity_type.manager'),
       $container->get('language_manager'),
       $container->get('ibm_apim.account'),
       $container->get('ibm_apim.user_registry'),
@@ -73,7 +82,7 @@ class ApicUserProfileForm extends ProfileForm {
   public function form(array $form, FormStateInterface $form_state) {
 
     $form = parent::form($form, $form_state);
-    $user = $this->entityManager->getStorage('user')->load($this->currentUser()->id());
+    $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser()->id());
     // This is an internal field that shouldn't be displayed for anyone
     $form['consumer_organization']['#access'] = FALSE;
 
@@ -313,7 +322,11 @@ class ApicUserProfileForm extends ProfileForm {
       $editUser->setPassword($password);
     }
     $editUser->setApicUserRegistryUrl($this->entity->get('registry_url')->value);
-
+    $customFields =  \Drupal::service('ibm_apim.apicuser')->getCustomUserFields();
+    $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $form_state);
+    foreach($customFieldValues as $customField => $value) {
+      $editUser->addCustomField($customField, $value);
+    }
     // We need to call different functions on the user manager
     // depending on who we are and who we edited.
     if (((int) $this->currentUser()->id() === 1) || ($this->currentUser()->getEmail() !== $editUser->getMail())) {

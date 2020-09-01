@@ -10,11 +10,9 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
-use Drupal\Core\Url;
-use Drupal\mail_subscribers\Event\MailAddedEvent;
-use Drupal\mail_subscribers\Event\MailSentEvent;
-use Drupal\Core\Render\Markup;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Url;
 
 /**
  * Implements hook_cron().
@@ -162,11 +160,6 @@ function mail_subscribers_batch_deliver($message, &$context) {
     if ((boolean) \Drupal::config('mail_subscribers.settings')->get('debug')) {
       \Drupal::logger('mail_subscribers')->notice('Message sent to %mail.', ['%mail' => $message['to_mail']]);
     }
-    if (\Drupal::moduleHandler()->moduleExists('rules')) {
-      $event = new MailSentEvent($message);
-      $eventDispatcher = \Drupal::service('event_dispatcher');
-      $eventDispatcher->dispatch(MailSentEvent::EVENT_NAME, $event);
-    }
   }
   else {
     $context['results'][] = t('Failed sending message to %mail - spooling it.',
@@ -177,11 +170,6 @@ function mail_subscribers_batch_deliver($message, &$context) {
       ->insert('mail_subscribers_spool', $options)
       ->fields($message)
       ->execute();
-    if (\Drupal::moduleHandler()->moduleExists('rules')) {
-      $event = new MailAddedEvent($message);
-      $eventDispatcher = \Drupal::service('event_dispatcher');
-      $eventDispatcher->dispatch(MailAddedEvent::EVENT_NAME, $event);
-    }
   }
 }
 

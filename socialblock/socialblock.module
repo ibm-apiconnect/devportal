@@ -52,7 +52,7 @@ function socialblock_get_forum_vocabularies(): array {
       if ($vocab->label() === 'Forums') {
         $container = \Drupal::getContainer();
         if ($container !== NULL) {
-          $vocabs = $container->get('entity.manager')->getStorage('taxonomy_term')->loadTree($vocab->id());
+          $vocabs = $container->get('entity_type.manager')->getStorage('taxonomy_term')->loadTree($vocab->id());
         }
       }
     }
@@ -139,10 +139,10 @@ function socialblock_cron() {
   if ($configInstances !== NULL && !empty($configInstances)) {
     foreach ($configInstances as $blockUuid => $settings) {
 
-      $numberOfTiles = $settings['numberOfTiles'];
-      $twitterSearchBy = $settings['twitterSearchBy'];      // In the form of 0 = userid, 1 = search;
+      $numberOfTiles = (int) $settings['numberOfTiles'];
+      $twitterSearchBy = (int) $settings['twitterSearchBy'];      // In the form of 0 = userid, 1 = search;
       $twitterSearchParameter = $settings['twitterSearchParameter'];
-      $twitterTweetTypes = $settings['twitterTweetTypes'];  // In the form of 0 = tweets, 1 = tweets and replies
+      $twitterTweetTypes = (int) $settings['twitterTweetTypes'];  // In the form of 0 = tweets, 1 = tweets and replies
 
       // These are the settings for the twitter oauth
       $config = \Drupal::config('socialblock.settings');
@@ -311,11 +311,15 @@ function socialblock_call_twitter_api($credentials, $api, $params) {
 /**
  * @param $cred
  *
- * @return bool
+ * @return int
  */
-function socialblock_not_rate_limited($cred): bool {
+function socialblock_not_rate_limited($cred): int {
   $result = socialblock_call_twitter_api($cred, 'application/rate_limit_status', ['resources' => 'statuses']);
-  return isset($result->resources->statuses->{'/statuses/user_timeline'}->remaining) && $result->resources->statuses->{'/statuses/user_timeline'}->remaining > 0;
+  $remaining = 0;
+  if (isset($result->resources->statuses->{'/statuses/user_timeline'}->remaining) && $result->resources->statuses->{'/statuses/user_timeline'}->remaining > 0) {
+    $remaining = $result->resources->statuses->{'/statuses/user_timeline'}->remaining;
+  }
+  return $remaining;
 }
 
 /**

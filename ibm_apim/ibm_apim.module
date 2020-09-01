@@ -537,21 +537,21 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       if (isset($form['modules']['Core (Experimental)']['migrate_drupal_multilingual'])) {
         unset($form['modules']['Core (Experimental)']['migrate_drupal_multilingual']);
       }
-      // blacklist some modules
-      $moduleBlacklist = \Drupal::config('ibm_apim.settings')->get('module_blacklist');
-      if (isset($moduleBlacklist) && !empty($moduleBlacklist)) {
+      // blocklist some modules
+      $moduleBlocklist = \Drupal::config('ibm_apim.settings')->get('module_blocklist');
+      if (isset($moduleBlocklist) && !empty($moduleBlocklist)) {
         foreach ($form['modules'] as $modulePackage => $modules) {
           if (!is_array($modules)) {
             continue;
           }
 
           foreach ($modules as $moduleName => $module_info) {
-            // Checks whether the module is blacklisted.
-            if (!in_array($moduleName, $moduleBlacklist, FALSE)) {
+            // Checks whether the module is blocklisted.
+            if (!in_array($moduleName, $moduleBlocklist, FALSE)) {
               continue;
             }
 
-            // Skips modules that are already enabled, even if it is blacklisted.
+            // Skips modules that are already enabled, even if it is blocklisted.
             if ($form['modules'][$modulePackage][$moduleName]['enable']['#default_value'] === TRUE) {
               continue;
             }
@@ -750,8 +750,8 @@ function ibm_apim_local_tasks_alter(&$local_tasks) {
  * @throws \Drupal\ibm_apim\Exception\ModuleInstallationBlocked
  */
 function ibm_apim_module_preinstall($module) {
-  $moduleBlacklist = \Drupal::config('ibm_apim.settings')->get('module_blacklist');
-  if (!$moduleBlacklist || !in_array($module, $moduleBlacklist, FALSE)) {
+  $moduleBlocklist = \Drupal::config('ibm_apim.settings')->get('module_blocklist');
+  if (!$moduleBlocklist || !in_array($module, $moduleBlocklist, FALSE)) {
     return;
   }
 
@@ -762,7 +762,7 @@ function ibm_apim_module_preinstall($module) {
   // rollback to those changes.
   \Drupal::service('ibm_apim.module_installer')->rollbackPreinstall($module);
 
-  throw new ModuleInstallationBlocked("Unable to install '$module' module. The installation of this module is blocked by Module Blacklist.");
+  throw new ModuleInstallationBlocked("Unable to install '$module' module. The installation of this module is blocked by Module Blocklist.");
 }
 
 /**
