@@ -59,7 +59,7 @@ interface ManagementServerInterface {
    * @return \Drupal\auth_apic\Rest\MeResponse
    *    Response from the PUT /me call.
    */
-  public function updateMe(ApicUser $user);
+  public function updateMe(ApicUser $user, $auth =  'user');
 
   /**
    * DELETE /me - delete current user from management server.

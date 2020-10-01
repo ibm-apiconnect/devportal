@@ -29,8 +29,8 @@ Feature: ConsumerorgRoles
     And I should see a "#edit-submit" element
     Given I enter "app34567" for "edit-title-0-value"
     And I enter "this is some text" for "edit-apic-summary-0-value"
-    When I press the "Submit" button
-    When I press the "Continue" button
+    When I press the "Save" button
+    When I click "OK"
     Given I am not logged in
     # check dave developer can access edit links
     Given I am logged in as "Dave"

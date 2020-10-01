@@ -7,7 +7,6 @@ dependencies:
     - node.type.application
     - node.type.article
     - node.type.blog_post
-    - node.type.book
     - node.type.consumerorg
     - node.type.forum
     - node.type.page
@@ -207,7 +206,6 @@ display:
             article: article
             page: page
             blog_post: blog_post
-            book: book
             forum: forum
             product: product
           group: 1

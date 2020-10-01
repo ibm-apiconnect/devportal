@@ -17,6 +17,8 @@ dependencies:
     - field.field.node.consumerorg.consumerorg_owner
     - field.field.node.consumerorg.consumerorg_tags
     - field.field.node.consumerorg.consumerorg_memberlist
+    - field.field.node.consumerorg.consumerorg_payment_method_refs
+    - field.field.node.consumerorg.consumerorg_def_payment_ref
     - node.type.consumerorg
   module:
     - user
@@ -74,6 +76,22 @@ content:
       link_to_entity: false
     third_party_settings: {  }
     type: string
+  consumerorg_payment_method_refs:
+    weight: 104
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  consumerorg_def_payment_ref:
+    weight: 105
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
   apic_rating:
     type: voting_api_formatter
     weight: 20

@@ -26,6 +26,7 @@ use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
+use Drupal\ibm_apim\Service\ApicUserService;
 
 class ApicLoginService implements ApicLoginServiceInterface {
 
@@ -79,6 +80,11 @@ class ApicLoginService implements ApicLoginServiceInterface {
    */
   private $consumerorgLogin;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\ApicUserService
+   */
+  protected $userService;
+
   public function __construct(ManagementServerInterface $mgmt_interface,
                               ApicAccountInterface $account_service,
                               UserUtils $user_utils,
@@ -88,7 +94,8 @@ class ApicLoginService implements ApicLoginServiceInterface {
                               SiteConfig $site_config,
                               AccountProxyInterface $current_user,
                               EntityTypeManagerInterface $entity_type_manager,
-                              ConsumerOrgLoginInterface $consumerorg_login_service) {
+                              ConsumerOrgLoginInterface $consumerorg_login_service,
+                              ApicUserService $user_service) {
     $this->mgmtServer = $mgmt_interface;
     $this->accountService = $account_service;
     $this->userUtils = $user_utils;
@@ -99,6 +106,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
     $this->currentUser = $current_user;
     $this->drupalUser = $entity_type_manager->getStorage('user');
     $this->consumerorgLogin = $consumerorg_login_service;
+    $this->userService = $user_service;
   }
 
   /**
@@ -146,6 +154,47 @@ class ApicLoginService implements ApicLoginServiceInterface {
         // the response from the management server is what we need to store.
         // Pull the existing account out of the drupal db or create it if it doesn't exist yet
         $account = $this->accountService->createOrUpdateLocalAccount($meuser);
+        if ($account) {
+          $localUser = $this->userService->parseDrupalAccount($account);
+          $customFieldValues = $localUser->getCustomFields();
+        }
+
+        // If it first time logging in and they have custom field data then probably a new register
+        // so update apim with their data.
+        if ($account->get('first_time_login') !== NULL && $account->get('first_time_login')->getString() === '1' && !empty($customFieldValues)) {
+          $updated = false;
+          if (isset($token_retrieved)) {
+            $localUser->setUrl(null);
+            $apic_me = $this->mgmtServer->updateMe($localUser,$token_retrieved->getBearerToken());
+            if ($apic_me->getCode() == 200) {
+              $updated = true;
+            } else {
+              \Drupal::logger('auth_apic')->error('Received @code code while storing new users custom fields.', ['@code' => $apic_me->getCode()]);
+            }
+          } else {
+            \Drupal::logger('auth_apic')->error("Couldn't get bearer token while storing new users custom fields.");
+          }
+          if (!$updated) {
+            //Clear account of custom fields
+            foreach (array_keys($customFieldValues) as $customField) {
+              $account->set($customField, null);
+            }
+            $account->save();
+            \Drupal::messenger()->addMessage(t('There were errors while activating your account. Check the information in your profile is accurate'));
+          }
+        } else {
+          //Update custom fields on local
+          $customFields = $this->userService->getCustomUserFields();
+          if (!empty($customFields)) {
+            $metadata = $meuser->getMetadata();
+            foreach($customFields as $customField) {
+              if (isset($metadata[$customField])) {
+                $account->set($customField, json_decode($metadata[$customField],true));
+              }
+            }
+            $account->save();
+          }
+        }
 
         // need to check the user isn't blocked in the portal database
         if (!$account->isBlocked()) {

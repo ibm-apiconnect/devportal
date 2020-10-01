@@ -13,10 +13,14 @@
 
 namespace Drupal\product\Service;
 
+use CommerceGuys\Intl\Currency\CurrencyRepository;
+use CommerceGuys\Intl\Formatter\CurrencyFormatter;
+use CommerceGuys\Intl\Formatter\NumberFormatter;
+use CommerceGuys\Intl\NumberFormat\NumberFormatRepository;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\ibm_apim\Service\Utils;
 use Drupal\Core\StringTranslation\TranslationManager;
+use Drupal\ibm_apim\Service\Utils;
 
 class ProductPlan {
 
@@ -280,7 +284,7 @@ class ProductPlan {
    *
    * @return array
    */
-  public function parseRateLimits($plan) : array{
+  public function parseRateLimits($plan): array {
     $planRateLimit = $this->parseRateLimit('unlimited');
     $tooltip = NULL;
     if (isset($plan['rate-limits']) || isset($plan['burst-limits'])) {
@@ -314,7 +318,7 @@ class ProductPlan {
           // handle having burst-limits but rate-limit (mix of v5 and v4 schemas)
           $tooltip['#rates'][] = $this->parseRateLimit($plan['rate-limit']['value']);
         }
-        if (array_key_exists('burst-limits',$plan) && !empty($plan['burst-limits'])) {
+        if (array_key_exists('burst-limits', $plan) && !empty($plan['burst-limits'])) {
           foreach ($plan['burst-limits'] as $rateName => $rateLimit) {
             $tooltip['#bursts'][] = $this->parseRateLimit($rateLimit['value']);
           }
@@ -428,38 +432,78 @@ class ProductPlan {
     }
     $text = $this->translationManager->translate('Free');
 
-    if (isset($billing['model'])) {
-      if (isset($billing['currency']) && $billing['currency'] !== 'JPY') {
-        $billing['amount'] /= 100;
+    if (isset($billing['billing'], $billing['currency'])) {
+      $lang_code = $this->languageManager->getCurrentLanguage()->getId();
+      $numberFormatRepository = new NumberFormatRepository();
+      $numberFormatter = new NumberFormatter($numberFormatRepository,);
+      $currencyRepository = new CurrencyRepository;
+      $currencyFormatter = new CurrencyFormatter($numberFormatRepository, $currencyRepository);
+      $price = $currencyFormatter->format($billing['price'], $billing['currency']);
+      // special case to avoid displaying $0.00
+      if ((int) $billing['price'] === 0) {
+        $text = $this->translationManager->translate('Free');
       }
-      if ($billing['model'] === 'flat-fee') {
-        $text = $this->utils->format_number_locale($billing['amount']) . ' ' . strtoupper($billing['currency']);
+      else {
+        $text = $this->translationManager->formatPlural($billing['period'], '@price per @period-unit', '@price per @period @period-unit', [
+          '@price' => $price,
+          '@period' => $billing['period'],
+          '@period-unit' => $this->timePeriodLookup($billing['period'], $billing['period-unit']),
+        ]);
       }
-      elseif ($billing['model'] === 'stripe_monthly_fixed') {
-        $text = $this->translationManager->translate('%length per month', ['%length' => $this->utils->format_number_locale($billing['amount']) . ' ' . strtoupper($billing['currency'])]);
-        if ($billing['trial-period-days']) {
-          $text .= ' ' . $this->translationManager
-              ->formatPlural($billing['trial-period-days'], '(%length day trial period)', '(%length days trial period)', ['%length' => $this->utils->format_number_locale($billing['trial-period-days'])]);
+      if (isset($billing['trial-period'], $billing['trial-period-unit'])) {
+        // special case to avoid displaying (0 days trial period)
+        if ((int) $billing['trial-period'] === 0) {
+          $text .= $this->translationManager->translate(' (No trial period)');
         }
-      }
-      elseif ($billing['model'] === 'flat-calls') {
-        $text = $this->translationManager->translate('%length per API call per month', ['%length' => $this->utils->format_number_locale($billing['amount']) . ' ' . strtoupper($billing['currency'])]);
-        if ($billing['freemium'] && $billing['freeCalls']) {
+        else {
           $text .= ' ' . $this->translationManager
-              ->formatPlural($billing['freeCalls'], '(%length call free per month)', '(%length calls free per month)', ['%length' => $this->utils->format_number_locale($billing['freeCalls'])]);
+              ->formatPlural($billing['trial-period'], ' (@length @period-unit trial period)', ' (@length @period-unit trial period)', [
+                '@length' => $billing['trial-period'],
+                '@period-unit' => $this->timePeriodLookup($billing['trial-period'], $billing['trial-period-unit']),
+              ]);
         }
-      }
-      elseif ($billing['model'] === 'credits') {
-        $text .= $this->translationManager
-          ->formatPlural($billing['credits'], '%price for %quantity API Call Credit', '%price for %quantity API Call Credits', [
-            '%price' => $this->utils->format_number_locale($billing['amount']) . ' ' . strtoupper($billing['currency']),
-            '%quantity' => $this->utils->format_number_locale($billing['credits']),
-          ]);
       }
     }
+
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__FUNCTION__, NULL);
     }
     return $text;
+  }
+
+  /**
+   * Small lookup function to allow handling plurals of time periods
+   *
+   * @param $quantity
+   * @param $period
+   *
+   * @return \Drupal\Core\StringTranslation\PluralTranslatableMarkup|string
+   */
+  protected function timePeriodLookup($quantity, $period) {
+    $returnValue = '';
+    switch ($period) {
+      case 'year':
+        $returnValue = $this->translationManager->formatPlural($quantity, 'year', 'yeary');
+        break;
+      case 'month':
+        $returnValue = $this->translationManager->formatPlural($quantity, 'month', 'months');
+        break;
+      case 'week':
+        $returnValue = $this->translationManager->formatPlural($quantity, 'week', 'weeks');
+        break;
+      case 'day':
+        $returnValue = $this->translationManager->formatPlural($quantity, 'day', 'days');
+        break;
+      case 'hour':
+        $returnValue = $this->translationManager->formatPlural($quantity, 'hour', 'hours');
+        break;
+      case 'minute':
+        $returnValue = $this->translationManager->formatPlural($quantity, 'minute', 'minutes');
+        break;
+      case 'second':
+        $returnValue = $this->translationManager->formatPlural($quantity, 'second', 'seconds');
+        break;
+    }
+    return $returnValue;
   }
 }

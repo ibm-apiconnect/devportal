@@ -16,7 +16,7 @@ Feature: Org member invitation
     And I should see the text "Email"
     And I should see the text "Assign Roles"
     And I should see the text "Cancel"
-    And I should see the text "Submit"
+    And I should see the text "Save"
 
   @api
   Scenario: As an org owner, I can send an org member invitation
@@ -31,7 +31,7 @@ Feature: Org member invitation
     And I am at "/myorg/invite"
     When I enter "inviteduser@example.com" for "Email"
     And if the field "captcha_response" is present, enter the value "@captcha"
-    And I press the "Submit" button
+    And I press the "Save" button
     Then I should be on "/myorg"
     And there are messages
     And I should see the text "Invitation sent successfully."
@@ -67,7 +67,7 @@ Feature: Org member invitation
     When I enter "inviteduser@example.com" for "Email"
     And I select the radio button "Administrator"
     And if the field "captcha_response" is present, enter the value "@captcha"
-    And I press the "Submit" button
+    And I press the "Save" button
     Then I should be on "/myorg"
     And there are messages
     And I should see the text "Invitation sent successfully."
@@ -95,7 +95,7 @@ Feature: Org member invitation
     When I enter "inviteduser@example.com" for "Email"
     And I select the radio button "Viewer"
     And if the field "captcha_response" is present, enter the value "@captcha"
-    And I press the "Submit" button
+    And I press the "Save" button
     Then I should be on "/myorg"
     And there are messages
     And I should see the text "Invitation sent successfully."
@@ -121,7 +121,7 @@ Feature: Org member invitation
     When I enter "inviteduser@example.com" for "Email"
     #Role=Developer radio button is selected by default
     And if the field "captcha_response" is present, enter the value "@captcha"
-    And I press the "Submit" button
+    And I press the "Save" button
     Then I should be on "/myorg"
     And there are messages
     And I should see the text "Invitation sent successfully."

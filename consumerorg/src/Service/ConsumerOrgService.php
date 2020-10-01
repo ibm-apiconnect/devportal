@@ -13,31 +13,30 @@
 
 namespace Drupal\consumerorg\Service;
 
-use Drupal\ibm_apim\ApicRest;
 use Drupal\apic_app\Application;
-use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\auth_apic\UserManagerResponse;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\consumerorg\ApicType\Role;
-use Drupal\consumerorg\Event\ConsumerorgCreateEvent;
-use Drupal\consumerorg\Event\ConsumerorgDeleteEvent;
-use Drupal\consumerorg\Event\ConsumerorgUpdateEvent;
+use Drupal\consumerorg\Entity\PaymentMethod;
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\ibm_apim\ApicRest;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Drupal\ibm_apim\Service\ApicUserService;
 
 /**
  * Class to work with the consumerorg content type, takes input from the JSON returned by
@@ -119,6 +118,11 @@ class ConsumerOrgService {
    * @var \Drupal\ibm_apim\UserManagement\ApicAccountInterface
    */
   private $accountService;
+  
+  /**
+   * @var \Drupal\ibm_apim\Service\ApicUserService
+   */
+  protected $userService;
 
   /**
    * ConsumerOrgService constructor.
@@ -137,6 +141,7 @@ class ConsumerOrgService {
    * @param \Drupal\consumerorg\Service\MemberService $member_service
    * @param \Drupal\consumerorg\Service\RoleService $role_service
    * @param \Drupal\ibm_apim\UserManagement\ApicAccountInterface $account_service
+   * @param ApicUserService $user_service
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
@@ -154,7 +159,9 @@ class ConsumerOrgService {
                               CacheTagsInvalidatorInterface $invalidator,
                               MemberService $member_service,
                               RoleService $role_service,
-                              ApicAccountInterface $account_service
+                              ApicAccountInterface $account_service,
+                              ApicUserService $user_service
+
   ) {
     $this->logger = $logger;
     $this->siteconfig = $site_config;
@@ -171,6 +178,7 @@ class ConsumerOrgService {
     $this->memberService = $member_service;
     $this->roleService = $role_service;
     $this->accountService = $account_service;
+    $this->userService = $user_service;
   }
 
   /**
@@ -212,6 +220,14 @@ class ConsumerOrgService {
     }
     $org->setName($name);
 
+    //Custom fields should already be null but wipe anyway JIC
+    $customFields = $this->getCustomFields();
+    foreach ($customFields as $customField) {
+      if (isset($values[$customField])) {
+        $org->addCustomField($customField, $values[$customField]);
+      }
+    }
+
     $apimResponse = $this->apimServer->createConsumerOrg($org);
 
     if ($apimResponse !== NULL && $apimResponse->getCode() === 201) {
@@ -227,25 +243,7 @@ class ConsumerOrgService {
         $org->setMembersFromArray($apimResponse->getData()['members']);
       }
 
-      $nid = $this->createNode($org);
-
-      $customFields = $this->getCustomFields();
-      if (isset($customFields) && count($customFields) > 0) {
-        $node = Node::load($nid);
-        if ($node !== NULL) {
-          foreach ($customFields as $customField) {
-            $value = $values[$customField];
-            if (is_array($value) && isset($value[0]['value'])) {
-              $value = $value[0]['value'];
-            }
-            elseif (isset($value[0])) {
-              $value = array_values($value[0]);
-            }
-            $node->set($customField, $value);
-          }
-          $node->save();
-        }
-      }
+      $this->createNode($org);
 
       $response->setMessage(t('Consumer organization created successfully.'));
       $this->logger->notice('Consumer organization @orgname created by @username', [
@@ -375,6 +373,11 @@ class ConsumerOrgService {
       $node->set('consumerorg_roles', NULL);
       $node->set('consumerorg_tags', NULL);
       $node->set('consumerorg_invites', NULL);
+      //Custom fields should already be null but wipe anyway JIC
+      $customFields = $this->getCustomFields();
+      foreach ($customFields as $customField) {
+        $node->set($customField, NULL);
+      }
     }
     else {
       $node = Node::create([
@@ -389,12 +392,6 @@ class ConsumerOrgService {
       // Calling all modules implementing 'hook_consumerorg_create':
       $this->moduleHandler->invokeAll('consumerorg_create', ['node' => $node, 'data' => $consumer]);
 
-      if ($this->moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $createEvent = new ConsumerorgCreateEvent($node, ['consumerorg' => $node]);
-        $this->eventDispatcher->dispatch(ConsumerorgCreateEvent::EVENT_NAME, $createEvent);
-      }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $node->id();
@@ -430,6 +427,10 @@ class ConsumerOrgService {
         $consumer->setTags([]);
       }
       $node->set('consumerorg_tags', $consumer->getTags());
+
+      foreach ($consumer->getCustomFields() as $field => $value) {
+        $node->set($field, $value);
+      }
 
       $roles = [];
       if ($consumer->getRoles() !== NULL) {
@@ -484,8 +485,8 @@ class ConsumerOrgService {
       if ($consumer->getMembers() !== NULL) {
         foreach ($consumer->getMembers() as $member) {
           $memberlist[] = $member->getUserUrl();
-          $members[] = serialize($member->toArray());
-
+          $memberArray = $member->toArray();
+          $members[] = serialize($memberArray);
           $user = $member->getUser();
           if ($user !== NULL && $user->getUsername() !== NULL) {
 
@@ -504,12 +505,21 @@ class ConsumerOrgService {
               if ($consumerorg_urls === NULL) {
                 $consumerorg_urls = [];
               }
+
+              //Add the custom fields to the user
+              $customFields = $this->userService->getCustomUserFields();
+              foreach($customFields as $customField) {
+                if (isset($memberArray['user'][$customField])) {
+                  $account->set($customField, json_decode($memberArray['user'][$customField],true));
+                }
+              }
+
               // Add the consumerorg if it isn't already associated with this user
               if (!$this->isConsumerorgAssociatedWithAccount($consumer->getUrl(), $account)) {
                 $consumerorg_urls[] = $consumer->getUrl();
                 $account->set('consumerorg_url', $consumerorg_urls);
-                $account->save();
               }
+              $account->save();
             }
           }
 
@@ -530,17 +540,17 @@ class ConsumerOrgService {
       }
       $node->set('consumerorg_invites', $invites);
       $node->save();
+
+      if ($consumer->getPaymentMethods() !== NULL) {
+        $paymentMethodService = \Drupal::service('consumerorg.paymentmethod');
+        $node = $paymentMethodService->createOrUpdatePaymentMethodList($node, $consumer->getPaymentMethods());
+      }
+
       if ($node !== NULL && $event !== 'internal') {
         $this->logger->notice('Consumer organization @consumerorg updated', ['@consumerorg' => $node->getTitle()]);
         // Calling all modules implementing 'hook_consumerorg_update':
         $this->moduleHandler->invokeAll('consumerorg_update', ['node' => $node, 'data' => $consumer]);
 
-        if ($this->moduleHandler->moduleExists('rules')) {
-          // Set the args twice on the event: as the main subject but also in the
-          // list of arguments.
-          $event = new ConsumerorgUpdateEvent($node, ['consumerorg' => $node]);
-          $this->eventDispatcher->dispatch(ConsumerorgUpdateEvent::EVENT_NAME, $event);
-        }
       }
       // invalidate myorg page cache
       $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $consumer->getUrl()]);
@@ -759,6 +769,19 @@ class ConsumerOrgService {
           Application::deleteNode((int) $appNid, 'comsumerorg_cascade');
         }
       }
+
+      // Delete all payment method entities for this consumerorg
+      $query = \Drupal::entityQuery('consumerorg_payment_method');
+      $query->condition('consumerorg_url.value', $node->consumerorg_url->value);
+
+      $entityIds = $query->execute();
+      if (isset($entityIds) && !empty($entityIds)) {
+        $paymentMethodEntities = PaymentMethod::loadMultiple($entityIds);
+        foreach ($paymentMethodEntities as $paymentMethodEntity) {
+          $paymentMethodEntity->delete();
+        }
+      }
+
       // remove the consumerorg assignment from all users since we're deleting it
       $query = $this->userQuery;
       $query->condition('consumerorg_url.value', $consumerorg_url, 'CONTAINS');
@@ -790,13 +813,6 @@ class ConsumerOrgService {
       $this->moduleHandler->invokeAllDeprecated($description, 'consumerorg_delete', ['node' => $node]);
 
       $node->delete();
-      if ($this->moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new ConsumerorgDeleteEvent($node, ['consumerorg' => $node]);
-
-        $this->eventDispatcher->dispatch(ConsumerorgDeleteEvent::EVENT_NAME, $event);
-      }
 
       $this->moduleHandler->invokeAll('consumerorg_post_delete',
         [
@@ -863,9 +879,15 @@ class ConsumerOrgService {
         }
         $org->setInvites($invites);
       }
+      if ($node->consumerorg_payment_method_refs) {
+        $org->setPaymentMethods($node->consumerorg_payment_method_refs->referencedEntities());
+      }
+      if ($node->consumerorg_def_payment_ref) {
+        $org->setDefaultPaymentMethod($node->consumerorg_def_payment_ref->referencedEntities());
+      }
       // TODO: consumerorg_memberlist?
       if ($node->consumerorg_tags) {
-        $org->setTags(array_column($node->get('consumerorg_tags')->getValue(),"value"));
+        $org->setTags(array_column($node->get('consumerorg_tags')->getValue(), "value"));
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $org !== NULL ? $org->getUrl() : NULL);
@@ -1074,6 +1096,8 @@ class ConsumerOrgService {
       'consumerorg_tags',
       'consumerorg_url',
       'consumerorg_roles',
+      'consumerorg_payment_method_refs',
+      'consumerorg_def_payment_ref'
     ];
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $ibmfields);
     return $ibmfields;
@@ -1334,7 +1358,7 @@ class ConsumerOrgService {
         $org->setMembers($newMembers);
         $this->createOrUpdateNode($org, 'internal');
       }
-
+      $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $org_url]);
     }
     else {
       $response->setSuccess(FALSE);
@@ -1435,7 +1459,24 @@ class ConsumerOrgService {
     }
     // update APIm
     $newData = ['title' => $name];
+    $customFields = $this->getCustomFields();
+    if (!empty($customFields)) {
+      $response = $this->apimServer->get($org->getUrl());
+      $newData['metadata'] = [];
+      if ($response->getCode() == 200) {
+        if (isset($response->getData()['metadata'])) {
+          $newData['metadata'] = $response->getData()['metadata'];
+        }
 
+        foreach ($customFields as $customField) {
+          if (isset($values[$customField])){
+            $newData['metadata'][$customField] = json_encode($values[$customField]);
+          } else {
+            $newData['metadata'][$customField] = "NULL";
+          }
+        }
+      }
+    }
     $response = new UserManagerResponse();
     $apimResponse = $this->apimServer->patchConsumerOrg($org, $newData);
     if ($apimResponse !== NULL && $apimResponse->getCode() === 200) {
@@ -1454,16 +1495,9 @@ class ConsumerOrgService {
           $orgNode->setTitle($name);
           // update any custom fields
           $customFields = $this->getCustomFields();
-          if (isset($customFields) && count($customFields) > 0) {
-            foreach ($customFields as $customField) {
-              $value = $values[$customField];
-              if (is_array($value) && isset($value[0]['value'])) {
-                $value = $value[0]['value'];
-              }
-              elseif (isset($value[0])) {
-                $value = array_values($value[0]);
-              }
-              $orgNode->set($customField, $value);
+          foreach($customFields as $customField) {
+            if (isset($newData['metadata'][$customField])) {
+              $orgNode->set($customField, json_decode($newData['metadata'][$customField],true));
             }
           }
           $orgNode->save();
@@ -1616,6 +1650,15 @@ class ConsumerOrgService {
       if (isset($json['consumer_org']['group_urls'])) {
         $org->setTags($json['consumer_org']['group_urls']);
       }
+      if (isset($json['consumer_org']['custom_fields'])) {
+        $org->setTags($json['consumer_org']['custom_fields']);
+      }
+      $customFields = $this->getCustomFields();
+      foreach ($customFields as $field) {
+        if (isset($json['consumer_org']['metadata'][$field])) {
+          $org->addCustomField($field, json_decode($json['consumer_org']['metadata'][$field],true));
+        }
+      }
       $roles = [];
       foreach ($json['roles'] as $role) {
         $roles[] = $this->roleService->createFromJSON($role);
@@ -1633,6 +1676,11 @@ class ConsumerOrgService {
       }
       else {
         $org->setInvites([]);
+      }
+      if (isset($json['payment_methods'])) {
+        $org->setPaymentMethods($json['payment_methods']);
+      } else {
+        $org->setPaymentMethods([]);
       }
     }
 
@@ -1722,6 +1770,74 @@ class ConsumerOrgService {
     }
 
     return $data;
+  }
+
+  /**
+   * Delete a payment method
+   *
+   * @param $paymentMethodId
+   *
+   * @return \stdClass|null
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function deletePaymentMethod($paymentMethodId): ?\stdClass {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $result = null;
+    $paymentMethod = PaymentMethod::load($paymentMethodId);
+
+    if ($paymentMethod !== NULL) {
+      $org = $paymentMethod->consumerorg_url();
+      $url = $org . '/payment-methods/' . $paymentMethodId;
+
+      $result = ApicRest::delete($url);
+
+      if (isset($result) && $result->code >= 200 && $result->code < 300) {
+        // update the consumerorg to remove it from the list
+        $query = \Drupal::entityQuery('node');
+        $query->condition('type', 'consumerorg');
+        $query->condition('consumerorg_url.value', $org);
+
+        $nids = $query->execute();
+        if ($nids !== NULL && !empty($nids)) {
+          $nid = array_shift($nids);
+          $consumerOrg = Node::load($nid);
+          if ($consumerOrg !== NULL) {
+            $paymentMethods = $consumerOrg->consumerorg_payment_method_refs->referencedEntities();
+            $newPaymentMethods = [];
+            foreach ($paymentMethods as $paymentMethod) {
+              if ($paymentMethod->id() !== $paymentMethodId) {
+                $newPaymentMethods[] = ['target_id' => $paymentMethod->id()];
+              }
+            }
+            $consumerOrg->set('consumerorg_payment_method_refs', $newPaymentMethods);
+
+            // check if this is the default payment method, is so wipe it
+            $defaultPaymentMethod = $consumerOrg->consumerorg_def_payment_ref->referencedEntities();
+            if (is_array($defaultPaymentMethod) && !empty($defaultPaymentMethod)) {
+              $defaultPaymentMethod = array_shift($defaultPaymentMethod);
+            }
+            if (!empty($defaultPaymentMethod) && $defaultPaymentMethod->id() === $paymentMethodId) {
+              $consumerOrg->set('consumerorg_def_payment_ref', []);
+            }
+            $consumerOrg->save();
+          }
+        }
+
+        // delete the entity
+        $paymentMethod->delete();
+
+        // invalidate myorg page cache
+        $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $org]);
+      }
+      else {
+        $this->logger->error('Unable to delete payment method @id', [
+          '@id' => $paymentMethodId,
+        ]);
+      }
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $result;
   }
 
 }

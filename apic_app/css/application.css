@@ -8,6 +8,11 @@
   background: none;
 }
 
+.application-view .views-exposed-form{
+  display: flex;
+  justify-content: space-between;
+}
+
 .apicNewAppWrapper .button {
   margin-top: 1rem;
   margin-left: 0.5rem;
@@ -37,12 +42,12 @@
   max-width: 500px;
 }
 .apicAppIcon {
-  margin-right: 16px;
+  margin-right: 0.75rem;
 }
 .apicAppIcon img {
   border: 0;
-  max-width: 36px;
-  max-height: 36px;
+  max-width: 40px;
+  max-height: 40px;
 }
 .applicationType {
   background-color: #8897a2;
@@ -86,53 +91,6 @@
   font-weight: normal;
 }
 
-.password-toggle .children {
-  padding-top: 2px;
-}
-
-.alert .password-toggle .children,
-.applicationWrapper .password-toggle .children {
-  padding-left: 1.625rem;
-}
-.apicAppCheckButton {
-  flex: 0.1;
-  align-self: center;
-  margin-right: 10px;
-  display: inline-block;
-  vertical-align: -moz-middle-with-baseline;
-}
-.alert .toggleParent,
-#application-create-form-two .toggleParent {
-  margin-top: 10px;
-}
-
-.alert .toggleParent .form-type-password,
-.alert .toggleParent .form-type-checkbox,
-#application-create-form-two .toggleParent .form-type-password,
-#application-create-form-two .toggleParent .form-type-checkbox,
-.clientIDContainer.toggleParent .form-type-password,
-.clientIDContainer.toggleParent .form-type-checkbox,
-.clientSecretContainer.toggleParent .form-type-password {
-  display: inline-block;
-  margin-bottom: 0;
-  vertical-align: -moz-middle-with-baseline;
-}
-
-.alert .toggleParent .form-type-password,
-.clientIDContainer .bx--form-item.form-item.form-group,
-.clientSecretContainer .bx--form-item.form-item.form-group
-{
-  margin-right: 1rem;
-  width: 25rem;
-}
-
-.alert .toggleParent .form-type-password input,
-.alert .toggleParent .form-type-password input:hover,
-.clientIDContainer .bx--form-item.form-item.form-group input,
-.clientSecretContainer .bx--form-item.form-item.form-group input {
-  width:100%;
-}
-
 .apicAppCheckButton label {
   font-weight: normal;
   display: inline-block;
@@ -141,19 +99,16 @@
   background-color: #fff;
 }
 
-.applicationWrapper header.titleSection .leftTitle {
-  padding: 0.625rem 0;
-}
-
 .applicationWrapper header.titleSection .breadcrumb {
-  margin-bottom: 16px;
+  margin-bottom: 0;
   background-color: #fff;
   padding: 8px 0;
 }
 .titleSection .applicationTitle .applicationLogo,
 .titleSection .applicationTitle .applicationName {
   display: inline-block;
-  font-weight: lighter;
+  font-weight: 400;
+  margin: 0;
 }
 .applicationWrapper .titleInnerWrapper {
   display: flex;
@@ -173,33 +128,57 @@
   align-items: center;
 }
 .applicationWrapper .contentInnerWrapper {
-  padding-top: 20px;
+  padding-top: 32px;
 }
 /* tabs in application details view */
 .applicationWrapper .titleSection .applicationTabs {
   background-color: #fff;
   flex-basis: 100%;
-  margin-top: 15px;
-}
-.applicationWrapper .titleSection .applicationTabs ul {
-  margin-bottom: unset;
+  margin-top: 1rem;
 }
 .applicationWrapper .titleSection .applicationTabs ul,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs ul {
-  display: flex;
   flex-direction: row;
   padding-left: 0;
+  display: flex;
+  max-width: 100%;
+  max-height: none;
+  overflow-x: auto;
+  transition: inherit;
+  margin-bottom: 0;
 }
 .applicationWrapper .titleSection .applicationTabs li,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li {
   list-style: none;
-  color: #000;
-  padding: 0.725rem 30px 0 0;
-  font-size: 0.875rem;
+  color: #161616;
+  height: auto;
+  background: transparent;
+  box-sizing: border-box;
+  margin: 0;
+  font-size: 100%;
+  font-family: inherit;
+  vertical-align: initial;
+  border: 0;
+  display: flex;
+  padding: 0;
+  cursor: pointer;
+  transition: background-color 70ms cubic-bezier(.2,0,.38,.9);
 }
 .applicationWrapper .titleSection .applicationTabs li a,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li a {
-  color: #000;
+  white-space: nowrap;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  color: #525252;
+  width: 10rem;
+  margin: 0;
+  padding: .75rem 1rem .5rem;
+  border-bottom: 2px solid #e0e0e0;
+  transition: color 70ms cubic-bezier(.2,0,.38,.9),border-bottom-color 70ms cubic-bezier(.2,0,.38,.9),outline 70ms cubic-bezier(.2,0,.38,.9);
+}
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li a {
+  padding-left: 0;
+  overflow: hidden;
 }
 .applicationWrapper .titleSection .applicationTabs li.selected,
 .applicationWrapper .titleSection .applicationTabs li:hover,
@@ -207,17 +186,26 @@
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li.selected,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:hover,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:focus {
-  color: #3d70b2;
+  color: #161616;
 }
 .applicationWrapper .titleSection .applicationTabs li.selected a,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li.selected a{
+  border-bottom: 2px solid #3d70b2;
+  color: #161616;
+  font-size: .875rem;
+  font-weight: 600;
+  line-height: 1.125rem;
+  letter-spacing: .16px;
+}
+
 .applicationWrapper .titleSection .applicationTabs li:hover a,
 .applicationWrapper .titleSection .applicationTabs li:focus a,
-.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li.selected a,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:hover a,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:focus a {
-  color: #3d70b2;
-  border-bottom: 2px solid #3d70b2;
+  color: #161616;
+  border-bottom: 2px solid #8d8d8d;
 }
+
 .applicationCredentials .credentialsTable,
 .applicationSubscriptions .subscriptionsTable {
   background-color: #fff;
@@ -239,26 +227,39 @@
 .applicationCredentials .credentialsTable .credentialsHeader .credentialsActions .credentialsActionsAdd,
 .applicationCredentials .credentialsTable .credentialsHeader .credentialsActions .credentialsActionsManage {
   display: inline-block;
-  padding-left: 18px;
+  vertical-align: bottom;
+}
+.applicationCredentials .credentialsTable .credentialsHeader .credentialsActions .credentialsActionsAdd{
+  margin-right: 16px;
+}
+.applicationCredentials .credentialsTable .credentialsHeader .credentialsActions .credentialsActionsAdd:hover{
+  background-color: #e5e5e5;
 }
 .applicationCredentials .credentialsTable .credentialsHeader .credentialsActions .credentialsActionsAdd svg {
   vertical-align: middle;
+  width: 16px;
+  height: 16px;
 }
 .applicationCredentials .credentialsTable .credentialsContent {
   padding: 0 1rem 1rem;
 }
+.clientIDContainer,
+.clientSecretContainer {
+  padding: 12px 0;
+}
 .clientIDContainer .field__label,
 .clientSecretContainer .field__label,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsData .field__label {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 400;
   margin-bottom: 0.625rem;
   color: #152935;
-  display:block;
+  display: block;
+  line-height: 16px;
+  letter-spacing: 0.32px;
 }
 .applicationCredentials .credentialsTable .credentialsContent .apicAppCheckButton {
   display: inline-block;
-  margin-left: 20px;
 }
 .applicationCredentials .credentialsTable .credentialsContent .apicAppCheckButton.verifyButton {
   margin-left: 0;
@@ -273,28 +274,55 @@
 .applicationSubscriptions {
   margin-top: 30px;
 }
-.applicationSubscriptions .subscriptionsTable .subscriptionsContent table {
-  width: 100%;
-}
-.applicationSubscriptions .subscriptionsTable .subscriptionsContent table thead tr th {
-  padding: 1rem;
-  text-transform: uppercase;
-  font-size: 0.875rem;
-}
-.applicationSubscriptions .subscriptionsTable .subscriptionsContent table tbody tr td {
-  padding: 1rem;
-  font-size: 0.875rem;
-}
+
 .applicationSubscriptions .subscriptionsTable .subscriptionsContent .product {
   display: inline-flex;
   align-items: center;
 }
-.applicationSubscriptions .subscriptionsTable .subscriptionsContent table tbody tr:nth-child(even) {
+
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent table {
+  width: 100%;
+}
+
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent table thead {
+  background: #e0e0e0;
+}
+
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent th {
+  padding: 0.5rem 1rem;
+  display: table-cell;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent th:first-child,
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent tbody td:first-child {
+  text-align:left;
+  padding-left: 1rem;
+}
+
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent tbody td {
+  padding: 0.5rem;
+  line-height:1.25;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent tbody tr.member-odd {
   background-color: #f0f3f6;
 }
-.applicationSubscriptions .subscriptionsTable .subscriptionsContent table thead tr {
-  border-bottom: 1px solid #5aaafa;
+
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent tbody tr.member-even {
+  background-color: #ffffff;
 }
+
+.applicationSubscriptions .subscriptionsTable .noSubsFound {
+  padding: 1rem;
+}
+
 .applicationSubscriptions .subscriptionsTable .subscriptionsContent .subscriptionMenu {
   text-align: end;
 }
@@ -326,13 +354,10 @@
   margin-bottom: 0;
 }
 .field--name-application-redirect-endpoints .field-multiple-table tbody {
-  border-left: 1px solid #ddd;
-  border-right: 1px solid #ddd;
-  border-top: 1px solid #ddd;
   display: block;
 }
 .field--name-application-redirect-endpoints .field-multiple-table tbody tr:first-child td {
-  padding-top: 10px;
+
 }
 
 .field--name-application-redirect-endpoints .field-multiple-table th {
@@ -360,8 +385,7 @@
   display: block;
   width: 100%;
   margin-bottom: 0.7rem;
-  margin-right: 4px;
-  margin-left: 10px;
+
 }
 .field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button {
   display: inline-block;
@@ -385,50 +409,47 @@
 .field--name-application-redirect-endpoints .field-multiple-table td.has-multiple-fields-remove-button .form-item input:active,
 .field--name-application-redirect-endpoints .field-multiple-table td.has-multiple-fields-remove-button .form-item input:focus,
 .field--name-application-redirect-endpoints .field-multiple-table td.has-multiple-fields-remove-button .form-item input:hover {
-  width: 505px;
+  width: 100%;
 }
 
 .field--name-application-redirect-endpoints .form-item .clearfix {
-  border-left: 1px solid #ddd;
-  border-right: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-  padding-left: 10px;
-  padding-bottom: 10px;
   padding-right: 10px;
 }
 
 /* application cards */
 .node--type-application.bx--card {
   min-height: unset;
-  min-width: 15.625rem;
-  height: 18.75rem;
-  max-width: 15.625rem;
+  min-width: 20rem;
+  height: 15rem;
+  max-width: 20rem;
 }
 
-.node--type-application.bx--card .apicCardIcon {
-  align-self: center;
-}
-
-.node--type-application.bx--card .apicCardIcon .bx--about__icon {
-  width: 4rem;
-  height: 4rem;
-  margin: 1rem 0;
+.node--type-application.bx--card .apicCardIcon img, .node--type-application.bx--card .apicCardIcon.bx--about__icon {
+  width: 2rem;
+  height: 2rem;
 }
 
 .node--type-application.bx--card .apicAppCardMain {
-  text-align: center;
   height: 5.5rem;
 }
 .node--type-application.bx--card .apicAppCardMain .bx--about__title--name {
   width: auto;
-  font-size: 1.5rem;
-  padding: 0 0 1rem;
+  font-size: 0.875rem;
+  line-height: 18px;
+  word-break: break-word;
+  font-weight: 600;
+  font-family: 'IBM Plex Sans', sans-serif;
 }
 .node--type-application.bx--card .apicAppCardMain .applicationType {
   margin: 0 0 10px 0;
 }
 .node--type-application.bx--card .apicAppCardMain .apicAppDesc {
-  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 0.875rem;
+  letter-spacing: 0.16px;
+  line-height: 20px;
 }
 
 .apicAppStatus {
@@ -481,7 +502,7 @@
 
 .bx--card .apicAppCard{
   flex-direction: column;
-  height: 15.75rem;
+  height: 12rem;
 }
 
 .bx--card .apicAppDesc{
@@ -515,4 +536,36 @@
   .apicAppName {
     max-width: 500px;
   }
+}
+
+input.clipboardjs {
+  width: 300px;
+}
+
+button.clipboardjs-button {
+  width: 34px;
+  height: 34px;
+  padding: 3px 7px;
+  border: unset;
+  background: unset;
+  border-radius: 0;
+}
+
+button.clipboardjs-button:hover {
+  background-color: #e5e5e5;
+}
+
+button.clipboardjs-button:focus {
+  outline: 2px solid #0f62fe;
+  outline-offset: -2px;
+  outline-color: #0f62fe;
+}
+
+button .bx--snippet__icon,
+button .bx--snippet__icon:hover {
+  fill: currentColor;
+}
+
+ul.overflow-menu.credentialsMenu.dropitmenu {
+  margin-bottom: 0;
 }

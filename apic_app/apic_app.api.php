@@ -324,8 +324,9 @@ function hook_apic_app_modify_client_secret_reset_alter(&$data, $appId) {
  *
  * @param $data
  * @param $appId
+ * @param $formState
  */
-function hook_apic_app_modify_create_alter(&$data, $appId) {
+function hook_apic_app_modify_create_alter(&$data, $appId, $formState) {
   $data['client_id'] = '12345';
   $data['client_secret'] = 'abcdefgh';
 }

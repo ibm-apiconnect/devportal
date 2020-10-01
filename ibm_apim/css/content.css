@@ -1,10 +1,10 @@
 .welcomebanner {
   display: flex;
-  justify-content: center;
-  height: 300px;
+  justify-content: left;
+  height: 386px;
   width: 100%;
   transition: 0.5s;
-  background-color: #5aaafa;
+  background-color: #0f62fe;
   background-image: url(../images/hero-background.png);
   background-size: cover;
 }
@@ -22,7 +22,7 @@
 
 .welcomebannertext {
   z-index: 2;
-  padding: 4rem 1rem 0 1rem;
+  padding: 4rem 1rem 0 2rem;
   max-width: 80%;
   color: #ffffff;
 }
@@ -30,7 +30,7 @@
 @media (max-width: 992px) {
 
   .welcomebannertext {
-    padding: 2rem 1rem 0 1rem;
+    padding: 2rem 1rem 0 2rem;
     max-width: 80%;
   }
 }
@@ -40,7 +40,7 @@
     display:none;
   }
   .welcomebannertext {
-    padding: 2rem 1rem 0 1rem;
+    padding: 2rem 1rem 0 2rem;
     max-width: 100%;
   }
 }
@@ -60,11 +60,19 @@
 .welcomebannertext h2 {
   padding-bottom: 1rem;
   max-width: 75%;
-  font-weight:bold;
+  font-size: 2rem;
+  letter-spacing: 0;
+  line-height: 40px;
+}
+
+welcomebannertext p {
+  font-size: 1.25rem;
+  letter-spacing: 0;
+  line-height: 26px;
 }
 
 .welcomebanner .bannerButtonRow {
-  margin-top: 1rem;
+  margin-top: 2rem;
 }
 
 .goahead {
@@ -110,7 +118,7 @@
 }
 
 section.block-getting-started,
-secgtion.block-go-ahead {
+section.block-go-ahead {
   background: #ffffff;
 }
 
@@ -118,56 +126,54 @@ secgtion.block-go-ahead {
   display: flex;
 }
 
+.block-getting-started .startguide .gsstep div.placeholder{
+ height: 48px;
+ width: 48px;
+ margin-left: 0;
+ margin-right: auto;
+ margin-top: 2rem;
+}
+
+#get-started-wrapper .startguide .gsstep div.placeholder{
+  height: 48px;
+  width: 48px;
+}
+
 .startguide .gsstep.signup div.placeholder {
-  background: transparent url(../images/api.svg) center left no-repeat;
-  height: 90px;
-  width: 90px;
-  margin-left: auto;
-  margin-right: auto;
+  background: transparent url(../images/signup.svg) center left no-repeat;
+
 }
 
 .startguide .gsstep.explore div.placeholder {
-  background: transparent url(../images/globe.svg) center left no-repeat;
-  height: 90px;
-  width: 90px;
-  margin-left: auto;
-  margin-right: auto;
+  background: transparent url(../images/exploreapis.svg) center left no-repeat;
 }
 
 .startguide .gsstep.subscribe div.placeholder {
-  background: transparent url(../images/create.svg) center left no-repeat;
-  height: 90px;
-  width: 90px;
-  margin-left: auto;
-  margin-right: auto;
+  background: transparent url(../images/createapp.svg) center left no-repeat;
 }
 
 .gsstep {
-  text-align: center;
-  width: calc(100% / 3 - 38px);
+  width: calc(100% / 4 - 38px);
   padding: 3rem 1rem;
   margin: 0 0.75rem;
 }
 
-.gsstep h3
+.gsstep h5
 {
-  font-size: 1.5rem;
-  padding: .75em 0;
   font-weight: 600;
+  font-family: 'IBM Plex Sans', sans-serif;
   line-height: 1.25;
-  color: #5A60B8;
 }
 
 .gsstep a {
   font-size: 1rem;
   font-weight: 600;
-  color: #5A60B8;
+  color: #fff;
   text-decoration: underline;
 }
 
 .gsstep p {
-  text-align: center;
-  padding: 0 2rem;
+  min-height: 5rem;
 }
 
 .get_help h3 {
@@ -227,7 +233,7 @@ secgtion.block-go-ahead {
   font-size: 1rem;
   padding: .75em 0;
   font-weight: 300;
-  color: #969CEC;
+  color: #fff;
 }
 
 .get_help div {
@@ -236,8 +242,8 @@ secgtion.block-go-ahead {
 
 .get_help a,
 .get_help a:hover {
-  color: #969CEC;
-  fill: #969CEC;
+  color: #fff;
+  fill: #fff;
   display: inline-flex;
   align-self: center;
   line-height: 1.5rem;
@@ -245,21 +251,26 @@ secgtion.block-go-ahead {
 }
 
 .get_help a svg {
-  margin-right: 0.5rem;
+  margin-left: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.ibmapimGetStarted {
+  background: transparent url(../images/apic-start.svg) no-repeat fixed right center;
+  min-height: calc(100vh - 136px);
 }
 
 .ibmapimGetStarted header {
-  display: flex;
-  justify-content: space-between;
+  padding-top: 1rem;
 }
 
-.ibmapimGetStarted header h1 {
+.ibmapimGetStarted header h2 {
   margin: 0;
-  padding: 11px 0;
+  padding: 1rem 0;
   border: none;
-  color: #5a6872;
-  font-size: 1.75rem;
-  font-weight: lighter;
+  color: #161616;
+  font-size: 2rem;
+  font-weight: 400;
 }
 
 .ibmapimGetStarted header .homepageLink {
@@ -268,30 +279,56 @@ secgtion.block-go-ahead {
 
 .ibmapimGetStarted .getStartedContentWrapper {
   display: flex;
-  margin-top: 50px;
+  flex-direction: column;
   justify-content: space-evenly;
+  margin-top: 7%;
 }
 .ibmapimGetStarted .getStartedContentWrapper .exploreDiv ,
 .ibmapimGetStarted .getStartedContentWrapper .createAppDiv {
-  max-width: 300px;
-  background-color: white;
-  padding: 40px 20px;
-  border: 1px solid #f0f3f6;
+  margin-right: 2px;
 }
+
+.ibmapimGetStarted .getStartedContentWrapper .exploreDiv a,
+.ibmapimGetStarted .getStartedContentWrapper .createAppDiv a {
+  padding: 1rem;
+  color: #161616;
+  max-width: 23rem;
+  width: 23rem;
+  height: 20rem;
+}
+
+.ibmapimGetStarted .getStartedContentWrapper .exploreDiv a:hover,
+.ibmapimGetStarted .getStartedContentWrapper .createAppDiv a:hover {
+  background: #e5e5e5;
+}
+
 .ibmapimGetStarted .getStartedContentWrapper .gsstep {
-  text-align: center;
+  text-align: left;
   width: auto;
-  padding-bottom: 40px;
-  margin: auto;
+  padding: 0;
+  margin: unset;
 }
 .ibmapimGetStarted .getStartedContentWrapper .getStartedText {
   width: 100%;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4rem 0 0.5rem;
+  height: 100%;
 }
-.ibmapimGetStarted .getStartedContentWrapper .linkWrap {
-  margin-top: 2rem;
-  margin-left: auto;
-  margin-right: auto;
+.ibmapimGetStarted .getStartedContentWrapper .getStartedText h3{
+  margin: 0;
+  font-weight: 400;
+}
+
+.ibmapimGetStarted .getStartedActivities {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.ibmapimGetStarted .homepageLink .breadcrumb{
+  padding: 2rem 0;
 }
 
 /* no permissions page */
@@ -326,11 +363,23 @@ secgtion.block-go-ahead {
 .ibmapimNoPermissions .mainContent {
   font-weight: lighter;
   font-size: 1.875rem;
-  color: #5A60B8;
+  color: #0f62fe;
   margin: 2rem;
 }
 
 .ibmapimNoPermissions .contactLink a {
-  color: #5A60B8;
+  color: #0f62fe;
   font-weight: bold;
+}
+
+.supportContentWrapper h2 {
+  font-size: 1.3rem;
+}
+
+.supportContentWrapper p {
+  font-size: 0.875rem;
+}
+
+.block-social-media-links-block .fa-2x {
+  color: #161616;
 }

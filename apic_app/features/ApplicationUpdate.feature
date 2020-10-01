@@ -22,8 +22,8 @@ Feature: ApplicationUpdate
     And I should see a "#edit-submit" element
     Given I enter "app23456" for "edit-title-0-value"
     And I enter "this is some text" for "edit-apic-summary-0-value"
-    When I press the "Submit" button
-    When I press the "Continue" button
+    When I press the "Save" button
+    When I click "OK"
     When I click on element ".applicationMenu .editApplication a"
     Then I should see a "#edit-title-0-value" element
     And I should see a "#edit-apic-summary-0-value" element
@@ -31,7 +31,7 @@ Feature: ApplicationUpdate
     And I should see a "#edit-submit" element
     Given I enter "newapp23456" for "edit-title-0-value"
     And I enter "this is some new text" for "edit-apic-summary-0-value"
-    When I press the "Submit" button
+    When I press the "Save" button
     #Due to caching issues with the mocks, need to log out and log back in to see the updates
     Given I am not logged in
     Given I am logged in as "Andre"
@@ -59,10 +59,10 @@ Feature: ApplicationUpdate
     And I should see a "#edit-submit" element
     Given I enter "app12345xyz" for "edit-title-0-value"
     And I enter "this is some text" for "edit-apic-summary-0-value"
-    When I press the "Submit" button
+    When I press the "Save" button
     Then there are no errors
     And I should see the text "API Key and Secret"
-    When I press the "Continue" button
+    When I click "OK"
     Then I should see the text "app12345xyz"
     And I should see the text "Edit"
     And I should see the text "Upload image"
@@ -81,7 +81,7 @@ Feature: ApplicationUpdate
     And there are no errors
     Given I enter "newapp23456" for "edit-title-0-value"
     And I enter "this is some new text" for "edit-apic-summary-0-value"
-    When I press the "Submit" button
+    When I press the "Save" button
     #Due to caching issues with the mocks, need to log out and log back in to see the updates
     Given I am not logged in
     Given I am logged in as "Andre"
@@ -215,7 +215,7 @@ Feature: ApplicationUpdate
     And there are no errors
     Given I enter "newapp23456" for "edit-title-0-value"
     And I enter "this is some new text" for "edit-apic-summary-0-value"
-    When I press the "Submit" button
+    When I press the "Save" button
     #Due to caching issues with the mocks, need to log out and log back in to see the updates
     Given I am not logged in
     Given I am logged in as "@data(andre[1].mail)"
@@ -256,7 +256,7 @@ Feature: ApplicationUpdate
     And I should see a "#edit-certificate" element
     Given I enter "newapp23456" for "edit-title-0-value"
     And I enter "cert23456" for "edit-certificate"
-    When I press the "Submit" button
+    When I press the "Save" button
     #Due to caching issues with the mocks, need to log out and log back in to see the updates
     Given I am not logged in
     Given I am logged in as "@data(andre[0].mail)"
@@ -299,7 +299,7 @@ Feature: ApplicationUpdate
     And I should see a "#edit-cancel" element
     And there are no errors
     Given I enter "https://abc.redirect.com" for "edit-application-redirect-endpoints-0-value"
-    When I press the "Submit" button
+    When I press the "Save" button
     #Due to caching issues with the mocks, need to log out and log back in to see the updates
     Given I am not logged in
     Given I am logged in as "@data(andre[0].mail)"
@@ -348,7 +348,7 @@ Feature: ApplicationUpdate
     And I press the "Add another item" button
     Then I should see a "#edit-application-redirect-endpoints-2-value" element
     Given I enter "https://hij.redirect.com" for "edit-application-redirect-endpoints-2-value"
-    When I press the "Submit" button
+    When I press the "Save" button
     #Due to caching issues with the mocks, need to log out and log back in to see the updates
     Given I am not logged in
     Given I am logged in as "@data(andre[0].mail)"
@@ -382,10 +382,10 @@ Feature: ApplicationUpdate
 #    Given I enter "app12345xyz" for "edit-title-0-value"
 #    And I enter "this is some text" for "edit-apic-summary-0-value"
 #    And I enter "https://abc.redirect.com" for "edit-application-redirect-endpoints-0-value"
-#    When I press the "Submit" button
+#    When I press the "Save" button
 #    Then there are no errors
 #    And I should see the text "API Key and Secret"
-#    When I press the "Continue" button
+#    When I click "OK"
 #    Then I should see the text "app12345xyz"
 #    #Due to caching issues with the mocks, need to log out and log back in to see the updates
 #    Given I am not logged in

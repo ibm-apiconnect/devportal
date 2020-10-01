@@ -12,36 +12,33 @@
 
 /// Include styles for screen reader/assistive text
 /// @access public
+/// @group global-helpers
 @mixin css-helpers {
   .#{$prefix}--assistive-text,
   .#{$prefix}--visually-hidden {
-    position:absolute;
-    width:1px;
-    height:1px;
-    padding:0;
-    margin:-1px;
-    overflow:hidden;
-    clip:rect(0, 0, 0, 0);
-    border:0;
-    visibility: visible;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+    visibility: inherit;
     white-space: nowrap;
   }
 
   .#{$prefix}--body {
     @include reset;
-    @if not feature-flag-enabled('components-x') {
-      @include font-family;
-    } @else {
-      @include type-style('body-short-01');
-    }
+    @include type-style('body-short-01');
     color: $text-01;
-    background-color: $ui-02;
+    background-color: $ui-background;
     line-height: 1;
   }
 }
 
 @include exports('css--helpers') {
-  @if global-variable-exists('css--helpers') == false or $css--helpers == true {
+  @if variable-exists('css--helpers') == false or $css--helpers == true {
     @include css-helpers;
   }
 }

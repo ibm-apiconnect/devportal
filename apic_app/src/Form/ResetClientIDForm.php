@@ -105,15 +105,6 @@ class ResetClientIDForm extends ConfirmFormBase {
     $this->node = $appId;
     $this->credId = Html::escape($credId);
     $form = parent::buildForm($form, $form_state);
-    $themeHandler = \Drupal::service('theme_handler');
-    if ($themeHandler->themeExists('bootstrap')) {
-      if (isset($form['actions']['submit'])) {
-        $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
-      }
-      if (isset($form['actions']['cancel'])) {
-        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-      }
-    }
     $form['#attached']['library'][] = 'apic_app/basic';
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -173,18 +164,6 @@ class ResetClientIDForm extends ConfirmFormBase {
       // alter hook (pre-invoke)
       \Drupal::moduleHandler()->alter('apic_app_modify_client_id_reset', $data, $appId);
 
-      $clientIdHtml = \Drupal\Core\Render\Markup::create('<div class="toggleParent"><div id="app_secret" class="appClientReset bx--form-item js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="clientSecret" type="password" readonly value="' . $data['client_id'] . '"></div>
-      <div class="password-toggle bx--form-item js-form-item form-item js-form-type-checkbox form-type-checkbox checkbox"><label title="" data-toggle="tooltip" class="bx--label option" data-original-title=""><input class="form-checkbox bx--checkbox" type="checkbox"><span class="bx--checkbox-appearance"><svg class="bx--checkbox-checkmark" width="12" height="9" viewBox="0 0 12 9" fill-rule="evenodd"><path d="M4.1 6.1L1.4 3.4 0 4.9 4.1 9l7.6-7.6L10.3 0z"></path></svg></span><span class="children"> ' . t('Show') . '</span></label></div></div>');
-      $this->messenger->addMessage(t('Your new client ID is: @html', [
-        '@html' => $clientIdHtml,
-      ]));
-      $clientSecretHtml = '<div class="toggleParent"><div id="app_secret" class="appSecret bx--form-item js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="clientSecret" type="password" readonly value="' . $data['client_secret'] . '"></div>
-        <div class="password-toggle bx--form-item js-form-item form-item js-form-type-checkbox form-type-checkbox checkbox"><label title="" data-toggle="tooltip" class="bx--label option" data-original-title=""><input class="form-checkbox bx--checkbox" type="checkbox"><span class="bx--checkbox-appearance"><svg class="bx--checkbox-checkmark" width="12" height="9" viewBox="0 0 12 9" fill-rule="evenodd"><path d="M4.1 6.1L1.4 3.4 0 4.9 4.1 9l7.6-7.6L10.3 0z"></path></svg></span><span class="children"> ' . t('Show') . '</span></label></div></div>';
-      $clientSecretHtml = \Drupal\Core\Render\Markup::create($clientSecretHtml);
-      $this->messenger->addMessage(t('Your client secret is: @html', [
-        '@html' => $clientSecretHtml,
-      ]));
-
       // update the credential entity
       $this->credsService->updateClientId($this->credId, $data['client_id']);
 
@@ -196,16 +175,13 @@ class ResetClientIDForm extends ConfirmFormBase {
         'appId' => $appId,
         'credId' => $this->credId,
       ]);
-
-      if ($moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new CredentialClientIDResetEvent($this->node, ['application' => $this->node]);
-        $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(CredentialClientIDResetEvent::EVENT_NAME, $event);
-      }
+      $credsString = base64_encode(json_encode($data));
+      $displayCredsUrl = Url::fromRoute('apic_app.display_creds', ['appId' => $appId, 'credentials' => $credsString]);
+    } else {
+      $displayCredsUrl = $this->getCancelUrl();
     }
-    $form_state->setRedirectUrl($this->getCancelUrl());
+
+    $form_state->setRedirectUrl($displayCredsUrl);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 }

@@ -79,8 +79,11 @@
   list-style: none;
 }
 .form-item--error-message {
-  color: $alert-danger-border;
   padding: 5px 10px 5px 10px;
   border: 1px solid $alert-danger-border;
-  border-left-width: 3px;
+  border-left-width: 5px;
+
+  strong {
+    padding-left: 2rem;
+  }
 }

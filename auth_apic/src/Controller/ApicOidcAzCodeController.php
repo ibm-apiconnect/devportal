@@ -17,6 +17,7 @@ use Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface;
 use Drupal\auth_apic\UserManagement\ApicLoginServiceInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\SiteConfig;
@@ -27,8 +28,10 @@ use Drupal\session_based_temp_store\SessionBasedTempStoreFactory;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Messenger\Messenger;
 
 class ApicOidcAzCodeController extends ControllerBase {
+  use StringTranslationTrait;
 
   /**
    * @var \Drupal\ibm_apim\Service\Utils
@@ -66,8 +69,10 @@ class ApicOidcAzCodeController extends ControllerBase {
   protected $logger;
 
   /**
-   * @var
+   * @var \Drupal\Core\Messenger\Messenger
    */
+  protected $messenger;
+
   protected $authApicSessionStore;
 
   protected $requestService;
@@ -87,7 +92,8 @@ class ApicOidcAzCodeController extends ControllerBase {
     LoggerInterface $logger,
     SessionBasedTempStoreFactory $sessionStoreFactory,
     RequestStack $request_service,
-    ManagementServerInterface $mgmtServer
+    ManagementServerInterface $mgmtServer,
+    Messenger $messenger
   ) {
     $this->apimUtils = $apim_utils;
     $this->siteConfig = $site_config;
@@ -99,6 +105,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     $this->authApicSessionStore = $sessionStoreFactory->get('auth_apic_invitation_token');
     $this->requestService = $request_service;
     $this->mgmtServer = $mgmtServer;
+    $this->messenger = $messenger;
   }
 
   public static function create(ContainerInterface $container) {
@@ -112,7 +119,8 @@ class ApicOidcAzCodeController extends ControllerBase {
       $container->get('logger.channel.auth_apic'),
       $container->get('session_based_temp_store'),
       $container->get('request_stack'),
-      $container->get('ibm_apim.mgmtserver')
+      $container->get('ibm_apim.mgmtserver'),
+      $container->get('messenger')
     );
   }
 
@@ -137,9 +145,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     $error = $this->requestService->getCurrentRequest()->query->get('error');
     if (!empty($error)) {
       $errordes = $this->requestService->getCurrentRequest()->query->get('error_description');
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error while authenticating user. Please contact your system administrator. Error: ' . $error . ' Description: ' . $errordes), 'error');
-      }
+      $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator. Error: ' . $error . ' Description: ' . $errordes));
       $this->logger->error('validateOidcRedirect error: ' . $errordes);
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -148,9 +154,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     $authCode = $this->requestService->getCurrentRequest()->query->get('code');
     if (empty($authCode)) {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Missing authorization code parameter. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Missing authorization code parameter. Contact your system administrator.'));
       $this->logger->error('validateOidcRedirect error: Missing authorization code parameter');
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -159,9 +163,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     $state = $this->requestService->getCurrentRequest()->query->get('state');
     if (empty($state)) {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Missing state parameter. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Missing state parameter. Contact your system administrator.'));
       $this->logger->error('validateOidcRedirect error: Missing state parameter');
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -179,9 +181,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       
       $redirect_location = $this->loginService->loginViaAzCode($authCode, $stateObj['registry_url']);
       if ($redirect_location === 'ERROR') {
-        if (function_exists('drupal_set_message')) {
-          drupal_set_message(t('Error while authenticating user. Please contact your system administrator.'), 'error');
-        }
+        $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
         $redirect_location = '<front>';
       }
       if (function_exists('ibm_apim_exit_trace')) {
@@ -189,9 +189,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       }
       return $redirect_location;
     } else {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error while authenticating user. Please contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }
@@ -231,9 +229,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     $error = $this->requestService->getCurrentRequest()->query->get('error');
     if (!empty($error)) {
       $errordes = $this->requestService->getCurrentRequest()->query->get('error_description');
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error while authenticating user. Please contact your system administrator. Error: ' . $error . ' Description: ' . $errordes), 'error');
-      }
+      $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator. Error: ' . $error . ' Description: ' . $errordes));
       $this->logger->error('validateApimOidcRedirect error: ' . $errordes);
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -243,9 +239,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     $state = $this->requestService->getCurrentRequest()->query->get('state');
     if (empty($state)) {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Missing state parameter. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Missing state parameter. Contact your system administrator.'));
       $this->logger->error('validateApimOidcRedirect error: Missing state parameter');
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -255,9 +249,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     $authCode = $this->requestService->getCurrentRequest()->query->get('code');
     if (empty($authCode)) {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Missing authorization code parameter. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Missing authorization code parameter. Contact your system administrator.'));
       $this->logger->error('validateApimOidcRedirect error: Missing authorization code parameter');
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -272,9 +264,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       $apimstate = substr($state, $pos + 1);
       $state = substr($state, 0, $pos);
     } else {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Invalid state parameter. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Invalid state parameter. Contact your system administrator.'));
       $this->logger->error('validateApimOidcRedirect error: Invalid state parameter: ' . $state);
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -288,9 +278,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       $stateObj = $this->oidcStateService->get($stateReceived);
     }
     if (!isset($stateObj)) {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Invalid state parameter. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Invalid state parameter. Contact your system administrator.'));
       $this->logger->error('validateApimOidcRedirect error: Invalid state parameter: ' . $state);
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -305,24 +293,28 @@ class ApicOidcAzCodeController extends ControllerBase {
     $parameters['state'] = $apimstate;
     $url .= http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);
 
-    $response = (array) $this->mgmtServer->get($url);
-    if (!isset($response['code'])) {
+
+    $response = $this->mgmtServer->get($url);
+    $headers = $response->getHeaders();
+    $code = $response->getCode();
+    $headers = array_change_key_case($headers, CASE_LOWER);
+    if (!isset($code)) {
       $redirect_location = 'ERROR';
       $this->logger->error('validateApimOidcRedirect error: Response code not set');
-    } else if ($response['code'] !== 302) {
+    } else if ($code !== 302) {
       $redirect_location = 'ERROR';
-      $this->logger->error('validateApimOidcRedirect error: Response code ' . $response['code']);
-    } else if (!isset($response['headers']['Location'])) {
+      $this->logger->error('validateApimOidcRedirect error: Response code ' . $code);
+    } else if (!isset($headers['location'])) {
       $redirect_location = 'ERROR';
       $this->logger->error('validateApimOidcRedirect error: Location header not set');
     } else {
-      $redirect_location = $response['headers']['Location'];
+      $redirect_location = $headers['location'];
     }
 
     if ($redirect_location === 'ERROR') {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Error while authenticating user. Contact your system administrator.'), 'error');
-      }
+      
+      $this->messenger->addError($this->t('Error: Error while authenticating user. Contact your system administrator.'));
+      
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }
@@ -360,9 +352,7 @@ class ApicOidcAzCodeController extends ControllerBase {
   public function validateApimOidcAz() {
     $clientId = $this->requestService->getCurrentRequest()->query->get('client_id');
     if (empty($clientId)) {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Missing Client ID parameter. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Missing Client ID parameter. Contact your system administrator.'));
       $this->logger->error('validateApimOidcAz error: Missing client_id parameter');
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -372,9 +362,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     $state = $this->requestService->getCurrentRequest()->query->get('state');
     if (empty($state)) {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Missing state parameter. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Missing state parameter. Contact your system administrator.'));
       $this->logger->error('validateApimOidcAz error: Missing state parameter');
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -384,9 +372,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     $redirectUri = $this->requestService->getCurrentRequest()->query->get('redirect_uri');
     if (empty($redirectUri)) {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Missing redirect uri parameter. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Missing redirect uri parameter. Contact your system administrator.'));
       $this->logger->error('validateApimOidcAz error: Missing redirect_uri parameter');
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -396,9 +382,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     $realm = $this->requestService->getCurrentRequest()->query->get('realm');
     if (empty($realm)) {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Missing realm parameter. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Missing realm parameter. Contact your system administrator.'));
       $this->logger->error('validateApimOidcAz error: Missing realm parameter');
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -408,9 +392,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     $responseType = $this->requestService->getCurrentRequest()->query->get('response_type');
     if (empty($responseType) || $responseType !== 'code') {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Missing or incorrect response type parameter. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Missing or incorrect response type parameter. Contact your system administrator.'));
       if (empty($responseType)) {
         $this->logger->error('validateApimOidcAz error: Missing response_type parameter');
       } else {
@@ -429,9 +411,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       $stateObj = $this->oidcStateService->get($stateReceived);
     }
     if (!isset($stateObj)) {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Invalid state parameter. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Invalid state parameter. Contact your system administrator.'));
       $this->logger->error('validateApimOidcAz error: Invalid state parameter: ' . $state);
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -443,9 +423,7 @@ class ApicOidcAzCodeController extends ControllerBase {
 
     $userRegistry = $this->userRegistryService->get($stateObj['registry_url']);
     if (!isset($userRegistry)) {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error while authenticating user. Please contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
       $this->logger->error('validateApimOidcAz error: Invalid user registry url: ' . $stateObj['registry_url']);
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -454,9 +432,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       return '<front>';
     }
     if ($realm !== $userRegistry->getRealm()) {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error while authenticating user. Please contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
       $this->logger->error('validateApimOidcAz error: Invalid realm parameter: ' . $realm . ' does not match ' . $userRegistry->getRealm());
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -466,9 +442,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
 
     if ($clientId !== $this->siteConfig->getClientId()) {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Invalid client_id parameter. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Invalid client_id parameter. Contact your system administrator.'));
       $this->logger->error('validateApimOidcAz error: Invalid client_id parameter: ' . $clientId . ' does not match ' . $this->siteConfig->getClientId());
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -485,9 +459,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     $host = $this->apimUtils->getHostUrl();
     $expectedRedirectUri = $host . $route;
     if ($redirectUri !== $expectedRedirectUri && $redirectUri !== '/ibm_apim/oauth2/redirect') {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error while authenticating user. Please contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
       $this->logger->error('validateApimOidcAz error: Invalid redirect_uri parameter: ' . $redirectUri . ' does not match ' . $expectedRedirectUri);
 
       if (function_exists('ibm_apim_exit_trace')) {
@@ -506,25 +478,25 @@ class ApicOidcAzCodeController extends ControllerBase {
       $url .= '&token=' . $invitation_object->getDecodedJwt();
     }
 
-    $response = (array) $this->mgmtServer->get($url);
-
-    if (!isset($response['code'])) {
+    $response = $this->mgmtServer->get($url);
+    $headers = $response->getHeaders();
+    $code = $response->getCode();
+    $headers = array_change_key_case($headers, CASE_LOWER);
+    if (!isset($code)) {
       $redirect_location = 'ERROR';
       $this->logger->error('validateApimOidcAz error: Response code not set');
-    } else if ($response['code'] !== 302) {
+    } else if ($code !== 302) {
       $redirect_location = 'ERROR';
-      $this->logger->error('validateApimOidcAz error: Response code ' . $response['code']);
-    } else if (!isset($response['headers']['Location'])) {
+      $this->logger->error('validateApimOidcAz error: Response code ' . $code);
+    } else if (!isset($headers['location'])) {
       $redirect_location = 'ERROR';
       $this->logger->error('validateApimOidcAz error: Location header not set');
     } else {
-      $redirect_location = $response['headers']['Location'];
+      $redirect_location = $headers['location'];
     }
 
     if ($redirect_location === 'ERROR') {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error: Error while authenticating user. Contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error: Error while authenticating user. Contact your system administrator.'));
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }
@@ -556,9 +528,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       }
       return $fixed_redirect;
     } else {
-      if (function_exists('drupal_set_message')) {
-        drupal_set_message(t('Error while authenticating user. Please contact your system administrator.'), 'error');
-      }
+      $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
       $this->logger->error('validateApimOidcAz error: Failed to parse redirect: ' . $redirect_location);
 
       if (function_exists('ibm_apim_exit_trace')) {

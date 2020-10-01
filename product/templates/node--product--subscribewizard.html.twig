@@ -59,7 +59,7 @@
                 <table>
                   <thead>
                   <tr>
-                    <th class="apicFixedColumn tlcorner hidden">
+                    <th class="apicFixedColumn tlcorner">
                       <div class="apicTableStandardCell title"><span class="planName">{{ "APIs"|t }}</span></div>
                     </th>
                     {% for planid, plan in planList %}
@@ -70,15 +70,20 @@
                           </span>
                           {% if plan.requiresApproval %}
                             {% set requireApproval = true %}
-                            {{ key_svg|raw }}
+                            {{ locked_svg|raw }}
                           {% endif %}
                           <div class="planSubscribe">
-                            {% if billing %}
-                              <div class="apicBillingInfo">
-                                {{ plan.billing-info }}
+                            {% if plan.rateLimit %}
+                              <div class="apicRateLimits">
+                                  {{ plan.rateLimit}}
                               </div>
                             {% endif %}
-                            <button type="submit" name="selectedPlan" value="{{ plan.data.title }}:{{ planid }}">
+                            {% if billing and plan['billing-info'] %}
+                              <div class="apicBillingInfo">
+                                {{ plan['billing-info'] | raw}}
+                              </div>
+                            {% endif %}
+                            <button class="button" type="submit" name="selectedPlan" value="{{ plan.data.title }}:{{ planid }}">
                               {{ 'Select this Plan'|t }}
                             </button>
                           </div>
@@ -90,7 +95,7 @@
                     {% endfor %}
                   </tr>
                   </thead>
-                  <tbody class="apicPlansTableBody hidden">
+                  <tbody class="apicPlansTableBody">
                   {% for api in apiList %}
                     <tr class="api-{% if loop.index is divisibleby(2) %}even{% else %}odd{% endif %}">
                       <th class="apicFixedColumn">
@@ -127,8 +132,11 @@
                         {% for pathSegment, path in api.swagger.paths %}
                           {% for verb, operation in path %}
                             {% if verb|upper in ['PUT', 'POST', 'GET', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH'] %}
-                              <div class="apicApiOperation apicTruncate apicSecondaryRow"
-                                   title="{{ verb|upper }} {{ pathSegment }}">{{ verb|upper }} {{ pathSegment }}</div>
+                              <div class="apicApiOperation apicTruncate apicSecondaryRow {{ verb|lower }}"
+                                title="{{ verb|upper }} {{ pathSegment }}">
+                                <span class="verb">{{ verb|upper }}</span>
+                                <span class="path">{{ pathSegment }}</span>
+                              </div>
                             {% endif %}
                           {% endfor %}
                         {% endfor %}
@@ -169,13 +177,13 @@
                 </table>
                 <div class="planTableSelector">
                    <span class="hideDetails">
-                  <a class="showComparisonTable" title="{{ 'Show a table comparing the available plans'|t }}"
+                  <a class="showComparisonTable hidden" title="{{ 'Show a table comparing the available plans'|t }}"
                      onclick="Drupal.settings.product.showTable(event)" href="javascript:">
                     <span class="linkLabel">{{ 'View details'|t }}</span>
                     <span class="apicTwistieIcon"><i class="fa fa-angle-down"></i></span>
                   </a>
 
-                    <a class="showPlans hidden" title="Show the available plans" onclick="Drupal.settings.product.showPlans(event)" href="javascript:">
+                    <a class="showPlans" title="Show the available plans" onclick="Drupal.settings.product.showPlans(event)" href="javascript:">
                     <span class="linkLabel">Hide details</span>
                     <span class="apicTwistieIcon"><i class="fa fa-angle-up"></i></span>
                     </a>
@@ -188,13 +196,13 @@
           <div class="tableKey">
             {% if multipleRates %}
               <div class="multipleRateLimitsMessage hidden">
-                {{ '* burst limit exists; hover to view limits'|t }}
+                {{ '* multiple rate limits; hover to view limits'|t }}
               </div>
             {% endif %}
             {%  if requireApproval %}
               <div class="planRequiresSubKey">
                 <p>
-                  {{ key_svg|raw }}
+                  {{ locked_svg|raw }}
                   {{ 'Requires subscription approval'|t}}
                 </p>
               </div>

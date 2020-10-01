@@ -99,6 +99,13 @@ content:
     third_party_settings: {  }
     type: basic_string
     region: content
+  api_state:
+    type: list_default
+    weight: 21
+    region: content
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
   apic_version:
     type: string
     weight: 0

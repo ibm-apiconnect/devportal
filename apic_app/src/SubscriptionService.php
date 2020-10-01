@@ -42,12 +42,14 @@ class SubscriptionService {
    */
   public static function create($appUrl, $subId, $product, $plan, $consumerOrgUrl, $state = 'enabled', $billingUrl = NULL): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$appUrl, $subId]);
+    $apimUtils = \Drupal::service('ibm_apim.apim_utils');
     $createdOrUpdated = TRUE;
-    $appUrl = Html::escape($appUrl);
+    $appUrl = Html::escape($apimUtils->removeFullyQualifiedUrl($appUrl));
     $product = Html::escape($product);
-    $billingUrl = Html::escape($billingUrl);
+    $billingUrl = Html::escape($apimUtils->removeFullyQualifiedUrl($billingUrl));
     $plan = Html::escape($plan);
-    $consumerOrgUrl = Html::escape($consumerOrgUrl);
+
+    $consumerOrgUrl = Html::escape($apimUtils->removeFullyQualifiedUrl($consumerOrgUrl));
 
     // only allow state to be enabled, disabled or pending
     if (!in_array($state, ['enabled', 'disabled', 'pending'], true)) {
@@ -112,51 +114,6 @@ class SubscriptionService {
         }
         $node->set('application_subscription_refs', $newArray);
         $node->save();
-      }
-    }
-    $moduleHandler = \Drupal::service('module_handler');
-    if ($moduleHandler->moduleExists('rules')) {
-      $productNode = NULL;
-      if (isset($product)) {
-        $query = \Drupal::entityQuery('node');
-        $query->condition('type', 'product');
-        $query->condition('apic_url.value', $product);
-        $results = $query->execute();
-        if (isset($results) && !empty($results)) {
-          $prodNid = array_shift($results);
-          $productNode = Node::load($prodNid);
-        }
-      }
-      if ($node !== NULL && $productNode !== NULL) {
-        if ($createdOrUpdated === TRUE) {
-          // Set the args twice on the event: as the main subject but also in the
-          // list of arguments.
-          $event = new SubscriptionCreateEvent($node, $productNode, $plan, $state, [
-            'application' => $node,
-            'product' => $productNode,
-            'planName' => $plan,
-            'state' => $state,
-          ]);
-          $eventDispatcher = \Drupal::service('event_dispatcher');
-          $eventDispatcher->dispatch(SubscriptionCreateEvent::EVENT_NAME, $event);
-        }
-        else {
-          // Set the args twice on the event: as the main subject but also in the
-          // list of arguments.
-          $event = new SubscriptionUpdateEvent($node, $productNode, $plan, $state, [
-            'application' => $node,
-            'product' => $productNode,
-            'planName' => $plan,
-            'state' => $state,
-          ]);
-          $eventDispatcher = \Drupal::service('event_dispatcher');
-          $eventDispatcher->dispatch(SubscriptionUpdateEvent::EVENT_NAME, $event);
-        }
-      } else {
-        \Drupal::logger('apic_app')->notice('Subscription @subid for application @app received but either the product or the application is missing.', [
-          '@subid' => $subId,
-          '@app' => $appTitle,
-        ]);
       }
     }
     if ($createdOrUpdated === TRUE) {
@@ -255,35 +212,6 @@ class SubscriptionService {
         }
         $node->set('application_subscription_refs', $currentSubs);
         $node->save();
-
-        $moduleHandler = \Drupal::service('module_handler');
-        if ($moduleHandler->moduleExists('rules')) {
-          $productNode = NULL;
-          if (isset($product)) {
-            $query = \Drupal::entityQuery('node');
-            $query->condition('type', 'product');
-            $query->condition('apic_url.value', $product);
-            $results = $query->execute();
-            if (isset($results) && !empty($results)) {
-              $prodNid = array_shift($results);
-              $productNode = Node::load($prodNid);
-            }
-          }
-
-          // we have to have a productNode to be able to generate an event
-          // but if this sub delete is as a result of a product delete, we don't have a product any more!
-          if (isset($productNode)) {
-            // Set the args twice on the event: as the main subject but also in the
-            // list of arguments.
-            $event = new SubscriptionDeleteEvent($node, $productNode, $planName, [
-              'application' => $node,
-              'product' => $productNode,
-              'planName' => $planName,
-            ]);
-            $eventDispatcher = \Drupal::service('event_dispatcher');
-            $eventDispatcher->dispatch(SubscriptionDeleteEvent::EVENT_NAME, $event);
-          }
-        }
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

@@ -17,6 +17,8 @@ dependencies:
     - field.field.node.consumerorg.consumerorg_roles
     - field.field.node.consumerorg.consumerorg_tags
     - field.field.node.consumerorg.consumerorg_url
+    - field.field.node.consumerorg.consumerorg_payment_method_refs
+    - field.field.node.consumerorg.consumerorg_def_payment_ref
     - node.type.consumerorg
 id: node.consumerorg.default
 targetEntityType: node
@@ -47,6 +49,8 @@ hidden:
   consumerorg_roles: true
   consumerorg_tags: true
   consumerorg_url: true
+  consumerorg_payment_method_refs: true
+  consumerorg_def_payment_ref: true
   created: true
   langcode: true
   path: true

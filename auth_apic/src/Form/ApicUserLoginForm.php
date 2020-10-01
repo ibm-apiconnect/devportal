@@ -35,6 +35,7 @@ use Drupal\user\UserAuthInterface;
 use Drupal\user\UserStorageInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Messenger\Messenger;
 
 class ApicUserLoginForm extends UserLoginForm {
 
@@ -92,6 +93,11 @@ class ApicUserLoginForm extends UserLoginForm {
    * @var \Drupal\auth_apic\UserManagement\ApicInvitationInterface
    */
   protected $invitationService;
+  
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
 
   /**
    * Constructs a new UserLoginForm.
@@ -112,7 +118,8 @@ class ApicUserLoginForm extends UserLoginForm {
                               SessionBasedTempStoreFactory $session_store_factory,
                               Config $ibm_settings_config,
                               ApicLoginServiceInterface $login_service,
-                              ApicInvitationInterface $invitation_service) {
+                              ApicInvitationInterface $invitation_service,
+                              Messenger $messenger) {
     parent::__construct($flood, $user_storage, $user_auth, $renderer);
     $this->logger = $logger;
     $this->accountService = $account_service;
@@ -125,6 +132,7 @@ class ApicUserLoginForm extends UserLoginForm {
     $this->ibmSettingsConfig = $ibm_settings_config;
     $this->loginService = $login_service;
     $this->invitationService = $invitation_service;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -133,7 +141,7 @@ class ApicUserLoginForm extends UserLoginForm {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('flood'),
-      $container->get('entity.manager')->getStorage('user'),
+      $container->get('entity_type.manager')->getStorage('user'),
       $container->get('user.auth'),
       $container->get('renderer'),
       $container->get('logger.channel.auth_apic'),
@@ -146,7 +154,8 @@ class ApicUserLoginForm extends UserLoginForm {
       $container->get('session_based_temp_store'),
       $container->get('config.factory')->get('ibm_apim.settings'),
       $container->get('auth_apic.login'),
-      $container->get('auth_apic.invitation')
+      $container->get('auth_apic.invitation'),
+      $container->get('messenger')
     );
   }
 
@@ -455,7 +464,7 @@ class ApicUserLoginForm extends UserLoginForm {
       if ($admin !== NULL && $name === $admin->getUsername()) {
 
         if ($jwt !== NULL) {
-          drupal_set_message(t('admin user is not allowed when signing in an invited user.'), 'error');
+          $this->messenger->addError(t('admin user is not allowed when signing in an invited user.'));
           $returnValue = FALSE;
         }
         else {

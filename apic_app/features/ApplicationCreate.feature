@@ -20,12 +20,12 @@ Feature: ApplicationCreate
     And I should see a "#edit-submit" element
     Given I enter "app12345xyz" for "edit-title-0-value"
     And I enter "this is some text" for "edit-apic-summary-0-value"
-    When I press the "Submit" button
+    When I press the "Save" button
     Then there are no errors
     And I should see the text "API Key and Secret"
     And I should see a ".appID" element
     And I should see a ".appSecret" element
-    When I press the "Continue" button
+    When I click "OK"
     Then I should see the text "app12345xyz"
     And I should see the text "Subscriptions"
     And I should see the text "Edit"
@@ -84,6 +84,7 @@ Feature: ApplicationCreate
 
   @api
   Scenario: Create application as a user with the role developer
+    Given I do not have an analytics service
     Given users:
       | name                 | mail                 | pass                     | status |
       | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
@@ -103,12 +104,12 @@ Feature: ApplicationCreate
     And I should see a "#edit-submit" element
     Given I enter "app12345xyz" for "edit-title-0-value"
     And I enter "this is some text" for "edit-apic-summary-0-value"
-    When I press the "Submit" button
+    When I press the "Save" button
     Then there are no errors
     And I should see the text "API Key and Secret"
     And I should see a ".appID" element
     And I should see a ".appSecret" element
-    When I press the "Continue" button
+    When I click "OK"
     Then I should see the text "app12345xyz"
     And I should see the text "Subscriptions"
     And I should see the text "Edit"
@@ -139,12 +140,12 @@ Feature: ApplicationCreate
     And I should see a "#edit-submit" element
     Given I enter "app12345xyz" for "edit-title-0-value"
     And I enter "this is some text" for "edit-apic-summary-0-value"
-    When I press the "Submit" button
+    When I press the "Save" button
     Then there are no errors
     And I should see the text "API Key and Secret"
     And I should see a ".appID" element
     And I should see a ".appSecret" element
-    When I press the "Continue" button
+    When I click "OK"
     Then I should see the text "app12345xyz"
     And I should see the text "Subscriptions"
     And I should see the text "Edit"
@@ -173,12 +174,12 @@ Feature: ApplicationCreate
     Given I enter "app12345xyz" for "edit-title-0-value"
     And I enter "this is some text" for "edit-apic-summary-0-value"
     And I enter "https://abc.redirect.com" for "edit-application-redirect-endpoints-0-value"
-    When I press the "Submit" button
+    When I press the "Save" button
     Then there are no errors
     And I should see the text "API Key and Secret"
     And I should see a ".appID" element
     And I should see a ".appSecret" element
-    When I press the "Continue" button
+    When I click "OK"
     Then I should see the text "app12345xyz"
     And I should see the text "Subscriptions"
     And I should see the text "Edit"
@@ -207,12 +208,12 @@ Feature: ApplicationCreate
     Given I enter "app12345xyz" for "edit-title-0-value"
     And I enter "this is some text" for "edit-apic-summary-0-value"
     And I enter "https://abc.redirect.com,https://def.acme.redirect.com,https://hij.redirect.com" for "edit-application-redirect-endpoints-0-value"
-    When I press the "Submit" button
+    When I press the "Save" button
     Then there are no errors
     And I should see the text "API Key and Secret"
     And I should see a ".appID" element
     And I should see a ".appSecret" element
-    When I press the "Continue" button
+    When I click "OK"
     Then I should see the text "app12345xyz"
     And I should see the text "Subscriptions"
     And I should see the text "Edit"

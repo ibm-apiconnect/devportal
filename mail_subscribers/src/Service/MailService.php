@@ -14,13 +14,10 @@
 namespace Drupal\mail_subscribers\Service;
 
 use Drupal\Component\Utility\EmailValidator;
-use Drupal\apic_app\Entity\ApplicationSubscription;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Mail\MailFormatHelper;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
-use Drupal\mail_subscribers\Event\AllMailAddedEvent;
-use Drupal\mail_subscribers\Event\MailAddedEvent;
 use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
 
@@ -583,7 +580,6 @@ class MailService {
     if ($mailParams['carbon_copy'] !== null && (boolean) $mailParams['carbon_copy'] === TRUE) {
       $toList[] = $from['mail'];
     }
-    $rulesEnabled = \Drupal::moduleHandler()->moduleExists('rules');
 
     $mailBody = $mailParams['message']['value'];
     $moduleHandler = \Drupal::moduleHandler();
@@ -634,11 +630,6 @@ class MailService {
             ->insert('mail_subscribers_spool', $options)
             ->fields($message)
             ->execute();
-          if ($rulesEnabled) {
-            $event = new MailAddedEvent($message);
-            $eventDispatcher = \Drupal::service('event_dispatcher');
-            $eventDispatcher->dispatch(MailAddedEvent::EVENT_NAME, $event);
-          }
         }
         $sent++;
       }
@@ -651,11 +642,6 @@ class MailService {
         'progress_message' => t('Sent @current of @total messages.'),
       ];
       batch_set($batch);
-    }
-    elseif (\Drupal::moduleHandler()->moduleExists('rules')) {
-      $event = new AllMailAddedEvent(count($toList));
-      $eventDispatcher = \Drupal::service('event_dispatcher');
-      $eventDispatcher->dispatch(AllMailAddedEvent::EVENT_NAME, $event);
     }
     // return the number of emails sent
     $rc = $sent;

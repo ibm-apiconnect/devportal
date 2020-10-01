@@ -10,34 +10,37 @@
 <div class="ibmapimGetStarted">
   <div id="get-started-wrapper">
     <header class="getStartedHeader">
-      <div class="getStartedTitle"><h1>{{ 'Get Started'|t }}</h1></div>
-      <div class="homepageLink breadcrumb"><a href="{{ path('<front>') }}">{{ 'Take me to the homepage'|t }}
-          <svg width='16' height='14' viewBox='0 0 16 14' fill-rule='evenodd'>
-            <path d='M12.6 6H0v2h12.7l-5 4.7L9 14l7-7-7-7-1.3 1.3z'></path>
-          </svg>
-        </a>
-      </div>
+      <div class="getStartedTitle"><h2>{{ 'Welcome,'|t }}<br/>{{ 'let\'s get started!'|t }}</h2></div>
     </header>
     <div class="getStartedContentWrapper startguide">
-      <div class="exploreDiv">
-        <div class="getStartedIcon gsstep explore"><div class="placeholder"></div></div>
-        <div class="getStartedText">
-          <h2>{{ 'Explore API Products'|t }}</h2>
-          <p>{{ 'Take a look at our API products and quickly find the APIs you need.'|t }}</p>
-          <div class="linkWrap"><a href="{{ path('view.products.page_1') }}"
-                                   class="btn button">{{ 'Start Exploring'|t }}</a></div>
-        </div>
-      </div>
-      {% if userHasAppManage and show_register_app %}
-        <div class="createAppDiv">
-          <div class="getStartedIcon gsstep subscribe"><div class="placeholder"></div></div>
-          <div class="getStartedText">
-            <h2>{{ 'Create a new App'|t }}</h2>
-            <p>{{ 'Create an App so you can subscribe to our API Products and start building your application.'|t }}</p>
-            <div class="linkWrap"><a href="{{ path('apic_app.create') }}" class="btn button">{{ 'Create an App'|t }}</a></div>
+      <div class="getStartedActivities">
+          <div class="getStartedActivity exploreDiv">
+              <a href="{{ path('view.products.page_1') }}" class="bx--card tile-button">
+                  <div class="getStartedIcon gsstep explore"><div class="placeholder"></div></div>
+                  <div class="getStartedText">
+                      <h3>{{ 'Explore API Products'|t }}</h3>
+                      <p>{{ 'Take a look at our API products and quickly find the APIs you need.'|t }}</p>
+                  </div>
+              </a>
           </div>
-        </div>
-      {% endif %}
+          {% if userHasAppManage and show_register_app %}
+              <div class="getStartedActivity createAppDiv">
+                  <a href="{{ path('apic_app.create') }}" class="bx--card tile-button">
+                      <div class="getStartedIcon gsstep subscribe"><div class="placeholder"></div></div>
+                      <div class="getStartedText">
+                          <h3>{{ 'Create a new App'|t }}</h3>
+                          <p>{{ 'Create an App so you can subscribe to our API Products and start building your application.'|t }}</p>
+                      </div>
+                  </a>
+              </div>
+          {% endif %}
+      </div>
+      <div class="homepageLink breadcrumb"><a href="{{ path('<front>') }}">{{ 'Take me to the homepage'|t }}
+              <svg width='16' height='14' viewBox='0 0 16 14' fill-rule='evenodd'>
+                  <path d='M12.6 6H0v2h12.7l-5 4.7L9 14l7-7-7-7-1.3 1.3z'></path>
+              </svg>
+         </a>
+      </div>
     </div>
   </div>
 </div>

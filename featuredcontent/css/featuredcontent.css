@@ -1,13 +1,13 @@
 .featuredcontent.featuredcontentBlockWrapper {
-  margin: 1.5rem 3rem;
+  margin: 1.5rem 2rem;
 }
 
 .featuredcontentNode {
-  margin: 1.375rem 0;
+  margin-bottom: 2px;
   width: calc(25% - 16px);
-  padding: 2.25rem 1.5rem;
+  padding: 1rem;
   background-color:#fff;
-  border: 1px solid #e7eaed;
+  min-width: 200px;
 }
 
 @media (max-width: 1280px) {
@@ -33,37 +33,38 @@
   font-size: 1.5rem;
 }
 
-.featuredcontent .featuredcontentBlockHeader a {
-  text-decoration: underline;
+.featuredcontentBlockHeader {
+  display: inline-block;
+  width: 250px;
+  vertical-align: top;
 }
 
-.featuredcontentBlockHeader {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding-top: 1rem;
+.featuredcontentContentContainer {
+  display: inline-block;
+  width: calc(100% - 300px);
 }
 
 .featuredcontentNodeHeader {
-  display:flex;
   align-items:center;
 }
 
 .featuredcontentNodeImage img {
-  width: 60px;
-  height: 60px;
+  width: 2rem;
+  height: 2rem;
 }
 
 .featuredcontentNodeImage {
   margin-right: 1.25rem;
   margin-top: auto;
   margin-bottom: auto;
+  padding-bottom: 0.5rem;
 }
 
 .featuredcontentNodeHeader .featuredcontentNodeTitle {
-  font-size: 1.25rem;
-  line-height: 2rem;
+  font-size: 0.875rem;
+  line-height: 18px;
   word-break: break-word;
+  font-family: 'IBM Plex Sans SemiBold', 'IBM Plex Sans', 'sans-serif';
 }
 
 .featuredcontentNodeInfo {
@@ -73,8 +74,19 @@
 .featuredcontentNodeInfo .featuredcontentNodeSummary,
 .featuredcontentNodeInfo .featuredcontentNodeDescription {
   font-size: 0.75rem;
-  line-height: 1.2;
-  height: 2.5rem;
+  line-height: 20px;
+  height: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.16px;
+}
+
+@media (max-width: 380px) {
+  .featuredcontentBlockHeader,
+  .featuredcontentContentContainer {
+    display: block;
+  }
+  .featuredcontentBlockHeader {
+    padding-bottom: 1rem;
+  }
 }

@@ -1,0 +1,36 @@
+<svg width="659px" height="832px" viewBox="0 0 659 832" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>bar diagram</title>
+    <g id="Getting-Started" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Get-started-Copy-9" transform="translate(-621.000000, -140.000000)" stroke="#0F6EFE" stroke-width="4">
+            <g id="bar-diagram" transform="translate(621.000000, 140.000000)">
+                <g id="Group-4" transform="translate(178.500000, 0.000000)">
+                    <line x1="152.5" y1="0" x2="152.5" y2="128" id="Path-2-Copy-14"></line>
+                    <line x1="152.5" y1="176" x2="152.5" y2="304" id="Path-2-Copy-17"></line>
+                    <line x1="240.5" y1="88" x2="240.5" y2="216" id="Path-2-Copy-15" transform="translate(240.500000, 152.000000) rotate(-90.000000) translate(-240.500000, -152.000000) "></line>
+                    <line x1="64.5" y1="88" x2="64.5" y2="216" id="Path-2-Copy-16" transform="translate(64.500000, 152.000000) rotate(-90.000000) translate(-64.500000, -152.000000) "></line>
+                </g>
+                <g id="Group-4-Copy" transform="translate(354.000000, 176.000000)">
+                    <line x1="152.5" y1="0" x2="152.5" y2="128" id="Path-2-Copy-14"></line>
+                    <line x1="152.5" y1="176" x2="152.5" y2="304" id="Path-2-Copy-17"></line>
+                    <line x1="240.5" y1="88" x2="240.5" y2="216" id="Path-2-Copy-15" transform="translate(240.500000, 152.000000) rotate(-90.000000) translate(-240.500000, -152.000000) "></line>
+                    <line x1="64.5" y1="88" x2="64.5" y2="216" id="Path-2-Copy-16" transform="translate(64.500000, 152.000000) rotate(-90.000000) translate(-64.500000, -152.000000) "></line>
+                </g>
+                <g id="Group-4-Copy-2" transform="translate(177.000000, 528.000000)">
+                    <line x1="152.5" y1="0" x2="152.5" y2="128" id="Path-2-Copy-14"></line>
+                    <line x1="152.5" y1="176" x2="152.5" y2="304" id="Path-2-Copy-17"></line>
+                    <line x1="240.5" y1="88" x2="240.5" y2="216" id="Path-2-Copy-15" transform="translate(240.500000, 152.000000) rotate(-90.000000) translate(-240.500000, -152.000000) "></line>
+                    <line x1="64.5" y1="88" x2="64.5" y2="216" id="Path-2-Copy-16" transform="translate(64.500000, 152.000000) rotate(-90.000000) translate(-64.500000, -152.000000) "></line>
+                </g>
+                <g id="Group-10" transform="translate(354.000000, 503.000000)">
+                    <line x1="152.5" y1="25" x2="152.5" y2="153" id="Path-2-Copy-17"></line>
+                    <line x1="64.5" y1="-63" x2="64.5" y2="65" id="Path-2-Copy-16" transform="translate(64.500000, 1.000000) rotate(-90.000000) translate(-64.500000, -1.000000) "></line>
+                </g>
+                <line x1="594" y1="616" x2="594" y2="744" id="Path-2-Copy-15" transform="translate(594.000000, 680.000000) rotate(-90.000000) translate(-594.000000, -680.000000) "></line>
+                <g id="Group-11" transform="translate(0.000000, 679.000000)">
+                    <line x1="152.5" y1="25" x2="152.5" y2="153" id="Path-2-Copy-17"></line>
+                    <line x1="64.5" y1="-63" x2="64.5" y2="65" id="Path-2-Copy-16" transform="translate(64.500000, 1.000000) rotate(-90.000000) translate(-64.500000, -1.000000) "></line>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

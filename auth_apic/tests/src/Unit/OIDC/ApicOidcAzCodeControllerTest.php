@@ -18,6 +18,7 @@ use Prophecy\Argument;
 use Prophecy\Prophet;
 use Drupal\auth_apic\Controller\ApicOidcAzCodeController;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\ibm_apim\Rest\RestResponse;
 
 
 
@@ -44,6 +45,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   protected $controller;
   protected $query;
   protected $mgmtServer;
+  protected $messenger;
   protected $storeFactory;
   protected $store;
   
@@ -62,6 +64,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->requestStack= $this->prophet->prophesize('Symfony\Component\HttpFoundation\RequestStack');
     $this->query = $this->prophet->prophesize('Symfony\Component\HttpFoundation\ParameterBag');
     $this->mgmtServer = $this->prophet->prophesize('Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface');
+    $this->messenger = $this->prophet->prophesize('Drupal\Core\Messenger\Messenger');
+    $translator = $this->prophet->prophesize('\Drupal\Core\StringTranslation\TranslationInterface');
     $this->storeFactory->get('auth_apic_invitation_token')->willReturn($this->store);
     $route = $this->prophet->prophesize('Drupal\Core\Routing\UrlGenerator;');
     $container = new ContainerBuilder();
@@ -80,8 +84,10 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
       $this->logger->reveal(),
       $this->storeFactory->reveal(),
       $this->requestStack->reveal(),
-      $this->mgmtServer->reveal()
+      $this->mgmtServer->reveal(),
+      $this->messenger->reveal()
     );
+    $this->controller->setStringTranslation($translator->reveal());
     $this->requestStack->query = $this->query;
   }
 
@@ -173,7 +179,11 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
 
     $arg = '/consumer-api/oauth2/redirect?state=apimstate' .
       '&code=601e0142-55c2-406e-98e3-10ba1fa3f2e8';
-    $this->mgmtServer->get($arg)->willReturn(['code' => 302, 'headers' => ['Location' => "https://correctRedirectLocation.com"]]);
+    $result = new RestResponse();
+    $result->setHeaders(['Location' => "https://correctRedirectLocation.com"]);
+    $result->setCode(302);
+    $result->setData('');
+    $this->mgmtServer->get($arg)->willReturn($result);
     
     $this->logger->error(Argument::any())->shouldNotBeCalled();
     $this->assertEquals($this->controller->validateApimOidcRedirect(), "https://correctRedirectLocation.com");
@@ -194,8 +204,12 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
       '&code=601e0142-55c2-406e-98e3-10ba1fa3f2e8' .
       '&scope=Looking%20glass' .
       '&xtoken=e0142';
-    $this->mgmtServer->get($arg)->willReturn(['code' => 302, 'headers' => ['Location' => "https://correctRedirectLocation.com"]]);
-    
+    $result = new RestResponse();
+    $result->setHeaders(['Location' => "https://correctRedirectLocation.com"]);
+    $result->setCode(302);
+    $result->setData('');
+    $this->mgmtServer->get($arg)->willReturn($result);
+
     $this->logger->error(Argument::any())->shouldNotBeCalled();
     $this->assertEquals($this->controller->validateApimOidcRedirect(), "https://correctRedirectLocation.com");
   }
@@ -263,8 +277,13 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
 
     $arg = '/consumer-api/oauth2/redirect?state=apimstate' .
       '&code=601e0142-55c2-406e-98e3-10ba1fa3f2e8';
-    $this->mgmtServer->get($arg)->willReturn(['code' => 400, 'headers' => ['Location' => "https://correctRedirectLocation.com"]]);
-    
+
+    $result = new RestResponse();
+    $result->setHeaders(['Location' => "https://correctRedirectLocation.com"]);
+    $result->setCode(400);
+    $result->setData('');
+    $this->mgmtServer->get($arg)->willReturn($result);    
+
     $this->logger->error(Argument::containingString('400'))->shouldBeCalled();
     $this->assertEquals($this->controller->validateApimOidcRedirect(), "<front>");
   }
@@ -280,7 +299,13 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
 
     $arg = '/consumer-api/oauth2/redirect?state=apimstate' .
       '&code=601e0142-55c2-406e-98e3-10ba1fa3f2e8';
-    $this->mgmtServer->get($arg)->willReturn(['code' => 302, 'headers' => []]);
+      $result = new \stdClass();
+
+    $result = new RestResponse();
+    $result->setHeaders([]);
+    $result->setCode(302);
+    $result->setData('');
+    $this->mgmtServer->get($arg)->willReturn($result);
     
     $this->logger->error(Argument::containingString('Location header'))->shouldBeCalled();
     $this->assertEquals($this->controller->validateApimOidcRedirect(), "<front>");
@@ -310,7 +335,11 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     '&response_type=code';
     $url = 'https://oidcServer.com/path?redirect_uri=https://correctRedirectLocation.com/incorrectRoute';
 
-    $this->mgmtServer->get($arg)->willReturn(['code' => 302, 'headers' => ['Location' => $url]]);
+    $result = new RestResponse();
+    $result->setHeaders(['Location' => $url]);
+    $result->setCode(302);
+    $result->setData('');
+    $this->mgmtServer->get($arg)->willReturn($result);
 
     $this->logger->error(Argument::any())->shouldNotBeCalled();
     $this->assertEquals($this->controller->validateApimOidcAz(), "https://oidcServer.com/path?redirect_uri=" . urlencode('https://correctRedirectLocation.com/route'));
@@ -339,7 +368,12 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     '&response_type=code';
     $url = 'https://oidcServer.com:339/path?redirect_uri=https://correctRedirectLocation.com/incorrectRoute';
 
-    $this->mgmtServer->get($arg)->willReturn(['code' => 302, 'headers' => ['Location' => $url]]);
+
+    $result = new RestResponse();
+    $result->setHeaders(['Location' => $url]);
+    $result->setCode(302);
+    $result->setData('');
+    $this->mgmtServer->get($arg)->willReturn($result);
 
     $this->logger->error(Argument::any())->shouldNotBeCalled();
     $this->assertEquals($this->controller->validateApimOidcAz(), "https://oidcServer.com:339/path?redirect_uri=" . urlencode('https://correctRedirectLocation.com/route'));
@@ -449,7 +483,11 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     '&response_type=code';
     $url = 'https://oidcServer.com/path?redirect_uri=https://correctRedirectLocation.com/incorrectRoute';
 
-    $this->mgmtServer->get($arg)->willReturn(['code' => 302, 'headers' => ['Location' => $url]]);
+    $result = new RestResponse();
+    $result->setHeaders(['Location' => $url]);
+    $result->setCode(302);
+    $result->setData('');
+    $this->mgmtServer->get($arg)->willReturn($result);
 
     $this->logger->error(Argument::containingString("wrongRegistryUrl"))->shouldBeCalled();
     $this->assertEquals($this->controller->validateApimOidcAz(), '<front>');
@@ -538,7 +576,11 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     '&response_type=code';
     $url = 'https://oidcServer.com/path?redirect_uri=https://correctRedirectLocation.com/incorrectRoute';
 
-    $this->mgmtServer->get($arg)->willReturn(['code' => 400, 'headers' => ['Location' => $url]]);
+    $result = new RestResponse();
+    $result->setHeaders(['Location' => $url]);
+    $result->setCode(400);
+    $result->setData('');
+    $this->mgmtServer->get($arg)->willReturn($result);
 
     $this->logger->error(Argument::containingString("400"))->shouldBeCalled();
     $this->assertEquals($this->controller->validateApimOidcAz(), '<front>');
@@ -566,7 +608,12 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     '&realm=trueRealm' .
     '&response_type=code';
 
-    $this->mgmtServer->get($arg)->willReturn(['code' => 302, 'headers' => []]);
+    $result = new RestResponse();
+    $result->setHeaders([]);
+    $result->setCode(302);
+    $result->setData('');
+    $this->mgmtServer->get($arg)->willReturn($result);
+
 
     $this->logger->error(Argument::containingString("Location header"))->shouldBeCalled();
     $this->assertEquals($this->controller->validateApimOidcAz(), '<front>');
@@ -595,7 +642,11 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     '&response_type=code';
     $url = 'https://oidcServer.com';
 
-    $this->mgmtServer->get($arg)->willReturn(['code' => 302, 'headers' => ['Location' => $url]]);
+    $result = new RestResponse();
+    $result->setHeaders(['Location' => $url]);
+    $result->setCode(302);
+    $result->setData('');
+    $this->mgmtServer->get($arg)->willReturn($result);
 
     $this->logger->error(Argument::containingString($url))->shouldBeCalled();
     $this->assertEquals($this->controller->validateApimOidcAz(), '<front>');

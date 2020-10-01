@@ -2,6 +2,7 @@
 
   .modal {
     text-align: center;
+    background-color: $modal_overlay;
   }
 
   &.modal-open {
@@ -16,7 +17,7 @@
   }
 
   .modal-header {
-    padding: 1rem 0 0.5rem 3rem;
+    padding: 1rem 1rem 0rem 1rem;
     .close {
       background-color: 		$modal-content-bg;
       color: 	                $modal-content-color;
@@ -31,15 +32,15 @@
   }
 
   .modal-title {
-    padding-top: 1.75rem;
-    padding-right: 3rem;
-    font-size: 0.75rem;
-    font-weight: bold;
-    text-transform: uppercase;
+    font-size: 1.25rem;
+    font-weight: 400;
+    line-height: 1.75rem;
+    letter-spacing: 0;
+    color: $modal-content-color;
   }
 
   .modal-body {
-    padding: 1.5rem 3rem 3rem 3rem;
+    padding: 1rem;
 
     input[type="radio"].bx--radio-button,
     input[type="checkbox"].bx--checkbox {
@@ -50,8 +51,9 @@
     .form-item input:hover,
     .form-item textarea,
     .form-item select {
-      background-color: $default-input-bg;
-      border-color: $default-input-border;
+      background-color: $input-bg;
+      border: unset;
+      border-bottom: 1px solid $default-input-border;
     }
 
     .bx--form-item.form-item:last-child {
@@ -61,20 +63,33 @@
     legend {
       border: none;
     }
+
   }
 
   .modal-content {
     border-radius: 0;
-    border-top: 5px solid $modal-content-border-color;
+    border: none;
     overflow-y: auto;
+    box-shadow: unset;
   }
 
   .modal-footer {
-    padding: 1.5rem 3rem;
+    padding: 0;
     text-align: right;
     border-top: none;
     background-color: unset;
+
+    .modal-buttons {
+      .button, button{
+        width: 50%;
+        height: 4rem;
+        margin: 0;
+        text-align: left;
+        padding-bottom: 2rem;
+      }
+    }
   }
+
 
 }
 
@@ -88,4 +103,49 @@
 
   // Modal sizes
   .modal-sm { width: $modal-sm; }
+}
+
+
+// treat popovers as xs passive modal
+.popover {
+  border-radius: 0;
+  border: 1px solid $ui-02;
+  box-shadow: unset;
+  background-color:	$ui-01;
+  .arrow {
+    display: none;
+  }
+
+  .popover-title {
+    font-size: 1.25rem;
+    background-color:unset;
+    border: unset;
+  }
+
+  .popover-content {
+    font-size: 0.875rem;
+    padding: 1rem;
+  }
+}
+
+.autologout-dialog {
+  .modal-buttons {
+    display: flex;
+    flex-direction: row-reverse;
+  }
+  .modal-buttons .btn:last-child {
+    flex-grow: 1;
+    background-color: $btn-default-bg;
+    color: $btn-default-color;
+    border: 2px solid $btn-default-border;
+    &:hover {
+      color: $btn-primary-color;
+      background-color: $hover-secondary;
+    }
+    &:focus{
+      color: $btn-primary-color;
+      inset: $inverse-01;
+      border: $focus;
+    }
+  }
 }

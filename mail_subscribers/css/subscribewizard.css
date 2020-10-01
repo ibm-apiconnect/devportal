@@ -3,11 +3,14 @@
  */
 .wizard-trail {
   height: 100px;
-  background-color: #fff;
-  border-bottom: 1px solid #dfe3e6;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
   display: flex;
-  justify-content: center;
-  align-items: center; }
+  justify-content: left;
+  align-items: center;
+  padding-left: 2rem;
+
+}
 
 .wizard-trail .bx--progress {
   display: -webkit-box;
@@ -21,7 +24,6 @@
   {   width: 100%; }
 }
 
-
 .wizard-trail .bx--progress-step {
   position: relative;
   display: -webkit-inline-box;
@@ -29,8 +31,8 @@
   display: inline-flex;
   -webkit-box-orient: vertical;
   -webkit-box-direction: normal;
-  -ms-flex-direction: column;
-  flex-direction: column;
+  -ms-flex-direction: row;
+  flex-direction: row;
   -webkit-box-flex: 1;
   -ms-flex: 1;
   flex: 1;
@@ -39,82 +41,68 @@
   overflow: visible;
 }
 
-
 @media (max-width: 480px) {
   .wizard-trail .bx--progress-step {
     min-width: 6rem; } }
 
-
 .wizard-trail .bx--progress-line {
   position: absolute;
-  top: 0.625rem;
-  right: 100%;
+  left: 0;
   height: 1px;
-  width: calc(100% - 24px);
-  border: 1px inset transparent; }
-
-.wizard-trail .bx--progress-step:first-child .bx--progress-line {
-  display: none; }
+  width: calc(100%);
+  border: 1px inset transparent;}
 
 .wizard-trail .bx--progress-step svg {
   position: relative;
   z-index: 1;
-  width: 1.5rem;
-  height: 1.5rem;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
   border-radius: 50%;
-  margin-bottom: 0.5rem; }
+  margin: 0.625rem 0.5rem 0 0;
+  fill: #0f62fe; }
+
+.wizard-trail .bx--progress-step--incomplete svg {
+  fill: #161616;
+}
+
+.wizard-trail .bx--progress-label::before {
+  display: block;
+  content: ''; }
 
 .wizard-trail .bx--progress-label {
-  line-height: 1;
-  width: 75%; }
-
-.wizard-trail .bx--progress-step--current circle:first-child {
-  stroke: #3d70b2;
-  stroke-width: 5;
-  fill: transparent; }
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: 0.16px;
+  max-width: 8rem;
+  margin: 0.5rem 0 0 0;
+  overflow: hidden;
+  color: #161616;
+  line-height: 1.45;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: box-shadow 110ms cubic-bezier(0.2, 0, 0.38, 0.9), color 110ms cubic-bezier(0.2, 0, 0.38, 0.9);}
 
 .wizard-trail .bx--progress-step--current circle:last-child {
-  fill: #3d70b2; }
+  fill: #0f62fe; }
 
-
-.wizard-trail .bx--progress-step--current .bx--progress-label {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #3d70b2;
-  font-weight: 600; }
 
  .wizard-trail .bx--progress-step--current .bx--progress-line {
-  background-color: #3d70b2; }
+  background-color: #0f62fe; }
 
-.wizard-trail .bx--progress-step--incomplete circle {
-  stroke: #8c9ba5;
-  stroke-width: 5;
-  fill: transparent; }
 
 .wizard-trail .bx--progress-step--incomplete .bx--progress-label {
-  color: #5a6872;
+  color: #161616;
 }
 
  .wizard-trail .bx--progress-step--incomplete .bx--progress-line {
-  background-color: #8c9ba5;
+  background-color: #e0e0e0;
 }
-
-.wizard-trail .bx--progress-step--complete circle {
-  stroke: #3d70b2;
-  stroke-width: 5;
-  fill: transparent; }
 
 .wizard-trail .bx--progress-step--complete polygon {
-  fill: #3d70b2;
-}
-
- .wizard-trail .bx--progress-step--complete .bx--progress-label {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #3d70b2;
-  font-weight: 600;
+  fill: #0f62fe;
 }
 
 .wizard-trail .bx--progress-step--complete .bx--progress-line {
-  background-color: #3d70b2;
+  background-color: #0f62fe;
 }

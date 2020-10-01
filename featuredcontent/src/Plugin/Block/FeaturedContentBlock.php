@@ -83,7 +83,7 @@ class FeaturedContentBlock extends BlockBase {
   public function defaultConfiguration() {
     return [
       'nodeType' => static::TYPE_PRODUCT,
-      'numberOfTiles' => 3,
+      'numberOfTiles' => 6,
       'selectionType' => static::CONST_CREATED,
       'customNodes' => [],
     ];
@@ -416,7 +416,7 @@ class FeaturedContentBlock extends BlockBase {
     $build['#algorithm'] = strtolower($this->configuration['selectionType']);
     $build['#showPlaceholders'] = $ibmApimShowPlaceholderImages;
     $build['#showVersions'] = $ibmApimShowVersions;
-    $build['#attached']['library'][] = 'masonry/layout';
+    $build['#attached']['library'][] = 'masonry/masonry.layout';
     $build['#attached']['library'][] = 'featuredcontent/featuredcontent';
     $build['#cache']['contexts'] = ['session'];
     if (\function_exists('ibm_apim_exit_trace')) {

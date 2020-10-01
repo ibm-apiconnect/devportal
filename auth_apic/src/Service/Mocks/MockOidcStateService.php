@@ -54,4 +54,15 @@ class MockOidcStateService implements OidcStateServiceInterface {
   public function prune() {
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getAllOidcState() {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function saveAllOidcState($state) {
+  }
 }

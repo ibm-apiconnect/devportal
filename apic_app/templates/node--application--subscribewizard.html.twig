@@ -17,7 +17,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
 {{ attach_library('ibm_apim/core') }}
 {{ attach_library('apic_app/basic') }}
 <div class="apicSubAppCard">
-<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+<button id="node-{{ node.id }}" {{ attributes.addClass(classes) }} type="submit" name="selectedApplication" value="{{ node.id }}" aria-label="{{ node.title[0].value }}">
   <div class="apicAppCard">
     {% if content.application_image is defined and content.application_image|render|trim is not empty %}
       <div class="apicCardIcon bx--about__icon">
@@ -33,7 +33,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
           <span id="node-{{ node.id }}-title" class="apicAppName apicTruncate" title="{{ node.title.value|striptags }}">{{- label -}}</span>
       </div>
       <div class="apicAppDesc apicFade"
-           title="{{- content.apic_summary['#items'][0].value|striptags -}}">{{ content.apic_summary }}</div>
+           title="{{- content.apic_summary['#items'][0].value|striptags -}}">{{ content.apic_summary['#items'][0].value|striptags }}</div>
       {% if custom_fields is defined and custom_fields is not empty %}
         <div class="customFields">
           {% for custom_field in custom_fields %}
@@ -47,7 +47,6 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
     </div>
   </div>
   <div class="bx--card-footer apicAppFooter">
-    <button class="btn-sm btn btn-default" type="submit" name="selectedApplication" value="{{ node.id }}">{{ 'Select App'|t }}</button>
   </div>
-</article>
+</button>
 </div>

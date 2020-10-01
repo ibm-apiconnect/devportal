@@ -1,6 +1,9 @@
 // import connect variables
 @import "connect-variables";
 
+// font
+$font-family-base: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+
 // Mono color palette
 $mono-01: #777677;
 $mono-02: #595859;
@@ -22,7 +25,6 @@ $black-01: #000;
 // these are the variables to override for custom theme creation
 // Global body
 $body-bg:            $white-01;
-
 
 // Global text color
 $text-color:                       $black-01;
@@ -47,6 +49,7 @@ $navbar-default-link-color:        $gray-05;
 $navbar-default-link-hover-color:  $gray-05;
 $navbar-default-link-active-color: $gray-05;
 $navbar-default-link-active-bg:    $white-01;
+$navbar-default-link-hover-bg:     $white-02;
 
 $navbar-default-toggle-icon-bar-bg: $white-01;
 
@@ -92,6 +95,10 @@ $btn-success-bg:     $mono-01;
 $btn-success-border: transparent;
 $btn-link-disabled-color: $brand-primary;
 
+$tile-btn-bg:   $white-02;
+$tile-btn-border: $white-02;
+$tile-btn-color: $text-01;
+
 // checkboxes and radio buttons
 $check-radio-bg: $white-01;
 $check-radio-border: $gray-05;
@@ -107,9 +114,10 @@ $tooltip-bg:          $gray-05;
 $modal-content-bg:                             $white-01;
 $modal-content-border-color:                   $brand-primary;
 $modal-backdrop-bg:           	$white-01;
-$modal-backdrop-opacity:        .5;
+$modal-backdrop-opacity:        0;
 $modal-header-border-color:   		transparent;
 $modal-content-color: $gray-05;
+
 //** Modal footer border color
 $modal-footer-border-color:   $gray-04;
 
@@ -120,6 +128,7 @@ $card-footer-bg: $gray-03;
 $disabled-bg: $gray-05;
 
 //** table settings
+$table-header-bg: $gray-04;
 $table-header-border: $brand-primary;
 $table-row-border: $gray-04;
 $table-row-hover: $gray-03;

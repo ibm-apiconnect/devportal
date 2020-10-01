@@ -32,7 +32,7 @@ class Generator {
 
     if ($name !== NULL) {
       $name = trim($name);
-      $tempDir = file_directory_temp();
+      $tempDir = \Drupal::service('file_system')->getTempDirectory();
       if ($type !== 'scss') {
         $type = 'css';
       }

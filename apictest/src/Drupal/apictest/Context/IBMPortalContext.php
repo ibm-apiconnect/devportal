@@ -102,7 +102,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   public static function setup(BeforeSuiteScope $scope) {
     $params = self::getContextParameters($scope, 'Drupal\apictest\Context\IBMPortalContext');
     if ($params['useMockServices'] === TRUE) {
-      MockServiceHandler::install($params['siteDirectory'], $params['modulesDirectory'], $params['userRegistry'], true);
+      MockServiceHandler::install($params['siteDirectory'], $params['modulesDirectory'], $params['userRegistry'], TRUE);
     }
   }
 
@@ -268,8 +268,9 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
     // Replace @captcha with the correct captcha solution from the database
     if (strpos($argument, '@captcha') !== FALSE) {
-      if (Database::getConnection()->schema()->tableExists("captcha_sessions")) {
-        $captchaSolution = db_query("SELECT `solution`, `csid` FROM `captcha_sessions` ORDER BY csid DESC LIMIT 1;")->fetchField();
+      $db = Database::getConnection();
+      if ($db->schema()->tableExists("captcha_sessions")) {
+        $captchaSolution = $db->query("SELECT `solution`, `csid` FROM `captcha_sessions` ORDER BY csid DESC LIMIT 1;")->fetchField();
         print "The captcha solution is $captchaSolution\n";
         $argument = str_replace('@captcha', $captchaSolution, $argument);
       }
@@ -491,6 +492,107 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   }
 
   /**
+   * @Given I have a billing service
+   */
+  public function enableBilling() {
+    $integrationService = \Drupal::service('ibm_apim.payment_method_schema');
+    $integrationObject = [
+      'type' => 'integration',
+      'integration_type' => 'payment_method',
+      'api_version' => '2.0.0',
+      'id' => '802725f9-feb8-424a-a82b-6e2c5307feef',
+      'name' => 'creditcard',
+      'title' => 'Credit Card',
+      'summary' => 'Credit Card',
+      'state' => 'enabled',
+      'remote' => TRUE,
+      'integration' => [
+        'integration' => '1.0.0',
+        'integration_type' => 'payment_method',
+        'info' => [
+          'name' => 'creditcard',
+          'version' => '1.0.0',
+          'title' => 'Credit Card',
+          'summary' => 'Credit Card',
+        ],
+        'configuration_schema' => [
+          'required' => [
+            'token',
+            'owner_email',
+          ],
+          'token' => '********',
+          'owner_email' => [
+            'type' => 'string',
+          ],
+          'owner_name' => [
+            'type' => 'string',
+            'readOnly' => TRUE,
+          ],
+          'expiration_year' => [
+            'type' => 'string',
+            'readOnly' => TRUE,
+          ],
+          'expiration_month' => [
+            'type' => 'string',
+            'readOnly' => TRUE,
+          ],
+          'last_4' => [
+            'type' => 'string',
+            'readOnly' => TRUE,
+          ],
+        ],
+      ],
+      'created_at' => '2020-06-15T17:32:10.000Z',
+      'updated_at' => '2020-06-15T17:39:43.462Z',
+      'url' => '/api/cloud/integrations/payment-method/802725f9-feb8-424a-a82b-6e2c5307feef',
+    ];
+    $integrationService->updateAll([$integrationObject]);
+
+    $billingService = \Drupal::service('ibm_apim.billing');
+    $billingObject = [
+      'type' => 'configured_billing',
+      'api_version' => '2.0.0',
+      'id' => 'e30e74c1-38d7-4e2f-87c5-1c522de70ff3',
+      'name' => '7c751639-36af-417d-8956-1a8dab69dd27',
+      'title' => '7c751639-36af-417d-8956-1a8dab69dd27',
+      'summary' => NULL,
+      'billing_url' => '/consumer-api/orgs/b33d299b-7eca-45ad-bca1-151323974cea/billings/7c751639-36af-417d-8956-1a8dab69dd27',
+      'scope' => 'catalog',
+      'original_id' => '7c751639-36af-417d-8956-1a8dab69dd27',
+      'payment_method_type_url' => '/api/cloud/integrations/billing/3860269e-f565-4ca1-951f-8a24d5c5b847',
+      'payment_method_integration_urls' => [
+        '/api/cloud/integrations/payment-method/802725f9-feb8-424a-a82b-6e2c5307feef',
+      ],
+      'configuration' => [
+        'full_access_key' => '********',
+        'publishable_key' => 'pk_test_d9gRFVrEcAkTFEeZ1tDoNMwO',
+      ],
+      'owned' => NULL,
+      'custom_endpoint' => NULL,
+      'metadata' => [
+        'testmode' => 'true',
+        'account_id' => 'acct_1B3S4PE4V1V7vQNs',
+      ],
+      'created_at' => '2018-02-26T21:51:52.246Z',
+      'updated_at' => '2018-02-26T22:32:48.979Z',
+      'org_url' => '/consumer-api/orgs/b33d299b-7eca-45ad-bca1-151323974cea',
+      'catalog_url' => '/api/catalogs/b33d299b-7eca-45ad-bca1-151323974cea/f3149806-a4b4-4e80-ae99-683ac7c98047',
+      'url' => '/api/catalogs/b33d299b-7eca-45ad-bca1-151323974cea/f3149806-a4b4-4e80-ae99-683ac7c98047/configured-billings/e30e74c1-38d7-4e2f-87c5-1c522de70ff3',
+    ];
+    $billingService->updateAll([$billingObject]);
+  }
+
+  /**
+   * @Given I do not have a billing service
+   */
+  public function disableBilling() {
+    $billingService = \Drupal::service('ibm_apim.billing');
+    $billingService->deleteAll();
+    $integrationService = \Drupal::service('ibm_apim.payment_method_schema');
+    $integrationService->deleteAll();
+  }
+
+  /**
    * @Then dump the current html
    *
    * drupal-extension provides a "Then print last response" which prints the current HTML but it has nothing that
@@ -559,7 +661,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       if ($result !== NULL) {
         $this->minkContext->assertEnterField($fieldIdOrName, $value);
       }
-    } catch(\Exception $exception) {
+    } catch (\Exception $exception) {
       // do nothing
     }
   }
@@ -775,11 +877,13 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
         if ($user->getAccountName() === 'admin') {
           print 'Admin user - loaded uid from the database' . \PHP_EOL;
         }
-        else if (isset($row['registry_url'])) {
-          print 'Found an existing user record for ' . $user->getAccountName() . ' (mail=' . $user->getEmail() . ', registry_url=' . $user->get('registry_url')->value . ') in the database.' . \PHP_EOL;
-        }
         else {
-          print 'Found an existing user record for ' . $user->getAccountName() . ' (mail=' . $user->getEmail() . ') in the database.' . \PHP_EOL;
+          if (isset($row['registry_url'])) {
+            print 'Found an existing user record for ' . $user->getAccountName() . ' (mail=' . $user->getEmail() . ', registry_url=' . $user->get('registry_url')->value . ') in the database.' . \PHP_EOL;
+          }
+          else {
+            print 'Found an existing user record for ' . $user->getAccountName() . ' (mail=' . $user->getEmail() . ') in the database.' . \PHP_EOL;
+          }
         }
 
         $basicUser = new \stdClass();
@@ -872,7 +976,6 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     }
 
 
-
     if (sizeof($makeUsersTableHash) !== 1) {
       // Call DrupalContext::createUsers with our potentially cut-down table
       $newUsersTable = new TableNode($makeUsersTableHash);
@@ -886,14 +989,14 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
     $query_for = ['name'];
 
-    if($row['name'] === 'admin') {
+    if ($row['name'] === 'admin') {
       $users = [1 => User::load(1)];
     }
     else {
       $user_storage = \Drupal::service('entity.manager')->getStorage('user');
 
 
-//      $query = ['name' => $row['name'], 'mail' => $row['mail']];
+      //      $query = ['name' => $row['name'], 'mail' => $row['mail']];
       // constraint on user with matching username + registry_url - ignoring email
       $query = ['name' => $row['name']];
 
@@ -919,8 +1022,8 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     $responseHeaders = $session->getResponseHeaders();
     $responseHeaders = array_change_key_case($responseHeaders, CASE_LOWER);
     $responseHeader = strtolower($arg1);
-    
-    if (array_key_exists($responseHeader,$responseHeaders)) {
+
+    if (array_key_exists($responseHeader, $responseHeaders)) {
       throw new \Exception("Response header $arg1 found but not expected");
     }
   }
@@ -983,7 +1086,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
     $user = \sizeof($users) > 0 ? reset($users) : NULL;
 
-    if($user !== NULL) {
+    if ($user !== NULL) {
       $basicUser = new \stdClass();
       $basicUser->name = $name;
       $basicUser->registry_url = $registry_url;
@@ -1187,7 +1290,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       ->set('proxy_auth', NULL)
       ->set('categories', $categories)
       ->set('codesnippets', $codesnippets)
-      ->set('module_blacklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer'])
+      ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer'])
       ->save();
   }
 
@@ -1354,32 +1457,32 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    * @Given application certificates are enabled
    */
   public function appCertificatesAreEnabled() {
-      print "application certificates enabled \n";
-      \Drupal::state()->set('ibm_apim.application_certificates', TRUE);
+    print "application certificates enabled \n";
+    \Drupal::state()->set('ibm_apim.application_certificates', TRUE);
   }
 
   /**
    * @Given application certificates are disabled
    */
   public function appCertificatesAreDisabled() {
-      print "application certificates disabled \n";
-      \Drupal::state()->set('ibm_apim.application_certificates', FALSE);
+    print "application certificates disabled \n";
+    \Drupal::state()->set('ibm_apim.application_certificates', FALSE);
   }
 
-    /**
-     * Check whether a tooltip on the page contains the following text.
-     *
-     * @Then I should see the tooltip text :arg1
-     */
-    public function iShouldSeeTheTooltipText($arg1) {
-        $page = $this->getSession()->getPage();
-        $tooltip = $page->findAll('css', '[data-original-title*="' . $arg1 . '"]');
+  /**
+   * Check whether a tooltip on the page contains the following text.
+   *
+   * @Then I should see the tooltip text :arg1
+   */
+  public function iShouldSeeTheTooltipText($arg1) {
+    $page = $this->getSession()->getPage();
+    $tooltip = $page->findAll('css', '[data-original-title*="' . $arg1 . '"]');
 
-        if ($tooltip === NULL) {
-            throw new Exception('cannot find expected tooltip');
-        }
-
+    if ($tooltip === NULL) {
+      throw new Exception('cannot find expected tooltip');
     }
+
+  }
 
 
 }

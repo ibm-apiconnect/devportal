@@ -17,13 +17,16 @@
  */
 
 use Drupal\block\Entity\Block;
+use Drupal\block_content\Entity\BlockContent;
 use Drupal\captcha\Entity\CaptchaPoint;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\locale\Gettext;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\search_api\Entity\Index;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\user\RoleInterface;
+use Drupal\views\Views;
 
 
 /**
@@ -75,7 +78,6 @@ function apim_profile_install() {
     'ckeditor',
     'automated_cron',
     'ban',
-    'book',
     'menu_ui',
     'link',
     'menu_link_content',
@@ -205,6 +207,8 @@ function apim_profile_install() {
     'warmer_entity',
     'svg_image_field',
     'views_taxonomy_term_name_depth',
+    'extlink',
+    'clipboardjs'
   ];
 
   $our_modules = [
@@ -213,6 +217,7 @@ function apim_profile_install() {
     'ibm_apim',
     'ibm_apic_mail',
     'ibm_apic_flood_control_ui',
+    'ibm_create_payment_method',
     'apic_type_count',
     'auth_apic',
     'apic_api',
@@ -315,6 +320,7 @@ function apim_profile_install() {
   // front page
   require_once $path . '/apim_profile.homepage.inc';
   apim_profile_create_homepage_blocks();
+  apim_profile_create_forum_block();
 
   // We install some menu links, so we have to rebuild the router, to ensure the
   // menu links are valid.
@@ -430,7 +436,7 @@ function add_forum_link_translations($link): void {
     if ($lang === 'en') {
       continue;
     }
-    if($link->hasTranslation($lang)) {
+    if ($link->hasTranslation($lang)) {
       $link->removeTranslation($lang);
     }
     $translation = [
@@ -458,7 +464,7 @@ function add_apps_link_translations($link): void {
     if ($lang === 'en') {
       continue;
     }
-    if($link->hasTranslation($lang)) {
+    if ($link->hasTranslation($lang)) {
       $link->removeTranslation($lang);
     }
     $translation = [
@@ -481,7 +487,7 @@ function add_apis_link_translations($link): void {
     if ($lang === 'en') {
       continue;
     }
-    if($link->hasTranslation($lang)) {
+    if ($link->hasTranslation($lang)) {
       $link->removeTranslation($lang);
     }
     $translation = [
@@ -498,14 +504,14 @@ function add_apis_link_translations($link): void {
  * @param string $menu_name
  * @param $link
  */
-function add_home_link_translations( $link): void {
+function add_home_link_translations($link): void {
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
     if ($lang === 'en') {
       continue;
     }
-    if($link->hasTranslation($lang)) {
+    if ($link->hasTranslation($lang)) {
       $link->removeTranslation($lang);
     }
     $translation = [
@@ -543,7 +549,6 @@ function apim_profile_login_menu_links() {
   add_sign_in_link_translations($login_link);
 
 
-
   $register_link = MenuLinkContent::create([
     'title' => t('Create account'),
     'description' => t('Create a new account'),
@@ -568,7 +573,7 @@ function add_create_account_link_translations($link): void {
     if ($lang === 'en') {
       continue;
     }
-    if($link->hasTranslation($lang)) {
+    if ($link->hasTranslation($lang)) {
       $link->removeTranslation($lang);
     }
     $translation = [
@@ -595,7 +600,7 @@ function add_sign_in_link_translations($link): void {
     if ($lang === 'en') {
       continue;
     }
-    if($link->hasTranslation($lang)) {
+    if ($link->hasTranslation($lang)) {
       $link->removeTranslation($lang);
     }
     $translation = [
@@ -663,7 +668,7 @@ function apim_profile_default_apic_config() {
     ->set('certificate_strip_prefix', TRUE)
     ->set('categories', $categories)
     ->set('codesnippets', $codesnippets)
-    ->set('module_blacklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
+    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
     ->save();
 
   \Drupal::service('config.factory')
@@ -751,6 +756,25 @@ function apim_profile_place_blocks() {
   $block = Block::create($values);
   $block->save();
 
+  // add subscription wizard title block
+  $values = [
+    'id' => 'subwizardtitle',
+    'plugin' => 'ibm_apim_wizard_title',
+    'provider' => NULL,
+    'region' => 'highlighted',
+    'settings' => [
+      'id' => 'ibm_apim_wizard_title',
+      'label' => 'Subscription Wizard Title',
+      'provider' => 'ibm_apim',
+      'label_display' => '0',
+    ],
+    'theme' => 'connect_theme',
+    'visibility' => [],
+    'weight' => 0,
+  ];
+  $block = Block::create($values);
+  $block->save();
+
   $values = [
     'id' => 'contactblock',
     'plugin' => 'contact_block',
@@ -811,7 +835,7 @@ function apim_profile_place_blocks() {
           'weight' => '-10',
         ],
         'twitter' => [
-          'value' => 'IBMintegration',
+          'value' => 'ibmcloud',
           'description' => 'Follow us on Twitter',
           'weight' => '-10',
         ],
@@ -876,6 +900,35 @@ function apim_profile_place_blocks() {
   ];
   $block = Block::create($values);
   $block->save();
+
+  // ensure the no content blocks are in the disabled region but enabled
+  // the connect_theme wont have been enabled when ibm_apim was installed
+  $block = Block::load('noappsblock');
+  if ($block !== NULL) {
+    $block->set('theme', 'connect_theme');
+    $block->set('region', 'disabled');
+    $block->set('status', true);
+    $block->save();
+  }
+  $block = Block::load('noapisblock');
+  if ($block !== NULL) {
+    $block->set('theme', 'connect_theme');
+    $block->set('region', 'disabled');
+    $block->set('status', true);
+    $block->save();
+  }
+  $block = Block::load('noproductsblock');
+  if ($block !== NULL) {
+    $block->set('theme', 'connect_theme');
+    $block->set('region', 'disabled');
+    $block->set('status', true);
+    $block->save();
+  }
+
+  // no content blocks
+  $path = __DIR__;
+  require_once $path . '/../../modules/ibm_apim/ibm_apim.emptycontent.inc';
+  ibm_apim_update_no_content_blocks();
 }
 
 /**
@@ -1153,11 +1206,11 @@ function apim_profile_update_8013() {
 }
 
 /**
- * Enable page_load_progress and node_type_count modules
+ * Enable page_load_progress and apic_type_count modules
  */
 function apim_profile_update_8014() {
   $module_installer = \Drupal::service('module_installer');
-  foreach (['page_load_progress', 'node_type_count'] as $module) {
+  foreach (['page_load_progress', 'apic_type_count'] as $module) {
     $module_installer->install([$module]);
   }
   user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, ['use page load progress']);
@@ -1289,7 +1342,6 @@ function apim_profile_update_8019() {
         'node:application' => 'node:application',
         'node:article' => 'node:article',
         'node:blog_post' => 'node:blog_post',
-        'node:book' => 'node:book',
         'node:consumerorg' => 'node:consumerorg',
         'node:faq' => 'node:faq',
         'node:forum' => 'node:forum',
@@ -1378,7 +1430,7 @@ function apim_profile_update_8024() {
   }
   \Drupal::service('config.factory')
     ->getEditable('ibm_apim.settings')
-    ->set('module_blacklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
+    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
     ->save();
 }
 
@@ -1411,9 +1463,6 @@ function apim_profile_update_8025() {
           // we have to match on the label of the block as we don't have anything else
           $label = $block_content->get('info')->value;
           switch ($label) {
-            case 'Go Ahead [en]':
-              add_go_ahead_block_content_translations($block_content);
-              break;
             case 'Get Help [en]':
               add_get_help_block_content_translations($block_content);
               break;
@@ -1457,7 +1506,7 @@ function apim_profile_update_8025() {
   $menu_links = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadMultiple();
   foreach ($menu_links as $link) {
     $title = $link->getTitle();
-    switch($title) {
+    switch ($title) {
       case 'API Products':
         add_apis_link_translations($link);
         break;
@@ -1494,9 +1543,640 @@ function apim_profile_update_8026() {
   $module_installer = \Drupal::service('module_installer');
   $moduleHandler = \Drupal::service('module_handler');
   if ($moduleHandler->moduleExists('node_type_count')) {
-    $module_installer->uninstall(['node_type_count']);
+    try {
+      // try deleting the module if we can
+      $module_installer->uninstall(['node_type_count']);
+    } catch (\Exception $e) {
+      // if deleting the module fails (and it might since we've deleted the files), then just purge it from the db
+      \Drupal::database()->delete('key_value')
+        ->condition('collection', 'system.schema')
+        ->condition('name', ['node_type_count'], 'IN')
+        ->execute();
+    }
+
   }
   $module_installer->install(['apic_type_count']);
+}
+
+/**
+ * If the rules module is not in use then disable it
+ */
+function apim_profile_update_8027() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('rules')) {
+    // if there are still rules then leave them, else disable the modules
+    $query = \Drupal::entityQuery('rules_reaction_rule');
+    $result = $query->count()->execute();
+    if (!isset($result) || (int) $result < 1) {
+      $module_installer = \Drupal::service('module_installer');
+      $module_installer->uninstall(['rules', 'rules_http_client']);
+    }
+  }
+}
+
+/**
+ * Add blocklist variable
+ */
+function apim_profile_update_8028() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
+    ->save();
+}
+
+/**
+ * Enable our new payment methods module
+ */
+function apim_profile_update_8029() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('ibm_create_payment_method')) {
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->install(['ibm_create_payment_method']);
+  }
+}
+
+/**
+ * Remove the bee SVG from the front page if its still there
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_update_8030() {
+  $languages = \Drupal::languageManager()->getLanguages();
+  $newString = '<div class="welcomebanner">';
+  // match on 2 random parts of the bee SVG
+  $oldString1 = '<path d="M12.922,58.197c-1.703,0.707-3.305,1.746-4.689,3.131c-1.387,1.387-2.424,2.984-3.131,4.688';
+  $oldString2 = '<path d="M54,42c4.418,0,8-3.58,8-8s-3.582-8-8-8s-8,3.58-8,8S49.582,42,54,42z M54,30c2.206,0,4,1.795,4,4s-1.794,4-4,4';
+  $query = \Drupal::entityQuery('block_content');
+  $nids = $query->execute();
+  if (isset($nids) && !empty($nids)) {
+    foreach ($nids as $blockid) {
+      $block = BlockContent::load($blockid);
+      if ($block !== NULL) {
+        foreach ($languages as $language) {
+          $translation = $block->getTranslation($language->getId());
+          $bodyValue = $translation->body->value;
+          if (strpos($bodyValue, $oldString1) !== FALSE && strpos($bodyValue, $oldString2) !== FALSE) {
+            // remove everything before <div class="welcomebannertext"> and replace it with $newString
+            $newBody = $newString . strstr($bodyValue, '<div class="welcomebannertext">');
+            $translation->set('body', [
+              'value' => $newBody,
+              'format' => 'full_html',
+            ]);
+            $translation->save();
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * make ckeditor save files in public not private
+ */
+function apim_profile_update_8101() {
+  $config_factory = \Drupal::configFactory();
+  $editor = $config_factory->getEditable('editor.editor.full_html');
+  $image_upload = $editor->get('image_upload');
+  $image_upload['scheme'] = 'public';
+  $editor->set('image_upload', $image_upload);
+  $third_party_settings = $editor->get('third_party_settings');
+  if (isset($third_party_settings['editor_file'])) {
+    $third_party_settings['editor_file']['scheme'] = 'public';
+    $editor->set('third_party_settings', $third_party_settings);
+  }
+  $editor->save();
+
+  $basic_editor = $config_factory->getEditable('editor.editor.basic_html');
+  $basic_image_upload = $basic_editor->get('image_upload');
+  $basic_image_upload['scheme'] = 'public';
+  $basic_editor->set('image_upload', $basic_image_upload);
+  $basic_third_party_settings = $basic_editor->get('third_party_settings');
+  if (isset($basic_third_party_settings['editor_file'])) {
+    $basic_third_party_settings['editor_file']['scheme'] = 'public';
+    $basic_editor->set('third_party_settings', $basic_third_party_settings);
+  }
+  $basic_editor->save();
+}
+
+/**
+ * enable extlink module
+ */
+function apim_profile_update_8102() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('extlink')) {
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->install(['extlink']);
+  }
+  \Drupal::service('config.factory')
+    ->getEditable('extlink.settings')
+    ->set('extlink_use_external_js_file', FALSE)
+    ->set('extlink_target', TRUE)
+    ->set('extlink_target_no_override', TRUE)
+    ->set('extlink_nofollow', TRUE)
+    ->set('extlink_noreferrer', TRUE)
+    ->set('extlink_follow_no_override', FALSE)
+    ->set('extlink_subdomains', TRUE)
+    ->set('extlink_alert', FALSE)
+    ->set('extlink_alert_text', 'This link will take you to an external web site. We are not responsible for their content.')
+    ->set('extlink_exclude', '')
+    ->set('extlink_include', '')
+    ->set('extlink_class', 'ext')
+    ->set('extlink_label', '(link is external)')
+    ->set('extlink_img_class', FALSE)
+    ->set('extlink_css_exclude', '')
+    ->set('extlink_css_explicit', '')
+    ->set('extlink_mailto_class', 'mailto')
+    ->set('extlink_mailto_label', '(link sends email)')
+    ->set('extlink_use_font_awesome', FALSE)
+    ->set('extlink_font_awesome_classes', [
+      'links' => 'fa fa-external-link',
+      'mailto' => 'fa fa-envelope-o',
+    ])
+    ->set('extlink_icon_placement', '0')
+    ->save();
+}
+
+/**
+ * Change the default number of tiles for the featured content block to be 6
+ * and update the getting help SVGs
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ */
+function apim_profile_update_8103() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('page_manager')) {
+    $page = \Drupal::entityTypeManager()->getStorage('page')->load('welcome');
+    if ($page !== NULL) {
+      $variants_array = $page->getVariants();
+      $variant = reset($variants_array);
+      $variant_settings = $variant->get('variant_settings');
+
+      foreach ($variant_settings['blocks'] as $block_id => $block_settings) {
+        if (isset($block_settings['provider']) && $block_settings['provider'] === 'featuredcontent') {
+          if (isset($block_settings['numberOfTiles']) && $block_settings['numberOfTiles'] === 3) {
+            $variant_settings['blocks'][$block_id]['numberOfTiles'] = 6;
+            $variant->set('variant_settings', $variant_settings);
+            $variant->save();
+          }
+        }
+        elseif (isset($block_settings['provider']) && $block_settings['provider'] === 'socialblock') {
+          if (isset($block_settings['twitterSearchParameter']) && $block_settings['twitterSearchParameter'] === 'IBMintegration') {
+            $variant_settings['blocks'][$block_id]['twitterSearchParameter'] = 'ibmcloud';
+            $variant->set('variant_settings', $variant_settings);
+            $variant->save();
+          }
+        }
+      }
+      // update the get help SVGs
+      $content = $variant->calculateDependencies()['content'];
+      $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
+      $languages = \Drupal::languageManager()->getLanguages();
+      $oldString = '<path  d="M16,2C8.269,2,2,8.269,2,16s6.269,14,14,14c7.731,0,14-6.269,14-14S23.731,2,16,2z M16,28C9.383,28,4,22.617,4,16';
+      foreach ($content as $block_content_id) {
+        // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
+        // we just need the uuid from this.
+        $raw_block_content_id = explode(':', $block_content_id)[2];
+        $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
+        $block_content = reset($block_content_array);
+        if ($block_content !== NULL) {
+          // we have to match on the label of the block as we don't have anything else
+          $label = $block_content->get('info')->value;
+          if ($label === 'Get Help [en]') {
+            foreach ($languages as $language) {
+              $translation = $block_content->getTranslation($language->getId());
+              $body = $translation->get('body')->value;
+              if (strpos($body, $oldString) !== FALSE) {
+                $search0 = '<?xml version="1.0" encoding="iso-8859-1"?>';
+                $replace0 = '';
+                $body = str_replace($search0, $replace0, $body);
+                $search1 = 'viewBox="0 0 32 32" width="24" height="24" style="enable-background:new 0 0 32 32;" xml:space="preserve">';
+                $replace1 = 'viewBox="0 0 16 16" width="16" height="16" fill="currentColor" xml:space="preserve">';
+                $body = str_replace($search1, $replace1, $body);
+                // string below contains a tab character
+                $search2 = '<polygon  points="15.293,10.707 19.586,15 8,15 8,17 19.586,17 15.293,21.293 16.707,22.707 23.414,16 16.707,9.293    "/>';
+                $replace2 = '';
+                $body = str_replace($search2, $replace2, $body);
+                $search3 = '<path  d="M16,2C8.269,2,2,8.269,2,16s6.269,14,14,14c7.731,0,14-6.269,14-14S23.731,2,16,2z M16,28C9.383,28,4,22.617,4,16';
+                $replace3 = '<path  d="M9.3 3.7L13.1 7.5 1 7.5 1 8.5 13.1 8.5 9.3 12.3 10 13 15 8 10 3z"/>';
+                $body = str_replace($search3, $replace3, $body);
+                $search4 = 'S9.383,4,16,4c6.617,0,12,5.383,12,12S22.617,28,16,28z"/>';
+                $replace4 = '';
+                $body = str_replace($search4, $replace4, $body);
+                $translation->set('body', [
+                  'value' => $body,
+                  'format' => 'full_html',
+                ]);
+                $translation->save();
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Update content for the getting started block and delete the go ahead block
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_update_8104() {
+  // update block contents on homepage
+  // welcome page is managed by page_manager
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('page_manager')) {
+    $page = \Drupal::entityTypeManager()->getStorage('page')->load('welcome');
+    if ($page !== NULL) {
+      $variants_array = $page->getVariants();
+      $variant = reset($variants_array);
+      $content = $variant->calculateDependencies()['content'];
+      $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
+      module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
+
+      foreach ($content as $block_content_id) {
+        // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
+        // we just need the uuid from this.
+        $raw_block_content_id = explode(':', $block_content_id)[2];
+
+        $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
+        $block_content = reset($block_content_array);
+
+        if ($block_content !== NULL) {
+          // we have to match on the label of the block as we don't have anything else
+          $label = $block_content->get('info')->value;
+          switch ($label) {
+            case 'Getting Started [en]':
+              add_getting_started_block_content_translations($block_content);
+              $translation = $block_content->getTranslation('en');
+              $translation->set('body', [
+                'value' => get_localized_gsb_content('en'),
+                'format' => 'full_html',
+              ]);
+              $translation->save();
+              break;
+            case 'Go Ahead [en]':
+              $go_ahead_block_id = $raw_block_content_id;
+              $block_content->delete();
+              break;
+          }
+        }
+      }
+
+      // remove go ahead block from the page
+      $variant_settings = $variant->get('variant_settings');
+      if (isset($go_ahead_block_id)) {
+        foreach ($variant_settings['blocks'] as $block_id => $block_settings) {
+          if (isset($block_settings['id']) && $block_settings['id'] === 'block_content:' . $go_ahead_block_id) {
+            unset($variant_settings['blocks'][$block_id]);
+            $variant->set('variant_settings', $variant_settings);
+            $variant->save();
+          }
+        }
+      }
+    }
+  }
+
+  // update default ibm integration twitter ID to new cloud one
+  $block = Block::load('socialmedialinks');
+  if ($block !== NULL) {
+    $settings = $block->get('settings');
+    if (isset($settings['platforms']['twitter']['value']) && $settings['platforms']['twitter']['value'] === 'IBMintegration') {
+      $settings['platforms']['twitter']['value'] = 'ibmcloud';
+      $block->set('settings', $settings);
+      $block->save();
+    }
+  }
+}
+
+/**
+ * Update blog content type to remove links from teaser view
+ * And create Card view modes for all content types
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_update_8105() {
+  $storage = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('blog')) {
+    $viewDisplay = $storage->load('node.blog.teaser');
+    if ($viewDisplay !== NULL) {
+      $values = $viewDisplay->getComponent('links');
+      if ($values !== NULL) {
+        $viewDisplay->removeComponent('links');
+        $viewDisplay->save();
+      }
+    }
+  }
+  // create article card view mode
+  $viewDisplay = $storage->load('node.article.card');
+  if ($viewDisplay === NULL) {
+    $newDisplay = $storage->create([
+      'targetEntityType' => 'node',
+      'bundle' => 'article',
+      'mode' => 'card',
+      'status' => TRUE,
+    ]);
+    if ($newDisplay !== NULL) {
+      $newDisplay->setComponent('body', [
+        'weight' => 1,
+        'label' => 'hidden',
+        'settings' => ['trim_length' => 200],
+        'region' => 'content',
+        'type' => 'text_summary_or_trimmed',
+      ]);
+      $newDisplay->setComponent('field_image', [
+        'weight' => 0,
+        'label' => 'hidden',
+        'settings' => ['image_style' => 'medium', 'image_link' => ''],
+        'region' => 'content',
+        'type' => 'image',
+      ]);
+      $newDisplay->setComponent('field_tags', [
+        'weight' => 2,
+        'label' => 'above',
+        'settings' => ['link' => TRUE],
+        'region' => 'content',
+        'type' => 'entity_reference_label',
+      ]);
+      $newDisplay->save();
+    }
+  }
+
+  // create blog post card view mode
+  $viewDisplay = $storage->load('node.blog_post.card');
+  if ($viewDisplay === NULL) {
+    $newDisplay = $storage->create([
+      'targetEntityType' => 'node',
+      'bundle' => 'blog_post',
+      'mode' => 'card',
+      'status' => TRUE,
+    ]);
+    if ($newDisplay !== NULL) {
+      $newDisplay->setComponent('body', [
+        'weight' => 1,
+        'label' => 'hidden',
+        'settings' => ['trim_length' => 200],
+        'region' => 'content',
+        'type' => 'text_summary_or_trimmed',
+      ]);
+      $newDisplay->save();
+    }
+  }
+
+  // create faq card view mode
+  $viewDisplay = $storage->load('node.faq.card');
+  if ($viewDisplay === NULL) {
+    $newDisplay = $storage->create([
+      'targetEntityType' => 'node',
+      'bundle' => 'faq',
+      'mode' => 'card',
+      'status' => TRUE,
+    ]);
+    if ($newDisplay !== NULL) {
+      $newDisplay->setComponent('faqs', [
+        'weight' => 1,
+        'label' => 'hidden',
+        'settings' => [
+          'active' => NULL,
+          'heightStyle' => 'auto',
+          'collapsible' => TRUE,
+          'event' => 'click',
+          'animate' => [
+            'duration' => 200,
+            'easing' => 'linear',
+          ],
+        ],
+        'region' => 'content',
+        'type' => 'faqfield_accordion',
+      ]);
+      $newDisplay->setComponent('links', [
+        'weight' => 2,
+        'region' => 'content',
+      ]);
+      $newDisplay->save();
+    }
+  }
+
+  // create forum post card view mode
+  $viewDisplay = $storage->load('node.forum.card');
+  if ($viewDisplay === NULL) {
+    $newDisplay = $storage->create([
+      'targetEntityType' => 'node',
+      'bundle' => 'forum',
+      'mode' => 'card',
+      'status' => TRUE,
+    ]);
+    if ($newDisplay !== NULL) {
+      $newDisplay->setComponent('body', [
+        'weight' => 1,
+        'label' => 'hidden',
+        'settings' => ['trim_length' => 200],
+        'region' => 'content',
+        'type' => 'text_summary_or_trimmed',
+      ]);
+      $newDisplay->setComponent('taxonomy_forums', [
+        'weight' => 2,
+        'label' => 'hidden',
+        'settings' => ['link' => TRUE],
+        'region' => 'content',
+        'type' => 'entity_reference_label',
+      ]);
+      $newDisplay->save();
+    }
+  }
+
+  // create page card view mode
+  $viewDisplay = $storage->load('node.page.card');
+  if ($viewDisplay === NULL) {
+    $newDisplay = $storage->create([
+      'targetEntityType' => 'node',
+      'bundle' => 'page',
+      'mode' => 'card',
+      'status' => TRUE,
+    ]);
+    if ($newDisplay !== NULL) {
+      $newDisplay->setComponent('body', [
+        'weight' => 1,
+        'label' => 'hidden',
+        'settings' => ['trim_length' => 200],
+        'region' => 'content',
+        'type' => 'text_summary_or_trimmed',
+      ]);
+      $newDisplay->setComponent('addtoany', [
+        'weight' => 2,
+        'label' => 'hidden',
+        'region' => 'content',
+      ]);
+      $newDisplay->save();
+    }
+  }
+
+  // update search page to use card view
+  $view = Views::getView('search_content');
+  if ($view !== NULL) {
+    $access = $view->getDisplay()->getOption('access');
+    if ($access['type'] !== 'perm') {
+      $access['type'] = 'perm';
+      $access['options'] = ['perm' => 'access content'];
+      $view->getDisplay()->setOption('access', $access);
+      $view->save();
+    }
+    $style = $view->getDisplay()->getOption('style');
+    if ($style['type'] !== 'masonry') {
+      $style['type'] = 'masonry';
+      $style['options'] = [
+        'row_class' => '',
+        'default_row_class' => TRUE,
+        'uses_fields' => FALSE,
+        'layoutColumnWidth' => '',
+        'layoutColumnWidthUnit' => 'px',
+        'gutterWidth' => '2',
+        'stampSelector' => '',
+        'isLayoutResizable' => 1,
+        'isLayoutAnimated' => 1,
+        'layoutAnimationDuration' => '500',
+        'isLayoutFitsWidth' => 0,
+        'isLayoutRtlMode' => 0,
+        'isLayoutImagesLoadedFirst' => 1,
+        'isItemsPositionInPercent' => 0,
+      ];
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
+    $row = $view->getDisplay()->getOption('row');
+    $row['options']['view_modes']['entity:node'] = [
+      'api: card',
+      'application' => 'card',
+      'article' => 'card',
+      'blog_post' => 'card',
+      'consumerorg' => 'card',
+      'faq' => 'card',
+      'forum' => 'card',
+      'page' => 'card',
+      'product' => 'card',
+    ];
+    $view->getDisplay()->setOption('row', $row);
+    $view->save();
+  }
+
+  // create forum sidebar block
+  module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
+  apim_profile_create_forum_block();
+}
+
+/**
+ * enable clipboardjs module
+ */
+function apim_profile_update_8106() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('clipboardjs')) {
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->install(['clipboardjs']);
+  }
+}
+
+function apim_profile_update_8107() {
+  // add subscription wizard title block
+  $block = Block::load('subwizardtitle');
+  if ($block === NULL) {
+    $values = [
+      'id' => 'subwizardtitle',
+      'plugin' => 'ibm_apim_wizard_title',
+      'provider' => NULL,
+      'region' => 'highlighted',
+      'settings' => [
+        'id' => 'ibm_apim_wizard_title',
+        'label' => 'Subscription Wizard Title',
+        'provider' => 'ibm_apim',
+        'label_display' => '0',
+      ],
+      'theme' => 'connect_theme',
+      'visibility' => [],
+      'weight' => 0,
+    ];
+    $block = Block::create($values);
+    $block->save();
+  }
+
+  // ensure the no content blocks are in the disabled region but enabled
+  // the connect_theme wont have been enabled when ibm_apim was installed
+  $block = Block::load('noappsblock');
+  if ($block !== NULL) {
+    $block->set('theme', 'connect_theme');
+    $block->set('region', 'disabled');
+    $block->set('status', true);
+    $block->save();
+  }
+  $block = Block::load('noapisblock');
+  if ($block !== NULL) {
+    $block->set('theme', 'connect_theme');
+    $block->set('region', 'disabled');
+    $block->set('status', true);
+    $block->save();
+  }
+  $block = Block::load('noproductsblock');
+  if ($block !== NULL) {
+    $block->set('theme', 'connect_theme');
+    $block->set('region', 'disabled');
+    $block->set('status', true);
+    $block->save();
+  }
+
+  // no content blocks
+  $path = __DIR__;
+  require_once $path . '/../../modules/ibm_apim/ibm_apim.emptycontent.inc';
+  ibm_apim_update_no_content_blocks();
+}
+
+function apim_profile_update_8108() {
+  $fieldConfig = FieldConfig::loadByName('node', 'forum', 'comment_forum');
+  if ($fieldConfig !== NULL) {
+    $settings = $fieldConfig->get('settings');
+    if ($settings['preview'] !== 0 ) {
+      $settings['preview'] = 0;
+      $fieldConfig->set('settings', $settings);
+      $fieldConfig->save();
+    }
+  }
+  $fieldConfig = FieldConfig::loadByName('node', 'article', 'comment');
+  if ($fieldConfig !== NULL) {
+    $settings = $fieldConfig->get('settings');
+    if ($settings['preview'] !== 0 ) {
+      $settings['preview'] = 0;
+      $fieldConfig->set('settings', $settings);
+      $fieldConfig->save();
+    }
+  }
+  $fieldConfig = FieldConfig::loadByName('node', 'blog_post', 'field_blog_comments');
+  if ($fieldConfig !== NULL) {
+    $settings = $fieldConfig->get('settings');
+    if ($settings['preview'] !== 0 ) {
+      $settings['preview'] = 0;
+      $fieldConfig->set('settings', $settings);
+      $fieldConfig->save();
+    }
+  }
+}
+
+/**
+ * disable book module
+ */
+function apim_profile_update_8109() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('book')) {
+    $module_installer = \Drupal::service('module_installer');
+    try {
+      $module_installer->uninstall(['book']);
+    } catch (\Exception $e) {
+      // do nothing, likely means another module depends on this module
+    }
+  }
 }
 
 /**
@@ -1519,7 +2199,7 @@ function apim_profile_update_dependencies() {
       ],
       // system 8803 must run before apim_profile 8025
       8025 => [
-        'system'=> 8803,
+        'system' => 8803,
       ],
     ],
     'eu_cookie_compliance_update' => [

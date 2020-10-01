@@ -1,6 +1,9 @@
 // import connect variables
 @import "connect-variables";
 
+// font
+$font-family-base: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+
 // Red color palette
 $red-01: #e62325;
 $red-02: #aa231f;
@@ -16,7 +19,6 @@ $gray-05: #464646;
 
 $dark-gray-01: #272727;
 $black-01: #000;
-
 
 // theme variables
 // these are the variables to override for custom theme creation
@@ -44,11 +46,12 @@ $navbar-default-color:             $white-01;
 $navbar-default-bg:                $brand-primary;
 
 $navbar-default-link-color:        $white-01;
-$navbar-default-link-hover-color:  $brand-primary;
+$navbar-default-link-hover-color:  $white-01;
 $navbar-default-link-active-color: $white-01;
 $navbar-default-link-active-bg:    $brand-primary;
+$navbar-default-link-hover-bg:     $white-02;
 
-$navbar-default-toggle-icon-bar-bg: $brand-primary;
+$navbar-default-toggle-icon-bar-bg: $brand-primary-dark;
 
 // footer variable overrides
 $footer-default-bg:                $white-01;
@@ -92,6 +95,10 @@ $btn-success-bg:     $red-01;
 $btn-success-border: transparent;
 $btn-link-disabled-color: $brand-primary;
 
+$tile-btn-bg:   $white-02;
+$tile-btn-border: $white-02;
+$tile-btn-color: $text-color;
+
 // checkboxes and radio buttons
 $check-radio-bg: $white-01;
 $check-radio-border: $gray-05;
@@ -120,6 +127,7 @@ $card-footer-bg: $gray-03;
 $disabled-bg: $gray-05;
 
 //** table settings
+$table-header-bg: $gray-04;
 $table-header-border: $brand-primary;
 $table-row-border: $gray-04;
 $table-row-hover: $gray-03;

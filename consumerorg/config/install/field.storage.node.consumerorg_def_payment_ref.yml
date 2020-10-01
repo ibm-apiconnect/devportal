@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - consumerorg
+id: node.consumerorg_def_payment_ref
+field_name: consumerorg_def_payment_ref
+entity_type: node
+type: entity_reference
+settings:
+  target_type: consumerorg_payment_method
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

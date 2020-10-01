@@ -126,7 +126,7 @@ class InviteUserForm extends FormBase {
       $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
-        '#href' => 'myorg',
+        '#url' => $this->getCancelUrl(),
         '#attributes' => ['class' => ['button']],
       ];
 
@@ -188,7 +188,7 @@ class InviteUserForm extends FormBase {
       $form['actions']['#type'] = 'actions';
       $form['actions']['submit'] = [
         '#type' => 'submit',
-        '#value' => t('Submit'),
+        '#value' => t('Save'),
       ];
       $form['actions']['cancel'] = [
         '#type' => 'link',
@@ -196,11 +196,6 @@ class InviteUserForm extends FormBase {
         '#url' => $this->getCancelUrl(),
         '#attributes' => ['class' => ['button', 'apicSecondary']],
       ];
-      $themeHandler = \Drupal::service('theme_handler');
-      if ($themeHandler->themeExists('bootstrap')) {
-        $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
-        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-      }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $form;

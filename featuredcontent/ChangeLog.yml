@@ -1,4 +1,21 @@
 changes:
+  8.x-2.2.6:
+  - responsiveness fixes
+  8.x-2.2.5:
+  - responsiveness fixes
+  8.x-2.2.4:
+  - fix font-family
+  8.x-2.2.3: null
+  8.x-2.2.2:
+  - first pass of new styling
+  - first pass of new styling
+  8.x-2.2.1:
+  - tidy up featured content tiles
+  8.x-2.2.0:
+  - Update featuredcontent.info.yml
+  8.x-2.1.2: null
+  8.x-2.1.1:
+  - masonry library has a new name
   8.x-2.1.0:
   - update version: 8.x-2.0.10 -> 8.x-2.1.0
   8.x-2.0.9: null

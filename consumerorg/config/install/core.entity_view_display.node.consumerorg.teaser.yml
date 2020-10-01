@@ -18,6 +18,8 @@ dependencies:
     - field.field.node.consumerorg.consumerorg_tags
     - field.field.node.consumerorg.consumerorg_memberlist
     - field.field.node.consumerorg.consumerorg_roles
+    - field.field.node.consumerorg.consumerorg_payment_method_refs
+    - field.field.node.consumerorg.consumerorg_def_payment_ref
     - node.type.consumerorg
   module:
     - user
@@ -64,4 +66,6 @@ hidden:
   consumerorg_memberlist: true
   consumerorg_roles: true
   consumerorg_invites: true
+  consumerorg_payment_method_refs: true
+  consumerorg_def_payment_ref: true
   langcode: true

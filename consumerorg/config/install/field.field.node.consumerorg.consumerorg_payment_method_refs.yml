@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.consumerorg_payment_method_refs
+    - node.type.consumerorg
+id: node.consumerorg.consumerorg_payment_method_refs
+field_name: consumerorg_payment_method_refs
+entity_type: node
+bundle: consumerorg
+label: 'Payment Method References'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:consumerorg_payment_method'
+  handler_settings:
+    target_bundles: null
+    auto_create: false
+field_type: entity_reference

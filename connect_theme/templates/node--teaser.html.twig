@@ -1,0 +1,39 @@
+{#
+/**
+ * @file
+ * Default teaser theme implementation for nodes.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+  'node',
+  'node--id-' ~ node.id,
+  ('node--type-' ~ node.bundle)|clean_class,
+  view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
+] -%}
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  <div class="apicTeaser">
+    {% if display_submitted %}
+      <footer class="apicTeaserIcon">
+        {{ author_picture }}
+      </footer>
+    {% endif %}
+    <div class="apicTeaserMain">
+      {{ title_prefix }}
+      {% if label and not page %}
+        <h2{{ title_attributes }}>
+          <a href="{{ url }}" rel="bookmark">{{ label }}</a>
+        </h2>
+      {% endif %}
+      {{ title_suffix }}
+      <div{{ author_attributes }}>
+        {% trans %}Submitted by {{ author_name }} on {{ date }}{% endtrans %}
+        {{ metadata }}
+      </div>
+      <div{{ content_attributes }}>
+        {{ content }}
+      </div>
+    </div>
+  </div>
+</article>

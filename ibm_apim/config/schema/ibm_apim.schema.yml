@@ -220,6 +220,12 @@ ibm_apim.settings:
         email_format:
           type: string
           label: 'The format of the email sent to administrators'
+    payment_method_encryption_profile:
+      type: string
+      label: 'The encryption profile to use for storing payment method data'
+    billing_providers:
+      type: text
+      label: 'The mapping of billing providers to payment method forms'
 
 comment.type.comment:
   type: config_object

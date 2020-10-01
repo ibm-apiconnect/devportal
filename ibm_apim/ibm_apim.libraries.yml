@@ -7,8 +7,9 @@ core:
   js:
     js/frontpage.js: {}
   dependencies:
-    - masonry/layout
-
+    - 'masonry/masonry.layout'
+    - 'core/drupal.dialog.ajax'
+    - 'core/jquery.form'
 billing:
   version: 1.x
   js:

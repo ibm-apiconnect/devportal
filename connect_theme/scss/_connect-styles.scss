@@ -1,3 +1,6 @@
+//
+// Copyright IBM Corp. 2016, 2020
+//
 // Bootstrap Framework.
 @import '../bootstrap/assets/stylesheets/bootstrap';
 
@@ -46,11 +49,10 @@ html{
 }
 
 @include css-body;
-@include typography;
 
 body.bx--global-light-ui
 {
-  font-family: 'ibm-plex-sans', Helvetica Neue, Arial, sans-serif;
+  font-family: $font-family-base;
 }
 
 // accessibility set contrast ratio for content that is screen reader only
@@ -74,22 +76,43 @@ svg title {
 }
 
 // Page header.
-.page-header,
-.node__title{
-  margin: 0;
-  padding-bottom: (($line-height-computed / 2) - 1);
-  border:none;
+h1.page-header,
+h1.node__title,
+h1.productName,
+h1.applicationName,
+h1.apiName,
+h1.orgName {
   color: $default-header;
+  font-family: $font-family-base;
   font-size: 2rem;
-  font-weight: lighter;
+  line-height: 40px;
+  font-weight: 300;
+  letter-spacing: 0px;
+}
+
+h1.page-header {
+  border-bottom: $body-bg;
+  background: $ui-02;
+  margin: 0 -2rem;
+  padding: 1rem 2rem;
+}
+
+.apicProductIcon img, .apicApiIcon img {
+  border: 0;
+  width: 40px;
+  height: 40px;
 }
 
 a {
   color: $link-color;
 }
 
-.page-header {
-  border-bottom: 2px solid $brand-primary;
+.bx--secondary-text {
+  color: $secondary-text;
+}
+
+.bx--tertiary-text {
+  color: $tertiary-text;
 }
 
 // sticky header
@@ -115,20 +138,24 @@ a {
 }
 
 .apicMainContent {
-  margin-top: 60px;
-  min-height: calc(100vh - 180px);
+//  margin-top: 60px;
+//  min-height: calc(100vh - 148px);
+  margin-top: 48px;
+  min-height: calc(100vh - 136px);
 }
 
 .path-frontpage .apicMainContent,
-.page-node-type-application .apicMainContent {
+.page-node-type-application .apicMainContent,
+.route-ibm-apimmyorg .apicMainContent{
   margin-top: 48px;
-  min-height: calc(100vh - 168px);
+  min-height: calc(100vh - 136px);
 }
 // make front page full width
 // and app, myorg pages too
 .path-frontpage .apicMainContent.container,
 .page-node-type-application .apicMainContent.container,
 .route-ibm-apimmyorg .apicMainContent,
+.route-ibm-apimbilling .apicMainContent,
 .route-ibm-apimanalytics .apicMainContent {
   padding-left: 0;
   padding-right: 0;
@@ -137,21 +164,16 @@ a {
   width: 100%;
 }
 
+.apicMainContent.container {
+
+}
+
 // title and content wrappers for applications need to honor the media page widths
 .page-node-type-application .container .contentInnerWrapper,
 .page-node-type-application .container .titleInnerWrapper {
   margin-left: auto;
   margin-right: auto;
-  @media (min-width: $screen-sm-min) {
-    width: $container-sm;
-  }
-  @media (min-width: $screen-md-min) {
-    width: $container-md;
-  }
-  @media (min-width: $screen-lg-min) {
-    width: 90%;
-    min-width: $container-md;
-  }
+  width: calc(100% - 100px);
 }
 
 .path-frontpage .apicMainContent section.col-sm-12,
@@ -179,7 +201,7 @@ a {
 
 // need space for admin toolbar
 body.adminimal-admin-toolbar .apicMainContent {
-  min-height: calc(100vh - 224px);
+  min-height: calc(100vh - 192px);
 }
 
 // no footer on API pages & full width
@@ -259,7 +281,6 @@ p:last-child,
   }
 }
 
-
 .help-block, .control-group .help-inline {
   color: $gray-light;
   font-size: 12px;
@@ -270,16 +291,47 @@ p:last-child,
   }
 }
 
+// danger
+.bx--global-light-ui {
+
+  ul.dropit-submenu {
+    li.deleteApplication,
+    li.deleteCredentials,
+    li.deleteOrganization,
+    li.deletePaymentMethod,
+    li.removeInvitation,
+    li.removeOrganizationUser,
+    li.unsubscribe {
+      a:hover {
+        background-color: $brand-danger;
+      }
+    }
+  }
+  button.btn-danger {
+    background-color: $brand-danger;
+    border-color: $brand-danger;
+    &:hover{
+      background-color: $hover-danger;
+      border-color: $hover-danger;
+    }
+    &:active {
+      background-color: $active-danger;
+      border-color: $active-danger;
+    }
+  }
+}
+
 // tooltips
+.tooltip {
+  transition: opacity  0s linear 1s;
+}
+
 .tooltip-inner {
   padding: 16px 16px;
   word-wrap: break-word;
   text-align: left;
-  box-shadow: 4px 4px 8px 4px rgba(0,0,0,0.10);
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
 }
-
-
-
 
 // API Explorer
 /* force lineheight for api pre tags to be normal */
@@ -292,16 +344,24 @@ apiconnect-explorer .bx--link {
   color: $brand-primary;
 }
 
-.featuredcontent h3,
-.featuredcontent a,
-.goahead h3 {
+apiconnect-explorer ul {
+  padding: unset;
+  margin: unset;
+}
+
+.featuredcontent a {
   color: $brand-primary;
+}
+
+.featuredcontent h3,
+.goahead h3 {
+  color: $text-01;
 }
 
 /* rhs menu icons */
 .imageContainer {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: inline-block;
   svg {
@@ -317,8 +377,8 @@ apiconnect-explorer .bx--link {
 }
 
 .imageContainer img {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
 }
 
@@ -384,6 +444,16 @@ th, td {
   margin-right: 1px;
 }
 
+.glyphicon-cog, .glyphicon-download, .glyphicon-export,
+.glyphicon-filter, .glyphicon-import, .glyphicon-ok,
+.glyphicon-pencil, .glyphicon-plus, .glyphicon-remove,
+.glyphicon-search, .glyphicon-upload, .glyphicon-eye-open,
+.glyphicon-log-in, .glyphicon-trash {
+  &:before {
+    content: none;
+  }
+}
+
 .node__submitted,
 .comment__submitted {
   color: $default-submitted;
@@ -392,6 +462,10 @@ th, td {
 .field--widget-text-textarea .filter-wrapper {
   border: 0;
   padding-bottom: 3em;
+  background-color: inherit;
+  box-shadow: none;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .applicationWrapper header.titleSection .breadcrumb,
@@ -402,13 +476,16 @@ th, td {
 .breadcrumb
 {
   background-color: transparent;
+  font-weight: 400;
+  line-height: 1.125rem;
+  letter-spacing: 0.16px;
   a {
     color: $brand-primary;
     font-size: 0.875rem;
     vertical-align: middle;
     svg {
       fill: $brand-primary;
-      vertical-align: bottom;
+      vertical-align: middle;
     }
   }
 }
@@ -426,59 +503,114 @@ th, td {
   fill: $brand-primary;
 }
 
-.applicationSubscriptions .subscriptionsTable .subscriptionsContent table tbody tr:nth-child(even) {
-  background-color: $table-row-bg-gray;
-}
 .applicationCredentials .credentialsTable,
 .applicationSubscriptions .subscriptionsTable {
   background-color: $table-row-bg-light;
   border: 1px solid $table-row-border;
 }
-.applicationCredentials .credentialsTable .credentialsHeader,
-.applicationSubscriptions .subscriptionsTable .subscriptionsHeader {
-  border-bottom: 1px solid $table-header-border;
+.apicMyOrg .apicMyOrgMembers tbody tr.member-odd,
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent tbody tr.member-odd {
+  background-color: #f0f3f6;
+}
+.apicMyOrg .apicMyOrgMembers tbody tr.member-even,
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent tbody tr.member-even {
+  background-color: $ui-background;
+}
+.apicMyOrg .apicMyOrgMembers table thead,
+.applicationSubscriptions .subscriptionsTable .subscriptionsContent table thead {
+  background: $ui-03;
+}
+
+.applicationCredentials .credentialsTable .credentialsHeader {
+  border-bottom: 1px solid $ui-03;
 }
 .applicationWrapper .titleSection .applicationTabs li.selected a,
-.applicationWrapper .titleSection .applicationTabs li:hover a,
-.applicationWrapper .titleSection .applicationTabs li:focus a,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li.selected a,
-.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:hover a,
-.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:focus a,
-.apicMyOrg .titleSection .organizationTabs li.selected a,
-.apicMyOrg .titleSection .organizationTabs li:hover a,
-.apicMyOrg .titleSection .organizationTabs li:focus a{
-  color: $brand-primary;
-  border-bottom: 2px solid $brand-primary;
+.nav.nav-tabs.filter-formats li.selected a,
+.apicMyOrg .titleSection .organizationTabs li.selected a {
+  color: $text-01;
+  border-bottom: 2px solid $interactive-04;
 }
+
+.applicationWrapper .titleSection .applicationTabs li:hover a,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:hover a,
+.nav.nav-tabs.filter-formats li:hover a,
+.apicMyOrg .titleSection .organizationTabs li:hover a {
+  color: $text-01;
+  border-bottom: 2px solid $ui-04;
+}
+.applicationWrapper .titleSection .applicationTabs li:focus a,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:focus a,
+.nav.nav-tabs.filter-formats li:focus a,
+.apicMyOrg .titleSection .organizationTabs li:focus a {
+  color: $text-01;
+  border-bottom: 2px solid $focus;
+}
+
 .applicationWrapper .titleSection .applicationTabs li.selected,
 .applicationWrapper .titleSection .applicationTabs li:hover,
 .applicationWrapper .titleSection .applicationTabs li:focus,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li.selected,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:hover,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:focus,
+.nav.nav-tabs.filter-formats li.selected,
+.nav.nav-tabs.filter-formats li:hover,
+.nav.nav-tabs.filter-formats li:focus,
 .apicMyOrg .titleSection .organizationTabs li.selected,
 .apicMyOrg .titleSection .organizationTabs li:hover,
 .apicMyOrg .titleSection .organizationTabs li:focus {
-  color: $brand-primary;
-}
-.applicationWrapper .titleSection .applicationTabs li a,
-.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li a,
-.applicationWrapper .titleSection .applicationTabs li,
-.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li
-.apicMyOrg .titleSection .organizationTabs li a,
-.apicMyOrg .titleSection .organizationTabs li {
-  margin-bottom: 4px;
-  padding-bottom:10px;
-  color: $text-color;
+  color: $text-01;
 }
 
-.apicMyOrg .apicMyOrgMembers polygon {
-  fill: $brand-primary;
+.applicationWrapper .titleSection .applicationTabs li,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li,
+.nav.nav-tabs.filter-formats li,
+.apicMyOrg .titleSection .organizationTabs li {
+  color: $text-02;
+}
+
+.applicationWrapper .titleSection .applicationTabs li a,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li a,
+.nav.nav-tabs.filter-formats li a,
+.apicMyOrg .titleSection .organizationTabs li a {
+  color: $text-02;
+  border-bottom: 2px solid $ui-03;
+}
+
+.nav.nav-tabs.filter-formats {
+  flex-basis: 100%;
+  margin-top: 1rem;
+}
+ul.nav.nav-tabs.filter-formats {
+  margin-bottom: unset;
+}
+ul.nav.nav-tabs.filter-formats {
+  display: flex;
+  flex-direction: row;
+  padding-left: 0;
+}
+.nav.nav-tabs.filter-formats li {
+  list-style: none;
+  padding: 0.725rem 30px 0 0;
+  font-size: 0.875rem;
 }
 
 .apicMyOrg .apicMyOrgMembers .apicMyOrgStatus {
   color: $brand-success;
   font-size: 0.875rem;
+}
+
+.apicMyOrg .memberSection,
+.apicMyOrgOwner {
+  background-color: $ui-02;
+}
+
+.apicMyOrg .field.organizationMembers .memberHeader{
+  border-bottom: 1px solid $ui-03;
+}
+
+.apicMyOrg .apicMyOrgMembers table thead {
+  background: $ui-03;
 }
 
 .apicMyOrg .apicMyOrgMembers .apicMyOrgNoMembers {
@@ -489,24 +621,13 @@ th, td {
   border-bottom: 2px solid $brand-primary;
 }
 
-header h1,
-.ibmapimGetStarted header h1 {
+header h1 {
   color: $black-01;
-}
-
-.ibmapimGetStarted header .homepageLink svg {
-  fill: $interactive-01;
-}
-
-.ibmapimGetStarted .getStartedContentWrapper .exploreDiv ,
-.ibmapimGetStarted .getStartedContentWrapper .createAppDiv {
-  background-color: $default-bg-light;
-  border: 1px solid $default-border;
 }
 
 .apicMainContent .supportContentWrapper .views-element-container .view {
   background: $default-bg-light;
-  border: 1px solid $default-border;
+  border: unset;
 }
 
 .views-element-container .view.view-faqs .ui-state-default,
@@ -523,14 +644,15 @@ header h1,
 
 /* socialblock */
 .socialblock.card {
-  border: 1px solid $brand-info;
-  border-left: 6px solid $brand-info;
+  border: unset;
   background-color: $default-bg-light;
-  color: $brand-primary;
+  color: $text-color;
+  max-width: 21rem;
+  min-width: 21rem;
 }
 
 .socialblock.card:hover {
-  box-shadow: 0 6px 5px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: unset;
 }
 
 .socialblock .op {
@@ -561,7 +683,7 @@ header h1,
 
 /* EU Cookie banner styling */
 .bx--global-light-ui  .eu-cookie-compliance-banner {
-  background-color: $purple-03;
+  background-color: $alert-info-bg;
   padding: 1rem 0;
 
   h2 {
@@ -645,34 +767,23 @@ section.block-go-ahead {
 }
 
 
-.ibmapimGetStarted header h1 {
+.ibmapimGetStarted header h2 {
   color: $default-header;
 }
 
 
 .ibmapimGetStarted .getStartedContentWrapper .exploreDiv ,
 .ibmapimGetStarted .getStartedContentWrapper .createAppDiv {
-  background-color: $default-bg-light;
-  border: 1px solid $default-border;
-  position:relative;
+
 }
 
 @media (max-width:$screen-sm-min) {
+
+  .ibmapimGetStarted {
+    background: unset;
+  }
   .ibmapimGetStarted .getStartedContentWrapper .exploreDiv {
-    margin-bottom:20px;
-  }
-}
-
-@media (min-width:$screen-sm-min) {
-  .ibmapimGetStarted .getStartedContentWrapper .getStartedText {
-    margin-bottom: 72px;
-  }
-
-  .ibmapimGetStarted .getStartedContentWrapper .getStartedText .linkWrap {
-    bottom: 40px;
-    position: absolute;
-    left: 0;
-    right: 0;
+    margin-bottom:2px;
   }
 }
 
@@ -686,7 +797,11 @@ section.block-go-ahead {
 .ibmapimNoPermissions .iconDiv svg {
   fill: $modal-content-color;
 }
+// loading
 
+.page-load-progress-lock-screen .bx--loading__stroke {
+  stroke: $brand-primary;
+};
 // maintenance page
 .maintenance-page {
   header.navbar,
@@ -775,4 +890,68 @@ article.search-result {
   padding: 5rem 0 0 2rem;
 }
 
+// footer
+footer.footer.container {
+  padding-left: 32px;
+  justify-content: normal;
+  height: 64px;
+}
+@media (max-width: 380px) {
+  footer.footer.container {
+    min-height: 64px;
+    height: auto;
+  }
+}
 
+.apic-login-wrapper:after,
+.apic-register-wrapper:after,
+.apic-reset-wrapper:after {
+  background-color: $ui-01;
+}
+
+body.bx--global-light-ui.context--user-login,
+body.bx--global-light-ui.context--user-register,
+body.bx--global-light-ui.route-change-pwd-pagereset,
+body.bx--global-light-ui.context--user-password {
+  background-color: $ui-02;
+}
+
+.apicMyOrg .apicMyOrgMembers .apicMyOrgNoMembers .noMembersTextContainer .firstLine,
+.noPaymentMethods .noPaymentMethodsText.firstLine,
+.block .apicNoContent .noContentTextContainer .firstLine {
+  color: $text-01;
+}
+
+.apicMyOrg .apicMyOrgMembers .apicMyOrgNoMembers .noMembersTextContainer .secondLine,
+.noPaymentMethods .noPaymentMethodsText.secondLine,
+.block .apicNoContent .noContentTextContainer .secondLine {
+  color: $text-02;
+}
+.bx--data-table thead {
+  background: $table-header-bg;
+}
+
+.bx--data-table th {
+    padding: $spacing-05;
+    font-size: 0.875rem;
+}
+
+.bx--data-table td {
+    @include type-style('body-short-01');
+    color: $secondary-text;
+    padding: $spacing-05;
+}
+
+.alert .close {
+  opacity: inherit;
+}
+
+.applicationCredentials .credentialsTable .credentialsHeader .credentialsActions .credentialsActionsAdd:hover{
+  background-color: $hover-ui;
+}
+.dropit-icon:hover  {
+  background-color: $hover-ui;
+}
+.consumerorgSelectBlock .dropit-icon:hover  {
+  background-color: transparent;
+}

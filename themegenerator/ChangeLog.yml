@@ -1,4 +1,11 @@
 changes:
+  8.x-2.2.1:
+  - update screenshots (#33) (#34)
+  8.x-2.2.0:
+  - Update themegenerator.info.yml
+  8.x-2.1.2: null
+  8.x-2.1.1:
+  - Tempmerge (#32)
   8.x-2.1.0:
   - update version: 8.x-2.0.10 -> 8.x-2.1.0
   8.x-2.0.9: null

@@ -1,0 +1,120 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2020
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+use Drupal\Core\Cache\CacheableMetadata;
+
+
+function ibm_stripe_payment_method_form_alter(&$form, &$form_state, $form_id) {
+    // Check when the right form is passed.
+    if ($form_id == 'payment_method_create_form') {
+        $form['#attached']['library'][] = 'ibm_stripe_payment_method/stripeform';
+    }
+}
+/**
+ * Default implementation for creating payment methods
+ *
+ * This function just displays the fields onscreen for the user to provide the details
+ *
+ * @param &$form
+ * @param $integration
+ * @param $billing
+ */
+function ibm_stripe_payment_method_consumerorg_payment_method_create_alter(&$form, $integration, $billing) {
+  $stripeConfig = \Drupal::config('ibm_stripe_payment_method.settings');
+  $billingProviderConfig = unserialize(\Drupal::config('ibm_apim.settings')->get('billing_providers'), ['allowed_classes' => FALSE]);
+
+  // check whether we should be using stripe for this billing provider
+  if (isset($billingProviderConfig) && $billingProviderConfig[$billing['name']] === 'ibm_stripe_payment_method') {
+
+    // Alter the form with Stripe specific needs.
+    $form['#attributes']['class'][] = 'stripe-form';
+
+    $publishableKey = $stripeConfig->get('publishable_key');
+    $secretKey = $stripeConfig->get('secret_key');
+    $moduleHandler = \Drupal::service('module_handler');
+    if ($moduleHandler->moduleExists('encrypt')) {
+      $ibmApimConfig = \Drupal::config('ibm_apim.settings');
+      $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
+      $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+      $encryptionService = \Drupal::service('encryption');
+      $publishableKey = $encryptionService->decrypt($publishableKey, $encryptionProfile);
+      $secretKey = $encryptionService->decrypt($secretKey, $encryptionProfile);
+    }
+    $setup_intent = NULL;
+    try {
+        \Stripe\Stripe::setApiKey($secretKey);
+        $setup_intent = \Stripe\SetupIntent::create([
+        'usage' => 'off_session',
+        ]);
+    } catch (\Stripe\Exception\AuthenticationException $exception) {
+        \Drupal::logger('ibm_apim')->error('Failed to create Stripe SetupIntent object. Check your Stripe api keys.');
+    }
+    if (isset($setup_intent)) {
+        $clientSecret = $setup_intent->client_secret;
+
+        $form['#attached']['drupalSettings']['apicStripe'] = [
+        'publishableKey' => $publishableKey,
+        'clientSecret' => $clientSecret,
+        ];
+
+        // Populated by the JS library.
+        $form['stripe_payment_method_id'] = [
+        '#type' => 'hidden',
+        '#attributes' => [
+            'id' => 'stripe-payment-method-id',
+        ],
+        '#required' => TRUE,
+        ];
+
+        $form['card_number'] = [
+        '#type' => 'item',
+        '#title' => t('Card number'),
+        '#required' => TRUE,
+        '#validated' => TRUE,
+        '#markup' => '<div id="card-number-element" class="form-text"></div>',
+        ];
+
+        $form['expiration'] = [
+        '#type' => 'item',
+        '#title' => t('Expiration date'),
+        '#required' => TRUE,
+        '#validated' => TRUE,
+        '#markup' => '<div id="expiration-element"></div>',
+        ];
+
+        $form['security_code'] = [
+        '#type' => 'item',
+        '#title' => t('CVC'),
+        '#required' => TRUE,
+        '#validated' => TRUE,
+        '#markup' => '<div id="security-code-element"></div>',
+        ];
+
+        // To display validation errors.
+        $form['payment_errors'] = [
+        '#type' => 'markup',
+        '#markup' => '<div id="payment-errors"></div>',
+        '#weight' => -200,
+        ];
+
+        $cacheability = new CacheableMetadata();
+        $cacheability->setCacheMaxAge(0);
+        $cacheability->applyTo($form);
+    } else {
+        $form['description'] = ['#markup' => '<p>' . t('An error occured while building the Stripe form. Please contact your system administrator.') . '</p>'];
+        unset($form['title']);
+        unset($form['actions']['submit']);
+    }
+  }
+}
+

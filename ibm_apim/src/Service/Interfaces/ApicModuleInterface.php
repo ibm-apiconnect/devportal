@@ -26,11 +26,11 @@ interface ApicModuleInterface {
 
 
   /**
-   * Purge any blacklisted modules from the site.
+   * Purge any blocklisted modules from the site.
    * This will uninstall the module if running and delete the files from the filesystem.
    *
    * @return bool TRUE if successful, FALSE otherwise
    */
-  public function purgeBlackListedModules(): bool;
+  public function purgeBlockListedModules(): bool;
 
 }

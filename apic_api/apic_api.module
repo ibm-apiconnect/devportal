@@ -502,6 +502,8 @@ function apic_api_preprocess_node(&$variables): void {
               foreach ($appCredentials as $cred) {
                 $credentials[] = [
                   'client_id' => $cred->client_id(),
+                  'name' => $cred->name(),
+                  'title' => $cred->title(),
                   'description' => $cred->summary(),
                 ];
               }

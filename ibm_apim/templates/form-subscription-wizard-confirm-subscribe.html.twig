@@ -1,4 +1,3 @@
-
 {#
 /**
  * @file
@@ -9,11 +8,75 @@
  */
 #}
 <div class="apicForm">
-  <div class="apicFormHeader">{{ 'Confirm Subscription'|t }}</div>
-  <div class="apicFormText">{{ 'A subscription will be created for the product, plan and application you selected.'|t }}</div>
-  <div class="apicFormWrapper">
-    <form {{ attributes }}>
-      {{ children }}
-    </form>
-  </div>
+  {% if element['#error'] %}
+    <div class="apicFormHeader">
+      {{ 'Subscription Error'|t }}
+      <div class="apicFormText">
+      <p>{{ 'There was a problem with your subscription request. Review any error messages and try again.'|t }} <p>
+    </div>
+    </div>
+    <div class="apicFormFooter"> 
+      <form {{ attributes }}>
+        {{ children }}
+      </form>
+    </div>
+  {% else %}
+    <div class="apicFormHeader">
+      {{ 'Confirm Subscription'|t }}
+      {% if element['#planInfo']['billingInfo'] and element['#paymentMethod'] is empty %}
+        <div class="apicFormText">
+          <p>{{ 'This plan requires payment.'|t }} <br>
+          <a class="button apicNewPaymentMethod" href="{{ url('consumerorg.billing_add_payment') }}">{{ 'Click here to add a payment method and try again.'|t }}</a></p>
+        </div>
+      {% else %}
+        {% if element['#planInfo']['billingInfo'] %}
+        <p>
+          {% trans %} Your default payment method is {{ element['#paymentMethod']['title'] }}.{% endtrans %}
+          <a href="{{ path('ibm_apim.billing') }}">{{ 'Click here to change your default payment method.'|t }}</a>
+        </p>
+      {% endif %}
+    </div>
+    <div class="apicFormContent">
+      <table class="bx--data-table">
+        <thead>
+          <tr>
+            <th id="product" class="product">{{ 'Product'|t }}</th>
+            <th id="application" class="application">{{ 'Application'|t }}</th>
+            <th id="plan" class="plan">{{ 'Plan'|t }}</th>
+            {% if element['#planInfo']['billingInfo'] %}
+              <th id="price" class="price">{{ 'Price'|t }}</th>
+            {% endif %}
+
+          </tr>
+        </thead>
+        <tbody>
+          <td class="product">
+          <img class="bx--about__icon" alt="{{ element['#productImage'] }}"
+                                src="{{ element['#productImage']  }}"/>
+            {{ element['#productName'] }}
+          </td>
+          <td class="application">{{ element['#applicationName'] }}</td>
+          <td class="plan">
+            {% if element['#planInfo']['billingInfo'] %}
+              {{ element['#planInfo']['name'] }}: {% set sub_billing_info = element['#planInfo']['billingInfo'] %}{% trans %}Subscription of {{ sub_billing_info | raw}} for {{ element['#planInfo']['rateLimit'] }}{% endtrans %}
+            {% else %}
+              {{ element['#planInfo']['name'] }}: {% trans %}Free subscription for {{ element['#planInfo']['rateLimit'] }}{% endtrans %}
+            {% endif %}
+          </td>
+          {% if element['#planInfo']['billingInfo'] %}
+            <td class="price">{{ element['#planInfo']['billingInfo'] | trans }}</td>
+          {% endif %}
+
+        </tbody>
+      </table>
+
+    </div>
+    <div class="apicFormFooter"> 
+      <form {{ attributes }}>
+        {{ children }}
+      </form>
+    </div>
+    {% endif %}
+
+  {% endif %}
 </div>

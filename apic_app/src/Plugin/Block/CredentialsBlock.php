@@ -108,7 +108,7 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
     $userHasAppManage = $userUtils->checkHasPermission('app:manage');
     $credentials = [];
     $credsArray = $node->application_credentials_refs->referencedEntities();
-    foreach($credsArray as $cred) {
+    foreach ($credsArray as $cred) {
       $credentials[] = $cred->toArray();
     }
     $nodeArray = [
@@ -125,6 +125,19 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
     $allow_clientid_reset = (boolean) $config->get('allow_clientid_reset');
     $allow_clientsecret_reset = (boolean) $config->get('allow_clientsecret_reset');
 
+    $libraries = ['apic_app/basic'];
+    $moduleHandler = \Drupal::service('module_handler');
+    if ($moduleHandler->moduleExists('clipboardjs')) {
+      $clipboard = [
+        'enabled' => TRUE,
+        'image_path' => drupal_get_path('module', 'apic_app'),
+      ];
+      $libraries[]  = 'clipboardjs/drupal';
+    }
+    else {
+      $clipboard = ['enabled' => FALSE];
+    }
+
     return [
       '#theme' => 'app_credentials',
       '#node' => $nodeArray,
@@ -132,8 +145,9 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
       '#allowNewCredentials' => $allow_new_credentials,
       '#allowClientidReset' => $allow_clientid_reset,
       '#allowClientsecretReset' => $allow_clientsecret_reset,
+      '#clipboard' => $clipboard,
       '#attached' => [
-        'library' => ['apic_app/basic'],
+        'library' => $libraries,
         'drupalSettings' => $drupalSettings,
       ],
     ];

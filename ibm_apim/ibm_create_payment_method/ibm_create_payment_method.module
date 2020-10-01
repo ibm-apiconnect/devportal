@@ -1,0 +1,121 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2020
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+
+/**
+ * Default implementation for creating payment methods
+ *
+ * This function just displays the fields onscreen for the user to provide the details
+ *
+ * @param &$form
+ * @param $integration
+ * @param $billing
+ */
+function ibm_create_payment_method_consumerorg_payment_method_create_alter(&$form, $integration, $billing) {
+  // if no other module is controlling the creation then fallback to inline fields
+  $billingProviderConfig = unserialize(\Drupal::config('ibm_apim.settings')->get('billing_providers'), ['allowed_classes' => FALSE]);
+
+  // check whether we should be using stripe for this billing provider
+  if (!isset($billingProviderConfig[$billing['name']]) || $billingProviderConfig[$billing['name']] === 'ibm_create_payment_method') {
+
+    // fallback to local form fields
+    $currentLang = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $localeStorage = \Drupal::service('locale.storage');
+
+    // OAI3 format to field type map
+    $formatMap = [
+      'date' => 'date',
+      'date-time' => 'datetime',
+      'double' => 'number',
+      'email' => 'email',
+      'float' => 'number',
+      'int32' => 'number',
+      'int64' => 'number',
+      'number' => 'number',
+      'password' => 'password',
+      'url' => 'url',
+      'text' => 'textarea',
+    ];
+    if (isset($integration['integration']['configuration_schema'])) {
+      // loop over the fields and add them to the form
+      foreach ($integration['integration']['configuration_schema'] as $key => $field) {
+        if ($key !== 'required') {
+          $fieldTitle = $field['x-ibm-label'] ?? $key;
+          // have to look up translation manually since not allowed to do t() with variables
+          // the form should already be cached per language so if you change language this should be re-evaluated
+          $translatedFieldTitle = $localeStorage->findTranslation(['source' => $fieldTitle, 'language' => $currentLang]);
+          if ($translatedFieldTitle !== NULL && $translatedFieldTitle->translation !== NULL) {
+            $fieldTitle = $translatedFieldTitle->translation;
+          }
+          if (isset($field['x-ibm-description'])) {
+            $fieldDescr = $field['x-ibm-label'];
+            $translatedFieldDescr = $localeStorage->findTranslation(['source' => $fieldDescr, 'language' => $currentLang]);
+            if ($translatedFieldDescr !== NULL && $translatedFieldDescr->translation !== NULL) {
+              $fieldDescr = $translatedFieldDescr->translation;
+            }
+          }
+
+          if (isset($field['type']) && (!array_key_exists('x-ibm-display', $field) || $field['x-ibm-display'] === TRUE)) {
+            // ENUM support
+            if (isset($field['enum'])) {
+              $form[$key] = [
+                '#type' => 'select',
+                '#title' => $fieldTitle,
+              ];
+              $options = [];
+              foreach ($field['enum'] as $enumValue) {
+                $options[$enumValue] = $enumValue;
+              }
+              $form[$key]['#options'] = $options;
+            }
+            // Strings
+            elseif ($field['type'] === 'string') {
+              $form[$key] = [
+                '#type' => 'textfield',
+                '#title' => $fieldTitle,
+              ];
+              // if format is set then use a more specific field type
+              if (isset($field['format'], $formatMap[$field['format']])) {
+                $form[$key]['#type'] = $formatMap[$field['format']];
+              }
+              if (isset($field['format']) && $field['format'] === 'text') {
+                $form[$key]['#wysiwyg'] = FALSE;
+              }
+            }
+            // booleans
+            elseif ($field['type'] === 'boolean') {
+              $form[$key] = [
+                '#type' => 'checkbox',
+                '#title' => $fieldTitle,
+              ];
+            }
+            // if there happens to be a default then honour it
+            if (isset($field['default'])) {
+              $form[$key]['#default_value'] = $field['default'];
+            }
+
+            // if the field is in the required array then mark it as such
+            if (isset($integration['integration']['configuration_schema']['required']) && in_array($key, $integration['integration']['configuration_schema']['required'], TRUE)) {
+              $form[$key]['#required'] = TRUE;
+            }
+            if (isset($fieldDescr)) {
+              $form[$key]['#description'] = $fieldDescr;
+            }
+          }
+        }
+      }
+    }
+  }
+
+}
+

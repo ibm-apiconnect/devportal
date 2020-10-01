@@ -1,6 +1,9 @@
 // import connect variables
 @import "connect-variables";
 
+// font
+$font-family-base: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+
 // Blue color palette
 $blue-01: #5392ff;
 $blue-02: #2d74da;
@@ -51,6 +54,7 @@ $navbar-default-link-color:        rgba($white-01,0.6);
 $navbar-default-link-hover-color:  rgba($white-01,1);
 $navbar-default-link-active-color: rgba($white-01,1);
 $navbar-default-link-active-bg:    $navbar-blue;
+$navbar-default-link-hover-bg:     $blue-02;
 
 $navbar-default-toggle-icon-bar-bg: $white-01;
 
@@ -96,6 +100,10 @@ $btn-success-bg:     $blue-01;
 $btn-success-border: transparent;
 $btn-link-disabled-color: $brand-primary;
 
+$tile-btn-bg:   $gray-01;
+$tile-btn-border: $gray-01;
+$tile-btn-color: $text-color;
+
 // checkboxes and radio buttons
 $check-radio-bg: $white-01;
 $check-radio-border: $gray-05;
@@ -111,7 +119,7 @@ $tooltip-bg:          $navbar-blue;
 $modal-content-bg:                             $gray-01;
 $modal-content-border-color:                   $brand-primary;
 $modal-backdrop-bg:           	$gray-03;
-$modal-backdrop-opacity:        .5;
+$modal-backdrop-opacity:        0;
 $modal-header-border-color:   		transparent;
 $modal-content-color: $gray-04;
 //** Modal footer border color
@@ -124,6 +132,7 @@ $card-footer-bg: $gray-03;
 $disabled-bg: $gray-05;
 
 //** table settings
+$table-header-bg: $gray-04;
 $table-header-border: $brand-primary;
 $table-row-border: $gray-04;
 $table-row-hover: $light-blue-03;

@@ -158,6 +158,24 @@ function consumerorg_node_access(NodeInterface $node, $operation, AccountInterfa
 }
 
 /**
+ * Only allows access to the payment_methods for the current consumerorg
+ *
+ * Implements hook_entity_access().
+ */
+function consumerorg_entity_access(\Drupal\Core\Entity\EntityInterface $entity, $operation, \Drupal\Core\Session\AccountInterface $account) {
+  if ($entity->bundle() === 'consumerorg_payment_method') {
+    $userUtils = \Drupal::service('ibm_apim.user_utils');
+    $org = $userUtils->getCurrentConsumerorg();
+    if ($entity->consumerorg_url->value === $org['url']) {
+      $access = new AccessResultAllowed();
+    }
+    else {
+      $access = new AccessResultForbidden();
+    }
+  }
+}
+
+/**
  * Need to use our custom content type templates
  *
  * @param $variables
@@ -338,6 +356,15 @@ function consumerorg_preprocess_node(&$variables): void {
       if (isset($analyticsAccessCheck)) {
         $variables['analytics_access'] = $analyticsAccessCheck->isAllowed();
       }
+      $variables['billing_access'] = FALSE;
+      $billingAccessCheck = \Drupal::service('ibm_apim.billing_access_checker')->access();
+      if (isset($billingAccessCheck)) {
+        $variables['billing_access'] = $billingAccessCheck->isAllowed();
+      }
+      $tabs = [];
+      // tabs should be an array of additional tabs, eg. [{'title' => 'tab title', 'path' => '/tab/path'}, ... ]
+      \Drupal::moduleHandler()->alter('consumerorg_myorg_tabs', $tabs, $nodeArray);
+      $variables['tabs'] = $tabs;
       $variables['edit_mode'] = $editMode;
       $variables['images_path'] = drupal_get_path('module', 'ibm_apim');
       $variables['myorg_title'] = $variables['node']->getTitle();
@@ -460,6 +487,16 @@ function consumerorg_theme($existing, $type, $theme, $path) {
         'orgs' => [],
         'selected_name' => NULL,
         'create_allowed' => FALSE,
+      ],
+    ],
+    'consumerorg_billing' => [
+      'variables' => [
+        'node' => [],
+        'consumerorgId' => NULL,
+        'consumerorgTitle' => NULL,
+        'tabs' => [],
+        'images_path' => drupal_get_path('module', 'ibm_apim'),
+        'showPlaceholders' => TRUE,
       ],
     ],
   ];

@@ -96,15 +96,6 @@ class UnsubscribeForm extends ConfirmFormBase {
     $this->node = $appId;
     $this->subId = Html::escape($subId);
     $form = parent::buildForm($form, $form_state);
-    $themeHandler = \Drupal::service('theme_handler');
-    if ($themeHandler->themeExists('bootstrap')) {
-      if (isset($form['actions']['submit'])) {
-        $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
-      }
-      if (isset($form['actions']['cancel'])) {
-        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-      }
-    }
     $form['#attached']['library'][] = 'apic_app/basic';
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -212,19 +203,6 @@ class UnsubscribeForm extends ConfirmFormBase {
         'subId' => $this->subId,
       ]);
 
-      // Rules
-      $moduleHandler = \Drupal::service('module_handler');
-      if ($theProduct !== NULL && $moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new SubscriptionDeleteEvent($this->node, $theProduct, $planName, [
-          'application' => $this->node,
-          'product' => $theProduct,
-          'planName' => $planName,
-        ]);
-        $event_dispatcher = \Drupal::service('event_dispatcher');
-        $event_dispatcher->dispatch(SubscriptionDeleteEvent::EVENT_NAME, $event);
-      }
     }
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

@@ -36,7 +36,7 @@ Feature: Edit Consumer Organization
     Then I should see the text "Update the consumer organization"
     And I should see the text "Organization Title"
     When I enter "New org1" for "Organization Title"
-    And I press the "Submit" button
+    And I press the "Save" button
     Then I should be on "/myorg"
     And I should see the text "New org1"
     And there are messages
@@ -85,7 +85,7 @@ Feature: Edit Consumer Organization
     Then I should see the text "Update the consumer organization"
     And I should see the text "Organization Title"
     When I enter "New org1" for "Organization Title"
-    And I press the "Submit" button
+    And I press the "Save" button
     Then I should be on "/myorg"
     And I should see the text "New org1"
     And there are messages

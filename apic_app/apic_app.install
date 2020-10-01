@@ -18,9 +18,10 @@
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Session\UserSession;
-use Drupal\node\Entity\Node;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\node\Entity\Node;
+use Drupal\views\Views;
 
 /**
  * Changes from 8.x-1.0 to 8.x-1.1 :
@@ -290,16 +291,16 @@ function apic_app_update_8105() {
   $field_storage_config = FieldStorageConfig::loadByName('node', 'application_credentials_refs');
   $field_storage_config->setSetting('target_type', 'apic_app_application_creds');
   $field_storage_config->save();
-  
+
   $field_storage_config = FieldStorageConfig::loadByName('node', 'application_subscription_refs');
   $field_storage_config->setSetting('target_type', 'apic_app_application_subs');
   $field_storage_config->save();
-  
-  $field_config = FieldConfig::loadByName('node','application', 'application_credentials_refs');
+
+  $field_config = FieldConfig::loadByName('node', 'application', 'application_credentials_refs');
   $field_config->setSetting('handler', 'default:apic_app_application_creds');
   $field_config->save();
-  
-  $field_config = FieldConfig::loadByName('node','application', 'application_subscription_refs');
+
+  $field_config = FieldConfig::loadByName('node', 'application', 'application_subscription_refs');
   $field_config->setSetting('handler', 'default:apic_app_application_subs');
   $field_config->save();
 
@@ -382,8 +383,7 @@ function apic_app_update_8106() {
   if (\Drupal::entityTypeManager()->hasDefinition('apic_app_credentials')) {
     try {
       \Drupal::entityDefinitionUpdateManager()->uninstallEntityType(\Drupal::entityTypeManager()->getDefinition('apic_app_credentials'));
-    }
-    catch (PluginNotFoundException $e) {
+    } catch (PluginNotFoundException $e) {
       \Drupal::logger('apic_app_update')->error('unable to uninstall old apic_app_credentials entity.');
     }
   }
@@ -391,8 +391,7 @@ function apic_app_update_8106() {
   if (\Drupal::entityTypeManager()->hasDefinition('apic_app_subscription')) {
     try {
       \Drupal::entityDefinitionUpdateManager()->uninstallEntityType(\Drupal::entityTypeManager()->getDefinition('apic_app_subscription'));
-    }
-    catch (PluginNotFoundException $e) {
+    } catch (PluginNotFoundException $e) {
       \Drupal::logger('apic_app_update')->error('unable to uninstall old apic_app_subscription entity.');
     }
   }
@@ -411,6 +410,93 @@ function apic_app_update_8107() {
   if ($apicSummaryFieldConfig !== NULL) {
     $apicSummaryFieldConfig->set('translatable', TRUE);
     $apicSummaryFieldConfig->save();
+  }
+}
+
+/**
+ * update the gutter width for latest masonry views
+ *
+ * bumped the second digit to ensure the change happens if migrating from 2018 to 10 too
+ */
+function apic_app_update_8201() {
+  $view = Views::getView('applications');
+  if ($view !== NULL) {
+    $style = $view->getDisplay()->getOption('style');
+    if ((int) $style['options']['gutterWidth'] === 0 || (int) $style['options']['gutterWidth'] === 20) {
+      $style['options']['gutterWidth'] = "2";
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
+    $pager = $view->getDisplay()->getOption('pager');
+    if ((int) $pager['options']['items_per_page'] === 5) {
+      $pager['options']['items_per_page'] = 10;
+      $view->getDisplay()->setOption('pager', $pager);
+      $view->save();
+    }
+    if ($pager['options']['expose']['items_per_page_options'] !== '10, 25, 50, 75') {
+      $pager['options']['expose']['items_per_page_options'] = '10, 25, 50, 75';
+      $view->getDisplay()->setOption('pager', $pager);
+      $view->save();
+    }
+  }
+}
+
+/**
+ * update the empty state for the view
+ *
+ */
+function apic_app_update_8202() {
+  $view = Views::getView('applications');
+  if ($view !== NULL) {
+    $empty = $view->getDisplay()->getOption('empty');
+    if (!isset($empty['entity_block'])) {
+      $empty['entity_block'] = [
+        'id' => 'entity_block',
+        'table' => 'views',
+        'field' => 'entity_block',
+        'relationship' => 'none',
+        'group_type' => 'group',
+        'admin_label' => '',
+        'empty' => TRUE,
+        'tokenize' => TRUE,
+        'target' => 'noappsblock',
+        'view_mode' => 'default',
+        'bypass_access' => FALSE,
+        'plugin_id' => 'entity',
+      ];
+      if (isset($empty['area'])) {
+        unset($empty['area']);
+      }
+      $view->getDisplay()->setOption('empty', $empty);
+      $view->save();
+    }
+    $exposed_form = $view->getDisplay()->getOption('exposed_form');
+    if ($exposed_form['options']['reset_button'] === TRUE) {
+      $exposed_form['options']['reset_button'] = FALSE;
+      unset($exposed_form['options']['bef']['sort']['bef_format']);
+      $exposed_form['options']['bef']['sort']['plugin_id'] = 'default';
+      $exposed_form['options']['bef']['sort']['advanced']['combine'] = true;
+      $view->getDisplay()->setOption('exposed_form', $exposed_form);
+      $view->save();
+    }
+    $filters = $view->getDisplay()->getOption('filters');
+    if (isset($filters['application_lifecycle_state_value'])) {
+      unset($filters['application_lifecycle_state_value']);
+    }
+    if (isset($filters['apic_state_value'])) {
+      unset($filters['apic_state_value']);
+    }
+    $view->getDisplay()->setOption('filters', $filters);
+    $view->save();
+    $sorts = $view->getDisplay()->getOption('sorts');
+    if (isset($sorts['application_lifecycle_state_value'])) {
+      unset($sorts['application_lifecycle_state_value']);
+    }
+    if (isset($sorts['apic_state_value'])) {
+      unset($sorts['apic_state_value']);
+    }
+    $view->getDisplay()->setOption('sorts', $sorts);
+    $view->save();
   }
 }
 

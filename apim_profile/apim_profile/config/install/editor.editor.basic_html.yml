@@ -12,6 +12,7 @@ third_party_settings:
     scheme: private
     directory: inline-files
     extensions: txt
+    max_size: ''
 format: basic_html
 editor: ckeditor
 settings:
@@ -50,15 +51,15 @@ settings:
     drupallink:
       linkit_enabled: false
       linkit_profile: ''
-    language:
-      language_list: un
     stylescombo:
       styles: ''
+    language:
+      language_list: un
     autoembed:
       status: ''
 image_upload:
   status: true
-  scheme: private
+  scheme: public
   directory: inline-images
   max_size: 5MB
   max_dimensions:

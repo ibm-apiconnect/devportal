@@ -10,8 +10,8 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
-use Drupal\Core\Session\UserSession;
 use Drupal\consumerorg\ApicType\Member;
+use Drupal\Core\Session\UserSession;
 
 function consumerorg_drush_command() {
 
@@ -74,7 +74,30 @@ function consumerorg_drush_command() {
       'event' => 'The event type',
     ],
   ];
-
+  $items['consumerorg-payment-method-create'] = [
+    'description' => 'Creates a payment method (which belongs to an org)',
+    'aliases' => ['cpaymentmethod'],
+    'arguments' => [
+      'event' => 'The event type',
+      'product' => 'The JSON payment method payload',
+    ],
+  ];
+  $items['consumerorg-payment-method-update'] = [
+    'description' => 'Creates a payment method (which belongs to an org)',
+    'aliases' => ['upaymentmethod'],
+    'arguments' => [
+      'event' => 'The event type',
+      'product' => 'The JSON payment method payload',
+    ],
+  ];
+  $items['consumerorg-payment-method-delete'] = [
+    'description' => 'Creates a payment method (which belongs to an org)',
+    'aliases' => ['dpaymentmethod'],
+    'arguments' => [
+      'event' => 'The event type',
+      'product' => 'The JSON payment method payload',
+    ],
+  ];
   return $items;
 }
 
@@ -691,6 +714,147 @@ function drush_consumerorg_member_delete($payload, $event = 'member_delete') {
       '@id' => $corg->getId(),
     ]));
 
+  }
+
+  if ($original_user !== NULL && $original_user->id() !== 1) {
+    $accountSwitcher->switchBack();
+  }
+
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
+
+/**
+ * @param $content
+ * @param string $event
+ */
+function drush_consumerorg_payment_method_create($content, $event = 'payment_method_create') {
+  ibm_apim_entry_trace(__FUNCTION__, NULL);
+
+  $corg_service = \Drupal::service('ibm_apim.consumerorg');
+
+  // in case moderation is on we need to run as admin
+  // save the current user so we can switch back at the end
+  $accountSwitcher = Drupal::service('account_switcher');
+  $original_user = \Drupal::currentUser();
+  if ($original_user->id() !== 1) {
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+  }
+
+  if (is_string($content)) {
+    $content = json_decode($content, 1);
+  }
+
+  // first - do we have the corg that this role belongs to?
+  $corg_url = $content['consumer_org_url'];
+  $corg = $corg_service->get($corg_url);
+
+  if (empty($corg)) {
+    drush_log(dt('Drush create payment method could not find org with url @org_url', ['@org_url' => $corg_url]), 'warning');
+  }
+  else {
+    // update the org with the new payment method
+    $payment_method_service = \Drupal::service('consumerorg.paymentmethod');
+    $content['consumer_org_url'] = $corg_url;
+    $payment_method_service->createOrUpdate($content);
+
+    drush_log(dt('Drush create payment method added payment method @id to org @org', [
+      '@org' => $corg->getTitle(),
+      '@id' => $content['id'],
+    ]), 'status');
+  }
+
+  if ($original_user !== NULL && $original_user->id() !== 1) {
+    $accountSwitcher->switchBack();
+  }
+
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
+
+/**
+ * @param $content
+ * @param string $event
+ */
+function drush_consumerorg_payment_method_update($content, $event = 'payment_method_update') {
+  ibm_apim_entry_trace(__FUNCTION__, NULL);
+
+  $corg_service = \Drupal::service('ibm_apim.consumerorg');
+
+  // in case moderation is on we need to run as admin
+  // save the current user so we can switch back at the end
+  $accountSwitcher = Drupal::service('account_switcher');
+  $original_user = \Drupal::currentUser();
+  if ($original_user->id() !== 1) {
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+  }
+
+  if (is_string($content)) {
+    $content = json_decode($content, 1);
+  }
+
+  // first - do we have the corg that this role belongs to?
+  $corg_url = $content['consumer_org_url'];
+  $corg = $corg_service->get($corg_url);
+
+  if (empty($corg)) {
+    drush_log(dt('Drush update payment method could not find org with url @org_url', ['@org_url' => $corg_url]), 'warning');
+  }
+  else {
+    // update the org with the new payment method
+    $payment_method_service = \Drupal::service('consumerorg.paymentmethod');
+    $content['consumer_org_url'] = $corg_url;
+    $payment_method_service->createOrUpdate($content);
+
+    drush_log(dt('Drush update payment method updated payment method @id from org @org', [
+      '@org' => $corg->getTitle(),
+      '@id' => $content['id'],
+    ]), 'status');
+  }
+
+  if ($original_user !== NULL && $original_user->id() !== 1) {
+    $accountSwitcher->switchBack();
+  }
+
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
+
+/**
+ * @param $content
+ * @param string $event
+ */
+function drush_consumerorg_payment_method_delete($content, $event = 'payment_method_delete') {
+  ibm_apim_entry_trace(__FUNCTION__, NULL);
+
+  $corg_service = \Drupal::service('ibm_apim.consumerorg');
+
+  // in case moderation is on we need to run as admin
+  // save the current user so we can switch back at the end
+  $accountSwitcher = Drupal::service('account_switcher');
+  $original_user = \Drupal::currentUser();
+  if ($original_user->id() !== 1) {
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+  }
+
+  if (is_string($content)) {
+    $content = json_decode($content, 1);
+  }
+
+  // first - do we have the corg that this role belongs to?
+  $corg_url = $content['consumer_org_url'];
+  $corg = $corg_service->get($corg_url);
+
+  if (empty($corg)) {
+    drush_log(dt('Drush delete payment method could not find org with url @org_url', ['@org_url' => $corg_url]), 'warning');
+  }
+  else {
+    // delete the payment method
+    $payment_method_id = $content['id'];
+    $payment_method_service = \Drupal::service('consumerorg.paymentmethod');
+    $payment_method_service->delete($payment_method_id, $corg_url);
+
+    drush_log(dt('Drush delete payment method removed payment method @id from org @org', [
+      '@org' => $corg->getTitle(),
+      '@id' => $payment_method_id,
+    ]), 'status');
   }
 
   if ($original_user !== NULL && $original_user->id() !== 1) {

@@ -54,6 +54,7 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
     $this->userService = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserService::class);
     $this->languageManager = $this->prophet->prophesize(\Drupal\Core\Language\LanguageManager::class);
     $this->userStorage = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserStorage::class);
+    $this->messenger = $this->prophet->prophesize('Drupal\Core\Messenger\Messenger');
 
   }
 
@@ -65,11 +66,13 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
    * @return ApicAccountService
    */
   protected function createAccountService(): ApicAccountService {
-    $userManager = new ApicAccountService($this->logger->reveal(),
+    $userManager = new ApicAccountService(
+      $this->logger->reveal(),
       $this->mgmtServer->reveal(),
       $this->userService->reveal(),
       $this->languageManager->reveal(),
-      $this->userStorage->reveal()
+      $this->userStorage->reveal(),
+      $this->messenger->reveal()
     );
     return $userManager;
   }
@@ -160,6 +163,7 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
     $this->mgmtServer->updateMe($user)->willReturn($meResponse);
     $this->userStorage->load($user)->willReturn($accountStub);
+    $this->userService->getCustomUserFields()->willReturn([]);
 
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -176,6 +180,7 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
     $user = $this->createUser();
     $user->setMail(NULL);
     $meResponse = $this->createMeResponse();
+    $this->userService->getCustomUserFields()->willReturn([]);
 
     $accountStub = $this->createAccountStub();
 
@@ -196,6 +201,7 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
     $user = $this->createUser();
     $user->setMail('updated@example.com');
     $meResponse = $this->createMeResponse();
+    $this->userService->getCustomUserFields()->willReturn([]);
 
     $account = $this->createAccountBase();
     $account->set('mail', 'updated@example.com')->shouldBeCalled();

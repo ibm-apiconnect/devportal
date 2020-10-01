@@ -1,4 +1,176 @@
 changes:
+  8.x-2.2.82:
+  - add height restriction to apicCard
+  8.x-2.2.81:
+  - remove background color for collapsible region button
+  8.x-2.2.80:
+  - dialog styling for delete account
+  8.x-2.2.79:
+  - hover colour from dropit menu
+  8.x-2.2.78:
+  - responsiveness fixes
+  8.x-2.2.77:
+  - responsiveness fixes
+  8.x-2.2.76:
+  - text area borders
+  8.x-2.2.75:
+  - sort out the bottom border on search and login menu
+  8.x-2.2.74:
+  - fix navbar active trail
+  8.x-2.2.73:
+  - fix navbar active trail
+  8.x-2.2.72:
+  - svg and label sizes on app subs page
+  8.x-2.2.71:
+  - left align the forgot password link
+  8.x-2.2.70:
+  - make signup spacing correct
+  8.x-2.2.69:
+  - add support for ghost buttons
+  8.x-2.2.68:
+  - add correct hover to nav
+  8.x-2.2.67:
+  - remove explorer ul padding
+  8.x-2.2.66:
+  - add support for ghost buttons
+  8.x-2.2.65:
+  - get rid of strange transition on tabs in explorer
+  8.x-2.2.64:
+  - hack to fix ckeditor
+  8.x-2.2.63:
+  - lock scssphp to 1.1.1
+  8.x-2.2.62:
+  - fix user page tabs styling
+  8.x-2.2.61:
+  - styling the autologout dialog
+  8.x-2.2.60:
+  - tabs for editing content and wysiwyg editor
+  8.x-2.2.59:
+  - new form for app creds
+  8.x-2.2.58:
+  - make tabs look like carbon x
+  8.x-2.2.57:
+  - update theme screenshot
+  8.x-2.2.56:
+  - remove uppercase table headings
+  8.x-2.2.55:
+  - trivial css tweaks for apps subs page
+  8.x-2.2.54:
+  - alignment for user mgmt forms
+  8.x-2.2.53:
+  - fix inline notification styling to be carbon x
+  - fix Carbon hover, focus, active styling (#195)
+  8.x-2.2.52:
+  - missing page background on user reset
+  8.x-2.2.51:
+  - get started page refresh
+  8.x-2.2.50:
+  - use carbon svg icons for ckeditor
+  8.x-2.2.49:
+  - fix footer color variable
+  8.x-2.2.48:
+  - remove placeholder font-style override
+  8.x-2.2.47:
+  - further styling for wizard headers (#193)
+  8.x-2.2.46:
+  - fix obscure filefox bug
+  8.x-2.2.45:
+  - ckeditor css
+  - ckeditor css
+  8.x-2.2.44:
+  - update subscribe wizard (#192)
+  8.x-2.2.43:
+  - use modal style for delete payment methods
+  8.x-2.2.42:
+  - use modal styling for create payment method
+  8.x-2.2.41:
+  - client id width
+  8.x-2.2.40:
+  - fix card font
+  8.x-2.2.39:
+  - use correct font families
+  8.x-2.2.38:
+  - restyle user account tabs
+  8.x-2.2.37:
+  - remove top margin
+  8.x-2.2.36:
+  - styling for forum link block
+  8.x-2.2.35:
+  - some basic styling for the forum list page
+  8.x-2.2.34:
+  - add sidebar block to forum pages
+  8.x-2.2.33:
+  - card view
+  8.x-2.2.32:
+  - default teaser view
+  8.x-2.2.31:
+  - styling for forum posts
+  8.x-2.2.30:
+  - new spacing for cards in sub view
+  8.x-2.2.29:
+  - sort out local tabs to look carbon x
+  8.x-2.2.28:
+  - Carbon css for subscribe wizard (#190) (#191)
+  8.x-2.2.27:
+  - use carbon X close icon for notifications
+  8.x-2.2.26:
+  - restyle modal-like forms
+  8.x-2.2.25:
+  - colours for no content text
+  8.x-2.2.24:
+  - ensure dropdown item danger precedence
+  8.x-2.2.23:
+  - restyle all headers to IDE Carbon X
+  8.x-2.2.22:
+  - styling for payment methods
+  8.x-2.2.21:
+  - billing page no payment methods styling
+  8.x-2.2.20:
+  - minor tweak for my org page
+  8.x-2.2.19:
+  - carbon x for register and reset pwd
+  8.x-2.2.18:
+  - carbon x for login panel
+  8.x-2.2.17:
+  - myorg page styling
+  8.x-2.2.16:
+  - footer styling
+  8.x-2.2.15:
+  - restyle social block tiles
+  8.x-2.2.14:
+  - danger button borders and delete act
+  8.x-2.2.13:
+  - add secondary and tertiary color vars
+  8.x-2.2.12:
+  - restyle of common components
+  8.x-2.2.11:
+  - restyle progress indicator (#189)
+  8.x-2.2.10:
+  - restyle app card
+  8.x-2.2.9:
+  - restyle api card/tile
+  8.x-2.2.8:
+  - update notification styling
+  8.x-2.2.7:
+  - update views filter (#187)
+  8.x-2.2.6:
+  - restyle product tile/card
+  8.x-2.2.5:
+  - new plex fonts
+  8.x-2.2.4:
+  - new bootstrap
+  8.x-2.2.3:
+  - refine header (#184)
+  8.x-2.2.2:
+  - first pass of move to Carbon X (#183)
+  8.x-2.2.1: null
+  8.x-2.2.0:
+  - Update connect_theme.info.yml
+  8.x-2.1.3: null
+  8.x-2.1.2:
+  - add copyright statement
+  8.x-2.1.1:
+  - Tempmerge (#182)
   8.x-2.1.0:
   - update version: 8.x-2.0.20 -> 8.x-2.1.0
   8.x-2.0.19:
@@ -12,11 +184,13 @@ changes:
   8.x-2.0.16: null
   8.x-2.0.15:
   - fix page template twig
-  8.x-2.0.14:
+  8.x-3.0.4:
   - a11y fix
-  8.x-2.0.13:
+  8.x-3.0.3:
   - fix missing id on title
-  8.x-2.0.12: null
+  8.x-3.0.2:
+  - padding for create button in wizard
+  8.x-3.0.1: null
   8.x-2.0.11:
   - copyright date
   8.x-2.0.10:

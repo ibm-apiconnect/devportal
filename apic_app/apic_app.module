@@ -27,6 +27,7 @@ use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
+use Drupal\views\ViewExecutable;
 
 /* Define a single permission to be granted */
 define('APPLICATION_GRANT', 1);
@@ -428,6 +429,7 @@ function apic_app_theme($existing, $type, $theme, $path) {
     'app_credentials' => [
       'variables' => [
         'node' => NULL,
+        'clipboard' => NULL,
         'userHasAppManage' => FALSE,
         'allowNewCredentials' => FALSE,
         'allowClientidReset' => FALSE,
@@ -519,7 +521,7 @@ function apic_app_preprocess_field_multiple_value_form(&$variables) {
       unset($row);
     }
     if (isset($variables['button'])) {
-      $variables['button']['#attributes']['class'][] = 'apicSecondary';
+      $variables['button']['#attributes']['class'][] = 'apicTertiary';
     }
   }
 }
@@ -547,5 +549,16 @@ function apic_app_node_delete(Node $node) {
     // Allows for clearing of caches for a given app id
     $tags = ['application:' . $node->id()];
     Cache::invalidateTags($tags);
+  }
+}
+
+/**
+ * Ensure the app library is loaded on the apps view
+ *
+ * @param \Drupal\views\ViewExecutable $view
+ */
+function apic_app_views_pre_render(ViewExecutable $view) {
+  if (isset($view) && ($view->storage->id() === 'applications')) {
+    $view->element['#attached']['library'][] = 'apic_app/basic';
   }
 }

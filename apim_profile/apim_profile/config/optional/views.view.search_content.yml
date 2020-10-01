@@ -1,21 +1,21 @@
-id: search_content
 langcode: en
 status: true
 dependencies:
-  module:
-    - search_api
   config:
-    - core.entity_view_mode.node.search_result
-    - core.entity_view_display.node.article.search_result
-    - core.entity_view_display.node.page.search_result
     - search_api.index.default_index
+  module:
+    - better_exposed_filters
+    - masonry_views
+    - search_api
+    - user
+    - views_autocomplete_filters
+id: search_content
 label: 'Search content'
 module: views
 description: 'A search page preconfigured to search through the content of your site'
 tag: ''
 base_table: search_api_index_default_index
 base_field: search_api_id
-core: 8.x
 display:
   default:
     display_plugin: default
@@ -24,8 +24,9 @@ display:
     position: 0
     display_options:
       access:
-        type: none
-        options: {  }
+        type: perm
+        options:
+          perm: 'access content'
       cache:
         type: none
         options: {  }
@@ -63,14 +64,38 @@ display:
             offset: false
             offset_label: Offset
       style:
-        type: default
+        type: masonry
+        options:
+          row_class: ''
+          default_row_class: true
+          uses_fields: false
+          layoutColumnWidth: ''
+          layoutColumnWidthUnit: px
+          gutterWidth: '2'
+          stampSelector: ''
+          isLayoutResizable: 1
+          isLayoutAnimated: 1
+          layoutAnimationDuration: '500'
+          isLayoutFitsWidth: 0
+          isLayoutRtlMode: 0
+          isLayoutImagesLoadedFirst: 1
+          isItemsPositionInPercent: 0
       row:
         type: search_api
         options:
           view_modes:
+            'entity:file':
+              file: default
             'entity:node':
-              article: search_result
-              page: search_result
+              api: card
+              application: card
+              article: card
+              blog_post: card
+              consumerorg: card
+              faq: card
+              forum: card
+              page: card
+              product: card
       filters:
         search_api_fulltext:
           id: search_api_fulltext
@@ -96,7 +121,18 @@ display:
             remember_roles:
               authenticated: authenticated
               anonymous: '0'
+              superuser: '0'
+              forum_moderator: '0'
+              content_author: '0'
               administrator: '0'
+            autocomplete_filter: 1
+            autocomplete_min_chars: '2'
+            autocomplete_items: '10'
+            autocomplete_raw_suggestion: 1
+            autocomplete_raw_dropdown: 1
+            autocomplete_dependent: 1
+            operator_limit_selection: false
+            operator_list: {  }
           is_grouped: false
           group_info:
             label: ''
@@ -113,9 +149,55 @@ display:
           min_length: 3
           fields: {  }
           plugin_id: search_api_fulltext
+        type:
+          id: type
+          table: search_api_index_default_index
+          field: type
+          relationship: none
+          group_type: group
+          admin_label: ''
+          operator: or
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: type_op
+            label: 'Content type'
+            description: ''
+            use_operator: false
+            operator: type_op
+            identifier: type
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              superuser: '0'
+              forum_moderator: '0'
+              content_author: '0'
+              administrator: '0'
+            reduce: false
+            operator_limit_selection: false
+            operator_list: {  }
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+          reduce_duplicates: false
+          plugin_id: search_api_options
       sorts: {  }
       title: 'Search Content'
-      header:
+      header: {  }
+      footer:
         result:
           id: result
           table: views
@@ -123,37 +205,42 @@ display:
           relationship: none
           group_type: group
           admin_label: ''
-          empty: false
-          content: 'Displaying results @start - @end of @total'
+          empty: true
+          content: 'Displaying @start - @end of @total'
           plugin_id: result
-      footer: {  }
       empty: {  }
       relationships: {  }
       arguments: {  }
       display_extenders: {  }
+      use_ajax: true
     cache_metadata:
       contexts:
-        - 'languages:language_content'
         - 'languages:language_interface'
         - url
         - url.query_args
+        - 'user.node_grants:view'
+        - user.permissions
       cacheable: false
-      max-age: 0
-      tags: {  }
+      max-age: -1
+      tags:
+        - 'config:search_api.index.default_index'
   page_1:
     display_plugin: page
     id: page_1
     display_title: Page
     position: 1
     display_options:
-      display_extenders: {  }
+      display_extenders:
+        ajax_history: {  }
       path: search/content
     cache_metadata:
       contexts:
-        - 'languages:language_content'
         - 'languages:language_interface'
         - url
         - url.query_args
+        - 'user.node_grants:view'
+        - user.permissions
       cacheable: false
-      max-age: 0
-      tags: {  }
+      max-age: -1
+      tags:
+        - 'config:search_api.index.default_index'

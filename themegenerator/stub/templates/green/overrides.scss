@@ -1,6 +1,9 @@
 // import connect variables
 @import "connect-variables";
 
+// font
+$font-family-base: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+
 // Green color palette
 $green-01: #008673;
 $green-02: #006456;
@@ -50,6 +53,7 @@ $navbar-default-link-color:        rgba($white-01,0.6);
 $navbar-default-link-hover-color:  rgba($white-01,1);
 $navbar-default-link-active-color: rgba($white-01,1);
 $navbar-default-link-active-bg:    $navbar-green;
+$navbar-default-link-hover-bg:     $green-02;
 
 $navbar-default-toggle-icon-bar-bg: $white-01;
 
@@ -95,6 +99,11 @@ $btn-success-bg:     $green-01;
 $btn-success-border: transparent;
 $btn-link-disabled-color: $brand-primary;
 
+
+$tile-btn-bg:   $white-01;
+$tile-btn-border: $white-01;
+$tile-btn-color: $text-color;
+
 // checkboxes and radio buttons
 $check-radio-bg: $white-01;
 $check-radio-border: $gray-05;
@@ -123,6 +132,7 @@ $card-footer-bg: $gray-03;
 $disabled-bg: $gray-05;
 
 //** table settings
+$table-header-bg: $gray-04;
 $table-header-border: $brand-primary;
 $table-row-border: $gray-04;
 $table-row-hover: $light-green-03;

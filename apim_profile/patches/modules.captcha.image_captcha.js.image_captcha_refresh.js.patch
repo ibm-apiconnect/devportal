@@ -1,0 +1,11 @@
+--- modules/captcha/image_captcha/js/image_captcha_refresh.js	2020-08-18 13:06:44.000000000 +0100
++++ modules/captcha/image_captcha/js/image_captcha_refresh.js	2020-08-18 13:04:03.000000000 +0100
+@@ -23,7 +23,7 @@
+         // Send post query for getting new captcha data.
+         var date = new Date();
+         var baseUrl = document.location.origin;
+-        var url = baseUrl + '/' + $(this).attr('href') + '?' + date.getTime();
++        var url = baseUrl + '/' + $(this).attr('href').replace(/^\/+/, '') + '?' + date.getTime();
+         $.get(
+           url,
+           {},

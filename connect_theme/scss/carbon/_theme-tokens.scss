@@ -5,283 +5,399 @@
 // LICENSE file in the root directory of this source tree.
 //
 
-@import 'feature-flags';
 @import './vendor/@carbon/elements/scss/import-once/import-once';
-@import 'functions';
 @import 'colors';
+@import 'feature-flags';
 @import 'spacing';
-
-/// @access private
-$carbon--theme--v9: (
-  brand-01: $color__blue-51,
-  brand-02: $color__blue-40,
-  brand-03: $color__teal-20,
-  inverse-01: $color__white,
-  inverse-02: #272d33,
-  ui-01: $color__white,
-  ui-02: #f4f7fb,
-  ui-03: $color__gray-1,
-  ui-04: #8897a2,
-  ui-05: $color__navy-gray-6,
-  text-01: $color__blue-90,
-  text-02: $color__navy-gray-6,
-  text-03: #cdd1d4,
-  field-01: #f4f7fb,
-  field-02: $color__white,
-  support-01: #e0182d,
-  support-02: $color__green-40,
-  support-03: $color__yellow-30,
-  support-04: $color__blue-30,
-  nav-01: $color__navy-gray-1,
-  nav-02: $color__blue-90,
-  nav-03: $color__purple-30,
-  nav-04: $color__purple-60,
-  nav-05: $color__teal-40,
-  nav-06: $color__teal-50,
-  nav-07: $color__blue-30,
-  nav-08: $color__blue-51,
-  hover-primary: darken($color__blue-51, 10%),
-  hover-primary-text: darken($color__blue-51, 15%),
-  hover-danger: darken(#e0182d, 10%),
-  hover-secondary: $color__blue-51,
-  hover-row: rgba($color__blue-40, 0.1),
-);
-
-@if not feature-flag-enabled('components-x') {
-  /// @access public
-  $carbon--theme: $carbon--theme--v9 !global;
-}
-
 @import './vendor/@carbon/elements/scss/themes/themes';
 
-@mixin theme() {
-  // Nav
-  /// @access public
-  $nav-01: $color__navy-gray-1 !default !global;
-  $nav-02: $color__blue-90 !default !global;
-  $nav-03: $color__purple-30 !default !global;
-  $nav-04: $color__purple-60 !default !global;
-  $nav-05: $color__teal-40 !default !global;
-  $nav-06: $color__teal-50 !default !global;
-  $nav-07: $color__blue-30 !default !global;
-  $nav-08: $color__blue-51 !default !global;
+// The load order of tokens versus themes matter, so we use `carbon--theme` here
+// to make sure that they're in sync if one has diverged from the other.
+@include carbon--theme();
 
-  // Global
-  /// @access public
-  $input-border: 1px solid transparent !default !global;
-  $input-label-weight: 600 !default !global;
-  $focus: $color__blue-20 !default !global;
+/// Theme variables
 
-  // Button Theme Variables
-  /// @access public
-  $button-font-weight: 600 !default !global;
-  $button-font-size: 0.875rem !default !global;
-  $button-border-radius: 0 !default !global;
-  $button-height: 40px !default !global;
-  $button-padding: 0 $spacing-md !default !global;
-  $button-padding-sm: 0 $spacing-xs !default !global;
-  $button-border-width: 2px !default !global;
-  $button-outline-width: 1px !default !global;
+/// @type Value
+/// @access public
+/// @group global-themes
+$input-border: 1px solid transparent !default;
 
-  // Accordion (Reverse)
-  /// @access public
-  $accordion-flex-direction: row !default !global;
-  $accordion-justify-content: flex-start !default !global;
-  $accordion-arrow-margin: 0 0 0 $spacing-2xs !default !global;
-  $accordion-title-margin: 0 0 0 $spacing-md !default !global;
-  $accordion-content-padding: 0 $spacing-md 0 $spacing-2xl !default !global;
+/// @type Number
+/// @access public
+/// @group global-themes
+$input-label-weight: 400 !default;
 
-  // Card
-  /// @access public
-  $card-text-align: center !default !global;
-  $card-flex-align: center !default !global;
+/// @type Color
+/// @access public
+/// @group global-themes
+$disabled: $disabled-02 !default;
 
-  // Checkbox
-  /// @access public
-  $checkbox-border-width: 2px !default !global;
+/// @type Color
+/// @access public
+/// @group global-themes
+$disabled-background-color: $disabled-01 !default;
 
-  // Code Snippet
-  /// @access public
-  $snippet-background-color: $ui-01 !default !global;
-  $snippet-border-color: $ui-03 !default !global;
+/// @type Color
+/// @access public
+/// @group global-themes
+$focus: $ibm-color__blue-60 !default;
 
-  // Content Switcher
-  /// @access public
-  $content-switcher-border-radius: 8px !default !global;
-  $content-switcher-option-border: 1px solid $brand-01 !default !global;
+/// @type Color
+/// @access public
+/// @group global-themes
+$inverse-focus-ui: $ibm-color__white-0 !default;
 
-  // Data Table
-  /// @access public
-  $data-table-heading-transform: uppercase !default !global;
-  $data-table-heading-border-bottom: 1px solid $brand-01 !default !global;
-  $data-table-row-height: 2rem !default !global;
+// Link
 
-  // Modal
-  /// @access public
-  $modal-border-top: $brand-01 4px solid !default !global;
-  $modal-footer-background-color: $ui-02 !default !global;
+/// @type Color
+/// @access public
+/// @group link
+/// @deprecated
+$link-visited: $visited-link !default;
 
-  // Progress Indicator
-  /// @access public
-  $progress-indicator-bar-width: 1px inset transparent !default !global;
-  $progress-indicator-stroke-width: 5 !default !global;
-  $progress-indicator-line-offset: 0.625rem !default !global;
+/// @type Color
+/// @access public
+/// @deprecated Use theme token `$inverse-link` instead.
+/// @group link
+$link-inverse-color: #6ea6ff !default;
 
-  // Radio Button
-  /// @access public
-  $radio-border-width: 2px !default !global;
+// Tooltip
 
-  // Structured Theme Variables
-  /// @access public
-  $structured-list-padding: 2rem !default !global;
-  $structured-list-text-transform: none !default !global;
+/// @type Color
+/// @access public
+/// @group tooltip
+$tooltip-background-color: $inverse-02 !default;
 
-  // Skeleton Loading
-  /// @access public
-  $skeleton: rgba($color__blue-51, 0.1) !default !global; //old $field-01
-}
+// Button
 
-// Light Experimental Theme
-@mixin theme--experimental() {
-  /// @access public
-  $edited: true !default !global;
-  $use-layer: true !default !global;
+/// @type Number
+/// @access public
+/// @group button
+$button-font-weight: 400 !default;
 
-  // Global
-  /// @access public
-  $input-border: 1px solid transparent !default !global;
-  $input-label-weight: 400 !default !global;
-  $disabled: $disabled-02 !default !global;
-  $disabled-background-color: $disabled-01 !default !global;
-  $focus: $ibm-color__blue-60 !default !global;
+/// @type Number
+/// @access public
+/// @group button
+$button-font-size: 0.875rem !default;
 
-  // Link
-  /// @access public
-  $link-visited: $ibm-color__purple-60 !default !global;
-  $link-inverse-color: #6ea6ff !default !global;
+/// @type Number
+/// @access public
+/// @group button
+$button-border-radius: 0 !default;
 
-  // Tooltip
-  /// @access public
-  $tooltip-background-color: $inverse-02 !default !global;
+/// @type Number
+/// @access public
+/// @group button
+$button-height: 48px !default;
 
-  // Button Theme Variables
-  /// @access public
-  $button-font-weight: 400 !default !global;
-  $button-font-size: 0.875rem !default !global;
-  $button-border-radius: 0 !default !global;
-  $button-height: 48px !default !global;
-  $button-padding: 0.875rem 15px !default !global;
-  $button-padding-sm: 0.375rem 15px !default !global;
-  $button-padding-lg: $carbon--spacing-04 !default !global;
-  $button-border-width: 1px !default !global;
-  $button-outline-width: 3px !default !global;
-  $button-outline-offset: -5px !default !global;
-  $button-outline: 1px solid $ibm-color__white-0 !default !global;
+/// @type Value
+/// @access public
+/// @group button
+$button-padding: calc(0.875rem - 3px) 60px calc(0.875rem - 3px) 12px !default;
 
-  // Accordion (Reverse)
-  /// @access public
-  $accordion-flex-direction: row-reverse !default !global;
-  $accordion-justify-content: flex-start !default !global;
-  $accordion-arrow-margin: 0 $carbon--spacing-05 0 0 !default !global;
-  $accordion-title-margin: 0 0 0 $carbon--spacing-05 !default !global;
-  $accordion-content-padding: 0 0 0 $carbon--spacing-05 !default !global;
+/// @type Value
+/// @access public
+/// @group button
+$button-padding-field: calc(0.675rem - 3px) 60px calc(0.675rem - 3px) 12px !default;
 
-  // Card
-  /// @access public
-  $card-text-align: center !default !global;
-  $card-flex-align: center !default !global;
+/// @type Value
+/// @access public
+/// @group button
+$button-padding-sm: calc(0.375rem - 3px) 60px calc(0.375rem - 3px) 12px !default;
 
-  // Checkbox
-  /// @access public
-  $checkbox-border-width: 2px !default !global;
+/// @type Number
+/// @access public
+/// @group button
+$button-padding-lg: $carbon--spacing-04 !default;
 
-  // Code Snippet
-  /// @access public
-  $snippet-background-color: $ui-01 !default !global; // TODO: Define for experimental
-  $snippet-border-color: $ui-03 !default !global; // TODO: Define for experimental
+/// @type Number
+/// @access public
+/// @group button
+/// Uses the same padding-y as normal buttons, but removes extra padding-right
+$button-padding-ghost: calc(0.875rem - 3px) 12px !default;
 
-  // Content Switcher
-  /// @access public
-  $content-switcher-border-radius: 0px !default !global;
-  $content-switcher-option-border: 1px solid $brand-01 !default !global;
-  $content-switcher-divider: $ui-03 !default !global;
+/// @type Number
+/// @access public
+/// @group button
+/// Uses the same padding-y as field buttons, but removes extra padding-right
+$button-padding-ghost-field: calc(0.675rem - 3px) 12px !default;
 
-  // Data Table
-  /// @access public
-  $data-table-heading-transform: uppercase !default !global;
-  $data-table-heading-border-bottom: 1px solid $brand-01 !default !global;
-  $data-table-row-height: 2rem !default !global;
-  $data-table-zebra-color: #fcfcfc !default !global;
-  $data-table-column-hover: $hover-selected-ui !default !global;
+/// @type Number
+/// @access public
+/// @group button
+/// Uses the same padding-y as small buttons, but removes extra padding-right
+$button-padding-ghost-sm: calc(0.375rem - 3px) 12px !default;
 
-  // Date Picker
-  /// @access public
-  $date-picker-in-range-background-color: $ibm-color__blue-20 !default !global;
+/// @type Number
+/// @access public
+/// @group button
+$button-border-width: 2px !default;
 
-  // Modal
-  /// @access public
-  $modal-border-top: $brand-01 4px solid !default !global;
-  $modal-footer-background-color: $ui-03 !default !global;
+/// @type Number
+/// @access public
+/// @group button
+$button-outline-width: 1px !default;
 
-  // Notification
-  /// @access public
-  $notification-info-background-color: $ibm-color__blue-10 !default !global;
-  $notification-error-background-color: $ibm-color__red-10 !default !global;
-  $notification-warning-background-color: rgba(#fdd13a, 0.15) !default !global;
-  $notification-success-background-color: $ibm-color__green-10 !default !global;
+/// @type Number
+/// @access public
+/// @group button
+/// @deprecated
+$button-outline-offset: -5px !default;
 
-  // Progress Indicator
-  /// @access public
-  $progress-indicator-bar-width: 1px inset transparent !default !global;
-  $progress-indicator-stroke-width: 5 !default !global;
-  $progress-indicator-line-offset: 0.625rem !default !global;
+/// @type Value
+/// @access public
+/// @group button
+/// @deprecated
+$button-outline: 1px solid $ibm-color__white-0 !default;
 
-  //Code Snippet
-  /// @access public
-  $copy-active: $active-ui !default !global;
-  $copy-btn-feedback: $ibm-color__gray-80 !default !global;
+// Accordion
 
-  // Radio Button
-  /// @access public
-  $radio-border-width: 1px !default !global;
+/// @type Value
+/// @access public
+/// @group accordion
+$accordion-flex-direction: row-reverse !default;
 
-  // Structured Theme Variables
-  /// @access public
-  $structured-list-padding: 2rem !default !global;
-  $structured-list-text-transform: none !default !global;
+/// @type Value
+/// @access public
+/// @group accordion
+$accordion-justify-content: flex-start !default;
 
-  // Slider
+/// @type Value
+/// @access public
+/// @group accordion
+$accordion-arrow-margin: 2px $carbon--spacing-05 0 0 !default;
 
-  //Tab
-  /// @access public
-  $tab-underline-color: 3px solid $ibm-color__gray-30 !default !global;
-  $tab-underline-color-hover: 3px solid $ibm-color__gray-60 !default !global;
-  $tab-text-disabled: $ibm-color__gray-30 !default !global;
-  $tab-underline-disabled: 3px solid $ibm-color__gray-10 !default !global;
+/// @type Value
+/// @access public
+/// @group accordion
+$accordion-title-margin: 0 0 0 $carbon--spacing-05 !default;
 
-  // Skeleton Loading
-  /// @access public
-  $skeleton: rgba($color__blue-51, 0.1) !default !global; //old $field-01 TODO: Define for experimental
+/// @type Value
+/// @access public
+/// @group accordion
+$accordion-content-padding: 0 0 0 $carbon--spacing-05 !default;
 
-  // ☠️ Deprecated
-  /// @deprecated
-  /// @access public
-  $hover-field: $hover-ui !default !global;
-  $active-01: $active-ui !default !global;
-  $nav-01: $color__navy-gray-1 !default !global;
-  $nav-02: $color__blue-90 !default !global;
-  $nav-03: $color__purple-30 !default !global;
-  $nav-04: $color__purple-60 !default !global;
-  $nav-05: $color__teal-40 !default !global;
-  $nav-06: $color__teal-50 !default !global;
-  $nav-07: $color__blue-30 !default !global;
-  $nav-08: $color__blue-51 !default !global;
-}
+// Checkbox
 
-@include exports('theme') {
-  @if feature-flag-enabled('components-x') {
-    @include theme--experimental;
-  } @else {
-    @include theme;
+/// @type Number
+/// @access public
+/// @group checkbox
+$checkbox-border-width: 2px !default;
+
+// Code Snippet
+
+/// @type Color
+/// @access public
+/// @group code-snippet
+$snippet-background-color: $ui-01 !default; // TODO: Define for experimental
+
+/// @type Color
+/// @access public
+/// @group code-snippet
+$snippet-border-color: $ui-03 !default; // TODO: Define for experimental
+
+// Content Switcher
+
+/// @type Number
+/// @access public
+/// @group content-switcher
+$content-switcher-border-radius: 0px !default;
+
+/// @type Number
+/// @access public
+/// @group content-switcher
+$content-switcher-option-border: 1px solid $brand-01 !default;
+
+/// @type Color
+/// @access public
+/// @group content-switcher
+$content-switcher-divider: $ui-03 !default;
+
+// Data Table
+
+/// @type Value
+/// @access public
+/// @group data-table
+$data-table-heading-transform: uppercase !default;
+
+/// @type Value
+/// @access public
+/// @group data-table
+$data-table-heading-border-bottom: 1px solid $brand-01 !default;
+
+/// @type Number
+/// @access public
+/// @group data-table
+$data-table-row-height: 2rem !default;
+
+/// @type Color
+/// @access public
+/// @group data-table
+$data-table-zebra-color: $ui-02 !default;
+
+/// @type Color
+/// @access public
+/// @group data-table
+$data-table-column-hover: $hover-selected-ui !default;
+
+// Date Picker
+
+/// @type Color
+/// @access public
+/// @group date-picker
+/// @deprecated
+$date-picker-in-range-background-color: $ibm-color__blue-20 !default;
+
+// Modal
+
+/// @type Color
+/// @access public
+/// @group modal
+$modal-border-top: $brand-01 4px solid !default;
+
+/// @type Color
+/// @access public
+/// @group modal
+/// @deprecated
+$modal-footer-background-color: $ui-03 !default;
+
+// Notification
+
+/// @type Color
+/// @access public
+/// @group notification
+$notification-info-background-color: $ibm-color__blue-10 !default;
+
+/// @type Color
+/// @access public
+/// @group notification
+$notification-error-background-color: $ibm-color__red-10 !default;
+
+/// @type Color
+/// @access public
+/// @group notification
+$notification-warning-background-color: mix(
+  $ibm-color__yellow-30,
+  $ibm-color__white-0,
+  15%
+) !default;
+
+/// @type Color
+/// @access public
+/// @group notification
+$notification-success-background-color: $ibm-color__green-10 !default;
+
+// Progress Indicator
+
+/// @type Value
+/// @access public
+/// @group progress-indicator
+$progress-indicator-bar-width: 1px inset transparent !default;
+
+/// @type Number
+/// @access public
+/// @group progress-indicator
+$progress-indicator-stroke-width: 5 !default;
+
+/// @type Number
+/// @access public
+/// @group progress-indicator
+$progress-indicator-line-offset: 0.625rem !default;
+
+// Copy Button
+
+/// @type Color
+/// @access public
+/// @group copy-button
+$copy-active: $active-ui !default;
+
+/// @type Color
+/// @access public
+/// @group copy-button
+$copy-btn-feedback: $inverse-02 !default;
+
+// Radio Button
+
+/// @type Number
+/// @access public
+/// @group radio-button
+$radio-border-width: 1px !default;
+
+// Structured List
+
+/// @type Number
+/// @access public
+/// @group structured-list
+$structured-list-padding: 2rem !default;
+
+/// @type Value
+/// @access public
+/// @group structured-list
+$structured-list-text-transform: none !default;
+
+// Tabs
+
+/// @type Value
+/// @access public
+/// @group tabs
+$tab-underline-color: 2px solid $ui-03 !default;
+
+/// @type Value
+/// @access public
+/// @group tabs
+$tab-underline-color-hover: 2px solid $ui-04 !default;
+
+/// @type Color
+/// @access public
+/// @group tabs
+$tab-text-disabled: $disabled-02 !default;
+
+/// @type Value
+/// @access public
+/// @group tabs
+$tab-underline-disabled: 2px solid $disabled-01 !default;
+
+// Skeleton Loading
+
+/// @type Color
+/// @access public
+/// @group skeleton
+$skeleton: $skeleton-01 !default; // TODO: Remove this in next major release
+
+// Light UI
+
+// Determine the "light" color for a given token.
+/// @param {String} $token The theme token.
+/// @return {String} The new color value as a hex code or a custom property.
+/// @access public
+/// @group light-ui
+@function get-light-value($token) {
+  $value: map-get($carbon--theme, $token);
+
+  @if $carbon--theme ==
+    $carbon--theme--white or
+    $carbon--theme ==
+    $carbon--theme--g10
+  {
+    $value: darken($value, 8%);
   }
+
+  @if $carbon--theme ==
+    $carbon--theme--g90 or
+    $carbon--theme ==
+    $carbon--theme--g100
+  {
+    $value: lighten($value, 8%);
+  }
+
+  @if feature-flags-enabled('enable-css-custom-properties') {
+    @return var(--#{$custom-property-prefix}-#{$token}-light, $value);
+  }
+
+  @return $value;
 }
+
+/// @type Color
+/// @access public
+/// @group light-ui
+$hover-ui-light: get-light-value('ui-01');

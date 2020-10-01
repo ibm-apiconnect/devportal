@@ -265,7 +265,7 @@ function apic_api_update_8116() {
     \Drupal::logger('apic_api_update')->notice('creating entity_view_display embedded');
 
     $items = [
-      'status'=> TRUE,
+      'status' => TRUE,
       'id' => $evd_id,
       'targetEntityType' => 'node',
       'bundle' => 'api',
@@ -459,12 +459,12 @@ function apic_api_update_8116() {
               ],
             ],
             'style' => [
-              'type' => 'blazy',
+              'type' => 'views_bootstrap_list_group',
               'options' => [
-                'style' => 'column',
-                'grid' => 3,
-                'grid_medium' => 2,
-                'grid_small' => 1,
+                'row_class'=> '',
+                'default_row_class'=> true,
+                'uses_fields'=> false,
+                'title_field'=> 'title',
               ],
             ],
             'row' => [
@@ -850,6 +850,141 @@ function apic_api_update_8117() {
   if ($apicDescriptionFieldConfig !== NULL) {
     $apicDescriptionFieldConfig->set('translatable', TRUE);
     $apicDescriptionFieldConfig->save();
+  }
+}
+
+/**
+ * update the gutter width for latest masonry views
+ *
+ * bumped the second digit to ensure the change happens if migrating from 2018 to 10 too
+ */
+function apic_api_update_8201() {
+  $view = Views::getView('apis');
+  if ($view !== NULL) {
+    $style = $view->getDisplay()->getOption('style');
+    if ((int) $style['options']['gutterWidth'] === 0 || (int) $style['options']['gutterWidth'] === 20) {
+      $style['options']['gutterWidth'] = "2";
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
+    $pager = $view->getDisplay()->getOption('pager');
+    if ((int) $pager['options']['items_per_page'] === 5) {
+      $pager['options']['items_per_page'] = 10;
+      $view->getDisplay()->setOption('pager', $pager);
+      $view->save();
+    }
+    if ($pager['options']['expose']['items_per_page_options'] !== '10, 25, 50, 75') {
+      $pager['options']['expose']['items_per_page_options'] = '10, 25, 50, 75';
+      $view->getDisplay()->setOption('pager', $pager);
+      $view->save();
+    }
+  }
+}
+
+/**
+ * Add api_state to the embedded view mode
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_api_update_8202() {
+  $formDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.embedded');
+  if ($formDisplay !== NULL) {
+    $values = [
+      'type' => 'list_default',
+      'weight' => 21,
+      'region' => 'content',
+      'label' => 'hidden',
+    ];
+    $formDisplay->setComponent('api_state', $values);
+    $formDisplay->save();
+  }
+  // update product_content to use views_bootstrap_list_group
+  $view = Views::getView('product_content');
+  if ($view !== NULL) {
+    $style = $view->getDisplay()->getOption('style');
+    if ($style !== null) {
+      if ($style['type'] !== 'views_bootstrap_list_group') {
+        $style['type'] = 'views_bootstrap_list_group';
+        $style['options'] = [];
+        $style['options']['row_class'] = '';
+        $style['options']['default_row_class'] = true;
+        $style['options']['uses_fields'] = false;
+        $style['options']['title_field'] = 'title';
+        $view->getDisplay()->setOption('style', $style);
+        $view->save();
+      }
+    }
+  }
+}
+
+/**
+ * update the empty state for the view
+ *
+ */
+function apic_api_update_8203() {
+  $view = Views::getView('apis');
+  if ($view !== NULL) {
+    $empty = $view->getDisplay()->getOption('empty');
+    if (!isset($empty['entity_block'])) {
+      $empty['entity_block'] = [
+        'id' => 'entity_block',
+        'table' => 'views',
+        'field' => 'entity_block',
+        'relationship' => 'none',
+        'group_type' => 'group',
+        'admin_label' => '',
+        'empty' => TRUE,
+        'tokenize' => TRUE,
+        'target' => 'noapisblock',
+        'view_mode' => 'default',
+        'bypass_access' => FALSE,
+        'plugin_id' => 'entity',
+      ];
+      if (isset($empty['area'])) {
+        unset($empty['area']);
+      }
+      $view->getDisplay()->setOption('empty', $empty);
+      $view->save();
+    }
+  }
+  $view = Views::getView('product_content');
+  if ($view !== NULL) {
+    $empty = $view->getDisplay()->getOption('empty');
+    if (!isset($empty['entity_block'])) {
+      $empty['entity_block'] = [
+        'id' => 'entity_block',
+        'table' => 'views',
+        'field' => 'entity_block',
+        'relationship' => 'none',
+        'group_type' => 'group',
+        'admin_label' => '',
+        'empty' => TRUE,
+        'tokenize' => TRUE,
+        'target' => 'noapisblock',
+        'view_mode' => 'default',
+        'bypass_access' => FALSE,
+        'plugin_id' => 'entity',
+      ];
+      if (isset($empty['area'])) {
+        unset($empty['area']);
+      }
+      $view->getDisplay()->setOption('empty', $empty);
+      $view->save();
+    }
+  }
+}
+
+function apic_api_update_8204() {
+  $fieldConfig = FieldConfig::loadByName('node', 'apic_api', 'comment');
+  if ($fieldConfig !== NULL) {
+    $settings = $fieldConfig->get('settings');
+    if ($settings['preview'] !== 0 ) {
+      $settings['preview'] = 0;
+      $fieldConfig->set('settings', $settings);
+      $fieldConfig->save();
+    }
   }
 }
 

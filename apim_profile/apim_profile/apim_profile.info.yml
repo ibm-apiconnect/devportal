@@ -45,7 +45,6 @@ dependencies:
   - ckeditor
   - automated_cron
   - ban
-  - book
   - menu_ui
   - forum
   - blog

@@ -1,4 +1,36 @@
 changes:
+  8.x-2.2.15:
+  - add credentials name and title to the array fed to explorer
+  8.x-2.2.14: null
+  8.x-2.2.13:
+  - remove preview button from comments
+  8.x-2.2.12: null
+  8.x-2.2.11: null
+  8.x-2.2.10:
+  - tidy up embedded api products
+  8.x-2.2.9:
+  - update views to use no content block
+  8.x-2.2.8:
+  - fix links from api titles
+  8.x-2.2.7:
+  - update icon images
+  8.x-2.2.6: null
+  8.x-2.2.5:
+  - minor tweak to css
+  - change api embedded view to carbon X design
+  8.x-2.2.4:
+  - restyle api card/tile (#102)
+  8.x-2.2.3: null
+  8.x-2.2.2:
+  - set default pagesize to be 10
+  - increase gutter for latest masonry views
+  8.x-2.2.1: null
+  8.x-2.2.0:
+  - Update apic_api.info.yml
+  8.x-2.1.2:
+  - remove Rules support from our code
+  8.x-2.1.1:
+  - Tempmerge (#99)
   8.x-2.1.0:
   - update version: 8.x-2.0.35 -> 8.x-2.1.0
   8.x-2.0.34: null

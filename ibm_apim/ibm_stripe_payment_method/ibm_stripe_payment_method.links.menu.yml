@@ -1,0 +1,6 @@
+ibm_stripe_payment_method.settings:
+  title: 'IBM APIC Stripe Integration'
+  route_name: ibm_stripe_payment_method.settings
+  parent: system.admin_config_system
+  description: 'IBM APIC Stripe Integration'
+  weight: -23

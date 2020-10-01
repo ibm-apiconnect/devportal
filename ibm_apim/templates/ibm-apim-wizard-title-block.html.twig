@@ -1,0 +1,17 @@
+{% extends "block.html.twig" %}
+{#
+/**
+ * @file
+ *
+ * Template for the subscription wizard title block (ibm_apim/Plugin/Block/SubWizardTitleBlock)
+ *
+ * @ingroup templates
+ */
+#}
+{% block content %}
+  {% if header %}
+    <div class="subscriptionWizardTitle">
+      <h3>{{ header }}</h3>
+    </div>
+  {% endif %}
+{% endblock %}

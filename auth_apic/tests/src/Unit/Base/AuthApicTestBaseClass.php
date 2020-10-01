@@ -45,6 +45,9 @@ abstract class AuthApicTestBaseClass extends UnitTestCase {
     $account->get('apic_user_registry_url')->willReturn($this->createSimpleObject('value', '/registry/idp1'));
     $account->get('registry_url')->willReturn($this->createSimpleObject('value', '/registry/idp1'));
     $account->get('apic_state')->willReturn($this->createSimpleObject('value','enabled'));
+    $first_time_field = $this->prophet->prophesize(\Drupal\Core\Field\FieldItemList::class);
+    $first_time_field->getString()->willReturn('0');
+    $account->get('first_time_login')->willReturn($first_time_field);
 
     $consumerorg_url_field = $this->prophet->prophesize(\Drupal\Core\Field\FieldItemList::class);
     $consumerorg_url_field->getValue()->willReturn([['value' => '/consumer-orgs/1234/5678/9abc']]);

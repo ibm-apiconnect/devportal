@@ -1,0 +1,52 @@
+/**
+ * @file
+ * Stripe payment form styles from the Commerce Stripe module.
+ */
+
+/*
+ * Add drupal core form elements styling to the Stripe payment form.
+ */
+ 
+.stripe-form .error {
+  background-color: hsl(15, 75%, 97%);
+  border-color: #e62600;
+  border-width: 1px;
+  box-shadow: 0 5px 5px -5px #b8b8b8 inset;
+  color: #a51b00;
+}
+.stripe-form #card-number-element {
+  width: 12em;
+}
+.stripe-form #expiration-element {
+  width: 5em;
+}
+.stripe-form #security-code-element {
+  width: 4em;
+}
+
+.stripe-form .form-text {
+  border: none;
+  background-color: #f4f4f4;
+  color: #161616;
+  font-size: 0.875rem;
+  border-radius: 0;
+  height: 2.5rem;
+  border-bottom: 1px solid #8d8d8d;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 2px 0;
+  padding: 4px;
+}
+  
+.stripe-form .form-text.error {
+  outline: 2px solid red;
+  outline-offset: -2px;
+  box-shadow: unset;
+}
+  
+.stripe-form .form-text.StripeElement--focus {
+  outline: 2px solid #0f62fe;
+  outline-offset: -2px;
+  box-shadow: unset;
+}

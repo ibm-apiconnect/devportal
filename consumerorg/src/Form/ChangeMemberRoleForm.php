@@ -122,12 +122,9 @@ class ChangeMemberRoleForm extends FormBase {
       $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
-        '#href' => 'myorg',
+        '#url' => $this->getCancelUrl(),
         '#attributes' => ['class' => ['button']],
       ];
-      if ($this->themeHandler->themeExists('bootstrap')) {
-        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-      }
     }
     else {
       $org = $this->userUtils->getCurrentConsumerorg();
@@ -180,20 +177,14 @@ class ChangeMemberRoleForm extends FormBase {
             $form['actions']['#type'] = 'actions';
             $form['actions']['submit'] = [
               '#type' => 'submit',
-              '#value' => t('Submit'),
+              '#value' => t('Save'),
             ];
-            if ($this->themeHandler->themeExists('bootstrap')) {
-              $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
-            }
             $form['actions']['cancel'] = [
               '#type' => 'link',
               '#title' => t('Cancel'),
-              '#href' => 'myorg',
+              '#url' => $this->getCancelUrl(),
               '#attributes' => ['class' => ['button', 'apicSecondary']],
             ];
-            if ($this->themeHandler->themeExists('bootstrap')) {
-              $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-            }
           }
           else {
             $this->messenger->addError(t('Cannot change role: could not find more than 1 role for developer organization %org', ['%org' => $this->currentOrg->getTitle()]));
@@ -209,12 +200,9 @@ class ChangeMemberRoleForm extends FormBase {
         $form['cancel'] = [
           '#type' => 'link',
           '#title' => t('Cancel'),
-          '#url' => Url::fromRoute('ibm_apim.myorg'),
+          '#url' => $this->getCancelUrl(),
           '#attributes' => ['class' => ['button']],
         ];
-        if ($this->themeHandler->themeExists('bootstrap')) {
-          $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-        }
       }
 
     }

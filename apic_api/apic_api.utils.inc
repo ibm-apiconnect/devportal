@@ -61,8 +61,9 @@ function apic_api_random_image($apiName): string {
 function apic_api_get_string_from_zip($data): string {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   $draft = '';
-  $file = \Drupal::service('file_system')->realpath(file_unmanaged_save_data($data, Settings::get('file_public_path')));
-  $tempDir = apic_api_tempdir(file_directory_temp());
+  $fileSystemService = \Drupal::service('file_system'); 
+  $file = $fileSystemService->realpath($fileSystemService->saveData($data, Settings::get('file_public_path')));
+  $tempDir = apic_api_tempdir($fileSystemService->getTempDirectory());
   $zip = new ZipArchive();
   if ($zip->open($file) === TRUE) {
     $zip->extractTo($tempDir);
@@ -87,7 +88,7 @@ function apic_api_get_string_from_zip($data): string {
     }
   }
   // clear up zip and temp extract dir
-  file_unmanaged_delete($file);
+  $fileSystemService->delete($file);
   apic_api_deletedir($tempDir);
   ibm_apim_exit_trace(__FUNCTION__, NULL);
   return $draft;

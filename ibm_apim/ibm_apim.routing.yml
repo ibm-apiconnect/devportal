@@ -6,6 +6,15 @@ ibm_apim.settings:
   requirements:
     _permission: 'administer_apic'
 
+ibm_apim.billing_settings:
+  path: '/admin/config/system/apic_billing'
+  defaults:
+    _form: 'Drupal\ibm_apim\Form\BillingConfigForm'
+    _title: 'Configure the billing integration for the IBM APIC Developer Portal'
+  requirements:
+    _permission: 'administer_apic'
+    _ibm_apim_billing_admin_access_check: 'TRUE'
+
 ibm_apim.devel:
   path: '/admin/config/development/ibm_apim'
   defaults:
@@ -89,15 +98,6 @@ ibm_apim.billing:
   requirements:
     _role: 'authenticated'
     _ibm_apim_billing_access_check: 'TRUE'
-
-ibm_apim.billing_submit:
-  path: '/ibm_apim/billing/{token}'
-  defaults:
-    _controller: '\Drupal\ibm_apim\Controller\MyOrgController::billingSubmit'
-    _title: 'Consumer organization Selection'
-  requirements:
-    _role: 'authenticated'
-    _ibm_apim_billiing_access_check: 'TRUE'
 
 ibm_apim.subscription_wizard:
   path: '/subscription'

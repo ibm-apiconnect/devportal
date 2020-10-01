@@ -9,43 +9,7 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
-/**
- * @file
- * Inspired by "password_toggle" module.
- */
-
 (function ($, Drupal, drupalSettings) {
-
-  /**
-   * Add a "Show password" checkbox to each password field.
-   *
-   * @type {Drupal~behavior}
-   *
-   * @prop {Drupal~behaviorAttach} attach
-   *   Attaches "Show password" checkbox to password fields.
-   */
-  Drupal.behaviors.showPassword = {
-    attach: function (context) {
-      // Find the checkbox.
-      const showPassword = $(context).find('.password-toggle.checkbox');
-
-      // Add click handler to checkboxes.
-      $(':checkbox', showPassword).click(function () {
-        const password_field = $(this).closest('.toggleParent').find('.toggle')[0];
-        if (!password_field.value.length > 0) {
-          return;
-        }
-
-        if ($(this).is(':checked')) {
-          password_field.type = "text";
-        }
-        else {
-          password_field.type = "password";
-        }
-      });
-
-    }
-  };
 
   /**
    * Provides JS click actions for multiple credential tabs on application page
@@ -83,7 +47,10 @@
         $.each(drupalSettings.application.credentials, function (index, item) {
           if (item.id == credid) {
             client_id = item['client_id'];
-            summary = item['summary'];
+            // only display summary if its different to title
+            if (item['summary'] !== item['title']) {
+              summary = item['summary'];
+            }
           }
         });
         clientIDField.val(client_id);
@@ -103,11 +70,6 @@
           summaryDiv.text();
         }
 
-        // force disable show client id
-        const showPassword = $(context).find('.password-toggle.checkbox');
-        $(':checkbox', showPassword).prop("checked", false);
-        const password_field = $(':checkbox', showPassword).closest('.toggleParent').find('.toggle')[0];
-        password_field.type = "password";
       });
     }
   };

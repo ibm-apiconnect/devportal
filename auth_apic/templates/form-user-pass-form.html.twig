@@ -15,62 +15,64 @@
 {% set ur_count_class = user_registry_count ? 'ur-count-' ~ user_registry_count %}
 {% set ur_managed_class = user_managed_registry_present ? 'ur-managed-true' : 'ur-managed-false' %}
 <div class='apic-user-form apic-user-form-reset-pwd {{ ur_count_class }} {{ ur_managed_class }}'>
-  <div class='apic-portal-title'>{{ site_name }}</div>
-  <div class='apic-user-form-header'>
+  <div class='apic-reset-wrapper'>
+    <div class='apic-portal-title'>{{ site_name }}</div>
+    <div class='apic-user-form-header'>
       {% if user_managed_registry_present %}
-          {{ 'Reset password'|t }}
+        {{ 'Reset password'|t }}
       {% else %}
-          {{ 'Reset \'admin\' password'|t }}
+        {{ 'Reset \'admin\' password'|t }}
       {% endif %}
-  </div>
-  <form{{ attributes }}>
-      <div class='apic-user-form-wrapper'>
-          <div class='apic-user-form-container'>
-              {% if element['#otherRegistries'] and element['#otherRegistries']['otherRegistries'] %}
-                  <div class='apic-user-form-subheader'>
-                      {% set registry_title = element['#registry_title']['registry_title'] %}
-                      {{ registry_title }}
-                  </div>
-              {% endif %}
-          </div>
-          <div class='apic-user-form-container'>
-              <div class='apic-user-form-inner-wrapper'>
-                  {% set registry_title = element['#registry_title']['registry_title'] %}
-                  {% set admin_only = element['admin_only'] %}
-                  {% if admin_only %}
-                      {% trans %}
-                      If you have forgotten your 'admin' password, you can reset it here.
-                      {% endtrans %}
-                      {% trans %}
-                      Your {{ registry_title }} account is managed externally and you must contact your authentication provider.
-                      {% endtrans %}
-                  {% else %}
-                      {% trans %}
-                      If you have forgotten the password for your {{ registry_title }} account or 'admin', you can reset it here.
-                      {% endtrans %}
-                  {% endif %}
-                  {{ children }}
-              </div>
-              {% if element['#otherRegistries'] and element['#otherRegistries']['otherRegistries'] %}
-
-                  <div class='apic-user-form-or-container'>
-                      <div class='apic-user-form-line'></div>
-                      <div class='apic-user-form-or'>{{ 'or'|t }}</div>
-                      <div class='apic-user-form-line'></div>
-                  </div>
-                  <div class='apic-user-form-inner-wrapper apic-user-form-registries'>
-                    <div class='apic-user-form-subheader'>
-                      {{ 'Select a different registry' | t }}
-                    </div>
-                      {{ element['#otherRegistries']['otherRegistries'] }}
-                  </div>
-              {% endif %}
-          </div>
-      </div>
-  </form>
-    <div class='apic-user-form-footer'>
-        <div class='apic-user-form-text'>
-            <a href=" {{ path('user.login') }} ">{{ 'Back to Sign in'|t }}</a>
-        </div>
     </div>
+    <form{{ attributes }}>
+      <div class='apic-user-form-wrapper'>
+        <div class='apic-user-form-container'>
+          {% if element['#otherRegistries'] and element['#otherRegistries']['otherRegistries'] %}
+            <div class='apic-user-form-subheader'>
+              {% set registry_title = element['#registry_title']['registry_title'] %}
+              {{ registry_title }}
+            </div>
+          {% endif %}
+        </div>
+        <div class='apic-user-form-container'>
+          <div class='apic-user-form-inner-wrapper'>
+            {% set registry_title = element['#registry_title']['registry_title'] %}
+            {% set admin_only = element['admin_only'] %}
+            {% if admin_only %}
+              {% trans %}
+                If you have forgotten your 'admin' password, you can reset it here.
+              {% endtrans %}
+              {% trans %}
+                Your {{ registry_title }} account is managed externally and you must contact your authentication provider.
+              {% endtrans %}
+            {% else %}
+              {% trans %}
+                If you have forgotten the password for your {{ registry_title }} account or 'admin', you can reset it here.
+              {% endtrans %}
+            {% endif %}
+            {{ children }}
+          </div>
+          {% if element['#otherRegistries'] and element['#otherRegistries']['otherRegistries'] %}
+
+            <div class='apic-user-form-or-container'>
+              <div class='apic-user-form-line'></div>
+              <div class='apic-user-form-or'>{{ 'or'|t }}</div>
+              <div class='apic-user-form-line'></div>
+            </div>
+            <div class='apic-user-form-inner-wrapper apic-user-form-registries'>
+              <div class='apic-user-form-subheader'>
+                {{ 'Select a different registry' | t }}
+              </div>
+              {{ element['#otherRegistries']['otherRegistries'] }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+    <div class='apic-user-form-footer'>
+      <div class='apic-user-form-text'>
+        <a href=" {{ path('user.login') }} ">{{ 'Back to Sign in'|t }}</a>
+      </div>
+    </div>
+  </div>
 </div>

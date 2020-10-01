@@ -21,10 +21,10 @@ Feature: CredentialsCRUD
     And I should see a "#edit-submit" element
     Given I enter "app45678" for "edit-title-0-value"
     And I enter "this is some text" for "edit-apic-summary-0-value"
-    When I press the "Submit" button
+    When I press the "Save" button
     Then there are no errors
     And I should see the text "API Key and Secret"
-    When I press the "Continue" button
+    When I click "OK"
     Then I should see the text "app45678"
     When I click "Subscriptions"
     Then I should see the text "Credentials"
@@ -40,7 +40,7 @@ Feature: CredentialsCRUD
 #    And I should see a "#edit-summary" element
 #    Given I enter "new credentials" for "edit-title"
 #    And I enter "new summary" for "edit-summary"
-#    Then I press the "Submit" button
+#    Then I press the "Save" button
 #    Then dump the current html
     #You should see a confirmation message at this point showing the new credentials, but you don't! Need to try logging out & back in
     #Log out/in didn't work.
@@ -61,7 +61,7 @@ Feature: CredentialsCRUD
 #    When I click on element ".credentialsActionsAdd a.addCredential"
 #    Then I should see a "#edit-description" element
 #    Given I enter "newcred" for "edit-description"
-#    When I press the "Submit" button
+#    When I press the "Save" button
 #    Then I should see the text "Your client ID is:"
 #    And I should see the text "Your client secret is:"
 #    Given I am not logged in
@@ -79,6 +79,6 @@ Feature: CredentialsCRUD
 #    When I click on element ".credentialsActionsManage .credentialsMenu .editCredentials a"
 #    Then I should see "Update application credentials"
 #    Given I enter "newcred2" for "edit-description"
-#    When I press the "Submit" button
+#    When I press the "Save" button
 #    Then I should see the text "Application credentials updated."
 #    And I should see "newcred2"

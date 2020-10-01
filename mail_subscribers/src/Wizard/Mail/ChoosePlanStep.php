@@ -69,7 +69,7 @@ class ChoosePlanStep extends FormBase {
       $wizardUrl = Link::fromTextAndUrl(t('Plan subscription wizard'), \Drupal\Core\Url::fromRoute('mail_subscribers.plan_wizard'));
       $this->messenger->addError(t('Email wizard was invoked with no product. Start the wizard again from the %wizardurl page.', ['%wizardurl' => $wizardUrl]));
       $this->redirect('<front>')->send();
-      return NULL;
+      return [];
     }
     $product = Node::load($product);
 
@@ -83,7 +83,7 @@ class ChoosePlanStep extends FormBase {
       $wizard_url = Link::fromTextAndUrl(t('Plan subscription wizard'), \Drupal\Core\Url::fromRoute('mail_subscribers.plan_wizard'));
       $this->messenger->addError(t('No plans found for this product. Start the wizard again from the %wizardurl page.', ['%wizardurl' => $wizard_url]));
       $this->redirect('<front>')->send();
-      return NULL;
+      return [];
     }
     foreach ($productPlans as $plan) {
       $options[$plan['name']] = $plan['title'];

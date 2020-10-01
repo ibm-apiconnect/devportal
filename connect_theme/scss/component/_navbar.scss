@@ -9,7 +9,7 @@ $grid-breakpoint: "screen and (min-width: #{$grid-float-breakpoint})";
 
 body {
   // Fix horizontal scrolling on iOS devices.
-  // http://drupal.org/node/1870076
+  // https://www.drupal.org/node/1870076
   position: relative;
 
   &.navbar-is-static-top {
@@ -45,6 +45,12 @@ body {
   }
 }
 
+
+@mixin navbar-vertical-align-padding($element-height) {
+  padding-top: (($navbar-height - $element-height) / 2);
+  padding-bottom: (($navbar-height - $element-height) / 2);
+}
+
 .navbar {
   display: flex;
   position: inherit;
@@ -57,17 +63,18 @@ body {
 
 .navbar-default .navbar-toggle {
   background-color: $navbar-default-bg;
-  @include navbar-vertical-align(40px);
+  @include navbar-vertical-align-padding(40px);
 }
 
 
 nav.block-login .menu.nav {
-  @include navbar-vertical-align(40px);
+  @include navbar-vertical-align-padding(40px);
+  padding-bottom: 0;
 }
 
 // Branding.
 .navbar .logo {
-  max-width: 240px;
+  max-width: 280px;
   margin:0;
   margin-right: -($grid-gutter-width / 2);
   padding-left: ($grid-gutter-width / 2);
@@ -103,22 +110,55 @@ nav.block-login .menu.nav {
   white-space: nowrap;
 }
 
-.navbar .nav > li > a {
-  font-weight: lighter;
-  margin-right: 2rem;
-  padding-top: 12px;
-  padding-bottom: 12px;
+.navbar .nav.navbar-nav > li > a {
+  padding: 0.625rem 0.75rem;
+  border: 2px solid transparent;
+}
+
+.navbar .nav.navbar-nav > li > a:hover {
+  background-color: $navbar-default-link-hover-bg
+}
+.navbar .nav.navbar-nav > li > a:active {
+  background-color: $navbar-default-link-active-bg;
+}
+
+.navbar .nav.navbar-nav > li > a:focus {
+  outline: unset;
+  border:2px solid $navbar-default-link-color;
+}
+
+.navbar .nav.navbar-nav > li > a.is-active,
+.navbar .nav.navbar-nav > li.active > a,
+.nav.menu--login > li.active a {
+  border-bottom: 2px solid $brand-primary;
+  background-color: $navbar-default-bg;
 }
 
 .navbar .nav.navbar-nav > li:last-child > a {
   margin-right: 0;
 }
 
-.navbar .dropitmenu,
-.navbar .ibmapimNotificationBlock,
-.navbar .ibmapimSearch{
+.navbar .dropitmenu{
   margin: 0 1rem;
-  @include navbar-vertical-align(34px);
+  @include navbar-vertical-align-padding(18px);
+}
+
+.navbar .ibmapimSearch{
+  padding: 0 .75rem 0 0.25rem;
+  @include navbar-vertical-align-padding(38px);
+  border: 2px solid transparent;
+  &:hover,
+  &:active {
+    background-color: $navbar-default-link-hover-bg;
+  }
+  &:focus {
+    outline: unset;
+    border:2px solid $navbar-default-link-color;
+  }
+}
+
+.context--search-content .navbar .ibmapimSearch {
+  border-bottom: 2px solid $brand-primary;
 }
 
 .navbar .ibmapimNotificationBlock,
@@ -144,16 +184,26 @@ nav.block-login .menu.nav {
 }
 
 .navbar .dropitmenu .dropit-icon {
-  color: $brand-primary-light;
+  color: $navbar-default-link-color;
   vertical-align: bottom;
   font-size: 0.625rem;
 }
 
 .navbar .account-menu.dropitmenu  {
-  margin: 0.5rem 1rem;
-
+  border: 2px solid transparent;
+  margin: 0;
+  padding: 0 0.75rem;
+  @include navbar-vertical-align-padding(28px);
   .dropit-submenu {
-    margin-top: 8px;
+    margin-top: 12px;
+  }
+  &:hover,
+  &:active {
+    background-color: $navbar-default-link-hover-bg;
+  }
+  &:focus {
+    outline: unset;
+    border:2px solid $navbar-default-link-color;
   }
 }
 
@@ -163,8 +213,8 @@ nav.block-login .menu.nav {
   border-style: solid none none none;
   border-color: $navbar-default-link-color;
   padding:0;
-  line-height: 2.25rem;
-  margin-top: 7px;
+  line-height: 2rem;
+  margin-top: 15px;
   margin-right: -1rem;
   max-height: 16rem;
   overflow-y: auto;
@@ -177,7 +227,8 @@ nav.block-login .menu.nav {
   a {
     font-size: 0.875rem;
     color: $navbar-default-color;
-    padding: 0 1rem;
+    padding: 0 0.75rem;
+    border: 2px solid transparent;
     line-height: 2.25rem;
     &.elipsis-names {
       text-overflow: ellipsis;
@@ -185,12 +236,29 @@ nav.block-login .menu.nav {
       overflow: hidden;
       width: 15rem;
     }
-    &:hover{
-      background-color: $brand-primary-light;
+    &:hover,
+    &:active {
+      background-color: $navbar-default-link-hover-bg;
+    }
+    &:focus {
+      outline: unset;
+      border:2px solid $navbar-default-link-color;
     }
   }
-
 }
+
+.consumerorgSelectBlock {
+  padding-right: 0.625rem;
+  &:hover,
+  &:active {
+   background-color: $navbar-default-link-hover-bg;
+  }
+  &:focus {
+    outline: unset;
+    border:2px solid $navbar-default-link-color;
+  }
+}
+
 .consumerorgSelectBlock .orgHeading {
   display: inline-block;
   color: $navbar-default-color;
@@ -205,7 +273,7 @@ nav.block-login .menu.nav {
 
   .currentOrg{
     line-height:1.1;
-    font-size: 1rem;
+    font-size: 0.875rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -219,16 +287,9 @@ nav.block-login .menu.nav {
   border-radius: 50%;
 }
 
-nav.block-account,
-.block-consumer-organization-selection
-{
-  background: rgba(255,255,255,0.08);
-}
-
-.block-consumer-organization-selection {
+section.block.block-consumer-organization-selection {
   max-width: 15rem;
   min-width: 7.25rem;
-  margin-right: 0.625rem;
   @media (max-width: $screen-xs-min) {
     width: 10rem;
   }
@@ -238,13 +299,16 @@ nav.block-account {
   display: inline-block;
 }
 
+.dropit-open .dropit-icon svg{
+  transform: rotate(180deg);
+}
 
 // main menu
 nav.block-menu ul.nav > li > a:focus,
 nav.block-menu ul.nav > li > a:hover,
 nav.block-menu ul.nav > li.active > a {
   padding-bottom: 8px;
-  border-bottom: 4px solid $brand-primary-light;
+  border-bottom: 4px solid $navbar-default-link-hover-color;
 }
 
 .navbar-nav > li.front {
@@ -260,18 +324,25 @@ nav.block-login ul.menu li {
 }
 nav.block-login ul.nav > li > a,
 nav.block-login ul.nav > li > a:visited {
-  margin-right: 20px;
+  padding-right: 0.75rem;
+  padding-left: 0.75rem;
   display: inline-block;
   color: $navbar-default-link-color;
+  padding-bottom: calc(0.74rem + 4px);
 }
 nav.block-login ul.nav > li > a:focus,
-nav.block-login ul.nav > li > a:hover{
+nav.block-login ul.nav > li > a:hover {
   color: $navbar-default-link-hover-color;
 }
 nav.block-login ul.menu li+li:before {
   content: " \00b7";
   color: $ui-04;
-  margin-right: 20px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+nav.block-login ul.nav > li.last {
+  margin-right: 10px;
 }
 
 // main menu overflow menu
@@ -286,8 +357,9 @@ nav.block-login ul.menu li+li:before {
         fill: $navbar-default-link-hover-color;
       }
     }
-
     .dropdown-menu {
+      @include reset;
+      @include type-style('body-short-01');
       background-color: $navbar-default-bg;
       border-style: solid none none none;
       border-color: $navbar-default-link-color;
@@ -295,10 +367,17 @@ nav.block-login ul.menu li+li:before {
       a {
         background-color: $navbar-default-bg;
         color: $navbar-default-link-color;
-        font-weight: lighter;
+        padding: 0 1rem;
+        border: 2px solid transparent;
+        line-height: 2.25rem;
         &:hover,
-        &:focus {
+        &:active {
           color: $navbar-default-link-hover-color;
+          background-color: $navbar-default-link-hover-bg;
+        }
+        &:focus {
+          outline: unset;
+          border:2px solid $navbar-default-link-color;
         }
       }
     }

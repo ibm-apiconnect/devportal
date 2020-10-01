@@ -19,6 +19,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
   use Drupal\ibm_apim\Rest\MeResponse;
   use Drupal\ibm_apim\Rest\TokenResponse;
   use Prophecy\Argument;
+  use Drupal\ibm_apim\Service\ApicUserService;
 
 
   /**
@@ -54,6 +55,8 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
     protected $sessionStore;
 
+    protected $userService;
+
     protected function setup() {
       parent::setup();
 
@@ -68,6 +71,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->currentUser = $this->prophet->prophesize(\Drupal\Core\Session\AccountProxyInterface::class);
       $this->entityTypeManager = $this->prophet->prophesize(\Drupal\Core\Entity\EntityTypeManagerInterface::class);
       $this->consumerOrgLogin = $this->prophet->prophesize(\Drupal\consumerorg\Service\ConsumerOrgLoginService::class);
+      $this->userService = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserService::class);
 
       $this->drupalUser = $this->prophet->prophesize(\Drupal\user\UserStorageInterface::class);
 
@@ -98,9 +102,10 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $meResponse = $this->createMeResponse($user);
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
-
+      $this->userService->parseDrupalAccount($accountStub)->willReturn($user);
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
       $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())->shouldBeCalled();
+      $this->userService->getCustomUserFields()->willReturn([]);
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->willReturn(['url' => '/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
       $this->userUtils->setOrgSessionData()->shouldBeCalled();
@@ -133,9 +138,10 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $meResponse = $this->createMeResponse($user);
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
-
+      $this->userService->parseDrupalAccount($accountStub)->willReturn($user);
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
       $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())->shouldBeCalled();
+      $this->userService->getCustomUserFields()->willReturn([]);
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->willReturn(['url' => '/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
       $this->userUtils->setOrgSessionData()->shouldBeCalled();
@@ -218,8 +224,9 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $meResponse = $this->createMeResponse($user);
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
-
+      $this->userService->parseDrupalAccount($accountStub)->willReturn($user);
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
+      $this->userService->getCustomUserFields()->willReturn([]);
 
       $this->sessionStore->set('auth', Argument::any())->shouldNotBeCalled();
       $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
@@ -249,6 +256,8 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->sessionStore->set('auth', Argument::any())->shouldBeCalled();
       $meResponse = $this->createMeResponse($user);
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
+      $this->userService->parseDrupalAccount($accountStub)->willReturn($user);
+      $this->userService->getCustomUserFields()->willReturn([]);
 
       // Get no consumer orgs back on me response.
       $meResponse->getUser()->setConsumerorgs([]);
@@ -428,9 +437,10 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $meResponse = $this->createMeResponse($user);
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn(NULL);
-
+      $this->userService->parseDrupalAccount($accountStub)->willReturn($user);
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
       $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())->shouldBeCalled();
+      $this->userService->getCustomUserFields()->willReturn([]);
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->willReturn(['url' => '/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
       $this->userUtils->setOrgSessionData()->shouldBeCalled();
@@ -519,8 +529,10 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
     public function testLoginViaAzCodeValid() {
 
-      $this->setUpOidcLoginTest();
+      $user = $this->setUpOidcLoginTest();
+      $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
       $service = $this->generateServiceUnderTest();
+      $this->userService->getCustomUserFields()->willReturn([]);
       $response = $service->loginViaAzCode('validCode', '/reg/oidc1');
 
       $this->assertEquals('<front>', $response);
@@ -543,7 +555,9 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
     public function testLoginViaAzCodeFirstTime() {
 
-      $this->setUpOidcLoginTest();
+      $user = $this->setUpOidcLoginTest();
+      $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
+      $this->userService->getCustomUserFields()->willReturn([]);
 
       $first_time_user = $this->prophet->prophesize(\Drupal\user\Entity\User::class);
 
@@ -567,7 +581,9 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
     }
 
     public function testLoginViaAzCodeCreateNewOrg(){
-      $this->setUpOidcLoginTest();
+      $user = $this->setUpOidcLoginTest();
+      $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
+      $this->userService->getCustomUserFields()->willReturn([]);
 
       $this->userUtils->getCurrentConsumerorg()->willReturn(NULL);
       $this->siteConfig->isSelfOnboardingEnabled()->willReturn(TRUE);
@@ -581,7 +597,9 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
     public function testLoginViaAzCodeNoOrgNoPerms(){
 
-      $this->setUpOidcLoginTest();
+      $user = $this->setUpOidcLoginTest();
+      $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
+      $this->userService->getCustomUserFields()->willReturn([]);
 
       $this->userUtils->getCurrentConsumerorg()->willReturn(NULL);
       $this->siteConfig->isSelfOnboardingEnabled()->willReturn(FALSE);
@@ -668,13 +686,14 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
         $this->siteConfig->reveal(),
         $this->currentUser->reveal(),
         $this->entityTypeManager->reveal(),
-        $this->consumerOrgLogin->reveal());
+        $this->consumerOrgLogin->reveal(),
+        $this->userService->reveal());
 
 
       return $service;
     }
 
-    private function setUpOidcLoginTest(): void {
+    private function setUpOidcLoginTest() {
       $loginUser = new ApicUser();
       $loginUser->setUsername('');
       $loginUser->setPassword('');
@@ -722,6 +741,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
       $this->logger->notice('@username [UID=@uid] logged in.', ['@username' => 'oidcandre', '@uid' => '1'])->shouldBeCalled();
       $this->logger->error(Argument::any())->shouldNotBeCalled();
+      return $apicUser;
     }
 
     /**

@@ -72,6 +72,7 @@
       > a {
         margin-right: 0;
         margin-bottom: 3px;
+        white-space: normal;
         &:focus {
           outline: 0;
         }
@@ -79,11 +80,12 @@
     }
   }
   > .tab-content {
-    border-radius: 0 $border-radius-base $border-radius-base $border-radius-base;
-    border: 1px solid $nav-tabs-border-color;
-    box-shadow: 0 1px 1px rgba(0,0,0,.05);
+    border-radius: 0;
+    border: 0;
+    box-shadow: none;
     overflow: hidden;
     padding: 10px 15px;
+    background-color: #f9f9f9;
   }
 }
 
@@ -93,17 +95,38 @@
     float: left;
     margin-right: -1px;
     > li > a {
-      border-radius: $border-radius-base 0 0 $border-radius-base;
-      &:hover,
+      border-radius: 0;
+      background-color: $ui-03;
+      box-shadow: none;
+      border: 0;
+      &:hover {
+        background-color: $hover-selected-ui;
+        border: 0;
+      }
       &:focus {
-        border-color: $nav-tabs-link-hover-border-color $nav-tabs-border-color $nav-tabs-link-hover-border-color $nav-tabs-link-hover-border-color;
+        outline: 2px solid $focus;
+        outline-offset: -2px;
       }
     }
+    > li:hover a {
+      border-bottom: 0;
+    }
+    > li.active:hover a {
+      border-bottom: 0;
+      box-shadow: inset 0 2px 0 0 $interactive-04;
+    }
     > .active > a,
-    > .active > a:hover,
+    > .active > a:hover {
+      box-shadow: inset 0 2px 0 0 $interactive-04;
+      background-color: $ui-background;
+      border: 0;
+    }
     > .active > a:focus {
-      border-color: $nav-tabs-border-color transparent $nav-tabs-border-color $nav-tabs-border-color;
-      box-shadow: -1px 1px 1px rgba(0,0,0,.05);
+      box-shadow: inset 0 2px 0 0 $interactive-04;
+      background-color: $ui-background;
+      border: 0;
+      outline: 2px solid $focus;
+      outline-offset: -2px;
     }
   }
 }
@@ -130,27 +153,110 @@
 }
 
 // local action tabs
-.tabs ul.tabs--primary li {
-  background-color: transparent;
-  border: 1px solid $tab-primary-background;
-  color: $tab-primary-background;
+nav.tabs,
+.path-node .tabs{
+  background-color: $ui-background;
+  flex-basis: 100%;
+  padding: 1rem 2rem 0 2rem;
+  display: flex;
+  width: calc(100% + 4rem);
+  margin-left: -2rem;
 }
 
-.tabs ul.tabs--primary li.active {
-  background-color: $tab-primary-background;
-  color: $tab-primary-text;
+ul.tabs--primary.nav.nav-tabs {
+  flex-direction: row;
+  padding-left: 0;
+  display: flex;
+  max-width: 100%;
+  max-height: none;
+  overflow-x: auto;
+  transition: inherit;
+  margin-bottom: 0;
 }
 
-.tabs ul.tabs--primary li:last-of-type {
-  border-top-right-radius: 8px;
-  border-bottom-right-radius: 8px;
+ul.tabs--primary.nav.nav-tabs li {
+  list-style: none;
+  color: $text-02;
+  height: auto;
+  background: transparent;
+  box-sizing: border-box;
+  margin: 0;
+  font-size: 100%;
+  font-family: inherit;
+  vertical-align: initial;
+  border: 0;
+  display: flex;
+  padding: 0;
+  cursor: pointer;
+  transition: background-color 70ms cubic-bezier(.2,0,.38,.9);
 }
 
-.tabs ul.tabs--primary a,
-.tabs ul.tabs--primary a:hover,
-.tabs ul.tabs--primary a:active,
-.tabs ul.tabs--primary a:focus {
+.nav-tabs > li > a,
+ul.tabs--primary.nav.nav-tabs li a {
+  white-space: nowrap;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  color: $text-02;
+  width: 10rem;
+  margin: 0;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
   background-color: inherit;
-  color: inherit;
-  border: none;
+  padding: .75rem 1rem .5rem;
+  border-bottom: 2px solid $ui-03;
+  transition: color 70ms cubic-bezier(.2,0,.38,.9),border-bottom-color 70ms cubic-bezier(.2,0,.38,.9),outline 70ms cubic-bezier(.2,0,.38,.9);
+}
+.nav-tabs > li.active,
+ul.tabs--primary.nav.nav-tabs li.active,
+ul.tabs--primary.nav.nav-tabs li.selected,
+ul.tabs--primary.nav.nav-tabs li:hover,
+ul.tabs--primary.nav.nav-tabs li:focus {
+  color: $text-01;
+}
+.nav-tabs > li.active > a,
+ul.tabs--primary.nav.nav-tabs li.active a,
+ul.tabs--primary.nav.nav-tabs li.selected a {
+  color: $text-01;
+  border-bottom: 2px solid $interactive-04;
+}
+.nav-tabs > li:hover > a,
+ul.tabs--primary.nav.nav-tabs li:hover a {
+  color: $text-01;
+  border-bottom: 2px solid $ui-04;
+}
+.nav-tabs > li:focus > a,
+ul.tabs--primary.nav.nav-tabs li:focus a {
+  color: $text-01;
+  border-bottom: 2px solid $focus;
+}
+.nav-tabs {
+  border: 0;
+}
+
+/* vertical tabs on user pages */
+.path-user.route-entityusercanonical ul.tabs--primary.nav.nav-tabs > li > a,
+.path-user.route-entityusercanonical ul.tabs--primary.nav.nav-tabs > li > a:hover,
+.path-user.route-entityusercanonical ul.tabs--primary.nav.nav-tabs > li > a:focus,
+.path-user.route-entityusercanonical ul.tabs--primary.nav.nav-tabs > li.active > a,
+.path-user.route-entityusercanonical ul.tabs--primary.nav.nav-tabs > li.active > a:hover,
+.path-user.route-entityusercanonical ul.tabs--primary.nav.nav-tabs > li.active > a:focus,
+.route-entityuseredit-form ul.tabs--primary.nav.nav-tabs > li > a,
+.route-entityuseredit-form ul.tabs--primary.nav.nav-tabs > li > a:hover,
+.route-entityuseredit-form ul.tabs--primary.nav.nav-tabs > li > a:focus,
+.route-entityuseredit-form ul.tabs--primary.nav.nav-tabs > li.active > a,
+.route-entityuseredit-form ul.tabs--primary.nav.nav-tabs > li.active > a:hover,
+.route-entityuseredit-form ul.tabs--primary.nav.nav-tabs > li.active > a:focus,
+.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) ul.tabs--primary.nav.nav-tabs > li > a,
+.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) ul.tabs--primary.nav.nav-tabs > li > a:hover,
+.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) ul.tabs--primary.nav.nav-tabs > li > a:focus,
+.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) ul.tabs--primary.nav.nav-tabs > li.active > a,
+.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) ul.tabs--primary.nav.nav-tabs > li.active > a:hover,
+.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) ul.tabs--primary.nav.nav-tabs > li.active > a:focus {
+  border-bottom: 0;
+}
+
+/* stop weird transition on tabs in explorer in the portal */
+.bx--global-light-ui .bx--tabs__nav-item .bx--tabs__nav-link {
+  transition: none;
 }

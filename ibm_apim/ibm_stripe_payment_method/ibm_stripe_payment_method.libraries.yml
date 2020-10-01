@@ -1,0 +1,31 @@
+stripe:
+  remote: https://github.com/stripe/stripe-php
+  version: "4.3.0"
+  license:
+    name: MIT
+    url: https://github.com/stripe/stripe-php/blob/master/LICENSE
+    gpl-compatible: true
+  js:
+    "https://js.stripe.com/v3/": { minified: true }
+
+stripemessages:
+  version: VERSION
+  js:
+    js/stripe.messages.js: {}
+  dependencies:
+    - classy/messages
+    - core/jquery
+    - core/drupal
+stripeform:
+  version: VERSION
+  css:
+    theme:
+      css/stripe.form.css: {}
+  js:
+    js/stripe.form.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/jquery.once
+    - ibm_stripe_payment_method/stripemessages
+    - ibm_stripe_payment_method/stripe

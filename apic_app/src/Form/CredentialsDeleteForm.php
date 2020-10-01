@@ -14,7 +14,6 @@
 namespace Drupal\apic_app\Form;
 
 use Drupal\apic_app\Entity\ApplicationCredentials;
-use Drupal\apic_app\Application;
 use Drupal\apic_app\Event\CredentialDeleteEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\apic_app\Service\CredentialsService;
@@ -108,15 +107,6 @@ class CredentialsDeleteForm extends ConfirmFormBase {
     $this->node = $appId;
     $this->credId = Html::escape($credId);
     $form = parent::buildForm($form, $form_state);
-    $themeHandler = \Drupal::service('theme_handler');
-    if ($themeHandler->themeExists('bootstrap')) {
-      if (isset($form['actions']['submit'])) {
-        $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
-      }
-      if (isset($form['actions']['cancel'])) {
-        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-      }
-    }
     $form['#attached']['library'][] = 'apic_app/basic';
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -187,17 +177,6 @@ class CredentialsDeleteForm extends ConfirmFormBase {
         'data' => $result->data,
         'credId' => $this->credId,
       ]);
-      if ($moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new CredentialDeleteEvent($this->node, $result->data, $this->credId, [
-          'application' => $this->node,
-          'data' => $result->data,
-          'credId' => $this->credId,
-        ]);
-        $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(CredentialDeleteEvent::EVENT_NAME, $event);
-      }
 
       $this->messenger->addMessage($this->t('Credentials deleted successfully.'));
       $currentUser = \Drupal::currentUser();

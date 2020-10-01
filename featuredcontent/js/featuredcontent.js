@@ -21,7 +21,7 @@
 
       $('.featuredcontentNodeContainer').masonry({
         // options
-        itemSelector: '.featuredcontentNode', columnWidth: '.featuredcontentNode', gutter: 21, percentPosition: true
+        itemSelector: '.featuredcontentNode', columnWidth: '.featuredcontentNode', gutter: 2, percentPosition: true
       });
 
     }

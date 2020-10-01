@@ -114,9 +114,6 @@ class OrgDeleteForm extends ConfirmFormBase {
         '#url' => Url::fromRoute('ibm_apim.myorg'),
         '#attributes' => ['class' => ['button']],
       ];
-      if ($this->themeHandler->themeExists('bootstrap')) {
-        $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-      }
 
     }
     elseif (sizeof($this->userUtils->loadConsumerorgs()) === 1) {
@@ -131,9 +128,6 @@ class OrgDeleteForm extends ConfirmFormBase {
         '#url' => Url::fromRoute('ibm_apim.myorg'),
         '#attributes' => ['class' => ['button']],
       ];
-      if ($this->themeHandler->themeExists('bootstrap')) {
-        $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-      }
     }
     else {
       $org = $this->userUtils->getCurrentConsumerorg();
@@ -152,20 +146,9 @@ class OrgDeleteForm extends ConfirmFormBase {
           '#url' => Url::fromRoute('ibm_apim.myorg'),
           '#attributes' => ['class' => ['button']],
         ];
-        if ($this->themeHandler->themeExists('bootstrap')) {
-          $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-        }
       }
       else {
         $form = parent::buildForm($form, $form_state);
-        if ($this->themeHandler->themeExists('bootstrap')) {
-          if (isset($form['actions']['submit'])) {
-            $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
-          }
-          if (isset($form['actions']['cancel'])) {
-            $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-          }
-        }
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

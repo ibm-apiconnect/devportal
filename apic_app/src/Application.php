@@ -56,13 +56,6 @@ class Application {
       self::invokeAppCreateHook($app, $node);
 
       \Drupal::logger('apic_app')->notice('Application @app created', ['@app' => $node->getTitle()]);
-      if ($moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new ApplicationCreateEvent($node, ['application' => $node]);
-        $event_dispatcher = \Drupal::service('event_dispatcher');
-        $event_dispatcher->dispatch(ApplicationCreateEvent::EVENT_NAME, $event);
-      }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
     return $node->id();
@@ -220,12 +213,17 @@ class Application {
 
       if ($formState !== NULL && !empty($formState) && $node !== NULL) {
         $customFields = self::getCustomFields();
-        foreach ($customFields as $customField) {
-          $value = $formState->getValue($customField);
-          if (\is_array($value) && isset($value[0]['value'])) {
-            $value = $value[0]['value'];
-          }
+        $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $formState);
+        foreach ($customFieldValues as $customField => $value) {
           $node->set($customField, $value);
+        }
+      } elseif (!empty($app['metadata'])) {
+        $customFields = self::getCustomFields();
+        foreach ($customFields as $customField) {
+          if (isset($app['metadata'][$customField])) {
+            $value = json_decode($app['metadata'][$customField], true);
+            $node->set($customField, $value);
+          }
         }
       }
 
@@ -250,14 +248,6 @@ class Application {
           \Drupal::logger('apic_app')->notice('Application @app created (update path)', ['@app' => $node->getTitle()]);
 
           self::invokeAppCreateHook($create_hook_app, $node);
-
-          if ($moduleHandler->moduleExists('rules')) {
-            // Set the args twice on the event: as the main subject but also in the
-            // list of arguments.
-            $event = new ApplicationCreateEvent($node, ['application' => $node]);
-            $event_dispatcher = \Drupal::service('event_dispatcher');
-            $event_dispatcher->dispatch(ApplicationCreateEvent::EVENT_NAME, $event);
-          }
         }
         else {
           \Drupal::logger('apic_app')->notice('Application @app updated', ['@app' => $node->getTitle()]);
@@ -265,13 +255,6 @@ class Application {
           // Calling all modules implementing 'hook_apic_app_update':
           $moduleHandler->invokeAll('apic_app_update', [$node, $app]);
 
-          if ($moduleHandler->moduleExists('rules')) {
-            // Set the args twice on the event: as the main subject but also in the
-            // list of arguments.
-            $event = new ApplicationUpdateEvent($node, ['application' => $node]);
-            $event_dispatcher = \Drupal::service('event_dispatcher');
-            $event_dispatcher->dispatch(ApplicationUpdateEvent::EVENT_NAME, $event);
-          }
         }
       }
       $returnValue = $node;
@@ -415,13 +398,6 @@ class Application {
 
       $node->delete();
 
-      if ($moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new ApplicationDeleteEvent($node, ['application' => $node]);
-        $event_dispatcher = \Drupal::service('event_dispatcher');
-        $event_dispatcher->dispatch(ApplicationDeleteEvent::EVENT_NAME, $event);
-      }
       // Calling all modules implementing 'hook_apic_app_post_delete':
       $moduleHandler->invokeAll('apic_app_post_delete', [
           'data' => $hookData

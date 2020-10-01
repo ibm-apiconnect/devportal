@@ -56,6 +56,8 @@ class MockApplicationRestService implements ApplicationRestInterface {
       'name' => 'app23456',
       'oauthRedirectURI' => '',
       'promoteTo' => '',
+      'client_id' => 'myclientid',
+      'client_secret' => 'myclientsecret',
       'type' => 'PRODUCTION',
       'state' => 'PUBLISHED',
       'description' => 'some text',
@@ -87,6 +89,8 @@ class MockApplicationRestService implements ApplicationRestInterface {
       'type' => 'PRODUCTION',
       'state' => 'PUBLISHED',
       'name' => 'app34567',
+      'client_id' => 'myclientid',
+      'client_secret' => 'myclientsecret',
       'description' => 'some text',
       'app_credentials' => [
         [
@@ -110,6 +114,8 @@ class MockApplicationRestService implements ApplicationRestInterface {
       'type' => 'PRODUCTION',
       'state' => 'PUBLISHED',
       'name' => 'app45678',
+      'client_id' => 'myclientid',
+      'client_secret' => 'myclientsecret',
       'description' => 'some text',
       'app_credentials' => [
         [

@@ -8,7 +8,7 @@
  */
 #}
 <div class="apicWizardMain apicSubscribeChooseApp">
-  <div class="apicWizardHeader apicSubscribeHeader">{{ 'Select Application'|t }}</div>
+  <div class="apicFormHeader">{{ element['#welcome'] }}</div>
   <div class="apicSubscribeInfoRow">
     <div class="apicSubscribeInfotext">
       {% if element['#messages'].subscribedAppsNotice %}
@@ -21,10 +21,10 @@
         {{ element['#messages'].noAppsNotice }}
       {% endif %}
     </div>
-    <div class="apicSubscribeNewAppWrapper">{{ element['#createNewApp'] }}</div>
   </div>
   <div class="apicNewAppWrapper"></div>
   <div class="apicSubscribeAppForm">
+    <div class="apicSubscribeNewAppWrapper">{{ element['#createNewApp'] }}</div>
     <form {{ attributes }}>
       {{ children }}
     </form>

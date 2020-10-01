@@ -7,6 +7,9 @@
     "issues": "https://github.com/ibm-apiconnect/devportal",
     "source": "https://github.com/ibm-apiconnect/devportal"
   },
+  "require": {
+    "commerceguys/intl": "^1.0.0"
+  },
   "license": "GPL-2.0+",
   "minimum-stability": "dev",
   "require-dev": {

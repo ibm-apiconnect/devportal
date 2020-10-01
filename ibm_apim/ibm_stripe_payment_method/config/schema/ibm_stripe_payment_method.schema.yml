@@ -1,0 +1,67 @@
+ibm_stripe_payment_method_config_object:
+  type: mapping
+  mapping:
+    langcode:
+      type: string
+      label: 'Language code'
+    _core:
+      type: _core_config_info
+    id:
+      type: string
+      label: 'Identifier'
+    field_name:
+      type: string
+      label: 'Field name'
+    uuid:
+      type: string
+      label: 'UUID'
+    status:
+      type: boolean
+      label: 'Enabled'
+    label:
+      type: label
+      label: 'Label'
+    bundle:
+      type: string
+      label: 'The entity bundle this applies to'
+    entity_type:
+      type: string
+      label: 'entity type'
+    description:
+      type: string
+      label: 'description'
+    required:
+      type: boolean
+      label: 'required'
+    translatable:
+      type: boolean
+      label: 'translatable'
+    default_value:
+      type: sequence
+      label: 'Default values'
+      sequence:
+        type: field.value.[%parent.%parent.field_type]
+        label: 'Default value'
+    default_value_callback:
+      type: string
+      label: 'Default value callback'
+    settings:
+      type: field.field_settings.[%parent.field_type]
+    field_type:
+      type: string
+      label: 'Field type'
+    dependencies:
+      type: config_dependencies
+      label: 'Dependencies'
+
+ibm_stripe_payment_method.settings:
+  type: config_object
+  label: 'IBM API Connect Stripe monetization configuration settings'
+  mapping:
+    publishable_key:
+      type: string
+      label: 'Publishable Key'
+    secret_key:
+      type: string
+      label: 'Secret Key'
+

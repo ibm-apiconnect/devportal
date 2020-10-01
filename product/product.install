@@ -11,9 +11,9 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
-use Drupal\views\Views;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\views\Views;
 
 /**
  * Ensure content type is translation enabled
@@ -243,5 +243,77 @@ function product_update_8115() {
   if ($fieldStorageConfig !== NULL) {
     $fieldStorageConfig->set('cardinality' , -1);
     $fieldStorageConfig->save();
+  }
+}
+
+/**
+ * update the gutter width for latest masonry views
+ *
+ * bumped the second digit to ensure the change happens if migrating from 2018 to 10 too
+ */
+function product_update_8201() {
+  $view = Views::getView('products');
+  if ($view !== NULL) {
+    $style = $view->getDisplay()->getOption('style');
+    if ((int) $style['options']['gutterWidth'] === 0 || (int) $style['options']['gutterWidth'] === 20) {
+      $style['options']['gutterWidth'] = "2";
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
+    $pager = $view->getDisplay()->getOption('pager');
+    if ((int) $pager['options']['items_per_page'] === 5) {
+      $pager['options']['items_per_page'] = 10;
+      $view->getDisplay()->setOption('pager', $pager);
+      $view->save();
+    }
+    if ($pager['options']['expose']['items_per_page_options'] !== '10, 25, 50, 75') {
+      $pager['options']['expose']['items_per_page_options'] = '10, 25, 50, 75';
+      $view->getDisplay()->setOption('pager', $pager);
+      $view->save();
+    }
+  }
+}
+
+/**
+ * update the empty state for the view
+ *
+ */
+function product_update_8202() {
+  $view = Views::getView('product');
+  if ($view !== NULL) {
+    $empty = $view->getDisplay()->getOption('empty');
+    if (!isset($empty['entity_block'])) {
+      $empty['entity_block'] = [
+        'id' => 'entity_block',
+        'table' => 'views',
+        'field' => 'entity_block',
+        'relationship' => 'none',
+        'group_type' => 'group',
+        'admin_label' => '',
+        'empty' => TRUE,
+        'tokenize' => TRUE,
+        'target' => 'noproductsblock',
+        'view_mode' => 'default',
+        'bypass_access' => FALSE,
+        'plugin_id' => 'entity',
+      ];
+      if (isset($empty['area'])) {
+        unset($empty['area']);
+      }
+      $view->getDisplay()->setOption('empty', $empty);
+      $view->save();
+    }
+  }
+}
+
+function product_update_8203() {
+  $fieldConfig = FieldConfig::loadByName('node', 'product', 'comment');
+  if ($fieldConfig !== NULL) {
+    $settings = $fieldConfig->get('settings');
+    if ($settings['preview'] !== 0 ) {
+      $settings['preview'] = 0;
+      $fieldConfig->set('settings', $settings);
+      $fieldConfig->save();
+    }
   }
 }

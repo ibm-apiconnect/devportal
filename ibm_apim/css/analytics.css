@@ -16,25 +16,21 @@
 .analyticsWidgetContainer #apistats {
   grid-area: apistats;
   background-color: white;
-  border: 1px solid #eee;
   padding: 14px;
 }
 
 .analyticsWidgetContainer #appAnalyticsSummary {
   grid-area: apistats;
   background-color: white;
-  border: 1px solid #eee;
   padding: 14px;
 }
 
 .analyticsWidgetContainer .apicAppTotals {
   grid-area: numbers;
   background-color: white;
-  border: 1px solid #eee;
 }
 .analyticsWidgetContainer .apicAppTotals .apicAppTotalCalls,
 .analyticsWidgetContainer .apicAppTotals .apicAppTotalErrors {
-  border-bottom: 1px solid #eee;
   padding: 14px;
 }
 .analyticsWidgetContainer .apicAppTotals .apicAppAverageResponseTime {
@@ -44,14 +40,12 @@
 .analyticsWidgetContainer #apicalls {
   grid-area: apicalls;
   background-color: white;
-  border: 1px solid #eee;
   padding: 14px;
 }
 
 .analyticsWidgetContainer #apicallhistory {
   grid-area: apicalls;
   background-color: white;
-  border: 1px solid #eee;
   padding: 14px;
 }
 
@@ -59,7 +53,6 @@
 .analyticsWidgetContainer .apicAppAPICallErrors {
   grid-area: subscriptions;
   background-color: white;
-  border: 1px solid #eee;
   padding: 14px;
 }
 
@@ -67,4 +60,24 @@
 .analyticsWidgetContainer .apicAppSubscriptionsSummary .bx--apim-list-container,
 .analyticsWidgetContainer .apicAppAPICallErrors .bx--apim-list-container{
   max-height: 100%;
+}
+
+.analyticsWidgetContainer .bx--tabs__nav-item--selected .bx--tabs__nav-link,
+.analyticsWidgetContainer .bx--tabs__nav-item--selected .bx--tabs__nav-link:focus,
+.analyticsWidgetContainer .bx--tabs__nav-link:hover,
+.analyticsWidgetContainer .bx--apim-metric-value {
+  color: #0f62fe;
+}
+
+.analyticsWidgetContainer .bx--tabs__nav-item--selected {
+  border-bottom: 2px solid #0f62fe;
+}
+.analyticsWidgetContainer .bx--apim-metric-value.bx--apim-metric-error {
+  color: #e71d32;
+}
+
+.analyticsWidgetContainer .bx--tile {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  border: 0;
 }

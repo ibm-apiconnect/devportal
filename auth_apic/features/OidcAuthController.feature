@@ -181,11 +181,9 @@ Feature: Sign in/ Sign up via an OIDC provider
       | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | oidcandre |
     And I am at "/ibm_apim/oauth2/redirect?code=firsttimelogin&state=czozOiJrZXkiOw=="
     Then I should be on "/start"
-    And I should see the text "Get Started"
-    And I should see the text "Explore API Products"
-    And I should see the link "Start Exploring"
-    And I should see the text "Create a new App"
-    And I should see the link "Create an App"
+    And I should see the text "let's get started"
+    And I should see the text "Explore API products"
+    And I should see the text "Create a new app"
     And I should see the link "Take me to the homepage"
     Then there are no errors
     And there are no messages

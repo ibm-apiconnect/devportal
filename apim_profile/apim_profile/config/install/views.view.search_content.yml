@@ -5,6 +5,7 @@ dependencies:
     - search_api.index.default_index
   module:
     - better_exposed_filters
+    - masonry_views
     - search_api
     - user
     - views_autocomplete_filters
@@ -15,7 +16,6 @@ description: 'A search page preconfigured to search through the content of your 
 tag: ''
 base_table: search_api_index_default_index
 base_field: search_api_id
-core: 8.x
 display:
   default:
     display_plugin: default
@@ -88,24 +88,38 @@ display:
             offset_label: Offset
           quantity: 9
       style:
-        type: default
+        type: masonry
+        options:
+          row_class: ''
+          default_row_class: true
+          uses_fields: false
+          layoutColumnWidth: ''
+          layoutColumnWidthUnit: px
+          gutterWidth: '2'
+          stampSelector: ''
+          isLayoutResizable: 1
+          isLayoutAnimated: 1
+          layoutAnimationDuration: '500'
+          isLayoutFitsWidth: 0
+          isLayoutRtlMode: 0
+          isLayoutImagesLoadedFirst: 1
+          isItemsPositionInPercent: 0
       row:
         type: search_api
         options:
           view_modes:
-            'entity:node':
-              api: teaser
-              application: teaser
-              article: search_result
-              blog_post: teaser
-              book: teaser
-              consumerorg: teaser
-              faq: teaser
-              forum: teaser
-              page: search_result
-              product: teaser
             'entity:file':
               file: default
+            'entity:node':
+              api: card
+              application: card
+              article: card
+              blog_post: card
+              consumerorg: card
+              faq: card
+              forum: card
+              page: card
+              product: card
       filters:
         search_api_fulltext:
           id: search_api_fulltext
@@ -141,6 +155,8 @@ display:
             autocomplete_raw_suggestion: 1
             autocomplete_raw_dropdown: 1
             autocomplete_dependent: 1
+            operator_limit_selection: false
+            operator_list: {  }
           is_grouped: false
           group_info:
             label: ''
@@ -186,6 +202,8 @@ display:
               content_author: '0'
               administrator: '0'
             reduce: false
+            operator_limit_selection: false
+            operator_list: {  }
           is_grouped: false
           group_info:
             label: ''
@@ -224,24 +242,29 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
+        - 'user.node_grants:view'
         - user.permissions
       cacheable: false
       max-age: -1
-      tags: {  }
+      tags:
+        - 'config:search_api.index.default_index'
   page_1:
     display_plugin: page
     id: page_1
     display_title: Page
     position: 1
     display_options:
-      display_extenders: {  }
+      display_extenders:
+        ajax_history: {  }
       path: search/content
     cache_metadata:
       contexts:
         - 'languages:language_interface'
         - url
         - url.query_args
+        - 'user.node_grants:view'
         - user.permissions
       cacheable: false
       max-age: -1
-      tags: {  }
+      tags:
+        - 'config:search_api.index.default_index'

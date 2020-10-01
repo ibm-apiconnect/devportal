@@ -1,0 +1,7 @@
+ibm_stripe_payment_method.settings:
+  path: '/admin/config/system/ibm_stripe'
+  defaults:
+    _form: 'Drupal\ibm_stripe_payment_method\Form\StripeConfigForm'
+    _title: 'IBM APIC Stripe Integration'
+  requirements:
+    _permission: 'administer_apic'

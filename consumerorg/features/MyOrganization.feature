@@ -18,9 +18,9 @@ Feature: My Organization
     And I should see the text "Delete organization"
     And I should see the text "Members"
     And I should see the text "Invite"
-    And I should see the text "NAME"
-    And I should see the text "STATE"
-    And I should see the text "Members will be listed here"
+    And I should see the text "Name"
+    And I should see the text "State"
+    And I should see the text "You don't currently have any members."
     And there are no errors
 
   @api

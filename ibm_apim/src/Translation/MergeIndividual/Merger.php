@@ -1,10 +1,5 @@
 <?php
 
-namespace Drupal\ibm_apim\Translation\MergeIndividual;
-
-use Drupal\ibm_apim\Translation\TranslationFileWriter;
-use Drupal\ibm_apim\Translation\TranslationMerger;
-
 /********************************************************* {COPYRIGHT-TOP} ***
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
@@ -15,6 +10,11 @@ use Drupal\ibm_apim\Translation\TranslationMerger;
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
+namespace Drupal\ibm_apim\Translation\MergeIndividual;
+
+use Drupal\ibm_apim\Translation\TranslationFileWriter;
+use Drupal\ibm_apim\Translation\TranslationMerger;
 
 /**
  * Class Merger

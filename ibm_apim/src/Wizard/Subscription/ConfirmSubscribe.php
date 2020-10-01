@@ -14,6 +14,8 @@ namespace Drupal\ibm_apim\Wizard\Subscription;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ibm_apim\Wizard\IbmWizardStepBase;
+use Drupal\node\Entity\Node;
+use Drupal\product\Product;
 
 class ConfirmSubscribe extends IbmWizardStepBase {
 
@@ -38,29 +40,75 @@ class ConfirmSubscribe extends IbmWizardStepBase {
       $product_name = $temp_store->get('productName');
       $plan_name = $temp_store->get('planName');
       $application_name = $temp_store->get('applicationName');
+      if ($temp_store->get('productId') !== null) {
+        $product_node = Node::load($temp_store->get('productId'));
+        if (isset($product_node)) {
+          //Get selected plan
+          $plans = $product_node->get("product_plans")->getValue();
+          $selectedPlan = null;
+          foreach ($plans as $plan) {
+            $plan = unserialize($plan['value'], ['allowed_classes' => FALSE]);
+            if (isset($plan['title']) && $plan['title'] === $plan_name) {
+              $selectedPlan = $plan;
+            }
+          }
+        }
+      }
 
-      $form['productName'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Product'),
-        '#default_value' => $product_name,
-        '#disabled' => TRUE,
-      ];
+      if (isset($selectedPlan)) {
+        //Get the product image
+        $moduleHandler = \Drupal::service('module_handler');
+        $ibm_apim_show_placeholder_images = (boolean) \Drupal::config('ibm_apim.settings')->get('show_placeholder_images');
+        $fid = $product_node->apic_image->getValue();
+        $product_image = NULL;
+        if (isset($fid[0]['target_id'])) {
+          $file = File::load($fid[0]['target_id']);
+          if ($file !== NULL) {
+            $product_image = $file->createFileUrl();
+          }
+        }
+        elseif ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('product')) {
+          $rawImage = Product::getRandomImageName($product_node->getTitle());
+          $product_image = base_path() . drupal_get_path('module', 'product') . '/images/' . $rawImage;
+        }
 
-      $form['planName'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Plan'),
-        '#default_value' => $plan_name,
-        '#disabled' => TRUE,
-      ];
+      //Set the rate limit
+      $form['#planInfo']['name'] = $plan_name;
+      $planService = \Drupal::service('product.plan');
+      if (isset($selectedPlan['rate-limits'])) {
+        $rateLimit = array_shift($selectedPlan['rate-limits'])['value'];
+        $form['#planInfo']['rateLimit'] = $planService->parseRateLimit($rateLimit);
+      }
 
-      $form['applicationName'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Application'),
-        '#default_value' => $application_name,
-        '#disabled' => TRUE,
-      ];
+      $form['#billing'] = false;
+      //Set the billing info
+      $billingAccessCheck = \Drupal::service('ibm_apim.billing_access_checker')->access();
+      if (isset($billingAccessCheck) && $billingAccessCheck->isAllowed()) {
+        $form['#billing'] = true;
+        if (isset($product_node)) {
+          $org_url = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerOrg();
+          $org_url = array_shift( $org_url );
+          $corgService = \Drupal::service('ibm_apim.consumerorg');
+          $org = $corgService->get($org_url );
+
+          if (isset($selectedPlan['billing'])) {
+            $form['#planInfo']['billingInfo'] = $planService->parseBilling($selectedPlan['billing']);
+            $form['#paymentMethod'] = $org->getDefaultPaymentMethod();
+            if (!empty($form['#paymentMethod']) && is_array($form['#paymentMethod'])) {
+              $form['#paymentMethod'] = $form['#paymentMethod'][0]->toArray();
+            }
+          }
+        }
+      }
+
+      $form['#productImage'] = $product_image;
+      $form['#productName'] = $product_name;
+      $form['#applicationName'] = $application_name;
+    } else {
+      $form['#error'] = TRUE;
     }
 
+    }
     return $form;
   }
 
@@ -79,6 +127,9 @@ class ConfirmSubscribe extends IbmWizardStepBase {
     $restService = \Drupal::service('apic_app.rest_service');
     $result = $restService->subscribeToPlan($applicationUrl, $planId);
     $temp_store->set('result', $result);
+    if (isset($form['#planInfo']['billingInfo'])) {
+      $temp_store->set('price', $form['#planInfo']['billingInfo']);
+    }
   }
 
 }

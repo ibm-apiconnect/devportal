@@ -18,22 +18,22 @@
 
   table thead,
   .table thead th{
-    border-bottom: 2px solid $table-header-border;
+    background: $ui-03;
   }
 
   th {
-    padding-left: 0;
-    padding-right: 2rem;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding: 0.5rem 1rem;
     display: table-cell;
     font-size: 0.75rem;
     font-weight: 600;
-    height: 2.5rem;
     letter-spacing: 1px;
-    text-align: left;
-    text-transform: uppercase;
+    text-align: center;
     vertical-align: middle;
+  }
+  th:first-child,
+  tbody td:first-child {
+    text-align: left;
+    padding-left: 1rem;
   }
 
   tbody tr {
@@ -42,11 +42,15 @@
       background-color: rgba($table-row-hover, 0.1);
     }
     td {
-      padding: 1rem 1rem 1rem 0;
-      line-height:1.25;
+      padding: 1rem 0;
+      line-height: 1.25;
+      text-align: center;
     }
   }
 
+  tbody tr:nth-child(odd) {
+    background-color: #f0f3f6;
+  }
 }
 
 .page-node-type-forum {
@@ -58,12 +62,46 @@
   }
   .forum footer {
     min-width:200px;
-    width: 200px;
     &> article > a {
       display: none;
     }
   }
   .forum .field--name-body{
     padding: 1rem 0;
+  }
+
+  .submittedOn {
+    margin-top: 2rem;
+  }
+}
+
+.forumWrapper .forumContent {
+  width: calc(100% - 250px);
+  display: inline-block;
+  background-color: $ui-background;
+  padding: 1rem;
+  margin-top: 2rem;
+}
+
+.forumWrapper .forumSidebar {
+  width: 220px;
+  display: inline-block;
+  vertical-align: top;
+  margin-left: 1rem;
+  margin-top: 1rem;
+
+  p {
+    font-size: 0.875rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+  .supporttext h2{
+    margin-top: 0;
+  }
+
+  .block-social-media-links {
+    margin-left: 12px;
   }
 }

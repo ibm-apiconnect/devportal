@@ -72,6 +72,34 @@ body.adminimal-admin-toolbar .explorerWrapper{
   border-top: 1px solid #dfe3e6;
 }
 
+.bx--tertiary-text {
+  color: #6f6f6f;
+}
+
+.apicProduct .apicProductBody .apicApiEmbedded .field {
+  margin: 0;
+}
+
+.apicCardFooter {
+  margin-top: 1rem;
+  padding-bottom:  1rem;
+}
+
+.apicCardFooter .apicProtocol,
+.apicCardFooter .apicState {
+  display: inline-block;
+}
+
+.apicCardFooter .apicProtocol .field:after,
+.apicCardFooter .apicState .field:after {
+  content: ' \2022';
+}
+
+.bx--card .apicApiEmbedded .apicApiDesc.apicFade {
+  max-height: 6.25rem;
+  /* height: min-content; */
+}
+
 apiconnect-explorer h1 .apiImage {
   border: 0;
   width: 48px;
@@ -131,5 +159,20 @@ apiconnect-explorer .signInMessage {
 }
 
 .node--type-api.node--view-mode-embedded.bx--card {
-  min-height: 7rem;
+  min-height: 14rem;
+  margin: 0;
+}
+.apicProductApiList .views-bootstrap-list-group {
+  padding: 0
+}
+.apicProductApiList .views-bootstrap-list-group .list-group-item {
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 2px;
+  padding: 0;
+  border: 0;
+}
+
+.apicProductApiList .views-bootstrap-list-group .list-group-item > p.list-group-item-text {
+  display: none;
 }

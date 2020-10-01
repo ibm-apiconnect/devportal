@@ -1,4 +1,31 @@
 changes:
+  8.x-2.2.9: null
+  8.x-2.2.8:
+  - fix tests for new getting started page
+  8.x-2.2.7:
+  - dont allow create account if logged in
+  8.x-2.2.6:
+  - User custom fields v10.0.1 (#581)
+  8.x-2.2.5:
+  - use the git based layout for the admin one time link form too
+  8.x-2.2.4: null
+  8.x-2.2.3:
+  - carbon x for register and reset pwd
+  - carbon x for login panel
+  8.x-2.2.2:
+  - update field label
+  - Submit -> Save
+  8.x-2.2.1:
+  - remove glyph icons
+  8.x-2.2.0:
+  - Update auth_apic.info.yml
+  8.x-2.1.4: null
+  8.x-2.1.3:
+  - Use getter functions for get response (#578) (#579)
+  8.x-2.1.2:
+  - Custom fields v10.0.0 (#577)
+  8.x-2.1.1:
+  - Tempmerge (#571)
   8.x-2.1.0:
   - update version: 8.x-2.0.26 -> 8.x-2.1.0
   8.x-2.0.25:

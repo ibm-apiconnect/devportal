@@ -10,7 +10,7 @@
 'node',
 'node--id-' ~ node.id,
 ('node--type-' ~ node.bundle)|clean_class,
-view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
+view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
 ('apitNodeID-' ~ node.id)|clean_class,
 ('apiTitle-' ~ node.title[0].value)|clean_class,
 ('apiVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
@@ -36,7 +36,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
     {% endif %}
     <div class="apicApiCardMain">
       <div class="bx--about__title--name" data-toggle="tooltip" data-placement="bottom" title="{{- node.title[0].value -}}">
-        <a href="{{- path('apic_api.view', {'apiNode': apiNode}) -}}" rel="bookmark">
+        <a href="{{- path('product.select', {'apiNode': apiNode}) -}}" rel="bookmark">
           <span id="node-{{ node.id }}-title" class="apicApiName apicTruncate">{{- label -}}</span>
           {% if showVersions %}
             <div class="apicApiCardVersion">{{- content.apic_version -}}</div>

@@ -1,4 +1,238 @@
 changes:
+  8.x-2.2.76:
+  - fix path to file
+  8.x-2.2.75:
+  - Change name to title
+  8.x-2.2.74:
+  - dont display link to create apps in wizard
+  8.x-2.2.73:
+  - Fixed some more bugs
+  - Fixed build and submit errors
+  - Error handling in stripe module
+  - Fixed submission and form styling
+  8.x-2.2.72:
+  - hide revision info from normal users
+  8.x-2.2.71:
+  - minor styling for my org
+  8.x-2.2.70:
+  - minor styling for no content view
+  8.x-2.2.69:
+  - hover colour from dropit menu
+  8.x-2.2.68:
+  - responsiveness fixes
+  8.x-2.2.67:
+  - responsiveness fixes
+  8.x-2.2.66: null
+  8.x-2.2.65: null
+  8.x-2.2.64:
+  - minor styling for user edit page
+  - support page polish
+  - node padding top
+  8.x-2.2.63:
+  - basic hierarchical taxonomy menu block styling
+  8.x-2.2.62:
+  - svg and label sizes on app subs page
+  8.x-2.2.61: null
+  8.x-2.2.60:
+  - left align the forgot password link
+  - make signup spacing correct
+  8.x-2.2.59:
+  - fix user page tabs styling
+  8.x-2.2.58:
+  - make tabs look like carbon x
+  8.x-2.2.57:
+  - override some analytics styling to make it carbon x
+  8.x-2.2.56:
+  - alignment for user mgmt forms
+  8.x-2.2.55:
+  - more defensive
+  8.x-2.2.54:
+  - add link to config settings
+  8.x-2.2.53:
+  - add drush command to run when site url changes
+  8.x-2.2.52:
+  - add tests for getting started page to ibm_apim
+  8.x-2.2.51: null
+  8.x-2.2.50:
+  - tidy css
+  - getting started page refresh (#599)
+  8.x-2.2.49:
+  - hide my blog link for normal users
+  8.x-2.2.48:
+  - fix how block content is loaded
+  8.x-2.2.47:
+  - add update function to update the blocks later
+  8.x-2.2.46:
+  - inline the SVG
+  8.x-2.2.45:
+  - update subscribe wizard (#598)
+  8.x-2.2.44: null
+  8.x-2.2.43:
+  - include product version too
+  - add new subscription header block
+  8.x-2.2.42:
+  - see if can fix why blocks not getting created correctly
+  8.x-2.2.41: null
+  8.x-2.2.40:
+  - ignore hash on updateall
+  - User custom fields v10.0.1 (#597)
+  8.x-2.2.39:
+  - use url not billing_url
+  8.x-2.2.38:
+  - fix no content blocks
+  8.x-2.2.37:
+  - use correct font families
+  8.x-2.2.36:
+  - restyle user account and edit page
+  8.x-2.2.35:
+  - show error if subscribe wizard accessed incorrectly
+  8.x-2.2.34:
+  - do avatar generation on user insert
+  8.x-2.2.33:
+  - restyle modal-like forms
+  8.x-2.2.32: null
+  8.x-2.2.31:
+  - minor css
+  - replace SVGs
+  8.x-2.2.30: null
+  8.x-2.2.29: null
+  8.x-2.2.28:
+  - add the SVG!
+  - fix path to svg
+  - fix no empty block inc file
+  - no content blocks for views
+  8.x-2.2.27: null
+  8.x-2.2.26:
+  - use info mode for password validator when empty
+  - Clean subscribe v10.0.1 (#592)
+  8.x-2.2.25:
+  - restyle all headers to IDE Carbon X
+  8.x-2.2.24:
+  - styling for payment methods
+  8.x-2.2.23:
+  - use the git based layout for the admin one time link form too
+  8.x-2.2.22:
+  - monetization schema change
+  8.x-2.2.21:
+  - check in the login gif
+  - add payment method styling
+  8.x-2.2.20:
+  - billing page no payment methods styling
+  8.x-2.2.19:
+  - minor tweak
+  8.x-2.2.18:
+  - minor tweak for my org page
+  8.x-2.2.17:
+  - carbon x for register and reset pwd
+  8.x-2.2.16: null
+  8.x-2.2.15:
+  - remove some padding
+  - carbon x for login panel
+  8.x-2.2.14:
+  - myorg page styling
+  8.x-2.2.13: null
+  8.x-2.2.12: null
+  8.x-2.2.11:
+  - update getting started on homepage
+  8.x-2.2.10:
+  - add getting started images and tidy
+  8.x-2.2.9:
+  - Refresh welcome page banner (#589)
+  8.x-2.2.8:
+  - fix banner text
+  - change search icon block (#588)
+  - support for textarea, descriptions
+  8.x-2.2.7: null
+  8.x-2.2.6:
+  - wrong hook names
+  - get the billing stuff working
+  8.x-2.2.5:
+  - remove ajax for now - just use a simple redirect link
+  8.x-2.2.4:
+  - fix tabs on billing page
+  8.x-2.2.3:
+  - billing page styling
+  8.x-2.2.2:
+  - make messages translatable
+  8.x-2.2.1: null
+  8.x-2.2.0:
+  - Update ibm_apim.info.yml
+  8.x-2.1.37: null
+  8.x-2.1.36: null
+  8.x-2.1.35:
+  - Made mock consistent with actual implementation (#579) (#584)
+  - Dupe fix v10.0.0 (#586)
+  8.x-2.1.34:
+  - Monetisation flow v10.0.0 (#583)
+  8.x-2.1.33:
+  - masonry library has a new name
+  8.x-2.1.32:
+  - Force user log out on token expiry (#574) (#575)
+  8.x-2.1.31:
+  - Add a render test for the analytics page
+  8.x-2.1.30:
+  - Custom fields v10.0.0 (#573)
+  8.x-2.1.29:
+  - fix templates mk2
+  8.x-2.1.28:
+  - fix templates
+  8.x-2.1.27:
+  - add hook to allow additional tabs
+  8.x-2.1.26:
+  - add hook to allow modification of the summary panel
+  8.x-2.1.25:
+  - enable ibm_create_payment_method by default
+  8.x-2.1.24:
+  - Added unit test (#566) (#570)
+  8.x-2.1.23:
+  - use a select field instead of text entry
+  8.x-2.1.22: null
+  8.x-2.1.21:
+  - restructure the payment method forms to handle different submodules
+  8.x-2.1.20:
+  - add attribution
+  - skeleton stripe support
+  - missing copyright statements
+  8.x-2.1.19:
+  - apimesh/devportal#5177
+  8.x-2.1.18:
+  - move the template for billing to the consumerorg module
+  8.x-2.1.17:
+  - use hash for deleteall too
+  8.x-2.1.16:
+  - add link to delete payment methods
+  8.x-2.1.15:
+  - special case the required array
+  8.x-2.1.14:
+  - support OAI3 style format and types
+  8.x-2.1.13:
+  - support hash attribute on integrations
+  8.x-2.1.12:
+  - add default create payment method impl
+  8.x-2.1.11:
+  - create deletetokens drush command
+  8.x-2.1.10:
+  - honour the configuration schema always
+  8.x-2.1.9:
+  - add support for the listen command handling integrations
+  8.x-2.1.8:
+  - render multi-pass form
+  8.x-2.1.7:
+  - add some classes
+  8.x-2.1.6:
+  - fill out payment methods
+  8.x-2.1.5:
+  - put billing tab in place
+  8.x-2.1.4:
+  - remove routing that doesnt exist anymore
+  - dont retrieve all billing objects if dont need to
+  8.x-2.1.3:
+  - encrypt the billing objects too
+  - remove Rules support from our code
+  8.x-2.1.2:
+  - fix issue with immutable config
+  8.x-2.1.1:
+  - Tempmerge (#565)
   8.x-2.1.0:
   - update version: 8.x-2.0.63 -> 8.x-2.1.0
   8.x-2.0.62:

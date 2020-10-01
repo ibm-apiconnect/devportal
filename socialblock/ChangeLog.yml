@@ -1,4 +1,17 @@
 changes:
+  8.x-2.2.2:
+  - fix link to tweets
+  8.x-2.2.1:
+  - change default
+  - change default
+  - fix socialblock
+  8.x-2.2.0:
+  - Update socialblock.info.yml
+  8.x-2.1.3: null
+  8.x-2.1.2:
+  - masonry library has a new name
+  8.x-2.1.1:
+  - Removed use of deprecated functions
   8.x-2.1.0:
   - update version: 8.x-2.0.14 -> 8.x-2.1.0
   8.x-2.0.13: null

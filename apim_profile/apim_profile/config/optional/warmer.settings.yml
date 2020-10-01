@@ -37,7 +37,6 @@ warmers:
       'node:application': 'node:application'
       'node:article': 'node:article'
       'node:blog_post': 'node:blog_post'
-      'node:book': 'node:book'
       'node:consumerorg': 'node:consumerorg'
       'node:faq': 'node:faq'
       'node:forum': 'node:forum'

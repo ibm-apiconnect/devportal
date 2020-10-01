@@ -450,11 +450,9 @@ Scenario: Sign in for the first time
   And I enter "@data(andre.password)" for "Password"
   When I press the "Sign in" button
   Then I should be on "/start"
-  And I should see the text "Get Started"
-  And I should see the text "Explore API Products"
-  And I should see the link "Start Exploring"
-  And I should see the text "Create a new App"
-  And I should see the link "Create an App"
+  And I should see the text "let's get started"
+  And I should see the text "Explore API products"
+  And I should see the text "Create a new app"
   And I should see the link "Take me to the homepage"
   Then there are no errors
   And there are no messages
@@ -632,11 +630,9 @@ Scenario: Sign in users from different user registries with the same username
     And I enter "@data(andre.password)" for "Password"
     When I press the "Sign in" button
     Then I should be on "/start"
-    And I should see the text "Get Started"
-    And I should see the text "Explore API Products"
-    And I should see the link "Start Exploring"
-    And I should see the text "Create a new App"
-    And I should see the link "Create an App"
+    And I should see the text "let's get started"
+    And I should see the text "Explore API products"
+    And I should see the text "Create a new app"
     And I should see the link "Take me to the homepage"
     Then there are no errors
     And there are no messages
@@ -662,11 +658,9 @@ Scenario: Sign in users from different user registries with the same username
     When I press the "Sign in" button
 #    Then I should be on the homepage - this is where the user should be, but current test framework doesn't support this
     Then I should be on "/start"
-    And I should see the text "Get Started"
-    And I should see the text "Explore API Products"
-    And I should see the link "Start Exploring"
-    And I should see the text "Create a new App"
-    And I should see the link "Create an App"
+    And I should see the text "let's get started"
+    And I should see the text "Explore API products"
+    And I should see the text "Create a new app"
     And I should see the link "Take me to the homepage"
     Then there are no errors
     And there are no messages

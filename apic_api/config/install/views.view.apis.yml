@@ -1,8 +1,8 @@
-uuid: e2e4d401-d24e-4611-b5ff-112f776967ac
 langcode: en
 status: true
 dependencies:
   config:
+    - block.block.noapisblock
     - core.entity_view_mode.node.card
     - node.type.api
     - taxonomy.vocabulary.tags
@@ -21,7 +21,6 @@ description: ''
 tag: ''
 base_table: node_field_data
 base_field: nid
-core: 8.x
 display:
   default:
     display_plugin: default
@@ -99,7 +98,7 @@ display:
           expose:
             items_per_page: true
             items_per_page_label: 'Items per page'
-            items_per_page_options: '5, 10, 25, 50'
+            items_per_page_options: '10, 25, 50, 75'
             items_per_page_options_all: false
             items_per_page_options_all_label: '- All -'
             offset: false
@@ -113,7 +112,7 @@ display:
           uses_fields: false
           layoutColumnWidth: ''
           layoutColumnWidthUnit: px
-          gutterWidth: '0'
+          gutterWidth: '2'
           stampSelector: ''
           isLayoutResizable: 1
           isLayoutAnimated: 1
@@ -185,6 +184,8 @@ display:
           id: status
           expose:
             operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
           group: 1
         type:
           id: type
@@ -196,6 +197,9 @@ display:
           entity_field: type
           plugin_id: bundle
           group: 1
+          expose:
+            operator_limit_selection: false
+            operator_list: {  }
         status_extra:
           id: status_extra
           table: node_field_data
@@ -219,6 +223,8 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
+            operator_limit_selection: false
+            operator_list: {  }
           is_grouped: false
           group_info:
             label: ''
@@ -268,6 +274,8 @@ display:
             autocomplete_raw_suggestion: 1
             autocomplete_raw_dropdown: 1
             autocomplete_dependent: 1
+            operator_limit_selection: false
+            operator_list: {  }
           is_grouped: false
           group_info:
             label: ''
@@ -311,6 +319,8 @@ display:
               content_author: '0'
               administrator: '0'
             reduce: false
+            operator_limit_selection: false
+            operator_list: {  }
           is_grouped: false
           group_info:
             label: ''
@@ -358,6 +368,8 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
+            operator_limit_selection: false
+            operator_list: {  }
           is_grouped: false
           group_info:
             label: ''
@@ -448,19 +460,19 @@ display:
       header: {  }
       footer: {  }
       empty:
-        area:
-          id: area
+        entity_block:
+          id: entity_block
           table: views
-          field: area
+          field: entity_block
           relationship: none
           group_type: group
           admin_label: ''
           empty: true
-          tokenize: false
-          content:
-            value: 'No APIs found.'
-            format: basic_html
-          plugin_id: text
+          tokenize: true
+          target: noapisblock
+          view_mode: default
+          bypass_access: false
+          plugin_id: entity
       relationships: {  }
       arguments: {  }
       display_extenders: {  }
@@ -584,6 +596,8 @@ display:
           id: status
           expose:
             operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
           group: 1
         type:
           id: type
@@ -594,6 +608,9 @@ display:
           entity_type: node
           entity_field: type
           plugin_id: bundle
+          expose:
+            operator_limit_selection: false
+            operator_list: {  }
         status_extra:
           id: status_extra
           table: node_field_data
@@ -617,6 +634,8 @@ display:
             multiple: false
             remember_roles:
               authenticated: authenticated
+            operator_limit_selection: false
+            operator_list: {  }
           is_grouped: false
           group_info:
             label: ''

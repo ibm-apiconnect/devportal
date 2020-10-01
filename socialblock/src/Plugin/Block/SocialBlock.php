@@ -40,10 +40,10 @@ class SocialBlock extends BlockBase {
   public function defaultConfiguration(): array {
 
     $default = [
-      'numberOfTiles' => 3,
+      'numberOfTiles' => 9,
       'forumsList' => [],
       'twitterSearchBy' => 0,
-      'twitterSearchParameter' => 'IBMintegration',
+      'twitterSearchParameter' => 'ibmcloud',
       'twitterTweetTypes' => 0,
     ];
 

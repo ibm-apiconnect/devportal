@@ -1,0 +1,38 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.card
+    - field.field.node.faq.faqs
+    - node.type.faq
+  module:
+    - faqfield
+    - user
+id: node.faq.card
+targetEntityType: node
+bundle: faq
+mode: card
+content:
+  faqs:
+    weight: 102
+    label: hidden
+    settings:
+      active: null
+      heightStyle: auto
+      collapsible: true
+      event: click
+      animate:
+        duration: 200
+        easing: linear
+    third_party_settings: {  }
+    type: faqfield_accordion
+    region: content
+  links:
+    weight: 100
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  addtoany: true
+  langcode: true
+  search_api_excerpt: true

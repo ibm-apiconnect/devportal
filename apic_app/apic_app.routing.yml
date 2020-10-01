@@ -42,7 +42,7 @@ apic_app.subscriptions:
 apic_app.create:
   path: '/application/new'
   defaults:
-    _form: '\Drupal\apic_app\Form\Multistep\ApplicationCreateStep1Form'
+    _form: '\Drupal\apic_app\Form\ApplicationCreateForm'
     _title: 'Create a new application'
   requirements:
     _user_is_logged_in: 'TRUE'
@@ -53,15 +53,6 @@ apic_app.create_modal:
   defaults:
     _controller: '\Drupal\apic_app\Controller\ApplicationController::createApplicationModal'
     _title: 'Create a new application'
-  requirements:
-    _user_is_logged_in: 'TRUE'
-    _application_developer_check: 'TRUE'
-
-apic_app.create_step_two:
-  path: '/application/new/summary'
-  defaults:
-    _form: '\Drupal\apic_app\Form\Multistep\ApplicationCreateStep2Form'
-    _title: 'API Key and Secret'
   requirements:
     _user_is_logged_in: 'TRUE'
     _application_developer_check: 'TRUE'
@@ -231,6 +222,19 @@ apic_app.migrate_subscription:
   defaults:
     _form: '\Drupal\apic_app\Form\MigrateSubscriptionForm'
     _title: 'Migrate a subscription to a product plan'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _application_developer_check: 'TRUE'
+  options:
+    parameters:
+      appId:
+        type: 'apic_app.appid'
+
+apic_app.display_creds:
+  path: '/application/credentials/{appId}/{credentials}'
+  defaults:
+    _form: '\Drupal\apic_app\Form\DisplayCredsForm'
+    _title: 'New application credentials'
   requirements:
     _user_is_logged_in: 'TRUE'
     _application_developer_check: 'TRUE'

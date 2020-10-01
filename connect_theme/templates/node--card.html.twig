@@ -1,0 +1,38 @@
+{#
+/**
+ * @file
+ * Default card theme implementation for apis.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+'node',
+'node--id-' ~ node.id,
+('node--type-' ~ node.bundle)|clean_class,
+view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
+'bx--card'
+] -%}
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  <div class="apicCard">
+    {% if display_submitted %}
+      <footer class="apicIcon">
+        {{ author_picture }}
+      </footer>
+    {% endif %}
+    <div class="apicCardMain">
+      <div class="bx--about__title--name" data-toggle="tooltip" data-placement="bottom" title="{{- node.title[0].value -}}">
+        {{ title_prefix }}
+        {% if label and not page %}
+          <h2{{ title_attributes }}>
+            <a href="{{ url }}" rel="bookmark">{{ label }}</a>
+          </h2>
+        {% endif %}
+        {{ title_suffix }}
+      </div>
+      <div{{ content_attributes }}>
+        {{ content }}
+      </div>
+    </div>
+  </div>
+</article>

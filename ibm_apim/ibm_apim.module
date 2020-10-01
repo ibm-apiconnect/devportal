@@ -63,6 +63,22 @@ function ibm_apim_module_implements_alter(&$implementations, $hook) {
 }
 
 /**
+ * Implements hook_preprocess_menu().
+ *
+ * @param $variables
+ */
+function ibm_apim_preprocess_menu(&$variables) {
+  if (isset($variables['menu_name']) && $variables['menu_name'] === 'account') {
+    $currentUser = \Drupal::currentUser();
+    $user = User::load($currentUser->id());
+    // remove the my blog link if anon or dont have perms to create blog posts
+    if (array_key_exists('blog.myblog_link', $variables['items']) && ($currentUser->isAnonymous() || ($user !== NULL && !$user->hasPermission('create blog_post content')))) {
+      unset($variables['items']['blog.myblog_link']);
+    }
+  }
+}
+
+/**
  *  Implements hook_menu_links_discovered_alter().
  *
  * @param array $links
@@ -98,6 +114,12 @@ function ibm_apim_user_insert(User $account) {
   if ($account !== NULL && (int) $account->id() !== 1) {
     $account->set('first_time_login', 1);
     $account->save();
+    // trigger avatar generation
+    $moduleHandler = \Drupal::service('module_handler');
+    if ($moduleHandler->moduleExists('avatars')) {
+      $avatarManager = \Drupal::service('avatars.avatar_manager');
+      $avatarManager->syncAvatar($account);
+    }
   }
 }
 
@@ -116,6 +138,7 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
     'ibm_apim_myorg' => [
       'variables' => [
         'node' => [],
+        'tabs' => [],
       ],
     ],
     'ibm_apim_search_icon_block' => [
@@ -148,13 +171,19 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
         'consumerorgTitle' => NULL,
         'filter' => NULL,
         'filterValue' => NULL,
-        'node' => NULL,
+        'node' => [],
+        'tabs' => [],
       ],
     ],
     'ibm_apim_status_messages_block' => [
       'variables' => [
         'header' => NULL,
         'messages' => NULL,
+      ],
+    ],
+    'ibm_apim_wizard_title_block' => [
+      'variables' => [
+        'header' => NULL,
       ],
     ],
     'form_subscription_wizard_choose_application' => [
@@ -263,12 +292,18 @@ function ibm_apim_preprocess(&$variables, $hook, &$info) {
     }
   }
 
-  if ($hook === 'ibm_apim_myorg' || $hook === 'ibm_apim_analytics') {
+  if ($hook === 'ibm_apim_myorg' || $hook === 'ibm_apim_analytics' || $hook === 'consumerorg_billing') {
     // set analytics variables if it is enabled
     $variables['analytics_access'] = FALSE;
     $analyticsAccessCheck = \Drupal::service('ibm_apim.analytics_access_checker')->access();
     if (isset($analyticsAccessCheck)) {
       $variables['analytics_access'] = $analyticsAccessCheck->isAllowed();
+    }
+    // set billing variables if it is enabled
+    $variables['billing_access'] = FALSE;
+    $billingAccessCheck = \Drupal::service('ibm_apim.billing_access_checker')->access();
+    if (isset($billingAccessCheck)) {
+      $variables['billing_access'] = $billingAccessCheck->isAllowed();
     }
   }
 
@@ -454,6 +489,19 @@ function ibm_apim_updater_info_alter(&$updaters) {
  */
 function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   switch ($form_id) {
+    case 'node_forum_edit_form':
+      if (!\Drupal::currentUser()->hasPermission('view forum revisions')) {
+        if (isset($form['revision'])) {
+          unset($form['revision']);
+        }
+        if (isset($form['revision_information'])) {
+          unset($form['revision_information']);
+        }
+        if (isset($form['revision_log'])) {
+          unset($form['revision_log']);
+        }
+      }
+      break;
     case 'user_register_form' :
       // We have to hide the elements that password policy module adds so we can replace them with something more compact!
       if (\Drupal::moduleHandler()->moduleExists("password_policy")) {
@@ -537,21 +585,31 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       if (isset($form['modules']['Core (Experimental)']['migrate_drupal_multilingual'])) {
         unset($form['modules']['Core (Experimental)']['migrate_drupal_multilingual']);
       }
-      // blacklist some modules
-      $moduleBlacklist = \Drupal::config('ibm_apim.settings')->get('module_blacklist');
-      if (isset($moduleBlacklist) && !empty($moduleBlacklist)) {
+      // if billing isn't enabled hide the monetization modules
+      $billingEnabled = \Drupal::service('ibm_apim.billing')->isEnabled();
+      if ($billingEnabled !== TRUE) {
+        if (isset($form['modules']['IBM API Connect']['ibm_create_payment_method'])) {
+          unset($form['modules']['IBM API Connect']['ibm_create_payment_method']);
+        }
+        if (isset($form['modules']['IBM API Connect']['ibm_stripe_payment_method'])) {
+          unset($form['modules']['IBM API Connect']['ibm_stripe_payment_method']);
+        }
+      }
+      // blocklist some modules
+      $moduleBlocklist = \Drupal::config('ibm_apim.settings')->get('module_blocklist');
+      if (isset($moduleBlocklist) && !empty($moduleBlocklist)) {
         foreach ($form['modules'] as $modulePackage => $modules) {
           if (!is_array($modules)) {
             continue;
           }
 
           foreach ($modules as $moduleName => $module_info) {
-            // Checks whether the module is blacklisted.
-            if (!in_array($moduleName, $moduleBlacklist, FALSE)) {
+            // Checks whether the module is blocklisted.
+            if (!in_array($moduleName, $moduleBlocklist, FALSE)) {
               continue;
             }
 
-            // Skips modules that are already enabled, even if it is blacklisted.
+            // Skips modules that are already enabled, even if it is blocklisted.
             if ($form['modules'][$modulePackage][$moduleName]['enable']['#default_value'] === TRUE) {
               continue;
             }
@@ -750,8 +808,8 @@ function ibm_apim_local_tasks_alter(&$local_tasks) {
  * @throws \Drupal\ibm_apim\Exception\ModuleInstallationBlocked
  */
 function ibm_apim_module_preinstall($module) {
-  $moduleBlacklist = \Drupal::config('ibm_apim.settings')->get('module_blacklist');
-  if (!$moduleBlacklist || !in_array($module, $moduleBlacklist, FALSE)) {
+  $moduleBlocklist = \Drupal::config('ibm_apim.settings')->get('module_blocklist');
+  if (!$moduleBlocklist || !in_array($module, $moduleBlocklist, FALSE)) {
     return;
   }
 
@@ -762,7 +820,7 @@ function ibm_apim_module_preinstall($module) {
   // rollback to those changes.
   \Drupal::service('ibm_apim.module_installer')->rollbackPreinstall($module);
 
-  throw new ModuleInstallationBlocked("Unable to install '$module' module. The installation of this module is blocked by Module Blacklist.");
+  throw new ModuleInstallationBlocked("Unable to install '$module' module. The installation of this module is blocked by Module Blocklist.");
 }
 
 /**
@@ -932,10 +990,10 @@ function ibm_apim_password_policy_check_constraints(array $form, FormStateInterf
   }
   if ($dataRows === NULL || empty($dataRows)) {
     $dataRows = \Drupal::service('password_policy.validator')
-    ->buildPasswordPolicyConstraintsTableRows(
-      $form_state->getValue('pass', ''),
-      $form_state->getFormObject()->getEntity(),
-      _password_policy_get_edited_user_roles($form, $form_state));
+      ->buildPasswordPolicyConstraintsTableRows(
+        $form_state->getValue('pass', ''),
+        $form_state->getFormObject()->getEntity(),
+        _password_policy_get_edited_user_roles($form, $form_state));
   }
   $status = [];
   $failed = FALSE;
@@ -958,17 +1016,28 @@ function ibm_apim_password_policy_check_constraints(array $form, FormStateInterf
     }
     if ($force_failed === TRUE || strpos($data['status'], 'Fail') !== FALSE) {
       $failed = TRUE;
-      $status[] = '<span class="failed"><span class="icon glyphicon glyphicon-remove" aria-hidden="true"></span> ' . $data['constraint'] . '</span>';
+      $status[] = '<span class="failed"><span class="icon glyphicon" aria-hidden="true"></span> ' . $data['constraint'] . '</span>';
       $status[] = '';
     }
     else {
-      $status[] = '<span class="passed"><span class="icon glyphicon glyphicon-ok" aria-hidden="true"></span> ' . $data['constraint'] . '</span>';
+      $status[] = '<span class="passed"><span class="icon glyphicon" aria-hidden="true"></span> ' . $data['constraint'] . '</span>';
       $status[] = '';
     }
   }
 
-  // If there are no fails, just return the 'div' hook point with no content.
-  if ($failed === FALSE) {
+  // if no content at all then use info mode
+  if ($force_failed === TRUE) {
+    $response[] = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => implode('</br>', $status),
+      '#title_display' => 'above',
+      '#prefix' => "<div id='ibm-apim-password-policy-status' class='alert alert-info'>",
+      '#suffix' => '</div>',
+    ];
+  }
+  elseif ($failed === FALSE) {
+    // If there are no fails, just return the 'div' hook point with no content.
     $response = [
       '#type' => 'html_tag',
       '#tag' => 'div',
@@ -1136,7 +1205,7 @@ function ibm_apim_form_subscription_wizard_choose_application_alter(&$form, \Dru
  */
 function ibm_apim_form_subscription_wizard_confirm_subscribe_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
 
-  // TODO : in theory changing the text here would be nice but doing so breaks the form submission
+  //TODO : in theory changing the text here would be nice but doing so breaks the form submission
   //  $form['actions']['submit']['#value'] = t('Subscribe');
   $form['actions']['#prefix'] = '<div class="apic-wizard-navigation">';
   $form['actions']['#suffix'] = '</div>';
@@ -1271,7 +1340,7 @@ function ibm_apim_language_switch_links_alter(&$links, $type, $path) {
 
     $is_currentpath = $link['query']['q'] === ltrim($pathUrl, '/');
     $is_empty = $link['query']['q'] === '';
-    $is_lang_prefix =  preg_match('@^[a-zA-Z-]+' . $pathUrl . '@', $link['query']['q']);
+    $is_lang_prefix = preg_match('@^[a-zA-Z-]+' . $pathUrl . '@', $link['query']['q']);
     $is_langcode = array_key_exists($link['query']['q'], $languages);
 
     if (isset($link['query']['q']) && ($is_currentpath || $is_empty || $is_lang_prefix || $is_langcode)) {

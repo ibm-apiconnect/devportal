@@ -2,6 +2,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - block.block.noappsblock
     - core.entity_view_mode.node.card
     - node.type.application
     - user.role.authenticated
@@ -9,7 +10,6 @@ dependencies:
     - better_exposed_filters
     - masonry_views
     - node
-    - options
     - user
     - views_autocomplete_filters
 id: applications
@@ -19,7 +19,6 @@ description: ''
 tag: ''
 base_table: node_field_data
 base_field: nid
-core: 8.x
 display:
   default:
     display_plugin: default
@@ -47,7 +46,7 @@ display:
         type: bef
         options:
           submit_button: Apply
-          reset_button: true
+          reset_button: false
           reset_button_label: Reset
           exposed_sorts_label: 'Sort by'
           expose_sort_order: true
@@ -62,11 +61,11 @@ display:
               autosubmit: false
               autosubmit_hide: false
             sort:
-              bef_format: default
+              plugin_id: default
               advanced:
                 collapsible: false
                 collapsible_label: 'Sort options'
-                combine: false
+                combine: true
                 combine_rewrite: ''
                 reset: false
                 reset_label: ''
@@ -108,7 +107,7 @@ display:
           expose:
             items_per_page: true
             items_per_page_label: 'Items per page'
-            items_per_page_options: '5, 10, 25, 50'
+            items_per_page_options: '10, 25, 50, 75'
             items_per_page_options_all: false
             items_per_page_options_all_label: '- All -'
             offset: false
@@ -122,7 +121,7 @@ display:
           uses_fields: false
           layoutColumnWidth: ''
           layoutColumnWidthUnit: px
-          gutterWidth: '0'
+          gutterWidth: '2'
           stampSelector: ''
           isLayoutResizable: 1
           isLayoutAnimated: 1
@@ -195,6 +194,8 @@ display:
           id: status
           expose:
             operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
           group: 1
         type:
           id: type
@@ -205,6 +206,9 @@ display:
           entity_type: node
           entity_field: type
           plugin_id: bundle
+          expose:
+            operator_limit_selection: false
+            operator_list: {  }
         title:
           id: title
           table: node_field_data
@@ -240,6 +244,8 @@ display:
             autocomplete_raw_suggestion: 1
             autocomplete_raw_dropdown: 1
             autocomplete_dependent: 1
+            operator_limit_selection: false
+            operator_list: {  }
           is_grouped: false
           group_info:
             label: ''
@@ -255,92 +261,6 @@ display:
           entity_type: node
           entity_field: title
           plugin_id: string
-        application_lifecycle_state_value:
-          id: application_lifecycle_state_value
-          table: node__application_lifecycle_state
-          field: application_lifecycle_state_value
-          relationship: none
-          group_type: group
-          admin_label: ''
-          operator: or
-          value: {  }
-          group: 1
-          exposed: true
-          expose:
-            operator_id: application_lifecycle_state_value_op
-            label: Type
-            description: ''
-            use_operator: false
-            operator: application_lifecycle_state_value_op
-            identifier: application_lifecycle_state_value
-            required: false
-            remember: true
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              superuser: '0'
-              forum_moderator: '0'
-              content_author: '0'
-              administrator: '0'
-            reduce: false
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-          reduce_duplicates: false
-          plugin_id: list_field
-        apic_state_value:
-          id: apic_state_value
-          table: node__apic_state
-          field: apic_state_value
-          relationship: none
-          group_type: group
-          admin_label: ''
-          operator: or
-          value: {  }
-          group: 1
-          exposed: true
-          expose:
-            operator_id: apic_state_value_op
-            label: State
-            description: ''
-            use_operator: false
-            operator: apic_state_value_op
-            identifier: apic_state_value
-            required: false
-            remember: true
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              superuser: '0'
-              forum_moderator: '0'
-              content_author: '0'
-              administrator: '0'
-            reduce: false
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-          reduce_duplicates: false
-          plugin_id: list_field
       sorts:
         title:
           id: title
@@ -386,47 +306,23 @@ display:
           entity_type: node
           entity_field: changed
           plugin_id: date
-        application_lifecycle_state_value:
-          id: application_lifecycle_state_value
-          table: node__application_lifecycle_state
-          field: application_lifecycle_state_value
-          relationship: none
-          group_type: group
-          admin_label: ''
-          order: ASC
-          exposed: true
-          expose:
-            label: Type
-          plugin_id: standard
-        apic_state_value:
-          id: apic_state_value
-          table: node__apic_state
-          field: apic_state_value
-          relationship: none
-          group_type: group
-          admin_label: ''
-          order: ASC
-          exposed: true
-          expose:
-            label: State
-          plugin_id: standard
       title: Apps
       header: {  }
       footer: {  }
       empty:
-        area:
-          id: area
+        entity_block:
+          id: entity_block
           table: views
-          field: area
+          field: entity_block
           relationship: none
           group_type: group
           admin_label: ''
           empty: true
-          tokenize: false
-          content:
-            value: 'No Applications found.'
-            format: basic_html
-          plugin_id: text
+          tokenize: true
+          target: noappsblock
+          view_mode: default
+          bypass_access: false
+          plugin_id: entity
       relationships: {  }
       arguments: {  }
       display_extenders: {  }
@@ -545,6 +441,8 @@ display:
           id: status
           expose:
             operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
           group: 1
         type:
           id: type
@@ -555,6 +453,9 @@ display:
           entity_type: node
           entity_field: type
           plugin_id: bundle
+          expose:
+            operator_limit_selection: false
+            operator_list: {  }
       filter_groups:
         operator: AND
         groups:
@@ -588,7 +489,8 @@ display:
     display_title: Page
     position: 1
     display_options:
-      display_extenders: {  }
+      display_extenders:
+        ajax_history: {  }
       path: application
       menu:
         type: none

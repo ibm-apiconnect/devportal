@@ -16,7 +16,7 @@ Feature: Create consumer organization
     Then I should see the text "Create new consumer organization"
     And I should see the text "Organization title"
     And I should see the text "Cancel"
-    And I should see the text "Submit"
+    And I should see the text "Save"
 
   @api
   Scenario: As Andre I can create a new consumer organization
@@ -30,7 +30,7 @@ Feature: Create consumer organization
     And I am logged in as "@data(andre.name)"
     And I am at "/myorg/create"
     When I enter "New org1" for "title[0][value]"
-    And I press the "Submit" button
+    And I press the "Save" button
     Then I should be on the homepage
     And there are messages
     And I should see the text "Consumer organization created successfully."
@@ -63,7 +63,7 @@ Feature: Create consumer organization
     And I am logged in as "@data(andre.name)"
     And I am at "/myorg/create"
     When I enter "New org1,&-!" for "title[0][value]"
-    And I press the "Submit" button
+    And I press the "Save" button
     Then I should be on the homepage
     And there are messages
     And I should see the text "Consumer organization created successfully."

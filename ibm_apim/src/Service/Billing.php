@@ -30,6 +30,23 @@ class Billing {
   }
 
   /**
+   * return true if there is at least one billing object
+   *
+   * @return bool
+   */
+  public function isEnabled(): bool {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $enabled = FALSE;
+    $bills = $this->state->get('ibm_apim.billing_objects');
+    if ($bills !== NULL && !empty($bills) && count($bills) > 0) {
+      $enabled = TRUE;
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $enabled);
+    return $enabled;
+  }
+
+  /**
    * get all the billing objects
    *
    * @return array an array of the billing objects.
@@ -38,7 +55,7 @@ class Billing {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $bills = $this->state->get('ibm_apim.billing_objects');
-    if ($bills === null || empty($bills)) {
+    if ($bills === NULL || empty($bills)) {
       $bills = [];
     }
 
@@ -51,9 +68,9 @@ class Billing {
    *
    * @param $key
    *
-   * @return null|array
+   * @return null|array|string
    */
-  public function get($key): ?array {
+  public function get($key) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     $bill = NULL;
@@ -80,8 +97,19 @@ class Billing {
 
     if (isset($data)) {
       $billings = [];
+      $moduleHandler = \Drupal::service('module_handler');
+      if ($moduleHandler->moduleExists('encrypt')) {
+        $ibmApimConfig = \Drupal::config('ibm_apim.settings');
+        $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
+        $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+        $encryptionService = \Drupal::service('encryption');
+      }
       foreach ($data as $bill) {
-        $billings[$bill['url']] = $bill;
+        $bill_url = $bill['billing_url'];
+        if ($moduleHandler->moduleExists('encrypt') && isset($encryptionService, $encryptionProfile)) {
+          $bill = $encryptionService->encrypt(serialize($bill), $encryptionProfile);
+        }
+        $billings[$bill_url] = $bill;
       }
       $this->state->set('ibm_apim.billing_objects', $billings);
     }
@@ -103,6 +131,14 @@ class Billing {
 
       if (!is_array($current_data)) {
         $current_data = [];
+      }
+      $moduleHandler = \Drupal::service('module_handler');
+      if ($moduleHandler->moduleExists('encrypt')) {
+        $ibmApimConfig = \Drupal::config('ibm_apim.settings');
+        $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
+        $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+        $encryptionService = \Drupal::service('encryption');
+        $data = $encryptionService->encrypt(serialize($data), $encryptionProfile);
       }
       $current_data[$key] = $data;
       $this->state->set('ibm_apim.billing_objects', $current_data);
@@ -145,5 +181,32 @@ class Billing {
     $this->state->set('ibm_apim.billing_objects', []);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+  /**
+   * Return a decrypted version of a given billing object
+   *
+   * @param $key - billing URL
+   *
+   * @return array|null
+   */
+  public function decrypt($key): ?array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
+    $data = NULL;
+    if (isset($key)) {
+      $data = $this->get($key);
+
+      $moduleHandler = \Drupal::service('module_handler');
+      if ($moduleHandler->moduleExists('encrypt')) {
+        $ibmApimConfig = \Drupal::config('ibm_apim.settings');
+        $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
+        $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+        $encryptionService = \Drupal::service('encryption');
+        $data = unserialize($encryptionService->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
+      }
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $data;
   }
 }

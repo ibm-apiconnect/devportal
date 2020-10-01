@@ -3,7 +3,7 @@ type: module
 description: Adds the content type representing consumer organizations in IBM API Connect
 package: IBM API Connect
 core: 8.x
-version: 8.x-2.1.1
+version: 8.x-2.2.41
 project: consumerorg
 dependencies:
 - path

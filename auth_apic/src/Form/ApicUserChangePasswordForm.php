@@ -14,12 +14,10 @@ namespace Drupal\auth_apic\Form;
 
 use Drupal\auth_apic\UserManagement\ApicPasswordInterface;
 use Drupal\change_pwd_page\Form\ChangePasswordForm;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Password\PasswordInterface;
-use Drupal\Core\Routing\UrlGeneratorInterface;
-use Drupal\Core\Routing\UrlGeneratorTrait;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -27,11 +25,11 @@ use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Messenger\Messenger;
 
 class ApicUserChangePasswordForm extends ChangePasswordForm {
 
   use StringTranslationTrait;
-  use UrlGeneratorTrait;
 
   /**
    * @var \Drupal\Core\Extension\ModuleHandler
@@ -44,9 +42,9 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   protected $apicPassword;
 
   /**
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
 
   /**
    * @var \Psr\Log\LoggerInterface
@@ -59,6 +57,11 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   protected $account;
 
   /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * Constructs a ChangePasswordForm object.
    *
    * @param \Drupal\Core\Session\AccountInterface $account
@@ -69,31 +72,29 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
    *   Logger.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   Translation interface, see https://www.drupal.org/docs/8/api/translation-api/overview
-   * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
-   *   Url generator - for redirect handling.
    * @param \Drupal\Core\Password\PasswordInterface $password_hasher
    *   The password hasher.
    * @param \Drupal\auth_apic\UserManagement\ApicPasswordInterface $apic_password
    *   Password service.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    */
   public function __construct(AccountInterface $account,
                               ModuleHandler $module_handler,
                               LoggerInterface $logger,
                               TranslationInterface $string_translation,
-                              UrlGeneratorInterface $url_generator,
                               PasswordInterface $password_hasher,
                               ApicPasswordInterface $apic_password,
-                              EntityManagerInterface $entity_manager) {
+                              EntityTypeManagerInterface $entity_type_manager,
+                              Messenger $messenger) {
     parent::__construct($password_hasher, $account);
     $this->account = $account;
     $this->moduleHandler = $module_handler;
     $this->logger = $logger;
     $this->stringTranslation = $string_translation;
-    $this->urlGenerator = $url_generator;
     $this->password_hasher = $password_hasher;
     $this->apicPassword = $apic_password;
-    $this->entityManager = $entity_manager;
+    $this->entityTypeManager = $entity_type_manager;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -105,10 +106,10 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       $container->get('module_handler'),
       $container->get('logger.channel.auth_apic'),
       $container->get('string_translation'),
-      $container->get('url_generator'),
       $container->get('password'),
       $container->get('auth_apic.password'),
-      $container->get('entity.manager')
+      $container->get('entity_type.manager'),
+      $container->get('messenger')
     );
   }
 
@@ -248,7 +249,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       }
 
       $form['actions'] = ['#type' => 'actions'];
-      $form['actions']['submit'] = ['#type' => 'submit', '#value' => $this->t('Submit')];
+      $form['actions']['submit'] = ['#type' => 'submit', '#value' => $this->t('Save')];
     }
 
     $form['#attached']['library'][] = 'ibm_apim/validate_password';
@@ -328,13 +329,13 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
     }
     else {
       $success = FALSE;
-      $user = $this->entityManager->getStorage('user')->load($this->currentUser()->id());
+      $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser()->id());
       if ($user !== NULL) {
         $this->logger->notice('change password form submit for non-admin user');
         $success = $this->apicPassword->changePassword($user, $form_state->getValue('current_pass'), $form_state->getValue('pass'));
       }
       if ($success) {
-        drupal_set_message(t('Password changed successfully'));
+        $this->messenger->addStatus(t('Password changed successfully'));
         //$form_state->setRedirect('user.logout');
       }
     }

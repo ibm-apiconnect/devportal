@@ -19,7 +19,7 @@
   min-width: 160px;
   padding: 5px 0;
   text-align: left;
-  z-index: ($zindex-dropdown + 100);
+  z-index: $zindex-dropdown;
 
   .ui-menu-item {
     border: 0;

@@ -30,6 +30,22 @@
 
           drupalSettings.ibmApimPassword.forEach(function (constraint) {
             var result;
+            var error_svg = '<svg width="8px" height="8px" viewBox="0 0 8 8" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n' +
+                '    <title>close</title>\n' +
+                '    <g id="Latest" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">\n' +
+                '        <g id="close" transform="translate(-3.973005, -4.000000)" fill="#161616">\n' +
+                '            <polygon id="Fill" points="12 4.7 11.3 4 8 7.3 4.7 4 4 4.7 7.3 8 4 11.3 4.7 12 8 8.7 11.3 12 12 11.3 8.7 8"></polygon>\n' +
+                '        </g>\n' +
+                '    </g>\n' +
+                '</svg>';
+            var success_svg = '<svg width="13px" height="8px" viewBox="0 0 13 8" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n' +
+                '    <title>Organization / Status / checkmark / 16</title>\n' +
+                '    <g id="Latest" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">\n' +
+                '        <g id="Fill" transform="translate(-0.946009, -4.000000)" fill="#000000">\n' +
+                '            <polygon points="6 10.6 2.5 7.1 1.8 7.8 5.3 11.3 6 12 13.1 4.9 12.4 4.2"></polygon>\n' +
+                '        </g>\n' +
+                '    </g>\n' +
+                '</svg>';
             switch (constraint['id']) {
               case 'character_types':
                 result = Drupal.ibmApimEvalatePasswordCharTypes($passwordInput.val(), constraint['character_types']);
@@ -52,18 +68,26 @@
                 break;
             }
             if (result) {
-              statusBox.append('<span class="passed"><span class="icon glyphicon glyphicon-ok" aria-hidden="true"></span> ' + constraint['message'] + '</span><br/><br/>');
+              statusBox.append('<span class="passed"><span class="icon glyphicon" aria-hidden="true">' + success_svg + '</span> ' + constraint['message'] + '</span><br/><br/>');
             } else {
-              statusBox.append('<span class="failed"><span class="icon glyphicon glyphicon-remove" aria-hidden="true"></span> ' + constraint['message'] + '</span><br/><br/>');
+              // no icon for info mode
+              if ($passwordInput.val().length === 0) {
+                statusBox.append('<span class="failed"><span class="icon glyphicon" aria-hidden="true"></span> ' + constraint['message'] + '</span><br/><br/>');
+              } else {
+                statusBox.append('<span class="failed"><span class="icon glyphicon" aria-hidden="true">' + error_svg + '</span> ' + constraint['message'] + '</span><br/><br/>');
+              }
             }
           });
 
           // switch wrapper class
           var failedElements = $(statusBox).find('span.failed');
-          if (failedElements.length === 0) {
-            wrapper.removeClass('alert-danger').addClass('alert-success');
+          // if no password at all then use info mode
+          if ($passwordInput.val().length === 0) {
+            wrapper.removeClass('alert-danger').removeClass('alert-success').addClass('alert-info');
+          } else if (failedElements.length === 0) {
+            wrapper.removeClass('alert-danger').removeClass('alert-info').addClass('alert-success');
           } else {
-            wrapper.removeClass('alert-success').addClass('alert-danger');
+            wrapper.removeClass('alert-success').removeClass('alert-info').addClass('alert-danger');
           }
         };
 

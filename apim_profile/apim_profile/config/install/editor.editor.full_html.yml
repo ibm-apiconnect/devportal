@@ -9,7 +9,7 @@ dependencies:
 third_party_settings:
   editor_file:
     status: true
-    scheme: private
+    scheme: public
     directory: inline-files
     extensions: 'txt doc docx xls xlsx ppt pptx pdf yaml yml rtf zip tgz tar gz'
     max_size: '5 MB'
@@ -73,15 +73,15 @@ settings:
     drupallink:
       linkit_enabled: false
       linkit_profile: ''
-    language:
-      language_list: un
     stylescombo:
       styles: ''
+    language:
+      language_list: un
     autoembed:
       status: embed
 image_upload:
   status: true
-  scheme: private
+  scheme: public
   directory: inline-images
   max_size: '5 MB'
   max_dimensions:

@@ -144,7 +144,7 @@ function auth_apic_preprocess(&$variables, $hook, &$info) {
     if ($variables['element']['#form_id'] === 'user_login_form' || $variables['element']['#form_id'] === 'user_register_form') {
       $templateFileName = 'form-' . str_replace('_', '-', $variables['element']['#form_id']);
     }
-    elseif ($variables['element']['#form_id'] === 'user_pass' || $variables['element']['#form_id'] === 'apic_resetpw') {
+    elseif ($variables['element']['#form_id'] === 'user_pass' || $variables['element']['#form_id'] === 'apic_resetpw' || $variables['element']['#form_id'] === 'user_pass_reset') {
       $templateFileName = 'form-user-pass-form';
     }
     elseif ($variables['element']['#form_id'] === 'apic_change_pwd_form') {

@@ -46,6 +46,7 @@ class SubscribeSummary extends IbmWizardStepBase {
       $application_node_id = $temp_store->get('applicationNodeId');
       $result = $temp_store->get('result');
       $product_node_id = $temp_store->get('productId');
+      $price = $temp_store->get('price');
 
       // read referer and clear it again
       $referer = \Drupal::service('tempstore.private')->get('ibm_apim')->get('subscription_wizard_referer', NULL);
@@ -107,6 +108,9 @@ class SubscribeSummary extends IbmWizardStepBase {
         if (isset($referer)) {
           $form['#subscriptionDetails']['referer'] = $referer;
         }
+        if (isset($price)) {
+          $form['#subscriptionDetails']['price'] = $price;
+        }
 
         if (isset($application_image) && !empty($application_image)) {
           $form['#subscriptionDetails']['applicationIcon'] = $application_image;
@@ -120,6 +124,8 @@ class SubscribeSummary extends IbmWizardStepBase {
         $form['#messages']['statusText'] = t('There was a problem with your subscription request. Review any error messages, correct the problem and try again.');
         $form['#error'] = TRUE;
       }
+      // allow other modules to modify the content on the summary panel
+      \Drupal::moduleHandler()->alter('ibm_apim_subscription_wizard_summary', $form);
 
       // blank out the form state - we've finished now
       $temp_store->deleteAll();

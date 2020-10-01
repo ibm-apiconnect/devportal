@@ -93,6 +93,11 @@ function ibm_apim_install() {
   $db_service->addNameAndRegistryUniqueKey();
   $db_service->setAdminRegistryUrl();
 
+  // no content blocks
+  $path = __DIR__;
+  require_once $path . '/ibm_apim.emptycontent.inc';
+  ibm_apim_create_no_content_blocks();
+
 }
 
 /**
@@ -141,7 +146,6 @@ function ibm_apim_update_8103() {
  * Create new entity view mode if it doesn't already exist
  */
 function ibm_apim_update_8104() {
-
   $entity_type = 'node';
   $view_mode = 'embedded';
   $view_id = $entity_type . '.' . $view_mode;
@@ -158,4 +162,26 @@ function ibm_apim_update_8104() {
     $viewmode->save();
   }
 
+}
+
+/**
+ * Set the encryption profile for payment method data
+ */
+function ibm_apim_update_8105() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('payment_method_encryption_profile', 'socialblock')
+    ->save();
+}
+
+/**
+ * Create no content blocks
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function ibm_apim_update_8201() {
+  // no content blocks
+  $path = __DIR__;
+  require_once $path . '/ibm_apim.emptycontent.inc';
+  ibm_apim_create_no_content_blocks();
 }

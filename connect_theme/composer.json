@@ -14,6 +14,6 @@
   },
   "require": {
     "drupal/bootstrap": "*",
-    "scssphp/scssphp": "^1.0.5"
+    "scssphp/scssphp": "1.1.1"
   }
 }

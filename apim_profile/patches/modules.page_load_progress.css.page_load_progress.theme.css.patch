@@ -64,7 +64,7 @@
 +  stroke-dasharray: 240;
 +}
 +.page-load-progress-lock-screen .bx--loading__stroke {
-+  stroke: #5a60b8;
++  stroke: #0f62fe;
 +  stroke-dashoffset: 40;
 +}
 +@keyframes rotate {

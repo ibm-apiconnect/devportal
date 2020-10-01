@@ -62,11 +62,11 @@ class ApicTheme extends Theme {
     }
 
     // APIC check for our functions
-    $files = file_scan_directory($directory, '/(.*\.php$|.*\.module$|.*\.install$|.*\.inc$)/');
+    $files = \Drupal::service('file_system')->scanDirectory($directory, '/(.*\.php$|.*\.module$|.*\.install$|.*\.inc$)/');
     foreach ($files as $file) {
       $rc = self::checkFunctionNames($file->uri);
       if ($rc !== TRUE) {
-        throw new UpdaterException(t('The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/support/knowledgecenter/en/SSMNED_2018/com.ibm.apic.devportal.doc/rapic_portal_custom_modules_drupal8.html', ['%file' => $file->uri]));
+        throw new UpdaterException(t('The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/support/knowledgecenter/en/SSMNED_v10/com.ibm.apic.devportal.doc/rapic_portal_custom_modules_drupal8.html', ['%file' => $file->uri]));
       }
     }
 

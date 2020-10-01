@@ -112,12 +112,9 @@ class ResendInviteForm extends ConfirmFormBase {
       $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
-        '#href' => 'myorg',
+        '#url' => $this->getCancelUrl(),
         '#attributes' => ['class' => ['button']],
       ];
-      if ($this->themeHandler->themeExists('bootstrap')) {
-        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-      }
     }
     else {
       $org = $this->userUtils->getCurrentConsumerorg();
@@ -139,14 +136,6 @@ class ResendInviteForm extends ConfirmFormBase {
       if ($moduleHandler->moduleExists('honeypot')) {
         // add honeypot to this form to prevent it being used to spam user's mailboxes
         honeypot_add_form_protection($form, $form_state, ['honeypot', 'time_restriction']);
-      }
-      if ($this->themeHandler->themeExists('bootstrap')) {
-        if (isset($form['actions']['submit'])) {
-          $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('envelope');
-        }
-        if (isset($form['actions']['cancel'])) {
-          $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-        }
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

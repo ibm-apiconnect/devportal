@@ -20,6 +20,7 @@ use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Messenger\Messenger;
 
 /**
  * Delete form for users.
@@ -51,14 +52,21 @@ class ApicUserDeleteForm extends ConfirmFormBase {
    */
   protected $logger;
 
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
   public function __construct(UserUtils $user_utils,
                               ConsumerOrgService $org_service,
                               ApicUserDeleteInterface $delete_service,
-                              LoggerInterface $logger) {
+                              LoggerInterface $logger,
+                              Messenger $messenger) {
     $this->userUtils = $user_utils;
     $this->orgService = $org_service;
     $this->deleteService = $delete_service;
     $this->logger = $logger;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -69,7 +77,8 @@ class ApicUserDeleteForm extends ConfirmFormBase {
       $container->get('ibm_apim.user_utils'),
       $container->get('ibm_apim.consumerorg'),
       $container->get('auth_apic.delete_user'),
-      $container->get('logger.channel.auth_apic')
+      $container->get('logger.channel.auth_apic'),
+      $container->get('messenger')
     );
   }
 
@@ -90,7 +99,7 @@ class ApicUserDeleteForm extends ConfirmFormBase {
 
     if (sizeof($this->ownedOrgs) > 1) {
       $this->logger->warning('Attempt to load ApicUserDeleteForm while owning more than 1 org.');
-      drupal_set_message(t('You cannot delete your account because you own more than 1 organization.'), 'error');
+      $this->messenger->addError(t('You cannot delete your account because you own more than 1 organization.'));
 
       $form = [];
       $form['description'] = [
@@ -186,11 +195,11 @@ class ApicUserDeleteForm extends ConfirmFormBase {
 
       if ($org_delete_response->success()) {
         $this->logger->debug('Organization successfully deleted from ApicUserDeleteForm.');
-        drupal_set_message(t('Organization successfully deleted.'));
+        $this->messenger->addStatus(t('Organization successfully deleted.'));
       }
       else {
         $this->logger->debug('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $org_url]);
-        drupal_set_message(t('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $org_url]), 'error');
+        $this->messenger->addStatus(t('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $org_url]));
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'error deleting org');
         return;
       }
@@ -207,7 +216,7 @@ class ApicUserDeleteForm extends ConfirmFormBase {
     }
     else {
       $this->logger->warning('Error deleting account from ApicUserDeleteForm.');
-      drupal_set_message(t('Error deleting user. Please contact your system administrator for assistance.'), 'error');
+      $this->messenger->addStatus(t('Error deleting user. Please contact your system administrator for assistance.'));
     }
 
     $form_state->setRedirectUrl($this->getCancelUrl());

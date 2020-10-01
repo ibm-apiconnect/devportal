@@ -29,6 +29,32 @@
   max-width: 500px;
 }
 
+.addPaymentMethod {
+  display: flex;
+  flex-direction: row-reverse;
+  padding-right: 30px;
+}
+
+.paymentMethodContainer.noPaymentMethods {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  padding-top: 100px;
+}
+
+.paymentMethodContainer.noPaymentMethods .svgContainer {
+  display: inline-block;
+  height: 150px;
+  vertical-align: middle;
+}
+.paymentMethodContainer.noPaymentMethods .svgContainer svg {
+  height: 150px;
+}
+.paymentMethodContainer.noPaymentMethods .messageContainer {
+  display: inline-block;
+  vertical-align: middle;
+}
+
 @media screen and (max-width: 1024px) {
   .apicCOrgName {
     max-width: 300px;

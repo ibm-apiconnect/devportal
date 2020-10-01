@@ -1,6 +1,9 @@
 // import connect variables
 @import "connect-variables";
 
+// font
+$font-family-base: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+
 // Brown color palette
 $gold-01: #74521b;
 $gold-02: #5b421c;
@@ -44,9 +47,10 @@ $navbar-default-color:              $white-01;
 $navbar-default-bg:               $gold-01;
 
 $navbar-default-link-color:        $white-01;
-$navbar-default-link-hover-color:  $gold-03;
-$navbar-default-link-active-color: $gold-03;
+$navbar-default-link-hover-color:  $white-01;
+$navbar-default-link-active-color: $white-01;
 $navbar-default-link-active-bg:    $gold-01;
+$navbar-default-link-hover-bg:     $gold-03;
 
 $navbar-default-toggle-icon-bar-bg: $gold-01;
 
@@ -91,6 +95,10 @@ $btn-success-color: $white-01;
 $btn-success-bg:     $gold-01;
 $btn-success-border: transparent;
 $btn-link-disabled-color: $brand-primary;
+
+$tile-btn-bg:   $white-01;
+$tile-btn-border: $white-01;
+$tile-btn-color: $text-color;
 
 // checkboxes and radio buttons
 $check-radio-bg: $white-01;

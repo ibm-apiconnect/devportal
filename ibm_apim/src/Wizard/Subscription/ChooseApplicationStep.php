@@ -119,25 +119,36 @@ class ChooseApplicationStep extends IbmWizardStepBase {
           ]);
       }
 
-      $form['#createNewApp'] = [
-        '#type' => 'link',
-        '#title' => $this->t('Create New'),
-        '#url' => Url::fromRoute('apic_app.create_modal'),
-        '#attributes' => [
-          'class' => [
-            'use-ajax',
-            'button',
+      $config = \Drupal::config('ibm_apim.settings');
+      $show_register_app = (boolean) $config->get('show_register_app');
+      if ($show_register_app === TRUE) {
+        $form['#createNewApp'] = [
+          '#type' => 'link',
+          '#title' => $this->t('Create Application'),
+          '#url' => Url::fromRoute('apic_app.create_modal'),
+          '#attributes' => [
+            'class' => [
+              'use-ajax',
+              'button',
+              'bx--card',
+              'tile-button',
+              'apicTertiary',
+              'add-app'
+            ],
           ],
-        ],
-        '#prefix' => '<div class="apicNewAppButton">',
-        '#suffix' => '</div>',
-      ];
+          '#prefix' => '<div class="apicNewAppButton">',
+          '#suffix' => '</div>',
+        ];
+        $form['#welcome'] = t('Select an existing application or create a new application');
+      } else {
+        $form['#welcome'] = t('Select an existing application');
+      }
 
       // this empty div is used to put the new apps in
       $form['newApps'] = ['#markup' => "<div class='apicNewAppsList'></div>"];
 
       if (!empty($validApps)) {
-        $form['apps'] = node_view_multiple($validApps, 'subscribewizard');
+        $form['apps'] = \Drupal::entityTypeManager()->getViewBuilder('node')->viewMultiple($validApps, 'subscribewizard');
         $form['apps']['#prefix'] = "<div class='apicSubscribeAppsList'>";
         $form['apps']['#suffix'] = '</div>';
       }

@@ -1,0 +1,24 @@
+--- modules/extlink/extlink.css	2020-08-19 16:45:05.000000000 +0100
++++ modules/extlink/extlink.css	2020-08-19 16:45:35.000000000 +0100
+@@ -6,21 +6,12 @@
+   width: 14px;
+   height: 14px;
+   padding-right: 0.2em;
+-  fill: #727272;
+-  font-weight: 900;
+ }
+ 
+ svg.mailto {
+   width: 14px;
+   height: 14px;
+   padding-right: 0.2em;
+-  fill: #727272;
+-}
+-
+-svg.ext path,
+-svg.mailto path {
+-  stroke: #727272;
+-  stroke-width: 3;
+ }
+ 
+ /* Hide the extra icons when printing. */

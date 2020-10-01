@@ -1,8 +1,12 @@
+//
+// Copyright IBM Corp. 2016, 2020
+//
 $css--font-face: true !default;
 $css--helpers: true !default;
 $css--body: true !default;
-$css--use-layer: true !default;
+//$css--use-layer: true !default;
 $css--reset: false !default;
+
 $css--typography: true !default;
 $css--plex: true !default;
 
@@ -12,7 +16,6 @@ $css--plex: true !default;
 @import "carbon/css--reset";
 @import 'carbon/css--font-face';
 @import "carbon/css--body";
-@import 'carbon/css--typography';
 @import "carbon/layer";
 
 /**
@@ -28,33 +31,28 @@ $css--plex: true !default;
  */
 
 // IBM API Connect Developer Portal color palette
-$purple-01: #5A60B8;
-$purple-02: #44488D;
-$purple-03: #969CEC;
-
-$light-purple-01: #EBECF6;
-$light-purple-02: #D7D9F2;
-$light-purple-03: #B7B9D4;
-
 $light-gray-01: $ui-02;
 $light-gray-02: #E2E8F2;
 $light-gray-03: #1D3649;
 
-$dark-gray-01: $color__navy-gray-4;
-$black-01: $color__blue-90;
+$black-01: $ibm-color__gray-100;
 
 // Set the proper directory for the Bootstrap Glyphicon font.
+// Needed for such things as the voting module
 $icon-font-path: '../bootstrap/assets/fonts/bootstrap/';
 
-// theme variables
+
+  // theme variables
 // these are the variables to override for custom theme creation
 
-// set large screens to be 100% width
+// set screens to be 100% width
+$container-tablet:        100%;
+$container-desktop:       100%;
 $container-large-desktop: 100%;
 
 // fonts
 $base-font-size:                  16px;
-$font-family-base:                'ibm-plex-sans', Helvetica Neue, Arial, sans-serif;
+$font-family-base:                'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
 
 $font-size-base:                   $base-font-size;
 $line-height-base: 1.5;
@@ -62,22 +60,24 @@ $headings-line-height: 1.25;
 $border-radius-base: 0;
 
 // Global body
-$body-bg:                         $ui-02;
-
+$body-bg:                         $ui-01;
 
 // Global text color
-$text-color:                       $black-01;
-$label-color:                      $black-01;
+$text-color:                       $text-01;
+$label-color:                      $text-02;
 //** Global textual link color.
 $link-color:                       $brand-01;
 //** Link hover color
-$link-hover-color:                 $brand-02;
+$link-hover-color:                 $interactive-02;
 //** Link hover decoration.
 $link-hover-decoration:            none;
 
-$brand-primary:         $purple-01;
-$brand-primary-light:   $purple-03;
-$brand-primary-dark:    $purple-02;
+$secondary-text: $text-02;
+$tertiary-text: $text-05;
+
+$brand-primary:         $interactive-01;
+$brand-primary-light:   $ibm-color__gray-10;
+$brand-primary-dark:    $hover-primary;
 
 $brand-success:         $support-02;
 $brand-info:            $support-04;
@@ -85,7 +85,7 @@ $brand-warning:         $support-03;
 $brand-danger:          $support-01;
 
 // Placeholder text color
-$input-color-placeholder:        $ui-05;
+$input-color-placeholder:        $text_03;
 
 // Navbar variable overrides
 $navbar-height:                    48px;
@@ -93,13 +93,14 @@ $navbar-margin-bottom:             none;
 $navbar-border-radius:             none;
 $navbar-padding-horizontal:        0;
 $navbar-padding-vertical:          none;
-$navbar-default-color:             rgba($inverse-01,0.6);
-$navbar-default-bg:                $nav-02;
+$navbar-default-color:             $ibm-color__gray-10;
+$navbar-default-bg:                $ibm-color__gray-100;
 
-$navbar-default-link-color:        rgba($inverse-01,0.6);
-$navbar-default-link-hover-color:  rgba($inverse-01,1);
-$navbar-default-link-active-color: rgba($inverse-01,1);
-$navbar-default-link-active-bg:    $nav-02;
+$navbar-default-link-color:        $ibm-color__gray-10;
+$navbar-default-link-hover-color:  $ibm-color__gray-10;
+$navbar-default-link-active-color: $ibm-color__gray-10;
+$navbar-default-link-active-bg:    $ibm-color__gray-80;
+$navbar-default-link-hover-bg:     $ibm-color__gray-80;
 
 $navbar-default-toggle-border-color:none;
 $navbar-default-toggle-hover-bg:    none;
@@ -109,96 +110,103 @@ $nav-link-hover-bg:                none;
 $nav-link-padding:                 .75rem 0rem;
 
 // footer variable overrides
-$footer-default-bg:                $inverse-01;
-$footer-default-color:             $nav-02;
-$footer-default-bordercolor:       $brand-01;
+$footer-default-bg:                $ui-01;
+$footer-default-color:             $text-02;
+$footer-default-bordercolor:       $ui-03;
 
-$footer-link-color:                 $brand-01;
+$footer-link-color:                 $text-02;
 
 // status messages
 $alert-border-radius: 0;
 $alert-padding: .75rem 1rem;
-$alert-info-bg: transparent;
-$alert-info-border: $brand-info;
-$alert-info-text: 	$text-02;
-$alert-danger-bg: transparent;
-$alert-danger-border: $brand-danger;
-$alert-danger-text: 	$text-02;
-$alert-warning-bg: transparent;
-$alert-warning-border: $brand-warning;
-$alert-warning-text: 	$text-02;
-$alert-success-bg: transparent;
-$alert-success-border: $brand-success;
-$alert-success-text: 	$text-02;
+$alert-info-bg: $notification-info-background-color;
+$alert-info-border: $support-04;
+$alert-info-text: 	$text-01;
+$alert-danger-bg: $notification-error-background-color;
+$alert-danger-border: $support-01;
+$alert-danger-text: 	$text-01;
+$alert-warning-bg: $notification-warning-background-color;
+$alert-warning-border: $support-03;
+$alert-warning-text: 	$text-01;
+$alert-success-bg: $notification-success-background-color;
+$alert-success-border: $support-02;
+$alert-success-text: 	$text-01;
 
 // tabs
 $tab-primary-background: $brand-primary;
 $tab-primary-text: $inverse-01;
 
 // apic & modal forms
-$default-header: $ui-05;
-$default-bg-light: $ui-01;
-$default-border: $ui-03;
+$default-header: $text-01;
+$default-bg-light: $ui-02;
+$default-border: $ui-04;
 $default-line: $ui-05;
 $default-submitted: $ui-04;
 $default-inverse: $inverse-01;
 
 $default-input-bg: $field-01;
-$default-input-border: $field-01;
+$default-input-border: $ui_04;
 
 // bootstrap form variable overrides
 $input-border-radius: 0;
 $input-bg: $field-02;
-$input-border: $field-02;
+$input-border: $ui_04;
 $input-color: $black-01;
+$input-focus: $focus;
 
 // buttons
 $btn-border-radius-base:  0;
 $btn-border-radius-large: 0;
 $btn-border-radius-small: 0;
-$btn-default-color: $purple-01;
-$btn-default-bg:    $inverse-01;
-$btn-default-border: $purple-01;
-$btn-primary-color:  $inverse-01;
-$btn-primary-bg:     $purple-01;
+$btn-default-color: $text-04;
+$btn-default-bg:    $interactive-02;
+$btn-default-border: $interactive-02;
+$btn-primary-color:  $text-04;
+$btn-primary-bg:     $interactive-01;
 $btn-primary-border: transparent;
-$btn-success-color: $inverse-01;
-$btn-success-bg:     $purple-01;
+$btn-success-color: $text-04;
+$btn-success-bg:     $interactive-01;
 $btn-success-border: transparent;
-$btn-link-disabled-color: $brand-01;
+$btn-disabled-color: $disabled-03;
+$btn-disabled-bg: $disabled-02;
+$btn-link-disabled-color: $disabled-03;
+
+$tile-btn-bg:   $ui-03;
+$tile-btn-border: $ui-03;
+$tile-btn-color: $interactive-01;
 
 // checkboxes and radio buttons
 $check-radio-bg: $inverse-01;
 $check-radio-border: $ui-05;
-$check-radio-bg-checked: $brand-01;
-$check-radio-border-checked: $brand-01;
+$check-radio-bg-checked: $ui-05;
+$check-radio-border-checked: $ui-05;
 $check-radio-color-checked: $inverse-01;
 
 // tooltips
 $tooltip-max-width:   15rem;
-$tooltip-color:       $inverse-01;
-$tooltip-bg:          $nav-02;
+$tooltip-color:      $inverse_01;
+$tooltip-bg:          $inverse-02;
 $tooltip-opacity:     1;
 
 // modals
 
 //** Padding applied to the modal body
 $modal-inner-padding:         15px !default;
-
 //** Padding applied to the modal title
 $modal-title-padding:         15px !default;
 //** Modal title line-height
 $modal-title-line-height:     $line-height-base !default;
 
-
 $modal-content-bg:                             $ui-01;
-$modal-content-border-color:                   $brand-01;
+$modal-content-border-color:                   transparent;
 $modal-backdrop-bg:           	$ui-03;
-$modal-backdrop-opacity:        .5;
+$modal-backdrop-opacity:       0;
 $modal-header-border-color:   		transparent;
-$modal-content-color: $ui-04;
+$modal-content-color: $text-02;
+$modal_overlay: $overlay_01;
+
 //** Modal footer border color
-$modal-footer-border-color:   $ui-03;
+$modal-footer-border-color:   transparent;
 
 $modal-lg:                    900px !default;
 $modal-md:                    625px !default;
@@ -206,17 +214,18 @@ $modal-sm:                    300px !default;
 
 
 //** card settings
-$card-bg: $ui-01;
-$card-border-color: $ui-03;
-$card-footer-bg: $ui-03;
+$card-bg: $ui-02;
+$card-border-color: $ui-02;
+$card-footer-bg: $ui-02;
 $disabled-bg: $ui-05;
 
 //** table settings
-$table-header-border: $brand-01;
+$table-header-bg: $ui-03;
+$table-header-border: $interactive-01;
 $table-row-border: $ui-03;
-$table-row-hover: $brand-02;
-$table-row-bg-light: $ui-01;
-$table-row-bg-gray: $ui-02;
-$table-zebra-stripe: $ui-02;
+$table-row-hover: $interactive-02;
+$table-row-bg-light: $ui-02;
+$table-row-bg-gray: $ui-01;
+$table-zebra-stripe: $ui-01;
 
 

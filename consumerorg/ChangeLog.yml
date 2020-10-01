@@ -1,4 +1,131 @@
 changes:
+  8.x-2.2.40:
+  - bug in payment method creation
+  8.x-2.2.39:
+  - need to set payment methods on the org
+  8.x-2.2.38: null
+  8.x-2.2.37:
+  - logic failure adding ref to the corg (#207)
+  8.x-2.2.36:
+  - Payment title (#206)
+  8.x-2.2.35:
+  - Fixed multistep form and form errors (#205)
+  8.x-2.2.34:
+  - use the carbon X overflow icon
+  8.x-2.2.33:
+  - Fixcreatepayment (#204)
+  8.x-2.2.32: null
+  8.x-2.2.31:
+  - fix display of a single integration
+  - dont allow 2 of the same integration
+  8.x-2.2.30: null
+  8.x-2.2.29:
+  - use title not name
+  - use title not name
+  8.x-2.2.28:
+  - get the multi-step form working properly
+  - fix button class
+  8.x-2.2.27:
+  - support multiple billing providers
+  - support multiple billing providers
+  8.x-2.2.26:
+  - User custom fields v10.0.1 (#203)
+  8.x-2.2.25:
+  - missing cancel buttons
+  8.x-2.2.24:
+  - Stop using placeholder payment id (#201)
+  - Fixed saving payment method name and added todo (#200)
+  8.x-2.2.23: null
+  8.x-2.2.22:
+  - use SVG from ibm_apim
+  - no content blocks for views
+  8.x-2.2.21:
+  - Fix payment method created and removed name from config (#197) (#198)
+  8.x-2.2.20:
+  - styling for payment methods
+  8.x-2.2.19:
+  - monetization schema change
+  8.x-2.2.18:
+  - add payment method icons
+  8.x-2.2.17:
+  - add payment method styling
+  8.x-2.2.16:
+  - billing page no payment methods styling
+  8.x-2.2.15:
+  - minor tweak for my org page
+  8.x-2.2.14:
+  - fix test case
+  - myorg page styling
+  8.x-2.2.13:
+  - Submit -> Save
+  8.x-2.2.12:
+  - remove glyph icons
+  8.x-2.2.11:
+  - first pass of styling for the billing tab
+  8.x-2.2.10:
+  - typo fixes
+  8.x-2.2.9:
+  - carbon x header changes
+  8.x-2.2.8:
+  - changes in apim endpoint
+  8.x-2.2.7:
+  - require a name for payment methods
+  8.x-2.2.6: null
+  8.x-2.2.5:
+  - wrong hook names
+  - get the billing stuff working
+  8.x-2.2.4:
+  - remove ajax for now - just use a simple redirect link
+  8.x-2.2.3:
+  - fix tabs on billing page
+  8.x-2.2.2:
+  - make messages translatable
+  8.x-2.2.1: null
+  8.x-2.2.0:
+  - Update consumerorg.info.yml
+  8.x-2.1.19: null
+  8.x-2.1.18:
+  - Monetisation flow v10.0.0 (#194)
+  8.x-2.1.17: null
+  8.x-2.1.16:
+  - twig errors
+  - add tests for billing
+  - clear cache when change role
+  8.x-2.1.15:
+  - Custom fields v10.0.0 (#189)
+  8.x-2.1.14: null
+  8.x-2.1.13:
+  - fix templates mk2
+  - fix templates
+  - add hook to allow additional tabs
+  8.x-2.1.12:
+  - restructure the payment method forms to handle different submodules
+  8.x-2.1.11:
+  - missing copyright statements
+  8.x-2.1.10:
+  - field name was too long!
+  - wrong field ID
+  8.x-2.1.9:
+  - syntax error
+  - move the template for billing to the consumerorg module
+  - add storage fields for default payment methods
+  - add impl for deleting payment methods
+  8.x-2.1.8:
+  - add form for deleting payment methods
+  8.x-2.1.7:
+  - fix up the request schema for creating a payment method
+  8.x-2.1.6:
+  - add default create payment method impl
+  8.x-2.1.5:
+  - render multi-pass form
+  8.x-2.1.4:
+  - fill out payment methods
+  8.x-2.1.3:
+  - put billing tab in place
+  8.x-2.1.2:
+  - remove Rules support from our code
+  8.x-2.1.1:
+  - Tempmerge (#186)
   8.x-2.1.0:
   - update version: 8.x-2.0.26 -> 8.x-2.1.0
   8.x-2.0.25:

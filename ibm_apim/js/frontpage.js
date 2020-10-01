@@ -11,7 +11,7 @@
 
 /**
  * @file
- * Setup masonry for the featured content block
+ * Setup masonry for get help block & apps subscribe wizard
  */
 
 (function ($, Drupal, drupalSettings) {

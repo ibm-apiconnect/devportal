@@ -120,12 +120,9 @@ class ChangeOrgOwnerForm extends FormBase {
       $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
-        '#href' => 'myorg',
+        '#url' => $this->getCancelUrl(),
         '#attributes' => ['class' => ['button']],
       ];
-      if ($this->themeHandler->themeExists('bootstrap')) {
-        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-      }
     }
     else {
       $members = $this->consumerOrgService->getMembers($org['url']);
@@ -190,7 +187,7 @@ class ChangeOrgOwnerForm extends FormBase {
           $form['actions']['#type'] = 'actions';
           $form['actions']['submit'] = [
             '#type' => 'submit',
-            '#value' => t('Submit'),
+            '#value' => t('Save'),
           ];
           $form['actions']['cancel'] = [
             '#type' => 'link',
@@ -198,10 +195,6 @@ class ChangeOrgOwnerForm extends FormBase {
             '#url' => $this->getCancelUrl(),
             '#attributes' => ['class' => ['button', 'apicSecondary']],
           ];
-          if ($this->themeHandler->themeExists('bootstrap')) {
-            $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
-            $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-          }
         }
       }
       else {
@@ -216,9 +209,6 @@ class ChangeOrgOwnerForm extends FormBase {
           '#url' => Url::fromRoute('ibm_apim.myorg'),
           '#attributes' => ['class' => ['button']],
         ];
-        if ($this->themeHandler->themeExists('bootstrap')) {
-          $form['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-        }
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

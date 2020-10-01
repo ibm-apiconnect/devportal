@@ -22,6 +22,7 @@ use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
+use Drupal\Core\Messenger\Messenger;
 
 /**
  * Mock of the ApicAccountService service.
@@ -51,6 +52,8 @@ class MockApicAccountService implements ApicAccountInterface {
 
   protected $provider = 'auth_apic';
 
+  protected $messenger;
+
   /**
    * MockApicAccountService constructor.
    *
@@ -62,11 +65,13 @@ class MockApicAccountService implements ApicAccountInterface {
   public function __construct(PrivateTempStoreFactory $tempStoreFactory,
                               ManagementServerInterface $mgmtInterface,
                               State $state,
-                              ApicUserStorageInterface $user_storage) {
+                              ApicUserStorageInterface $user_storage,
+                              Messenger $messenger) {
     $this->sessionStore = $tempStoreFactory->get('ibm_apim');
     $this->mgmtServer = $mgmtInterface;
     $this->state = $state;
     $this->userStorage = $user_storage;
+    $this->messenger = $messenger;
   }
 
 
@@ -117,7 +122,7 @@ class MockApicAccountService implements ApicAccountInterface {
     $dbuser->set('mail', $user->getMail());
     $dbuser->save();
 
-    drupal_set_message('MOCKED SERVICE:: Your account has been updated.');
+    $this->messenger->addStatus('MOCKED SERVICE:: Your account has been updated.');
     return NULL;
   }
 
@@ -145,7 +150,7 @@ class MockApicAccountService implements ApicAccountInterface {
     return TRUE;
   }
 
-  public function saveCustomFields($user, $form_state, $view_mode): void {
+  public function saveCustomFields($apicUser, $user, $form_state, $view_mode): void {
     \Drupal::logger('ibm_apim_mocks')->error('MockApicAccountService::saveCustomFields not implemented');
   }
 

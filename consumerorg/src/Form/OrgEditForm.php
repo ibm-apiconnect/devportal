@@ -126,12 +126,9 @@ class OrgEditForm extends FormBase {
       $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
-        '#href' => 'myorg',
+        '#url' => $this->getCancelUrl(),
         '#attributes' => ['class' => ['button']],
       ];
-      if ($this->themeHandler->themeExists('bootstrap')) {
-        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-      }
     }
     else {
       $org = $this->userUtils->getCurrentConsumerorg();
@@ -176,7 +173,7 @@ class OrgEditForm extends FormBase {
       $form['actions']['#type'] = 'actions';
       $form['actions']['submit'] = [
         '#type' => 'submit',
-        '#value' => t('Submit'),
+        '#value' => t('Save'),
       ];
       $form['actions']['cancel'] = [
         '#type' => 'link',
@@ -186,10 +183,6 @@ class OrgEditForm extends FormBase {
       ];
       $form['actions']['#weight'] = $max_weight + 1;
 
-      if ($this->themeHandler->themeExists('bootstrap')) {
-        $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('ok');
-        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-      }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $form;
@@ -227,8 +220,13 @@ class OrgEditForm extends FormBase {
       $this->messenger->addError(t('An organization title is required.'));
     }
     else {
-
-      $response = $this->consumerOrgService->edit($this->currentOrg, $form_state->getValues());
+      $customFields = $this->consumerOrgService->getCustomFields();
+      $values = $form_state->getValues();
+      if (!empty($customFields)) {
+        $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $form_state);
+        $values = array_replace($values, $customFieldValues);
+      }
+      $response = $this->consumerOrgService->edit($this->currentOrg, $values);
       if ($response->success()) {
         $this->messenger->addMessage(t('Organization updated.'));
       }

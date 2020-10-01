@@ -77,6 +77,16 @@ function hook_consumerorg_post_delete($data) {
 
 }
 
+/**
+ * Allow other modules to build up the form for the add payment method wizard
+ *
+ * @param $form
+ * @param $integration
+ * @param $billing
+ */
+function hook_consumerorg_alter_payment_method_create(&$form, $integration, $billing) {
+
+}
 
 /**
  * @} End of "addtogroup hooks".

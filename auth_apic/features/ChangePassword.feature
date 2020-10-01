@@ -9,7 +9,7 @@ Feature: Change Password
     Then I should see the text "Current password"
     Then I should see the text "Password"
     Then I should see the text "Confirm password"
-    Then I should see the "Submit" button
+    Then I should see the "Save" button
 
 @api
   Scenario: View the change password form as non-admin
@@ -25,7 +25,7 @@ Feature: Change Password
     Then I should see the text "Current password"
     Then I should see the text "Password"
     Then I should see the text "Confirm password"
-    Then I should see the "Submit" button
+    Then I should see the "Save" button
 
 @api
 Scenario: Submit change password form as non-admin user
@@ -40,12 +40,12 @@ Scenario: Submit change password form as non-admin user
   When I enter "@data(andre.password)" for "Current password"
   And I enter "newPassw0rd" for "Password"
   And I enter "newPassw0rd" for "Confirm password"
-  And I press the "Submit" button
+  And I press the "Save" button
   Given I am at "/user/@uid/change-password"
   When I enter "newPassw0rd" for "Current password"
   And I enter "@data(andre.password)" for "Password"
   And I enter "@data(andre.password)" for "Confirm password"
-  And I press the "Submit" button
+  And I press the "Save" button
   #TODO: verify things are good!!!!!!!
 
 #  Admin users - we need to check 2 cases, uid===1 special case and a user which has the administrator role.
@@ -57,7 +57,7 @@ Scenario: Submit change password form as user with administrator role
   When I enter "blah" for "current_pass"
   And I enter "newPassw0rd" for "pass[pass1]"
   And I enter "newPassw0rd" for "pass[pass2]"
-  And I press the "Submit" button
+  And I press the "Save" button
   Then I should see the text "Password changed successfully"
 
 @api
@@ -70,7 +70,7 @@ Scenario: Submit change password form as admin user
   When I enter "@data(admin.password)" for "current_pass"
   And I enter "newPassw0rd" for "pass[pass1]"
   And I enter "newPassw0rd" for "pass[pass2]"
-  And I press the "Submit" button
+  And I press the "Save" button
   Then I should see the text "Your password has been changed."
   # unfortunately this has actually changed the admin password so we need to revert it.
   # admin user does not logout, so we are still on the changepassword screen.
@@ -78,7 +78,7 @@ Scenario: Submit change password form as admin user
   When I enter "newPassw0rd" for "current_pass"
   And I enter "@data(admin.password)" for "pass[pass1]"
   And I enter "@data(admin.password)" for "pass[pass2]"
-  And I press the "Submit" button
+  And I press the "Save" button
   Then I should see the text "Your password has been changed."
 
 @api
@@ -91,7 +91,7 @@ Scenario: Submit change password form as admin user
     When I enter "thisiswrong" for "current_pass"
     And I enter "newPassw0rd" for "pass[pass1]"
     And I enter "newPassw0rd" for "pass[pass2]"
-    And I press the "Submit" button
+    And I press the "Save" button
     Then I should see the text "The current password you provided is incorrect."
 
 @api
@@ -107,7 +107,7 @@ Scenario: Wrong current password as non-admin
   When I enter "thisiswrong" for "Current password"
   And I enter "newPassw0rd" for "Password"
   And I enter "newPassw0rd" for "Confirm password"
-  And I press the "Submit" button
+  And I press the "Save" button
   Then I should see the text "The old password is incorrect"
 
 @api
@@ -123,7 +123,7 @@ Scenario: Invalid new password as non-admin
   When I enter "@data(andre.password)" for "Current password"
   And I enter "thisisinvalid" for "Password"
   And I enter "thisisinvalid" for "Confirm password"
-  And I press the "Submit" button
+  And I press the "Save" button
   Then I should see the text "Password must contain at least 3 types of characters from the following character types:"
 
 Scenario: Form not available if not logged in
@@ -152,7 +152,7 @@ Scenario: Change password for users with the same username
   And I enter "Qwert123" for "Current password"
   And I enter "newPassw0rd" for "Password"
   And I enter "newPassw0rd" for "Confirm password"
-  And I press the "Submit" button
+  And I press the "Save" button
   #And I am on "/myorg"
   Then there are no errors
   And there are no warnings
@@ -163,7 +163,7 @@ Scenario: Change password for users with the same username
   When I enter "Qwert246" for "Current password"
   And I enter "newPassw0rd" for "Password"
   And I enter "newPassw0rd" for "Confirm password"
-  And I press the "Submit" button
+  And I press the "Save" button
   Then there are no errors
   And there are no warnings
   And there are messages
@@ -187,7 +187,7 @@ Scenario: Change password for users with the same username
     And I enter "Qwert123" for "Current password"
     And I enter "newPassw0rd" for "Password"
     And I enter "newPassw0rd" for "Confirm password"
-    And I press the "Submit" button
+    And I press the "Save" button
     Then there are no errors
     And there are no warnings
     And there are messages

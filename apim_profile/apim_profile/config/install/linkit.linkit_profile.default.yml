@@ -40,7 +40,6 @@ matchers:
         api: api
         article: article
         blog_post: blog_post
-        book: book
         forum: forum
         page: page
         product: product

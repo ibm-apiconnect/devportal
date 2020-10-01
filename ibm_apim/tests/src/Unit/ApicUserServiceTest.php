@@ -21,6 +21,8 @@ use Drupal\ibm_apim\Service\UserRegistryService;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Prophet;
 use Psr\Log\LoggerInterface;
+use Drupal\Core\Messenger\Messenger;
+
 
 /**
  * @coversDefaultClass \Drupal\ibm_apim\Service\ApicUserService
@@ -37,12 +39,14 @@ class ApicUserServiceTest extends UnitTestCase {
   protected $logger;
   protected $state;
   protected $userRegistryService;
+  protected $messenger;
 
   protected function setup() {
     $this->prophet = new Prophet();
     $this->logger = $this->prophet->prophesize(LoggerInterface::class);
     $this->state = $this->prophet->prophesize(State::class);
     $this->userRegistryService = $this->prophet->prophesize(UserRegistryService::class);
+    $this->messenger = $this->prophet->prophesize(Messenger::class);
   }
 
   protected function tearDown() {
@@ -56,7 +60,7 @@ class ApicUserServiceTest extends UnitTestCase {
 
     $this->userRegistryService->get('/user/reg/url')->willReturn($registry);
 
-    $service = new ApicUserService($this->logger->reveal(), $this->state->reveal(), $this->userRegistryService->reveal());
+    $service = new ApicUserService($this->logger->reveal(), $this->state->reveal(), $this->userRegistryService->reveal(), $this->messenger->reveal());
 
     $result = $service->getUserAccountFields($user);
 
@@ -80,7 +84,7 @@ class ApicUserServiceTest extends UnitTestCase {
 
     $this->userRegistryService->get('/user/reg/url')->willReturn($registry);
 
-    $service = new ApicUserService($this->logger->reveal(), $this->state->reveal(), $this->userRegistryService->reveal());
+    $service = new ApicUserService($this->logger->reveal(), $this->state->reveal(), $this->userRegistryService->reveal(), $this->messenger->reveal());
 
     $result = $service->getUserAccountFields($user);
 
@@ -104,7 +108,7 @@ class ApicUserServiceTest extends UnitTestCase {
 
     $this->userRegistryService->get('/user/reg/url')->willReturn($registry);
 
-    $service = new ApicUserService($this->logger->reveal(), $this->state->reveal(), $this->userRegistryService->reveal());
+    $service = new ApicUserService($this->logger->reveal(), $this->state->reveal(), $this->userRegistryService->reveal(), $this->messenger->reveal());
 
     $result = $service->getUserAccountFields($user);
 

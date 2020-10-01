@@ -1,15 +1,15 @@
-uuid: 4488fa2a-1887-425d-be09-755f3a12f098
 langcode: en
 status: true
 dependencies:
   config:
+    - block.block.noapisblock
     - core.entity_view_mode.node.embedded
     - node.type.api
   module:
-    - blazy
     - node
     - select_translation
     - user
+    - views_bootstrap
 id: product_content
 label: 'Product Content'
 module: views
@@ -71,15 +71,16 @@ display:
             offset_label: Offset
           quantity: 9
       style:
-        type: blazy
+        type: views_bootstrap_list_group
         options:
-          style: column
-          grid: 3
-          grid_medium: 2
-          grid_small: 1
+          row_class: ''
+          default_row_class: true
+          uses_fields: false
+          title_field: title
       row:
         type: 'entity:node'
         options:
+          relationship: none
           view_mode: embedded
       fields:
         title:
@@ -216,7 +217,20 @@ display:
       title: 'Product Content'
       header: {  }
       footer: {  }
-      empty: {  }
+      empty:
+        entity_block:
+          id: entity_block
+          table: views
+          field: entity_block
+          relationship: none
+          group_type: group
+          admin_label: ''
+          empty: true
+          tokenize: true
+          target: noapisblock
+          view_mode: default
+          bypass_access: false
+          plugin_id: entity
       relationships: {  }
       arguments:
         nid:
@@ -385,7 +399,8 @@ display:
     display_title: Page
     position: 1
     display_options:
-      display_extenders: {  }
+      display_extenders:
+        ajax_history: {  }
       path: product_content
       rendering_language: '***LANGUAGE_language_interface***'
     cache_metadata:

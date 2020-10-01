@@ -92,7 +92,7 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function updateMe(ApicUser $user) : ?MeResponse{
+  public function updateMe(ApicUser $user, $auth =  'user') : ?MeResponse{
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::updateMe() is missing!');
     return NULL;
   }
@@ -312,9 +312,13 @@ class MockAPIMServer implements ManagementServerInterface {
     if ($url == $exp) {
       $loc = $host . URL::fromRoute('auth_apic.azredir')->toString(TRUE)->getGeneratedUrl() .
         '?state=czozOiJrZXkiOw==_apimstate&' .
-        'code=valid&' . 
-        'scope=scope';
-      return ['code' => 302, 'headers' => ['Location' => $loc]];
+        'code=valid&' .
+        'scope=scope';       
+      $result = new \stdClass();
+      $result->headers = ['location' => $loc];
+      $result->code = 302;
+      $result->data = '';
+      return $this->restResponseReader->read($result);
     }
 
     $exp = '/consumer-api/oauth2/redirect?state=apimstate' .
@@ -328,7 +332,11 @@ class MockAPIMServer implements ManagementServerInterface {
       $loc = $host . URL::fromRoute('auth_apic.azcode')->toString(TRUE)->getGeneratedUrl() .
         '?code=valid&' . 
         'state=czozOiJrZXkiOw==';
-      return ['code' => 302, 'headers' => ['Location' => $loc]];
+      $result = new \stdClass();
+      $result->headers = ['Location' => $loc];
+      $result->code = 302;
+      $result->data = '';
+      return $this->restResponseReader->read($result);
     }
   }
 }

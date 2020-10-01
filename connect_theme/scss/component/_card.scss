@@ -2,8 +2,6 @@
 
 .bx--card {
   @include reset;
-  @include font-family;
-  @include layer('raised');
   display: flex;
   flex-direction: column;
   width: rem(300px);
@@ -12,10 +10,9 @@
   max-height: rem(400px);
   background-color: $card-bg;
   border: 1px solid $card-border-color;
-  margin: 20px 0;
-
+  margin-bottom: 2px;
   &:focus {
-    @include focus-outline('border');
+    @include focus-outline('outline');
   }
 }
 
@@ -51,7 +48,7 @@
 }
 
 .bx--card-footer__link {
-  @include font-size('14');
+  font-size: 0.875rem;
 }
 
 .bx--card-overview__about {
@@ -69,7 +66,7 @@
 }
 
 .bx--about__title--name {
-  @include font-size('18');
+  font-size: 1.125rem;
   @include text-overflow(rem(168px));
   font-weight: 400;
   margin: 0;
@@ -77,13 +74,13 @@
 }
 
 .bx--about__title--link {
-  @include font-size('12');
+  font-size: 0.75rem;
   @include text-overflow(rem(180px));
   font-weight: 400;
 }
 
 .bx--about__title--additional-info {
-  @include font-size('12');
+  font-size: 0.75rem;
   @include text-overflow(rem(180px));
   font-weight: 400;
   padding: 0;
@@ -101,12 +98,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: rem(50px);
-  height: rem(50px);
+  width: rem(32px);
+  height: rem(32px);
   background-color: $card-bg;
   border: 1px solid $card-border-color;
-  border-radius: 100%;
-
   .bx--about__icon--img {
     width: rem(32px);
     height: rem(32px);
@@ -115,7 +110,7 @@
 }
 
 .bx--app-actions__button {
-  @include font-size('16');
+  font-size: 1rem;
   display: inline-block;
   padding: .125rem 0 0;
   margin: 0 .175rem;
@@ -144,8 +139,28 @@
 }
 
 .bx--card .apicApiCardMain {
-  margin-left: 10px;
+  grid-column-start: 1;
+  grid-column-end: span end;
+  .bx--about__title--name a{
+    display: flex;
+    align-items: baseline;
+    font-size: 0.875rem;
+    line-height: 18px;
+    word-break: break-word;
+    font-weight: 600;
+    font-family: 'IBM Plex Sans', sans-serif;
+    .apicApiName{
+      padding-right: 0.625rem;
+      max-width: 10rem;
+    }
+    .apicApiCardVersion{
+      font-size: 0.875rem;
+    }
+
+  }
 }
+
+
 
 .bx--card .apicApiCardVersion .field--name-api-version{
   display: inline-block;
@@ -157,10 +172,15 @@
 .bx--card .apicApiDesc h2,
 .bx--card .apicApiDesc h3,
 .bx--card .apicApiDesc h4{
-  font-size: 75%;
-  line-height: 0.85rem;
+  font-size: 0.875rem;
+  line-height: 20px;
   grid-column-start: 1;
   grid-column-end: span end;
+  height: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: IBMPlexSans, 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0.16px;
 }
 
 .bx--card .apicFade {
@@ -192,4 +212,9 @@
 
 .node--type-application.bx--card a .apicAppName {
   color: $brand-primary;
+  font-size: 0.875rem;
+  line-height: 18px;
+  word-break: break-word;
+  font-weight: 600;
+  font-family: 'IBM Plex Sans', sans-serif;
 }

@@ -113,7 +113,7 @@
 
       $('.productMultiSelect .productCards').masonry({
         // options
-        itemSelector: '.node--view-mode-card', columnWidth: '.node--view-mode-card', gutter: 20
+        itemSelector: '.node--view-mode-card', columnWidth: '.node--view-mode-card', gutter: 2
       });
 
     }

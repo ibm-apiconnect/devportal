@@ -2,10 +2,269 @@
  * Node styling.
  */
 
+.is-unpublished {
+  background-color: #fff4f4;
+}
+
 .node-preview-container {
   margin-top: -($grid-gutter-width / 2);
 }
 
 .node-preview-form-select {
   padding: ($grid-gutter-width / 2);
+}
+
+/* forum posts and blogs */
+article footer {
+  display: flex;
+  justify-content: space-between;
+
+  article {
+    margin-right: 1rem;
+  }
+
+  .field--name-user-picture img {
+    max-width: 48px;
+  }
+  .author {
+    padding-top: 2rem;
+  }
+}
+
+.path-node .content section h2 {
+  font-size: 1.5rem;
+}
+
+.field--name-comment-body .form-item {
+  margin: 0;
+}
+
+.apicTeaser {
+  display: flex;
+}
+
+.apicTeaserMain {
+  flex: 1;
+}
+
+.apicTeaserMain h2 {
+  display: flex;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.apicTeaserMain h2 a {
+  display: flex;
+  padding-right: 10px;
+}
+
+.apicTeaserMain h2 a span:first-of-type {
+  padding-right: 4px;
+  margin-bottom: 0;
+}
+
+.apicTeaserMain .field {
+  margin-bottom: 0;
+}
+
+@media screen and (max-width: 640px) {
+  .apicTeaser {
+    flex-direction: column;
+  }
+
+  .apicTeaserMain {
+    -ms-flex: 1 0 auto;
+  }
+
+  .apicTeaserMain h2 {
+    flex-direction: column;
+  }
+
+  .apicTeaserMain h2 a {
+    flex-direction: column;
+  }
+
+}
+
+/* cards */
+.bx--card {
+  height: 19rem;
+  border: none;
+  box-shadow: none;
+}
+
+.bx--card .apicCard{
+  padding-left: 1rem;
+  padding-top: 1rem;
+  padding-right: 1rem;
+  display: -ms-grid;
+  display: grid;
+  -ms-grid-columns: 50px auto;
+  grid-template-columns: 50px auto;
+  max-height: 18rem;
+}
+
+.bx--card .apicIcon {
+  -ms-grid-column: 1;
+}
+.bx--card .apicIcon article {
+  display: flex;
+}
+
+.bx--card .apicIcon article .field--name-user-picture {
+  margin-right: 1rem;
+}
+
+.bx--card .apicCardMain {
+  -ms-grid-column: 1;
+  grid-column-start: 1;
+  -ms-grid-column-span: end;
+  grid-column-end: span end;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.bx--card .apicCardMain .bx--about__title--name {
+  width: 13rem;
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+.bx--card .apicCardMain .bx--about__title--name a{
+  display: flex;
+  font-size: 0.875rem;
+  line-height: 18px;
+  word-break: break-word;
+  font-weight: 600;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+/* ckeditor */
+.bx--global-light-ui .cke_top {
+  background-color: $ui-background;
+  border-bottom: 1px solid $ui-01;
+}
+.bx--global-light-ui .cke_chrome {
+  border: 0;
+  /* evil hack to prevent some broken JS from setting width to 0px on ckeditor */
+  width: 100% !important;
+}
+.bx--global-light-ui .cke_bottom {
+  border-top: 0;
+  background: $ui-background;
+}
+
+/* ckeditor toolbar icons */
+.bx--global-light-ui .cke_hidpi .cke_button__bold_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--bold.svg) !important;
+  background-position: -4px -4px !important;
+  background-size: 24px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__italic_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--italic.svg) !important;
+  background-position: -4px -4px !important;
+  background-size: 24px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__underline_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--underline.svg) !important;
+  background-position: -3px -2px !important;
+  background-size: 20px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__strike_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--strikethrough.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__superscript_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--superscript.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__subscript_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--subscript.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__justifyleft_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--align--left.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__justifycenter_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--align--center.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__justifyright_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--align--right.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__justifyblock_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--align--justify.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__drupallink_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/link.svg) !important;
+  background-position: 0 -2px !important;
+  background-size: 18px !important;
+  width: 18px;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__drupalunlink_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/unlink.svg) !important;
+  background-position: -2px -2px !important;
+  background-size: 18px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__content_browser_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/box.svg) !important;
+  background-position: -1px -1px !important;
+  background-size: 18px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__bulletedlist_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/list--bulleted.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__numberedlist_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/list--numbered.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__drupalfile_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/attachment.svg) !important;
+  background-position: -1px -1px !important;
+  background-size: 18px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__blockquote_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/quotes.svg) !important;
+  background-position: -2px -2px !important;
+  background-size: 20px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__file_browser_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/archive.svg) !important;
+  background-position: -1px -1px !important;
+  background-size: 18px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__drupalimage_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/image.svg) !important;
+  background-position: -2px -1px !important;
+  background-size: 19px !important;
+}
+.bx--global-light-ui .cke_ltr.cke_hidpi .cke_button__source_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/script.svg) !important;
+  background-position: -2px -1px !important;
+  background-size: 17px !important;
+}
+
+.text-format-wrapper .filter-wrapper .icon.glyphicon.glyphicon-question-sign {
+  display: none;
+}
+
+.field--widget-text-textarea-with-summary .form-type-textarea {
+  margin-bottom: 0;
+}
+.field--widget-text-textarea-with-summary .filter-wrapper {
+  background-color: $ui-background;
+  border: 0;
 }

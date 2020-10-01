@@ -112,12 +112,9 @@ class DeleteInviteForm extends ConfirmFormBase {
       $form['actions']['cancel'] = [
         '#type' => 'link',
         '#title' => t('Cancel'),
-        '#href' => 'myorg',
+        '#url' => $this->getCancelUrl(),
         '#attributes' => ['class' => ['button']],
       ];
-      if ($this->themeHandler->themeExists('bootstrap')) {
-        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-      }
     }
     else {
       $org = $this->userUtils->getCurrentConsumerorg();
@@ -136,15 +133,6 @@ class DeleteInviteForm extends ConfirmFormBase {
         throw new NotFoundHttpException(t('Specified invite not found in this consumer organization.'));
       }
       $form = parent::buildForm($form, $form_state);
-      $themeHandler = \Drupal::service('theme_handler');
-      if ($themeHandler->themeExists('bootstrap')) {
-        if (isset($form['actions']['submit'])) {
-          $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
-        }
-        if (isset($form['actions']['cancel'])) {
-          $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-        }
-      }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $form;

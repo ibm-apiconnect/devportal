@@ -18,7 +18,6 @@ form_settings:
   node_application_form: false
   node_article_form: false
   node_blog_post_form: false
-  node_book_form: false
   node_consumerorg_form: false
   node_faq_form: false
   node_forum_form: true

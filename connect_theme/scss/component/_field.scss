@@ -4,7 +4,7 @@
  */
 
 .field--label {
-  font-weight: 600;
+  font-weight: bold;
 }
 .field--label-inline .field--label,
 .field--label-inline .field--items {
@@ -19,6 +19,7 @@
 [dir="rtl"] .field--label-inline .field--items {
   padding-left: 0.5em;
   padding-right: 0;
+  float: right; /*RTL*/
 }
 .field--label-inline .field--label::after {
   content: ':';

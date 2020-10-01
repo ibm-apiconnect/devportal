@@ -1,0 +1,40 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.card
+    - field.field.node.page.allapis
+    - field.field.node.page.allproducts
+    - field.field.node.page.apiref
+    - field.field.node.page.body
+    - field.field.node.page.prodref
+    - node.type.page
+  module:
+    - text
+    - user
+id: node.page.card
+targetEntityType: node
+bundle: page
+mode: card
+content:
+  addtoany:
+    weight: 1
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  body:
+    label: hidden
+    type: text_summary_or_trimmed
+    weight: 0
+    settings:
+      trim_length: 200
+    third_party_settings: {  }
+    region: content
+hidden:
+  allapis: true
+  allproducts: true
+  apiref: true
+  langcode: true
+  links: true
+  prodref: true
+  search_api_excerpt: true

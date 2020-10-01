@@ -73,6 +73,7 @@ class AnalyticsController extends ControllerBase {
     $catalogName = $this->siteConfig->getCatalog()['title'];
     $pOrgId = $this->siteConfig->getOrgId();
     $consumerorgId = NULL;
+    $consumerorgNid = NULL;
     $consumerorgTitle = NULL;
     if (isset($consumer_org['url'])) {
       $query = \Drupal::entityQuery('node');
@@ -80,8 +81,8 @@ class AnalyticsController extends ControllerBase {
       $query->condition('consumerorg_url.value', $consumer_org['url']);
       $consumerorgresults = $query->execute();
       if (isset($consumerorgresults) && !empty($consumerorgresults)) {
-        $first = array_shift($consumerorgresults);
-        $consumerorg = Node::load($first);
+        $consumerorgNid = array_shift($consumerorgresults);
+        $consumerorg = Node::load($consumerorgNid);
         if ($consumerorg !== null) {
           $consumerorgId = $consumerorg->consumerorg_id->value;
           $consumerorgTitle = $consumerorg->getTitle();
@@ -113,6 +114,11 @@ class AnalyticsController extends ControllerBase {
         \Drupal::messenger()->addError(t('Analytics client URL is not set.'));
       }
     }
+    $nodeArray = ['id' => $consumerorgNid];
+
+    $tabs = [];
+    // tabs should be an array of additional tabs, eg. [{'title' => 'tab title', 'path' => '/tab/path'}, ... ]
+    \Drupal::moduleHandler()->alter('consumerorg_myorg_tabs', $tabs, $nodeArray);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, [
       'theme' => $theme,
@@ -121,6 +127,8 @@ class AnalyticsController extends ControllerBase {
       'catalogName' => $catalogName,
       'porgId' => $pOrgId,
       'consumerorgTitle' => $consumerorgTitle,
+      'node' => $nodeArray,
+      'tabs' => $tabs,
     ]);
 
     return [
@@ -134,6 +142,8 @@ class AnalyticsController extends ControllerBase {
         'library' => $libraries,
         'drupalSettings' => $drupalSettings,
       ],
+      '#node' => $nodeArray,
+      '#tabs' => $tabs,
     ];
   }
 

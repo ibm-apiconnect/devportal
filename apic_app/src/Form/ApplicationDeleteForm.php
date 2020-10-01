@@ -116,14 +116,6 @@ class ApplicationDeleteForm extends ConfirmFormBase {
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
     $this->node = $appId;
     $form = parent::buildForm($form, $form_state);
-    if ($this->themeHandler->themeExists('bootstrap')) {
-      if (isset($form['actions']['submit'])) {
-        $form['actions']['submit']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('trash');
-      }
-      if (isset($form['actions']['cancel'])) {
-        $form['actions']['cancel']['#icon'] = \Drupal\bootstrap\Bootstrap::glyphicon('remove');
-      }
-    }
     $form['#attached']['library'][] = 'apic_app/basic';
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

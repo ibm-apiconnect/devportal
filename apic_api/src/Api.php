@@ -173,14 +173,6 @@ class Api {
     if ($node !== NULL) {
       // Calling all modules implementing 'hook_apic_api_create':
       $moduleHandler->invokeAll('apic_api_create', ['node' => $node, 'data' => $api]);
-      // invoke rules
-      if ($moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new ApiCreateEvent($node, ['api' => $node]);
-        $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(ApiCreateEvent::EVENT_NAME, $event);
-      }
 
       $config = \Drupal::config('ibm_apim.settings');
       $autoCreateForum = (boolean) $config->get('autocreate_apiforum');
@@ -191,7 +183,7 @@ class Api {
         $this->apiTaxonomy->create_api_forum($this->utils->truncate_string($api['consumer_api']['info']['title']), $api['consumer_api']['info']['description']);
       }
 
-      \Drupal::logger('apic_api')->notice('API @api created', ['@api' => $node->getTitle()]);
+      \Drupal::logger('apic_api')->notice('API @api @version created', ['@api' => $node->getTitle(), '@version' => $node->apic_version->value]);
 
       $nodeId = $node->id();
     } else {
@@ -227,7 +219,7 @@ class Api {
 
       // filter out any retired apis and remove them
       if (array_key_exists('state', $api) && $api['state'] === 'retired') {
-        \Drupal::logger('apic_api')->error('Update api: retired API @apiName, deleting it.', ['@apiName' => $api['name']]);
+        \Drupal::logger('apic_api')->error('Update api: retired API @apiName @version, deleting it.', ['@apiName' => $api['name'], '@version' => $api['consumer_api']['info']['version']]);
         self::deleteNode($node->id(), 'retired_api');
         $node = NULL;
       } else {
@@ -511,17 +503,10 @@ class Api {
           // Calling all modules implementing 'hook_apic_api_update':
           $moduleHandler->invokeAll('apic_api_update', ['node' => $node, 'data' => $api]);
 
-          if ($moduleHandler->moduleExists('rules')) {
-            // Set the args twice on the event: as the main subject but also in the
-            // list of arguments.
-            $event = new ApiUpdateEvent($node, ['api' => $node]);
-            $eventDispatcher = \Drupal::service('event_dispatcher');
-            $eventDispatcher->dispatch(ApiUpdateEvent::EVENT_NAME, $event);
-          }
         }
 
         if ($event !== 'internal') {
-          \Drupal::logger('apic_api')->notice('API @api updated', ['@api' => $node->getTitle()]);
+          \Drupal::logger('apic_api')->notice('API @api @version updated', ['@api' => $node->getTitle(), '@version' => $node->apic_version->value]);
         }
       }
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -589,18 +574,10 @@ class Api {
 
     $node = Node::load($nid);
     if ($node !== NULL) {
-      \Drupal::logger('apic_api')->notice('API @api deleted', ['@api' => $node->getTitle()]);
+      \Drupal::logger('apic_api')->notice('API @api @version deleted', ['@api' => $node->getTitle(), '@version' => $node->apic_version->value]);
 
       // Calling all modules implementing 'hook_apic_api_delete':
       $moduleHandler->invokeAll('apic_api_delete', ['node' => $node]);
-
-      if ($moduleHandler->moduleExists('rules')) {
-        // Set the args twice on the event: as the main subject but also in the
-        // list of arguments.
-        $event = new ApiDeleteEvent($node, ['api' => $node]);
-        $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(ApiDeleteEvent::EVENT_NAME, $event);
-      }
 
       $node->delete();
       unset($node);

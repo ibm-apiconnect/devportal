@@ -214,7 +214,7 @@ class OidcStateService implements OidcStateServiceInterface {
     return $this->encryptionProfile;
   }
 
-  private function getAllOidcState() {
+  public function getAllOidcState() {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -232,7 +232,7 @@ class OidcStateService implements OidcStateServiceInterface {
     return unserialize($all_state, ['allowed_classes' => FALSE]);
   }
 
-  private function saveAllOidcState($state) {
+  public function saveAllOidcState($state) {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }

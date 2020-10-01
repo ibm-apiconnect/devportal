@@ -27,16 +27,27 @@
       display: none;
     }
 
-    .wizard-trail {
-      height: 100px;
+    .subscriptionWizardTitle{
       background-color: $default-bg-light;
-      border-bottom: 1px solid $default-border;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      margin: 0 -1rem;
+      padding: 0 2rem;
+    }
 
+    .subscriptionWizardTitle h3{
+      font-size: 2rem;
+      font-weight: 300;
+      margin:0;
+      padding: 1rem 0;
+    }
+
+    .wizard-trail {
+      height: 3.75rem;
+      background-color: $default-bg-light;
+      display: flex;
+      justify-content: left;
+      align-items: center;
+      padding-left: 1rem;
       .bx--progress {
-        font-family: 'ibm-plex-sans', Helvetica Neue, Arial, sans-serif;
         display: -webkit-box;
         display: -ms-flexbox;
         display: flex;
@@ -47,6 +58,12 @@
         }
       }
 
+      .bx--progress {
+        margin-bottom: 1rem;
+        height: 2.75rem;
+        padding-left: 1rem;
+      }
+
       .bx--progress-step {
         position: relative;
         display: -webkit-inline-box;
@@ -54,8 +71,8 @@
         display: inline-flex;
         -webkit-box-orient: vertical;
         -webkit-box-direction: normal;
-        -ms-flex-direction: column;
-        flex-direction: column;
+        -ms-flex-direction: row;
+        flex-direction: row;
         -webkit-box-flex: 1;
         -ms-flex: 1;
         flex: 1;
@@ -69,74 +86,71 @@
 
       .bx--progress-line {
         position: absolute;
-        top: 0.625rem;
-        right: 100%;
+        left:0;
         height: 1px;
-        width: calc(100% - 24px);
-        border: 1px inset transparent; }
-      .bx--progress-step:first-child .bx--progress-line {
-        display: none; }
+        width: calc(100%);
+        border: 1px inset transparent;
+      }
 
       .bx--progress-step svg {
         position: relative;
         z-index: 1;
-        width: 1.5rem;
-        height: 1.5rem;
+        flex-shrink: 0;
+        width: 1rem;
+        height: 1rem;
         border-radius: 50%;
-        margin-bottom: 0.5rem; }
+        margin: 0.625rem .5rem 0 0;
+        fill: $brand-primary;
+      }
+
+      .bx--progress-step--incomplete svg {
+        fill: $default-line;
+      }
+
+      .bx--progress-label::before {
+        display: block;
+        content: '';
+      }
 
       .bx--progress-label {
-        line-height: 1;
-        width: 75%; }
+        font-size: .875rem;
+        font-weight: 400;
+        letter-spacing: .16px;
+        max-width: 8rem;
+        margin: .5rem 0 0 0;
+        overflow: hidden;
+        color: #161616;
+        line-height: 1.45;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        transition: box-shadow 110ms cubic-bezier(0.2, 0, 0.38, 0.9),color 110ms cubic-bezier(0.2, 0, 0.38, 0.9);
+      }
 
-      .bx--progress-step--current circle:first-child {
-        stroke: $brand-primary;
-        stroke-width: 5;
-        fill: transparent; }
+
 
       .bx--progress-step--current circle:last-child {
         fill: $brand-primary; }
 
-      .bx--progress-step--current .bx--progress-label {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        color: $brand-primary;
-        font-weight: 600; }
-
       .bx--progress-step--current .bx--progress-line {
         background-color: $brand-primary; }
-
-      .bx--progress-step--incomplete circle {
-        stroke: $default-line;
-        stroke-width: 5;
-        fill: transparent; }
 
       .bx--progress-step--incomplete .bx--progress-label {
         color: $default-line; }
 
       .bx--progress-step--incomplete .bx--progress-line {
-        background-color: $default-line; }
-
-      .bx--progress-step--complete circle {
-        stroke: $brand-primary;
-        stroke-width: 5;
-        fill: transparent; }
+        background-color: $default-border; }
 
       .bx--progress-step--complete polygon {
         fill: $brand-primary; }
 
-      .bx--progress-step--complete .bx--progress-label {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        color: $brand-primary;
-        font-weight: 600; }
+
 
       .bx--progress-step--complete .bx--progress-line {
         background-color: $brand-primary; }
     }
 
     .region form {
-      padding: 0 15px;
+
     }
 
     .apicWizardHeader {
@@ -195,23 +209,31 @@
       padding: 0.5rem 0;
     }
 
+    .apicSubscribeAppForm{
+      display:flex;
+      flex-direction: row-reverse;
+    }
+
     .apicSubscribeNewAppWrapper {
-      padding: 0.5rem 0 0.5rem 1rem;
+
+    }
+
+    .subscription-wizard-choose-application {
+      width: calc(100% - 16rem);
     }
 
     .apicNewAppsList {
       display: flex;
-      flex-direction: row-reverse;
-      flex-wrap: wrap-reverse;
+      flex-wrap: wrap;
       .apicSubAppCard {
-        margin: 0.5%;
-        padding: 0.7%;
+        margin: 1px;
+        padding: 0;
       }
     }
 
     .apicSubscribeAppsList .apicSubAppCard {
-      margin: 0.5%;
-      padding: 0.7%;
+      margin: 1px;
+      padding: 0;
     }
 
     .apicSubscribeAppForm .apicNewAppWrapper > div {
@@ -260,6 +282,36 @@
   }
 }
 
+@mixin add_icon($color) {
+  $color-rgb: "rgb(" + red($color) + "%2C" + green($color) + "%2C" + blue($color) + ")";
+  content: url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20xmlns%3Axlink%3D%27http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%27%20version%3D%271.1%27%20id%3D%27icon%27%20x%3D%270px%27%20y%3D%270px%27%20width%3D%2732px%27%20height%3D%2732px%27%20viewBox%3D%270%200%2032%2032%27%20fill%3D%27#{$color-rgb}%27%20style%3D%27enable-background%3Anew%200%200%2032%2032%3B%27%20xml%3Aspace%3D%27preserve%27%3E%3Cstyle%20type%3D%27text%2Fcss%27%3E.st0%7Bfill%3Anone%3B%7D%3C%2Fstyle%3E%3Cpolygon%20points%3D%2717%2C15%2017%2C8%2015%2C8%2015%2C15%208%2C15%208%2C17%2015%2C17%2015%2C24%2017%2C24%2017%2C17%2024%2C17%2024%2C15%20%27%2F%3E%3Crect%20class%3D%27st0%27%20width%3D%2732%27%20height%3D%2732%27%2F%3E%3C%2Fsvg%3E');
+ }
+
+.apicWizardMain .apicNewAppButton .tile-button {
+  min-height: unset;
+  min-width: 20rem;
+  height: 15rem;
+  max-width: 20rem;
+  padding: 0 1rem 2rem;
+  background-color: $tile-btn-bg;
+  border-color: $tile-btn-border;
+  color: $tile-btn-color;
+  &:hover{
+    background-color: $hover-ui;
+    border-color: $hover-ui;
+    &:before {
+      @include add_icon($text_04);
+    }
+  }
+  &:active{
+    background-color: $active-ui;
+    border-color: $active-ui;
+  }
+  &:before {
+    @include add_icon($brand-primary);
+  }
+}
+
 .modal-content {
   .clientIDContainer,
   .clientSecretContainer {
@@ -271,8 +323,9 @@
       margin-right: 20px;
       width: 27rem;
       input {
-        width: 100%;
+        width: calc( 100% - 44px );
         opacity:0.9;
+        border: unset;
       }
     }
 

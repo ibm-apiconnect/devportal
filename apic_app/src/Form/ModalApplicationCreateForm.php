@@ -100,6 +100,8 @@ class ModalApplicationCreateForm extends FormBase {
     $form['#parents'] = [];
     $max_weight = 500;
 
+    $moduleHandler = \Drupal::service('module_handler');
+
     $entity = \Drupal::entityTypeManager()->getStorage('node')->create([
       'type' => 'application',
     ]);
@@ -165,7 +167,7 @@ class ModalApplicationCreateForm extends FormBase {
     $form['actions']['#weight'] = $max_weight + 1;
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Submit'),
+      '#value' => $this->t('Save'),
       '#button_type' => 'primary',
       '#attributes' => [
         'class' => [
@@ -181,6 +183,9 @@ class ModalApplicationCreateForm extends FormBase {
 
     $form['#attached']['library'][] = 'apic_app/basic';
     $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
+    if ($moduleHandler->moduleExists('clipboardjs')) {
+      $credsForm['#attached']['library'][] = 'clipboardjs/drupal';
+    }
 
     // remove any admin fields if they exist
     if (isset($form['revision_log'])) {
@@ -282,7 +287,7 @@ class ModalApplicationCreateForm extends FormBase {
         $node = Node::load($nid);
 
         if ($node !== NULL) {
-          $renderArray = node_view($node, 'subscribewizard');
+          $renderArray = \Drupal::entityTypeManager()->getViewBuilder('node')->view($node, 'subscribewizard');
           $renderer = \Drupal::service('renderer');
           $html = $renderer->render($renderArray);
           $response->addCommand(new InsertCommand('div.apicNewAppsList', $html, []));
@@ -290,6 +295,7 @@ class ModalApplicationCreateForm extends FormBase {
 
         // Pop up a new modal dialog to display the client id and secret
         $credsForm = [];
+        $moduleHandler = \Drupal::service('module_handler');
 
         $modalHeaderHTML = '<div class="modal-header ui-dialog-titlebar ui-draggable-handle" id="drupal-modal--header"><button class="close ui-dialog-titlebar-close" aria-label="Close" data-dismiss="modal" type="button"><span aria-hidden="true">×</span></button><h4 class="modal-title ui-dialog-title">' . t('Credentials for your new application') . '</h4></div>';
         $credsForm['intro'] = [
@@ -297,23 +303,40 @@ class ModalApplicationCreateForm extends FormBase {
           '#weight' => 0,
           '#allowed_tags' => ['button', 'div', 'span', 'p', 'h4'],
         ];
+        if ($moduleHandler->moduleExists('clipboardjs')) {
+          $credsForm['client_id'] = [
+            '#markup' => Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input id="clientIDInput" class="clipboardjs" aria-labelledby="clientIDInputLabel" value="' . $clientId . '" readonly="readonly" />
+                <button class="clipboardjs-button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#clientIDInput">
+                  ' . file_get_contents(drupal_get_path('module', 'apic_app') . "/images/clipboard.svg") . '</button></div>'),
+            '#weight' => 10,
+          ];
 
-        $credsForm['client_id'] = [
-          '#markup' => Markup::create('<div class="clientIDContainer toggleParent"><p class="field__label">' . $this->t('Key') . '</p><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_id" type="password" readonly value="' . $clientId . '"></div><div class="apicAppCheckButton">
-        <div class="password-toggle bx--form-item js-form-item form-item js-form-type-checkbox form-type-checkbox checkbox"><label title="" data-toggle="tooltip" class="bx--label option" data-original-title=""><input class="form-checkbox bx--checkbox" type="checkbox"><span class="bx--checkbox-appearance"><svg class="bx--checkbox-checkmark" width="12" height="9" viewBox="0 0 12 9" fill-rule="evenodd"><path d="M4.1 6.1L1.4 3.4 0 4.9 4.1 9l7.6-7.6L10.3 0z"></path></svg></span><span class="children"> ' . t('Show') . '</span></label></div></div></div>'),
-          '#weight' => 10,
-        ];
+          $credsForm['client_secret'] = [
+            '#markup' => Markup::create('<div class="clientSecretContainer"><label for="client_secret" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input id="clientSecretInput" class="clipboardjs" aria-labelledby="clientSecretInputLabel" value="' . $clientSecret . '" readonly="readonly" />
+                <button class="clipboardjs-button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#clientSecretInput">
+                  ' . file_get_contents(drupal_get_path('module', 'apic_app') . "/images/clipboard.svg") . '</button></div>'),
+            '#weight' => 20,
+          ];
+        } else {
+          $credsForm['client_id'] = [
+            '#markup' => \Drupal\Core\Render\Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input class="form-control" id="client_id" readonly value="' . $clientId . '"></div></div>'),
+            '#weight' => 10,
+          ];
 
-        $credsForm['client_secret'] = [
-          '#markup' => Markup::create('<div class="clientSecretContainer toggleParent"><p class="field__label">' . $this->t('Secret') . '</p><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-type-password js-form-item-password form-item-password form-group"><input class="form-control toggle" id="client_secret" type="password" readonly value="' . $clientSecret . '"></div><div class="apicAppCheckButton">
-        <div class="password-toggle bx--form-item js-form-item form-item js-form-type-checkbox form-type-checkbox checkbox"><label title="" data-toggle="tooltip" class="bx--label option" data-original-title=""><input class="form-checkbox bx--checkbox" type="checkbox"><span class="bx--checkbox-appearance"><svg class="bx--checkbox-checkmark" width="12" height="9" viewBox="0 0 12 9" fill-rule="evenodd"><path d="M4.1 6.1L1.4 3.4 0 4.9 4.1 9l7.6-7.6L10.3 0z"></path></svg></span><span class="children"> ' . t('Show') . '</span></label></div></div></div>'),
-          '#weight' => 20,
-        ];
+          $credsForm['client_secret'] = [
+            '#markup' => \Drupal\Core\Render\Markup::create('<div class="clientSecretContainer"><label for="client_secret" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input class="form-control" id="client_secret" readonly value="' . $clientSecret . '"></div></div>'),
+            '#weight' => 20,
+          ];
+        }
 
         $credsForm['outro'] = [
           '#markup' => '<p>' . t('The Secret will only be displayed here one time. Please copy your API Secret and keep it for your records.') . '</p></div></div></div>',
           '#weight' => 30,
         ];
+        if ($moduleHandler->moduleExists('clipboardjs')) {
+          $credsForm['#attached']['library'][] = 'clipboardjs/drupal';
+        }
+
         $response->addCommand(new OpenModalDialogCommand(t('Credentials for your new application'), $credsForm));
       }
     }

@@ -69,3 +69,23 @@ consumerorg.delete_invite:
     _title: 'Delete an invitation to a user in your consumer organization'
   requirements:
     _consumerorg_edit_org_access_check: 'TRUE'
+
+consumerorg.billing_add_payment:
+  path: '/myorg/addpayment'
+  defaults:
+    _form: '\Drupal\consumerorg\Form\PaymentMethodCreateForm'
+    _title: 'Add Payment Method'
+  requirements:
+    _role: 'authenticated'
+    _consumerorg_edit_org_access_check: 'TRUE'
+    _ibm_apim_billing_access_check: 'TRUE'
+
+consumerorg.billing_delete_payment:
+  path: '/myorg/deletepayment/{paymentMethodId}'
+  defaults:
+    _form: '\Drupal\consumerorg\Form\PaymentMethodDeleteForm'
+    _title: 'Delete Payment Method'
+  requirements:
+    _role: 'authenticated'
+    _consumerorg_edit_org_access_check: 'TRUE'
+    _ibm_apim_billing_access_check: 'TRUE'

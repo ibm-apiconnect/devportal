@@ -1,0 +1,171 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the consumer organization billing page
+ *
+ * Variables available:
+ * - consumerorgId: the consumer organization id
+ * - consumerorgTitle: the consumer org title
+ * - node: array of fields about the consumerorg
+ * @ingroup themeable
+ */
+#}
+<article class="node">
+  <div class="apicMyOrg">
+    <header class="titleSection apicMyOrgHeader">
+      <div class="titleInnerWrapper">
+        <div class="leftTitle">
+          <h1 class="orgName">{{- consumerorgTitle -}}</h1>
+        </div>
+        <div class="rightTitle">
+          <div class="extraMenu apicMyOrgActions">
+            <ul class="overflow-menu organizationMenu dropitmenu">
+              <li title="{{ 'Manage organization'|t }}"><a href="#" class="trigger">
+                <span class="dropit-icon">
+                <svg version="1.1" id="icon" xmlns="http://www.w3.org/2000/svg"
+                     xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                     width="32px" height="32px" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;"
+                     xml:space="preserve">
+                  <style type="text/css">.st0 {
+                      fill: none;
+                    }</style>
+                  <title>overflow-menu--vertical</title>
+                  <circle cx="16" cy="8" r="2"/>
+                  <circle cx="16" cy="16" r="2"/>
+                  <circle cx="16" cy="24" r="2"/>
+                  <rect id="_Transparent_Rectangle_" class="st0" width="32" height="32"/>
+                </svg></span></a>
+                <ul class="dropitmenu-submenu">
+                  <li class="editOrganizationName">
+                    <a href="{{ url('consumerorg.update') }}" title="{{ 'Edit organization name'|t }}">
+                      {{ 'Edit organization name'|t }}
+                    </a>
+                  </li>
+                  {% if myorg_members|length > 1 %}
+                    <li class="changeOrganizationOwner">
+                      <a href="{{ url('consumerorg.changeowner') }}" title="{{ 'Change organization owner'|t }}">
+                        {{ 'Change organization owner'|t }}</a>
+                    </li>
+                  {% endif %}
+
+                  <li class="deleteOrganization">
+                    <a href="{{ url('consumerorg.delete') }}" title="{{ 'Delete organization'|t }}">
+                      {{ 'Delete organization'|t }}</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        {% if analytics_access or billing_access %}
+          <div class="organizationTabs">
+            <ul>
+              <li class="orgManage"><a href="{{- path('ibm_apim.myorg') -}}">{{ 'Manage'|t }}</a></li>
+              {% if analytics_access %}
+                <li class="orgAnalytics">
+                  <a href="{{- path('ibm_apim.analytics') -}}">{{ 'Analytics'|t }}</a>
+                </li>
+              {% endif %}
+              {% if billing_access %}
+                <li class="selected orgBilling">
+                  <a href="#">{{ 'Billing'|t }}</a>
+                </li>
+              {% endif %}
+              {% if tabs is not empty %}
+                {% for tab in tabs %}
+                  <li class="orgExtraTab">
+                    <a href="{{- path(tab.path) -}}">{{ tab.title }}</a>
+                  </li>
+                {% endfor %}
+              {% endif %}
+            </ul>
+          </div>
+        {% else %}
+        {% endif %}
+      </div>
+    </header>
+    <div class="ibmapimBilling">
+      <div class="paymentMethodPage">
+        <div class="addPaymentMethod">
+          <a class="button apicNewPaymentMethod" href="{{ url('consumerorg.billing_add_payment') }}"
+             title="{{ 'Add a new payment method for your consumer organization'|t }}">
+            <span>{{ 'Add'|t }}</span>
+          </a>
+        </div>
+        {% if node.payment_methods is empty %}
+          <div class="apicNoContent paymentMethodContainer noPaymentMethods">
+            <div class="noContentImage svgContainer">{% include images_path ~ '/images/EmptyState-Nothinglarge.svg' %}</div>
+            <div class="noContentTextContainer messageContainer">
+              <div class="noContentText noPaymentMethodsText firstLine">{{ "You don't currently have any payment methods."|t }}</div>
+              <div class="noContentText noPaymentMethodsText secondLine">{{ 'Click add to add a new payment method for use when subscribing to API products.'|t }}</div>
+            </div>
+          </div>
+        {% else %}
+          <div class="paymentMethodContainer">
+            {% for payment_method in node.payment_methods %}
+              <div class="bx--card paymentMethod {{ payment_method.payment_type.type|clean_class }}">
+                <div class="paymentMethodTitleRow">
+                  {% if showPlaceholders %}
+                    <div class="apicCardIcon">
+                      <img class="bx--about__icon" src="{{- payment_method.placeholderImageUrl -}}" alt=""/>
+                    </div>
+                  {% endif %}
+                  <div class="extraMenu apicPaymentMethodActions">
+                    <ul class="overflow-menu dropitmenu">
+                      <li title="{{ 'Manage payment method'|t }}">
+                        <a href="#" class="trigger">
+                       <span class="dropit-icon">
+                            <svg version="1.1" id="icon" xmlns="http://www.w3.org/2000/svg"
+                                 xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                                 width="32px" height="32px" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;"
+                                 xml:space="preserve">
+                              <style type="text/css">.st0 {
+                                  fill: none;
+                                }</style>
+                              <title>overflow-menu--vertical</title>
+                              <circle cx="16" cy="8" r="2"/>
+                              <circle cx="16" cy="16" r="2"/>
+                              <circle cx="16" cy="24" r="2"/>
+                              <rect id="_Transparent_Rectangle_" class="st0" width="32" height="32"/>
+                            </svg>
+                       </span>
+                        </a>
+                        <ul class="dropitmenu-submenu">
+                          <li class="deletePaymentMethod">
+                            <a href="{{ url('consumerorg.billing_delete_payment', {'paymentMethodId': payment_method.id}) }}"
+                               title="{{ 'Delete payment method'|t }}">
+                              {{ 'Delete payment method'|t }}
+                            </a>
+                          </li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <div
+                    class="bx--about__title--name {{ payment_method.payment_type.type|clean_class }}">{{ payment_method.title }}</div>
+
+                {% for key,value in payment_method.configuration %}
+                  {% if key|lower is same as('token') %}
+                    {# don't render the token #}
+                  {% elseif key|lower is same as('last_4') %}
+                    <p class="key {{ key|clean_class }}">{{ 'Card number'|t }}: ************{{ value }}</p>
+                  {% elseif key|lower is same as('expiration_month') and payment_method.configuration.expiration_year is defined %}
+                    <p class="key cardExpiry">{{ 'Expiry'|t }}: {{ payment_method.configuration.expiration_month }}
+                      / {{ payment_method.configuration.expiration_year }}</p>
+                  {% elseif key|lower is same as('expiration_year') and payment_method.configuration.expiration_month is defined %}
+                    {# do nothing since we've handled expiry above #}
+                  {% elseif value is empty %} 
+                    {# don't render empty values #}
+                  {% else %}
+                    <p class="key {{ key|clean_class }}">{{ key }}: {{ value }}</p>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</article>

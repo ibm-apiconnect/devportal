@@ -38,7 +38,6 @@ field_settings:
           application: teaser
           article: search_index
           blog_post: teaser
-          book: teaser
           consumerorg: teaser
           faq: teaser
           forum: teaser

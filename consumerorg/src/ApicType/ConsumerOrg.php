@@ -37,6 +37,8 @@ class ConsumerOrg {
 
   private $owner_url;
 
+  private $default_payment_method;
+
   private $roles = [];
 
   private $members = [];
@@ -44,6 +46,10 @@ class ConsumerOrg {
   private $invites = [];
 
   private $tags = [];
+
+  private $payment_methods = [];
+
+  private $custom_fields = [];
 
   /**
    * @return string
@@ -412,6 +418,42 @@ class ConsumerOrg {
   }
 
   /**
+   * Gets the payment methods of this org.
+   *
+   * @return array
+   */
+  public function getPaymentMethods(): ?array {
+    return $this->payment_methods;
+  }
+
+  /**
+   * Sets the payment methods of this org.
+   *
+   * @param array $payment_methods
+   */
+  public function setPaymentMethods($payment_methods): void {
+    $this->payment_methods = $payment_methods;
+  }
+
+  /**
+   * Gets the payment methods of this org.
+   *
+   * @return array
+   */
+  public function getDefaultPaymentMethod() {
+    return $this->default_payment_method;
+  }
+
+  /**
+   * Sets the payment methods of this org.
+   *
+   * @param array $default_payment_method
+   */
+  public function setDefaultPaymentMethod($default_payment_method): void {
+    $this->default_payment_method = $default_payment_method;
+  }
+
+  /**
    * Adds the provided member to this consumer org checking first if they
    * are already a member (no duplicates)
    *
@@ -550,5 +592,34 @@ class ConsumerOrg {
 
     return $returnValue;
   }
+
+  /**
+   * @return array
+   */
+  public function getCustomFields() {
+    if (!isset($this->custom_fields)) {
+      $this->custom_fields = [];
+    }
+    return $this->custom_fields;
+  }
+
+  /**
+   * @param array $customFields
+   */
+  public function setCustomFields($customFields): void {
+    if (empty($customFields)) {
+      $this->custom_fields = [];
+    } else {
+      $this->custom_fields = $customFields;
+    }
+  }
+
+  public function addCustomField($field, $value): void {
+    if (!isset($this->custom_fields)) {
+      $this->custom_fields = [];
+    }
+    $this->custom_fields[$field] = $value;
+  }
+
 
 }

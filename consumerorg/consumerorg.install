@@ -1,5 +1,18 @@
 <?php
 
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2020
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\Node;
 
 /**
@@ -84,5 +97,88 @@ function consumerorg_update_8103() {
       ], 'captcha_point');
       $captcha_point2->enable()->save();
     }
+  }
+}
+
+/**
+ * add consumerorg_payment_method_refs and consumerorg_def_payment_ref fields
+ */
+function consumerorg_update_8104() {
+  // Create a new field storage 'consumerorg_payment_method_refs'
+  $fieldStorageConfig = FieldStorageConfig::create([
+    'field_name' => 'consumerorg_payment_method_refs',
+    'entity_type' => 'node',
+    'type' => 'entity_reference',
+    'required' => FALSE,
+    'translatable' => FALSE,
+    'cardinality' => -1,
+    'settings' => ['target_type' => 'consumerorg_payment_method'],
+  ]);
+  $fieldStorageConfig->save();
+
+  // Create a new field for the consumerorg module
+  $fieldConfig = FieldConfig::create([
+    'field_name' => 'consumerorg_payment_method_refs',
+    'entity_type' => 'node',
+    'bundle' => 'consumerorg',
+    'translatable' => FALSE,
+    'field_type' => 'entity_reference',
+    'label' => t('Payment Method References'),
+    'settings' => ['handler' => 'default:consumerorg_payment_method', 'handler_settings' => ['target_bundles' => NULL, 'auto_create' => FALSE]],
+  ]);
+  $fieldConfig->save();
+
+  // Create a new field storage 'consumerorg_def_payment_ref'
+  $defaultFieldStorageConfig = FieldStorageConfig::create([
+    'field_name' => 'consumerorg_def_payment_ref',
+    'entity_type' => 'node',
+    'type' => 'entity_reference',
+    'required' => FALSE,
+    'translatable' => FALSE,
+    'cardinality' => 1,
+    'settings' => ['target_type' => 'consumerorg_payment_method'],
+  ]);
+  $defaultFieldStorageConfig->save();
+
+  // Create a new field for the consumerorg module
+  $defaultFieldConfig = FieldConfig::create([
+    'field_name' => 'consumerorg_def_payment_ref',
+    'entity_type' => 'node',
+    'bundle' => 'consumerorg',
+    'translatable' => FALSE,
+    'field_type' => 'entity_reference',
+    'label' => t('Default Payment Method Reference'),
+    'settings' => ['handler' => 'default:consumerorg_payment_method', 'handler_settings' => ['target_bundles' => NULL, 'auto_create' => FALSE]],
+  ]);
+  $defaultFieldConfig->save();
+
+  // Modify entity form display modes to show consumerorg_payment_method_refs field
+  $viewDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.consumerorg.default');
+  if ($viewDisplay !== NULL) {
+    // ensure we can handle this existing already too
+    $component = $viewDisplay->getComponent('consumerorg_payment_method_refs');
+    if (isset($component)) {
+      $viewDisplay->removeComponent('consumerorg_payment_method_refs');
+    }
+    $component = $viewDisplay->getComponent('consumerorg_def_payment_ref');
+    if (isset($component)) {
+      $viewDisplay->removeComponent('consumerorg_def_payment_ref');
+    }
+    // add our new field
+    $viewDisplay->setComponent('consumerorg_payment_method_refs', [
+      'weight' => 103,
+      'label' => 'above',
+      'settings' => ['link' => TRUE],
+      'region' => 'content',
+      'type' => 'entity_reference_label',
+    ]);
+    $viewDisplay->setComponent('consumerorg_def_payment_ref', [
+      'weight' => 104,
+      'label' => 'above',
+      'settings' => ['link' => TRUE],
+      'region' => 'content',
+      'type' => 'entity_reference_label',
+    ]);
+    $viewDisplay->save();
   }
 }

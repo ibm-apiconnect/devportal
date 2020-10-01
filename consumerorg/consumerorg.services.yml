@@ -42,10 +42,13 @@ services:
                 '@cache_tags.invalidator',
                 '@consumerorg.member',
                 '@consumerorg.role',
-                '@ibm_apim.account'
+                '@ibm_apim.account',
+                '@ibm_apim.apicuser'
                ]
   consumerorg.login:
     class: Drupal\consumerorg\Service\ConsumerOrgLoginService
     arguments: ['@ibm_apim.consumerorg',
                 '@logger.channel.consumerorg'
                 ]
+  consumerorg.paymentmethod:
+    class: Drupal\consumerorg\Service\PaymentMethodService

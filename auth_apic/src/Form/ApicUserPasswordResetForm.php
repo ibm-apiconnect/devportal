@@ -22,6 +22,7 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\user\Entity\User;
+use Drupal\Core\Messenger\Messenger;
 
 /**
  * Form controller for the user password forms.
@@ -59,6 +60,11 @@ class ApicUserPasswordResetForm extends FormBase {
   protected $moduleHandler;
 
   /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected $messenger;
+
+  /**
    * ApicUserPasswordResetForm constructor.
    *
    * @param \Psr\Log\LoggerInterface $logger
@@ -67,19 +73,22 @@ class ApicUserPasswordResetForm extends FormBase {
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    * @param \Drupal\auth_apic\Service\Interfaces\TokenParserInterface $token_parser
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
   public function __construct(LoggerInterface $logger,
                               LanguageManagerInterface $language_manager,
                               ApicPasswordInterface $apic_password,
                               AccountProxyInterface $current_user,
                               TokenParserInterface $token_parser,
-                              ModuleHandlerInterface $module_handler) {
+                              ModuleHandlerInterface $module_handler,
+                              Messenger $messenger) {
     $this->logger = $logger;
     $this->languageManager = $language_manager;
     $this->apicPassword = $apic_password;
     $this->currentUser = $current_user;
     $this->tokenParser = $token_parser;
     $this->moduleHandler = $module_handler;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -91,7 +100,8 @@ class ApicUserPasswordResetForm extends FormBase {
       $container->get('auth_apic.password'),
       $container->get('current_user'),
       $container->get('auth_apic.jwtparser'),
-      $container->get('module_handler'));
+      $container->get('module_handler'),
+      $container->get('messenger'));
   }
 
   /**
@@ -115,14 +125,14 @@ class ApicUserPasswordResetForm extends FormBase {
 
     // Check that nobody is logged in - if they are, send them away!
     if (\Drupal::currentUser()->isAuthenticated()) {
-      drupal_set_message(t('You can not reset passwords while you are logged in. You must log out first.'));
+      $this->messenger->addStatus(t('You can not reset passwords while you are logged in. You must log out first.'));
       return $this->redirect('<front>');
     }
 
     $token = \Drupal::request()->query->get('token');
 
     if (!$token) {
-      drupal_set_message(t('Missing token. Contact the system administrator for assistance.'), 'error');
+      $this->messenger->addError(t('Missing token. Contact the system administrator for assistance.'));
       $this->logger->notice('Missing token.');
 
       return $this->redirect('<front>');
@@ -130,7 +140,7 @@ class ApicUserPasswordResetForm extends FormBase {
     else {
       $resetPasswordObject = $this->tokenParser->parse($token);
       if ($resetPasswordObject === null || empty($resetPasswordObject)) {
-        drupal_set_message(t('Invalid token. Contact the system administrator for assistance.'), 'error');
+        $this->messenger->addError(t('Invalid token. Contact the system administrator for assistance.'));
         $this->logger->notice('Invalid token: %token', ['%token' => $token]);
         return $this->redirect('<front>');
       }
@@ -185,7 +195,7 @@ class ApicUserPasswordResetForm extends FormBase {
 
     $form['submit'] = [
       '#type' => 'submit',
-      '#value' => t('Submit'),
+      '#value' => t('Save'),
     ];
     $form['#attached']['library'][] = 'ibm_apim/validate_password';
 
@@ -221,14 +231,14 @@ class ApicUserPasswordResetForm extends FormBase {
     $token = $form_state->getValue('token');
 
     if (empty($password)) {
-      drupal_set_message(t('New password not set. Try again.'), 'error');
+      $this->messenger->addError(t('New password not set. Try again.'));
       $this->logger->notice('New password not set.');
       $form_state->setRedirect('user/forgot-password?token=' . $token);
       return;
     }
 
     if (empty($token)) {
-      drupal_set_message(t('Missing token. Contact the system administrator.'), 'error');
+      $this->messenger->addError(t('Missing token. Contact the system administrator.'));
       $this->logger->notice('Missing token.');
       $form_state->setRedirect('<front>');
       return;
@@ -246,7 +256,7 @@ class ApicUserPasswordResetForm extends FormBase {
     $responseCode = $this->apicPassword->resetPassword($resetPasswordObject, $password);
 
     if ($responseCode >= 200 && $responseCode < 300) {
-      drupal_set_message(t('Password successfully updated.'));
+      $this->messenger->addStatus(t('Password successfully updated.'));
       // Success, user needs to login now that the password has been reset.
       $form_state->setRedirect('user.login');
       return;

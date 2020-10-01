@@ -18,6 +18,7 @@ use Drupal\auth_apic\UserManagement\ApicActivationInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Messenger\Messenger;
 
 class ApicUserActivationController extends ControllerBase {
 
@@ -27,19 +28,24 @@ class ApicUserActivationController extends ControllerBase {
 
   protected $activation;
 
+  protected $messenger;
+
   public function __construct(TokenParserInterface $tokenParser,
                               SiteConfig $site_config,
-                              ApicActivationInterface $activation_service) {
+                              ApicActivationInterface $activation_service,
+                              Messenger $messenger) {
     $this->jwtParser = $tokenParser;
     $this->siteConfig = $site_config;
     $this->activation = $activation_service;
+    $this->messenger = $messenger;
   }
 
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('auth_apic.jwtparser'),
       $container->get('ibm_apim.site_config'),
-      $container->get('auth_apic.activation')
+      $container->get('auth_apic.activation'),
+      $container->get('messenger')
     );
   }
 
@@ -48,7 +54,7 @@ class ApicUserActivationController extends ControllerBase {
 
     $activationToken = \Drupal::request()->query->get('activation') ?: 'default';
     if (empty($activationToken)) {
-      drupal_set_message(t('Missing activation token. Unable to proceed.'), 'error');
+      $this->messenger->addError(t('Missing activation token. Unable to proceed.'));
       return $this->redirect('<front>');
     }
 
