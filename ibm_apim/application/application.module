@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2015, 2019
+ * (C) Copyright IBM Corporation 2015, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -3436,7 +3436,7 @@ function application_subscribeapp_modal_form_submit($form, &$form_state) {
   $appid = check_plain(ibm_apim_base64_url_decode($form_state['values']['app']));
   $planId = check_plain($form_state['values']['planId']);
   $requiresapproval = check_plain($form_state['values']['approval']);
-  if (mb_strtolower($requiresapproval) != 'true' && mb_strtolower($requiresapproval != 'false')) {
+  if (mb_strtolower($requiresapproval) != 'true' && mb_strtolower($requiresapproval) != 'false') {
     $requiresapproval = 'false';
   }
 

@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2016, 2019
+ * (C) Copyright IBM Corporation 2016, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -60,8 +60,6 @@ function apim_profile_install() {
     'fasttoggle_node',
     'site_uploader',
     'comprehensive_uninstaller',
-    'slick_ui',
-    'slick_fields',
     'metatag',
     'metatag_dc',
     'metatag_facebook',
@@ -431,7 +429,7 @@ product/*'
   // create admin guide book
   $path = dirname(__FILE__);
   require_once $path . '/content/book.import.inc';
-  apim_profile_create_book();
+  //apim_profile_create_book();
 
   // hide Add Content link from navigation menu
   $mlid = db_query("SELECT mlid FROM {menu_links} WHERE link_title=:link_title AND  link_path=:link_path AND menu_name=:menu_name", array(
@@ -3197,11 +3195,6 @@ function apim_profile_update_7400() {
     'ghmarkdown',
     'front_page',
     'label_help',
-    'slick',
-    'slick_views',
-    'slick_extras',
-    'slick_ui',
-    'slick_fields',
     'profanity',
     'seckit',
     'restrict_by_ip',
@@ -3261,8 +3254,8 @@ function apim_profile_update_7400() {
   variable_set('l10n_update_download_store', conf_path() . '/translations');
 
   $path = dirname(__FILE__);
-  require_once $path . '/content/book.import.inc';
-  apim_profile_create_book();
+//  require_once $path . '/content/book.import.inc';
+//  apim_profile_create_book();
 
   // configure cron
   if (variable_get('ultimate_cron_plugin_logger_default', NULL) === NULL) {

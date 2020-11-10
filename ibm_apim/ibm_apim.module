@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2015, 2019
+ * (C) Copyright IBM Corporation 2015, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -220,7 +220,7 @@ function ibm_apim_create_developer_org_form($form, &$form_state) {
  * @param $form_state
  */
 function ibm_apim_create_developer_org_form_submit_handler($form, &$form_state) {
-  $orgname = check_plain($form_state['values']['orgname']);
+  $orgname = filter_xss($form_state['values']['orgname']);
   $ibm_apim_allow_devorg_creation = variable_get('ibm_apim_allow_devorg_creation', TRUE);
   if ($ibm_apim_allow_devorg_creation == 1) {
     // update APIm
@@ -2734,22 +2734,22 @@ function ibm_apim_billing() {
   $markup .= "<label for='edit-role'>" . t('Contact information') . "</label>";
   $markup .= "<div class='form-item form-type-textfield'>";
   $markup .= "<label for='billing_name'>" . t('Name:') . "</label>";
-  $markup .= "<span id='billing_name'>" . ' ' . $billing_data[0]['properties']['name'] . "</span>";
+  $markup .= "<span id='billing_name'>" . ' ' . check_plain($billing_data[0]['properties']['name']) . "</span>";
   $markup .= "</div>";
   $markup .= "<div class='form-item form-type-textfield'>";
   $markup .= "<label for='billing_email'>" . t('Email:') . "</label>";
-  $markup .= "<span id='billing_email'>" . ' ' . $billing_data[0]['properties']['email'] . "</span>";
+  $markup .= "<span id='billing_email'>" . ' ' . check_plain($billing_data[0]['properties']['email']) . "</span>";
   $markup .= "</div>";
   $markup .= "</div>";
   $markup .= "<div class='form-item form-item-role'>";
   $markup .= "<label for='edit-role'>" . t('Credit card') . "</label>";
   $markup .= "<div class='form-item form-type-textfield'>";
   $markup .= "<label for='card_ending'>" . t('Card ending in:') . "</label>";
-  $markup .= "<span id='card_ending'>" . ' ' . $billing_data[0]['properties']['last4'] . "</span>";
+  $markup .= "<span id='card_ending'>" . ' ' . check_plain($billing_data[0]['properties']['last4']) . "</span>";
   $markup .= "</div>";
   $markup .= "<div class='form-item form-type-textfield form-item-new-email'>";
   $markup .= "<label for='card_expiring'>" . t('Card expiration:') . "</label>";
-  $markup .= "<span id='card_expiring'>" . ' ' . $billing_expiration . "</span>";
+  $markup .= "<span id='card_expiring'>" . ' ' . check_plain($billing_expiration) . "</span>";
   $markup .= "</div>";
   $markup .= "</div>";
   $markup .= "<button id='billing_button' class='form-submit'>" . t('Update') . "</button>";
@@ -2957,7 +2957,7 @@ function ibm_apim_analytics_proxy($input1 = NULL, $input2 = NULL, $input3 = NULL
   $mgmturl = _ibm_apim_parse_apim_host()['url'];
   $string = join('/', func_get_args());
   // trim any naughty attempts to load other files using relative paths
-  $string = preg_replace("@\.\./@", "/", $string);
+  $string = preg_replace("@\.(\.)+/@", "/", $string);
   $url = $mgmturl . '/v1/kibana/' . $string;
 
   $data = NULL;
@@ -3103,7 +3103,7 @@ function _ibm_apim_swaggerjson_callback($apiref) {
               }
               if (is_array($yaml[$key][$prop])) {
                 foreach ($yaml[$key][$prop] as $prop2 => $value2) {
-                  if ($prop2 == 'schema') {
+                  if ($prop2 == 'schema' || $prop2 == 'properties') {
                     if (is_array($yaml[$key][$prop][$prop2]) && empty($yaml[$key][$prop][$prop2])) {
                       unset($yaml[$key][$prop][$prop2]);
                     }
@@ -3658,7 +3658,7 @@ function _ibm_apim_edit_myorg($form, &$form_state) {
  * @param $form_state
  */
 function _ibm_apim_edit_myorg_submit_handler($form, &$form_state) {
-  $name = check_plain($form_state['values']['name']);
+  $name = filter_xss($form_state['values']['name']);
   $orgid = check_plain($form_state['values']['orgid']);
   $ibm_apim_allow_devorg_rename = variable_get('ibm_apim_allow_devorg_rename', TRUE);
   if ($ibm_apim_allow_devorg_rename == 1) {
@@ -3969,7 +3969,7 @@ function _ibm_apim_invite_user_form($form, $form_state) {
   }
 
   $roles = _ibm_apim_get_roles($org['id']);
-  if (isset($roles) && count($roles) > 1) {
+  if (isset($roles) && count($roles) >= 1) {
     $roles_array = array();
     foreach ($roles as $role) {
       $roles_array[$role['name']] = $role['displayName'];
@@ -3978,8 +3978,9 @@ function _ibm_apim_invite_user_form($form, $form_state) {
     $form['invite_user_fieldset']['role'] = array(
       '#type' => 'radios',
       '#title' => t('Role'),
-      '#default_value' => 'developer',
+      '#default_value' => empty(!$roles) ? $roles[(count($roles)-1)]['name'] : 'developer',
       '#options' => $roles_array,
+      '#disabled' => count($roles_array) == 1,
       '#description' => t('Select which role the new user will have in your organization.')
     );
   }
@@ -4002,7 +4003,7 @@ function _ibm_apim_invite_user_form_submit_handler($form, &$form_state) {
   $org = ibm_apim_get_current_developer_org();
   $developerOrgs = $org['id'];
   $url = '/v1/portal/orgs/' . $developerOrgs . '/members';
-  $name = check_plain($form_state['values']['new_email']);
+  $name = check_plain(trim($form_state['values']['new_email']));
   if (isset($name)) {
     $result = ibm_apim_call($url);
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
@@ -4134,19 +4135,19 @@ function ibm_apim_select_developer_menu() {
     $count = count($result);
     if ($count == 1) {
       _ibm_apim_set_current_developer_org($result[0]['id']);
-      $markup .= '<div class="elipsis-names singleOrg" title="' . t("Current organization name: ") . check_plain($result[0]['name']) . '">' . check_plain($result[0]['name']) . '</div>';
+      $markup .= '<div class="elipsis-names singleOrg" title="' . t("Current organization name: ") . filter_xss($result[0]['name']) . '">' . filter_xss($result[0]['name']) . '</div>';
     }
     elseif ($count > 1) {
       $selected = ibm_apim_get_current_developer_org();
       if (!isset($selected) || empty($selected)) {
         $selected = _ibm_apim_set_current_developer_org($result[0]['id']);
       }
-      $selected_name = check_plain($selected['name']);
+      $selected_name = filter_xss($selected['name']);
       $selected_id = check_plain($selected['id']);
       $markup .= '<ul class="dropitmenu orgmenu"><li><a href="#"><div class="elipsis-names">' . $selected_name . '</div> <span class="dropit-icon ui-icon-triangle-1-s"></span></a>';
       $markup .= '<ul id="dropdown-menu" class="dropdown-menu">';
       foreach ($result as $developer_org) {
-        $markup .= '<li class="elipsis-names" title="' . check_plain($developer_org['name']) . '">' . l(check_plain($developer_org['name']), 'ibm_apim/org/' . check_plain($developer_org['id']), array(
+        $markup .= '<li class="elipsis-names" title="' . filter_xss($developer_org['name']) . '">' . l(filter_xss($developer_org['name']), 'ibm_apim/org/' . check_plain($developer_org['id']), array(
             'html' => TRUE,
             'attributes' => array('class' => array('elipsis-names'))
           )) . '</li>';
@@ -4169,7 +4170,7 @@ function ibm_apim_update_org_name($orgid = NULL, $orgname = NULL) {
   $result = NULL;
   if (isset($orgid) && isset($orgname)) {
     $apim_session = &_ibm_apim_get_apim_session();
-    $newdata = array('name' => check_plain($orgname));
+    $newdata = array('name' => filter_xss($orgname));
     $developer_org_url = '/orgs/' . check_plain($orgid);
     $url = '/v1/portal' . $developer_org_url;
     $result = ibm_apim_put($url, json_encode($newdata));
@@ -5026,6 +5027,13 @@ function _ibm_apim_download_proxy($url, $verb = 'GET', $node = NULL, $filter = F
   $apim_session = &_ibm_apim_get_apim_session();
   if (empty($url)) {
     drupal_set_message(t('URL not specified. Specify a valid URL and try again.'), 'error');
+    return NULL;
+  }
+  // Only allow this proxy to connect to the defined apim host
+  $host_pieces = _ibm_apim_parse_apim_host();
+  if (strpos($url, $host_pieces['url']) !== 0) {
+    print 'URL not authorised';
+    drupal_set_message(t('Unauthorised URL specified. Specify a valid URL and try again.'), 'error');
     return NULL;
   }
 
@@ -6317,11 +6325,20 @@ function ibm_apim_external_login_register($name, $edit = array(), $login = FALSE
       $edit['access'] = REQUEST_TIME;
 
       $account = user_save(drupal_anonymous_user(), $edit);
-      // Terminate if an error occurred during user_save().
+
+      // If the user_save failed first time try enabling/disabling the dummy_module
       if (!$account) {
-        drupal_set_message(t("Error saving user account."), 'error');
-        watchdog('ibm_apim_external_login_register', 'Error saving user account. userid: %name', array('%name' => serialize($name)), WATCHDOG_NOTICE);
-        return;
+        module_enable(['dummy_module']);
+        module_disable(['dummy_module']);
+        $account = user_save(drupal_anonymous_user(), $edit);
+
+        // Terminate if an error occurred during user_save().
+        if (!$account) {
+          drupal_set_message(t("Temporary issue saving user account. Please try operation again."), 'error');
+          watchdog('ibm_apim_external_login_register', 'Error saving user account. userid: %name.  Please contact your site administrator, reference: CS0262676.', array('%name' => serialize($name)), WATCHDOG_NOTICE);
+          menu_rebuild();
+          return;
+        }
       }
       if (module_exists('social_login')) {
         // invoke register hook

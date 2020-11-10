@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2016, 2019
+ * (C) Copyright IBM Corporation 2016, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -303,8 +303,8 @@ function product_node_grants($account, $op) {
         $nids[] = $item->nid;
         $query = db_query("SELECT application_subscriptions_value FROM {field_data_application_subscriptions} WHERE entity_id = $item->nid");
         $subresults = $query->fetchAll();
-        foreach ($subresults as $sub) {
-          $subs = unserialize($subresults[0]->application_subscriptions_value);
+        foreach ($subresults as $key => $subresult) {
+          $subs = unserialize($subresults[$key]->application_subscriptions_value);
           if (is_array($subs)) {
             foreach ($subs as $sub) {
               if (isset($sub['product'])) {
@@ -522,21 +522,22 @@ function product_collection_callback($productid = NULL) {
   if ($productid == NULL) {
     $nids = product_list_products();
     if (!empty($nids)) {
+      $nodes = node_load_multiple($nids);
+      $nids = [];
+      // Only include nodes that are set as published
+      foreach ($nodes as $node) {
+        if (($node->product_state[$node->language][0]['value'] == "published" || $node->product_state[$node->language][0]['value'] == "deprecated") && $node->product_view_enabled[$node->language][0]['value'] == 1 ) {
+          array_push($nids, $node->nid);
+        }
+      }
+
       // handle paging
       $page = pager_find_page();
       $total = count($nids);
       $offset = $limit * $page;
       $chunk = array_slice($nids, $offset, $limit);
       pager_default_initialize($total, $limit);
-
-      // Only include nodes that are set as published
-      $finalnodes = array();
-      $allnodes = node_load_multiple($chunk);
-      foreach ($allnodes as $node) {
-        if ($node->product_state[$node->language][0]['value'] == "published" || $node->product_state[$node->language][0]['value'] == "deprecated") {
-          array_push($finalnodes, $node);
-        }
-      }
+      $finalnodes = node_load_multiple($chunk);
 
       if ($finalnodes) {
         $build = array(
@@ -891,6 +892,7 @@ function _product_createNewProductNode($product, $event = 'publish') {
       }
     }
   }
+
   $node->title = ibm_apim_truncate_string($product['document']['info']['title']);
   // if en wasn't in the x-ibm-languages list then assume it was the root level one
   if (!isset($product['document']['info']['x-ibm-languages']['title']) || !in_array('en', array_keys($product['document']['info']['x-ibm-languages']['title']))) {
@@ -947,6 +949,7 @@ function _product_createNewProductNode($product, $event = 'publish') {
   if (!isset($product['document']['info']['description']) || empty($product['document']['info']['description'])) {
     $product['document']['info']['description'] = '';
   }
+
   if (isset($product['document']['info']['x-ibm-languages']['description']) && !empty($product['document']['info']['x-ibm-languages']['description'])) {
     foreach ($product['document']['info']['x-ibm-languages']['description'] as $lang => $lang_array) {
       $lang = _ibm_apim_convert_lang_name_to_drupal($lang);
@@ -1253,6 +1256,7 @@ function _product_updateExistingProductNode($node, $product, $event = 'bgsync') 
       }
     }
   }
+
   $node->title = ibm_apim_truncate_string($product['document']['info']['title']);
   // if en wasn't in the x-ibm-languages list then assume it was the root level one
   if (!isset($product['document']['info']['x-ibm-languages']['title']) || !in_array('en', array_keys($product['document']['info']['x-ibm-languages']['title']))) {

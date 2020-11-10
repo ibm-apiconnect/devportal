@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2015, 2019
+ * (C) Copyright IBM Corporation 2015, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -384,7 +384,7 @@ function drush_ibm_apim_translate_sample_content($langcode) {
 
   _drush_ibm_apim_translate_beans($langcode);
 
-  _drush_ibm_apim_translate_book($langcode);
+  //_drush_ibm_apim_translate_book($langcode);
 
   drupal_set_message(t('Sample content updated for lang=@lang', array('@lang' => $langcode)), 'success');
 }

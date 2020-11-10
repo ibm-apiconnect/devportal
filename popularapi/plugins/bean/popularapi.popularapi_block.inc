@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2016, 2019
+ * (C) Copyright IBM Corporation 2016, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -127,8 +127,8 @@ class PopularAPIBlockBean extends BeanPlugin {
 		   </div>';
         }
         $markup .= '</div>'; // api image
-        $markup .= '<div class="popularapi_title">' . popularapi_truncate_string($title, 50) . '<span class="version">' . $version . '</span></div>';
-        $markup .= '<div class="popularapi_description ' . $notop . '">' . ibm_apim_markdown_field($description) . '</div>';
+        $markup .= '<div class="popularapi_title">' . popularapi_truncate_string(check_plain($title), 50) . '<span class="version">' . $version . '</span></div>';
+        $markup .= '<div class="popularapi_description ' . $notop . '">' . ibm_apim_markdown_field(check_plain($description)) . '</div>';
         $markup .= '<div class="popularapi_detaillink"><a href="' . url('node/' . $nid) . '" title="' . check_plain($blocktitle) . '"><span>' . t('Detail') . '</span></a></div>';
         $markup .= '</div></a></div>';
       }

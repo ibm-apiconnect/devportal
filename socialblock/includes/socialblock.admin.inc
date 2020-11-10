@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2016, 2019
+ * (C) Copyright IBM Corporation 2016, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -18,7 +18,7 @@
 function socialblock_admin($form, &$form_state) {
   $client_id = variable_get('ibm_apim_client_id');
   $data = variable_get('twitter_oauth_settings');
-  $iv_size = mcrypt_get_iv_size(MCRYPT_CAST_256, MCRYPT_MODE_CBC);
+  $iv_size = openssl_cipher_iv_length('AES-256-CBC');
   $iv = substr($data, 0, $iv_size);
   if (strlen($client_id) < 32) {
     $char = 32 - strlen($client_id);
@@ -124,8 +124,8 @@ function socialblock_admin_variable_settings_form_submit($form, &$form_state) {
     $credentials['twitter_token_secret'] = trim($form_state['values']['twitter_token_secret']);
   }
   $client_id = variable_get('ibm_apim_client_id');
-  $iv_size = mcrypt_get_iv_size(MCRYPT_CAST_256, MCRYPT_MODE_CBC);
-  $iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
+  $iv_size = openssl_cipher_iv_length('AES-256-CBC');
+  $iv = random_bytes($iv_size);
   if (strlen($client_id) < 32) {
     $char = 32 - strlen($client_id);
     $client_id = str_pad($client_id, 32, $char);

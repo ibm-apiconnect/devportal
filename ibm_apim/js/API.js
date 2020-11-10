@@ -2,7 +2,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2016, 2019
+ * (C) Copyright IBM Corporation 2016, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -173,7 +173,7 @@
             if (api.basePath) {
                 endpoint = endpoint + api.basePath;
             }
-            var content = window.exampleGenerator.generateCodeSnippets(api, path, verb, operation, config, 'REPLACE_THIS_KEY', 'REPLACE_THIS_KEY', languages, null, endpoint);
+            var content = window.exampleGen.exampleGenerator.generateCodeSnippets(api, path, verb, operation, config, 'REPLACE_THIS_KEY', 'REPLACE_THIS_KEY', languages, null, endpoint);
 
             var body = null;
             var parameters = [];
@@ -192,7 +192,7 @@
                 // use the first one only
                 // should be inline schema by now
                 try {
-                    var example = window.exampleGenerator.generateExampleParameter(api, path, verb, bodyParameters[0], null, false);
+                    var example = window.exampleGen.exampleGenerator.generateExampleParameter(api, path, verb, bodyParameters[0], null, false);
                     $("#body_" + id + " textarea").val(example).height(150);
                 } catch (e) {
 
@@ -329,7 +329,7 @@
             }
 
             try {
-                var example = window.exampleGenerator.generateExampleResponse(api, path, verb);
+                var example = window.exampleGen.exampleGenerator.generateExampleResponse(api, path, verb);
                 if (example.length > 1000) {
                     var truncated = example.substring(0, 1000);
                     $("#" + exampleid + " pre.exampleResponsePre code").text(truncated);
@@ -538,6 +538,9 @@
                                         url = url.replace(/([^:]\/)\/+/g, "$1");
                                         $("#tab-content_example_" + exampleid + " .exampleDefinition").text(verb.toUpperCase() + " " + url);
                                         $("#tab-content_try_" + tryid + " .apiURL").text(url);
+
+                                        var tester = self.testers[expanded.info["x-ibm-name"] + expanded.info["version"] + "_" + verb + "_" + path];
+                                        tester.parseSecurityConfig();
                                     }
                                 });
                             });
@@ -746,7 +749,7 @@
 
     $(document).ready(function () {
 
-        window.refResolver.resolveReferences(window.apiJson[0]).then(function(expandedapiJson) {
+        window.exampleGen.resolveReferences(window.apiJson[0]).then(function(expandedapiJson) {
 
             let expandedApis = [expandedapiJson];
             window.API = new API(window.apiJson, expandedApis);
@@ -808,188 +811,6 @@
             return input;
         }
 
-        function parseSecurityConfig() {
-            // any requirement for identification?
-            if (self.config.requiresClientId || self.config.requiresClientSecret || !$.isEmptyObject(self.config.externalApiKeys)) {
-                $(".identificationSection", self.requestForm).removeClass("hidden");
-            }
-            // any requirement for client ID?
-            if (self.config.requiresClientId) {
-                $(".identificationSection .clientId", self.requestForm).removeClass("hidden");
-            }
-            // any requirement for client secret?
-            if (self.config.requiresClientSecret) {
-                $(".identificationSection .clientSecret", self.requestForm).removeClass("hidden");
-            }
-            // any external apiKey security
-            if (!$.isEmptyObject(self.config.externalApiKeys)) {
-                $.each(self.config.externalApiKeys, function (key, value) {
-                    var keydiv = document.createElement('div');
-                    keydiv.className = "parameter externalSecurity";
-                    var labeldiv = document.createElement('div');
-                    labeldiv.className = 'parameterName';
-                    var labelText = document.createTextNode(value.name);
-                    labeldiv.appendChild(labelText);
-                    var input = document.createElement('input');
-                    input.setAttribute('type', 'password');
-                    input.setAttribute('name', value.name);
-                    input.setAttribute('id', key);
-                    input.className = 'parameterValue';
-                    keydiv.appendChild(labeldiv);
-                    keydiv.appendChild(input);
-                    $(".identificationSection .contrast", self.requestForm).append(keydiv);
-                });
-                if (!self.config.requiresClientId && !self.config.requiresClientSecret) {
-                    // hide the message to login if not using clientID or clientSecret
-                    $(".identificationSection .loginMessage", self.requestForm).addClass("hidden");
-                }
-            }
-            // any requirement for authorization?
-            if (self.config.requiresBasicAuth || self.config.requiresOauth) {
-                $(".authorizationSection", self.requestForm).removeClass("hidden");
-            }
-
-            // any requirement for an authorization call-out?
-            if (self.config.requiresOauth) {
-                $(".authorizationSection .apimAuthorize", self.requestForm).removeClass("hidden");
-                $(".authorizationSection .apimAuthUrl", self.requestForm).removeClass("hidden");
-                $(".apimScopes", self.requestForm).removeClass("hidden");
-                // show client type field
-                // leave this hidden for now since assuming confidential client types everywhere
-                // $(".authorizationSection .apimAuthUrl .apimClientType", self.requestForm).removeClass("hidden");
-
-                if (self.config.oauthScopes) {
-                    $(".apimScopes .oauthscopes", self.requestForm).empty();
-
-                    var scopesList = [];
-                    // If there are no operation level scopes defined, then just use the API ones
-                    if (!self.operation.definition["security"]){
-                        $.each(self.config.oauthScopes, function (key, value) {
-                            scopesList.push(value);
-                        });
-                    } else {
-                        // check if an oauth flow has been selected - we only want to show the scopes from that flow
-                        var flowName = null;
-                        if ($('.securityType', self.requestForm).is(":visible")){
-                           flowName = $('.securityType option:selected', self.requestForm).val();
-                           if (!flowName){
-                              // if not set by user, then just use the first one.
-                              flowName = $('.securityType option:first-child', self.requestForm).val();
-                           }
-                        }
-                        // loop through the security operations and add all those that are of type oauth and match the
-                        // selected (or first if none selected) flow name.
-                        for (var i=0; i<self.operation.definition.security.length; i++){
-                            $.each(self.operation.definition.security[i], function (key, value) {
-                                // check if key exists in api.securityDefinitions and check if it is type oauth
-                                if (api.securityDefinitions[key]){
-                                    if (api.securityDefinitions[key].type == "oauth2"){
-                                        // if flowname is not set then it means .securityType was not visible - so just
-                                        // show scopes, otherwise only show scopes for selected flow.
-                                        if (!flowName || (key == flowName)){
-                                            for (var x=0; x<value.length; x++){
-                                                scopesList.push(value[x]);
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                    }
-
-                    for (var i=0; i<scopesList.length; i++){
-                        var inputdiv = document.createElement('div');
-                        var input = document.createElement('input');
-                        input.setAttribute('type', 'checkbox');
-                        input.setAttribute('name', 'scope[]');
-                        input.setAttribute('value', scopesList[i]);
-                        input.setAttribute('checked', 'checked');
-                        input.value = scopesList[i];
-                        var inputText = document.createTextNode(scopesList[i]);
-                        inputdiv.appendChild(input);
-                        inputdiv.appendChild(inputText);
-                        $(".apimScopes .oauthscopes", self.requestForm).append(inputdiv);
-                    }
-
-                }
-                // before filling out any OAuth URLs, replace any $(catalog.url) instances
-                var endpoint = self.apiObj.getEndpoint(self.api);
-                if (self.config.oauthAuthUrl) {
-                    self.config.oauthAuthUrl = self.config.oauthAuthUrl.replace('$(catalog.url)', endpoint);
-                }
-                if (self.config.oauthTokenUrl) {
-                    self.config.oauthTokenUrl = self.config.oauthTokenUrl.replace('$(catalog.url)', endpoint);
-                }
-
-                // any requirement for token refresh?
-                if (self.config.oauthFlow == "accessCode") {
-                    $(".authorizationSection .apimAuthUrl .authurl", self.requestForm).text(self.config.oauthAuthUrl);
-                    $(".authorizationSection .apimAuthUrl .accessCodeFlow", self.requestForm).removeClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .tokenurl", self.requestForm).text(self.config.oauthTokenUrl);
-                    $(".authorizationSection .apimAuthUrl .threelegged", self.requestForm).removeClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .tokenBasedFlow", self.requestForm).removeClass("hidden");
-
-                    $(".authorizationSection .apimAuthUrl .implicitFlow", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .passwordFlow", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .applicationFlow", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .twolegged", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .notAccessCodeFlow", self.requestForm).addClass("hidden");
-                }
-                if (self.config.oauthFlow == "implicit") {
-                    $(".authorizationSection .apimAuthUrl .authurl", self.requestForm).text(self.config.oauthAuthUrl);
-                    $(".authorizationSection .apimAuthUrl .implicitFlow", self.requestForm).removeClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .threelegged", self.requestForm).removeClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .notAccessCodeFlow", self.requestForm).removeClass("hidden");
-
-                    $(".authorizationSection .apimAuthUrl .accessCodeFlow", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .passwordFlow", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .applicationFlow", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .tokenBasedFlow", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .twolegged", self.requestForm).addClass("hidden");
-                }
-                if (self.config.oauthFlow == "application") {
-                    $(".authorizationSection .apimAuthUrl .applicationFlow", self.requestForm).removeClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .twolegged", self.requestForm).removeClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .tokenBasedFlow", self.requestForm).removeClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .notAccessCodeFlow", self.requestForm).removeClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .tokenurl", self.requestForm).text(self.config.oauthTokenUrl);
-
-                    $(".authorizationSection .apimAuthUrl .accessCodeFlow", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .implicitFlow", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .passwordFlow", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .threelegged", self.requestForm).addClass("hidden");
-                }
-                if (self.config.oauthFlow == "password") {
-                    $(".authorizationSection .apimAuthUrl .passwordFlow", self.requestForm).removeClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .twolegged", self.requestForm).removeClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .tokenBasedFlow", self.requestForm).removeClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .notAccessCodeFlow", self.requestForm).removeClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .tokenurl", self.requestForm).text(self.config.oauthTokenUrl);
-
-                    $(".authorizationSection .apimAuthUrl .accessCodeFlow", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .implicitFlow", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .applicationFlow", self.requestForm).addClass("hidden");
-                    $(".authorizationSection .apimAuthUrl .threelegged", self.requestForm).addClass("hidden");
-                }
-            } else {
-                $(".authorizationSection .apimAuthorize", self.requestForm).addClass("hidden");
-                $(".authorizationSection .apimAuthUrl", self.requestForm).addClass("hidden");
-                $(".apimScopes", self.requestForm).addClass("hidden");
-                $(".authorizationSection .apimAuthUrl .twolegged", self.requestForm).addClass("hidden");
-                $(".authorizationSection .apimAuthUrl .accessCodeFlow", self.requestForm).addClass("hidden");
-                $(".authorizationSection .apimAuthUrl .implicitFlow", self.requestForm).addClass("hidden");
-                $(".authorizationSection .apimAuthUrl .applicationFlow", self.requestForm).addClass("hidden");
-                $(".authorizationSection .apimAuthUrl .passwordFlow", self.requestForm).addClass("hidden");
-                $(".authorizationSection .apimAuthUrl .threelegged", self.requestForm).addClass("hidden");
-            }
-
-            if (self.config.requiresBasicAuth || (self.config.oauthFlow == "password")) {
-                $(".authorizationSection .userCredentials", self.requestForm).removeClass("hidden");
-            } else {
-                $(".authorizationSection .userCredentials", self.requestForm).addClass("hidden");
-            }
-        }
-
         var id = "content-apis_" + cleanUpClassName(api.info["x-ibm-name"] + api.info["version"]) + "_paths_" + cleanUpKey(self.operation.path) + "_" + self.operation.verb;
         self.responseSection = $("." + id + " #response_" + cleanUpClassName(api.info["x-ibm-name"] + api.info["version"]) + '_' + cleanUpKey(self.operation.path) + "_" + self.operation.verb);
         self.requestForm = $("." + id + " form[name='request_" + cleanUpClassName(api.info["x-ibm-name"] + api.info["version"]) + "_" + cleanUpKey(self.operation.path) + "_" + self.operation.verb + "']");
@@ -1016,7 +837,7 @@
 
             // set to first option by default
             self.config = window.CommonAPI.getConfigurationForOperation(operation.definition, api.paths[operation.path], api, self.config.securityFlows[0]);
-            parseSecurityConfig();
+            self.parseSecurityConfig();
 
             $(".securitySelectionSection .apimSecurityType .securityType", self.requestForm).change(
                 function () {
@@ -1027,14 +848,14 @@
                             self.config = window.CommonAPI.getConfigurationForOperation(operation.definition, api.paths[operation.path], api, object);
                         }
                     });
-                    parseSecurityConfig();
+                    self.parseSecurityConfig();
                     // empty the token field
                     $(".authorizationSection .apimAuthUrl .accesstoken .result", self.requestForm).val('');
                 }
             );
         } else if (self.config.securityFlows && self.config.securityFlows.length == 1) {
             self.config = window.CommonAPI.getConfigurationForOperation(operation.definition, api.paths[operation.path], api, self.config.securityFlows[0]);
-            parseSecurityConfig();
+            self.parseSecurityConfig();
         }
 
         // any requirement for user credentials?
@@ -1069,6 +890,194 @@
             });
     }
 
+    Test.prototype.parseSecurityConfig = function () {
+        var self = this;
+        // any requirement for identification?
+        if (self.config.requiresClientId || self.config.requiresClientSecret || !$.isEmptyObject(self.config.externalApiKeys)) {
+            $(".identificationSection", self.requestForm).removeClass("hidden");
+        }
+        // any requirement for client ID?
+        if (self.config.requiresClientId) {
+            $(".identificationSection .clientId", self.requestForm).removeClass("hidden");
+        }
+        // any requirement for client secret?
+        if (self.config.requiresClientSecret) {
+            $(".identificationSection .clientSecret", self.requestForm).removeClass("hidden");
+        }
+        // any external apiKey security
+        if (!$.isEmptyObject(self.config.externalApiKeys)) {
+            $.each(self.config.externalApiKeys, function (key, value) {
+                var keydiv = document.createElement('div');
+                keydiv.className = "parameter externalSecurity";
+                var labeldiv = document.createElement('div');
+                labeldiv.className = 'parameterName';
+                var labelText = document.createTextNode(value.name);
+                labeldiv.appendChild(labelText);
+                var input = document.createElement('input');
+                input.setAttribute('type', 'password');
+                input.setAttribute('name', value.name);
+                input.setAttribute('id', key);
+                input.className = 'parameterValue';
+                keydiv.appendChild(labeldiv);
+                keydiv.appendChild(input);
+                $(".identificationSection .contrast", self.requestForm).append(keydiv);
+            });
+            if (!self.config.requiresClientId && !self.config.requiresClientSecret) {
+                // hide the message to login if not using clientID or clientSecret
+                $(".identificationSection .loginMessage", self.requestForm).addClass("hidden");
+            }
+        }
+        // any requirement for authorization?
+        if (self.config.requiresBasicAuth || self.config.requiresOauth) {
+            $(".authorizationSection", self.requestForm).removeClass("hidden");
+        }
+
+        // any requirement for an authorization call-out?
+        if (self.config.requiresOauth) {
+            $(".authorizationSection .apimAuthorize", self.requestForm).removeClass("hidden");
+            $(".authorizationSection .apimAuthUrl", self.requestForm).removeClass("hidden");
+            $(".apimScopes", self.requestForm).removeClass("hidden");
+            // show client type field
+            // leave this hidden for now since assuming confidential client types everywhere
+            // $(".authorizationSection .apimAuthUrl .apimClientType", self.requestForm).removeClass("hidden");
+
+            if (self.config.oauthScopes) {
+                $(".apimScopes .oauthscopes", self.requestForm).empty();
+
+                var scopesList = [];
+                // If there are no operation level scopes defined, then just use the API ones
+                if (!self.operation.definition["security"]){
+                    $.each(self.config.oauthScopes, function (key, value) {
+                        scopesList.push(value);
+                    });
+                } else {
+                    // check if an oauth flow has been selected - we only want to show the scopes from that flow
+                    var flowName = null;
+                    if ($('.securityType', self.requestForm).is(":visible")){
+                        flowName = $('.securityType option:selected', self.requestForm).val();
+                        if (!flowName){
+                            // if not set by user, then just use the first one.
+                            flowName = $('.securityType option:first-child', self.requestForm).val();
+                        }
+                    }
+                    // loop through the security operations and add all those that are of type oauth and match the
+                    // selected (or first if none selected) flow name.
+                    for (var i=0; i<self.operation.definition.security.length; i++){
+                        $.each(self.operation.definition.security[i], function (key, value) {
+                            // check if key exists in api.securityDefinitions and check if it is type oauth
+                            if (self.api.securityDefinitions[key]){
+                                if (self.api.securityDefinitions[key].type == "oauth2"){
+                                    // if flowname is not set then it means .securityType was not visible - so just
+                                    // show scopes, otherwise only show scopes for selected flow.
+                                    if (!flowName || (key == flowName)){
+                                        for (var x=0; x<value.length; x++){
+                                            scopesList.push(value[x]);
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+
+                for (var i=0; i<scopesList.length; i++){
+                    var inputdiv = document.createElement('div');
+                    var input = document.createElement('input');
+                    input.setAttribute('type', 'checkbox');
+                    input.setAttribute('name', 'scope[]');
+                    input.setAttribute('value', scopesList[i]);
+                    input.setAttribute('checked', 'checked');
+                    input.value = scopesList[i];
+                    var inputText = document.createTextNode(scopesList[i]);
+                    inputdiv.appendChild(input);
+                    inputdiv.appendChild(inputText);
+                    $(".apimScopes .oauthscopes", self.requestForm).append(inputdiv);
+                }
+
+            }
+            // before filling out any OAuth URLs, replace any $(catalog.url) instances
+            var endpoint = self.apiObj.getEndpoint(self.api);
+            if (self.config.oauthAuthUrl) {
+                if (!self.config.rawAuthUrl) {
+                    self.config.rawAuthUrl = self.config.oauthAuthUrl;
+                }
+                self.config.oauthAuthUrl = self.config.rawAuthUrl.replace('$(catalog.url)', endpoint);
+            }
+            if (self.config.oauthTokenUrl) {
+                if (!self.config.rawTokenUrl) {
+                    self.config.rawTokenUrl = self.config.oauthTokenUrl;
+                }
+                self.config.oauthTokenUrl = self.config.rawTokenUrl.replace('$(catalog.url)', endpoint);
+            }
+
+            // any requirement for token refresh?
+            if (self.config.oauthFlow == "accessCode") {
+                $(".authorizationSection .apimAuthUrl .authurl", self.requestForm).text(self.config.oauthAuthUrl);
+                $(".authorizationSection .apimAuthUrl .accessCodeFlow", self.requestForm).removeClass("hidden");
+                $(".authorizationSection .apimAuthUrl .tokenurl", self.requestForm).text(self.config.oauthTokenUrl);
+                $(".authorizationSection .apimAuthUrl .threelegged", self.requestForm).removeClass("hidden");
+                $(".authorizationSection .apimAuthUrl .tokenBasedFlow", self.requestForm).removeClass("hidden");
+
+                $(".authorizationSection .apimAuthUrl .implicitFlow", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .passwordFlow", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .applicationFlow", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .twolegged", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .notAccessCodeFlow", self.requestForm).addClass("hidden");
+            }
+            if (self.config.oauthFlow == "implicit") {
+                $(".authorizationSection .apimAuthUrl .authurl", self.requestForm).text(self.config.oauthAuthUrl);
+                $(".authorizationSection .apimAuthUrl .implicitFlow", self.requestForm).removeClass("hidden");
+                $(".authorizationSection .apimAuthUrl .threelegged", self.requestForm).removeClass("hidden");
+                $(".authorizationSection .apimAuthUrl .notAccessCodeFlow", self.requestForm).removeClass("hidden");
+
+                $(".authorizationSection .apimAuthUrl .accessCodeFlow", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .passwordFlow", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .applicationFlow", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .tokenBasedFlow", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .twolegged", self.requestForm).addClass("hidden");
+            }
+            if (self.config.oauthFlow == "application") {
+                $(".authorizationSection .apimAuthUrl .applicationFlow", self.requestForm).removeClass("hidden");
+                $(".authorizationSection .apimAuthUrl .twolegged", self.requestForm).removeClass("hidden");
+                $(".authorizationSection .apimAuthUrl .tokenBasedFlow", self.requestForm).removeClass("hidden");
+                $(".authorizationSection .apimAuthUrl .notAccessCodeFlow", self.requestForm).removeClass("hidden");
+                $(".authorizationSection .apimAuthUrl .tokenurl", self.requestForm).text(self.config.oauthTokenUrl);
+
+                $(".authorizationSection .apimAuthUrl .accessCodeFlow", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .implicitFlow", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .passwordFlow", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .threelegged", self.requestForm).addClass("hidden");
+            }
+            if (self.config.oauthFlow == "password") {
+                $(".authorizationSection .apimAuthUrl .passwordFlow", self.requestForm).removeClass("hidden");
+                $(".authorizationSection .apimAuthUrl .twolegged", self.requestForm).removeClass("hidden");
+                $(".authorizationSection .apimAuthUrl .tokenBasedFlow", self.requestForm).removeClass("hidden");
+                $(".authorizationSection .apimAuthUrl .notAccessCodeFlow", self.requestForm).removeClass("hidden");
+                $(".authorizationSection .apimAuthUrl .tokenurl", self.requestForm).text(self.config.oauthTokenUrl);
+
+                $(".authorizationSection .apimAuthUrl .accessCodeFlow", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .implicitFlow", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .applicationFlow", self.requestForm).addClass("hidden");
+                $(".authorizationSection .apimAuthUrl .threelegged", self.requestForm).addClass("hidden");
+            }
+        } else {
+            $(".authorizationSection .apimAuthorize", self.requestForm).addClass("hidden");
+            $(".authorizationSection .apimAuthUrl", self.requestForm).addClass("hidden");
+            $(".apimScopes", self.requestForm).addClass("hidden");
+            $(".authorizationSection .apimAuthUrl .twolegged", self.requestForm).addClass("hidden");
+            $(".authorizationSection .apimAuthUrl .accessCodeFlow", self.requestForm).addClass("hidden");
+            $(".authorizationSection .apimAuthUrl .implicitFlow", self.requestForm).addClass("hidden");
+            $(".authorizationSection .apimAuthUrl .applicationFlow", self.requestForm).addClass("hidden");
+            $(".authorizationSection .apimAuthUrl .passwordFlow", self.requestForm).addClass("hidden");
+            $(".authorizationSection .apimAuthUrl .threelegged", self.requestForm).addClass("hidden");
+        }
+
+        if (self.config.requiresBasicAuth || (self.config.oauthFlow == "password")) {
+            $(".authorizationSection .userCredentials", self.requestForm).removeClass("hidden");
+        } else {
+            $(".authorizationSection .userCredentials", self.requestForm).addClass("hidden");
+        }
+    };
     Test.prototype.authorize = function () {
         var requestForm = {};
         this.requestForm.serializeArray().forEach(function (parameter) {
@@ -1472,7 +1481,7 @@
             queryParameters.forEach(function (parameter) {
                 if (parameter.name) {
                     // if boolean then must be set to true or false
-                    if ((requestForm['param' + parameter.name] !== undefined && (!parameter.type || (parameter.type != "boolean" && !parameter.enum && requestForm['param' + parameter.name]))) || (parameter.type && parameter.type == "boolean" && (requestForm['param' + parameter.name] == "true" || requestForm['param' + parameter.name] == "false")) || (parameter.enum && parameter.enum.indexOf(requestForm['param' + parameter.name]) != -1)) {
+                    if ((requestForm['param' + parameter.name] !== undefined && (!parameter.type || (parameter.type != "boolean" && !parameter.enum && requestForm['param' + parameter.name]))) || (parameter.type && parameter.type == "boolean" && (requestForm['param' + parameter.name] == "true" || requestForm['param' + parameter.name] == "false")) || (parameter.enum && parameter.enum.indexOf(requestForm['param' + parameter.name]) != -1) || (parameter.enum && parameter.type === "integer" && parameter.enum.indexOf(parseInt(requestForm['param' + parameter.name])) != -1)) {
                         targetUrl += parameter.name + "=" + requestForm['param' + parameter.name] + "&";
                         queryParametersAdded = true;
                     } else if (parameter.type && parameter.type == "boolean" && parameter.required) {
@@ -1655,13 +1664,13 @@
             }
             if (xhrObj.responseText && xhrObj.responseText !== "") {
                 if ((responseHeaderArray['content-type'] || responseHeaderArray['Content-Type']) && (responseHeaderArray['content-type'] == 'application/json' || responseHeaderArray['Content-Type'] == 'application/json')) {
-                    var parsedJsonResponse = window.vkbeautify.json(xhrObj.responseText);
+                    var parsedJsonResponse = window.exampleGen.vkbeautify.json(xhrObj.responseText);
                     if (!parsedJsonResponse) {
                         parsedJsonResponse = xhrObj.responseText;
                     }
                     $(".responseDetails.responseBody", self.responseSection).text(parsedJsonResponse);
                 } else if ((responseHeaderArray['content-type'] || responseHeaderArray['Content-Type']) && (responseHeaderArray['content-type'] == 'application/xml' || responseHeaderArray['Content-Type'] == 'application/xml')) {
-                    var parsedXmlResponse = window.vkbeautify.xml(xhrObj.responseText);
+                    var parsedXmlResponse = window.exampleGen.vkbeautify.xml(xhrObj.responseText);
                     if (!parsedXmlResponse) {
                         parsedXmlResponse = xhrObj.responseText;
                     }

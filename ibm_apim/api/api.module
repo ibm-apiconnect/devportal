@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2015, 2019
+ * (C) Copyright IBM Corporation 2015, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -163,27 +163,6 @@ function api_menu() {
     'description' => 'See how you can use our data',
     'access callback' => TRUE
   );
-  $items['api/docdownload/%'] = array(
-    'title' => 'API Documents Proxy',
-    'page callback' => '_api_document_proxy_callback',
-    'page arguments' => array(2),
-    'access callback' => TRUE,
-    'type' => MENU_CALLBACK
-  );
-  $items['api/wsdldownload/%'] = array(
-    'title' => 'API WSDL Proxy',
-    'page callback' => '_api_wsdl_proxy_callback',
-    'page arguments' => array(2),
-    'access callback' => TRUE,
-    'type' => MENU_CALLBACK
-  );
-  $items['api/swaggerdownload/%'] = array(
-    'title' => 'Open API Proxy',
-    'page callback' => '_api_swagger_proxy_callback',
-    'page arguments' => array(2),
-    'access callback' => TRUE,
-    'type' => MENU_CALLBACK
-  );
   $items['api/%_api_path_param_to_arg'] = array(
     'title' => 'View',
     'page callback' => 'api_collection_callback',
@@ -247,7 +226,7 @@ function api_node_access_records($node)
             // Pick up all of the data we need.  Left Joins are used for tables where
             // there may not be an entry (e.g. if tags or orgs are not defined)
             $query = db_query("SELECT pub.product_visibility_public_value AS product_visibility_public_value, auth.product_visibility_authenticated_value AS product_visibility_authenticated_value
-, org.product_visibility_custom_orgs_value AS product_visibility_custom_orgs_value, tags.product_visibility_custom_tags_value AS product_visibility_custom_tags_value, view.product_view_enabled_value AS product_view_enabled_value, prref.product_ref_value AS product_ref_value
+, org.product_visibility_custom_orgs_value AS product_visibility_custom_orgs_value, tags.product_visibility_custom_tags_value AS product_visibility_custom_tags_value, view.product_view_enabled_value AS product_view_enabled_value, prref.product_ref_value AS product_ref_value, state.product_state_value AS product_state_value
 FROM
 field_data_product_visibility_public pub
 INNER JOIN field_data_product_visibility_authenticated auth ON pub.entity_id = auth.entity_id
@@ -255,6 +234,7 @@ LEFT JOIN field_data_product_visibility_custom_orgs org ON pub.entity_id = org.e
 LEFT JOIN field_data_product_visibility_custom_tags tags ON pub.entity_id = tags.entity_id
 LEFT JOIN field_data_product_ref prref ON pub.entity_id = prref.entity_id
 INNER JOIN field_data_product_view_enabled view ON pub.entity_id = view.entity_id
+INNER JOIN field_data_product_state state ON prref.entity_id = state.entity_id
 WHERE  (pub.entity_id = ". $prod->entity_id .")");
             $results = $query->fetchAll();
 
@@ -277,14 +257,30 @@ WHERE  (pub.entity_id = ". $prod->entity_id .")");
                     );
                     // Create a grant for public access if public is set
                     if ($row->product_visibility_public_value == 1) {
-                        $grants[] = array(
-                            'realm' => 'product',
-                            'gid' => PUBLIC_PRODUCT_GRANT,
-                            'grant_view' => 1,
-                            'grant_update' => 0,
-                            'grant_delete' => 0,
-                            'priority' => 0,
-                        );
+
+                      // Create a grant for subscription base on the apic_url if the API's product is depcrecated 
+                      if ($row->product_state_value === 'deprecated' && isset($row->product_ref_value)) {
+                        $grants[] = [
+                          'realm' => 'product_ref_' . $row->product_ref_value,
+                          'gid' => SUBSCRIBED_TO_PRODUCT_GRANT,
+                          'grant_view' => 1,
+                          'grant_update' => 0,
+                          'grant_delete' => 0,
+                          'priority' => 0,
+                        ];
+                      }
+
+                      // Create a grant for public access if public is set and the API's product is not deprecated
+                      else {
+                        $grants[] = [
+                          'realm' => 'product',
+                          'gid' => PUBLIC_PRODUCT_GRANT,
+                          'grant_view' => 1,
+                          'grant_update' => 0,
+                          'grant_delete' => 0,
+                          'priority' => 0,
+                        ];
+                      }
                     }
                     // Create a grant for authenticated access if authenticated is set
                     if ($row->product_visibility_authenticated_value == 1) {
@@ -909,6 +905,7 @@ function api_createNewAPINode($api, $event) {
       }
     }
   }
+
   $node->title = ibm_apim_truncate_string($api['document']['info']['title']);
   // if en wasn't in the x-ibm-languages list then assume it was the root level one
   if (isset($api['document']['info']['x-ibm-languages']['title']) && !in_array('en', array_keys($api['document']['info']['x-ibm-languages']['title']))) {
@@ -1283,6 +1280,7 @@ function api_updateExistingAPINode($node, $api, $event) {
       }
     }
   }
+
   $node->title = ibm_apim_truncate_string($api['document']['info']['title']);
   // if en wasn't in the x-ibm-languages list then assume it was the root level one
   if (isset($api['document']['info']['x-ibm-languages']['title']) && !in_array('en', array_keys($api['document']['info']['x-ibm-languages']['title']))) {
@@ -1304,6 +1302,7 @@ function api_updateExistingAPINode($node, $api, $event) {
   if (!isset($api['document']['info']['description']) || empty($api['document']['info']['description'])) {
     $api['document']['info']['description'] = '';
   }
+
   if (isset($api['document']['info']['x-ibm-languages']['description']) && !empty($api['document']['info']['x-ibm-languages']['description'])) {
     foreach ($api['document']['info']['x-ibm-languages']['description'] as $lang => $lang_array) {
       $lang = _ibm_apim_convert_lang_name_to_drupal($lang);
@@ -1813,7 +1812,7 @@ function _api_create_forum($apiname = NULL, $apidescription = NULL) {
             if (isset($first_key)) {
               $forum_form_fields = array();
               $forum_form_fields['values']['name'] = $cleanname;
-              $forum_form_fields['values']['description'] = $apidescription;
+              $forum_form_fields['values']['description'] = check_plain($apidescription);
               $forum_form_fields['values']['parent'][0] = $containerID[$first_key]->tid;
               $forum_form_fields['values']['weight'] = 0;
               $forum_form_fields['values']['vid'] = variable_get('forum_nav_vocabulary', 1);
@@ -2098,53 +2097,6 @@ function api_getCSSforMimetype($mimetype) {
       $class = "defaultDocType";
   }
   return $class;
-}
-
-/**
- * Callback for swagger proxy
- *
- * @param $apiref
- */
-function _api_swagger_proxy_callback($apiref) {
-  if (isset($apiref)) {
-    ibm_apim_get_api_swagger($apiref);
-  }
-}
-
-/**
- * Callback for document proxy
- *
- * @param $encodedurl
- */
-function _api_document_proxy_callback($encodedurl) {
-  $url = ibm_apim_base64_url_decode($encodedurl);
-  _ibm_apim_download_proxy($url, 'GET');
-}
-
-/**
- * Callback for wsdl proxy
- *
- * @param $apiref
- */
-function _api_wsdl_proxy_callback($apiref) {
-  $org = ibm_apim_get_current_developer_org();
-  $developerOrgs = $org['id'];
-  if (isset($developerOrgs)) {
-    $developer_org_url = '/orgs/' . $developerOrgs;
-  }
-  else {
-    $developer_org_url = '';
-  }
-
-  $host_pieces = _ibm_apim_parse_apim_host();
-  if (empty($host_pieces)) {
-    drupal_set_message(t('IBM APIC Module is not correctly configured. Specify a valid hostname and try again.'), 'error');
-    return;
-  }
-  $ref = ibm_apim_base64_url_decode($apiref);
-  $wsdlurl = $host_pieces['url'] . '/v1/portal' . $developer_org_url . '/apis/' . $ref . '/wsdl';
-
-  _ibm_apim_download_proxy($wsdlurl, 'GET');
 }
 
 /**

@@ -162,7 +162,7 @@ else {
               <div>
                 <label><?php print t('Description'); ?></label>
                 <div
-                  class="markdown"><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($api, ['info'], 'description')); ?></div>
+                  class="markdown"><?php print ibm_apim_markdown_field(check_plain(ibm_apim_get_translated_string($api, ['info'], 'description'))); ?></div>
               </div>
             <?php endif; ?>
             <?php $docs = render($content['api_attachments']); ?>
@@ -170,23 +170,23 @@ else {
               <div>
                 <label><?php print t('Documentation'); ?></label>
                 <?php if (isset($api['externalDocs'])) : ?>
-                  <div><a href="<?php print $api['externalDocs']['url']; ?>" target='_blank'>
+                  <div><a href="<?php print check_plain($api['externalDocs']['url']); ?>" target='_blank'>
                       <?php if (isset($api['externalDocs']['description'])) {
-                        print ibm_apim_get_translated_string($api, ['externalDocs'], 'description');
+                        print check_plain(ibm_apim_get_translated_string($api, ['externalDocs'], 'description'));
                       }
                       else {
-                        print $api['externalDocs']['url'];
+                        print  check_plain($api['externalDocs']['url']);
                       } ?>
                     </a></div>
                 <?php endif; ?>
                 <?php if (isset($api['x-ibm-configuration']['externalDocs'])) : ?>
                   <?php foreach ($api['x-ibm-configuration']['externalDocs'] as $key=>$doc) : ?>
-                    <div><a href="<?php print $doc['url']; ?>" target='_blank'>
+                    <div><a href="<?php print check_plain($doc['url']); ?>" target='_blank'>
                         <?php if (isset($doc['description'])) {
-                          print ibm_apim_get_translated_string($api, ['x-ibm-configuration', 'externalDocs' ,$key], 'description');
+                          print  check_plain(ibm_apim_get_translated_string($api, ['x-ibm-configuration', 'externalDocs' ,$key], 'description'));
                         }
                         else {
-                          print $doc['url'];
+                          print  check_plain($doc['url']);
                         } ?>
                       </a></div>
                   <?php endforeach; ?>
@@ -217,16 +217,16 @@ else {
               </div>
               <div class="contactContent">
                 <?php if (isset($api['info']['contact']['name']) && !empty($api['info']['contact']['name'])) : ?>
-                  <div><?php print $api['info']['contact']['name']; ?></div>
+                  <div><?php print  check_plain($api['info']['contact']['name']); ?></div>
                 <?php endif; ?>
                 <?php if (isset($api['info']['contact']['email']) && !empty($api['info']['contact']['email'])) : ?>
                   <div><a
-                      href='mailto:<?php print $api['info']['contact']['email']; ?>'><?php print $api['info']['contact']['email']; ?></a>
+                      href='mailto:<?php print $api['info']['contact']['email']; ?>'><?php print  check_plain($api['info']['contact']['email']); ?></a>
                   </div>
                 <?php endif; ?>
                 <?php if (isset($api['info']['contact']['url']) && !empty($api['info']['contact']['url'])) : ?>
                   <div><a href='<?php print $api['info']['contact']['url']; ?>'
-                          target='_blank'><?php print $api['info']['contact']['url']; ?></a></div>
+                          target='_blank'><?php print  check_plain($api['info']['contact']['url']); ?></a></div>
                 <?php endif; ?>
               </div>
             </div>
@@ -246,14 +246,14 @@ else {
                   <div>
                     <label><?php print t('License'); ?></label>
                     <div><a
-                        href='<?php print $api['info']['license']['url']; ?>'
-                        target='_blank'><?php print $api['info']['license']['name']; ?></a></div>
+                        href='<?php print check_plain($api['info']['license']['url']); ?>'
+                        target='_blank'><?php print  check_plain($api['info']['license']['name']); ?></a></div>
                   </div>
                 <?php endif; ?>
                 <?php if (isset($api['info']['termsOfService']) && !empty($api['info']['termsOfService'])) : ?>
                   <div>
                     <label><?php print t('Terms of service'); ?></label>
-                    <div><?php print ibm_apim_get_translated_string($api, ['info'], 'termsOfService'); ?></div>
+                    <div><?php print  check_plain(ibm_apim_get_translated_string($api, ['info'], 'termsOfService')); ?></div>
                   </div>
                 <?php endif; ?>
               </div>
@@ -577,7 +577,7 @@ else {
                                   </div><div class='description markdown'>
                                     <?php
                                       if(isset($api['securityDefinitions'][$securityDefName]['description'])) {
-                                        print ibm_apim_markdown_field($api['securityDefinitions'][$securityDefName]['description']);
+                                        print ibm_apim_markdown_field(ibm_apim_get_translated_string($api['securityDefinitions'][$securityDefName], array(), 'description'));
                                       }
                                     ?>
                                     <?php if (isset($operation['security'])) {
@@ -1904,7 +1904,7 @@ else {
                   unset($definition['example']);
                 } ?>
                 <pre class="inlineSchema"><code
-                    class="definitionDetails"><?php print json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE); ?></code>
+                    class="definitionDetails"><?php print json_encode($definition, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?></code>
               </pre>
               <?php endforeach; ?>
             </div>

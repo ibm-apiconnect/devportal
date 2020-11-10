@@ -73,7 +73,7 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
           <li class="tocItem toc-product"><a
               onclick="product.navigate('product')"
               href="javascript:;"
-              title="<?php print $product_title; ?>"><?php print $product_title; ?></a>
+              title="<?php print $product_title; ?>"><?php print check_plain($product_title); ?></a>
           </li>
           <?php if (isset($docpages) && !empty($docpages)) : ?>
             <li
@@ -98,7 +98,7 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
             <?php if (isset($apinode->status) && $apinode->status == 1) : ?>
               <a
                 href="<?php print url('productapi/' . $node->nid . '/' . ibm_apim_base64_url_encode($apinode->api_ref[$apinode->language][0]['value'])) ?>"
-                title="<?php print $apinode->title; ?>"><?php print check_plain($apinode->title); ?></a>
+                title="<?php print check_plain($apinode->title); ?>"><?php print check_plain($apinode->title); ?></a>
             <?php else: ?>
               <span
                 class="moderatedAPI"><?php print check_plain($apinode->title); ?></span>
@@ -142,10 +142,10 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
                   <?php endif; ?>
                 </div>
                 <h1 class="name">
-                  <?php print ibm_apim_get_translated_string($product, ['info'], 'title'); ?>
+                  <?php print check_plain(ibm_apim_get_translated_string($product, ['info'], 'title')); ?>
                   <?php if ($showversions == 1): ?>
                     <span
-                      class="version"><?php print $product['info']['version']; ?></span>
+                      class="version"><?php print check_plain($product['info']['version']); ?></span>
                   <?php endif; ?>
                 </h1>
                 <?php if (isset($product_state[0]['value']) && strtolower($product_state[0]['value']) == 'deprecated') : ?>
@@ -166,7 +166,7 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
                     <label
                       for='product_description'><?php print t('Description'); ?></label>
                     <div class="markdown"
-                         id='product_description'><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($product, ['info'], 'description')); ?></div>
+                         id='product_description'><?php print ibm_apim_markdown_field(check_plain(ibm_apim_get_translated_string($product, ['info'], 'description'))); ?></div>
                   </div>
                 <?php endif; ?>
                 <?php $docs = render($content['product_attachments']); ?>
@@ -199,17 +199,17 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
               </div>
               <div class="contactContent">
                 <?php if (isset($product['info']['contact']['name']) && !empty($product['info']['contact']['name'])) : ?>
-                  <div><?php print $product['info']['contact']['name']; ?></div>
+                  <div><?php print check_plain($product['info']['contact']['name']); ?></div>
                 <?php endif; ?>
                 <?php if (isset($product['info']['contact']['email']) && !empty($product['info']['contact']['email'])) : ?>
                   <div><a
-                      href='mailto:<?php print $product['info']['contact']['email']; ?>'><?php print $product['info']['contact']['email']; ?></a>
+                      href='mailto:<?php print check_plain($product['info']['contact']['email']); ?>'><?php print check_plain($product['info']['contact']['email']); ?></a>
                   </div>
                 <?php endif; ?>
                 <?php if (isset($product['info']['contact']['url']) && !empty($product['info']['contact']['url'])) : ?>
                   <div><a
-                      href='<?php print $product['info']['contact']['url']; ?>'
-                      target='_blank'><?php print $product['info']['contact']['url']; ?></a></div>
+                      href='<?php print check_plain($product['info']['contact']['url']); ?>'
+                      target='_blank'><?php print check_plain($product['info']['contact']['url']); ?></a></div>
                 <?php endif; ?>
               </div>
             </div>
@@ -230,14 +230,14 @@ $codesnippets = variable_get('ibm_apim_codesnippets', array(
                   <div>
                     <label><?php print t('License'); ?></label>
                     <div><a
-                        href='<?php print $product['info']['license']['url']; ?>'
-                        target='_blank'><?php print ibm_apim_get_translated_string($product['info']['license'], array(), 'name'); ?></a></div>
+                        href='<?php print check_plain($product['info']['license']['url']); ?>'
+                        target='_blank'><?php print check_plain(ibm_apim_get_translated_string($product['info']['license'], array(), 'name')); ?></a></div>
                   </div>
                 <?php endif; ?>
                 <?php if (isset($product['info']['termsOfService']) && !empty($product['info']['termsOfService'])) : ?>
                   <div>
                     <label><?php print t('Terms of service'); ?></label>
-                    <div><?php print ibm_apim_markdown_field(ibm_apim_get_translated_string($product, ['info'], 'termsOfService')); ?></div>
+                    <div><?php print ibm_apim_markdown_field(check_plain(ibm_apim_get_translated_string($product, ['info'], 'termsOfService'))); ?></div>
                   </div>
                 <?php endif; ?>
               </div>

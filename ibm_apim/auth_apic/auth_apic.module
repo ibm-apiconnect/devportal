@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2015, 2019
+ * (C) Copyright IBM Corporation 2015, 2020
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -452,19 +452,10 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
         $ibm_apim_readonly_idp = variable_get('ibm_apim_readonly_idp', FALSE);
         $ibm_apim_email_as_username = variable_get('ibm_apim_email_as_username', TRUE);
         // hide the devorg field
-        $form['field_developer_organization']['#access'] = FALSE;
+        unset($form['field_developer_organization']);
 
         if ($form['#user']->uid == $user->uid) {
           // editing own profile
-
-          // Developer Org field is always readonly on edit profile
-          if ($form['field_developer_organization']) {
-            $form['field_developer_organization']['#disabled'] = TRUE;
-            $form['field_developer_organization']['#required'] = FALSE;
-            $form['field_developer_organization']['und']['#required'] = 0;
-            $form['field_developer_organization']['und'][0]['#required'] = FALSE;
-            $form['field_developer_organization']['und'][0]['value']['#required'] = FALSE;
-          }
 
           if ($ibm_apim_username_show != TRUE) {
             if (isset($form['account']['name'])) {
@@ -633,13 +624,6 @@ function auth_apic_form_alter(&$form, &$form_state, $form_id) {
             $form['field_address']['#disabled'] = TRUE;
             $form['field_address']['und']['#required'] = 0;
             $form['field_address']['und'][0]['#required'] = FALSE;
-          }
-          if (isset($form['field_developer_organization'])) {
-            $form['field_developer_organization']['#disabled'] = TRUE;
-            $form['field_developer_organization']['#required'] = FALSE;
-            $form['field_developer_organization']['und']['#required'] = 0;
-            $form['field_developer_organization']['und'][0]['#required'] = FALSE;
-            $form['field_developer_organization']['und'][0]['value']['#required'] = FALSE;
           }
           if (isset($form['field_codesnippet'])) {
             $form['field_codesnippet']['#disabled'] = TRUE;
@@ -1035,7 +1019,6 @@ function _auth_apic_authenticated_login($name, $pass, $authenticated, $login = T
     if (isset($orgs)) {
       foreach ($orgs as $org) {
         $devorgs_array[] = array('value' => $org['name']);
-        $org_ids[$org['id']] = array();
         $org_ids[$org['id']] = ($org['owner'] ? 'owner' : 'member');
       }
     }
@@ -1886,7 +1869,7 @@ function _auth_apic_reset_user_password($email) {
   );
   $result = ibm_apim_post($url, json_encode($data));
   if (isset($result)) {
-    drupal_set_message(t('Password reset e-mail successfully sent.'));
+    form_set_error('name',t('If the account exists, it has been emailed further instructions.'));
   }
 }
 

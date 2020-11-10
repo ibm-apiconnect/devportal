@@ -22,28 +22,13 @@ drupal_add_library('underscore', 'underscore');
 drupal_add_js(libraries_get_path('waypoints') . '/lib/jquery.waypoints.min.js', array(
   'weight' => 2
 ));
-drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/httpsnippet-browser.js', array(
-  'weight' => 3
-));
-drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/chance.js', array(
-  'weight' => 3
-));
 drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/json2xml.js', array(
   'weight' => 3
 ));
-drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/vkbeautify.js', array(
+drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/example-generator.min.js', array(
   'weight' => 3
 ));
-drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/vkbeautify.js', array(
-  'weight' => 3
-));
-drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/x2js.js', array(
-  'weight' => 3
-));
-drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/apiconnect-example-generator.js', array(
-  'weight' => 3
-));
-drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/reference-resolver.js', array(
+drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/worker-script.min.js', array(
   'weight' => 3
 ));
 drupal_add_js(drupal_get_path('module', 'ibm_apim') . '/js/CommonAPI.js', array(
@@ -97,7 +82,7 @@ else {
       } ?>
       <li class="tocItem toc-product"><a
           href="<?php print url('node/' . $productnid); ?>"
-          title="<?php print $product_title; ?>"><?php print $product_title; ?></a>
+          title="<?php print $product_title; ?>"><?php print check_plain($product_title); ?></a>
       </li>
       <?php if (isset($product_docpages) && !empty($product_docpages)) : ?>
         <li
