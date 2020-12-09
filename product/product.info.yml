@@ -3,7 +3,7 @@ type: module
 description: Products from IBM API Connect
 package: IBM API Connect
 core: 8.x
-version: 8.x-2.2.25
+version: 8.x-2.3.18
 project: product
 dependencies:
 - path

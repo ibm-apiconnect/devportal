@@ -332,44 +332,35 @@ section.block-go-ahead {
 }
 
 /* no permissions page */
-.route-ibm-apimnoperms .main-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
 .route-ibm-apimnoperms .page-header,
 .route-ibm-apimnoperms footer {
   display: none;
 }
 
-.ibmapimNoPermissions .noPermsContentWrapper {
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-  align-items: center;
+.route-ibm-apimnoperms .main-container.container {
+  background-image: url(../images/Error_Page_Illustrations_403.svg);
+  min-height: 600px;
+  background-size: contain;
+  background-repeat: no-repeat;
 }
-
-.ibmapimNoPermissions .iconDiv {
-  height: 120px;
-  width: 120px;
-  margin: 2rem;
+.route-ibm-apimnoperms .main-container.container .noPermsContentWrapper {
+  width: 100%;
+  border: 0;
+  background-color: inherit;
+  padding: 100px 2rem 2rem 300px;
 }
-
-.ibmapimNoPermissions .iconDiv svg {
-  fill: #D9DAE3
+.route-ibm-apimnoperms .main-container.container .row {
+  margin: 40px;
+  width: calc(100% - 80px);
 }
 
 .ibmapimNoPermissions .mainContent {
-  font-weight: lighter;
-  font-size: 1.875rem;
-  color: #0f62fe;
-  margin: 2rem;
+  font-size: 1.5rem;
+  margin: 2rem 2rem 1rem 0;
 }
 
 .ibmapimNoPermissions .contactLink a {
   color: #0f62fe;
-  font-weight: bold;
 }
 
 .supportContentWrapper h2 {

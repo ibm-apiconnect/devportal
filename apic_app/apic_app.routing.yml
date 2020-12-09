@@ -122,6 +122,8 @@ apic_app.credentials_update:
     parameters:
       appId:
         type: 'apic_app.appid'
+      credId:
+        type: 'apic_app.credid'
 
 apic_app.credentials_delete:
   path: '/application/{appId}/delete-clientcreds/{credId}'
@@ -135,6 +137,8 @@ apic_app.credentials_delete:
     parameters:
       appId:
         type: 'apic_app.appid'
+      credId:
+        type: 'apic_app.credid'
 
 apic_app.image_upload:
   path: '/application/{appId}/upload'
@@ -176,6 +180,8 @@ apic_app.reset_clientid:
     parameters:
       appId:
         type: 'apic_app.appid'
+      credId:
+        type: 'apic_app.credid'
 
 apic_app.reset_clientsecret:
   path: '/application/{appId}/reset-clientsecret/{credId}'
@@ -190,6 +196,8 @@ apic_app.reset_clientsecret:
     parameters:
       appId:
         type: 'apic_app.appid'
+      credId:
+        type: 'apic_app.credid'
 
 apic_app.verify_clientsecret:
   path: '/application/{appId}/verify/{credId}'
@@ -203,6 +211,8 @@ apic_app.verify_clientsecret:
     parameters:
       appId:
         type: 'apic_app.appid'
+      credId:
+        type: 'apic_app.credid'
 
 apic_app.unsubscribe:
   path: '/application/{appId}/unsubscribe/{subId}'
@@ -216,6 +226,8 @@ apic_app.unsubscribe:
     parameters:
       appId:
         type: 'apic_app.appid'
+      subId:
+        type: 'apic_app.subid'
 
 apic_app.migrate_subscription:
   path: '/application/{appId}/migrate/{subId}/{planRef}'
@@ -229,6 +241,8 @@ apic_app.migrate_subscription:
     parameters:
       appId:
         type: 'apic_app.appid'
+      subId:
+        type: 'apic_app.subid'
 
 apic_app.display_creds:
   path: '/application/credentials/{appId}/{credentials}'

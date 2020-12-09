@@ -36,6 +36,8 @@ use Drupal\user\UserStorageInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Messenger\Messenger;
+use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\Core\Extension\ModuleHandler;
 
 class ApicUserLoginForm extends UserLoginForm {
 
@@ -99,6 +101,14 @@ class ApicUserLoginForm extends UserLoginForm {
    */
   protected $messenger;
 
+  protected $chosen_registry;
+
+  /**
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
+  protected $moduleHandler;
+
+
   /**
    * Constructs a new UserLoginForm.
    *
@@ -119,7 +129,8 @@ class ApicUserLoginForm extends UserLoginForm {
                               Config $ibm_settings_config,
                               ApicLoginServiceInterface $login_service,
                               ApicInvitationInterface $invitation_service,
-                              Messenger $messenger) {
+                              Messenger $messenger,
+                              ModuleHandler $module_handler) {
     parent::__construct($flood, $user_storage, $user_auth, $renderer);
     $this->logger = $logger;
     $this->accountService = $account_service;
@@ -133,6 +144,7 @@ class ApicUserLoginForm extends UserLoginForm {
     $this->loginService = $login_service;
     $this->invitationService = $invitation_service;
     $this->messenger = $messenger;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -155,7 +167,8 @@ class ApicUserLoginForm extends UserLoginForm {
       $container->get('config.factory')->get('ibm_apim.settings'),
       $container->get('auth_apic.login'),
       $container->get('auth_apic.invitation'),
-      $container->get('messenger')
+      $container->get('messenger'),
+      $container->get('module_handler')
     );
   }
 
@@ -168,6 +181,8 @@ class ApicUserLoginForm extends UserLoginForm {
 
     $baseForm = parent::buildForm($form, $form_state);
 
+
+    $enabled_oidc_login_form = (boolean) \Drupal::config('ibm_apim.settings')->get('enable_oidc_login_form');
     // if we are on the invited user flow, there will be a JWT in the session so grab that
     $jwt = $this->authApicSessionStore->get('invitation_object');
     if ($jwt !== NULL) {
@@ -185,6 +200,17 @@ class ApicUserLoginForm extends UserLoginForm {
         ];
       }
     }
+    $this->authApicSessionStore->delete('redirect_to');
+    if (\Drupal::request()->query->get('destination') === 'user/logout') {
+      \Drupal::request()->query->remove('destination');
+    } else if (\Drupal::request()->query->get('redirectto') === 'user/logout') {
+      \Drupal::request()->query->remove('redirectto');
+    }
+    if (\Drupal::request()->query->has('destination')) {
+      $this->authApicSessionStore->set('redirect_to', \Drupal::request()->query->get('destination'));
+    } else if (\Drupal::request()->query->has('redirectto')) {
+      $this->authApicSessionStore->set('redirect_to', \Drupal::request()->query->get('redirectto'));
+    }
 
     // if the page was loaded due to invoking the subscription wizard, put up a more helpful piece of text on the form
     $subscription_wizard_cookie = \Drupal::request()->cookies->get('Drupal_visitor_startSubscriptionWizard');
@@ -195,7 +221,7 @@ class ApicUserLoginForm extends UserLoginForm {
     // work out what user registries are enabled on this catalog
     $registries = $this->userRegistryService->getAll();
 
-    $chosen_registry = $this->userRegistryService->getDefaultRegistry();
+    $this->chosen_registry = $this->userRegistryService->getDefaultRegistry();
     $chosen_registry_url = \Drupal::request()->query->get('registry_url');
     $hide_admin_registry = (bool) $this->ibmSettingsConfig->get('hide_admin_registry');
 
@@ -210,22 +236,27 @@ class ApicUserLoginForm extends UserLoginForm {
       return $baseForm;
     }
 
-    if (!empty($chosen_registry_url) && array_key_exists($chosen_registry_url, $registries) && ($this->apimUtils->sanitizeRegistryUrl($chosen_registry_url) === 1 || $chosen_registry_url === $this->userRegistryService->getAdminRegistryUrl())) {
-      $chosen_registry = $registries[$chosen_registry_url];
+    if (!empty($chosen_registry_url) && array_key_exists($chosen_registry_url, $registries) && ($chosen_registry_url === $this->userRegistryService->getAdminRegistryUrl() || $this->apimUtils->sanitizeRegistryUrl($chosen_registry_url) === 1)) {
+      $this->chosen_registry = $registries[$chosen_registry_url];
+    }
+    $chosenRegistryURL = $chosen_registry_url;
+    if ($this->chosen_registry !== NULL) {
+      $chosenRegistryURL = $this->chosen_registry->getUrl();
+      $chosenRegistryTitle = $this->chosen_registry->getTitle();
     }
 
     // store registry_url for validate/submit
     $form['registry_url'] = [
       '#type' => 'hidden',
-      '#value' => $chosen_registry->getUrl(),
+      '#value' => $chosenRegistryURL,
     ];
 
     // store registry_url for template
-    $form['#registry_url']['registry_url'] = $chosen_registry->getUrl();
+    $form['#registry_url']['registry_url'] = $chosenRegistryURL;
 
 
     if (sizeof($registries) > 1) {
-      $other_registries = array_diff_key($registries, [$chosen_registry->getUrl() => $chosen_registry]);
+      $other_registries = array_diff_key($registries, [$chosenRegistryURL => $this->chosen_registry]);
     }
 
     // build the form
@@ -239,7 +270,7 @@ class ApicUserLoginForm extends UserLoginForm {
     $form['headers_container']['signin_label'] = [
       '#type' => 'html_tag',
       '#tag' => 'div',
-      '#value' => t('Sign in with @registryName', ['@registryName' => $chosen_registry->getTitle()]),
+      '#value' => t('Sign in with @registryName', ['@registryName' => $chosenRegistryTitle]),
       '#attributes' => ['class' => ['apic-user-form-subheader']],
       '#weight' => -1000,
     ];
@@ -256,32 +287,46 @@ class ApicUserLoginForm extends UserLoginForm {
     $baseForm['#prefix'] = '<div class="apic-user-form-inner-wrapper">';
     $baseForm['#suffix'] = '</div>';
 
-    if ($chosen_registry->getRegistryType() === 'oidc') {
+    if ($this->chosen_registry !== NULL && $this->chosen_registry->getRegistryType() === 'oidc') {
       // for oidc we don't need to present a username/ password + submit form... just a button.
+      $oidc_info = $this->oidcService->getOidcMetadata($this->chosen_registry, $jwt);
+      $baseForm['actions']['submit']['#value'] = t('Sign in');
 
-      $oidc_info = $this->oidcService->getOidcMetadata($chosen_registry, $jwt);
-      $button = [
-        '#type' => 'html_tag',
-        '#tag' => 'span',
-        '#attributes' => [
-          'class' => [
-            'apic-user-registry-button',
-            'apic-user-registry-' . $chosen_registry->getRegistryType(),
+      if ($enabled_oidc_login_form) {
+        $baseForm['oidc_url'] = [
+          '#type' => 'hidden',
+          '#value' => $oidc_info['az_url']
+        ];
+
+        $baseForm['actions']['submit']['#attributes'] = ['class' => [
+          'apic-user-registry-button',
+          'apic-user-registry-' . $this->chosen_registry->getRegistryType(),
+          'registry-button'
+        ]];
+      } else {        
+        $button = [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#attributes' => [
+            'class' => [
+              'apic-user-registry-button',
+              'apic-user-registry-' . $this->chosen_registry->getRegistryType(),
+            ],
           ],
-        ],
-        '#name' => $chosen_registry->getName(),
-        '#url' => $chosen_registry->getUrl(),
-        '#limit_validation_errors' => [],
-        '#prefix' => '<a class="chosen-registry-button registry-button generic-button button" href="' . $oidc_info['az_url'] . '" title="' . $this->t('Sign in using @ur', ['@ur' => $chosen_registry->getTitle()]) . '">' .
-          $oidc_info['image'] .
-          '<span class="registry-name">' . $chosen_registry->getTitle() . '</span>
-                      </a>',
-
-      ];
-      $baseForm['oidc_link'] = $button;
+          '#name' => $this->chosen_registry->getName(),
+          '#url' => $this->chosen_registry->getUrl(),
+          '#limit_validation_errors' => [],
+          '#prefix' => '<a class="chosen-registry-button registry-button generic-button button" href="' . $oidc_info['az_url'] . '" title="' . $this->t('Sign in using @ur', ['@ur' => $this->chosen_registry->getTitle()]) . '">' .
+            $oidc_info['image']['html'] .
+            '<span class="registry-name">' . $this->chosen_registry->getTitle() . '</span>
+                        </a>',
+  
+        ];
+        $baseForm['oidc_link'] = $button;
+        $baseForm['actions']['#access'] = FALSE;
+      }
       $baseForm['name']['#access'] = FALSE;
       $baseForm['pass']['#access'] = FALSE;
-      $baseForm['actions']['#access'] = FALSE;
 
     }
     else {
@@ -292,7 +337,7 @@ class ApicUserLoginForm extends UserLoginForm {
       $baseForm['pass']['#required'] = FALSE;
       $baseForm['pass']['#attributes'] = ['autocomplete' => 'off'];
 
-      if ($chosen_registry->getUrl() === $this->userRegistryService->getAdminRegistryUrl()) {
+      if ($chosenRegistryURL === $this->userRegistryService->getAdminRegistryUrl()) {
         $baseForm['actions']['submit']['#value'] = t('Sign in');
         unset($baseForm['actions']['submit']['#icon']);
       }
@@ -379,10 +424,14 @@ class ApicUserLoginForm extends UserLoginForm {
             '#url' => $other_registry->getUrl(),
             '#limit_validation_errors' => [],
             '#prefix' => '<a class="registry-button generic-button button" href="' . $oidc_info['az_url'] . '" title="' . $this->t('Sign in using @ur', ['@ur' => $other_registry->getTitle()]) . '">' .
-              $oidc_info['image'] .
+              $oidc_info['image']['html'] .
               '<span class="registry-name">' . $other_registry->getTitle() . '</span>
                           </a>',
           ];
+          if ($enabled_oidc_login_form) {
+            $button['#prefix'] = '<a class="registry-button generic-button button" href="' . $redirect_with_registry_url . $other_registry->getUrl() . '" title="' . $this->t('Sign in using @ur', ['@ur' => $other_registry->getTitle()]) . '">'
+            . $oidc_info['image']['html'] . '<span class="registry-name">' . $other_registry->getTitle() . '</span></a>';
+          }
         }
         else {
           $button['#prefix'] = '<a class="registry-button generic-button button" href="' . $redirect_with_registry_url . $other_registry->getUrl() . '" title="' . $this->t('Sign in using @ur', ['@ur' => $other_registry->getTitle()]) . '">
@@ -398,7 +447,7 @@ class ApicUserLoginForm extends UserLoginForm {
       $form['main_container']['other'] = $otherRegistriesForm;
     }
     $form['#attached']['library'][] = 'ibm_apim/single_click';
-    if (\Drupal::moduleHandler()->moduleExists('page_load_progress') && \Drupal::currentUser()->hasPermission('use page load progress')) {
+    if ($this->moduleHandler->moduleExists('page_load_progress') && \Drupal::currentUser()->hasPermission('use page load progress')) {
 
       // Unconditionally attach assets to the page.
       $form['#attached']['library'][] = 'auth_apic/oidc_page_load_progress';
@@ -408,6 +457,9 @@ class ApicUserLoginForm extends UserLoginForm {
       $form['#attached']['drupalSettings']['oidc_page_load_progress'] = [
         'esc_key' => $pjp_config->get('page_load_progress_esc_key'),
       ];
+    }
+    if ($this->moduleHandler->moduleExists('social_media_links')) {
+      $form['#attached']['library'][] = 'social_media_links/fontawesome.component';
     }
 
     // need to add cache context for the query param
@@ -428,19 +480,20 @@ class ApicUserLoginForm extends UserLoginForm {
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    //Don't need to validate if its oidc
+    if ($this->chosen_registry !== NULL && $this->chosen_registry->getRegistryType() !== 'oidc') {
+      $this->validateName($form, $form_state);
 
-    $this->validateName($form, $form_state);
+      $apicAuthenticated = $this->validateApicAuthentication($form, $form_state);
+      if ($apicAuthenticated !== TRUE) {
+        $user_input = $form_state->getUserInput();
+        $query = isset($user_input['name']) ? ['name' => $user_input['name']] : [];
+        $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
+        $form_state->setErrorByName('usernameorpassword2', $this->t('<a href=":password">Forgot your password? Click here to reset it.</a>', [':password' => Url::fromRoute('user.pass', [], ['query' => $query])->toString()]));
+      }
 
-    $apicAuthenticated = $this->validateApicAuthentication($form, $form_state);
-    if ($apicAuthenticated !== TRUE) {
-      $user_input = $form_state->getUserInput();
-      $query = isset($user_input['name']) ? ['name' => $user_input['name']] : [];
-      $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
-      $form_state->setErrorByName('usernameorpassword2', $this->t('<a href=":password">Forgot your password? Click here to reset it.</a>', [':password' => Url::fromRoute('user.pass', [], ['query' => $query])->toString()]));
+      $this->validateFinal($form, $form_state);
     }
-
-    $this->validateFinal($form, $form_state);
-
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 
@@ -575,66 +628,76 @@ class ApicUserLoginForm extends UserLoginForm {
 
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    // parent form will actually log the use in...
-    parent::submitForm($form, $form_state);
-    // now we need to check whether:
-    // - this is a first time login?
-    // - user needs to pick up in a subscription wizard?
-    // - user isn't in a consumer org?
 
-    $current_user = \Drupal::currentUser();
-    $first_time_login = NULL;
-    $subscription_wizard_cookie = NULL;
-
-    if (isset($current_user)) {
-      $current_user = User::load($current_user->id());
-      $first_time_login = $current_user->first_time_login->value;
-      $subscription_wizard_cookie = \Drupal::request()->cookies->get('Drupal_visitor_startSubscriptionWizard');
-    }
-
-    // If this is the first login, set langauge for user to browser language.
-    if (isset($current_user) && (int) $first_time_login !== 0) {
-      $this->accountService->setDefaultLanguage($current_user);
-    }
-
-    // check if the user we just logged in is a member of at least one dev org
-    $current_corg = $this->userUtils->getCurrentConsumerorg();
-    if (!isset($current_corg)) {
-      // if onboarding is enabled, we can redirect to the create org page
-      if ($this->siteConfig->isSelfOnboardingEnabled()) {
-        $form_state->setRedirect('consumerorg.create');
+    if ($this->chosen_registry->getRegistryType() == 'oidc') {
+      $oidc_url = $form_state->getValue('oidc_url');
+      $response = new TrustedRedirectResponse(Url::fromUri($oidc_url)->toString());
+      $form_state->setResponse($response);
+    } else {
+      // parent form will actually log the use in...
+      parent::submitForm($form, $form_state);
+      // now we need to check whether:
+      // - this is a first time login?
+      // - user needs to pick up in a subscription wizard?
+      // - user isn't in a consumer org?
+  
+      $current_user = \Drupal::currentUser();
+      $first_time_login = NULL;
+      $subscription_wizard_cookie = NULL;
+  
+      if (isset($current_user)) {
+        $current_user = User::load($current_user->id());
+        $first_time_login = $current_user->first_time_login->value;
+        $subscription_wizard_cookie = \Drupal::request()->cookies->get('Drupal_visitor_startSubscriptionWizard');
+      }
+  
+      // If this is the first login, set langauge for user to browser language.
+      if (isset($current_user) && (int) $first_time_login !== 0) {
+        $this->accountService->setDefaultLanguage($current_user);
+      }
+  
+      // check if the user we just logged in is a member of at least one dev org
+      $current_corg = $this->userUtils->getCurrentConsumerorg();
+      if (!isset($current_corg)) {
+        // if onboarding is enabled, we can redirect to the create org page
+        if ($this->siteConfig->isSelfOnboardingEnabled()) {
+          $form_state->setRedirect('consumerorg.create');
+        }
+        else {
+          // we can't help the user, they need to talk to an administrator
+          $form_state->setRedirect('ibm_apim.noperms');
+        }
+        // if no consumer org then return early, everything else is secondary.
+        return;
+      }
+      if ($this->authApicSessionStore->get('redirect_to')) {
+        $this->authApicSessionStore->delete('redirect_to');
+      }
+  
+      if (isset($current_user) && (int) $first_time_login !== 0 && empty($subscription_wizard_cookie)) {
+        // set first_time_login to 0 for next time
+        $current_user->set('first_time_login', 0);
+        $current_user->save();
+  
+        $form_state->setRedirect('ibm_apim.get_started');
+      }
+      elseif (!empty($subscription_wizard_cookie)) {
+        // If the startSubscriptionWizard cookie is set, grab the value from it, set up a redirect and delete it
+        $form_state->setRedirect('ibm_apim.subscription_wizard.step', [
+          'step' => 'chooseplan',
+          'productId' => $subscription_wizard_cookie,
+        ]);
+        user_cookie_delete('startSubscriptionWizard');
       }
       else {
-        // we can't help the user, they need to talk to an administrator
-        $form_state->setRedirect('ibm_apim.noperms');
-      }
-      // if no consumer org then return early, everything else is secondary.
-      return;
-    }
-
-    if (isset($current_user) && (int) $first_time_login !== 0 && empty($subscription_wizard_cookie)) {
-      // set first_time_login to 0 for next time
-      $current_user->set('first_time_login', 0);
-      $current_user->save();
-
-      $form_state->setRedirect('ibm_apim.get_started');
-    }
-    elseif (!empty($subscription_wizard_cookie)) {
-      // If the startSubscriptionWizard cookie is set, grab the value from it, set up a redirect and delete it
-      $form_state->setRedirect('ibm_apim.subscription_wizard.step', [
-        'step' => 'chooseplan',
-        'productId' => $subscription_wizard_cookie,
-      ]);
-      user_cookie_delete('startSubscriptionWizard');
-    }
-    else {
-      // this is for the 404 redirect from the apic_app module
-      $destination = \Drupal::request()->get('redirectto');
-      if (isset($destination) && !empty($destination)) {
-        $form_state->setRedirectUrl(Url::fromUserInput($destination));
-      }
-      else {
-        $form_state->setRedirect('<front>');
+        // this is for the 404 redirect from the apic_app module
+        $destination = \Drupal::request()->get('redirectto');
+        if (isset($destination) && !empty($destination)) {
+          $form_state->setRedirectUrl(Url::fromUserInput($destination));
+        }
+        else {
+          $form_state->setRedirect('<front>');
+        }
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

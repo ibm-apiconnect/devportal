@@ -14,23 +14,23 @@
 namespace Drupal\ibm_apim\Service;
 
 use Drupal\auth_apic\JWTToken;
-use Drupal\ibm_apim\Rest\MeResponse;
-use \Drupal\Core\Session\AccountProxyInterface;
-use \Drupal\Core\Messenger\MessengerInterface;
-use Drupal\ibm_apim\Rest\Payload\MeResponseReader;
-use Drupal\ibm_apim\Rest\Payload\TokenResponseReader;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\ApicType\Member;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\ibm_apim\ApicRest;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Rest\Exception\RestResponseParseException;
+use Drupal\ibm_apim\Rest\MeResponse;
+use Drupal\ibm_apim\Rest\Payload\MeResponseReader;
 use Drupal\ibm_apim\Rest\Payload\RestResponseReader;
+use Drupal\ibm_apim\Rest\Payload\TokenResponseReader;
 use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
+use Drupal\user\Entity\User;
 use Psr\Log\LoggerInterface;
-use \Drupal\user\Entity\User;
 
 /**
  * API Connect Management Server REST apis.
@@ -214,8 +214,8 @@ class APIMServer implements ManagementServerInterface {
     //Check if it's already refreshing
     if ($this->sessionStore->get('isRefreshing')) {
       sleep(1);
-      if ($this->sessionStore->get('isRefreshing') !== true && $this->sessionStore->get('auth') !== NULL && 
-      $this->sessionStore->get('expires_in') !== NULL && (int) $this->sessionStore->get('expires_in') > time()) {
+      if ($this->sessionStore->get('isRefreshing') !== true && $this->sessionStore->get('auth') !== NULL &&
+        $this->sessionStore->get('expires_in') !== NULL && (int) $this->sessionStore->get('expires_in') > time()) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
         return true;
       } else {
@@ -227,16 +227,16 @@ class APIMServer implements ManagementServerInterface {
     try {
       $this->sessionStore->set('isRefreshing', true);
       $success = false;
-      
+
       \Drupal::logger('ibm_apim')->notice('Refreshing token with @refresh',
-      ['@refresh' => $this->sessionStore->get('refresh')]);
+        ['@refresh' => $this->sessionStore->get('refresh')]);
 
       $refresh = $this->sessionStore->get('refresh');
       $refresh_expires_in = $this->sessionStore->get('refresh_expires_in');
 
       if (!isset($refresh) || (isset($refresh_expires_in) && (int) $refresh_expires_in < time())) {
         $this->logger->error('Invalid refresh token: @refresh expires @expiry',
-        ['@refresh' => $refresh, '@expiry' => $refresh_expires_in]);
+          ['@refresh' => $refresh, '@expiry' => $refresh_expires_in]);
         return false;
       }
 
@@ -245,12 +245,12 @@ class APIMServer implements ManagementServerInterface {
       $user_registry = $this->registryService->get($user_registry_url);
       if ($user_registry === null || empty($user_registry)) {
         $this->logger->error('Failed to find user registry with URL @regurl.',
-        ['@regurl' => $user_registry_url]);
+          ['@regurl' => $user_registry_url]);
         $this->messenger->addError(t('Unable to authorize your request. Contact the site administrator.'));
         return false;
       }
-    
-    //Generate Request Data
+
+      //Generate Request Data
       $token_request = [
         'realm' => $user_registry->getRealm(),
         'client_id' => $this->siteConfig->getClientId(),
@@ -274,7 +274,7 @@ class APIMServer implements ManagementServerInterface {
         return false;
       } elseif ((int) $response->code < 200 || (int) $response->code >= 300) {
         $this->logger->error('Refresh token request received @code response',
-        ['@code' => $response->code]);
+          ['@code' => $response->code]);
         return false;
       }
       $token_response = $this->tokenResponseReader->read($response);
@@ -301,7 +301,7 @@ class APIMServer implements ManagementServerInterface {
       if (isset($refresh_expires_in)) {
         $this->sessionStore->set('refresh_expires_in', (int) $refresh_expires_in);
       }
-      $success = true; 
+      $success = true;
     } catch (RestResponseParseException $exception) {
       $this->logger->error('RefreshAuth: failure parsing POST /token response: %message', ['%message' => $exception->getMessage()]);
       return false;
@@ -309,7 +309,7 @@ class APIMServer implements ManagementServerInterface {
       $this->sessionStore->delete('isRefreshing');
       if ($success) {
         $this->logger->notice('Successfully refreshed the token');
-      } else {  
+      } else {
         $this->sessionStore->delete('auth');
         $this->sessionStore->delete('expires_in');
         $this->sessionStore->delete('refresh');
@@ -842,6 +842,17 @@ class APIMServer implements ManagementServerInterface {
     $response = ApicRest::post($url, json_encode($requestBody, JSON_THROW_ON_ERROR));
     $response = $this->restResponseReader->read($response);
 
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $response->getCode());
+    return $response;
+  }
+
+  public function postSignOut() {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      $response = $this->restResponseReader->read(ApicRest::post('/me/sign-out', NULL));
+    }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $response->getCode());
     return $response;

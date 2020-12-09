@@ -13,10 +13,8 @@
 
 namespace Drupal\apic_app\Form;
 
-use Drupal\apic_app\Event\SubscriptionDeleteEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\apic_app\SubscriptionService;
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
@@ -40,11 +38,11 @@ class UnsubscribeForm extends ConfirmFormBase {
   protected $node;
 
   /**
-   * This represents the subscription ID
+   * This represents the subscription entity
    *
-   * @var string
+   * @var \Drupal\apic_app\Entity\ApplicationSubscription
    */
-  protected $subId;
+  protected $sub;
 
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
@@ -94,7 +92,7 @@ class UnsubscribeForm extends ConfirmFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $subId = NULL): array {
     $this->node = $appId;
-    $this->subId = Html::escape($subId);
+    $this->sub = $subId;
     $form = parent::buildForm($form, $form_state);
     $form['#attached']['library'][] = 'apic_app/basic';
 
@@ -146,35 +144,20 @@ class UnsubscribeForm extends ConfirmFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appId = $this->node->application_id->value;
-    $url = $this->node->apic_url->value . '/subscriptions/' . $this->subId;
+    $url = $this->node->apic_url->value . '/subscriptions/' . $this->sub->uuid();
     $result = $this->restService->deleteSubscription($url);
-    $productUrl = '';
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
-      $planName = '';
-      // get details of the subscription before removing it
-      $existingSubs = $this->node->application_subscription_refs->referencedEntities();
-
-      if (is_array($existingSubs)) {
-        foreach ($existingSubs as $sub) {
-          if ((string) $sub->id() === (string) $this->subId) {
-            // found the one we want
-            $productUrl = $sub->product_url();
-            $planName = $sub->plan();
-            break;
-          }
-        }
-      }
       // Find name and version of product
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product');
-      $query->condition('apic_url.value', $productUrl);
+      $query->condition('apic_url.value', $this->sub->product_url());
       $nids = $query->execute();
       if (isset($nids) && !empty($nids)) {
         $nids = array_values($nids);
       }
       if (count($nids) < 1) {
         \Drupal::logger('apic_app')->warning('Unable to find product name and version for @productUrl. Found @size matches in db.',
-          ['@productUrl' => $productUrl, '@size' => count($nids)]);
+          ['@productUrl' => $this->sub->product_url(), '@size' => count($nids)]);
         $productTitle = 'unknown';
         $theProduct = NULL;
       }
@@ -183,14 +166,14 @@ class UnsubscribeForm extends ConfirmFormBase {
         $productTitle = $theProduct->getTitle();
       }
 
-      SubscriptionService::delete($this->node->apic_url->value, $this->subId);
+      SubscriptionService::delete($this->node->apic_url->value, $this->sub->uuid());
 
       $this->messenger->addMessage(t('Application unsubscribed successfully.'));
       $currentUser = \Drupal::currentUser();
       \Drupal::logger('apic_app')->notice('Application @appName unsubscribed from @product @plan plan by @username', [
         '@appName' => $this->node->getTitle(),
         '@product' => $productTitle,
-        '@plan' => $planName,
+        '@plan' => $this->sub->plan(),
         '@username' => $currentUser->getAccountName(),
       ]);
       // Calling all modules implementing 'hook_apic_app_unsubscribe':
@@ -198,13 +181,14 @@ class UnsubscribeForm extends ConfirmFormBase {
         'node' => $this->node,
         'data' => $result->data,
         'appId' => $appId,
-        'product_url' => $productUrl,
-        'plan' => $planName,
-        'subId' => $this->subId,
+        'product_url' => $this->sub->product_url(),
+        'plan' => $this->sub->plan(),
+        'subId' => $this->sub->uuid(),
       ]);
 
     }
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

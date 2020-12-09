@@ -12,6 +12,11 @@
 
 namespace Drupal\ibm_apim\Service;
 
+use DirectoryIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RegexIterator;
+
 /**
  * Miscellaneous utility functions.
  */
@@ -262,6 +267,163 @@ class Utils {
         unlink($path); // Delete the file
       }
     }
+  }
+
+  /**
+   * List the directories under <site path>/themes
+   *
+   * @return array directory names (= custom theme names)
+   */
+  public function getCustomThemeDirectories(): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $custom_modules = [];
+    $sitePath = \Drupal::service('site.path');
+    $dir = new DirectoryIterator($sitePath . '/themes');
+    foreach ($dir as $fileinfo) {
+      if ($fileinfo->isDir() && !$fileinfo->isDot()) {
+        $custom_modules[] = $fileinfo->getFilename();
+      }
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $custom_modules);
+    return $custom_modules;
+  }
+
+  /**
+   * List the directories under <site path>/modules
+   *
+   * @return array directory names (= custom module names)
+   */
+  public function getCustomModuleDirectories(): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $custom_modules = [];
+    $sitePath = \Drupal::service('site.path');
+    $dir = new DirectoryIterator($sitePath . '/modules');
+    foreach ($dir as $fileinfo) {
+      if ($fileinfo->isDir() && !$fileinfo->isDot()) {
+        $custom_modules[] = $fileinfo->getFilename();
+      }
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $custom_modules);
+    return $custom_modules;
+  }
+
+  /**
+   * Return information about all of the modules which are eligible for deletion.
+   *
+   * Custom modules which are listed satisfy the following criteria:
+   *  - are installed in <site_dir>
+   *  - have a valid info.yml file
+   *  - are not marked as hidden in the info.yml
+   *  - don't have any enabled submodules.
+   *
+   * @return array options to pass into tableselect
+   */
+  public function getDisabledCustomModules(): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $custom_module_dirs = $this->getCustomModuleDirectories();
+
+    $uninstall_list = [];
+    $sitePath = \Drupal::service('site.path');
+    $moduleHandler = \Drupal::service('module_handler');
+
+    foreach ($custom_module_dirs as $cm) {
+      if ($moduleHandler->moduleExists($cm)) {
+        \Drupal::logger('ibm_apim')->debug('getDisabledCustomModules: %cm is enabled so not listed.', ['%cm' => $cm]);
+      }
+      else {
+
+        $info_yml = DRUPAL_ROOT . '/' . $sitePath . '/modules' . '/' . $cm . '/' . $cm . '.info.yml';
+
+        if (file_exists($info_yml) && !$this->isHidden($info_yml)) {
+
+          $submodules = $this->getSubModules($cm);
+          $enabled_submodule = FALSE;
+
+          foreach ($submodules as $sm) {
+            if ($moduleHandler->moduleExists($sm)) {
+              \Drupal::logger('ibm_apim')->info('getDisabledCustomModules: not listing %cm as sub-module %sm is still enabled', ['%cm' => $cm, '%sm' => $sm]);
+              $enabled_submodule = TRUE;
+            }
+          }
+
+          if (!$enabled_submodule) {
+            if (empty($submodules)) {
+              $info_msg = t('No sub-modules found.');
+            }
+            else {
+              $info_msg = t('The following sub-modules will also be deleted: %modules', ['%modules' => \implode(', ', $submodules)]);
+            }
+
+            $module = [
+              'module' => \yaml_parse_file($info_yml)['name'],
+              'info' => $info_msg,
+            ];
+            $uninstall_list[$cm] = $module;
+          }
+        }
+        else {
+          \Drupal::logger('ibm_apim')->debug('getDisabledCustomModules: info.yml not found or module marked as hidden for %cm.', ['%cm' => $cm]);
+        }
+
+      }
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $uninstall_list;
+
+  }
+
+  /**
+   * Check hidden property in info.yml file.
+   * TODO: honour `$settings['extension_discovery_scan_tests'] = TRUE`
+   *      (see https://www.drupal.org/docs/8/creating-custom-modules/let-drupal-8-know-about-your-module-with-an-infoyml-file)
+   *
+   * @param $info_yml - full path to info.yml
+   *
+   * @return bool is hidden?
+   */
+  public function isHidden($info_yml): bool {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $info_yml);
+    $info = \yaml_parse_file($info_yml);
+    $hidden = FALSE;
+    if (\array_key_exists('hidden', $info) && $info['hidden'] !== NULL && (boolean) $info['hidden'] === TRUE) {
+      \Drupal::logger('ibm_apim')->debug('isHidden: module marked as hidden in %info_yml', ['%info_yml' => basename($info_yml)]);
+      $hidden = TRUE;
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $hidden);
+    return $hidden;
+  }
+
+  /**
+   * Search for info.yml files in sub directories under a custom module.
+   * Exclude hidden modules from the returned list.
+   *
+   * @param string $parent custom module name.
+   *
+   * @return array
+   */
+  public function getSubModules(string $parent): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $parent);
+    $subs = [];
+    $sitePath = \Drupal::service('site.path');
+    $dir = new RecursiveDirectoryIterator($sitePath . '/modules/' . $parent);
+    $ite = new RecursiveIteratorIterator($dir);
+    $files = new RegexIterator($ite, '/^.+\.info.yml$/i', RegexIterator::GET_MATCH);
+
+    foreach ($files as $file) {
+      $info_yml_full_path = DRUPAL_ROOT . '/' . \array_shift($file);
+
+      if (!$this->isHidden($info_yml_full_path)) {
+        $info_yml = \basename($info_yml_full_path);
+        $module_name = \substr($info_yml, 0, -\strlen('.info.yml'));
+        if ($module_name !== $parent) {
+          $subs[] = $module_name;
+        }
+      }
+
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $subs);
+    return $subs;
+
   }
 
 }

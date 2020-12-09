@@ -210,8 +210,7 @@
   Drupal.ibmApimEvaluatePasswordStrength = function (password, strengthTarget) {
     password = password.trim();
     var result = false;
-    // JS validator seems stricter than PHP version so use fudge factor
-    var target = parseInt(strengthTarget) - 1;
+    var target = parseInt(strengthTarget);
     var zxcvbnResult = zxcvbn(password);
     if (zxcvbnResult.score && zxcvbnResult.score >= target) {
       result = true;

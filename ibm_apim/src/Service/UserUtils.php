@@ -212,7 +212,7 @@ class UserUtils {
 
       $current_org = $this->getCurrentConsumerorg();
       if (!isset($current_org['url'])) {
-        $this->logger->debug('there is no current organization so attempting to set one.');
+        $this->logger->debug('There is no current organization so attempting to set one.');
         // if current consumerorg not set then invoke it and try again
         $current_org = $this->setCurrentConsumerorg();
       }
@@ -227,7 +227,7 @@ class UserUtils {
           // store the current consumerorg in the session
           if (isset($consumerOrg)) {
             $org = ['url' => $consumerOrg->getUrl(), 'name' => $consumerOrg->getName()];
-            $this->logger->debug('storing current org in session: ' . serialize($org));
+            $this->logger->debug('Storing current org in session: %org', ['%org' => serialize($org)]);
             $this->sessionStore->set('current_consumer_organization', $org);
 
             // total permissions for user is all permissions of all roles that the user has
@@ -238,7 +238,7 @@ class UserUtils {
 
               foreach ($roles as $role) {
                 $permURLs = $role->getPermissions();
-                foreach($permURLs as $permission) {
+                foreach ($permURLs as $permission) {
                   if (strpos($permission, '/') > -1) {
                     $permission_name = \Drupal::service('ibm_apim.permissions')->get($permission)['name'];
                     if (empty($permission_name)) {
@@ -256,13 +256,13 @@ class UserUtils {
               $perms = array_unique($perms);
             }
             else {
-              $this->logger->warning('unable to load current user so cannot update roles and permissions');
+              $this->logger->warning('Unable to load current user so cannot update roles and permissions');
             }
-            $this->logger->debug('storing permissions in session: ' . \serialize($perms));
+            $this->logger->debug('Storing permissions in session: %perms', ['%perms' => \serialize($perms)]);
             $this->sessionStore->set('permissions', $perms);
           }
           else {
-            $this->logger->warning('no consumerorg retrieved for ' . $consumerorg_url);
+            $this->logger->warning('No consumerorg retrieved for %consumerorg_url', ['%consumerorg_url' => $consumerorg_url]);
           }
         }
       }
@@ -347,7 +347,7 @@ class UserUtils {
       if ($account !== NULL) {
         $org_urls = $account->get('consumerorg_url')->getValue();
 
-        if(!empty($org_urls)) {
+        if (!empty($org_urls)) {
           // update the consumerorg urls list set on the user object
           $this->logger->debug('updating consumerorg urls list set on the user object');
           foreach ($org_urls as $index => $valueArray) {
@@ -357,7 +357,7 @@ class UserUtils {
           }
         }
         if (!$found) {
-          $this->logger->debug('adding org to consumerorg urls list '.$orgUrl);
+          $this->logger->debug('adding org to consumerorg urls list ' . $orgUrl);
           $org_urls[] = ['value' => $orgUrl];
           $account->set('consumerorg_url', $org_urls);
           $account->save();
@@ -509,22 +509,28 @@ class UserUtils {
           $format = "Y-m-d";
           if (isset($userInputs[$customField][0]['value']) && is_array($userInputs[$customField][0]['value']) && count($userInputs[$customField][0]['value']) == 2) {
             $format = "Y-m-d\Th:i:s";
-          } 
+          }
           $value = array_column($value, 'value');
           foreach ($value as $key => $val) {
             $value[$key] = $val->format($format);
-          } 
-        } else if (isset($userInputs[$customField]) && isset($value)) {
-          $input = $userInputs[$customField];
-          //Remove unnecessary fields based on user Input
-          if (is_array($input)) {
-            foreach(array_keys($value) as $key) {
-              if (!array_key_exists($key, $input)) {
-                unset($value[$key]);
-              } else if (!empty($value[$key]) && is_array($value[$key])) {
-                foreach(array_keys($value[$key]) as $attr) {
-                  if (is_array($input[$key]) && !array_key_exists($attr, $input[$key]) || $value[$key][$attr] == 'upload') {
-                    unset($value[$key][$attr]);
+          }
+        }
+        else {
+          if (isset($userInputs[$customField]) && isset($value)) {
+            $input = $userInputs[$customField];
+            //Remove unnecessary fields based on user Input
+            if (is_array($input)) {
+              foreach (array_keys($value) as $key) {
+                if (!array_key_exists($key, $input)) {
+                  unset($value[$key]);
+                }
+                else {
+                  if (!empty($value[$key]) && is_array($value[$key])) {
+                    foreach (array_keys($value[$key]) as $attr) {
+                      if (is_array($input[$key]) && !array_key_exists($attr, $input[$key]) || $value[$key][$attr] == 'upload') {
+                        unset($value[$key][$attr]);
+                      }
+                    }
                   }
                 }
               }

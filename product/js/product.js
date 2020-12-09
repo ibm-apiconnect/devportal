@@ -118,4 +118,19 @@
 
     }
   };
+  Drupal.behaviors.embeddedNav = {
+    attach: function (context) {
+      $('.embeddedDocPagesNav .embeddedDocNavLink a').click(function() {
+        var pageName = $(this).attr('data-page');
+        // remove selected from all links first
+        $('.embeddedDocPagesNav .embeddedDocNavLink a').removeClass('selected');
+        // mark us as being selected
+        $(this).addClass('selected');
+        // hide all content pages
+        $('.mainProductContent .node__content').addClass('hidden');
+        // but then show our selected one
+        $('.mainProductContent .node__content.'+pageName).removeClass('hidden');
+      });
+    }
+  };
 })(jQuery, Drupal, drupalSettings);

@@ -14,7 +14,6 @@
 namespace Drupal\apic_app\Form;
 
 use Drupal\apic_app\Application;
-use Drupal\apic_app\Event\ApplicationUpdateEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\apic_app\Service\CertificateService;
 use Drupal\Core\Form\FormBase;
@@ -272,7 +271,7 @@ class ApplicationUpdateForm extends FormBase {
         if (isset($appData['metadata'])) {
           $metadata = $appData['metadata'];
         }
-        foreach($customFieldValues as $customField => $value) {
+        foreach ($customFieldValues as $customField => $value) {
           $metadata[$customField] = json_encode($value);
         }
         $data['metadata'] = $metadata;
@@ -283,7 +282,7 @@ class ApplicationUpdateForm extends FormBase {
         $this->node->setTitle($this->utils->truncate_string($name));
         $this->node->set('apic_summary', $summary);
         $this->node->set('application_redirect_endpoints', $oauthEndpoints);
-        foreach($customFieldValues as $customField => $value) {
+        foreach ($customFieldValues as $customField => $value) {
           $this->node->set($customField, $value);
         }
         $this->node->save();
@@ -304,4 +303,5 @@ class ApplicationUpdateForm extends FormBase {
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

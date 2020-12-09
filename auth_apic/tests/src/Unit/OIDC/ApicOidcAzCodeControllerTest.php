@@ -103,6 +103,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
     $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
     $this->oidcStateService->delete('key')->willReturn();
+    $this->store->get('redirect_to')->willReturn();
     $this->store->delete(Argument::any())->willReturn();
     $this->loginService->loginViaAzCode('601e0142-55c2-406e-98e3-10ba1fa3f2e8', 'registryUrl')->willReturn("https://correctRedirectLocation.com");
 
@@ -321,6 +322,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('redirect_uri')->willReturn('https://correctRedirectLocation.com/incorrectRoute');
     $this->query->get('realm')->willReturn('trueRealm');
     $this->query->get('response_type')->willReturn('code');
+    $this->query->get('invitation_scope')->willReturn();
+    $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
     $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
@@ -354,6 +357,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('redirect_uri')->willReturn('https://correctRedirectLocation.com/incorrectRoute');
     $this->query->get('realm')->willReturn('trueRealm');
     $this->query->get('response_type')->willReturn('code');
+    $this->query->get('invitation_scope')->willReturn();
+    $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
     $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
@@ -456,6 +461,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('redirect_uri')->willReturn('https://correctRedirectLocation.com/incorrectRoute');
     $this->query->get('realm')->willReturn('trueRealm');
     $this->query->get('response_type')->willReturn('code');
+    $this->query->get('invitation_scope')->willReturn();
+    $this->query->get('title')->willReturn();
     $this->utils->base64_url_decode('badState')->willReturn();
 
     $this->logger->error(Argument::containingString("badState"))->shouldBeCalled();
@@ -470,6 +477,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('redirect_uri')->willReturn('https://correctRedirectLocation.com/incorrectRoute');
     $this->query->get('realm')->willReturn('trueRealm');
     $this->query->get('response_type')->willReturn('code');
+    $this->query->get('invitation_scope')->willReturn();
+    $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
     $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
@@ -502,6 +511,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('redirect_uri')->willReturn('https://correctRedirectLocation.com/incorrectRoute');
     $this->query->get('realm')->willReturn('wrongRealm');
     $this->query->get('response_type')->willReturn('code');
+    $this->query->get('invitation_scope')->willReturn();
+    $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
     $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
@@ -522,6 +533,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('redirect_uri')->willReturn('https://correctRedirectLocation.com/incorrectRoute');
     $this->query->get('realm')->willReturn('trueRealm');
     $this->query->get('response_type')->willReturn('code');
+    $this->query->get('invitation_scope')->willReturn();
+    $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('wrongClientId');
     $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
@@ -542,6 +555,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('redirect_uri')->willReturn('https://correctRedirectLocation.com/badRoute');
     $this->query->get('realm')->willReturn('trueRealm');
     $this->query->get('response_type')->willReturn('code');
+    $this->query->get('invitation_scope')->willReturn();
+    $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
     $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
@@ -562,6 +577,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('redirect_uri')->willReturn('https://correctRedirectLocation.com/incorrectRoute');
     $this->query->get('realm')->willReturn('trueRealm');
     $this->query->get('response_type')->willReturn('code');
+    $this->query->get('invitation_scope')->willReturn();
+    $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
     $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
@@ -595,6 +612,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('redirect_uri')->willReturn('https://correctRedirectLocation.com/incorrectRoute');
     $this->query->get('realm')->willReturn('trueRealm');
     $this->query->get('response_type')->willReturn('code');
+    $this->query->get('invitation_scope')->willReturn();
+    $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
     $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
@@ -628,6 +647,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('redirect_uri')->willReturn('https://correctRedirectLocation.com/incorrectRoute');
     $this->query->get('realm')->willReturn('trueRealm');
     $this->query->get('response_type')->willReturn('code');
+    $this->query->get('invitation_scope')->willReturn();
+    $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
     $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');

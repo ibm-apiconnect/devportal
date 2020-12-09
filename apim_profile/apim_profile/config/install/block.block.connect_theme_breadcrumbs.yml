@@ -1,5 +1,5 @@
 langcode: en
-status: false
+status: true
 dependencies:
   module:
     - system
@@ -7,8 +7,8 @@ dependencies:
     - connect_theme
 id: connect_theme_breadcrumbs
 theme: connect_theme
-region: disabled
-weight: 0
+region: content
+weight: 4
 provider: null
 plugin: system_breadcrumb_block
 settings:
@@ -19,6 +19,6 @@ settings:
 visibility:
   request_path:
     id: request_path
-    pages: '<front>'
-    negate: true
+    pages: '/forum*'
+    negate: false
     context_mapping: {  }

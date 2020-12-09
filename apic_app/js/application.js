@@ -45,7 +45,7 @@
         $(this).addClass("selected");
         // update client ID value
         $.each(drupalSettings.application.credentials, function (index, item) {
-          if (item.id == credid) {
+          if (item.uuid === credid) {
             client_id = item['client_id'];
             // only display summary if its different to title
             if (item['summary'] !== item['title']) {
@@ -54,6 +54,7 @@
           }
         });
         clientIDField.val(client_id);
+        $('#hiddenClientIDInput').text(client_id);
         // update links
         updateLinkTarget('.applicationCredentials .credentialsTable .credentialsActionsManage .editCredentials', credid);
         updateLinkTarget('.applicationCredentials .credentialsTable .credentialsActionsManage .resetClientID', credid);

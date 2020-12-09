@@ -141,6 +141,30 @@ Feature: Sign-up
 
   Scenario: View the sign up form with an oidc registry
     Given I am not logged in
+    # Enabled is the default but set it again to make sure
+    And ibm_apim settings config boolean property "enable_oidc_register_form" value is "true"
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | oidc | @data(user_registries[3].title)   | @data(user_registries[3].url)     | no           | yes     |
+    When I am at "/user/register"
+    Then I should see the text "Sign up with @data(user_registries[3].title)"
+    And I should see the "Sign up" button
+    And I should see the text "Consumer organization"
+    And I should not see a link with href including "/consumer-api/oauth2/authorize"
+    And I should not see the text "First Name"
+    And I should not see the text "Last Name"
+    And I should not see the text "Email address"
+    And I should not see the text "Confirm password"
+    And I should not see the text "Select a different registry"
+    And I should see the text "Already have an account?"
+    And I should see the link "Sign in"
+    And there are no errors
+    And there are no warnings
+    And there are no messages
+
+  Scenario: View the sign up form with an oidc registry with oidc form disabled
+    Given I am not logged in
+    And ibm_apim settings config boolean property "enable_oidc_register_form" value is "false"
     Given userregistries:
       | type | title                             | url                               | user_managed | default |
       | oidc | @data(user_registries[3].title)   | @data(user_registries[3].url)     | no           | yes     |
@@ -207,6 +231,7 @@ Feature: Sign-up
 
   Scenario: Sign up form with oidc registry as default
     Given I am not logged in
+    And ibm_apim settings config boolean property "enable_oidc_register_form" value is "false"
     Given userregistries:
       | type | title                             | url                               | user_managed | default |
       | oidc | @data(user_registries[3].title)   | @data(user_registries[3].url)     | no           | yes     |

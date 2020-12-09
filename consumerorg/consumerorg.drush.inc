@@ -614,7 +614,7 @@ function drush_consumerorg_member_update($payload, $event = 'member_update') {
   // first - do we have the corg that this member is being updated in?
   $corg_url = $payload['consumer_org_url'];
   $corg = $corg_service->get($corg_url, 1);
-
+  
   if (empty($corg)) {
     drush_log(dt('Drush member-update could not find org with url @org_url', ['@org_url' => $corg_url]), 'warning');
   }
@@ -626,11 +626,12 @@ function drush_consumerorg_member_update($payload, $event = 'member_update') {
   }
   else {
     $members = $corg->getMembers();
-    if ($members !== NULL && !empty($members)) {
+    if ($members !== NULL && !empty($members)) {      
       foreach ($members as $key => $existingMember) {
         if ($existingMember->getUserUrl() === $payload['user_url']) {
           $members[$key]->setRoleUrls($payload['role_urls']);
           $members[$key]->setState($payload['state']);
+          $members[$key]->setUser($user_service->getUserFromJSON($payload['user']));
         }
       }
       $corg->setMembers($members);

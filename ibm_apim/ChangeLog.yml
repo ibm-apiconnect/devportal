@@ -1,4 +1,65 @@
 changes:
+  8.x-2.3.30: null
+  8.x-2.3.29: null
+  8.x-2.3.28:
+  - try and get the tests to pass
+  8.x-2.3.27:
+  - Mock update returns user
+  8.x-2.3.26:
+  - Handle redirect on logout (#622)
+  8.x-2.3.25: null
+  8.x-2.3.24:
+  - Return the user (#620)
+  8.x-2.3.23:
+  - Don't set name to null or empty (#617) (#618)
+  8.x-2.3.22:
+  - alignment and spacing in billing tab
+  - use alert template for stripe error msg (#616)
+  8.x-2.3.21:
+  - use an actual error
+  8.x-2.3.20: null
+  8.x-2.3.19:
+  - add cancel button
+  - rename Previous to be "Back"
+  8.x-2.3.18:
+  - missing import
+  8.x-2.3.17:
+  - remove fudge factor
+  8.x-2.3.16:
+  - add ability to disable swagger validation
+  8.x-2.3.15:
+  - Fixed sign out loop bug (#614)
+  8.x-2.3.14: null
+  8.x-2.3.13:
+  - add new drush command to update block translations
+  8.x-2.3.12:
+  - warnings from invalid messages - not translatable
+  8.x-2.3.11:
+  - need to get the explicit string back
+  - More stripe (#612)
+  - Removed credentials webhook code (#611)
+  8.x-2.3.10:
+  - Add configuration fields to stripe form (#610)
+  8.x-2.3.9:
+  - update usage help
+  8.x-2.3.8:
+  - need to check if the table exists for paymentmethods
+  8.x-2.3.7:
+  - Options to enable forms for oidc flows (#606) (#608)
+  8.x-2.3.6:
+  - more missing translations for config
+  8.x-2.3.5:
+  - stop deletion of activated themes
+  - fix module check
+  8.x-2.3.4: null
+  8.x-2.3.3:
+  - ensure master and 10.0.1 are in sync
+  - fix mock
+  8.x-2.3.2:
+  - remove duplicate function - merge issue
+  8.x-2.3.1: null
+  8.x-2.3.0:
+  - update version: 8.x-2.2.77 -> 8.x-2.3.0
   8.x-2.2.76:
   - fix path to file
   8.x-2.2.75:

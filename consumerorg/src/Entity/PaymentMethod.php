@@ -43,9 +43,16 @@ class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface 
   /**
    * Drupal entity ID
    *
-   * @var string
+   * @var int
    */
   protected $id;
+
+  /**
+   * APIM UUID
+   *
+   * @var string
+   */
+  protected $uuid;
 
   /**
    * The payment method title
@@ -92,6 +99,13 @@ class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface 
   /**
    * {@inheritdoc}
    */
+  public function uuid() {
+    return $this->uuid;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function title() {
     return $this->title;
   }
@@ -127,6 +141,7 @@ class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface 
   public function toArray(): array {
     return [
       'id' => $this->id,
+      'uuid' => $this->uuid,
       'title' => $this->title,
       'configuration' => $this->configuration,
       'consumerorg_url' => $this->consumerorg_url,
@@ -142,9 +157,15 @@ class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface 
     $fields = [];
 
     // Standard field, used as unique if primary index.
-    $fields['id'] = BaseFieldDefinition::create('string')
+    $fields['id'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('ID'))
       ->setDescription(t('The ID of the Payment Method entity.'))
+      ->setSetting('unsigned', TRUE)
+      ->setReadOnly(TRUE);
+
+    $fields['uuid'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('UUID'))
+      ->setDescription(t('The UUID of the Payment Method entity.'))
       ->setReadOnly(TRUE);
 
     $fields['title'] = BaseFieldDefinition::create('string')

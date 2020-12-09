@@ -25,7 +25,7 @@ use Drupal\Core\Url;
 use Drupal\ibm_apim\Exception\ModuleInstallationBlocked;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-
+use Drupal\Core\Routing\TrustedRedirectResponse;
 
 /**
  * Implementation of hook_init().
@@ -1357,5 +1357,24 @@ function ibm_apim_entity_base_field_info(EntityTypeInterface $entity_type) {
       ->setLabel(t('APIC User Registry URL'));
 
     return $fields;
+  }
+}
+
+function ibm_apim_user_logout($account) {
+  if ((int)$account->id() !== 1) {
+    $user = User::load($account->id());
+    if ($user !== NULL) {
+      $registry_url = $user->get('registry_url')->value;
+      \Drupal::service('ibm_apim.user_registry')->get($registry_url);
+      $response = \Drupal::service('ibm_apim.mgmtserver')->postSignOut();
+
+      if ($response->getCode() === 302) {
+        $headers = $response->getHeaders();
+        $headers = array_change_key_case($headers, CASE_LOWER);
+        $redirect = new TrustedRedirectResponse($headers['location']);    
+        $redirect->send();
+      }
+    }
+    
   }
 }

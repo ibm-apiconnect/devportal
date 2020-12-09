@@ -13,11 +13,8 @@
 
 namespace Drupal\apic_app\Form;
 
-use Drupal\apic_app\Entity\ApplicationCredentials;
-use Drupal\apic_app\Event\CredentialDeleteEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\apic_app\Service\CredentialsService;
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
@@ -59,13 +56,12 @@ class CredentialsDeleteForm extends ConfirmFormBase {
    */
   protected $credsService;
 
-
   /**
-   * This represents the credential ID
+   * This represents the credential object
    *
-   * @var string
+   * @var \Drupal\apic_app\Entity\ApplicationCredentials
    */
-  protected $credId;
+  protected $cred;
 
   /**
    * CredentialsDeleteForm constructor.
@@ -105,7 +101,8 @@ class CredentialsDeleteForm extends ConfirmFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL): array {
     $this->node = $appId;
-    $this->credId = Html::escape($credId);
+    $this->cred = $credId;
+
     $form = parent::buildForm($form, $form_state);
     $form['#attached']['library'][] = 'apic_app/basic';
 
@@ -132,14 +129,11 @@ class CredentialsDeleteForm extends ConfirmFormBase {
    */
   public function getQuestion(): TranslatableMarkup {
     $question = $this->t('Delete credentials for %title?', ['%title' => $this->node->title->value]);
-    $query = \Drupal::entityQuery('apic_app_application_creds');
-    $query->condition('id', $this->credId);
-    $entityIds = $query->execute();
-    if (isset($entityIds) && !empty($entityIds)) {
-      $cred = ApplicationCredentials::load(array_pop($entityIds));
-      if (isset($cred)) {
-        $question =  $this->t('Delete credentials %credentials for %title?', ['%credentials' => $cred->name(),'%title' => $this->node->title->value]);
-      }
+    if (isset($this->cred)) {
+      $question = $this->t('Delete credentials %credentials for %title?', [
+        '%credentials' => $this->cred->name(),
+        '%title' => $this->node->title->value,
+      ]);
     }
     return $question;
   }
@@ -164,18 +158,18 @@ class CredentialsDeleteForm extends ConfirmFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appUrl = $this->node->apic_url->value;
-    $url = $appUrl . '/credentials/' . $this->credId;
+    $url = $appUrl . '/credentials/' . $this->cred->uuid();
     $result = $this->restService->deleteCredentials($url);
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       // update the stored app
-      $this->node = $this->credsService->deleteCredentials($this->node, $this->credId);
+      $this->node = $this->credsService->deleteCredentials($this->node, $this->cred->uuid());
 
       // Calling all modules implementing 'hook_apic_app_creds_delete':
       $moduleHandler = \Drupal::moduleHandler();
       $moduleHandler->invokeAll('apic_app_creds_delete', [
         'node' => $this->node,
         'data' => $result->data,
-        'credId' => $this->credId,
+        'credId' => $this->cred->uuid(),
       ]);
 
       $this->messenger->addMessage($this->t('Credentials deleted successfully.'));
@@ -185,7 +179,14 @@ class CredentialsDeleteForm extends ConfirmFormBase {
         '@username' => $currentUser->getAccountName(),
       ]);
     }
+    else {
+      $this->messenger->addError($this->t('Failed to delete credentials.'));
+      \Drupal::logger('apic_app')->notice('Received @code when trying to delete credential.', [
+        '@code' => $result->code,
+      ]);
+    }
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

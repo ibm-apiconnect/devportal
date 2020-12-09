@@ -77,13 +77,13 @@ class ApicModuleService implements ApicModuleInterface {
     $error_found = FALSE;
     foreach ($modules as $module) {
       $path = \DRUPAL_ROOT . '/' . $this->sitePath . '/modules/' . $module;
-      $this->logger->debug(__FUNCTION__ . ': checking existence of %path', ['%path' => $path]);
+      $this->logger->debug('%function: Checking existence of %path', ['%function' => __FUNCTION__, '%path' => $path]);
       if (is_dir($path)) {
-        $this->logger->debug(__FUNCTION__ . ': %path found and will be deleted.', ['%path' => $path]);
+        $this->logger->debug('%function: %path found and will be deleted.', ['%function' => __FUNCTION__, '%path' => $path]);
         $paths[] = $path;
       }
       elseif ($fail_on_no_deletion) {
-        $this->logger->error(__FUNCTION__ . ': %path is not found.', ['%path' => $path]);
+        $this->logger->error('%function: %path is not found.', ['%function' => __FUNCTION__, '%path' => $path]);
         $error_found = TRUE;
       }
     }
@@ -94,18 +94,18 @@ class ApicModuleService implements ApicModuleInterface {
     }
     elseif (!empty($paths)) {
       foreach ($paths as $path) {
-        $this->logger->debug(__FUNCTION__ . ': recursively deleting %path', ['%path' => $path]);
+        $this->logger->debug('%function: Recursively deleting %path', ['%function' => __FUNCTION__, '%path' => $path]);
         $this->utils->file_delete_recursive($path);
       }
       $return = TRUE;
     }
     else { // nothing found to delete
       if ($fail_on_no_deletion) {
-        $this->logger->error(__FUNCTION__ . ': Empty list of paths to delete.');
+        $this->logger->error('%function: Empty list of paths to delete.', ['%function' => __FUNCTION__]);
         $return = FALSE;
       }
       else {
-        $this->logger->debug(__FUNCTION__ . ': Nothing deleted.');
+        $this->logger->debug('%function: Nothing deleted.', ['%function' => __FUNCTION__]);
         $return = TRUE;
       }
     }
@@ -128,23 +128,23 @@ class ApicModuleService implements ApicModuleInterface {
     foreach ($block_list as $module) {
       // moduleExists returns TRUE if the module is enabled.
       if ($this->moduleHandler->moduleExists($module)) {
-        $this->logger->notice('Blocklisted module ' . $module . ' found. Forcing uninstall.');
+        $this->logger->notice('Blocklisted module %module found. Forcing uninstall.', ['%module' => $module]);
         // uninstalling module but not dependencies.
         try {
           $this->moduleInstaller->uninstall([$module], FALSE);
         }
         catch(\Throwable $e) {
-          $this->logger->warning('Exception while deleting blocklist module: ' . $module);
-          $this->logger->debug($module . ' uninstall exception message : ' . $e->getMessage());
+          $this->logger->warning('Exception while deleting blocklist module: %module', ['%module' => $module]);
+          $this->logger->debug('%module uninstall exception message : %message', ['%module' => $module, '%message'=> $e->getMessage()]);
           $uninstall_success = FALSE;
           // don't stop processing because uninstall of one module has failed.
         }
         finally {
-          $this->logger->notice('Blocklisted module ' . $module . ': forced uninstall complete.');
+          $this->logger->notice('Blocklisted module %module: forced uninstall complete.', ['%module' => $module]);
         }
       }
       else {
-        $this->logger->debug('Blocklisted module ' . $module . ' not found.');
+        $this->logger->debug('Blocklisted module %module not found.', ['%module' => $module]);
       }
     }
 

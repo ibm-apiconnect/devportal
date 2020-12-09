@@ -1,4 +1,22 @@
 changes:
+  8.x-2.3.7:
+  - default breadcrumb padding
+  - smarten up overflow menu
+  - fix new app tile hover in sub wizard
+  - support [disabled]
+  8.x-2.3.6:
+  - ensure the buttons are at the bottom even with no apps
+  8.x-2.3.5:
+  - need to wrap text for longer langs
+  8.x-2.3.4:
+  - change focus offset
+  8.x-2.3.3:
+  - dont make section headings links
+  8.x-2.3.2:
+  - Styling for embedded docs in products
+  8.x-2.3.1: null
+  8.x-2.3.0:
+  - update version: 8.x-2.2.83 -> 8.x-2.3.0
   8.x-2.2.82:
   - add height restriction to apicCard
   8.x-2.2.81:
@@ -184,13 +202,6 @@ changes:
   8.x-2.0.16: null
   8.x-2.0.15:
   - fix page template twig
-  8.x-3.0.4:
-  - a11y fix
-  8.x-3.0.3:
-  - fix missing id on title
-  8.x-3.0.2:
-  - padding for create button in wizard
-  8.x-3.0.1: null
   8.x-2.0.11:
   - copyright date
   8.x-2.0.10:

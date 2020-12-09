@@ -52,7 +52,7 @@ class SubscribeSummary extends IbmWizardStepBase {
       $referer = \Drupal::service('tempstore.private')->get('ibm_apim')->get('subscription_wizard_referer', NULL);
       \Drupal::service('tempstore.private')->get('ibm_apim')->set('subscription_wizard_referer', NULL);
 
-      if ((int) $result->code === 201) {
+      if (isset($result) && (int) $result->code === 201) {
         // For all data we want to display, just pass the data to the twig template which then handles how it gets rendered.
         if ($result->data['state'] !== 'enabled') {
           $form['#messages']['statusText'] = t('Your subscription request has been created and is now pending approval. You will receive an email once your subscription request is approved.');

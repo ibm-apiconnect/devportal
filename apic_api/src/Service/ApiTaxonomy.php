@@ -15,6 +15,7 @@ namespace Drupal\apic_api\Service;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Mail\MailFormatHelper;
 use Drupal\ibm_apim\Service\ApicTaxonomy;
 use Drupal\taxonomy\Entity\Term;
 
@@ -188,6 +189,14 @@ class ApiTaxonomy {
 
           // trim description
           if ($apiDescription !== NULL) {
+            $moduleHandler = \Drupal::service('module_handler');
+            if ($moduleHandler->moduleExists('ghmarkdown')) {
+              // convert markdown to html
+              $parser = new \Drupal\ghmarkdown\cebe\markdown\GithubMarkdown();
+              $apiDescription = $parser->parse($apiDescription);
+            }
+            // convert html to plaintext
+            $apiDescription = MailFormatHelper::htmlToText($apiDescription);
             $apiDescription = Unicode::truncate($apiDescription, 360, TRUE, TRUE, 4);
           }
 

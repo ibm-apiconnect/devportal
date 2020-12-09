@@ -521,30 +521,34 @@ function product_preprocess_node(&$variables) {
         $billing = FALSE;
         $billingEnabled = (boolean) \Drupal::service('ibm_apim.billing')->isEnabled();
         if ($productPlans !== NULL && is_array($productPlans) && count($productPlans) > 0) {
+          $productData = yaml_parse($variables['node']->product_data->value);
           foreach ($productPlans as $plan) {
-            $planId = $variables['node']->apic_url->value . ':' . $plan['name'];
-            $planArray[$planId] = $planService->process($planId, $plan, $apiList, $apiRefs);
-            if (isset($plan['deploymentState'])) {
-              $planArray[$planId]['deploymentState'] = $plan['deploymentState'];
+            // check the plan name is actually set - this can be missing if it only consisted of DBCS chars in apim
+            // its not valid though and there is an apim bug to get it fixed. We cannot continue without a plan name though!
+            if ($plan['name'] !== null && !empty(trim($plan['name']))) {
+              $planId = $variables['node']->apic_url->value . ':' . $plan['name'];
+              $planArray[$planId] = $planService->process($planId, $plan, $apiList, $apiRefs, $productData);
+              if (isset($plan['deploymentState'])) {
+                $planArray[$planId]['deploymentState'] = $plan['deploymentState'];
+              }
+              if (isset($plan['supersedes'])) {
+                $planArray[$planId]['supersedes'] = $plan['supersedes'];
+              }
+              if (isset($plan['superseded-by'])) {
+                $planArray[$planId]['superseded-by'] = $plan['superseded-by'];
+              }
+              if ($billingEnabled && isset($plan['billing'])) {
+                // billing enabled and plans with billing info, so enable display of prices for this product
+                $billing = TRUE;
+              }
+              if ($billingEnabled) {
+                // get price
+                $parseValue = $plan['billing'] ?? [];
+                $planArray[$planId]['billing-info'] = $planService->parseBilling($parseValue);
+              }
             }
-            if (isset($plan['supersedes'])) {
-              $planArray[$planId]['supersedes'] = $plan['supersedes'];
-            }
-            if (isset($plan['superseded-by'])) {
-              $planArray[$planId]['superseded-by'] = $plan['superseded-by'];
-            }
-            $approveStr = 'false';
-            if (isset($plan['approval']) && (boolean) $plan['approval'] === TRUE) {
-              $approveStr = 'true';
-            }
-            if ($billingEnabled && isset($plan['billing'])) {
-              // billing enabled and plans with billing info, so enable display of prices for this product
-              $billing = TRUE;
-            }
-            if ($billingEnabled) {
-              // get price
-              $parseValue = $plan['billing'] ?? [];
-              $planArray[$planId]['billing-info'] = $planService->parseBilling($parseValue);
+            else {
+              \Drupal::messenger()->addError(t('Invalid plan found with empty plan name. Contact your system administrator'));
             }
           } // end for
         }
@@ -561,8 +565,25 @@ function product_preprocess_node(&$variables) {
         $docPages = Product::getLinkedPages($variables['node']->id());
         $variables['docpages'] = $docPages;
         $variables['#attached']['library'][] = 'apic_app/subscribe';
+        $moduleHandler = \Drupal::service('module_handler');
+        // this is needed for the fontawesome symbols in the plan table
+        if ($moduleHandler->moduleExists('social_media_links')) {
+          $variables['#attached']['library'][] = 'social_media_links/fontawesome.component';
+        }
       }
     }
+
+    // embedded docs
+    if ($variables['view_mode'] === 'full') {
+      $customDocs = [];
+      $productData = yaml_parse($variables['node']->product_data->value);
+      if (isset($productData['x-embedded-doc']) && is_array($productData['x-embedded-doc']) && !empty($productData['x-embedded-doc'])) {
+        $variables['embedded_docs'] = Product::processEmbeddedDocs($productData['x-embedded-doc']);
+        $customDocs = $productData['x-embedded-doc'];
+      }
+      $variables['initial_embeddeddoc'] = Product::findInitialEmbeddedDoc($customDocs);
+    }
+
     // custom fields
     $view_mode = $variables['view_mode'];
     if ($view_mode === 'full') {

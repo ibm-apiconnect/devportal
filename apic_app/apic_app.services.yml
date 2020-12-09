@@ -3,6 +3,14 @@ services:
     class: Drupal\apic_app\ParamConverter\AppIdParamConverter
     tags:
       - { name: paramconverter }
+  apic_app.credid_converter:
+    class: Drupal\apic_app\ParamConverter\CredUuidParamConverter
+    tags:
+      - { name: paramconverter }
+  apic_app.subid_converter:
+    class: Drupal\apic_app\ParamConverter\SubUuidParamConverter
+    tags:
+      - { name: paramconverter }
   apic_app.access_checker:
     class: Drupal\apic_app\Access\ApplicationAccessCheck
     arguments: ['@apic_app.appid_converter']

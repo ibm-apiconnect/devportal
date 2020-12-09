@@ -18,8 +18,8 @@
 
 use Drupal\auth_apic\Form\ApicUserProfileForm;
 use Drupal\auth_apic\Form\ApicUserRegisterForm;
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\user\Entity\User;
 
 /**
  * Implements hook_form_alter().
@@ -125,6 +125,30 @@ function auth_apic_menu_local_tasks_alter(&$data, $route_name) {
 
     if (($currentUserId !== $form_for_user) || ($currentUserId !== 1 && $ro === TRUE)) {
       unset($data['tabs'][0]['change_pwd_page.change_password_form']);
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_menu().
+ *
+ * @param $variables
+ */
+function auth_apic_preprocess_menu(&$variables) {
+  if (isset($variables['menu_name']) && $variables['menu_name'] === 'account' && array_key_exists('change_pwd_page.change_password', $variables['items'])) {
+    $currentUser = \Drupal::currentUser();
+    if (!$currentUser->isAnonymous() && $currentUser->id() !== 1) {
+      $currentUser = User::load($currentUser->id());
+      $registryUrl = $currentUser->get('registry_url')->value;
+      if ($registryUrl !== NULL && $registryUrl !== '/admin') {
+        $registry = \Drupal::service('ibm_apim.user_registry')->get($registryUrl);
+        if ($registry !== NULL) {
+          $ro = !$registry->isUserManaged();
+          if ($ro === TRUE) {
+            unset($variables['items']['change_pwd_page.change_password']);
+          }
+        }
+      }
     }
   }
 }

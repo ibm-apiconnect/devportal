@@ -1,4 +1,36 @@
 changes:
+  8.x-2.3.17:
+  - float not int
+  8.x-2.3.16:
+  - get rid of warning
+  8.x-2.3.15:
+  - missing upgrade function maybe?
+  8.x-2.3.14:
+  - logic failure
+  8.x-2.3.13:
+  - Translate custom strings in our views too
+  8.x-2.3.12: null
+  8.x-2.3.11:
+  - delete retired apis if deleting a product too
+  8.x-2.3.10:
+  - plan table header alignment
+  8.x-2.3.9:
+  - fix product handling of plans
+  8.x-2.3.8:
+  - fix multiple rate limits
+  8.x-2.3.7:
+  - do not show invalid plans
+  8.x-2.3.6: null
+  8.x-2.3.5:
+  - dont make section headings links
+  8.x-2.3.4:
+  - Styling for embedded docs in products
+  8.x-2.3.3:
+  - Support embedded docs in products
+  8.x-2.3.2: null
+  8.x-2.3.1: null
+  8.x-2.3.0:
+  - update version: 8.x-2.2.25 -> 8.x-2.3.0
   8.x-2.2.24:
   - fix multiple rate limit text
   8.x-2.2.23:

@@ -121,7 +121,7 @@
         overflow: hidden;
         color: #161616;
         line-height: 1.45;
-        white-space: nowrap;
+        white-space: normal;
         text-overflow: ellipsis;
         transition: box-shadow 110ms cubic-bezier(0.2, 0, 0.38, 0.9),color 110ms cubic-bezier(0.2, 0, 0.38, 0.9);
       }
@@ -225,6 +225,7 @@
     .apicNewAppsList {
       display: flex;
       flex-wrap: wrap;
+      min-height: 260px;
       .apicSubAppCard {
         margin: 1px;
         padding: 0;
@@ -299,8 +300,9 @@
   &:hover{
     background-color: $hover-ui;
     border-color: $hover-ui;
+    color: $brand-primary;
     &:before {
-      @include add_icon($text_04);
+      @include add_icon($brand-primary);
     }
   }
   &:active{
@@ -324,7 +326,6 @@
       width: 27rem;
       input {
         width: calc( 100% - 44px );
-        opacity:0.9;
         border: unset;
       }
     }

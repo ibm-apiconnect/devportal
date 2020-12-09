@@ -36,7 +36,8 @@ services:
                 '@logger.channel.ibm_apim',
                 '@ibm_apim.utils',
                 '@ibm_apim.apim_utils',
-                '@auth_apic.oidc_state']
+                '@auth_apic.oidc_state',
+                '@module_handler']
   auth_apic.usermanaged_signup:
     class: Drupal\auth_apic\UserManagement\UserManagedSignUp
     arguments: ['@ibm_apim.mgmtserver',
@@ -59,7 +60,10 @@ services:
                 '@current_user',
                 '@entity_type.manager',
                 '@consumerorg.login',
-                '@ibm_apim.apicuser'
+                '@ibm_apim.apicuser',
+                '@module_handler',
+                '@ibm_apim.user_registry',
+                '@ibm_apim.utils'
                 ]
   auth_apic.activation:
     class: Drupal\auth_apic\UserManagement\ApicActivationService

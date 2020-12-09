@@ -16,6 +16,9 @@ settings:
     -
       value: 3
       label: 'Open API v3'
+    -
+      value: asyncapi2
+      label: 'Async API v2'
   allowed_values_function: ''
 module: options
 locked: false

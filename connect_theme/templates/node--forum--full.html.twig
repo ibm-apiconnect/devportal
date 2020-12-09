@@ -74,27 +74,28 @@
 #}
 <div class="forumWrapper">
   <div class="forumContent">
-    <article{{ attributes }}>
-
-      {{ title_prefix }}
-      {% if label and not page %}
-        <h2{{ title_attributes }}>
-          <a href="{{ url }}" rel="bookmark">{{ label }}</a>
-        </h2>
-      {% endif %}
-      {{ title_suffix }}
+    <article{{ attributes.addClass('forumPost') }}>
 
       {% if display_submitted %}
         <footer>
-          {{ author_picture }}
-          <div{{ author_attributes.addClass('submittedOn') }}>
+          <div class="leftContent">
+            {{ author_picture }}
+            {{ title_prefix }}
+            {% if label %}
+              <h2{{ title_attributes }}>
+                {{ label }}
+              </h2>
+            {% endif %}
+            {{ title_suffix }}
+          </div>
+          <div{{ author_attributes.addClass(['submittedOn', 'submitted']) }}>
             {% trans %}Submitted by {{ author_name }} on {{ date }}{% endtrans %}
             {{ metadata }}
           </div>
         </footer>
       {% endif %}
 
-      <div{{ content_attributes }}>
+      <div{{ content_attributes.addClass('content') }}>
         {{ content }}
       </div>
 

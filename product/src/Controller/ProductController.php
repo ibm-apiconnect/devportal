@@ -256,7 +256,7 @@ class ProductController extends ControllerBase {
         // if only one product found then just load it and redirect
         if (count($nodes) === 1) {
           $firstNode = reset($nodes);
-          $path = Url::fromRoute('product.api', ['prodNode' => $firstNode, 'apiNode' => $apiNode->id()])
+          $path = Url::fromRoute('product.api', ['prodNode' => $firstNode->id(), 'apiNode' => $apiNode->id()])
             ->setAbsolute()
             ->toString();
           $response = new RedirectResponse($path);

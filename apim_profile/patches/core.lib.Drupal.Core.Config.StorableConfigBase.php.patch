@@ -1,0 +1,17 @@
+--- core/lib/Drupal/Core/Config/StorableConfigBase.php	2020-11-19 11:45:29.000000000 +0000
++++ core/lib/Drupal/Core/Config/StorableConfigBase.php	2020-11-19 13:06:59.000000000 +0000
+@@ -176,7 +176,13 @@
+    *   If the value is unsupported in configuration.
+    */
+   protected function castValue($key, $value) {
+-    $element = $this->getSchemaWrapper()->get($key);
++    // APIC change to avoid exploding when saving a view
++    $schemaWrapper = $this->getSchemaWrapper();
++    if (method_exists($schemaWrapper, 'get')) {
++      $element = $schemaWrapper->get($key);
++    } else {
++      $element = $this->get($key);
++    }
+     // Do not cast value if it is unknown or defined to be ignored.
+     if ($element && ($element instanceof Undefined || $element instanceof Ignore)) {
+       // Do validate the value (may throw UnsupportedDataTypeConfigException)

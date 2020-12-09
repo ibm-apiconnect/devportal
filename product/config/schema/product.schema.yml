@@ -134,3 +134,62 @@ field.field.node.product.product_visibility_public:
   type: ibm_apim_config_object
   label: 'Public visibility'
 
+views.view.products:
+  type: string
+  label: 'Products'
+
+views.view.products.display.default.display_options.exposed_form.options:
+  type: string
+  text_input_required: 'Select any filter and click on Apply to see results'
+
+views.view.products.display.default.display_options.exposed_form.options.bef.sort.advanced:
+  type: string
+  collapsible_label: 'Sort options'
+
+views.view.products.display.default.display_options.exposed_form.options.bef.general:
+  type: string
+  secondary_label: 'Advanced options'
+
+views.view.products.display.default.display_options.filters.title.expose:
+  type: string
+  label: 'Name'
+
+views.view.products.display.default.display_options.filters.term_node_tid_depth.expose:
+  type: string
+  label: 'Category'
+
+views.view.products.display.default.display_options.sorts.title.expose:
+  type: string
+  label: 'Name'
+
+views.view.products.display.default.display_options.sorts.apic_version_value.expose:
+  type: string
+  label: 'Version'
+
+views.view.products.display.default.display_options.sorts.apic_rating_status.expose:
+  type: string
+  label: 'Rating'
+
+views.view.products.display.default.display_options.sorts.created.expose:
+  type: string
+  label: 'Created'
+
+views.view.products.display.default.display_options.sorts.changed.expose:
+  type: string
+  label: 'Changed'
+
+views.view.products.display.default.display_options:
+  type: string
+  title: 'Products'
+
+views.view.products.display.block_1.display_options:
+  type: string
+  title: 'Product List'
+
+views.view.products.display.block_1.display_options.sorts.title.expose:
+  type: string
+  label: 'Name'
+
+views.view.products.display.page_1.display:
+  type: string
+  title: 'Page'

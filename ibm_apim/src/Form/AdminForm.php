@@ -121,6 +121,14 @@ class AdminForm extends ConfigFormBase {
       '#description' => t('If unchecked then interactive testing of APIs will be disabled.'),
     ];
 
+    $form['config']['validate_apis'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Validate API documents'),
+      '#default_value' => $config->get('validate_apis'),
+      '#weight' => -11,
+      '#description' => t('If unchecked then the built in validation of API documents will be disabled.'),
+    ];
+
     $form['config']['autotag_with_phase'] = [
       '#type' => 'checkbox',
       '#title' => t('Automatically tag APIs with their phase'),
@@ -194,7 +202,20 @@ class AdminForm extends ConfigFormBase {
                            The login form for admin can be found at
                            :url', [':url' => Url::fromRoute('user.login', [], ['query' => ['registry_url' => '/admin']])->toString()]),
     ];
-
+    $form['config']['enable_oidc_register_form'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Enable the OIDC register form.'),
+      '#default_value' => $config->get('enable_oidc_register_form'),
+      '#weight' => -1,
+      '#description' => t('If checked then users will be redirected to a form before being sent to the OIDC provider when registering with OIDC.'),
+    ];
+    $form['config']['enable_oidc_login_form'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Enable the OIDC login form.'),
+      '#default_value' => $config->get('enable_oidc_login_form'),
+      '#weight' => -1,
+      '#description' => t('If checked then users will be redirected to a form before being sent to the OIDC provider when logging in with OIDC.'),
+    ];
     // code snippets options
     $form['categories'] = [
       '#type' => 'fieldset',
@@ -511,6 +532,7 @@ class AdminForm extends ConfigFormBase {
       ->set('show_register_app', (bool) $form_state->getValue('show_register_app'))
       ->set('show_versions', (bool) $form_state->getValue('show_versions'))
       ->set('enable_api_test', (bool) $form_state->getValue('enable_api_test'))
+      ->set('validate_apis', (bool) $form_state->getValue('validate_apis'))
       ->set('autotag_with_phase', (bool) $form_state->getValue('autotag_with_phase'))
       ->set('show_cors_warnings', (bool) $form_state->getValue('show_cors_warnings'))
       ->set('show_analytics', (bool) $form_state->getValue('show_analytics'))
@@ -524,6 +546,8 @@ class AdminForm extends ConfigFormBase {
       ->set('allow_consumerorg_rename', (bool) $form_state->getValue('allow_consumerorg_rename'))
       ->set('allow_consumerorg_change_owner', (bool) $form_state->getValue('allow_consumerorg_change_owner'))
       ->set('allow_consumerorg_delete', (bool) $form_state->getValue('allow_consumerorg_delete'))
+      ->set('enable_oidc_register_form', (bool) $form_state->getValue('enable_oidc_register_form'))
+      ->set('enable_oidc_login_form', (bool) $form_state->getValue('enable_oidc_login_form'))
       ->set('allow_user_delete', (bool) $form_state->getValue('allow_user_delete'))
       ->set('allow_new_credentials', (bool) $form_state->getValue('allow_new_credentials'))
       ->set('allow_clientid_reset', (bool) $form_state->getValue('allow_clientid_reset'))

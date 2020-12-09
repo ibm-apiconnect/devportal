@@ -13,16 +13,15 @@
 
 namespace Drupal\ibm_apim\UserManagement\Mocks;
 
-use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
-use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\State\State;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\ibm_apim\ApicType\ApicUser;
+use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
-use Drupal\user\Entity\User;
+use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\user\UserInterface;
-use Drupal\Core\Messenger\Messenger;
 
 /**
  * Mock of the ApicAccountService service.
@@ -106,9 +105,9 @@ class MockApicAccountService implements ApicAccountInterface {
   /**
    * @inheritDoc
    */
-  public function updateApicAccount(ApicUser $user): bool {
+  public function updateApicAccount(ApicUser $user): ?ApicUser  {
      $this->updateLocalAccount($user);
-     return TRUE;
+     return $user;
   }
 
   /**
@@ -117,13 +116,15 @@ class MockApicAccountService implements ApicAccountInterface {
   public function updateLocalAccount(ApicUser $user): ?UserInterface {
 
     $dbuser = $this->loadUserFromDatabase($user);
-    $dbuser->set('first_name', $user->getFirstname());
-    $dbuser->set('last_name', $user->getLastname());
-    $dbuser->set('mail', $user->getMail());
-    $dbuser->save();
+    if ($dbuser !== NULL) {
+      $dbuser->set('first_name', $user->getFirstname());
+      $dbuser->set('last_name', $user->getLastname());
+      $dbuser->set('mail', $user->getMail());
+      $dbuser->save();
+    }
 
     $this->messenger->addStatus('MOCKED SERVICE:: Your account has been updated.');
-    return NULL;
+    return $dbuser;
   }
 
 
@@ -155,14 +156,14 @@ class MockApicAccountService implements ApicAccountInterface {
   }
 
   public function setDefaultLanguage($user): void {
-    \Drupal::logger('ibm_apim_mocks')->error('MockApicAccountService::setDefaultLanguage not implemented');
+    \Drupal::logger('ibm_apim_mocks')->warning('MockApicAccountService::setDefaultLanguage not implemented');
   }
 
   /**
    * @inheritDoc
    */
   public function createOrUpdateLocalAccount(ApicUser $user): ?UserInterface {
-    \Drupal::logger('ibm_apim_mocks')->error('MockApicAccountService::createOrUpdateLocalAccount not implemented');
+    \Drupal::logger('ibm_apim_mocks')->warning('MockApicAccountService::createOrUpdateLocalAccount not implemented');
   }
 
   /**

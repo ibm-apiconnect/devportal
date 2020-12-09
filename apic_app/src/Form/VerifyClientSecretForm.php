@@ -14,7 +14,6 @@
 namespace Drupal\apic_app\Form;
 
 use Drupal\apic_app\Service\ApplicationRestInterface;
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
@@ -36,11 +35,11 @@ class VerifyClientSecretForm extends FormBase {
   protected $node;
 
   /**
-   * This represents the credential ID
+   * This represents the credential object
    *
-   * @var string
+   * @var \Drupal\apic_app\Entity\ApplicationCredentials
    */
-  protected $credId;
+  protected $cred;
 
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
@@ -91,7 +90,7 @@ class VerifyClientSecretForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $this->node = $appId;
-    $this->credId = Html::escape($credId);
+    $this->cred = $credId;
 
     $form['intro'] = ['#markup' => '<p>' . t('Use this form to verify you have the correct client secret for this application.') . '</p>'];
 
@@ -106,7 +105,7 @@ class VerifyClientSecretForm extends FormBase {
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => t('Save'),
+      '#value' => t('Verify'),
     ];
     $form['actions']['cancel'] = [
       '#type' => 'link',
@@ -139,15 +138,10 @@ class VerifyClientSecretForm extends FormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $secret = $form_state->getValue('secret');
     $clientid = NULL;
-    $credentials = $this->node->application_credentials_refs->referencedEntities();
-    foreach ($credentials as $cred) {
-      if ((string) $cred->id() === (string) $this->credId) {
-        $clientid = $cred->client_id();
-      }
-    }
-    $url = $this->node->apic_url->value . '/credentials/' . $this->credId . '/verify-client-secret';
 
-    $data = ['client_secret' => $secret, 'client_id' => $clientid];
+    $url = $this->node->apic_url->value . '/credentials/' . $this->cred->uuid() . '/verify-client-secret';
+
+    $data = ['client_secret' => $secret, 'client_id' => $this->cred->client_id()];
     $result = $this->restService->postClientSecret($url, json_encode($data));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       $this->messenger->addMessage(t('Application secret verified successfully.'));
@@ -157,7 +151,13 @@ class VerifyClientSecretForm extends FormBase {
         '@username' => $current_user->getAccountName(),
       ]);
     }
+    else {
+      \Drupal::logger('apic_app')->notice('Received @code when trying to verify credentials.', [
+        '@code' => $result->code,
+      ]);
+    }
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

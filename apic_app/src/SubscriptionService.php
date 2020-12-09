@@ -57,11 +57,12 @@ class SubscriptionService {
     }
 
     $query = \Drupal::entityQuery('apic_app_application_subs');
-    $query->condition('id', $subId);
+    $query->condition('uuid', $subId);
 
     $entityIds = $query->execute();
     if (isset($entityIds) && !empty($entityIds)) {
       $entityId = array_shift($entityIds);
+      $targetEntityId = $entityId;
       $subEntity = ApplicationSubscription::load($entityId);
       if ($subEntity !== NULL) {
         $subEntity->set('billing_url', $billingUrl);
@@ -75,14 +76,14 @@ class SubscriptionService {
         $createdOrUpdated = FALSE;
       }
       // put it back on the array since we'll need it down below to add to the app
-      $entityIds[] = $subId;
+      $entityIds[] = $entityId;
     }
     if (!isset($entityIds)) {
       $entityIds = [];
     }
     if ($createdOrUpdated !== FALSE) {
       $newSub = ApplicationSubscription::create([
-        'id' => $subId,
+        'uuid' => $subId,
         'billing_url' => $billingUrl,
         'product_url' => $product,
         'plan' => $plan,
@@ -92,7 +93,13 @@ class SubscriptionService {
       ]);
       $newSub->enforceIsNew();
       $newSub->save();
-      $entityIds[] = $newSub->get("id")->value;
+      $query = \Drupal::entityQuery('apic_app_application_subs');
+      $query->condition('uuid', $subId);
+      $entityIds = $query->execute();
+      if (isset($entityIds) && !empty($entityIds)) {
+        $targetEntityId = array_shift($entityIds);
+        $entityIds[] = $targetEntityId;
+      }
     }
 
     // load the application
@@ -107,10 +114,9 @@ class SubscriptionService {
       $node = Node::load($nid);
       if (isset($node)) {
         $appTitle = $node->getTitle();
-        $entityId = array_shift($entityIds);
         $newArray = $node->application_subscription_refs->getValue();
-        if (!in_array(['target_id' => $entityId], array_values($newArray), false)) {
-          $newArray[] = ['target_id' => $entityId];
+        if (!in_array(['target_id' => $targetEntityId], array_values($newArray), false)) {
+          $newArray[] = ['target_id' => $targetEntityId];
         }
         $node->set('application_subscription_refs', $newArray);
         $node->save();
@@ -176,7 +182,7 @@ class SubscriptionService {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$appUrl, $subId]);
 
     $query = \Drupal::entityQuery('apic_app_application_subs');
-    $query->condition('id', $subId);
+    $query->condition('uuid', $subId);
 
     $entityIds = $query->execute();
     if (isset($entityIds) && !empty($entityIds)) {

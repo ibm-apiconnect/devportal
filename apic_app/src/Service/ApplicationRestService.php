@@ -71,6 +71,8 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @inheritDoc
    */
   public function deleteCredentials($url) {
+    // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
+    Application::invalidateCaches();
     return $this->doDelete($url);
   }
 
@@ -78,6 +80,8 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @inheritDoc
    */
   public function patchCredentials($url, $requestBody) {
+    // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
+    Application::invalidateCaches();
     return $this->doPatch($url, $requestBody);
   }
 
@@ -92,6 +96,8 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @inheritDoc
    */
   public function postClientId($url, $requestBody) {
+    // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
+    Application::invalidateCaches();
     return $this->doPost($url, $requestBody);
   }
 
@@ -99,6 +105,8 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @inheritDoc
    */
   public function postClientSecret($url, $requestBody) {
+    // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
+    Application::invalidateCaches();
     return $this->doPost($url, $requestBody);
   }
 

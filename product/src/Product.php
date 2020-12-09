@@ -184,7 +184,10 @@ class Product {
         'data' => $product,
       ]);
 
-      \Drupal::logger('product')->notice('Product @product @version created', ['@product' => $node->getTitle(), '@version' => $node->apic_version->value]);
+      \Drupal::logger('product')->notice('Product @product @version created', [
+        '@product' => $node->getTitle(),
+        '@version' => $node->apic_version->value,
+      ]);
     }
     if ($node !== NULL) {
       $returnId = $node->id();
@@ -547,7 +550,10 @@ class Product {
         // if invoked from the create code then don't invoke the update event - will be invoked from create instead
         if ($node !== NULL) {
           if ($event !== 'internal') {
-            \Drupal::logger('product')->notice('Product @product @version updated', ['@product' => $node->getTitle(),'@version' => $node->apic_version->value]);
+            \Drupal::logger('product')->notice('Product @product @version updated', [
+              '@product' => $node->getTitle(),
+              '@version' => $node->apic_version->value,
+            ]);
             // Calling all modules implementing 'hook_product_update':
             $moduleHandler->invokeAll('product_update', [
               'node' => $node,
@@ -624,13 +630,16 @@ class Product {
     if ($node !== NULL) {
       // Calling all modules implementing 'hook_product_delete':
       $moduleHandler->invokeAll('product_delete', ['node' => $node]);
-      \Drupal::logger('product')->notice('Product @product:@version deleted', ['@product' => $node->getTitle(), '@version' => $node->apic_version->value]);
+      \Drupal::logger('product')->notice('Product @product:@version deleted', [
+        '@product' => $node->getTitle(),
+        '@version' => $node->apic_version->value,
+      ]);
 
       //Delete all subscriptions for the product
       $query = \Drupal::entityQuery('apic_app_application_subs');
       $query->condition('product_url', $node->apic_url->value);
       $subIds = $query->execute();
-      
+
       foreach (array_chunk($subIds, 50) as $chunk) {
         $subEntities = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->loadMultiple($chunk);
         if (!empty($subEntities)) {
@@ -1103,5 +1112,88 @@ class Product {
         }
       }
     }
+  }
+
+  /**
+   * Parse the embedded docs to handle the markdown / base 64 encoded html
+   *
+   * @param $productData
+   *
+   * @return array
+   */
+  public static function processEmbeddedDocs($productData): array {
+    $returnArray = [];
+    if (isset($productData) && is_array($productData) && !empty($productData)) {
+      $returnArray = self::processEmbeddedDocsArray($productData);
+    }
+
+    return $returnArray;
+  }
+
+  /**
+   * If custom docs are present then find the first one to use as the default
+   *
+   * @param $productData
+   *
+   * @return string
+   */
+  public static function findInitialEmbeddedDoc($productData = []): string {
+    $returnValue = 'apisandplans';
+    $found = false;
+    if (isset($productData) && is_array($productData) && !empty($productData)) {
+      foreach ($productData as $key => $embeddedDoc) {
+        if ($found === false && !isset($embeddedDoc['docs'])) {
+          $returnValue = $embeddedDoc['name'];
+          $found = true;
+        } elseif ($found === false && isset($embeddedDoc['docs'])) {
+          foreach ($embeddedDoc['docs'] as $childkey => $embeddedDocChild) {
+            if ($found === false && !isset($embeddedDocChild['docs'])) {
+              $returnValue = $embeddedDocChild['name'];
+              $found = true;
+            } elseif ($found === false && isset($embeddedDocChild['docs'])) {
+              foreach ($embeddedDocChild['docs'] as $grandchildkey => $embeddedDocGrandChild) {
+                if ($found === false && !isset($embeddedDocGrandChild['docs'])) {
+                  $returnValue = $embeddedDocGrandChild['name'];
+                  $found = true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return $returnValue;
+  }
+
+  /**
+   * Split out to separate function so it can call itself to handle nested arrays of docs
+   *
+   * @param $docs
+   *
+   * @return array
+   */
+  private static function processEmbeddedDocsArray($docs): array {
+    $moduleHandler = \Drupal::service('module_handler');
+    foreach ($docs as $key => $embeddedDoc) {
+      if (isset($embeddedDoc['docs'])) {
+        // nested section
+        $docs[$key]['docs'] = self::processEmbeddedDocsArray($embeddedDoc['docs']);
+      }
+      elseif (isset($embeddedDoc['content'])) {
+        if ((!isset($embeddedDoc['format']) || $embeddedDoc['format'] === 'md') && $moduleHandler->moduleExists('ghmarkdown')) {
+          $parser = new \Drupal\ghmarkdown\cebe\markdown\GithubMarkdown();
+          $text = $parser->parse($embeddedDoc['content']);
+        }
+        elseif ($embeddedDoc['format'] === 'b64html') {
+          $text = base64_decode($embeddedDoc['content']);
+        }
+        else {
+          // just use raw content
+          $text = $embeddedDoc['content'];
+        }
+        $docs[$key]['output'] = $text;
+      }
+    }
+    return $docs;
   }
 }

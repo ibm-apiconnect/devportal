@@ -7,14 +7,14 @@
  */
 #}
 {%- set classes = [
-'node',
-'node--id-' ~ node.id,
-('node--type-' ~ node.bundle)|clean_class,
-view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
-('apitNodeID-' ~ node.id)|clean_class,
-('apiTitle-' ~ node.title[0].value)|clean_class,
-('apiVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
-'bx--card'
+  'node',
+  'node--id-' ~ node.id,
+  ('node--type-' ~ node.bundle)|clean_class,
+  view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
+  ('apitNodeID-' ~ node.id)|clean_class,
+  ('apiTitle-' ~ node.title[0].value)|clean_class,
+  ('apiVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
+  'bx--card'
 ] -%}
 {{ attach_library('ibm_apim/core') }}
 {{ attach_library('apic_api/basic') }}
@@ -35,7 +35,8 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
       </div>
     {% endif %}
     <div class="apicApiCardMain">
-      <div class="bx--about__title--name" data-toggle="tooltip" data-placement="bottom" title="{{- node.title[0].value -}}">
+      <div class="bx--about__title--name" data-toggle="tooltip" data-placement="bottom"
+           title="{{- node.title[0].value -}}">
         <a href="{{- path('product.select', {'apiNode': apiNode}) -}}" rel="bookmark">
           <span id="node-{{ node.id }}-title" class="apicApiName apicTruncate">{{- label -}}</span>
           {% if showVersions %}
@@ -47,21 +48,29 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
         {{ content.apic_rating }}
       </div>
     </div>
-      {% if content.apic_summary['#items'][0].value is defined and content.apic_summary['#items'][0].value is not empty %}
-          <div class="apicApiDesc summary"
-               title="{{- content.apic_summary['#items'][0].value|striptags -}}">{{ content.apic_summary }}</div>
-      {% else %}
-          <div class="apicApiDesc"
-               title="{{- content.apic_description['#items'][0].value|striptags -}}">{{ content.apic_description }}</div>
-      {% endif %}
-      {% if custom_fields is defined and custom_fields is not empty %}
-          <div class="customFields">
-              {% for custom_field in custom_fields %}
-                  <div class="{{ custom_field|clean_class }}">
-                      {{ content[custom_field] }}
-                  </div>
-              {% endfor %}
+    {% if content.apic_summary['#items'][0].value is defined and content.apic_summary['#items'][0].value is not empty %}
+      <div class="apicApiDesc summary"
+           title="{{- content.apic_summary['#items'][0].value|striptags -}}">{{ content.apic_summary }}</div>
+    {% else %}
+      <div class="apicApiDesc"
+           title="{{- content.apic_description['#items'][0].value|striptags -}}">{{ content.apic_description }}</div>
+    {% endif %}
+    {% if custom_fields is defined and custom_fields is not empty %}
+      <div class="customFields">
+        {% for custom_field in custom_fields %}
+          <div class="{{ custom_field|clean_class }}">
+            {{ content[custom_field] }}
           </div>
-      {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="apicCardFooter">
+      <div class="apicProtocol bx--tertiary-text">
+        {{ content.api_protocol }}
+      </div>
+      <div class="apicState bx--tertiary-text">
+        {{ content.api_state }}
+      </div>
+    </div>
   </div>
 </article>

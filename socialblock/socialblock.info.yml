@@ -3,7 +3,7 @@ type: module
 description: Displays active forum topics and tweets
 package: IBM API Connect
 core: 8.x
-version: 8.x-2.2.3
+version: 8.x-2.3.3
 project: socialblock
 configure: socialblock.form
 dependencies:

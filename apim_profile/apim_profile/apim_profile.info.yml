@@ -138,6 +138,7 @@ dependencies:
   - apic_api
   - product
   - themegenerator
+  - drushadmin
 
 
 themes:

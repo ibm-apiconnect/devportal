@@ -262,6 +262,18 @@ function consumerorg_preprocess_node(&$variables): void {
           $role = new Role();
           $role->createFromArray(unserialize($arrayValue['value'], ['allowed_classes' => $whitelist]));
           if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
+            // use translated role names if possible
+            switch ($role->getTitle()) {
+              case 'Administrator':
+                $role->setTitle(t('Administrator'));
+                break;
+              case 'Developer':
+                $role->setTitle(t('Developer'));
+                break;
+              case 'Viewer':
+                $role->setTitle(t('Viewer'));
+                break;
+            }
             $orgRoles[] = $role;
           }
         }

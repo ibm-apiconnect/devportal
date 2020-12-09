@@ -38,9 +38,10 @@ class PaymentMethodService {
   public static function create($paymentMethodId, $title, $billingUrl, $paymentMethodTypeUrl, $consumerOrgUrl, $configuration, $isDefault = true): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $paymentMethodId);
     $createdOrUpdated = TRUE;
+    $paymentMethodEntityId = NULL;
 
     $query = \Drupal::entityQuery('consumerorg_payment_method');
-    $query->condition('id', $paymentMethodId);
+    $query->condition('uuid', $paymentMethodId);
     $moduleHandler = \Drupal::service('module_handler');
     if ($moduleHandler->moduleExists('encrypt')) {
       $ibmApimConfig = \Drupal::config('ibm_apim.settings');
@@ -61,12 +62,13 @@ class PaymentMethodService {
         $paymentMethodEntity->set('configuration', $configuration);
         $paymentMethodEntity->set('consumerorg_url', $consumerOrgUrl);
         $paymentMethodEntity->save();
+        $paymentMethodEntityId = $entityId;
         $createdOrUpdated = FALSE;
       }
     }
     if ($createdOrUpdated !== FALSE) {
       $newPayment = PaymentMethod::create([
-        'id' => $paymentMethodId,
+        'uuid' => $paymentMethodId,
         'title' => $title,
         'billing_url' => $billingUrl,
         'payment_method_type_url' => $paymentMethodTypeUrl,
@@ -75,6 +77,12 @@ class PaymentMethodService {
       ]);
       $newPayment->enforceIsNew();
       $newPayment->save();
+      $query = \Drupal::entityQuery('consumerorg_payment_method');
+      $query->condition('uuid', $paymentMethodId);
+      $entityIds = $query->execute();
+      if (isset($entityIds) && !empty($entityIds)) {
+        $paymentMethodEntityId = array_shift($entityIds);
+      }
     }
 
     // load the consumerorg
@@ -90,16 +98,16 @@ class PaymentMethodService {
         $newArray = $node->consumerorg_payment_method_refs->getValue();
         $found = false;
         foreach ($newArray as $key=>$value) {
-          if ($value['target_id'] === $paymentMethodId) {
+          if ($value['target_id'] === $paymentMethodEntityId) {
             $found = true;
           }
         }
         if ($found !== TRUE) {
-          $newArray[] = ['target_id' => $paymentMethodId];
+          $newArray[] = ['target_id' => $paymentMethodEntityId];
         }
         $node->set('consumerorg_payment_method_refs', $newArray);
         if (count($newArray) == 1 || $isDefault) {
-          $node->set('consumerorg_def_payment_ref', ['target_id' => $paymentMethodId]);
+          $node->set('consumerorg_def_payment_ref', ['target_id' => $paymentMethodEntityId]);
         }
         $node->save();
       }
@@ -151,13 +159,23 @@ class PaymentMethodService {
       foreach ($paymentMethods as $paymentMethod) {
         $paymentMethod['consumer_org_url'] = $node->consumerorg_url->value;
         $createdOrUpdated = self::createOrUpdate($paymentMethod);
-        if ($createdOrUpdated !== NULL) {
-          $newPaymentMethods[] = ['target_id' => $paymentMethod['id']];
-        }
-        else {
+        $query = \Drupal::entityQuery('consumerorg_payment_method');
+        $query->condition('uuid', $paymentMethod['id']);
+        $entityIds = $query->execute();
+        if (isset($entityIds) && !empty($entityIds)) {
+          $entityId = array_shift($entityIds);
+          if ($createdOrUpdated !== NULL) {
+            $newPaymentMethods[] = ['target_id' => $entityId];
+          }
+          else {
+            \Drupal::logger('consumerorg')
+              ->warning('createOrUpdatePaymentMethodList: Error updating a payment method @entityId', ['@entityId' => $paymentMethod['id']]);
+          }
+        } else {
           \Drupal::logger('consumerorg')
-            ->warning('createOrUpdatePaymentMethodList: Error updating a payment method @entityId', ['@entityId' => $paymentMethod['id']]);
+            ->warning('createOrUpdatePaymentMethodList: Couldn\'t find payment method @entityId', ['@entityId' => $paymentMethod['id']]);
         }
+
       }
 
       // update the consumerorg
@@ -177,7 +195,7 @@ class PaymentMethodService {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $paymentMethodId);
 
     $query = \Drupal::entityQuery('consumerorg_payment_method');
-    $query->condition('id', $paymentMethodId);
+    $query->condition('uuid', $paymentMethodId);
 
     $entityIds = $query->execute();
     if (isset($entityIds) && !empty($entityIds)) {

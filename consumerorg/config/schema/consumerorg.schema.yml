@@ -58,4 +58,38 @@ field.field.node.consumerorg.apic_tags:
   type: ibm_apim_config_object
   label: 'Tags'
 
+field.field.node.consumerorg.consumerorg_payment_method_refs:
+  type: ibm_apim_config_object
+  label: 'Payment Method Reference'
+
+field.field.node.consumerorg.consumerorg_def_payment_ref:
+  type: ibm_apim_config_object
+  label: 'Default Payment Method Reference'
+
+consumerorg.consumerorg_payment_method.*:
+  type: content_entity
+  label: 'Consumer Organization Payment Method'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    uuid:
+      type: string
+      label: 'UUID'
+    title:
+      type: string
+      label: 'Title'
+    payment_method_type_url:
+      type: string
+      label: 'Payment method schema type URL'
+    billing_url:
+      type: string
+      label: 'Configured Billing URL'
+    configuration:
+      type: string
+      label: 'Configuration'
+    consumerorg_url:
+      type: string
+      label: 'Consumer Organization URL'
+
 

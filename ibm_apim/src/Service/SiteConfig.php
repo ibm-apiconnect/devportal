@@ -700,15 +700,17 @@ class SiteConfig {
           $paymentEncryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
           // only need to do the decryption / re-encryption if using our socialblock profile
           if ($paymentEncryptionProfileName === 'socialblock') {
-            $query = \Drupal::entityQuery('consumerorg_payment_method');
-            $queryIds = $query->execute();
+            if (\Drupal::database()->schema() !==NULL && \Drupal::database()->schema()->tableExists("consumerorg_payment_methods")) {
+              $query = \Drupal::entityQuery('consumerorg_payment_method');
+              $queryIds = $query->execute();
 
-            foreach (array_chunk($queryIds, 50) as $chunk) {
-              $paymentEntities = \Drupal::entityTypeManager()->getStorage('consumerorg_payment_method')->loadMultiple($chunk);
-              if (!empty($paymentEntities)) {
-                foreach ($paymentEntities as $paymentEntity) {
-                  $configuration = unserialize($encryptionService->decrypt($paymentEntity->configuration(), $encryptionProfile), ['allowed_classes' => FALSE]);
-                  $decryptedPayments[$paymentEntity->id()] = $configuration;
+              foreach (array_chunk($queryIds, 50) as $chunk) {
+                $paymentEntities = \Drupal::entityTypeManager()->getStorage('consumerorg_payment_method')->loadMultiple($chunk);
+                if (!empty($paymentEntities)) {
+                  foreach ($paymentEntities as $paymentEntity) {
+                    $configuration = unserialize($encryptionService->decrypt($paymentEntity->configuration(), $encryptionProfile), ['allowed_classes' => FALSE]);
+                    $decryptedPayments[$paymentEntity->id()] = $configuration;
+                  }
                 }
               }
             }
@@ -733,17 +735,19 @@ class SiteConfig {
 
         // re-encrypt payment methods
         if (!empty($decryptedPayments) && $moduleHandler->moduleExists('consumerorg')) {
-          foreach ($decryptedPayments as $id => $encryptedConfiguration) {
-            $configuration = $encryptionService->encrypt(serialize($encryptedConfiguration), $encryptionProfile);
-            $query = \Drupal::entityQuery('consumerorg_payment_method');
-            $query->condition('id', $id);
-            $queryIds = $query->execute();
-            if (isset($queryIds) && !empty($queryIds)) {
-              $entityId = array_shift($queryIds);
-              $paymentMethodEntity = \Drupal\consumerorg\Entity\PaymentMethod::load($entityId);
-              if ($paymentMethodEntity !== NULL) {
-                $paymentMethodEntity->set('configuration', $configuration);
-                $paymentMethodEntity->save();
+          if (\Drupal::database()->schema() !==NULL && \Drupal::database()->schema()->tableExists("consumerorg_payment_methods")) {
+            foreach ($decryptedPayments as $id => $encryptedConfiguration) {
+              $configuration = $encryptionService->encrypt(serialize($encryptedConfiguration), $encryptionProfile);
+              $query = \Drupal::entityQuery('consumerorg_payment_method');
+              $query->condition('id', $id);
+              $queryIds = $query->execute();
+              if (isset($queryIds) && !empty($queryIds)) {
+                $entityId = array_shift($queryIds);
+                $paymentMethodEntity = \Drupal\consumerorg\Entity\PaymentMethod::load($entityId);
+                if ($paymentMethodEntity !== NULL) {
+                  $paymentMethodEntity->set('configuration', $configuration);
+                  $paymentMethodEntity->save();
+                }
               }
             }
           }

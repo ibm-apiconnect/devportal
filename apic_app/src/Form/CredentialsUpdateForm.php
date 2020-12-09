@@ -13,10 +13,8 @@
 
 namespace Drupal\apic_app\Form;
 
-use Drupal\apic_app\Event\CredentialUpdateEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\apic_app\Service\CredentialsService;
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
@@ -38,18 +36,11 @@ class CredentialsUpdateForm extends FormBase {
   protected $node;
 
   /**
-   * This represents the credential ID
+   * This represents the credential object
    *
-   * @var string
+   * @var \Drupal\apic_app\Entity\ApplicationCredentials
    */
-  protected $credId;
-
-  /**
-   * This represents the existing credentials
-   *
-   * @var array
-   */
-  protected $existingCred;
+  protected $cred;
 
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
@@ -110,29 +101,22 @@ class CredentialsUpdateForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $this->node = $appId;
-    $this->credId = Html::escape($credId);
+    $this->cred = $credId;
 
     $form['intro'] = ['#markup' => '<p>' . t('Use this form to update an existing set of credentials for this application.') . '</p>'];
-    $this->existingCred = ['title' => '', 'summary' => ''];
-    $credentials = $this->node->application_credentials_refs->referencedEntities();
-    foreach ($credentials as $key => $existingCred) {
-      if ((string) $existingCred->id() === (string) $this->credId) {
-        $this->existingCred = $existingCred->toArray();
-      }
-    }
 
     $form['title'] = [
       '#type' => 'textfield',
       '#title' => t('Title'),
       '#required' => FALSE,
-      '#default_value' => $this->existingCred['title'],
+      '#default_value' => $this->cred->title(),
     ];
 
     $form['summary'] = [
       '#type' => 'textfield',
       '#title' => t('Summary'),
       '#required' => FALSE,
-      '#default_value' => $this->existingCred['summary'],
+      '#default_value' => $this->cred->summary(),
     ];
 
     $form['actions']['#type'] = 'actions';
@@ -173,15 +157,16 @@ class CredentialsUpdateForm extends FormBase {
     $appUrl = $this->node->apic_url->value;
     $title = $form_state->getValue('title');
     $summary = $form_state->getValue('summary');
-    $url = $appUrl . '/credentials/' . $this->credId;
+    $url = $appUrl . '/credentials/' . $this->cred->uuid();
     $data = ['title' => $title, 'summary' => $summary];
     $result = $this->restService->patchCredentials($url, json_encode($data));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       $this->messenger->addMessage(t('Application credentials updated.'));
       // update the stored app with the new creds
-      $this->existingCred['summary'] = $summary;
-      $this->existingCred['title'] = $title;
-      $this->node = $this->credsService->updateCredentials($this->node, $this->existingCred);
+      $existingCred = $this->cred->toArray();
+      $existingCred['summary'] = $summary;
+      $existingCred['title'] = $title;
+      $this->node = $this->credsService->updateCredentials($this->node, $existingCred);
 
       $currentUser = \Drupal::currentUser();
       \Drupal::logger('apic_app')->notice('Application @appName credentials updated by @username', [
@@ -194,11 +179,18 @@ class CredentialsUpdateForm extends FormBase {
       $moduleHandler->invokeAll('apic_app_creds_update', [
         'node' => $this->node,
         'data' => $result->data,
-        'credId' => $this->credId,
+        'credId' => $this->cred->uuid(),
       ]);
 
+    }
+    else {
+      $this->messenger->addError($this->t('Failed to update credentials.'));
+      \Drupal::logger('apic_app')->notice('Received @code when trying to update credential.', [
+        '@code' => $result->code,
+      ]);
     }
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

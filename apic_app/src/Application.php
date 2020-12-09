@@ -804,7 +804,7 @@ class Application {
             'plan_name' => Html::escape($sub->plan()),
             'plan_title' => Html::escape($planTitle),
             'state' => Html::escape($sub->state()),
-            'subId' => Html::escape($sub->id()),
+            'subId' => Html::escape($sub->uuid()),
             'cost' => $cost,
             'superseded_by_product' => $supersedingProduct,
           ];

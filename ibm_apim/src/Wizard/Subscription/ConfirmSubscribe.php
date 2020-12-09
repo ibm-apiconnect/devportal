@@ -13,6 +13,7 @@
 namespace Drupal\ibm_apim\Wizard\Subscription;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\file\Entity\File;
 use Drupal\ibm_apim\Wizard\IbmWizardStepBase;
 use Drupal\node\Entity\Node;
 use Drupal\product\Product;

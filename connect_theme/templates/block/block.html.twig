@@ -52,7 +52,7 @@
 'block-' ~ plugin_id|clean_class,
 'clearfix',
 ] %}
-<section{{ attributes.addClass(classes) }} aria-label="{% if label %}{{ label }}{% else %}{{ configuration.label }}{% endif %}">
+<section{{ attributes.addClass(classes) }} aria-label="{% if label %}{{ label }}{% elseif configuration.label %}{{ configuration.label }}{% else %}{{ 'Block'|t }}{% endif %}">
   {{ title_prefix }}
   {% if label %}
     <h2{{ title_attributes.addClass('block-title') }}>{{ label }}</h2>

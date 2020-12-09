@@ -17,11 +17,14 @@
  */
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Core\Database\Database;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Session\UserSession;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\Node;
 use Drupal\views\Views;
+use Drupal\Core\Entity\EntityStorageException;
 
 /**
  * Changes from 8.x-1.0 to 8.x-1.1 :
@@ -415,6 +418,21 @@ function apic_app_update_8107() {
 
 /**
  * update the gutter width for latest masonry views
+ */
+function apic_app_update_8108() {
+  $view = Views::getView('applications');
+  if ($view !== null) {
+    $style = $view->getDisplay()->getOption('style');
+    if ((int) $style['options']['gutterWidth'] === 0) {
+      $style['options']['gutterWidth'] = "20";
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
+  }
+}
+
+/**
+ * update the gutter width for latest masonry views
  *
  * bumped the second digit to ensure the change happens if migrating from 2018 to 10 too
  */
@@ -497,6 +515,57 @@ function apic_app_update_8202() {
     }
     $view->getDisplay()->setOption('sorts', $sorts);
     $view->save();
+  }
+}
+
+/**
+ * Delete existing payment methods and update the db schema
+ * the data will be repopulated by apim
+ */
+function apic_app_update_8203() {
+  $tables = ['apic_app_application_creds', 'apic_app_application_subs'];
+  $database = \Drupal::database();
+  // Retrieve existing field data in apic_app entity tables.
+  foreach ($tables as $table) {
+    // Delete any table data.
+    if ($database->schema() !==NULL && $database->schema()->tableExists($table)) {
+      $database->truncate($table)->execute();
+    }
+  }
+  try {
+    $entityDefUpManager = \Drupal::service('entity.definition_update_manager');
+    $entityDefUpManager->applyUpdates();
+    if ($database->schema() !==NULL && $database->schema()->tableExists("apic_app_application_subs")) {
+      Database::getConnection()->schema()->changeField('apic_app_application_subs', 'id', 'id', [
+        'type' => 'int',
+        'not null' => TRUE,
+        'auto_increment' => TRUE,
+      ]);
+
+      $storage_definition = BaseFieldDefinition::create('string')
+        ->setLabel(t('UUID'))
+        ->setDescription(t('The UUID of the Subscription entity.'))
+        ->setReadOnly(TRUE);
+      \Drupal::entityDefinitionUpdateManager()
+        ->installFieldStorageDefinition('uuid', 'apic_app_application_subs', 'apic_app', $storage_definition);
+    }
+    if ($database->schema() !==NULL && $database->schema()->tableExists("apic_app_application_creds")) {
+      Database::getConnection()->schema()->changeField('apic_app_application_creds', 'id', 'id', [
+        'type' => 'int',
+        'not null' => TRUE,
+        'auto_increment' => TRUE,
+      ]);
+
+      $storage_definition = BaseFieldDefinition::create('string')
+        ->setLabel(t('UUID'))
+        ->setDescription(t('The UUID of the Application Credentials entity.'))
+        ->setReadOnly(TRUE);
+      \Drupal::entityDefinitionUpdateManager()
+        ->installFieldStorageDefinition('uuid', 'apic_app_application_creds', 'apic_app', $storage_definition);
+    }
+    \Drupal::logger('apic_app: ')->notice('Successfully applied updates');
+  } catch (EntityStorageException $e) {
+    \Drupal::logger('apic_app: ')->notice($e->getMessage());
   }
 }
 

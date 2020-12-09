@@ -248,6 +248,21 @@ function product_update_8115() {
 
 /**
  * update the gutter width for latest masonry views
+ */
+function product_update_8116() {
+  $view = Views::getView('products');
+  if ($view !== null) {
+    $style = $view->getDisplay()->getOption('style');
+    if ((int) $style['options']['gutterWidth'] === 0) {
+      $style['options']['gutterWidth'] = "20";
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
+  }
+}
+
+/**
+ * update the gutter width for latest masonry views
  *
  * bumped the second digit to ensure the change happens if migrating from 2018 to 10 too
  */

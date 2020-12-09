@@ -182,13 +182,41 @@ class MyOrgController extends ControllerBase {
     $payment_methods = $node->consumerorg_payment_method_refs->referencedEntities();
     $paymentMethodService = \Drupal::service('consumerorg.paymentmethod');
     $integrationService = \Drupal::service('ibm_apim.payment_method_schema');
+    $currentLang = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $localeStorage = \Drupal::service('locale.storage');
     $paymentMethodArray = [];
     foreach ($payment_methods as $key => $payment_method) {
       $paymentMethodArray[$key] = $payment_method->toArray();
-      $paymentMethodArray[$key]['configuration'] = $paymentMethodService->decryptConfiguration($payment_method->configuration());
+      $paymentMethodConfiguration = $paymentMethodService->decryptConfiguration($payment_method->configuration());
       // get the integration name and title
+      $paymentMethodArray[$key]['configuration'] = [];
+      $paymentMethodArray[$key]['raw_configuration'] = $paymentMethodConfiguration;
       $integration = $integrationService->get($payment_method->payment_method_type_url());
-      $paymentMethodArray[$key]['payment_type'] = ['name' => $integration['name'], 'title' => $integration['title']];
+      foreach ($integration['configuration_schema'] as $fieldKey => $field) {
+        if ($fieldKey !== 'required') {
+          if (isset($field['type']) && ((!array_key_exists('x-ibm-display', $field) || $field['x-ibm-display'] === TRUE) ||
+              (!array_key_exists('x-ibm-display-card', $field) || $field['x-ibm-display-card'] === TRUE))) {
+            $fieldTitle = $field['x-ibm-label'] ?? $fieldKey;
+            // have to look up translation manually since not allowed to do t() with variables
+            // the form should already be cached per language so if you change language this should be re-evaluated
+            $translatedFieldTitle = $localeStorage->findTranslation(['source' => $fieldTitle, 'language' => $currentLang]);
+            if ($translatedFieldTitle !== NULL && $translatedFieldTitle->translation !== NULL) {
+              $fieldTitle = $translatedFieldTitle->translation;
+            }
+            if (array_key_exists($fieldKey, $paymentMethodConfiguration)) {
+              $paymentMethodArray[$key]['configuration'][$fieldKey] = [
+                'title' => $fieldTitle,
+                'value' => $paymentMethodConfiguration[$fieldKey],
+              ];
+            }
+          }
+        }
+      }
+      $paymentMethodArray[$key]['payment_type'] = [
+        'name' => $integration['name'],
+        'title' => $integration['title'],
+        'configuration_schema' => $integration['configuration_schema'],
+      ];
       if ($ibmApimShowPlaceholderImages) {
         $placeholderUrl = $paymentMethodService->getPlaceholderImageURL($payment_method->title());
         $paymentMethodArray[$key]['placeholderImageUrl'] = $placeholderUrl;

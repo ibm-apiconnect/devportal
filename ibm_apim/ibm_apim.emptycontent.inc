@@ -134,7 +134,7 @@ function ibm_apim_add_apps_block_translations(EntityInterface $apps_block_conten
       $apps_block_content->removeTranslation($lang);
     }
     $translation = [
-      'info' => t('No Apps Found', [], ['langcode' => $lang]) . ' [' . $lang . ']',
+      'info' => t('No Apps Found', [], ['langcode' => $lang])->render() . ' [' . $lang . ']',
       'type' => 'basic',
       'body' => [
         'value' => ibm_apim_get_localized_noapps_content($lang),
@@ -164,7 +164,7 @@ function ibm_apim_add_apis_block_translations(EntityInterface $apis_block_conten
       $apis_block_content->removeTranslation($lang);
     }
     $translation = [
-      'info' => t('No Apis Found', [], ['langcode' => $lang]) . ' [' . $lang . ']',
+      'info' => t('No Apis Found', [], ['langcode' => $lang])->render() . ' [' . $lang . ']',
       'type' => 'basic',
       'body' => [
         'value' => ibm_apim_get_localized_noapis_content($lang),
@@ -194,7 +194,7 @@ function ibm_apim_add_products_block_translations(EntityInterface $products_bloc
       $products_block_content->removeTranslation($lang);
     }
     $translation = [
-      'info' => t('No Products Found', [], ['langcode' => $lang]) . ' [' . $lang . ']',
+      'info' => t('No Products Found', [], ['langcode' => $lang])->render() . ' [' . $lang . ']',
       'type' => 'basic',
       'body' => [
         'value' => ibm_apim_get_localized_noproducts_content($lang),
@@ -220,8 +220,8 @@ function ibm_apim_get_localized_noapps_content($langcode): string {
   $html .= $svg;
   $html .= '</span>';
   $html .= '<div class="noContentTextContainer noAppsTextContainer">';
-  $html .= '<span class="noContentText noAppsText firstLine">' . t("You don't currently have any applications.", [], ['langcode' => $langcode]) . '</span>';
-  $html .= '<span class="noContentText noAppsText secondLine">' . t("Click Create to create an application.", [], ['langcode' => $langcode]) . '</span>';
+  $html .= '<span class="noContentText noAppsText firstLine">' . t("You don't currently have any applications.", [], ['langcode' => $langcode])->render() . '</span>';
+  $html .= '<span class="noContentText noAppsText secondLine">' . t("Click Create to create an application.", [], ['langcode' => $langcode])->render() . '</span>';
   $html .= '</div></div>';
   return $html;
 }
@@ -239,7 +239,7 @@ function ibm_apim_get_localized_noapis_content($langcode): string {
   $html .= $svg;
   $html .= '</span>';
   $html .= '<div class="noContentTextContainer noApisTextContainer">';
-  $html .= '<span class="noContentText noApisText firstLine">' . t("No APIs found.", [], ['langcode' => $langcode]) . '</span>';
+  $html .= '<span class="noContentText noApisText firstLine">' . t("No APIs found.", [], ['langcode' => $langcode])->render() . '</span>';
   $html .= '<span class="noContentText noApisText secondLine"></span>';
   $html .= '</div></div>';
   return $html;
@@ -258,7 +258,7 @@ function ibm_apim_get_localized_noproducts_content($langcode): string {
   $html .= $svg;
   $html .= '</span>';
   $html .= '<div class="noContentTextContainer noProductsTextContainer">';
-  $html .= '<span class="noContentText noProductsText firstLine">' . t("No API Products found.", [], ['langcode' => $langcode]) . '</span>';
+  $html .= '<span class="noContentText noProductsText firstLine">' . t("No API Products found.", [], ['langcode' => $langcode])->render() . '</span>';
   $html .= '<span class="noContentText noProductsText secondLine"></span>';
   $html .= '</div></div>';
   return $html;

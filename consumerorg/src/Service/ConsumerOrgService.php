@@ -118,7 +118,7 @@ class ConsumerOrgService {
    * @var \Drupal\ibm_apim\UserManagement\ApicAccountInterface
    */
   private $accountService;
-  
+
   /**
    * @var \Drupal\ibm_apim\Service\ApicUserService
    */
@@ -499,18 +499,24 @@ class ConsumerOrgService {
             }
 
             if ($account) {
-              // consumerorg_id is a multi value field which Drupal represents using a FieldItemList class
+              // consumerorg_url is a multi value field which Drupal represents using a FieldItemList class
               // this causes headaches as seen below....
               $consumerorg_urls = $account->consumerorg_url->getValue();
               if ($consumerorg_urls === NULL) {
                 $consumerorg_urls = [];
               }
 
-              //Add the custom fields to the user
+              // Doesn't update the custom fields since they're not in the right format
+              $updatedAccount = $this->accountService->updateLocalAccount($user);
+              if ($updatedAccount !== NULL) {
+                $account = $updatedAccount;
+              }
+
+              // Add the custom fields to the user
               $customFields = $this->userService->getCustomUserFields();
-              foreach($customFields as $customField) {
+              foreach ($customFields as $customField) {
                 if (isset($memberArray['user'][$customField])) {
-                  $account->set($customField, json_decode($memberArray['user'][$customField],true));
+                  $account->set($customField, json_decode($memberArray['user'][$customField], TRUE));
                 }
               }
 
@@ -1097,7 +1103,7 @@ class ConsumerOrgService {
       'consumerorg_url',
       'consumerorg_roles',
       'consumerorg_payment_method_refs',
-      'consumerorg_def_payment_ref'
+      'consumerorg_def_payment_ref',
     ];
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $ibmfields);
     return $ibmfields;
@@ -1469,9 +1475,10 @@ class ConsumerOrgService {
         }
 
         foreach ($customFields as $customField) {
-          if (isset($values[$customField])){
+          if (isset($values[$customField])) {
             $newData['metadata'][$customField] = json_encode($values[$customField]);
-          } else {
+          }
+          else {
             $newData['metadata'][$customField] = "NULL";
           }
         }
@@ -1495,9 +1502,9 @@ class ConsumerOrgService {
           $orgNode->setTitle($name);
           // update any custom fields
           $customFields = $this->getCustomFields();
-          foreach($customFields as $customField) {
+          foreach ($customFields as $customField) {
             if (isset($newData['metadata'][$customField])) {
-              $orgNode->set($customField, json_decode($newData['metadata'][$customField],true));
+              $orgNode->set($customField, json_decode($newData['metadata'][$customField], TRUE));
             }
           }
           $orgNode->save();
@@ -1656,7 +1663,7 @@ class ConsumerOrgService {
       $customFields = $this->getCustomFields();
       foreach ($customFields as $field) {
         if (isset($json['consumer_org']['metadata'][$field])) {
-          $org->addCustomField($field, json_decode($json['consumer_org']['metadata'][$field],true));
+          $org->addCustomField($field, json_decode($json['consumer_org']['metadata'][$field], TRUE));
         }
       }
       $roles = [];
@@ -1679,7 +1686,8 @@ class ConsumerOrgService {
       }
       if (isset($json['payment_methods'])) {
         $org->setPaymentMethods($json['payment_methods']);
-      } else {
+      }
+      else {
         $org->setPaymentMethods([]);
       }
     }
@@ -1782,12 +1790,12 @@ class ConsumerOrgService {
    */
   public function deletePaymentMethod($paymentMethodId): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $result = null;
+    $result = NULL;
     $paymentMethod = PaymentMethod::load($paymentMethodId);
 
     if ($paymentMethod !== NULL) {
       $org = $paymentMethod->consumerorg_url();
-      $url = $org . '/payment-methods/' . $paymentMethodId;
+      $url = $org . '/payment-methods/' . $paymentMethod->uuid();
 
       $result = ApicRest::delete($url);
 

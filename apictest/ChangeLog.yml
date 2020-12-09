@@ -1,4 +1,16 @@
 changes:
+  8.x-2.3.5:
+  - Added another fix (#180)
+  - Fix test bug (#179)
+  8.x-2.3.4:
+  - Oidc register form v10.0.1 (#178)
+  8.x-2.3.3:
+  - echo should be cat
+  8.x-2.3.2:
+  - Support mysql 8
+  8.x-2.3.1: null
+  8.x-2.3.0:
+  - update version: 8.x-2.2.3 -> 8.x-2.3.0
   8.x-2.2.2:
   - monetization schema change
   8.x-2.2.1:

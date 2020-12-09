@@ -35,6 +35,8 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Entity\EntityRepositoryInterface;
+use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\Core\Extension\ModuleHandler;
 
 /**
  * Self sign up / create new user form.
@@ -108,6 +110,8 @@ class ApicUserRegisterForm extends RegisterForm {
    */
   protected $messenger;
 
+  protected $chosen_registry;
+
   /**
    * {@inheritdoc}
    */
@@ -127,7 +131,8 @@ class ApicUserRegisterForm extends RegisterForm {
                               ApicInvitationInterface $invitation_service,
                               ApicUserStorageInterface $user_storage,
                               CacheBackendInterface $cache_backend,
-                              Messenger $messenger) {
+                              Messenger $messenger,
+                              ModuleHandler $module_handler) {
     parent::__construct($entity_repository, $language_manager, $entity_type_bundle_info, $time);
     $this->logger = $logger;
     $this->accountService = $account_service;
@@ -142,6 +147,7 @@ class ApicUserRegisterForm extends RegisterForm {
     $this->userStorage = $user_storage;
     $this->cacheBackend = $cache_backend;
     $this->messenger = $messenger;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -165,7 +171,8 @@ class ApicUserRegisterForm extends RegisterForm {
       $container->get('auth_apic.invitation'),
       $container->get('ibm_apim.user_storage'),
       $container->get('cache.default'),
-      $container->get('messenger')
+      $container->get('messenger'),
+      $container->get('module_handler')
     );
   }
 
@@ -178,19 +185,28 @@ class ApicUserRegisterForm extends RegisterForm {
     $member_invitation = FALSE;
 
     if (!\Drupal::currentUser()->isAnonymous()) {
-      $this->messenger->addError(t('Permission denied.'));
+      if (\Drupal::request()->getPathInfo() == '/user/oidcregister') {
+        $form = parent::form($form, $form_state);
+      } else {
+        $this->messenger->addError(t('Permission denied.'));
 
-      $form = [];
-      $form['description'] = ['#markup' => '<p>' . t('You are already logged in. Log out first to create a new account.') . '</p>'];
+        $form = [];
+        $form['description'] = ['#markup' => '<p>' . t('You are already logged in. Log out first to create a new account.') . '</p>'];
 
-      $form['cancel'] = [
-        '#type' => 'link',
-        '#title' => t('Cancel'),
-        '#url' => Url::fromRoute('<front>'),
-        '#attributes' => ['class' => ['button']],
-      ];
+        $form['cancel'] = [
+          '#type' => 'link',
+          '#title' => t('Cancel'),
+          '#url' => Url::fromRoute('<front>'),
+          '#attributes' => ['class' => ['button']],
+        ];
+      }
     } else {
       $form = parent::form($form, $form_state);
+      $enabled_oidc_register_form = (boolean) \Drupal::config('ibm_apim.settings')->get('enable_oidc_register_form');
+
+      if ($this->moduleHandler->moduleExists('social_media_links')) {
+        $form['#attached']['library'][] = 'social_media_links/fontawesome.component';
+      }
 
       $form['#form_id'] = $this->getFormId();
       $form['account']['roles'] = [];
@@ -233,26 +249,26 @@ class ApicUserRegisterForm extends RegisterForm {
       // we have two options :
       //  1) display the default registry on the left and the others on the right
       //  2) display the "chosen" registry on the left (second time through after clicking a registry button)
-      $chosen_registry = $this->userRegistryService->getDefaultRegistry();
+      $this->chosen_registry = $this->userRegistryService->getDefaultRegistry();
       $chosen_registry_url = \Drupal::request()->query->get('registry_url');
       if (!empty($chosen_registry_url) && array_key_exists($chosen_registry_url, $all_registries) && ($this->apimUtils->sanitizeRegistryUrl($chosen_registry_url) === 1)) {
-        $chosen_registry = $all_registries[$chosen_registry_url];
+        $this->chosen_registry = $all_registries[$chosen_registry_url];
       }
 
       // store chosen registry in form so we can use it in validation and submit
       $form['registry_url'] = [
         '#type' => 'hidden',
-        '#value' => $chosen_registry->getUrl(),
+        '#value' => $this->chosen_registry->getUrl(),
       ];
       // store the name for the template
-      $form['#registry_title']['registry_title'] = $chosen_registry->getTitle();
+      $form['#registry_title']['registry_title'] = $this->chosen_registry->getTitle();
 
       if (sizeof($all_registries) > 1) {
-        $other_registries = array_diff_key($all_registries, [$chosen_registry->getUrl() => $chosen_registry]);
+        $other_registries = array_diff_key($all_registries, [$this->chosen_registry->getUrl() => $this->chosen_registry]);
       }
 
       // The rest of the fields depend on whether this is LUR, LDAP etc
-      if ($chosen_registry->isUserManaged()) {
+      if ($this->chosen_registry->isUserManaged()) {
 
         if (!$member_invitation) {
           // override multi select consumer org panel with just a textfield
@@ -313,7 +329,7 @@ class ApicUserRegisterForm extends RegisterForm {
         }
 
         // first_name and last_name aren't required in our config as they aren't stored in some registries, but they are needed for LUR.
-        if ($chosen_registry->getRegistryType() === 'lur') {
+        if ($this->chosen_registry->getRegistryType() === 'lur') {
           if (isset($form['first_name'])) {
             $form['first_name']['widget'][0]['value']['#required'] = TRUE;
           }
@@ -328,28 +344,51 @@ class ApicUserRegisterForm extends RegisterForm {
         // user exists already in the registry
         unset($form['account']['pass'], $form['account']['mail']);
 
-        if ($chosen_registry->getRegistryType() === 'oidc') {
+        if ($this->chosen_registry->getRegistryType() === 'oidc') {
           // for oidc we don't need to present a username/ password + submit form... just a button.
+          $form['#oidc'] = true;
+          $oidc_info = $this->oidcService->getOidcMetadata($this->chosen_registry, $jwt);
 
-          $oidc_info = $this->oidcService->getOidcMetadata($chosen_registry, $jwt);
-          $button = [
-            '#type' => 'html_tag',
-            '#tag' => 'span',
-            '#attributes' => [
-              'class' => [
-                'apic-user-registry-button',
-                'apic-user-registry-' . $chosen_registry->getRegistryType(),
+          if ($enabled_oidc_register_form) {
+            $form['oidc_url'] = [
+              '#type' => 'hidden',
+              '#value' => $oidc_info['az_url']
+            ];
+            if (!$member_invitation) {
+              $form['consumerorg'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('Consumer organization'),
+                '#required' => TRUE,
+                '#weight' => $form['consumer_organization']['#weight'],
+                '#description' => $this->t('Provide a name for your consumer organization such as "ACME Enterprises".'),
+              ];
+            }
+
+            //Stops password policy error
+            $form['pw_no_policy'] = [
+              '#type' => 'hidden',
+              '#value' => 'ignored'
+            ];
+          } else {
+            $button = [
+              '#type' => 'html_tag',
+              '#tag' => 'span',
+              '#attributes' => [
+                'class' => [
+                  'apic-user-registry-button',
+                  'apic-user-registry-' . $this->chosen_registry->getRegistryType(),
+                ],
               ],
-            ],
-            '#name' => $chosen_registry->getName(),
-            '#url' => $chosen_registry->getUrl(),
-            '#limit_validation_errors' => [],
-            '#prefix' => '<a class="chosen-registry-button registry-button generic-button button" href="' . $oidc_info['az_url'] . '"  title="' . $this->t('Create account using @ur', ['@ur' => $chosen_registry->getTitle()]) . '">' .
-              $oidc_info['image'] .
-              '<span class="registry-name">' . $chosen_registry->getTitle() . '</span>
-                        </a>',
-          ];
-          $form['oidc_link'] = $button;
+              '#name' => $this->chosen_registry->getName(),
+              '#url' => $this->chosen_registry->getUrl(),
+              '#limit_validation_errors' => [],
+              '#prefix' => '<a class="chosen-registry-button registry-button generic-button button" href="' . $oidc_info['az_url'] . '"  title="' . $this->t('Create account using @ur', ['@ur' => $this->chosen_registry->getTitle()]) . '">' .
+                  $oidc_info['image']['html'] .
+                  '<span class="registry-name">' . $this->chosen_registry->getTitle() . '</span>
+                      </a>'
+            ];
+            $form['oidc_link'] = $button;
+          }
           unset($form['account']['name']);
 
         }
@@ -372,7 +411,7 @@ class ApicUserRegisterForm extends RegisterForm {
           ];
         }
         // here we are invited from apim, we need to specify a consumer org.
-        if (!empty($jwt) && !$member_invitation && $chosen_registry->getRegistryType() !== 'oidc') {
+        if (!empty($jwt) && !$member_invitation && $this->chosen_registry->getRegistryType() !== 'oidc') {
           $form['consumerorg'] = [
             '#type' => 'textfield',
             '#title' => $this->t('Consumer organization'),
@@ -421,13 +460,16 @@ class ApicUserRegisterForm extends RegisterForm {
                 ],
               ],
               '#name' => $other_registry->getName(),
-              '#url' => $other_registry->getUrl(),
               '#limit_validation_errors' => [],
               '#prefix' => '<a class="registry-button generic-button button" href="' . $oidc_info['az_url'] . '">' .
-                $oidc_info['image'] .
+                $oidc_info['image']['html'] .
                 '<span class="registry-name">' . $other_registry->getTitle() . '</span>
                           </a>',
             ];
+            if ($enabled_oidc_register_form) {
+              $button['#prefix'] = '<a class="registry-button generic-button button" href="' . $redirect_with_registry_url . $other_registry->getUrl() . '" title="' . $this->t('Create account using @ur', ['@ur' => $other_registry->getTitle()]) . '">'
+              . $oidc_info['image']['html'] . '<span class="registry-name">' . $other_registry->getTitle() . '</span></a>';
+            }
           }
           else {
             $button['#prefix'] = '<a class="registry-button generic-button button" href="' . $redirect_with_registry_url . $other_registry->getUrl() . '" title="' . $this->t('Create account using @ur', ['@ur' => $other_registry->getTitle()]) . '">
@@ -447,7 +489,7 @@ class ApicUserRegisterForm extends RegisterForm {
       $form['#attached']['library'][] = 'ibm_apim/single_click';
       $form['#attached']['library'][] = 'ibm_apim/validate_password';
 
-      if (\Drupal::moduleHandler()->moduleExists('page_load_progress') && \Drupal::currentUser()->hasPermission('use page load progress')) {
+      if ($this->moduleHandler->moduleExists('page_load_progress') && \Drupal::currentUser()->hasPermission('use page load progress')) {
 
         // Unconditionally attach assets to the page.
         $form['#attached']['library'][] = 'auth_apic/oidc_page_load_progress';
@@ -483,9 +525,19 @@ class ApicUserRegisterForm extends RegisterForm {
       $element = [];
     } else {
       $element = parent::actions($form, $form_state);
-      if (isset($form['oidc_link'])) {
-        // oidc is currently handled via a link, suppress the submit button.
-        unset($element['submit']);
+      if ($this->chosen_registry->getRegistryType() === 'oidc') {
+        $enabled_oidc_register_form = (boolean) \Drupal::config('ibm_apim.settings')->get('enable_oidc_register_form');
+        if ($enabled_oidc_register_form) {
+          $element['submit']['#value'] = $this->t('Sign up');
+          $element['submit']['#attributes'] = ['class' => [
+            'apic-user-registry-button',
+            'apic-user-registry-' . $this->chosen_registry->getRegistryType(),
+            'registry-button'
+          ]];
+        } else {
+            // oidc is currently handled via a link, suppress the submit button.
+            unset($element['submit']);
+        }
       }
       else {
         $element['submit']['#value'] = $this->t('Sign up');
@@ -539,13 +591,20 @@ class ApicUserRegisterForm extends RegisterForm {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $registry_url = $form_state->getValue('registry_url');
-    $registry = $this->userRegistryService->get($registry_url);
+    if ($this->chosen_registry->getRegistryType() == 'oidc') {
+      $oidc_url = $form_state->getValue('oidc_url');
+      $oidc_url .= "&invitation_scope=consumer-org&title=" . urlencode($form_state->getValue('consumerorg'));
+      $response = new TrustedRedirectResponse(Url::fromUri($oidc_url)->toString());
+      $form_state->setResponse($response);
+    } else {
+      $registry_url = $form_state->getValue('registry_url');
+      $registry = $this->userRegistryService->get($registry_url);
 
-    $this->submitToApim($form_state, $registry);
+      $this->submitToApim($form_state, $registry);
+      // Clear the JWT from the session as we're done with it now
+      $this->authApicSessionStore->delete('invitation_object');
+    }
 
-    // Clear the JWT from the session as we're done with it now
-    $this->authApicSessionStore->delete('invitation_object');
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }

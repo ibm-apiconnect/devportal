@@ -604,20 +604,31 @@ input[type="checkbox"].bx--checkbox {
   &.bx--btn--ghost:focus {
     border: $focus;
   }
-  &.bx--btn--ghost:disabled {
+  &.bx--btn--ghost:disabled,
+  &.bx--btn--ghost[disabled]{
     color: $disabled-02;
   }
 }
 
-.bx--global-light-ui .button:disabled,
-.bx--global-light-ui .btn:disabled,
-.bx--global-light-ui .bx--btn:disabled,
-.bx--global-light-ui .button.apicSecondary:disabled,
-.bx--global-light-ui button.apicSecondary:disabled,
-.bx--global-light-ui button.link-edit-summary:disabled {
-  cursor: not-allowed;
-  color: $btn-disabled-color;
-  background-color: $btn-disabled-bg;
+.bx--global-light-ui .button,
+.bx--global-light-ui button,
+.bx--global-light-ui .btn,
+.bx--global-light-ui .bx--btn,
+.bx--global-light-ui .button.apicSecondary,
+.bx--global-light-ui button.apicSecondary,
+.bx--global-light-ui button.link-edit-summary {
+  &:disabled,
+  &[disabled],
+  &.bx--btn--disabled,
+  &[disabled]:hover,
+  &.bx--btn--disabled:hover,
+  &[disabled]:focus,
+  &.bx--btn--disabled:focus {
+    cursor: not-allowed;
+    fill: $btn-disabled-color;
+    color: $btn-disabled-color;
+    background-color: $btn-disabled-bg;
+  }
 }
 .bx--global-light-ui .button.bx--btn--tertiary {
   background-color: transparent;
@@ -637,10 +648,13 @@ input[type="checkbox"].bx--checkbox {
   border: 2px solid $focus;
   inset: $inverse-01;
 }
-.bx--global-light-ui .button.bx--btn--tertiary:disabled {
-  background-color: transparent;
-  border: 2px solid $disabled-02;
-  color: $disabled-02;
+.bx--global-light-ui .button.bx--btn--tertiary {
+  &:disabled,
+  &[disabled] {
+    background-color: transparent;
+    border: 2px solid $disabled-02;
+    color: $disabled-02;
+  }
 }
 
 .bx--global-light-ui a.button {
@@ -988,7 +1002,7 @@ form.user-pass-reset,
     padding:unset;
   }
 
-  #edit-actions {
+  #edit-actions, .form-actions {
     width: calc(100% + 2rem);
     position: relative;
     left: -1rem;
@@ -1004,7 +1018,6 @@ form.user-pass-reset,
   }
 }
 .route-change-pwd-pagechange-password-form.pass-reset .main-container .row {
-  width: 48%;
   .apic-user-form {
     padding-left: 0;
     padding-right: 0;

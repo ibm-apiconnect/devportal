@@ -55,6 +55,14 @@ body.bx--global-light-ui
   font-family: $font-family-base;
 }
 
+code {
+  line-height: 1.125rem;
+}
+
+a:focus {
+  outline-offset: 1px;
+}
+
 // accessibility set contrast ratio for content that is screen reader only
 .sr-only,
 .visually-hidden {
@@ -479,6 +487,7 @@ th, td {
   font-weight: 400;
   line-height: 1.125rem;
   letter-spacing: 0.16px;
+  padding: 1rem 0 0;
   a {
     color: $brand-primary;
     font-size: 0.875rem;
@@ -575,24 +584,6 @@ th, td {
 .apicMyOrg .titleSection .organizationTabs li a {
   color: $text-02;
   border-bottom: 2px solid $ui-03;
-}
-
-.nav.nav-tabs.filter-formats {
-  flex-basis: 100%;
-  margin-top: 1rem;
-}
-ul.nav.nav-tabs.filter-formats {
-  margin-bottom: unset;
-}
-ul.nav.nav-tabs.filter-formats {
-  display: flex;
-  flex-direction: row;
-  padding-left: 0;
-}
-.nav.nav-tabs.filter-formats li {
-  list-style: none;
-  padding: 0.725rem 30px 0 0;
-  font-size: 0.875rem;
 }
 
 .apicMyOrg .apicMyOrgMembers .apicMyOrgStatus {
@@ -789,7 +780,6 @@ section.block-go-ahead {
 
 .gsstep h3,
 .gsstep a,
-.ibmapimNoPermissions .mainContent,
 .ibmapimNoPermissions .contactLink a {
   color: $brand-primary;
 }
@@ -813,22 +803,28 @@ section.block-go-ahead {
       padding-top: 10px;
     }
   }
-  .main-container.container .row {
-    margin: 40px;
-    width: calc(100% - 80px);
+  .main-container.container {
+    background-image: url(../images/ibmcarbon/svg/Error_Page_Illustrations_OTHER.svg);
+    min-height: 600px;
+    background-size: contain;
+    background-repeat: no-repeat;
 
-    .col-sm-12 {
-      padding: 30px;
-      border: 1px solid #ddd;
-      width: 100%;
-      background-color: #fff;
+    .row {
+      margin: 40px;
+      width: calc(100% - 80px);
 
-      h1 {
-        padding-bottom: 10px;
+      .col-sm-12.maintenanceSection {
+        width: 100%;
+        border: 0;
+        background-color: inherit;
+        padding: 100px 2rem 2rem 300px;
+
+        h1 {
+          padding-bottom: 10px;
+        }
       }
     }
   }
-
 }
 // taxonomy menu block
 .block-tags {
@@ -912,6 +908,7 @@ footer.footer.container {
 body.bx--global-light-ui.context--user-login,
 body.bx--global-light-ui.context--user-register,
 body.bx--global-light-ui.route-change-pwd-pagereset,
+body.bx--global-light-ui.route-apicresetpw,
 body.bx--global-light-ui.context--user-password {
   background-color: $ui-02;
 }
@@ -954,4 +951,74 @@ body.bx--global-light-ui.context--user-password {
 }
 .consumerorgSelectBlock .dropit-icon:hover  {
   background-color: transparent;
+}
+/* password view toggles */
+.bx--global-light-ui .eye-close {
+  background-image: url(../images/ibmcarbon/svg/view.svg);
+}
+.bx--global-light-ui .eye-open {
+  background-image: url(../images/ibmcarbon/svg/view--off.svg);
+}
+.bx--global-light-ui .form-item input[type='password'],
+.bx--global-light-ui .form-item .passwordCreds,
+.bx--global-light-ui .form-item .password-field,
+.bx--global-light-ui .form-item .password-confirm,
+.bx--global-light-ui .form-item #edit-current-pass {
+  display: inline-block;
+}
+.bx--global-light-ui .credentialsContent .clientIDContainer.form-item .password-field {
+  width: 310px;
+}
+.bx--global-light-ui .input-group .form-control.password-field {
+  float: none;
+  z-index: auto;
+  position: static;
+}
+.bx--global-light-ui .form-type-password .input-group {
+  display: block;
+}
+.route-apicresetpw.bx--global-light-ui #edit-pass.js-form-type-password-confirm,
+.route-change-pwd-pagechange-password-form.pass-reset.bx--global-light-ui #edit-pass.js-form-type-password-confirm {
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+// error page
+.route-system404,
+.route-system403 {
+  .main-container.container {
+    background-image: url(../images/ibmcarbon/svg/Error_Page_Illustrations_403.svg);
+    min-height: 600px;
+    background-size: contain;
+    background-repeat: no-repeat;
+
+    .row {
+      margin: 40px;
+      width: calc(100% - 80px);
+
+      .col-sm-12 {
+        width: 100%;
+        border: 0;
+        background-color: inherit;
+        padding: 100px 2rem 2rem 300px;
+
+        h1.page-header {
+          border: 0;
+          background: inherit;
+          margin: 0 -2rem;
+          padding: 1rem 2rem;
+        }
+      }
+    }
+  }
+}
+.route-system404 .main-container.container {
+  background-image: url(../images/ibmcarbon/svg/Error_Page_Illustrations_404.svg);
+}
+/* comments filter format page */
+.path-filter p {
+  font-size: 0.875rem;
+}
+.path-filter ul {
+  line-height: 1.175rem;
 }

@@ -44,9 +44,16 @@ class ApplicationSubscription extends ContentEntityBase implements ApplicationSu
   /**
    * Drupal entity ID
    *
-   * @var string
+   * @var int
    */
   protected $id;
+
+  /**
+   * APIM UUID
+   *
+   * @var string
+   */
+  protected $uuid;
 
   /**
    * The application URL.
@@ -100,6 +107,13 @@ class ApplicationSubscription extends ContentEntityBase implements ApplicationSu
   /**
    * {@inheritdoc}
    */
+  public function uuid() {
+    return $this->uuid;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function app_url() {
     return $this->app_url;
   }
@@ -147,9 +161,15 @@ class ApplicationSubscription extends ContentEntityBase implements ApplicationSu
     $fields = [];
 
     // Standard field, used as unique if primary index.
-    $fields['id'] = BaseFieldDefinition::create('string')
+    $fields['id'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('ID'))
       ->setDescription(t('The ID of the Subscription entity.'))
+      ->setSetting('unsigned', TRUE)
+      ->setReadOnly(TRUE);
+
+    $fields['uuid'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('UUID'))
+      ->setDescription(t('The UUID of the Subscription entity.'))
       ->setReadOnly(TRUE);
 
     $fields['app_url'] = BaseFieldDefinition::create('string')

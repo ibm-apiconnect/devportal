@@ -348,6 +348,10 @@ function ibm_apim_drush_command() {
     'description' => 'Update content when the site URL changes',
     'aliases' => ['updatesiteurl']
   ];
+  $items['ibm_apim-update_block_translations'] = [
+    'description' => 'Update block translations after new strings loaded',
+    'aliases' => ['updateblocktranslations']
+  ];
   return $items;
 }
 
@@ -577,15 +581,6 @@ function drush_ibm_apim_listen() {
             break;
           case 'subscription_del':
             drush_apic_app_deletesub($content);
-            break;
-          case 'credential_create':
-            drush_apic_app_createcred($content);
-            break;
-          case 'credential_update':
-            drush_apic_app_updatecred($content);
-            break;
-          case 'credential_del':
-            drush_apic_app_deletecred($content);
             break;
           case 'member_create':
             drush_consumerorg_member_create($content);
@@ -2971,12 +2966,29 @@ function drush_ibm_apim_update_site_url() {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if (defined('DRUPAL_ROOT')) {
-    require_once DRUPAL_ROOT . '/profiles/apim_profile/apim_profile.homepage.inc';
-    if (function_exists('apim_profile_update_forum_block')) {
-      apim_profile_update_forum_block();
-    }
+  // this is an evil hack to update the site URLs in content that needs it
+  // this has to be done as part of a user browsing session since drush doesnt know what the site URL is
+  // so this sets a state variable and then the AdminMessagesBlock does the actual updating.
+  \Drupal::state()->set('ibm_apim.update_site_url', true);
+
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
   }
+}
+
+/**
+ * We need the translations to have been loaded before this function is called
+ * So created a custom drush command for it
+ *
+ */
+function drush_ibm_apim_update_block_translations() {
+  if (function_exists('ibm_apim_entry_trace')) {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+  }
+
+  $path = __DIR__;
+  require_once $path . '/ibm_apim.emptycontent.inc';
+  ibm_apim_update_no_content_blocks();
 
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_exit_trace(__FUNCTION__, NULL);

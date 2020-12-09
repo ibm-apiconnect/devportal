@@ -25,6 +25,7 @@ article footer {
 
   .field--name-user-picture img {
     max-width: 48px;
+    border-radius: 50%;
   }
   .author {
     padding-top: 2rem;
@@ -267,4 +268,94 @@ article footer {
 .field--widget-text-textarea-with-summary .filter-wrapper {
   background-color: $ui-background;
   border: 0;
+}
+/* comments */
+.js-comment .field.field--name-user-picture {
+  float: left;
+  width: 40px;
+  padding-top: 0;
+  img {
+    border-radius: 50%;
+  }
+}
+.new mark {
+  border-radius: .9375rem;
+  color: white;
+  background: $interactive-01;
+  padding: .25rem .5rem;
+  font-size: 1rem;
+  margin-right: 10px;
+}
+
+/* only solution could find to hide the blog links in comments */
+.js-comment [typeof="schema:Person"] .js-form-item.js-form-type-item.form-type-item.form-no-label.form-group,
+.forumPost [typeof="schema:Person"] .js-form-item.js-form-type-item.form-type-item.form-no-label.form-group,
+.blog-post [typeof="schema:Person"] .js-form-item.js-form-type-item.form-type-item.form-no-label.form-group {
+  display: none;
+}
+.js-comment > h3 {
+  font-size: 1.3rem;
+}
+.js-comment > h3,
+.js-comment .submitted,
+.js-comment .content {
+  margin-left: 50px;
+  padding-top: 0;
+}
+.js-comment .content p{
+  font-size: 0.875rem;
+}
+.js-comment .submitted {
+  font-size: 0.75rem;
+}
+.js-comment .content .links {
+  padding-top: 10px;
+}
+.blog-post footer {
+  float: left;
+}
+.blog-post .submitted {
+  float: right;
+  padding-top: 0.5rem;
+}
+.blog-post .content {
+  padding-top: 2rem;
+}
+.forumContent .leftContent {
+  width: calc(100% - 350px);
+  min-width: 300px;
+}
+.forumPost [typeof="schema:Person"] {
+  float: left;
+}
+.forumPost .quickedit-field [typeof="schema:Person"] {
+  float: none;
+}
+.forumPost .field--name-body {
+  padding-top: 1rem;
+}
+.path-node .forumPost .content {
+  padding-top: 1rem;
+}
+/* embedded docs in products */
+.Pane.vertical.Pane1 {
+  border-right: 1px solid $ui-03;
+}
+.apicProduct .embeddedDocPagesNav a.selected {
+  color: $interactive-01;
+}
+.apicProduct .embeddedDocPagesNav a.selected {
+  border-left: 4px solid $interactive-01;
+}
+.apicProduct .embeddedDocPagesNav a,
+.apicProduct .embeddedDocPagesNav div.bx--side-nav__link {
+  color: $text-01;
+}
+.apicProduct .embeddedDocPagesNav ul .tocItem a:hover,
+.apicProduct .embeddedDocPagesNav ul .tocItem a.selected {
+  background-color: $ui-03;
+}
+
+.route-productview footer.footer.container {
+  margin-top: 0;
 }

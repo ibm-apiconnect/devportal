@@ -18,7 +18,7 @@
 
   table thead,
   .table thead th{
-    background: $ui-03;
+    border-bottom: 1px solid $ui-03;
   }
 
   th {
@@ -46,10 +46,6 @@
       line-height: 1.25;
       text-align: center;
     }
-  }
-
-  tbody tr:nth-child(odd) {
-    background-color: #f0f3f6;
   }
 }
 

@@ -336,10 +336,10 @@ class ApicUserProfileForm extends ProfileForm {
     }
     else {
       // everyone else needs updating in the mgmt appliance too
-      $updatedMgmtAppliance = $this->accountService->updateApicAccount($editUser);
+      $apicUser = $this->accountService->updateApicAccount($editUser);
 
-      if ($updatedMgmtAppliance) {
-        $this->accountService->updateLocalAccount($editUser);
+      if (isset($apicUser)) {
+        $this->accountService->updateLocalAccount($apicUser);
       }
     }
 

@@ -3,6 +3,7 @@ show_placeholder_images: true
 show_register_app: true
 show_versions: true
 enable_api_test: true
+validate_apis: true
 autotag_with_phase: false
 show_cors_warnings: true
 show_analytics: true
@@ -20,6 +21,8 @@ render_api_schema_view: true
 allow_consumerorg_creation: true
 allow_consumerorg_rename: true
 allow_consumerorg_delete: true
+enable_oidc_register_form: true
+enable_oidc_login_form: false
 allow_user_delete: true
 allow_new_credentials: true
 allow_clientid_reset: true
@@ -53,3 +56,4 @@ proxy_auth:
 proxy_for_api: 'CONSUMER,PLATFORM,ANALYTICS'
 payment_method_encryption_profile: 'socialblock'
 billing_providers:
+api_max_depth: 9

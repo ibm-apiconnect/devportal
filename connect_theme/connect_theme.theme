@@ -302,4 +302,12 @@ function connect_theme_preprocess_form_user_reset_pwd(&$variables) {
   }
 }
 
-
+/**
+ * Implements hook_preprocess_page_title().
+ */
+function connect_theme_preprocess_page_title(&$variables) {
+  $node = \Drupal::request()->attributes->get('node');
+  if ($node && $node->bundle() == 'forum') {
+    $variables['title'] = t('Forums');
+  }
+}

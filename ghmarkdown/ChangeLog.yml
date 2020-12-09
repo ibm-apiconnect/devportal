@@ -1,4 +1,6 @@
 changes:
+  8.x-2.3.0:
+  - update version: 8.x-2.2.1 -> 8.x-2.3.0
   8.x-2.2.0:
   - Update ghmarkdown.info.yml
   8.x-2.1.1: null

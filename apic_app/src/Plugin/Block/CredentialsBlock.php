@@ -137,7 +137,11 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
     else {
       $clipboard = ['enabled' => FALSE];
     }
-
+    $moduleHandler = \Drupal::service('module_handler');
+    if ($moduleHandler->moduleExists('view_password')) {
+      // Adding js for the view_password lib since it only attaches to forms by default.
+      $libraries[] = 'view_password/pwd_lb';
+    }
     return [
       '#theme' => 'app_credentials',
       '#node' => $nodeArray,

@@ -18,7 +18,7 @@
     <header class="titleSection apicMyOrgHeader">
       <div class="titleInnerWrapper">
         <div class="leftTitle">
-          <h1 class="orgName">{{- myorg_title -}}</h1>
+          <h1 id="node-{{ node.id }}-title" class="orgName">{{- myorg_title -}}</h1>
         </div>
         {% if edit_mode and (myorg_can_rename_org or myorg_can_delete_org or myorg_can_transfer_owner) %}
           <div class="rightTitle">

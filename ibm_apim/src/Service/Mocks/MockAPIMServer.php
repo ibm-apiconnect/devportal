@@ -14,15 +14,15 @@
 namespace Drupal\ibm_apim\Service\Mocks;
 
 use Drupal\auth_apic\JWTToken;
-use Drupal\ibm_apim\Rest\MeResponse;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicType\ApicUser;
+use Drupal\ibm_apim\Rest\MeResponse;
 use Drupal\ibm_apim\Rest\Payload\RestResponseReader;
 use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
-use Drupal\Core\Url;
 
 
 /**
@@ -169,6 +169,11 @@ class MockAPIMServer implements ManagementServerInterface {
     return $this->restResponseReader->read($response);
   }
 
+  public function postSignOut(): RestResponse {
+    \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::postSignOut() is missing!');
+    return new RestResponse();
+  }
+
   public function acceptInvite(JWTToken $token, ApicUser $acceptingUser, $orgTitle) {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::acceptInvite() is missing!');
     return NULL;
@@ -195,23 +200,23 @@ class MockAPIMServer implements ManagementServerInterface {
         'title' => 'andremember',
         'state' => 'enabled',
         'user' => [
-            'type' => 'user',
-            'api_version' => '2.0.0',
-            'id' => '9bfd584a-b907-4209-869e-9ef481f470ad',
-            'name' => 'andremember',
-            'title' => 'andremember',
-            'url' => '/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029/users/9bfd584a-b907-4209-869e-9ef481f470ad',
-            'state' => 'enabled',
-            'identity_provider' => 'dev-idp',
-            'username' => 'andremember',
-            'email' => 'andremember@example.com',
-            'first_name' => 'andremember',
-            'last_name' => 'andresson',
-            'user_registry_url' => '/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029',
-          ],
+          'type' => 'user',
+          'api_version' => '2.0.0',
+          'id' => '9bfd584a-b907-4209-869e-9ef481f470ad',
+          'name' => 'andremember',
+          'title' => 'andremember',
+          'url' => '/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029/users/9bfd584a-b907-4209-869e-9ef481f470ad',
+          'state' => 'enabled',
+          'identity_provider' => 'dev-idp',
+          'username' => 'andremember',
+          'email' => 'andremember@example.com',
+          'first_name' => 'andremember',
+          'last_name' => 'andresson',
+          'user_registry_url' => '/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029',
+        ],
         'role_urls' => [
-            '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/roles/b8b957dc-15fb-4420-805a-3a7db9eb0fe9',
-          ],
+          '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/roles/b8b957dc-15fb-4420-805a-3a7db9eb0fe9',
+        ],
         'created_at' => '2019-07-03T10:10:20.403Z',
         'updated_at' => '2019-07-03T10:10:20.403Z',
         'org_url' => '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958',
@@ -261,9 +266,9 @@ class MockAPIMServer implements ManagementServerInterface {
    * @inheritDoc
    */
   public function patchConsumerOrg(ConsumerOrg $org, array $data) {
-      $response = new RestResponse();
-      $response->setCode(200);
-      return $response;
+    $response = new RestResponse();
+    $response->setCode(200);
+    return $response;
   }
 
   /**
@@ -298,7 +303,7 @@ class MockAPIMServer implements ManagementServerInterface {
    */
   public function activateFromJWT(JWTToken $jwt): RestResponse {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::activateFromJWT() is missing!');
-    return NULL;
+    return new RestResponse();
   }
 
 
@@ -326,11 +331,11 @@ class MockAPIMServer implements ManagementServerInterface {
       '&scope=scope' .
       '&redirect_uri=';
 
-      
+
     $utils = \Drupal::service('ibm_apim.utils');
     if ($utils->startsWith($url, $exp) && $utils->endsWith($url,'%2Fibm_apim%2Foidcredirect')) {
       $loc = $host . URL::fromRoute('auth_apic.azcode')->toString(TRUE)->getGeneratedUrl() .
-        '?code=valid&' . 
+        '?code=valid&' .
         'state=czozOiJrZXkiOw==';
       $result = new \stdClass();
       $result->headers = ['Location' => $loc];

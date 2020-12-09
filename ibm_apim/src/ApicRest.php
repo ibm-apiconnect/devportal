@@ -486,7 +486,7 @@ class ApicRest implements ApicRestInterface {
 
     $result = self::json_http_request($url, $verb, $headers, $data, $returnResult, NULL, NULL, TRUE, $apiType);
 
-    if (isset($result) && (int) $result->code === 401 && $session_store->get('refresh') !== null) {
+    if (!$utils->endsWith($url,'/me/sign-out') && isset($result) && (int) $result->code === 401 && $session_store->get('refresh') !== null) {
       $refresh_expires_in = $session_store->get('refresh_expires_in');
       if (!isset($refresh_expires_in) || (int) $refresh_expires_in > time()) {
         $refreshed = \Drupal::service('ibm_apim.mgmtserver')->refreshAuth();
@@ -537,7 +537,7 @@ class ApicRest implements ApicRestInterface {
         $returnValue = $result;
       }
     }
-    elseif ($current_user->isAuthenticated() && (int) $current_user->id() !== 1 && (isset($result) && ((int) $result->code === 401 || ($expires_in !== NULL && (int) $expires_in < time())))) {
+    elseif (!$utils->endsWith($url,'/me/sign-out') && $current_user->isAuthenticated() && (int) $current_user->id() !== 1 && (isset($result) && ((int) $result->code === 401 || ($expires_in !== NULL && (int) $expires_in < time())))) {
       // handle token having expired
       // force log the user out, they can login and try again
       \Drupal::logger('ibm_apim')->notice('Session expired based on token expires_in value. Forcing logout.');

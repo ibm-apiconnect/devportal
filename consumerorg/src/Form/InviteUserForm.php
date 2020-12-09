@@ -116,6 +116,12 @@ class InviteUserForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $roles = null;
+    $org = $this->userUtils->getCurrentConsumerorg();
+    $this->currentOrg = $this->consumerOrgService->get($org['url']);
+    if ($this->currentOrg !== NULL) {
+      $roles = $this->currentOrg->getRoles();
+    }
     if (!$this->userUtils->checkHasPermission('member:manage')) {
       $this->messenger->addError(t('Permission denied.'));
 
@@ -130,11 +136,22 @@ class InviteUserForm extends FormBase {
         '#attributes' => ['class' => ['button']],
       ];
 
+    } elseif ($roles === NULL || count($roles) < 2) {
+      $this->messenger->addError(t('Permission denied.'));
+
+      $form = [];
+      $form['description'] = ['#markup' => '<p>' . t('Only one role found for this consumer organization. Inviting other members is not possible. Please contact your administrator if you think this is an error.') . '</p>'];
+
+      $form['actions'] = ['#type' => 'actions'];
+      $form['actions']['cancel'] = [
+        '#type' => 'link',
+        '#title' => t('Cancel'),
+        '#url' => $this->getCancelUrl(),
+        '#attributes' => ['class' => ['button']],
+      ];
+
     }
     else {
-      $org = $this->userUtils->getCurrentConsumerorg();
-      $this->currentOrg = $this->consumerOrgService->get($org['url']);
-
       $form['new_email'] = [
         '#type' => 'email',
         '#title' => t('Email'),
@@ -143,7 +160,6 @@ class InviteUserForm extends FormBase {
         '#required' => TRUE,
       ];
 
-      $roles = $this->currentOrg->getRoles();
       if ($roles !== NULL && count($roles) > 1) {
         $roles_array = [];
         $default_role = NULL;

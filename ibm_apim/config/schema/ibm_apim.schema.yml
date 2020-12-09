@@ -73,6 +73,9 @@ ibm_apim.settings:
     enable_api_test:
       type: boolean
       label: 'Allow testing of APIs'
+    validate_apis:
+      type: boolean
+      label: 'Validate APIs'
     autotag_with_phase:
       type: boolean
       label: 'Automatically tag each API with its phase'
@@ -136,6 +139,12 @@ ibm_apim.settings:
     hide_admin_registry:
       type: boolean
       label: 'Hide the admin user registry on the login form.'
+    enable_oidc_register_form:
+      type: boolean
+      label: 'Enable the OIDC register form.'
+    enable_oidc_login_form:
+      type: boolean
+      label: 'Enable the OIDC login form.'
     categories:
       type: mapping
       label: 'Categories'
@@ -226,6 +235,9 @@ ibm_apim.settings:
     billing_providers:
       type: text
       label: 'The mapping of billing providers to payment method forms'
+    api_max_depth:
+      type: integer
+      label: 'The maximum depth in layers for API objects to process examples'
 
 comment.type.comment:
   type: config_object
@@ -235,6 +247,10 @@ comment.type.comment:
 core.entity_view_mode.node.card:
   type: config_object
   label: 'Card'
+
+core.entity_view_mode.node.embedded:
+  type: config_object
+  label: 'Embedded'
 
 core.entity_view_mode.node.subscribewizard:
   type: config_object
@@ -268,6 +284,10 @@ field.field.user.user.codesnippet:
 field.field.user.user.consumer_organization:
   type: ibm_apim_config_object
   label: 'Consumer organization'
+
+field.field.user.user.consumerorg_url:
+  type: ibm_apim_config_object
+  label: 'Consumer organization URL'
 
 field.field.user.user.first_name:
   type: ibm_apim_config_object

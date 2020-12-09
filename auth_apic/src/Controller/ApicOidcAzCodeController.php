@@ -183,7 +183,11 @@ class ApicOidcAzCodeController extends ControllerBase {
       if ($redirect_location === 'ERROR') {
         $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
         $redirect_location = '<front>';
+      } else if ($this->authApicSessionStore->get('redirect_to')) {
+        $this->requestService->getCurrentRequest()->query->set('destination', $this->authApicSessionStore->get('redirect_to'));
+        $this->authApicSessionStore->delete('redirect_to');
       }
+
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }
@@ -403,6 +407,8 @@ class ApicOidcAzCodeController extends ControllerBase {
       }
       return '<front>';
     }
+    $invitationScope = $this->requestService->getCurrentRequest()->query->get('invitation_scope');
+    $title = $this->requestService->getCurrentRequest()->query->get('title');
 
     //Validates the state parameter
     $stateReceived = unserialize($this->utils->base64_url_decode($state));
@@ -477,6 +483,10 @@ class ApicOidcAzCodeController extends ControllerBase {
     if (isset($invitation_object)) {
       $url .= '&token=' . $invitation_object->getDecodedJwt();
     }
+    if (isset($invitationScope) && $invitationScope == 'consumer-org' && isset($title)) {
+      $url .= '&invitation_scope=consumer-org&title=' . $title;
+    }
+
 
     $response = $this->mgmtServer->get($url);
     $headers = $response->getHeaders();

@@ -94,10 +94,13 @@
         </div>
         {% if node.payment_methods is empty %}
           <div class="apicNoContent paymentMethodContainer noPaymentMethods">
-            <div class="noContentImage svgContainer">{% include images_path ~ '/images/EmptyState-Nothinglarge.svg' %}</div>
+            <div
+                class="noContentImage svgContainer">{% include images_path ~ '/images/EmptyState-Nothinglarge.svg' %}</div>
             <div class="noContentTextContainer messageContainer">
-              <div class="noContentText noPaymentMethodsText firstLine">{{ "You don't currently have any payment methods."|t }}</div>
-              <div class="noContentText noPaymentMethodsText secondLine">{{ 'Click add to add a new payment method for use when subscribing to API products.'|t }}</div>
+              <div
+                  class="noContentText noPaymentMethodsText firstLine">{{ "You don't currently have any payment methods."|t }}</div>
+              <div
+                  class="noContentText noPaymentMethodsText secondLine">{{ 'Click add to add a new payment method for use when subscribing to API products.'|t }}</div>
             </div>
           </div>
         {% else %}
@@ -144,23 +147,24 @@
                 </div>
                 <div
                     class="bx--about__title--name {{ payment_method.payment_type.type|clean_class }}">{{ payment_method.title }}</div>
-
-                {% for key,value in payment_method.configuration %}
-                  {% if key|lower is same as('token') %}
-                    {# don't render the token #}
-                  {% elseif key|lower is same as('last_4') %}
-                    <p class="key {{ key|clean_class }}">{{ 'Card number'|t }}: ************{{ value }}</p>
-                  {% elseif key|lower is same as('expiration_month') and payment_method.configuration.expiration_year is defined %}
-                    <p class="key cardExpiry">{{ 'Expiry'|t }}: {{ payment_method.configuration.expiration_month }}
-                      / {{ payment_method.configuration.expiration_year }}</p>
-                  {% elseif key|lower is same as('expiration_year') and payment_method.configuration.expiration_month is defined %}
-                    {# do nothing since we've handled expiry above #}
-                  {% elseif value is empty %} 
-                    {# don't render empty values #}
-                  {% else %}
-                    <p class="key {{ key|clean_class }}">{{ key }}: {{ value }}</p>
-                  {% endif %}
-                {% endfor %}
+                <div class="paymentMethodFields">
+                  {% for key,field in payment_method.configuration %}
+                    {% if key|lower is same as('token') %}
+                      {# don't render the token #}
+                    {% elseif key|lower is same as('last_4') %}
+                      <p class="key {{ key|clean_class }}">{{ 'Card number'|t }}: ************{{ value }}</p>
+                    {% elseif key|lower is same as('expiration_month') and payment_method.configuration.expiration_year is defined %}
+                      <p class="key cardExpiry">{{ 'Expiry'|t }}: {{ payment_method.configuration.expiration_month }}
+                        / {{ payment_method.configuration.expiration_year }}</p>
+                    {% elseif key|lower is same as('expiration_year') and payment_method.configuration.expiration_month is defined %}
+                      {# do nothing since we've handled expiry above #}
+                    {% elseif field.value is empty %}
+                      {# don't render empty values #}
+                    {% else %}
+                      <p class="key {{ key|clean_class }}">{{ field.title }}: {{ field.value }}</p>
+                    {% endif %}
+                  {% endfor %}
+                </div>
               </div>
             {% endfor %}
           </div>

@@ -54,11 +54,11 @@ class CredentialsService {
    *
    * @return \Drupal\node\NodeInterface
    */
-  public function deleteCredentials($node, $credId): NodeInterface {
-    if (isset($node, $credId)) {
+  public function deleteCredentials($node, $uuid): NodeInterface {
+    if (isset($node, $uuid)) {
       // delete the credential entities
       $query = \Drupal::entityQuery('apic_app_application_creds');
-      $query->condition('id', $credId);
+      $query->condition('uuid', $uuid);
       $entityIds = $query->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         $credEntities = ApplicationCredentials::loadMultiple($entityIds);
@@ -72,7 +72,7 @@ class CredentialsService {
       // Now ensure the app doesnt reference the deleted credential
       $credentials = $node->application_credentials_refs->referencedEntities();
       foreach ($credentials as $credential) {
-        if ($credential->id() !== $credId) {
+        if ($credential->uuid() !== $uuid) {
           $newCreds[] = ['target_id' => $credential->id()];
         }
       }
@@ -89,6 +89,7 @@ class CredentialsService {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   private function createOrUpdateACredential($cred) {
+    $newEntityId = null;
     if ($cred !== NULL) {
       if (isset($cred['consumer_org_url'])) {
         $cred['consumerorg_url'] = $cred['consumer_org_url'];
@@ -96,8 +97,11 @@ class CredentialsService {
       if (isset($cred['cred_url'])) {
         $cred['url'] = $cred['cred_url'];
       }
+      if (isset($cred['uuid'])) {
+        $cred['id'] = $cred['uuid'];
+      }
       $query = \Drupal::entityQuery('apic_app_application_creds');
-      $query->condition('id', $cred['id']);
+      $query->condition('uuid', $cred['id']);
       $entityIds = $query->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         $credEntities = ApplicationCredentials::loadMultiple($entityIds);
@@ -110,6 +114,7 @@ class CredentialsService {
         $credEntity->set('summary', $cred['summary']);
         $credEntity->set('cred_url', $cred['url']);
         $credEntity->save();
+        $newEntityId = array_shift($entityIds);
         if (sizeof($credEntities) > 1) {
           // if there is more than one credential with this ID then something's gone wrong - delete any others
           foreach (array_slice($credEntities, 1) as $key => $credEntity) {
@@ -119,7 +124,7 @@ class CredentialsService {
       }
       else {
         $newCred = ApplicationCredentials::create([
-          'id' => $cred['id'],
+          'uuid' => $cred['id'],
           'client_id' => $cred['client_id'],
           'name' => $cred['name'],
           'title' => $cred['title'],
@@ -130,9 +135,15 @@ class CredentialsService {
         ]);
         $newCred->enforceIsNew();
         $newCred->save();
+        $query = \Drupal::entityQuery('apic_app_application_creds');
+        $query->condition('uuid', $cred['id']);
+        $entityIds = $query->execute();
+        if (isset($entityIds) && !empty($entityIds)) {
+          $newEntityId = array_shift($entityIds);
+        }
       }
     }
-    return $cred['id'];
+    return $newEntityId;
   }
 
   /**
@@ -172,8 +183,7 @@ class CredentialsService {
   public function createOrUpdateCredentialsList($node, $creds): NodeInterface {
     if ($creds !== NULL && $node !== NULL) {
       $newCreds = [];
-
-      foreach($creds as $cred){
+      foreach($creds as $cred) {
         $newId = $this->createOrUpdateACredential($cred);
         if ($newId !== null) {
           $newCreds[] = ['target_id' => $newId];
@@ -181,7 +191,12 @@ class CredentialsService {
           \Drupal::logger('apic_app')->warning('createOrUpdateCredentialsList: Error updating a credential @credId', ['@credId' => $cred['id']]);
         }
       }
-
+      $oldCreds = $node->get('application_credentials_refs')->referencedEntities();
+      foreach($oldCreds as $cred) {
+        if (!in_array(['target_id' => $cred->id()], $newCreds)) {
+          \Drupal::entityTypeManager()->getStorage('apic_app_application_creds')->load($cred->id())->delete();
+        }
+      }
       // update the application
       $node->set('application_credentials_refs', $newCreds);
       $node->save();

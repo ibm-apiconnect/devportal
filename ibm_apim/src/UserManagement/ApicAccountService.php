@@ -185,8 +185,8 @@ class ApicAccountService implements ApicAccountInterface {
 
     }
     else {
-      $account->set('first_name', $user->getFirstname());
-      $account->set('last_name', $user->getLastname());
+        $account->set('first_name', $user->getFirstname());
+        $account->set('last_name', $user->getLastname());
       // some user registries don't have a mail address and we store a known value to
       // identify this case and still be valid in Drupal so don't overwrite it with NULL
       if ($user->getMail() !== NULL && $user->getMail() !== '') {
@@ -263,14 +263,13 @@ class ApicAccountService implements ApicAccountInterface {
   /**
    * @inheritDoc
    */
-  public function updateApicAccount(ApicUser $user): bool {
+  public function updateApicAccount(ApicUser $user): ?ApicUser {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
 
-    $returnValue = TRUE;
     $apic_me = $this->mgmtServer->updateMe($user);
-
+    $returnValue = $apic_me->getUser();
     if ((int) $apic_me->getCode() !== 200) {
 
       // The management server rejected our update. Log the error.
@@ -292,7 +291,7 @@ class ApicAccountService implements ApicAccountInterface {
         '@code' => $apic_me->getCode(),
         '@error' => $errors,
       ]);
-      $returnValue = FALSE;
+      $returnValue = null;
     }
 
     if (\function_exists('ibm_apim_exit_trace')) {

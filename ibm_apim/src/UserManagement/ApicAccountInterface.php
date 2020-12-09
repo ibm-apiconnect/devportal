@@ -68,9 +68,9 @@ interface ApicAccountInterface {
    * @param \Drupal\ibm_apim\ApicType\ApicUser $user
    *   the user profile to update including the updated fields
    *
-   * @return bool
+   * @return ApicUser|null
    */
-  public function updateApicAccount(ApicUser $user): bool;
+  public function updateApicAccount(ApicUser $user): ?ApicUser ;
 
   /**
    * @param $apic_user ApicUser

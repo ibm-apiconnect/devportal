@@ -208,7 +208,9 @@ function apim_profile_install() {
     'svg_image_field',
     'views_taxonomy_term_name_depth',
     'extlink',
-    'clipboardjs'
+    'clipboardjs',
+    'securitytxt',
+    'view_password',
   ];
 
   $our_modules = [
@@ -228,6 +230,7 @@ function apim_profile_install() {
     'socialblock',
     'themegenerator',
     'mail_subscribers',
+    'drushadmin',
   ];
   // enable our modules
   $module_installer = \Drupal::service('module_installer');
@@ -684,6 +687,12 @@ function apim_profile_default_apic_config() {
     ->set('notify.register_no_approval_required', FALSE)
     ->set('notify.register_pending_approval', FALSE)
     ->save();
+
+  \Drupal::service('config.factory')
+    ->getEditable('system.maintenance')
+    ->set('message', '<h3>Sorry! Our site is currently under maintenance. We should be back shortly. </h3>
+Please <a href="contact">contact us</a> with any questions.')
+    ->save(TRUE);
 }
 
 /**
@@ -907,21 +916,21 @@ function apim_profile_place_blocks() {
   if ($block !== NULL) {
     $block->set('theme', 'connect_theme');
     $block->set('region', 'disabled');
-    $block->set('status', true);
+    $block->set('status', TRUE);
     $block->save();
   }
   $block = Block::load('noapisblock');
   if ($block !== NULL) {
     $block->set('theme', 'connect_theme');
     $block->set('region', 'disabled');
-    $block->set('status', true);
+    $block->set('status', TRUE);
     $block->save();
   }
   $block = Block::load('noproductsblock');
   if ($block !== NULL) {
     $block->set('theme', 'connect_theme');
     $block->set('region', 'disabled');
-    $block->set('status', true);
+    $block->set('status', TRUE);
     $block->save();
   }
 
@@ -1250,6 +1259,7 @@ function apim_profile_update_8016() {
  * Enable Advanced Aggregation of JS and CSS
  */
 function apim_profile_update_8017() {
+  \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
   $module_installer = \Drupal::service('module_installer');
   foreach ([
              'advagg',
@@ -1258,6 +1268,7 @@ function apim_profile_update_8017() {
            ] as $module) {
     $module_installer->install([$module]);
   }
+  \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
 
   \Drupal::service('config.factory')
     ->getEditable('advagg.settings')
@@ -1320,7 +1331,7 @@ function apim_profile_update_8018() {
 }
 
 function apim_profile_update_8019() {
-
+  \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
   $module_installer = \Drupal::service('module_installer');
   foreach ([
              'warmer',
@@ -1329,6 +1340,7 @@ function apim_profile_update_8019() {
            ] as $module) {
     $module_installer->install([$module]);
   }
+  \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
   \Drupal::service('config.factory')
     ->getEditable('warmer.settings')
     ->set('entity', [
@@ -1385,7 +1397,9 @@ function apim_profile_update_8021() {
              'svg_image_field',
              'views_taxonomy_term_name_depth',
            ] as $module) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
     $module_installer->install([$module]);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
   }
 }
 
@@ -1425,8 +1439,10 @@ function apim_profile_update_8024() {
   // force removal of the php module
   $moduleHandler = \Drupal::service('module_handler');
   if ($moduleHandler->moduleExists('php')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
     $module_installer = \Drupal::service('module_installer');
     $module_installer->uninstall(['php']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
   }
   \Drupal::service('config.factory')
     ->getEditable('ibm_apim.settings')
@@ -1545,7 +1561,9 @@ function apim_profile_update_8026() {
   if ($moduleHandler->moduleExists('node_type_count')) {
     try {
       // try deleting the module if we can
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
       $module_installer->uninstall(['node_type_count']);
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
     } catch (\Exception $e) {
       // if deleting the module fails (and it might since we've deleted the files), then just purge it from the db
       \Drupal::database()->delete('key_value')
@@ -1555,7 +1573,9 @@ function apim_profile_update_8026() {
     }
 
   }
+  \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
   $module_installer->install(['apic_type_count']);
+  \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
 }
 
 /**
@@ -1568,8 +1588,10 @@ function apim_profile_update_8027() {
     $query = \Drupal::entityQuery('rules_reaction_rule');
     $result = $query->count()->execute();
     if (!isset($result) || (int) $result < 1) {
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
       $module_installer = \Drupal::service('module_installer');
       $module_installer->uninstall(['rules', 'rules_http_client']);
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
     }
   }
 }
@@ -1590,8 +1612,10 @@ function apim_profile_update_8028() {
 function apim_profile_update_8029() {
   $moduleHandler = \Drupal::service('module_handler');
   if (!$moduleHandler->moduleExists('ibm_create_payment_method')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
     $module_installer = \Drupal::service('module_installer');
     $module_installer->install(['ibm_create_payment_method']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
   }
 }
 
@@ -1664,8 +1688,10 @@ function apim_profile_update_8101() {
 function apim_profile_update_8102() {
   $moduleHandler = \Drupal::service('module_handler');
   if (!$moduleHandler->moduleExists('extlink')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
     $module_installer = \Drupal::service('module_installer');
     $module_installer->install(['extlink']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
   }
   \Drupal::service('config.factory')
     ->getEditable('extlink.settings')
@@ -2076,8 +2102,10 @@ function apim_profile_update_8105() {
 function apim_profile_update_8106() {
   $moduleHandler = \Drupal::service('module_handler');
   if (!$moduleHandler->moduleExists('clipboardjs')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
     $module_installer = \Drupal::service('module_installer');
     $module_installer->install(['clipboardjs']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
   }
 }
 
@@ -2110,21 +2138,21 @@ function apim_profile_update_8107() {
   if ($block !== NULL) {
     $block->set('theme', 'connect_theme');
     $block->set('region', 'disabled');
-    $block->set('status', true);
+    $block->set('status', TRUE);
     $block->save();
   }
   $block = Block::load('noapisblock');
   if ($block !== NULL) {
     $block->set('theme', 'connect_theme');
     $block->set('region', 'disabled');
-    $block->set('status', true);
+    $block->set('status', TRUE);
     $block->save();
   }
   $block = Block::load('noproductsblock');
   if ($block !== NULL) {
     $block->set('theme', 'connect_theme');
     $block->set('region', 'disabled');
-    $block->set('status', true);
+    $block->set('status', TRUE);
     $block->save();
   }
 
@@ -2138,7 +2166,7 @@ function apim_profile_update_8108() {
   $fieldConfig = FieldConfig::loadByName('node', 'forum', 'comment_forum');
   if ($fieldConfig !== NULL) {
     $settings = $fieldConfig->get('settings');
-    if ($settings['preview'] !== 0 ) {
+    if ($settings['preview'] !== 0) {
       $settings['preview'] = 0;
       $fieldConfig->set('settings', $settings);
       $fieldConfig->save();
@@ -2147,7 +2175,7 @@ function apim_profile_update_8108() {
   $fieldConfig = FieldConfig::loadByName('node', 'article', 'comment');
   if ($fieldConfig !== NULL) {
     $settings = $fieldConfig->get('settings');
-    if ($settings['preview'] !== 0 ) {
+    if ($settings['preview'] !== 0) {
       $settings['preview'] = 0;
       $fieldConfig->set('settings', $settings);
       $fieldConfig->save();
@@ -2156,7 +2184,7 @@ function apim_profile_update_8108() {
   $fieldConfig = FieldConfig::loadByName('node', 'blog_post', 'field_blog_comments');
   if ($fieldConfig !== NULL) {
     $settings = $fieldConfig->get('settings');
-    if ($settings['preview'] !== 0 ) {
+    if ($settings['preview'] !== 0) {
       $settings['preview'] = 0;
       $fieldConfig->set('settings', $settings);
       $fieldConfig->save();
@@ -2172,10 +2200,125 @@ function apim_profile_update_8109() {
   if ($moduleHandler->moduleExists('book')) {
     $module_installer = \Drupal::service('module_installer');
     try {
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
       $module_installer->uninstall(['book']);
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
     } catch (\Exception $e) {
       // do nothing, likely means another module depends on this module
     }
+  }
+  if (!$moduleHandler->moduleExists('securitytxt')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->install(['securitytxt']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  }
+}
+
+/**
+ * enable view_password module
+ */
+function apim_profile_update_8110() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('view_password')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->install(['view_password']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  }
+  \Drupal::configFactory()
+    ->getEditable('view_password.settings')
+    ->set('form_ids', 'user_login_form,user_register_form,apic_change_pwd_form,display_app_credentials_form,apic_resetpw')
+    ->save(TRUE);
+}
+
+/**
+ * Set a better default maintenance mode message
+ */
+function apim_profile_update_8111() {
+  \Drupal::service('config.factory')
+    ->getEditable('system.maintenance')
+    ->set('message', '<h3>Sorry! Our site is currently under maintenance. We should be back shortly. </h3>
+Please <a href="contact">contact us</a> with any questions.')
+    ->save(TRUE);
+
+  // enable AJAX history for search content view so that query params work
+  $view = Views::getView('search_content');
+  if ($view !== NULL) {
+    $view->setDisplay('page_1');
+    $display_extenders = $view->getDisplay()->getOption('display_extenders');
+    if (empty($display_extenders['ajax_history']) || !isset($display_extenders['ajax_history']['enable_history']) || $display_extenders['ajax_history']['enable_history'] !== TRUE) {
+      $display_extenders['ajax_history'] = ['enable_history' => TRUE];
+      $view->getDisplay()->setOption('display_extenders', $display_extenders);
+      $view->save();
+    }
+  }
+
+  \Drupal::configFactory()
+    ->getEditable('search404.settings')
+    ->set('search404_do_custom_search', TRUE)
+    ->set('search404_custom_search_path', 'search/content?keys=@keys')
+    ->save(TRUE);
+
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('drushadmin')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->install(['drushadmin']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  }
+
+  // sort out field order on blog posts
+  $viewDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.blog_post.default');
+  if ($viewDisplay !== NULL) {
+    $component = $viewDisplay->getComponent('body');
+    if (isset($component)) {
+      $component['weight'] = 0;
+      $viewDisplay->setComponent('body', $component);
+    }
+    $component = $viewDisplay->getComponent('field_blog_comments');
+    if (isset($component)) {
+      $component['weight'] = 3;
+      $viewDisplay->setComponent('field_blog_comments', $component);
+    }
+    $component = $viewDisplay->getComponent('field_blog_tags');
+    if (isset($component)) {
+      $component['weight'] = 2;
+      $component['type'] = 'cshs_full_hierarchy';
+      $component['settings'] = ['linked' => '1', 'separator' => ' » ', 'reverse' => 0];
+      $viewDisplay->setComponent('field_blog_tags', $component);
+    }
+    $component = $viewDisplay->getComponent('links');
+    if (isset($component)) {
+      $component['weight'] = 1;
+      $viewDisplay->setComponent('links', $component);
+    }
+    $viewDisplay->save();
+  }
+
+  // put breadcrumb block on forum pages
+  $block = Block::load('connect_theme_breadcrumbs');
+  if ($block !== NULL) {
+    $block->set('theme', 'connect_theme');
+    $block->set('region', 'content');
+    $block->set('weight', 4);
+    $block->set('status', TRUE);
+    $block->set('visibility', ['request_path' => ['id' => 'request_path', 'pages' => '/forum*', 'negate' => FALSE]]);
+    $block->save();
+  }
+}
+
+/**
+ * make sure warmer is not still referring to book module
+ */
+function apim_profile_update_8112() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('warmer')) {
+    $entityTypes = \Drupal::config('warmer.settings')->get('warmers.entity.entity_types');
+    if (in_array('node:book', array_values($entityTypes), true)) {
+      unset($entityTypes['node:book']);
+    }
+    \Drupal::configFactory()->getEditable('warmer.settings')->set('warmers.entity.entity_types', $entityTypes)->save();
   }
 }
 

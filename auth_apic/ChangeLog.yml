@@ -1,4 +1,24 @@
 changes:
+  8.x-2.3.10: null
+  8.x-2.3.9:
+  - Always update off apim response (#599)
+  8.x-2.3.8:
+  - Fixed tests
+  - Check for name and email on oidc register
+  8.x-2.3.7:
+  - add missing services
+  8.x-2.3.6:
+  - fix logic
+  8.x-2.3.5:
+  - avoid warnings about nulls
+  8.x-2.3.4:
+  - Stop user being logged out on login (#596)
+  8.x-2.3.3:
+  - Oidc register form v10.0.1 (#593)
+  8.x-2.3.2: null
+  8.x-2.3.1: null
+  8.x-2.3.0:
+  - update version: 8.x-2.2.10 -> 8.x-2.3.0
   8.x-2.2.9: null
   8.x-2.2.8:
   - fix tests for new getting started page

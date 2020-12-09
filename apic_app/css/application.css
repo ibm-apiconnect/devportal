@@ -130,11 +130,15 @@
 .applicationWrapper .contentInnerWrapper {
   padding-top: 32px;
 }
+
+.applicationWrapper .titleSection .leftTitle {
+  margin-bottom: 1rem;
+}
+
 /* tabs in application details view */
 .applicationWrapper .titleSection .applicationTabs {
   background-color: #fff;
   flex-basis: 100%;
-  margin-top: 1rem;
 }
 .applicationWrapper .titleSection .applicationTabs ul,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs ul {
@@ -543,12 +547,13 @@ input.clipboardjs {
 }
 
 button.clipboardjs-button {
-  width: 34px;
-  height: 34px;
   padding: 3px 7px;
   border: unset;
   background: unset;
   border-radius: 0;
+  width: 40px;
+  height: 40px;
+  margin-left: 3px;
 }
 
 button.clipboardjs-button:hover {
@@ -568,4 +573,11 @@ button .bx--snippet__icon:hover {
 
 ul.overflow-menu.credentialsMenu.dropitmenu {
   margin-bottom: 0;
+}
+.offscreen-field {
+  position: absolute;
+  top: 0px;
+  left: -1500px;
+  color: transparent;
+  font-size: 1px;
 }

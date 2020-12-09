@@ -13,7 +13,6 @@
 
 namespace Drupal\apic_app\Form;
 
-use Drupal\apic_app\Event\CredentialCreateEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\apic_app\Service\CredentialsService;
 use Drupal\Core\Form\FormBase;

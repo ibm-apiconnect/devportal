@@ -1,4 +1,33 @@
 changes:
+  8.x-2.3.13: null
+  8.x-2.3.12:
+  - reinstate fix
+  8.x-2.3.11:
+  - Removed test breaking code
+  - try and get the tests to pass
+  - Update user properly from consumerorg webhooks
+  - Update user from member_update
+  8.x-2.3.10:
+  - use correct uuid in delete url
+  8.x-2.3.9:
+  - translate role names too
+  8.x-2.3.8: null
+  8.x-2.3.7:
+  - add AUTO_INCREMENT
+  - add AUTO_INCREMENT
+  8.x-2.3.6:
+  - make integer unsigned
+  - make sure payment method entity installed
+  8.x-2.3.5: null
+  8.x-2.3.4:
+  - need to check if the table exists before doing the next bit too
+  - only truncate table if it exists
+  8.x-2.3.3:
+  - oops missing translations for new config
+  8.x-2.3.2: null
+  8.x-2.3.1: null
+  8.x-2.3.0:
+  - update version: 8.x-2.2.41 -> 8.x-2.3.0
   8.x-2.2.40:
   - bug in payment method creation
   8.x-2.2.39:

@@ -55,6 +55,16 @@
   vertical-align: middle;
 }
 
+.paymentMethod .bx--about__title--name {
+  overflow-y: hidden;
+  width: auto;
+}
+.paymentMethodFields {
+  overflow-x: hidden;
+  overflow-y: scroll;
+  text-overflow: ellipsis;
+}
+
 @media screen and (max-width: 1024px) {
   .apicCOrgName {
     max-width: 300px;

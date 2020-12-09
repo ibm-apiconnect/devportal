@@ -22,6 +22,12 @@ settings:
     -
       value: graphql
       label: GraphQL
+    -
+      value: kafka
+      label: Kafka
+    -
+      value: mq
+      label: MQ
   allowed_values_function: ''
 module: options
 locked: false

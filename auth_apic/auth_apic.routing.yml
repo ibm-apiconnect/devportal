@@ -110,3 +110,13 @@ auth_apic.deleteuser:
   requirements:
     _ibm_apim_delete_user_access_check: 'TRUE'
     _ibm_apim_loggedin_not_admin_access_check: 'TRUE'
+
+auth_apic.oidc_register:
+  path: '/user/oidcregister'
+  defaults:
+    _form: 'Drupal\auth_apic\Form\OidcRegisterForm'
+    _title: 'Oidc Sign Up'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: 'TRUE'

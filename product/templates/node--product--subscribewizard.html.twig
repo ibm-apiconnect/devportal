@@ -31,7 +31,7 @@
         {% endif %}
         <h1 class="node__title">
         <span id="node-{{ node.id }}-title"
-          class="field field-name-title field-formatter-string field-type-string field-label-hidden">{{- label -}}</span>
+              class="field field-name-title field-formatter-string field-type-string field-label-hidden">{{- label -}}</span>
         </h1>
         {% if showVersions %}
           <span class="apicProductVersion">{{- content.apic_version -}}</span>
@@ -66,7 +66,7 @@
                       <th class="planTitle">
                         <div class="apicTableStandardCell title">
                           <span class="planName">
-                          {{ plan.data.title }}
+                            {{ plan.data.title }}
                           </span>
                           {% if plan.requiresApproval %}
                             {% set requireApproval = true %}
@@ -75,15 +75,27 @@
                           <div class="planSubscribe">
                             {% if plan.rateLimit %}
                               <div class="apicRateLimits">
-                                  {{ plan.rateLimit}}
+                                {% if plan.rateData is defined %}
+                                  {% set multipleRates = true %}
+                                  <span class="multiRateLimits"
+                                        data-ratelimits="{{ plan.rateData }}">{{ plan.rateLimit }}</span>
+                                {% else %}
+                                  {{ plan.rateLimit }}
+                                {% endif %}
                               </div>
                             {% endif %}
                             {% if billing and plan['billing-info'] %}
                               <div class="apicBillingInfo">
-                                {{ plan['billing-info'] | raw}}
+                                {{ plan['billing-info'] | raw }}
                               </div>
                             {% endif %}
-                            <button class="button" type="submit" name="selectedPlan" value="{{ plan.data.title }}:{{ planid }}">
+                            {% if plan.data.description is defined and plan.data.description is not empty %}
+                              <div class="planDescription">
+                                {{ plan.data.description }}
+                              </div>
+                            {% endif %}
+                            <button class="button" type="submit" name="selectedPlan"
+                                    value="{{ plan.data.title }}:{{ planid }}">
                               {{ 'Select this Plan'|t }}
                             </button>
                           </div>
@@ -96,23 +108,26 @@
                   </tr>
                   </thead>
                   <tbody class="apicPlansTableBody">
+                  {% if apiList is defined and apiList is not empty %}
                   {% for api in apiList %}
                     <tr class="api-{% if loop.index is divisibleby(2) %}even{% else %}odd{% endif %}">
                       <th class="apicFixedColumn">
                         <div class="apicApiCell">
                           <div class="apicTwistieTitle">
                             <a onclick="Drupal.settings.product.toggleTwistieRow(event)" href="javascript:">
-                              <span class="apicTwistieIcon"><i class="fa fa-angle-right"></i></span>
+                              <span class="apicTwistieIcon"><i class="fa fa-angle-down"></i></span>
                               <span
-                                class="apiName">{{ api.node.title[0].value }}{% if showVersions %} {{ api.node.apic_version[0].value }} {% endif %}</span>
+                                  class="apiName"
+                                  title="{{ api.node.title[0].value }}">{{ api.node.title[0].value }}{% if showVersions %} {{ api.node.apic_version[0].value }}{% endif %}</span>
                             </a>
                           </div>
                         </div>
                       </th>
                       {% for planid, plan in planList %}
                         <td>
-                          <div class="apicTableStandardCell">
-                            {% if plan.data.apiList is empty or api.node.api_xibmname[0].value in plan.data.apiList %}
+                          <div class="apicTableStandardCell"
+                               data-api="{{ api.node.title[0].value }}{% if showVersions %} {{ api.node.apic_version[0].value }}{% endif %}">
+                            {% if plan.data.apiList is empty or (api.swagger.info['x-ibm-name'] ~ ':' ~ api.swagger.info['version']) in plan.data.apiList %}
                               {% if plan.rateData is defined %}
                                 {% set multipleRates = true %}
                                 <span class="multiRateLimits"
@@ -121,7 +136,7 @@
                                 {{ plan.rateLimit }}
                               {% endif %}
                             {% else %}
-                              &#x2014;
+                              <i class="fa fa-times"></i>
                             {% endif %}
                           </div>
                         </td>
@@ -131,11 +146,12 @@
                       <th class="apicFixedColumn">
                         {% for pathSegment, path in api.swagger.paths %}
                           {% for verb, operation in path %}
-                            {% if verb|upper in ['PUT', 'POST', 'GET', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH'] %}
+                            {% if verb|upper in ['PUT', 'POST', 'GET', 'DELETE', 'OPTIONS', 'HEAD', 'TRACE', 'PATCH'] %}
                               <div class="apicApiOperation apicTruncate apicSecondaryRow {{ verb|lower }}"
-                                title="{{ verb|upper }} {{ pathSegment }}">
+                                   title="{{ verb|upper }} {{ pathSegment }}">
                                 <span class="verb">{{ verb|upper }}</span>
                                 <span class="path">{{ pathSegment }}</span>
+
                               </div>
                             {% endif %}
                           {% endfor %}
@@ -145,10 +161,10 @@
                         <td>
                           <div class="apicTableStandardCell">
                             {% for apiName, apiData in plan.nodes %}
-                              {% if apiName == api.node.apic_ref[0].value|clean_class %}
+                              {% if apiName is same as(api.node.apic_ref[0].value|clean_class) %}
                                 {% for path, verbs in apiData.resources %}
                                   {% for verb, verbData in verbs %}
-                                    <div class="apicSecondaryRow">
+                                    <div class="apicSecondaryRow" data-op="{{ verb }} {{ path }}">
                                       {% if verbData.enabled %}
                                         {% if verbData.rateData is defined %}
                                           {% set multipleRates = true %}
@@ -170,11 +186,48 @@
                       {% endfor %}
                     </tr>
                   {% endfor %}
+                  {% else %}
+                  {% for planid, plan in planList %}
+                    <td>
+                      <div class="apicTableStandardCell"
+                           data-api="{{ api.node.title[0].value }}{% if showVersions %} {{ api.node.apic_version[0].value }}{% endif %}">
+                        {% if plan.data.apiList is empty or (api.swagger.info['x-ibm-name'] ~ ':' ~ api.swagger.info['version']) in plan.data.apiList %}
+                          {% if plan.rateData is defined %}
+                            {% set multipleRates = true %}
+                            <span class="multiRateLimits"
+                                  data-ratelimits="{{ plan.rateData }}">{{ plan.rateLimit }}</span>
+                          {% else %}
+                            {{ plan.rateLimit }}
+                          {% endif %}
+                        {% else %}
+                          <i class="fa fa-times"></i>
+                        {% endif %}
+                      </div>
+                    </td>
+                  {% endfor %}
+                  </tr>
+                  <tr class="apicTwistieRow api-{% if loop.index is divisibleby(2) %}even{% else %}odd{% endif %}">
+                    <th class="apicFixedColumn">
+                      {% for pathSegment, path in api.swagger.paths %}
+                        {% for verb, operation in path %}
+                          {% if verb|upper in ['PUT', 'POST', 'GET', 'DELETE', 'OPTIONS', 'HEAD', 'TRACE', 'PATCH'] %}
+                            <div class="apicApiOperation apicTruncate apicSecondaryRow {{ verb|lower }}"
+                                 title="{{ verb|upper }} {{ pathSegment }}">
+                              <span class="verb">{{ verb|upper }}</span>
+                              <span class="path">{{ pathSegment }}</span>
+
+                            </div>
+                          {% endif %}
+                        {% endfor %}
+                      {% endfor %}
+                    </th>
+                    {% endif %}
                   </tbody>
                   <tfoot>
-
                   </tfoot>
                 </table>
+
+
                 <div class="planTableSelector">
                    <span class="hideDetails">
                   <a class="showComparisonTable hidden" title="{{ 'Show a table comparing the available plans'|t }}"
@@ -183,7 +236,8 @@
                     <span class="apicTwistieIcon"><i class="fa fa-angle-down"></i></span>
                   </a>
 
-                    <a class="showPlans" title="Show the available plans" onclick="Drupal.settings.product.showPlans(event)" href="javascript:">
+                    <a class="showPlans" title="Show the available plans"
+                       onclick="Drupal.settings.product.showPlans(event)" href="javascript:">
                     <span class="linkLabel">Hide details</span>
                     <span class="apicTwistieIcon"><i class="fa fa-angle-up"></i></span>
                     </a>
@@ -199,11 +253,11 @@
                 {{ '* multiple rate limits; hover to view limits'|t }}
               </div>
             {% endif %}
-            {%  if requireApproval %}
+            {% if requireApproval %}
               <div class="planRequiresSubKey">
                 <p>
                   {{ locked_svg|raw }}
-                  {{ 'Requires subscription approval'|t}}
+                  {{ 'Requires subscription approval'|t }}
                 </p>
               </div>
             {% endif %}
@@ -218,8 +272,8 @@
                   <svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg"
                        xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd">
                     <path
-                      d="M8,0 C3.6,0 0,3.6 0,8 C0,12.4 3.6,16 8,16 C12.4,16 16,12.4 16,8 C16,3.6 12.4,0 8,0 L8,0 Z M8,4 C8.6,4 9,4.4 9,5 C9,5.6 8.6,6 8,6 C7.4,6 7,5.6 7,5 C7,4.4 7.4,4 8,4 L8,4 Z M10,12 L6,12 L6,11 L7,11 L7,8 L6,8 L6,7 L9,7 L9,11 L10,11 L10,12 L10,12 Z"
-                      id="Shape"></path>
+                        d="M8,0 C3.6,0 0,3.6 0,8 C0,12.4 3.6,16 8,16 C12.4,16 16,12.4 16,8 C16,3.6 12.4,0 8,0 L8,0 Z M8,4 C8.6,4 9,4.4 9,5 C9,5.6 8.6,6 8,6 C7.4,6 7,5.6 7,5 C7,4.4 7.4,4 8,4 L8,4 Z M10,12 L6,12 L6,11 L7,11 L7,8 L6,8 L6,7 L9,7 L9,11 L10,11 L10,12 L10,12 Z"
+                        id="Shape"></path>
                   </svg>
                 </span>
                 <div class="alert-text-wrapper">

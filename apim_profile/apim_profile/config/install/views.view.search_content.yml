@@ -254,8 +254,9 @@ display:
     display_title: Page
     position: 1
     display_options:
-      display_extenders:
-        ajax_history: {  }
+      display_extend:
+        ajax_history:
+          enable_history: true
       path: search/content
     cache_metadata:
       contexts:

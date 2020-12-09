@@ -45,6 +45,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->utils = $this->prophet->prophesize('Drupal\ibm_apim\Service\Utils');
     $this->apimUtils = $this->prophet->prophesize('Drupal\ibm_apim\Service\ApimUtils');
     $this->oidcStateService = $this->prophet->prophesize('Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface');
+    $this->moduleHandler = $this->prophet->prophesize('Drupal\Core\Extension\ModuleHandler');
   }
 
   protected function tearDown() {
@@ -89,7 +90,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->assertRegExp('/esponse_type=code/', $response['az_url'], 'Expected response_code query parameter not found in authorization url.');
 
     //$this->assertEquals($response['az_url'], 'https://mgmt.example.com/consumer-api/oauth2/authorize?client_id=iamaclientid&state=base64encodedstate&redirect_uri=http://portal.example.com/test/env&realm=&response_type=code', 'Unexpected authorization url.');
-    $this->assertStringStartsWith('<svg ', $response['image'], 'Unexpected image.');
+    $this->assertStringStartsWith('<svg ', $response['image']['html'], 'Unexpected image.');
 
   }
 
@@ -122,7 +123,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->assertNotNull($response['image'], 'unexpected NULL image when gathering oidc metadata.');
 
     $this->assertRegExp('/&token=blahdeblah$/', $response['az_url'], 'Expected token query parameter not found in authorization url.');
-    $this->assertStringStartsWith('<svg ', $response['image'], 'Unexpected image.');
+    $this->assertStringStartsWith('<svg ', $response['image']['html'], 'Unexpected image.');
 
   }
 
@@ -171,7 +172,8 @@ class OidcRegistryServiceTest extends UnitTestCase {
       $this->logger->reveal(),
       $this->utils->reveal(),
       $this->apimUtils->reveal(),
-      $this->oidcStateService->reveal());
+      $this->oidcStateService->reveal(), 
+      $this->moduleHandler->reveal());
     return $service;
   }
 

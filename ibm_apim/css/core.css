@@ -1168,7 +1168,7 @@ span.cron-description__run-cron a {
 
 /* payment method styling */
 .paymentMethodPage {
-  margin: 10px 48px 48px 48px;
+  margin: 2rem 3rem 3rem;
 }
 
 .addPaymentMethod {
@@ -1194,11 +1194,17 @@ span.cron-description__run-cron a {
   height: 100px;
   width: 100px;
   display: inline-block;
-  vertical-align: text-bottom;
+  vertical-align: bottom;
 }
 
 .paymentMethodContainer.noPaymentMethods .messageContainer {
   display: inline-block;
+  text-align: left;
+}
+
+.paymentMethodContainer.noPaymentMethods .messageContainer .noPaymentMethodsText{
+  padding-bottom: 0.5rem;
+  padding-left: 1rem;
 }
 
 .bx--card.paymentMethod {
@@ -1283,4 +1289,26 @@ span.cron-description__run-cron a {
 .route-entitynodecontent-translation-overview .table-responsive,
 .route-entitynodeversion-history .table-responsive {
   padding-top: 2rem;
+}
+
+.registry-button .fa.fa-facebook {
+  font-size:18px;
+}
+.registry-button .fa.fa-slack {
+  font-size:19px;
+}
+.registry-button .fa.fa-twitter {
+  font-size:19px;
+}
+.registry-button .fa.fa-windows {
+  font-size:17px;
+}
+.registry-button .fa.fa-linkedin-square {
+  font-size:20px;
+}
+.registry-button .fa.fa-google {
+  font-size:18px;
+}
+.registry-button .fa.fa-github {
+  font-size:21px;
 }

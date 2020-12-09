@@ -71,7 +71,7 @@ class ApplicationController extends ControllerBase {
   public function createApplicationModal() {
     $response = new AjaxResponse();
     $form = \Drupal::getContainer()->get('form_builder')->getForm('Drupal\apic_app\Form\ModalApplicationCreateForm');
-    $response->addCommand(new OpenModalDialogCommand('Create an application', $form, []));
+    $response->addCommand(new OpenModalDialogCommand(t('Create an application'), $form, []));
     return $response;
   }
 

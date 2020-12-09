@@ -11,9 +11,12 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
+use Drupal\Core\Database\Database;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\Node;
+use Drupal\Core\Entity\EntityStorageException;
 
 /**
  * Function to delete all the consumerorgs in the database
@@ -180,5 +183,46 @@ function consumerorg_update_8104() {
       'type' => 'entity_reference_label',
     ]);
     $viewDisplay->save();
+  }
+}
+
+/**
+ * Delete existing payment methods and update the db schema
+ * the data will be repopulated by apim
+ */
+function consumerorg_update_8105() {
+  $tables = ["consumerorg_payment_methods"];
+  $database = \Drupal::database();
+  // Retrieve existing field data in consumerorg_payment_methods table.
+  foreach ($tables as $table) {
+    // Delete any table data.
+    if ($database->schema() !==NULL && $database->schema()->tableExists($table)) {
+      $database->truncate($table)->execute();
+    }
+  }
+  try {
+    $entityDefUpManager = \Drupal::service('entity.definition_update_manager');
+    $entityDefUpManager->applyUpdates();
+    if ($database->schema() !==NULL && $database->schema()->tableExists("consumerorg_payment_methods")) {
+      Database::getConnection()->schema()->changeField('consumerorg_payment_methods', 'id', 'id', [
+        'type' => 'int',
+        'not null' => TRUE,
+        'auto_increment' => TRUE,
+      ]);
+
+      $storage_definition = BaseFieldDefinition::create('string')
+        ->setLabel(t('UUID'))
+        ->setDescription(t('The UUID of the Payment Method entity.'))
+        ->setReadOnly(TRUE);
+      \Drupal::entityDefinitionUpdateManager()
+        ->installFieldStorageDefinition('uuid', 'consumerorg_payment_method', 'consumerorg', $storage_definition);
+
+      \Drupal::logger('consumerorg: ')->notice('Successfully applied updates');
+    } else {
+      // if entity missing then install it
+      \Drupal::entityDefinitionUpdateManager()->installEntityType(\Drupal::entityTypeManager()->getDefinition('consumerorg_payment_method'));
+    }
+  } catch (EntityStorageException $e) {
+    \Drupal::logger('consumerorg: ')->notice($e->getMessage());
   }
 }

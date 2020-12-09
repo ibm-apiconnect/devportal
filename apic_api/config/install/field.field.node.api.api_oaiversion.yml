@@ -10,7 +10,7 @@ id: node.api.api_oaiversion
 field_name: api_oaiversion
 entity_type: node
 bundle: api
-label: 'OAI Version'
+label: 'Specification'
 description: ''
 required: true
 translatable: false

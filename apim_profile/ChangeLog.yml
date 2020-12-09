@@ -1,4 +1,533 @@
 changes:
+  8.x-20201127-1723:
+    commits: null
+    modules:
+      product:
+        8.x-2.3.17:
+        - float not int
+  8.x-20201125-2323:
+    commits:
+    - patches no longer needed
+    - drupal security update (#423)
+    modules:
+      apic_app:
+        8.x-2.3.23: null
+  8.x-20201125-1234:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-2.3.13: null
+  8.x-20201123-0523:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-2.3.12:
+        - reinstate fix
+      apictest:
+        8.x-2.3.5:
+        - Added another fix (#180)
+        - Fix test bug (#179)
+  8.x-20201120-2323:
+    commits: null
+    modules:
+      apic_app:
+        8.x-2.3.22:
+        - need title to be translatable
+  8.x-20201120-1723:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-2.3.11:
+        - Removed test breaking code
+        - try and get the tests to pass
+        - Update user properly from consumerorg webhooks
+        - Update user from member_update
+  8.x-20201119-1731:
+    commits: null
+    modules:
+      product:
+        8.x-2.3.16:
+        - get rid of warning
+      ibm_apim:
+        8.x-2.3.30: null
+        8.x-2.3.29: null
+        8.x-2.3.28:
+        - try and get the tests to pass
+  8.x-20201118-1734:
+    commits:
+    - try and ensure method exists before calling it
+    - try and ensure method exists before calling it
+    - fix patch
+    - update drupal for security vuln (#420)
+    modules:
+      ibm_apim:
+        8.x-2.3.27:
+        - Mock update returns user
+  8.x-20201118-1123:
+    commits: null
+    modules:
+      product:
+        8.x-2.3.15:
+        - missing upgrade function maybe?
+      apic_api:
+        8.x-2.3.6:
+        - missing upgrade function maybe?
+      apic_app:
+        8.x-2.3.21:
+        - missing upgrade function maybe?
+  8.x-20201117-1748:
+    commits:
+    - update explorer
+    modules:
+      ibm_apim:
+        8.x-2.3.26:
+        - Handle redirect on logout (#622)
+  8.x-20201116-1123:
+    commits:
+    - composer update
+    modules:
+      product:
+        8.x-2.3.14:
+        - logic failure
+  8.x-20201115-1418:
+    commits: null
+    modules:
+      product:
+        8.x-2.3.13:
+        - Translate custom strings in our views too
+        8.x-2.3.12: null
+      apic_api:
+        8.x-2.3.5:
+        - Translate custom strings in our views too
+      apic_app:
+        8.x-2.3.20:
+        - Translate custom strings in our views too
+  8.x-20201113-2055:
+    commits: null
+    modules:
+      product:
+        8.x-2.3.11:
+        - delete retired apis if deleting a product too
+  8.x-20201113-0523:
+    commits:
+    - use patch level 81 for explorer
+    modules:
+      auth_apic:
+        8.x-2.3.10: null
+        8.x-2.3.9:
+        - Always update off apim response (#599)
+        8.x-2.3.8:
+        - Fixed tests
+        - Check for name and email on oidc register
+      ibm_apim:
+        8.x-2.3.25: null
+        8.x-2.3.24:
+        - Return the user (#620)
+        8.x-2.3.23:
+        - Don't set name to null or empty (#617) (#618)
+  8.x-20201112-1523:
+    commits: null
+    modules:
+      product:
+        8.x-2.3.10:
+        - plan table header alignment
+      apic_app:
+        8.x-2.3.19:
+        - spacing for app title without analytics
+      ibm_apim:
+        8.x-2.3.22:
+        - alignment and spacing in billing tab
+        - use alert template for stripe error msg (#616)
+  8.x-20201111-2323:
+    commits:
+    - fix info.yml file
+    - patch no longer needed
+    - composer update
+    modules:
+      apic_api:
+        8.x-2.3.4:
+        - add the worker.js files to the library too
+  8.x-20201111-1723:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-2.3.7:
+        - add missing services
+  8.x-20201111-1123:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-2.3.21:
+        - use an actual error
+  8.x-20201110-1547:
+    commits: null
+    modules:
+      apic_app:
+        8.x-2.3.18:
+        - make sure really not visible
+      ibm_apim:
+        8.x-2.3.20: null
+        8.x-2.3.19:
+        - add cancel button
+        - rename Previous to be "Back"
+  8.x-20201106-1401:
+    commits:
+    - drupal core update
+    - Fixaever (#419)
+    modules:
+      auth_apic:
+        8.x-2.3.6:
+        - fix logic
+      apic_app:
+        8.x-2.3.17: null
+        8.x-2.3.16:
+        - wrong target id
+        - still visible on FF on create app - move further left
+  8.x-20201105-1725:
+    commits: null
+    modules:
+      product:
+        8.x-2.3.9:
+        - fix product handling of plans
+  8.x-20201104-1730:
+    commits:
+    - Only run builds every 6 hours
+    modules:
+      apic_app:
+        8.x-2.3.15:
+        - update the hidden field too
+        8.x-2.3.14:
+        - use a hidden field for the credentials for clipboardjs
+  8.x-20201104-0857:
+    commits:
+    - remove references to book from warmer
+    - update patch
+    modules:
+      auth_apic:
+        8.x-2.3.5:
+        - avoid warnings about nulls
+      apic_api:
+        8.x-2.3.3:
+        - strip markdown from api descriptions
+  8.x-20201103-1056:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-2.3.10:
+        - use correct uuid in delete url
+  8.x-20201102-1037:
+    commits:
+    - composer update
+    modules:
+      product:
+        8.x-2.3.8:
+        - fix multiple rate limits
+  8.x-20201101-0830:
+    commits: null
+    modules:
+      product:
+        8.x-2.3.7:
+        - do not show invalid plans
+      apic_app:
+        8.x-2.3.13:
+        - invalidate app cache when creds change
+  8.x-20201030-1923:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-2.3.18:
+        - missing import
+  8.x-20201030-1323:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-2.3.17:
+        - remove fudge factor
+  8.x-20201029-1821:
+    commits:
+    - composer update
+    modules:
+      apic_api:
+        8.x-2.3.2:
+        - add ability to disable swagger validation
+      ibm_apim:
+        8.x-2.3.16:
+        - add ability to disable swagger validation
+  8.x-20201028-1923:
+    commits:
+    - node 14
+    - Tc2dev/20201009 (#418)
+    modules:
+      auth_apic:
+        8.x-2.3.4:
+        - Stop user being logged out on login (#596)
+      ibm_apim:
+        8.x-2.3.15:
+        - Fixed sign out loop bug (#614)
+  8.x-20201028-1323:
+    commits: null
+    modules:
+      apic_app:
+        8.x-2.3.12:
+        - JS needs fixiing for multiple credentials
+      ibm_apim:
+        8.x-2.3.14: null
+        8.x-2.3.13:
+        - add new drush command to update block translations
+  8.x-20201027-1413:
+    commits:
+    - update menu_item_role_access module
+    modules:
+      ibm_apim:
+        8.x-2.3.12:
+        - warnings from invalid messages - not translatable
+        8.x-2.3.11:
+        - need to get the explicit string back
+        - More stripe (#612)
+        - Removed credentials webhook code (#611)
+      consumerorg:
+        8.x-2.3.9:
+        - translate role names too
+  8.x-20201026-1805:
+    commits: null
+    modules:
+      apic_app:
+        8.x-2.3.11:
+        - whitespace formatting
+        - use a subId paramconverter
+        - use a credId paramconverter
+  8.x-20201015-1925:
+    commits:
+    - keep composer at 1.x for now
+    - composer update
+    - Merge pull request
+    - rename versions
+    - Merge pull request
+    modules:
+      apic_app:
+        8.x-2.3.10:
+        - use uuids for credentials params
+        - Fixes for credentials
+  8.x-20201014-1626:
+    commits:
+    - disable lang import when installing custom modules
+    modules:
+      ibm_apim:
+        8.x-2.3.10:
+        - Add configuration fields to stripe form (#610)
+  8.x-20201014-0801:
+    commits:
+    - Composerupdate (#413)
+    modules:
+      ibm_apim:
+        8.x-2.3.9:
+        - update usage help
+  8.x-20201012-2223:
+    commits: null
+    modules:
+      apic_app:
+        8.x-2.3.9:
+        - need to auto-increment
+  8.x-20201012-1323:
+    commits: null
+    modules:
+      product:
+        8.x-2.3.6: null
+  8.x-20201009-1924:
+    commits: null
+    modules:
+      product:
+        8.x-2.3.5:
+        - dont make section headings links
+        8.x-2.3.4:
+        - Styling for embedded docs in products
+      apic_app:
+        8.x-2.3.8: null
+        8.x-2.3.7:
+        - add AUTO_INCREMENT
+        - add AUTO_INCREMENT
+        - make integer unsigned
+      ibm_apim:
+        8.x-2.3.8:
+        - need to check if the table exists for paymentmethods
+      consumerorg:
+        8.x-2.3.8: null
+        8.x-2.3.7:
+        - add AUTO_INCREMENT
+        - add AUTO_INCREMENT
+        8.x-2.3.6:
+        - make integer unsigned
+        - make sure payment method entity installed
+  8.x-20201009-1345:
+    commits: null
+    modules:
+      product:
+        8.x-2.3.3:
+        - Support embedded docs in products
+      auth_apic:
+        8.x-2.3.3:
+        - Oidc register form v10.0.1 (#593)
+      apic_app:
+        8.x-2.3.6:
+        - need to check if the table exists before doing the next bit too
+        8.x-2.3.5:
+        - only truncate table if it exists
+      ibm_apim:
+        8.x-2.3.7:
+        - Options to enable forms for oidc flows (#606) (#608)
+      consumerorg:
+        8.x-2.3.5: null
+        8.x-2.3.4:
+        - need to check if the table exists before doing the next bit too
+        - only truncate table if it exists
+      apictest:
+        8.x-2.3.4:
+        - Oidc register form v10.0.1 (#178)
+  8.x-20201009-0722:
+    commits:
+    - composer update
+    modules:
+      apic_app:
+        8.x-2.3.4: null
+        8.x-2.3.3:
+        - more missing translations for config
+        - oops missing translations for new config
+      ibm_apim:
+        8.x-2.3.6:
+        - more missing translations for config
+  8.x-20201008-1220:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-2.3.3:
+        - oops missing translations for new config
+  8.x-20201007-1624:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-2.3.5:
+        - stop deletion of activated themes
+        - fix module check
+  8.x-20201007-0723:
+    commits:
+    - cat -> echo
+    - cat should have been echo
+    - mysql 8
+    modules:
+      auth_apic:
+        8.x-2.3.2: null
+      consumerorg:
+        8.x-2.3.2: null
+      apictest:
+        8.x-2.3.3:
+        - echo should be cat
+        8.x-2.3.2:
+        - Support mysql 8
+  8.x-20201006-1324:
+    commits: null
+    modules:
+      socialblock:
+        8.x-2.3.2: null
+      product:
+        8.x-2.3.2: null
+      mail_subscribers:
+        8.x-2.3.2: null
+      themegenerator:
+        8.x-2.3.2: null
+      featuredcontent:
+        8.x-2.3.2: null
+      apic_app:
+        8.x-2.3.2: null
+  8.x-20201001-1023:
+    commits:
+    - Fixed translation dumps
+    - sql dumps
+    - New po files with updated versions added.
+    - Deleted 182 old po files
+    - Revert "always use string for entity id"
+    - always use string for entity id
+    - clearing site's temp directory
+    - Update version for 10.0.1.1
+    - update profile dependencies in build.sh
+    - clearing site's temp directory
+    - Fixed translation dumps
+    - add breadcrumbs to forums
+    - field order for blog posts
+    - enable drushadmin by default
+    - Fix search 404 so it works
+    - need to enable AJAX history in the search content view
+    - sql dumps
+    - Search404 doesnt work with custom paths on subdir sites
+    - New po files with updated versions added.
+    modules:
+      socialblock:
+        8.x-2.3.1: null
+      product:
+        8.x-2.3.1: null
+      auth_apic:
+        8.x-2.3.1: null
+      mail_subscribers:
+        8.x-2.3.1: null
+      themegenerator:
+        8.x-2.3.1: null
+      featuredcontent:
+        8.x-2.3.1: null
+      apic_api:
+        8.x-2.3.1: null
+      apic_app:
+        8.x-2.3.1: null
+      ibm_apim:
+        8.x-2.3.4: null
+        8.x-2.3.3:
+        - ensure master and 10.0.1 are in sync
+        - fix mock
+        8.x-2.3.2:
+        - remove duplicate function - merge issue
+        8.x-2.3.1: null
+      consumerorg:
+        8.x-2.3.1: null
+      apictest:
+        8.x-2.3.1: null
+  8.x-20200914-1925:
+    commits:
+    - Update version for 10.0.1.1
+    modules:
+      socialblock:
+        8.x-2.3.0:
+        - update version: 8.x-2.2.3 -> 8.x-2.3.0
+      product:
+        8.x-2.3.0:
+        - update version: 8.x-2.2.25 -> 8.x-2.3.0
+      ghmarkdown:
+        8.x-2.3.0:
+        - update version: 8.x-2.2.1 -> 8.x-2.3.0
+      auth_apic:
+        8.x-2.3.0:
+        - update version: 8.x-2.2.10 -> 8.x-2.3.0
+      mail_subscribers:
+        8.x-2.3.0:
+        - update version: 8.x-2.2.3 -> 8.x-2.3.0
+      themegenerator:
+        8.x-2.3.0:
+        - update version: 8.x-2.2.2 -> 8.x-2.3.0
+      featuredcontent:
+        8.x-2.3.0:
+        - update version: 8.x-2.2.7 -> 8.x-2.3.0
+      apic_api:
+        8.x-2.3.0:
+        - update version: 8.x-2.2.16 -> 8.x-2.3.0
+      apic_app:
+        8.x-2.3.0:
+        - update version: 8.x-2.2.27 -> 8.x-2.3.0
+      ibm_apim:
+        8.x-2.3.0:
+        - update version: 8.x-2.2.77 -> 8.x-2.3.0
+      consumerorg:
+        8.x-2.3.0:
+        - update version: 8.x-2.2.41 -> 8.x-2.3.0
+      apictest:
+        8.x-2.3.0:
+        - update version: 8.x-2.2.3 -> 8.x-2.3.0
   8.x-20200914-1323:
     commits: null
     modules:
@@ -2732,4 +3261,4 @@ changes:
         - try to make it more tolerant of yum issues
         8.x-1.3.132:
         - try to make it more tolerant of yum issues
-  8.x-20200914-1925:
+  8.x-20201202-1327:

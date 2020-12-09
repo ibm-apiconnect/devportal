@@ -327,6 +327,16 @@ class Api {
           $lowerType = mb_strtolower($api['consumer_api']['x-ibm-configuration']['type']);
           if ($lowerType === 'rest' || $lowerType === 'wsdl' || $lowerType === 'oauth' || $lowerType === 'graphql') {
             $apiType = $lowerType;
+          } elseif ($lowerType === 'asyncapi' || isset($api['consumer_api']['asyncapi'])) {
+            if (isset($api['consumer_api']['servers'])) {
+              $protocol = array_values($api['consumer_api']['servers'])[0]['protocol'];
+              $lowerProtocol = mb_strtolower($protocol);
+              if ($lowerProtocol === 'kafka') {
+                $apiType = 'kafka';
+              } elseif ($lowerProtocol === 'amqp' || $lowerProtocol === 'amqps') {
+                $apiType = 'mq';
+              }
+            }
           }
         }
         $node->set('api_protocol', $apiType);
@@ -339,6 +349,8 @@ class Api {
         $oaiVersion = 2;
         if (isset($api['consumer_api']['openapi']) && $this->utils->startsWith($api['consumer_api']['openapi'], '3.')) {
           $oaiVersion = 3;
+        } elseif (isset($api['consumer_api']['asyncapi'])) {
+          $oaiVersion = 'asyncapi2';
         }
         $node->set('api_oaiversion', $oaiVersion);
         $node->save();
@@ -372,6 +384,16 @@ class Api {
                 foreach ($path as $verb => $operation) {
                   if (isset($operation['tags'])) {
                     foreach ($operation['tags'] as $tag) {
+                      $tags[] = $tag;
+                    }
+                  }
+                }
+              }
+            } elseif (isset($api['consumer_api']['channels'])) {
+              foreach ($api['consumer_api']['channels'] as $path) {
+                foreach ($path as $verb => $operation) {
+                  if (isset($path['tags'])) {
+                    foreach ($path['tags'] as $tag) {
                       $tags[] = $tag;
                     }
                   }

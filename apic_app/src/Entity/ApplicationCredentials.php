@@ -44,9 +44,16 @@ class ApplicationCredentials extends ContentEntityBase implements ApplicationCre
   /**
    * Drupal entity ID
    *
-   * @var string
+   * @var int
    */
   protected $id;
+
+  /**
+   * APIM UUID
+   *
+   * @var string
+   */
+  protected $uuid;
 
   /**
    * The application URL.
@@ -107,6 +114,13 @@ class ApplicationCredentials extends ContentEntityBase implements ApplicationCre
   /**
    * {@inheritdoc}
    */
+  public function uuid() {
+    return $this->uuid;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function app_url() {
     return $this->app_url;
   }
@@ -156,6 +170,7 @@ class ApplicationCredentials extends ContentEntityBase implements ApplicationCre
   public function toArray(): array {
     return [
       'id' => $this->id,
+      'uuid' => $this->uuid,
       'cred_url' => $this->cred_url,
       'title' => $this->title,
       'summary' => $this->summary,
@@ -173,9 +188,15 @@ class ApplicationCredentials extends ContentEntityBase implements ApplicationCre
     $fields = [];
 
     // Standard field, used as unique if primary index.
-    $fields['id'] = BaseFieldDefinition::create('string')
+    $fields['id'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('ID'))
       ->setDescription(t('The ID of the Application Credentials entity.'))
+      ->setSetting('unsigned', TRUE)
+      ->setReadOnly(TRUE);
+
+    $fields['uuid'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('UUID'))
+      ->setDescription(t('The UUID of the Application Credentials entity.'))
       ->setReadOnly(TRUE);
 
     $fields['app_url'] = BaseFieldDefinition::create('string')

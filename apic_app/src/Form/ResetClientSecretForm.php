@@ -13,9 +13,7 @@
 
 namespace Drupal\apic_app\Form;
 
-use Drupal\apic_app\Event\CredentialClientSecretResetEvent;
 use Drupal\apic_app\Service\ApplicationRestInterface;
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
@@ -36,6 +34,13 @@ class ResetClientSecretForm extends ConfirmFormBase {
    * @var \Drupal\node\NodeInterface
    */
   protected $node;
+
+  /**
+   * This represents the credential object
+   *
+   * @var \Drupal\apic_app\Entity\ApplicationCredentials
+   */
+  protected $cred;
 
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
@@ -74,13 +79,6 @@ class ResetClientSecretForm extends ConfirmFormBase {
   }
 
   /**
-   * This represents the credential ID
-   *
-   * @var string
-   */
-  protected $credId;
-
-  /**
    * {@inheritdoc}
    */
   public function getFormId(): string {
@@ -92,7 +90,8 @@ class ResetClientSecretForm extends ConfirmFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL): array {
     $this->node = $appId;
-    $this->credId = Html::escape($credId);
+    $this->cred = $credId;
+
     $form = parent::buildForm($form, $form_state);
     $form['#attached']['library'][] = 'apic_app/basic';
 
@@ -141,7 +140,7 @@ class ResetClientSecretForm extends ConfirmFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appId = $this->node->application_id->value;
-    $url = $this->node->apic_url->value . '/credentials/' . $this->credId . '/reset-client-secret';
+    $url = $this->node->apic_url->value . '/credentials/' . $this->cred->uuid() . '/reset-client-secret';
     $result = $this->restService->postClientSecret($url, NULL);
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       $currentUser = \Drupal::currentUser();
@@ -160,13 +159,17 @@ class ResetClientSecretForm extends ConfirmFormBase {
         'node' => $this->node,
         'data' => $data,
         'appId' => $appId,
-        'credId' => $this->credId,
+        'credId' => $this->cred->uuid(),
       ]);
 
       $credsString = base64_encode(json_encode($data));
       $displayCredsUrl = Url::fromRoute('apic_app.display_creds', ['appId' => $appId, 'credentials' => $credsString]);
     } else {
       $displayCredsUrl = $this->getCancelUrl();
+      $this->messenger->addError($this->t('Failed to reset client secret.'));
+      \Drupal::logger('apic_app')->notice('Received @code when trying to delete credential.', [
+        '@code' => $result->code,
+      ]);
     }
     $form_state->setRedirectUrl($displayCredsUrl);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

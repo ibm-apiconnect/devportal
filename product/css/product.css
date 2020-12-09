@@ -510,6 +510,18 @@ tfoot .apicFixedColumn {
 	background:#EDF5FF;
 }
 
+.apicPlansTable .planTitle {
+  text-align: left;
+}
+
+.apicPlansTable .planTitle .planSubscribe {
+  margin-top: 1rem;
+}
+
+.apicPlansTable .planTitle .planSubscribe .button {
+  margin-top: 0.5rem;
+  height: 2.5rem;
+}
 
 .apicTableFixedColumn thead th .fa {
   font-size: 1.4rem;
@@ -522,7 +534,6 @@ tfoot .apicFixedColumn {
 
 .apicTableFixedColumn tr .planDescription {
   line-height: 1.2rem;
-  padding-bottom: 0.5rem;
 }
 
 .apicTableFixedColumn tfoot td {
@@ -708,6 +719,10 @@ div[class*="planColumn"]:not(:last-of-type)
   color: #a56eff;
 }
 
+.trace .verb{
+  color: #8a3800;
+}
+
 
 @media screen and (max-width: 500px) {
   .planTableSelector {
@@ -864,4 +879,142 @@ div[class*="planColumn"]:not(:last-of-type)
 
 .route-entitynodecanonical.page-node-type-product h1.page-header {
   display: none;
+}
+
+/* embedded docs */
+.SplitPane.vertical {
+  display: flex;
+  flex: 1 1 0%;
+  height: 100%;
+  outline: none;
+  overflow: hidden;
+  user-select: text;
+  flex-direction: row;
+  left: 0;
+  right: 0;
+  min-height: calc(100vh - 287px);
+}
+.Pane.vertical.Pane1 {
+  flex: 0 0 auto;
+  position: relative;
+  outline: none;
+  width: 236px;
+  border-right: 1px solid #dfe3e6;
+  overflow: hidden;
+}
+.Pane.vertical.Pane2 {
+  flex: 1 1 0%;
+  position: relative;
+  outline: none;
+}
+.embeddedDocPagesNav {
+  display: inline-block;
+  vertical-align: top;
+}
+.apicProduct .stretch {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: auto;
+}
+
+.apicProduct .embeddedDocPagesNav ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+.bx--side-nav__items {
+  -ms-flex: 1 1;
+  flex: 1 1;
+  padding: 1rem 0 0;
+  overflow: hidden;
+}
+.apicProduct .embeddedDocPagesNav .tocItem {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.apicProduct .embeddedDocPagesNav a.selected {
+  color: #0f62fe;
+}
+.apicProduct .embeddedDocPagesNav .tocHeader a {
+  font-weight: 600;
+}
+.apicProduct .embeddedDocPagesNav a.selected {
+  background-color: unset;
+  border-left: 4px solid #0f62fe;
+  font-weight: 600;
+}
+.apicProduct .embeddedDocPagesNav a {
+  color: #161616;
+}
+.apicProduct .embeddedDocPagesNav a {
+  font-size: 0.875rem;
+  font-weight: 400;
+  position: relative;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+  text-decoration: none;
+  border-left: 4px solid transparent;
+}
+.apicProduct .embeddedDocPagesNav a,
+.apicProduct .embeddedDocPagesNav a:hover {
+  cursor: pointer;
+  text-decoration: none;
+}
+.apicProduct .truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+}
+div.bx--side-nav__link,
+a.bx--side-nav__link,
+.bx--side-nav a.bx--header__menu-item,
+.bx--side-nav .bx--header__menu-title[aria-expanded='true']+.bx--header__menu {
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  font-size: .875rem;
+  font-weight: 600;
+  line-height: 1.29;
+  letter-spacing: .16px;
+  position: relative;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0 1rem;
+  text-decoration: none;
+  -webkit-transition: color 110ms,background-color 110ms,outline 110ms;
+  -o-transition: color 110ms,background-color 110ms,outline 110ms;
+  transition: color 110ms,background-color 110ms,outline 110ms;
+}
+.apicProduct .embeddedDocPagesNav ul .tocItem a:hover,
+.apicProduct .embeddedDocPagesNav ul .tocItem a.selected {
+  background-color: #e0e0e0;
+  outline: none;
+}
+.apicProduct .embeddedDocPagesNav a.selected span {
+  font-size: 0.875rem;
+}
+.apicProduct .embeddedDocPagesNav ul .tocItem span {
+  font-size: 0.75rem;
+}
+.apicProduct .embeddedDocPagesNav ul.doc-tree--list {
+  margin-left: 1rem;
+}
+
+.apicProduct .embeddedDocPagesNav div.bx--side-nav__link {
+  font-size: 0.875rem;
+  font-weight: 400;
+  position: relative;
+  border-left: 4px solid transparent;
+  display: flex;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+  color: #161616;
 }

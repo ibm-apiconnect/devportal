@@ -245,16 +245,21 @@ class IbmApimThemeInstallController extends ThemeController {
     if (isset($theme) && !empty($theme)) {
       // Get current list of themes.
       $themes = $this->themeHandler->listInfo();
-      // Check if the specified theme is disabled
-      if (!in_array($theme, $themes, TRUE)) {
-        $item_path = drupal_get_path('theme', $theme);
-        if (isset($item_path) && !empty($item_path)) {
-          $this->utils->file_delete_recursive($item_path);
-          // clear all caches otherwise reinstalling the same theme will fail
-          drupal_flush_all_caches();
+      $customThemes = \Drupal::service('ibm_apim.utils')->getCustomThemeDirectories();
+      if (in_array($theme, $customThemes, TRUE)) {
+        // Check if the specified theme is disabled
+        if (!array_key_exists($theme, $themes)) {
+          $item_path = drupal_get_path('theme', $theme);
+          if (isset($item_path) && !empty($item_path)) {
+            $this->utils->file_delete_recursive($item_path);
+            // clear all caches otherwise reinstalling the same theme will fail
+            drupal_flush_all_caches();
 
-          $this->messenger->addMessage($this->t('The %theme theme has been uninstalled.', ['%theme' => $theme]));
+            $this->messenger->addMessage($this->t('The %theme theme has been uninstalled.', ['%theme' => $theme]));
+          }
         }
+      } else {
+        $this->messenger->addError($this->t('Only custom themes can be uninstalled. %theme is not a custom theme.', ['%theme' => $theme]));
       }
 
     }

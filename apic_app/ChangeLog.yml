@@ -1,4 +1,53 @@
 changes:
+  8.x-2.3.23: null
+  8.x-2.3.22:
+  - need title to be translatable
+  8.x-2.3.21:
+  - missing upgrade function maybe?
+  8.x-2.3.20:
+  - Translate custom strings in our views too
+  8.x-2.3.19:
+  - spacing for app title without analytics
+  8.x-2.3.18:
+  - make sure really not visible
+  8.x-2.3.17: null
+  8.x-2.3.16:
+  - wrong target id
+  - still visible on FF on create app - move further left
+  8.x-2.3.15:
+  - update the hidden field too
+  8.x-2.3.14:
+  - use a hidden field for the credentials for clipboardjs
+  8.x-2.3.13:
+  - invalidate app cache when creds change
+  8.x-2.3.12:
+  - JS needs fixiing for multiple credentials
+  8.x-2.3.11:
+  - whitespace formatting
+  - use a subId paramconverter
+  - use a credId paramconverter
+  8.x-2.3.10:
+  - use uuids for credentials params
+  - Fixes for credentials
+  8.x-2.3.9:
+  - need to auto-increment
+  8.x-2.3.8: null
+  8.x-2.3.7:
+  - add AUTO_INCREMENT
+  - add AUTO_INCREMENT
+  - make integer unsigned
+  8.x-2.3.6:
+  - need to check if the table exists before doing the next bit too
+  8.x-2.3.5:
+  - only truncate table if it exists
+  8.x-2.3.4: null
+  8.x-2.3.3:
+  - more missing translations for config
+  - oops missing translations for new config
+  8.x-2.3.2: null
+  8.x-2.3.1: null
+  8.x-2.3.0:
+  - update version: 8.x-2.2.27 -> 8.x-2.3.0
   8.x-2.2.26:
   - use modal form for new creds
   8.x-2.2.25:

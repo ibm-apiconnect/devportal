@@ -45,7 +45,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
     }
     $registries = $this->state->get('ibm_apim.user_registries');
 
-    if ($registries === null || empty($registries)) {
+    if ($registries === NULL || empty($registries)) {
       $this->logger->warning('Found no user registries in the catalog config. Potentially missing data from APIM.');
       $registries = [];
     }
@@ -92,7 +92,9 @@ class UserRegistryService implements UserRegistryServiceInterface {
   /**
    * Update all user_registries
    *
-   * @param $data array of UserRegistries keyed on url
+   * @param array $data
+   *
+   * @return bool
    */
   public function updateAll($data): bool {
     if (function_exists('ibm_apim_entry_trace')) {
@@ -103,7 +105,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
     if (isset($data)) {
       $user_registries = [];
       foreach ($data as $ur) {
-        if (gettype($ur) === 'object' && $ur instanceof UserRegistry) {
+        if (is_object($ur) && $ur instanceof UserRegistry) {
           $user_registries[$ur->getUrl()] = $ur;
         }
         else {
@@ -202,7 +204,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
    *
    * @return UserRegistry|null
    */
-  public function getRegistryContainingIdentityProvider($identityProviderName) :?UserRegistry{
+  public function getRegistryContainingIdentityProvider($identityProviderName): ?UserRegistry {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -230,7 +232,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
   /**
    * @inheritdoc
    */
-  public function getDefaultRegistry() :?UserRegistry{
+  public function getDefaultRegistry(): ?UserRegistry {
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -289,7 +291,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
     }
 
     // if we have any user_managed registries then use the first of them, otherwise just return the first one.
-    $user_managed = array_filter($all_registries, function ($reg) {
+    $user_managed = array_filter($all_registries, static function ($reg) {
       return $reg->isUserManaged();
     });
     if ($user_managed) {
@@ -326,4 +328,28 @@ class UserRegistryService implements UserRegistryServiceInterface {
     return $this->admin_registry_url;
   }
 
+  /**
+   * This is used bu the session manager to decide what cookie setting to use
+   *
+   * @return bool
+   */
+  public function isOidcRegistryPresent(): bool {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
+
+    $result = FALSE;
+    $all_registries = $this->state->get('ibm_apim.user_registries');
+    foreach ($all_registries as $registry) {
+      if ($registry->getRegistryType() === 'oidc') {
+        $result = TRUE;
+      }
+    }
+
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $result);
+    }
+
+    return $result;
+  }
 }

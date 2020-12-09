@@ -11,6 +11,7 @@
  ********************************************************** {COPYRIGHT-END} **/
 
 use Drupal\product\Product;
+use Drupal\apic_api\Api;
 use Drupal\Core\Session\UserSession;
 
 function product_drush_command() {
@@ -203,8 +204,9 @@ function drush_product_delete($product, $event = 'product_del') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   if ($product !== NULL) {
     // handle being sent the content payload or the sub-element 'product'
-    if (isset($product['product']) && !empty($product['product'])) {
-      $product = $product['product'];
+    if (!isset($product['product'])) {
+      $newProduct['product'] = $product;
+      $product = $newProduct;
     }
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
@@ -215,20 +217,37 @@ function drush_product_delete($product, $event = 'product_del') {
     }
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'product');
-    $query->condition('apic_ref.value', $product['name'] . ':' . $product['version']);
+    $query->condition('apic_ref.value', $product['product']['name'] . ':' . $product['product']['version']);
 
     $nids = $query->execute();
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
       Product::deleteNode($nid, $event);
-      drush_log(dt('Drush DeleteProduct deleted Product @prod', ['@prod' => $product['id']]), 'success');
-      $moduleHandler = \Drupal::service('module_handler');
-      if ($moduleHandler->moduleExists('views')) {
-        views_invalidate_cache();
-      }
+      drush_log(dt('Drush DeleteProduct deleted Product @prod', ['@prod' => $product['product']['id']]), 'success');
     }
     else {
-      drush_log(dt('Drush DeleteProduct could not find Product @prod', ['@prod' => $product['id']]), 'warning');
+      drush_log(dt('Drush DeleteProduct could not find Product @prod', ['@prod' => $product['product']['id']]), 'warning');
+    }
+    // check if any APIs are in retired state, if so delete them too
+    if (isset($product['consumer_apis']) && !empty($product['consumer_apis'])) {
+      foreach ($product['consumer_apis'] as $consumer_api) {
+        if (isset($consumer_api['state']) && strtolower($consumer_api['state']) === 'retired') {
+          $query = \Drupal::entityQuery('node');
+          $query->condition('type', 'api');
+          $query->condition('status', 1);
+          $query->condition('apic_url', $consumer_api['url']);
+          $apiNids = $query->execute();
+          if ($apiNids !== NULL && !empty($apiNids)) {
+            $apiNid = array_shift($apiNids);
+            Api::deleteNode($apiNid, $event);
+            drush_log(dt('Drush DeleteProduct deleted retired API @api', ['@api' => $consumer_api['url']]), 'success');
+          }
+        }
+      }
+    }
+    $moduleHandler = \Drupal::service('module_handler');
+    if ($moduleHandler->moduleExists('views')) {
+      views_invalidate_cache();
     }
     if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();

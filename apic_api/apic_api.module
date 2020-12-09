@@ -394,6 +394,11 @@ function apic_api_preprocess_node(&$variables): void {
     $config = \Drupal::config('ibm_apim.settings');
     $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
     $renderApiSchemaView = (boolean) $config->get('render_api_schema_view');
+    $api_max_depth = $config->get('api_max_depth');
+    if ($api_max_depth === null || !is_int($api_max_depth) || $api_max_depth < 2 || $api_max_depth > 25) {
+      $api_max_depth = 9;
+    }
+    $variables['apiMaxDepth'] = $api_max_depth;
     if ($ibmApimShowPlaceholderImages === NULL) {
       $ibmApimShowPlaceholderImages = TRUE;
     }
@@ -459,6 +464,7 @@ function apic_api_preprocess_node(&$variables): void {
         }
       }
       $enableApiTest = (boolean) $config->get('enable_api_test');
+      $enableApiValidation = (boolean) $config->get('validate_apis');
       $applications = [];
       $defaultCodeSnippetLang = NULL;
       $currentUser = \Drupal::currentUser();
@@ -635,6 +641,8 @@ function apic_api_preprocess_node(&$variables): void {
         'languages' => $codeSnippetLangs,
         'defaultLanguage' => $defaultCodeSnippetLang,
         'tryIt' => $enableApiTest,
+        'validateSwagger'=> $enableApiValidation,
+        'apiMaxDepth' => $variables['apiMaxDepth'],
         'onReady' => 'portalExplorerReady',
         'wsdlRetrieverURL' => Url::fromRoute('apic_api.retrievewsdl', ['api' => $variables['node']->apic_ref->value, 'endpoint' => 'REPLACE_THIS_VALUE'])->setAbsolute()->toString(),
         'explorerDir' => base_path() . drupal_get_path('module', 'apic_api') . '/explorer/app/',
@@ -735,12 +743,21 @@ function apic_api_library_info_alter(&$libraries, $extension) {
   if (array_key_exists('explorer', $libraries) && file_exists(drupal_get_path('module', 'apic_api') . '/explorer/app/asset-manifest.json')) {
     $string = file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app/asset-manifest.json');
     $json = json_decode($string, TRUE);
-    if (isset($json['main.js']) && file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app/' . $json['main.js'])) {
-      $libraries['explorer']['js']['explorer/app/' . $json['main.js']] = [
+    if (isset($json['main.js']) && file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app' . $json['main.js'])) {
+      $libraries['explorer']['js']['explorer/app' . $json['main.js']] = [
         'weight' => -1,
         'minified' => TRUE,
         'preprocess' => FALSE,
       ];
+      foreach (array_keys($json) as $key => $value) {
+        if (\Drupal::service('ibm_apim.utils')->endsWith($key, 'worker.js')) {
+          $libraries['explorer']['js']['explorer/app' . $value] = [
+            'weight' => -1,
+            'minified' => TRUE,
+            'preprocess' => FALSE,
+          ];
+        }
+      }
     }
   }
   // modify the load order for the voting_widgets/fivestar library as it needs to be loaded before our explorer libraries

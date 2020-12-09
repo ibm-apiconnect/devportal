@@ -41,11 +41,11 @@
         <a href="{{- path('product.api', {'prodNode': prodNode, 'apiNode': apiNode}) -}}" rel="bookmark">
           {% else %}
           <a href="{{- path('apic_api.view', {'apiNode': apiNode}) -}}" rel="bookmark">
-            {% endif %}
-            <span id="node-{{ node.id }}-title" class="apicApiName apicTruncate">{{- label -}}</span>
-            {% if showVersions %}
-              <div class="apicApiCardVersion">{{- content.apic_version -}}</div>
-            {% endif %}
+        {% endif %}
+        <span id="node-{{ node.id }}-title" class="apicApiName apicTruncate">{{- label -}}</span>
+          {% if showVersions %}
+            <div class="apicApiCardVersion">{{- content.apic_version -}}</div>
+          {% endif %}
           </a>
       </div>
       {% if content.apic_summary['#items'][0].value is defined and content.apic_summary['#items'][0].value is not empty %}

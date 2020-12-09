@@ -70,8 +70,8 @@ class ApicUserService {
     if (isset($form_values['name'])) {
       $user->setUsername($form_values['name']);
     }
-    if (isset($form_values['mail']->value)) {
-      $user->setMail($form_values['mail']->value);
+    if (isset($form_values['mail'][0]['value'])) {
+      $user->setMail($form_values['mail'][0]['value']);
     }
 
     if (isset($form_values['pass']['pass1'])) {
@@ -335,6 +335,10 @@ class ApicUserService {
         'apic_provider_id',
         'apic_rating',
         'apic_tags',
+        'apic_realm',
+        'apic_state',
+        'apic_url',
+        'apic_user_registry_url',
         'consumerorg_id',
         'consumerorg_invites',
         'consumerorg_memberlist',
@@ -344,7 +348,10 @@ class ApicUserService {
         'consumerorg_roles',
         'consumerorg_tags',
         'consumerorg_url',
-        'codesnippet'
+        'consumerorg_def_payment_ref',
+        'consumerorg_payment_method_refs',
+        'codesnippet',
+        'user_picture'
       ];
       $merged = array_merge($coreFields, $ibmFields);
       $fields = array_diff($keys, $merged);

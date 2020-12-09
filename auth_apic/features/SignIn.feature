@@ -113,8 +113,34 @@ Feature: Sign in
     And there are no warnings
     And there are no errors
 
+  Scenario: View the sign in page - oidc with admin hidden and oidc login form enabled
+    Given I am not logged in
+    And ibm_apim settings config boolean property "enable_oidc_login_form" value is "true"
+    And ibm_apim settings config boolean property "hide_admin_registry" value is "true"
+    Given userregistries:
+      | type | title                             | url                               | user_managed | default |
+      | oidc | @data(user_registries[3].title)   | @data(user_registries[3].url)     | no           | yes     |
+    And I am at "/user/login"
+    Then I should see the text "Sign in"
+    And I should not see the link "@data(user_registries[3].title)"
+    And I should not see a link with href including "/consumer-api/oauth2/authorize"
+    And I should not see the text "Username"
+    #And I should not see the text "Password"
+    And I should not see the text "Continue with"
+    And I should not see the link "admin"
+    And I should not see the link "Forgot password?"
+    And I should not see the link "Forgot your 'admin' password?"
+    And I should not see the text "Don't have an account?"
+    And I should not see the link "Sign up"
+    And there are no messages
+    And there are no warnings
+    And there are no errors
+
+
   Scenario: View the sign in page - oidc with admin hidden (common case on public internet facing sites)
     Given I am not logged in
+    # Disabled is the default but set it again to make sure
+    And ibm_apim settings config boolean property "enable_oidc_login_form" value is "false"
     And ibm_apim settings config boolean property "hide_admin_registry" value is "true"
     Given userregistries:
       | type | title                             | url                               | user_managed | default |

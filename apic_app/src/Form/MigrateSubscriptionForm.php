@@ -40,11 +40,11 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
   protected $node;
 
   /**
-   * Subscription ID
+   * This represents the subscription entity
    *
-   * @var string
+   * @var \Drupal\apic_app\Entity\ApplicationSubscription
    */
-  protected $subId;
+  protected $sub;
 
   /**
    * Plan reference
@@ -127,7 +127,7 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $subId = NULL, $planRef = NULL): array {
     $this->node = $appId;
-    $this->subId = Html::escape($subId);
+    $this->sub = $subId;
     $this->planRef = Html::escape($planRef);
     $form = parent::buildForm($form, $form_state);
     $form['#attached']['library'][] = 'apic_app/basic';
@@ -139,7 +139,7 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getDescription() : TranslatableMarkup{
+  public function getDescription(): TranslatableMarkup {
     return $this->t('Are you sure you want to migrate this subscription? This action cannot be undone.');
   }
 
@@ -153,14 +153,14 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getQuestion() : TranslatableMarkup{
+  public function getQuestion(): TranslatableMarkup {
     return $this->t('Migrate the subscription for %title?', ['%title' => $this->node->title->value]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() : Url{
+  public function getCancelUrl(): Url {
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
     if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
       $url = Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
@@ -183,7 +183,7 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
     $appId = $this->node->application_id->value;
     $planRef = Html::escape($this->utils->base64_url_decode($this->planRef));
 
-    $url = $this->node->apic_url->value . '/subscriptions/' . $this->subId;
+    $url = $this->node->apic_url->value . '/subscriptions/' . $this->sub->uuid();
     $parts = explode(':', $planRef);
     $productUrl = $parts[0];
     $planName = $parts[1];
@@ -205,7 +205,7 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
         'data' => $result->data,
         'appId' => $appId,
         'planId' => $this->planRef,
-        'subId' => $this->subId,
+        'subId' => $this->sub->uuid(),
       ]);
 
       $currentUser = \Drupal::currentUser();

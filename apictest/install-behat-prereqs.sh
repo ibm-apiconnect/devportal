@@ -13,7 +13,7 @@ mkdir /var/log
 # dpkg --configure cpp
 
 # update package definitions or the install won't find anything to install
-yum update -y
+dnf update -y
 
 # install the required packages
-yum groupinstall -y 'Development Tools'
+dnf groupinstall -y 'Development Tools'

@@ -834,6 +834,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    * "Given users:"
    */
   public function createUsers(TableNode $table) {
+    $apimUtils = \Drupal::service('ibm_apim.apim_utils');
 
     // If we are not using mocks, then we are testing with live data from a management appliance
     // Under those circumstances, we should absolutely not create any user in the database!
@@ -851,7 +852,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
           $basicUser->apic_url = $row['url'];
         }
         else {
-          $basicUser->apic_url = $row['name'];
+          $basicUser->apic_url = $apimUtils->removeFullyQualifiedUrl($row['name']);
         }
         if (isset($row['registry_url'])) {
           $basicUser->registry_url = $row['registry_url'];
@@ -900,7 +901,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
           $basicUser->apic_url = $row['url'];
         }
         else {
-          $basicUser->apic_url = $row['name'];
+          $basicUser->apic_url = $apimUtils->removeFullyQualifiedUrl($row['name']);
         }
         if (isset($row['registry_url'])) {
           $basicUser->registry_url = $row['registry_url'];
@@ -957,7 +958,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
           $row['apic_url'] = $row['url'];
         }
         else {
-          $row['apic_url'] = $row['name'];
+          $row['apic_url'] = $apimUtils->removeFullyQualifiedUrl($row['name']);
         }
 
         if (!isset($row['first_time_login'])) {
@@ -1035,7 +1036,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    * Overrides DrupalContext::assertLoggedInByName.
    */
   public function assertLoggedInByName($name) {
-
+    
     // log in to the UI by calling the default DrupalContext login function
     parent::assertLoggedInByName($name);
 
@@ -1174,7 +1175,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       }
 
       // Skip remote links
-      if (strpos($href, $url_segment) !== 0) {
+      if (strpos($href, $url_segment) !== false) {
         //print "Found link with $url_segment -> $href  \n";
         $foundMatch = TRUE;
         continue;
@@ -1183,6 +1184,45 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
     if (!$foundMatch) {
       throw new \Exception("No link found with href including: $url_segment");
+    }
+
+  }
+
+  /**
+   * Check no link on the page has a link with a specific href location.
+   *
+   * @Then I should not see a link with href including :arg1
+   */
+  public function iShouldNotSeeALinkWithHrefIncluding($url_segment) {
+    $page = $this->getSession()->getPage();
+    $links = $page->findAll('xpath', '//a/@href');
+
+    $foundMatch = FALSE;
+
+    foreach ($links as $link) {
+
+      // If element or tag is empty...
+      if (empty($link->getParent())) {
+        continue;
+      }
+
+      $href = $link->getParent()->getAttribute('href');
+
+      // Skip if empty
+      if (empty($href)) {
+        continue;
+      }
+
+      // Skip remote links
+      if (strpos($href, $url_segment) !== false) {
+        //print "Found link with $url_segment -> $href  \n";
+        $foundMatch = TRUE;
+        continue;
+      }
+    }
+
+    if ($foundMatch) {
+      throw new \Exception("Link found with href including: $url_segment");
     }
 
   }

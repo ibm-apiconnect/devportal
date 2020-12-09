@@ -855,6 +855,21 @@ function apic_api_update_8117() {
 
 /**
  * update the gutter width for latest masonry views
+ */
+function apic_api_update_8118() {
+  $view = Views::getView('apis');
+  if ($view !== null) {
+    $style = $view->getDisplay()->getOption('style');
+    if ((int) $style['options']['gutterWidth'] === 0) {
+      $style['options']['gutterWidth'] = "20";
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
+  }
+}
+
+/**
+ * update the gutter width for latest masonry views
  *
  * bumped the second digit to ensure the change happens if migrating from 2018 to 10 too
  */
@@ -985,6 +1000,41 @@ function apic_api_update_8204() {
       $fieldConfig->set('settings', $settings);
       $fieldConfig->save();
     }
+  }
+}
+
+/**
+ * Update the field storage for the protocol field to include kafka and mq
+ */
+function apic_api_update_8205() {
+  $fieldConfig = \Drupal\field\Entity\FieldConfig::loadByName('node', 'api', 'api_protocol');
+  $storage = $fieldConfig->getFieldStorageDefinition();
+  if ($storage !== NULL) {
+    $allowed_values = $storage->getSetting('allowed_values');
+    if (!array_key_exists('kafka', $allowed_values)) {
+      $allowed_values['kafka'] = 'Kafka';
+      $storage->setSetting('allowed_values', $allowed_values);
+      $storage->save();
+    }
+    if (!array_key_exists('mq', $allowed_values)) {
+      $allowed_values['mq'] = 'MQ';
+      $storage->setSetting('allowed_values', $allowed_values);
+      $storage->save();
+    }
+  }
+  $fieldConfig = \Drupal\field\Entity\FieldConfig::loadByName('node', 'api', 'api_oaiversion');
+  $storage = $fieldConfig->getFieldStorageDefinition();
+  if ($storage !== NULL) {
+    $allowed_values = $storage->getSetting('allowed_values');
+    if (!array_key_exists('asyncapi2', $allowed_values)) {
+      $allowed_values['asyncapi2'] = 'Async API v2';
+      $storage->setSetting('allowed_values', $allowed_values);
+      $storage->save();
+    }
+  }
+  if ($fieldConfig->get('label') !== 'Specification') {
+    $fieldConfig->set('label', 'Specification');
+    $fieldConfig->save();
   }
 }
 

@@ -50,10 +50,11 @@ class ProductPlan {
    * @param $plan
    * @param $apiNodes
    * @param $apiRefs
+   * @param $productData
    *
    * @return array
    */
-  public function process($planId, $plan, $apiNodes, $apiRefs): array {
+  public function process($planId, $plan, $apiNodes, $apiRefs, $productData): array {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__FUNCTION__, NULL);
     }
@@ -78,10 +79,14 @@ class ProductPlan {
     $planArray['data']['apiList'] = [];
     if (isset($planArray['data']['apis']) && !empty($planArray['data']['apis'])) {
       foreach ($planArray['data']['apis'] as $key => $api) {
-        $planArray['data']['apiList'][] = $key;
+        $planArray['data']['apiList'][] = $productData['apis'][$key]['name'];
       } // end for
     }
     $parsedRateLimit = $this->parseRateLimits($plan);
+    // set default tooltip to be the parsed one
+    if (isset($parsedRateLimit['tooltip'])) {
+      $tooltip = $parsedRateLimit['tooltip'];
+    }
 
     $planArray['rateLimit'] = $parsedRateLimit['planRateLimit'];
     if ($parsedRateLimit['tooltip'] !== NULL) {
@@ -138,7 +143,7 @@ class ProductPlan {
           foreach ($plan['apis'] as $apiName => $planApi) {
             // only include apis matching the current API
             if (array_key_exists($apiName, $planArray['data']['apis'])) {
-              $apiSafeName = Html::getClass($apiName);
+              $apiSafeName = Html::getClass($productData['apis'][$apiName]['name']);
               $planArray['nodes'][$apiSafeName]['enabled'] = TRUE;
               if (!isset($planArray['nodes'][$apiSafeName]['resources']) || !is_array($planArray['nodes'][$apiSafeName]['resources'])) {
                 $planArray['nodes'][$apiSafeName]['resources'] = [];
@@ -152,6 +157,7 @@ class ProductPlan {
                     'DELETE',
                     'OPTIONS',
                     'HEAD',
+                    'TRACE',
                     'PATCH',
                   ])) {
                     // remove any query param portion of the path
@@ -178,17 +184,20 @@ class ProductPlan {
                         $rateLimit = $this->translationManager->translate('@count rate limits *', ['@count' => count($resource['rate-limits'])]);
                       }
                       else {
-                        $rateLimit = $this->parseRateLimit(array_shift($resource['rate-limits'])['value']);
+                        $rateLimit = $this->parseRateLimit(current($resource['rate-limits'])['value']);
+                        unset($opTooltip);
                       }
                     }
                     elseif (isset($resource['rate-limit']) && $resource['rate-limit']['value'] !== NULL) {
                       $rateLimit = $this->parseRateLimit($resource['rate-limit']['value']);
+                      unset($opTooltip);
                     }
                     elseif (isset($plan['rateLimit']['value'])) {
                       $rateLimit = $this->parseRateLimit($plan['rateLimit']['value']);
+                      unset($opTooltip);
                     }
                     $planArray['nodes'][$apiSafeName]['resources'][$path][mb_strtoupper($resource['operation'])]['rateLimit'] = $rateLimit;
-                    if ($opTooltip !== NULL) {
+                    if (isset($opTooltip)) {
                       $planArray['nodes'][$apiSafeName]['resources'][$path][mb_strtoupper($resource['operation'])]['rateData'] = json_encode($opTooltip, JSON_UNESCAPED_UNICODE);
                     }
                     $planArray['nodes'][$apiSafeName]['resources'][$path][mb_strtoupper($resource['operation'])]['op'] = $resource;
@@ -216,6 +225,7 @@ class ProductPlan {
                       'DELETE',
                       'OPTIONS',
                       'HEAD',
+                      'TRACE',
                       'PATCH',
                     ])) {
                       if (!isset($planArray['nodes'][$apiSafeName]['resources'][$pathName][mb_strtoupper($verb)])) {
@@ -331,11 +341,11 @@ class ProductPlan {
           $planRateLimit = $this->parseRateLimit($plan['rate-limit']['value']);
         }
         else {
-          $planRateLimit = $this->parseRateLimit(array_shift($plan['rate-limits'])['value']);
+          $planRateLimit = $this->parseRateLimit(current($plan['rate-limits'])['value']);
         }
       }
       else {
-        $planRateLimit = $this->parseRateLimit(array_shift($plan['burst-limits'])['value']);
+        $planRateLimit = $this->parseRateLimit(current($plan['burst-limits'])['value']);
       }
     }
     elseif (isset($plan['rate-limit']) && $plan['rate-limit']['value'] !== NULL) {
@@ -440,7 +450,7 @@ class ProductPlan {
       $currencyFormatter = new CurrencyFormatter($numberFormatRepository, $currencyRepository);
       $price = $currencyFormatter->format($billing['price'], $billing['currency']);
       // special case to avoid displaying $0.00
-      if ((int) $billing['price'] === 0) {
+      if (!((float) $billing['price'] > 0)) {
         $text = $this->translationManager->translate('Free');
       }
       else {

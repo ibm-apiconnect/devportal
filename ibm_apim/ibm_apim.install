@@ -185,3 +185,13 @@ function ibm_apim_update_8201() {
   require_once $path . '/ibm_apim.emptycontent.inc';
   ibm_apim_create_no_content_blocks();
 }
+
+/**
+ * Enable API Validation by default
+ */
+function ibm_apim_update_8202() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('validate_apis', true)
+    ->save();
+}

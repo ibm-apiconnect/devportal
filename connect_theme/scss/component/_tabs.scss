@@ -163,7 +163,8 @@ nav.tabs,
   margin-left: -2rem;
 }
 
-ul.tabs--primary.nav.nav-tabs {
+ul.tabs--primary.nav.nav-tabs,
+ul.nav.nav-tabs.filter-formats {
   flex-direction: row;
   padding-left: 0;
   display: flex;
@@ -174,7 +175,8 @@ ul.tabs--primary.nav.nav-tabs {
   margin-bottom: 0;
 }
 
-ul.tabs--primary.nav.nav-tabs li {
+ul.tabs--primary.nav.nav-tabs li,
+ul.nav.nav-tabs.filter-formats li {
   list-style: none;
   color: $text-02;
   height: auto;
@@ -192,6 +194,7 @@ ul.tabs--primary.nav.nav-tabs li {
 }
 
 .nav-tabs > li > a,
+ul.nav.nav-tabs.filter-formats li a,
 ul.tabs--primary.nav.nav-tabs li a {
   white-space: nowrap;
   text-decoration: none;
@@ -208,6 +211,10 @@ ul.tabs--primary.nav.nav-tabs li a {
   transition: color 70ms cubic-bezier(.2,0,.38,.9),border-bottom-color 70ms cubic-bezier(.2,0,.38,.9),outline 70ms cubic-bezier(.2,0,.38,.9);
 }
 .nav-tabs > li.active,
+ul.nav.nav-tabs.filter-formats li.active,
+ul.nav.nav-tabs.filter-formats li.selected,
+ul.nav.nav-tabs.filter-formats li:hover,
+ul.nav.nav-tabs.filter-formats li:focus,
 ul.tabs--primary.nav.nav-tabs li.active,
 ul.tabs--primary.nav.nav-tabs li.selected,
 ul.tabs--primary.nav.nav-tabs li:hover,
@@ -215,17 +222,21 @@ ul.tabs--primary.nav.nav-tabs li:focus {
   color: $text-01;
 }
 .nav-tabs > li.active > a,
+ul.nav.nav-tabs.filter-formats li.active a,
+ul.nav.nav-tabs.filter-formats li.selected a,
 ul.tabs--primary.nav.nav-tabs li.active a,
 ul.tabs--primary.nav.nav-tabs li.selected a {
   color: $text-01;
   border-bottom: 2px solid $interactive-04;
 }
 .nav-tabs > li:hover > a,
+ul.nav.nav-tabs.filter-formats li:hover a,
 ul.tabs--primary.nav.nav-tabs li:hover a {
   color: $text-01;
   border-bottom: 2px solid $ui-04;
 }
 .nav-tabs > li:focus > a,
+ul.nav.nav-tabs.filter-formats li:focus a,
 ul.tabs--primary.nav.nav-tabs li:focus a {
   color: $text-01;
   border-bottom: 2px solid $focus;

@@ -29,6 +29,7 @@ class ConsumerOrgContext extends RawDrupalContext {
    * @Given consumerorgs:
    */
   public function createConsumerorgs(TableNode $table): void {
+    $apimUtils = \Drupal::service('ibm_apim.apim_utils');
 
     // If we are not using mocks, then we are testing with live data from a management appliance
     // Under those circumstances, we should absolutely not create any consumerorg in the database!
@@ -56,7 +57,7 @@ class ConsumerOrgContext extends RawDrupalContext {
         $org->setOwnerUrl($user->get('apic_url')->value);
       }
       else {
-        $org->setOwnerUrl($row['owner']);
+        $org->setOwnerUrl($apimUtils->removeFullyQualifiedUrl($row['owner']));
       }
       $org->setOrgUrl('/orgs/1234');
       $org->setCatalogUrl('/catalogs/1234/5678');

@@ -12,12 +12,8 @@
    *
    * @type {Drupal~behavior}
    *
-   * @prop object cardNumber
-   *   Stripe card number element.
-   * @prop object cardExpiry
-   *   Stripe card expiry element.
-   * @prop object cardCvc
-   *   Stripe card cvc element.
+   * @prop object card
+   *   Stripe card element.
    * @prop {Drupal~behaviorAttach} attach
    *   Attaches the apicStripeForm behavior.
    * @prop {Drupal~behaviorDetach} detach
@@ -26,9 +22,7 @@
    * @see Drupal.apicStripe
    */
   Drupal.behaviors.apicStripeForm = {
-    cardNumber: null,
-    cardExpiry: null,
-    cardCvc: null,
+    card: null,
 
     attach: function (context) {
       var self = this;
@@ -56,29 +50,17 @@
           invalid: 'error'
         };
         // Create instances of the card elements.
-        self.cardNumber = elements.create('cardNumber', {
+        self.card = elements.create('card', {
           classes: classes,
           placeholder: ''
         });
-        self.cardExpiry = elements.create('cardExpiry', {
-          classes: classes
-        });
-        self.cardCvc = elements.create('cardCvc', {
-          classes: classes
-        });
+
         // Add an instance of the card UI components into the "scard-element" element <div>
-        self.cardNumber.mount('#card-number-element');
-        self.cardExpiry.mount('#expiration-element');
-        self.cardCvc.mount('#security-code-element');
+        self.card.mount('#card-element');
+
 
         // Input validation.
-        self.cardNumber.on('change', function (event) {
-          stripeErrorHandler(event);
-        });
-        self.cardExpiry.on('change', function (event) {
-          stripeErrorHandler(event);
-        });
-        self.cardCvc.on('change', function (event) {
+        self.card.on('change', function (event) {
           stripeErrorHandler(event);
         });
 
@@ -124,7 +106,7 @@
 
           if (drupalSettings.apicStripe.clientSecret === null) {
             // Try to create the Stripe token and submit the form.
-            stripe.createPaymentMethod('card', self.cardNumber).then(function (result) {
+            stripe.createPaymentMethod('card', self.card).then(function (result) {
               if (result.error) {
                 // Inform the user if there was an error.
                 stripeErrorHandler(result);
@@ -137,7 +119,7 @@
               }
             });
           } else {
-            stripe.handleCardSetup(drupalSettings.apicStripe.clientSecret, self.cardNumber).then(function (result) {
+            stripe.handleCardSetup(drupalSettings.apicStripe.clientSecret, self.card).then(function (result) {
               if (result.error) {
                 // Inform the user if there was an error.
                 stripeErrorHandler(result);
@@ -157,7 +139,7 @@
           }
 
           // Prevent the form from submitting with the default action.
-          if ($('#card-number-element', $form).length) {
+          if ($('#card-element', $form).length) {
             return false;
           }
         });
@@ -169,7 +151,7 @@
         return;
       }
       var self = this;
-      ['cardNumber', 'cardExpiry', 'cardCvc'].forEach(function (i) {
+      ['card',].forEach(function (i) {
         if (self[i] && self[i].length > 0) {
           self[i].unmount();
           self[i] = null;

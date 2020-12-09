@@ -30,6 +30,17 @@ class AdminMessagesBlock extends BlockBase {
    */
   public function build() {
 
+    // this is an evil hack to update the site URLs in content that needs it
+    // this has to be done as part of a user browsing session since drush doesnt know what the site URL is
+    $update_site_url = \Drupal::state()->get('ibm_apim.update_site_url');
+    if (defined('DRUPAL_ROOT') && $update_site_url === true) {
+      require_once DRUPAL_ROOT . '/profiles/apim_profile/apim_profile.homepage.inc';
+      if (function_exists('apim_profile_update_forum_block')) {
+        apim_profile_update_forum_block();
+      }
+      \Drupal::state()->delete('ibm_apim.update_site_url');
+    }
+
     // clear cookies when navigating away from user management pages
     $current_route = \Drupal::routeMatch()->getRouteName();
     if ($current_route !== 'user.login' && $current_route !== 'user.register' && $current_route !== 'auth_apic.azcode') {

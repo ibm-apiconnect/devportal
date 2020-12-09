@@ -1,4 +1,8 @@
 changes:
+  8.x-2.3.2: null
+  8.x-2.3.1: null
+  8.x-2.3.0:
+  - update version: 8.x-2.2.2 -> 8.x-2.3.0
   8.x-2.2.1:
   - update screenshots (#33) (#34)
   8.x-2.2.0:
