@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -177,287 +177,311 @@ class ApicUserRegisterForm extends RegisterForm {
 
     $member_invitation = FALSE;
 
-    $form = parent::form($form, $form_state);
+    if (!\Drupal::currentUser()->isAnonymous()) {
+      if (\Drupal::request()->getPathInfo() == '/user/oidcregister') {
+        $form = parent::form($form, $form_state);
+      } else {
+        $this->messenger->addError(t('Permission denied.'));
 
-    $form['#form_id'] = $this->getFormId();
-    $form['account']['roles'] = [];
-    $form['account']['roles']['#default_value'] = ['authenticated' => 'authenticated'];
+        $form = [];
+        $form['description'] = ['#markup' => '<p>' . t('You are already logged in. Log out first to create a new account.') . '</p>'];
 
-    // which fields displayed is controlled by config, we need to read and honour this.
-    // we need an entity to work from, but this is for register so anonymous is the best we can do.
-    $entity_form = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('user.user.register');
-
-    // if there are no registries on the catalog then bail out.
-    $all_registries = $this->userRegistryService->getAll();
-    if (empty($all_registries)) {
-      $this->messenger->addError(t('Self-service onboarding not possible: No user registries defined.'), 'error');
-      throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
-    }
-
-    // Hide the multi-value submit for consumerorgs regardless of whether we are going to add it again.
-    $form['consumer_organization']['#access'] = FALSE;
-    $form['consumer_organization']['#required'] = FALSE;
-
-    // if we are on the invited user flow, there will be a JWT in the session so grab that
-    // we can use this to pre-populate the email field
-    $jwt = $this->authApicSessionStore->get('invitation_object');
-    if ($jwt !== NULL) {
-      $form['#message']['message'] = t('To complete your invitation, fill out any required fields below.');
-
-      // for andre inviting another andre, we won't need the consumer org field
-      if (strpos($jwt->getPayload()['scopes']['url'], '/member-invitations/')) {
-        $member_invitation = TRUE;
-      }
-    }
-
-    // If self onboarding is disabled and this is not the invited user flow then bail out.
-    if ((boolean) \Drupal::state()->get('ibm_apim.selfSignUpEnabled', TRUE) === FALSE && empty($jwt)) {
-      $this->messenger->addError(t('Self-service onboarding is disabled for this site.'), 'error');
-      throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
-    }
-
-    // decide which registry is going on the left side and which buttons to put on the right
-    // we have two options :
-    //  1) display the default registry on the left and the others on the right
-    //  2) display the "chosen" registry on the left (second time through after clicking a registry button)
-    $chosen_registry = $this->userRegistryService->getDefaultRegistry();
-    $chosen_registry_url = \Drupal::request()->query->get('registry_url');
-    if (!empty($chosen_registry_url) && array_key_exists($chosen_registry_url, $all_registries) && ($this->apimUtils->sanitizeRegistryUrl($chosen_registry_url) === 1)) {
-      $chosen_registry = $all_registries[$chosen_registry_url];
-    }
-
-    // store chosen registry in form so we can use it in validation and submit
-    $form['registry_url'] = [
-      '#type' => 'hidden',
-      '#value' => $chosen_registry->getUrl(),
-    ];
-    // store the name for the template
-    $form['#registry_title']['registry_title'] = $chosen_registry->getTitle();
-
-    if (sizeof($all_registries) > 1) {
-      $other_registries = array_diff_key($all_registries, [$chosen_registry->getUrl() => $chosen_registry]);
-    }
-
-    // The rest of the fields depend on whether this is LUR, LDAP etc
-    if ($chosen_registry->isUserManaged()) {
-
-      if (!$member_invitation) {
-        // override multi select consumer org panel with just a textfield
-        $form['consumerorg'] = [
-          '#type' => 'textfield',
-          '#title' => $this->t('Consumer organization'),
-          '#required' => TRUE,
-          '#weight' => $form['consumer_organization']['#weight'],
-          '#description' => $this->t('Provide a name for your consumer organization such as "ACME Enterprises".'),
+        $form['cancel'] = [
+          '#type' => 'link',
+          '#title' => t('Cancel'),
+          '#url' => Url::fromRoute('<front>'),
+          '#attributes' => ['class' => ['button']],
         ];
       }
+    } else {
+      $form = parent::form($form, $form_state);
 
-      if (!empty($jwt)) {
+      $form['#form_id'] = $this->getFormId();
+      $form['account']['roles'] = [];
+      $form['account']['roles']['#default_value'] = ['authenticated' => 'authenticated'];
+
+      // which fields displayed is controlled by config, we need to read and honour this.
+      // we need an entity to work from, but this is for register so anonymous is the best we can do.
+      $entity_form = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('user.user.register');
+
+      // if there are no registries on the catalog then bail out.
+      $all_registries = $this->userRegistryService->getAll();
+      if (empty($all_registries)) {
+        $this->messenger->addError(t('Self-service onboarding not possible: No user registries defined.'), 'error');
+        throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
+      }
+
+      // if there are no registries on the catalog then bail out.
+      $all_registries = $this->userRegistryService->getAll();
+      if (empty($all_registries)) {
+        $this->messenger->addError(t('Self-service onboarding not possible: No user registries defined.'), 'error');
+        throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
+      }
+
+      // Hide the multi-value submit for consumerorgs regardless of whether we are going to add it again.
+      $form['consumer_organization']['#access'] = FALSE;
+      $form['consumer_organization']['#required'] = FALSE;
+
+      // if we are on the invited user flow, there will be a JWT in the session so grab that
+      // we can use this to pre-populate the email field
+      $jwt = $this->authApicSessionStore->get('invitation_object');
+      if ($jwt !== NULL) {
+        $form['#message']['message'] = t('To complete your invitation, fill out any required fields below.');
+
+        // for andre inviting another andre, we won't need the consumer org field
+        if (strpos($jwt->getPayload()['scopes']['url'], '/member-invitations/')) {
+          $member_invitation = TRUE;
+        }
+      }
+
+      // If self onboarding is disabled and this is not the invited user flow then bail out.
+      if ((boolean) \Drupal::state()->get('ibm_apim.selfSignUpEnabled', TRUE) === FALSE && empty($jwt)) {
+        $this->messenger->addError(t('Self-service onboarding is disabled for this site.'), 'error');
+        throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
+      }
+
+      // decide which registry is going on the left side and which buttons to put on the right
+      // we have two options :
+      //  1) display the default registry on the left and the others on the right
+      //  2) display the "chosen" registry on the left (second time through after clicking a registry button)
+      $chosen_registry = $this->userRegistryService->getDefaultRegistry();
+      $chosen_registry_url = \Drupal::request()->query->get('registry_url');
+      if (!empty($chosen_registry_url) && array_key_exists($chosen_registry_url, $all_registries) && ($this->apimUtils->sanitizeRegistryUrl($chosen_registry_url) === 1)) {
+        $chosen_registry = $all_registries[$chosen_registry_url];
+      }
+
+      // store chosen registry in form so we can use it in validation and submit
+      $form['registry_url'] = [
+        '#type' => 'hidden',
+        '#value' => $chosen_registry->getUrl(),
+      ];
+      // store the name for the template
+      $form['#registry_title']['registry_title'] = $chosen_registry->getTitle();
+
+      if (sizeof($all_registries) > 1) {
+        $other_registries = array_diff_key($all_registries, [$chosen_registry->getUrl() => $chosen_registry]);
+      }
+
+      // The rest of the fields depend on whether this is LUR, LDAP etc
+      if ($chosen_registry->isUserManaged()) {
+
+        if (!$member_invitation) {
+          // override multi select consumer org panel with just a textfield
+          $form['consumerorg'] = [
+            '#type' => 'textfield',
+            '#title' => $this->t('Consumer organization'),
+            '#required' => TRUE,
+            '#weight' => $form['consumer_organization']['#weight'],
+            '#description' => $this->t('Provide a name for your consumer organization such as "ACME Enterprises".'),
+          ];
+        }
+
+        if (!empty($jwt)) {
+          if (isset($form['account']['mail'])) {
+            $form['account']['mail']['#value'] = $jwt->getPayload()['email'];
+            $form['account']['mail']['#disabled'] = TRUE;
+            unset($form['account']['mail']['#description']);
+          }
+          if (isset($form['mail'])) {
+            $form['mail']['#value'] = $jwt->getPayload()['email'];
+            $form['mail']['#disabled'] = TRUE;
+            unset($form['mail']['#description']);
+          }
+        }
+
+        // If the password policy module is enabled, modify this form to show
+        // the configured policy.
+        $moduleService = \Drupal::service('module_handler');
+        $showPasswordPolicy = FALSE;
+
+        if ($moduleService->moduleExists('password_policy')) {
+          $showPasswordPolicy = _password_policy_show_policy();
+        }
+
+        if ($showPasswordPolicy) {
+          $form['ibm-apim-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
+          $form['ibm-apim-password-policy-status']['#weight'] = 10;
+          $form['#attached']['drupalSettings']['ibmApimPassword'] = ibm_apim_password_policy_client_settings($form, $form_state);
+        }
+
+        if (isset($form['account']['pass'])) {
+          if (empty($form['account']['pass']['#attributes'])) {
+            $form['account']['pass']['#attributes'] = [];
+          }
+          $form['account']['pass']['#attributes']['autocomplete'] = 'off';
+        }
+        if (isset($form['account']['name'])) {
+          if (empty($form['account']['name']['#attributes'])) {
+            $form['account']['name']['#attributes'] = [];
+          }
+          $form['account']['name']['#attributes']['autocomplete'] = 'off';
+        }
         if (isset($form['account']['mail'])) {
-          $form['account']['mail']['#value'] = $jwt->getPayload()['email'];
-          $form['account']['mail']['#disabled'] = TRUE;
-          unset($form['account']['mail']['#description']);
+          if (empty($form['account']['mail']['#attributes'])) {
+            $form['account']['mail']['#attributes'] = [];
+          }
+          $form['account']['mail']['#attributes']['autocomplete'] = 'off';
         }
-        if (isset($form['mail'])) {
-          $form['mail']['#value'] = $jwt->getPayload()['email'];
-          $form['mail']['#disabled'] = TRUE;
-          unset($form['mail']['#description']);
+
+        // first_name and last_name aren't required in our config as they aren't stored in some registries, but they are needed for LUR.
+        if ($chosen_registry->getRegistryType() === 'lur') {
+          if (isset($form['first_name'])) {
+            $form['first_name']['widget'][0]['value']['#required'] = TRUE;
+          }
+          if (isset($form['last_name'])) {
+            $form['last_name']['widget'][0]['value']['#required'] = TRUE;
+          }
         }
-      }
-
-      // If the password policy module is enabled, modify this form to show
-      // the configured policy.
-      $moduleService = \Drupal::service('module_handler');
-      $showPasswordPolicy = FALSE;
-
-      if ($moduleService->moduleExists('password_policy')) {
-        $showPasswordPolicy = _password_policy_show_policy();
-      }
-
-      if ($showPasswordPolicy) {
-        $form['ibm-apim-password-policy-status'] = ibm_apim_password_policy_check_constraints($form, $form_state);
-        $form['ibm-apim-password-policy-status']['#weight'] = 10;
-        $form['#attached']['drupalSettings']['ibmApimPassword'] = ibm_apim_password_policy_client_settings($form, $form_state);
-      }
-
-      if (isset($form['account']['pass'])) {
-        if (empty($form['account']['pass']['#attributes'])) {
-          $form['account']['pass']['#attributes'] = [];
-        }
-        $form['account']['pass']['#attributes']['autocomplete'] = 'off';
-      }
-      if (isset($form['account']['name'])) {
-        if (empty($form['account']['name']['#attributes'])) {
-          $form['account']['name']['#attributes'] = [];
-        }
-        $form['account']['name']['#attributes']['autocomplete'] = 'off';
-      }
-      if (isset($form['account']['mail'])) {
-        if (empty($form['account']['mail']['#attributes'])) {
-          $form['account']['mail']['#attributes'] = [];
-        }
-        $form['account']['mail']['#attributes']['autocomplete'] = 'off';
-      }
-
-      // first_name and last_name aren't required in our config as they aren't stored in some registries, but they are needed for LUR.
-      if ($chosen_registry->getRegistryType() === 'lur') {
-        if (isset($form['first_name'])) {
-          $form['first_name']['widget'][0]['value']['#required'] = TRUE;
-        }
-        if (isset($form['last_name'])) {
-          $form['last_name']['widget'][0]['value']['#required'] = TRUE;
-        }
-      }
-
-    }
-    else {
-
-      // user exists already in the registry
-      unset($form['account']['pass'], $form['account']['mail']);
-
-      if ($chosen_registry->getRegistryType() === 'oidc') {
-        // for oidc we don't need to present a username/ password + submit form... just a button.
-
-        $oidc_info = $this->oidcService->getOidcMetadata($chosen_registry, $jwt);
-        $button = [
-          '#type' => 'html_tag',
-          '#tag' => 'span',
-          '#attributes' => [
-            'class' => [
-              'apic-user-registry-button',
-              'apic-user-registry-' . $chosen_registry->getRegistryType(),
-            ],
-          ],
-          '#name' => $chosen_registry->getName(),
-          '#url' => $chosen_registry->getUrl(),
-          '#limit_validation_errors' => [],
-          '#prefix' => '<a class="chosen-registry-button registry-button generic-button button" href="' . $oidc_info['az_url'] . '"  title="' . $this->t('Create account using @ur', ['@ur' => $chosen_registry->getTitle()]) . '">' .
-            $oidc_info['image'] .
-            '<span class="registry-name">' . $chosen_registry->getTitle() . '</span>
-                        </a>',
-        ];
-        $form['oidc_link'] = $button;
-        unset($form['account']['name']);
 
       }
       else {
-        // ldap /authurl
 
-        // change name of property to avoid password policy
-        $form['pw_no_policy'] = [
-          '#type' => 'password',
-          '#title' => t('Password'),
-          '#size' => 60,
-          '#maxlength' => 128,
-          '#required' => TRUE,
-          '#attributes' => [
-            'class' => ['username'],
-            'autocorrect' => 'off',
-            'autocapitalize' => 'off',
-            'spellcheck' => 'false',
-          ],
-        ];
-      }
-      // here we are invited from apim, we need to specify a consumer org.
-      if (!empty($jwt) && !$member_invitation && $chosen_registry->getRegistryType() !== 'oidc') {
-        $form['consumerorg'] = [
-          '#type' => 'textfield',
-          '#title' => $this->t('Consumer organization'),
-          '#required' => TRUE,
-          '#weight' => $form['consumer_organization']['#weight'],
-          '#description' => $this->t('Provide a name for your consumer organization such as "ACME Enterprises".'),
-        ];
-      }
+        // user exists already in the registry
+        unset($form['account']['pass'], $form['account']['mail']);
 
-      // loop over everything which would be required from the config on a user managed form but isn't in this case.
-      if ($entity_form !== NULL) {
-        foreach ($entity_form->getComponents() as $name => $options) {
-          if ($name !== 'consumer_organization' && $name !== 'account' && $name !== 'pw_no_policy') {
-            unset($form[$name]);
-          }
-        }
-      }
+        if ($chosen_registry->getRegistryType() === 'oidc') {
+          // for oidc we don't need to present a username/ password + submit form... just a button.
 
-    }
-
-    if (!empty($other_registries)) {
-
-      $otherRegistries = [];
-
-      $redirect_with_registry_url = Url::fromRoute('user.register')->toString() . '?registry_url=';
-
-      foreach ($other_registries as $other_registry) {
-
-        $button = [
-          '#type' => 'html_tag',
-          '#tag' => 'span',
-          '#attributes' => ['class' => ['apic-user-registry-button', 'apic-user-registry-' . $other_registry->getRegistryType()]],
-          '#name' => $other_registry->getName(),
-          '#url' => $other_registry->getUrl(),
-          '#limit_validation_errors' => [],
-        ];
-        if ($other_registry->getRegistryType() === 'oidc') {
-          $oidc_info = $this->oidcService->getOidcMetadata($other_registry, $jwt);
+          $oidc_info = $this->oidcService->getOidcMetadata($chosen_registry, $jwt);
           $button = [
             '#type' => 'html_tag',
             '#tag' => 'span',
             '#attributes' => [
               'class' => [
                 'apic-user-registry-button',
-                'apic-user-registry-' . $other_registry->getRegistryType(),
+                'apic-user-registry-' . $chosen_registry->getRegistryType(),
               ],
             ],
+            '#name' => $chosen_registry->getName(),
+            '#url' => $chosen_registry->getUrl(),
+            '#limit_validation_errors' => [],
+            '#prefix' => '<a class="chosen-registry-button registry-button generic-button button" href="' . $oidc_info['az_url'] . '"  title="' . $this->t('Create account using @ur', ['@ur' => $chosen_registry->getTitle()]) . '">' .
+              $oidc_info['image'] .
+              '<span class="registry-name">' . $chosen_registry->getTitle() . '</span>
+                          </a>',
+          ];
+          $form['oidc_link'] = $button;
+          unset($form['account']['name']);
+
+        }
+        else {
+          // ldap /authurl
+
+          // change name of property to avoid password policy
+          $form['pw_no_policy'] = [
+            '#type' => 'password',
+            '#title' => t('Password'),
+            '#size' => 60,
+            '#maxlength' => 128,
+            '#required' => TRUE,
+            '#attributes' => [
+              'class' => ['username'],
+              'autocorrect' => 'off',
+              'autocapitalize' => 'off',
+              'spellcheck' => 'false',
+            ],
+          ];
+        }
+        // here we are invited from apim, we need to specify a consumer org.
+        if (!empty($jwt) && !$member_invitation && $chosen_registry->getRegistryType() !== 'oidc') {
+          $form['consumerorg'] = [
+            '#type' => 'textfield',
+            '#title' => $this->t('Consumer organization'),
+            '#required' => TRUE,
+            '#weight' => $form['consumer_organization']['#weight'],
+            '#description' => $this->t('Provide a name for your consumer organization such as "ACME Enterprises".'),
+          ];
+        }
+
+        // loop over everything which would be required from the config on a user managed form but isn't in this case.
+        if ($entity_form !== NULL) {
+          foreach ($entity_form->getComponents() as $name => $options) {
+            if ($name !== 'consumer_organization' && $name !== 'account' && $name !== 'pw_no_policy') {
+              unset($form[$name]);
+            }
+          }
+        }
+
+      }
+
+      if (!empty($other_registries)) {
+
+        $otherRegistries = [];
+
+        $redirect_with_registry_url = Url::fromRoute('user.register')->toString() . '?registry_url=';
+
+        foreach ($other_registries as $other_registry) {
+
+          $button = [
+            '#type' => 'html_tag',
+            '#tag' => 'span',
+            '#attributes' => ['class' => ['apic-user-registry-button', 'apic-user-registry-' . $other_registry->getRegistryType()]],
             '#name' => $other_registry->getName(),
             '#url' => $other_registry->getUrl(),
             '#limit_validation_errors' => [],
-            '#prefix' => '<a class="registry-button generic-button button" href="' . $oidc_info['az_url'] . '">' .
-              $oidc_info['image'] .
-              '<span class="registry-name">' . $other_registry->getTitle() . '</span>
-                          </a>',
           ];
-        }
-        else {
-          $button['#prefix'] = '<a class="registry-button generic-button button" href="' . $redirect_with_registry_url . $other_registry->getUrl() . '" title="' . $this->t('Create account using @ur', ['@ur' => $other_registry->getTitle()]) . '">
-                                <svg width="18" height="18" viewBox="0 0 32 32" fill-rule="evenodd"><path d="M16 6.4c3.9 0 7 3.1 7 7s-3.1 7-7 7-7-3.1-7-7 3.1-7 7-7zm0-2c-5 0-9 4-9 9s4 9 9 9 9-4 9-9-4-9-9-9z"></path>
-                                <path d="M16 0C7.2 0 0 7.2 0 16s7.2 16 16 16 16-7.2 16-16S24.8 0 16 0zm7.3 24.3H8.7c-1.2 0-2.2.5-2.8 1.3C3.5 23.1 2 19.7 2 16 2 8.3 8.3 2 16 2s14 6.3 14 14c0 3.7-1.5 7.1-3.9 9.6-.6-.8-1.7-1.3-2.8-1.3z"></path></svg>';
-          $button['#suffix'] = '<span class="registry-name">' . $other_registry->getTitle() . '</span></a>';
-        }
+          if ($other_registry->getRegistryType() === 'oidc') {
+            $oidc_info = $this->oidcService->getOidcMetadata($other_registry, $jwt);
+            $button = [
+              '#type' => 'html_tag',
+              '#tag' => 'span',
+              '#attributes' => [
+                'class' => [
+                  'apic-user-registry-button',
+                  'apic-user-registry-' . $other_registry->getRegistryType(),
+                ],
+              ],
+              '#name' => $other_registry->getName(),
+              '#url' => $other_registry->getUrl(),
+              '#limit_validation_errors' => [],
+              '#prefix' => '<a class="registry-button generic-button button" href="' . $oidc_info['az_url'] . '">' .
+                $oidc_info['image'] .
+                '<span class="registry-name">' . $other_registry->getTitle() . '</span>
+                            </a>',
+            ];
+          }
+          else {
+            $button['#prefix'] = '<a class="registry-button generic-button button" href="' . $redirect_with_registry_url . $other_registry->getUrl() . '" title="' . $this->t('Create account using @ur', ['@ur' => $other_registry->getTitle()]) . '">
+                                  <svg width="18" height="18" viewBox="0 0 32 32" fill-rule="evenodd"><path d="M16 6.4c3.9 0 7 3.1 7 7s-3.1 7-7 7-7-3.1-7-7 3.1-7 7-7zm0-2c-5 0-9 4-9 9s4 9 9 9 9-4 9-9-4-9-9-9z"></path>
+                                  <path d="M16 0C7.2 0 0 7.2 0 16s7.2 16 16 16 16-7.2 16-16S24.8 0 16 0zm7.3 24.3H8.7c-1.2 0-2.2.5-2.8 1.3C3.5 23.1 2 19.7 2 16 2 8.3 8.3 2 16 2s14 6.3 14 14c0 3.7-1.5 7.1-3.9 9.6-.6-.8-1.7-1.3-2.8-1.3z"></path></svg>';
+            $button['#suffix'] = '<span class="registry-name">' . $other_registry->getTitle() . '</span></a>';
+          }
 
-        $otherRegistries[] = $button;
+          $otherRegistries[] = $button;
+        }
+        $form['#otherRegistries']['otherRegistries'] = $otherRegistries;
       }
-      $form['#otherRegistries']['otherRegistries'] = $otherRegistries;
+
+      // attach custom javascript library to generate corg names from first/last name
+      $form['#attached']['library'][] = 'auth_apic/generate-consumerorg-name';
+
+      $form['#attached']['library'][] = 'ibm_apim/single_click';
+      $form['#attached']['library'][] = 'ibm_apim/validate_password';
+
+      if (\Drupal::moduleHandler()->moduleExists('page_load_progress') && \Drupal::currentUser()->hasPermission('use page load progress')) {
+
+        // Unconditionally attach assets to the page.
+        $form['#attached']['library'][] = 'auth_apic/oidc_page_load_progress';
+
+        $pjp_config = \Drupal::config('page_load_progress.settings');
+        // Attach config settings.
+        $form['#attached']['drupalSettings']['oidc_page_load_progress'] = [
+          'esc_key' => $pjp_config->get('page_load_progress_esc_key')
+        ];
+      }
+
+      // need to add cache context for the query param
+      if (!isset($form['#cache'])) {
+        $form['#cache'] = [];
+      }
+      if (!isset($form['#cache']['contexts'])) {
+        $form['#cache']['contexts'] = [];
+      }
+      $form['#cache']['contexts'][] = 'url.query_args:registry_url';
+
+      // and clear the cache for captcha placement
+      $this->cacheBackend->delete('captcha_placement_map_cache');
     }
-
-    // attach custom javascript library to generate corg names from first/last name
-    $form['#attached']['library'][] = 'auth_apic/generate-consumerorg-name';
-
-    $form['#attached']['library'][] = 'ibm_apim/single_click';
-    $form['#attached']['library'][] = 'ibm_apim/validate_password';
-
-    if (\Drupal::moduleHandler()->moduleExists('page_load_progress') && \Drupal::currentUser()->hasPermission('use page load progress')) {
-
-      // Unconditionally attach assets to the page.
-      $form['#attached']['library'][] = 'auth_apic/oidc_page_load_progress';
-
-      $pjp_config = \Drupal::config('page_load_progress.settings');
-      // Attach config settings.
-      $form['#attached']['drupalSettings']['oidc_page_load_progress'] = [
-        'esc_key' => $pjp_config->get('page_load_progress_esc_key')
-      ];
-    }
-
-    // need to add cache context for the query param
-    if (!isset($form['#cache'])) {
-      $form['#cache'] = [];
-    }
-    if (!isset($form['#cache']['contexts'])) {
-      $form['#cache']['contexts'] = [];
-    }
-    $form['#cache']['contexts'][] = 'url.query_args:registry_url';
-
-    // and clear the cache for captcha placement
-    $this->cacheBackend->delete('captcha_placement_map_cache');
-
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $form;
   }

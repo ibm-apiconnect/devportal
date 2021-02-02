@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -183,7 +183,11 @@ class ApicOidcAzCodeController extends ControllerBase {
       if ($redirect_location === 'ERROR') {
         $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
         $redirect_location = '<front>';
+      } else if ($this->authApicSessionStore->get('redirect_to')) {
+        $this->requestService->getCurrentRequest()->query->set('destination', $this->authApicSessionStore->get('redirect_to'));
+        $this->authApicSessionStore->delete('redirect_to');
       }
+
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }

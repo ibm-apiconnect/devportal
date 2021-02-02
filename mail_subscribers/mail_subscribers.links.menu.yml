@@ -11,3 +11,10 @@ mail_subscribers.startWizard:
   route_name: mail_subscribers.startWizard
   parent: entity.user.collection
   weight: 20
+
+mail_subscribers.startWizardContent:
+  title: 'Email subscribers'
+  route_name: mail_subscribers.startWizard
+  parent: system.admin_content
+  description: 'Email subscribers of a product, plan or API.'
+  weight: 20

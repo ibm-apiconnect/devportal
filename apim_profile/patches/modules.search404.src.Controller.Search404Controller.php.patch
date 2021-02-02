@@ -1,0 +1,11 @@
+--- modules/search404/src/Controller/Search404Controller.php	2020-09-28 12:34:44.000000000 +0100
++++ modules/search404/src/Controller/Search404Controller.php	2020-09-28 12:35:06.000000000 +0100
+@@ -245,7 +245,7 @@
+         if ($search_keys != '') {
+           $custom_search_path = str_replace('@keys', $search_keys, $custom_search_path);
+         }
+-        return $this->search404Goto("/" . $custom_search_path);
++        return $this->search404Goto(base_path() . $custom_search_path);
+       }
+     }
+ 

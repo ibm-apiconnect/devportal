@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -118,20 +118,23 @@ class ChooseApplicationStep extends IbmWizardStepBase {
             '%product' => $productName,
           ]);
       }
-
-      $form['#createNewApp'] = [
-        '#type' => 'link',
-        '#title' => $this->t('Create New'),
-        '#url' => Url::fromRoute('apic_app.create_modal'),
-        '#attributes' => [
-          'class' => [
-            'use-ajax',
-            'button',
+      $config = \Drupal::config('ibm_apim.settings');
+      $show_register_app = (boolean) $config->get('show_register_app');
+      if ($show_register_app === TRUE) {
+        $form['#createNewApp'] = [
+          '#type' => 'link',
+          '#title' => $this->t('Create New'),
+          '#url' => Url::fromRoute('apic_app.create_modal'),
+          '#attributes' => [
+            'class' => [
+              'use-ajax',
+              'button',
+            ],
           ],
-        ],
-        '#prefix' => '<div class="apicNewAppButton">',
-        '#suffix' => '</div>',
-      ];
+          '#prefix' => '<div class="apicNewAppButton">',
+          '#suffix' => '</div>',
+        ];
+      }
 
       // this empty div is used to put the new apps in
       $form['newApps'] = ['#markup' => "<div class='apicNewAppsList'></div>"];

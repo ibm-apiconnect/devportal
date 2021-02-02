@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,8 +13,10 @@
 
 namespace Drupal\product;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\node\NodeInterface;
 
 /**
@@ -184,7 +186,10 @@ class Product {
         'data' => $product,
       ]);
 
-      \Drupal::logger('product')->notice('Product @product @version created', ['@product' => $node->getTitle(), '@version' => $node->apic_version->value]);
+      \Drupal::logger('product')->notice('Product @product @version created', [
+        '@product' => $node->getTitle(),
+        '@version' => $node->apic_version->value,
+      ]);
     }
     if ($node !== NULL) {
       $returnId = $node->id();
@@ -547,7 +552,10 @@ class Product {
         // if invoked from the create code then don't invoke the update event - will be invoked from create instead
         if ($node !== NULL) {
           if ($event !== 'internal') {
-            \Drupal::logger('product')->notice('Product @product @version updated', ['@product' => $node->getTitle(),'@version' => $node->apic_version->value]);
+            \Drupal::logger('product')->notice('Product @product @version updated', [
+              '@product' => $node->getTitle(),
+              '@version' => $node->apic_version->value,
+            ]);
             // Calling all modules implementing 'hook_product_update':
             $moduleHandler->invokeAll('product_update', [
               'node' => $node,
@@ -624,13 +632,16 @@ class Product {
     if ($node !== NULL) {
       // Calling all modules implementing 'hook_product_delete':
       $moduleHandler->invokeAll('product_delete', ['node' => $node]);
-      \Drupal::logger('product')->notice('Product @product:@version deleted', ['@product' => $node->getTitle(), '@version' => $node->apic_version->value]);
+      \Drupal::logger('product')->notice('Product @product:@version deleted', [
+        '@product' => $node->getTitle(),
+        '@version' => $node->apic_version->value,
+      ]);
 
       //Delete all subscriptions for the product
       $query = \Drupal::entityQuery('apic_app_application_subs');
       $query->condition('product_url', $node->apic_url->value);
       $subIds = $query->execute();
-      
+
       foreach (array_chunk($subIds, 50) as $chunk) {
         $subEntities = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->loadMultiple($chunk);
         if (!empty($subEntities)) {
@@ -979,6 +990,15 @@ class Product {
     $ibmFields = self::getIBMFields();
     $merged = array_merge($coreFields, $ibmFields);
     $diff = array_diff($keys, $merged);
+
+    // make sure we only include actual custom fields so check there is a field config
+    foreach ($diff as $key => $field) {
+      $fieldConfig = FieldConfig::loadByName('node', 'product', $field);
+      if ($fieldConfig === NULL) {
+        unset($diff[$key]);
+      }
+    }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $diff);
     return $diff;
   }
@@ -1101,6 +1121,38 @@ class Product {
         if (isset($product['info']['categories'])) {
           $this->productTaxonomy->process_categories($product, $node);
         }
+      }
+    }
+  }
+
+  /**
+   * Clears the cache of all applications that have a subscription to the given product url
+   *
+   * @param $productUrl
+   */
+  public static function clearAppCache($productUrl): void {
+    $appUrls = [];
+    $query = \Drupal::entityQuery('apic_app_application_subs');
+    $query->condition('product_url', $productUrl);
+    $subIds = $query->execute();
+
+    if (isset($subIds) && !empty($subIds)) {
+      foreach (array_chunk($subIds, 50) as $chunk) {
+        $subEntities = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->loadMultiple($chunk);
+        foreach ($subEntities as $sub) {
+          $appUrls[] = $sub->app_url();
+        }
+      }
+    }
+    if (!empty($appUrls)) {
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'application');
+      $query->condition('apic_url', $appUrls, 'IN');
+      $nids = $query->execute();
+
+      foreach ($nids as $nid) {
+        $tags = ['application:' . $nid];
+        Cache::invalidateTags($tags);
       }
     }
   }

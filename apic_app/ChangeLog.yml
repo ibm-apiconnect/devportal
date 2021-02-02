@@ -1,4 +1,16 @@
 changes:
+  8.x-1.10.12:
+  - handle placeholders being disabled
+  8.x-1.10.11:
+  - Copyright statements for 2021
+  8.x-1.10.10:
+  - ensure custom fields are actual fields
+  8.x-1.10.9:
+  - Fix subscription table layout
+  8.x-1.10.8:
+  - need title to be translatable
+  8.x-1.10.7:
+  - invalidate app cache when creds change
   8.x-1.10.6:
   - increase gutter for latest masonry views
   8.x-1.10.5:

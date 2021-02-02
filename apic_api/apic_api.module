@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -394,6 +394,11 @@ function apic_api_preprocess_node(&$variables): void {
     $config = \Drupal::config('ibm_apim.settings');
     $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
     $renderApiSchemaView = (boolean) $config->get('render_api_schema_view');
+    $api_max_depth = $config->get('api_max_depth');
+    if ($api_max_depth === null || !is_int($api_max_depth) || $api_max_depth < 2 || $api_max_depth > 25) {
+      $api_max_depth = 9;
+    }
+    $variables['apiMaxDepth'] = $api_max_depth;
     if ($ibmApimShowPlaceholderImages === NULL) {
       $ibmApimShowPlaceholderImages = TRUE;
     }
@@ -502,6 +507,8 @@ function apic_api_preprocess_node(&$variables): void {
               foreach ($appCredentials as $cred) {
                 $credentials[] = [
                   'client_id' => $cred->client_id(),
+                  'name' => $cred->name(),
+                  'title' => $cred->title(),
                   'description' => $cred->summary(),
                 ];
               }
@@ -633,6 +640,7 @@ function apic_api_preprocess_node(&$variables): void {
         'languages' => $codeSnippetLangs,
         'defaultLanguage' => $defaultCodeSnippetLang,
         'tryIt' => $enableApiTest,
+        'apiMaxDepth' => $variables['apiMaxDepth'],
         'onReady' => 'portalExplorerReady',
         'wsdlRetrieverURL' => Url::fromRoute('apic_api.retrievewsdl', ['api' => $variables['node']->apic_ref->value, 'endpoint' => 'REPLACE_THIS_VALUE'])->setAbsolute()->toString(),
         'explorerDir' => base_path() . drupal_get_path('module', 'apic_api') . '/explorer/app/',

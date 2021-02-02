@@ -1,4 +1,19 @@
 changes:
+  8.x-1.7.13:
+  - Copyright statements for 2021
+  8.x-1.7.12:
+  - Err msg 2018.4.1 (#604)
+  8.x-1.7.11:
+  - remove extra `the`
+  8.x-1.7.10: null
+  8.x-1.7.9:
+  - Oidc fix 2018.4.1 (#601)
+  8.x-1.7.8: null
+  8.x-1.7.7:
+  - Indent + missed curly brace (#594)
+  8.x-1.7.6:
+  - Oidc register form (#585) (#592)
+  - Fixed redirect when logging in with oidc (#584) (#591)
   8.x-1.7.5:
   - User custom fields 2018.4.1 (#582)
   8.x-1.7.4: null

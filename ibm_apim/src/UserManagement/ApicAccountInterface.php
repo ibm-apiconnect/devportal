@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -68,9 +68,9 @@ interface ApicAccountInterface {
    * @param \Drupal\ibm_apim\ApicType\ApicUser $user
    *   the user profile to update including the updated fields
    *
-   * @return bool
+   * @return ApicUser|null
    */
-  public function updateApicAccount(ApicUser $user): bool;
+  public function updateApicAccount(ApicUser $user): ?ApicUser ;
 
   /**
    * @param $apic_user ApicUser

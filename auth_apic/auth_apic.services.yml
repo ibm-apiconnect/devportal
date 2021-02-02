@@ -59,7 +59,10 @@ services:
                 '@current_user',
                 '@entity_type.manager',
                 '@consumerorg.login',
-                '@ibm_apim.apicuser'
+                '@ibm_apim.apicuser',
+                '@module_handler',
+                '@ibm_apim.user_registry',
+                '@ibm_apim.utils'
                 ]
   auth_apic.activation:
     class: Drupal\auth_apic\UserManagement\ApicActivationService

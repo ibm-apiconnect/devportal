@@ -112,7 +112,7 @@ dependencies:
   - search_api_autocomplete
   - views_autocomplete_filters
   - robotstxt
-  - flood_unblock
+  - flood_control
   - key
   - encrypt
   - real_aes

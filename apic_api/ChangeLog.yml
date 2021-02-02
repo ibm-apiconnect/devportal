@@ -1,4 +1,12 @@
 changes:
+  8.x-1.6.7:
+  - Copyright statements for 2021
+  8.x-1.6.6:
+  - ensure custom fields are actual fields
+  8.x-1.6.5:
+  - pass through cred name and title too
+  8.x-1.6.4:
+  - pass apiMaxDepth through to explorer
   8.x-1.6.3:
   - increase gutter for latest masonry views
   8.x-1.6.2:

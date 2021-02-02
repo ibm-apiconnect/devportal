@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -336,10 +336,10 @@ class ApicUserProfileForm extends ProfileForm {
     }
     else {
       // everyone else needs updating in the mgmt appliance too
-      $updatedMgmtAppliance = $this->accountService->updateApicAccount($editUser);
+      $apicUser = $this->accountService->updateApicAccount($editUser);
 
-      if ($updatedMgmtAppliance) {
-        $this->accountService->updateLocalAccount($editUser);
+      if (isset($apicUser)) {
+        $this->accountService->updateLocalAccount($apicUser);
       }
     }
 

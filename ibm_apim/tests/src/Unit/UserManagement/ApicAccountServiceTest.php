@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -168,9 +168,9 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
     $userManager = $this->createAccountService();
-    $result = $userManager->updateApicAccount($user);
-    $this->assertEquals(TRUE, $result);
-    $result = $userManager->updateLocalAccount($user);
+    $apicUser = $userManager->updateApicAccount($user);
+    $this->assertNotNull($apicUser);
+    $result = $userManager->updateLocalAccount($apicUser);
     $this->assertEquals($accountStub, $result);
 
   }
@@ -236,7 +236,7 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
     $userManager = $this->createAccountService();
     $result = $userManager->updateApicAccount($user);
-    $this->assertEquals(FALSE, $result);
+    $this->assertNull($result);
 
   }
 
@@ -249,7 +249,7 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
     $userManager = $this->createAccountService();
     $result = $userManager->updateLocalAccount($user);
-    $this->assertEquals(FALSE, $result);
+    $this->assertNull($result);
 
   }
 

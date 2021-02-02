@@ -12,6 +12,8 @@
             <th class="plan">{{ 'Plan'|t }}</th>
             {% if billing_enabled == true %}
               <th class="cost">{{ 'Monthly Cost'|t }}</th>
+            {% else %}
+              <th id="cost" class="cost"></th>
             {% endif %}
             <th class="action">&nbsp;</th>
           </tr>
@@ -28,6 +30,8 @@
                 <td class="plan">{{ sub.plan_title }}</td>
                 {% if billing_enabled == true %}
                   <td class="cost">{{ sub.cost }}</td>
+                {% else %}
+                  <td class="cost"></td>
                 {% endif %}
                 {% if sub.superseded_by_product%}
                   <td class="migrate">
@@ -35,6 +39,8 @@
                         {% trans %} Migrate this subscription to plan '<em>{{ sub.superseded_by_product.plan_title|striptags }}</em>' in product '<em>{{ sub.superseded_by_product.product_title|striptags }}</em>' at version '<em>{{ sub.superseded_by_product.product_version|striptags }}</em>' {% endtrans %}
                     </a>
                   </td>
+                {% else %}
+                  <td class="migrate"></td>
                 {% endif %}
                 <td class="action" data-subid="{{ sub.id }}">
                   <ul class="overflow-menu subscriptionMenu dropitmenu">

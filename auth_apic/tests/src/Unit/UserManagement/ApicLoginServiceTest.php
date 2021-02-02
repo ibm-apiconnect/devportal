@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -20,7 +20,8 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
   use Drupal\ibm_apim\Rest\TokenResponse;
   use Prophecy\Argument;
   use Drupal\ibm_apim\Service\ApicUserService;
-
+  use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
+  use Drupal\ibm_apim\Service\Utils;
 
   /**
    * @coversDefaultClass \Drupal\auth_apic\UserManagement\ApicLoginService
@@ -56,9 +57,22 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
     protected $sessionStore;
 
     protected $userService;
+    
+    protected $entityFormDisplay;
+
+    protected $moduleHandler;
+
+    protected $entityFormDisplayStorage;
+
+  protected $userRegistryService;
+
+  protected $utils;
+
+  protected $oidcRegistry;
 
     protected function setup() {
       parent::setup();
+
 
       $this->mgmtServer = $this->prophet->prophesize(\Drupal\ibm_apim\Service\APIMServer::class);
       $this->accountService = $this->prophet->prophesize(\Drupal\ibm_apim\UserManagement\ApicAccountService::class);
@@ -72,9 +86,21 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->entityTypeManager = $this->prophet->prophesize(\Drupal\Core\Entity\EntityTypeManagerInterface::class);
       $this->consumerOrgLogin = $this->prophet->prophesize(\Drupal\consumerorg\Service\ConsumerOrgLoginService::class);
       $this->userService = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserService::class);
-
+      $this->entityFormDisplay = $this->prophet->prophesize(\Drupal\Core\Entity\Entity\EntityFormDisplay::class);
+      $this->entityFormDisplayStorage = $this->prophet->prophesize(\Drupal\Core\Entity\EntityStorageInterface::class);
       $this->drupalUser = $this->prophet->prophesize(\Drupal\user\UserStorageInterface::class);
+      $this->moduleHandler =  $this->prophet->prophesize(\Drupal\Core\Extension\ModuleHandlerInterface::class);
+      $this->userRegistryService = $this->prophet->prophesize(\Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface::class);
+      $this->utils =  $this->prophet->prophesize(\Drupal\ibm_apim\Service\Utils::class);
+      
+      
+      $this->moduleHandler->moduleExists('terms_of_use')->willReturn(false);
+      $this->oidcRegistry = $this->prophet->prophesize(\Drupal\ibm_apim\ApicType\UserRegistry::class);
+      $this->oidcRegistry->getRegistryType()->willReturn('oidc');
 
+      $this->entityTypeManager->getStorage('entity_form_display')->willReturn($this->entityFormDisplayStorage);
+      $this->entityFormDisplayStorage->load('user.user.register')->willReturn($this->entityFormDisplay);
+      $this->entityFormDisplay->getComponents()->willReturn([]);
       $this->entityTypeManager->getStorage('user')->willReturn($this->drupalUser->reveal());
       $this->tempStore->get('ibm_apim')->willReturn($this->sessionStore);
 
@@ -531,6 +557,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
+      $this->userRegistryService->get('/reg/oidc1')->willReturn($this->oidcRegistry);
       $service = $this->generateServiceUnderTest();
       $this->userService->getCustomUserFields()->willReturn([]);
       $response = $service->loginViaAzCode('validCode', '/reg/oidc1');
@@ -558,6 +585,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
       $this->userService->getCustomUserFields()->willReturn([]);
+      $this->userRegistryService->get('/reg/oidc1')->willReturn($this->oidcRegistry);
 
       $first_time_user = $this->prophet->prophesize(\Drupal\user\Entity\User::class);
 
@@ -584,6 +612,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
       $this->userService->getCustomUserFields()->willReturn([]);
+      $this->userRegistryService->get('/reg/oidc1')->willReturn($this->oidcRegistry);
 
       $this->userUtils->getCurrentConsumerorg()->willReturn(NULL);
       $this->siteConfig->isSelfOnboardingEnabled()->willReturn(TRUE);
@@ -600,6 +629,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
       $this->userService->getCustomUserFields()->willReturn([]);
+      $this->userRegistryService->get('/reg/oidc1')->willReturn($this->oidcRegistry);
 
       $this->userUtils->getCurrentConsumerorg()->willReturn(NULL);
       $this->siteConfig->isSelfOnboardingEnabled()->willReturn(FALSE);
@@ -687,7 +717,10 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
         $this->currentUser->reveal(),
         $this->entityTypeManager->reveal(),
         $this->consumerOrgLogin->reveal(),
-        $this->userService->reveal());
+        $this->userService->reveal(),
+        $this->moduleHandler->reveal(),
+        $this->userRegistryService->reveal(), 
+        $this->utils->reveal());
 
 
       return $service;

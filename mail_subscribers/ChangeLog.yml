@@ -1,4 +1,14 @@
 changes:
+  8.x-1.6.6:
+  - Copyright statements for 2021
+  8.x-1.6.5:
+  - need to get values first
+  8.x-1.6.4:
+  - oops overwriting values we shouldnt
+  8.x-1.6.3:
+  - fix cache issues in mail subscriber wizard
+  8.x-1.6.2:
+  - add link to mail subscriber wizard to content menu
   8.x-1.6.1:
   - remove Rules support from our code
   8.x-1.6.0:

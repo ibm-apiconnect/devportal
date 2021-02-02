@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -1532,6 +1532,25 @@ function apim_profile_update_8028() {
     ->getEditable('ibm_apim.settings')
     ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
     ->save();
+}
+
+/**
+ * switch flood_control for flood_control module
+ */
+function apim_profile_update_8031() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('flood_control')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->install(['flood_control']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  }
+  if ($moduleHandler->moduleExists('flood_unblock')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->uninstall(['flood_unblock']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  }
 }
 
 /**

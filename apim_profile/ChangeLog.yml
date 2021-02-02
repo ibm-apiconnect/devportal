@@ -1,4 +1,245 @@
 changes:
+  8.x-20210111-1033:
+    commits:
+    - flood_unblock is no more, use flood_control instead
+    - flood_unblock is no more, use flood_control instead
+    - drupal core update
+    - Session cookies (#429) (#431)
+    - copy application translation (#428)
+    modules:
+      ibm_apim:
+        8.x-1.8.22:
+        - Remove users not in the snapshot (#629)
+  8.x-20210105-1356:
+    commits:
+    - fix version of explorer
+    - fix perimeter patch
+    - update some modules that were on old releases
+    modules:
+      apic_app:
+        8.x-1.10.12:
+        - handle placeholders being disabled
+  8.x-20201222-1123:
+    commits:
+    - Copyright statements for 2021
+    - should be fp15
+    - composer update
+    - composer 1.10.19
+    modules:
+      socialblock:
+        8.x-1.6.6:
+        - Copyright statements for 2021
+      product:
+        8.x-1.6.10:
+        - Copyright statements for 2021
+      auth_apic:
+        8.x-1.7.13:
+        - Copyright statements for 2021
+      mail_subscribers:
+        8.x-1.6.6:
+        - Copyright statements for 2021
+      themegenerator:
+        8.x-1.6.2:
+        - Copyright statements for 2021
+      featuredcontent:
+        8.x-1.6.4:
+        - Copyright statements for 2021
+      apic_api:
+        8.x-1.6.7:
+        - Copyright statements for 2021
+      apic_app:
+        8.x-1.10.11:
+        - Copyright statements for 2021
+      ibm_apim:
+        8.x-1.8.21:
+        - Copyright statements for 2021
+      consumerorg:
+        8.x-1.7.8:
+        - Copyright statements for 2021
+      apictest:
+        8.x-1.8.4:
+        - Copyright statements for 2021
+  8.x-20201221-1745:
+    commits: null
+    modules:
+      mail_subscribers:
+        8.x-1.6.5:
+        - need to get values first
+        8.x-1.6.4:
+        - oops overwriting values we shouldnt
+  8.x-20201218-1123:
+    commits: null
+    modules:
+      mail_subscribers:
+        8.x-1.6.3:
+        - fix cache issues in mail subscriber wizard
+      ibm_apim:
+        8.x-1.8.20:
+        - only return an analytics service if have exactly 1
+  8.x-20201216-2323:
+    commits: null
+    modules:
+      mail_subscribers:
+        8.x-1.6.2:
+        - add link to mail subscriber wizard to content menu
+  8.x-20201216-1107:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.7.12:
+        - Err msg 2018.4.1 (#604)
+  8.x-20201214-1947:
+    commits: null
+    modules:
+      product:
+        8.x-1.6.9:
+        - need to handle there not being any subs
+  8.x-20201214-1150:
+    commits: null
+    modules:
+      product:
+        8.x-1.6.8:
+        - ensure custom fields are actual fields
+      apic_api:
+        8.x-1.6.6:
+        - ensure custom fields are actual fields
+      apic_app:
+        8.x-1.10.10:
+        - ensure custom fields are actual fields
+      ibm_apim:
+        8.x-1.8.19:
+        - ensure custom fields are actual fields
+      consumerorg:
+        8.x-1.7.7:
+        - ensure custom fields are actual fields
+  8.x-20201208-1123:
+    commits:
+    - composer update
+    modules:
+      product:
+        8.x-1.6.7:
+        - Fix displaying subscription migration target
+      apic_app:
+        8.x-1.10.9:
+        - Fix subscription table layout
+  8.x-20201120-1124:
+    commits:
+    - modules update
+    - patches no longer needed
+    - drupal security update
+    modules:
+      auth_apic:
+        8.x-1.7.11:
+        - remove extra `the`
+  8.x-20201117-1748:
+    commits:
+    - fix patch
+    - update drupal for security vuln
+    modules:
+      apic_app:
+        8.x-1.10.8:
+        - need title to be translatable
+  8.x-20201116-1123:
+    commits:
+    - composer update
+    modules:
+      product:
+        8.x-1.6.6:
+        - logic failure
+  8.x-20201116-0523:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.7.10: null
+  8.x-20201113-2323:
+    commits: null
+    modules:
+      product:
+        8.x-1.6.5:
+        - delete retired apis if deleting a product too
+  8.x-20201110-1724:
+    commits:
+    - fix info.yml file
+    - patch no longer needed
+    - composer update
+    modules:
+      auth_apic:
+        8.x-1.7.9:
+        - Oidc fix 2018.4.1 (#601)
+      ibm_apim:
+        8.x-1.8.18: null
+        8.x-1.8.17:
+        - Return the user
+        - Don't set name to null or empty (#617)
+  8.x-20201102-1123:
+    commits:
+    - drupal core update
+    - Only run builds every 6 hours
+    - update patch
+    - composer update
+    - composer update
+    modules:
+      apic_api:
+        8.x-1.6.5:
+        - pass through cred name and title too
+  8.x-20201012-1744:
+    commits:
+    - composer update
+    - update menu_item_role_access module
+    - keep composer at 1.x for now
+    - composer update
+    - Composerupdate (#413)
+    - fp14
+    modules:
+      apic_app:
+        8.x-1.10.7:
+        - invalidate app cache when creds change
+  8.x-20200918-1023:
+    commits:
+    - Stop register error when no mail field
+    - composer update
+    - clearing site's temp directory
+    - Search404 doesnt work with custom paths on subdir sites
+    - oops should be 3.x not 4.x
+    modules:
+      auth_apic:
+        8.x-1.7.8: null
+        8.x-1.7.7:
+        - Indent + missed curly brace (#594)
+        8.x-1.7.6:
+        - Oidc register form (#585) (#592)
+        - Fixed redirect when logging in with oidc (#584) (#591)
+  8.x-20200916-1323:
+    commits:
+    - drupal security updates
+    modules:
+      product:
+        8.x-1.6.4:
+        - needs the nid not the node
+  8.x-20200909-1643:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.6.4:
+        - pass apiMaxDepth through to explorer
+      ibm_apim:
+        8.x-1.8.16:
+        - pass apiMaxDepth through to explorer
+  8.x-20200907-1023:
+    commits:
+    - hardcode composer for now
+    modules:
+      ibm_apim:
+        8.x-1.8.15:
+        - dont display link to create apps in wizard
+  8.x-20200824-1550:
+    commits:
+    - update names
+    - resolve conflicts
+    modules:
+      ibm_apim:
+        8.x-1.8.14:
+        - basic hierarchical taxonomy menu block styling
   8.x-20200818-1624:
     commits:
     - remove leading slashes from path
@@ -1093,4 +1334,4 @@ changes:
         - update version: 8.x-1.1.46 -> 8.x-1.2.46
       apictest:
         8.x-1.3.55: null
-  8.x-20200824-1550:
+  8.x-20210113-1811:

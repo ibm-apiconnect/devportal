@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -256,7 +256,7 @@ class ProductController extends ControllerBase {
         // if only one product found then just load it and redirect
         if (count($nodes) === 1) {
           $firstNode = reset($nodes);
-          $path = Url::fromRoute('product.api', ['prodNode' => $firstNode, 'apiNode' => $apiNode->id()])
+          $path = Url::fromRoute('product.api', ['prodNode' => $firstNode->id(), 'apiNode' => $apiNode->id()])
             ->setAbsolute()
             ->toString();
           $response = new RedirectResponse($path);

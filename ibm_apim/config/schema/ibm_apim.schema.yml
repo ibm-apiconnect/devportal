@@ -220,6 +220,9 @@ ibm_apim.settings:
         email_format:
           type: string
           label: 'The format of the email sent to administrators'
+    api_max_depth:
+      type: integer
+      label: 'The maximum depth in layers for API objects to process examples'
 
 comment.type.comment:
   type: config_object

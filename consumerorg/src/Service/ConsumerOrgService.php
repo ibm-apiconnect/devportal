@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -28,6 +28,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
@@ -1098,6 +1099,14 @@ class ConsumerOrgService {
       $ibmFields = $this->getIBMFields();
       $merged = array_merge($coreFields, $ibmFields);
       $diff = array_diff($keys, $merged);
+
+      // make sure we only include actual custom fields so check there is a field config
+      foreach ($diff as $key => $field) {
+        $fieldConfig = FieldConfig::loadByName('node', 'consumerorg', $field);
+        if ($fieldConfig === NULL) {
+          unset($diff[$key]);
+        }
+      }
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $diff);

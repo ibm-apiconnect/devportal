@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -27,6 +27,9 @@ use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Drupal\ibm_apim\Service\ApicUserService;
+use \Drupal\Core\Extension\ModuleHandlerInterface;
+use \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
+use Drupal\ibm_apim\Service\Utils;
 
 class ApicLoginService implements ApicLoginServiceInterface {
 
@@ -85,6 +88,14 @@ class ApicLoginService implements ApicLoginServiceInterface {
    */
   protected $userService;
 
+  protected $entityTypeManager;
+
+  protected $moduleHandler;
+
+  protected $userRegistryService;
+
+  protected $utils;
+
   public function __construct(ManagementServerInterface $mgmt_interface,
                               ApicAccountInterface $account_service,
                               UserUtils $user_utils,
@@ -95,7 +106,10 @@ class ApicLoginService implements ApicLoginServiceInterface {
                               AccountProxyInterface $current_user,
                               EntityTypeManagerInterface $entity_type_manager,
                               ConsumerOrgLoginInterface $consumerorg_login_service,
-                              ApicUserService $user_service) {
+                              ApicUserService $user_service,
+                              ModuleHandlerInterface $module_handler,
+                              UserRegistryServiceInterface $user_registry_service,
+                              Utils $utils) {
     $this->mgmtServer = $mgmt_interface;
     $this->accountService = $account_service;
     $this->userUtils = $user_utils;
@@ -107,6 +121,10 @@ class ApicLoginService implements ApicLoginServiceInterface {
     $this->drupalUser = $entity_type_manager->getStorage('user');
     $this->consumerorgLogin = $consumerorg_login_service;
     $this->userService = $user_service;
+    $this->entityTypeManager = $entity_type_manager;
+    $this->moduleHandler = $module_handler;
+    $this->userRegistryService = $user_registry_service;
+    $this->utils = $utils;
   }
 
   /**
@@ -406,24 +424,49 @@ class ApicLoginService implements ApicLoginServiceInterface {
       // on first time login we need to pick up the browser language regardless of where we are redirecting to.
       //$user->get('first_time_login')[0]->getValue()['value'] === '1'
       //if (isset($user->first_time_login) && $user->first_time_login->value === '1') {
-      if ($user->get('first_time_login') !== NULL && $user->get('first_time_login')->getString() === '1') {
+      $firstTimeLogin = $user->get('first_time_login') !== NULL && $user->get('first_time_login')->getString() === '1';
+      if ($firstTimeLogin) {
         $this->accountService->setDefaultLanguage($user);
       }
+      
+      //Maybe store empty fields in an array and pass it as a session entity
+      $hasEmptyFields = false;
 
-      // check if the user we just logged in is a member of at least one dev org
+      if ($this->userRegistryService->get($registryUrl)->getRegistryType() === 'oidc') {
+        $entity_form = $this->entityTypeManager->getStorage('entity_form_display')->load('user.user.register');
+
+        foreach ($entity_form->getComponents() as $name => $options) {
+          if ($user->hasField($name) && $name !== 'consumer_organization' && 
+            (empty($user->get($name)->value) && $user->get($name)->getFieldDefinition()->isRequired() ||
+            $name === 'mail' && $this->utils->endsWith($user->get($name)->value, 'noemailinregistry@example.com') ||
+            $name === 'first_name' && empty($user->get($name)->value) ||
+            $name === 'last_name' && empty($user->get($name)->value))) {
+            $hasEmptyFields = true;
+          }
+        }
+      }
+
       $currentCOrg = $this->userUtils->getCurrentConsumerorg();
-      if (!isset($currentCOrg)) {
-        // if onboarding is enabled, we can redirect to the create org page
-        if ($this->siteConfig->isSelfOnboardingEnabled()) {
-          $redirectTo = 'consumerorg.create';
-        }
-        else {
-          // we can't help the user, they need to talk to an administrator
-          $redirectTo = 'ibm_apim.noperms';
-        }
+
+      if (!isset($currentCOrg) && !$this->siteConfig->isSelfOnboardingEnabled()) {
+        // we can't help the user, they need to talk to an administrator
+        $redirectTo = 'ibm_apim.noperms';
+        $message = 'redirect to ' . $redirectTo . ' as no consumer org set';
+
+      } 
+      elseif ($firstTimeLogin && ($hasEmptyFields || $this->moduleHandler->moduleExists('terms_of_use'))) {
+        // the user needs to fill in their required fields and accept ToU
+        $redirectTo = 'auth_apic.oidc_register';
+        $message = 'successful authentication, first time login redirect to ' . $redirectTo;
+
+      }
+      elseif (!isset($currentCOrg)) {
+        // check if the user we just logged in is a member of at least one dev org
+        // onboarding is enabled, we can redirect to the create org page
+        $redirectTo = 'consumerorg.create';
         $message = 'redirect to ' . $redirectTo . ' as no consumer org set';
       }
-      elseif ($user->get('first_time_login') !== NULL && $user->get('first_time_login')->getString() === '1') {
+      elseif ($firstTimeLogin) {
         // on first time login we need to redirect to getting started.
         $redirectTo = 'ibm_apim.get_started';
         $user->set('first_time_login', 0);

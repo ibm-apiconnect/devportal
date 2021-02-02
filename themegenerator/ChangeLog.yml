@@ -1,4 +1,6 @@
 changes:
+  8.x-1.6.2:
+  - Copyright statements for 2021
   8.x-1.6.1:
   - Removed use of deprecated functions
   8.x-1.6.0:

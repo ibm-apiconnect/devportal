@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -21,6 +21,7 @@ use Drupal\apic_app\Event\ApplicationUpdateEvent;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Url;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
@@ -679,6 +680,15 @@ class Application {
     $ibmFields = self::getIBMFields();
     $merged = array_merge($coreFields, $ibmFields);
     $diff = array_diff($keys, $merged);
+
+    // make sure we only include actual custom fields so check there is a field config
+    foreach ($diff as $key => $field) {
+      $fieldConfig = FieldConfig::loadByName('node', 'application', $field);
+      if ($fieldConfig === NULL) {
+        unset($diff[$key]);
+      }
+    }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $diff);
     return $diff;
   }

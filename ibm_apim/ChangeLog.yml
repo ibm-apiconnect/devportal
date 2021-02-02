@@ -1,4 +1,22 @@
 changes:
+  8.x-1.8.22:
+  - Remove users not in the snapshot (#629)
+  8.x-1.8.21:
+  - Copyright statements for 2021
+  8.x-1.8.20:
+  - only return an analytics service if have exactly 1
+  8.x-1.8.19:
+  - ensure custom fields are actual fields
+  8.x-1.8.18: null
+  8.x-1.8.17:
+  - Return the user
+  - Don't set name to null or empty (#617)
+  8.x-1.8.16:
+  - pass apiMaxDepth through to explorer
+  8.x-1.8.15:
+  - dont display link to create apps in wizard
+  8.x-1.8.14:
+  - basic hierarchical taxonomy menu block styling
   8.x-1.8.13:
   - User custom fields 2018.4.1 (#596)
   8.x-1.8.12:

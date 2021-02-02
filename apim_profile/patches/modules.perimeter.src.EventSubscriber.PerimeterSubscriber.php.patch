@@ -1,14 +1,14 @@
 --- modules/perimeter/src/EventSubscriber/PerimeterSubscriber.php	2019-07-11 09:26:09.304172808 +0000
 +++ modules/perimeter/src/EventSubscriber/PerimeterSubscriber.php	2019-07-11 09:28:26.736656971 +0000
-@@ -9,6 +9,7 @@
- use Drupal\Component\Utility\Xss;
- use Drupal\Core\Database\Database;
+@@ -11,6 +11,7 @@
  use Drupal\ban\BanIpManager;
+ use Drupal\Core\Config\ConfigFactoryInterface;
+ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 +use Drupal\Core\Site\Settings;
- 
+
  /**
   * On page not found events, ban the IP if the request is suspicious.
-@@ -49,6 +50,10 @@
+@@ -40,6 +41,10 @@
     * On page not found events, ban the IP if the request is suspicious.
     */
    public function handleBannedUrls(Event $event) {

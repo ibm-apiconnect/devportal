@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -101,6 +101,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
     $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
     $this->oidcStateService->delete('key')->willReturn();
+    $this->store->get('redirect_to')->willReturn();
     $this->store->delete(Argument::any())->willReturn();
     $this->loginService->loginViaAzCode('601e0142-55c2-406e-98e3-10ba1fa3f2e8', 'registryUrl')->willReturn("https://correctRedirectLocation.com");
 

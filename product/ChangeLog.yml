@@ -1,4 +1,18 @@
 changes:
+  8.x-1.6.10:
+  - Copyright statements for 2021
+  8.x-1.6.9:
+  - need to handle there not being any subs
+  8.x-1.6.8:
+  - ensure custom fields are actual fields
+  8.x-1.6.7:
+  - Fix displaying subscription migration target
+  8.x-1.6.6:
+  - logic failure
+  8.x-1.6.5:
+  - delete retired apis if deleting a product too
+  8.x-1.6.4:
+  - needs the nid not the node
   8.x-1.6.3:
   - increase gutter for latest masonry views
   8.x-1.6.2:

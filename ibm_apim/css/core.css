@@ -919,3 +919,39 @@ span.cron-description__run-cron a {
   border: 0;
   background: inherit;
 }
+
+/* hierarchical taxonomy block */
+.block-hierarchical-taxonomy-menu h2.block-title {
+  font-size: 1.2rem;
+  font-weight: 400;
+}
+.block-hierarchical-taxonomy-menu ul {
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+  position: relative;
+  line-height: 1.2rem;
+}
+.block-hierarchical-taxonomy-menu li {
+  list-style-type: none;
+  border-left: 1px solid #161616;
+  margin-left: 1em;
+}
+.block-hierarchical-taxonomy-menu li a {
+  padding-left: 1.3em;
+  position: relative;
+}
+.block-hierarchical-taxonomy-menu li a::before {
+  content:'';
+  position: absolute;
+  top: 0;
+  left: -1px;
+  bottom: 50%;
+  width: 0.75em;
+  border: 1px solid #161616;
+  border-top: 0 none transparent;
+  border-right: 0 none transparent;
+}
+.block-hierarchical-taxonomy-menu ul > li:last-child {
+  border-left: 1px solid transparent;
+}

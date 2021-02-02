@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -14,6 +14,7 @@
 namespace Drupal\ibm_apim\Service;
 
 use Drupal\Core\State\State;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\user\Entity\User;
@@ -70,8 +71,8 @@ class ApicUserService {
     if (isset($form_values['name'])) {
       $user->setUsername($form_values['name']);
     }
-    if (isset($form_values['mail']->value)) {
-      $user->setMail($form_values['mail']->value);
+    if (isset($form_values['mail'][0]['value'])) {
+      $user->setMail($form_values['mail'][0]['value']);
     }
 
     if (isset($form_values['pass']['pass1'])) {
@@ -335,6 +336,10 @@ class ApicUserService {
         'apic_provider_id',
         'apic_rating',
         'apic_tags',
+        'apic_realm',
+        'apic_state',
+        'apic_url',
+        'apic_user_registry_url',
         'consumerorg_id',
         'consumerorg_invites',
         'consumerorg_memberlist',
@@ -344,13 +349,25 @@ class ApicUserService {
         'consumerorg_roles',
         'consumerorg_tags',
         'consumerorg_url',
-        'codesnippet'
+        'consumerorg_def_payment_ref',
+        'consumerorg_payment_method_refs',
+        'codesnippet',
+        'user_picture',
       ];
       $merged = array_merge($coreFields, $ibmFields);
       $fields = array_diff($keys, $merged);
     }
 
+    // make sure we only include actual custom fields so check there is a field config
+    foreach ($fields as $key => $field) {
+      $fieldConfig = FieldConfig::loadByName('user', 'user', $field);
+      if ($fieldConfig === NULL) {
+        unset($fields[$key]);
+      }
+    }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $fields);
     return $fields;
   }
+
 }

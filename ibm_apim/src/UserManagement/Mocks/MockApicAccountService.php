@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -106,9 +106,9 @@ class MockApicAccountService implements ApicAccountInterface {
   /**
    * @inheritDoc
    */
-  public function updateApicAccount(ApicUser $user): bool {
+  public function updateApicAccount(ApicUser $user): ?ApicUser  {
      $this->updateLocalAccount($user);
-     return TRUE;
+     return $user;
   }
 
   /**

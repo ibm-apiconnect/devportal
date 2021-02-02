@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -71,6 +71,8 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @inheritDoc
    */
   public function deleteCredentials($url) {
+    // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
+    Application::invalidateCaches();
     return $this->doDelete($url);
   }
 
@@ -78,6 +80,8 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @inheritDoc
    */
   public function patchCredentials($url, $requestBody) {
+    // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
+    Application::invalidateCaches();
     return $this->doPatch($url, $requestBody);
   }
 
@@ -92,6 +96,8 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @inheritDoc
    */
   public function postClientId($url, $requestBody) {
+    // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
+    Application::invalidateCaches();
     return $this->doPost($url, $requestBody);
   }
 
@@ -99,6 +105,8 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @inheritDoc
    */
   public function postClientSecret($url, $requestBody) {
+    // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
+    Application::invalidateCaches();
     return $this->doPost($url, $requestBody);
   }
 
@@ -248,11 +256,8 @@ class ApplicationRestService implements ApplicationRestInterface {
         else {
           $application_image_url = 'http://' . $application_image_url;
         }
+        $data['image_endpoint'] = $application_image_url;
       }
-      else {
-        $application_image_url = '';
-      }
-      $data['image_endpoint'] = $application_image_url;
 
       $customFields = Application::getCustomFields();
       $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $formState);

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -71,7 +71,7 @@ class ApplicationController extends ControllerBase {
   public function createApplicationModal() {
     $response = new AjaxResponse();
     $form = \Drupal::getContainer()->get('form_builder')->getForm('Drupal\apic_app\Form\ModalApplicationCreateForm');
-    $response->addCommand(new OpenModalDialogCommand('Create an application', $form, []));
+    $response->addCommand(new OpenModalDialogCommand(t('Create an application'), $form, []));
     return $response;
   }
 
