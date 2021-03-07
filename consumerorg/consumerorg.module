@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -512,4 +512,69 @@ function consumerorg_theme($existing, $type, $theme, $path) {
       ],
     ],
   ];
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function consumerorg_token_info() {
+
+  $type = [
+    'name' => t('Consumer organization'),
+    'description' => t('Tokens related to the individual consumer organization'),
+    'needs-data' => 'consumer-org',
+  ];
+
+  $consumerOrg['name'] = array(
+    'name' => t("Name"),
+    'description' => t("The name of the consumer organization"),
+  );
+  $consumerOrg['title'] = array(
+    'name' => t("Title"),
+    'description' => t("The title of the consumer organization"),
+  );
+  $consumerOrg['id'] = array(
+    'name' => t("ID"),
+    'description' => t("The ID of the consumer organization"),
+  );
+
+  return [
+    'types' => ['consumer-org' => $type],
+    'tokens' => ['consumer-org' => $consumerOrg],
+  ];
+}
+
+/**
+ * Implementation hook_tokens().
+ *
+ * These token replacements are used by Rules.
+ *
+ * @param $type
+ * @param $tokens
+ * @param array $data
+ * @param array $options
+ *
+ * @return array
+ */
+function consumerorg_tokens($type, $tokens, array $data = [], array $options = []) {
+
+  $replacements = [];
+  if ($type === 'consumer-org' && !empty($data['consumer-org'])) {
+    $consumerOrg = $data['consumer-org'];
+
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'name':
+          $replacements[$original] = $consumerOrg->consumerorg_name->value;
+          break;
+        case 'title':
+          $replacements[$original] = $consumerOrg->getTitle();
+          break;
+        case 'id':
+          $replacements[$original] = $consumerOrg->consumerorg_id->value;
+          break;
+      }
+    }
+  }
+  return $replacements;
 }

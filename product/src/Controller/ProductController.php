@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -164,6 +164,13 @@ class ProductController extends ControllerBase {
           $rawImage = Api::getRandomImageName($apiNode->getTitle());
           $apiImageUrl = base_path() . drupal_get_path('module', 'apic_api') . '/images/' . $rawImage;
         }
+        $enforced = true;
+        if (isset($apiNode->api_swagger->value)) {
+          $swagger = unserialize($apiNode->api_swagger->value, ['allowed_classes' => FALSE]);
+          if (!isset($swagger['x-ibm-configuration']) || $swagger['x-ibm-configuration']['enforced'] === false) {
+            $enforced = false;
+          }
+        }
 
         $api = [
           'nid' => $apiNode->id(),
@@ -172,6 +179,7 @@ class ProductController extends ControllerBase {
           'version' => $apiNode->apic_version->value,
           'pathalias' => $apiNode->apic_pathalias->value,
           'image_url' => $apiImageUrl,
+          'enforced' => $enforced,
         ];
 
         if (!$found) {

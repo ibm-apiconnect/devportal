@@ -1,4 +1,21 @@
 changes:
+  8.x-2.4.8:
+  - Wait for WSREP ready in create_test_site.sh
+  8.x-2.4.7:
+  - apimesh/devportal#6637 Fix WSREP ready error
+  8.x-2.4.6: null
+  8.x-2.4.5:
+  - php 7.4
+  8.x-2.4.4:
+  - Revert "SnippetAcceptingContext is now deprecated"
+  8.x-2.4.3: null
+  8.x-2.4.2:
+  - SnippetAcceptingContext is now deprecated
+  - Add drupal core compatibility info
+  8.x-2.4.1:
+  - Copyright statements for 2021
+  8.x-2.4.0:
+  - update version: 8.x-2.3.6 -> 8.x-2.4.0
   8.x-2.3.5:
   - Added another fix (#180)
   - Fix test bug (#179)

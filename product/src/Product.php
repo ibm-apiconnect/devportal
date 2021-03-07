@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,8 +13,11 @@
 
 namespace Drupal\product;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 
 /**
@@ -988,6 +991,15 @@ class Product {
     $ibmFields = self::getIBMFields();
     $merged = array_merge($coreFields, $ibmFields);
     $diff = array_diff($keys, $merged);
+
+    // make sure we only include actual custom fields so check there is a field config
+    foreach ($diff as $key => $field) {
+      $fieldConfig = FieldConfig::loadByName('node', 'product', $field);
+      if ($fieldConfig === NULL) {
+        unset($diff[$key]);
+      }
+    }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $diff);
     return $diff;
   }
@@ -1096,9 +1108,70 @@ class Product {
   }
 
   /**
+   * Returns an array representation of a product for returning to drush
+   *
+   * @param $url
+   *
+   * @return array
+   */
+  public static function getProductForDrush($url): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['url' => $url]);
+    $output = NULL;
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', 'product');
+    $query->condition('apic_url.value', $url);
+
+    $nids = $query->execute();
+
+    if ($nids !== NULL && !empty($nids)) {
+      $nid = array_shift($nids);
+      $node = Node::load($nid);
+      if ($node !== NULL) {
+        $output['url'] = $url;
+        $output['id'] = $node->product_id->value;
+        $output['name'] = $node->product_name->value;
+        $output['version'] = $node->apic_version->value;
+        $output['title'] = $node->getTitle();
+        $output['state'] = $node->product_state->value;
+        $output['summary'] = $node->apic_summary->value;
+        $output['description'] = $node->apic_description->value;
+        $output['billing_url'] = $node->product_billing_url->value;
+        $productApis = [];
+        foreach ($node->product_apis->getValue() as $arrayValue) {
+          $productApis[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+        }
+        $output['apis'] = $productApis;
+        $output['view_enabled'] = (bool)(int)$node->product_view_enabled->value;
+        $output['subscribe_enabled'] = (bool)(int)$node->product_subscribe_enabled->value;
+        $output['visibility_public'] = (bool)(int)$node->product_visibility_public->value;
+        $output['visibility_authenticated'] = (bool)(int)$node->product_visibility_authenticated->value;
+        $customOrgs = [];
+        foreach ($node->product_visibility_custom_orgs->getValue() as $customOrg) {
+          if ($customOrg['value'] !== NULL) {
+            $customOrgs[] = $customOrg['value'];
+          }
+        }
+        $output['visibility_custom_orgs'] = $customOrgs;
+        $customTags = [];
+        foreach ($node->product_visibility_custom_tags->getValue() as $customTag) {
+          if ($customTag['value'] !== NULL) {
+            $customTags[] = $customTag['value'];
+          }
+        }
+        $output['visibility_custom_tags'] = $customTags;
+      }
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $output;
+  }
+
+  /**
    * Used by the batch API from the AdminForm
    *
    * @param $nid
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function processCategoriesForNode($nid): void {
     $config = \Drupal::config('ibm_apim.settings');
@@ -1110,6 +1183,38 @@ class Product {
         if (isset($product['info']['categories'])) {
           $this->productTaxonomy->process_categories($product, $node);
         }
+      }
+    }
+  }
+
+  /**
+   * Clears the cache of all applications that have a subscription to the given product url
+   *
+   * @param $productUrl
+   */
+  public static function clearAppCache($productUrl): void {
+    $appUrls = [];
+    $query = \Drupal::entityQuery('apic_app_application_subs');
+    $query->condition('product_url', $productUrl);
+    $subIds = $query->execute();
+
+    if (isset($subIds) && !empty($subIds)) {
+      foreach (array_chunk($subIds, 50) as $chunk) {
+        $subEntities = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->loadMultiple($chunk);
+        foreach ($subEntities as $sub) {
+          $appUrls[] = $sub->app_url();
+        }
+      }
+    }
+    if (!empty($appUrls)) {
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'application');
+      $query->condition('apic_url', $appUrls, 'IN');
+      $nids = $query->execute();
+
+      foreach ($nids as $nid) {
+        $tags = ['application:' . $nid];
+        Cache::invalidateTags($tags);
       }
     }
   }

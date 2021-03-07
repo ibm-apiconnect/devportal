@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -488,7 +488,7 @@ class ApicUserLoginForm extends UserLoginForm {
       if ($apicAuthenticated !== TRUE) {
         $user_input = $form_state->getUserInput();
         $query = isset($user_input['name']) ? ['name' => $user_input['name']] : [];
-        $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
+        $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
         $form_state->setErrorByName('usernameorpassword2', $this->t('<a href=":password">Forgot your password? Click here to reset it.</a>', [':password' => Url::fromRoute('user.pass', [], ['query' => $query])->toString()]));
       }
 

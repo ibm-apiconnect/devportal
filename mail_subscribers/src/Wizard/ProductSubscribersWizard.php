@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -12,6 +12,7 @@
 
 namespace Drupal\mail_subscribers\Wizard;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\ctools\Event\WizardEvent;
 use Drupal\ctools\Wizard\FormWizardBase;
 use Drupal\ctools\Wizard\FormWizardInterface;
@@ -73,6 +74,33 @@ class ProductSubscribersWizard extends FormWizardBase {
     return $steps;
   }
 
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return array
+   */
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $cached_values = $form_state->getTemporaryValue('wizard');
+
+    $cached_values['objectType'] = 'product';
+    if (isset($cached_values['api'])) {
+      unset($cached_values['api']);
+    }
+    if (isset($cached_values['plan'])) {
+      unset($cached_values['plan']);
+    }
+    $form_state->setTemporaryValue('wizard', $cached_values);
+
+    $form = parent::buildForm($form, $form_state);
+
+    if ($this->getStep($cached_values) === 'summary') {
+      unset($form['actions']['previous']);
+    }
+
+    return $form;
+  }
+
   public function initValues() {
     $values = [];
     $event = new WizardEvent($this, $values);
@@ -82,4 +110,5 @@ class ProductSubscribersWizard extends FormWizardBase {
     $event->setValues($tempValues);
     return $event->getValues();
   }
+
 }

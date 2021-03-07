@@ -61,11 +61,11 @@ function drush_drushadmin_theme_delete($theme_name) {
           \Drupal::service('ibm_apim.utils')->file_delete_recursive($item_path);
           // clear all caches otherwise reinstalling the same theme will fail
           drupal_flush_all_caches();
-          drush_log(dt("!theme_name deleted.", ['!theme_name' => $inputTheme]), "success");
+          \Drupal::logger("drushadmin")->notice(dt("!theme_name deleted.", ['!theme_name' => $inputTheme]));
         }
       }
       else {
-        drush_log(dt("!theme_name not deleted. It is either still activated or is not a custom module.", ['!theme_name' => $inputTheme]), "error");
+        \Drupal::logger("drushadmin")->error(dt("!theme_name not deleted. It is either still activated or is not a custom theme.", ['!theme_name' => $inputTheme]));
       }
     }
   }
@@ -89,10 +89,10 @@ function drush_drushadmin_module_delete($module_name) {
         \Drupal::service('ibm_apim.module')->deleteModulesOnFileSystem([$inputModule], FALSE);
         // clear all caches otherwise reinstalling the same module will fail
         drupal_flush_all_caches();
-        drush_log(dt("!module_name deleted.", ['!module_name' => $inputModule]), "success");
+        \Drupal::logger("drushadmin")->notice(dt("!module_name deleted.", ['!module_name' => $inputModule]));
       }
       else {
-        drush_log(dt("!module_name not deleted. It is either still activated or is not a custom module.", ['!module_name' => $inputModule]), "error");
+        \Drupal::logger("drushadmin")->error(dt("!module_name not deleted. It is either still activated or is not a custom module.", ['!module_name' => $inputModule]));
       }
     }
   }

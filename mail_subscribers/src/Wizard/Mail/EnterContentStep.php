@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -34,6 +34,7 @@ class EnterContentStep extends FormBase {
     $receipt = NULL;
     $direct = NULL;
     $carbon_copy = NULL;
+    $send_original = NULL;
     // load any saved values in case have gone backwards in the wizard
     $cached_values = $form_state->getTemporaryValue('wizard');
     if (!empty($cached_values) && isset($cached_values['subject'])) {
@@ -47,6 +48,9 @@ class EnterContentStep extends FormBase {
     }
     if (!empty($cached_values) && isset($cached_values['carbon_copy'])) {
       $carbon_copy = $cached_values['carbon_copy'];
+    }
+    if (!empty($cached_values) && isset($cached_values['send_original'])) {
+      $send_original = $cached_values['send_original'];
     }
     if (!empty($cached_values) && isset($cached_values['priority'])) {
       $priority = $cached_values['priority'];
@@ -79,7 +83,10 @@ class EnterContentStep extends FormBase {
       $direct = 1;
     }
     if ($carbon_copy === NULL) {
-      $carbon_copy = 1;
+      $carbon_copy = 0;
+    }
+    if ($send_original === NULL) {
+      $send_original = 0;
     }
 
     $form['intro'] = [
@@ -91,6 +98,7 @@ class EnterContentStep extends FormBase {
       '#type' => 'textfield',
       '#default_value' => !empty($subject) ? $subject : '',
       '#title' => $this->t('Subject'),
+      '#element_validate' => array('token_element_validate'),
     ];
 
     $form['message'] = [
@@ -102,6 +110,7 @@ class EnterContentStep extends FormBase {
       '#allowed_formats' => ['basic_html', 'plain_text'],
       '#rows' => 10,
       '#description' => $this->t('Enter the body of the message. You can use tokens in the message.'),
+      '#element_validate' => array('token_element_validate'),
     ];
 
     if (!\Drupal::moduleHandler()->moduleExists('token')) {
@@ -118,32 +127,36 @@ class EnterContentStep extends FormBase {
         '#description' => $this->t('You can use the following tokens in the subject or message.'),
       ];
 
-      // standard tokens from drupal
-      //      $form['token']['general'] = array(
-      //        '#type' => 'details',
-      //        '#title' => $this->t('General tokens'),
-      //      );
+      $cached_values = $form_state->getTemporaryValue('wizard', $cached_values);
 
-      $token_types = ['site', 'user', 'node', 'current-date'];
+      switch ($cached_values['objectType']) {
+        case 'all':
+          $token_types = ['consumer-org', 'user'];
+          break;
+        case 'product':
+          $token_types = ['consumer-org', 'product', 'application', 'user'];
+          break;
+        case 'plan':
+          $token_types = ['consumer-org', 'product', 'product-plan', 'application', 'user'];
+          break;
+        case 'api':
+          $token_types = ['consumer-org', 'product', 'application', 'api', 'user'];
+          break;
+        default:
+          $token_types = [];
+          break;
+      }
+
+      // Set which tokens are allowed
+      $form['message']['#token_types'] = $token_types;
+      $form['subject']['#token_types'] = $token_types;
       $form['token']['tokens'] = [
         '#theme' => 'token_tree_link',
         '#token_types' => $token_types,
+        '#global_types' => TRUE
       ];
 
-      // TODO : implement mail subscriber specific tokens
-      //      $form['token']['mail_subscribers'] = array(
-      //        '#type' => 'details',
-      //        '#title' => $this->t('Mail Subscribers specific tokens'),
-      //      );
-      //      $form['token']['mail_subscribers']['tokens'] = array(
-      //        '#markup' => mail_subscribers_token_help($fields_name_text)
-      //      );
-      //      $form['token']['general'] = array(
-      //        '#type' => 'details',
-      //        '#title' => $this->t('General tokens'),
-      //      );
     }
-
     $form['additional'] = [
       '#type' => 'details',
       '#title' => $this->t('Additional email options'),
@@ -183,8 +196,15 @@ class EnterContentStep extends FormBase {
     ];
     $form['carbon_copy'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Send a copy of the message to the sender.'),
+      '#title' => $this->t('Send a copy of all messages to the sender.'),
+      '#description' => $this->t("This will send a copy of each email that is generated to the sender.  Because the email may contain context specific tokens, new email content is generated for each recipient with the correct token replacement.  This option will send a copy of all generated emails to the sender "),
       '#default_value' => $carbon_copy,
+    ];
+    $form['send_original'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Send a copy of the original message to the sender.'),
+      '#description' => $this->t("This will send a single copy of the email to the sender without the replacement of any tokens that may have been selected"),
+      '#default_value' => $send_original,
     ];
 
     return $form;
@@ -199,7 +219,7 @@ class EnterContentStep extends FormBase {
       $form_state->setErrorByName('subject', $this->t('You must enter a Subject.'));
       return FALSE;
     }
-    if (empty($form_state->getUserInput()['message'])) {
+    if (empty($form_state->getValue(['message', 'value']))) {
       $form_state->setErrorByName('message', $this->t('You must enter some content for the message.'));
       return FALSE;
     }
@@ -218,6 +238,7 @@ class EnterContentStep extends FormBase {
     $headers = $form_state->getUserInput()['headers'];
     $direct = $form_state->getUserInput()['direct'];
     $carbon_copy = $form_state->getUserInput()['carbon_copy'];
+    $send_original = $form_state->getUserInput()['send_original'];
 
     $cached_values['subject'] = $subject;
     $cached_values['message'] = $message;
@@ -226,6 +247,7 @@ class EnterContentStep extends FormBase {
     $cached_values['headers'] = $headers;
     $cached_values['direct'] = $direct;
     $cached_values['carbon_copy'] = $carbon_copy;
+    $cached_values['send_original'] = $send_original;
 
     $form_state->setTemporaryValue('wizard', $cached_values);
 

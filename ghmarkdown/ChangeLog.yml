@@ -1,4 +1,8 @@
 changes:
+  8.x-2.4.1:
+  - Add drupal core compatibility info
+  8.x-2.4.0:
+  - update version: 8.x-2.3.1 -> 8.x-2.4.0
   8.x-2.3.0:
   - update version: 8.x-2.2.1 -> 8.x-2.3.0
   8.x-2.2.0:

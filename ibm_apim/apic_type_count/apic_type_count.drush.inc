@@ -3,6 +3,7 @@
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Session\UserSession;
 use Drupal\node\NodeInterface;
+use Drupal\apic_type_count\Controller\ApicConfigController;
 use Drupal\apic_type_count\Controller\ApicTypeCountController;
 use Drupal\apic_type_count\Controller\ApicNodeListController;
 
@@ -16,51 +17,98 @@ function apic_type_count_drush_command() {
   $items['apic_type_count-totals'] = [
     'description' => 'Count nodes of each type',
     'aliases' => ['nodecount'],
-    'outputformat' => array(
-      'default' => 'table'
-    ),
+    'outputformat' => [
+      'default' => 'table',
+    ],
   ];
   $items['apic_type_count-users'] = [
     'description' => 'Count users of each role',
     'aliases' => ['usercount'],
-    'outputformat' => array(
-      'default' => 'table'
-    ),
+    'outputformat' => [
+      'default' => 'table',
+    ],
   ];
   $items['apic_type_count-entities'] = [
     'description' => 'Count entities of each type',
     'aliases' => ['entitycount'],
-    'outputformat' => array(
-      'default' => 'table'
-    ),
+    'outputformat' => [
+      'default' => 'table',
+    ],
   ];
   $items['apic_type_count-productlist'] = [
     'description' => 'List products',
     'aliases' => ['productlist'],
-    'outputformat' => array(
-      'default' => 'table'
-    ),
+    'outputformat' => [
+      'default' => 'table',
+    ],
   ];
   $items['apic_type_count-apilist'] = [
     'description' => 'List APIs',
     'aliases' => ['apilist'],
-    'outputformat' => array(
-      'default' => 'table'
-    ),
+    'outputformat' => [
+      'default' => 'table',
+    ],
   ];
   $items['apic_type_count-consumerorglist'] = [
     'description' => 'List Consumer orgs',
     'aliases' => ['consumerorglist'],
-    'outputformat' => array(
-      'default' => 'table'
-    ),
+    'outputformat' => [
+      'default' => 'table',
+    ],
   ];
   $items['apic_type_count-applicationlist'] = [
     'description' => 'List Applications',
     'aliases' => ['applicationlist'],
-    'outputformat' => array(
-      'default' => 'table'
-    ),
+    'outputformat' => [
+      'default' => 'table',
+    ],
+  ];
+  $items['apic_type_count-apiget'] = [
+    'description' => 'Get an API',
+    'aliases' => ['apiget'],
+    'arguments' => [
+      'input' => 'The API ID or name:version',
+    ],
+    'outputformat' => [
+      'default' => 'json',
+    ],
+  ];
+  $items['apic_type_count-productget'] = [
+    'description' => 'Get a product',
+    'aliases' => ['productget'],
+    'arguments' => [
+      'input' => 'The product ID or name:version',
+    ],
+    'outputformat' => [
+      'default' => 'json',
+    ],
+  ];
+  $items['apic_type_count-applicationget'] = [
+    'description' => 'Get an application',
+    'aliases' => ['applicationget'],
+    'arguments' => [
+      'input' => 'The application ID',
+    ],
+    'outputformat' => [
+      'default' => 'json',
+    ],
+  ];
+  $items['apic_type_count-consumerorgget'] = [
+    'description' => 'Get a consumer organization',
+    'aliases' => ['consumerorgget'],
+    'arguments' => [
+      'input' => 'The consumer organization ID',
+    ],
+    'outputformat' => [
+      'default' => 'json',
+    ],
+  ];
+  $items['apic_type_count-apic_config'] = [
+    'description' => 'Get site configuration',
+    'aliases' => ['apic-config', 'apicconfig'],
+    'outputformat' => [
+      'default' => 'json',
+    ],
   ];
   return $items;
 }
@@ -270,4 +318,143 @@ function drush_apic_type_count_applicationlist() {
   }
 
   return $result_final;
+}
+
+function drush_apic_type_count_apiget($input) {
+  $results = NULL;
+  if ($input !== NULL) {
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
+    try {
+      $results = ApicNodeListController::getAPI($input);
+    } catch (\Exception $e) {
+      \Drupal::logger("apic_type_count")
+        ->error(dt("An exception occurred. That may mean the api does not exist or you do not have access to it."));
+    }
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+  }
+  else {
+    \Drupal::logger("apic_type_count")
+      ->error(dt("No input provided."));
+  }
+  return $results;
+}
+
+function drush_apic_type_count_productget($input) {
+  $results = NULL;
+  if ($input !== NULL) {
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+    try {
+      $results = ApicNodeListController::getProduct($input);
+    } catch (\Exception $e) {
+      \Drupal::logger("apic_type_count")
+        ->error(dt("An exception occurred. That may mean the product does not exist or you do not have access to it."));
+    }
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+  }
+  else {
+    \Drupal::logger("apic_type_count")
+      ->error(dt("No input provided."));
+  }
+  return $results;
+}
+
+function drush_apic_type_count_applicationget($input) {
+  $results = NULL;
+  if ($input !== NULL) {
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
+    try {
+      $results = ApicNodeListController::getApplication($input);
+    } catch (\Exception $e) {
+      \Drupal::logger("apic_type_count")
+        ->error(dt("An exception occurred. That may mean the application does not exist or you do not have access to it."));
+    }
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+  }
+  else {
+    \Drupal::logger("apic_type_count")
+      ->error(dt("No input provided."));
+  }
+  return $results;
+}
+
+function drush_apic_type_count_consumerorgget($input) {
+  $results = NULL;
+  if ($input !== NULL) {
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
+    try {
+      $results = ApicNodeListController::getConsumerorg($input);
+    } catch (\Exception $e) {
+      \Drupal::logger("apic_type_count")
+        ->error(dt("An exception occurred. That may mean the consumer organization does not exist or you do not have access to it."));
+    }
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+
+  }
+  else {
+    \Drupal::logger("apic_type_count")
+      ->error(dt("No input provided."));
+  }
+  return $results;
+}
+
+function drush_apic_type_count_apic_config() {
+  // in case moderation is on we need to run as admin
+  // save the current user so we can switch back at the end
+  $accountSwitcher = Drupal::service('account_switcher');
+  $originalUser = \Drupal::currentUser();
+  if ((int) $originalUser->id() !== 1) {
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+  }
+
+  try {
+    $results = ApicConfigController::getConfig();
+  } catch (\Exception $e) {
+    \Drupal::logger("apic_type_count")->error(dt("An exception occurred."));
+  }
+
+
+  if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+    $accountSwitcher->switchBack();
+  }
+
+  return $results;
 }

@@ -1,7 +1,7 @@
 name: 'IBM API Connect Developer Portal'
 type: profile
 description: 'Provides modules to access the content in an API Manager node and a skeleton site which application developers can use to browse APIs.'
-core: 8.x
+core_version_requirement: ^8 || ^9
 
 # Optional: Declare your installation profile as a distribution
 # This will make the installer auto-select this installation profile.
@@ -111,7 +111,7 @@ dependencies:
   - search_api_autocomplete
   - views_autocomplete_filters
   - robotstxt
-  - flood_unblock
+  - flood_control
   - key
   - encrypt
   - real_aes

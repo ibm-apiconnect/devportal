@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -39,6 +39,8 @@ class BillingConfigForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $config = $this->config('ibm_apim.settings');
+    $currentLang = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $localeStorage = \Drupal::service('locale.storage');
 
     $form['intro'] = [
       '#markup' => t('IBM API Connect Billing Integration Settings'),
@@ -60,7 +62,18 @@ class BillingConfigForm extends ConfigFormBase {
     foreach ($hook_modules as $moduleName) {
       // if we can get the module display name then use it
       if (isset($moduleData[$moduleName])) {
-        $options[$moduleName] = $moduleData[$moduleName]->info['name'] . ' (' . $moduleName . ')';
+        // get translation if available
+        $translatedModuleTitle = $localeStorage->findTranslation([
+          'source' => $moduleData[$moduleName]->info['name'],
+          'language' => $currentLang,
+        ]);
+        if ($translatedModuleTitle !== NULL && $translatedModuleTitle->translation !== NULL) {
+          $moduleTitle = $translatedModuleTitle->translation;
+        }
+        else {
+          $moduleTitle = $moduleData[$moduleName]->info['name'];
+        }
+        $options[$moduleName] = $moduleTitle . ' (' . $moduleName . ')';
       }
       else {
         $options[$moduleName] = $moduleName;
@@ -114,4 +127,5 @@ class BillingConfigForm extends ConfigFormBase {
 
     parent::submitForm($form, $form_state);
   }
+
 }

@@ -28,6 +28,9 @@ settings:
     -
       value: mq
       label: MQ
+    -
+      value: asyncapi
+      label: AsyncAPI
   allowed_values_function: ''
 module: options
 locked: false

@@ -1,4 +1,22 @@
 changes:
+  8.x-2.4.8:
+  - divisibleby is deprecated
+  - Add drupal core compatibility info
+  8.x-2.4.7:
+  - Add tokens
+  8.x-2.4.6:
+  - Copyright statements for 2021
+  8.x-2.4.5:
+  - drush commands to get individual nodes
+  8.x-2.4.4:
+  - need to handle there not being any subs
+  8.x-2.4.3:
+  - ensure custom fields are actual fields
+  8.x-2.4.2: null
+  8.x-2.4.1:
+  - hide plans and subscribe for unenforced apis
+  8.x-2.4.0:
+  - update version: 8.x-2.3.18 -> 8.x-2.4.0
   8.x-2.3.17:
   - float not int
   8.x-2.3.16:

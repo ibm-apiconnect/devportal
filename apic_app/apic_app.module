@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -561,4 +561,121 @@ function apic_app_views_pre_render(ViewExecutable $view) {
   if (isset($view) && ($view->storage->id() === 'applications')) {
     $view->element['#attached']['library'][] = 'apic_app/basic';
   }
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function apic_app_token_info() {
+
+  $type = [
+    'name' => t('Application'),
+    'description' => t('Tokens related to an individual application'),
+    'needs-data' => 'application',
+  ];
+
+  $app['name'] = array(
+    'name' => t("Name"),
+    'description' => t("The name of the application"),
+  );
+  $app['title'] = array(
+    'name' => t("Title"),
+    'description' => t("The title of the application"),
+  );
+  $app['id'] = array(
+    'name' => t("ID"),
+    'description' => t("The ID of the application"),
+  );
+  $app['enabled'] = array(
+    'name' => t("Enabled"),
+    'description' => t("The state the application is currently in"),
+  );
+  $app['description'] = array(
+    'name' => t("Description"),
+    'description' => t("The description given to the application"),
+  );
+  $app['lifecycle_state'] = array(
+    'name' => t("Lifecycle State"),
+    'description' => t("The current lifecycle state of the application"),
+  );
+  $app['image_url'] = array(
+    'name' => t("Image URL"),
+    'description' => t("The URL of the image for the application"),
+  );
+
+  return [
+    'types' => ['application' => $type],
+    'tokens' => ['application' => $app],
+  ];
+}
+
+/**
+ * Implementation hook_tokens().
+ *
+ * These token replacements are used by Rules.
+ *
+ * @param $type
+ * @param $tokens
+ * @param array $data
+ * @param array $options
+ *
+ * @return array
+ */
+function apic_app_tokens($type, $tokens, array $data = [], array $options = []) {
+
+  $replacements = [];
+  if ($type === 'application' && !empty($data['application'])) {
+    $application = $data['application'];
+
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'name':
+          $replacements[$original] = $application->application_name->value;
+          break;
+        case 'title':
+          $replacements[$original] = $application->getTitle();
+          break;
+        case 'id':
+          $replacements[$original] = $application->application_id->value;
+          break;
+        case 'enabled':
+          $replacements[$original] = $application->application_enabled->value;
+          break;
+        case 'lifecycle_state':
+          $replacements[$original] = $application->application_lifecycle_state->value;
+          break;
+        case 'description':
+          $replacements[$original] = $application->apic_summary->value;
+          break;
+        case 'image_url':
+          $config = \Drupal::config('ibm_apim.settings');
+          $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
+          $customImage = $application->application_image;
+          $customImageString = NULL;
+
+          if ($customImage !== NULL && !empty($customImage)) {
+            $entity = $application->application_image->entity;
+            if ($entity !== NULL) {
+              $customImageString = $entity->getFileUri();
+            }
+          }
+          if ($customImageString !== NULL && !empty($customImageString)) {
+            if (preg_match('/^http[s]?:\/\//', $customImageString) === 1) {
+              $apiImageUrl = $customImageString;
+            } else {
+              $apiImageUrl = NULL;
+            }
+          }
+          elseif ($ibmApimShowPlaceholderImages) {
+            $apiImageUrl = Application::getPlaceholderImage($application->getTitle());
+          }
+          else {
+            $apiImageUrl = NULL;
+          }
+          $replacements[$original] = $apiImageUrl;
+          break;
+      }
+    }
+  }
+  return $replacements;
 }

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -444,6 +444,16 @@ function apic_api_preprocess_node(&$variables): void {
     }
     $variables['custom_fields'] = $diff;
 
+    $swagger = unserialize($variables['node']->api_swagger->value, ['allowed_classes' => FALSE]);
+    $enforced = true;
+    if (isset($swagger['x-ibm-configuration']) && array_key_exists('enforced', $swagger['x-ibm-configuration'])) {
+      $enforced = $swagger['x-ibm-configuration']['enforced'];
+    }
+    if ($enforced !== true && $enforced !== false) {
+      $enforced = true;
+    }
+    $variables['enforced'] = $enforced;
+
     if ($variables['view_mode'] === 'full') {
       $showCorsWarnings = (boolean) $config->get('show_cors_warnings');
       $soapSwaggerDownload = (boolean) $config->get('soap_swagger_download');
@@ -783,4 +793,128 @@ function apic_api_node_view(array &$build, NodeInterface $node, $display, $viewM
       $build['#cache']['tags'] = array_merge($build['#cache']['tags'], $tags);
     }
   }
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function apic_api_token_info() {
+
+  $type = [
+    'name' => t('API'),
+    'description' => t('Tokens related to an individual API'),
+    'needs-data' => 'api',
+  ];
+  $api['name'] = array(
+    'name' => t("Name"),
+    'description' => t("The name of the API"),
+  );
+  $api['version'] = array(
+    'name' => t("Version"),
+    'description' => t("The version of the API"),
+  );
+  $api['title'] = array(
+    'name' => t("Title"),
+    'description' => t("The title of the API"),
+  );
+  $api['id'] = array(
+    'name' => t("ID"),
+    'description' => t("The ID of the API"),
+  );
+  $api['state'] = array(
+    'name' => t("State"),
+    'description' => t("The current state the API is in"),
+  );
+  $api['protocol'] = array(
+    'name' => t("Protocol"),
+    'description' => t("The protocol of the API"),
+  );
+  $api['oai_version'] = array(
+    'name' => t("OAI Version"),
+    'description' => t("The OAI version of the API"),
+  );
+  $api['image_url'] = array(
+    'name' => t("Image URL"),
+    'description' => t("The URL of the image for the api"),
+  );
+
+  return [
+    'types' => ['api' => $type],
+    'tokens' => ['api' => $api],
+  ];
+}
+
+/**
+ * Implementation hook_tokens().
+ *
+ * These token replacements are used by Rules.
+ *
+ * @param $type
+ * @param $tokens
+ * @param array $data
+ * @param array $options
+ *
+ * @return array
+ */
+function apic_api_tokens($type, $tokens, array $data = [], array $options = []) {
+
+  $replacements = [];
+  if ($type === 'api' && !empty($data['api'])) {
+    $api = $data['api'];
+
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'name':
+          $replacements[$original] = $api->api_xibmname->value;
+          break;
+        case 'version':
+          $replacements[$original] = $api->apic_version->value;
+          break;
+        case 'title':
+          $replacements[$original] = $api->getTitle();
+          break;
+        case 'id':
+          $replacements[$original] = $api->api_id->value;
+          break;
+        case 'state':
+          $replacements[$original] = $api->api_state->value;
+          break;
+        case 'protocol':
+          $replacements[$original] = $api->api_protocol->value;
+          break;
+        case 'oai_version':
+          $replacements[$original] = $api->api_oaiversion->value;
+          break;
+        case 'image_url':
+          $config = \Drupal::config('ibm_apim.settings');
+          $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
+          $customImage = $api->apic_image;
+          $customImageString = NULL;
+
+          if ($customImage !== NULL && !empty($customImage)) {
+            $entity = $api->apic_image->entity;
+            if ($entity !== NULL) {
+              $customImageString = $entity->getFileUri();
+            }
+          }
+          if ($customImageString !== NULL && !empty($customImageString)) {
+            if (preg_match('/^http[s]?:\/\//', $customImageString) === 1) {
+              $productImageUrl = $customImageString;
+            } else {
+              $productImageUrl = NULL;
+            }
+          }
+          elseif ($ibmApimShowPlaceholderImages) {
+            $productImageUrl = Api::getPlaceholderImage($api->getTitle());
+          }
+          else {
+            $productImageUrl = NULL;
+          }
+          $replacements[$original] = $productImageUrl;
+
+          break;
+      }
+    }
+  }
+  return $replacements;
 }

@@ -1,4 +1,22 @@
 changes:
+  8.x-2.4.8:
+  - Add drupal core compatibility info
+  8.x-2.4.7:
+  - handle placeholders being disabled
+  8.x-2.4.6:
+  - Add tokens
+  8.x-2.4.5:
+  - Copyright statements for 2021
+  8.x-2.4.4:
+  - fix error handling in drush commands
+  8.x-2.4.3:
+  - drush commands to get individual nodes
+  8.x-2.4.2:
+  - ensure custom fields are actual fields
+  8.x-2.4.1:
+  - Fix subscription table layout
+  8.x-2.4.0:
+  - update version: 8.x-2.3.24 -> 8.x-2.4.0
   8.x-2.3.23: null
   8.x-2.3.22:
   - need title to be translatable

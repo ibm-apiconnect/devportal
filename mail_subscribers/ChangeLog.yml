@@ -1,4 +1,22 @@
 changes:
+  8.x-2.4.7:
+  - Add drupal core compatibility info
+  8.x-2.4.6:
+  - Enable user tokens
+  - Additional mail subscriber fixes
+  - Add tokens
+  8.x-2.4.5:
+  - Copyright statements for 2021
+  8.x-2.4.4:
+  - need to get values first
+  8.x-2.4.3:
+  - oops overwriting values we shouldnt
+  8.x-2.4.2:
+  - fix cache issues in mail subscriber wizard
+  8.x-2.4.1:
+  - add link to mail subscriber wizard to content menu
+  8.x-2.4.0:
+  - update version: 8.x-2.3.3 -> 8.x-2.4.0
   8.x-2.3.2: null
   8.x-2.3.1: null
   8.x-2.3.0:

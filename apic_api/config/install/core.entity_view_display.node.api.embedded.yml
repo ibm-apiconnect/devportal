@@ -92,6 +92,13 @@ content:
       show_own_vote: false
     third_party_settings: {  }
     region: content
+  api_swagger:
+    type: basic_string
+    weight: 0
+    region: content
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
   apic_summary:
     weight: 15
     label: above
@@ -124,8 +131,6 @@ hidden:
   api_ibmconfiguration: true
   api_id: true
   api_soapversion: true
-  api_state: true
-  api_swagger: true
   api_encodedswagger: true
   api_swaggertags: true
   api_wsdl: true

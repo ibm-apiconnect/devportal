@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -1035,6 +1035,72 @@ function apic_api_update_8205() {
   if ($fieldConfig->get('label') !== 'Specification') {
     $fieldConfig->set('label', 'Specification');
     $fieldConfig->save();
+  }
+}
+
+/**
+ * Update the field storage for the protocol field to include asyncapi
+ */
+function apic_api_update_8206() {
+  $fieldConfig = \Drupal\field\Entity\FieldConfig::loadByName('node', 'api', 'api_protocol');
+  $storage = $fieldConfig->getFieldStorageDefinition();
+  if ($storage !== NULL) {
+    $allowed_values = $storage->getSetting('allowed_values');
+    if (!array_key_exists('asyncapi', $allowed_values)) {
+      $allowed_values['asyncapi'] = 'AsyncAPI';
+      $storage->setSetting('allowed_values', $allowed_values);
+      $storage->save();
+    }
+  }
+}
+
+/**
+ * Add api_state and api_swagger fields to the view modes
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_api_update_8207() {
+  $stateValues = [
+    'type' => 'list_default',
+    'weight' => 21,
+    'region' => 'content',
+    'label' => 'hidden',
+  ];
+  $swaggerValues = [
+    'type' => 'basic_string',
+    'weight' => 0,
+    'region' => 'content',
+    'label' => 'hidden',
+  ];
+
+  $cardFormDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.card');
+  if ($cardFormDisplay !== NULL) {
+    $cardFormDisplay->setComponent('api_state', $stateValues);
+    $cardFormDisplay->setComponent('api_swagger', $swaggerValues);
+    $cardFormDisplay->save();
+  }
+
+  $teaserFormDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.teaser');
+  if ($teaserFormDisplay !== NULL) {
+    $teaserFormDisplay->setComponent('api_state', $stateValues);
+    $teaserFormDisplay->setComponent('api_swagger', $swaggerValues);
+    $teaserFormDisplay->save();
+  }
+
+  $embeddedFormDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.embedded');
+  if ($embeddedFormDisplay !== NULL) {
+    $embeddedFormDisplay->setComponent('api_state', $stateValues);
+    $embeddedFormDisplay->setComponent('api_swagger', $swaggerValues);
+    $embeddedFormDisplay->save();
+  }
+
+  $defaultFormDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.default');
+  if ($defaultFormDisplay !== NULL) {
+    // default already has the api_swagger field set
+    $defaultFormDisplay->setComponent('api_state', $stateValues);
+    $defaultFormDisplay->save();
   }
 }
 

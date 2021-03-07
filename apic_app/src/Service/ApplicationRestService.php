@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -256,11 +256,8 @@ class ApplicationRestService implements ApplicationRestInterface {
         else {
           $application_image_url = 'http://' . $application_image_url;
         }
+        $data['image_endpoint'] = $application_image_url;
       }
-      else {
-        $application_image_url = '';
-      }
-      $data['image_endpoint'] = $application_image_url;
 
       $customFields = Application::getCustomFields();
       $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $formState);

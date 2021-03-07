@@ -2,8 +2,8 @@ name: Mail Subscribers
 type: module
 description: Email subscribers of a given APIC Plan, Product or API
 package: IBM API Connect
-core: 8.x
-version: 8.x-2.3.3
+core_version_requirement: ^8 || ^9
+version: 8.x-2.4.8
 project: mail_subscribers
 libraries:
 - mail_subscribers/basic

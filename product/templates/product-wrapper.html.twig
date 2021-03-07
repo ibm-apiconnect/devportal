@@ -22,7 +22,8 @@
             {% set prodNode = product.nid %}
           {% endif %}
           <div class="breadcrumb"><a href="{{ path('view.products.page_1') }}">
-              {{ 'Products'|t }}</a> / <a href="{{- path('product.view', {'prodNode': prodNode}) }}">{{- product.title -}}</a></div>
+              {{ 'Products'|t }}</a> / <a
+                href="{{- path('product.view', {'prodNode': prodNode}) }}">{{- product.title -}}</a></div>
         {% endif %}
         <div class="apicProductTitle apicApiTitle">
           {% if api.image_url is defined and api.image_url is not empty %}
@@ -48,9 +49,11 @@
           {% else %}
             {% set prodNode = product.nid %}
           {% endif %}
-          <div class="subscribeButton"><a href="{{- path('ibm_apim.subscription_wizard', {'productId': prodNode}) }}"
-                                          title="{{ 'Subscribe to this API'|t }}"
-                                          class="subscribeButton button">{{ 'Subscribe'|t }}</a></div>
+          {% if api.enforced %}
+            <div class="subscribeButton"><a href="{{- path('ibm_apim.subscription_wizard', {'productId': prodNode}) }}"
+                                            title="{{ 'Subscribe to this API'|t }}"
+                                            class="subscribeButton button">{{ 'Subscribe'|t }}</a></div>
+          {% endif %}
         {% endif %}
       </div>
     </div>

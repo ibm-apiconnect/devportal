@@ -15,7 +15,9 @@
 view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
 ('apitNodeID-' ~ node.id)|clean_class,
 ('apiTitle-' ~ node.title[0].value)|clean_class,
-('apiVersion-' ~ content.apic_version['#items'][0].value)|clean_class
+('apiVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
+('apiState-' ~ content.api_state['#items'][0].value)|clean_class,
+('apiEnforced-' ~ enforced)|clean_class
 ] -%}
 
 {{ attach_library('apic_api/basic') }}

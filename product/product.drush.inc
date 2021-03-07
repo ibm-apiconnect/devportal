@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -153,6 +153,9 @@ function drush_product_createOrUpdate($content, $event, $func) {
       if ($func !== 'MassUpdate' && $moduleHandler->moduleExists('views')) {
         views_invalidate_cache();
       }
+
+      Product::clearAppCache($content['product']['url']);
+
       if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
         $accountSwitcher->switchBack();
       }

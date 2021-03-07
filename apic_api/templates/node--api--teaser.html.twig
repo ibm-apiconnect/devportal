@@ -7,13 +7,15 @@
  */
 #}
 {%- set classes = [
-'node',
-'node--id-' ~ node.id,
-('node--type-' ~ node.bundle)|clean_class,
-view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
-('apitNodeID-' ~ node.id)|clean_class,
-('apiTitle-' ~ node.title[0].value)|clean_class,
-('apiVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
+  'node',
+  'node--id-' ~ node.id,
+  ('node--type-' ~ node.bundle)|clean_class,
+  view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
+    ('apitNodeID-' ~ node.id)|clean_class,
+  ('apiTitle-' ~ node.title[0].value)|clean_class,
+  ('apiVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
+  ('apiState-' ~ content.api_state['#items'][0].value)|clean_class,
+  ('apiEnforced-' ~ enforced)|clean_class,
 ] -%}
 {{ attach_library('ibm_apim/core') }}
 {{ attach_library('apic_api/basic') }}
@@ -44,7 +46,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
       </h2>
       {% if content.apic_summary['#items'][0].value is defined and content.apic_summary['#items'][0].value is not empty %}
         <div class="apicApiDesc apicFade summary"
-            title="{{- content.apic_summary['#items'][0].value|striptags -}}">{{ content.apic_summary }}</div>
+             title="{{- content.apic_summary['#items'][0].value|striptags -}}">{{ content.apic_summary }}</div>
       {% else %}
         <div class="apicApiDesc apicFade"
              title="{{- content.apic_description['#items'][0].value|striptags -}}">{{ content.apic_description }}</div>

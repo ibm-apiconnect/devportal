@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -340,9 +340,11 @@ class UserRegistryService implements UserRegistryServiceInterface {
 
     $result = FALSE;
     $all_registries = $this->state->get('ibm_apim.user_registries');
-    foreach ($all_registries as $registry) {
-      if ($registry->getRegistryType() === 'oidc') {
-        $result = TRUE;
+    if (is_array($all_registries) && !empty($all_registries)) {
+      foreach ($all_registries as $registry) {
+        if ($registry->getRegistryType() === 'oidc') {
+          $result = TRUE;
+        }
       }
     }
 
@@ -352,4 +354,5 @@ class UserRegistryService implements UserRegistryServiceInterface {
 
     return $result;
   }
+
 }

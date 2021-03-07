@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -24,6 +24,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\Driver\Exception\Exception;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\ibm_apim\ApicRest;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\ApimUtils;
@@ -490,18 +492,23 @@ class ConsumerOrgService {
           $user = $member->getUser();
           if ($user !== NULL && $user->getUsername() !== NULL) {
 
-            $account = $userStorage->load($user);
+            $userAccount = $userStorage->load($user);
 
             // if there isn't an account for this user then we have enough information to create and use it at this point.
-            if ($account === NULL) {
+            if ($userAccount === NULL) {
               $this->logger->notice('registering new account for %username based on member data.', ['%username' => $user->getUsername()]);
-              $account = $this->accountService->registerApicUser($user);
+              try {
+                $userAccount = $this->accountService->registerApicUser($user);
+              } catch(\Exception $e) {
+                // Quietly ignore errors from duplicate users to prevent webhooks from blowing up.
+                $this->logger->notice('Failed creating apic user %username, ignoring exception', ['%username' => $user->getUsername()]);
+              }
             }
 
-            if ($account) {
+            if ($userAccount) {
               // consumerorg_url is a multi value field which Drupal represents using a FieldItemList class
               // this causes headaches as seen below....
-              $consumerorg_urls = $account->consumerorg_url->getValue();
+              $consumerorg_urls = $userAccount->consumerorg_url->getValue();
               if ($consumerorg_urls === NULL) {
                 $consumerorg_urls = [];
               }
@@ -509,23 +516,23 @@ class ConsumerOrgService {
               // Doesn't update the custom fields since they're not in the right format
               $updatedAccount = $this->accountService->updateLocalAccount($user);
               if ($updatedAccount !== NULL) {
-                $account = $updatedAccount;
+                $userAccount = $updatedAccount;
               }
 
               // Add the custom fields to the user
               $customFields = $this->userService->getCustomUserFields();
               foreach ($customFields as $customField) {
                 if (isset($memberArray['user'][$customField])) {
-                  $account->set($customField, json_decode($memberArray['user'][$customField], TRUE));
+                  $userAccount->set($customField, json_decode($memberArray['user'][$customField], TRUE));
                 }
               }
 
               // Add the consumerorg if it isn't already associated with this user
-              if (!$this->isConsumerorgAssociatedWithAccount($consumer->getUrl(), $account)) {
+              if (!$this->isConsumerorgAssociatedWithAccount($consumer->getUrl(), $userAccount)) {
                 $consumerorg_urls[] = $consumer->getUrl();
-                $account->set('consumerorg_url', $consumerorg_urls);
+                $userAccount->set('consumerorg_url', $consumerorg_urls);
               }
-              $account->save();
+              $userAccount->save();
             }
           }
 
@@ -1129,6 +1136,14 @@ class ConsumerOrgService {
       $ibmFields = $this->getIBMFields();
       $merged = array_merge($coreFields, $ibmFields);
       $diff = array_diff($keys, $merged);
+
+      // make sure we only include actual custom fields so check there is a field config
+      foreach ($diff as $key => $field) {
+        $fieldConfig = FieldConfig::loadByName('node', 'consumerorg', $field);
+        if ($fieldConfig === NULL) {
+          unset($diff[$key]);
+        }
+      }
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $diff);
@@ -1695,6 +1710,55 @@ class ConsumerOrgService {
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $org);
     return $org;
 
+  }
+
+  /**
+   * @param $url
+   *
+   * @return array
+   */
+  public function getConsumerOrgForDrush($url): array  {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['url' => $url]);
+    $output = NULL;
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', 'consumerorg');
+    $query->condition('consumerorg_url.value', $url);
+
+    $nids = $query->execute();
+
+    if ($nids !== NULL && !empty($nids)) {
+      $nid = array_shift($nids);
+      $node = Node::load($nid);
+      if ($node !== NULL) {
+        $output['url'] = $url;
+        $output['id'] = $node->consumerorg_id->value;
+        $output['name'] = $node->consumerorg_name->value;
+        $output['owner'] = $node->consumerorg_owner->value;
+        $members = [];
+        foreach ($node->consumerorg_members->getValue() as $orgMember) {
+          if ($orgMember['value'] !== NULL) {
+            $members[] = unserialize($orgMember['value'], ['allowed_classes' => FALSE]);
+          }
+        }
+        $output['members'] = $members;
+        $roles = [];
+        foreach ($node->consumerorg_roles->getValue() as $role) {
+          if ($role['value'] !== NULL) {
+            $roles[] = unserialize($role['value'], ['allowed_classes' => FALSE]);
+          }
+        }
+        $output['roles'] = $roles;
+        $invites = [];
+        foreach ($node->consumerorg_invites->getValue() as $invite) {
+          if ($invite['value'] !== NULL) {
+            $invites[] = unserialize($invite['value'], ['allowed_classes' => FALSE]);
+          }
+        }
+        $output['invites'] = $invites;
+      }
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $output;
   }
 
 

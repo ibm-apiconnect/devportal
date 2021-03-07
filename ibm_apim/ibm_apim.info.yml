@@ -2,8 +2,8 @@ name: IBM APIC
 type: module
 description: Core IBM API Connect integration
 package: IBM API Connect
-core: 8.x
-version: 8.x-2.3.31
+core_version_requirement: ^8 || ^9
+version: 8.x-2.4.19
 project: ibm_apim
 dependencies:
 - telephone

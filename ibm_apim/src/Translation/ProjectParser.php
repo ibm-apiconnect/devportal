@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -59,8 +59,12 @@ class ProjectParser {
     foreach ($this->projects as $project => $info) {
       $translation_files = [];
       echo "Project: $project \n";
-      foreach ($info->getPoFiles() as $language => $poFile) {
-        $translation_files[$language] = new TranslationSplitter($info->getPotFile(), $poFile, $language);
+      try {
+        foreach ($info->getPoFiles() as $language => $poFile) {
+          $translation_files[$language] = new TranslationSplitter($info->getPotFile(), $poFile, $language);
+        }
+      } catch (\Exception $exception) {
+        echo "Exception found when parsing project: " . $project . ", skipping it. Exception: " . $exception;
       }
       $this->fulltranslations[$project] = $translation_files;
     }

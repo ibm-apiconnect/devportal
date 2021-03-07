@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -21,6 +21,7 @@ use Drupal\apic_app\Event\ApplicationUpdateEvent;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Url;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
@@ -124,7 +125,8 @@ class Application {
         $app['org_url'] = $apimUtils->removeFullyQualifiedUrl($app['org_url']);
         $node->set('application_consumer_org_url', $app['org_url']);
         $appOrgUrl = $app['org_url'];
-      } else {
+      }
+      else {
         $appOrgUrl = '';
       }
 
@@ -164,7 +166,8 @@ class Application {
           }
           if (isset($cred['url'])) {
             $cred['url'] = $apimUtils->removeFullyQualifiedUrl($cred['url']);
-          } else {
+          }
+          else {
             $cred['url'] = $app['url'] . '/credentials/' . $cred['id'];
           }
           if (!isset($cred['name'])) {
@@ -217,11 +220,12 @@ class Application {
         foreach ($customFieldValues as $customField => $value) {
           $node->set($customField, $value);
         }
-      } elseif (!empty($app['metadata'])) {
+      }
+      elseif (!empty($app['metadata'])) {
         $customFields = self::getCustomFields();
         foreach ($customFields as $customField) {
           if (isset($app['metadata'][$customField])) {
-            $value = json_decode($app['metadata'][$customField], true);
+            $value = json_decode($app['metadata'][$customField], TRUE);
             $node->set($customField, $value);
           }
         }
@@ -331,7 +335,7 @@ class Application {
       $app['org_url'] = $apimUtils->removeFullyQualifiedUrl($app['org_url']);
     }
     if (isset($app['app_credential_urls'])) {
-      foreach ($app['app_credential_urls'] as $key => $url){
+      foreach ($app['app_credential_urls'] as $key => $url) {
         $app['app_credential_urls'][$key] = $apimUtils->removeFullyQualifiedUrl($url);
       }
     }
@@ -368,9 +372,9 @@ class Application {
       // Calling all modules implementing 'hook_apic_app_pre_delete':
       $hookData = self::createAppHookData($node);
       $moduleHandler->invokeAll('apic_app_pre_delete', [
-          'node' => $node,
-          'data' => $hookData,
-        ]);
+        'node' => $node,
+        'data' => $hookData,
+      ]);
       // TODO: invoke pre delete rule here
 
       // Delete all subscription entities for this application
@@ -400,8 +404,8 @@ class Application {
 
       // Calling all modules implementing 'hook_apic_app_post_delete':
       $moduleHandler->invokeAll('apic_app_post_delete', [
-          'data' => $hookData
-        ]);
+        'data' => $hookData,
+      ]);
 
       \Drupal::logger('apic_app')->notice('Application @app deleted', ['@app' => $node->getTitle()]);
       unset($node);
@@ -679,6 +683,15 @@ class Application {
     $ibmFields = self::getIBMFields();
     $merged = array_merge($coreFields, $ibmFields);
     $diff = array_diff($keys, $merged);
+
+    // make sure we only include actual custom fields so check there is a field config
+    foreach ($diff as $key => $field) {
+      $fieldConfig = FieldConfig::loadByName('node', 'application', $field);
+      if ($fieldConfig === NULL) {
+        unset($diff[$key]);
+      }
+    }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $diff);
     return $diff;
   }
@@ -747,7 +760,7 @@ class Application {
               $supersededByPlan = $productPlans[$sub->plan()]['superseded-by']['plan'];
               // dont display a link for superseded-by targets that are what we're already subscribed to
               // apim shouldn't really allow that, but it does, so try to handle it best we can
-              if ($supersededByProductUrl !== $sub->product_url() || $supersededByPlan !== $sub->plan() ) {
+              if ($supersededByProductUrl !== $sub->product_url() || $supersededByPlan !== $sub->plan()) {
                 $utils = \Drupal::service('ibm_apim.utils');
                 $supersededByRef = $utils->base64_url_encode($supersededByProductUrl . ':' . $supersededByPlan);
                 $supersededByTitle = NULL;
@@ -882,7 +895,7 @@ class Application {
 
     if ($node->hasField('application_credentials_refs') && !$node->get('application_credentials_refs')->isEmpty()) {
       $data['application_credentials_refs'] = [];
-      foreach ($node->get('application_credentials_refs') as  $ref) {
+      foreach ($node->get('application_credentials_refs') as $ref) {
         $data['application_credentials_refs'][] = $ref->target_id;
       }
     }
@@ -922,4 +935,76 @@ class Application {
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $output;
   }
+
+  /**
+   * Returns an array representation of an application for returning to drush
+   *
+   * @param $url
+   *
+   * @return array
+   */
+  public static function getApplicationForDrush($url): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['url' => $url]);
+    $output = NULL;
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', 'application');
+    $query->condition('apic_url.value', $url);
+
+    $nids = $query->execute();
+
+    if ($nids !== NULL && !empty($nids)) {
+      $nid = array_shift($nids);
+      $node = Node::load($nid);
+      if ($node !== NULL) {
+        $output['url'] = $url;
+        $output['id'] = $node->application_id->value;
+        $output['name'] = $node->application_name->value;
+        $output['title'] = $node->getTitle();
+        $output['state'] = $node->apic_state->value;
+        $output['summary'] = $node->apic_summary->value;
+        $output['consumer_org_url'] = $node->application_consumer_org_url->value;
+        $redirect_endpoints = [];
+        foreach ($node->application_redirect_endpoints->getValue() as $redirect_endpoint) {
+          if ($redirect_endpoint['value'] !== NULL) {
+            $redirect_endpoints[] = $redirect_endpoint['value'];
+          }
+        }
+        $output['redirect_endpoints'] = $redirect_endpoints;
+        $output['lifecycle_state'] = $node->application_lifecycle_state->value;
+        $output['lifecycle_pending'] = $node->application_lifecycle_pending->value;
+        $subs = [];
+        $subscriptions = $node->application_subscription_refs->referencedEntities();
+        if (isset($subscriptions) && is_array($subscriptions)) {
+          foreach ($subscriptions as $sub) {
+            $subs[] = [
+              'id' => $sub->uuid(),
+              'product_url' => $sub->product_url(),
+              'plan' => $sub->plan(),
+              'state' => $sub->state(),
+              'billing_url' => $sub->billing_url(),
+            ];
+          }
+        }
+        $output['subscriptions'] = $subs;
+        $creds = [];
+        $credentials = $node->application_credentials_refs->referencedEntities();
+        if (isset($credentials) && is_array($credentials)) {
+          foreach ($credentials as $cred) {
+            $creds[] = [
+              'id' => $cred->uuid(),
+              'cred_url' => $cred->cred_url(),
+              'title' => $cred->title(),
+              'name' => $cred->name(),
+              'summary' => $cred->summary(),
+              'client_id' => $cred->client_id(),
+            ];
+          }
+        }
+        $output['credentials'] = $creds;
+      }
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $output;
+  }
+
 }

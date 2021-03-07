@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,12 +13,13 @@
 
 namespace Drupal\ibm_apim\Service;
 
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\State\State;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\user\Entity\User;
 use Psr\Log\LoggerInterface;
-use Drupal\Core\Messenger\Messenger;
 
 /**
  * Factory for ApicUser objects.
@@ -136,7 +137,7 @@ class ApicUserService {
     foreach ($customFields as $field) {
       $value = $account->get($field)->getValue();
       if (isset($value)) {
-        $user->addCustomField($field,$value);
+        $user->addCustomField($field, $value);
       }
     }
     return $user;
@@ -180,14 +181,15 @@ class ApicUserService {
     $customFields = $user->getCustomFields();
     if (!empty($customFields)) {
       foreach ($customFields as $customField => $value) {
-        $customFields[$customField] = json_encode($value);  
+        $customFields[$customField] = json_encode($value);
       }
 
       $apic_me = \Drupal::service('ibm_apim.mgmtserver')->getMe($auth);
       $getMeUser = $apic_me->getUser();
       if (isset($getMeUser)) {
-        $data['metadata'] = array_merge($getMeUser->getMetadata(),$customFields);
-      } else {
+        $data['metadata'] = array_merge($getMeUser->getMetadata(), $customFields);
+      }
+      else {
         $this->messenger->addError(t('Your account was created/updated with errors. Please make sure your information was correctly saved in your account.'));
         $this->logger->error((int) $apic_me->getCode() . ' code received while trying to retrieve user metadata.');
       }
@@ -220,7 +222,7 @@ class ApicUserService {
     //Currently only sets known fields, null fields wont be included
     $customFields = $user->getCustomFields();
     if (isset($customFields)) {
-      foreach($customFields as $field => $value) {
+      foreach ($customFields as $field => $value) {
         $data[$field] = $value;
       }
     }
@@ -263,7 +265,7 @@ class ApicUserService {
     $customFields = $this->getCustomUserFields();
     foreach ($customFields as $field) {
       $value = $apicuser['metadata'][$field];
-      $user->addCustomField($field, json_decode($value,  true));
+      $user->addCustomField($field, json_decode($value, TRUE));
     }
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $user->getUsername());
@@ -323,7 +325,7 @@ class ApicUserService {
         'avatars_avatar_generator',
         'avatars_user_picture',
         'field_last_password_reset',
-        'field_password_expiration'
+        'field_password_expiration',
       ];
       $ibmFields = [
         'consumer_organization',
@@ -351,13 +353,22 @@ class ApicUserService {
         'consumerorg_def_payment_ref',
         'consumerorg_payment_method_refs',
         'codesnippet',
-        'user_picture'
+        'user_picture',
       ];
       $merged = array_merge($coreFields, $ibmFields);
       $fields = array_diff($keys, $merged);
     }
 
+    // make sure we only include actual custom fields so check there is a field config
+    foreach ($fields as $key => $field) {
+      $fieldConfig = FieldConfig::loadByName('user', 'user', $field);
+      if ($fieldConfig === NULL) {
+        unset($fields[$key]);
+      }
+    }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $fields);
     return $fields;
   }
+
 }

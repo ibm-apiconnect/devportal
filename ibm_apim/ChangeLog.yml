@@ -1,4 +1,45 @@
 changes:
+  8.x-2.4.18:
+  - Fix duplicate user exception (#634)
+  8.x-2.4.17:
+  - logic failure being called twice
+  8.x-2.4.16:
+  - get rid of warning in test run logs
+  8.x-2.4.15:
+  - drupal 9 compatibility info
+  - Add drupal core compatibility info
+  - Remove users not in the snapshot
+  8.x-2.4.14:
+  - Modify autocomplete labels
+  8.x-2.4.13:
+  - Copyright statements for 2021
+  8.x-2.4.12:
+  - use translatable block for blogs view
+  8.x-2.4.11:
+  - only return an analytics service if have exactly 1
+  8.x-2.4.10:
+  - expand default UR too
+  8.x-2.4.9:
+  - rename to apic-config
+  8.x-2.4.8:
+  - remove ERROR string
+  - fix error handling in drush commands
+  8.x-2.4.7:
+  - drush commands to get site config
+  8.x-2.4.6:
+  - drush commands to get individual nodes
+  8.x-2.4.5:
+  - drush_log is deprecated
+  8.x-2.4.4:
+  - theme not module
+  8.x-2.4.3:
+  - ensure custom fields are actual fields
+  8.x-2.4.2: null
+  8.x-2.4.1:
+  - use translations
+  - handle modules with no strings
+  8.x-2.4.0:
+  - update version: 8.x-2.3.31 -> 8.x-2.4.0
   8.x-2.3.30: null
   8.x-2.3.29: null
   8.x-2.3.28:

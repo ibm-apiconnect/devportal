@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -130,4 +130,17 @@ class TlsClientProfile {
     return $returnValue;
   }
 
+  /**
+   * Used in the getconfig drush command
+   *
+   * @return array
+   */
+  public function toArray(): array {
+    $output = [];
+    $output['id'] = $this->getId();
+    $output['name'] = $this->getName();
+    $output['keyFile'] = $this->getKeyFile();
+    $output['keyStore'] = $this->getKeyStore();
+    return $output;
+  }
 }

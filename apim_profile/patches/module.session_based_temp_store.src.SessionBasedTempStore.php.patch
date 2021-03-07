@@ -1,0 +1,33 @@
+--- modules/session_based_temp_store/src/SessionBasedTempStore.php  2021-01-11 15:45:51.000000000 +0000
++++ modules/session_based_temp_store/src/SessionBasedTempStore.php  2021-01-11 15:46:00.000000000 +0000
+@@ -187,7 +187,12 @@
+       'data' => $value,
+       'updated' => (int) $this->requestStack->getMasterRequest()->server->get('REQUEST_TIME'),
+     ];
+-    $this->storage->setWithExpire($key, $value, $this->expire);
++
++    // If the global expiration time is set to 0 (expire at the end of the session),
++    // Let's set the DB storage entry expiration time to 24 hours.
++    $expire = $this->expire === 0 ? 86400 : $this->expire;
++
++    $this->storage->setWithExpire($key, $value, $expire);
+     $this->lockBackend->release($key);
+   }
+ 
+@@ -324,9 +329,14 @@
+    * Returns the date/time that the session store will expire.
+    *
+    * @return int
+-   *   UNIX time stamp
++   *   UNIX time stamp.
+    */
+   protected function expirationTime() {
++    // Allow the cookie to expire at the end of the session.
++    if ($this->expire === 0) {
++      return $this->expire;
++    }
++    // Otherwise set the specific expiration time passed in the argument.
+     $request_time = (int) $this->requestStack->getMasterRequest()->server->get('REQUEST_TIME');
+     return $request_time + $this->expire;
+   }
+   

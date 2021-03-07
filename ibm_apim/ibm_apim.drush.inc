@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -881,6 +881,16 @@ function processContent($content, $UUID) {
               $orgList[] = '/consumer-api/orgs/' . $content['id'];
             }
             file_put_contents("/tmp/snapshot.$UUID/content_refresh_consumerorgs.$UUID.json", json_encode($orgList));
+
+            $userList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_users.$UUID.json")) {
+              $userList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_users.$UUID.json"), TRUE);
+            }
+            foreach ($content['members'] as $member) {
+              $userList[] = $member['user_url'];
+            }
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_users.$UUID.json", json_encode($userList));
+
             drush_consumerorg_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
             break;
           case 'catalog_setting':
@@ -945,6 +955,12 @@ function processContent($content, $UUID) {
             drush_consumerorg_role_create($content);
             break;
           case 'member':
+            $userList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_users.$UUID.json")) {
+              $userList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_users.$UUID.json"), TRUE);
+            }
+            $userList[] = $content['user_url'];
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_users.$UUID.json", json_encode($userList));
             drush_ibm_apim_user_createOrUpdate($content, 'ContentRefresh');
             break;
           case 'member_invitation':
@@ -1201,6 +1217,48 @@ function drush_ibm_apim_clearup($UUID) {
 
   // Delete all users from db with duplicate emails
   \Drupal::service('ibm_apim.db_usersfielddata')->deleteUsersWithDuplicateEmails();
+
+  // remove any users that were not in the snapshot from apim
+  if (file_exists("/tmp/snapshot.$UUID/content_refresh_users.$UUID.json")) {
+    $current_users = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_users.$UUID.json"), TRUE);
+  }
+  else {
+    $current_users = [];
+  }
+
+  if (!is_array($current_users)) {
+    $current_users = [];
+  }
+
+  $query= \Drupal::entityTypeManager()->getStorage('user')->getQuery();
+  if (!empty($current_users)) {
+    $group = $query->orConditionGroup()
+      ->condition('apic_url', NULL, 'IS NULL')
+      ->condition('apic_url', $current_users, 'NOT IN');
+    $query->condition($group);
+  }
+  $results = $query->execute();
+  if ($results !== NULL && !empty($results)) {
+
+    foreach ($results as $id) {
+
+      // DO NOT DELETE THE ADMIN USER!
+      if ((int)$id > 1) {
+
+        \Drupal::logger('ibm_apim')->notice('Found user %id in the database that did not have a matching user_url in the snapshot.', array('%id' => $id));
+
+        user_cancel([], $id, 'user_cancel_reassign');
+        $performBatch = true;
+      }
+    }
+
+    if (!empty($performBatch)) {
+      \Drupal::logger('ibm_apim')->notice('Processing batch delete of users...');
+      $batch = &batch_get();
+      $batch['progressive'] = FALSE;
+      batch_process();
+    }
+  }
 
   // remove any vendor extensions in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up extensions'), 'success');
@@ -1729,7 +1787,13 @@ function drush_ibm_apim_apicuser_create($apicUser, $event = 'user_create') {
 
         $userManager = \Drupal::service('ibm_apim.account');
         drush_print('Creating apic user ' . $apicUser['username']);
-        $userManager->registerApicUser($createUser);
+
+        try {
+          $userManager->registerApicUser($createUser);
+        } catch(\Exception $e) {
+          // Quietly ignore errors from duplicate users to prevent webhooks from blowing up.
+          drush_print('Failed creating apic user ' . $apicUser['username'] . ', ignoring exception');
+        }
       }
     }
     if (isset($originalUser) && (int) $originalUser->id() !== 1) {

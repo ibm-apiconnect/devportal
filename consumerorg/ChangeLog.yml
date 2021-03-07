@@ -1,4 +1,19 @@
 changes:
+  8.x-2.4.6:
+  - Fix duplicate user exception
+  8.x-2.4.5:
+  - divisibleby is deprecated
+  - Add drupal core compatibility info
+  8.x-2.4.4:
+  - Add tokens
+  8.x-2.4.3:
+  - Copyright statements for 2021
+  8.x-2.4.2:
+  - drush commands to get individual nodes
+  8.x-2.4.1:
+  - ensure custom fields are actual fields
+  8.x-2.4.0:
+  - update version: 8.x-2.3.14 -> 8.x-2.4.0
   8.x-2.3.13: null
   8.x-2.3.12:
   - reinstate fix

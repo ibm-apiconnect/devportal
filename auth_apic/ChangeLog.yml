@@ -1,4 +1,14 @@
 changes:
+  8.x-2.4.4:
+  - Add drupal core compatibility info
+  8.x-2.4.3:
+  - Copyright statements for 2021
+  8.x-2.4.2:
+  - Err msg v10.0.1 (#603)
+  8.x-2.4.1:
+  - remove extra the
+  8.x-2.4.0:
+  - update version: 8.x-2.3.11 -> 8.x-2.4.0
   8.x-2.3.10: null
   8.x-2.3.9:
   - Always update off apim response (#599)

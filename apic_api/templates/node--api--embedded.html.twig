@@ -14,6 +14,8 @@
     ('apitNodeID-' ~ node.id)|clean_class,
   ('apiTitle-' ~ node.title[0].value)|clean_class,
   ('apiVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
+  ('apiState-' ~ content.api_state['#items'][0].value)|clean_class,
+  ('apiEnforced-' ~ enforced)|clean_class,
   'bx--card'
 ] -%}
 {{ attach_library('ibm_apim/core') }}
@@ -41,11 +43,11 @@
         <a href="{{- path('product.api', {'prodNode': prodNode, 'apiNode': apiNode}) -}}" rel="bookmark">
           {% else %}
           <a href="{{- path('apic_api.view', {'apiNode': apiNode}) -}}" rel="bookmark">
-        {% endif %}
-        <span id="node-{{ node.id }}-title" class="apicApiName apicTruncate">{{- label -}}</span>
-          {% if showVersions %}
-            <div class="apicApiCardVersion">{{- content.apic_version -}}</div>
-          {% endif %}
+            {% endif %}
+            <span id="node-{{ node.id }}-title" class="apicApiName apicTruncate">{{- label -}}</span>
+            {% if showVersions %}
+              <div class="apicApiCardVersion">{{- content.apic_version -}}</div>
+            {% endif %}
           </a>
       </div>
       {% if content.apic_summary['#items'][0].value is defined and content.apic_summary['#items'][0].value is not empty %}
@@ -59,9 +61,11 @@
         <div class="apicProtocol bx--tertiary-text">
           {{ content.api_protocol }}
         </div>
-        <div class="apicState bx--tertiary-text">
-          {{ content.api_state }}
-        </div>
+        {% if enforced %}
+          <div class="apicState bx--tertiary-text">
+            {{ content.api_state }}
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>

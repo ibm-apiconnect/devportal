@@ -2,6 +2,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - block.block.noblogsblock
     - core.entity_view_mode.node.teaser
     - node.type.blog_post
     - system.menu.main
@@ -165,17 +166,19 @@ display:
       header: {  }
       footer: {  }
       empty:
-        area_text_custom:
-          id: area_text_custom
+        entity_block:
+          id: entity_block
           table: views
-          field: area_text_custom
+          field: entity_block
           relationship: none
           group_type: group
           admin_label: ''
           empty: true
           tokenize: true
-          content: 'No blog entries have been created.'
-          plugin_id: text_custom
+          target: noblogsblock
+          view_mode: default
+          bypass_access: false
+          plugin_id: entity
       relationships: {  }
       arguments: {  }
       display_extenders: {  }

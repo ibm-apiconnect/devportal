@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -179,7 +179,7 @@ function apim_profile_install() {
     'search_api_db',
     'search_api_autocomplete',
     'robotstxt',
-    'flood_unblock',
+    'flood_control',
     'key',
     'encrypt',
     'real_aes',
@@ -690,8 +690,7 @@ function apim_profile_default_apic_config() {
 
   \Drupal::service('config.factory')
     ->getEditable('system.maintenance')
-    ->set('message', '<h3>Sorry! Our site is currently under maintenance. We should be back shortly. </h3>
-Please <a href="contact">contact us</a> with any questions.')
+    ->set('message', '<h3>Sorry! Our site is currently under maintenance. We should be back shortly.</h3>')
     ->save(TRUE);
 }
 
@@ -927,6 +926,13 @@ function apim_profile_place_blocks() {
     $block->save();
   }
   $block = Block::load('noproductsblock');
+  if ($block !== NULL) {
+    $block->set('theme', 'connect_theme');
+    $block->set('region', 'disabled');
+    $block->set('status', TRUE);
+    $block->save();
+  }
+  $block = Block::load('noblogsblock');
   if ($block !== NULL) {
     $block->set('theme', 'connect_theme');
     $block->set('region', 'disabled');
@@ -2238,8 +2244,7 @@ function apim_profile_update_8110() {
 function apim_profile_update_8111() {
   \Drupal::service('config.factory')
     ->getEditable('system.maintenance')
-    ->set('message', '<h3>Sorry! Our site is currently under maintenance. We should be back shortly. </h3>
-Please <a href="contact">contact us</a> with any questions.')
+    ->set('message', '<h3>Sorry! Our site is currently under maintenance. We should be back shortly.</h3>')
     ->save(TRUE);
 
   // enable AJAX history for search content view so that query params work
@@ -2319,6 +2324,92 @@ function apim_profile_update_8112() {
       unset($entityTypes['node:book']);
     }
     \Drupal::configFactory()->getEditable('warmer.settings')->set('warmers.entity.entity_types', $entityTypes)->save();
+  }
+}
+
+/**
+ * Create no content blogs block
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_update_8113() {
+  // ensure the no content blocks are in the disabled region but enabled
+  // the connect_theme wont have been enabled when ibm_apim was installed
+  $block = Block::load('noblogsblock');
+  if ($block !== NULL) {
+    $block->set('theme', 'connect_theme');
+    $block->set('region', 'disabled');
+    $block->set('status', TRUE);
+    $block->save();
+  }
+
+  // no content blocks
+  $path = __DIR__;
+  require_once $path . '/../../modules/ibm_apim/ibm_apim.emptycontent.inc';
+  ibm_apim_update_blogs_no_content_blocks();
+}
+
+/**
+ * switch flood_control for flood_control module
+ */
+function apim_profile_update_8114() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('flood_control')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->install(['flood_control']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  }
+  if ($moduleHandler->moduleExists('flood_unblock')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->uninstall(['flood_unblock']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  }
+}
+
+/**
+ * remove link to contact page since that wont work in maintenance mode!
+ */
+function apim_profile_update_8116() {
+  \Drupal::service('config.factory')
+    ->getEditable('system.maintenance')
+    ->set('message', '<h3>Sorry! Our site is currently under maintenance. We should be back shortly.</h3>')
+    ->save(TRUE);
+}
+
+/**
+ * work around bug in image_captcha upgrade that leaves the fonts not set
+ */
+function apim_profile_update_8117() {
+  $image_captcha_fonts_preview_map_cache = \Drupal::config('image_captcha.settings')->get('image_captcha_fonts_preview_map_cache');
+  if (!isset($image_captcha_fonts_preview_map_cache) || empty($image_captcha_fonts_preview_map_cache)) {
+    $image_captcha_fonts_preview_map_cache = [
+      'ced5d84285b76ebcaa40beb0b5c0efc54aca6a6d347da73638673906d5cda331' => [
+        'uri' => 'modules/captcha/image_captcha/fonts/Tuffy/Tuffy_Bold.ttf',
+        'filename' => 'Tuffy_Bold.ttf',
+        'name' => 'Tuffy_Bold',
+      ],
+      '3438abc85ac58eaab01cd741b1c3f9bb5dd3b9be3c079b1a7851884135608b2f' => [
+        'uri' => 'modules/captcha/image_captcha/fonts/Tuffy/Tuffy.ttf',
+        'filename' => 'Tuffy.ttf',
+        'name' => 'Tuffy',
+      ],
+      '984e950858126332ff4905c76efeb723ee1aa185c07f80537ce57c26be1cc0c5' => [
+        'uri' => 'modules/captcha/image_captcha/fonts/Tesox/tesox.ttf',
+        'filename' => 'tesox.ttf',
+        'name' => 'tesox',
+      ],
+    ];
+    $image_captcha_fonts = [
+      '3438abc85ac58eaab01cd741b1c3f9bb5dd3b9be3c079b1a7851884135608b2f' => '3438abc85ac58eaab01cd741b1c3f9bb5dd3b9be3c079b1a7851884135608b2f',
+      '984e950858126332ff4905c76efeb723ee1aa185c07f80537ce57c26be1cc0c5' => '984e950858126332ff4905c76efeb723ee1aa185c07f80537ce57c26be1cc0c5',
+    ];
+    \Drupal::service('config.factory')
+      ->getEditable('image_captcha.settings')
+      ->set('image_captcha_fonts_preview_map_cache', $image_captcha_fonts_preview_map_cache)
+      ->set('image_captcha_fonts', $image_captcha_fonts)
+      ->save(TRUE);
   }
 }
 

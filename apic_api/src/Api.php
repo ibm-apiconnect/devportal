@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -19,6 +19,7 @@ use Drupal\apic_api\Event\ApiUpdateEvent;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\product\Product;
@@ -335,7 +336,11 @@ class Api {
                 $apiType = 'kafka';
               } elseif ($lowerProtocol === 'amqp' || $lowerProtocol === 'amqps') {
                 $apiType = 'mq';
+              } else {
+                $apiType = 'asyncapi';
               }
+            } else {
+              $apiType = 'asyncapi';
             }
           }
         }
@@ -760,6 +765,14 @@ class Api {
     $ibmFields = self::getIBMFields();
     $merged = array_merge($coreFields, $ibmFields);
     $diff = array_diff($keys, $merged);
+
+    // make sure we only include actual custom fields so check there is a field config
+    foreach ($diff as $key => $field) {
+      $fieldConfig = FieldConfig::loadByName('node', 'api', $field);
+      if ($fieldConfig === NULL) {
+        unset($diff[$key]);
+      }
+    }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $diff);
     return $diff;
   }
@@ -854,7 +867,7 @@ class Api {
    *
    * @return string (JSON)
    */
-  public function getApiAsJson($url): string {
+  public static function getApiAsJson($url): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['url' => $url]);
     $output = NULL;
     $query = \Drupal::entityQuery('node');
@@ -873,6 +886,41 @@ class Api {
       }
       else {
         \Drupal::logger('api')->notice('getApiAsJson: serialization module not enabled', []);
+      }
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $output;
+  }
+
+  /**
+   * Returns an array representation of an API for returning to drush
+   *
+   * @param $url
+   *
+   * @return array
+   */
+  public static function getApiForDrush($url): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['url' => $url]);
+    $output = NULL;
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', 'api');
+    $query->condition('apic_url.value', $url);
+
+    $nids = $query->execute();
+
+    if ($nids !== NULL && !empty($nids)) {
+      $nid = array_shift($nids);
+      $node = Node::load($nid);
+      if ($node !== NULL) {
+        $output['url'] = $url;
+        $output['id'] = $node->api_id->value;
+        $output['name'] = $node->api_xibmname->value;
+        $output['version'] = $node->apic_version->value;
+        $output['title'] = $node->getTitle();
+        $output['state'] = $node->api_state->value;
+        $output['type'] = $node->api_protocol->value;
+        $output['summary'] = $node->apic_summary->value;
+        $output['description'] = $node->apic_description->value;
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

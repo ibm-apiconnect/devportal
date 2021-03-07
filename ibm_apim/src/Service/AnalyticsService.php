@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -167,7 +167,9 @@ class AnalyticsService {
     $default_service = NULL;
 
     $analytics_services = $this->getAll();
-    if (!empty($analytics_services)) {
+    // only return an analytics service if we have exactly 1
+    // we do not support consumer analytics for multiple analytics services
+    if (!empty($analytics_services) && count(array_values($analytics_services)) === 1) {
       $default_service = array_values($analytics_services)[0];
     }
 

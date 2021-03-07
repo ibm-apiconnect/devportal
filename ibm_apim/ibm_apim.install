@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -13,6 +13,7 @@
 
 
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\views\Views;
 
 /**
  * @file
@@ -97,7 +98,7 @@ function ibm_apim_install() {
   $path = __DIR__;
   require_once $path . '/ibm_apim.emptycontent.inc';
   ibm_apim_create_no_content_blocks();
-
+  ibm_apim_create_blogs_no_content_blocks();
 }
 
 /**
@@ -194,4 +195,42 @@ function ibm_apim_update_8202() {
     ->getEditable('ibm_apim.settings')
     ->set('validate_apis', true)
     ->save();
+}
+
+/**
+ * Create blogs no content block
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function ibm_apim_update_8203() {
+  // no content blocks
+  $path = __DIR__;
+  require_once $path . '/ibm_apim.emptycontent.inc';
+  ibm_apim_create_blogs_no_content_blocks();
+
+  $view = Views::getView('blog');
+  if ($view !== NULL) {
+    $empty = $view->getDisplay()->getOption('empty');
+    if (!isset($empty['entity_block'])) {
+      $empty['entity_block'] = [
+        'id' => 'entity_block',
+        'table' => 'views',
+        'field' => 'entity_block',
+        'relationship' => 'none',
+        'group_type' => 'group',
+        'admin_label' => '',
+        'empty' => TRUE,
+        'tokenize' => TRUE,
+        'target' => 'noblogsblock',
+        'view_mode' => 'default',
+        'bypass_access' => FALSE,
+        'plugin_id' => 'entity',
+      ];
+      if (isset($empty['area_text_custom'])) {
+        unset($empty['area_text_custom']);
+      }
+      $view->getDisplay()->setOption('empty', $empty);
+      $view->save();
+    }
+  }
 }

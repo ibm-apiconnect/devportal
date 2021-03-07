@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -53,7 +53,7 @@ class StartWizardForm extends FormBase {
       '#title' => t('Who would you like to email?'),
       '#options' => $options,
       '#description' => t('You can email the subscribers of a given product, plan or API. Or alternatively email all registered consumer organizations. Select which to use.'),
-      '#default_value' => $options['product'],
+      '#default_value' => 'product',
     ];
 
     $form['actions']['#type'] = 'actions';

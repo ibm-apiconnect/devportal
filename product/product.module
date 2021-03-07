@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2020
+ * (C) Copyright IBM Corporation 2018, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -454,6 +454,7 @@ function product_preprocess_node(&$variables) {
     if ($productApis !== NULL && is_array($productApis)) {
       $variables['apiCount'] = count($productApis);
     }
+    $unenforcedOnly = true;
     if ($variables['apiCount'] > 0) {
       // pre-process the list of APIs in the product
       $apiNames = [];
@@ -499,6 +500,9 @@ function product_preprocess_node(&$variables) {
           $swagger = NULL;
           if (isset($api->api_swagger->value)) {
             $swagger = unserialize($api->api_swagger->value, ['allowed_classes' => FALSE]);
+            if (isset($swagger['x-ibm-configuration']) && $swagger['x-ibm-configuration']['enforced'] === true) {
+              $unenforcedOnly = false;
+            }
           }
           $listEntry = [
             'node' => $api,
@@ -511,6 +515,7 @@ function product_preprocess_node(&$variables) {
         } // end for
       }
       $variables['apiList'] = $apiList;
+      $variables['unenforcedOnly'] = $unenforcedOnly;
       if ($variables['view_mode'] === 'full' || $variables['view_mode'] === 'subscribewizard') {
         // pre-process the list of plans in the product
         $planArray = [];
@@ -779,4 +784,193 @@ function product_theme($existing, $type, $theme, $path) {
       ],
     ],
   ];
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function product_token_info() {
+
+  $types['product'] = [
+    'name' => t('Product'),
+    'description' => t('Tokens related to an individual product'),
+    'needs-data' => 'product',
+  ];
+  $types['product-plan'] = [
+    'name' => t('Plan'),
+    'description' => t('Tokens related to an individual plan'),
+    'needs-data' => 'product-plan',
+  ];
+
+  $product['name'] = array(
+    'name' => t("Name"),
+    'description' => t("The name of the product"),
+  );
+  $product['title'] = array(
+    'name' => t("Title"),
+    'description' => t("The title of the product"),
+  );
+  $product['id'] = array(
+    'name' => t("ID"),
+    'description' => t("The ID of the product"),
+  );
+  $product['state'] = array(
+    'name' => t("State"),
+    'description' => t("The state of the product"),
+  );
+  $product['apis'] = array(
+    'name' => t("APIs"),
+    'description' => t("A comma separated list of APIs (name:version) within the product."),
+  );
+  $product['plans'] = array(
+    'name' => t("Plans"),
+    'description' => t("A comma separated list of Plans names within the product."),
+  );
+  $product['image_url'] = array(
+    'name' => t("Image URL"),
+    'description' => t("The URL of the image for the product"),
+  );
+
+  $plan['name'] = array(
+    'name' => t("Name"),
+    'description' => t("The name of a given plan within the product"),
+  );
+  $plan['title'] = array(
+    'name' => t("Title"),
+    'description' => t("The title of the plan"),
+  );
+  $plan['description'] = array(
+    'name' => t("Description"),
+    'description' => t("The description of the plan"),
+  );
+  $plan['approval'] = array(
+    'name' => t("Approval required"),
+    'description' => t("Whether the plan requires approval or not"),
+  );
+  $plan['rate-limits'] = array(
+    'name' => t("Rate limits"),
+    'description' => t("A comma separated list of rate limit name value pairs the plan contains"),
+  );
+
+  return [
+    'types' => $types,
+    'tokens' => ['product' => $product, 'product-plan' => $plan],
+  ];
+}
+
+/**
+ * Implementation hook_tokens().
+ *
+ * These token replacements are used by Rules.
+ *
+ * @param $type
+ * @param $tokens
+ * @param array $data
+ * @param array $options
+ *
+ * @return array
+ */
+function product_tokens($type, $tokens, array $data = [], array $options = []) {
+
+  $replacements = [];
+  if ($type === 'product' && !empty($data['product'])) {
+    $product = $data['product'];
+
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'name':
+          $replacements[$original] = $product->product_name->value;
+          break;
+        case 'title':
+          $replacements[$original] = $product->getTitle();
+          break;
+        case 'id':
+          $replacements[$original] = $product->product_id->value;
+          break;
+        case 'state':
+          $replacements[$original] = $product->product_state->value;
+          break;
+        case 'apis':
+          $apisList = [];
+          foreach ($product->product_apis->getValue() as $arrayValue) {
+            $apis = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+            foreach ($apis as $prodRef) {
+              array_push($apisList, $prodRef);
+            }
+          }
+          $replacements[$original] = implode(", ", $apisList);
+          break;
+        case 'plans':
+          $plansList = [];
+          foreach ($product->product_plans->getValue() as $arrayValue) {
+            $plan = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+
+            array_push($plansList, $plan['name']);
+
+          }
+
+          $replacements[$original] = implode(", ", $plansList);
+          break;
+        case 'image_url':
+          $config = \Drupal::config('ibm_apim.settings');
+          $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
+          $customImage = $product->apic_image;
+          $customImageString = NULL;
+
+          if ($customImage !== NULL && !empty($customImage)) {
+            $entity = $product->apic_image->entity;
+            if ($entity !== NULL) {
+              $customImageString = $entity->getFileUri();
+            }
+          }
+          if ($customImageString !== NULL && !empty($customImageString)) {
+            if (preg_match('/^http[s]?:\/\//', $customImageString) === 1) {
+              $productImageUrl = $customImageString;
+            } else {
+              $productImageUrl = NULL;
+            }
+          }
+          elseif ($ibmApimShowPlaceholderImages) {
+            $productImageUrl = Product::getPlaceholderImage($product->getTitle());
+          }
+          else {
+            $productImageUrl = NULL;
+          }
+          $replacements[$original] = $productImageUrl;
+
+          break;
+      }
+    }
+  }
+  if ($type === 'product-plan' && !empty($data['product-plan'])) {
+    $plan = $data['product-plan'];
+
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'name':
+          $replacements[$original] = $plan['name'];
+          break;
+        case 'title':
+          $replacements[$original] = $plan['title'];
+          break;
+        case 'description':
+          $replacements[$original] = $plan['description'];
+          break;
+        case 'approval':
+          $replacements[$original] = $plan['approval'] ? 'true' : 'false';
+          break;
+        case 'rate-limits':
+          $rateLimits = [];
+          foreach ($plan['rate-limits'] as $name => $limit) {
+            array_push($rateLimits, $name . ': ' . $limit['value']);
+          }
+          if (isset($rateLimits) && !empty($rateLimits)) {
+            $replacements[$original] = implode(", ", $rateLimits);;
+          }
+          break;
+      }
+    }
+  }
+
+  return $replacements;
 }
