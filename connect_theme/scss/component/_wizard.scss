@@ -126,8 +126,6 @@
         transition: box-shadow 110ms cubic-bezier(0.2, 0, 0.38, 0.9),color 110ms cubic-bezier(0.2, 0, 0.38, 0.9);
       }
 
-
-
       .bx--progress-step--current circle:last-child {
         fill: $brand-primary; }
 
@@ -166,6 +164,18 @@
     display: none;
   }
 }
+//specific styling for subscription wizards
+
+.route-ibm-apimsubscription-wizard,
+.route-ibm-apimsubscription-wizardstep,
+.route-ibm-apimsubscription-wizardnoplan,
+.route-ibm-apimsubscription-wizardnoplanstep{
+  .apicFormContent {
+    padding:0;
+    margin-bottom: 0;
+  }
+}
+
 // specific styling for mail wizards
 .route-mail-subscribersproduct-wizard,
 .route-mail-subscribersproduct-wizardstep,

@@ -1,6 +1,6 @@
 --- ./modules/admin_toolbar/admin_toolbar_tools/src/Plugin/Derivative/ExtraLinks.php	2019-08-30 14:56:40.000000000 +0100
 +++ ./modules/admin_toolbar/admin_toolbar_tools/src/Plugin/Derivative/ExtraLinks.php	2019-09-10 15:30:33.000000000 +0100
-@@ -185,11 +185,6 @@
+@@ -203,11 +203,6 @@
      }
  
      // Adds user links.

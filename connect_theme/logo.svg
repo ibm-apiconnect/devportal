@@ -1,16 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="280px" height="48px" viewBox="0 0 280 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Logo</title>
+    <defs>
+        <style type="text/css">
+            @font-face {
+                font-family: 'IBM Plex Sans';
+                src: url("fonts/sans/IBMPlexSans-SemiBold.woff");
+                font-weight: 500;
+                font-style: normal;
+            }
+            @font-face {
+                font-family: 'IBM Plex Sans';
+                src: url("fonts/sans/IBMPlexSans-SemiBold.woff");
+                font-weight: normal;
+                font-style: normal;
+            }
+        </style>
+    </defs>
     <g id="Banner/DevPortal">
         <g id="basic-header">
-                <text id="[Name]" font-family="IBMPlexSans-SemiBold, IBM Plex Sans" font-size="14" font-weight="500" line-spacing="18" letter-spacing="0.1" fill="#FFFFFF">
+                <text id="[Name]" font-family="'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="500" line-spacing="18" letter-spacing="0.1" fill="#FFFFFF">
                     <tspan x="46" y="29">API Connect</tspan>
                 </text>
-                <text id="IBM" font-family="IBMPlexSans, IBM Plex Sans" font-size="14" font-weight="normal" line-spacing="18" letter-spacing="0.1" fill="#FFFFFF">
+                <text id="IBM" font-family="'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="normal" line-spacing="18" letter-spacing="0.1" fill="#FFFFFF">
                     <tspan x="16" y="29">IBM</tspan>
                 </text>
         </g>
-        <g id="Developer-Portal" stroke-width="1" fill-rule="evenodd" transform="translate(142.000000, 15.000000)" font-family="IBMPlexSans, IBM Plex Sans" font-size="14" font-weight="normal">
+        <g id="Developer-Portal" stroke-width="1" fill-rule="evenodd" transform="translate(142.000000, 15.000000)" font-family="'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="normal">
             <text id="|" opacity="0.4" fill="#F3F3F3">
                 <tspan x="0" y="14">|</tspan>
             </text>

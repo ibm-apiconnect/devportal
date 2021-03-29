@@ -1,68 +1,84 @@
 changes:
-  8.x-2.4.8:
+  8.x-3.0.40:
+  - Use sudo instead of su to get to aegir when running the tests
+  8.x-3.0.39:
+  - revert patches (#193)
+  8.x-3.0.38:
+  - Try-patches-again (#192)
+  8.x-3.0.37:
+  - Merge pull request
+  8.x-3.0.36:
+  - fix patches (#186)
+  - update patches (#185)
+  8.x-3.0.35:
+  - pathalias test data
+  8.x-3.0.34:
   - Wait for WSREP ready in create_test_site.sh
-  8.x-2.4.7:
+  8.x-3.0.33:
   - apimesh/devportal#6637 Fix WSREP ready error
-  8.x-2.4.6: null
-  8.x-2.4.5:
-  - php 7.4
-  8.x-2.4.4:
+  8.x-3.0.32:
+  - /ssl -> /ssl-admin
+  8.x-3.0.31:
+  - Fix settings8 patch
+  8.x-3.0.30:
+  - Fix pdo.patch
+  8.x-3.0.29:
   - Revert "SnippetAcceptingContext is now deprecated"
-  8.x-2.4.3: null
-  8.x-2.4.2:
+  8.x-3.0.28: null
+  8.x-3.0.27:
   - SnippetAcceptingContext is now deprecated
   - Add drupal core compatibility info
-  8.x-2.4.1:
+  8.x-3.0.26:
+  - php 7.4
+  8.x-3.0.25:
   - Copyright statements for 2021
-  8.x-2.4.0:
-  - update version: 8.x-2.3.6 -> 8.x-2.4.0
-  8.x-2.3.5:
+  8.x-3.0.24:
   - Added another fix (#180)
+  8.x-3.0.23:
   - Fix test bug (#179)
-  8.x-2.3.4:
-  - Oidc register form v10.0.1 (#178)
-  8.x-2.3.3:
+  8.x-3.0.22:
+  - minor fix
+  - Added should not see link
+  8.x-3.0.21:
   - echo should be cat
-  8.x-2.3.2:
+  8.x-3.0.20:
   - Support mysql 8
-  8.x-2.3.1: null
-  8.x-2.3.0:
-  - update version: 8.x-2.2.3 -> 8.x-2.3.0
-  8.x-2.2.2:
+  8.x-3.0.19:
   - monetization schema change
-  8.x-2.2.1:
+  8.x-3.0.18:
   - patch the files after they exist!
+  8.x-3.0.17:
   - cant create sites right now in module builds
-  - fix path to php-fpm
-  - dont use scl on UBI 8
-  8.x-2.2.0:
-  - Update apictest.info.yml
-  8.x-2.1.6: null
-  8.x-2.1.5:
+  8.x-3.0.16:
   - add billing services
-  8.x-2.1.4:
+  8.x-3.0.15:
+  - fix path to php-fpm
+  8.x-3.0.14:
+  - dont use scl on UBI 8
+  8.x-3.0.13:
   - add -y
-  8.x-2.1.3:
+  8.x-3.0.12:
   - tolerant option removed
-  8.x-2.1.2:
+  8.x-3.0.11:
   - missing copyright
-  8.x-2.1.1:
-  - Tempmerge (#174)
-  8.x-2.1.0:
-  - update version: 8.x-2.0.36 -> 8.x-2.1.0
-  8.x-2.0.35:
+  8.x-3.0.10:
+  - blacklist -> blocklist
+  8.x-3.0.9:
+  - Removed use of deprecated functions
+  8.x-3.0.8:
   - see if setting this back to null helps ?
-  8.x-2.0.34:
+  8.x-3.0.7:
   - php 7.3
-  8.x-2.0.33:
+  8.x-3.0.6:
   - handle field not existing
-  8.x-2.0.32:
+  8.x-3.0.5:
   - oops need captcha after all
-  8.x-2.0.31:
+  8.x-3.0.4:
   - need to disable captcha for tests too
-  8.x-2.0.30: null
-  8.x-2.0.29:
+  8.x-3.0.3: null
+  8.x-3.0.2:
   - php upgrade (#172)
+  8.x-3.0.1: null
   8.x-2.0.28:
   - Oidc proxy (#171)
   8.x-2.0.27:

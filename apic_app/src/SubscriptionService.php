@@ -14,9 +14,6 @@
 namespace Drupal\apic_app;
 
 use Drupal\apic_app\Entity\ApplicationSubscription;
-use Drupal\apic_app\Event\SubscriptionCreateEvent;
-use Drupal\apic_app\Event\SubscriptionDeleteEvent;
-use Drupal\apic_app\Event\SubscriptionUpdateEvent;
 use Drupal\Component\Utility\Html;
 use Drupal\node\Entity\Node;
 

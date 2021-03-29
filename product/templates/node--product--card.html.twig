@@ -72,8 +72,8 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
     <div class="apicApiCount">
       {% for api in apiList %}
         {% if loop.index < 6 %}
-          {% if api.node.apic_pathalias['#items'][0].value is defined and api.node.apic_pathalias['#items'][0].value is not empty %}
-            {% set apiNode = api.node.apic_pathalias['#items'][0].value %}
+          {% if api.node.apic_pathalias[0].value is defined and api.node.apic_pathalias[0].value is not empty %}
+            {% set apiNode = api.node.apic_pathalias[0].value %}
           {% else %}
             {% set apiNode = api.node.id %}
           {% endif %}

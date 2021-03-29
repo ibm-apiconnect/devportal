@@ -1,0 +1,10 @@
+--- modules/votingapi_widgets/css/fivestar.css
++++ modules/votingapi_widgets/css/fivestar.css
+@@ -5,3 +5,7 @@
+ .votingapi-widgets.fivestar a.disabled {
+   opacity: 0.5;
+ }
++
++.votingapi-widgets .form-select, .votingapi_widgets .form-submit {
++  display: none;
++}

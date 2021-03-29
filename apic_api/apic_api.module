@@ -631,6 +631,12 @@ function apic_api_preprocess_node(&$variables): void {
       $variables['docpages'] = $docPages;
 
       $utils = \Drupal::service('ibm_apim.utils');
+      $options = array(
+        'absolute'   => TRUE,
+      );
+      $apiTypeDocs = ['asyncapi' => Url::fromUri('internal:/asyncapi', $options)->toString(),
+        'kafka' => Url::fromUri('internal:/asyncapi-kafka', $options)->toString(),
+        'mq' => Url::fromUri('internal:/asyncapi-mq', $options)->toString()];
 
       $variables['#attached']['library'][] = 'apic_api/explorer';
       $variables['#attached']['drupalSettings']['api']['explorer']['apis'] = [unserialize($variables['node']->api_swagger->value, ['allowed_classes' => FALSE])];
@@ -640,6 +646,7 @@ function apic_api_preprocess_node(&$variables): void {
       }
       $variables['#attached']['drupalSettings']['api']['explorer']['apps'] = $applications;
       $variables['#attached']['drupalSettings']['api']['explorer']['options'] = [
+        'apiTypeDocs' => $apiTypeDocs,
         'showApiVersion' => $ibmApimShowVersions,
         'showCorsWarnings' => $showCorsWarnings,
         'showSoapSwaggerDownload' => $soapSwaggerDownload,

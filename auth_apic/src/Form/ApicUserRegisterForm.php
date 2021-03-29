@@ -204,6 +204,8 @@ class ApicUserRegisterForm extends RegisterForm {
       $form = parent::form($form, $form_state);
       $enabled_oidc_register_form = (boolean) \Drupal::config('ibm_apim.settings')->get('enable_oidc_register_form');
 
+      $this->authApicSessionStore->set('action','signup');
+
       if ($this->moduleHandler->moduleExists('social_media_links')) {
         $form['#attached']['library'][] = 'social_media_links/fontawesome.component';
       }
@@ -352,7 +354,7 @@ class ApicUserRegisterForm extends RegisterForm {
           if ($enabled_oidc_register_form) {
             $form['oidc_url'] = [
               '#type' => 'hidden',
-              '#value' => $oidc_info['az_url']
+              '#value' => $oidc_info['az_url'] . '&action=signup'
             ];
             if (!$member_invitation) {
               $form['consumerorg'] = [
@@ -382,7 +384,7 @@ class ApicUserRegisterForm extends RegisterForm {
               '#name' => $this->chosen_registry->getName(),
               '#url' => $this->chosen_registry->getUrl(),
               '#limit_validation_errors' => [],
-              '#prefix' => '<a class="chosen-registry-button registry-button generic-button button" href="' . $oidc_info['az_url'] . '"  title="' . $this->t('Create account using @ur', ['@ur' => $this->chosen_registry->getTitle()]) . '">' .
+              '#prefix' => '<a class="chosen-registry-button registry-button generic-button button" href="' . $oidc_info['az_url'] . '&action=signup"  title="' . $this->t('Create account using @ur', ['@ur' => $this->chosen_registry->getTitle()]) . '">' .
                   $oidc_info['image']['html'] .
                   '<span class="registry-name">' . $this->chosen_registry->getTitle() . '</span>
                       </a>'
@@ -461,7 +463,7 @@ class ApicUserRegisterForm extends RegisterForm {
               ],
               '#name' => $other_registry->getName(),
               '#limit_validation_errors' => [],
-              '#prefix' => '<a class="registry-button generic-button button" href="' . $oidc_info['az_url'] . '">' .
+              '#prefix' => '<a class="registry-button generic-button button" href="' . $oidc_info['az_url'] . '&action=signup">' .
                 $oidc_info['image']['html'] .
                 '<span class="registry-name">' . $other_registry->getTitle() . '</span>
                           </a>',

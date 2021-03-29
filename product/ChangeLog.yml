@@ -1,131 +1,151 @@
 changes:
-  8.x-2.4.8:
+  8.x-3.0.73:
+  - handle long api and product titles in titlebar (#158)
+  8.x-3.0.72:
+  - handle title not being translated
+  8.x-3.0.71:
+  - invalidate views cache
+  - delete any retired apis we're sent
+  8.x-3.0.70:
+  - make sure api title is actually set
+  8.x-3.0.69:
+  - path alias test
+  8.x-3.0.68:
+  - fix productselect routing
+  - use pathaliases
+  8.x-3.0.67:
+  - make Terms of Service collapse cleaner
+  8.x-3.0.66:
+  - fix message if plan contains mixed apis
+  8.x-3.0.65:
+  - display markdown terms of service field correctly
+  8.x-3.0.64:
+  - add support for translatable terms of service
+  - markdown terms of service
+  8.x-3.0.63:
+  - remove 0 padding from card title
+  8.x-3.0.62: null
+  8.x-3.0.61:
   - divisibleby is deprecated
   - Add drupal core compatibility info
-  8.x-2.4.7:
+  8.x-3.0.60:
   - Add tokens
-  8.x-2.4.6:
+  8.x-3.0.59:
   - Copyright statements for 2021
-  8.x-2.4.5:
+  8.x-3.0.58:
   - drush commands to get individual nodes
-  8.x-2.4.4:
+  8.x-3.0.57:
   - need to handle there not being any subs
-  8.x-2.4.3:
+  8.x-3.0.56:
   - ensure custom fields are actual fields
-  8.x-2.4.2: null
-  8.x-2.4.1:
+  8.x-3.0.55:
+  - Fix displaying subscription migration target
+  8.x-3.0.54:
   - hide plans and subscribe for unenforced apis
-  8.x-2.4.0:
-  - update version: 8.x-2.3.18 -> 8.x-2.4.0
-  8.x-2.3.17:
+  8.x-3.0.53:
   - float not int
-  8.x-2.3.16:
+  8.x-3.0.52:
   - get rid of warning
-  8.x-2.3.15:
+  8.x-3.0.51:
   - missing upgrade function maybe?
-  8.x-2.3.14:
+  8.x-3.0.50:
   - logic failure
-  8.x-2.3.13:
+  8.x-3.0.49:
   - Translate custom strings in our views too
-  8.x-2.3.12: null
-  8.x-2.3.11:
+  8.x-3.0.48:
   - delete retired apis if deleting a product too
-  8.x-2.3.10:
+  8.x-3.0.47:
   - plan table header alignment
-  8.x-2.3.9:
+  8.x-3.0.46:
   - fix product handling of plans
-  8.x-2.3.8:
+  8.x-3.0.45:
   - fix multiple rate limits
-  8.x-2.3.7:
+  8.x-3.0.44:
   - do not show invalid plans
-  8.x-2.3.6: null
-  8.x-2.3.5:
+  8.x-3.0.43:
   - dont make section headings links
-  8.x-2.3.4:
+  8.x-3.0.42:
   - Styling for embedded docs in products
-  8.x-2.3.3:
+  8.x-3.0.41:
   - Support embedded docs in products
-  8.x-2.3.2: null
-  8.x-2.3.1: null
-  8.x-2.3.0:
-  - update version: 8.x-2.2.25 -> 8.x-2.3.0
-  8.x-2.2.24:
+  8.x-3.0.40:
+  - handle x-embedded-docs in product documents too
+  8.x-3.0.39:
+  - add support for trace verb
+  8.x-3.0.38:
+  - needs the nid not the node
+  8.x-3.0.37:
   - fix multiple rate limit text
-  8.x-2.2.23:
+  8.x-3.0.36:
   - fix double header after posting comment
-  8.x-2.2.22:
+  8.x-3.0.35:
   - fix font name
-  8.x-2.2.21:
+  8.x-3.0.34:
   - remove preview button from comments
-  8.x-2.2.20:
+  8.x-3.0.33:
   - Product view fixes for design (#143)
-  8.x-2.2.19:
+  8.x-3.0.32:
   - add relevant selectors to sub wizard plan view (#142)
-  8.x-2.2.18:
+  8.x-3.0.31:
   - use correct font families
-  8.x-2.2.17:
+  8.x-3.0.30:
   - restyle modal-like forms
-  8.x-2.2.16:
+  8.x-3.0.29:
   - update views to use no content block
-  8.x-2.2.15:
-  - Remove html tags (#141)
-  8.x-2.2.14:
+  8.x-3.0.28:
   - restyle all headers to IDE Carbon X
-  8.x-2.2.13:
+  8.x-3.0.27:
   - restyling product plan table (#140)
-  8.x-2.2.12:
+  8.x-3.0.26:
   - tweak strings
-  8.x-2.2.11:
+  8.x-3.0.25:
   - update images
-  8.x-2.2.10:
+  8.x-3.0.24:
   - change masonry gutter
-  8.x-2.2.9:
+  8.x-3.0.23:
+  - Remove html tags
+  8.x-3.0.22: null
+  8.x-3.0.21:
   - use locked icon instead of key for plans
   - no icon for info messages in carbon x
-  8.x-2.2.8: null
-  8.x-2.2.7: null
-  8.x-2.2.6:
+  8.x-3.0.20:
+  - set default pagesize to be 10
+  8.x-3.0.19:
   - increase gutter for latest masonry views
-  8.x-2.2.5:
+  8.x-3.0.18:
   - restyle product tile/card (#138)
-  8.x-2.2.4:
+  8.x-3.0.17:
   - handle undef variable
-  8.x-2.2.3: null
-  8.x-2.2.2:
+  8.x-3.0.16: null
+  8.x-3.0.15: null
+  8.x-3.0.14:
   - spacing
   - if some plans have billing then display something for all of them
   - special case quantities of 0
-  8.x-2.2.1:
+  8.x-3.0.13:
   - update verb colours
-  8.x-2.2.0:
-  - Update product.info.yml
-  8.x-2.1.5: null
-  8.x-2.1.4:
-  - Display rate limit and billing for plans (#137)
-  8.x-2.1.3:
+  8.x-3.0.12:
+  - Display rate limit and billing for plans
+  8.x-3.0.11:
   - handle parsing price plans
-  8.x-2.1.2:
+  8.x-3.0.10:
   - remove Rules support from our code
-  8.x-2.1.1:
-  - Tempmerge (#135)
-  8.x-2.1.0:
-  - update version: 8.x-2.0.37 -> 8.x-2.1.0
-  8.x-2.0.36: null
-  8.x-2.0.35:
+  8.x-3.0.9:
+  - log the product version when we create/delete/update (#134)
+  8.x-3.0.8:
   - Maybe fix for putting corgs into groups
-  8.x-2.0.34: null
-  8.x-2.0.33:
+  8.x-3.0.7: null
+  8.x-3.0.6:
   - fix Product ToS and License swap
-  8.x-2.0.32:
-  - Show migration link after superseding (#127) (#128)
-  8.x-2.0.31: null
-  8.x-2.0.30:
+  8.x-3.0.5:
+  - Show migration link after superseding (#127)
+  8.x-3.0.4:
   - fix missing id on title
-  8.x-2.0.29:
+  8.x-3.0.3:
   - product_api_nids set to -1 after upgrade
-  8.x-2.0.28: null
-  8.x-2.0.27:
+  8.x-3.0.2:
   - AVT & GraphQL css changes
+  8.x-3.0.1: null
   8.x-2.0.26:
   - tidy up api explorer view
   8.x-2.0.25:

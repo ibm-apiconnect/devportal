@@ -36,7 +36,7 @@
                   <img src="{{- placeholderUrl -}}" alt=""/>
                 </div>
               {% endif %}</div>
-            <h1 id="node-{{ node.id }}-title" class="applicationName">{{- label -}}</h1>
+            <h1 id="node-{{ node.id }}-title" class="applicationName apicTruncate" title="{{ node.title[0].value }}">{{- label -}}</h1>
             {% if applifecycleEnabled %}
               <div
                   class="applicationType {{ content.application_lifecycle_state['#items'][0].value|clean_class }}">{% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %} {{ 'Development'|t }} {% else %} {{ 'Production'|t }} {% endif %}</div>

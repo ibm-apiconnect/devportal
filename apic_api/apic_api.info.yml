@@ -2,8 +2,8 @@ name: API
 type: module
 description: Provides the API node content type
 package: IBM API Connect
-core: 8.x
-version: 8.x-2.4.8
+core_version_requirement: ^8 || ^9
+version: 8.x-3.0.57
 project: apic_api
 dependencies:
 - path

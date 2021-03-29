@@ -18,7 +18,7 @@
     font-weight: 300;
     src: local('IBM Plex Sans Condensed Light Italic'),
     local('IBMPlexSansCond-LightItalic'),
-    url(../../../../../../../../fonts/condensed/IBMPlexSansCond-LightItalic.woff)
+    url('#{$font-path}/condensed/IBMPlexSansCond-LightItalic.woff')
     format('woff');
   }
   @font-face {
@@ -27,7 +27,7 @@
     font-weight: 400;
     src: local('IBM Plex Sans Condensed Italic'),
     local('IBMPlexSansCond-Italic'),
-    url(../../../../../../../../fonts/condensed/IBMPlexSansCond-Italic.woff)
+    url('#{$font-path}/condensed/IBMPlexSansCond-Italic.woff')
     format('woff');
   }
   @font-face {
@@ -36,7 +36,7 @@
     font-weight: 600;
     src: local('IBM Plex Sans Condensed SemiBold Italic'),
     local('IBMPlexSansCond-SemiBoldItalic'),
-    url(../../../../../../../../fonts/condensed/IBMPlexSansCond-SemiBoldItalic.woff)
+    url('#{$font-path}/condensed/IBMPlexSansCond-SemiBoldItalic.woff')
     format('woff');
   }
   @font-face {
@@ -44,7 +44,7 @@
     font-style: normal;
     font-weight: 300;
     src: local('IBM Plex Sans Condensed Light'), local('IBMPlexSansCond-Light'),
-    url(../../../../../../../../fonts/condensed/IBMPlexSansCond-Light.woff)
+    url('#{$font-path}/condensed/IBMPlexSansCond-Light.woff')
     format('woff');
   }
   @font-face {
@@ -52,7 +52,7 @@
     font-style: normal;
     font-weight: 400;
     src: local('IBM Plex Sans Condensed'), local('IBMPlexSansCond'),
-    url(../../../../../../../../fonts/condensed/IBMPlexSansCond-Regular.woff)
+    url('#{$font-path}/condensed/IBMPlexSansCond-Regular.woff')
     format('woff');
   }
   @font-face {
@@ -61,7 +61,7 @@
     font-weight: 600;
     src: local('IBM Plex Sans Condensed SemiBold'),
     local('IBMPlexSansCond-SemiBold'),
-    url(../../../../../../../../fonts/condensed/IBMPlexSansCond-SemiBold.woff)
+    url('#{$font-path}/condensed/IBMPlexSansCond-SemiBold.woff')
     format('woff');
   }
 
@@ -73,7 +73,7 @@
     font-display: swap;
     src: local('IBM Plex Sans Condensed Light Italic'),
     local('IBMPlexSansCond-LightItalic'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-LightItalic.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-LightItalic.woff2')
     format('woff2');
     unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169,
     U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
@@ -86,7 +86,7 @@
     font-display: swap;
     src: local('IBM Plex Sans Condensed Light Italic'),
     local('IBMPlexSansCond-LightItalic'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-LightItalic.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-LightItalic.woff2')
     format('woff2');
     unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB,
     U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
@@ -99,7 +99,7 @@
     font-display: swap;
     src: local('IBM Plex Sans Condensed Light Italic'),
     local('IBMPlexSansCond-LightItalic'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-LightItalic.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-LightItalic.woff2')
     format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
     U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212,
@@ -113,7 +113,7 @@
     font-display: swap;
     src: local('IBM Plex Sans Condensed Italic'),
     local('IBMPlexSansCond-Italic'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-Italic.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-Italic.woff2')
     format('woff2');
     unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169,
     U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
@@ -126,7 +126,7 @@
     font-display: swap;
     src: local('IBM Plex Sans Condensed Italic'),
     local('IBMPlexSansCond-Italic'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-Italic.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-Italic.woff2')
     format('woff2');
     unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB,
     U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
@@ -139,7 +139,7 @@
     font-display: swap;
     src: local('IBM Plex Sans Condensed Italic'),
     local('IBMPlexSansCond-Italic'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-Italic.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-Italic.woff2')
     format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
     U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212,
@@ -153,7 +153,7 @@
     font-display: swap;
     src: local('IBM Plex Sans Condensed SemiBold Italic'),
     local('IBMPlexSansCond-SemiBoldItalic'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-SemiBoldItalic.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-SemiBoldItalic.woff2')
     format('woff2');
     unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169,
     U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
@@ -166,7 +166,7 @@
     font-display: swap;
     src: local('IBM Plex Sans Condensed SemiBold Italic'),
     local('IBMPlexSansCond-SemiBoldItalic'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-SemiBoldItalic.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-SemiBoldItalic.woff2')
     format('woff2');
     unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB,
     U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
@@ -179,7 +179,7 @@
     font-display: swap;
     src: local('IBM Plex Sans Condensed SemiBold Italic'),
     local('IBMPlexSansCond-SemiBoldItalic'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-SemiBoldItalic.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-SemiBoldItalic.woff2')
     format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
     U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212,
@@ -192,7 +192,7 @@
     font-weight: 300;
     font-display: swap;
     src: local('IBM Plex Sans Condensed Light'), local('IBMPlexSansCond-Light'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-Light.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-Light.woff2')
     format('woff2');
     unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169,
     U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
@@ -204,7 +204,7 @@
     font-weight: 300;
     font-display: swap;
     src: local('IBM Plex Sans Condensed Light'), local('IBMPlexSansCond-Light'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-Light.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-Light.woff2')
     format('woff2');
     unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB,
     U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
@@ -216,7 +216,7 @@
     font-weight: 300;
     font-display: swap;
     src: local('IBM Plex Sans Condensed Light'), local('IBMPlexSansCond-Light'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-Light.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-Light.woff2')
     format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
     U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212,
@@ -229,7 +229,7 @@
     font-weight: 400;
     font-display: swap;
     src: local('IBM Plex Sans Condensed'), local('IBMPlexSansCond'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-Regular.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-Regular.woff2')
     format('woff2');
     unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169,
     U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
@@ -241,7 +241,7 @@
     font-weight: 400;
     font-display: swap;
     src: local('IBM Plex Sans Condensed'), local('IBMPlexSansCond'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-Regular.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-Regular.woff2')
     format('woff2');
     unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB,
     U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
@@ -253,7 +253,7 @@
     font-weight: 400;
     font-display: swap;
     src: local('IBM Plex Sans Condensed'), local('IBMPlexSansCond'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-Regular.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-Regular.woff2')
     format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
     U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212,
@@ -267,7 +267,7 @@
     font-display: swap;
     src: local('IBM Plex Sans Condensed SemiBold'),
     local('IBMPlexSansCond-SemiBold'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-SemiBold.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-SemiBold.woff2')
     format('woff2');
     unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169,
     U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
@@ -280,7 +280,7 @@
     font-display: swap;
     src: local('IBM Plex Sans Condensed SemiBold'),
     local('IBMPlexSansCond-SemiBold'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-SemiBold.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-SemiBold.woff2')
     format('woff2');
     unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB,
     U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
@@ -293,7 +293,7 @@
     font-display: swap;
     src: local('IBM Plex Sans Condensed SemiBold'),
     local('IBMPlexSansCond-SemiBold'),
-    url(../../../../../../../../fonts/extcharset/condensed/IBMPlexSansCond-SemiBold.woff2)
+    url('#{$font-path}/extcharset/condensed/IBMPlexSansCond-SemiBold.woff2')
     format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
     U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212,

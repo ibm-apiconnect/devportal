@@ -289,6 +289,23 @@ function drush_product_supersede($content) {
         }
       }
       // process apis
+      // check if any APIs are in retired state, if so delete them too
+      if (isset($content['consumer_apis']) && !empty($content['consumer_apis'])) {
+        foreach ($content['consumer_apis'] as $consumer_api) {
+          if (isset($consumer_api['state']) && strtolower($consumer_api['state']) === 'retired') {
+            $query = \Drupal::entityQuery('node');
+            $query->condition('type', 'api');
+            $query->condition('status', 1);
+            $query->condition('apic_url', $consumer_api['url']);
+            $apiNids = $query->execute();
+            if ($apiNids !== NULL && !empty($apiNids)) {
+              $apiNid = array_shift($apiNids);
+              Api::deleteNode($apiNid, 'product_supersede');
+              drush_log(dt('Drush SupersedeProduct deleted retired API @api', ['@api' => $consumer_api['url']]), 'success');
+            }
+          }
+        }
+      }
       drush_apic_api_massupdate($content['consumer_apis'], 'product_supersede');
 
       // update all subscribed apps
@@ -309,6 +326,10 @@ function drush_product_supersede($content) {
             }
           }
         }
+      }
+      $moduleHandler = \Drupal::service('module_handler');
+      if ($moduleHandler->moduleExists('views')) {
+        views_invalidate_cache();
       }
     }
     else {
@@ -350,7 +371,33 @@ function drush_product_replace($content) {
         }
       }
       // process apis
+      // check if any APIs are in retired state, if so delete them too
+      if (isset($content['consumer_apis']) && !empty($content['consumer_apis'])) {
+        foreach ($content['consumer_apis'] as $consumer_api) {
+          if (isset($consumer_api['state']) && strtolower($consumer_api['state']) === 'retired') {
+            $query = \Drupal::entityQuery('node');
+            $query->condition('type', 'api');
+            $query->condition('status', 1);
+            $query->condition('apic_url', $consumer_api['url']);
+            $apiNids = $query->execute();
+            if ($apiNids !== NULL && !empty($apiNids)) {
+              $apiNid = array_shift($apiNids);
+              Api::deleteNode($apiNid, 'product_supersede');
+              drush_log(dt('Drush ReplaceProduct deleted retired API @api', ['@api' => $consumer_api['url']]), 'success');
+            }
+          }
+        }
+      }
       drush_apic_api_massupdate($content['consumer_apis'], 'product_supersede');
+
+      // if there happens to be a plan mapping then handle it
+      if (isset($content['plan_map']) && !empty($content['plan_map'])) {
+        Product::processPlanMapping($content['plan_map']);
+      }
+      $moduleHandler = \Drupal::service('module_handler');
+      if ($moduleHandler->moduleExists('views')) {
+        views_invalidate_cache();
+      }
     }
     else {
       drush_log(dt('Drush product replace : incorrect number of products found. Should be 2 but was @count.', ['@count' => sizeof($content['products'])]), 'error');

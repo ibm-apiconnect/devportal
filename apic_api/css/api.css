@@ -82,7 +82,8 @@ body.adminimal-admin-toolbar .explorerWrapper{
 
 .apicCardFooter {
   margin-top: 1rem;
-  padding-bottom:  1rem;
+  padding-bottom: 1rem;
+  width: 16.75rem;
 }
 
 .apicCardFooter .apicProtocol,
@@ -90,11 +91,12 @@ body.adminimal-admin-toolbar .explorerWrapper{
   display: inline-block;
 }
 
-.apicCardFooter .apicProtocol .field:after,
-.apicCardFooter .apicState .field:after {
-  content: ' \2022';
+.apicCardFooter .apicState .field::before {
+  content: '\2022';
+  margin-right: 0.2rem;
 }
 
+.bx--card .apicApiDesc.apicFade,
 .bx--card .apicApiEmbedded .apicApiDesc.apicFade {
   max-height: 6.25rem;
   /* height: min-content; */

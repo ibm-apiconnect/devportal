@@ -145,7 +145,7 @@ class APIMServer implements ManagementServerInterface {
     $user_registry_url = $user->getApicUserRegistryUrl();
     $user_registry = $this->registryService->get($user_registry_url);
 
-    if ($user_registry === null || empty($user_registry)) {
+    if ($user_registry === NULL || empty($user_registry)) {
       $this->logger->error('Failed to find user registry with URL @regurl for user @username.',
         ['@regurl' => $user_registry_url, '@username' => $user->getUsername()]);
       $this->messenger->addError(t('Unable to authorize your request. Contact the site administrator.'));
@@ -214,19 +214,20 @@ class APIMServer implements ManagementServerInterface {
     //Check if it's already refreshing
     if ($this->sessionStore->get('isRefreshing')) {
       sleep(1);
-      if ($this->sessionStore->get('isRefreshing') !== true && $this->sessionStore->get('auth') !== NULL &&
+      if ($this->sessionStore->get('isRefreshing') !== TRUE && $this->sessionStore->get('auth') !== NULL &&
         $this->sessionStore->get('expires_in') !== NULL && (int) $this->sessionStore->get('expires_in') > time()) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-        return true;
-      } else {
+        return TRUE;
+      }
+      else {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-        return false;
+        return FALSE;
       }
     }
 
     try {
-      $this->sessionStore->set('isRefreshing', true);
-      $success = false;
+      $this->sessionStore->set('isRefreshing', TRUE);
+      $success = FALSE;
 
       \Drupal::logger('ibm_apim')->notice('Refreshing token with @refresh',
         ['@refresh' => $this->sessionStore->get('refresh')]);
@@ -237,17 +238,17 @@ class APIMServer implements ManagementServerInterface {
       if (!isset($refresh) || (isset($refresh_expires_in) && (int) $refresh_expires_in < time())) {
         $this->logger->error('Invalid refresh token: @refresh expires @expiry',
           ['@refresh' => $refresh, '@expiry' => $refresh_expires_in]);
-        return false;
+        return FALSE;
       }
 
       //Get User Registry
       $user_registry_url = User::load($this->current_user->id())->get('registry_url')->value;
       $user_registry = $this->registryService->get($user_registry_url);
-      if ($user_registry === null || empty($user_registry)) {
+      if ($user_registry === NULL || empty($user_registry)) {
         $this->logger->error('Failed to find user registry with URL @regurl.',
           ['@regurl' => $user_registry_url]);
         $this->messenger->addError(t('Unable to authorize your request. Contact the site administrator.'));
-        return false;
+        return FALSE;
       }
 
       //Generate Request Data
@@ -268,14 +269,15 @@ class APIMServer implements ManagementServerInterface {
         'X-IBM-Consumer-Context: ' . $this->siteConfig->getOrgId() . '.' . $this->siteConfig->getEnvId(),
       ];
 
-      $response = ApicRest::json_http_request('/token', 'POST', $headers, json_encode($token_request), false, NULL, NULL, TRUE, 'consumer');
+      $response = ApicRest::json_http_request('/token', 'POST', $headers, json_encode($token_request), FALSE, NULL, NULL, TRUE, 'consumer');
       if (!isset($response)) {
         $this->logger->error('Failed to refresh token');
-        return false;
-      } elseif ((int) $response->code < 200 || (int) $response->code >= 300) {
+        return FALSE;
+      }
+      elseif ((int) $response->code < 200 || (int) $response->code >= 300) {
         $this->logger->error('Refresh token request received @code response',
           ['@code' => $response->code]);
-        return false;
+        return FALSE;
       }
       $token_response = $this->tokenResponseReader->read($response);
 
@@ -301,15 +303,16 @@ class APIMServer implements ManagementServerInterface {
       if (isset($refresh_expires_in)) {
         $this->sessionStore->set('refresh_expires_in', (int) $refresh_expires_in);
       }
-      $success = true;
+      $success = TRUE;
     } catch (RestResponseParseException $exception) {
       $this->logger->error('RefreshAuth: failure parsing POST /token response: %message', ['%message' => $exception->getMessage()]);
-      return false;
+      return FALSE;
     } finally {
       $this->sessionStore->delete('isRefreshing');
       if ($success) {
         $this->logger->notice('Successfully refreshed the token');
-      } else {
+      }
+      else {
         $this->sessionStore->delete('auth');
         $this->sessionStore->delete('expires_in');
         $this->sessionStore->delete('refresh');
@@ -317,7 +320,7 @@ class APIMServer implements ManagementServerInterface {
       }
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-    return true;
+    return TRUE;
   }
 
   /**
@@ -338,6 +341,8 @@ class APIMServer implements ManagementServerInterface {
   /**
    * @param \Drupal\ibm_apim\ApicType\ApicUser $user
    *
+   * @param string $auth
+   *
    * @return \Drupal\ibm_apim\Rest\MeResponse
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
@@ -352,7 +357,7 @@ class APIMServer implements ManagementServerInterface {
     $registry_url = $user->getApicUserRegistryUrl();
     $user->setApicUserRegistryUrl(NULL);
 
-    $response = ApicRest::put('/me', $this->userService->getUserJSON($user, $auth),$auth);
+    $response = ApicRest::put('/me', $this->userService->getUserJSON($user, $auth), $auth);
 
     $user->setUsername($username);
     $user->setApicUserRegistryUrl($registry_url);
@@ -378,7 +383,7 @@ class APIMServer implements ManagementServerInterface {
    * @param \Drupal\ibm_apim\ApicType\ApicUser $user
    * @param null $auth
    *
-   * @return \Drupal\auth_apic\Rest\UsersRegisterResponse|\Drupal\ibm_apim\Rest\RestResponse|null
+   * @return \Drupal\ibm_apim\Rest\UsersRegisterResponse|\Drupal\ibm_apim\Rest\RestResponse|null
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
   public function postUsersRegister(ApicUser $user, $auth = NULL) {
@@ -413,10 +418,10 @@ class APIMServer implements ManagementServerInterface {
 
     if (empty($invitedUser->getOrganization())) {
       // This is andre invited by another andre and obviously the request body is therefore completely different
-      $data = json_decode($this->userService->getUserJSON($invitedUser), false);
+      $data = json_decode($this->userService->getUserJSON($invitedUser), FALSE);
     }
     else {
-      $data['user'] = json_decode($this->userService->getUserJSON($invitedUser), false);
+      $data['user'] = json_decode($this->userService->getUserJSON($invitedUser), FALSE);
       $data['org'] = ['title' => $invitedUser->getOrganization()];
     }
 
@@ -461,7 +466,7 @@ class APIMServer implements ManagementServerInterface {
       $data['password'] = $acceptingUser->getPassword();
     }
     else {
-      $data['user'] = json_decode($this->userService->getUserJSON($acceptingUser), false);
+      $data['user'] = json_decode($this->userService->getUserJSON($acceptingUser), FALSE);
       if ($orgTitle !== NULL) {
         $data['org'] = ['title' => $orgTitle];
       }
@@ -502,7 +507,7 @@ class APIMServer implements ManagementServerInterface {
     // To save ourselves future hassle, we will actually remove all error
     // messages from the data field (since we never want a message to display
     // to the end user enabling future enumeration vulnerabilities).
-    $response = ApicRest::post($url, json_encode($data), 'user',FALSE);
+    $response = ApicRest::post($url, json_encode($data), 'user', FALSE);
     $responseObject = $this->restResponseReader->read($response);
 
     $code = $responseObject->getCode();
@@ -512,9 +517,9 @@ class APIMServer implements ManagementServerInterface {
       $responseObject->setCode($code);
       $data['status'] = 204;
     }
-    $data['message'] = array();
+    $data['message'] = [];
     $responseObject->setData($data);
-    $responseObject->setErrors(array());
+    $responseObject->setErrors([]);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $responseObject;
@@ -614,7 +619,7 @@ class APIMServer implements ManagementServerInterface {
     $response = ApicRest::post($url, json_encode($data));
     $responseObject = $this->restResponseReader->read($response);
 
-    if ($responseObject !== null) {
+    if ($responseObject !== NULL) {
       $code = $responseObject->getCode();
       if ($code >= 200 && $code < 400) {
         $data = $responseObject->getData();
@@ -626,10 +631,10 @@ class APIMServer implements ManagementServerInterface {
           $roleUrl = '/orgs/' . $data['id'] . '/roles';
           $roleResponse = ApicRest::get($roleUrl);
           $roleResponseObject = $this->restResponseReader->read($roleResponse);
-          if ($roleResponseObject !== null && isset($roleResponseObject->getData()['results'])) {
+          if ($roleResponseObject !== NULL && isset($roleResponseObject->getData()['results'])) {
             $rolesArray = $roleResponseObject->getData()['results'];
 
-            foreach($rolesArray as $key => $role) {
+            foreach ($rolesArray as $key => $role) {
               $rolesArray[$key]['url'] = $this->apim_utils->removeFullyQualifiedUrl($rolesArray[$key]['url']);
               $rolesArray[$key]['org_url'] = $this->apim_utils->removeFullyQualifiedUrl($rolesArray[$key]['org_url']);
               foreach ($rolesArray[$key]['permission_urls'] as $permKey => $perm) {
@@ -643,9 +648,9 @@ class APIMServer implements ManagementServerInterface {
           $membersResponse = ApicRest::get($membersUrl);
 
           $membersResponseObject = $this->restResponseReader->read($membersResponse);
-          if ($membersResponseObject !== null && isset($membersResponseObject->getData()['results'])) {
+          if ($membersResponseObject !== NULL && isset($membersResponseObject->getData()['results'])) {
             $membersArray = $membersResponseObject->getData()['results'];
-            foreach($membersArray as $key => $member) {
+            foreach ($membersArray as $key => $member) {
               $membersArray[$key]['url'] = $this->apim_utils->removeFullyQualifiedUrl($membersArray[$key]['url']);
               $membersArray[$key]['org_url'] = $this->apim_utils->removeFullyQualifiedUrl($membersArray[$key]['org_url']);
               foreach ($membersArray[$key]['role_urls'] as $urlKey => $url) {

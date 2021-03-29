@@ -4,6 +4,8 @@ dependencies:
   config:
     - field.storage.node.product_terms_of_service
     - node.type.product
+  module:
+    - text
 id: node.product.product_terms_of_service
 field_name: product_terms_of_service
 entity_type: node
@@ -15,4 +17,4 @@ translatable: false
 default_value: {  }
 default_value_callback: ''
 settings: {  }
-field_type: string_long
+field_type: text_long

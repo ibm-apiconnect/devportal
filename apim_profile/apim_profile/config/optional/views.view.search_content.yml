@@ -34,7 +34,7 @@ display:
         type: search_api_query
         options: {  }
       exposed_form:
-        type: input_required
+        type: bef
         options:
           submit_button: Search
           reset_button: false
@@ -43,10 +43,31 @@ display:
           expose_sort_order: true
           sort_asc_label: Asc
           sort_desc_label: Desc
+          input_required: false
           text_input_required: 'Please enter some keywords to search.'
+          bef:
+            general:
+              allow_secondary: false
+              secondary_label: 'Advanced options'
+              autosubmit: false
+              autosubmit_hide: false
+            search_api_fulltext:
+              bef_format: default
+              more_options:
+                is_secondary: false
+                rewrite:
+                  filter_rewrite_values: ''
+            type:
+              bef_format: default
+              more_options:
+                bef_select_all_none: false
+                bef_collapsible: false
+                is_secondary: false
+                rewrite:
+                  filter_rewrite_values: ''
           text_input_required_format: basic_html
       pager:
-        type: mini
+        type: full
         options:
           items_per_page: 10
           offset: 0
@@ -55,14 +76,17 @@ display:
           tags:
             previous: '‹ previous'
             next: 'next ›'
+            first: '« First'
+            last: 'Last »'
           expose:
-            items_per_page: false
+            items_per_page: true
             items_per_page_label: 'Items per page'
             items_per_page_options: '5, 10, 25, 50'
             items_per_page_options_all: false
             items_per_page_options_all_label: '- All -'
             offset: false
             offset_label: Offset
+          quantity: 9
       style:
         type: masonry
         options:
@@ -194,6 +218,48 @@ display:
             group_items: {  }
           reduce_duplicates: false
           plugin_id: search_api_options
+        search_api_language:
+          id: search_api_language
+          table: search_api_index_default_index
+          field: search_api_language
+          relationship: none
+          group_type: group
+          admin_label: ''
+          operator: in
+          value:
+            '***LANGUAGE_language_interface***': '***LANGUAGE_language_interface***'
+            zxx: zxx
+            und: und
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+          plugin_id: search_api_language
       sorts: {  }
       title: 'Search Content'
       header: {  }
@@ -231,7 +297,8 @@ display:
     position: 1
     display_options:
       display_extenders:
-        ajax_history: {  }
+        ajax_history:
+          enable_history: true
       path: search/content
     cache_metadata:
       contexts:

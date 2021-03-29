@@ -116,7 +116,6 @@
   justify-content: space-between;
 }
 .applicationWrapper .titleInnerWrapper .rightTitle {
-  padding-top: 48px;
   display: flex;
   align-items: center;
 }
@@ -133,6 +132,7 @@
 
 .applicationWrapper .titleSection .leftTitle {
   margin-bottom: 1rem;
+  width: calc(100% - 3rem);
 }
 
 /* tabs in application details view */
@@ -454,6 +454,7 @@
   font-size: 0.875rem;
   letter-spacing: 0.16px;
   line-height: 20px;
+  text-align: left;
 }
 
 .apicAppStatus {
@@ -507,6 +508,8 @@
 .bx--card .apicAppCard{
   flex-direction: column;
   height: 12rem;
+  width: 20rem;
+  max-width: 20rem;
 }
 
 .bx--card .apicAppDesc{

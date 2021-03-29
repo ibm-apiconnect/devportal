@@ -121,6 +121,14 @@ content:
       link_to_entity: false
     third_party_settings: {  }
     region: content
+  apic_pathalias:
+    weight: 112
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
   links:
     weight: 100
     region: content
@@ -138,7 +146,6 @@ hidden:
   apic_attachments: true
   apic_catalog_id: true
   apic_hostname: true
-  apic_pathalias: true
   apic_provider_id: true
   apic_ref: true
   apic_tags: true

@@ -247,21 +247,30 @@ class Product {
         $returnValue = NULL;
       }
       else {
-        $node->setTitle($utils->truncate_string($product['catalog_product']['info']['title']));
+        $truncated_title = $utils->truncate_string($product['catalog_product']['info']['title']);
+        // title must be set, if not fall back on name
+        if (isset($truncated_title) && !empty($truncated_title)) {
+          $node->setTitle($truncated_title);
+        }
+        else {
+          $node->setTitle($product['catalog_product']['info']['name']);
+        }
         if (isset($product['catalog_product']['info']['x-ibm-languages']['title']) && !empty($product['catalog_product']['info']['x-ibm-languages']['title'])) {
           foreach ($product['catalog_product']['info']['x-ibm-languages']['title'] as $lang => $langArray) {
             $lang = $utils->convert_lang_name_to_drupal($lang);
             // if its one of our locales or the root of one of our locales
             foreach ($languageList as $langListKey => $langListValue) {
               if (\in_array($lang, $languageList, FALSE)) {
-                if (!$node->hasTranslation($lang)) {
-                  $translation = $node->addTranslation($lang, ['title' => $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['title'][$lang])]);
-                  $translation->save();
-                }
-                else {
-                  $node->getTranslation($lang)
-                    ->setTitle($utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['title'][$lang]))
-                    ->save();
+                $truncated_title = $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['title'][$lang]);
+                // title needs to actually have a value
+                if (isset($truncated_title) && !empty($truncated_title)) {
+                  if (!$node->hasTranslation($lang)) {
+                    $translation = $node->addTranslation($lang, ['title' => $truncated_title]);
+                    $translation->save();
+                  }
+                  else {
+                    $node->getTranslation($lang)->setTitle($truncated_title)->save();
+                  }
                 }
               }
             }
@@ -320,12 +329,17 @@ class Product {
             foreach ($languageList as $langListKey => $langListValue) {
               if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
-                  $translation = $node->addTranslation($lang, ['apic_description' => $product['catalog_product']['info']['x-ibm-languages']['description'][$lang]]);
+                  // ensure the translation has a title as its a required field
+                  $translation = $node->addTranslation($lang, ['title' => $truncated_title, 'apic_description' => $product['catalog_product']['info']['x-ibm-languages']['description'][$lang]]);
                   $translation->save();
                 }
                 else {
-                  $node->getTranslation($lang)
-                    ->set('apic_description', $product['catalog_product']['info']['x-ibm-languages']['description'][$lang])
+                  $translation = $node->getTranslation($lang);
+                  // ensure the translation has a title as its a required field
+                  if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
+                    $translation->setTitle($truncated_title);
+                  }
+                  $translation->set('apic_description', $product['catalog_product']['info']['x-ibm-languages']['description'][$lang])
                     ->save();
                 }
               }
@@ -343,15 +357,20 @@ class Product {
             foreach ($languageList as $langListKey => $langListValue) {
               if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
-                  $translation = $node->addTranslation($lang, [
+                  // ensure the translation has a title as its a required field
+                  $translation = $node->addTranslation($lang, ['title' => $truncated_title,
                     'apic_summary' => $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['summary'][$lang]),
                     1000,
                   ]);
                   $translation->save();
                 }
                 else {
-                  $node->getTranslation($lang)
-                    ->set('apic_summary', $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['summary'][$lang]), 1000)
+                  $translation = $node->getTranslation($lang);
+                  // ensure the translation has a title as its a required field
+                  if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
+                    $translation->setTitle($truncated_title);
+                  }
+                  $translation->set('apic_summary', $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['summary'][$lang]), 1000)
                     ->save();
                 }
               }
@@ -393,7 +412,40 @@ class Product {
         if (!isset($product['catalog_product']['info']['termsOfService']) || empty($product['catalog_product']['info']['termsOfService'])) {
           $product['catalog_product']['info']['termsOfService'] = '';
         }
-        $node->set('product_terms_of_service', $product['catalog_product']['info']['termsOfService']);
+        if ($moduleHandler->moduleExists('ghmarkdown')) {
+          $format = 'ghmarkdown';
+        }
+        else {
+          $format = 'full_html';
+        }
+        $node->set('product_terms_of_service', [
+          'value' => $product['catalog_product']['info']['termsOfService'],
+          'format' => $format,
+        ]);
+        if (isset($product['catalog_product']['info']['x-ibm-languages']['termsOfService']) && !empty($product['catalog_product']['info']['x-ibm-languages']['termsOfService'])) {
+          foreach ($product['catalog_product']['info']['x-ibm-languages']['termsOfService'] as $lang => $langArray) {
+            $lang = $utils->convert_lang_name_to_drupal($lang);
+            // if its one of our locales or the root of one of our locales
+            foreach ($languageList as $langListKey => $langListValue) {
+              if (\in_array($lang, $languageList, FALSE)) {
+                if (!$node->hasTranslation($lang)) {
+                  // ensure the translation has a title as its a required field
+                  $translation = $node->addTranslation($lang, ['title' => $truncated_title, 'product_terms_of_service' => $product['catalog_product']['info']['x-ibm-languages']['termsOfService'][$lang]]);
+                  $translation->save();
+                }
+                else {
+                  $translation = $node->getTranslation($lang);
+                  // ensure the translation has a title as its a required field
+                  if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
+                    $translation->setTitle($truncated_title);
+                  }
+                  $translation->set('product_terms_of_service', $product['catalog_product']['info']['x-ibm-languages']['termsOfService'][$lang])
+                    ->save();
+                }
+              }
+            }
+          }
+        }
         $node->set('product_visibility', []);
         // If there is a 'visibility' block in the product use that to determine visibility,
         // otherwise use the one inside catalog_product

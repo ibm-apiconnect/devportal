@@ -608,6 +608,14 @@ input[type="checkbox"].bx--checkbox {
   &.bx--btn--ghost[disabled]{
     color: $disabled-02;
   }
+  &.bx--btn--field {
+    color: $black-01;
+    padding: calc(0.675rem - 3px) 16px;
+    height: unset;
+  }
+  &.bx--btn--field:hover {
+    color: $black-01;
+  }
 }
 
 .bx--global-light-ui .button,

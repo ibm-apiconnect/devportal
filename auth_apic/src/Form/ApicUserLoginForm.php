@@ -181,6 +181,7 @@ class ApicUserLoginForm extends UserLoginForm {
 
     $baseForm = parent::buildForm($form, $form_state);
 
+    $this->authApicSessionStore->set('action','signin');
 
     $enabled_oidc_login_form = (boolean) \Drupal::config('ibm_apim.settings')->get('enable_oidc_login_form');
     // if we are on the invited user flow, there will be a JWT in the session so grab that
@@ -295,7 +296,7 @@ class ApicUserLoginForm extends UserLoginForm {
       if ($enabled_oidc_login_form) {
         $baseForm['oidc_url'] = [
           '#type' => 'hidden',
-          '#value' => $oidc_info['az_url']
+          '#value' => $oidc_info['az_url'] . '&action=signin'
         ];
 
         $baseForm['actions']['submit']['#attributes'] = ['class' => [
@@ -316,7 +317,7 @@ class ApicUserLoginForm extends UserLoginForm {
           '#name' => $this->chosen_registry->getName(),
           '#url' => $this->chosen_registry->getUrl(),
           '#limit_validation_errors' => [],
-          '#prefix' => '<a class="chosen-registry-button registry-button generic-button button" href="' . $oidc_info['az_url'] . '" title="' . $this->t('Sign in using @ur', ['@ur' => $this->chosen_registry->getTitle()]) . '">' .
+          '#prefix' => '<a class="chosen-registry-button registry-button generic-button button" href="' . $oidc_info['az_url'] . '&action=signin" title="' . $this->t('Sign in using @ur', ['@ur' => $this->chosen_registry->getTitle()]) . '">' .
             $oidc_info['image']['html'] .
             '<span class="registry-name">' . $this->chosen_registry->getTitle() . '</span>
                         </a>',
@@ -423,7 +424,7 @@ class ApicUserLoginForm extends UserLoginForm {
             '#name' => $other_registry->getName(),
             '#url' => $other_registry->getUrl(),
             '#limit_validation_errors' => [],
-            '#prefix' => '<a class="registry-button generic-button button" href="' . $oidc_info['az_url'] . '" title="' . $this->t('Sign in using @ur', ['@ur' => $other_registry->getTitle()]) . '">' .
+            '#prefix' => '<a class="registry-button generic-button button" href="' . $oidc_info['az_url'] . '&action=signin" title="' . $this->t('Sign in using @ur', ['@ur' => $other_registry->getTitle()]) . '">' .
               $oidc_info['image']['html'] .
               '<span class="registry-name">' . $other_registry->getTitle() . '</span>
                           </a>',

@@ -18,6 +18,7 @@ use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Rest\RestResponse;
+use Drupal\ibm_apim\Rest\MeResponse;
 
 interface ManagementServerInterface {
 
@@ -45,26 +46,29 @@ interface ManagementServerInterface {
    * @param $auth
    *   Optionally provide the authentication to use for this call
    *
-   * @return \Drupal\auth_apic\Rest\MeResponse
+   * @return \Drupal\ibm_apim\Rest\MeResponse
    *    Response from the GET /me call.
    */
-  public function getMe($auth);
+  public function getMe($auth): MeResponse;
 
   /**
    * PUT /me - update user profile.
    *
-   * @param \Drupal\auth_apic\ApicUser $user
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $user
    *   the user details to update including the changed fields
    *
-   * @return \Drupal\auth_apic\Rest\MeResponse
+   * @param string $auth
+   *   The type of authentication to use
+   *
+   * @return \Drupal\ibm_apim\Rest\MeResponse Response from the PUT /me call.
    *    Response from the PUT /me call.
    */
-  public function updateMe(ApicUser $user, $auth =  'user');
+  public function updateMe(ApicUser $user, $auth = 'user'): MeResponse;
 
   /**
    * DELETE /me - delete current user from management server.
    *
-   * @return \Drupal\ibm_apim\Rest\RestReponse
+   * @return \Drupal\ibm_apim\Rest\RestResponse
    *   Response from the call.
    */
   public function deleteMe(): ?RestResponse;
@@ -72,10 +76,10 @@ interface ManagementServerInterface {
   /**
    * POST /users/register.
    *
-   * @param \Drupal\auth_apic\ApicUser $user
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $user
    *   the user
    *
-   * @return \Drupal\auth_apic\Rest\UsersRegisterResponse
+   * @return \Drupal\ibm_apim\Rest\UsersRegisterResponse
    *    Response from POST /users/register call
    */
   public function postUsersRegister(ApicUser $user);
@@ -85,12 +89,12 @@ interface ManagementServerInterface {
    *
    * POST ../org-invitations/:id/register
    *
-   * @param \Drupal\auth_apic\InvitationObject $obj
+   * @param \Drupal\auth_apic\JWTToken $token
    *   Invitation object.
-   * @param \Drupal\auth_apic\ApicUser $invitedUser
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $invitedUser
    *   the user details from the form.
    *
-   * @return \Drupal\ibm_apim\Rest\RestReponse
+   * @return \Drupal\ibm_apim\Rest\RestResponse
    *   Response from the call.
    */
   public function orgInvitationsRegister(JWTToken $token, ApicUser $invitedUser);
@@ -254,4 +258,5 @@ interface ManagementServerInterface {
    * @return \Drupal\ibm_apim\Rest\RestResponse
    */
   public function activateFromJWT(JWTToken $jwt): RestResponse;
+
 }

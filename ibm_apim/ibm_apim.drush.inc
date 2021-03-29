@@ -13,6 +13,7 @@
 
 use Drupal\apic_api\Api;
 use Drupal\apic_app\Application;
+use Drupal\apic_app\Entity\ApplicationSubscription;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Render\Markup;
@@ -684,6 +685,8 @@ function drush_ibm_apim_listen() {
       if ($errors === NULL) {
         $errors = [];
       }
+      // only keep the last 20 errors
+      $errors = array_slice($errors, -10, 10, true);
       $errors[] = [
         'type' => 'exception',
         'message' => $e->getMessage(),
@@ -1020,6 +1023,8 @@ function processContent($content, $UUID) {
       if ($errors === NULL) {
         $errors = [];
       }
+      // only keep the last 20 errors
+      $errors = array_slice($errors, -10, 10, true);
       $errors[] = [
         'type' => 'exception',
         'message' => $e->getMessage(),
@@ -1180,6 +1185,41 @@ function drush_ibm_apim_clearup($UUID) {
       // \Drupal::entityTypeManager()->getStorage('node')->resetCache(array($nid));
     }
   }
+
+  // remove any subs in our db that were not returned by apim
+  drush_log(dt('Drush drush_ibm_apim_clearup tidying up subscriptions'), 'success');
+  if (file_exists("/tmp/snapshot.$UUID/content_refresh_subs.$UUID.json")) {
+    $current_subs = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_subs.$UUID.json"), TRUE);
+  }
+  else {
+    $current_subs = [];
+  }
+  if (!is_array($current_subs)) {
+    $current_subs = [];
+  }
+  $query = \Drupal::entityQuery('apic_app_application_subs');
+  if (!empty($current_subs)) {
+    $group = $query->orConditionGroup()
+      ->condition('uuid', NULL, 'IS NULL')
+      ->condition('uuid', $current_subs, 'NOT IN');
+    $query->condition($group);
+  }
+  $results = $query->execute();
+  $entityIds = [];
+  if (isset($results)) {
+    foreach ($results as $item) {
+      $entityIds[] = $item;
+    }
+  }
+  if (isset($entityIds) && !empty($entityIds)) {
+    foreach (array_chunk($entityIds, 50) as $chunk) {
+      $subEntities = ApplicationSubscription::loadMultiple($chunk);
+      foreach ($subEntities as $subEntity) {
+        $subEntity->delete();
+      }
+    }
+  }
+  unset($current_subs);
 
   // remove any user registries in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up user registries'), 'success');
@@ -1391,6 +1431,9 @@ function drush_ibm_apim_clearup($UUID) {
       }
     }
   }
+
+  // clear the sync_error array if all parsed successfully
+  \Drupal::state()->set('ibm_apim.sync_errors', []);
 
   drush_log(dt('Drush drush_ibm_apim_clearup exiting'), 'success');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -2257,7 +2300,7 @@ function drush_ibm_apim_group_create($group, $event = 'group_create') {
       $group = json_decode($group, TRUE);
     }
 
-    if (!isset($group['url'])) {
+    if (!isset($group['url']) || empty($group['url'])) {
       $group['url'] = 'unknown';
     }
     $groupService = \Drupal::service('ibm_apim.group');
@@ -2292,7 +2335,7 @@ function drush_ibm_apim_group_update($group, $event = 'group_update') {
     if (is_string($group)) {
       $group = json_decode($group, TRUE);
     }
-    if (!isset($group['url'])) {
+    if (!isset($group['url']) || empty($group['url'])) {
       $group['url'] = 'unknown';
     }
     $groupService = \Drupal::service('ibm_apim.group');
@@ -2327,7 +2370,7 @@ function drush_ibm_apim_group_delete($group, $event = 'group_del') {
     if (is_string($group)) {
       $group = json_decode($group, TRUE);
     }
-    if (!isset($group['url'])) {
+    if (!isset($group['url']) || empty($group['url'])) {
       $group['url'] = 'unknown';
     }
     $groupService = \Drupal::service('ibm_apim.group');

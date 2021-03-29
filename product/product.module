@@ -454,7 +454,6 @@ function product_preprocess_node(&$variables) {
     if ($productApis !== NULL && is_array($productApis)) {
       $variables['apiCount'] = count($productApis);
     }
-    $unenforcedOnly = true;
     if ($variables['apiCount'] > 0) {
       // pre-process the list of APIs in the product
       $apiNames = [];
@@ -474,6 +473,7 @@ function product_preprocess_node(&$variables) {
       $apiList = [];
       // safety net to avoid blowing OOM - don't load APIs if there are more than 100
       $apiCount = count($apiNids);
+      $enforcedCount = 0;
       if ($apiCount > 0 && $apiCount < 100) {
         $apis = Node::loadMultiple($apiNids);
         $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
@@ -501,7 +501,7 @@ function product_preprocess_node(&$variables) {
           if (isset($api->api_swagger->value)) {
             $swagger = unserialize($api->api_swagger->value, ['allowed_classes' => FALSE]);
             if (isset($swagger['x-ibm-configuration']) && $swagger['x-ibm-configuration']['enforced'] === true) {
-              $unenforcedOnly = false;
+              $enforcedCount++;
             }
           }
           $listEntry = [
@@ -515,7 +515,8 @@ function product_preprocess_node(&$variables) {
         } // end for
       }
       $variables['apiList'] = $apiList;
-      $variables['unenforcedOnly'] = $unenforcedOnly;
+      $variables['unenforcedOnly'] = $enforcedCount === 0;
+      $variables['enforcedOnly'] = $enforcedCount === $apiCount;
       if ($variables['view_mode'] === 'full' || $variables['view_mode'] === 'subscribewizard') {
         // pre-process the list of plans in the product
         $planArray = [];

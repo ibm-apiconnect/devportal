@@ -260,7 +260,7 @@ content:
     label: hidden
     settings: {  }
     third_party_settings: {  }
-    type: basic_string
+    type: text_default
     region: content
   apic_url:
     weight: 28

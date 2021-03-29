@@ -4,7 +4,7 @@
      $user = isset($this->creds['user']) ? $this->creds['user'] : '';
      $pass = isset($this->creds['pass']) ? $this->creds['pass'] : '';
      try {
--      $this->conn = new PDO($this->dsn, $user, $pass, array( PDO::MYSQL_ATTR_SSL_CA => '/etc/secrets/ca/tls.crt', PDO::MYSQL_ATTR_SSL_CIPHER => 'ECDHE-RSA-AES256-GCM-SHA384', PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false, PDO::MYSQL_ATTR_SSL_KEY => '/etc/secrets/client/tls.key', PDO::MYSQL_ATTR_SSL_CERT => '/etc/secrets/client/tls.crt'));
+-      $this->conn = new PDO($this->dsn, $user, $pass, array( PDO::MYSQL_ATTR_SSL_CA => '/etc/nginx/ssl/mysql-ca-crt.pem', PDO::MYSQL_ATTR_SSL_CIPHER => 'ECDHE-RSA-AES256-GCM-SHA384', PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false, PDO::MYSQL_ATTR_SSL_KEY => '/etc/nginx/ssl/mysql-client-key.pem', PDO::MYSQL_ATTR_SSL_CERT => '/etc/nginx/ssl/mysql-client-crt.pem'));
 +      $this->conn = new PDO($this->dsn, $user, $pass);
        return $this->conn;
      }
@@ -13,7 +13,7 @@
      $dsn = $this->dsn . ';dbname=' . $name;
      try {
        // Try to connect to the DB to test if it exists.
--      $conn = new PDO($dsn, $this->creds['user'], $this->creds['pass'], array( PDO::MYSQL_ATTR_SSL_CA => '/etc/secrets/ca/tls.crt', PDO::MYSQL_ATTR_SSL_CIPHER => 'ECDHE-RSA-AES256-GCM-SHA384', PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false, PDO::MYSQL_ATTR_SSL_KEY => '/etc/secrets/client/tls.key', PDO::MYSQL_ATTR_SSL_CERT => '/etc/secrets/client/tls.crt'));
+-      $conn = new PDO($dsn, $this->creds['user'], $this->creds['pass'], array( PDO::MYSQL_ATTR_SSL_CA => '/etc/nginx/ssl/mysql-ca-crt.pem', PDO::MYSQL_ATTR_SSL_CIPHER => 'ECDHE-RSA-AES256-GCM-SHA384', PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false, PDO::MYSQL_ATTR_SSL_KEY => '/etc/nginx/ssl/mysql-client-key.pem', PDO::MYSQL_ATTR_SSL_CERT => '/etc/nginx/ssl/mysql-client-crt.pem'));
 +      $conn = new PDO($dsn, $this->creds['user'], $this->creds['pass']);
        // Free the $conn memory.
        $conn = NULL;

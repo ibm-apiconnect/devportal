@@ -5,12 +5,12 @@
       */
      'port' => (string) $_SERVER['db_port'],
 -    'pdo' => array (
--        PDO::MYSQL_ATTR_SSL_KEY => '/etc/secrets/client/tls.key',
--        PDO::MYSQL_ATTR_SSL_CERT => '/etc/secrets/client/tls.crt',
--        PDO::MYSQL_ATTR_SSL_CA => '/etc/secrets/ca/tls.crt',
+-        PDO::MYSQL_ATTR_SSL_KEY => '/etc/nginx/ssl/mysql-client-key.pem',
+-        PDO::MYSQL_ATTR_SSL_CERT => '/etc/nginx/ssl/mysql-client-crt.pem',
+-        PDO::MYSQL_ATTR_SSL_CA => '/etc/nginx/ssl/mysql-ca-crt.pem',
 -        PDO::MYSQL_ATTR_SSL_CIPHER => 'ECDHE-RSA-AES256-GCM-SHA384',
 -        PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false
 -    ),
- 
+
  <?php if ($utf8mb4_is_configurable && $utf8mb4_is_supported): ?>
      'charset' => 'utf8mb4',

@@ -45,7 +45,7 @@ class TokenResponseReader extends RestResponseReader {
    * @param null $response_object
    *
    * //@return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|null
-   * @return \Drupal\auth_apic\Rest\TokenResponse|null
+   * @return \Drupal\ibm_apim\Rest\TokenResponse|null
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
   public function read($response, $response_object = NULL): ?RestResponseInterface {
@@ -73,14 +73,14 @@ class TokenResponseReader extends RestResponseReader {
     if (!isset($data['expires_in'])) {
       throw new RestResponseParseException('No expires_in available from GET /token with success response');
     }
-    $token_response->setExpiresIn(time() + (int)$data['expires_in']);
+    $token_response->setExpiresIn(time() + (int) $data['expires_in']);
 
     if (isset($data['refresh_token'])) {
       $token_response->setRefreshToken($data['refresh_token']);
     }
 
     if (isset($data['refresh_expires_in'])) {
-      $token_response->setRefreshExpiresIn(time() + (int)$data['refresh_expires_in']);
+      $token_response->setRefreshExpiresIn(time() + (int) $data['refresh_expires_in']);
     }
     return $token_response;
   }

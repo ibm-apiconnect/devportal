@@ -1,36 +1,30 @@
 changes:
-  8.x-2.4.2:
+  8.x-3.0.14:
+  - line up the left hand side
+  8.x-3.0.13:
+  - fix styling quirk
+  8.x-3.0.12:
   - Add drupal core compatibility info
-  8.x-2.4.1:
+  8.x-3.0.11:
   - Copyright statements for 2021
-  8.x-2.4.0:
-  - update version: 8.x-2.3.3 -> 8.x-2.4.0
-  8.x-2.3.2: null
-  8.x-2.3.1: null
-  8.x-2.3.0:
-  - update version: 8.x-2.2.7 -> 8.x-2.3.0
-  8.x-2.2.6:
+  8.x-3.0.10:
   - responsiveness fixes
-  8.x-2.2.5:
+  8.x-3.0.9:
   - responsiveness fixes
-  8.x-2.2.4:
+  8.x-3.0.8:
   - fix font-family
-  8.x-2.2.3: null
-  8.x-2.2.2:
+  8.x-3.0.7: null
+  8.x-3.0.6:
   - first pass of new styling
   - first pass of new styling
-  8.x-2.2.1:
+  8.x-3.0.5:
   - tidy up featured content tiles
-  8.x-2.2.0:
-  - Update featuredcontent.info.yml
-  8.x-2.1.2: null
-  8.x-2.1.1:
+  8.x-3.0.4: null
+  8.x-3.0.3:
   - masonry library has a new name
-  8.x-2.1.0:
-  - update version: 8.x-2.0.10 -> 8.x-2.1.0
-  8.x-2.0.9: null
-  8.x-2.0.8: null
-  8.x-2.0.7: null
+  8.x-3.0.2:
+  - small design tweak
+  8.x-3.0.1: null
   8.x-2.0.6:
   - try and fix phpunit requriements
   8.x-2.0.5:

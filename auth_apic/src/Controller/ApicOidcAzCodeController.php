@@ -178,6 +178,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       $this->oidcStateService->delete($stateReceived);
       // Clear the JWT from the session as we're done with it now
       $this->authApicSessionStore->delete('invitation_object');
+      $this->authApicSessionStore->delete('action');
       
       $redirect_location = $this->loginService->loginViaAzCode($authCode, $stateObj['registry_url']);
       if ($redirect_location === 'ERROR') {
@@ -475,6 +476,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
 
     $invitation_object = $this->authApicSessionStore->get('invitation_object');
+    $action = $this->authApicSessionStore->get('action');
     $url = '/consumer-api/oauth2/authorize?client_id=' . $clientId .
       '&state=' . $state .
       '&redirect_uri=' . $redirectUri .
@@ -482,6 +484,9 @@ class ApicOidcAzCodeController extends ControllerBase {
       '&response_type=' . $responseType;
     if (isset($invitation_object)) {
       $url .= '&token=' . $invitation_object->getDecodedJwt();
+    }
+    if (isset($action) && ($action == 'signin' || $action == 'signup')) {
+      $url .= '&action=' . $action;
     }
     if (isset($invitationScope) && $invitationScope == 'consumer-org' && isset($title)) {
       $url .= '&invitation_scope=consumer-org&title=' . $title;

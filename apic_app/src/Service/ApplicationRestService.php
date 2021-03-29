@@ -14,7 +14,6 @@
 namespace Drupal\apic_app\Service;
 
 use Drupal\apic_app\Application;
-use Drupal\apic_app\Event\SubscriptionCreateEvent;
 use Drupal\apic_app\SubscriptionService;
 use Drupal\ibm_apim\ApicRest;
 use Drupal\node\Entity\Node;

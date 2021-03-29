@@ -16,6 +16,6 @@ dependencies:
 - session_based_temp_store
 package: IBM API Connect
 core_version_requirement: ^8 || ^9
-version: 8.x-2.4.5
+version: 8.x-3.0.51
 project: auth_apic
 interface translation project: auth_apic

@@ -51,7 +51,7 @@ Feature: Sign in/ Sign up via an OIDC provider
 
   Scenario: Valid sign in using oidc provider and portal as proxy.
     Given I am not logged in
-    And I am at "/ibm_apim/oauth2/authorize?client_id=clientId&state=czozOiJrZXkiOw==&redirect_uri=/ibm_apim/oauth2/redirect&realm=consumer:orgId:envId/trueRealm&response_type=code"
+    And I am at "/ibm_apim/oauth2/authorize?client_id=clientId&state=czozOiJrZXkiOw==&redirect_uri=/ibm_apim/oauth2/redirect&realm=consumer:orgId:envId/trueRealm&response_type=code&action=signin"
     Then I should be on "/"
     And there are no errors
     And there are no warnings

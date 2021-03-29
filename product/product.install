@@ -332,3 +332,132 @@ function product_update_8203() {
     }
   }
 }
+
+/**
+ * Convert terms of service to be a formatable text_long
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function product_update_8204() {
+  $database = \Drupal::database();
+  $entityType = 'node';
+  $fieldName = 'product_terms_of_service';
+  $table = $entityType . '__' . $fieldName;
+  $currentRows = NULL;
+  $newFieldsList = [];
+  $fieldStorage = FieldStorageConfig::loadByName($entityType, $fieldName);
+
+  if (is_null($fieldStorage)) {
+    return;
+  }
+
+  // Get all current data from DB.
+  if ($database->schema()->tableExists($table)) {
+    // The table data to restore after the update is completed.
+    $currentRows = $database->select($table, 'n')
+      ->fields('n')
+      ->execute()
+      ->fetchAll();
+  }
+
+  // Use existing field config for new field.
+  foreach ($fieldStorage->getBundles() as $bundle => $label) {
+    $field = FieldConfig::loadByName($entityType, $bundle, $fieldName);
+    $newField = $field->toArray();
+    $newField['field_type'] = 'text_long';
+    $newField['settings'] = [];
+    $newFieldsList[] = $newField;
+  }
+
+  // Deleting field storage which will also delete bundles(fields).
+  $newFieldStorage = $fieldStorage->toArray();
+  $newFieldStorage['type'] = 'text_long';
+  $newFieldStorage['settings'] = [];
+
+  $fieldStorage->delete();
+
+  // Purge field data now to allow new field and field_storage with same name
+  // to be created.
+  field_purge_batch(40);
+
+  // Create new field storage.
+  $newFieldStorage = FieldStorageConfig::create($newFieldStorage);
+  $newFieldStorage->set('translatable', TRUE);
+  $newFieldStorage->save();
+
+  // Create new fields.
+  foreach ($newFieldsList as $nfield) {
+    $nfieldConfig = FieldConfig::create($nfield);
+    $nfieldConfig->set('translatable', TRUE);
+    $nfieldConfig->save();
+  }
+
+  // Restore existing data in new table.
+  if (!is_null($currentRows)) {
+    foreach ($currentRows as $row) {
+      $database->insert($table)
+        ->fields((array) $row)
+        ->execute();
+    }
+  }
+  $fieldConfig = FieldConfig::loadByName('node', 'product', 'product_api_nids');
+  if ($fieldConfig === NULL) {
+    $fieldConfig = FieldConfig::create([
+      'field_name' => 'product_api_nids',
+      'entity_type' => 'node',
+      'bundle' => 'product',
+      'label' => 'API Node IDs',
+      'required' => FALSE,
+      'translatable' => FALSE,
+      'settings' => [],
+      'field_type' => 'string_long',
+    ]);
+    $fieldConfig->save();
+  }
+  // update the view display too
+  $displayModes = ['default','subscribewizard'];
+  foreach ($displayModes as $displayMode) {
+    $viewDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.product.' . $displayMode);
+    if ($viewDisplay !== NULL) {
+      $component = $viewDisplay->getComponent($fieldName);
+      if (isset($component)) {
+        $viewDisplay->removeComponent($fieldName);
+      }
+      $viewDisplay->setComponent($fieldName, [
+        'weight' => 15,
+        'label' => 'hidden',
+        'region' => 'content',
+        'type' => 'text_default',
+      ]);
+      $viewDisplay->save();
+    }
+  }
+}
+
+/**
+ * Add apic_pathalias field to the view modes
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function product_update_8205() {
+  $fieldValues = [
+    'type' => 'string',
+    'weight' => 112,
+    'region' => 'content',
+    'label' => 'hidden',
+  ];
+
+  $cardFormDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.product.card');
+  if ($cardFormDisplay !== NULL) {
+    $cardFormDisplay->setComponent('apic_pathalias', $fieldValues);
+    $cardFormDisplay->save();
+  }
+
+  $teaserFormDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.product.teaser');
+  if ($teaserFormDisplay !== NULL) {
+    $teaserFormDisplay->setComponent('apic_pathalias', $fieldValues);
+    $teaserFormDisplay->save();
+  }
+}

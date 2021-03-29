@@ -7,7 +7,8 @@
   width: calc(25% - 16px);
   padding: 1rem;
   background-color:#fff;
-  min-width: 200px;
+  min-width: 12.5rem;
+  max-height: 12.75rem;
 }
 
 @media (max-width: 1280px) {
@@ -35,13 +36,14 @@
 
 .featuredcontentBlockHeader {
   display: inline-block;
-  width: 250px;
+  width: calc(100%/4 - 8px);
+  min-width: 250px;
   vertical-align: top;
 }
 
 .featuredcontentContentContainer {
   display: inline-block;
-  width: calc(100% - 300px);
+  width: 75%;
 }
 
 .featuredcontentNodeHeader {

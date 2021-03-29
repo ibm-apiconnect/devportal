@@ -21,11 +21,22 @@
           <tbody>
           {% if node.subscriptions is defined and node.subscriptions is not empty %}
             {% for sub in node.subscriptions %}
+              {% if sub.product_pathalias is defined and sub.product_pathalias is not empty %}
+                {% set prodNode = sub.product_pathalias %}
+              {% else %}
+                {% set prodNode = sub.product_nid %}
+              {% endif %}
               <tr>
-                <td class="product">{% if sub.application_image %}
+                <td class="product">
+                  <a href="{{ path('product.view', {'prodNode': prodNode}) }}"
+                          title="{{ sub.product_title|striptags }}">
+                  {% if sub.application_image %}
                     <div class="miniApplicationLogo"><img
-                        src="{{- sub.application_image -}}" alt=""/></div>{% endif %}{{ sub.product_title }}
+                        src="{{- sub.application_image -}}" alt=""/></div>
+                  {% endif %}
+                  {{ sub.product_title }}
                   {% if showVersions %}({{ sub.product_version }}){% endif %} {% if sub.state != 'enabled' %}({{ 'Pending approval'|t }}){% endif %}
+                  </a>
                 </td>
                 <td class="plan">{{ sub.plan_title }}</td>
                 {% if billing_enabled == true %}
@@ -67,7 +78,7 @@
                       </a>
                       <ul class="dropitmenu-submenu">
                         <li class="viewDocumentation"><a
-                              href="{{ path('entity.node.canonical', {'node': sub.product_nid}) }}"
+                              href="{{ path('product.view', {'prodNode': prodNode}) }}"
                               title="{% trans %}View documentation for {{ sub.product_title|striptags }}{% endtrans %}">{{ 'View documentation'|t }}</a>
                         </li>
                         <li class="unsubscribe"><a

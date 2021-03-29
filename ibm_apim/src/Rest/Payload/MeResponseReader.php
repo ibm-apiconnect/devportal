@@ -85,7 +85,7 @@ class MeResponseReader extends RestResponseReader {
    * @param $response
    * @param null $response_object
    *
-   * @return \Drupal\auth_apic\Rest\MeResponse
+   * @return \Drupal\ibm_apim\Rest\MeResponse
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
   public function read($response, $response_object = NULL): ?RestResponseInterface {
@@ -123,7 +123,7 @@ class MeResponseReader extends RestResponseReader {
 
     $metadata = $data['metadata'] ?? NULL;
     $user->setMetadata($metadata);
-    
+
     $idp = $data['identity_provider'] ?? NULL;
     $user->setApicIdp($idp);
     if ($idp !== NULL) {

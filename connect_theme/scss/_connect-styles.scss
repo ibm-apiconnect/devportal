@@ -5,6 +5,7 @@
 @import '../bootstrap/assets/stylesheets/bootstrap';
 
 // component framework
+@import "component/accordion";
 @import "component/alert";
 @import "component/ajax";
 @import "component/card";
@@ -101,7 +102,7 @@ h1.orgName {
 h1.page-header {
   border-bottom: $body-bg;
   background: $ui-02;
-  margin: 0 -2rem;
+  margin: 0 -1.9rem;
   padding: 1rem 2rem;
 }
 
@@ -624,13 +625,13 @@ header h1 {
 .views-element-container .view.view-faqs .ui-state-default,
 .views-element-container .view.view-faqs .ui-widget-content .ui-state-default,
 .views-element-container .view.view-faqs .ui-widget-header .ui-state-default {
-  color: $brand-primary;
+  color: $text-color;
 }
 
 .views-element-container .view.view-faqs .ui-state-active,
 .views-element-container .view.view-faqs .ui-widget-content .ui-state-active,
 .views-element-container .view.view-faqs .ui-widget-header .ui-state-active {
-  color: $brand-primary;
+  color: $text-color;
 }
 
 /* socialblock */
@@ -784,9 +785,6 @@ section.block-go-ahead {
   color: $brand-primary;
 }
 
-.ibmapimNoPermissions .iconDiv svg {
-  fill: $modal-content-color;
-}
 // loading
 
 .page-load-progress-lock-screen .bx--loading__stroke {

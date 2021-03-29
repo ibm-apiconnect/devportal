@@ -78,8 +78,9 @@
   background-color: unset;
 }
 
-.apicMyOrg header.titleSection .leftTitle {
-  /* padding: 0.625rem 0; */
+.apicMyOrg header.titleSection .leftTitle,
+.apicMyOrg header.titleSection h1{
+  width: calc(100% - 3rem);
 }
 
 .apicMyOrg header.titleSection .orgName {
@@ -1164,6 +1165,10 @@ span.cron-description__run-cron a {
 .apicProductApiList.view-product-content .masonry-layout .masonry-item {
   border: 0;
   background: inherit;
+}
+
+.view-search-content .masonry-item .apicCard {
+  overflow: hidden;
 }
 
 /* payment method styling */

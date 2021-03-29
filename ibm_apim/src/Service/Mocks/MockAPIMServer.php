@@ -75,7 +75,7 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getMe($auth = NULL) :MeResponse{
+  public function getMe($auth = NULL): MeResponse {
 
     $response = [];
     $response['firstName'] = 'mockFirstName';
@@ -92,9 +92,9 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function updateMe(ApicUser $user, $auth =  'user') : ?MeResponse{
+  public function updateMe(ApicUser $user, $auth = 'user'): MeResponse {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::updateMe() is missing!');
-    return NULL;
+    return new MeResponse();
   }
 
   /**
@@ -111,7 +111,7 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function postUsersRegister(ApicUser $user) : ?\Drupal\auth_apic\Rest\UsersRegisterResponse{
+  public function postUsersRegister(ApicUser $user): ?\Drupal\ibm_apim\Rest\UsersRegisterResponse {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::postUsersRegister() is missing!');
     return NULL;
   }
@@ -133,12 +133,12 @@ class MockAPIMServer implements ManagementServerInterface {
     return $response;
   }
 
-  public function resetPassword(JWTToken $obj, $password) : ?RestResponse{
+  public function resetPassword(JWTToken $obj, $password): ?RestResponse {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::resetPassword() is missing!');
     return NULL;
   }
 
-  public function changePassword($old_password, $new_password) : ?RestResponse{
+  public function changePassword($old_password, $new_password): ?RestResponse {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::changePassword() is missing!');
     return NULL;
   }
@@ -192,36 +192,38 @@ class MockAPIMServer implements ManagementServerInterface {
       'id' => '123',
       'owner_url' => '/user/1',
       'group_urls' => '/groups/1',
-      'members' => [[
-        'type' => 'member',
-        'api_version' => '2.0.0',
-        'id' => 'cfc5ecd8-342d-4ae6-a1b9-0e49cb836c1b',
-        'name' => 'andremember',
-        'title' => 'andremember',
-        'state' => 'enabled',
-        'user' => [
-          'type' => 'user',
+      'members' => [
+        [
+          'type' => 'member',
           'api_version' => '2.0.0',
-          'id' => '9bfd584a-b907-4209-869e-9ef481f470ad',
+          'id' => 'cfc5ecd8-342d-4ae6-a1b9-0e49cb836c1b',
           'name' => 'andremember',
           'title' => 'andremember',
-          'url' => '/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029/users/9bfd584a-b907-4209-869e-9ef481f470ad',
           'state' => 'enabled',
-          'identity_provider' => 'dev-idp',
-          'username' => 'andremember',
-          'email' => 'andremember@example.com',
-          'first_name' => 'andremember',
-          'last_name' => 'andresson',
-          'user_registry_url' => '/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029',
+          'user' => [
+            'type' => 'user',
+            'api_version' => '2.0.0',
+            'id' => '9bfd584a-b907-4209-869e-9ef481f470ad',
+            'name' => 'andremember',
+            'title' => 'andremember',
+            'url' => '/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029/users/9bfd584a-b907-4209-869e-9ef481f470ad',
+            'state' => 'enabled',
+            'identity_provider' => 'dev-idp',
+            'username' => 'andremember',
+            'email' => 'andremember@example.com',
+            'first_name' => 'andremember',
+            'last_name' => 'andresson',
+            'user_registry_url' => '/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029',
+          ],
+          'role_urls' => [
+            '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/roles/b8b957dc-15fb-4420-805a-3a7db9eb0fe9',
+          ],
+          'created_at' => '2019-07-03T10:10:20.403Z',
+          'updated_at' => '2019-07-03T10:10:20.403Z',
+          'org_url' => '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958',
+          'url' => '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/members/cfc5ecd8-342d-4ae6-a1b9-0e49cb836c1b',
         ],
-        'role_urls' => [
-          '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/roles/b8b957dc-15fb-4420-805a-3a7db9eb0fe9',
-        ],
-        'created_at' => '2019-07-03T10:10:20.403Z',
-        'updated_at' => '2019-07-03T10:10:20.403Z',
-        'org_url' => '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958',
-        'url' => '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/members/cfc5ecd8-342d-4ae6-a1b9-0e49cb836c1b',
-      ]],
+      ],
     ];
     $response->setData($data);
 
@@ -308,17 +310,20 @@ class MockAPIMServer implements ManagementServerInterface {
 
 
   public function get($url) {
+    $utils = \Drupal::service('ibm_apim.utils');
     $host = \Drupal::service('ibm_apim.apim_utils')->getHostUrl();
+
     $exp = '/consumer-api/oauth2/authorize?client_id=clientId' .
       '&state=czozOiJrZXkiOw==' .
       '&redirect_uri=/ibm_apim/oauth2/redirect' .
       '&realm=consumer:orgId:envId/trueRealm' .
-      '&response_type=code';
-    if ($url == $exp) {
+      '&response_type=code' .
+      '&action=';
+    if ($utils->startsWith($url, $exp)) {
       $loc = $host . URL::fromRoute('auth_apic.azredir')->toString(TRUE)->getGeneratedUrl() .
         '?state=czozOiJrZXkiOw==_apimstate&' .
         'code=valid&' .
-        'scope=scope';       
+        'scope=scope';
       $result = new \stdClass();
       $result->headers = ['location' => $loc];
       $result->code = 302;
@@ -332,8 +337,7 @@ class MockAPIMServer implements ManagementServerInterface {
       '&redirect_uri=';
 
 
-    $utils = \Drupal::service('ibm_apim.utils');
-    if ($utils->startsWith($url, $exp) && $utils->endsWith($url,'%2Fibm_apim%2Foidcredirect')) {
+    if ($utils->startsWith($url, $exp) && $utils->endsWith($url, '%2Fibm_apim%2Foidcredirect')) {
       $loc = $host . URL::fromRoute('auth_apic.azcode')->toString(TRUE)->getGeneratedUrl() .
         '?code=valid&' .
         'state=czozOiJrZXkiOw==';
@@ -344,4 +348,5 @@ class MockAPIMServer implements ManagementServerInterface {
       return $this->restResponseReader->read($result);
     }
   }
+
 }

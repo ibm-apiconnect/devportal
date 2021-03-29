@@ -1105,6 +1105,40 @@ function apic_api_update_8207() {
 }
 
 /**
+ * Add apic_pathalias field to the view modes
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_api_update_8208() {
+  $fieldValues = [
+    'type' => 'string',
+    'weight' => 112,
+    'region' => 'content',
+    'label' => 'hidden',
+  ];
+
+  $cardFormDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.card');
+  if ($cardFormDisplay !== NULL) {
+    $cardFormDisplay->setComponent('apic_pathalias', $fieldValues);
+    $cardFormDisplay->save();
+  }
+
+  $teaserFormDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.teaser');
+  if ($teaserFormDisplay !== NULL) {
+    $teaserFormDisplay->setComponent('apic_pathalias', $fieldValues);
+    $teaserFormDisplay->save();
+  }
+
+  $embeddedFormDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.embedded');
+  if ($embeddedFormDisplay !== NULL) {
+    $embeddedFormDisplay->setComponent('apic_pathalias', $fieldValues);
+    $embeddedFormDisplay->save();
+  }
+}
+
+/**
  * Implements hook_update_dependencies().
  */
 function apic_api_update_dependencies() {

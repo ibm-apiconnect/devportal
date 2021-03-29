@@ -98,6 +98,10 @@ class AdminMessagesBlock extends BlockBase {
       $messages['config'][] = t('FATAL: Site credentials are missing. Contact your system administrator before continuing further. This will prevent almost all portal functionality from working including user login.');
       $errors[] = 'Site credentials are missing.';
     }
+    if (isset($errors) && !empty($errors)) {
+      $messages['config'][] = t('FATAL: Essential required information has not been received from the API Manager. Contact your system administrator before continuing further.');
+      $errors[] = 'Essential required information has not been received from the API Manager.';
+    }
 
     if (isset($messages) && !empty($messages)) {
       $build['#header'] = t('There are issues with your site:');

@@ -34,7 +34,7 @@
           </div>
         {% endif %}
         <div class="apicProductTitleText">
-          <h1 class="productName">
+          <h1 class="productName apicTruncate">
                 <span id="node-{{ node.id }}-title"
                       class="field field-name-title field-formatter-string field-type-string field-label-hidden">{{- label -}}</span>
           </h1>
@@ -205,6 +205,22 @@
               </div>
 
               <div class="planComparisonTable">
+                {% if not enforcedOnly %}
+                <div class="apicMixedProduct">
+                  <div class="alert short alert-info" role="alert">
+                    <div class="alert-details">
+                      <div class="alert-text-wrapper">
+                        <h4 class="sr-only">{{ 'Informative message'|t }}</h4>
+                        <ul class="item-list item-list--messages">
+                          <li class="item item--message">
+                {{ 'This product contains both enforced and unenforced APIs. Plans are not applicable to any unenforced APIs.'| t }}
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
                 <div class="apicPlansTable">
                   <div class="apicTableFixedContainer">
                     <div class="apicTableFixedColumn">
@@ -470,11 +486,11 @@
           {% if content.product_terms_of_service['#items'][0].value is defined %}
             <div class="field apicProductTermsOfService">
               <h3 class="field__label label">{{ 'Terms of Service'|t }}</h3>
+              <a role="button" class="collapsed fa" data-toggle="collapse" href="#collapseTos" aria-expanded="false"
+                 aria-controls="collapseTos"></a>
               <div class="tosContainer">
                 <div class="collapse termsOfService" id="collapseTos"
                      aria-expanded="false">{{ content.product_terms_of_service }}</div>
-                <a role="button" class="collapsed fa" data-toggle="collapse" href="#collapseTos" aria-expanded="false"
-                   aria-controls="collapseTos"></a>
               </div>
             </div>
           {% endif %}

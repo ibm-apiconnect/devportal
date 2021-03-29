@@ -15,9 +15,6 @@ namespace Drupal\apic_app;
 
 use Drupal\apic_app\Entity\ApplicationCredentials;
 use Drupal\apic_app\Entity\ApplicationSubscription;
-use Drupal\apic_app\Event\ApplicationCreateEvent;
-use Drupal\apic_app\Event\ApplicationDeleteEvent;
-use Drupal\apic_app\Event\ApplicationUpdateEvent;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Url;
@@ -248,7 +245,7 @@ class Application {
         $moduleHandler = \Drupal::service('module_handler');
         // we have support for calling create hook here as well because of timing issues with webhooks coming in and sending us down
         // the update path in createOrUpdate even when the initial user action was create
-        if ($event === 'create') {
+        if ($event === 'create' || $event === 'app_create' ) {
           \Drupal::logger('apic_app')->notice('Application @app created (update path)', ['@app' => $node->getTitle()]);
 
           self::invokeAppCreateHook($create_hook_app, $node);

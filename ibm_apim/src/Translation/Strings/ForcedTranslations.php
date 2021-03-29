@@ -103,6 +103,14 @@ class ForcedTranslations {
     $r4032login_message = t('Access denied. You must log in to view this page.');
     $autologout_message = t('Your session is about to expire. Do you want to reset it?');
     $autologout_inactivity_message = t('You have been logged out due to inactivity.');
+    $view_recent_blog_entries = t('View recent blog entries');
+    $tags_to_help_categorize = t('Tags to help categorize blog post.');
+    $my_blog = t('My blog');
+    $blog_tags = t('Blog tags');
+    $tags = t('tags');
+    $enter_ip_address_in_cidr = t('Enter IP Address Ranges in CIDR Notation separated with semi-colons, with no trailing semi-colon. E.G. 10.20.30.0/24;192.168.199.1/32;1.0.0.0/8<br />For more information on CIDR notation <a href="http://www.brassy.net/2007/mar/cidr_basic_subnetting" target="_blank">click here</a>.<br /><strong>Leave field empty to disable IP restrictions for this user.</strong>');
+    $select_source_of_avatar = t('Select source of avatar.');
+    $image_representing_account = t('An image representing your user account.');
   }
 
 

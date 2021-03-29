@@ -249,7 +249,7 @@ class ApicRest implements ApicRestInterface {
       // a return code of zero mostly likely means there has been a certificate error
       // so make sure we surface this in the UI
       if ($notifyDrupal) {
-        \Drupal::messenger()->addError(t('Could not communicate with server. Reason: ') . serialize($error));
+        \Drupal::messenger()->addError(t('Could not communicate with server. Reason: Failed to communicate with API Manager.'));
         \Drupal::logger('ibm_apim')->error('Failed to communicate with remote server. URL was @url. Error was @error', [
           '@url' => $url,
           '@error' => $error,
