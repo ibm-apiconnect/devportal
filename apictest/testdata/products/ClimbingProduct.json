@@ -1,0 +1,44 @@
+{
+  "info": {
+    "version": "1.0.0",
+    "title": "Climbing Weather",
+    "name": "climbing-weather",
+    "x-pathalias": "climbingweather"
+  },
+  "apis": {
+    "climbing-weather-api1.0.0": {
+      "name": "climbing-weather-api:1.0.0"
+    }
+  },
+  "gateways": [
+    "datapower-api-gateway"
+  ],
+  "product": "1.0.0",
+  "visibility": {
+    "view": {
+      "enabled": true,
+      "type": "public",
+      "tags": [],
+      "orgs": []
+    },
+    "subscribe": {
+      "enabled": true,
+      "type": "authenticated",
+      "tags": [],
+      "orgs": []
+    }
+  },
+  "plans": {
+    "default": {
+      "title": "Default Plan",
+      "description": "Default Plan",
+      "approval": false,
+      "rate-limits": {
+        "default": {
+          "value": "100/hour",
+          "hard-limit": false
+        }
+      }
+    }
+  }
+}

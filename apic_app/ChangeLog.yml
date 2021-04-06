@@ -1,4 +1,8 @@
 changes:
+  8.x-1.11.1:
+  - use x path alias from subscriptions if present (#223)
+  8.x-1.11.0:
+  - update version: 8.x-1.10.13 -> 8.x-1.11.0
   8.x-1.10.12:
   - handle placeholders being disabled
   8.x-1.10.11:

@@ -613,6 +613,8 @@ function drush_ibm_apim_listen() {
       if ($errors === NULL) {
         $errors = [];
       }
+      // only keep the last 20 errors
+      $errors = array_slice($errors, -10, 10, true);
       $errors[] = [
         'type' => 'exception',
         'message' => $e->getMessage(),
@@ -949,6 +951,8 @@ function processContent($content, $UUID) {
       if ($errors === NULL) {
         $errors = [];
       }
+      // only keep the last 20 errors
+      $errors = array_slice($errors, -10, 10, true);
       $errors[] = [
         'type' => 'exception',
         'message' => $e->getMessage(),
@@ -1318,6 +1322,9 @@ function drush_ibm_apim_clearup($UUID) {
       }
     }
   }
+
+  // clear the sync_error array if all parsed successfully
+  \Drupal::state()->set('ibm_apim.sync_errors', []);
 
   drush_log(dt('Drush drush_ibm_apim_clearup exiting'), 'success');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -1714,7 +1721,13 @@ function drush_ibm_apim_apicuser_create($apicUser, $event = 'user_create') {
 
         $userManager = \Drupal::service('ibm_apim.account');
         drush_print('Creating apic user ' . $apicUser['username']);
-        $userManager->registerApicUser($createUser);
+
+        try {
+          $userManager->registerApicUser($createUser);
+        } catch(\Exception $e) {
+          // Quietly ignore errors from duplicate users to prevent webhooks from blowing up.
+          drush_print('Failed creating apic user ' . $apicUser['username'] . ', ignoring exception');
+        }
       }
     }
     if (isset($originalUser) && (int) $originalUser->id() !== 1) {

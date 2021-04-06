@@ -1,4 +1,159 @@
 changes:
+  8.x-20210318-1701:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.9.6:
+        - delete users when deleting a UR
+  8.x-20210316-1624:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.9.5:
+        - Removed deprecated from getRealm
+  8.x-20210310-2323:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.11.1:
+        - use x path alias from subscriptions if present (#223)
+  8.x-20210303-1723:
+    commits: null
+    modules:
+      product:
+        8.x-1.7.6:
+        - handle title not being translated
+      apic_api:
+        8.x-1.7.5:
+        - handle title not being translated
+  8.x-20210303-1014:
+    commits: null
+    modules:
+      socialblock:
+        8.x-1.7.1:
+        - use real post count
+  8.x-20210226-1123:
+    commits:
+    - composer update
+    modules:
+      product:
+        8.x-1.7.5:
+        - make sure api title is actually set
+      apic_api:
+        8.x-1.7.4:
+        - make sure api title is actually set
+  8.x-20210225-1140:
+    commits:
+    - try composer 2 (#450)
+    modules:
+      product:
+        8.x-1.7.4:
+        - path alias test
+      apic_api:
+        8.x-1.7.3:
+        - path alias test (#108)
+  8.x-20210224-1745:
+    commits: null
+    modules:
+      apictest:
+        8.x-1.9.4:
+        - pathalias test data
+  8.x-20210223-1147:
+    commits: null
+    modules:
+      product:
+        8.x-1.7.3:
+        - fix productselect routing
+        - use pathaliases
+      apic_api:
+        8.x-1.7.2:
+        - use pathaliases
+  8.x-20210216-1723:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.9.4:
+        - limit how many errors we store (#636)
+        8.x-1.9.3:
+        - Fix duplicate user exception (#635)
+      consumerorg:
+        8.x-1.8.1:
+        - Fix duplicate user exception
+  8.x-20210209-1732:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.9.2:
+        - hide API endpoint from the error message
+  8.x-20210203-1723:
+    commits:
+    - composer update
+    - composer update
+    - composer update
+    modules:
+      auth_apic:
+        8.x-1.8.2:
+        - fix logic
+        - hide change password link for ro registries
+      ibm_apim:
+        8.x-1.9.1:
+        - hide my blog link for normal users
+  8.x-20210203-1122:
+    commits:
+    - php 7.4 (#432) (#441)
+    modules:
+      apictest:
+        8.x-1.9.3:
+        - php 7.4
+  8.x-20210202-1754:
+    commits: null
+    modules:
+      product:
+        8.x-1.7.2: null
+        8.x-1.7.1:
+        - handle x-embedded-docs in product documents too
+      auth_apic:
+        8.x-1.8.1: null
+      apictest:
+        8.x-1.9.2: null
+  8.x-20210113-1811:
+    commits:
+    - Update version for 2018.4.1.16
+    modules:
+      socialblock:
+        8.x-1.7.0:
+        - update version: 8.x-1.6.7 -> 8.x-1.7.0
+      product:
+        8.x-1.7.0:
+        - update version: 8.x-1.6.11 -> 8.x-1.7.0
+      ghmarkdown:
+        8.x-1.7.0:
+        - update version: 8.x-1.6.1 -> 8.x-1.7.0
+      auth_apic:
+        8.x-1.8.0:
+        - update version: 8.x-1.7.14 -> 8.x-1.8.0
+      mail_subscribers:
+        8.x-1.7.0:
+        - update version: 8.x-1.6.7 -> 8.x-1.7.0
+      themegenerator:
+        8.x-1.7.0:
+        - update version: 8.x-1.6.3 -> 8.x-1.7.0
+      featuredcontent:
+        8.x-1.7.0:
+        - update version: 8.x-1.6.5 -> 8.x-1.7.0
+      apic_api:
+        8.x-1.7.1: null
+      apic_app:
+        8.x-1.11.0:
+        - update version: 8.x-1.10.13 -> 8.x-1.11.0
+      ibm_apim:
+        8.x-1.9.0:
+        - update version: 8.x-1.8.23 -> 8.x-1.9.0
+      consumerorg:
+        8.x-1.8.0:
+        - update version: 8.x-1.7.9 -> 8.x-1.8.0
+      apictest:
+        8.x-1.9.1: null
   8.x-20210111-1033:
     commits:
     - flood_unblock is no more, use flood_control instead
@@ -1334,4 +1489,4 @@ changes:
         - update version: 8.x-1.1.46 -> 8.x-1.2.46
       apictest:
         8.x-1.3.55: null
-  8.x-20210113-1811:
+  8.x-20210324-2223:

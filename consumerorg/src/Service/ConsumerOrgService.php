@@ -493,18 +493,25 @@ class ConsumerOrgService {
           $user = $member->getUser();
           if ($user !== NULL && $user->getUsername() !== NULL) {
 
-            $account = $userStorage->load($user);
+            $userAccount = $userStorage->load($user);
 
             // if there isn't an account for this user then we have enough information to create and use it at this point.
-            if ($account === NULL) {
+            if ($userAccount === NULL) {
               $this->logger->notice('registering new account for %username based on member data.', ['%username' => $user->getUsername()]);
-              $account = $this->accountService->registerApicUser($user);
+
+              try {
+                $userAccount = $this->accountService->registerApicUser($user);
+              } catch(\Exception $e) {
+                // Quietly ignore errors from duplicate users to prevent webhooks from blowing up.
+                $this->logger->notice('Failed creating apic user %username, ignoring exception', ['%username' => $user->getUsername()]);
+              }
+
             }
 
-            if ($account) {
+            if ($userAccount) {
               // consumerorg_id is a multi value field which Drupal represents using a FieldItemList class
               // this causes headaches as seen below....
-              $consumerorg_urls = $account->consumerorg_url->getValue();
+              $consumerorg_urls = $userAccount->consumerorg_url->getValue();
               if ($consumerorg_urls === NULL) {
                 $consumerorg_urls = [];
               }
@@ -513,16 +520,16 @@ class ConsumerOrgService {
               $customFields = $this->userService->getCustomUserFields();
               foreach($customFields as $customField) {
                 if (isset($memberArray['user'][$customField])) {
-                  $account->set($customField, json_decode($memberArray['user'][$customField],true));
+                  $userAccount->set($customField, json_decode($memberArray['user'][$customField],true));
                 }
               }
 
               // Add the consumerorg if it isn't already associated with this user
-              if (!$this->isConsumerorgAssociatedWithAccount($consumer->getUrl(), $account)) {
+              if (!$this->isConsumerorgAssociatedWithAccount($consumer->getUrl(), $userAccount)) {
                 $consumerorg_urls[] = $consumer->getUrl();
-                $account->set('consumerorg_url', $consumerorg_urls);
+                $userAccount->set('consumerorg_url', $consumerorg_urls);
               }
-              $account->save();
+              $userAccount->save();
             }
           }
 

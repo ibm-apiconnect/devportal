@@ -562,6 +562,18 @@ function product_preprocess_node(&$variables) {
         $variables['#attached']['library'][] = 'apic_app/subscribe';
       }
     }
+
+    // embedded docs
+    if ($variables['view_mode'] === 'full') {
+      $customDocs = [];
+      $productData = yaml_parse($variables['node']->product_data->value);
+      if (isset($productData['x-embedded-doc']) && is_array($productData['x-embedded-doc']) && !empty($productData['x-embedded-doc'])) {
+        $variables['embedded_docs'] = Product::processEmbeddedDocs($productData['x-embedded-doc']);
+        $customDocs = $productData['x-embedded-doc'];
+      }
+      $variables['initial_embeddeddoc'] = Product::findInitialEmbeddedDoc($customDocs);
+    }
+
     // custom fields
     $view_mode = $variables['view_mode'];
     if ($view_mode === 'full') {

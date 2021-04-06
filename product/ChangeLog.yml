@@ -1,4 +1,18 @@
 changes:
+  8.x-1.7.6:
+  - handle title not being translated
+  8.x-1.7.5:
+  - make sure api title is actually set
+  8.x-1.7.4:
+  - path alias test
+  8.x-1.7.3:
+  - fix productselect routing
+  - use pathaliases
+  8.x-1.7.2: null
+  8.x-1.7.1:
+  - handle x-embedded-docs in product documents too
+  8.x-1.7.0:
+  - update version: 8.x-1.6.11 -> 8.x-1.7.0
   8.x-1.6.10:
   - Copyright statements for 2021
   8.x-1.6.9:

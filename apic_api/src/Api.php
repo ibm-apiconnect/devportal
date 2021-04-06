@@ -224,19 +224,27 @@ class Api {
         self::deleteNode($node->id(), 'retired_api');
         $node = NULL;
       } else {
-        $node->setTitle($this->utils->truncate_string($api['consumer_api']['info']['title']));
+        $truncated_title = $this->utils->truncate_string($api['consumer_api']['info']['title']);
+        // title must be set, if not fall back on name
+        if (isset($truncated_title) && !empty($truncated_title)) {
+          $node->setTitle($truncated_title);
+        } else {
+          $node->setTitle($api['name']);
+        }
         if (isset($api['consumer_api']['info']['x-ibm-languages']['title']) && !empty($api['consumer_api']['info']['x-ibm-languages']['title'])) {
           foreach ($api['consumer_api']['info']['x-ibm-languages']['title'] as $lang => $langArray) {
             $lang = $this->utils->convert_lang_name_to_drupal($lang);
             if (\in_array($lang, $languageList, FALSE)) {
-              if (!$node->hasTranslation($lang)) {
-                $translation = $node->addTranslation($lang, ['title' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['title'][$lang])]);
-                $translation->save();
-              }
-              else {
-                $node->getTranslation($lang)
-                  ->setTitle($this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['title'][$lang]))
-                  ->save();
+              $truncated_title = $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['title'][$lang]);
+              // title needs to actually have a value
+              if (isset($truncated_title) && !empty($truncated_title)) {
+                if (!$node->hasTranslation($lang)) {
+                  $translation = $node->addTranslation($lang, ['title' => $truncated_title]);
+                  $translation->save();
+                }
+                else {
+                  $node->getTranslation($lang)->setTitle($truncated_title)->save();
+                }
               }
             }
           }
@@ -276,12 +284,17 @@ class Api {
             foreach ($languageList as $langListKey => $langListValue) {
               if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
-                  $translation = $node->addTranslation($lang, ['apic_description' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang])]);
+                  // ensure the translation has a title as its a required field
+                  $translation = $node->addTranslation($lang, ['title' => $truncated_title, 'apic_description' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang])]);
                   $translation->save();
                 }
                 else {
-                  $node->getTranslation($lang)
-                    ->set('apic_description', $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang]))
+                  $translation = $node->getTranslation($lang);
+                  // ensure the translation has a title as its a required field
+                  if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
+                    $translation->setTitle($truncated_title);
+                  }
+                  $translation->set('apic_description', $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang]))
                     ->save();
                 }
               }
@@ -306,12 +319,17 @@ class Api {
             foreach ($languageList as $langListKey => $langListValue) {
               if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
-                  $translation = $node->addTranslation($lang, ['apic_summary' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['x-ibm-summary'][$lang], 1000)]);
+                  // ensure the translation has a title as its a required field
+                  $translation = $node->addTranslation($lang, ['title' => $truncated_title, 'apic_summary' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages'][$summaryField][$lang], 1000)]);
                   $translation->save();
                 }
                 else {
-                  $node->getTranslation($lang)
-                    ->set('apic_summary', $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['x-ibm-summary'][$lang], 1000))
+                  $translation = $node->getTranslation($lang);
+                  // ensure the translation has a title as its a required field
+                  if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
+                    $translation->setTitle($truncated_title);
+                  }
+                  $translation->set('apic_summary', $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages'][$summaryField][$lang], 1000))
                     ->save();
                 }
               }

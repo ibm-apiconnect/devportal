@@ -1,4 +1,6 @@
 changes:
+  8.x-1.7.0:
+  - update version: 8.x-1.6.1 -> 8.x-1.7.0
   8.x-1.6.0:
   - update version: 8.x-1.5.1 -> 8.x-1.6.0
   8.x-1.5.0:

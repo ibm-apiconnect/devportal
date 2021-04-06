@@ -17,6 +17,7 @@ use Drupal\block\Entity\Block;
 use Drupal\Component\Datetime\DateTimePlus;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
@@ -90,21 +91,46 @@ class SocialBlock extends BlockBase {
 
     $container = \Drupal::getContainer();
 
+    // get forum post counts
+    $options = ['target' => 'default'];
+    $connection = Database::getConnection($options['target']);
+
+    $query = $connection->select('node_field_data', 'n');
+    $query->join('comment_entity_statistics', 'ces', "n.nid = ces.entity_id AND ces.field_name = 'comment_forum' AND ces.entity_type = 'node'");
+    $query->join('forum', 'f', 'n.vid = f.vid');
+    $query->addExpression('COUNT(n.nid)', 'topic_count');
+    $query->addExpression('SUM(ces.comment_count)', 'comment_count');
+    $forumStatistics = $query
+      ->fields('f', ['tid'])
+      ->condition('n.status', 1)
+      ->condition('n.default_langcode', 1)
+      ->groupBy('tid')
+      ->addTag('node_access')
+      ->execute()
+      ->fetchAllAssoc('tid');
+
     // Build up an array of forums and topics to display in the form (needed later)
     $options = [];
     $selectedForumDefaults = [];
     if ($this->forumVocabularies !== NULL && $container !== NULL) {
 
       foreach ($this->forumVocabularies as $forumVocabulary) {
-
+        $forumTopics = [];
         $forumManager = $container->get('forum_manager');
-        $forumTopics = $forumManager->getTopics($forumVocabulary->tid, $container->get('current_user'));
+        if ($forumManager !== NULL) {
+          $forumTopics = $forumManager->getTopics($forumVocabulary->tid, $container->get('current_user'));
+        }
 
+        $numPosts = 0;
+        if (isset($forumStatistics[$forumVocabulary->tid])) {
+          // add number of topics to number of comments to get number of posts
+          $numPosts = (int) $forumStatistics[$forumVocabulary->tid]->topic_count + (int) $forumStatistics[$forumVocabulary->tid]->comment_count;
+        }
         $options[$forumVocabulary->tid] = [
           'forum' => $forumVocabulary->name,
           'description' => strip_tags($forumVocabulary->description__value),
           'topics' => sizeof($forumTopics['topics']),
-          'posts' => -1,
+          'posts' => $numPosts,
         ];
 
         // if this forum id is in the forumsList array, it was previously enabled when this block was configured

@@ -1,0 +1,24 @@
+--- modules/honeypot/honeypot.module	2021-03-23 16:34:11.081770867 +0000
++++ modules/honeypot/honeypot.module	2021-03-23 16:33:33.789553342 +0000
+@@ -8,6 +8,7 @@
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Component\Utility\Crypt;
+ use Drupal\Core\Routing\RouteMatchInterface;
++use Drupal\Core\Site\Settings;
+ 
+ /**
+  * Implements hook_help().
+@@ -222,6 +223,13 @@
+     return;
+   }
+ 
++  // Don't do anything if the client IP is whitelisted.
++  $IPAd = \Drupal::service('request_stack')->getCurrentRequest()->getClientIp();
++  $whitelist = Settings::get('reverse_proxy_addresses', 'none') ;
++  if (in_array($IPAd, $whitelist)){
++     return;
++  }
++
+   $triggering_element = $form_state->getTriggeringElement();
+   // Don't do anything if the triggering element is a preview button.
+   if ($triggering_element['#value'] == t('Preview')) {

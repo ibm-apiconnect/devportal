@@ -261,7 +261,6 @@ class UserRegistry {
    * hard code the realm for that idp.
    *
    * @return null|string
-   * @deprecated
    */
   public function getRealm(): ?string {
     if (isset($this->getIdentityProviders()[0]['name'])) {

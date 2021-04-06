@@ -265,7 +265,7 @@ function apic_api_update_8116() {
     \Drupal::logger('apic_api_update')->notice('creating entity_view_display embedded');
 
     $items = [
-      'status'=> TRUE,
+      'status' => TRUE,
       'id' => $evd_id,
       'targetEntityType' => 'node',
       'bundle' => 'api',
@@ -865,6 +865,40 @@ function apic_api_update_8118() {
       $view->getDisplay()->setOption('style', $style);
       $view->save();
     }
+  }
+}
+
+/**
+ * Add apic_pathalias field to the view modes
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_api_update_8119() {
+  $fieldValues = [
+    'type' => 'string',
+    'weight' => 112,
+    'region' => 'content',
+    'label' => 'hidden',
+  ];
+
+  $cardFormDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.card');
+  if ($cardFormDisplay !== NULL) {
+    $cardFormDisplay->setComponent('apic_pathalias', $fieldValues);
+    $cardFormDisplay->save();
+  }
+
+  $teaserFormDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.teaser');
+  if ($teaserFormDisplay !== NULL) {
+    $teaserFormDisplay->setComponent('apic_pathalias', $fieldValues);
+    $teaserFormDisplay->save();
+  }
+
+  $embeddedFormDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.embedded');
+  if ($embeddedFormDisplay !== NULL) {
+    $embeddedFormDisplay->setComponent('apic_pathalias', $fieldValues);
+    $embeddedFormDisplay->save();
   }
 }
 

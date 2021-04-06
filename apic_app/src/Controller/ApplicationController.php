@@ -336,7 +336,7 @@ class ApplicationController extends ControllerBase {
                 if (!isset($plan_title) || empty($plan_title)) {
                   $plan_title = Html::escape($sub->plan());
                 }
-                $subarray[] = [
+                $newElement = [
                   'product_title' => Html::escape($product->getTitle()),
                   'product_version' => Html::escape($product->apic_version->value),
                   'product_nid' => $nid,
@@ -347,6 +347,10 @@ class ApplicationController extends ControllerBase {
                   'subId' => Html::escape($sub->id()),
                   'cost' => $cost,
                 ];
+                if (isset($product->apic_pathalias->value) && !empty($product->apic_pathalias->value)) {
+                  $newElement['product_pathalias'] = Html::escape($product->apic_pathalias->value);
+                }
+                $subarray[] = $newElement;
               }
             }
           }

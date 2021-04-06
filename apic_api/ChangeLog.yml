@@ -1,4 +1,15 @@
 changes:
+  8.x-1.7.5:
+  - handle title not being translated
+  8.x-1.7.4:
+  - make sure api title is actually set
+  8.x-1.7.3:
+  - path alias test (#108)
+  8.x-1.7.2:
+  - use pathaliases
+  8.x-1.7.1: null
+  8.x-1.7.0:
+  - update version: 8.x-1.6.8 -> 8.x-1.7.0
   8.x-1.6.7:
   - Copyright statements for 2021
   8.x-1.6.6:

@@ -1,4 +1,18 @@
 changes:
+  8.x-1.9.6:
+  - delete users when deleting a UR
+  8.x-1.9.5:
+  - Removed deprecated from getRealm
+  8.x-1.9.4:
+  - limit how many errors we store (#636)
+  8.x-1.9.3:
+  - Fix duplicate user exception (#635)
+  8.x-1.9.2:
+  - hide API endpoint from the error message
+  8.x-1.9.1:
+  - hide my blog link for normal users
+  8.x-1.9.0:
+  - update version: 8.x-1.8.23 -> 8.x-1.9.0
   8.x-1.8.22:
   - Remove users not in the snapshot (#629)
   8.x-1.8.21:

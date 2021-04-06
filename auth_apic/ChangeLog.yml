@@ -1,4 +1,10 @@
 changes:
+  8.x-1.8.2:
+  - fix logic
+  - hide change password link for ro registries
+  8.x-1.8.1: null
+  8.x-1.8.0:
+  - update version: 8.x-1.7.14 -> 8.x-1.8.0
   8.x-1.7.13:
   - Copyright statements for 2021
   8.x-1.7.12:

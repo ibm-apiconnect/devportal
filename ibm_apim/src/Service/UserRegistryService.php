@@ -171,7 +171,18 @@ class UserRegistryService implements UserRegistryServiceInterface {
           }
         }
         $this->state->set('ibm_apim.user_registries', $new_data);
-        // TODO this needs to delete all users from that user registry too
+      }
+      // delete all users from this user registry
+      $query = \Drupal::entityTypeManager()->getStorage('user')->getQuery();
+      $query->condition('apic_user_registry_url', $key);
+      $results = $query->execute();
+      if ($results !== NULL && !empty($results)) {
+        foreach ($results as $id) {
+          // DO NOT DELETE THE ADMIN USER!
+          if ((int) $id > 1) {
+            user_cancel([], $id, 'user_cancel_reassign');
+          }
+        }
       }
     }
 

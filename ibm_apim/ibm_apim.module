@@ -63,6 +63,22 @@ function ibm_apim_module_implements_alter(&$implementations, $hook) {
 }
 
 /**
+ * Implements hook_preprocess_menu().
+ *
+ * @param $variables
+ */
+function ibm_apim_preprocess_menu(&$variables) {
+  if (isset($variables['menu_name']) && $variables['menu_name'] === 'account') {
+    $currentUser = \Drupal::currentUser();
+    $user = User::load($currentUser->id());
+    // remove the my blog link if anon or dont have perms to create blog posts
+    if (array_key_exists('blog.myblog_link', $variables['items']) && ($currentUser->isAnonymous() || ($user !== NULL && !$user->hasPermission('create blog_post content')))) {
+      unset($variables['items']['blog.myblog_link']);
+    }
+  }
+}
+
+/**
  *  Implements hook_menu_links_discovered_alter().
  *
  * @param array $links

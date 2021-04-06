@@ -1,4 +1,8 @@
 changes:
+  8.x-1.8.1:
+  - Fix duplicate user exception
+  8.x-1.8.0:
+  - update version: 8.x-1.7.9 -> 8.x-1.8.0
   8.x-1.7.8:
   - Copyright statements for 2021
   8.x-1.7.7:

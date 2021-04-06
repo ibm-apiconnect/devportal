@@ -1,0 +1,208 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "x-ibm-name": "climbing-weather-api",
+    "title": "Climbing Weather API",
+    "description": "API for climbing and weather.",
+    "version": "1.0.0",
+    "x-ibm-languages": {
+      "title": {
+        "fr": "Climat d'escalade"
+      },
+      "description": {
+        "fr": "API pour l'escalade et la météo."
+      }
+    },
+    "x-pathalias": "climbing"
+  },
+  "externalDocs": {
+    "url": "http://www.weather.com",
+    "description": "Sample clients for the API.",
+    "x-ibm-languages": {
+      "description": {
+        "fr": "Exemples de clients pour l'API."
+      }
+    }
+  },
+  "schemes": ["https"],
+  "host": "example.com",
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "x-ibm-configuration": {
+    "enforced": true,
+    "testable": true,
+    "phase": "realized",
+    "cors": {
+      "enabled": true
+    }
+  },
+  "paths": {
+    "/weather/forecast": {
+      "get": {
+        "summary": "Retrieve the 3 day forecast for a location",
+        "description": "Retrieve the locations weather forecast descriptions for the next 3 days and nights",
+        "operationId": "getWeather",
+        "externalDocs": {
+          "url": "http://www.weather.com",
+          "description": "Documentation with user guide and sample clients.",
+          "x-ibm-languages": {
+            "description": {
+              "fr": "Documentation avec guide d'utilisation et exemples de clients."
+            }
+          }
+        },
+        "x-ibm-languages": {
+          "summary": {
+            "fr": "Récupérer la prévision de 3 jours pour un emplacement"
+          },
+          "description": {
+            "fr": "Récupérer les descriptions des prévisions météo pour les 3 prochains jours et les nuits"
+          }
+        },
+        "tags": ["Weather"],
+        "parameters": [
+          {
+            "name": "zip",
+            "type": "string",
+            "in": "query",
+            "description": "A 5 number zip code",
+            "x-ibm-languages": {
+              "description": {
+                "fr": "Un code postal à 5 numéros"
+              }
+            }
+          },
+          {
+            "name": "country",
+            "type": "string",
+            "in": "query",
+            "description": "A 2 letter country code",
+            "x-ibm-languages": {
+              "description": {
+                "fr": "Un code de pays de 2 lettres"
+              }
+            }
+          },
+          {
+            "name": "lat",
+            "type": "string",
+            "in": "query",
+            "description": "A latitude value between -90 and 90",
+            "x-ibm-languages": {
+              "description": {
+                "fr": "Une valeur de latitude entre -90 et 90"
+              }
+            }
+          },
+          {
+            "name": "lon",
+            "type": "string",
+            "in": "query",
+            "description": "A longitude value between -180 and 180",
+            "x-ibm-languages": {
+              "description": {
+                "fr": "Une valeur de longitude entre -180 et 180"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "x-ibm-languages": {
+              "description": {
+                "fr": "Succès"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "x-ibm-languages": {
+              "description": {
+                "fr": "Mauvaise Demande"
+              }
+            }
+          },
+          "408": {
+            "description": "Request Timeout",
+            "x-ibm-languages": {
+              "description": {
+                "fr": "Délai de délai de demande"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "x-ibm-languages": {
+              "description": {
+                "fr": "Erreur Interne du Serveur"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Weather",
+      "description": "Sample API to get weather forecast data",
+      "x-ibm-languages": {
+        "description": {
+          "fr": "Exemple d'API pour obtenir des données météorologiques"
+        }
+      }
+    }
+  ],
+  "securityDefinitions": {
+    "client-secret": {
+      "type": "apiKey",
+      "description": "Client secret in the header",
+      "in": "header",
+      "name": "X-IBM-Client-Secret",
+      "x-ibm-languages": {
+        "description": {
+          "fr": "Client secret dans l'en-tête"
+        }
+      }
+    },
+    "client-id": {
+      "type": "apiKey",
+      "description": "API key in the header",
+      "in": "header",
+      "name": "X-IBM-Client-Id",
+      "x-ibm-languages": {
+        "description": {
+          "fr": "Clé API dans l'en-tête"
+        }
+      }
+    },
+    "oauth-1": {
+      "type": "oauth2",
+      "description": "OAuth2 security",
+      "flow": "password",
+      "scopes": {
+        "scope1": "Find out about the weather",
+        "x-ibm-languages": {
+          "scope1": {
+            "fr": "Découvrez la météo"
+          }
+        }
+      },
+      "tokenUrl": "https://example.com/si/sb/oauth/oauth2/token",
+      "x-ibm-languages": {
+        "description": {
+          "fr": "Sécurité OAuth2"
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "client-secret": [],
+      "client-id": [],
+      "oauth-1": ["scope1"]
+    }
+  ]
+}

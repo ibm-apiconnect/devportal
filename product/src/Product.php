@@ -246,21 +246,30 @@ class Product {
         $returnValue = NULL;
       }
       else {
-        $node->setTitle($utils->truncate_string($product['catalog_product']['info']['title']));
+        $truncated_title = $utils->truncate_string($product['catalog_product']['info']['title']);
+        // title must be set, if not fall back on name
+        if (isset($truncated_title) && !empty($truncated_title)) {
+          $node->setTitle($truncated_title);
+        }
+        else {
+          $node->setTitle($product['catalog_product']['info']['name']);
+        }
         if (isset($product['catalog_product']['info']['x-ibm-languages']['title']) && !empty($product['catalog_product']['info']['x-ibm-languages']['title'])) {
           foreach ($product['catalog_product']['info']['x-ibm-languages']['title'] as $lang => $langArray) {
             $lang = $utils->convert_lang_name_to_drupal($lang);
             // if its one of our locales or the root of one of our locales
             foreach ($languageList as $langListKey => $langListValue) {
               if (\in_array($lang, $languageList, FALSE)) {
-                if (!$node->hasTranslation($lang)) {
-                  $translation = $node->addTranslation($lang, ['title' => $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['title'][$lang])]);
-                  $translation->save();
-                }
-                else {
-                  $node->getTranslation($lang)
-                    ->setTitle($utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['title'][$lang]))
-                    ->save();
+                $truncated_title = $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['title'][$lang]);
+                // title needs to actually have a value
+                if (isset($truncated_title) && !empty($truncated_title)) {
+                  if (!$node->hasTranslation($lang)) {
+                    $translation = $node->addTranslation($lang, ['title' => $truncated_title]);
+                    $translation->save();
+                  }
+                  else {
+                    $node->getTranslation($lang)->setTitle($truncated_title)->save();
+                  }
                 }
               }
             }
@@ -319,12 +328,17 @@ class Product {
             foreach ($languageList as $langListKey => $langListValue) {
               if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
-                  $translation = $node->addTranslation($lang, ['apic_description' => $product['catalog_product']['info']['x-ibm-languages']['description'][$lang]]);
+                  // ensure the translation has a title as its a required field
+                  $translation = $node->addTranslation($lang, ['title' => $truncated_title, 'apic_description' => $product['catalog_product']['info']['x-ibm-languages']['description'][$lang]]);
                   $translation->save();
                 }
                 else {
-                  $node->getTranslation($lang)
-                    ->set('apic_description', $product['catalog_product']['info']['x-ibm-languages']['description'][$lang])
+                  $translation = $node->getTranslation($lang);
+                  // ensure the translation has a title as its a required field
+                  if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
+                    $translation->setTitle($truncated_title);
+                  }
+                  $translation->set('apic_description', $product['catalog_product']['info']['x-ibm-languages']['description'][$lang])
                     ->save();
                 }
               }
@@ -342,15 +356,20 @@ class Product {
             foreach ($languageList as $langListKey => $langListValue) {
               if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
-                  $translation = $node->addTranslation($lang, [
+                  // ensure the translation has a title as its a required field
+                  $translation = $node->addTranslation($lang, ['title' => $truncated_title,
                     'apic_summary' => $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['summary'][$lang]),
                     1000,
                   ]);
                   $translation->save();
                 }
                 else {
-                  $node->getTranslation($lang)
-                    ->set('apic_summary', $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['summary'][$lang]), 1000)
+                  $translation = $node->getTranslation($lang);
+                  // ensure the translation has a title as its a required field
+                  if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
+                    $translation->setTitle($truncated_title);
+                  }
+                  $translation->set('apic_summary', $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['summary'][$lang]), 1000)
                     ->save();
                 }
               }
@@ -1155,5 +1174,88 @@ class Product {
         Cache::invalidateTags($tags);
       }
     }
+  }
+
+  /**
+   * Parse the embedded docs to handle the markdown / base 64 encoded html
+   *
+   * @param $productData
+   *
+   * @return array
+   */
+  public static function processEmbeddedDocs($productData): array {
+    $returnArray = [];
+    if (isset($productData) && is_array($productData) && !empty($productData)) {
+      $returnArray = self::processEmbeddedDocsArray($productData);
+    }
+
+    return $returnArray;
+  }
+
+  /**
+   * If custom docs are present then find the first one to use as the default
+   *
+   * @param $productData
+   *
+   * @return string
+   */
+  public static function findInitialEmbeddedDoc($productData = []): string {
+    $returnValue = 'apisandplans';
+    $found = false;
+    if (isset($productData) && is_array($productData) && !empty($productData)) {
+      foreach ($productData as $key => $embeddedDoc) {
+        if ($found === false && !isset($embeddedDoc['docs'])) {
+          $returnValue = $embeddedDoc['name'];
+          $found = true;
+        } elseif ($found === false && isset($embeddedDoc['docs'])) {
+          foreach ($embeddedDoc['docs'] as $childkey => $embeddedDocChild) {
+            if ($found === false && !isset($embeddedDocChild['docs'])) {
+              $returnValue = $embeddedDocChild['name'];
+              $found = true;
+            } elseif ($found === false && isset($embeddedDocChild['docs'])) {
+              foreach ($embeddedDocChild['docs'] as $grandchildkey => $embeddedDocGrandChild) {
+                if ($found === false && !isset($embeddedDocGrandChild['docs'])) {
+                  $returnValue = $embeddedDocGrandChild['name'];
+                  $found = true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return $returnValue;
+  }
+
+  /**
+   * Split out to separate function so it can call itself to handle nested arrays of docs
+   *
+   * @param $docs
+   *
+   * @return array
+   */
+  private static function processEmbeddedDocsArray($docs): array {
+    $moduleHandler = \Drupal::service('module_handler');
+    foreach ($docs as $key => $embeddedDoc) {
+      if (isset($embeddedDoc['docs'])) {
+        // nested section
+        $docs[$key]['docs'] = self::processEmbeddedDocsArray($embeddedDoc['docs']);
+      }
+      elseif (isset($embeddedDoc['content'])) {
+        if ((!isset($embeddedDoc['format']) || $embeddedDoc['format'] === 'md') && $moduleHandler->moduleExists('ghmarkdown')) {
+          $parser = new \Drupal\ghmarkdown\cebe\markdown\GithubMarkdown();
+          $text = $parser->parse($embeddedDoc['content']);
+        }
+        elseif ($embeddedDoc['format'] === 'b64html') {
+          $text = base64_decode($embeddedDoc['content']);
+        }
+        else {
+          // just use raw content
+          $text = $embeddedDoc['content'];
+        }
+        $docs[$key]['output'] = $text;
+      }
+    }
+    return $docs;
   }
 }

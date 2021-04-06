@@ -1,4 +1,12 @@
 changes:
+  8.x-1.9.4:
+  - pathalias test data
+  8.x-1.9.3:
+  - php 7.4
+  8.x-1.9.2: null
+  8.x-1.9.1: null
+  8.x-1.9.0:
+  - update version: 8.x-1.8.5 -> 8.x-1.9.0
   8.x-1.8.4:
   - Copyright statements for 2021
   8.x-1.8.3:
