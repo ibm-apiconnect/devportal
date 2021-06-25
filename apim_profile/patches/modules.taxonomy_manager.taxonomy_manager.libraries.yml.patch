@@ -4,11 +4,11 @@
      gpl-compatible: true
    css:
      component:
--      //cdn.jsdelivr.net/npm/jquery.fancytree@2.30.1/dist/skin-lion/ui.fancytree.min.css: {}
+-      //cdn.jsdelivr.net/npm/jquery.fancytree@2.37.0/dist/skin-lion/ui.fancytree.min.css: {}
 +      css/ui.fancytree.min.css: {}
    js:
--    //cdn.jsdelivr.net/npm/jquery.fancytree@2.30.1/dist/jquery.fancytree.min.js: { type: external, minified: true }
+-    //cdn.jsdelivr.net/npm/jquery.fancytree@2.37.0/dist/jquery.fancytree.min.js: { type: external, minified: true }
 +    js/jquery.fancytree.min.js: { type: external, minified: true }
    dependencies:
      - core/jquery
-     - core/jquery.ui
+     - jquery_ui/core

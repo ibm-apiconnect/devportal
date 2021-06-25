@@ -14,7 +14,9 @@ namespace Drupal\ibm_apim;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderBase;
+use Drupal\ibm_apim\Session\APICSessionManager;
 use Symfony\Component\DependencyInjection\Reference;
+use Drupal\ibm_apim\EntityAutocompleteMatcher;
 
 /**
  * Class IbmApimServiceProvider
@@ -28,13 +30,14 @@ class IbmApimServiceProvider extends ServiceProviderBase {
   /**
    * {@inheritdoc}
    */
-  public function alter(ContainerBuilder $container) {
+  public function alter(ContainerBuilder $container): void {
     // Overrides session_manager class to do Strict session cookies if not using OIDC.
     $definition = $container->getDefinition('session_manager');
-    $definition->setClass(\Drupal\ibm_apim\Session\APICSessionManager::class)->addArgument(new Reference('ibm_apim.user_registry'));
+    $definition->setClass(APICSessionManager::class)->addArgument(new Reference('ibm_apim.user_registry'));
 
     // Overrides entity.autocomplete_matcher class to allow custom labels to be returned
     $autoCompleteDefinition = $container->getDefinition('entity.autocomplete_matcher');
-    $autoCompleteDefinition->setClass('Drupal\ibm_apim\EntityAutocompleteMatcher');
+    $autoCompleteDefinition->setClass(EntityAutocompleteMatcher::class);
   }
+
 }

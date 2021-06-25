@@ -18,6 +18,9 @@ namespace Drupal\ibm_apim\Service;
  */
 class StatusMessages {
 
+  /**
+   * StatusMessages constructor.
+   */
   public function __construct() {
     if (!is_array(\Drupal::state()->get('ibm_apim.status_messages'))) {
       \Drupal::state()->set('ibm_apim.status_messages', []);
@@ -29,10 +32,10 @@ class StatusMessages {
    *
    * @param string $component Component heading to insert the message under.
    * @param string $message The message text to be displayed.
-   * @param string $role 'administrator' by default
+   * @param string|null $role 'administrator' by default
    *
    */
-  public function add($component, $message, $role = 'administrator'): void {
+  public function add(string $component, string $message, ?string $role = 'administrator'): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$component, $message]);
 
     $current_messages = \Drupal::state()->get('ibm_apim.status_messages');
@@ -64,7 +67,7 @@ class StatusMessages {
    * @param string $message The string of the message to be removed.
    *
    */
-  public function remove($component, $message): void {
+  public function remove(string $component, string $message): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$component, $message]);
 
     $current_messages = \Drupal::state()->get('ibm_apim.status_messages');
@@ -90,7 +93,7 @@ class StatusMessages {
    * @param string $component Component for which all messages should be removed.
    *
    */
-  public function clearComponent($component): void {
+  public function clearComponent(string $component): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $component);
 
     $current_messages = \Drupal::state()->get('ibm_apim.status_messages');

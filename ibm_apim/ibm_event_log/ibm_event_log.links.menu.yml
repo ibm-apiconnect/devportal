@@ -1,0 +1,6 @@
+ibm_event_log.settings:
+  title: 'IBM APIC Notifications Settings'
+  route_name: ibm_event_log.settings
+  parent: system.admin_config_system
+  description: 'IBM API Developer Portal notifications configuration.'
+  weight: -30

@@ -17,26 +17,34 @@ use Drupal\auth_apic\UserManagerResponse;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Psr\Log\LoggerInterface;
+use Drupal\ibm_apim\Service\SiteConfig;
 
 class NonUserManagedSignUp implements SignUpInterface {
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface
    */
-  private $mgmtServer;
+  private ManagementServerInterface $mgmtServer;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  private $logger;
+  private LoggerInterface $logger;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
+  private SiteConfig $siteConfig;
 
   /**
    * @inheritDoc
    */
   public function __construct(ManagementServerInterface $mgmt_interface,
-                              LoggerInterface $logger) {
+                              LoggerInterface $logger,
+                              SiteConfig $site_config) {
     $this->mgmtServer = $mgmt_interface;
     $this->logger = $logger;
+    $this->siteConfig = $site_config;
   }
 
 
@@ -52,7 +60,7 @@ class NonUserManagedSignUp implements SignUpInterface {
 
     $userManagerResponse = new UserManagerResponse();
 
-    if ($mgmtResponse && $mgmtResponse->getCode() === 200) {
+    if ($mgmtResponse && ($mgmtResponse->getCode() === 200 || $mgmtResponse->getCode() === 201)) {
       // For !user_managed registries there is no real sign up process so this is just an authentication check.
       // If we have a response then all is good, report this and inform the user to sign in.
       $userManagerResponse->setSuccess(TRUE);
@@ -60,17 +68,19 @@ class NonUserManagedSignUp implements SignUpInterface {
         '@username' => $user->getUsername(),
       ]);
 
-      $userManagerResponse->setMessage(t('Your account was created successfully. You may now sign in.'));
-      $userManagerResponse->setRedirect('<front>');
-
+      if ($this->siteConfig->isAccountapprovalsEnabled()) {
+        $userManagerResponse->setMessage(t('Your account was created successfully and is pending approval. You will receive an email with further instructions.'));
+      } else {
+        $userManagerResponse->setMessage(t('Your account was created successfully. You may now sign in.'));
+      }
     }
     else {
       $userManagerResponse->setSuccess(FALSE);
       $this->logger->error('error during sign-up process, no token retrieved.');
 
       $userManagerResponse->setMessage(t('There was an error creating your account. Please contact the system administrator.'));
-      $userManagerResponse->setRedirect('<front>');
     }
+    $userManagerResponse->setRedirect('<front>');
 
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $userManagerResponse);

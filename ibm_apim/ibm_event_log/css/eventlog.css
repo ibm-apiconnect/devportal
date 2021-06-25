@@ -1,0 +1,30 @@
+/* for event log entries */
+.ibmapimActivity.ibmapimOrgActivity {
+  padding: 2rem 2rem 0;
+}
+
+.ibmapimActivity .views-element-container {
+  padding: 0;
+}
+
+.eventLog {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border-top: 1px solid #e0e0e0;
+}
+
+.eventLogAvatar {
+  padding: 0.5rem 1rem;
+}
+
+.eventLogAvatar img {
+  width: 2rem;
+  border-radius: 50%;
+}
+
+.eventLogTimestamp {
+  margin-left: auto;
+  margin-right: 1rem;
+  white-space: nowrap;
+}

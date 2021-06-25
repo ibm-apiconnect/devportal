@@ -15,14 +15,13 @@ namespace Drupal\apictest\Context;
 
 use Behat\Gherkin\Node\TableNode;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
-use Drupal\ibm_apim\ApicUser;
 
 class UserRegistryContext extends RawDrupalContext {
 
   /**
    * @Given userregistries:
    */
-  public function userregistries(TableNode $table): void {
+  public function userRegistries(TableNode $table): void {
 
     // user registries are not stored in the db, they are in state. Therefore we will create these for the tests even if
     // running with mocks elsewhere.
@@ -35,7 +34,11 @@ class UserRegistryContext extends RawDrupalContext {
       $reg = [];
       $reg['registry_type'] = $row['type'];
       $reg['title'] = $row['title'];
-      $reg['name'] = $row['title'];
+      if (isset($row['name'])) {
+        $reg['name'] = $row['name'];
+      } else {
+        $reg['name'] = $row['title'];
+      }
       $url = $row['url'];
       $reg['url'] = $url;
       $reg['id'] = $url;

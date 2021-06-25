@@ -14,10 +14,10 @@
  * JS for the "app_analytics_detail" block.
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   Drupal.behaviors.app_analytics_detail = {
-    attach: function (context) {
+    attach: function(context) {
 
 
     }

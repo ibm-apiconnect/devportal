@@ -1,18 +1,18 @@
 <?php
 
+use Drupal\apic_type_count\Controller\ApicConfigController;
+use Drupal\apic_type_count\Controller\ApicNodeListController;
+use Drupal\apic_type_count\Controller\ApicTypeCountController;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Session\UserSession;
 use Drupal\node\NodeInterface;
-use Drupal\apic_type_count\Controller\ApicConfigController;
-use Drupal\apic_type_count\Controller\ApicTypeCountController;
-use Drupal\apic_type_count\Controller\ApicNodeListController;
 
 /**
  * Implements hook_drush_command
  *
- * @return mixed
+ * @return array
  */
-function apic_type_count_drush_command() {
+function apic_type_count_drush_command(): array {
 
   $items['apic_type_count-totals'] = [
     'description' => 'Count nodes of each type',
@@ -118,7 +118,7 @@ function apic_type_count_drush_command() {
  *
  * @return array
  */
-function drush_apic_type_count_totals() {
+function drush_apic_type_count_totals(): array {
   // in case moderation is on we need to run as admin
   // save the current user so we can switch back at the end
   $accountSwitcher = Drupal::service('account_switcher');
@@ -150,7 +150,7 @@ function drush_apic_type_count_totals() {
  *
  * @return array
  */
-function drush_apic_type_count_users() {
+function drush_apic_type_count_users(): array {
   // in case moderation is on we need to run as admin
   // save the current user so we can switch back at the end
   $accountSwitcher = Drupal::service('account_switcher');
@@ -182,7 +182,7 @@ function drush_apic_type_count_users() {
  *
  * @return array
  */
-function drush_apic_type_count_entities() {
+function drush_apic_type_count_entities(): array {
   // in case moderation is on we need to run as admin
   // save the current user so we can switch back at the end
   $accountSwitcher = Drupal::service('account_switcher');
@@ -213,7 +213,7 @@ function drush_apic_type_count_entities() {
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  */
-function drush_apic_type_count_productlist() {
+function drush_apic_type_count_productlist(): array {
   // in case moderation is on we need to run as admin
   // save the current user so we can switch back at the end
   $accountSwitcher = Drupal::service('account_switcher');
@@ -221,6 +221,7 @@ function drush_apic_type_count_productlist() {
   if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
+  $result_final = [];
 
   $results = ApicNodeListController::getNodesForType('product');
   if (is_array($results)) {
@@ -241,7 +242,7 @@ function drush_apic_type_count_productlist() {
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  */
-function drush_apic_type_count_apilist() {
+function drush_apic_type_count_apilist(): array {
   // in case moderation is on we need to run as admin
   // save the current user so we can switch back at the end
   $accountSwitcher = Drupal::service('account_switcher');
@@ -249,6 +250,7 @@ function drush_apic_type_count_apilist() {
   if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
+  $result_final = [];
 
   $results = ApicNodeListController::getNodesForType('api');
   if (is_array($results)) {
@@ -269,7 +271,7 @@ function drush_apic_type_count_apilist() {
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  */
-function drush_apic_type_count_consumerorglist() {
+function drush_apic_type_count_consumerorglist(): array {
   // in case moderation is on we need to run as admin
   // save the current user so we can switch back at the end
   $accountSwitcher = Drupal::service('account_switcher');
@@ -277,6 +279,7 @@ function drush_apic_type_count_consumerorglist() {
   if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
+  $result_final = [];
 
   $results = ApicNodeListController::getNodesForType('consumerorg');
   if (is_array($results)) {
@@ -297,7 +300,7 @@ function drush_apic_type_count_consumerorglist() {
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  */
-function drush_apic_type_count_applicationlist() {
+function drush_apic_type_count_applicationlist(): array {
   // in case moderation is on we need to run as admin
   // save the current user so we can switch back at the end
   $accountSwitcher = Drupal::service('account_switcher');
@@ -305,6 +308,7 @@ function drush_apic_type_count_applicationlist() {
   if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
+  $result_final = [];
 
   $results = ApicNodeListController::getNodesForType('application');
   if (is_array($results)) {
@@ -320,7 +324,12 @@ function drush_apic_type_count_applicationlist() {
   return $result_final;
 }
 
-function drush_apic_type_count_apiget($input) {
+/**
+ * @param $input
+ *
+ * @return array|null
+ */
+function drush_apic_type_count_apiget($input): ?array {
   $results = NULL;
   if ($input !== NULL) {
     // in case moderation is on we need to run as admin
@@ -335,7 +344,7 @@ function drush_apic_type_count_apiget($input) {
       $results = ApicNodeListController::getAPI($input);
     } catch (\Exception $e) {
       \Drupal::logger("apic_type_count")
-        ->error(dt("An exception occurred. That may mean the api does not exist or you do not have access to it."));
+        ->error("An exception occurred. That may mean the api does not exist or you do not have access to it.");
     }
 
     if (isset($originalUser) && (int) $originalUser->id() !== 1) {
@@ -343,13 +352,17 @@ function drush_apic_type_count_apiget($input) {
     }
   }
   else {
-    \Drupal::logger("apic_type_count")
-      ->error(dt("No input provided."));
+    \Drupal::logger("apic_type_count")->error("No input provided.");
   }
   return $results;
 }
 
-function drush_apic_type_count_productget($input) {
+/**
+ * @param $input
+ *
+ * @return array|null
+ */
+function drush_apic_type_count_productget($input): ?array {
   $results = NULL;
   if ($input !== NULL) {
     // in case moderation is on we need to run as admin
@@ -363,7 +376,7 @@ function drush_apic_type_count_productget($input) {
       $results = ApicNodeListController::getProduct($input);
     } catch (\Exception $e) {
       \Drupal::logger("apic_type_count")
-        ->error(dt("An exception occurred. That may mean the product does not exist or you do not have access to it."));
+        ->error("An exception occurred. That may mean the product does not exist or you do not have access to it.");
     }
 
     if (isset($originalUser) && (int) $originalUser->id() !== 1) {
@@ -371,13 +384,17 @@ function drush_apic_type_count_productget($input) {
     }
   }
   else {
-    \Drupal::logger("apic_type_count")
-      ->error(dt("No input provided."));
+    \Drupal::logger("apic_type_count")->error("No input provided.");
   }
   return $results;
 }
 
-function drush_apic_type_count_applicationget($input) {
+/**
+ * @param $input
+ *
+ * @return array|null
+ */
+function drush_apic_type_count_applicationget($input): ?array {
   $results = NULL;
   if ($input !== NULL) {
     // in case moderation is on we need to run as admin
@@ -392,7 +409,7 @@ function drush_apic_type_count_applicationget($input) {
       $results = ApicNodeListController::getApplication($input);
     } catch (\Exception $e) {
       \Drupal::logger("apic_type_count")
-        ->error(dt("An exception occurred. That may mean the application does not exist or you do not have access to it."));
+        ->error("An exception occurred. That may mean the application does not exist or you do not have access to it.");
     }
 
     if (isset($originalUser) && (int) $originalUser->id() !== 1) {
@@ -400,13 +417,17 @@ function drush_apic_type_count_applicationget($input) {
     }
   }
   else {
-    \Drupal::logger("apic_type_count")
-      ->error(dt("No input provided."));
+    \Drupal::logger("apic_type_count")->error("No input provided.");
   }
   return $results;
 }
 
-function drush_apic_type_count_consumerorgget($input) {
+/**
+ * @param $input
+ *
+ * @return array|null
+ */
+function drush_apic_type_count_consumerorgget($input): ?array {
   $results = NULL;
   if ($input !== NULL) {
     // in case moderation is on we need to run as admin
@@ -421,7 +442,7 @@ function drush_apic_type_count_consumerorgget($input) {
       $results = ApicNodeListController::getConsumerorg($input);
     } catch (\Exception $e) {
       \Drupal::logger("apic_type_count")
-        ->error(dt("An exception occurred. That may mean the consumer organization does not exist or you do not have access to it."));
+        ->error("An exception occurred. That may mean the consumer organization does not exist or you do not have access to it.");
     }
 
     if (isset($originalUser) && (int) $originalUser->id() !== 1) {
@@ -430,13 +451,15 @@ function drush_apic_type_count_consumerorgget($input) {
 
   }
   else {
-    \Drupal::logger("apic_type_count")
-      ->error(dt("No input provided."));
+    \Drupal::logger("apic_type_count")->error("No input provided.");
   }
   return $results;
 }
 
-function drush_apic_type_count_apic_config() {
+/**
+ * @return array|null
+ */
+function drush_apic_type_count_apic_config(): ?array {
   // in case moderation is on we need to run as admin
   // save the current user so we can switch back at the end
   $accountSwitcher = Drupal::service('account_switcher');
@@ -444,11 +467,12 @@ function drush_apic_type_count_apic_config() {
   if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
+  $results = [];
 
   try {
     $results = ApicConfigController::getConfig();
   } catch (\Exception $e) {
-    \Drupal::logger("apic_type_count")->error(dt("An exception occurred."));
+    \Drupal::logger("apic_type_count")->error("An exception occurred.");
   }
 
 

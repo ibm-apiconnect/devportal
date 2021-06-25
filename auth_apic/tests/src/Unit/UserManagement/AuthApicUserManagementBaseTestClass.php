@@ -27,15 +27,20 @@ namespace Drupal\auth_apic\UserManagement {
    *
    * @param string $string
    *   A string containing the English text to translate.
+   * @param array $inserts
    *
    * @return string
    */
-  function t($string) {
+  function t(string $string, array $inserts = []): string {
     return $string;
   }
 
-
-  function user_cancel() {
+  /**
+   * @param $edit
+   * @param $uid
+   * @param $method
+   */
+  function user_cancel($edit, $uid, $method) {
 
   }
 

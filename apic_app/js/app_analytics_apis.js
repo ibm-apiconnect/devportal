@@ -13,10 +13,10 @@
  * Setup global config for analytics
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   Drupal.behaviors.appApiAnalyticsConfig = {
-    attach: function (context) {
+    attach: function(context) {
       if (drupalSettings.analytics && drupalSettings.analytics.analyticsDir) {
         window.apiConnectAnalytics = [];
         window.apiConnectAnalytics.options = [];
@@ -30,12 +30,8 @@
             refreshRate: '1m'
           },
           user: {
-            context: {
-
-            },
-            config: {
-
-            }
+            context: {},
+            config: {}
           }
         });
         if (!drupalSettings.anv) {
@@ -45,7 +41,7 @@
         if (!drupalSettings.anv.apiStatsTimeId) {
           drupalSettings.anv.apiStatsTimeId = anv.createTime({
             "field": "datetime",
-            "values": ["30s", "1m", "30m", "1h", "1d", "7d", "30d"],
+            "values": [ "30s", "1m", "30m", "1h", "1d", "7d", "30d" ],
             "selectedValue": "1d"
           });
         }
@@ -53,7 +49,7 @@
         if (!drupalSettings.anv.static1hTime) {
           drupalSettings.anv.static1hTime = anv.createTime({
             "field": "datetime",
-            "values": ["1h"],
+            "values": [ "1h" ],
             "selectedValue": "1h"
           });
         }
@@ -63,8 +59,8 @@
             "id": "api-stats",
             "time": drupalSettings.anv.apiStatsTimeId,
             "timeType": "split",
-            "vis": [{
-              "metrics": [{
+            "vis": [ {
+              "metrics": [ {
                 "field": "time_to_serve_request",
                 "type": "average"
               }, {
@@ -73,12 +69,12 @@
               }, {
                 "field": "time_to_serve_request",
                 "type": "minimum"
-              }],
+              } ],
               "type": "line",
               "metadata": {
                 "label": drupalSettings.analytics.translations.response_time
               }
-            }],
+            } ],
             "metadata": {
               "title": drupalSettings.analytics.translations.api_stats,
               "dateSubtitle": true
@@ -91,13 +87,13 @@
             "id": "api-calls",
             "time": drupalSettings.anv.static1hTime,
             "timeType": "single",
-            "vis": [{
+            "vis": [ {
               "type": "info",
-              "metrics": [{
+              "metrics": [ {
                 "field": "",
                 "type": "raw",
                 "size": 100
-              }],
+              } ],
               "metadata": {
                 "path": "_uri_path_",
                 "date": "_datetime_",
@@ -105,7 +101,7 @@
                 "title": "_request_method_",
                 "averageTime": "_time_to_serve_request_"
               }
-            }],
+            } ],
             "metadata": {
               "scrollable": true,
               "title": drupalSettings.analytics.translations.calls_last_100,

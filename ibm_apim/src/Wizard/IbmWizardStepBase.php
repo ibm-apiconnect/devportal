@@ -14,6 +14,11 @@ namespace Drupal\ibm_apim\Wizard;
 
 use Drupal\Core\Form\FormBase;
 
+/**
+ * Class IbmWizardStepBase
+ *
+ * @package Drupal\ibm_apim\Wizard
+ */
 abstract class IbmWizardStepBase extends FormBase {
 
   /**

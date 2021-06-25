@@ -13,14 +13,19 @@
 
 namespace Drupal\consumerorg\Form;
 
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Utility\Html;
+use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\Service\ConsumerOrgService;
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
+use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -33,37 +38,43 @@ class InviteUserForm extends FormBase {
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgService
    */
-  protected $consumerOrgService;
+  protected ConsumerOrgService $consumerOrgService;
 
   /**
-   * @var \Drupal\consumerorg\ApicType\ConsumerOrg
+   * @var \Drupal\consumerorg\ApicType\ConsumerOrg|NULL
    */
-  protected $currentOrg;
+  protected ?ConsumerOrg $currentOrg;
 
   /**
    * @var \Drupal\Core\Session\AccountInterface
    */
-  protected $currentUser;
+  protected AccountInterface $currentUser;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\Core\State\StateInterface
    */
-  protected $state;
+  protected StateInterface $state;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
    */
   protected $messenger;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
+  protected SiteConfig $siteConfig;
+
   /**
    * InviteUserForm constructor.
    *
@@ -73,6 +84,7 @@ class InviteUserForm extends FormBase {
    * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
    * @param \Drupal\Core\State\StateInterface $state
    * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\ibm_apim\Service\SiteConfig $siteConfig
    */
   public function __construct(
     ConsumerOrgService $consumer_org_service,
@@ -80,7 +92,8 @@ class InviteUserForm extends FormBase {
     LoggerInterface $logger,
     UserUtils $user_utils,
     StateInterface $state,
-    Messenger $messenger
+    Messenger $messenger,
+    SiteConfig $siteConfig
   ) {
     $this->consumerOrgService = $consumer_org_service;
     $this->currentUser = $account;
@@ -88,19 +101,21 @@ class InviteUserForm extends FormBase {
     $this->userUtils = $user_utils;
     $this->state = $state;
     $this->messenger = $messenger;
+    $this->siteConfig = $siteConfig;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): InviteUserForm {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('current_user'),
       $container->get('logger.channel.consumerorg'),
       $container->get('ibm_apim.user_utils'),
       $container->get('state'),
-      $container->get('messenger')
+      $container->get('messenger'),
+      $container->get('ibm_apim.site_config')
     );
   }
 
@@ -113,16 +128,42 @@ class InviteUserForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \JsonException
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $roles = null;
+    $roles = NULL;
+    $permittedRoles = [];
     $org = $this->userUtils->getCurrentConsumerorg();
     $this->currentOrg = $this->consumerOrgService->get($org['url']);
     if ($this->currentOrg !== NULL) {
       $roles = $this->currentOrg->getRoles();
+      // this check is to handle inviting someone to an org having only just created it
+      // if just been created and not had a webhook yet then we will only have the owner role and so cant invite anyone
+      // refresh the data from apim to solve the problem
+      if ($roles === NULL || count($roles) < 2) {
+        try {
+          $updatedOrg = $this->consumerOrgService->getFromApim($this->currentOrg);
+          if ($updatedOrg !== NULL) {
+            $this->currentOrg = $updatedOrg;
+          }
+        } catch (InvalidPluginDefinitionException | PluginNotFoundException | EntityStorageException | \JsonException $e) {
+          $this->messenger->addError(t('An error occurred retrieving organization information from API Manager.'));
+        }
+      }
     }
-    if (!$this->userUtils->checkHasPermission('member:manage')) {
+
+    $configRoles = $this->siteConfig->getConsumerOrgInvitationRoles();
+
+    foreach ($roles as $role) {
+      $roleName = $role->getName();
+      if ($roleName !== 'owner' && $roleName !== 'member' && in_array($roleName, $configRoles, TRUE)) {
+        $permittedRoles[] = $role;
+      }
+    }
+
+    if (!$this->userUtils->checkHasPermission('member:manage') || !$this->siteConfig->isConsumerOrgInvitationEnabled()) {
       $this->messenger->addError(t('Permission denied.'));
 
       $form = [];
@@ -136,7 +177,9 @@ class InviteUserForm extends FormBase {
         '#attributes' => ['class' => ['button']],
       ];
 
-    } elseif ($roles === NULL || count($roles) < 2) {
+    }
+    elseif ($roles === NULL || count($roles) < 2) {
+      // this check uses $roles not $permittedRoles since its checking for invalid config - e.g. owner only role
       $this->messenger->addError(t('Permission denied.'));
 
       $form = [];
@@ -151,6 +194,21 @@ class InviteUserForm extends FormBase {
       ];
 
     }
+    elseif ($permittedRoles === NULL || count($permittedRoles) < 1) {
+      // this check makes sure there is at least one permitted role
+      $this->messenger->addError(t('Permission denied.'));
+
+      $form = [];
+      $form['description'] = ['#markup' => '<p>' . t('No permitted roles for invitation. Inviting other members is not possible. Please contact your administrator if you think this is an error.') . '</p>'];
+
+      $form['actions'] = ['#type' => 'actions'];
+      $form['actions']['cancel'] = [
+        '#type' => 'link',
+        '#title' => t('Cancel'),
+        '#url' => $this->getCancelUrl(),
+        '#attributes' => ['class' => ['button']],
+      ];
+    }
     else {
       $form['new_email'] = [
         '#type' => 'email',
@@ -160,13 +218,14 @@ class InviteUserForm extends FormBase {
         '#required' => TRUE,
       ];
 
-      if ($roles !== NULL && count($roles) > 1) {
+      if (count($permittedRoles) > 1) {
         $roles_array = [];
         $default_role = NULL;
-        foreach ($roles as $role) {
-          if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
+        foreach ($permittedRoles as $role) {
+          $roleName = $role->getName();
+          if ($roleName !== 'owner' && $roleName !== 'member') {
             // use translated role names if possible
-            switch($role->getTitle()) {
+            switch ($role->getTitle()) {
               case 'Administrator':
                 $roles_array[$role->getUrl()] = t('Administrator');
                 break;
@@ -194,6 +253,14 @@ class InviteUserForm extends FormBase {
           '#description' => t('Select which role the new user will have in your organization.'),
         ];
       }
+      else {
+        // only one permitted role means we can just default to using it
+        $role = reset($permittedRoles);
+        $form['role'] = [
+          '#type' => 'hidden',
+          '#value' => $role->getUrl(),
+        ];
+      }
 
       $moduleHandler = \Drupal::service('module_handler');
       if ($moduleHandler->moduleExists('honeypot')) {
@@ -218,7 +285,7 @@ class InviteUserForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @return \Drupal\Core\Url
    */
   public function getCancelUrl(): Url {
     return Url::fromRoute('ibm_apim.myorg');
@@ -230,7 +297,7 @@ class InviteUserForm extends FormBase {
    * @param array $form
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *
-   * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \Drupal\Core\TempStore\TempStoreException|\JsonException
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -274,7 +341,10 @@ class InviteUserForm extends FormBase {
    * @param array $form
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -296,4 +366,5 @@ class InviteUserForm extends FormBase {
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

@@ -27,27 +27,36 @@ use Prophecy\Prophet;
  */
 class JWTParserTest extends UnitTestCase {
 
-  private $prophet;
+  /**
+   * @var \Prophecy\Prophet
+   */
+  private Prophet $prophet;
 
-  /*
-   Dependencies of JWTParser.
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
    */
   protected $logger;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\Utils|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $utils;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
     $this->utils = $this->prophet->prophesize(\Drupal\ibm_apim\Service\Utils::class);
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
   /**
    * Positive parser test.
+   *
+   * @throws \JsonException
+   * @throws \Exception
    */
   public function testValidParse(): void {
 
@@ -58,34 +67,37 @@ class JWTParserTest extends UnitTestCase {
     $parser = new JWTParser($this->logger->reveal(), $this->utils->reveal());
     $result = $parser->parse($this->getValidEncodedJWT());
 
-    $this->assertEquals($this->getValidJWTObject(), $result, 'Unexpected token object produced from parser');
+    self::assertEquals($this->getValidJWTObject(), $result, 'Unexpected token object produced from parser');
 
   }
 
   /**
    * Invalid - missing headers section from encoded JWT
+   *
+   * @throws \Exception
    */
   public function testInvalidTokenParse(): void {
 
-    $this->logger->error('Invalid jwt token. Expected 3 period separated elements.')->shouldBeCalled();
-    $this->logger->error('invalid invitation jwt')->shouldBeCalled();
+    $this->logger->error('Invalid JWT token. Expected 3 period separated elements.')->shouldBeCalled();
+    $this->logger->error('invalid invitation JWT')->shouldBeCalled();
 
     $parser = new JWTParser($this->logger->reveal(), $this->utils->reveal());
     $result = $parser->parse($this->getEncodedJWTWithMissingHeaders());
 
-    $this->assertNull($result, 'Result from invalid parse is not NULL');
+    self::assertNull($result, 'Result from invalid parse is not NULL');
   }
 
   /**
-   * Invalid - missing url in token.
+   * Invalid - missing URL in token.
+   *
+   * @throws \Exception
    */
   public function testMissingUrlParse(): void {
 
-    $this->logger->error('payload.scopes.url not available in activation jwt')->shouldBeCalled();
-
+    $this->logger->error('payload.scopes.url not available in activation JWT')->shouldBeCalled();
     $parser = new JWTParser($this->logger->reveal(), $this->utils->reveal());
     $result = $parser->parse($this->getEncodedJWTWithMissingUrl());
-    $this->assertNull($result, 'Unexpected response when parsing a token with missing url');
+    self::assertNull($result, 'Unexpected response when parsing a token with missing URL');
 
   }
 
@@ -93,22 +105,25 @@ class JWTParserTest extends UnitTestCase {
   /**
    * Parse NULL.
    *
-   * @expectedException \Exception
    */
   public function testParseNULL(): void {
+    $this->expectException(\Exception::class);
 
     $parser = new JWTParser($this->logger->reveal(), $this->utils->reveal());
     $parser->parse(NULL);
 
   }
 
+  /**
+   * @throws \JsonException
+   */
   private function getValidJWTObject(): JWTToken {
     $jwt = new JWTToken();
     $jwt->setUrl($this->getValidUrl());
     $jwt->setDecodedJwt($this->getValidJWT());
-    $jwt->setHeaders(json_decode(\base64_decode($this->getValidHeaders()), TRUE));
-    $jwt->setPayload(json_decode(\base64_decode($this->getValidPayload()), TRUE));
-    $jwt->setSignature(json_decode(\base64_decode($this->getValidSignature()), TRUE));
+    $jwt->setHeaders(json_decode(\base64_decode($this->getValidHeaders()), TRUE, 512, JSON_THROW_ON_ERROR));
+    $jwt->setPayload(json_decode(\base64_decode($this->getValidPayload()), TRUE, 512, JSON_THROW_ON_ERROR));
+    $jwt->setSignature($this->getValidSignature());
     return $jwt;
   }
 

@@ -1,15 +1,15 @@
 ibm_apim.settings:
-  title: 'IBM API Connect'
+  title: 'IBM API Developer Portal'
   route_name: ibm_apim.settings
   parent: system.admin_config_system
-  description: 'IBM API Connect Developer Portal configuration.'
+  description: 'IBM API Developer Portal configuration.'
   weight: -25
 
 ibm_apim.billing_settings:
-  title: 'IBM API Connect Billing'
+  title: 'IBM API Developer Portal Billing'
   route_name: ibm_apim.billing_settings
   parent: system.admin_config_system
-  description: 'IBM API Connect Billing settings'
+  description: 'IBM API Developer Portal Billing settings'
   weight: -24
 
 ibm_apim.devel:

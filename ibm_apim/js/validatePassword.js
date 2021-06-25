@@ -14,7 +14,7 @@
  * Used for doing client side password validation
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
   Drupal.behaviors.ibmApimValidatePassword = {
     attach: function attach(context, drupalSettings) {
       var $passwordInput = $(context).find('input.js-password-field').once('ibmApimValidatePassword');
@@ -28,24 +28,24 @@
           // remove all existing child content from status box
           statusBox.html('');
 
-          drupalSettings.ibmApimPassword.forEach(function (constraint) {
+          drupalSettings.ibmApimPassword.forEach(function(constraint) {
             var result;
             var error_svg = '<svg width="8px" height="8px" viewBox="0 0 8 8" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n' +
-                '    <title>close</title>\n' +
-                '    <g id="Latest" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">\n' +
-                '        <g id="close" transform="translate(-3.973005, -4.000000)" fill="#161616">\n' +
-                '            <polygon id="Fill" points="12 4.7 11.3 4 8 7.3 4.7 4 4 4.7 7.3 8 4 11.3 4.7 12 8 8.7 11.3 12 12 11.3 8.7 8"></polygon>\n' +
-                '        </g>\n' +
-                '    </g>\n' +
-                '</svg>';
+              '    <title>close</title>\n' +
+              '    <g id="Latest" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">\n' +
+              '        <g id="close" transform="translate(-3.973005, -4.000000)" fill="#161616">\n' +
+              '            <polygon id="Fill" points="12 4.7 11.3 4 8 7.3 4.7 4 4 4.7 7.3 8 4 11.3 4.7 12 8 8.7 11.3 12 12 11.3 8.7 8"></polygon>\n' +
+              '        </g>\n' +
+              '    </g>\n' +
+              '</svg>';
             var success_svg = '<svg width="13px" height="8px" viewBox="0 0 13 8" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n' +
-                '    <title>Organization / Status / checkmark / 16</title>\n' +
-                '    <g id="Latest" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">\n' +
-                '        <g id="Fill" transform="translate(-0.946009, -4.000000)" fill="#000000">\n' +
-                '            <polygon points="6 10.6 2.5 7.1 1.8 7.8 5.3 11.3 6 12 13.1 4.9 12.4 4.2"></polygon>\n' +
-                '        </g>\n' +
-                '    </g>\n' +
-                '</svg>';
+              '    <title>Organization / Status / checkmark / 16</title>\n' +
+              '    <g id="Latest" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">\n' +
+              '        <g id="Fill" transform="translate(-0.946009, -4.000000)" fill="#000000">\n' +
+              '            <polygon points="6 10.6 2.5 7.1 1.8 7.8 5.3 11.3 6 12 13.1 4.9 12.4 4.2"></polygon>\n' +
+              '        </g>\n' +
+              '    </g>\n' +
+              '</svg>';
             switch (constraint['id']) {
               case 'character_types':
                 result = Drupal.ibmApimEvalatePasswordCharTypes($passwordInput.val(), constraint['character_types']);
@@ -102,7 +102,7 @@
    * @param types
    * @returns {boolean}
    */
-  Drupal.ibmApimEvalatePasswordCharTypes = function (password, types) {
+  Drupal.ibmApimEvalatePasswordCharTypes = function(password, types) {
     password = password.trim();
     var numtypes = 0;
     var hasLowercase = /[a-z]/.test(password);
@@ -135,7 +135,7 @@
    * @param length
    * @returns {boolean}
    */
-  Drupal.ibmApimEvalatePasswordMinLength = function (password, length) {
+  Drupal.ibmApimEvalatePasswordMinLength = function(password, length) {
     password = password.trim();
     var result = false;
 
@@ -151,7 +151,7 @@
    * @param length
    * @returns {boolean}
    */
-  Drupal.ibmApimEvalatePasswordMaxLength = function (password, length) {
+  Drupal.ibmApimEvalatePasswordMaxLength = function(password, length) {
     password = password.trim();
     var result = false;
 
@@ -168,7 +168,7 @@
    * @param settingsUsername
    * @returns {boolean}
    */
-  Drupal.ibmApimEvalatePasswordUsername = function (password, disallow_username, settingsUsername) {
+  Drupal.ibmApimEvalatePasswordUsername = function(password, disallow_username, settingsUsername) {
     password = password.trim();
     var result = true;
     var $usernameBox = $('input.username');
@@ -186,7 +186,7 @@
    * @param number
    * @returns {boolean}
    */
-  Drupal.ibmApimEvalateConsecutiveChars = function (password, number) {
+  Drupal.ibmApimEvalateConsecutiveChars = function(password, number) {
     password = password.trim();
     var result = false;
     var groups = parseInt(number) - 1;
@@ -207,7 +207,7 @@
    * @param strengthTarget
    * @returns {boolean}
    */
-  Drupal.ibmApimEvaluatePasswordStrength = function (password, strengthTarget) {
+  Drupal.ibmApimEvaluatePasswordStrength = function(password, strengthTarget) {
     password = password.trim();
     var result = false;
     var target = parseInt(strengthTarget);

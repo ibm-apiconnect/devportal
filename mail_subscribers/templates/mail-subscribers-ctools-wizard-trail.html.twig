@@ -1,19 +1,19 @@
 {% if trail %}
   {% set complete_class = [
-  'bx--progress-step--complete',
+    'bx--progress-step--complete',
   ] %}
   {% set current_class = [
-  'bx--progress-step--current',
+    'bx--progress-step--current',
   ] %}
   {% set incomplete_class = [
-  'bx--progress-step--incomplete',
+    'bx--progress-step--incomplete',
   ] %}
 
   <div class="wizard-trail">
     <ul data-progress data-progress-current class="bx--progress">
       {% set classes = [
-      'bx--progress-step',
-      'bx--progress-step--complete',
+        'bx--progress-step',
+        'bx--progress-step--complete',
       ] %}
       {%- set attributes = attributes.addClass(classes) -%}
       {% for key, value in trail %}
@@ -21,9 +21,11 @@
           {%- set attributes = attributes.removeClass(complete_class) -%}
           {%- set attributes = attributes.addClass(current_class) -%}
           <li {{ attributes }}>
-            <svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="16" height="16" viewBox="0 0 32 32" aria-hidden="true">
+            <svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"
+                 fill="currentColor" width="16" height="16" viewBox="0 0 32 32" aria-hidden="true">
               <circle cx="16" cy="16" r="10"></circle>
-              <path d="M16,30A14,14,0,1,1,30,16,14.0158,14.0158,0,0,1,16,30ZM16,4A12,12,0,1,0,28,16,12.0137,12.0137,0,0,0,16,4Z"></path>
+              <path
+                  d="M16,30A14,14,0,1,1,30,16,14.0158,14.0158,0,0,1,16,30ZM16,4A12,12,0,1,0,28,16,12.0137,12.0137,0,0,0,16,4Z"></path>
               <title>{{ value }}</title></svg>
             <p class="bx--progress-label">{{ value }}</p>
             <span class="bx--progress-line"></span>
@@ -33,14 +35,16 @@
         {% else %}
           <li {{ attributes }}>
             {% if attributes.hasClass('bx--progress-step--complete') %}
-              <svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="16" height="16" viewBox="0 0 32 32" aria-hidden="true">
+              <svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"
+                   fill="currentColor" width="16" height="16" viewBox="0 0 32 32" aria-hidden="true">
                 <path d="M14 21.414L9 16.413 10.413 15 14 18.586 21.585 11 23 12.415 14 21.414z"></path>
                 <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2Zm0,26A12,12,0,1,1,28,16,12,12,0,0,1,16,28Z"></path>
                 <title>{{ value }}</title>
               </svg>
             {% else %}
               <svg>
-                <svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="16" height="16" viewBox="0 0 32 32" aria-hidden="true">
+                <svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"
+                     fill="currentColor" width="16" height="16" viewBox="0 0 32 32" aria-hidden="true">
                   <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2Zm0,26A12,12,0,1,1,28,16,12,12,0,0,1,16,28Z"></path>
                   <title>{{ value }}</title>
                 </svg>

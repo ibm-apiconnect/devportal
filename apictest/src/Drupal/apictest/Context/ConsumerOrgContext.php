@@ -19,11 +19,14 @@ use Drupal\Component\Utility\Html;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\ApicType\Role;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
-use Drupal\ibm_apim\ApicUser;
-use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
 
 class ConsumerOrgContext extends RawDrupalContext {
+
+  /**
+   * @var bool|\stdClass|\stdClass[]
+   */
+  private $useMockServices = TRUE;
 
   /**
    * @Given consumerorgs:
@@ -54,11 +57,15 @@ class ConsumerOrgContext extends RawDrupalContext {
       $org->setId($row['id']);
       if (isset($row['owner_uid'])) {
         $user = User::load($row['owner_uid']);
-        $org->setOwnerUrl($user->get('apic_url')->value);
+        if ($user !== NULL) {
+          $org->setOwnerUrl($user->get('apic_url')->value);
+        }
       }
       else {
         $org->setOwnerUrl($apimUtils->removeFullyQualifiedUrl($row['owner']));
       }
+      $org->setCreatedAt(strtotime("-1 day"));
+      $org->setUpdatedAt(time());
       $org->setOrgUrl('/orgs/1234');
       $org->setCatalogUrl('/catalogs/1234/5678');
       $org->setUrl('/consumer-orgs/1234/5678/' . $row['id']);
@@ -96,7 +103,7 @@ class ConsumerOrgContext extends RawDrupalContext {
       }
       $consumerOrgService->createOrUpdateNode($org, 'test');
     }
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -104,6 +111,7 @@ class ConsumerOrgContext extends RawDrupalContext {
 
   /**
    * @Given members:
+   * @throws \Exception
    */
   public function createMembers(TableNode $table): void {
 
@@ -136,9 +144,9 @@ class ConsumerOrgContext extends RawDrupalContext {
         print('(member create) Saved user ' . $account->getAccountName() . ' after adding consumerorg field ' . $consumerorgUrl . "\n");
       }
 
-      // get the corg from the consumerorg service
-      $corg = $consumerOrgService->get($consumerorgUrl);
-      $orgRoles = $corg->getRoles();
+      // get the cOrg from the consumerorg service
+      $cOrg = $consumerOrgService->get($consumerorgUrl);
+      $orgRoles = $cOrg->getRoles();
       $requiredRoles = \explode(',', $row['roles']);
       $rolesToAdd = [];
       foreach ($requiredRoles as $requiredRole) {
@@ -152,11 +160,11 @@ class ConsumerOrgContext extends RawDrupalContext {
         }
       }
       if (!empty($rolesToAdd)) {
-        ApicTestUtils::addMemberToOrg($corg, $userService->parseDrupalAccount($account), $rolesToAdd);
+        ApicTestUtils::addMemberToOrg($cOrg, $userService->parseDrupalAccount($account), $rolesToAdd);
       }
     }
 
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -189,9 +197,9 @@ class ConsumerOrgContext extends RawDrupalContext {
       $consumerorgUrl = '/consumer-orgs/1234/5678/' . $row['consumerorgid'];
 
 
-      // get the corg from the consumerorg service
-      $corg = $consumerOrgService->get($consumerorgUrl);
-      $orgRoles = $corg->getRoles();
+      // get the cOrg from the consumerorg service
+      $cOrg = $consumerOrgService->get($consumerorgUrl);
+      $orgRoles = $cOrg->getRoles();
       $requiredRoles = \explode(',', $row['roles']);
       $rolesToAdd = [];
       foreach ($requiredRoles as $requiredRole) {
@@ -205,11 +213,11 @@ class ConsumerOrgContext extends RawDrupalContext {
         }
       }
       if (!empty($rolesToAdd)) {
-        ApicTestUtils::addInvitationToOrg($corg, $row['mail'], $rolesToAdd);
+        ApicTestUtils::addInvitationToOrg($cOrg, $row['mail'], $rolesToAdd);
       }
     }
 
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -217,8 +225,9 @@ class ConsumerOrgContext extends RawDrupalContext {
 
   /**
    * @Then I should see that :arg1 is a(n) :arg2
+   * @throws \Exception
    */
-  public function iShouldSeeThatUserIsARole($username, $role) {
+  public function iShouldSeeThatUserIsARole($username, $role): void {
 
     $num = $this->getNumberOfUserRoleElements($username, $role);
     if ($num !== 1) {
@@ -230,8 +239,9 @@ class ConsumerOrgContext extends RawDrupalContext {
 
   /**
    * @Then I should not see that :arg1 is a(n) :arg2
+   * @throws \Exception
    */
-  public function iShouldSeeThatUserIsNotARole($username, $role) {
+  public function iShouldSeeThatUserIsNotARole($username, $role): void {
 
     $num = $this->getNumberOfUserRoleElements($username, $role);
     if ($num !== 0) {
@@ -254,19 +264,17 @@ class ConsumerOrgContext extends RawDrupalContext {
     print 'searched for ' . $css_selector . "\n";
     print 'enabled ' . \sizeof($enabled);
 
-    $num = \sizeof($enabled);
-    return $num;
+    return \sizeof($enabled);
   }
 
   /**
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
    * @param $user
-   * @param $userService
    * @param \Drupal\consumerorg\ApicType\Role $ownerRole
    *
-   * @return mixed
+   * @return void
    */
-  private function linkUserAndOrg(ConsumerOrg $org, $user, Role $ownerRole) {
+  private function linkUserAndOrg(ConsumerOrg $org, $user, Role $ownerRole): void {
 
     $userService = \Drupal::service('ibm_apim.apicuser');
 
@@ -277,7 +285,7 @@ class ConsumerOrgContext extends RawDrupalContext {
     $apic_user = $userService->parseDrupalAccount($user);
     ApicTestUtils::addMemberToOrg($org, $apic_user, [$ownerRole]);
 
-    print('Saved user ' . $user->getAccountName() . '(uid=' . $user->id() .') after adding consumerorg field ' . $org->getUrl() . "\n");
+    print('Saved user ' . $user->getAccountName() . '(uid=' . $user->id() . ') after adding consumerorg field ' . $org->getUrl() . "\n");
   }
 
 

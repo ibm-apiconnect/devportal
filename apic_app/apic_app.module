@@ -16,7 +16,6 @@
  * Provides the application integration with APIC.
  */
 
-use Drupal\apic_app\Application;
 use Drupal\Core\Access\AccessResultAllowed;
 use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Access\AccessResultNeutral;
@@ -44,7 +43,7 @@ define('APPLICATION_GRANT', 1);
  *
  * Note: hook is called when rebuilding permissions
  */
-function apic_app_node_access_records($node) {
+function apic_app_node_access_records($node): array {
 
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
@@ -93,7 +92,7 @@ function apic_app_node_access_records($node) {
  * Note: hook is not called at all when admin logged in
  * Note: hook is called on every login, logout and page load
  */
-function apic_app_node_grants($account, $op) {
+function apic_app_node_grants($account, $op): array {
 
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
@@ -205,7 +204,7 @@ function apic_app_preprocess(&$variables, $hook, &$info) {
  * @param $variables
  *
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
- * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException|\Drupal\Core\Entity\EntityMalformedException
  */
 function apic_app_preprocess_node(&$variables) {
   if ($variables['node']->getType() === 'application') {
@@ -218,12 +217,15 @@ function apic_app_preprocess_node(&$variables) {
     }
     $variables['showPlaceholders'] = $ibmApimShowPlaceholderImages;
     if ($ibmApimShowPlaceholderImages) {
-      $rawImage = Application::getRandomImageName($variables['node']->getTitle());
+      $rawImage = \Drupal::service('apic_app.application')->getRandomImageName($variables['node']->getTitle());
       $variables['placeholderUrl'] = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
     }
     else {
       $variables['placeholderUrl'] = NULL;
     }
+
+    $variables['events_found'] = \Drupal::service('apic_api.utils')->areEventAPIsPresent();
+
     if ($variables['view_mode'] === 'full') {
       $userUtils = \Drupal::service('ibm_apim.user_utils');
       $variables['userHasAppManage'] = $userUtils->checkHasPermission('app:manage');
@@ -241,14 +243,14 @@ function apic_app_preprocess_node(&$variables) {
       $credentials = $variables['node']->application_credentials_refs->referencedEntities();
 
       if ($credentials !== NULL && is_array($credentials)) {
-        $credentialsArray = array();
+        $credentialsArray = [];
         foreach ($credentials as $cred) {
-          array_push($credentialsArray, $cred->toArray());
+          $credentialsArray[] = $cred->toArray();
         }
         $variables['credentials'] = $credentialsArray;
         $variables['#attached']['drupalSettings']['application']['credentials'] = $credentialsArray;
       }
-      $variables['subscriptions'] = Application::getSubscriptions($variables['node']);
+      $variables['subscriptions'] = \Drupal::service('apic_app.application')->getSubscriptions($variables['node']);
     }
     $variables['apic_state'] = $variables['node']->apic_state->value;
     $variables['applifecycleEnabled'] = (boolean) \Drupal::state()->get('ibm_apim.applifecycle_enabled');
@@ -273,7 +275,7 @@ function apic_app_preprocess_node(&$variables) {
         'links',
         'addtoany',
       ];
-      $ibmFields = Application::getIBMFields();
+      $ibmFields = \Drupal::service('apic_app.application')->getIBMFields();
       $merged = array_merge($coreFields, $ibmFields);
       $diff = array_diff($fieldList, $merged);
     }
@@ -310,6 +312,12 @@ function apic_app_preprocess_node(&$variables) {
       else {
         $variables['analytics_access'] = FALSE;
       }
+      $consumerorg_url = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerOrg()['url'];
+      if ($consumerorg_url !== NULL && $consumerorg_url === $variables['node']->application_consumer_org_url->value) {
+        $variables['notifications_access'] = TRUE;
+      } else {
+        $variables['notifications_access'] = FALSE;
+      }
     }
 
     $variables['#attached']['drupalSettings']['application']['id'] = $variables['node']->application_id->value;
@@ -342,7 +350,7 @@ function apic_app_form_alter(array &$form, FormStateInterface $form_state, $form
         $form['application_redirect_endpoints']['#disabled'] = TRUE;
       }
       // if anyone has made our internal fields visible, then lets make them readonly
-      $internal_field_list = Application::getIBMFields();
+      $internal_field_list = \Drupal::service('apic_app.application')->getIBMFields();
       foreach ($internal_field_list as $fieldName) {
         if ($fieldName !== 'application_image' && $fieldName !== 'apic_summary' && $fieldName !== 'application_redirect_endpoints' && $fieldName !== 'application_client_type' && isset($form[$fieldName])) {
           $form[$fieldName]['#disabled'] = TRUE;
@@ -393,7 +401,7 @@ function apic_app_menu_links_discovered_alter(&$links) {
  *
  * @return array
  */
-function apic_app_theme($existing, $type, $theme, $path) {
+function apic_app_theme($existing, $type, $theme, $path): array {
   return [
     'new_application' => [
       'variables' => [],
@@ -408,6 +416,7 @@ function apic_app_theme($existing, $type, $theme, $path) {
         'userHasSubView' => FALSE,
         'applifecycleEnabled' => FALSE,
         'appImageUploadEnabled' => FALSE,
+        'notifications_access' => FALSE,
         'node' => NULL,
         'subscriptions' => NULL,
         'credentials' => NULL,
@@ -422,8 +431,25 @@ function apic_app_theme($existing, $type, $theme, $path) {
         'userHasSubManage' => FALSE,
         'userHasSubView' => FALSE,
         'applifecycleEnabled' => FALSE,
+        'notifications_access' => FALSE,
         'appImageUploadEnabled' => FALSE,
         'node' => NULL,
+      ],
+    ],
+    'application_activity' => [
+      'variables' => [
+        'catalogId' => NULL,
+        'catalogName' => NULL,
+        'porgId' => NULL,
+        'userHasAppManage' => FALSE,
+        'userHasSubManage' => FALSE,
+        'userHasSubView' => FALSE,
+        'applifecycleEnabled' => FALSE,
+        'appImageUploadEnabled' => FALSE,
+        'analytics_access' => FALSE,
+        'notifications_access' => FALSE,
+        'node' => NULL,
+        'events' => [],
       ],
     ],
     'app_credentials' => [
@@ -566,7 +592,7 @@ function apic_app_views_pre_render(ViewExecutable $view) {
 /**
  * Implements hook_token_info().
  */
-function apic_app_token_info() {
+function apic_app_token_info(): array {
 
   $type = [
     'name' => t('Application'),
@@ -574,34 +600,34 @@ function apic_app_token_info() {
     'needs-data' => 'application',
   ];
 
-  $app['name'] = array(
+  $app['name'] = [
     'name' => t("Name"),
     'description' => t("The name of the application"),
-  );
-  $app['title'] = array(
+  ];
+  $app['title'] = [
     'name' => t("Title"),
     'description' => t("The title of the application"),
-  );
-  $app['id'] = array(
+  ];
+  $app['id'] = [
     'name' => t("ID"),
     'description' => t("The ID of the application"),
-  );
-  $app['enabled'] = array(
+  ];
+  $app['enabled'] = [
     'name' => t("Enabled"),
     'description' => t("The state the application is currently in"),
-  );
-  $app['description'] = array(
+  ];
+  $app['description'] = [
     'name' => t("Description"),
     'description' => t("The description given to the application"),
-  );
-  $app['lifecycle_state'] = array(
+  ];
+  $app['lifecycle_state'] = [
     'name' => t("Lifecycle State"),
     'description' => t("The current lifecycle state of the application"),
-  );
-  $app['image_url'] = array(
+  ];
+  $app['image_url'] = [
     'name' => t("Image URL"),
     'description' => t("The URL of the image for the application"),
-  );
+  ];
 
   return [
     'types' => ['application' => $type],
@@ -621,7 +647,7 @@ function apic_app_token_info() {
  *
  * @return array
  */
-function apic_app_tokens($type, $tokens, array $data = [], array $options = []) {
+function apic_app_tokens($type, $tokens, array $data = [], array $options = []): array {
 
   $replacements = [];
   if ($type === 'application' && !empty($data['application'])) {
@@ -662,12 +688,13 @@ function apic_app_tokens($type, $tokens, array $data = [], array $options = []) 
           if ($customImageString !== NULL && !empty($customImageString)) {
             if (preg_match('/^http[s]?:\/\//', $customImageString) === 1) {
               $apiImageUrl = $customImageString;
-            } else {
+            }
+            else {
               $apiImageUrl = NULL;
             }
           }
           elseif ($ibmApimShowPlaceholderImages) {
-            $apiImageUrl = Application::getPlaceholderImage($application->getTitle());
+            $apiImageUrl = \Drupal::service('apic_app.application')->getPlaceholderImage($application->getTitle());
           }
           else {
             $apiImageUrl = NULL;
@@ -678,4 +705,26 @@ function apic_app_tokens($type, $tokens, array $data = [], array $options = []) 
     }
   }
   return $replacements;
+}
+
+/**
+ * When a consumer org is deleted also delete all of its applications
+ *
+ * @param Node $node A consumer org node
+ * @param $data
+ */
+function apic_app_consumerorg_pre_delete($node, $data) {
+  if (isset($node)) {
+    // remove applications that belong to the consumer org
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', 'application');
+    $query->condition('application_consumer_org_url.value', $node->consumerorg_url->value);
+    $results = $query->execute();
+    if (isset($results) && !empty($results)) {
+      $appNids = array_values($results);
+      foreach ($appNids as $appNid) {
+        \Drupal::service('apic_app.application')->deleteNode((int) $appNid, 'comsumerorg_cascade');
+      }
+    }
+  }
 }

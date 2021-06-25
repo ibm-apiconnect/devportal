@@ -14,10 +14,10 @@
  * JS for the "app_cost" block.
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   Drupal.behaviors.app_cost = {
-    attach: function (context) {
+    attach: function(context) {
 
 
     }

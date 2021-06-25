@@ -13,6 +13,7 @@
 
 namespace Drupal\consumerorg\Form;
 
+use Drupal\consumerorg\ApicType\Member;
 use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Core\Form\FormBase;
@@ -21,6 +22,7 @@ use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -28,34 +30,46 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class ChangeMemberRoleForm extends FormBase {
 
-  protected $consumerOrgService;
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
+  protected ConsumerOrgService $consumerOrgService;
 
-  protected $userUtils;
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
+  protected UserUtils $userUtils;
 
-  protected $apimUtils;
+  /**
+   * @var \Drupal\ibm_apim\Service\ApimUtils
+   */
+  protected ApimUtils $apimUtils;
 
-  protected $themeHandler;
+  /**
+   * @var \Drupal\Core\Extension\ThemeHandler
+   */
+  protected ThemeHandler $themeHandler;
 
   /**
    * The node representing the application.
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $orgNode;
+  protected NodeInterface $orgNode;
 
   /**
    * The id of the member to change role
    *
    * @var string
    */
-  protected $memberId;
+  protected string $memberId;
 
   /**
    * The member to change role
    *
    * @var \Drupal\consumerorg\ApicType\Member
    */
-  protected $member;
+  protected Member $member;
 
   protected $currentOrg;
 
@@ -90,7 +104,7 @@ class ChangeMemberRoleForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): ChangeMemberRoleForm {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('ibm_apim.user_utils'),
@@ -109,6 +123,7 @@ class ChangeMemberRoleForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function buildForm(array $form, FormStateInterface $form_state, $memberId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -131,7 +146,7 @@ class ChangeMemberRoleForm extends FormBase {
       $this->currentOrg = $this->consumerOrgService->get($org['url']);
 
       $members = $this->currentOrg->getMembers();
-      if ($members) {
+      if ($members && $memberId !== NULL) {
         $roles_array = [];
         // If there is only one member, do not allow change
         if (count($members) === 1) {
@@ -151,7 +166,7 @@ class ChangeMemberRoleForm extends FormBase {
               // owner and member are special cases - ignore them
               if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
                 // use translated role names if possible
-                switch($role->getTitle()) {
+                switch ($role->getTitle()) {
                   case 'Administrator':
                     $roles_array[$role->getUrl()] = t('Administrator');
                     break;
@@ -258,4 +273,5 @@ class ChangeMemberRoleForm extends FormBase {
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

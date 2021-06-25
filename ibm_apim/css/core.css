@@ -32,25 +32,30 @@
 .route-ibm-apimmyorg .container section,
 .route-ibm-apimbilling .container,
 .route-ibm-apimbilling .container section,
+.route-ibm-apimactivity .container,
+.route-ibm-apimactivity .container section,
 .route-ibm-apimanalytics .container,
 .route-ibm-apimanalytics .container section {
-  padding:0;
+  padding: 0;
 }
 
 .route-ibm-apimmyorg .apicMainContent,
 .route-ibm-apimbilling .apicMainContent,
+.route-ibm-apimactivity .apicMainContent,
 .route-ibm-apimanalytics .apicMainContent {
   margin-top: 48px;
 }
 
 .route-ibm-apimmyorg .page-header,
 .route-ibm-apimbilling .page-header,
+.route-ibm-apimactivity .page-header,
 .route-ibm-apimanalytics .page-header {
   display: none;
 }
 
 .route-ibm-apimmyorg header.apicMyOrgHeader,
 .route-ibm-apimbilling header.apicMyOrgHeader,
+.route-ibm-apimactivity header.apicMyOrgHeader,
 .route-ibm-apimanalytics header.apicMyOrgHeader {
   background-color: white;
   padding: 1rem 2rem 0;
@@ -58,11 +63,14 @@
 
 .route-ibm-apimmyorg nav.tabs,
 .route-ibm-apimbilling nav.tabs,
+.route-ibm-apimactivity nav.tabs,
 .route-ibm-apimanalytics nav.tabs {
   border-bottom: 1px solid #dfe3e6;
 }
+
 .route-ibm-apimmyorg nav.tabs ul.tabs--primary li,
 .route-ibm-apimbilling nav.tabs ul.tabs--primary li,
+.route-ibm-apimactivity nav.tabs ul.tabs--primary li,
 .route-ibm-apimanalytics nav.tabs ul.tabs--primary li {
   font-weight: bold;
   border: none;
@@ -72,6 +80,7 @@
 
 .route-ibm-apimmyorg nav.tabs ul.tabs--primary li.active,
 .route-ibm-apimbilling nav.tabs ul.tabs--primary li.active,
+.route-ibm-apimactivity nav.tabs ul.tabs--primary li.active,
 .route-ibm-apimanalytics nav.tabs ul.tabs--primary li.active {
   border-bottom: 2px solid #5a60b8;
   color: #5a60b8;
@@ -79,7 +88,7 @@
 }
 
 .apicMyOrg header.titleSection .leftTitle,
-.apicMyOrg header.titleSection h1{
+.apicMyOrg header.titleSection h1 {
   width: calc(100% - 3rem);
 }
 
@@ -112,6 +121,11 @@
 .apicMyOrg .contentInnerWrapper {
   padding-top: 20px;
 }
+
+.apicMyOrg .enforcedEventsNotification {
+  margin: 1rem 2rem;
+}
+
 /* tabs in organization details view */
 .apicMyOrg .titleSection .organizationTabs {
   background-color: #fff;
@@ -144,7 +158,7 @@
   display: flex;
   padding: 0;
   cursor: pointer;
-  transition: background-color 70ms cubic-bezier(.2,0,.38,.9);
+  transition: background-color 70ms cubic-bezier(.2, 0, .38, .9);
 }
 
 .apicMyOrg .titleSection .organizationTabs li a {
@@ -156,13 +170,15 @@
   margin: 0;
   padding: .75rem 1rem .5rem;
   border-bottom: 2px solid #e0e0e0;
-  transition: color 70ms cubic-bezier(.2,0,.38,.9),border-bottom-color 70ms cubic-bezier(.2,0,.38,.9),outline 70ms cubic-bezier(.2,0,.38,.9);
+  transition: color 70ms cubic-bezier(.2, 0, .38, .9), border-bottom-color 70ms cubic-bezier(.2, 0, .38, .9), outline 70ms cubic-bezier(.2, 0, .38, .9);
 }
+
 .apicMyOrg .titleSection .organizationTabs li.selected,
 .apicMyOrg .titleSection .organizationTabs li:hover,
 .apicMyOrg .titleSection .organizationTabs li:focus {
   color: #161616;
 }
+
 .apicMyOrg .titleSection .organizationTabs li.selected a {
   border-bottom: 2px solid #3d70b2;
   color: #161616;
@@ -171,6 +187,7 @@
   line-height: 1.125rem;
   letter-spacing: .16px;
 }
+
 .apicMyOrg .titleSection .organizationTabs li:hover a,
 .apicMyOrg .titleSection .organizationTabs li:focus a {
   color: #161616;
@@ -183,10 +200,10 @@
   padding: 2rem 2rem 0;
 }
 
-.apicMyOrg .field.organizationMembers .memberHeader{
-  display:flex;
+.apicMyOrg .field.organizationMembers .memberHeader {
+  display: flex;
   justify-content: space-between;
-  margin:0 0 1rem 0;
+  margin: 0 0 1rem 0;
   border-bottom: 1px solid #e0e0e0;
   padding-bottom: 14px;
 }
@@ -202,14 +219,15 @@
 .apicMyOrgMemberDetails {
   display: flex;
   flex: 1;
+  align-items: center;
 }
 
-.apicMyOrgMemberDetails .orgApicUser{
-  padding-left:1rem;
+.apicMyOrgMemberDetails .orgApicUser {
+  padding-left: 1rem;
   font-size: 0.875rem;
 }
 
-.apicMyOrg .apicMyOrgMember .memberIcon img{
+.apicMyOrg .apicMyOrgMember .memberIcon img {
   width: 2rem;
 }
 
@@ -223,7 +241,7 @@
 }
 
 .apicUserMail {
- opacity: 0.7;
+  opacity: 0.7;
 }
 
 .apicMyOrgOwner {
@@ -252,7 +270,7 @@
 }
 
 .apicMyOrg .memberIcon {
-  margin-top: 16px;
+
 }
 
 .apicMyOrg .memberHeader h3 {
@@ -279,13 +297,13 @@
 
 .apicMyOrg .apicMyOrgMembers th:first-child,
 .apicMyOrg .apicMyOrgMembers tbody td:first-child {
-  text-align:left;
+  text-align: left;
   padding-left: 1rem;
 }
 
 .apicMyOrg .apicMyOrgMembers tbody td {
   padding: 0.5rem;
-  line-height:1.25;
+  line-height: 1.25;
   text-align: center;
   vertical-align: middle;
 }
@@ -398,7 +416,7 @@ ul.analyticsAppSelector li.selected {
 }
 
 .field--name-field-apiref .tabledrag-toggle-weight,
-.field--name-field-productref .tabledrag-toggle-weight{
+.field--name-field-productref .tabledrag-toggle-weight {
   display: none;
 }
 
@@ -430,6 +448,10 @@ ul.analyticsAppSelector li.selected {
   flex: 2;
   padding-right: 20px;
 }
+.supportContentWrapper .faqDiv h2.viewTitle,
+.supportContentWrapper .forumDiv h2 {
+  margin-top: 0;
+}
 
 .supportContentWrapper .contactDiv {
   flex: 1;
@@ -445,13 +467,11 @@ ul.analyticsAppSelector li.selected {
   padding-top: 0;
 }
 
-.supportContentWrapper .contactFormDiv h2
-{
+.supportContentWrapper .contactFormDiv h2 {
   margin-bottom: 1.2rem;
 }
 
-.supportContentWrapper .feedbackCollapse
-{
+.supportContentWrapper .feedbackCollapse {
   margin-top: 1.2rem;
 }
 
@@ -460,12 +480,13 @@ ul.analyticsAppSelector li.selected {
   border: 1px solid #dfe3e6;
   padding: 10px;
 }
+
 .apicMainContent .supportContentWrapper .views-element-container .view .view-filters.form-group input.form-text {
   width: 10rem;
 }
 
-@media (max-width:62em) {
-  .apicMainContent .supportContentWrapper{
+@media (max-width: 62em) {
+  .apicMainContent .supportContentWrapper {
     flex-direction: column;
   }
 }
@@ -474,9 +495,11 @@ ul.analyticsAppSelector li.selected {
   justify-content: space-between;
   flex-direction: row;
 }
+
 .bx--global-light-ui .view-search-content .views-exposed-form {
   flex-direction: row;
 }
+
 .bx--global-light-ui .view-search-content .view-filters.form-group {
   margin: 20px 0;
   padding: 0;
@@ -509,6 +532,7 @@ ul.analyticsAppSelector li.selected {
   background: none;
   color: #3d70b2;
 }
+
 .supportContentWrapper .views-element-container .view .ui-widget-content {
   border: 0;
   background: none;
@@ -521,15 +545,13 @@ ul.analyticsAppSelector li.selected {
  */
 
 .apic-user-form {
-  margin: auto;
-  margin-top: 5rem;
+  margin: 5rem auto auto;
   padding: 2rem;
   max-width: 50rem;
 }
 
 .apic-user-form .form-item input,
-.apic-user-form .form-item input:hover
-{
+.apic-user-form .form-item input:hover {
   width: 100%;
 }
 
@@ -537,8 +559,7 @@ ul.analyticsAppSelector li.selected {
   border: none;
 }
 
-.pass-change .apic-user-form.apic-user-form-change-pwd
-{
+.pass-change .apic-user-form.apic-user-form-change-pwd {
   max-width: 30rem;
 }
 
@@ -549,17 +570,15 @@ ul.analyticsAppSelector li.selected {
   padding-bottom: .75rem;
 }
 
-.apic-user-form-header
-{
+.apic-user-form-header {
   font-size: 1.75rem;
   padding-left: 1.5rem;
   font-weight: lighter;
 }
 
-@media(max-width:992px){
+@media (max-width: 992px) {
   .apic-user-form .apic-portal-title,
-  .apic-user-form-header
-  {
+  .apic-user-form-header {
     padding-left: 2rem;
   }
 }
@@ -575,7 +594,7 @@ ul.analyticsAppSelector li.selected {
 }
 
 .apic-user-form-text {
-  padding: 1.5rem;
+  padding: 1.5rem 2rem;
 }
 
 .apic-user-form-footer {
@@ -595,8 +614,7 @@ ul.analyticsAppSelector li.selected {
 }
 
 .apic-user-form-inner-wrapper {
-  margin: auto;
-  margin-top: 0;
+  margin: 0 auto auto;
   width: 100%;
   max-width: 25rem;
   display: flex;
@@ -607,6 +625,7 @@ ul.analyticsAppSelector li.selected {
 .apic-user-form.apic-user-form-register.ur-count-1 {
   max-width: 30rem;
 }
+
 .apic-user-form.apic-user-form-reset-pwd.ur-count-1 .apic-user-form-wrapper {
   padding-top: 1rem;
   margin-left: 2rem;
@@ -623,12 +642,12 @@ ul.analyticsAppSelector li.selected {
 }
 
 .user-register-form .apic-user-form-inner-wrapper #edit-account {
-  display:none;
+  display: none;
 }
 
 .apic-user-form-wrapper .form-actions button.form-submit,
 .apic-user-form-reset-pwd .apic-user-form-wrapper button.form-submit,
-.apic-user-form-inner-wrapper .form-actions button.form-submit{
+.apic-user-form-inner-wrapper .form-actions button.form-submit {
   width: 100%;
 }
 
@@ -637,7 +656,7 @@ ul.analyticsAppSelector li.selected {
 }
 
 .chosen-registry-button {
-  margin-top:2rem;
+  margin-top: 2rem;
 }
 
 a.button.disabled {
@@ -666,9 +685,7 @@ a.button.disabled {
 .apic-user-form-line {
   width: 1px;
   height: 36%;
-  margin: auto;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin: 1rem auto;
 }
 
 .apic-user-form-or {
@@ -719,8 +736,7 @@ form[class*='apic-resetpw'] .form-item input:focus {
   flex-direction: column;
 }
 
-.context-user-login.bx--global-light-ui .form-actions .form-submit
-{
+.context-user-login.bx--global-light-ui .form-actions .form-submit {
   margin-left: 0;
 }
 
@@ -730,8 +746,7 @@ form[class*='apic-resetpw'] .form-item input:focus {
 form[class='apic-change-pwd-form'] .form-submit,
 .context-ibm-apim-forgotpwd-x .form-submit,
 .context-user-register .form-submit {
-  margin: auto;
-  margin-top: 1.5rem;
+  margin: 1.5rem auto auto;
 }
 
 .context-user-login .form-actions,
@@ -760,8 +775,7 @@ form[class*='change-pwd-form'] .input-group-addon,
 .context-user-register .input-group-addon,
 .context-ibm-apim-forgotpwd-x .input-group-addon,
 .context-support .input-group-addon,
-.context-user-forgot-password .input-group-addon
-{
+.context-user-forgot-password .input-group-addon {
   display: none;
 }
 
@@ -792,7 +806,7 @@ form[class*='change-pwd-form'] .password-parent,
 .apic-login-wrapper:after,
 .apic-register-wrapper:after,
 .apic-reset-wrapper:after {
-  background: url(../images/apic-login.gif);
+  background-image: url(../images/apic-login.gif);
   background-color: #f4f4f4;
   content: ' ';
   display: block;
@@ -821,14 +835,17 @@ body.bx--global-light-ui.context--user-password {
     margin-left: 0;
     margin-right: 0;
   }
+
   .apic-user-form.apic-user-form-register {
     margin-top: 0;
   }
+
   .apic-login-wrapper:after,
   .apic-register-wrapper:after,
   .apic-reset-wrapper:after {
     display: none;
   }
+
   .apic-user-form-register.ur-count-1 .apic-portal-title,
   .apic-user-form-reset-pwd.ur-count-1 .apic-portal-title,
   .apic-user-form-register.ur-count-1 .apic-user-form-header,
@@ -837,19 +854,24 @@ body.bx--global-light-ui.context--user-password {
   .apic-user-form-login .apic-user-form-header {
     margin-left: 0;
   }
+
   .apic-user-form.apic-user-form-reset-pwd.ur-count-1 .apic-user-form-wrapper {
     margin-left: 1rem;
   }
+
   .apic-user-form-footer .apic-user-form-text,
   .apic-user-forgot-password {
     padding-left: 0;
   }
+
   .user-login-form .apic-user-form-wrapper {
     margin-left: 1rem;
   }
+
   .apic-user-form-subheader {
     margin-left: 0;
   }
+
   .user-register-form .apic-user-form-inner-wrapper {
     margin-left: 0;
     margin-right: 0;
@@ -909,9 +931,10 @@ body.bx--global-light-ui.context--user-password {
 
 .route-entityusercanonical .region-content .apic-change-form-wrapper,
 .route-entityuseredit-form .region-content .apic-change-form-wrapper,
-.route-change-pwd-pagechange-password-form:not(.pass-reset) .region-content .apic-change-form-wrapper{
-  max-width:25rem;
+.route-change-pwd-pagechange-password-form:not(.pass-reset) .region-content .apic-change-form-wrapper {
+  max-width: 25rem;
 }
+
 /* the tabs on user profile forms */
 
 .path-user.route-entityusercanonical .region-content nav.tabs ul.tabs--primary,
@@ -935,7 +958,7 @@ body.bx--global-light-ui.context--user-password {
 
 .path-user.route-entityusercanonical .region-content nav.tabs ul.tabs--primary li a,
 .path-user.route-entityuseredit-form .region-content nav.tabs ul.tabs--primary li a,
-.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) .region-content nav.tabs ul.tabs--primary li a{
+.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) .region-content nav.tabs ul.tabs--primary li a {
   padding: 0.5rem 0 0.5rem 1rem;
 }
 
@@ -965,14 +988,14 @@ body.bx--global-light-ui.context--user-password {
 .route-entityuseredit-form select,
 .route-entityuseredit-form .bx--form-item select,
 .route-change-pwd-pagechange-password-form .bx--form-item select,
-.route-change-pwd-pagechange-password-form selector{
+.route-change-pwd-pagechange-password-form selector {
   width: 100%;
 }
 
 .route-entityuseredit-form .select-wrapper,
 .route-change-pwd-pagechange-password-form .select-wrapper,
 .route-entityuseredit-form .form-item .description,
-.route-change-pwd-pagechange-password-form .form-item .description{
+.route-change-pwd-pagechange-password-form .form-item .description {
   max-width: 33rem;
 }
 
@@ -990,7 +1013,7 @@ body.bx--global-light-ui.context--user-password {
 .route-entityuseredit-form #edit-rip,
 .route-entityuseredit-form #edit-statustext,
 .route-entityuseredit-form #edit-rolestext,
-.route-entityuseredit-form #edit-avatars-avatar-generator--wrapper{
+.route-entityuseredit-form #edit-avatars-avatar-generator--wrapper {
   max-width: 100%;
   border: unset;
   box-shadow: unset;
@@ -1002,9 +1025,9 @@ body.bx--global-light-ui.context--user-password {
 .route-entityuseredit-form #edit-statustext .panel-heading,
 .route-entityuseredit-form #edit-rolestext .panel-heading,
 .route-entityuseredit-form #edit-avatars-avatar-generator-wrapper .panel-heading,
-.route-entityuseredit-form #edit-rip  .panel-heading{
+.route-entityuseredit-form #edit-rip .panel-heading {
   padding: 1.5rem 0 1rem 0;
-  background:  unset;
+  background: unset;
 }
 
 .route-entityuseredit-form #edit-timezone .panel-body,
@@ -1014,8 +1037,7 @@ body.bx--global-light-ui.context--user-password {
 .route-entityuseredit-form #edit-rolestext .panel-body,
 .route-entityuseredit-form #edit-avatars-avatar-generator-wrapper .panel-body,
 .route-entityuseredit-form #edit-rip .panel-body {
-  padding: 0;
-  padding-top: .5rem;
+  padding: .5rem 0 0;
 }
 
 /* contact and system modules always add these elements to every user form. we don't want that so hide them.*/
@@ -1050,8 +1072,7 @@ form.user-pass-reset div {
 
 body[class*='change-password'] .apicForm,
 body[class*='change-password'] .apic-user-form,
-body[class*='forgot-password'] .apic-user-form
-{
+body[class*='forgot-password'] .apic-user-form {
   margin-top: 2rem;
   max-width: 30rem;
 }
@@ -1069,13 +1090,13 @@ body[class*='forgot-password'] .apic-user-form
 .apic-user-form-registries button.registry-button,
 .apic-user-form-registries a.registry-button {
   display: flex;
-  justify-contenser-t: start;
+  justify-content: flex-start;
   margin-bottom: 0.5rem;
-  min-height:40px;
-  white-space:  normal;
-  height:unset;
-  text-align:left;
-  word-wrap:  break-word;
+  min-height: 40px;
+  white-space: normal;
+  height: unset;
+  text-align: left;
+  word-wrap: break-word;
 }
 
 span.registry-name {
@@ -1121,7 +1142,6 @@ span.registry-name {
   margin: 0;
   box-shadow: none;
   transition: none;
-@include font-size('14');
   line-height: 1;
 }
 
@@ -1207,7 +1227,7 @@ span.cron-description__run-cron a {
   text-align: left;
 }
 
-.paymentMethodContainer.noPaymentMethods .messageContainer .noPaymentMethodsText{
+.paymentMethodContainer.noPaymentMethods .messageContainer .noPaymentMethodsText {
   padding-bottom: 0.5rem;
   padding-left: 1rem;
 }
@@ -1242,10 +1262,11 @@ span.cron-description__run-cron a {
   height: 16px;
 }
 
-.dropit-icon:hover  {
+.dropit-icon:hover {
   background-color: #e5e5e5;
 }
-.consumerorgSelectBlock .dropit-icon:hover  {
+
+.consumerorgSelectBlock .dropit-icon:hover {
   background-color: transparent;
 }
 
@@ -1254,6 +1275,7 @@ span.cron-description__run-cron a {
   font-size: 1.2rem;
   font-weight: 400;
 }
+
 .block-hierarchical-taxonomy-menu ul {
   padding: 0;
   margin: 0;
@@ -1261,17 +1283,20 @@ span.cron-description__run-cron a {
   position: relative;
   line-height: 1.2rem;
 }
+
 .block-hierarchical-taxonomy-menu li {
   list-style-type: none;
   border-left: 1px solid #161616;
   margin-left: 1em;
 }
+
 .block-hierarchical-taxonomy-menu li a {
   padding-left: 1.3em;
   position: relative;
 }
+
 .block-hierarchical-taxonomy-menu li a::before {
-  content:'';
+  content: '';
   position: absolute;
   top: 0;
   left: -1px;
@@ -1281,12 +1306,15 @@ span.cron-description__run-cron a {
   border-top: 0 none transparent;
   border-right: 0 none transparent;
 }
+
 .block-hierarchical-taxonomy-menu ul > li:last-child {
   border-left: 1px solid transparent;
 }
+
 .route-contactsite-page form.contact-message-feedback-form {
   padding-top: 2rem;
 }
+
 .path-node .content,
 .path-node .node-form,
 .route-entitynodedelete-form .node-page-delete-form,
@@ -1297,23 +1325,49 @@ span.cron-description__run-cron a {
 }
 
 .registry-button .fa.fa-facebook {
-  font-size:18px;
+  font-size: 18px;
 }
+
 .registry-button .fa.fa-slack {
-  font-size:19px;
+  font-size: 19px;
 }
+
 .registry-button .fa.fa-twitter {
-  font-size:19px;
+  font-size: 19px;
 }
+
 .registry-button .fa.fa-windows {
-  font-size:17px;
+  font-size: 17px;
 }
+
 .registry-button .fa.fa-linkedin-square {
-  font-size:20px;
+  font-size: 20px;
 }
+
 .registry-button .fa.fa-google {
-  font-size:18px;
+  font-size: 18px;
 }
+
 .registry-button .fa.fa-github {
-  font-size:21px;
+  font-size: 21px;
+}
+
+.apicConcepts {
+  background-color: white;
+  padding: 12px;
+}
+.apicConcepts table {
+  width: 100%;
+}
+.apicConcepts table tr {
+  border-bottom: 1px solid #e0e0e0;
+}
+.apicConcepts table td,
+.apicConcepts table th {
+  padding: 12px;
+}
+.page-header .title-breadcrumb {
+  font-size: 14px;
+  line-height: 25px;
+  display: block;
 }

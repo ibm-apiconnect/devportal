@@ -21,10 +21,22 @@ use Psr\Log\LoggerInterface;
  */
 class TlsClientProfilesService {
 
-  private $state;
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  private StateInterface $state;
 
-  private $logger;
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  private LoggerInterface $logger;
 
+  /**
+   * TlsClientProfilesService constructor.
+   *
+   * @param \Drupal\Core\State\StateInterface $state
+   * @param \Psr\Log\LoggerInterface $logger
+   */
   public function __construct(StateInterface $state, LoggerInterface $logger) {
     $this->state = $state;
     $this->logger = $logger;
@@ -40,7 +52,7 @@ class TlsClientProfilesService {
 
     $client_profiles = $this->state->get('ibm_apim.tls_client_profiles');
 
-    if ($client_profiles === null || empty($client_profiles)) {
+    if ($client_profiles === NULL || empty($client_profiles)) {
       $this->logger->warning('Found no tls client profiles in the catalog state. Potentially missing data from APIM.');
       $client_profiles = [];
     }
@@ -52,11 +64,11 @@ class TlsClientProfilesService {
   /**
    * get a specific tls client profile by url
    *
-   * @param $key
+   * @param string $key
    *
    * @return null|array
    */
-  public function get($key): ?array {
+  public function get(string $key): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     $client_profile = NULL;
@@ -76,9 +88,9 @@ class TlsClientProfilesService {
   /**
    * Update all tls client profile definitions
    *
-   * @param $data array of tls client profiles
+   * @param array $data array of tls client profiles
    */
-  public function updateAll($data): void {
+  public function updateAll(array $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $data);
 
     if (isset($data)) {
@@ -97,10 +109,10 @@ class TlsClientProfilesService {
   /**
    * Update a specific tls profile
    *
-   * @param $key
-   * @param $data
+   * @param string $key
+   * @param array $data
    */
-  public function update($key, $data): void {
+  public function update(string $key, array $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     if (isset($key, $data)) {
@@ -121,9 +133,9 @@ class TlsClientProfilesService {
   /**
    * Delete a specific tls profile
    *
-   * @param $key (analytics service url)
+   * @param string $key (analytics service url)
    */
-  public function delete($key): void {
+  public function delete(string $key): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     if (isset($key)) {

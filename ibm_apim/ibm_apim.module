@@ -20,6 +20,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Exception\ModuleInstallationBlocked;
@@ -71,9 +72,27 @@ function ibm_apim_preprocess_menu(&$variables) {
   if (isset($variables['menu_name']) && $variables['menu_name'] === 'account') {
     $currentUser = \Drupal::currentUser();
     $user = User::load($currentUser->id());
-    // remove the my blog link if anon or dont have perms to create blog posts
-    if (array_key_exists('blog.myblog_link', $variables['items']) && ($currentUser->isAnonymous() || ($user !== NULL && !$user->hasPermission('create blog_post content')))) {
+    $route_provider = \Drupal::service('router.route_provider');
+    $blogRouteExists = count($route_provider->getRoutesByNames(['view.blog.blog_user_all'])) === 1;
+    // remove the my blog link if anon or dont have perms to create blog posts (check blog view exists too)
+    if ($blogRouteExists !== TRUE || (array_key_exists('blog.myblog_link', $variables['items']) && ($currentUser->isAnonymous() || ($user !== NULL && !$user->hasPermission('create blog_post content'))))) {
       unset($variables['items']['blog.myblog_link']);
+    }
+  }
+}
+
+/**
+ * Add a Support breadcrumb link to AsyncAPI concept pages
+ *
+ * @param $variables
+ */
+function ibm_apim_preprocess_page_title(&$variables) {
+  $current_path = \Drupal::service('path.current')->getPath();
+  if (isset($current_path)) {
+    $result = \Drupal::service('path_alias.manager')->getAliasByPath($current_path);
+    if (isset($result) && ($result === '/asyncapi' || $result === '/asyncapi-kafka' || $result === '/asyncapi-mq')) {
+      $variables['title'] = Markup::create('<span class=\'title-breadcrumb\'><a href=\'' . Url::fromUri('internal:/support')
+          ->toString() . '\'>' . t('Support') . '</a> /</span>' . $variables['title']->__toString());
     }
   }
 }
@@ -144,6 +163,12 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
     'ibm_apim_search_icon_block' => [
       'variables' => [],
     ],
+    'ibm_apim_concepts_block' => [
+      'variables' => [
+        'concepts' => [],
+        'eventsFound' => FALSE,
+      ],
+    ],
     'ibm_apim_get_started' => [
       'variables' => [
         'userHasAppManage' => FALSE,
@@ -171,8 +196,18 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
         'consumerorgTitle' => NULL,
         'filter' => NULL,
         'filterValue' => NULL,
+        'events_found' => NULL,
         'node' => [],
         'tabs' => [],
+      ],
+    ],
+    'ibm_apim_activity' => [
+      'variables' => [
+        'consumerorgTitle' => NULL,
+        'node' => [],
+        'tabs' => [],
+        'events' => [],
+        'analytics_access' => FALSE,
       ],
     ],
     'ibm_apim_status_messages_block' => [
@@ -292,7 +327,7 @@ function ibm_apim_preprocess(&$variables, $hook, &$info) {
     }
   }
 
-  if ($hook === 'ibm_apim_myorg' || $hook === 'ibm_apim_analytics' || $hook === 'consumerorg_billing') {
+  if ($hook === 'ibm_apim_myorg' || $hook === 'ibm_apim_activity' || $hook === 'ibm_apim_analytics' || $hook === 'consumerorg_billing') {
     // set analytics variables if it is enabled
     $variables['analytics_access'] = FALSE;
     $analyticsAccessCheck = \Drupal::service('ibm_apim.analytics_access_checker')->access();
@@ -368,10 +403,9 @@ function template_preprocess_status_report_general_info(&$variables) {
   $variables['custom_modules'] = $customModules;
   $variables['custom_themes'] = $customThemes;
 
-  $userFields = [];
   $nodeFields = ['api' => [], 'product' => [], 'application' => [], 'consumerorg' => []];
-  if ($moduleHandler->moduleExists('apic_app')) {
-    $nodeFields['application'] = \Drupal\apic_app\Application::getCustomFields();
+  if ($moduleHandler->moduleExists('apic_app') && \Drupal::hasService('apic_app.application')) {
+    $nodeFields['application'] = \Drupal::service('apic_app.application')->getCustomFields();
   }
   if ($moduleHandler->moduleExists('apic_api')) {
     $nodeFields['api'] = \Drupal\apic_api\Api::getCustomFields();
@@ -379,7 +413,7 @@ function template_preprocess_status_report_general_info(&$variables) {
   if ($moduleHandler->moduleExists('product')) {
     $nodeFields['product'] = \Drupal\product\Product::getCustomFields();
   }
-  if ($moduleHandler->moduleExists('consumerorg')) {
+  if ($moduleHandler->moduleExists('consumerorg') && \Drupal::hasService('ibm_apim.consumerorg')) {
     $cOrgService = \Drupal::service('ibm_apim.consumerorg');
     $nodeFields['consumerorg'] = $cOrgService->getCustomFields();
   }
@@ -400,7 +434,7 @@ function ibm_apim_preprocess_html(&$variables) {
   }
 
   $currentPath = \Drupal::service('path.current')->getPath();
-  $currentPathAlias = \Drupal::service('path.alias_manager')->getAliasByPath($currentPath);
+  $currentPathAlias = \Drupal::service('path_alias.manager')->getAliasByPath($currentPath);
   $variables['current_path'] = $currentPathAlias;
   $variables['attributes']['class'][] = Html::cleanCssIdentifier('context-' . $currentPathAlias);
   // add user registry type to body
@@ -505,14 +539,23 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     case 'user_register_form' :
       // We have to hide the elements that password policy module adds so we can replace them with something more compact!
       if (\Drupal::moduleHandler()->moduleExists("password_policy")) {
-        $form['auth-apic-password-policy-status']['#weight'] = 7;
+        $form['ibm-apim-password-policy-status']['#weight'] = 7;
+        // make sure the password policy appears right after the password field
+        $entityFormStorage = \Drupal::entityTypeManager()->getStorage('entity_form_display');
+        $userFormDisplay = $entityFormStorage->load('user.user.register');
+        if (isset($userFormDisplay)) {
+          $pass = $userFormDisplay->getComponent('pass');
+          if (array_key_exists('weight', $pass)) {
+            $form['ibm-apim-password-policy-status']['#weight'] = ($pass['weight'] + 0.1);
+          }
+        }
         $form['account']['password_policy_status']['#access'] = FALSE;
       }
       break;
     case 'user_multiple_cancel_confirm' :
       $form['apic_intro'] = [
-        '#markup' => '<br/><br/><p>' . t('Note: Cancelling another user\'s account in the portal will NOT delete their account from IBM API Connect, the user\'s record in the Portal database will simply be recreated when they next login. 
-        Users must delete their own accounts from their \'Edit Profile\' page for them to be completely deleted from IBM API Connect. Administrators may delete users via the toolkit, refer to the IBM API Connect Knowledge Center.') . '</p>',
+        '#markup' => '<br/><br/><p>' . t('Note: Cancelling another user\'s account in the portal will NOT delete their account from the IBM API Manager, the user\'s record in the Portal database will simply be recreated when they next login. 
+        Users must delete their own accounts from their \'Edit Profile\' page for them to be completely deleted from the IBM API Manager. Administrators may delete users via the toolkit, refer to the IBM API Connect Knowledge Center.') . '</p>',
         '#weight' => 20,
       ];
       break;
@@ -548,8 +591,8 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         unset($form['modules']['Core']['syslog']);
       }
       // hide our test module
-      if (isset($form['modules']['IBM API Connect']['apictest'])) {
-        unset($form['modules']['IBM API Connect']['apictest']);
+      if (isset($form['modules']['IBM API Developer Portal']['apictest'])) {
+        unset($form['modules']['IBM API Developer Portal']['apictest']);
       }
       // hide the migration modules
       if (isset($form['modules']['Migration']['migrate_upgrade'])) {
@@ -588,11 +631,11 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       // if billing isn't enabled hide the monetization modules
       $billingEnabled = \Drupal::service('ibm_apim.billing')->isEnabled();
       if ($billingEnabled !== TRUE) {
-        if (isset($form['modules']['IBM API Connect']['ibm_create_payment_method'])) {
-          unset($form['modules']['IBM API Connect']['ibm_create_payment_method']);
+        if (isset($form['modules']['IBM API Developer Portal']['ibm_create_payment_method'])) {
+          unset($form['modules']['IBM API Developer Portal']['ibm_create_payment_method']);
         }
-        if (isset($form['modules']['IBM API Connect']['ibm_stripe_payment_method'])) {
-          unset($form['modules']['IBM API Connect']['ibm_stripe_payment_method']);
+        if (isset($form['modules']['IBM API Developer Portal']['ibm_stripe_payment_method'])) {
+          unset($form['modules']['IBM API Developer Portal']['ibm_stripe_payment_method']);
         }
       }
       // blocklist some modules
@@ -681,11 +724,11 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         }
       }
       if (isset($form['manual_updates'])) {
-        $form['manual_updates']['#prefix'] .= '<p>' . t('To update the version of Drupal Core download the latest IBM API Connect release or contact IBM Support.') . '</p>';
+        $form['manual_updates']['#prefix'] .= '<p>' . t('To update the version of Drupal Core download the latest IBM API Developer Portal release or contact IBM Support.') . '</p>';
       }
       if (count($ibmUpdateNeeded) > 0) {
         $form['ibm_update'] = [
-          '#markup' => '<h2>' . t('IBM APIC Developer Portal Modules') . '</h2><p>' . t('Updates found for the following modules provided by IBM API Connect: %modules.', ['%modules' => implode(",", $ibmUpdateNeeded)]) . '</p><p>' . t('To update modules provided by IBM API Connect download the latest API Connect release or contact IBM Support.') . '</p>',
+          '#markup' => '<h2>' . t('IBM APIC Developer Portal Modules') . '</h2><p>' . t('Updates found for the following modules provided by the IBM API Developer Portal: %modules.', ['%modules' => implode(",", $ibmUpdateNeeded)]) . '</p><p>' . t('To update modules provided by the IBM API Developer Portal download the latest release from IBM or contact IBM Support.') . '</p>',
           '#weight' => 150,
         ];
         // if no updatable modules left remove the table
@@ -1256,7 +1299,7 @@ function ibm_apim_preprocess_form(&$variables) {
   $variables['enable_signup_link'] = \Drupal::state()->get('ibm_apim.selfSignUpEnabled', 0);
 
   // if there is an invitation token in the session, allow the login link to be displayed regardless of onboarding enabled/disabled
-  $sessionStore = \Drupal::service('session_based_temp_store')->get('auth_apic_invitation_token');
+  $sessionStore = \Drupal::service('session_based_temp_store')->get('auth_apic_storage');
   $jwt = $sessionStore->get('invitation_object');
   if ($jwt !== NULL) {
     $variables['enable_signup_link'] = TRUE;
@@ -1338,13 +1381,15 @@ function ibm_apim_language_switch_links_alter(&$links, $type, $path) {
     // check whether the q query parameter is superfluous, if it is just drop it.
     // NOTE, when it is just a lang code this is side effect of running url negotiation via the language switcher running with nginx.
 
-    $is_currentpath = $link['query']['q'] === ltrim($pathUrl, '/');
-    $is_empty = $link['query']['q'] === '';
-    $is_lang_prefix = preg_match('@^[a-zA-Z-]+' . $pathUrl . '@', $link['query']['q']);
-    $is_langcode = array_key_exists($link['query']['q'], $languages);
+    if (isset($link['query']['q'])) {
+      $is_currentpath = $link['query']['q'] === ltrim($pathUrl, '/');
+      $is_empty = $link['query']['q'] === '';
+      $is_lang_prefix = preg_match('@^[a-zA-Z-]+' . $pathUrl . '@', $link['query']['q']);
+      $is_langcode = array_key_exists($link['query']['q'], $languages);
 
-    if (isset($link['query']['q']) && ($is_currentpath || $is_empty || $is_lang_prefix || $is_langcode)) {
-      unset($link['query']['q']);
+      if ($is_currentpath || $is_empty || $is_lang_prefix || $is_langcode) {
+        unset($link['query']['q']);
+      }
     }
   }
   // needed to prevent weird side effects since by reference above
@@ -1361,20 +1406,22 @@ function ibm_apim_entity_base_field_info(EntityTypeInterface $entity_type) {
 }
 
 function ibm_apim_user_logout($account) {
-  if ((int)$account->id() !== 1) {
+  if ((int) $account->id() !== 1) {
     $user = User::load($account->id());
     if ($user !== NULL) {
       $registry_url = $user->get('registry_url')->value;
-      \Drupal::service('ibm_apim.user_registry')->get($registry_url);
-      $response = \Drupal::service('ibm_apim.mgmtserver')->postSignOut();
+      if ($registry_url !== NULL) {
+        \Drupal::service('ibm_apim.user_registry')->get($registry_url);
+        $response = \Drupal::service('ibm_apim.mgmtserver')->postSignOut();
 
-      if ($response->getCode() === 302) {
-        $headers = $response->getHeaders();
-        $headers = array_change_key_case($headers, CASE_LOWER);
-        $redirect = new TrustedRedirectResponse($headers['location']);    
-        $redirect->send();
+        if ($response->getCode() === 302) {
+          $headers = $response->getHeaders();
+          $headers = array_change_key_case($headers, CASE_LOWER);
+          $redirect = new TrustedRedirectResponse($headers['location']);
+          $redirect->send();
+        }
       }
     }
-    
+
   }
 }

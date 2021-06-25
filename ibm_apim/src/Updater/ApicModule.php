@@ -21,7 +21,10 @@ use Drupal\Core\Updater\UpdaterException;
  */
 class ApicModule extends Module {
 
-  public $title;
+  /**
+   * @var string|null
+   */
+  public ?string $title = NULL;
 
   /**
    * ApicModule constructor.
@@ -134,6 +137,7 @@ class ApicModule extends Module {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\Updater\UpdaterException
    */
   public static function canUpdateDirectory($directory): bool {
     $info = static::getExtensionInfo($directory);

@@ -12,7 +12,7 @@
 
 namespace Drupal\apic_app\Form;
 
-use Drupal\apic_app\Application;
+use Drupal\apic_app\Service\ApplicationService;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Extension\ThemeHandler;
@@ -23,7 +23,9 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\node\NodeInterface;
+use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -36,37 +38,42 @@ class ApplicationDeleteForm extends ConfirmFormBase {
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $node;
+  protected NodeInterface $node;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
    */
-  protected $restService;
+  protected ApplicationRestInterface $restService;
 
   /**
    * @var \Drupal\Core\Session\AccountProxyInterface
    */
-  protected $currentUser;
+  protected AccountProxyInterface $currentUser;
 
   /**
    * @var \Drupal\Core\Extension\ThemeHandler
    */
-  protected $themeHandler;
+  protected ThemeHandler $themeHandler;
 
   /**
    * @var \Drupal\Core\Extension\ModuleHandler
    */
-  protected $moduleHandler;
+  protected ModuleHandler $moduleHandler;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
    */
   protected $messenger;
+
+  /**
+   * @var \Drupal\apic_app\Service\ApplicationService
+   */
+  protected ApplicationService $applicationService;
 
   /**
    * ApplicationDeleteForm constructor.
@@ -77,20 +84,22 @@ class ApplicationDeleteForm extends ConfirmFormBase {
    * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
    * @param \Drupal\Core\Extension\ModuleHandler $moduleHandler
    * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\apic_app\Service\ApplicationService $applicationService
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, AccountProxyInterface $current_user, ThemeHandler $themeHandler, ModuleHandler $moduleHandler, Messenger $messenger) {
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, AccountProxyInterface $current_user, ThemeHandler $themeHandler, ModuleHandler $moduleHandler, Messenger $messenger, ApplicationService $applicationService) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->currentUser = $current_user;
     $this->themeHandler = $themeHandler;
     $this->moduleHandler = $moduleHandler;
     $this->messenger = $messenger;
+    $this->applicationService = $applicationService;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): ApplicationDeleteForm {
     // Load the service required to construct this class
     return new static(
       $container->get('apic_app.rest_service'),
@@ -98,7 +107,8 @@ class ApplicationDeleteForm extends ConfirmFormBase {
       $container->get('current_user'),
       $container->get('theme_handler'),
       $container->get('module_handler'),
-      $container->get('messenger')
+      $container->get('messenger'),
+      $container->get('apic_app.application')
     );
   }
 
@@ -114,7 +124,9 @@ class ApplicationDeleteForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
-    $this->node = $appId;
+    if ($appId !== NULL) {
+      $this->node = $appId;
+    }
     $form = parent::buildForm($form, $form_state);
     $form['#attached']['library'][] = 'apic_app/basic';
 
@@ -145,6 +157,7 @@ class ApplicationDeleteForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public function getCancelUrl(): Url {
     return $this->node->toUrl();
@@ -152,6 +165,8 @@ class ApplicationDeleteForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -168,7 +183,7 @@ class ApplicationDeleteForm extends ConfirmFormBase {
       ]);
 
       // also delete the node from the drupal DB too
-      Application::deleteNode($this->node->id(), 'delete');
+      $this->applicationService->deleteNode($this->node->id(), 'delete');
       // Calling all modules implementing 'hook_apic_app_delete':
       // NOTE: This hook is being deprecated in favour of apic_app_pre_delete and
       //       apic_app_post_delete. This is being done because this happens too late
@@ -179,6 +194,27 @@ class ApplicationDeleteForm extends ConfirmFormBase {
         'data' => $result->data,
         'appId' => $appId,
       ]);
+
+      $eventEntity = new ApicEvent();
+      $eventEntity->setArtifactType('application');
+      if (\Drupal::currentUser()->isAuthenticated() && (int) \Drupal::currentUser()->id() !== 1) {
+        $current_user = User::load(\Drupal::currentUser()->id());
+        if ($current_user !== NULL) {
+          $eventEntity->setUserUrl($current_user->get('apic_url')->value);
+        }
+      }
+      $eventEntity->setTimestamp(time());
+      $eventEntity->setEvent('delete');
+      $eventEntity->setArtifactUrl($url);
+      $eventEntity->setAppUrl($url);
+      $eventEntity->setConsumerOrgUrl($this->node->application_consumer_org_url->value);
+      $utils = \Drupal::service('ibm_apim.utils');
+      $appTitle = $utils->truncate_string($this->node->getTitle());
+      $eventEntity->setData(['name' => $appTitle]);
+      $eventLogService = \Drupal::service('ibm_apim.event_log');
+      $eventLogService->createIfNotExist($eventEntity);
+
+      \Drupal::service('apic_app.application')->invalidateCaches();
 
       $this->messenger->addMessage($this->t('Application deleted successfully.'));
       $form_state->setRedirectUrl(Url::fromRoute('view.applications.page_1'));

@@ -9,7 +9,6 @@
   justify-content: left;
   align-items: center;
   padding-left: 2rem;
-
 }
 
 .wizard-trail .bx--progress {
@@ -17,11 +16,13 @@
   display: -ms-flexbox;
   display: flex;
   list-style: none;
-  width: 60%; }
+  width: 60%;
+}
 
 @media (max-width: 480px) {
-  .wizard-trail .bx--progress
-  {   width: 100%; }
+  .wizard-trail .bx--progress {
+    width: 100%;
+  }
 }
 
 .wizard-trail .bx--progress-step {
@@ -43,14 +44,17 @@
 
 @media (max-width: 480px) {
   .wizard-trail .bx--progress-step {
-    min-width: 6rem; } }
+    min-width: 6rem;
+  }
+}
 
 .wizard-trail .bx--progress-line {
   position: absolute;
   left: 0;
   height: 1px;
   width: calc(100%);
-  border: 1px inset transparent;}
+  border: 1px inset transparent;
+}
 
 .wizard-trail .bx--progress-step svg {
   position: relative;
@@ -60,7 +64,8 @@
   height: 1rem;
   border-radius: 50%;
   margin: 0.625rem 0.5rem 0 0;
-  fill: #0f62fe; }
+  fill: #0f62fe;
+}
 
 .wizard-trail .bx--progress-step--incomplete svg {
   fill: #161616;
@@ -68,7 +73,8 @@
 
 .wizard-trail .bx--progress-label::before {
   display: block;
-  content: ''; }
+  content: '';
+}
 
 .wizard-trail .bx--progress-label {
   font-size: 0.875rem;
@@ -81,21 +87,22 @@
   line-height: 1.45;
   white-space: nowrap;
   text-overflow: ellipsis;
-  transition: box-shadow 110ms cubic-bezier(0.2, 0, 0.38, 0.9), color 110ms cubic-bezier(0.2, 0, 0.38, 0.9);}
+  transition: box-shadow 110ms cubic-bezier(0.2, 0, 0.38, 0.9), color 110ms cubic-bezier(0.2, 0, 0.38, 0.9);
+}
 
 .wizard-trail .bx--progress-step--current circle:last-child {
-  fill: #0f62fe; }
+  fill: #0f62fe;
+}
 
-
- .wizard-trail .bx--progress-step--current .bx--progress-line {
-  background-color: #0f62fe; }
-
+.wizard-trail .bx--progress-step--current .bx--progress-line {
+  background-color: #0f62fe;
+}
 
 .wizard-trail .bx--progress-step--incomplete .bx--progress-label {
   color: #161616;
 }
 
- .wizard-trail .bx--progress-step--incomplete .bx--progress-line {
+.wizard-trail .bx--progress-step--incomplete .bx--progress-line {
   background-color: #e0e0e0;
 }
 

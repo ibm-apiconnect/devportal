@@ -13,6 +13,7 @@
 
 namespace Drupal\apic_app\Form;
 
+use Drupal\apic_app\Entity\ApplicationCredentials;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\apic_app\Service\CredentialsService;
 use Drupal\Core\Form\ConfirmFormBase;
@@ -21,7 +22,10 @@ use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_event_log\ApicType\ApicEvent;
+use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -34,17 +38,17 @@ class CredentialsDeleteForm extends ConfirmFormBase {
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $node;
+  protected NodeInterface $node;
 
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
    */
-  protected $restService;
+  protected ApplicationRestInterface $restService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -54,14 +58,14 @@ class CredentialsDeleteForm extends ConfirmFormBase {
   /**
    * @var \Drupal\apic_app\Service\CredentialsService
    */
-  protected $credsService;
+  protected CredentialsService $credsService;
 
   /**
    * This represents the credential object
    *
    * @var \Drupal\apic_app\Entity\ApplicationCredentials
    */
-  protected $cred;
+  protected ApplicationCredentials $cred;
 
   /**
    * CredentialsDeleteForm constructor.
@@ -81,7 +85,7 @@ class CredentialsDeleteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): CredentialsDeleteForm {
     // Load the service required to construct this class
     return new static($container->get('apic_app.rest_service'),
       $container->get('ibm_apim.user_utils'),
@@ -100,8 +104,12 @@ class CredentialsDeleteForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL): array {
-    $this->node = $appId;
-    $this->cred = $credId;
+    if ($appId !== NULL) {
+      $this->node = $appId;
+    }
+    if ($credId !== NULL) {
+      $this->cred = $credId;
+    }
 
     $form = parent::buildForm($form, $form_state);
     $form['#attached']['library'][] = 'apic_app/basic';
@@ -162,7 +170,32 @@ class CredentialsDeleteForm extends ConfirmFormBase {
     $result = $this->restService->deleteCredentials($url);
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       // update the stored app
-      $this->node = $this->credsService->deleteCredentials($this->node, $this->cred->uuid());
+      $this->credsService->deleteCredentials($this->cred->uuid());
+      // Reload the node to pick up the updated list of credentials
+      $this->node = Node::load($this->node->id());
+
+      // Add Activity Feed Event Log
+      $eventEntity = new ApicEvent();
+      $eventEntity->setArtifactType('credential');
+      if (\Drupal::currentUser()->isAuthenticated() && (int) \Drupal::currentUser()->id() !== 1) {
+        $current_user = User::load(\Drupal::currentUser()->id());
+        if ($current_user !== NULL) {
+          // we only set the user if we're running as someone other than admin
+          // if running as admin then we're likely doing things on behalf of the admin
+          // TODO we might want to check if there is a passed in user_url and use that too
+          $eventEntity->setUserUrl($current_user->get('apic_url')->value);
+        }
+      }
+      $eventEntity->setTimestamp(time());
+      $eventEntity->setEvent('delete');
+      $eventEntity->setArtifactUrl($url);
+      $eventEntity->setAppUrl($appUrl);
+      $eventEntity->setConsumerOrgUrl($this->node->application_consumer_org_url->value);
+      $utils = \Drupal::service('ibm_apim.utils');
+      $appTitle = $utils->truncate_string($this->node->getTitle());
+      $eventEntity->setData(['name' => $this->cred->name(), 'appName' => $appTitle]);
+      $eventLogService = \Drupal::service('ibm_apim.event_log');
+      $eventLogService->createIfNotExist($eventEntity);
 
       // Calling all modules implementing 'hook_apic_app_creds_delete':
       $moduleHandler = \Drupal::moduleHandler();
@@ -171,6 +204,8 @@ class CredentialsDeleteForm extends ConfirmFormBase {
         'data' => $result->data,
         'credId' => $this->cred->uuid(),
       ]);
+
+      \Drupal::service('apic_app.application')->invalidateCaches();
 
       $this->messenger->addMessage($this->t('Credentials deleted successfully.'));
       $currentUser = \Drupal::currentUser();

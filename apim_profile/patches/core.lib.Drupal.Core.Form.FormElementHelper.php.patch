@@ -1,0 +1,11 @@
+--- core/lib/Drupal/Core/Form/FormElementHelper.php
++++ core/lib/Drupal/Core/Form/FormElementHelper.php
+@@ -23,7 +23,7 @@ class FormElementHelper {
+    */
+   public static function getElementByName($name, array $form) {
+     foreach (Element::children($form) as $key) {
+-      if (implode('][', $form[$key]['#parents']) === $name) {
++      if (isset($form[$key]['#parents']) && implode('][', $form[$key]['#parents']) === $name) {
+         return $form[$key];
+       }
+       elseif ($element = static::getElementByName($name, $form[$key])) {

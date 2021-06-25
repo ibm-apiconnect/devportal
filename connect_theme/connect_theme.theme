@@ -11,10 +11,6 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
-use Drupal\file\Entity\File;
-use Drupal\Core\Link;
-use Drupal\Core\Url;
-use Drupal\Core\Template\Attribute;
 use Drupal\user\Entity\User;
 
 /**
@@ -54,7 +50,7 @@ function connect_theme_page_attachments_alter(array &$attachments) {
     }
   }
   foreach ($attachments['#attached']['html_head'] as $key => $attachment) {
-    if ($attachment[1] == 'system_meta_generator') {
+    if ($attachment[1] === 'system_meta_generator') {
       unset($attachments['#attached']['html_head'][$key]);
     }
   }
@@ -103,7 +99,7 @@ function connect_theme_preprocess_field(&$variables) {
   }
   $element = $variables['element'];
 
-  if ($element['#field_type'] == 'comment') {
+  if ($element['#field_type'] === 'comment') {
     $variables['attributes']['aria-label'] = t('Comments');
   }
 
@@ -120,10 +116,11 @@ function connect_theme_preprocess_node(&$variables) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if ($variables['node']->getType() === 'page'){
+  if ($variables['node']->getType() === 'page') {
     $variables['attributes']['aria-labelledby'] = 'page-node-title';
     $variables['title_attributes']['id'] = 'page-node-title';
-  } else {
+  }
+  else {
     $variables['attributes']['aria-labelledby'] = 'node-' . $variables['node']->id() . '-title';
     $variables['title_attributes']['id'] = 'node-' . $variables['node']->id() . '-title';
   }
@@ -171,17 +168,17 @@ function connect_theme_preprocess_block(&$variables) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  if ($variables['plugin_id'] == 'system_menu_block:account') {
+  if ($variables['plugin_id'] === 'system_menu_block:account') {
     $variables['#cache']['max-age'] = 0;
   }
-  if ($variables['plugin_id'] =='contact_block') {
+  if ($variables['plugin_id'] === 'contact_block') {
     $variables['attributes']['aria-label'] = t('Contact form');
   }
-  if ($variables['plugin_id'] == 'system_menu_block:main') {
-  $variables['attributes']['class'][] = $variables['derivative_plugin_id'] . "-menu";
-        $variables['#attached']['library'][] = 'connect_theme/overflowhandler';
+  if ($variables['plugin_id'] === 'system_menu_block:main') {
+    $variables['attributes']['class'][] = $variables['derivative_plugin_id'] . "-menu";
+    $variables['#attached']['library'][] = 'connect_theme/overflowhandler';
   }
-  if($variables['base_plugin_id'] == 'system_menu_block') {
+  if ($variables['base_plugin_id'] === 'system_menu_block') {
     $variables['attributes']['class'][] = "block-" . $variables['derivative_plugin_id'];
   }
 
@@ -205,11 +202,12 @@ function connect_theme_preprocess_menu(&$variables) {
   $current_user = \Drupal::currentUser();
   if (!$current_user->isAnonymous()) {
     $entity = User::load($current_user->id());
-    if ($entity !== null && !empty($entity->user_picture) && $entity->user_picture->isEmpty() === FALSE) {
+    if ($entity !== NULL && $entity->user_picture->isEmpty() === FALSE) {
       $image = $entity->user_picture;
       $uri = $image->entity->getFileUri();
       $variables['user_picture'] = file_create_url($uri);
-    } else {
+    }
+    else {
       $variables['user_picture'] = '';
     }
   }
@@ -307,7 +305,7 @@ function connect_theme_preprocess_form_user_reset_pwd(&$variables) {
  */
 function connect_theme_preprocess_page_title(&$variables) {
   $node = \Drupal::request()->attributes->get('node');
-  if ($node && $node->bundle() == 'forum') {
+  if ($node && $node->bundle() === 'forum') {
     $variables['title'] = t('Forums');
   }
 }

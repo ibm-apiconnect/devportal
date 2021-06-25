@@ -21,10 +21,22 @@ use Psr\Log\LoggerInterface;
  */
 class PaymentMethodSchema {
 
-  private $state;
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  private StateInterface $state;
 
-  private $logger;
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  private LoggerInterface $logger;
 
+  /**
+   * PaymentMethodSchema constructor.
+   *
+   * @param \Drupal\Core\State\StateInterface $state
+   * @param \Psr\Log\LoggerInterface $logger
+   */
   public function __construct(StateInterface $state, LoggerInterface $logger) {
     $this->state = $state;
     $this->logger = $logger;
@@ -50,11 +62,11 @@ class PaymentMethodSchema {
   /**
    * get a specific payment method schema object by url
    *
-   * @param $key
+   * @param string $key
    *
    * @return null|array
    */
-  public function get($key): ?array {
+  public function get(string $key): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     $integration = NULL;
@@ -74,11 +86,11 @@ class PaymentMethodSchema {
   /**
    * get a specific payment method schema object by name
    *
-   * @param $name
+   * @param string $name
    *
    * @return null|array
    */
-  public function getByName($name): ?array {
+  public function getByName(string $name): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $name);
 
     $targetIntegration = NULL;
@@ -97,11 +109,36 @@ class PaymentMethodSchema {
   }
 
   /**
+   * get a specific payment method schema object by ID
+   *
+   * @param string $id
+   *
+   * @return null|array
+   */
+  public function getById(string $id): ?array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $id);
+
+    $targetIntegration = NULL;
+    if (isset($id)) {
+      $current_data = $this->state->get('ibm_apim.payment_method_schemas');
+
+      foreach ($current_data as $integration) {
+        if ($integration['id'] === $id) {
+          $targetIntegration = $integration;
+        }
+      }
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $targetIntegration);
+    return $targetIntegration;
+  }
+
+  /**
    * Update all payment method schema objects
    *
-   * @param $data array of payment method schema objects keyed on url
+   * @param array $data array of payment method schema objects keyed on url
    */
-  public function updateAll($data): void {
+  public function updateAll(array $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $data);
 
     if (isset($data)) {
@@ -119,10 +156,10 @@ class PaymentMethodSchema {
   /**
    * Update a specific payment method schema object
    *
-   * @param $key
-   * @param $data
+   * @param string $key
+   * @param array $data
    */
-  public function update($key, $data): void {
+  public function update(string $key, array $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     if (isset($key, $data)) {
@@ -142,9 +179,9 @@ class PaymentMethodSchema {
   /**
    * Delete a specific payment method schema object
    *
-   * @param $key (url)
+   * @param string $key (url)
    */
-  public function delete($key): void {
+  public function delete(string $key): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     if (isset($key)) {
@@ -176,10 +213,10 @@ class PaymentMethodSchema {
   }
 
   /**
-   * @param $integration
+   * @param array $integration
    *
    */
-  public function storeTranslations($integration): void {
+  public function storeTranslations(array $integration): void {
     if (isset($integration['x-ibm-languages'])) {
       $localeStorage = \Drupal::service('locale.storage');
       $utils = \Drupal::service('ibm_apim.utils');
@@ -207,8 +244,12 @@ class PaymentMethodSchema {
     }
   }
 
-  public function addConfigurationSchemaFields(&$form, $integration) {
-    
+  /**
+   * @param array $form
+   * @param array $integration
+   */
+  public function addConfigurationSchemaFields(array &$form, array $integration): void {
+
     // fallback to local form fields
     $currentLang = \Drupal::languageManager()->getCurrentLanguage()->getId();
     $localeStorage = \Drupal::service('locale.storage');
@@ -247,10 +288,10 @@ class PaymentMethodSchema {
           }
 
           if (isset($field['type']) && (!array_key_exists('readOnly', $field) || $field['readOnly'] === FALSE)) {
-            
+
             //Hidden fields
             if ((array_key_exists('x-ibm-display', $field) && $field['x-ibm-display'] === FALSE) ||
-            (array_key_exists('x-ibm-display-form', $field) && $field['x-ibm-display-form'] === FALSE)) {
+              (array_key_exists('x-ibm-display-form', $field) && $field['x-ibm-display-form'] === FALSE)) {
               $form[$key] = [
                 '#type' => 'hidden',
                 '#title' => $fieldTitle,
@@ -306,4 +347,5 @@ class PaymentMethodSchema {
       }
     }
   }
+
 }

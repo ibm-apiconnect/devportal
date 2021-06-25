@@ -13,9 +13,12 @@
 
 namespace Drupal\featuredcontent\Plugin\Block;
 
+use Drupal\apic_api\Api;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
+use Drupal\product\Product;
 
 /**
  * Provides a Featured Content Block
@@ -80,7 +83,7 @@ class FeaturedContentBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     return [
       'nodeType' => static::TYPE_PRODUCT,
       'numberOfTiles' => 6,
@@ -92,7 +95,7 @@ class FeaturedContentBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  public function blockForm($form, FormStateInterface $form_state) {
+  public function blockForm($form, FormStateInterface $form_state): array {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -172,34 +175,34 @@ class FeaturedContentBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  public function blockValidate($form, FormStateInterface $form_state) {
+  public function blockValidate($form, FormStateInterface $form_state): void {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
     parent::blockValidate($form, $form_state);
 
     $nodeType = $form_state->getValue('nodeType');
-    if ($nodeType === null || empty($nodeType) || ($nodeType !== static::TYPE_API && $nodeType !== static::TYPE_PRODUCT)) {
+    if ($nodeType === NULL || empty($nodeType) || ($nodeType !== static::TYPE_API && $nodeType !== static::TYPE_PRODUCT)) {
       $form_state->setErrorByName('nodeType', $this->t('Node type must be set to either \'api\' or \'product\'.'));
     }
     $numberOfTiles = $form_state->getValue('numberOfTiles');
-    if ($numberOfTiles === null || empty($numberOfTiles)) {
+    if ($numberOfTiles === NULL || empty($numberOfTiles)) {
       $form_state->setErrorByName('numberOfTiles', $this->t('Number of tiles must be an integer between 1 and 20.'));
     }
     else {
       $numberOfTiles_int = (int) $numberOfTiles;
-      if ($numberOfTiles_int === null || !\is_int($numberOfTiles_int) || $numberOfTiles_int > 21 || $numberOfTiles_int < 1) {
+      if ($numberOfTiles_int === NULL || !\is_int($numberOfTiles_int) || $numberOfTiles_int > 21 || $numberOfTiles_int < 1) {
         $form_state->setErrorByName('numberOfTiles', $this->t('Number of tiles must be an integer between 1 and 20.'));
       }
     }
 
     $selectionType = $form_state->getValue('selectionType');
-    if ($selectionType === null || empty($selectionType)) {
+    if ($selectionType === NULL || empty($selectionType)) {
       $form_state->setErrorByName('selectionType', $this->t('Node selection algorithm must be set.'));
     }
 
     $customNodes = $form_state->getValue('customNodes');
-    if ($selectionType !== null && $selectionType === static::CONST_CUSTOM && ($customNodes === null || empty($customNodes))) {
+    if ($selectionType !== NULL && $selectionType === static::CONST_CUSTOM && ($customNodes === NULL || empty($customNodes))) {
       $form_state->setErrorByName('customNodes', $this->t('If using Custom node selection then \'Custom nodes\' must be specified.'));
     }
 
@@ -212,7 +215,7 @@ class FeaturedContentBlock extends BlockBase {
    * {@inheritdoc}
    * This function runs when the config / edit form is submitted
    */
-  public function blockSubmit($form, FormStateInterface $form_state) {
+  public function blockSubmit($form, FormStateInterface $form_state): void {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -231,7 +234,7 @@ class FeaturedContentBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  public function build() {
+  public function build(): array {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -272,7 +275,7 @@ class FeaturedContentBlock extends BlockBase {
     $moduleHandler = \Drupal::service('module_handler');
 
     // build up query
-    if ($nodeType !== null && strtoupper($this->configuration['selectionType']) !== static::CONST_CUSTOM) {
+    if ($nodeType !== NULL && strtoupper($this->configuration['selectionType']) !== static::CONST_CUSTOM) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', $nodeType);
       $query->condition('status', 1);
@@ -323,26 +326,22 @@ class FeaturedContentBlock extends BlockBase {
       }
     }
 
-    if ($nids !== null && !empty($nids)) {
+    if ($nids !== NULL && !empty($nids)) {
       $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
       $rawNodes = Node::loadMultiple($nids);
       foreach ($rawNodes as $rawNode) {
         $hasTranslation = $rawNode->hasTranslation($lang_code);
-        if ($hasTranslation === true) {
+        if ($hasTranslation === TRUE) {
           $rawNode = $rawNode->getTranslation($lang_code);
         }
 
         $data = ['title' => $rawNode->getTitle(), 'nid' => $rawNode->id()];
         if ($rawNode->bundle() === static::TYPE_API) {
-          $fid = null;
+          $fid = NULL;
           $data['summary'] = $rawNode->apic_summary->value;
           // if ghmarkdown is available then use that
           if ($moduleHandler->moduleExists('ghmarkdown')) {
-            if ($rawNode->apic_description->value !== null) {
-              $string = $rawNode->apic_description->value;
-            } else {
-              $string = '';
-            }
+            $string = $rawNode->apic_description->value ?? '';
             $data['description'] = $utils->truncate_string(strip_tags(\Drupal\ghmarkdown\Plugin\Filter\GHMarkdown::parse($string)), 300);
           }
           else {
@@ -351,21 +350,17 @@ class FeaturedContentBlock extends BlockBase {
           $data['version'] = $rawNode->apic_version->value;
           $data['id'] = $rawNode->api_id->value;
           if (isset($rawNode->apic_image)) {
-            $fid = $rawNode->apic_image->getValue();
-
-            if (isset($fid[0]['target_id'])) {
-              $fid = $fid[0]['target_id'];
-            }
+            $fid = $fid[0]['target_id'] ?? $rawNode->apic_image->getValue();
           }
           $imageUrl = NULL;
-          if ($fid !== null && !empty($fid)) {
-            $file = \Drupal\file\Entity\File::load($fid);
-            if ($file !== null) {
+          if ($fid !== NULL && !empty($fid)) {
+            $file = File::load($fid);
+            if ($file !== NULL) {
               $imageUrl = $file->createFileUrl();
             }
           }
           elseif ($ibmApimShowPlaceholderImages === TRUE && $moduleHandler->moduleExists('apic_api')) {
-            $rawImage = \Drupal\apic_api\Api::getRandomImageName($rawNode->getTitle());
+            $rawImage = Api::getRandomImageName($rawNode->getTitle());
             $imageUrl = base_path() . drupal_get_path('module', 'apic_api') . '/images/' . $rawImage;
           }
           $data['image'] = $imageUrl;
@@ -374,11 +369,7 @@ class FeaturedContentBlock extends BlockBase {
           $data['summary'] = $rawNode->apic_summary->value;
           // if ghmarkdown is available then use that
           if ($moduleHandler->moduleExists('ghmarkdown')) {
-            if ($rawNode->apic_description->value !== null) {
-              $string = $rawNode->apic_description->value;
-            } else {
-              $string = '';
-            }
+            $string = $rawNode->apic_description->value ?? '';
             $data['description'] = $utils->truncate_string(strip_tags(\Drupal\ghmarkdown\Plugin\Filter\GHMarkdown::parse($string)), 300);
           }
           else {
@@ -388,20 +379,17 @@ class FeaturedContentBlock extends BlockBase {
           $data['version'] = $rawNode->apic_version->value;
           $fid = NULL;
           if (isset($rawNode->apic_image)) {
-            $fid = $rawNode->apic_image->getValue();
-            if (isset($fid[0]['target_id'])) {
-              $fid = $fid[0]['target_id'];
-            }
+            $fid = $fid[0]['target_id'] ?? $rawNode->apic_image->getValue();
           }
           $imageUrl = NULL;
           if ($fid !== NULL && !empty($fid)) {
-            $file = \Drupal\file\Entity\File::load($fid);
+            $file = File::load($fid);
             if ($file !== NULL) {
               $imageUrl = $file->createFileUrl();
             }
           }
           if ($imageUrl === NULL && $ibmApimShowPlaceholderImages === TRUE && $moduleHandler->moduleExists('product')) {
-            $rawImage = \Drupal\product\Product::getRandomImageName($rawNode->getTitle());
+            $rawImage = Product::getRandomImageName($rawNode->getTitle());
             $imageUrl = base_path() . drupal_get_path('module', 'product') . '/images/' . $rawImage;
           }
           $data['image'] = $imageUrl;
@@ -424,5 +412,6 @@ class FeaturedContentBlock extends BlockBase {
     }
     return $build;
   }
+
 }
 

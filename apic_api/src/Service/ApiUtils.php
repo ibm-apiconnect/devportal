@@ -13,20 +13,34 @@
 
 namespace Drupal\apic_api\Service;
 
+use Drupal\Core\State\StateInterface;
+use Drupal\node\Entity\Node;
+
 class ApiUtils {
 
-  public function __construct() {
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  private StateInterface $state;
+
+  /**
+   * ApiUtils constructor.
+   *
+   * @param \Drupal\Core\State\StateInterface $state
+   */
+  public function __construct(StateInterface $state) {
+    $this->state = $state;
   }
 
   /**
    * This function checks that the specified endpoint is one of those listed in the API
    *
-   * @param \Drupal\node\Entity\Node $node
+   * @param Node $node
    * @param string $endpoint
    *
    * @return bool
    */
-  public function validateApiEndpoint($node, $endpoint): bool {
+  public function validateApiEndpoint(Node $node, string $endpoint): bool {
     $returnValue = FALSE;
     if ($node !== NULL && $endpoint !== NULL) {
 
@@ -103,7 +117,7 @@ class ApiUtils {
         else {
           //\Drupal::logger('apic_api')->debug('WSDLRetrieverController: No Match!', []);
         }
-        // TODO missing return statement
+        return NULL;
       });
       if (!empty($match)) {
         $returnValue = TRUE;
@@ -115,4 +129,14 @@ class ApiUtils {
     }
     return $returnValue;
   }
+
+  /**
+   * Returns true if AsyncAPIs present, false otherwise
+   *
+   * @return bool
+   */
+  public function areEventAPIsPresent(): bool {
+    return (bool) $this->state->get('ibm_apim.asyncapis_present', FALSE);
+  }
+
 }

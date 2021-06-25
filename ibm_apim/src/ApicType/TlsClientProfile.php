@@ -15,67 +15,79 @@ namespace Drupal\ibm_apim\ApicType;
 
 class TlsClientProfile {
 
-  private $id;
-
-  private $name;
-
-  private $url;
-
-  private $keystore;
+  /**
+   * @var string|null
+   */
+  private ?string $id = NULL;
 
   /**
-   * @return mixed
+   * @var string|null
    */
-  public function getId() {
+  private ?string $name = NULL;
+
+  /**
+   * @var string|null
+   */
+  private ?string $url = NULL;
+
+  /**
+   * @var array
+   */
+  private array $keystore = [];
+
+  /**
+   * @return string|null
+   */
+  public function getId(): ?string {
     return $this->id;
   }
 
   /**
-   * @param mixed $id
+   * @param string|null $id
    */
-  public function setId($id): void {
+  public function setId(?string $id): void {
     $this->id = $id;
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function getName() {
+  public function getName(): ?string {
     return $this->name;
   }
 
   /**
-   * @param mixed $name
+   * @param string|null $name
    */
-  public function setName($name): void {
+  public function setName(?string $name): void {
     $this->name = $name;
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function getUrl() {
+  public function getUrl(): ?string {
     return $this->url;
   }
 
   /**
-   * @param mixed $url
+   * @param string|null $url
    */
-  public function setUrl($url): void {
+  public function setUrl(?string $url): void {
     $this->url = $url;
   }
 
   /**
-   * @return mixed
+   * @return array
    */
-  public function getKeystore() {
+  public function getKeystore(): array {
     return $this->keystore;
   }
 
   /**
-   * @param mixed $keystore
+   * @param array $keystore
    */
-  public function setKeystore($keystore): void {
+  public function setKeystore(array $keystore): void {
     $this->keystore = $keystore;
   }
 
@@ -86,7 +98,7 @@ class TlsClientProfile {
    *
    * @param array $data
    */
-  public function setValues($data): void {
+  public function setValues(array $data): void {
 
     if (isset($data['id'])) {
       $this->setId($data['id']);
@@ -143,4 +155,5 @@ class TlsClientProfile {
     $output['keyStore'] = $this->getKeyStore();
     return $output;
   }
+
 }

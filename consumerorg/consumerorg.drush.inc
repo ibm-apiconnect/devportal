@@ -13,7 +13,7 @@
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\Core\Session\UserSession;
 
-function consumerorg_drush_command() {
+function consumerorg_drush_command(): array {
 
   $items['consumerorg-cleanse-drush-command'] = [
     'description' => 'Clears the consumerorg entries back to a clean state.',
@@ -120,7 +120,7 @@ function drush_consumerorg_cleanse_drush_command() {
   foreach ($nodes as $node) {
     $node->delete();
   }
-  if ($original_user !== NULL && $original_user->id() !== 1) {
+  if ($original_user->id() !== 1) {
     $accountSwitcher->switchBack();
   }
   drush_log(dt('All consumer organization entries deleted.'), 'success');
@@ -167,7 +167,7 @@ function drush_consumerorg_createOrUpdate($content, $event, $func) {
         '@func' => $func,
       ]), 'warning');
     }
-    if ($original_user !== NULL && $original_user->id() !== 1) {
+    if ($original_user->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -200,6 +200,8 @@ function drush_consumerorg_update($content, $event = 'consumer_org_update') {
 /**
  * @param $event
  * @param $content
+ *
+ * @throws \JsonException
  */
 function drush_consumerorg_delete($content, $event = 'consumer_org_del') {
   ibm_apim_entry_trace(__FUNCTION__);
@@ -213,7 +215,7 @@ function drush_consumerorg_delete($content, $event = 'consumer_org_del') {
     }
 
     if (is_string($content)) {
-      $content = json_decode($content, TRUE);
+      $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
     }
 
     // TODO : hack until https://github.ibm.com/velox/apim/issues/6145 is fixed
@@ -235,7 +237,7 @@ function drush_consumerorg_delete($content, $event = 'consumer_org_del') {
     else {
       drush_log(dt('Drush DeleteOrg could not find organization @org', ['@org' => $content['consumer_org']['title']]), 'warning');
     }
-    if ($original_user !== NULL && $original_user->id() !== 1) {
+    if ($original_user->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -313,7 +315,7 @@ function drush_consumerorg_invitation_delete($content = [], $event = 'invitation
 
       $consumerOrgService->deleteInvitation($content, $event);
 
-      if ($original_user !== NULL && $original_user->id() !== 1) {
+      if ($original_user->id() !== 1) {
         $accountSwitcher->switchBack();
       }
       drush_log(dt('Drush deleted invitation for organization @org', [
@@ -331,7 +333,6 @@ function drush_consumerorg_invitation_delete($content = [], $event = 'invitation
 /**
  * @param $content
  * @param $event
- * @param $func
  */
 function drush_consumerorg_invitation_createOrUpdate($content, $event) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -360,7 +361,7 @@ function drush_consumerorg_invitation_createOrUpdate($content, $event) {
         '@org' => $ref,
       ]), 'success');
     }
-    if ($original_user !== NULL && $original_user->id() !== 1) {
+    if ($original_user->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -373,6 +374,8 @@ function drush_consumerorg_invitation_createOrUpdate($content, $event) {
 /**
  * @param $content
  * @param string $event
+ *
+ * @throws \JsonException
  */
 function drush_consumerorg_role_create($content, $event = 'role_create') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -389,7 +392,7 @@ function drush_consumerorg_role_create($content, $event = 'role_create') {
   }
 
   if (is_string($content)) {
-    $content = json_decode($content, 1);
+    $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
   }
 
   // first - do we have the corg that this role belongs to?
@@ -412,7 +415,7 @@ function drush_consumerorg_role_create($content, $event = 'role_create') {
     ]), 'status');
   }
 
-  if ($original_user !== NULL && $original_user->id() !== 1) {
+  if ($original_user->id() !== 1) {
     $accountSwitcher->switchBack();
   }
 
@@ -422,6 +425,8 @@ function drush_consumerorg_role_create($content, $event = 'role_create') {
 /**
  * @param $content
  * @param string $event
+ *
+ * @throws \JsonException
  */
 function drush_consumerorg_role_update($content, $event = 'role_update') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -438,7 +443,7 @@ function drush_consumerorg_role_update($content, $event = 'role_update') {
   }
 
   if (is_string($content)) {
-    $content = json_decode($content, 1);
+    $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
   }
 
   // first - do we have the corg that this role belongs to?
@@ -469,7 +474,7 @@ function drush_consumerorg_role_update($content, $event = 'role_update') {
     ]), 'status');
   }
 
-  if ($original_user !== NULL && $original_user->id() !== 1) {
+  if ($original_user->id() !== 1) {
     $accountSwitcher->switchBack();
   }
 
@@ -479,6 +484,8 @@ function drush_consumerorg_role_update($content, $event = 'role_update') {
 /**
  * @param $content
  * @param string $event
+ *
+ * @throws \JsonException
  */
 function drush_consumerorg_role_delete($content, $event = 'role_delete') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -494,7 +501,7 @@ function drush_consumerorg_role_delete($content, $event = 'role_delete') {
   }
 
   if (is_string($content)) {
-    $content = json_decode($content, 1);
+    $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
   }
 
   // first - do we have the corg that this role belongs to?
@@ -523,7 +530,7 @@ function drush_consumerorg_role_delete($content, $event = 'role_delete') {
     ]), 'status');
   }
 
-  if ($original_user !== NULL && $original_user->id() !== 1) {
+  if ($original_user->id() !== 1) {
     $accountSwitcher->switchBack();
   }
 
@@ -533,6 +540,8 @@ function drush_consumerorg_role_delete($content, $event = 'role_delete') {
 /**
  * @param $payload
  * @param string $event
+ *
+ * @throws \JsonException
  */
 function drush_consumerorg_member_create($payload, $event = 'member_create') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -549,7 +558,7 @@ function drush_consumerorg_member_create($payload, $event = 'member_create') {
   $user_service = \Drupal::service('ibm_apim.apicuser');
 
   if (\is_string($payload)) {
-    $payload = json_decode($payload, 1);
+    $payload = json_decode($payload, TRUE, 512, JSON_THROW_ON_ERROR);
   }
 
   // first - do we have the corg that this member is being added to?
@@ -572,6 +581,12 @@ function drush_consumerorg_member_create($payload, $event = 'member_create') {
     $member->setUserUrl($payload['user_url']);
     $member->setRoleUrls($payload['role_urls']);
     $member->setState($payload['state']);
+    if (!empty($payload['created_at'])) {
+      $member->setCreatedAt(strtotime($payload['created_at']));
+    }
+    if (!empty($payload['updated_at'])) {
+      $member->setUpdatedAt(strtotime($payload['updated_at']));
+    }
 
     $corg->addMember($member);
     $corg_service->createOrUpdateNode($corg, 'member_create_drush');
@@ -582,7 +597,7 @@ function drush_consumerorg_member_create($payload, $event = 'member_create') {
     ]));
   }
 
-  if ($original_user !== NULL && $original_user->id() !== 1) {
+  if ($original_user->id() !== 1) {
     $accountSwitcher->switchBack();
   }
 
@@ -592,6 +607,8 @@ function drush_consumerorg_member_create($payload, $event = 'member_create') {
 /**
  * @param $payload
  * @param string $event
+ *
+ * @throws \JsonException
  */
 function drush_consumerorg_member_update($payload, $event = 'member_update') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -608,13 +625,13 @@ function drush_consumerorg_member_update($payload, $event = 'member_update') {
   $user_service = \Drupal::service('ibm_apim.apicuser');
 
   if (\is_string($payload)) {
-    $payload = json_decode($payload, 1);
+    $payload = json_decode($payload, TRUE, 512, JSON_THROW_ON_ERROR);
   }
 
   // first - do we have the corg that this member is being updated in?
   $corg_url = $payload['consumer_org_url'];
   $corg = $corg_service->get($corg_url, 1);
-  
+
   if (empty($corg)) {
     drush_log(dt('Drush member-update could not find org with url @org_url', ['@org_url' => $corg_url]), 'warning');
   }
@@ -626,12 +643,18 @@ function drush_consumerorg_member_update($payload, $event = 'member_update') {
   }
   else {
     $members = $corg->getMembers();
-    if ($members !== NULL && !empty($members)) {      
+    if ($members !== NULL && !empty($members)) {
       foreach ($members as $key => $existingMember) {
         if ($existingMember->getUserUrl() === $payload['user_url']) {
           $members[$key]->setRoleUrls($payload['role_urls']);
           $members[$key]->setState($payload['state']);
           $members[$key]->setUser($user_service->getUserFromJSON($payload['user']));
+          if (!empty($payload['created_at'])) {
+            $members[$key]->setCreatedAt(strtotime($payload['created_at']));
+          }
+          if (!empty($payload['updated_at'])) {
+            $members[$key]->setUpdatedAt(strtotime($payload['updated_at']));
+          }
         }
       }
       $corg->setMembers($members);
@@ -647,7 +670,12 @@ function drush_consumerorg_member_update($payload, $event = 'member_update') {
       $member->setUserUrl($payload['user_url']);
       $member->setRoleUrls($payload['role_urls']);
       $member->setState($payload['state']);
-
+      if (!empty($payload['created_at'])) {
+        $member->setCreatedAt(strtotime($payload['created_at']));
+      }
+      if (!empty($payload['updated_at'])) {
+        $member->setUpdatedAt(strtotime($payload['updated_at']));
+      }
       $corg->addMember($member);
       drush_log(dt('Added member @username to consumer org @id', [
         '@username' => $member->getUser()->getUsername(),
@@ -658,7 +686,7 @@ function drush_consumerorg_member_update($payload, $event = 'member_update') {
     $corg_service->createOrUpdateNode($corg, 'member_update_drush');
   }
 
-  if ($original_user !== NULL && $original_user->id() !== 1) {
+  if ($original_user->id() !== 1) {
     $accountSwitcher->switchBack();
   }
 
@@ -670,6 +698,8 @@ function drush_consumerorg_member_update($payload, $event = 'member_update') {
  *
  * @param $payload
  * @param string $event
+ *
+ * @throws \JsonException
  */
 function drush_consumerorg_member_delete($payload, $event = 'member_delete') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -686,7 +716,7 @@ function drush_consumerorg_member_delete($payload, $event = 'member_delete') {
   $user_service = \Drupal::service('ibm_apim.apicuser');
 
   if (\is_string($payload)) {
-    $payload = json_decode($payload, 1);
+    $payload = json_decode($payload, TRUE, 512, JSON_THROW_ON_ERROR);
   }
 
   // first - do we have the corg that this member is being removed from?
@@ -706,6 +736,12 @@ function drush_consumerorg_member_delete($payload, $event = 'member_delete') {
     $member->setUserUrl($payload['user_url']);
     $member->setRoleUrls($payload['role_urls']);
     $member->setState($payload['state']);
+    if (!empty($payload['created_at'])) {
+      $member->setCreatedAt(strtotime($payload['created_at']));
+    }
+    if (!empty($payload['updated_at'])) {
+      $member->setUpdatedAt(strtotime($payload['updated_at']));
+    }
 
     $corg->removeMember($member);
     $corg_service->createOrUpdateNode($corg, 'member_remove_drush');
@@ -717,7 +753,7 @@ function drush_consumerorg_member_delete($payload, $event = 'member_delete') {
 
   }
 
-  if ($original_user !== NULL && $original_user->id() !== 1) {
+  if ($original_user->id() !== 1) {
     $accountSwitcher->switchBack();
   }
 
@@ -727,6 +763,8 @@ function drush_consumerorg_member_delete($payload, $event = 'member_delete') {
 /**
  * @param $content
  * @param string $event
+ *
+ * @throws \JsonException
  */
 function drush_consumerorg_payment_method_create($content, $event = 'payment_method_create') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -742,7 +780,7 @@ function drush_consumerorg_payment_method_create($content, $event = 'payment_met
   }
 
   if (is_string($content)) {
-    $content = json_decode($content, 1);
+    $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
   }
 
   // first - do we have the corg that this role belongs to?
@@ -764,7 +802,7 @@ function drush_consumerorg_payment_method_create($content, $event = 'payment_met
     ]), 'status');
   }
 
-  if ($original_user !== NULL && $original_user->id() !== 1) {
+  if ($original_user->id() !== 1) {
     $accountSwitcher->switchBack();
   }
 
@@ -774,6 +812,8 @@ function drush_consumerorg_payment_method_create($content, $event = 'payment_met
 /**
  * @param $content
  * @param string $event
+ *
+ * @throws \JsonException
  */
 function drush_consumerorg_payment_method_update($content, $event = 'payment_method_update') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -789,7 +829,7 @@ function drush_consumerorg_payment_method_update($content, $event = 'payment_met
   }
 
   if (is_string($content)) {
-    $content = json_decode($content, 1);
+    $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
   }
 
   // first - do we have the corg that this role belongs to?
@@ -811,7 +851,7 @@ function drush_consumerorg_payment_method_update($content, $event = 'payment_met
     ]), 'status');
   }
 
-  if ($original_user !== NULL && $original_user->id() !== 1) {
+  if ($original_user->id() !== 1) {
     $accountSwitcher->switchBack();
   }
 
@@ -821,6 +861,8 @@ function drush_consumerorg_payment_method_update($content, $event = 'payment_met
 /**
  * @param $content
  * @param string $event
+ *
+ * @throws \JsonException
  */
 function drush_consumerorg_payment_method_delete($content, $event = 'payment_method_delete') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -836,7 +878,7 @@ function drush_consumerorg_payment_method_delete($content, $event = 'payment_met
   }
 
   if (is_string($content)) {
-    $content = json_decode($content, 1);
+    $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
   }
 
   // first - do we have the corg that this role belongs to?
@@ -858,7 +900,7 @@ function drush_consumerorg_payment_method_delete($content, $event = 'payment_met
     ]), 'status');
   }
 
-  if ($original_user !== NULL && $original_user->id() !== 1) {
+  if ($original_user->id() !== 1) {
     $accountSwitcher->switchBack();
   }
 

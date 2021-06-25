@@ -1,9 +1,9 @@
-name: IBM APIC Sub-theme Generator
+name: IBM API Developer Portal Sub-theme Generator
 type: module
 description: Generate an IBM API Connect sub-theme
-package: IBM API Connect
+package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9
-version: 8.x-3.0.9
+version: 8.x-3.1.7
 project: themegenerator
 dependencies:
 - ibm_apim:ibm_apim

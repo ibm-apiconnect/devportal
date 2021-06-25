@@ -37,6 +37,7 @@ consumerorg.invite:
     _title: 'Invite a user to join your consumer organization'
   requirements:
     _consumerorg_edit_org_access_check: 'TRUE'
+    _consumerorg_invitation_access_check: 'TRUE'
 
 consumerorg.remove_user:
   path: '/myorg/remove/{memberId}'

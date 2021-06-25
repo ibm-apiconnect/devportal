@@ -25,6 +25,8 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\Node;
 use Drupal\views\Views;
 use Drupal\Core\Entity\EntityStorageException;
+use Drupal\apic_app\ApplicationSubscriptionSchema;
+use Drupal\apic_app\ApplicationCredentialsSchema;
 
 /**
  * Changes from 8.x-1.0 to 8.x-1.1 :
@@ -159,6 +161,8 @@ function apic_app_update_8103() {
  * Changes from 8.x-1.4 to 8.x-1.5 :
  *  - add subscription_refs field
  *  - add credentials_refs field
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apic_app_update_8104() {
   // Create a new field storage 'application_image'
@@ -357,7 +361,7 @@ function apic_app_update_8105() {
 
   \Drupal::logger('apic_app.upgrade')->debug('Switching credentials and subscriptions done (ready for content refresh).');
 
-  if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+  if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchBack();
   }
 }
@@ -400,7 +404,11 @@ function apic_app_update_8106() {
   }
 }
 
-// Making sure that application summary is translatable
+/**
+ * Making sure that application summary is translatable
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
 function apic_app_update_8107() {
 
   $apicSummaryFieldStorageConfig = FieldStorageConfig::loadByName('node', 'apic_summary');
@@ -421,7 +429,7 @@ function apic_app_update_8107() {
  */
 function apic_app_update_8108() {
   $view = Views::getView('applications');
-  if ($view !== null) {
+  if ($view !== NULL) {
     $style = $view->getDisplay()->getOption('style');
     if ((int) $style['options']['gutterWidth'] === 0) {
       $style['options']['gutterWidth'] = "20";
@@ -493,7 +501,7 @@ function apic_app_update_8202() {
       $exposed_form['options']['reset_button'] = FALSE;
       unset($exposed_form['options']['bef']['sort']['bef_format']);
       $exposed_form['options']['bef']['sort']['plugin_id'] = 'default';
-      $exposed_form['options']['bef']['sort']['advanced']['combine'] = true;
+      $exposed_form['options']['bef']['sort']['advanced']['combine'] = TRUE;
       $view->getDisplay()->setOption('exposed_form', $exposed_form);
       $view->save();
     }
@@ -528,14 +536,14 @@ function apic_app_update_8203() {
   // Retrieve existing field data in apic_app entity tables.
   foreach ($tables as $table) {
     // Delete any table data.
-    if ($database->schema() !==NULL && $database->schema()->tableExists($table)) {
+    if ($database->schema() !== NULL && $database->schema()->tableExists($table)) {
       $database->truncate($table)->execute();
     }
   }
   try {
-    $entityDefUpManager = \Drupal::service('entity.definition_update_manager');
+    $entityDefUpManager = \Drupal::service('ibm_apim.apic_definition_update_manager');
     $entityDefUpManager->applyUpdates();
-    if ($database->schema() !==NULL && $database->schema()->tableExists("apic_app_application_subs")) {
+    if ($database->schema() !== NULL && $database->schema()->tableExists("apic_app_application_subs")) {
       Database::getConnection()->schema()->changeField('apic_app_application_subs', 'id', 'id', [
         'type' => 'int',
         'not null' => TRUE,
@@ -549,7 +557,7 @@ function apic_app_update_8203() {
       \Drupal::entityDefinitionUpdateManager()
         ->installFieldStorageDefinition('uuid', 'apic_app_application_subs', 'apic_app', $storage_definition);
     }
-    if ($database->schema() !==NULL && $database->schema()->tableExists("apic_app_application_creds")) {
+    if ($database->schema() !== NULL && $database->schema()->tableExists("apic_app_application_creds")) {
       Database::getConnection()->schema()->changeField('apic_app_application_creds', 'id', 'id', [
         'type' => 'int',
         'not null' => TRUE,
@@ -570,13 +578,117 @@ function apic_app_update_8203() {
 }
 
 /**
+ * Store APIC created_at and updated_at timestamps
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_app_update_8301() {
+  // Create a new field for the application module
+  $fieldConfig = FieldConfig::create([
+    'field_name' => 'apic_created_at',
+    'field_type' => 'timestamp',
+    'entity_type' => 'node',
+    'bundle' => 'application',
+    'translatable' => FALSE,
+    'label' => t('Creation time'),
+  ]);
+  $fieldConfig->save();
+
+  // Create a new field for the application module
+  $fieldConfig = FieldConfig::create([
+    'field_name' => 'apic_updated_at',
+    'field_type' => 'timestamp',
+    'entity_type' => 'node',
+    'bundle' => 'application',
+    'translatable' => FALSE,
+    'label' => t('Modification time'),
+  ]);
+  $fieldConfig->save();
+
+  // update entities
+  $database = \Drupal::database();
+  try {
+    $entityDefUpManager = \Drupal::service('ibm_apim.apic_definition_update_manager');
+    $entityDefUpManager->applyUpdates();
+    foreach (['apic_app_application_subs', 'apic_app_application_creds'] as $entityType) {
+      if ($database->schema() !== NULL && $database->schema()->tableExists($entityType)) {
+        $created_at = BaseFieldDefinition::create('timestamp')
+          ->setLabel(t('Creation time'))
+          ->setDescription(t('The APIC creation timestamp'))
+          ->setDefaultValue(0)
+          ->setReadOnly(TRUE);
+        \Drupal::entityDefinitionUpdateManager()
+          ->installFieldStorageDefinition('created_at', $entityType, 'apic_app', $created_at);
+
+        $updated_at = BaseFieldDefinition::create('timestamp')
+          ->setLabel(t('Modification time'))
+          ->setDescription(t('The APIC modification timestamp'))
+          ->setDefaultValue(0)
+          ->setReadOnly(TRUE);
+        \Drupal::entityDefinitionUpdateManager()
+          ->installFieldStorageDefinition('updated_at', $entityType, 'apic_app', $updated_at);
+      }
+    }
+    \Drupal::logger('apic_app: ')->notice('Successfully applied entity updates');
+  } catch (EntityStorageException $e) {
+    \Drupal::logger('apic_app: ')->notice($e->getMessage());
+  }
+}
+
+
+/**
+ * Set additional indexes on apic_app_application_subs and
+ * apic_app_application_creds tables
+ */
+function apic_app_update_8302() {
+  $table = 'apic_app_application_creds';
+  $classValue = ApplicationCredentialsSchema::class;
+  applyTableIndexUpdates($table, $classValue, array('uuid', 'app_url'));
+
+  $table = 'apic_app_application_subs';
+  $classValue = ApplicationSubscriptionSchema::class;
+  applyTableIndexUpdates($table, $classValue, array('uuid', 'consumerorg_url', 'app_url', 'product_url'));
+
+  // Set an index on the apic_url_value column of the node__apic_url table
+  $field_storage_configs = FieldStorageConfig::loadByName('node', 'apic_url');
+  $field_storage_configs->setIndexes(array('value' => array('value')));
+  $field_storage_configs->save();
+}
+
+/**
+ * Ensures that the correct storage schema class is set for the 
+ * given entity (table).  Also ensures that indexes are set on the 
+ * given array of field names.
+ */
+function applyTableIndexUpdates($table, $storageClass, $indexFields) {
+  $manager = \Drupal::entityDefinitionUpdateManager();
+
+  // Get the current entity type definition, ensure the storage schema
+  // class is set.
+  $entity_type = $manager->getEntityType($table)
+    ->setHandlerClass('storage_schema', $storageClass);
+
+  // Regenerate entity type indexes.
+  $manager->updateEntityType($entity_type);
+
+  foreach ($indexFields as $field_name) {
+    $manager->updateFieldStorageDefinition($manager->getFieldStorageDefinition($field_name, $table));
+  }
+}
+
+/**
  * Implements hook_update_dependencies().
  */
-function apic_app_update_dependencies() {
+function apic_app_update_dependencies(): array {
   return [
     'system' => [
       8803 => [
         'apic_app' => 8106,
+      ],
+    ],
+    'apic_app' => [
+      8301 => [
+        'consumerorg' => 8201,
       ],
     ],
   ];

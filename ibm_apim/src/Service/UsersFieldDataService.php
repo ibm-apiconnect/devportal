@@ -13,48 +13,69 @@
 namespace Drupal\ibm_apim\Service;
 
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Schema;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\ibm_apim\Service\Interfaces\UsersFieldDataServiceInterface;
 use Psr\Log\LoggerInterface;
 use \Drupal\user\Entity\User;
 
+/**
+ * Class UsersFieldDataService
+ *
+ * @package Drupal\ibm_apim\Service
+ */
 class UsersFieldDataService implements UsersFieldDataServiceInterface {
 
-  private $users_field_data_table = 'users_field_data';
-
-  private $registry_url_column = 'registry_url';
-
-  private $user_name_index = 'user__name';
-
-  private $user_name_registry_index = 'user__name__registry';
-
-  private $user_name_registry_index_fields = ['name', 'registry_url', 'langcode'];
+  /**
+   * @var string
+   */
+  private string $users_field_data_table = 'users_field_data';
 
   /**
-   * @var \Drupal\Core\Database\Schema
+   * @var string
    */
-  protected $schema;
+  private string $registry_url_column = 'registry_url';
+
+  /**
+   * @var string
+   */
+  private string $user_name_index = 'user__name';
+
+  /**
+   * @var string
+   */
+  private string $user_name_registry_index = 'user__name__registry';
+
+  /**
+   * @var array|string[]
+   */
+  private array $user_name_registry_index_fields = ['name', 'registry_url', 'langcode'];
+
+  /**
+   * @var \Drupal\Core\Database\Schema|null
+   */
+  protected ?Schema $schema;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
    */
-  protected $userRegistryService;
+  protected UserRegistryServiceInterface $userRegistryService;
 
   /**
    * @var \Drupal\Core\Database\Connection
    */
-  protected $database;
+  protected Connection $database;
 
   public function __construct(Connection $database,
                               LoggerInterface $logger,
@@ -78,12 +99,18 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
     if ($this->schema->fieldExists($this->users_field_data_table, $this->registry_url_column)) {
 
       if ($this->schema->indexExists($this->users_field_data_table, $this->user_name_index)) {
-        $this->logger->notice('Dropping %index from %table.', ['%index' => $this->user_name_index, '%table' => $this->users_field_data_table]);
+        $this->logger->notice('Dropping %index from %table.', [
+          '%index' => $this->user_name_index,
+          '%table' => $this->users_field_data_table,
+        ]);
         $this->schema->dropUniqueKey($this->users_field_data_table, $this->user_name_index);
       }
 
       if (!$this->schema->indexExists($this->users_field_data_table, $this->user_name_registry_index)) {
-        $this->logger->notice('Creating %index in %table.', ['%index' => $this->user_name_registry_index, '%table' => $this->users_field_data_table]);
+        $this->logger->notice('Creating %index in %table.', [
+          '%index' => $this->user_name_registry_index,
+          '%table' => $this->users_field_data_table,
+        ]);
         $this->schema->addUniqueKey($this->users_field_data_table, $this->user_name_registry_index, $this->user_name_registry_index_fields);
       }
 
@@ -104,6 +131,9 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
 
   /**
    * @inheritDoc
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function setAdminRegistryUrl(): void {
     if (function_exists('ibm_apim_entry_trace')) {
@@ -125,6 +155,9 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
 
   /**
    * @inheritDoc
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function updateRegistryUrlFieldIfEmpty(): void {
     if (function_exists('ibm_apim_entry_trace')) {
@@ -133,18 +166,18 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
 
     $storage = $this->entityTypeManager->getStorage('user');
     $entity_ids = $storage->getQuery()
-      ->condition('uid', [0,1], 'NOT IN')
+      ->condition('uid', [0, 1], 'NOT IN')
       ->condition('registry_url', NULL, 'IS NULL')
       ->execute();
 
     foreach ($entity_ids as $user_id) {
       $user = User::load($user_id);
 
-      if ($user->hasField('apic_user_registry_url') && $user->get('apic_user_registry_url')->value !== NULL) {
+      if ($user !== NULL && $user->hasField('apic_user_registry_url') && $user->get('apic_user_registry_url')->value !== NULL) {
 
         $this->logger->notice('updating user %uid registry_url with %apic_user_registry_url', [
-          '%uid' =>$user->id(),
-          '%apic_user_registry_url' => $user->get('apic_user_registry_url')->value
+          '%uid' => $user->id(),
+          '%apic_user_registry_url' => $user->get('apic_user_registry_url')->value,
         ]);
         $user->set('registry_url', $user->get('apic_user_registry_url')->value);
         $user->save();
@@ -155,6 +188,11 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
     }
   }
 
+  /**
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function deleteUsersWithDuplicateEmails(): void {
     $this->logger->notice('Deleting users with duplicated emails');
     $options = ['target' => 'default'];
@@ -164,7 +202,7 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
     foreach ($uids as $uid) {
       $user = $this->entityTypeManager->getStorage('user')->load($uid->uid);
       //Only delete users who've never logged in
-      if ($user->first_time_login->value == 1) {
+      if ($user !== NULL && (int) $user->first_time_login->value === 1) {
         $this->entityTypeManager->getStorage('user')->delete([$user]);
       }
     }

@@ -1,7 +1,7 @@
 name: 'APIC Drush Administration commands'
 type: module
 description: 'Additional drush admin commands'
-package: 'IBM API Connect'
+package: 'IBM API Developer Portal'
 core_version_requirement: ^8 || ^9
 version: 8.x-1.0.1
 project: drushadmin

@@ -25,18 +25,47 @@ use RecursiveIteratorIterator;
 use RegexIterator;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * Class CustomModulesDeleteForm
+ *
+ * @package Drupal\ibm_apim\Form
+ */
 class CustomModulesDeleteForm extends FormBase {
 
-  protected $sitePath;
+  /**
+   * @var string
+   */
+  protected string $sitePath;
 
-  protected $moduleHandler;
+  /**
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected ModuleHandlerInterface $moduleHandler;
 
-  protected $logger;
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected LoggerInterface $logger;
 
-  protected $keyValueExpirable;
+  /**
+   * @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface
+   */
+  protected KeyValueStoreExpirableInterface $keyValueExpirable;
 
-  protected $utils;
+  /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
+  protected Utils $utils;
 
+  /**
+   * CustomModulesDeleteForm constructor.
+   *
+   * @param string $site_path
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   * @param \Psr\Log\LoggerInterface $logger
+   * @param \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $key_value_expirable
+   * @param \Drupal\ibm_apim\Service\Utils $utils
+   */
   public function __construct(string $site_path,
                               ModuleHandlerInterface $module_handler,
                               LoggerInterface $logger,
@@ -48,7 +77,13 @@ class CustomModulesDeleteForm extends FormBase {
     $this->utils = $utils;
   }
 
-  public static function create(ContainerInterface $container) {
+  /**
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *
+   * @return \Drupal\ibm_apim\Form\CustomModulesDeleteForm|static
+   */
+  public static function create(ContainerInterface $container): CustomModulesDeleteForm {
+    /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('site.path'),
       $container->get('module_handler'),
@@ -73,7 +108,7 @@ class CustomModulesDeleteForm extends FormBase {
 
     $form['preamble'] = [
       '#type' => 'item',
-      '#description' => 'This form allows you to delete any modules you have installed. Any modules shipped with IBM API Connect cannot be deleted. For a module to appear in the list it, and all of its sub-modules, need to be disabled.',
+      '#description' => 'This form allows you to delete any modules you have installed. Any modules shipped with IBM API Developer Portal cannot be deleted. For a module to appear in the list it, and all of its sub-modules, need to be disabled.',
     ];
     $header = [
       'module' => $this->t('Module'),
@@ -97,6 +132,10 @@ class CustomModulesDeleteForm extends FormBase {
     return $form;
   }
 
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 

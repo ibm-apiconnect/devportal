@@ -8,7 +8,7 @@
   clip: rect(1px, 1px, 1px, 1px);
   position: absolute !important;
   height: 1px !important;
-  margin: 0 !important;
+  margin:  !important;
   overflow: hidden !important;
   padding: 0 !important;
   width: 1px !important;
@@ -30,13 +30,6 @@ ul.sf-menu div {
 ul.sf-menu {
   line-height: 1.0;
   z-index: 497;
-}
-ul.sf-menu:after {
-  clear: both;
-  content: "";
-  height: 0;
-  display: block;
-  visibility: hidden;
 }
 ul.sf-menu ul {
   left: 0;
@@ -87,7 +80,7 @@ ul.sf-menu .sf-with-ul {
   padding-right: 3em;
 }
 ul.sf-menu .sf-sub-indicator {
-  height: 1em;
+  height: 12px;
   line-height: 9999px;
   opacity: 0.75;
   overflow: hidden;
@@ -101,7 +94,7 @@ ul.sf-menu .sf-sub-indicator {
   -ms-transform: translateY(-50%);
   -o-transform: translateY(-50%);
   transform: translateY(-50%);
-  width: 1em;
+  width: 12px;
 }
 ul.sf-menu .sf-sub-indicator:after {
   content: "▼";

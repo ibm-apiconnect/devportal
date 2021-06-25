@@ -29,6 +29,7 @@ use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
+use Drupal\session_based_temp_store\SessionBasedTempStore;
 use Drupal\session_based_temp_store\SessionBasedTempStoreFactory;
 use Drupal\user\RegisterForm;
 use Psr\Log\LoggerInterface;
@@ -37,6 +38,7 @@ use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Extension\ModuleHandler;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Self sign up / create new user form.
@@ -58,52 +60,52 @@ class ApicUserRegisterForm extends RegisterForm {
   /**
    * @var \Drupal\ibm_apim\Service\ApicUserService
    */
-  protected $userService;
+  protected ApicUserService $userService;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
    */
-  protected $userRegistryService;
+  protected UserRegistryServiceInterface $userRegistryService;
 
   /**
    * @var \Drupal\ibm_apim\Service\ApimUtils
    */
-  protected $apimUtils;
+  protected ApimUtils $apimUtils;
 
   /**
    * @var \Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface
    */
-  protected $oidcService;
+  protected OidcRegistryServiceInterface $oidcService;
 
   /**
-   * @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory
+   * @var \Drupal\session_based_temp_store\SessionBasedTempStore
    */
-  protected $authApicSessionStore;
-
-  /**
-   * @var \Drupal\auth_apic\UserManagement\SignUpInterface
-   */
-  protected $userManagedSignUp;
+  protected SessionBasedTempStore $authApicSessionStore;
 
   /**
    * @var \Drupal\auth_apic\UserManagement\SignUpInterface
    */
-  protected $nonUserManagedSignUp;
+  protected SignUpInterface $userManagedSignUp;
+
+  /**
+   * @var \Drupal\auth_apic\UserManagement\SignUpInterface
+   */
+  protected SignUpInterface $nonUserManagedSignUp;
 
   /**
    * @var \Drupal\auth_apic\UserManagement\ApicInvitationInterface
    */
-  protected $invitationService;
+  protected ApicInvitationInterface $invitationService;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface
    */
-  protected $userStorage;
+  protected ApicUserStorageInterface $userStorage;
 
   /**
    * @var \Drupal\Core\Cache\CacheBackendInterface
    */
-  protected $cacheBackend;
+  protected CacheBackendInterface $cacheBackend;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -140,7 +142,7 @@ class ApicUserRegisterForm extends RegisterForm {
     $this->userService = $userService;
     $this->apimUtils = $apim_utils;
     $this->oidcService = $oidc_service;
-    $this->authApicSessionStore = $sessionStoreFactory->get('auth_apic_invitation_token');
+    $this->authApicSessionStore = $sessionStoreFactory->get('auth_apic_storage');
     $this->userManagedSignUp = $user_managed_signup;
     $this->nonUserManagedSignUp = $non_user_managed_signup;
     $this->invitationService = $invitation_service;
@@ -151,9 +153,12 @@ class ApicUserRegisterForm extends RegisterForm {
   }
 
   /**
-   * {@inheritdoc}
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *
+   * @return \Drupal\auth_apic\Form\ApicUserRegisterForm|\Drupal\Core\Entity\ContentEntityForm|\Drupal\user\AccountForm|static
    */
   public static function create(ContainerInterface $container) {
+    /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('entity.repository'),
       $container->get('language_manager'),
@@ -177,15 +182,22 @@ class ApicUserRegisterForm extends RegisterForm {
   }
 
   /**
-   * @inheritdoc
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \Exception
    */
-  public function form(array $form, FormStateInterface $form_state) {
+  public function form(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $member_invitation = FALSE;
 
     if (!\Drupal::currentUser()->isAnonymous()) {
-      if (\Drupal::request()->getPathInfo() == '/user/oidcregister') {
+      if (\Drupal::request()->getPathInfo() === '/user/oidcregister') {
         $form = parent::form($form, $form_state);
       } else {
         $this->messenger->addError(t('Permission denied.'));
@@ -222,7 +234,7 @@ class ApicUserRegisterForm extends RegisterForm {
       $all_registries = $this->userRegistryService->getAll();
       if (empty($all_registries)) {
         $this->messenger->addError(t('Self-service onboarding not possible: No user registries defined.'), 'error');
-        throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
+        throw new AccessDeniedHttpException();
       }
 
       // Hide the multi-value submit for consumerorgs regardless of whether we are going to add it again.
@@ -244,7 +256,7 @@ class ApicUserRegisterForm extends RegisterForm {
       // If self onboarding is disabled and this is not the invited user flow then bail out.
       if ((boolean) \Drupal::state()->get('ibm_apim.selfSignUpEnabled', TRUE) === FALSE && empty($jwt)) {
         $this->messenger->addError(t('Self-service onboarding is disabled for this site.'), 'error');
-        throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
+        throw new AccessDeniedHttpException();
       }
 
       // decide which registry is going on the left side and which buttons to put on the right
@@ -351,7 +363,7 @@ class ApicUserRegisterForm extends RegisterForm {
           $form['#oidc'] = true;
           $oidc_info = $this->oidcService->getOidcMetadata($this->chosen_registry, $jwt);
 
-          if ($enabled_oidc_register_form) {
+          if ($enabled_oidc_register_form || (!empty($jwt) && !$member_invitation)) {
             $form['oidc_url'] = [
               '#type' => 'hidden',
               '#value' => $oidc_info['az_url'] . '&action=signup'
@@ -395,7 +407,7 @@ class ApicUserRegisterForm extends RegisterForm {
 
         }
         else {
-          // ldap /authurl
+          // ldap / authurl
 
           // change name of property to avoid password policy
           $form['pw_no_policy'] = [
@@ -468,7 +480,7 @@ class ApicUserRegisterForm extends RegisterForm {
                 '<span class="registry-name">' . $other_registry->getTitle() . '</span>
                           </a>',
             ];
-            if ($enabled_oidc_register_form) {
+            if ($enabled_oidc_register_form || (!empty($jwt) && !$member_invitation)) {
               $button['#prefix'] = '<a class="registry-button generic-button button" href="' . $redirect_with_registry_url . $other_registry->getUrl() . '" title="' . $this->t('Create account using @ur', ['@ur' => $other_registry->getTitle()]) . '">'
               . $oidc_info['image']['html'] . '<span class="registry-name">' . $other_registry->getTitle() . '</span></a>';
             }
@@ -529,7 +541,8 @@ class ApicUserRegisterForm extends RegisterForm {
       $element = parent::actions($form, $form_state);
       if ($this->chosen_registry->getRegistryType() === 'oidc') {
         $enabled_oidc_register_form = (boolean) \Drupal::config('ibm_apim.settings')->get('enable_oidc_register_form');
-        if ($enabled_oidc_register_form) {
+        $jwt = $this->authApicSessionStore->get('invitation_object');
+        if ($enabled_oidc_register_form  || (!empty($jwt) && !strpos($jwt->getPayload()['scopes']['url'], '/member-invitations/'))) {
           $element['submit']['#value'] = $this->t('Sign up');
           $element['submit']['#attributes'] = ['class' => [
             'apic-user-registry-button',
@@ -573,7 +586,11 @@ class ApicUserRegisterForm extends RegisterForm {
     }
 
 
-    $this->validateUniqueUser($form_state, $registry);
+    if ($registry !== NULL) {
+      $this->validateUniqueUser($form_state, $registry);
+    } else {
+      $form_state->setErrorByName('', t('The specified user registry could not be found.'));
+    }
 
     // Set the form redirect to the homepage.
     $language = $this->languageManager->getCurrentLanguage();
@@ -593,7 +610,7 @@ class ApicUserRegisterForm extends RegisterForm {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    if ($this->chosen_registry->getRegistryType() == 'oidc') {
+    if ($this->chosen_registry->getRegistryType() === 'oidc') {
       $oidc_url = $form_state->getValue('oidc_url');
       $oidc_url .= "&invitation_scope=consumer-org&title=" . urlencode($form_state->getValue('consumerorg'));
       $response = new TrustedRedirectResponse(Url::fromUri($oidc_url)->toString());
@@ -602,7 +619,9 @@ class ApicUserRegisterForm extends RegisterForm {
       $registry_url = $form_state->getValue('registry_url');
       $registry = $this->userRegistryService->get($registry_url);
 
-      $this->submitToApim($form_state, $registry);
+      if ($registry !== NULL) {
+        $this->submitToApim($form_state, $registry);
+      }
       // Clear the JWT from the session as we're done with it now
       $this->authApicSessionStore->delete('invitation_object');
     }
@@ -644,7 +663,7 @@ class ApicUserRegisterForm extends RegisterForm {
     return TRUE;
   }
 
-  private function isBannedName(string $username) {
+  private function isBannedName(string $username): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $username);
     // explicitly ban some usernames.
     $banned_usernames = ['admin', 'anonymous'];
@@ -683,7 +702,7 @@ class ApicUserRegisterForm extends RegisterForm {
       $response = $this->userManagedSignUp->signUp($new_user);
     }
     else {
-      $response = $this->nonUserManagedSignUp->signUp($new_user, $registry);
+      $response = $this->nonUserManagedSignUp->signUp($new_user);
     }
 
     if ($response === NULL) {

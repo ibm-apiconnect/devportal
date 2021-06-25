@@ -1,0 +1,26 @@
+{
+  "asyncapi": "2.0.0",
+  "info": {
+    "title": "Basic events",
+    "version": "1.0.0",
+    "x-ibm-name": "basic-events"
+  },
+  "servers": {
+    "broker1": {
+      "url": "broker1.hostname.com:9092",
+      "protocol": "kafka",
+      "protocolVersion": "2.6"
+    }
+  },
+  "channels": {
+    "channelA": {
+      "description": "A topic containing the temperatures registered at my home",
+      "subscribe": {
+        "summary": "Basic subscribe operation"
+      }
+    }
+  },
+  "x-ibm-configuration": {
+    "type": "asyncapi"
+  }
+}

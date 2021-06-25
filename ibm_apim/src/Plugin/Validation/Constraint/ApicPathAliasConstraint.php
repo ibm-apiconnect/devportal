@@ -24,8 +24,8 @@ use Symfony\Component\Validator\Constraint;
  */
 class ApicPathAliasConstraint extends Constraint {
 
-  public $isInt = 'The path alias cannot be an integer as this would conflict with node IDs.';
+  public string $isInt = 'The path alias cannot be an integer as this would conflict with node IDs.';
 
-  public $invalidChars = 'The path alias can only contain the following characters: [A-Za-z0-9_-.]';
+  public string $invalidChars = 'The path alias can only contain the following characters: [A-Za-z0-9_-.]';
 
 }

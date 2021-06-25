@@ -1,4 +1,85 @@
 changes:
+  8.x-3.1.39:
+  - we were double strtotime the timestamps === bang
+  8.x-3.1.38:
+  - need to check not empty
+  8.x-3.1.37:
+  - get current consumer org not correct
+  - get current consumer org not correct
+  8.x-3.1.36:
+  - fix get default payment method
+  - fix billing id
+  8.x-3.1.35:
+  - has to be entity id not table name
+  8.x-3.1.34:
+  - ensure timestamps are set for members
+  8.x-3.1.33:
+  - fix upgrade error
+  8.x-3.1.32:
+  - missing strtotime
+  8.x-3.1.31:
+  - set timestamps for members
+  - slight tweak to eventlog entities for consumer orgs
+  8.x-3.1.30:
+  - dont show notifications link to admin
+  8.x-3.1.29:
+  - Index consumer org url column
+  - do create and update event logs all the time (#235)
+  8.x-3.1.28:
+  - Index consumer org url column (#234)
+  8.x-3.1.27:
+  - use ID to load the payment method schema
+  8.x-3.1.26:
+  - Tempmerge (#232)
+  8.x-3.1.25:
+  - use chunking
+  8.x-3.1.24: null
+  8.x-3.1.23:
+  - Services (#231)
+  8.x-3.1.22:
+  - there might not be any roles
+  8.x-3.1.21:
+  - use "IBM API Developer Portal" instead of API Connect
+  8.x-3.1.20:
+  - Invitetests (#230)
+  8.x-3.1.19:
+  - only show invitation button if enabled
+  8.x-3.1.18: null
+  8.x-3.1.17: null
+  8.x-3.1.16:
+  - array not object
+  8.x-3.1.15: null
+  8.x-3.1.14:
+  - fix missing '
+  8.x-3.1.13:
+  - event service has moved
+  - use dependency injection
+  - use dependency injection
+  - wire up more payment methods
+  - wire up more events
+  8.x-3.1.12:
+  - Notitab (#228)
+  8.x-3.1.11:
+  - payment methods needs to be array not objects
+  8.x-3.1.10:
+  - fix object parsing
+  8.x-3.1.9: null
+  8.x-3.1.8:
+  - fix up the activity feed tabs for org and app
+  8.x-3.1.7:
+  - Tempmerge (#226)
+  8.x-3.1.6: null
+  8.x-3.1.5:
+  - entity_reference module is now empty and not needed
+  8.x-3.1.4:
+  - use void
+  8.x-3.1.3:
+  - deprecated function
+  8.x-3.1.2: null
+  8.x-3.1.1:
+  - Createdat (#221)
+  8.x-3.1.0:
+  - update version 8.x-3.0.108 -> 8.x-3.1.0
   8.x-3.0.107:
   - long corg name handling (#222)
   8.x-3.0.106: null

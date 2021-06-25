@@ -31,17 +31,32 @@ use Drupal\Core\Messenger\Messenger;
  */
 class ApicUserServiceTest extends UnitTestCase {
 
-  private $prophet;
+  /**
+   * @var \Prophecy\Prophet
+   */
+  private Prophet $prophet;
 
-  /*
-   Dependencies of service.
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
    */
   protected $logger;
+
+  /**
+   * @var \Drupal\Core\State\State|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $state;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\UserRegistryService|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $userRegistryService;
+
+  /**
+   * @var \Drupal\Core\Messenger\Messenger|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $messenger;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->logger = $this->prophet->prophesize(LoggerInterface::class);
     $this->state = $this->prophet->prophesize(State::class);
@@ -49,7 +64,7 @@ class ApicUserServiceTest extends UnitTestCase {
     $this->messenger = $this->prophet->prophesize(Messenger::class);
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
@@ -64,15 +79,15 @@ class ApicUserServiceTest extends UnitTestCase {
 
     $result = $service->getUserAccountFields($user);
 
-    $this->assertEquals('andre', $result['first_name']);
-    $this->assertEquals('andresson', $result['last_name']);
-    $this->assertEquals('Qwert123', $result['pass']);
-    $this->assertEquals('andre@example.com', $result['mail']);
-    $this->assertEquals('andreorg', $result['consumer_organization']);
-    $this->assertEquals('/user/url', $result['apic_url']);
-    $this->assertEquals('/user/reg/url', $result['apic_user_registry_url']);
-    $this->assertEquals('idp1', $result['apic_idp']);
-    $this->assertEquals('pending', $result['apic_state']);
+    self::assertEquals('andre', $result['first_name']);
+    self::assertEquals('andresson', $result['last_name']);
+    self::assertEquals('Qwert123', $result['pass']);
+    self::assertEquals('andre@example.com', $result['mail']);
+    self::assertEquals('andreorg', $result['consumer_organization']);
+    self::assertEquals('/user/url', $result['apic_url']);
+    self::assertEquals('/user/reg/url', $result['apic_user_registry_url']);
+    self::assertEquals('idp1', $result['apic_idp']);
+    self::assertEquals('pending', $result['apic_state']);
 
   }
 
@@ -88,15 +103,15 @@ class ApicUserServiceTest extends UnitTestCase {
 
     $result = $service->getUserAccountFields($user);
 
-    $this->assertEquals('andre', $result['first_name']);
-    $this->assertEquals('andresson', $result['last_name']);
-    $this->assertEquals('Qwert123', $result['pass']);
-    $this->assertEquals('andre@example.com', $result['mail']);
-    $this->assertEquals('andreorg', $result['consumer_organization']);
-    $this->assertEquals('/user/url', $result['apic_url']);
-    $this->assertEquals('/user/reg/url', $result['apic_user_registry_url']);
-    $this->assertEquals('idp1', $result['apic_idp']);
-    $this->assertEquals('enabled', $result['apic_state']);
+    self::assertEquals('andre', $result['first_name']);
+    self::assertEquals('andresson', $result['last_name']);
+    self::assertEquals('Qwert123', $result['pass']);
+    self::assertEquals('andre@example.com', $result['mail']);
+    self::assertEquals('andreorg', $result['consumer_organization']);
+    self::assertEquals('/user/url', $result['apic_url']);
+    self::assertEquals('/user/reg/url', $result['apic_user_registry_url']);
+    self::assertEquals('idp1', $result['apic_idp']);
+    self::assertEquals('enabled', $result['apic_state']);
 
   }
 
@@ -112,15 +127,15 @@ class ApicUserServiceTest extends UnitTestCase {
 
     $result = $service->getUserAccountFields($user);
 
-    $this->assertEquals('andre', $result['first_name']);
-    $this->assertEquals('andresson', $result['last_name']);
-    $this->assertEquals('Qwert123', $result['pass']);
-    $this->assertEquals('andre@example.com', $result['mail']);
-    $this->assertEquals('andreorg', $result['consumer_organization']);
-    $this->assertEquals('/user/url', $result['apic_url']);
-    $this->assertEquals('/user/reg/url', $result['apic_user_registry_url']);
-    $this->assertEquals('idp1', $result['apic_idp']);
-    $this->assertEquals('enabled', $result['apic_state']);
+    self::assertEquals('andre', $result['first_name']);
+    self::assertEquals('andresson', $result['last_name']);
+    self::assertEquals('Qwert123', $result['pass']);
+    self::assertEquals('andre@example.com', $result['mail']);
+    self::assertEquals('andreorg', $result['consumer_organization']);
+    self::assertEquals('/user/url', $result['apic_url']);
+    self::assertEquals('/user/reg/url', $result['apic_user_registry_url']);
+    self::assertEquals('idp1', $result['apic_idp']);
+    self::assertEquals('enabled', $result['apic_state']);
 
   }
 
@@ -149,7 +164,7 @@ class ApicUserServiceTest extends UnitTestCase {
   /**
    * @return \Drupal\ibm_apim\ApicType\UserRegistry
    */
-  private function createLurRegistry(): \Drupal\ibm_apim\ApicType\UserRegistry {
+  private function createLurRegistry(): UserRegistry {
     $registry = new UserRegistry();
     $registry->setUrl('/user/reg/url');
     $registry->setRegistryType('lur');
@@ -161,7 +176,7 @@ class ApicUserServiceTest extends UnitTestCase {
   /**
    * @return \Drupal\ibm_apim\ApicType\UserRegistry
    */
-  private function createLdapRegistry(): \Drupal\ibm_apim\ApicType\UserRegistry {
+  private function createLdapRegistry(): UserRegistry {
     $registry = new UserRegistry();
     $registry->setUrl('/user/reg/url');
     $registry->setRegistryType('ldap');

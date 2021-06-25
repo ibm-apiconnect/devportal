@@ -16,18 +16,24 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ctools\Event\WizardEvent;
 use Drupal\ctools\Wizard\FormWizardBase;
 use Drupal\ctools\Wizard\FormWizardInterface;
+use Drupal\mail_subscribers\Wizard\Mail\ChooseProductStep;
+use Drupal\mail_subscribers\Wizard\Mail\ChoosePlanStep;
+use Drupal\mail_subscribers\Wizard\Mail\ChooseRoleStep;
+use Drupal\mail_subscribers\Wizard\Mail\EnterContentStep;
+use Drupal\mail_subscribers\Wizard\Mail\ConfirmSend;
+use Drupal\mail_subscribers\Wizard\Mail\MailSummary;
 
 class PlanSubscribersWizard extends FormWizardBase {
 
   /**
-   * {@inheritdoc}
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string
    */
   public function getWizardLabel() {
     return t('Mail Plan Subscribers Wizard');
   }
 
   /**
-   * {@inheritdoc}
+   * @return string
    */
   public function getMachineLabel(): string {
     return 'mail_plan_subscribers_wizard';
@@ -36,7 +42,7 @@ class PlanSubscribersWizard extends FormWizardBase {
   /**
    * {@inheritdoc}
    */
-  public function getRouteName() {
+  public function getRouteName(): string {
     return 'mail_subscribers.plan_wizard.step';
   }
 
@@ -48,32 +54,32 @@ class PlanSubscribersWizard extends FormWizardBase {
 
     $steps['chooseitem'] = [
       'title' => t('Select a product'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChooseProductStep',
+      'form' => ChooseProductStep::class,
     ];
 
     $steps['chooseplan'] = [
       'title' => t('Select a plan'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChoosePlanStep',
+      'form' => ChoosePlanStep::class,
     ];
 
     $steps['choosesubs'] = [
       'title' => t('Select Subscribers'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChooseRoleStep',
+      'form' => ChooseRoleStep::class,
     ];
 
     $steps['entercontent'] = [
       'title' => t('Enter content'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\EnterContentStep',
+      'form' => EnterContentStep::class,
     ];
 
     $steps['confirm'] = [
       'title' => t('Confirm'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ConfirmSend',
+      'form' => ConfirmSend::class,
     ];
 
     $steps['summary'] = [
       'title' => t('Summary'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\MailSummary',
+      'form' => MailSummary::class,
     ];
 
     return $steps;

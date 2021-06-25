@@ -23,6 +23,7 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\ibm_apim\Service\SiteConfig;
+use Drupal\session_based_temp_store\SessionBasedTempStore;
 use Drupal\session_based_temp_store\SessionBasedTempStoreFactory;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -36,24 +37,27 @@ class ApicUserInvitationController extends ControllerBase {
   /**
    * @var \Drupal\auth_apic\Service\Interfaces\TokenParserInterface
    */
-  protected $jwtParser;
+  protected TokenParserInterface $jwtParser;
 
   /**
    * @var \Drupal\ibm_apim\Service\SiteConfig
    */
-  protected $siteConfig;
+  protected SiteConfig $siteConfig;
 
   /**
-   * @var
+   * @var \Drupal\session_based_temp_store\SessionBasedTempStore
    */
-  protected $sessionStore;
+  protected SessionBasedTempStore $sessionStore;
 
-  protected $userStorage;
+  /**
+   * @var \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface
+   */
+  protected ApicUserStorageInterface $userStorage;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * @var \Drupal\Core\Session\AccountProxyInterface
@@ -68,10 +72,26 @@ class ApicUserInvitationController extends ControllerBase {
   /**
    * @var \Drupal\Core\Config\Config
    */
-  protected $system_site_config;
+  protected Config $system_site_config;
 
+  /**
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
   protected $messenger;
 
+  /**
+   * ApicUserInvitationController constructor.
+   *
+   * @param \Drupal\auth_apic\Service\Interfaces\TokenParserInterface $tokenParser
+   * @param \Drupal\ibm_apim\Service\SiteConfig $site_config
+   * @param \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $tempStoreFactory
+   * @param \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface $user_storage
+   * @param \Psr\Log\LoggerInterface $logger
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
+   * @param \Drupal\Core\Config\Config $system_site_config
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   */
   public function __construct(TokenParserInterface $tokenParser,
                               SiteConfig $site_config,
                               SessionBasedTempStoreFactory $tempStoreFactory,
@@ -83,7 +103,7 @@ class ApicUserInvitationController extends ControllerBase {
                               MessengerInterface $messenger) {
     $this->jwtParser = $tokenParser;
     $this->siteConfig = $site_config;
-    $this->sessionStore = $tempStoreFactory->get('auth_apic_invitation_token', self::INVITATION_COOKIE_TIMEOUT);
+    $this->sessionStore = $tempStoreFactory->get('auth_apic_storage', self::INVITATION_COOKIE_TIMEOUT);
     $this->userStorage = $user_storage;
     $this->logger = $logger;
     $this->currentUser = $current_user;
@@ -92,7 +112,13 @@ class ApicUserInvitationController extends ControllerBase {
     $this->messenger = $messenger;
   }
 
-  public static function create(ContainerInterface $container) {
+  /**
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *
+   * @return \Drupal\auth_apic\Controller\ApicUserInvitationController|static
+   */
+  public static function create(ContainerInterface $container): ApicUserInvitationController {
+    /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('auth_apic.jwtparser'),
       $container->get('ibm_apim.site_config'),
@@ -106,7 +132,10 @@ class ApicUserInvitationController extends ControllerBase {
     );
   }
 
-
+  /**
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse|null
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   */
   public function process(): ?RedirectResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
@@ -138,36 +167,21 @@ class ApicUserInvitationController extends ControllerBase {
     // for this slightly different flow. So we set a session variable here to signal
     // that we are on this invited user flow so that the reused sign-in and create
     // account forms know to behave differently.
-    if ($jwt) {
+    $this->sessionStore->set('invitation_object', $jwt);
 
-      $this->sessionStore->set('invitation_object', $jwt);
+    // check the user email address and attempt to find a matching local account
+    $invited_email = $jwt->getPayload()['email'];
+    $existing_account = $this->userStorage->loadUserByEmailAddress($invited_email);
 
-      // check the user email address and attempt to find a matching local account
-      $invited_email = $jwt->getPayload()['email'];
-      $existing_account = $this->userStorage->loadUserByEmailAddress($invited_email);
-
-      // redirect based on whether we think this user has an account or needs to register
-      if (isset($existing_account) && $existing_account !== NULL) {
-        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'invitation of existing user');
-        return $this->redirect('user.login');
-      }
-      else {
-        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'invitation of new user');
-        return $this->redirect('user.register');
-      }
-    }
-    else {
-      if ($this->moduleHandler->moduleExists('contact')) {
-        $contact_link = Link::fromTextAndUrl(t('contact'), Url::fromRoute('contact.site_page'));
-      }
-      else {
-        $contact_link = Link::fromTextAndUrl(t('contact'), Url::fromUri('mailto:' . $this->system_site_config->get('mail')));
-      }
-      $this->messenger->addMessage(t('Unable to proceed with invitation process. @contact_link the site administrator.', ['@contact_link' => $contact_link]));
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'generic invitation error.');
-      return $this->redirect('<front>');
+    // redirect based on whether we think this user has an account or needs to register
+    if (isset($existing_account)) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'invitation of existing user');
+      return $this->redirect('user.login');
     }
 
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'invitation of new user');
+    return $this->redirect('user.register');
 
   }
+
 }

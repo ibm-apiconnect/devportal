@@ -79,7 +79,7 @@ interface ManagementServerInterface {
    * @param \Drupal\ibm_apim\ApicType\ApicUser $user
    *   the user
    *
-   * @return \Drupal\ibm_apim\Rest\UsersRegisterResponse
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    *    Response from POST /users/register call
    */
   public function postUsersRegister(ApicUser $user);
@@ -97,7 +97,7 @@ interface ManagementServerInterface {
    * @return \Drupal\ibm_apim\Rest\RestResponse
    *   Response from the call.
    */
-  public function orgInvitationsRegister(JWTToken $token, ApicUser $invitedUser);
+  public function orgInvitationsRegister(JWTToken $token, ApicUser $invitedUser): RestResponse;
 
   /**
    * Accept the invitation represented by the JWTToken as the ApicUser provided
@@ -106,9 +106,9 @@ interface ManagementServerInterface {
    * @param \Drupal\ibm_apim\ApicType\ApicUser $acceptingUser
    * @param string $orgTitle
    *
-   * @return mixed
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    */
-  public function acceptInvite(JWTToken $token, ApicUser $acceptingUser, $orgTitle);
+  public function acceptInvite(JWTToken $token, ApicUser $acceptingUser, string $orgTitle);
 
   /**
    * POST to /me/request-password-reset
@@ -119,12 +119,12 @@ interface ManagementServerInterface {
    * @param string $username
    *   Username to reset password of.
    *
-   * @param string $realm
+   * @param string|null $realm
    *   The realm for this user
    *
-   * @return NULL|\stdClass
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    */
-  public function forgotPassword($username, $realm);
+  public function forgotPassword(string $username, ?string $realm);
 
   /**
    * Reset users password.
@@ -136,9 +136,9 @@ interface ManagementServerInterface {
    * @param \string $password
    *   New password.
    *
-   * @return \Drupal\ibm_apim\Rest\RestResponse
+   * @return \Drupal\ibm_apim\Rest\RestResponse|null
    */
-  public function resetPassword(JWTToken $obj, $password);
+  public function resetPassword(JWTToken $obj, string $password): ?RestResponse;
 
   /**
    * PUT /me/change-password
@@ -148,9 +148,9 @@ interface ManagementServerInterface {
    * @param /string $new_password
    *   New password.
    *
-   * @return \Drupal\ibm_apim\Rest\RestResponse
+   * @return \Drupal\ibm_apim\Rest\RestResponse|null
    */
-  public function changePassword($old_password, $new_password);
+  public function changePassword($old_password, $new_password): ?RestResponse;
 
   /**
    * POST s/sign-up
@@ -158,17 +158,21 @@ interface ManagementServerInterface {
    * @param \Drupal\ibm_apim\ApicType\ApicUser $new_user
    *  The user to create
    *
-   * @return mixed
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    */
   public function postSignUp(ApicUser $new_user);
 
+  /**
+   * @return \Drupal\ibm_apim\Rest\RestResponse
+   */
+  public function postSignOut(): RestResponse;
 
   /**
    * Create consumer org.
    *
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
    *
-   * @return mixed
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    */
   public function createConsumerOrg(ConsumerOrg $org);
 
@@ -179,7 +183,7 @@ interface ManagementServerInterface {
    * @param string $email_address
    * @param string|NULL $role
    *
-   * @return mixed
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    */
   public function postMemberInvitation(ConsumerOrg $org, string $email_address, string $role = NULL);
 
@@ -189,7 +193,7 @@ interface ManagementServerInterface {
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
    * @param string $inviteId
    *
-   * @return mixed
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    */
   public function deleteMemberInvitation(ConsumerOrg $org, string $inviteId);
 
@@ -199,7 +203,7 @@ interface ManagementServerInterface {
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
    * @param string $inviteId
    *
-   * @return mixed
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    */
   public function resendMemberInvitation(ConsumerOrg $org, string $inviteId);
 
@@ -209,7 +213,7 @@ interface ManagementServerInterface {
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
    * @param array $data
    *
-   * @return mixed
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse
    */
   public function patchConsumerOrg(ConsumerOrg $org, array $data);
 
@@ -218,7 +222,7 @@ interface ManagementServerInterface {
    *
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
    *
-   * @return mixed
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    */
   public function deleteConsumerOrg(ConsumerOrg $org);
 
@@ -228,7 +232,7 @@ interface ManagementServerInterface {
    * @param \Drupal\consumerorg\ApicType\Member $member
    * @param array $data
    *
-   * @return mixed
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    */
   public function patchMember(Member $member, array $data);
 
@@ -237,7 +241,7 @@ interface ManagementServerInterface {
    *
    * @param \Drupal\consumerorg\ApicType\Member $member
    *
-   * @return mixed
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    */
   public function deleteMember(Member $member);
 
@@ -248,9 +252,9 @@ interface ManagementServerInterface {
    * @param string $newOwnerUrl
    * @param string|null $role
    *
-   * @return mixed
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    */
-  public function postTransferConsumerOrg(ConsumerOrg $org, string $newOwnerUrl, $role);
+  public function postTransferConsumerOrg(ConsumerOrg $org, string $newOwnerUrl, ?string $role);
 
   /**
    * @param \Drupal\auth_apic\JWTToken $jwt

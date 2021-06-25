@@ -12,23 +12,25 @@
 
 namespace Drupal\auth_apic\Form;
 
+use Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface;
 use Drupal\auth_apic\UserManagement\ApicPasswordInterface;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Flood\FloodInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
+use Drupal\session_based_temp_store\SessionBasedTempStore;
+use Drupal\session_based_temp_store\SessionBasedTempStoreFactory;
 use Drupal\user\Form\UserPasswordForm;
 use Drupal\user\UserInterface;
 use Drupal\user\UserStorageInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Messenger\Messenger;
-use Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface;
 
 
 /**
@@ -39,22 +41,22 @@ class ApicUserPasswordForm extends UserPasswordForm {
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface
    */
-  protected $mgmtServer;
+  protected ManagementServerInterface $mgmtServer;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
    */
-  protected $registryService;
+  protected UserRegistryServiceInterface $registryService;
 
   /**
    * @var \Drupal\ibm_apim\Service\ApimUtils
    */
-  protected $apimUtils;
+  protected ApimUtils $apimUtils;
 
   /**
    * @var \Drupal\Core\Config\ConfigFactory
@@ -69,12 +71,22 @@ class ApicUserPasswordForm extends UserPasswordForm {
   /**
    * @var \Drupal\auth_apic\UserManagement\ApicPasswordInterface
    */
-  protected $password;
+  protected ApicPasswordInterface $password;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
    */
   protected $messenger;
+
+  /**
+   * @var \Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface
+   */
+  protected OidcRegistryServiceInterface $oidcService;
+
+  /**
+   * @var \Drupal\session_based_temp_store\SessionBasedTempStore
+   */
+  protected SessionBasedTempStore $authApicSessionStore;
 
   /**
    * ApicUserPasswordForm constructor.
@@ -89,6 +101,8 @@ class ApicUserPasswordForm extends UserPasswordForm {
    * @param \Drupal\Core\Flood\FloodInterface $flood
    * @param \Drupal\auth_apic\UserManagement\ApicPasswordInterface $password_service
    * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface $oidc_service
+   * @param \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $session_store_factory
    */
   public function __construct(UserStorageInterface $user_storage,
                               LanguageManagerInterface $language_manager,
@@ -100,8 +114,9 @@ class ApicUserPasswordForm extends UserPasswordForm {
                               FloodInterface $flood,
                               ApicPasswordInterface $password_service,
                               Messenger $messenger,
-                              OidcRegistryServiceInterface $oidc_service) {
-    parent::__construct($user_storage, $language_manager);
+                              OidcRegistryServiceInterface $oidc_service,
+                              SessionBasedTempStoreFactory $session_store_factory) {
+    parent::__construct($user_storage, $language_manager, $config_factory, $flood);
     $this->mgmtServer = $mgmtServer;
     $this->logger = $logger;
     $this->registryService = $registry_service;
@@ -111,12 +126,14 @@ class ApicUserPasswordForm extends UserPasswordForm {
     $this->password = $password_service;
     $this->messenger = $messenger;
     $this->oidcService = $oidc_service;
+    $this->authApicSessionStore = $session_store_factory->get('auth_apic_storage');
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
+    /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('entity_type.manager')->getStorage('user'),
       $container->get('language_manager'),
@@ -129,11 +146,13 @@ class ApicUserPasswordForm extends UserPasswordForm {
       $container->get('auth_apic.password'),
       $container->get('messenger'),
       $container->get('auth_apic.oidc'),
+      $container->get('session_based_temp_store'),
     );
   }
 
   /**
    * {@inheritdoc}
+   * @throws \Exception
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -214,9 +233,10 @@ class ApicUserPasswordForm extends UserPasswordForm {
           '#limit_validation_errors' => [],
         ];
         if ($other_registry->getRegistryType() === 'oidc') {
-          $oidc_info = $this->oidcService->getOidcMetadata($other_registry);
+          $jwt = $this->authApicSessionStore->get('invitation_object');
+          $oidc_info = $this->oidcService->getOidcMetadata($other_registry, $jwt);
           $button['#prefix'] = '<a class="registry-button x generic-button button" href="' . $redirect_with_registry_url . $other_registry->getUrl() . '" title="' . $this->t('Sign in using @ur', ['@ur' => $other_registry->getTitle()]) . '">' .
-              $oidc_info['image']['html'];
+            $oidc_info['image']['html'];
         }
         else {
           $button['#prefix'] = '<a class="registry-button generic-button button" href="' . $redirect_with_registry_url . $other_registry->getUrl() . '" title="' . $this->t('Use @ur', ['@ur' => $other_registry->getTitle()]) . '">
@@ -255,7 +275,10 @@ class ApicUserPasswordForm extends UserPasswordForm {
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     $flood_config = $this->configFactory->get('user.flood');
     if (!$this->flood->isAllowed('user.password_request_ip', $flood_config->get('ip_limit'), $flood_config->get('ip_window'))) {
-      $this->logger->notice('Flood Control: Blocking password reset attempt from IP: @ip_address', ['@ip_address' => $this->getRequest()->getClientIP()]);
+      $this->logger->notice('Flood Control: Blocking password reset attempt from IP: @ip_address', [
+        '@ip_address' => $this->getRequest()
+          ->getClientIP(),
+      ]);
       $form_state->setErrorByName('name', $this->t('Too many password recovery requests. You have been temporarily blocked. Try again later or contact the site administrator.'));
       return;
     }

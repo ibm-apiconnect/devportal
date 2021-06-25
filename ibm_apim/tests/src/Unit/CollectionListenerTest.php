@@ -14,9 +14,8 @@
 namespace Drupal\Tests\ibm_apim\Unit;
 
 use Drupal\ibm_apim\JsonStreamingParser\CollectionListener;
-use JsonStreamingParser\Parser;
 use Drupal\Tests\UnitTestCase;
-use Psr\Log\LoggerInterface;
+use JsonStreamingParser\Parser;
 
 /**
  * @coversDefaultClass \Drupal\ibm_apim\Service\ApicUserService
@@ -25,31 +24,35 @@ use Psr\Log\LoggerInterface;
  */
 class CollectionListenerTest extends UnitTestCase {
 
-  /*
-   Dependencies of service.
+  /**
+   * @throws \Exception
    */
-
-  public function testMockSnapshot(): void
-  {
-      $filePath = __DIR__.'/data/snapshot.json';
-      $UUID = '';
-      $listener = new CollectionListener(array($this,'processContent'),$UUID);
-      $stream = fopen($filePath, 'r');
-      try {
-          $parser = new Parser($stream, $listener);
-          $parser->parse();
-          fclose($stream);
-      } catch (\Exception $e) {
-          fclose($stream);
-          throw $e;
-      }
+  public function testMockSnapshot(): void {
+    $filePath = __DIR__ . '/data/snapshot.json';
+    $UUID = '';
+    $listener = new CollectionListener([$this, 'processContent'], $UUID);
+    $stream = fopen($filePath, 'rb');
+    try {
+      $parser = new Parser($stream, $listener);
+      $parser->parse();
+      fclose($stream);
+    } catch (\Exception $e) {
+      fclose($stream);
+      throw $e;
+    }
 
   }
 
+  /**
+   * @param $content
+   * @param $UUID
+   *
+   * @return mixed
+   */
   public function processContent($content, $UUID) {
-    $expectedJson = array(
-      'configured_catalog_user_registries' => array(
-        array(
+    $expectedJson = [
+      'configured_catalog_user_registries' => [
+        [
           'type' => 'configured_catalog_user_registry',
           'api_version' => '2.0.0',
           'id' => '3e57a787-db9a-4b3b-89b2-65bb2cd2f50d',
@@ -66,26 +69,26 @@ class CollectionListenerTest extends UnitTestCase {
           'user_registry_managed' => TRUE,
           'onboarding' => 'active',
           'case_sensitive' => TRUE,
-          'identity_providers' => array(
-            array(
+          'identity_providers' => [
+            [
               'name' => 'sandbox-idp',
               'title' => 'Sandbox Identity Provider',
-            ),
-          ),
-          'metadata' => array(
+            ],
+          ],
+          'metadata' => [
             'id' => '33803e54-e161-40ff-988f-c51f681f7cef:e4afff0b-dbad-4e2b-b44e-db4b0a857937',
             'name' => 'sandbox-catalog',
-          ),
+          ],
           'created_at' => '2018-09-06T14:37:35.669Z',
           'updated_at' => '2018-09-06T14:37:35.669Z',
           'org_url' => '/consumer-api/orgs/33803e54-e161-40ff-988f-c51f681f7cef',
           'catalog_url' => '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002',
           'user_registry_url' => '/consumer-api/user-registries/3e57a787-db9a-4b3b-89b2-65bb2cd2f50d',
           'url' => '/consumer-api/user-registries/3e57a787-db9a-4b3b-89b2-65bb2cd2f50d',
-        ),
-      ),
-      'catalogs' => array(
-        array(
+        ],
+      ],
+      'catalogs' => [
+        [
           'type' => 'catalog',
           'api_version' => '2.0.0',
           'id' => 'aff3eada-4a04-450a-bcc7-f22518bad002',
@@ -101,10 +104,10 @@ class CollectionListenerTest extends UnitTestCase {
           'updated_at' => '2018-09-06T14:37:31.551Z',
           'org_url' => '/api/orgs/33803e54-e161-40ff-988f-c51f681f7cef',
           'url' => '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002',
-        ),
-      ),
-      'orgs' => array(
-        array(
+        ],
+      ],
+      'orgs' => [
+        [
           'type' => 'org',
           'api_version' => '2.0.0',
           'id' => '33803e54-e161-40ff-988f-c51f681f7cef',
@@ -121,10 +124,10 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-06T14:37:27.877Z',
           'updated_at' => '2018-09-06T14:37:27.877Z',
           'url' => '/api/orgs/33803e54-e161-40ff-988f-c51f681f7cef',
-        ),
-      ),
-      'permissions' => array(
-        array(
+        ],
+      ],
+      'permissions' => [
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => '41cca046-e825-47b0-b80b-3d2a39bcc8c3',
@@ -136,8 +139,8 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:27.004Z',
           'updated_at' => '2018-09-04T09:35:27.004Z',
           'url' => '/consumer-api/consumer/permissions/org/41cca046-e825-47b0-b80b-3d2a39bcc8c3',
-        ),
-        array(
+        ],
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => '2d60261d-7986-4443-9256-1e35fc1eaaec',
@@ -149,8 +152,8 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:26.976Z',
           'updated_at' => '2018-09-04T09:35:26.976Z',
           'url' => '/consumer-api/consumer/permissions/org/2d60261d-7986-4443-9256-1e35fc1eaaec',
-        ),
-        array(
+        ],
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => '3b79bfb4-3da0-4b37-8f65-d5daa81acc3a',
@@ -162,8 +165,8 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:26.953Z',
           'updated_at' => '2018-09-04T09:35:26.953Z',
           'url' => '/consumer-api/consumer/permissions/org/3b79bfb4-3da0-4b37-8f65-d5daa81acc3a',
-        ),
-        array(
+        ],
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => '0efcfcd9-6ccc-47fb-986f-adff8e42c006',
@@ -175,8 +178,8 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:26.931Z',
           'updated_at' => '2018-09-04T09:35:26.931Z',
           'url' => '/consumer-api/consumer/permissions/org/0efcfcd9-6ccc-47fb-986f-adff8e42c006',
-        ),
-        array(
+        ],
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => '3ae30a11-3734-4b33-85af-0d4232ff22de',
@@ -188,8 +191,8 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:27.054Z',
           'updated_at' => '2018-09-04T09:35:27.054Z',
           'url' => '/consumer-api/consumer/permissions/org/3ae30a11-3734-4b33-85af-0d4232ff22de',
-        ),
-        array(
+        ],
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => 'c24ba03f-30cb-4b6b-a1e7-e0910e1fd8d7',
@@ -201,8 +204,8 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:27.027Z',
           'updated_at' => '2018-09-04T09:35:27.027Z',
           'url' => '/consumer-api/consumer/permissions/org/c24ba03f-30cb-4b6b-a1e7-e0910e1fd8d7',
-        ),
-        array(
+        ],
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => 'f417e2f1-a71c-4312-a531-493318b7c8e0',
@@ -214,8 +217,8 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:27.085Z',
           'updated_at' => '2018-09-04T09:35:27.085Z',
           'url' => '/consumer-api/consumer/permissions/org/f417e2f1-a71c-4312-a531-493318b7c8e0',
-        ),
-        array(
+        ],
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => '6e5db5be-0ac4-4426-bef3-c7bb4db73a4b',
@@ -227,8 +230,8 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:27.916Z',
           'updated_at' => '2018-09-04T09:35:27.916Z',
           'url' => '/consumer-api/consumer/permissions/consumer/6e5db5be-0ac4-4426-bef3-c7bb4db73a4b',
-        ),
-        array(
+        ],
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => '324cc1ca-d50a-44fa-90cf-5c9287e3afaf',
@@ -240,8 +243,8 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:27.831Z',
           'updated_at' => '2018-09-04T09:35:27.831Z',
           'url' => '/consumer-api/consumer/permissions/consumer/324cc1ca-d50a-44fa-90cf-5c9287e3afaf',
-        ),
-        array(
+        ],
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => '901f9467-3f99-4e30-af69-bf0e83420a2f',
@@ -253,8 +256,8 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:27.851Z',
           'updated_at' => '2018-09-04T09:35:27.851Z',
           'url' => '/consumer-api/consumer/permissions/consumer/901f9467-3f99-4e30-af69-bf0e83420a2f',
-        ),
-        array(
+        ],
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => '2aded18d-cada-4ed8-835a-444cdd1a96c4',
@@ -266,8 +269,8 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:27.809Z',
           'updated_at' => '2018-09-04T09:35:27.809Z',
           'url' => '/consumer-api/consumer/permissions/consumer/2aded18d-cada-4ed8-835a-444cdd1a96c4',
-        ),
-        array(
+        ],
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => 'a1d3b340-547e-48a9-af64-653b10f93e22',
@@ -279,8 +282,8 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:27.791Z',
           'updated_at' => '2018-09-04T09:35:27.791Z',
           'url' => '/consumer-api/consumer/permissions/consumer/a1d3b340-547e-48a9-af64-653b10f93e22',
-        ),
-        array(
+        ],
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => 'ec2889d7-bea2-4675-9b5f-3c5f29608fa7',
@@ -292,8 +295,8 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:27.897Z',
           'updated_at' => '2018-09-04T09:35:27.897Z',
           'url' => '/consumer-api/consumer/permissions/consumer/ec2889d7-bea2-4675-9b5f-3c5f29608fa7',
-        ),
-        array(
+        ],
+        [
           'type' => 'permission',
           'api_version' => '2.0.0',
           'id' => '4afc7137-9100-4b06-b707-8370e51a1d58',
@@ -305,13 +308,13 @@ class CollectionListenerTest extends UnitTestCase {
           'created_at' => '2018-09-04T09:35:27.873Z',
           'updated_at' => '2018-09-04T09:35:27.873Z',
           'url' => '/consumer-api/consumer/permissions/consumer/4afc7137-9100-4b06-b707-8370e51a1d58',
-        ),
-      ),
-      'consumer_orgs' => array(
-        array(
+        ],
+      ],
+      'consumer_orgs' => [
+        [
           'type' => 'consumer_org',
           'id' => 'a4a67ab9-37f2-47a1-90c7-7340c1900dfb',
-          'setting' => array(
+          'setting' => [
             'type' => 'consumer_org_setting',
             'api_version' => '2.0.0',
             'name' => 'consumer-org-setting',
@@ -323,8 +326,8 @@ class CollectionListenerTest extends UnitTestCase {
             'created_at' => '2018-09-06T14:37:40.683Z',
             'updated_at' => '2018-09-06T14:37:40.683Z',
             'url' => '/api/consumer-orgs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002/a4a67ab9-37f2-47a1-90c7-7340c1900dfb/settings',
-          ),
-          'consumer_org' => array(
+          ],
+          'consumer_org' => [
             'name' => 'sandbox-test-org',
             'title' => 'Sandbox Test Organization',
             'summary' => 'Sandbox Test Organization Summary',
@@ -340,16 +343,16 @@ class CollectionListenerTest extends UnitTestCase {
             'catalog_url' => '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002',
             'state_pending' => NULL,
             'shadow_id' => '6652ae60-b1e2-11e8-9d82-36626b9fbe07',
-          ),
-          'roles' => array(
-            array(
+          ],
+          'roles' => [
+            [
               'type' => 'role',
               'api_version' => '2.0.0',
               'id' => 'ddf7d6a0-d63d-4de7-b733-d220596fb905',
               'name' => 'administrator',
               'title' => 'Administrator',
               'summary' => 'Administers the app developer organization',
-              'permission_urls' => array(
+              'permission_urls' => [
                 '/consumer-api/consumer/permissions/org/2d60261d-7986-4443-9256-1e35fc1eaaec',
                 '/consumer-api/consumer/permissions/org/41cca046-e825-47b0-b80b-3d2a39bcc8c3',
                 '/consumer-api/consumer/permissions/org/0efcfcd9-6ccc-47fb-986f-adff8e42c006',
@@ -362,22 +365,22 @@ class CollectionListenerTest extends UnitTestCase {
                 '/consumer-api/consumer/permissions/consumer/4afc7137-9100-4b06-b707-8370e51a1d58',
                 '/consumer-api/consumer/permissions/consumer/ec2889d7-bea2-4675-9b5f-3c5f29608fa7',
                 '/consumer-api/consumer/permissions/consumer/6e5db5be-0ac4-4426-bef3-c7bb4db73a4b',
-              ),
+              ],
               'shadow_id' => '6677c290-b1e2-11e8-bd65-2fba6d5d7eac',
               'shadow' => FALSE,
               'created_at' => '2018-09-06T14:37:37.358Z',
               'updated_at' => '2018-09-06T14:37:37.358Z',
               'org_url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb',
               'url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb/roles/ddf7d6a0-d63d-4de7-b733-d220596fb905',
-            ),
-            array(
+            ],
+            [
               'type' => 'role',
               'api_version' => '2.0.0',
               'id' => 'c38953f5-bbbb-4c70-a2b3-85ca407dabe3',
               'name' => 'developer',
               'title' => 'Developer',
               'summary' => 'Builds and manages apps in the developer organization',
-              'permission_urls' => array(
+              'permission_urls' => [
                 '/consumer-api/consumer/permissions/org/2d60261d-7986-4443-9256-1e35fc1eaaec',
                 '/consumer-api/consumer/permissions/org/0efcfcd9-6ccc-47fb-986f-adff8e42c006',
                 '/consumer-api/consumer/permissions/org/f417e2f1-a71c-4312-a531-493318b7c8e0',
@@ -388,39 +391,39 @@ class CollectionListenerTest extends UnitTestCase {
                 '/consumer-api/consumer/permissions/consumer/4afc7137-9100-4b06-b707-8370e51a1d58',
                 '/consumer-api/consumer/permissions/consumer/ec2889d7-bea2-4675-9b5f-3c5f29608fa7',
                 '/consumer-api/consumer/permissions/consumer/6e5db5be-0ac4-4426-bef3-c7bb4db73a4b',
-              ),
+              ],
               'shadow_id' => '6712a300-b1e2-11e8-8537-8e5acbc25c76',
               'shadow' => FALSE,
               'created_at' => '2018-09-06T14:37:38.433Z',
               'updated_at' => '2018-09-06T14:37:38.433Z',
               'org_url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb',
               'url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb/roles/c38953f5-bbbb-4c70-a2b3-85ca407dabe3',
-            ),
-            array(
+            ],
+            [
               'type' => 'role',
               'api_version' => '2.0.0',
               'id' => 'a52dad46-bb16-45e6-b559-abff49aae679',
               'name' => 'member',
               'title' => 'Member',
               'summary' => 'Minumum role',
-              'permission_urls' => array(
+              'permission_urls' => [
                 '/consumer-api/consumer/permissions/org/f417e2f1-a71c-4312-a531-493318b7c8e0',
-              ),
+              ],
               'shadow_id' => '675d4090-b1e2-11e8-ae54-61761e30c9bf',
               'shadow' => FALSE,
               'created_at' => '2018-09-06T14:37:38.917Z',
               'updated_at' => '2018-09-06T14:37:38.917Z',
               'org_url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb',
               'url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb/roles/a52dad46-bb16-45e6-b559-abff49aae679',
-            ),
-            array(
+            ],
+            [
               'type' => 'role',
               'api_version' => '2.0.0',
               'id' => 'aeb976ed-d960-4629-bd27-5d19ccdf6bd4',
               'name' => 'owner',
               'title' => 'Owner',
               'summary' => 'Owns and administers the app developer organization',
-              'permission_urls' => array(
+              'permission_urls' => [
                 '/consumer-api/consumer/permissions/org/2d60261d-7986-4443-9256-1e35fc1eaaec',
                 '/consumer-api/consumer/permissions/org/41cca046-e825-47b0-b80b-3d2a39bcc8c3',
                 '/consumer-api/consumer/permissions/org/0efcfcd9-6ccc-47fb-986f-adff8e42c006',
@@ -433,22 +436,22 @@ class CollectionListenerTest extends UnitTestCase {
                 '/consumer-api/consumer/permissions/consumer/4afc7137-9100-4b06-b707-8370e51a1d58',
                 '/consumer-api/consumer/permissions/consumer/ec2889d7-bea2-4675-9b5f-3c5f29608fa7',
                 '/consumer-api/consumer/permissions/consumer/6e5db5be-0ac4-4426-bef3-c7bb4db73a4b',
-              ),
+              ],
               'shadow_id' => '67bf84d0-b1e2-11e8-8261-d9139a2143a4',
               'shadow' => FALSE,
               'created_at' => '2018-09-06T14:37:39.521Z',
               'updated_at' => '2018-09-06T14:37:39.521Z',
               'org_url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb',
               'url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb/roles/aeb976ed-d960-4629-bd27-5d19ccdf6bd4',
-            ),
-            array(
+            ],
+            [
               'type' => 'role',
               'api_version' => '2.0.0',
               'id' => 'b7f162ba-2b30-4b79-be13-2b4298690fae',
               'name' => 'viewer',
               'title' => 'Viewer',
               'summary' => 'Views the app developer organization',
-              'permission_urls' => array(
+              'permission_urls' => [
                 '/consumer-api/consumer/permissions/org/2d60261d-7986-4443-9256-1e35fc1eaaec',
                 '/consumer-api/consumer/permissions/org/0efcfcd9-6ccc-47fb-986f-adff8e42c006',
                 '/consumer-api/consumer/permissions/org/f417e2f1-a71c-4312-a531-493318b7c8e0',
@@ -456,17 +459,17 @@ class CollectionListenerTest extends UnitTestCase {
                 '/consumer-api/consumer/permissions/consumer/2aded18d-cada-4ed8-835a-444cdd1a96c4',
                 '/consumer-api/consumer/permissions/consumer/4afc7137-9100-4b06-b707-8370e51a1d58',
                 '/consumer-api/consumer/permissions/consumer/6e5db5be-0ac4-4426-bef3-c7bb4db73a4b',
-              ),
+              ],
               'shadow_id' => '68226550-b1e2-11e8-8541-75feeca275f9',
               'shadow' => FALSE,
               'created_at' => '2018-09-06T14:37:40.211Z',
               'updated_at' => '2018-09-06T14:37:40.211Z',
               'org_url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb',
               'url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb/roles/b7f162ba-2b30-4b79-be13-2b4298690fae',
-            ),
-          ),
-          'members' => array(
-            array(
+            ],
+          ],
+          'members' => [
+            [
               'type' => 'member',
               'api_version' => '2.0.0',
               'id' => 'f7b301bb-e338-4b51-b409-477e81aa2d2a',
@@ -475,7 +478,7 @@ class CollectionListenerTest extends UnitTestCase {
               'state' => 'enabled',
               'shadow_id' => '68a88544-b1e2-11e8-a638-186c2afcd229',
               'shadow' => FALSE,
-              'user' => array(
+              'user' => [
                 'type' => 'user',
                 'api_version' => '2.0.0',
                 'id' => '9db5a27c-1b81-4e55-ba09-72a0709b77a1',
@@ -486,11 +489,11 @@ class CollectionListenerTest extends UnitTestCase {
                 'url' => '/consumer-api/user-registries/3e57a787-db9a-4b3b-89b2-65bb2cd2f50d/users/9db5a27c-1b81-4e55-ba09-72a0709b77a1',
                 'created_at' => '2018-09-06T14:37:36.963Z',
                 'updated_at' => '2018-09-06T14:37:36.963Z',
-                'metadata' => array(
+                'metadata' => [
                   'id' => '3fbe1373-bb2f-4374-9fb0-dcf7e4732c1c',
                   'name' => '9db5a27c-1b81-4e55-ba09-72a0709b77a1',
                   'username' => 'test-user',
-                ),
+                ],
                 'state' => 'enabled',
                 'identity_provider' => 'sandbox-idp',
                 'username' => 'test-user',
@@ -498,23 +501,23 @@ class CollectionListenerTest extends UnitTestCase {
                 'first_name' => 'Test User',
                 'last_name' => ' ',
                 'user_registry_url' => '/consumer-api/user-registries/3e57a787-db9a-4b3b-89b2-65bb2cd2f50d',
-              ),
+              ],
               'user_url' => '/consumer-api/user-registries/3e57a787-db9a-4b3b-89b2-65bb2cd2f50d/users/9db5a27c-1b81-4e55-ba09-72a0709b77a1',
-              'role_urls' => array(
+              'role_urls' => [
                 '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb/roles/aeb976ed-d960-4629-bd27-5d19ccdf6bd4',
-              ),
+              ],
               'created_at' => '2018-09-06T14:37:40.931Z',
               'updated_at' => '2018-09-06T14:37:40.931Z',
               'org_url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb',
               'user_registry_url' => '/consumer-api/user-registries/3e57a787-db9a-4b3b-89b2-65bb2cd2f50d',
               'url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb/members/f7b301bb-e338-4b51-b409-477e81aa2d2a',
-            ),
-          ),
-          'memberInvitations' => array(),
-        ),
-      ),
-      'credentials' => array(
-        array(
+            ],
+          ],
+          'memberInvitations' => [],
+        ],
+      ],
+      'credentials' => [
+        [
           'type' => 'credential',
           'api_version' => '2.0.0',
           'id' => '14cff214-3c18-40e1-a2dc-d201d58c465d',
@@ -530,10 +533,10 @@ class CollectionListenerTest extends UnitTestCase {
           'consumer_org_url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb',
           'app_url' => '/consumer-api/apps/a4a67ab9-37f2-47a1-90c7-7340c1900dfb/13db67bf-7370-4fbc-a9d4-11db9b13e7ee',
           'url' => '/consumer-api/apps/a4a67ab9-37f2-47a1-90c7-7340c1900dfb/13db67bf-7370-4fbc-a9d4-11db9b13e7ee/credentials/14cff214-3c18-40e1-a2dc-d201d58c465d',
-        ),
-      ),
-      'apps' => array(
-        array(
+        ],
+      ],
+      'apps' => [
+        [
           'type' => 'app',
           'api_version' => '2.0.0',
           'id' => '13db67bf-7370-4fbc-a9d4-11db9b13e7ee',
@@ -543,17 +546,17 @@ class CollectionListenerTest extends UnitTestCase {
           'state' => 'enabled',
           'lifecycle_state' => 'production',
           'shadow_id' => '69723de0-b1e2-11e8-9cb3-f7a071a1a24c',
-          'app_credential_urls' => array(
+          'app_credential_urls' => [
             '/consumer-api/apps/a4a67ab9-37f2-47a1-90c7-7340c1900dfb/13db67bf-7370-4fbc-a9d4-11db9b13e7ee/credentials/14cff214-3c18-40e1-a2dc-d201d58c465d',
-          ),
+          ],
           'created_at' => '2018-09-06T14:37:42.389Z',
           'updated_at' => '2018-09-06T14:37:42.847Z',
           'org_url' => '/consumer-api/orgs/33803e54-e161-40ff-988f-c51f681f7cef',
           'catalog_url' => '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002',
           'consumer_org_url' => '/consumer-api/orgs/a4a67ab9-37f2-47a1-90c7-7340c1900dfb',
           'url' => '/consumer-api/apps/a4a67ab9-37f2-47a1-90c7-7340c1900dfb/13db67bf-7370-4fbc-a9d4-11db9b13e7ee',
-          'app_credentials' => array(
-            array(
+          'app_credentials' => [
+            [
               'name' => 'sandbox-test-app-credentials',
               'title' => 'Sandbox Test App Credentials',
               'summary' => 'Sandbox Test App Credentials',
@@ -569,12 +572,12 @@ class CollectionListenerTest extends UnitTestCase {
               'app_url' => '/consumer-api/apps/a4a67ab9-37f2-47a1-90c7-7340c1900dfb/13db67bf-7370-4fbc-a9d4-11db9b13e7ee',
               'client_id' => 'efcfda1e230db20dcf9e732d0a6a2107',
               'shadow_id' => '6985ecf0-b1e2-11e8-a0a0-92998d902e7c',
-            ),
-          ),
-        ),
-      ),
-      'catalog_settings' => array(
-        array(
+            ],
+          ],
+        ],
+      ],
+      'catalog_settings' => [
+        [
           'type' => 'catalog_setting',
           'api_version' => '2.0.0',
           'name' => 'catalog-setting',
@@ -582,44 +585,44 @@ class CollectionListenerTest extends UnitTestCase {
           'summary' => NULL,
           'shadow_id' => '66779b82-b1e2-11e8-910b-5e4fb9974d8e',
           'shadow' => FALSE,
-          'application_lifecycle' => array(
+          'application_lifecycle' => [
             'enabled' => FALSE,
-          ),
+          ],
           'consumer_self_service_onboarding' => TRUE,
           'custom_notification_templates_enabled' => FALSE,
-          'email_sender' => array(
+          'email_sender' => [
             'custom' => FALSE,
             'name' => NULL,
             'address' => NULL,
-          ),
+          ],
           'hash_client_secret' => FALSE,
           'invitation_ttl' => 172800,
-          'portal' => array(
+          'portal' => [
             'type' => 'drupal',
             'endpoint' => 'https://portal.mf7.argo2-sl.dev.ciondemand.com/test/sandbox',
             'portal_service_url' => '/api/orgs/33803e54-e161-40ff-988f-c51f681f7cef/portal-services/0a2dde8d-9c0d-42c5-b1a5-2ad6452cc9c7',
             'webhook_url' => NULL,
-          ),
+          ],
           'product_lifecycle_approvals' => NULL,
           'production_mode' => FALSE,
           'spaces_enabled' => FALSE,
           'task_self_approval' => FALSE,
           'user_registry_default_url' => '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002/configured-catalog-user-registries/3e57a787-db9a-4b3b-89b2-65bb2cd2f50d',
-          'vanity_api_endpoint' => array(
+          'vanity_api_endpoint' => [
             'enabled' => FALSE,
             'endpoint_preference' => NULL,
-            'vanity_api_base_endpoints' => array(),
-          ),
+            'vanity_api_base_endpoints' => [],
+          ],
           'metadata' => NULL,
           'created_at' => '2018-09-06T14:37:36.263Z',
           'updated_at' => '2018-09-06T14:44:16.331Z',
           'org_url' => '/api/orgs/33803e54-e161-40ff-988f-c51f681f7cef',
           'catalog_url' => '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002',
           'url' => '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002/settings',
-        ),
-      ),
-      'apis' => array(
-        array(
+        ],
+      ],
+      'apis' => [
+        [
           'type' => 'api',
           'api_version' => '2.0.0',
           'id' => '580af3e4-00d8-4e88-aa99-ccee8c58dd6f',
@@ -629,124 +632,124 @@ class CollectionListenerTest extends UnitTestCase {
           'state' => 'online',
           'shadow_id' => '48696780-b1e3-11e8-92c2-af06da5a7610',
           'scope' => 'catalog',
-          'gateway_service_urls' => array(
+          'gateway_service_urls' => [
             '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002/configured-gateway-services/87e5fab4-fefb-4063-a7f2-7381608c7b0a',
-          ),
-          'user_registry_urls' => array(),
-          'oauth_provider_urls' => array(),
-          'tls_client_profile_urls' => array(),
-          'extension_urls' => array(),
-          'policy_urls' => array(
+          ],
+          'user_registry_urls' => [],
+          'oauth_provider_urls' => [],
+          'tls_client_profile_urls' => [],
+          'extension_urls' => [],
+          'policy_urls' => [
             '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002/configured-gateway-services/87e5fab4-fefb-4063-a7f2-7381608c7b0a/policies/523e8bee-6867-4ae1-a071-0bb6dfe32b76',
             '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002/configured-gateway-services/87e5fab4-fefb-4063-a7f2-7381608c7b0a/policies/97ad8a2d-3adf-4597-9419-6a9cadb38002',
             '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002/configured-gateway-services/87e5fab4-fefb-4063-a7f2-7381608c7b0a/policies/67d66392-2124-477d-90f1-04c577eb7609',
-          ),
-          'consumer_api' => array(
+          ],
+          'consumer_api' => [
             'swagger' => '2.0',
-            'info' => array(
+            'info' => [
               'version' => '0.0.1',
               'title' => 'Echo API',
               'x-ibm-name' => 'echo-api',
-              'contact' => array(
+              'contact' => [
                 'name' => 'Ricky Moorhouse',
                 'email' => 'moorh@uk.ibm.com',
-              ),
-            ),
+              ],
+            ],
             'host' => 'mf7-gw.argo2-sl.dev.ciondemand.com',
             'basePath' => '/test/sandbox/echo',
-            'paths' => array(
-              '/get' => array(
-                'get' => array(
-                  'responses' => array(
-                    200 => array(
+            'paths' => [
+              '/get' => [
+                'get' => [
+                  'responses' => [
+                    200 => [
                       'description' => '200 OK',
-                      'schema' => array(
+                      'schema' => [
                         '$ref' => '#/definitions/responseObject',
-                      ),
-                    ),
-                  ),
-                  'parameters' => array(
-                    array(
+                      ],
+                    ],
+                  ],
+                  'parameters' => [
+                    [
                       '$ref' => '#/parameters/text',
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            'security' => array(
-              array(
-                'api-key-2' => array(),
-                'api-key-1' => array(),
-              ),
-            ),
-            'x-ibm-configuration' => array(
+                    ],
+                  ],
+                ],
+              ],
+            ],
+            'security' => [
+              [
+                'api-key-2' => [],
+                'api-key-1' => [],
+              ],
+            ],
+            'x-ibm-configuration' => [
               'gateway' => 'datapower-gateway',
               'enforced' => TRUE,
               'testable' => TRUE,
               'phase' => 'realized',
-              'cors' => array(
+              'cors' => [
                 'enabled' => TRUE,
-              ),
+              ],
               'type' => 'rest',
-              'servers' => array(
-                array(
+              'servers' => [
+                [
                   'url' => 'https://mf7-gw.argo2-sl.dev.ciondemand.com/test/sandbox/echo',
                   'description' => '',
-                  'type' => array(
+                  'type' => [
                     'production',
                     'development',
-                  ),
-                ),
-              ),
-            ),
-            'produces' => array(
+                  ],
+                ],
+              ],
+            ],
+            'produces' => [
               'application/json',
-            ),
-            'parameters' => array(
-              'text' => array(
+            ],
+            'parameters' => [
+              'text' => [
                 'name' => 'text',
                 'type' => 'string',
                 'required' => FALSE,
                 'in' => 'query',
                 'description' => 'Text passed in',
-              ),
-            ),
-            'definitions' => array(
-              'responseObject' => array(
-                'properties' => array(
-                  'text' => array(
+              ],
+            ],
+            'definitions' => [
+              'responseObject' => [
+                'properties' => [
+                  'text' => [
                     'type' => 'string',
-                  ),
-                ),
-              ),
-            ),
-            'securityDefinitions' => array(
-              'api-key-2' => array(
+                  ],
+                ],
+              ],
+            ],
+            'securityDefinitions' => [
+              'api-key-2' => [
                 'type' => 'apiKey',
                 'description' => '',
                 'in' => 'header',
                 'name' => 'X-IBM-Client-Secret',
-              ),
-              'api-key-1' => array(
+              ],
+              'api-key-1' => [
                 'type' => 'apiKey',
                 'description' => '',
                 'in' => 'header',
                 'name' => 'X-IBM-Client-Id',
-              ),
-            ),
-            'schemes' => array(
+              ],
+            ],
+            'schemes' => [
               'https',
-            ),
-          ),
+            ],
+          ],
           'created_at' => '2018-09-06T14:43:56.320Z',
           'updated_at' => '2018-09-06T14:43:57.202Z',
           'org_url' => '/consumer-api/orgs/33803e54-e161-40ff-988f-c51f681f7cef',
           'catalog_url' => '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002',
           'url' => '/consumer-api/apis/580af3e4-00d8-4e88-aa99-ccee8c58dd6f',
-        ),
-      ),
-      'products' => array(
-        array(
+        ],
+      ],
+      'products' => [
+        [
           'type' => 'product',
           'api_version' => '2.0.0',
           'id' => 'b1e9fb34-2bd3-4544-84e8-ec6ca291eff3',
@@ -757,76 +760,75 @@ class CollectionListenerTest extends UnitTestCase {
           'state' => 'published',
           'shadow_id' => '48881310-b1e3-11e8-b7f0-f0630d8d6915',
           'scope' => 'catalog',
-          'gateway_service_urls' => array(
+          'gateway_service_urls' => [
             '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002/configured-gateway-services/87e5fab4-fefb-4063-a7f2-7381608c7b0a',
-          ),
-          'visibility' => array(
-            'view' => array(
+          ],
+          'visibility' => [
+            'view' => [
               'type' => 'public',
               'enabled' => TRUE,
-            ),
-            'subscribe' => array(
+            ],
+            'subscribe' => [
               'type' => 'authenticated',
               'enabled' => TRUE,
-            ),
-          ),
-          'api_urls' => array(
+            ],
+          ],
+          'api_urls' => [
             '/consumer-api/apis/580af3e4-00d8-4e88-aa99-ccee8c58dd6f',
-          ),
-          'oauth_provider_urls' => array(),
-          'catalog_product' => array(
-            'info' => array(
+          ],
+          'oauth_provider_urls' => [],
+          'catalog_product' => [
+            'info' => [
               'version' => '1.0.0',
               'title' => 'Echo Product',
               'name' => 'echo-product',
               'summary' => 'This is a product containing an echo api',
-            ),
-            'gateways' => array(
+            ],
+            'gateways' => [
               'datapower-gateway',
-            ),
-            'plans' => array(
-              'default-plan' => array(
-                'rate-limits' => array(
-                  'default' => array(
+            ],
+            'plans' => [
+              'default-plan' => [
+                'rate-limits' => [
+                  'default' => [
                     'value' => '100/1hour',
-                  ),
-                ),
+                  ],
+                ],
                 'title' => 'Default Plan',
                 'description' => 'Default Plan',
                 'approval' => FALSE,
-              ),
-            ),
-            'apis' => array(
-              'Echo API' => array(
+              ],
+            ],
+            'apis' => [
+              'Echo API' => [
                 'name' => 'echo-api:0.0.1',
-              ),
-            ),
-            'visibility' => array(
-              'view' => array(
+              ],
+            ],
+            'visibility' => [
+              'view' => [
                 'type' => 'public',
                 'enabled' => TRUE,
-              ),
-              'subscribe' => array(
+              ],
+              'subscribe' => [
                 'type' => 'authenticated',
                 'enabled' => TRUE,
-              ),
-            ),
+              ],
+            ],
             'product' => '1.0.0',
-          ),
-          'task_urls' => array(),
+          ],
+          'task_urls' => [],
           'created_at' => '2018-09-06T14:43:56.057Z',
           'updated_at' => '2018-09-06T14:43:57.028Z',
           'org_url' => '/consumer-api/orgs/33803e54-e161-40ff-988f-c51f681f7cef',
           'catalog_url' => '/api/catalogs/33803e54-e161-40ff-988f-c51f681f7cef/aff3eada-4a04-450a-bcc7-f22518bad002',
           'url' => '/consumer-api/products/b1e9fb34-2bd3-4544-84e8-ec6ca291eff3',
-        ),
-      ),
-    );
-    $this->assertEquals($expectedJson, $content);
+        ],
+      ],
+    ];
+    self::assertEquals($expectedJson, $content);
 
     return $content;
   }
-
 
 
 }

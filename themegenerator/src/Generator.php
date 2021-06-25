@@ -177,7 +177,7 @@ class Generator {
    *
    * @return string
    */
-  protected static function createZip($dir, $zipFileName) :string{
+  protected static function createZip($dir, $zipFileName): string {
     $rootPath = realpath(DRUPAL_ROOT . '/' . $dir);
 
     $zipName = $dir . '/' . $zipFileName . '.zip';
@@ -219,8 +219,8 @@ class Generator {
    *
    * @return bool|null
    */
-  public static function delTree($dir = NULL) : ?bool{
-    if ($dir !== null) {
+  public static function delTree($dir = NULL): ?bool {
+    if ($dir !== NULL) {
       $files = array_diff(scandir($dir, SCANDIR_SORT_NONE), ['.', '..']);
       foreach ($files as $file) {
         is_dir("$dir/$file") ? self::delTree("$dir/$file") : unlink("$dir/$file");
@@ -229,4 +229,5 @@ class Generator {
     }
     return NULL;
   }
+
 }

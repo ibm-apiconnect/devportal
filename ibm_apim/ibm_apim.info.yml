@@ -1,9 +1,9 @@
 name: IBM APIC
 type: module
-description: Core IBM API Connect integration
-package: IBM API Connect
+description: Core IBM API Management integration
+package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9
-version: 8.x-3.0.237
+version: 8.x-3.1.98
 project: ibm_apim
 dependencies:
 - telephone
@@ -26,6 +26,7 @@ dependencies:
 - ibm_log_stdout
 - content_translation
 - ibm_create_payment_method
+- ibm_event_log
 libraries:
 - ibm_apim/core
 - core/drupal.dialog

@@ -36,22 +36,22 @@ class MeResponseReader extends RestResponseReader {
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  private $logger;
+  private LoggerInterface $logger;
 
   /**
    * @var \Drupal\ibm_apim\Service\ApimUtils
    */
-  private $apimUtils;
+  private ApimUtils $apimUtils;
 
   /**
    * @var \Drupal\ibm_apim\Service\Utils
    */
-  private $utils;
+  private Utils $utils;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
    */
-  private $registryService;
+  private UserRegistryServiceInterface $registryService;
 
 
   /**
@@ -59,7 +59,7 @@ class MeResponseReader extends RestResponseReader {
    *
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   * @param \Drupal\pathauto\MessengerInterface $messenger
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    * @param \Psr\Log\LoggerInterface $logger
    * @param \Drupal\ibm_apim\Service\ApimUtils $apim_utils
    * @param \Drupal\ibm_apim\Service\Utils $utils
@@ -87,6 +87,7 @@ class MeResponseReader extends RestResponseReader {
    *
    * @return \Drupal\ibm_apim\Rest\MeResponse
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Exception
    */
   public function read($response, $response_object = NULL): ?RestResponseInterface {
 
@@ -121,7 +122,7 @@ class MeResponseReader extends RestResponseReader {
     $state = $data['state'] ?? NULL;
     $user->setState($state);
 
-    $metadata = $data['metadata'] ?? NULL;
+    $metadata = $data['metadata'] ?? [];
     $user->setMetadata($metadata);
 
     $idp = $data['identity_provider'] ?? NULL;
@@ -214,6 +215,7 @@ class MeResponseReader extends RestResponseReader {
    * @param $json
    *
    * @return ConsumerOrg
+   * @throws \JsonException
    */
   private function createConsumerOrgFromMeResponseJSON($json): ConsumerOrg {
 
@@ -222,7 +224,7 @@ class MeResponseReader extends RestResponseReader {
     $org = new ConsumerOrg();
 
     if (\is_string($json)) {
-      $json = json_decode($json, 1);
+      $json = json_decode($json, TRUE, 512, JSON_THROW_ON_ERROR);
     }
 
     if (isset($json['org']['name'])) {
@@ -241,10 +243,10 @@ class MeResponseReader extends RestResponseReader {
       $org->setState($json['org']['state']);
     }
     if (isset($json['org']['created_at'])) {
-      $org->setCreatedAt($json['org']['created_at']);
+      $org->setCreatedAt(strtotime($json['org']['created_at']));
     }
     if (isset($json['org']['updated_at'])) {
-      $org->setUpdatedAt($json['org']['updated_at']);
+      $org->setUpdatedAt(strtotime($json['org']['updated_at']));
     }
     if (isset($json['org']['url'])) {
       $org->setUrl($this->apimUtils->removeFullyQualifiedUrl($json['org']['url']));

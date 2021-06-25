@@ -21,14 +21,19 @@
           </div>
         </div>
         <span class="dropit-icon">
-            <svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" class="bx--header__menu-arrow">
+            <svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"
+                 fill="currentColor" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"
+                 class="bx--header__menu-arrow">
                 <path d="M8 11L3 6 3.7 5.3 8 9.6 12.3 5.3 13 6z"></path>
             </svg>
         </span></a>
       <ul class="dropitmenu-submenu">
-        <li class="elipsis-names myorg" title="{{ 'My organization'|t }}"><a href="{{ path('ibm_apim.myorg') }}" class="elipsis-names">{{ 'My organization'| t }}</a></li>
-        {%  if create_allowed == true %}
-        <li class="elipsis-names createorg" title="{{ 'Create organization'|t }}"><a href="{{ path('consumerorg.create') }}" class="elipsis-names">{{ 'Create organization'| t }}</a></li>
+        <li class="elipsis-names myorg" title="{{ 'My organization'|t }}"><a href="{{ path('ibm_apim.myorg') }}"
+                                                                             class="elipsis-names">{{ 'My organization'| t }}</a>
+        </li>
+        {% if create_allowed == true %}
+          <li class="elipsis-names createorg" title="{{ 'Create organization'|t }}"><a
+                href="{{ path('consumerorg.create') }}" class="elipsis-names">{{ 'Create organization'| t }}</a></li>
         {% endif %}
         <li class="selectorg" disabled>{{ 'Select organization'|t }}</li>
         {% for org in orgs %}

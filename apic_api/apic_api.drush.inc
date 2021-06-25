@@ -15,9 +15,9 @@ use Drupal\Core\Session\UserSession;
 use Drupal\node\Entity\Node;
 
 /**
- * @return mixed
+ * @return array
  */
-function apic_api_drush_command() {
+function apic_api_drush_command(): array {
 
   $items['apic-api-cleanse-drush-command'] = [
     'description' => 'Clears the API entries back to a clean state.',
@@ -86,7 +86,7 @@ function drush_apic_api_cleanse_drush_command() {
   foreach ($nodes as $node) {
     $node->delete();
   }
-  if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+  if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchBack();
   }
   drush_log(dt('All API entries deleted.'), 'success');
@@ -99,6 +99,7 @@ function drush_apic_api_cleanse_drush_command() {
  * @param $func
  *
  * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
  */
 function drush_apic_api_createOrUpdate($api, $event, $func) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -111,7 +112,7 @@ function drush_apic_api_createOrUpdate($api, $event, $func) {
       $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
     if (is_string($api)) {
-      $api = json_decode($api, TRUE);
+      $api = json_decode($api, TRUE, 512, JSON_THROW_ON_ERROR);
     }
     if (isset($api['consumer_api']['definitions']) && empty($api['consumer_api']['definitions'])) {
       unset($api['consumer_api']['definitions']);
@@ -136,7 +137,7 @@ function drush_apic_api_createOrUpdate($api, $event, $func) {
     if ($func !== 'MassUpdate' && $moduleHandler->moduleExists('views')) {
       views_invalidate_cache();
     }
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -150,7 +151,7 @@ function drush_apic_api_createOrUpdate($api, $event, $func) {
  * @param $api
  * @param string $event
  *
- * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
  */
 function drush_apic_api_create($api, $event = 'api_create') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -162,7 +163,7 @@ function drush_apic_api_create($api, $event = 'api_create') {
  * @param $api
  * @param string $event
  *
- * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
  */
 function drush_apic_api_update($api, $event = 'api_update') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -175,6 +176,7 @@ function drush_apic_api_update($api, $event = 'api_update') {
  * @param string $event
  *
  * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
  */
 function drush_apic_api_delete($api, $event = 'api_delete') {
   ibm_apim_entry_trace(__FUNCTION__);
@@ -188,7 +190,7 @@ function drush_apic_api_delete($api, $event = 'api_delete') {
     }
 
     if (is_string($api)) {
-      $api = json_decode($api, TRUE);
+      $api = json_decode($api, TRUE, 512, JSON_THROW_ON_ERROR);
     }
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'api');
@@ -241,7 +243,7 @@ function drush_apic_api_delete($api, $event = 'api_delete') {
     else {
       drush_log(dt('Drush DeleteAPI could not find API @api', ['@api' => $api['url']]), 'warning');
     }
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -255,7 +257,7 @@ function drush_apic_api_delete($api, $event = 'api_delete') {
  * @param array $apis
  * @param string $event
  *
- * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
  */
 function drush_apic_api_massupdate($apis = [], $event = 'api_massupdate') {
   ibm_apim_entry_trace(__FUNCTION__, count($apis));

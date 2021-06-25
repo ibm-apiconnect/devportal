@@ -30,6 +30,7 @@ class MockApicPasswordService implements ApicPasswordInterface {
       \Drupal::messenger()->addStatus('MOCKED SERVICE:: In resetPassword return 200');
       return 200;
     }
+    return 200;
   }
 
   /**
@@ -43,7 +44,8 @@ class MockApicPasswordService implements ApicPasswordInterface {
       return FALSE;
     }
     elseif ($new_password === 'thisisinvalid') {
-      \Drupal::messenger()->addStatus('MOCKED SERVICE:: Password must contain characters from 3 of the 4 following categories: 1. upper-case, 2. lower-case, 3. numeric, and 4. punctuation (for example, !, $, #, %)');
+      \Drupal::messenger()
+        ->addStatus('MOCKED SERVICE:: Password must contain characters from 3 of the 4 following categories: 1. upper-case, 2. lower-case, 3. numeric, and 4. punctuation (for example, !, $, #, %)');
       return FALSE;
     }
     return TRUE;
@@ -56,4 +58,5 @@ class MockApicPasswordService implements ApicPasswordInterface {
     \Drupal::logger('mock_auth_apic')->debug(__CLASS__ . '::' . __FUNCTION__ . ': TODO IMPL');
     return NULL;
   }
+
 }

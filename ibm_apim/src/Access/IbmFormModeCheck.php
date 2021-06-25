@@ -21,6 +21,11 @@ use Drupal\Core\Routing\RouteMatch;
  */
 class IbmFormModeCheck implements AccessInterface {
 
+  /**
+   * @param \Drupal\Core\Routing\RouteMatch|null $routeMatch
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   */
   public function access(RouteMatch $routeMatch = NULL): AccessResult {
     $allowed = TRUE;
 
@@ -37,4 +42,5 @@ class IbmFormModeCheck implements AccessInterface {
 
     return AccessResult::allowedIf($allowed);
   }
+
 }

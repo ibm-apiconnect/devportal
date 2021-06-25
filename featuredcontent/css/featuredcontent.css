@@ -6,7 +6,7 @@
   margin-bottom: 2px;
   width: calc(25% - 16px);
   padding: 1rem;
-  background-color:#fff;
+  background-color: #fff;
   min-width: 12.5rem;
   max-height: 12.75rem;
 }
@@ -36,7 +36,7 @@
 
 .featuredcontentBlockHeader {
   display: inline-block;
-  width: calc(100%/4 - 8px);
+  width: calc(100% / 4 - 8px);
   min-width: 250px;
   vertical-align: top;
 }
@@ -47,7 +47,7 @@
 }
 
 .featuredcontentNodeHeader {
-  align-items:center;
+  align-items: center;
 }
 
 .featuredcontentNodeImage img {
@@ -70,7 +70,7 @@
 }
 
 .featuredcontentNodeInfo {
-  padding-top:0.875rem;
+  padding-top: 0.875rem;
 }
 
 .featuredcontentNodeInfo .featuredcontentNodeSummary,
@@ -88,6 +88,7 @@
   .featuredcontentContentContainer {
     display: block;
   }
+
   .featuredcontentBlockHeader {
     padding-bottom: 1rem;
   }

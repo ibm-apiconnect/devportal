@@ -13,30 +13,15 @@
 
 namespace Drupal\Tests\consumerorg\Unit;
 
-
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\consumerorg\Service\ConsumerOrgLoginService;
 use Drupal\consumerorg\Service\ConsumerOrgService;
-use Drupal\consumerorg\Service\MemberService;
-use Drupal\consumerorg\Service\RoleService;
-use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\ibm_apim\ApicType\ApicUser;
-use Drupal\ibm_apim\Rest\RestResponse;
-use Drupal\ibm_apim\Service\ApimUtils;
-use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
-use Drupal\ibm_apim\Service\SiteConfig;
-use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 use Prophecy\Prophet;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @coversDefaultClass \Drupal\consumerorg\Service\ConsumerOrgLoginService
@@ -45,23 +30,40 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  */
 class ConsumerOrgLoginServiceTest extends UnitTestCase {
 
-  private $prophet;
+  /**
+   * @var \Prophecy\Prophet
+   */
+  private Prophet $prophet;
 
   // dependencies of ConsumerOrgLoginService
+
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $consumerOrgService;
+
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
+   */
   private $logger;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->consumerOrgService = $this->prophet->prophesize(ConsumerOrgService::class);
     $this->logger = $this->prophet->prophesize(LoggerInterface::class);
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
-  public function testCreateOrUpdateLoginOrgMemberExists() {
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
+   */
+  public function testCreateOrUpdateLoginOrgMemberExists(): void {
 
     $existing_members = [];
     $existing_member = new Member();
@@ -95,7 +97,7 @@ class ConsumerOrgLoginServiceTest extends UnitTestCase {
 
     $this->consumerOrgService->get('/org/1')->willReturn($stored_org)->shouldBeCalled();
     $this->consumerOrgService->createNode(Argument::any())->shouldNotBeCalled();
-    $this->consumerOrgService->createOrUpdateNode(Argument::any())->shouldNotBeCalled();
+    $this->consumerOrgService->createOrUpdateNode(Argument::any(), Argument::any())->shouldNotBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
     $this->logger->warning(Argument::any())->shouldNotBeCalled();
@@ -103,13 +105,19 @@ class ConsumerOrgLoginServiceTest extends UnitTestCase {
     $service = $this->createService();
     $result = $service->createOrUpdateLoginOrg($new_org, $user);
 
-    $this->assertNotNull($result);
-    $this->assertEquals('/org/1', $result->getUrl());
-    $this->assertEquals(2, \sizeof($result->getMembers()));
+    self::assertNotNull($result);
+    self::assertEquals('/org/1', $result->getUrl());
+    self::assertEquals(2, \sizeof($result->getMembers()));
 
   }
 
-  public function testCreateOrUpdateLoginOrgAddNewMember() {
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
+   */
+  public function testCreateOrUpdateLoginOrgAddNewMember(): void {
 
     $existing_members = [];
     $existing_member = new Member();
@@ -146,13 +154,19 @@ class ConsumerOrgLoginServiceTest extends UnitTestCase {
     $service = $this->createService();
     $result = $service->createOrUpdateLoginOrg($new_org, $user);
 
-    $this->assertNotNull($result);
-    $this->assertEquals('/org/1', $result->getUrl());
-    $this->assertEquals(2, \sizeof($result->getMembers()));
+    self::assertNotNull($result);
+    self::assertEquals('/org/1', $result->getUrl());
+    self::assertEquals(2, \sizeof($result->getMembers()));
 
   }
 
-  public function testCreateOrUpdateLoginOrgNoExistingOrg() {
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
+   */
+  public function testCreateOrUpdateLoginOrgNoExistingOrg(): void {
 
     $user = new ApicUser();
     $user->setUrl('/user/2');
@@ -172,8 +186,8 @@ class ConsumerOrgLoginServiceTest extends UnitTestCase {
     $org_service = $this->consumerOrgService;
     $this->consumerOrgService->createNode($new_org)->shouldBeCalled()->will(function ($args) use ($org_service, $new_org) {
       $org_service->get('/org/1')->willReturn($new_org)->shouldBeCalled();
-    });;
-    $this->consumerOrgService->createOrUpdateNode(Argument::any())->shouldNotBeCalled();
+    });
+    $this->consumerOrgService->createOrUpdateNode(Argument::any(), Argument::any())->shouldNotBeCalled();
     $this->logger->notice('Consumerorg @consumerorgname (url=@consumerorgurl) was not found in drupal database during login. It will be created.', [
       '@consumerorgurl' => '/org/1',
       '@consumerorgname' => 'org1',
@@ -184,11 +198,11 @@ class ConsumerOrgLoginServiceTest extends UnitTestCase {
     $service = $this->createService();
     $result = $service->createOrUpdateLoginOrg($new_org, $user);
 
-    $this->assertNotNull($result);
-    $this->assertEquals('/org/1', $result->getUrl());
-    $this->assertEquals('org1', $result->getTitle());
-    $this->assertEquals('/user/2', $result->getOwnerUrl());
-    $this->assertEquals(1, \sizeof($result->getMembers()));
+    self::assertNotNull($result);
+    self::assertEquals('/org/1', $result->getUrl());
+    self::assertEquals('org1', $result->getTitle());
+    self::assertEquals('/user/2', $result->getOwnerUrl());
+    self::assertEquals(1, \sizeof($result->getMembers()));
 
   }
 
@@ -197,10 +211,9 @@ class ConsumerOrgLoginServiceTest extends UnitTestCase {
    * @return \Drupal\consumerorg\Service\ConsumerOrgLoginService
    */
   private function createService(): ConsumerOrgLoginService {
-    $service = new ConsumerOrgLoginService(
+    return new ConsumerOrgLoginService(
       $this->consumerOrgService->reveal(),
       $this->logger->reveal());
-    return $service;
   }
 
 

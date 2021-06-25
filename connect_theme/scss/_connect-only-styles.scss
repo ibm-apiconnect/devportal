@@ -1,0 +1,121 @@
+//
+// Copyright IBM Corp. 2016, 2021
+//
+
+/* ckeditor */
+.bx--global-light-ui .cke_top {
+  background-color: $ui-background;
+  border-bottom: 1px solid $ui-01;
+}
+.bx--global-light-ui .cke_chrome {
+  border: 0;
+  /* evil hack to prevent some broken JS from setting width to 0px on ckeditor */
+  width: 100% !important;
+}
+.bx--global-light-ui .cke_bottom {
+  border-top: 0;
+  background: $ui-background;
+}
+
+/* ckeditor toolbar icons */
+.bx--global-light-ui .cke_hidpi .cke_button__bold_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--bold.svg) !important;
+  background-position: -4px -4px !important;
+  background-size: 24px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__italic_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--italic.svg) !important;
+  background-position: -4px -4px !important;
+  background-size: 24px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__underline_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--underline.svg) !important;
+  background-position: -3px -2px !important;
+  background-size: 20px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__strike_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--strikethrough.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__superscript_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--superscript.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__subscript_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--subscript.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__justifyleft_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--align--left.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__justifycenter_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--align--center.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__justifyright_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--align--right.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__justifyblock_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/text--align--justify.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__drupallink_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/link.svg) !important;
+  background-position: 0 -2px !important;
+  background-size: 18px !important;
+  width: 18px;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__drupalunlink_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/unlink.svg) !important;
+  background-position: -2px -2px !important;
+  background-size: 18px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__content_browser_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/box.svg) !important;
+  background-position: -1px -1px !important;
+  background-size: 18px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__bulletedlist_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/list--bulleted.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__numberedlist_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/list--numbered.svg) !important;
+  background-position: -4px -3px !important;
+  background-size: 22px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__drupalfile_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/attachment.svg) !important;
+  background-position: -1px -1px !important;
+  background-size: 18px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__blockquote_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/quotes.svg) !important;
+  background-position: -2px -2px !important;
+  background-size: 20px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__file_browser_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/archive.svg) !important;
+  background-position: -1px -1px !important;
+  background-size: 18px !important;
+}
+.bx--global-light-ui .cke_hidpi .cke_button__drupalimage_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/image.svg) !important;
+  background-position: -2px -1px !important;
+  background-size: 19px !important;
+}
+.bx--global-light-ui .cke_ltr.cke_hidpi .cke_button__source_icon {
+  background-image: url(../images/ibmcarbon/svg/ckeditor/script.svg) !important;
+  background-position: -2px -1px !important;
+  background-size: 17px !important;
+}

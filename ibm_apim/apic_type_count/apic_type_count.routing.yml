@@ -15,7 +15,7 @@ apic_type_count_description_user:
     _controller: '\Drupal\apic_type_count\Controller\ApicTypeCountController::userRoleCount'
     _title: 'User Count'
   requirements:
-     _permission: 'administer modules'
+    _permission: 'administer modules'
 
 apic_type_count_description_entity:
   path: 'admin/reports/apic-type-count/entities'

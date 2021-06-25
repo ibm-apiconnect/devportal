@@ -7,8 +7,8 @@
 
 namespace Drupal\apic_type_count\Controller;
 
-use Drupal\Core\Controller\ControllerBase;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Controller\ControllerBase;
 use Drupal\node\NodeInterface;
 
 /**
@@ -204,8 +204,8 @@ class ApicTypeCountController extends ControllerBase {
    * @return array|int
    */
   public static function entityCountState($type) {
-    $result = null;
-    if ($type !== null) {
+    $result = NULL;
+    if ($type !== NULL) {
       $query = \Drupal::entityQuery($type);
       $result = $query->count()->execute();
     }
@@ -218,6 +218,7 @@ class ApicTypeCountController extends ControllerBase {
    * @return array
    */
   public static function getEntityTypes(): array {
-    return ['apic_app_application_subs' => 'Subscriptions', 'apic_app_application_creds' => 'Credentials'];
+    return ['apic_app_application_subs' => 'Subscriptions', 'apic_app_application_creds' => 'Credentials', 'consumerorg_payment_method' => 'Payment Methods', 'event_log' => 'Event Logs'];
   }
+
 }

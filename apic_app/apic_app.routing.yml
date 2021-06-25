@@ -14,12 +14,11 @@ apic_app.view:
 apic_app.activity:
   path: '/node/{node}/activity'
   defaults:
-    _controller: '\Drupal\apic_app\Controller\ApplicationController::analytics'
-    _title: 'Activity'
+    _controller: '\Drupal\apic_app\Controller\ApplicationController::activity'
+    _title: 'Notifications'
   requirements:
     _role: 'authenticated'
-    _application_analytics_access_check: 'TRUE'
-    _ibm_apim_analytics_access_check: 'TRUE'
+    _application_access_check: 'TRUE'
   options:
     parameters:
       node:

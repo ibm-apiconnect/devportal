@@ -17,6 +17,10 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * APIC billing monetization settings form.
+ *
+ * Class BillingConfigForm
+ *
+ * @package Drupal\ibm_apim\Form
  */
 class BillingConfigForm extends ConfigFormBase {
 
@@ -43,7 +47,7 @@ class BillingConfigForm extends ConfigFormBase {
     $localeStorage = \Drupal::service('locale.storage');
 
     $form['intro'] = [
-      '#markup' => t('IBM API Connect Billing Integration Settings'),
+      '#markup' => t('IBM API Developer Portal Billing Integration Settings'),
       '#weight' => -20,
     ];
 

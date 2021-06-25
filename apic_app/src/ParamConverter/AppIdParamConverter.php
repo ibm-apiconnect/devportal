@@ -18,6 +18,11 @@ use Drupal\Core\ParamConverter\ParamConverterInterface;
 use Drupal\node\Entity\Node;
 use Symfony\Component\Routing\Route;
 
+/**
+ * Class AppIdParamConverter
+ *
+ * @package Drupal\apic_app\ParamConverter
+ */
 class AppIdParamConverter implements ParamConverterInterface {
 
   /**
@@ -26,7 +31,7 @@ class AppIdParamConverter implements ParamConverterInterface {
    * @param string $name
    * @param array $defaults
    *
-   * @return \Drupal\Core\Entity\EntityInterface|\Drupal\node\Entity\Node|mixed|null
+   * @return \Drupal\Core\Entity\EntityBase|\Drupal\Core\Entity\EntityInterface|\Drupal\node\Entity\Node|null
    */
   public function convert($value, $definition, $name, array $defaults) {
     $returnValue = NULL;
@@ -48,7 +53,15 @@ class AppIdParamConverter implements ParamConverterInterface {
     return $returnValue;
   }
 
+  /**
+   * @param mixed $definition
+   * @param string $name
+   * @param \Symfony\Component\Routing\Route $route
+   *
+   * @return bool
+   */
   public function applies($definition, $name, Route $route): bool {
     return (!empty($definition['type']) && $definition['type'] === 'apic_app.appid');
   }
+
 }

@@ -17,8 +17,16 @@ use Drupal\ibm_apim\Service\ApicUserService;
 
 class MemberService {
 
-  private $userService;
+  /**
+   * @var \Drupal\ibm_apim\Service\ApicUserService
+   */
+  private ApicUserService $userService;
 
+  /**
+   * MemberService constructor.
+   *
+   * @param \Drupal\ibm_apim\Service\ApicUserService $user_service
+   */
   public function __construct(ApicUserService $user_service) {
     $this->userService = $user_service;
   }
@@ -27,11 +35,14 @@ class MemberService {
   /**
    * Parse an ApicType/Member object out of the given JSON structure (e.g. from a webhook body or snapshot)
    *
-   * @param object $json
+   * @param array $json
    *
    * @return \Drupal\consumerorg\ApicType\Member
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \JsonException
    */
-  public function createFromJSON($json): Member {
+  public function createFromJSON(array $json): Member {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $member = new Member();
 
@@ -57,6 +68,14 @@ class MemberService {
 
     if (!empty($json['org_url'])) {
       $member->setOrgUrl($json['org_url']);
+    }
+
+    if (!empty($json['created_at'])) {
+      $member->setCreatedAt(strtotime($json['created_at']));
+    }
+
+    if (!empty($json['updated_at'])) {
+      $member->setUpdatedAt(strtotime($json['updated_at']));
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $member);

@@ -7,7 +7,7 @@ Feature: System Settings
     Given I am logged in as a user with the "Administrator" role
     And restore ibm_apim settings default values
     And I am at "/admin/config/system/ibm_apim"
-    Then I should see the text "Configure the IBM API Connect Developer Portal"
+    Then I should see the text "Configure the IBM API Developer Portal"
     And I should see the text "Proxy Configuration"
     And I should see the text "Enable Proxy Support"
     And I should see the text "If enabled, use the Proxy for Consumer, Platform or Analytics APIs"

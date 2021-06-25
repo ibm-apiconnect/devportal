@@ -11,7 +11,7 @@ stripe:
 stripemessages:
   version: VERSION
   js:
-    js/stripe.messages.js: {}
+    js/stripe.messages.js: { }
   dependencies:
     - classy/messages
     - core/jquery
@@ -20,9 +20,9 @@ stripeform:
   version: VERSION
   css:
     theme:
-      css/stripe.form.css: {}
+      css/stripe.form.css: { }
   js:
-    js/stripe.form.js: {}
+    js/stripe.form.js: { }
   dependencies:
     - core/jquery
     - core/drupal

@@ -18,68 +18,80 @@ namespace Drupal\ibm_apim\Rest;
  */
 class TokenResponse extends RestResponse {
 
-  private $bearer_token;
-
-  private $expires_in;
-
-  private $refresh_token;
-
-  private $refresh_expires_in;
+  /**
+   * @var string|null
+   */
+  private ?string $bearer_token = NULL;
 
   /**
-   * @return mixed
+   * @var int|null
    */
-  public function getBearerToken() {
+  private ?int $expires_in = NULL;
+
+  /**
+   * @var string|null
+   */
+  private ?string $refresh_token = NULL;
+
+  /**
+   * @var int|null
+   */
+  private ?int $refresh_expires_in = NULL;
+
+  /**
+   * @return string|null
+   */
+  public function getBearerToken(): ?string {
     return $this->bearer_token;
   }
 
   /**
-   * @param mixed $bearer_token
+   * @param string|null $bearer_token
    */
-  public function setBearerToken($bearer_token): void {
+  public function setBearerToken(?string $bearer_token): void {
     $this->bearer_token = $bearer_token;
   }
 
   /**
-   * @return mixed
+   * @return int|null
    */
-  public function getExpiresIn() {
+  public function getExpiresIn(): ?int {
     return $this->expires_in;
   }
 
   /**
-   * @param mixed $expires_in
+   * @param int|null $expires_in
    */
-  public function setExpiresIn($expires_in): void {
+  public function setExpiresIn(?int $expires_in): void {
     $this->expires_in = $expires_in;
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function getRefreshToken() {
+  public function getRefreshToken(): ?string {
     return $this->refresh_token;
   }
 
   /**
-   * @param mixed $refresh_token
+   * @param string|null $refresh_token
    */
-  public function setRefreshToken($refresh_token): void {
+  public function setRefreshToken(?string $refresh_token): void {
     $this->refresh_token = $refresh_token;
   }
 
-   /**
-   * @return mixed
+  /**
+   * @return int|null
    */
-  public function getRefreshExpiresIn() {
+  public function getRefreshExpiresIn(): ?int {
     return $this->refresh_expires_in;
   }
 
   /**
-   * @param mixed $refresh_expires_in
+   * @param int|null $refresh_expires_in
    */
-  public function setRefreshExpiresIn($refresh_expires_in): void {
+  public function setRefreshExpiresIn(?int $refresh_expires_in): void {
     $this->refresh_expires_in = $refresh_expires_in;
   }
-  
+
 }

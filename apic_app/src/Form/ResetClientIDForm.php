@@ -13,6 +13,7 @@
 
 namespace Drupal\apic_app\Form;
 
+use Drupal\apic_app\Entity\ApplicationCredentials;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\apic_app\Service\CredentialsService;
 use Drupal\Core\Form\ConfirmFormBase;
@@ -21,7 +22,9 @@ use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\node\NodeInterface;
+use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -34,24 +37,24 @@ class ResetClientIDForm extends ConfirmFormBase {
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $node;
+  protected NodeInterface $node;
 
   /**
    * This represents the credential object
    *
    * @var \Drupal\apic_app\Entity\ApplicationCredentials
    */
-  protected $cred;
+  protected ApplicationCredentials $cred;
 
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
    */
-  protected $restService;
+  protected ApplicationRestInterface $restService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -61,7 +64,7 @@ class ResetClientIDForm extends ConfirmFormBase {
   /**
    * @var \Drupal\apic_app\Service\CredentialsService
    */
-  protected $credsService;
+  protected CredentialsService $credsService;
 
   /**
    * ResetClientIDForm constructor.
@@ -81,7 +84,7 @@ class ResetClientIDForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): ResetClientIDForm {
     // Load the service required to construct this class
     return new static($container->get('apic_app.rest_service'),
       $container->get('ibm_apim.user_utils'),
@@ -100,8 +103,12 @@ class ResetClientIDForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL): array {
-    $this->node = $appId;
-    $this->cred = $credId;
+    if ($appId !== NULL) {
+      $this->node = $appId;
+    }
+    if ($credId !== NULL) {
+      $this->cred = $credId;
+    }
 
     $form = parent::buildForm($form, $form_state);
     $form['#attached']['library'][] = 'apic_app/basic';
@@ -147,13 +154,16 @@ class ResetClientIDForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appId = $this->node->application_id->value;
     $url = $this->node->apic_url->value . '/credentials/' . $this->cred->uuid() . '/reset';
-    $result = $this->restService->postClientId($url, NULL);
+    $result = $this->restService->postClientId($url, '');
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
+      $resultData = $result->data;
       $currentUser = \Drupal::currentUser();
       \Drupal::logger('apic_app')->notice('Application @appName client ID and secret reset by @username', [
         '@appName' => $this->node->getTitle(),
@@ -164,7 +174,40 @@ class ResetClientIDForm extends ConfirmFormBase {
       \Drupal::moduleHandler()->alter('apic_app_modify_client_id_reset', $data, $appId);
 
       // update the credential entity
-      $this->credsService->updateClientId($this->credId, $data['client_id']);
+      $this->credsService->updateClientId($this->cred->id(), $data['client_id']);
+
+      // Add Activity Feed Event Log
+      $eventEntity = new ApicEvent();
+      $eventEntity->setArtifactType('credential');
+      if ($currentUser->isAuthenticated() && (int) $currentUser->id() !== 1) {
+        $current_user = User::load($currentUser->id());
+        if ($current_user !== NULL) {
+          // we only set the user if we're running as someone other than admin
+          // if running as admin then we're likely doing things on behalf of the admin
+          // TODO we might want to check if there is a passed in user_url and use that too
+          $eventEntity->setUserUrl($current_user->get('apic_url')->value);
+        }
+      }
+      $timestamp = $resultData['updated_at'];
+      // if timestamp still not set default to current time
+      if ($timestamp === NULL) {
+        $timestamp = time();
+      }
+      else {
+        // if it is set then ensure its epoch not a string
+        // intentionally done this way round since strtotime on null might lead to odd effects
+        $timestamp = strtotime($timestamp);
+      }
+      $eventEntity->setTimestamp((int) $timestamp);
+      $eventEntity->setEvent('reset');
+      $eventEntity->setArtifactUrl($this->node->apic_url->value . '/credentials/' . $this->cred->uuid());
+      $eventEntity->setAppUrl($this->node->apic_url->value);
+      $eventEntity->setConsumerOrgUrl($this->node->application_consumer_org_url->value);
+      $utils = \Drupal::service('ibm_apim.utils');
+      $appTitle = $utils->truncate_string($this->node->getTitle());
+      $eventEntity->setData(['name' => $this->cred->name(), 'appName' => $appTitle]);
+      $eventLogService = \Drupal::service('ibm_apim.event_log');
+      $eventLogService->createIfNotExist($eventEntity);
 
       // Calling all modules implementing 'hook_apic_app_clientid_reset':
       $moduleHandler = \Drupal::service('module_handler');
@@ -174,7 +217,7 @@ class ResetClientIDForm extends ConfirmFormBase {
         'appId' => $appId,
         'credId' => $this->cred->uuid(),
       ]);
-      $credsString = base64_encode(json_encode($data));
+      $credsString = base64_encode(json_encode($data, JSON_THROW_ON_ERROR));
       $displayCredsUrl = Url::fromRoute('apic_app.display_creds', ['appId' => $appId, 'credentials' => $credsString]);
     }
     else {

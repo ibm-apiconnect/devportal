@@ -8,18 +8,18 @@
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
   Drupal.behaviors.appsubscribe = {
-    attach: function (context, settings) {
-      $(window).on("dialog:aftercreate", function (event, ui) {
-        setTimeout(function () {
+    attach: function(context, settings) {
+      $(window).on("dialog:aftercreate", function(event, ui) {
+        setTimeout(function() {
           // cache reference to all radio buttons.
           const radioButtons = $('input[type="radio"]', "#drupal-modal .modal-dialog .application-subscription-form");
 
-          const checkRadios = function (radioButtons) {
+          const checkRadios = function(radioButtons) {
             var anyRadioButtonHasValue = false;
             // iterate through all radio buttons
-            radioButtons.each(function () {
+            radioButtons.each(function() {
               if (this.checked) {
                 // indicate we found a radio button which has a value
                 anyRadioButtonHasValue = true;
@@ -40,7 +40,7 @@
           // initial check to disable button upfront
           checkRadios(radioButtons);
           //watch for change
-          radioButtons.change(function () {
+          radioButtons.change(function() {
             checkRadios(radioButtons);
           });
         }, 0);

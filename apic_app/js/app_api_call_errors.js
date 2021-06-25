@@ -14,10 +14,10 @@
  * JS for the "app_api_call_errors" block.
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   Drupal.behaviors.app_api_call_errors = {
-    attach: function (context) {
+    attach: function(context) {
 
 
     }

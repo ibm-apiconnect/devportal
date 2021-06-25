@@ -13,16 +13,15 @@
 
 namespace Drupal\Tests\ibm_apim\Unit;
 
-use Drupal\ibm_apim\Service\UserUtils;
-
-use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\State\State;
+use Drupal\Core\TempStore\PrivateTempStore;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\Tests\auth_apic\Unit\Base\AuthApicTestBaseClass;
+use Drupal\user\UserStorageInterface;
 use Psr\Log\LoggerInterface;
-use Drupal\Tests\UnitTestCase;
-use Prophecy\Prophet;
 
 /**
  * @coversDefaultClass \Drupal\ibm_apim\Service\Utils
@@ -31,97 +30,135 @@ use Prophecy\Prophet;
  */
 class UserUtilsTest extends AuthApicTestBaseClass {
 
-  protected $prophet;
-
   /*
     Dependencies of UserUtils.
   */
 
-
+  /**
+   * @var \Drupal\Core\Session\AccountProxyInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $current_user;
 
-  protected $temp_store_factory;
-
+  /**
+   * @var \Drupal\Core\State\State|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $state;
 
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
+   */
   protected $logger;
 
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $entity_type_manager;
 
+  /**
+   * @var \Drupal\Core\TempStore\PrivateTempStore|\Prophecy\Prophecy\ObjectProphecy
+   */
+  private $sessionStore;
 
+  /**
+   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $tempStore;
 
-  protected function setup() {
+  /**
+   * @var \Drupal\user\UserStorageInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
+  private $userStorage;
+
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  protected function setup(): void {
 
     parent::setup();
-    //$this->prophet = new Prophet();
-
     $this->current_user = $this->prophet->prophesize(AccountProxyInterface::class);
-    $this->temp_store_factory = $this->prophet->prophesize(PrivateTempStoreFactory::class);
+    $this->tempStore = $this->prophet->prophesize(PrivateTempStoreFactory::class);
     $this->state = $this->prophet->prophesize(State::class);
-    $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
+    $this->logger = $this->prophet->prophesize(LoggerInterface::class);
     $this->entity_type_manager = $this->prophet->prophesize(EntityTypeManagerInterface::class);
-
+    $this->sessionStore = $this->prophet->prophesize(PrivateTempStore::class);
+    $this->userStorage = $this->prophet->prophesize(UserStorageInterface::class);
+    $this->tempStore->get('ibm_apim')->willReturn($this->sessionStore);
+    $this->entity_type_manager->getStorage('user')->willReturn($this->userStorage->reveal());
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
-
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function testCheckHasPermission(): void {
-    $utils = new UserUtils( $this->current_user->reveal(),
-      $this->temp_store_factory->reveal(),
+    $utils = new UserUtils($this->current_user->reveal(),
+      $this->tempStore->reveal(),
       $this->state->reveal(),
       $this->logger->reveal(),
       $this->entity_type_manager->reveal());
     $result = $utils->checkHasPermission();
-    $this->assertEquals(false, $result);
+    self::assertEquals(FALSE, $result);
   }
 
 
+  /**
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function testAddConsumerOrgToUser(): void {
 
-    $orgUrl="/consumer-orgs/1234/5678/9abc";
+    $orgUrl = "/consumer-orgs/1234/5678/9abc";
     $userAccount = $this->createAccountBase();
 
-    $this->current_user->isAnonymous()->willReturn(false);
+    $this->current_user->isAnonymous()->willReturn(FALSE);
     $this->current_user->id()->willReturn(2);
     $this->logger->debug('updating consumerorg urls list set on the user object')->shouldBeCalled();
-    $this->logger->debug('adding org to consumerorg urls list '.$orgUrl)->shouldNotBeCalled();
-    $utils = new UserUtils( $this->current_user->reveal(),
-      $this->temp_store_factory->reveal(),
+    $this->logger->debug('adding org to consumerorg urls list %orgUrl', ['%orgUrl' => $orgUrl])->shouldNotBeCalled();
+    $utils = new UserUtils($this->current_user->reveal(),
+      $this->tempStore->reveal(),
       $this->state->reveal(),
       $this->logger->reveal(),
       $this->entity_type_manager->reveal());
 
     $result = $utils->addConsumerOrgToUser($orgUrl, $userAccount->reveal());
 
-    $this->assertTrue($result);
+    self::assertTrue($result);
 
   }
 
+  /**
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function testAddConsumerOrgToNewUser(): void {
 
-    $orgUrl="/consumer-orgs/1234/5678/9abc";
+    $orgUrl = "/consumer-orgs/1234/5678/9abc";
     $userAccount = $this->createAccountBase();
 
     $consumerorg_url_field = $this->prophet->prophesize(\Drupal\Core\Field\FieldItemList::class);
     $consumerorg_url_field->getValue()->willReturn([]);
     $userAccount->get('consumerorg_url')->willReturn($consumerorg_url_field);
 
-    $this->current_user->isAnonymous()->willReturn(false);
+    $this->current_user->isAnonymous()->willReturn(FALSE);
     $this->current_user->id()->willReturn(2);
     $this->logger->debug('updating consumerorg urls list set on the user object')->shouldNotBeCalled();
-    $this->logger->debug('adding org to consumerorg urls list '.$orgUrl)->shouldBeCalled();
-    $utils = new UserUtils( $this->current_user->reveal(),
-      $this->temp_store_factory->reveal(),
+    $this->logger->debug('adding org to consumerorg urls list %orgUrl', ['%orgUrl' => $orgUrl])->shouldBeCalled();
+    $utils = new UserUtils($this->current_user->reveal(),
+      $this->tempStore->reveal(),
       $this->state->reveal(),
       $this->logger->reveal(),
       $this->entity_type_manager->reveal());
 
     $result = $utils->addConsumerOrgToUser($orgUrl, $userAccount->reveal());
 
-    $this->assertTrue($result);
+    self::assertTrue($result);
   }
 
 

@@ -26,7 +26,7 @@ class Stdout implements LoggerInterface {
    *
    * @var \Drupal\Core\Logger\LogMessageParserInterface
    */
-  protected $parser;
+  protected LogMessageParserInterface $parser;
 
   /**
    * Constructs a Stdout object.
@@ -41,8 +41,8 @@ class Stdout implements LoggerInterface {
   /**
    * {@inheritdoc}
    */
-  public function log($level, $message, array $context = []) {
-    $output = fopen('php://stderr', 'w');
+  public function log($level, $message, array $context = []): void {
+    $output = fopen('php://stderr', 'wb');
     $severity = strtoupper(RfcLogLevel::getLevels()[$level]);
     $username = '';
     if (isset($context['user']) && !empty($context['user'])) {

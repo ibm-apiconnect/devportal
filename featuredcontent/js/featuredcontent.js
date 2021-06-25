@@ -14,10 +14,10 @@
  * Setup masonry for the featured content block
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   Drupal.behaviors.featuredContentSetup = {
-    attach: function (context) {
+    attach: function(context) {
 
       $('.featuredcontentNodeContainer').masonry({
         // options

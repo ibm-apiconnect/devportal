@@ -19,9 +19,15 @@ use Psr\Log\LoggerInterface;
  */
 class ApimUtils {
 
-  private $logger;
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  private LoggerInterface $logger;
 
-  private $siteconfig;
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
+  private SiteConfig $siteConfig;
 
   /**
    * ApimUtils constructor.
@@ -32,7 +38,7 @@ class ApimUtils {
   public function __construct(LoggerInterface $logger,
                               SiteConfig $site_config) {
     $this->logger = $logger;
-    $this->siteconfig = $site_config;
+    $this->siteConfig = $site_config;
   }
 
 
@@ -58,7 +64,7 @@ class ApimUtils {
         $this->logger->debug('createFullyQualifiedUrl: url does not start with / so updated to %url', ['%url' => $url]);
       }
 
-      $hostname = $this->siteconfig->getApimHost();
+      $hostname = $this->siteConfig->getApimHost();
 
       // but we don't want the /consumer-api part on the end
       $hostname = $this->stripConsumerApiSuffix($hostname);
@@ -82,7 +88,7 @@ class ApimUtils {
 
     if (strpos($url, 'https://') === 0) {
 
-      $hostname = $this->siteconfig->getApimHost();
+      $hostname = $this->siteConfig->getApimHost();
 
       // but we don't want the /consumer-api part on the end
 
@@ -120,6 +126,23 @@ class ApimUtils {
       $hostname = substr($hostname, 0, -$length);
     }
     return $hostname;
+  }
+
+  /**
+   * returns whether a url starts with /consumer-api/
+   *
+   * @param $url
+   *
+   * @return bool
+   */
+  public function isConsumerApiURL($url): bool {
+    $consumer_api_path = '/consumer-api/';
+    $returnValue = false;
+    if (isset($url)) {
+      $url = $this->removeFullyQualifiedUrl($url);
+      $returnValue = mb_strpos($url, $consumer_api_path) === 0;
+    }
+    return $returnValue;
   }
 
   /**

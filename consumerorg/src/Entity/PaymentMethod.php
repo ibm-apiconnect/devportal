@@ -30,6 +30,9 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *     singular = @Translation("consumer organization payment methods"),
  *     plural = @Translation("consumer organization payment methods"),
  *   ),
+ *   handlers = {
+ *     "storage_schema" = "Drupal\consumerorg\PaymentMethodSchema",
+ *   },
  *   fieldable = FALSE,
  *   translatable = FALSE,
  *   base_table = "consumerorg_payment_methods",
@@ -43,51 +46,79 @@ class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface 
   /**
    * Drupal entity ID
    *
-   * @var int
+   * @var int|NULL
    */
-  protected $id;
+  protected ?int $id = NULL;
 
   /**
    * APIM UUID
    *
-   * @var string
+   * @var string|NULL
    */
-  protected $uuid;
+  protected ?string $uuid = NULL;
 
   /**
    * The payment method title
    *
-   * @var string
+   * @var string|NULL
    */
-  protected $title;
+  protected ?string $title = NULL;
 
   /**
    * The payment method schema type url.
    *
-   * @var string
+   * @var string|NULL
    */
-  protected $payment_method_type_url;
+  protected ?string $payment_method_type_url = NULL;
 
   /**
    * The configured billing integration URL.
    *
-   * @var string
+   * @var string|NULL
    */
-  protected $billing_url;
+  protected ?string $billing_url = NULL;
 
   /**
    * The payment method integration (in JSON form).
    *
-   * @var string
+   * @var string|NULL
    */
-  protected $configuration;
+  protected ?string $configuration = NULL;
 
   /**
    * The owning consumer organization URL.
    *
-   * @var string
+   * @var string|NULL
    */
-  protected $consumerorg_url;
+  protected ?string $consumerorg_url = NULL;
+
+  /**
+   * APIC Creation timestamp
+   *
+   * @var int|NULL
+   */
+  protected ?int $created_at = NULL;
+
+  /**
+   * APIC Modification timestamp
+   *
+   * @var int|NULL
+   */
+  protected ?int $updated_at = NULL;
+
+  /**
+   * APIC Creation user url
+   *
+   * @var string|NULL
+   */
+  protected ?string $created_by = NULL;
+
+  /**
+   * APIC Modification user url
+   *
+   * @var string|NULL
+   */
+  protected ?string $updated_by = NULL;
 
   /**
    * {@inheritdoc}
@@ -104,40 +135,71 @@ class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface 
   }
 
   /**
-   * {@inheritdoc}
+   * @return string|null
    */
-  public function title() {
+  public function title(): ?string {
     return $this->title;
   }
 
   /**
-   * {@inheritdoc}
+   * @return string|null
    */
-  public function payment_method_type_url() {
+  public function payment_method_type_url(): ?string {
     return $this->payment_method_type_url;
   }
 
   /**
-   * {@inheritdoc}
+   * @return string|null
    */
-  public function billing_url() {
+  public function billing_url(): ?string {
     return $this->billing_url;
   }
 
   /**
-   * {@inheritdoc}
+   * @return string|null
    */
-  public function configuration() {
+  public function configuration(): ?string {
     return $this->configuration;
   }
 
   /**
-   * {@inheritdoc}
+   * @return string|null
    */
-  public function consumerorg_url() {
+  public function consumerorg_url(): ?string {
     return $this->consumerorg_url;
   }
 
+  /**
+   * @return int|null
+   */
+  public function created_at(): ?int {
+    return $this->created_at;
+  }
+
+  /**
+   * @return int|null
+   */
+  public function updated_at(): ?int {
+    return $this->updated_at;
+  }
+
+  /**
+   * @return string|null
+   */
+  public function created_by(): ?string {
+    return $this->created_by;
+  }
+
+  /**
+   * @return string|null
+   */
+  public function updated_by(): ?string {
+    return $this->updated_by;
+  }
+
+  /**
+   * @return array
+   */
   public function toArray(): array {
     return [
       'id' => $this->id,
@@ -147,13 +209,17 @@ class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface 
       'consumerorg_url' => $this->consumerorg_url,
       'billing_url' => $this->billing_url,
       'payment_method_type_url' => $this->payment_method_type_url,
+      'created_at' => $this->created_at,
+      'updated_at' => $this->updated_at,
+      'created_by' => $this->created_by,
+      'updated_by' => $this->updated_by,
     ];
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
+  public static function baseFieldDefinitions(EntityTypeInterface $entity_type): array {
     $fields = [];
 
     // Standard field, used as unique if primary index.
@@ -193,6 +259,28 @@ class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface 
       ->setDescription(t('The URL of the consumer organization which owns the payment method'))
       ->setReadOnly(TRUE);
 
+    $fields['created_at'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Creation time'))
+      ->setDescription(t('The APIC creation timestamp'))
+      ->setSetting('unsigned', TRUE)
+      ->setReadOnly(TRUE);
+
+    $fields['updated_at'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Modification time'))
+      ->setDescription(t('The APIC modification timestamp'))
+      ->setSetting('unsigned', TRUE)
+      ->setReadOnly(TRUE);
+
+    $fields['created_by'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Created by'))
+      ->setDescription(t('The APIC created by user url'))
+      ->setReadOnly(TRUE);
+
+    $fields['updated_by'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Updated by'))
+      ->setDescription(t('The APIC updated by user url'))
+      ->setReadOnly(TRUE);
     return $fields;
   }
+
 }

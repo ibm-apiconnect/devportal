@@ -31,7 +31,7 @@ function mail_subscribers_send_from_spool() {
   $ok = $fail = $check = 0;
 
   // Get PHP maximum execution time. 30 seconds default.
-  $maxExecutionTime = ini_get('max_execution_time') ? ini_get('max_execution_time') : 30;
+  $maxExecutionTime = ini_get('max_execution_time') ?: 30;
 
   // Reset a Drupal timer.
   Timer::start('mail_subscribers');
@@ -39,7 +39,9 @@ function mail_subscribers_send_from_spool() {
   // Retrieve messages to be send.
   $query = "SELECT * FROM {mail_subscribers_spool} WHERE status = :status ORDER BY tentatives ASC, timestamp ASC";
   $options = ['target' => 'default'];
-  $result = $limit ? Database::getConnection($options['target'])->queryRange($query, 0, $limit, array(':status' => 0), $options) : Database::getConnection($options['target'])->query($query, array(':status' => 0), $options);
+  $result = $limit ? Database::getConnection($options['target'])
+    ->queryRange($query, 0, $limit, [':status' => 0], $options) : Database::getConnection($options['target'])
+    ->query($query, [':status' => 0], $options);
   foreach ($result as $message) {
     // Send the message.
     $status = mail_subscribers_deliver($message);
@@ -47,9 +49,13 @@ function mail_subscribers_send_from_spool() {
     if ($status) {
       // Update the spool status.
       $options = ['target' => 'default'];
-      Database::getConnection($options['target'])->query("UPDATE {mail_subscribers_spool} SET status = :status WHERE eid = :eid", array(':status' => 1, ':eid' => $message->eid), $options);
+      Database::getConnection($options['target'])
+        ->query("UPDATE {mail_subscribers_spool} SET status = :status WHERE eid = :eid", [
+          ':status' => 1,
+          ':eid' => $message->eid,
+        ], $options);
       if ((boolean) \Drupal::config('mail_subscribers.settings')->get('debug')) {
-        \Drupal::logger('mail_subscribers')->notice('Message sent to %mail.', array('%mail' => $message->to_mail));
+        \Drupal::logger('mail_subscribers')->notice('Message sent to %mail.', ['%mail' => $message->to_mail]);
       }
       $ok++;
     }
@@ -57,7 +63,8 @@ function mail_subscribers_send_from_spool() {
       // Increment tentatives so that next time this message
       // will be scheduled with low priority.
       $options = ['target' => 'default'];
-      Database::getConnection($options['target'])->query("UPDATE {mail_subscribers_spool} SET tentatives = tentatives + 1 WHERE eid = :eid", array(':eid' => $message->eid), $options);
+      Database::getConnection($options['target'])
+        ->query("UPDATE {mail_subscribers_spool} SET tentatives = tentatives + 1 WHERE eid = :eid", [':eid' => $message->eid], $options);
       $fail++;
     }
 
@@ -69,7 +76,8 @@ function mail_subscribers_send_from_spool() {
 
       // Break if exceeded.
       if (Timer::read('mail_subscribers') / 1000 > .8 * $maxExecutionTime) {
-        \Drupal::logger('mail_subscribers')->notice('PHP maximum execution time almost exceeded. Remaining e-mail messages will be sent during the next cron run. If this warning occurs regularly you should reduce the cron throttle setting.');
+        \Drupal::logger('mail_subscribers')
+          ->notice('PHP maximum execution time almost exceeded. Remaining e-mail messages will be sent during the next cron run. If this warning occurs regularly you should reduce the cron throttle setting.');
         break;
       }
     }
@@ -78,7 +86,7 @@ function mail_subscribers_send_from_spool() {
   if ($ok + $fail > 0) {
     // Log results and exit.
     \Drupal::logger('mail_subscribers')->notice('%ok messages sent in %sec seconds, %fail failed sending.',
-      array('%ok' => $ok, '%sec' => Timer::read('mail_subscribers') / 1000, '%fail' => $fail)
+      ['%ok' => $ok, '%sec' => Timer::read('mail_subscribers') / 1000, '%fail' => $fail]
     );
   }
 }
@@ -90,5 +98,9 @@ function mail_subscribers_clear_spool() {
   // TODO: Drupal 7: replace time() with REQUEST_TIME.
   $expirationTime = time() - \Drupal::config('mail_subscribers.settings')->get('spool_expire') * 86400;
   $options = ['target' => 'default'];
-  Database::getConnection($options['target'])->query("DELETE FROM {mail_subscribers_spool} WHERE status = :status AND timestamp <= :expiry", array(':status' => 1, 'expiry' => $expirationTime), $options);
+  Database::getConnection($options['target'])
+    ->query("DELETE FROM {mail_subscribers_spool} WHERE status = :status AND timestamp <= :expiry", [
+      ':status' => 1,
+      'expiry' => $expirationTime,
+    ], $options);
 }

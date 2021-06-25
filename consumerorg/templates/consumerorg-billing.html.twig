@@ -57,31 +57,31 @@
             </ul>
           </div>
         </div>
-        {% if analytics_access or billing_access %}
-          <div class="organizationTabs">
-            <ul>
-              <li class="orgManage"><a href="{{- path('ibm_apim.myorg') -}}">{{ 'Manage'|t }}</a></li>
-              {% if analytics_access %}
-                <li class="orgAnalytics">
-                  <a href="{{- path('ibm_apim.analytics') -}}">{{ 'Analytics'|t }}</a>
+        <div class="organizationTabs">
+          <ul>
+            <li class="orgManage"><a href="{{- path('ibm_apim.myorg') -}}">{{ 'Manage'|t }}</a></li>
+            {% if analytics_access %}
+              <li class="orgAnalytics">
+                <a href="{{- path('ibm_apim.analytics') -}}">{{ 'Analytics'|t }}</a>
+              </li>
+            {% endif %}
+            {% if billing_access %}
+              <li class="selected orgBilling">
+                <a href="#">{{ 'Billing'|t }}</a>
+              </li>
+            {% endif %}
+            <li class="orgActivity">
+              <a href="{{- path('ibm_apim.activity') -}}">{{ 'Notifications'|t }}</a>
+            </li>
+            {% if tabs is not empty %}
+              {% for tab in tabs %}
+                <li class="orgExtraTab">
+                  <a href="{{- path(tab.path) -}}">{{ tab.title }}</a>
                 </li>
-              {% endif %}
-              {% if billing_access %}
-                <li class="selected orgBilling">
-                  <a href="#">{{ 'Billing'|t }}</a>
-                </li>
-              {% endif %}
-              {% if tabs is not empty %}
-                {% for tab in tabs %}
-                  <li class="orgExtraTab">
-                    <a href="{{- path(tab.path) -}}">{{ tab.title }}</a>
-                  </li>
-                {% endfor %}
-              {% endif %}
-            </ul>
-          </div>
-        {% else %}
-        {% endif %}
+              {% endfor %}
+            {% endif %}
+          </ul>
+        </div>
       </div>
     </header>
     <div class="ibmapimBilling">

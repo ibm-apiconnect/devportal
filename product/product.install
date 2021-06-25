@@ -33,60 +33,63 @@ function product_update_8111() {
     ->save();
 
   $view = Views::getView('products');
-  $view->setDisplay('default');
-  $filters = $view->getDisplay()->getOption('filters');
-  if (!array_key_exists('select_translation', $filters)) {
-    $filters['select_translation'] = [
-      'id' => 'select_translation',
-      'table' => 'node_field_data',
-      'field' => 'select_translation',
-      'relationship' => 'none',
-      'group_type' => 'group',
-      'admin_label' => '',
-      'operator' => '=',
-      'value' => 'default',
-      'group' => 1,
-      'exposed' => FALSE,
-      'expose' => [
-        'operator_id' => '',
-        'label' => '',
-        'description' => '',
-        'use_operator' => FALSE,
-        'operator' => '',
-        'identifier' => '',
-        'required' => FALSE,
-        'remember' => FALSE,
-        'multiple' => FALSE,
-        'remember_roles' => [
-          'authenticated' => 'authenticated',
+  if ($view !== NULL) {
+    $view->setDisplay('default');
+    $filters = $view->getDisplay()->getOption('filters');
+    if (!array_key_exists('select_translation', $filters)) {
+      $filters['select_translation'] = [
+        'id' => 'select_translation',
+        'table' => 'node_field_data',
+        'field' => 'select_translation',
+        'relationship' => 'none',
+        'group_type' => 'group',
+        'admin_label' => '',
+        'operator' => '=',
+        'value' => 'default',
+        'group' => 1,
+        'exposed' => FALSE,
+        'expose' => [
+          'operator_id' => '',
+          'label' => '',
+          'description' => '',
+          'use_operator' => FALSE,
+          'operator' => '',
+          'identifier' => '',
+          'required' => FALSE,
+          'remember' => FALSE,
+          'multiple' => FALSE,
+          'remember_roles' => [
+            'authenticated' => 'authenticated',
+          ],
         ],
-      ],
-      'is_grouped' => FALSE,
-      'group_info' => [
-        'label' => '',
-        'description' => '',
-        'identifier' => '',
-        'optional' => TRUE,
-        'widget' => 'select',
-        'multiple' => FALSE,
-        'remember' => FALSE,
-        'default_group' => 'All',
-        'default_group_multiple' => [],
-        'group_items' => [],
-      ],
-      'priorities' => '',
-      'default_language_only' => 0,
-      'include_content_with_unpublished_translation' => 0,
-      'entity_type' => 'node',
-      'plugin_id' => 'select_translation_filter',
-    ];
-    $view->getDisplay()->setOption('filters', $filters);
-    $view->save();
-
+        'is_grouped' => FALSE,
+        'group_info' => [
+          'label' => '',
+          'description' => '',
+          'identifier' => '',
+          'optional' => TRUE,
+          'widget' => 'select',
+          'multiple' => FALSE,
+          'remember' => FALSE,
+          'default_group' => 'All',
+          'default_group_multiple' => [],
+          'group_items' => [],
+        ],
+        'priorities' => '',
+        'default_language_only' => 0,
+        'include_content_with_unpublished_translation' => 0,
+        'entity_type' => 'node',
+        'plugin_id' => 'select_translation_filter',
+      ];
+      $view->getDisplay()->setOption('filters', $filters);
+      $view->save();
+    }
     $view2 = Views::getView('products');
-    $view2->setDisplay('page_1');
-    $view2->getDisplay()->setOption('rendering_language', '***LANGUAGE_language_interface***');
-    $view2->save();
+    if ($view2 !== NULL) {
+      $view2->setDisplay('page_1');
+      $view2->getDisplay()->setOption('rendering_language', '***LANGUAGE_language_interface***');
+      $view2->save();
+    }
   }
 
 }
@@ -97,80 +100,86 @@ function product_update_8111() {
 function product_update_8112() {
 
   $view = Views::getView('products');
-  $filters = $view->getDisplay()->getOption('filters');
-  // remove old tid based filter
-  if (array_key_exists('tid', $filters)) {
-    unset($filters['tid']);
-  }
-  // add new tid with depth
-  if (!array_key_exists('term_node_tid_depth', $filters)) {
-    $filters['term_node_tid_depth'] = [
-      'id' => 'term_node_tid_depth',
-      'table' => 'node_field_data',
-      'field' => 'term_node_tid_depth',
-      'relationship' => 'none',
-      'group_type' => 'group',
-      'admin_label' => '',
-      'operator' => 'or',
-      'value' => NULL,
-      'group' => 1,
-      'exposed' => TRUE,
-      'expose' => [
-        'operator_id' => 'term_node_tid_depth_op',
-        'label' => 'Category',
-        'description' => '',
-        'use_operator' => FALSE,
-        'operator' => 'term_node_tid_depth_op',
-        'identifier' => 'term_node_tid_depth',
-        'required' => FALSE,
-        'remember' => TRUE,
-        'multiple' => FALSE,
-        'remember_roles' => [
-          'authenticated' => 'authenticated',
-        ],
-        'reduce' => FALSE,
-      ],
-      'is_grouped' => FALSE,
-      'group_info' => [
-        'label' => '',
-        'description' => '',
-        'identifier' => '',
-        'optional' => TRUE,
-        'widget' => 'select',
-        'multiple' => FALSE,
-        'remember' => FALSE,
-        'default_group' => 'All',
-        'default_group_multiple' => [],
-        'group_items' => [],
-      ],
-      'reduce_duplicates' => FALSE,
-      'type' => 'cshs',
-      'limit' => TRUE,
-      'hierarchy' => FALSE,
-      'error_message' => TRUE,
-      'vid' => 'tags',
-      'depth' => 0,
-      'parent' => '0',
-      'level_labels' => '',
-      'force_deepest' => 0,
-      'entity_type' => 'node',
-      'plugin_id' => 'taxonomy_index_tid_depth',
-    ];
-    if (!isset($filters['type']['group'])) {
-      $filters['type']['group'] = 1;
+  if ($view !== NULL) {
+    $filters = $view->getDisplay()->getOption('filters');
+    // remove old tid based filter
+    if (array_key_exists('tid', $filters)) {
+      unset($filters['tid']);
     }
+    // add new tid with depth
+    if (!array_key_exists('term_node_tid_depth', $filters)) {
+      $filters['term_node_tid_depth'] = [
+        'id' => 'term_node_tid_depth',
+        'table' => 'node_field_data',
+        'field' => 'term_node_tid_depth',
+        'relationship' => 'none',
+        'group_type' => 'group',
+        'admin_label' => '',
+        'operator' => 'or',
+        'value' => NULL,
+        'group' => 1,
+        'exposed' => TRUE,
+        'expose' => [
+          'operator_id' => 'term_node_tid_depth_op',
+          'label' => 'Category',
+          'description' => '',
+          'use_operator' => FALSE,
+          'operator' => 'term_node_tid_depth_op',
+          'identifier' => 'term_node_tid_depth',
+          'required' => FALSE,
+          'remember' => TRUE,
+          'multiple' => FALSE,
+          'remember_roles' => [
+            'authenticated' => 'authenticated',
+          ],
+          'reduce' => FALSE,
+        ],
+        'is_grouped' => FALSE,
+        'group_info' => [
+          'label' => '',
+          'description' => '',
+          'identifier' => '',
+          'optional' => TRUE,
+          'widget' => 'select',
+          'multiple' => FALSE,
+          'remember' => FALSE,
+          'default_group' => 'All',
+          'default_group_multiple' => [],
+          'group_items' => [],
+        ],
+        'reduce_duplicates' => FALSE,
+        'type' => 'cshs',
+        'limit' => TRUE,
+        'hierarchy' => FALSE,
+        'error_message' => TRUE,
+        'vid' => 'tags',
+        'depth' => 0,
+        'parent' => '0',
+        'level_labels' => '',
+        'force_deepest' => 0,
+        'entity_type' => 'node',
+        'plugin_id' => 'taxonomy_index_tid_depth',
+      ];
+      if (!isset($filters['type']['group'])) {
+        $filters['type']['group'] = 1;
+      }
+    }
+    $view->getDisplay()->setOption('filters', $filters);
+    $filter_groups = $view->getDisplay()->getOption('filter_groups');
+    if (!isset($filter_groups)) {
+      $filter_groups = ['operator' => 'AND', 'groups' => [1 => 'AND']];
+      $view->getDisplay()->setOption('filter_groups', $filter_groups);
+    }
+    $view->save();
   }
-  $view->getDisplay()->setOption('filters', $filters);
-  $filter_groups = $view->getDisplay()->getOption('filter_groups');
-  if (!isset($filter_groups)) {
-    $filter_groups = ['operator' => 'AND', 'groups' => [1 => 'AND']];
-    $view->getDisplay()->setOption('filter_groups', $filter_groups);
-  }
-  $view->save();
 }
 
 /**
  * Create new fields and update form and view displays
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function product_update_8113() {
   // check for field storage object and create if it doesn't exist
@@ -236,12 +245,16 @@ function product_update_8114() {
 
 }
 
-// ensure cardinality of product_api_nids is -1
+/**
+ * ensure cardinality of product_api_nids is -1
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
 function product_update_8115() {
   // check for field storage object and create if it doesn't exist
   $fieldStorageConfig = FieldStorageConfig::loadByName('node', 'product_api_nids');
   if ($fieldStorageConfig !== NULL) {
-    $fieldStorageConfig->set('cardinality' , -1);
+    $fieldStorageConfig->set('cardinality', -1);
     $fieldStorageConfig->save();
   }
 }
@@ -251,7 +264,7 @@ function product_update_8115() {
  */
 function product_update_8116() {
   $view = Views::getView('products');
-  if ($view !== null) {
+  if ($view !== NULL) {
     $style = $view->getDisplay()->getOption('style');
     if ((int) $style['options']['gutterWidth'] === 0) {
       $style['options']['gutterWidth'] = "20";
@@ -321,11 +334,14 @@ function product_update_8202() {
   }
 }
 
+/**
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
 function product_update_8203() {
   $fieldConfig = FieldConfig::loadByName('node', 'product', 'comment');
   if ($fieldConfig !== NULL) {
     $settings = $fieldConfig->get('settings');
-    if ($settings['preview'] !== 0 ) {
+    if ($settings['preview'] !== 0) {
       $settings['preview'] = 0;
       $fieldConfig->set('settings', $settings);
       $fieldConfig->save();
@@ -336,6 +352,8 @@ function product_update_8203() {
 /**
  * Convert terms of service to be a formatable text_long
  *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function product_update_8204() {
@@ -415,7 +433,7 @@ function product_update_8204() {
     $fieldConfig->save();
   }
   // update the view display too
-  $displayModes = ['default','subscribewizard'];
+  $displayModes = ['default', 'subscribewizard'];
   foreach ($displayModes as $displayMode) {
     $viewDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.product.' . $displayMode);
     if ($viewDisplay !== NULL) {
@@ -460,4 +478,45 @@ function product_update_8205() {
     $teaserFormDisplay->setComponent('apic_pathalias', $fieldValues);
     $teaserFormDisplay->save();
   }
+}
+
+/**
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function product_update_8301() {
+  // Create a new field for the api module
+  $fieldConfig = FieldConfig::create([
+    'field_name' => 'apic_created_at',
+    'field_type' => 'timestamp',
+    'entity_type' => 'node',
+    'bundle' => 'product',
+    'translatable' => FALSE,
+    'label' => t('Creation time'),
+  ]);
+  $fieldConfig->save();
+
+  // Create a new field for the api module
+  $fieldConfig = FieldConfig::create([
+    'field_name' => 'apic_updated_at',
+    'field_type' => 'timestamp',
+    'entity_type' => 'node',
+    'bundle' => 'product',
+    'translatable' => FALSE,
+    'label' => t('Modification time'),
+  ]);
+  $fieldConfig->save();
+}
+
+/**
+ * Implements hook_update_dependencies().
+ */
+function product_update_dependencies(): array {
+  return [
+    'product' => [
+      // consumerorg creates the storage for the created_at and updated_at fields so has to run first
+      8301 => [
+        'consumerorg' => 8201,
+      ],
+    ],
+  ];
 }

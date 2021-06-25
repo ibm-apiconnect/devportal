@@ -18,7 +18,8 @@
 
 namespace Drupal\apic_app\Plugin\Block;
 
-use Drupal\apic_app\Application;
+use Drupal\apic_app\Service\ApplicationService;
+use Drupal\Component\Utility\Html;
 use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
@@ -35,7 +36,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @Block(
  *   id = "app_subscriptions",
  *   admin_label = @Translation("Application Subscriptions"),
- *   category = @Translation("IBM API Connect (Application)")
+ *   category = @Translation("IBM API Developer Portal (Application)")
  * )
  *
  */
@@ -44,21 +45,50 @@ class SubscriptionsBlock extends BlockBase implements ContainerFactoryPluginInte
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgService
    */
-  protected $consumerOrgService;
+  protected ConsumerOrgService $consumerOrgService;
 
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, UserUtils $userUtils, ConsumerOrgService $consumerOrgService) {
+  /**
+   * @var \Drupal\apic_app\Service\ApplicationService
+   */
+  protected ApplicationService $applicationService;
+
+  /**
+   * SubscriptionsBlock constructor.
+   *
+   * @param array $configuration
+   * @param $plugin_id
+   * @param $plugin_definition
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumerOrgService
+   * @param \Drupal\apic_app\Service\ApplicationService $applicationService
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, UserUtils $userUtils, ConsumerOrgService $consumerOrgService, ApplicationService $applicationService) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->userUtils = $userUtils;
     $this->consumerOrgService = $consumerOrgService;
+    $this->applicationService = $applicationService;
   }
 
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition, $container->get('ibm_apim.user_utils'), $container->get('ibm_apim.consumerorg'));
+  /**
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   * @param array $configuration
+   * @param string $plugin_id
+   * @param mixed $plugin_definition
+   *
+   * @return \Drupal\apic_app\Plugin\Block\SubscriptionsBlock
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): SubscriptionsBlock {
+    return new static($configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('ibm_apim.user_utils'),
+      $container->get('ibm_apim.consumerorg'),
+      $container->get('apic_app.application'));
   }
 
   /**
@@ -81,28 +111,34 @@ class SubscriptionsBlock extends BlockBase implements ContainerFactoryPluginInte
     return AccessResult::allowedIf($allowed);
   }
 
-  public function getCacheContexts() {
+  /**
+   * @return array|string[]
+   */
+  public function getCacheContexts(): array {
     //if you depends on \Drupal::routeMatch()
     //you must set context of this block with 'route' context tag.
     //Every new route this block will rebuild
     return Cache::mergeContexts(parent::getCacheContexts(), ['route']);
   }
 
-  public function getCacheTags() {
-    //With this when your node change your block will rebuild
+  /**
+   * @return array|string[]
+   */
+  public function getCacheTags(): array {
+    $userUtils = \Drupal::service('ibm_apim.user_utils');
+    $org = $userUtils->getCurrentConsumerOrg();
+    $tags = Cache::mergeTags(parent::getCacheTags(), ['consumerorg:' . Html::cleanCssIdentifier($org['url'])]);
+
+    // With this when your node change your block will rebuild
     if ($node = \Drupal::routeMatch()->getParameter('node')) {
-      //if there is node add its cachetag
-      return Cache::mergeTags(parent::getCacheTags(), ['node:' . $node->id()]);
+      // if there is node add its cachetag
+      $tags = Cache::mergeTags($tags, ['node:' . $node->id()]);
     }
-    else {
-      //Return default tags instead.
-      return parent::getCacheTags();
-    }
+    return $tags;
   }
 
   /**
    * @return array
-   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public function build(): array {
     $userUtils = \Drupal::service('ibm_apim.user_utils');
@@ -118,7 +154,7 @@ class SubscriptionsBlock extends BlockBase implements ContainerFactoryPluginInte
 
     $nodeArray = [
       'application_id' => ['value' => $node->application_id->value],
-      'subscriptions' => Application::getSubscriptions($node),
+      'subscriptions' => $this->applicationService->getSubscriptions($node),
       'id' => $node->id(),
     ];
 
@@ -135,4 +171,5 @@ class SubscriptionsBlock extends BlockBase implements ContainerFactoryPluginInte
       ],
     ];
   }
+
 }

@@ -8,10 +8,10 @@
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   function toggleTwistie(evt) {
-    var parent = evt.target.parentNode;
+    let parent = evt.target.parentNode;
     while (parent && !parent.classList.contains("apicTwistieTitle")) {
       parent = parent.parentNode;
     } // end while
@@ -19,8 +19,9 @@
       parent.parentNode.classList.toggle("apicTwistieOpen");
     }
   }
+
   function togglePlan(evt) {
-    var parent = evt.target.parentNode;
+    let parent = evt.target.parentNode;
     while (parent && !parent.classList.contains("apicTwistieTitle")) {
       parent = parent.parentNode;
     } // end while
@@ -30,7 +31,7 @@
   }
 
   function toggleTwistieRow(evt) {
-    var parent = evt.target.parentNode;
+    let parent = evt.target.parentNode;
     while (parent && parent.tagName != "TR") {
       parent = parent.parentNode;
     } // end while
@@ -46,7 +47,6 @@
     $('.multipleRateLimitsMessage').addClass('hidden');
     $('.planTableSelector .showPlans').addClass('hidden');
     $('.planTableSelector .showComparisonTable').removeClass('hidden');
-    $('.multipleRateLimitsMessage').addClass('hidden');
   }
 
   function showTable(evt) {
@@ -57,8 +57,12 @@
     $('.planTableSelector .showComparisonTable').addClass('hidden');
   }
 
-  var api = {
-    toggleTwistie: toggleTwistie, togglePlan: togglePlan, toggleTwistieRow: toggleTwistieRow, showPlans: showPlans, showTable: showTable
+  let api = {
+    toggleTwistie: toggleTwistie,
+    togglePlan: togglePlan,
+    toggleTwistieRow: toggleTwistieRow,
+    showPlans: showPlans,
+    showTable: showTable
   };
 
   if (!Drupal.settings) {
@@ -67,49 +71,47 @@
   Drupal.settings.product = api;
 
   Drupal.behaviors.rateLimits = {
-    attach: function (context, settings) {
-      if ($(document, context).tooltip && typeof($(document).tooltip) == "function") {
+    attach: function(context, settings) {
+      if ($(document, context).tooltip && typeof ($(document).tooltip) == "function") {
         // add support for data-title
 
-        var html =
-        $(document, context).tooltip({
-          selector: "[data-ratelimits]", html: true, title: function () {
-            var element = $(this);
-            if (element.is("[data-ratelimits]")) {
-              var data = $.parseJSON(element[0].dataset.ratelimits);
-              var output = '<div class="ratePopup">';
-              if (data['#rates'] && data['#rates'].length > 0) {
-                if (data['#rateLabel']) {
-                  output += '<span class="rateLabel">' + data['#rateLabel'] + '</span><br/>';
+        let html =
+          $(document, context).tooltip({
+            selector: "[data-ratelimits]", html: true, title: function() {
+              let element = $(this);
+              if (element.is("[data-ratelimits]")) {
+                let data = $.parseJSON(element[0].dataset.ratelimits);
+                let output = '<div class="ratePopup">';
+                if (data['#rates'] && data['#rates'].length > 0) {
+                  if (data['#rateLabel']) {
+                    output += '<span class="rateLabel">' + data['#rateLabel'] + ":" + '</span><br/>';
+                  } else {
+                    output += '<span class="rateLabel">Rate limits:</span><br/>';
+                  }
+                  data['#rates'].forEach(function(rate) {
+                    output += rate + '<br/>';
+                  });
                 }
-                else {
-                  output += '<span class="rateLabel">Rate limits</span><br/>';
+                if (data['#bursts'] && data['#bursts'].length > 0) {
+                  if (data['#burstLabel']) {
+                    output += '<br/><span class="burstLabel">' + data['#burstLabel'] + ":" + '</span><br/>';
+                  } else {
+                    output += '<br/><span class="burstLabel">Burst limits:</span><br/>';
+                  }
+                  data['#bursts'].forEach(function(rate) {
+                    output += rate + '<br/>';
+                  });
                 }
-                  data['#rates'].forEach(function (rate) {
-                  output += rate + '<br/>';
-                });
+                output += '</div>';
+                return output;
               }
-              if (data['#bursts'] && data['#bursts'].length > 0) {
-                if (data['#burstLabel']) {
-                  output += '<span class="burstLabel">' + data['#burstLabel'] + '</span><br/>';
-                }
-                else {
-                  output += '<span class="burstLabel">Burst limits</span><br/>';
-                }
-                  data['#bursts'].forEach(function (rate) {
-                  output += rate + '<br/>';
-                });
-              }
-              output += '</div>';
-              return output;
             }
-          }
-        });
+          });
       }
     }
   };
   Drupal.behaviors.productSelectSetup = {
-    attach: function (context) {
+    attach: function(context) {
 
       $('.productMultiSelect .productCards').masonry({
         // options
@@ -119,9 +121,9 @@
     }
   };
   Drupal.behaviors.embeddedNav = {
-    attach: function (context) {
+    attach: function(context) {
       $('.embeddedDocPagesNav .embeddedDocNavLink a').click(function() {
-        var pageName = $(this).attr('data-page');
+        let pageName = $(this).attr('data-page');
         // remove selected from all links first
         $('.embeddedDocPagesNav .embeddedDocNavLink a').removeClass('selected');
         // mark us as being selected
@@ -129,7 +131,7 @@
         // hide all content pages
         $('.mainProductContent .node__content').addClass('hidden');
         // but then show our selected one
-        $('.mainProductContent .node__content.'+pageName).removeClass('hidden');
+        $('.mainProductContent .node__content.' + pageName).removeClass('hidden');
       });
     }
   };

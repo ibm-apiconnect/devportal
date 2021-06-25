@@ -36,7 +36,8 @@
                   <img src="{{- placeholderUrl -}}" alt=""/>
                 </div>
               {% endif %}</div>
-            <h1 id="node-{{ node.id }}-title" class="applicationName apicTruncate" title="{{ node.title[0].value }}">{{- label -}}</h1>
+            <h1 id="node-{{ node.id }}-title" class="applicationName apicTruncate"
+                title="{{ node.title[0].value }}">{{- label -}}</h1>
             {% if applifecycleEnabled %}
               <div
                   class="applicationType {{ content.application_lifecycle_state['#items'][0].value|clean_class }}">{% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %} {{ 'Development'|t }} {% else %} {{ 'Production'|t }} {% endif %}</div>
@@ -62,7 +63,8 @@
           {% if userHasAppManage %}
             <div class="extraMenu">
               <ul class="overflow-menu applicationMenu dropitmenu">
-                <li title="{{ 'Manage application'|t }}"><a title="{{ 'Manage application'|t }}" href="#" class="trigger">
+                <li title="{{ 'Manage application'|t }}"><a title="{{ 'Manage application'|t }}" href="#"
+                                                            class="trigger">
                 <span class="dropit-icon">
                 <svg version="1.1" id="icon" xmlns="http://www.w3.org/2000/svg"
                      xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
@@ -104,22 +106,55 @@
           <div class="applicationTabs">
             <ul>
               <li class="selected"><a href="#">{{ 'Dashboard'|t }}</a></li>
-              {#<li><a class="analyticsApplication"#}
-              {#href="{{- path('apic_app.activity', {'node': node.id}) -}}">{{ 'Activity'|t }}</a></li>#}
               <li><a class="subscriptionsApplication"
                      href="{{- path('apic_app.subscriptions', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
+              {% if notifications_access %}
+                <li><a class="activityApplication"
+                       href="{{- path('apic_app.activity', {'node': node.id}) -}}">{{ 'Notifications'|t }}</a></li>
+              {% endif %}
             </ul>
           </div>
         {% else %}
+          <div class="applicationTabs">
+            <ul>
+              <li class="selected"><a href="#">{{ 'Subscriptions'|t }}</a></li>
+              {% if notifications_access %}
+                <li><a class="activityApplication"
+                       href="{{- path('apic_app.activity', {'node': node.id}) -}}">{{ 'Notifications'|t }}</a></li>
+              {% endif %}
+            </ul>
+          </div>
         {% endif %}
       </div>
     </header>
+    {% if analytics_access and events_found %}
+      <div class="enforcedEventsNotification alert short alert-info" role="alert">
+        <div class="alert-details">
+          <span class="icon icon-info" aria-hidden="true">
+            <svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                 xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd">
+              <path
+                  d="M8,0 C3.6,0 0,3.6 0,8 C0,12.4 3.6,16 8,16 C12.4,16 16,12.4 16,8 C16,3.6 12.4,0 8,0 L8,0 Z M8,4 C8.6,4 9,4.4 9,5 C9,5.6 8.6,6 8,6 C7.4,6 7,5.6 7,5 C7,4.4 7.4,4 8,4 L8,4 Z M10,12 L6,12 L6,11 L7,11 L7,8 L6,8 L6,7 L9,7 L9,11 L10,11 L10,12 L10,12 Z"
+                  id="Shape"></path>
+            </svg>
+          </span>
+          <div class="alert-text-wrapper">
+            <h4 class="sr-only">{{ 'Informative message'|t }}</h4>
+            <ul class="item-list item-list--messages">
+              <li class="item item--message">
+                {{ 'Note: Use of Event APIs will not be represented.'|t }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    {% endif %}
     <div class="contentInnerWrapper">
       <div class="applicationContent">
-        {% if apic_state|lower|clean_class == 'suspended' %}
+        {% if apic_state|lower|clean_class == 'disabled' %}
           <div class="alert alert-warning" role="alert">
             <div class="alert-details">
-              {{ 'Warning: This application is suspended. '|t }}
+              {{ 'Warning: This application is disabled. '|t }}
               {% if contact %}
                 <a href="{{ path('contact.site_page') }}"> {{ 'Contact us for more information'|t }} </a>
               {% else %}

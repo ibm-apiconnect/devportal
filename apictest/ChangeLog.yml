@@ -1,4 +1,34 @@
 changes:
+  8.x-3.1.15:
+  - improved visibility and subscribability tests (#212) (#213)
+  8.x-3.1.14:
+  - Tempmerge (#211)
+  8.x-3.1.13:
+  - dont need a stack
+  - refactor Application.php to be a service (#210)
+  8.x-3.1.12:
+  - refactor SubscriptionService to be a proper service
+  8.x-3.1.11:
+  - use "IBM API Developer Portal" instead of API Connect
+  8.x-3.1.10:
+  - add support functions for disabling andre invitations
+  8.x-3.1.9: null
+  8.x-3.1.8: null
+  8.x-3.1.7:
+  - dont call get with null
+  8.x-3.1.6: null
+  8.x-3.1.5:
+  - deprecated function
+  8.x-3.1.4:
+  - add message to see in logs
+  8.x-3.1.3:
+  - use composer based drupal-check
+  8.x-3.1.2:
+  - fix up a few typos and update test data (#184)
+  8.x-3.1.1:
+  - Merge pull request
+  8.x-3.1.0:
+  - update version 8.x-3.0.41 -> 8.x-3.1.0
   8.x-3.0.40:
   - Use sudo instead of su to get to aegir when running the tests
   8.x-3.0.39:

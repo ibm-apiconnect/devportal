@@ -14,32 +14,36 @@
     </header>
     <div class="getStartedContentWrapper startguide">
       <div class="getStartedActivities">
-          <div class="getStartedActivity exploreDiv">
-              <a href="{{ path('view.products.page_1') }}" class="bx--card tile-button">
-                  <div class="getStartedIcon gsstep explore"><div class="placeholder"></div></div>
-                  <div class="getStartedText">
-                      <h3>{{ 'Explore API Products'|t }}</h3>
-                      <p>{{ 'Take a look at our API products and quickly find the APIs you need.'|t }}</p>
-                  </div>
-              </a>
-          </div>
-          {% if userHasAppManage and show_register_app %}
-              <div class="getStartedActivity createAppDiv">
-                  <a href="{{ path('apic_app.create') }}" class="bx--card tile-button">
-                      <div class="getStartedIcon gsstep subscribe"><div class="placeholder"></div></div>
-                      <div class="getStartedText">
-                          <h3>{{ 'Create a new App'|t }}</h3>
-                          <p>{{ 'Create an App so you can subscribe to our API Products and start building your application.'|t }}</p>
-                      </div>
-                  </a>
+        <div class="getStartedActivity exploreDiv">
+          <a href="{{ path('view.products.page_1') }}" class="bx--card tile-button">
+            <div class="getStartedIcon gsstep explore">
+              <div class="placeholder"></div>
+            </div>
+            <div class="getStartedText">
+              <h3>{{ 'Explore API Products'|t }}</h3>
+              <p>{{ 'Take a look at our API products and quickly find the APIs you need.'|t }}</p>
+            </div>
+          </a>
+        </div>
+        {% if userHasAppManage and show_register_app %}
+          <div class="getStartedActivity createAppDiv">
+            <a href="{{ path('apic_app.create') }}" class="bx--card tile-button">
+              <div class="getStartedIcon gsstep subscribe">
+                <div class="placeholder"></div>
               </div>
-          {% endif %}
+              <div class="getStartedText">
+                <h3>{{ 'Create a new App'|t }}</h3>
+                <p>{{ 'Create an App so you can get access to our API Products and start building your application.'|t }}</p>
+              </div>
+            </a>
+          </div>
+        {% endif %}
       </div>
       <div class="homepageLink breadcrumb"><a href="{{ path('<front>') }}">{{ 'Take me to the homepage'|t }}
-              <svg width='16' height='14' viewBox='0 0 16 14' fill-rule='evenodd'>
-                  <path d='M12.6 6H0v2h12.7l-5 4.7L9 14l7-7-7-7-1.3 1.3z'></path>
-              </svg>
-         </a>
+          <svg width='16' height='14' viewBox='0 0 16 14' fill-rule='evenodd'>
+            <path d='M12.6 6H0v2h12.7l-5 4.7L9 14l7-7-7-7-1.3 1.3z'></path>
+          </svg>
+        </a>
       </div>
     </div>
   </div>

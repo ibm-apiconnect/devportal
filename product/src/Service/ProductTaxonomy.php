@@ -18,7 +18,7 @@ use Drupal\node\NodeInterface;
 
 class ProductTaxonomy {
 
-  protected $apicTaxonomy;
+  protected ApicTaxonomy $apicTaxonomy;
 
   public function __construct(ApicTaxonomy $apicTaxonomy) {
     $this->apicTaxonomy = $apicTaxonomy;
@@ -31,6 +31,8 @@ class ProductTaxonomy {
    * @param array $product
    * @param \Drupal\node\NodeInterface $node
    *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function process_categories(array $product, NodeInterface $node): void {

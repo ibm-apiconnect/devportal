@@ -14,6 +14,8 @@ namespace Drupal\ibm_apim\Service;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityStorageException;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Extension\ModuleInstallerInterface;
 use Drupal\Core\Menu\MenuLinkManagerInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\State\StateInterface;
@@ -31,68 +33,97 @@ class SiteConfig {
   /**
    * @var \Drupal\Core\State\StateInterface
    */
-  private $state;
+  private StateInterface $state;
 
   /**
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
-  private $configFactory;
+  private ConfigFactoryInterface $configFactory;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  private $logger;
+  private LoggerInterface $logger;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
    */
-  private $urService;
+  private UserRegistryServiceInterface $urService;
 
   /**
    * @var \Drupal\ibm_apim\Service\Billing
    */
-  private $billService;
+  private Billing $billService;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\PermissionsServiceInterface
    */
-  private $permsService;
+  private PermissionsServiceInterface $permsService;
 
   /**
    * @var \Drupal\ibm_apim\Service\AnalyticsService
    */
-  private $analyticsService;
+  private AnalyticsService $analyticsService;
 
   /**
    * @var \Drupal\ibm_apim\Service\TlsClientProfilesService
    */
-  private $tlsProfilesService;
+  private TlsClientProfilesService $tlsProfilesService;
 
   /**
    * @var \Drupal\ibm_apim\Service\Group
    */
-  private $groupService;
+  private Group $groupService;
 
   /**
    * @var \Drupal\ibm_apim\Service\VendorExtension
    */
-  private $vendorExtService;
+  private VendorExtension $vendorExtService;
 
   /**
    * @var \Drupal\Core\Menu\MenuLinkManagerInterface
    */
-  private $menuLinkManager;
+  private MenuLinkManagerInterface $menuLinkManager;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
    */
-  private $messenger;
+  private Messenger $messenger;
 
+  /**
+   * @var \Drupal\Core\Extension\ModuleInstallerInterface
+   */
+  private ModuleInstallerInterface $moduleInstaller;
+
+  /**
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  private ModuleHandlerInterface $moduleHandler;
+
+  /**
+   * SiteConfig constructor.
+   *
+   * @param \Drupal\Core\State\StateInterface $state
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Psr\Log\LoggerInterface $logger
+   * @param \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface $urService
+   * @param \Drupal\ibm_apim\Service\Billing $billService
+   * @param \Drupal\ibm_apim\Service\Interfaces\PermissionsServiceInterface $permsService
+   * @param \Drupal\ibm_apim\Service\AnalyticsService $analyticsService
+   * @param \Drupal\ibm_apim\Service\TlsClientProfilesService $tlsProfilesService
+   * @param \Drupal\ibm_apim\Service\Group $groupService
+   * @param \Drupal\ibm_apim\Service\VendorExtension $vendorExtService
+   * @param \Drupal\Core\Menu\MenuLinkManagerInterface $menuLinkManager
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   * @param \Drupal\Core\Extension\ModuleInstallerInterface $module_installer
+   */
   public function __construct(StateInterface $state, ConfigFactoryInterface $config_factory,
                               LoggerInterface $logger, UserRegistryServiceInterface $urService, Billing $billService,
                               PermissionsServiceInterface $permsService, AnalyticsService $analyticsService,
                               TlsClientProfilesService $tlsProfilesService, Group $groupService, VendorExtension $vendorExtService, MenuLinkManagerInterface $menuLinkManager,
-                              Messenger $messenger) {
+                              Messenger $messenger, ModuleHandlerInterface $module_handler,
+                              ModuleInstallerInterface $module_installer) {
     $this->state = $state;
     $this->configFactory = $config_factory;
     $this->logger = $logger;
@@ -105,6 +136,8 @@ class SiteConfig {
     $this->vendorExtService = $vendorExtService;
     $this->menuLinkManager = $menuLinkManager;
     $this->messenger = $messenger;
+    $this->moduleHandler = $module_handler;
+    $this->moduleInstaller = $module_installer;
   }
 
   /**
@@ -178,7 +211,7 @@ class SiteConfig {
   /**
    * @return null|string
    */
-  public function getPlatformApimEndpoint() {
+  public function getPlatformApimEndpoint(): ?string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $platformApimEndpoint = $this->state->get('ibm_apim.host');
@@ -189,7 +222,7 @@ class SiteConfig {
       }
     }
     else {
-      $platformApiEndpoint = NULL;
+      $platformApimEndpoint = NULL;
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -202,7 +235,6 @@ class SiteConfig {
   public function getApimHost() {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $returnValue = NULL;
     $custom_hostname = $this->state->get('ibm_apim.apim_host');
     if (isset($custom_hostname) && !empty($custom_hostname)) {
       $this->logger->debug('getApimHost():: Using custom hostname.');
@@ -365,6 +397,7 @@ class SiteConfig {
    * Get basic APIC config and store it in the session.
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginException
+   * @throws \Exception
    */
   public function getCheckAndStore(): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -417,6 +450,29 @@ class SiteConfig {
         // TODO show create new org link
       }
 
+      // Can Andre invite Andre?
+      if (array_key_exists('consumer_org_invitations_enabled', $config_data) && $config_data['consumer_org_invitations_enabled'] === FALSE) {
+        $this->state->set('ibm_apim.consumerOrgInvitationEnabled', FALSE);
+      }
+      else {
+        $this->state->set('ibm_apim.consumerOrgInvitationEnabled', TRUE);
+      }
+
+      if (array_key_exists('consumer_self_service_onboarding_approval', $config_data) && $config_data['consumer_self_service_onboarding_approval'] === TRUE) {
+        $this->state->set('ibm_apim.accountApprovalEnabled', TRUE);
+      }
+      else {
+        $this->state->set('ibm_apim.accountApprovalEnabled', FALSE);
+      }
+
+      // if we're given a list of roles to allow use it, else use default
+      if (array_key_exists('consumer_org_invitation_roles', $config_data) && is_array($config_data['consumer_org_invitation_roles'])) {
+        $this->state->set('ibm_apim.consumerOrgInvitationRoles', $config_data['consumer_org_invitation_roles']);
+      }
+      else {
+        $this->state->set('ibm_apim.consumerOrgInvitationRoles', ['administrator', 'developer', 'viewer']);
+      }
+
       if (isset($config_data['analytics'])) {
         $this->analyticsService->updateAll($config_data['analytics']);
       }
@@ -456,6 +512,11 @@ class SiteConfig {
       //          // TODO need to unhide the create org link
       //        }
       //      }
+
+      // If we're running in IBM Cloud then update things accordingly
+      if ($this->isInCloud()) {
+        $this->setRunningInIBMCloud();
+      }
     }
     else {
       // Clear any other messages as until this problem is fixed they will just muddy the water
@@ -467,13 +528,13 @@ class SiteConfig {
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 
-  private function showDefaultExtraUserfields() {
+  private function showDefaultExtraUserfields(): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 
-  private function hideDefaultExtraUserfields() {
+  private function hideDefaultExtraUserfields(): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -561,8 +622,6 @@ class SiteConfig {
   public function isInCloud(): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $returnValue = NULL;
-
     $cloud_file = '/web/config/ibm_cloud';
 
     if (file_exists($cloud_file)) {
@@ -602,6 +661,27 @@ class SiteConfig {
   }
 
   /**
+   * @return mixed
+   */
+  public function isAccountApprovalsEnabled() {
+    return $this->state->get('ibm_apim.accountApprovalEnabled', FALSE);
+  }
+
+  /**
+   * @return bool
+   */
+  public function isConsumerOrgInvitationEnabled(): bool {
+    return $this->state->get('ibm_apim.consumerOrgInvitationEnabled', TRUE);
+  }
+
+  /**
+   * @return array
+   */
+  public function getConsumerOrgInvitationRoles(): array {
+    return $this->state->get('ibm_apim.consumerOrgInvitationRoles', ['administrator', 'developer', 'viewer']);
+  }
+
+  /**
    * Enables or disables the "Create account" menu link shown on the front page
    * of the portal site.
    *
@@ -631,9 +711,11 @@ class SiteConfig {
    *
    * @param $newClientId
    *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function updateEncryptionKey($newClientId) {
+  public function updateEncryptionKey($newClientId): void {
     $deleteOldKey = NULL;
     if ($newClientId !== NULL) {
       // create new encryption key
@@ -699,18 +781,18 @@ class SiteConfig {
           $ibmApimConfig = \Drupal::config('ibm_apim.settings');
           $paymentEncryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
           // only need to do the decryption / re-encryption if using our socialblock profile
-          if ($paymentEncryptionProfileName === 'socialblock') {
-            if (\Drupal::database()->schema() !==NULL && \Drupal::database()->schema()->tableExists("consumerorg_payment_methods")) {
-              $query = \Drupal::entityQuery('consumerorg_payment_method');
-              $queryIds = $query->execute();
+          if (($paymentEncryptionProfileName === 'socialblock') && \Drupal::database()->schema() !== NULL && \Drupal::database()
+              ->schema()
+              ->tableExists("consumerorg_payment_methods")) {
+            $query = \Drupal::entityQuery('consumerorg_payment_method');
+            $queryIds = $query->execute();
 
-              foreach (array_chunk($queryIds, 50) as $chunk) {
-                $paymentEntities = \Drupal::entityTypeManager()->getStorage('consumerorg_payment_method')->loadMultiple($chunk);
-                if (!empty($paymentEntities)) {
-                  foreach ($paymentEntities as $paymentEntity) {
-                    $configuration = unserialize($encryptionService->decrypt($paymentEntity->configuration(), $encryptionProfile), ['allowed_classes' => FALSE]);
-                    $decryptedPayments[$paymentEntity->id()] = $configuration;
-                  }
+            foreach (array_chunk($queryIds, 50) as $chunk) {
+              $paymentEntities = \Drupal::entityTypeManager()->getStorage('consumerorg_payment_method')->loadMultiple($chunk);
+              if (!empty($paymentEntities)) {
+                foreach ($paymentEntities as $paymentEntity) {
+                  $configuration = unserialize($encryptionService->decrypt($paymentEntity->configuration(), $encryptionProfile), ['allowed_classes' => FALSE]);
+                  $decryptedPayments[$paymentEntity->id()] = $configuration;
                 }
               }
             }
@@ -734,20 +816,19 @@ class SiteConfig {
         $oidcStateService->saveAllOidcState($encryptedState);
 
         // re-encrypt payment methods
-        if (!empty($decryptedPayments) && $moduleHandler->moduleExists('consumerorg')) {
-          if (\Drupal::database()->schema() !==NULL && \Drupal::database()->schema()->tableExists("consumerorg_payment_methods")) {
-            foreach ($decryptedPayments as $id => $encryptedConfiguration) {
-              $configuration = $encryptionService->encrypt(serialize($encryptedConfiguration), $encryptionProfile);
-              $query = \Drupal::entityQuery('consumerorg_payment_method');
-              $query->condition('id', $id);
-              $queryIds = $query->execute();
-              if (isset($queryIds) && !empty($queryIds)) {
-                $entityId = array_shift($queryIds);
-                $paymentMethodEntity = \Drupal\consumerorg\Entity\PaymentMethod::load($entityId);
-                if ($paymentMethodEntity !== NULL) {
-                  $paymentMethodEntity->set('configuration', $configuration);
-                  $paymentMethodEntity->save();
-                }
+        if (!empty($decryptedPayments) && $moduleHandler->moduleExists('consumerorg') && \Drupal::database()
+            ->schema() !== NULL && \Drupal::database()->schema()->tableExists("consumerorg_payment_methods")) {
+          foreach ($decryptedPayments as $id => $encryptedConfiguration) {
+            $configuration = $encryptionService->encrypt(serialize($encryptedConfiguration), $encryptionProfile);
+            $query = \Drupal::entityQuery('consumerorg_payment_method');
+            $query->condition('id', $id);
+            $queryIds = $query->execute();
+            if (isset($queryIds) && !empty($queryIds)) {
+              $entityId = array_shift($queryIds);
+              $paymentMethodEntity = \Drupal\consumerorg\Entity\PaymentMethod::load($entityId);
+              if ($paymentMethodEntity !== NULL) {
+                $paymentMethodEntity->set('configuration', $configuration);
+                $paymentMethodEntity->save();
               }
             }
           }
@@ -763,4 +844,42 @@ class SiteConfig {
       }
     }
   }
+
+  /**
+   * Called when we detect we're running in IBM Cloud
+   */
+  public function setRunningInIBMCloud(): void {
+    if ($this->isInCloud()) {
+      $this->disableIPSecurityFeatures();
+    }
+  }
+
+  /**
+   * Disable all IP based Security Features if running in IBM Cloud
+   */
+  public function disableIPSecurityFeatures(): void {
+    $modulesToRemove = ['honeypot', 'restrict_by_ip', 'perimeter'];
+    foreach ($modulesToRemove as $modToRemove) {
+      if ($this->moduleHandler->moduleExists($modToRemove)) {
+        $this->logger->notice('Module %module found incompatible with IBM Cloud. Forcing uninstall.', ['%module' => $modToRemove]);
+        // uninstalling module but not dependencies.
+        try {
+          $this->moduleInstaller->uninstall([$modToRemove], TRUE);
+        } catch (\Throwable $e) {
+          $this->logger->warning('Exception while deleting IBM Cloud incompatible module: %module', ['%module' => $modToRemove]);
+          $this->logger->debug('%module uninstall exception message : %message', [
+            '%module' => $modToRemove,
+            '%message' => $e->getMessage(),
+          ]);
+          // don't stop processing because uninstall of one module has failed.
+        } finally {
+          $this->logger->notice('Module %module found incompatible with IBM Cloud. Forced uninstall complete.', ['%module' => $modToRemove]);
+        }
+      }
+    }
+
+    // disable the flood IP based rules
+    $this->configFactory->getEditable('user.flood')->set('ip_window', 0)->set('ip_limit', 1000)->save();
+  }
+
 }

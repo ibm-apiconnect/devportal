@@ -13,10 +13,10 @@
  * Setup global config for analytics
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   Drupal.behaviors.analyticsConfig = {
-    attach: function (context) {
+    attach: function(context) {
       if (drupalSettings.analytics && drupalSettings.analytics.analyticsDir) {
         window.apiConnectAnalytics = [];
         window.apiConnectAnalytics.options = [];
@@ -42,7 +42,7 @@
         if (!drupalSettings.anv.apiStatsTimeId) {
           drupalSettings.anv.apiStatsTimeId = anv.createTime({
             "field": "datetime",
-            "values": ["30s", "1m", "30m", "1h", "1d", "7d", "30d"],
+            "values": [ "30s", "1m", "30m", "1h", "1d", "7d", "30d" ],
             "selectedValue": "1d"
           });
         }
@@ -50,7 +50,7 @@
         if (!drupalSettings.anv.static30dTime) {
           drupalSettings.anv.static30dTime = anv.createTime({
             "field": "datetime",
-            "values": ["30d"],
+            "values": [ "30d" ],
             "selectedValue": "30d"
           });
         }
@@ -58,7 +58,7 @@
         if (!drupalSettings.anv.static1hTime) {
           drupalSettings.anv.static1hTime = anv.createTime({
             "field": "datetime",
-            "values": ["1h"],
+            "values": [ "1h" ],
             "selectedValue": "1h"
           });
         }
@@ -119,7 +119,7 @@
         if (!drupalSettings.anv.errorFilter) {
           drupalSettings.anv.errorFilter = anv.createFilter({
             "field": "status_code",
-            "values": ["4*||5*"],
+            "values": [ "4*||5*" ],
             "selectedValue": "4*||5*"
           });
         }
@@ -128,19 +128,19 @@
           drupalSettings.anv.totalErrorsWidget = anv.createWidget({
             "id": "total-errors",
             "time": drupalSettings.anv.static30dTime,
-            "filters": [drupalSettings.anv.errorFilter],
+            "filters": [ drupalSettings.anv.errorFilter ],
             "timeType": "single",
-            "vis": [{
+            "vis": [ {
               "type": "num",
-              "metrics": [{
+              "metrics": [ {
                 "type": "total"
-              }],
+              } ],
               "metadata": {
                 "title": drupalSettings.analytics.translations.total_errors,
                 "units": "errors",
                 "unitType": "error"
               }
-            }]
+            } ]
           });
         }
 
@@ -204,13 +204,13 @@
             "id": "api-calls-errors",
             "time": drupalSettings.anv.static30dTime,
             "timeType": "single",
-            "filters": [drupalSettings.anv.errorFilter],
-            "vis": [{
+            "filters": [ drupalSettings.anv.errorFilter ],
+            "vis": [ {
               "type": "info",
-              "metrics": [{
+              "metrics": [ {
                 "type": "raw",
                 "size": 100
-              }],
+              } ],
               "metadata": {
                 "path": "_uri_path_",
                 "date": "_datetime_",
@@ -218,7 +218,7 @@
                 "title": "_request_method_",
                 "averageTime": "_time_to_serve_request_"
               }
-            }],
+            } ],
             "metadata": {
               "scrollable": true,
               "title": drupalSettings.analytics.translations.errors_last_100,

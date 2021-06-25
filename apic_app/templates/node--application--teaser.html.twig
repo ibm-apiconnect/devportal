@@ -7,11 +7,11 @@
  */
 #}
 {%- set classes = [
-'node',
-'node--id-' ~ node.id,
-('node--type-' ~ node.bundle)|clean_class,
-apic_state ? ('application-state-' ~ apic_state)|clean_class,
-view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
+  'node',
+  'node--id-' ~ node.id,
+  ('node--type-' ~ node.bundle)|clean_class,
+  apic_state ? ('application-state-' ~ apic_state)|clean_class,
+  view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
 ] -%}
 {{ attach_library('ibm_apim/core') }}
 {{ attach_library('apic_app/basic') }}
@@ -29,7 +29,8 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
     <div class="apicAppTeaserMain">
       <h2>
         <a href="{{- path('entity.node.canonical', {'node': node.id}) -}}" rel="bookmark">
-          <span id="node-{{ node.id }}-title" class="apicAppName apicTruncate" title="{{ node.title.value|striptags }}">{{- label -}}</span>
+          <span id="node-{{ node.id }}-title" class="apicAppName apicTruncate"
+                title="{{ node.title.value|striptags }}">{{- label -}}</span>
         </a>
       </h2>
       <div class="apicAppDesc apicFade"

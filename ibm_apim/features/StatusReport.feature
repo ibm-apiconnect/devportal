@@ -10,7 +10,7 @@ Feature: System Status Report
     Given I am logged in as "@data(admin.name)"
     And I am at "/admin/reports/status"
     Then there are no errors
-    And I should see the text "IBM API Connect Version"
+    And I should see the text "IBM API Developer Portal Version"
     And I should see the text "API Explorer"
     And I should see the text "Custom Modules"
     And I should see the text "Custom Themes"

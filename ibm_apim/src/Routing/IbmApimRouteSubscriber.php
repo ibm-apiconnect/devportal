@@ -65,7 +65,7 @@ class IbmApimRouteSubscriber extends RouteSubscriberBase {
       );
     }
     // Remove the admin create new user route.
-    if ($collection->get('user.admin_create') !== null) {
+    if ($collection->get('user.admin_create') !== NULL) {
       $collection->remove('user.admin_create');
     }
 
@@ -144,11 +144,12 @@ class IbmApimRouteSubscriber extends RouteSubscriberBase {
   /**
    * ensure we run last
    *
-   * @return mixed
+   * @return array
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events = parent::getSubscribedEvents();
     $events[RoutingEvents::ALTER] = ['onAlterRoutes', -200];
     return $events;
   }
+
 }

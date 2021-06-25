@@ -29,23 +29,35 @@ namespace Drupal\Tests\auth_apic\Unit {
    */
   class NonUserManagedSignUpTest extends AuthApicUserManagementBaseTestClass {
 
-    /*
-     Dependencies of UserManagedSignUp service.
+    /**
+     * @var \Drupal\ibm_apim\Service\APIMServer|\Prophecy\Prophecy\ObjectProphecy 
      */
     protected $mgmtServer;
 
+    /**
+     * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface 
+     */
     protected $logger;
 
-    protected function setup() {
+    /**
+     * @var \Prophecy\Prophecy\ObjectProphecy|\Drupal\ibm_apim\Service\SiteConfig
+     */
+    protected $siteConfig;
+
+    protected function setup(): void {
       $this->prophet = new Prophet();
       $this->mgmtServer = $this->prophet->prophesize(\Drupal\ibm_apim\Service\APIMServer::class);
       $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
+      $this->siteConfig = $this->prophet->prophesize(\Drupal\ibm_apim\Service\SiteConfig::class);
     }
 
-    protected function tearDown() {
+    protected function tearDown(): void {
       $this->prophet->checkPredictions();
     }
 
+    /**
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
     public function testNonUserManagedSignUpSuccess(): void {
 
       $user = $this->createUser();
@@ -59,14 +71,18 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->mgmtServer->getAuth($user)->willReturn($mgmtServerResponse);
 
       $service = new NonUserManagedSignUp($this->mgmtServer->reveal(),
-        $this->logger->reveal());
+        $this->logger->reveal(),
+        $this->siteConfig->reveal());
       $result = $service->signUp($user);
 
-      $this->assertTrue($result->success());
-      $this->assertEquals('<front>', $result->getRedirect());
-      $this->assertEquals('Your account was created successfully. You may now sign in.', $result->getMessage());
+      self::assertTrue($result->success());
+      self::assertEquals('<front>', $result->getRedirect());
+      self::assertEquals('Your account was created successfully. You may now sign in.', $result->getMessage());
     }
 
+    /**
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
     public function testUserManagedSignUpMgmtFailure(): void {
 
       $user = $this->createUser();
@@ -80,12 +96,13 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->mgmtServer->getAuth($user)->willReturn($mgmtServerResponse);
 
       $service = new NonUserManagedSignUp($this->mgmtServer->reveal(),
-        $this->logger->reveal());
+        $this->logger->reveal(),
+        $this->siteConfig->reveal());
       $result = $service->signUp($user);
 
-      $this->assertFalse($result->success());
-      $this->assertEquals('<front>', $result->getRedirect());
-      $this->assertEquals('There was an error creating your account. Please contact the system administrator.', $result->getMessage());
+      self::assertFalse($result->success());
+      self::assertEquals('<front>', $result->getRedirect());
+      self::assertEquals('There was an error creating your account. Please contact the system administrator.', $result->getMessage());
     }
 
     private function createUser(): ApicUser {

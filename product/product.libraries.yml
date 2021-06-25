@@ -2,6 +2,7 @@ basic:
   version: 1.x
   css:
     component:
-      css/product.css: {}
+      css/product.css: { }
   js:
-    js/product.js: {}
+    js/product.js: { }
+    js/plans.js: { }

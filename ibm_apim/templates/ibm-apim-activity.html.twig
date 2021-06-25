@@ -1,0 +1,93 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the consumer organization activity feed
+ *
+ * Variables available:
+ * - consumerorgId: the consumer organization id
+ * - catalogId: the catalog ID
+ * - catalogName: urlencoded catalog name
+ * - porgId: provider organization ID
+ * - consumerorgTitle
+ * @ingroup themeable
+ */
+#}
+<article class="node">
+  <div class="apicMyOrg">
+    <header class="titleSection apicMyOrgHeader">
+      <div class="titleInnerWrapper">
+        <div class="leftTitle">
+          <h1 class="orgName apicTruncate">{{- consumerorgTitle -}}</h1>
+        </div>
+        <div class="rightTitle">
+          <div class="extraMenu apicMyOrgActions">
+            <ul class="overflow-menu organizationMenu dropitmenu">
+              <li title="{{ 'Manage organization'|t }}"><a href="#" class="trigger">
+                <span class="dropit-icon">
+                <svg version="1.1" id="icon" xmlns="http://www.w3.org/2000/svg"
+                     xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                     width="32px" height="32px" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;"
+                     xml:space="preserve">
+                  <style type="text/css">.st0 {
+                      fill: none;
+                    }</style>
+                  <title>overflow-menu--vertical</title>
+                  <circle cx="16" cy="8" r="2"/>
+                  <circle cx="16" cy="16" r="2"/>
+                  <circle cx="16" cy="24" r="2"/>
+                  <rect id="_Transparent_Rectangle_" class="st0" width="32" height="32"/>
+                </svg></span></a>
+                <ul class="dropitmenu-submenu">
+                  <li class="editOrganizationName">
+                    <a href="{{ url('consumerorg.update') }}" title="{{ 'Edit organization name'|t }}">
+                      {{ 'Edit organization name'|t }}
+                    </a>
+                  </li>
+                  {% if myorg_members|length > 1 %}
+                    <li class="changeOrganizationOwner">
+                      <a href="{{ url('consumerorg.changeowner') }}" title="{{ 'Change organization owner'|t }}">
+                        {{ 'Change organization owner'|t }}</a>
+                    </li>
+                  {% endif %}
+
+                  <li class="deleteOrganization">
+                    <a href="{{ url('consumerorg.delete') }}" title="{{ 'Delete organization'|t }}">
+                      {{ 'Delete organization'|t }}</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="organizationTabs">
+          <ul>
+            <li class="orgManage"><a href="{{- path('ibm_apim.myorg') -}}">{{ 'Manage'|t }}</a></li>
+            {% if analytics_access %}
+              <li class="orgAnalytics">
+                <a href="{{- path('ibm_apim.analytics') -}}">{{ 'Analytics'|t }}</a>
+              </li>
+            {% endif %}
+            {% if billing_access %}
+              <li class="orgBilling">
+                <a href="{{- path('ibm_apim.billing') -}}">{{ 'Billing'|t }}</a>
+              </li>
+            {% endif %}
+            <li class="selected orgActivity">
+              <a href="#">{{ 'Notifications'|t }}</a>
+            </li>
+            {% if tabs is not empty %}
+              {% for tab in tabs %}
+                <li class="orgExtraTab">
+                  <a href="{{- path(tab.path) -}}">{{ tab.title }}</a>
+                </li>
+              {% endfor %}
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </header>
+    <div class="ibmapimActivity ibmapimOrgActivity">
+      {{ drupal_view('notifications', 'page_1') }}
+    </div>
+  </div>
+</article>

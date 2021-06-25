@@ -10,15 +10,11 @@ use Drupal\Core\Routing\RouteMatchInterface;
 /**
  * Implements hook_help().
  */
-function ibm_apic_flood_control_ui_help($route_name, RouteMatchInterface $route_match) {
-  switch ($route_name) {
-    // Main module help for the ibm_apic_flood_control_ui module.
-    case 'help.page.ibm_apic_flood_control_ui':
-      $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Interface for flood control options.') . '</p>';
-      return $output;
-
-    default:
+function ibm_apic_flood_control_ui_help($route_name, RouteMatchInterface $route_match): ?string {
+  if ($route_name === 'help.page.ibm_apic_flood_control_ui') {
+    $output = '<h3>' . t('About') . '</h3>';
+    $output .= '<p>' . t('Interface for flood control options.') . '</p>';
+    return $output;
   }
+  return null;
 }

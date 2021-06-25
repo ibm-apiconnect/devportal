@@ -29,10 +29,12 @@
   grid-area: numbers;
   background-color: white;
 }
+
 .analyticsWidgetContainer .apicAppTotals .apicAppTotalCalls,
 .analyticsWidgetContainer .apicAppTotals .apicAppTotalErrors {
   padding: 14px;
 }
+
 .analyticsWidgetContainer .apicAppTotals .apicAppAverageResponseTime {
   padding: 14px;
 }
@@ -58,7 +60,7 @@
 
 .analyticsWidgetContainer .apicAppAPICallHistory .bx--apim-list-container,
 .analyticsWidgetContainer .apicAppSubscriptionsSummary .bx--apim-list-container,
-.analyticsWidgetContainer .apicAppAPICallErrors .bx--apim-list-container{
+.analyticsWidgetContainer .apicAppAPICallErrors .bx--apim-list-container {
   max-height: 100%;
 }
 
@@ -72,6 +74,7 @@
 .analyticsWidgetContainer .bx--tabs__nav-item--selected {
   border-bottom: 2px solid #0f62fe;
 }
+
 .analyticsWidgetContainer .bx--apim-metric-value.bx--apim-metric-error {
   color: #e71d32;
 }

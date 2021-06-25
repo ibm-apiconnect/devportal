@@ -22,6 +22,14 @@ field.field.node.application.apic_url:
   type: ibm_apim_config_object
   label: 'URL'
 
+field.field.node.application.apic_created_at:
+  type: ibm_apim_config_object
+  label: 'Creation time'
+
+field.field.node.application.apic_updated_at:
+  type: ibm_apim_config_object
+  label: 'Modification time'
+
 field.field.node.application.application_client_type:
   type: ibm_apim_config_object
   label: 'Client type'

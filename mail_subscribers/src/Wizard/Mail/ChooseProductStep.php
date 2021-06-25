@@ -61,13 +61,13 @@ class ChooseProductStep extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): ?bool {
 
     if (empty($form_state->getUserInput()['product'])) {
       $form_state->setErrorByName('product', t('You must select a Product.'));
       return FALSE;
     }
-
+    return NULL;
   }
 
   /**

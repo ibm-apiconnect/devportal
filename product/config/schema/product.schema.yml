@@ -134,6 +134,14 @@ field.field.node.product.product_visibility_public:
   type: ibm_apim_config_object
   label: 'Public visibility'
 
+field.field.node.product.apic_created_at:
+  type: ibm_apim_config_object
+  label: 'Creation time'
+
+field.field.node.product.apic_updated_at:
+  type: ibm_apim_config_object
+  label: 'Modification time'
+
 views.view.products:
   type: string
   label: 'Products'

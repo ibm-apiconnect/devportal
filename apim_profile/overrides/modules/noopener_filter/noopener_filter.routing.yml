@@ -1,0 +1,7 @@
+noopener_filter.settings:
+  path: '/admin/config/noopener-filter/settings'
+  defaults:
+    _form: '\Drupal\noopener_filter\Form\SettingsForm'
+    _title: 'Settings for Noopener filter'
+  requirements:
+    _permission: 'administer noopener filter'

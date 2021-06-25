@@ -1,6 +1,6 @@
 {
   "name": "drupal/connect_theme",
-  "description": "IBM API Connect Theme",
+  "description": "IBM API Developer Portal Theme",
   "type": "drupal-theme",
   "homepage": "https://github.com/ibm-apiconnect/devportal",
   "support": {

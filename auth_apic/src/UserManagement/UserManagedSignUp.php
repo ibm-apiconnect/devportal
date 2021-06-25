@@ -14,44 +14,44 @@ namespace Drupal\auth_apic\UserManagement;
 
 use Drupal\auth_apic\UserManagerResponse;
 use Drupal\ibm_apim\ApicType\ApicUser;
-use Drupal\ibm_apim\Service\ApicUserService;
-use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
+use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Psr\Log\LoggerInterface;
+use Drupal\ibm_apim\Service\SiteConfig;
 
 class UserManagedSignUp implements SignUpInterface {
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface
    */
-  private $mgmtServer;
+  private ManagementServerInterface $mgmtServer;
 
   /**
    * @var \Drupal\ibm_apim\UserManagement\ApicAccountInterface
    */
-  private $accountService;
-
-  /**
-   * @var \Drupal\ibm_apim\Service\ApicUserService
-   */
-  private $userService;
+  private ApicAccountInterface $accountService;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  private $logger;
+  private LoggerInterface $logger;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
+  private SiteConfig $siteConfig;
 
   /**
    * @inheritDoc
    */
   public function __construct(ManagementServerInterface $mgmt_interface,
                               ApicAccountInterface $account_service,
-                              ApicUserService $user_service,
-                              LoggerInterface $logger) {
+                              LoggerInterface $logger,
+                              SiteConfig $site_config) {
     $this->mgmtServer = $mgmt_interface;
     $this->accountService = $account_service;
-    $this->userService = $user_service;
     $this->logger = $logger;
+    $this->siteConfig = $site_config;
   }
 
 
@@ -65,7 +65,7 @@ class UserManagedSignUp implements SignUpInterface {
     $mgmtResponse = $this->mgmtServer->postSignUp($user);
     $userManagerResponse = new UserManagerResponse();
 
-    if ((int) $mgmtResponse->getCode() === 204) {
+    if ($mgmtResponse !== NULL && ((int) $mgmtResponse->getCode() === 201 || (int) $mgmtResponse->getCode() === 204)) {
       // user will need to accept invitation so invite as pending.
       $user->setState('pending');
 
@@ -77,7 +77,11 @@ class UserManagedSignUp implements SignUpInterface {
         $this->logger->notice('sign-up processed for @username', [
           '@username' => $user->getUsername(),
         ]);
-        $userManagerResponse->setMessage(t('Your account was created successfully. You will receive an email with activation instructions.'));
+        if ($this->siteConfig->isAccountapprovalsEnabled()) {
+          $userManagerResponse->setMessage(t('Your account was created successfully and is pending approval. You will receive an email with further instructions.'));
+        } else {
+          $userManagerResponse->setMessage(t('Your account was created successfully. You will receive an email with activation instructions.'));
+        }
       }
       else {
         $this->logger->error('error registering drupal account for @username', ['@username' => $user->getUsername()]);

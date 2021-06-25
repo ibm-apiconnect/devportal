@@ -32,27 +32,24 @@ class OrgDeleteForm extends ConfirmFormBase {
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgService
    */
-  protected $consumerOrgService;
+  protected ConsumerOrgService $consumerOrgService;
 
-  /**
-   * @var
-   */
   protected $currentOrg;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\Core\Session\AccountProxyInterface
    */
-  protected $currentUser;
+  protected AccountProxyInterface $currentUser;
 
   /**
    * @var \Drupal\Core\Extension\ThemeHandler
    */
-  protected $themeHandler;
+  protected ThemeHandler $themeHandler;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -79,7 +76,7 @@ class OrgDeleteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): OrgDeleteForm {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('ibm_apim.user_utils'),
@@ -98,6 +95,7 @@ class OrgDeleteForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -200,4 +198,5 @@ class OrgDeleteForm extends ConfirmFormBase {
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

@@ -25,7 +25,7 @@ class ApiNidOrPathParamConverter implements ParamConverterInterface {
       $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
       if ((int) $value > 0) {
         $node = Node::load($value);
-        if ($node !== null) {
+        if ($node !== NULL) {
           // ensure use the translated version of api nodes
           $hasTranslation = $node->hasTranslation($lang_code);
           if ($hasTranslation === TRUE) {
@@ -45,7 +45,7 @@ class ApiNidOrPathParamConverter implements ParamConverterInterface {
         if ($nids !== NULL && !empty($nids)) {
           $nid = array_shift($nids);
           $node = Node::load($nid);
-          if ($node !== null) {
+          if ($node !== NULL) {
             // ensure use the translated version of api nodes
             $hasTranslation = $node->hasTranslation($lang_code);
             if ($hasTranslation === TRUE) {
@@ -53,7 +53,8 @@ class ApiNidOrPathParamConverter implements ParamConverterInterface {
             }
           }
           $returnValue = $node;
-        } else {
+        }
+        else {
           // try name:version
           $query = \Drupal::entityQuery('node');
           $query->condition('type', 'api');
@@ -64,7 +65,7 @@ class ApiNidOrPathParamConverter implements ParamConverterInterface {
           if ($nids !== NULL && !empty($nids)) {
             $nid = array_shift($nids);
             $node = Node::load($nid);
-            if ($node !== null) {
+            if ($node !== NULL) {
               // ensure use the translated version of api nodes
               $hasTranslation = $node->hasTranslation($lang_code);
               if ($hasTranslation === TRUE) {
@@ -82,4 +83,5 @@ class ApiNidOrPathParamConverter implements ParamConverterInterface {
   public function applies($definition, $name, Route $route): bool {
     return (!empty($definition['type']) && $definition['type'] === 'apic_api.nidorpath');
   }
+
 }

@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.apic_updated_at
+    - node.type.consumerorg
+id: node.api.apic_updated_at
+field_name: apic_updated_at
+entity_type: node
+bundle: consumerorg
+label: 'Modification time'
+description: ''
+required: false
+translatable: false
+default_value_callback: ''
+settings: {  }
+field_type: timestamp

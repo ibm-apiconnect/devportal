@@ -29,7 +29,7 @@
 
     .subscriptionWizardTitle{
       background-color: $default-bg-light;
-      margin: 0 -1rem;
+      margin: 0 -0.96rem;
       padding: 0 2rem;
     }
 
@@ -38,6 +38,10 @@
       font-weight: 300;
       margin:0;
       padding: 1rem 0;
+    }
+
+    .subscription-wizard-choose-plan .button.apicTertiary {
+      margin: 0 0 1rem 3rem;
     }
 
     .wizard-trail {
@@ -222,29 +226,44 @@
     .apicSubscribeAppForm{
       display:flex;
       flex-direction: row-reverse;
-    }
-
-    .apicSubscribeNewAppWrapper {
-
+      justify-content: flex-start;
     }
 
     .subscription-wizard-choose-application {
+      display: flex;
+      flex-direction: column;
       width: calc(100% - 16rem);
+      flex-wrap: wrap;
+      min-height: 305px
     }
 
     .apicNewAppsList {
       display: flex;
       flex-wrap: wrap;
-      min-height: 260px;
+
       .apicSubAppCard {
         margin: 1px;
         padding: 0;
+        position: relative !important;
       }
     }
 
-    .apicSubscribeAppsList .apicSubAppCard {
-      margin: 1px;
-      padding: 0;
+    .apicSubscribeAppsList {
+      display: flex;
+      flex-wrap: wrap;
+
+      .apicSubAppCard {
+        margin: 1px;
+        padding: 0;
+        position: relative !important;
+        top: unset !important;
+        left: unset !important;
+
+        .apicAppCard {
+          text-align: left;
+        }
+      }
+
     }
 
     .apicSubscribeAppForm .apicNewAppWrapper > div {
@@ -282,6 +301,8 @@
     .apic-wizard-navigation {
       display: flex;
       justify-content: space-between;
+      margin-top: auto;
+      padding: 1rem 0 1rem 0;
     }
 
     // only needed for error conditions

@@ -24,42 +24,42 @@ $black-01: #2f261c;
 // theme variables
 // these are the variables to override for custom theme creation
 // Global body
-$body-bg:            $white-01;
+$body-bg: $white-01;
 
 
 // Global text color
-$text-color:                       $black-01;
-$label-color:                      $black-01;
+$text-color: $black-01;
+$label-color: $black-01;
 //** Global textual link color.
-$link-color:                       $gold-01;
+$link-color: $gold-01;
 //** Link hover color
-$link-hover-color:                 $gold-02;
+$link-hover-color: $gold-02;
 
-$brand-primary:         $gold-01;
-$brand-primary-light:   $gold-03;
-$brand-primary-dark:    $gold-02;
+$brand-primary: $gold-01;
+$brand-primary-light: $gold-03;
+$brand-primary-dark: $gold-02;
 
 // Placeholder text color
-$input-color-placeholder:        $gray-05;
+$input-color-placeholder: $gray-05;
 
 // Navbar variable overrides
-$navbar-default-color:              $white-01;
-$navbar-default-bg:               $gold-01;
+$navbar-default-color: $white-01;
+$navbar-default-bg: $gold-01;
 
-$navbar-default-link-color:        $white-01;
-$navbar-default-link-hover-color:  $white-01;
+$navbar-default-link-color: $white-01;
+$navbar-default-link-hover-color: $white-01;
 $navbar-default-link-active-color: $white-01;
-$navbar-default-link-active-bg:    $gold-01;
-$navbar-default-link-hover-bg:     $gold-03;
+$navbar-default-link-active-bg: $gold-01;
+$navbar-default-link-hover-bg: $gold-03;
 
 $navbar-default-toggle-icon-bar-bg: $gold-01;
 
 // footer variable overrides
-$footer-default-bg:                $gold-01;
-$footer-default-color:             $white-01;
-$footer-default-bordercolor:       $brand-primary-light;
+$footer-default-bg: $gold-01;
+$footer-default-color: $white-01;
+$footer-default-bordercolor: $brand-primary-light;
 
-$footer-link-color:                 $white-01;
+$footer-link-color: $white-01;
 
 // tabs
 $tab-primary-background: $brand-primary;
@@ -82,21 +82,21 @@ $input-border: $gray-01;
 $input-color: $black-01;
 
 // buttons
-$btn-border-radius-base:  0;
+$btn-border-radius-base: 0;
 $btn-border-radius-large: 0;
 $btn-border-radius-small: 0;
 $btn-default-color: $gold-01;
-$btn-default-bg:    $white-01;
+$btn-default-bg: $white-01;
 $btn-default-border: $gold-01;
-$btn-primary-color:  $white-01;
-$btn-primary-bg:     $gold-01;
+$btn-primary-color: $white-01;
+$btn-primary-bg: $gold-01;
 $btn-primary-border: transparent;
 $btn-success-color: $white-01;
-$btn-success-bg:     $gold-01;
+$btn-success-bg: $gold-01;
 $btn-success-border: transparent;
 $btn-link-disabled-color: $brand-primary;
 
-$tile-btn-bg:   $white-01;
+$tile-btn-bg: $white-01;
 $tile-btn-border: $white-01;
 $tile-btn-color: $text-color;
 
@@ -108,18 +108,18 @@ $check-radio-border-checked: $brand-primary;
 $check-radio-color-checked: $white-01;
 
 // tooltips
-$tooltip-color:       $white-01;
-$tooltip-bg:          $gray-05;
+$tooltip-color: $white-01;
+$tooltip-bg: $gray-05;
 
 // modals
-$modal-content-bg:                             $white-01;
-$modal-content-border-color:                   $brand-primary;
-$modal-backdrop-bg:           	$white-01;
-$modal-backdrop-opacity:        .5;
-$modal-header-border-color:   		transparent;
+$modal-content-bg: $white-01;
+$modal-content-border-color: $brand-primary;
+$modal-backdrop-bg: $white-01;
+$modal-backdrop-opacity: .5;
+$modal-header-border-color: transparent;
 $modal-content-color: $gray-05;
 //** Modal footer border color
-$modal-footer-border-color:   $gray-04;
+$modal-footer-border-color: $gray-04;
 
 //** card settings
 $card-bg: $gray-01;

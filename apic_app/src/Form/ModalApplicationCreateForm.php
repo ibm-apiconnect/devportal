@@ -37,12 +37,12 @@ class ModalApplicationCreateForm extends FormBase {
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
    */
-  protected $restService;
+  protected ApplicationRestInterface $restService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -52,7 +52,7 @@ class ModalApplicationCreateForm extends FormBase {
   /**
    * @var \Drupal\apic_app\Service\CertificateService
    */
-  protected $certService;
+  protected CertificateService $certService;
 
   /**
    * ModalApplicationCreateForm constructor.
@@ -73,7 +73,7 @@ class ModalApplicationCreateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): ModalApplicationCreateForm {
     // Load the service required to construct this class
     return new static(
       $container->get('apic_app.rest_service'),
@@ -180,10 +180,11 @@ class ModalApplicationCreateForm extends FormBase {
       ],
     ];
 
+    $form['#attached']['library'][] = 'ibm_apim/modal';
     $form['#attached']['library'][] = 'apic_app/basic';
     $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
     if ($moduleHandler->moduleExists('clipboardjs')) {
-      $credsForm['#attached']['library'][] = 'clipboardjs/drupal';
+      $form['#attached']['library'][] = 'clipboardjs/drupal';
     }
 
     // remove any admin fields if they exist
@@ -213,7 +214,7 @@ class ModalApplicationCreateForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @return \Drupal\Core\Url
    */
   public function getCancelUrl(): Url {
     return Url::fromRoute('view.applications.page_1');
@@ -226,7 +227,10 @@ class ModalApplicationCreateForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
    */
   public function submitModalFormAjax(array &$form, FormStateInterface $form_state): AjaxResponse {
     $response = new AjaxResponse();
@@ -321,12 +325,12 @@ class ModalApplicationCreateForm extends FormBase {
         }
         else {
           $credsForm['client_id'] = [
-            '#markup' => \Drupal\Core\Render\Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input class="form-control password-field passwordCreds" type="password" id="client_id" value="' . $clientId . '"></div></div>'),
+            '#markup' => Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input class="form-control password-field passwordCreds" type="password" id="client_id" value="' . $clientId . '"></div></div>'),
             '#weight' => 10,
           ];
 
           $credsForm['client_secret'] = [
-            '#markup' => \Drupal\Core\Render\Markup::create('<div class="clientSecretContainer"><label for="client_secret" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input class="form-control password-field passwordCreds" type="password" id="client_secret" value="' . $clientSecret . '"></div></div>'),
+            '#markup' => Markup::create('<div class="clientSecretContainer"><label for="client_secret" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input class="form-control password-field passwordCreds" type="password" id="client_secret" value="' . $clientSecret . '"></div></div>'),
             '#weight' => 20,
           ];
         }

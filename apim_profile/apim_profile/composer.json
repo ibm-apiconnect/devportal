@@ -1,6 +1,6 @@
 {
   "name": "drupal-composer/apim_profile",
-  "description": "IBM API Connect Developer Portal installation profile",
+  "description": "IBM API Developer Portal installation profile",
   "type": "drupal-profile",
   "license": "GPL-2.0+",
   "homepage": "https://github.com/ibm-apiconnect/devportal",

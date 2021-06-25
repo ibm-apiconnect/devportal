@@ -16,20 +16,40 @@ namespace Drupal\auth_apic\Controller;
 use Drupal\auth_apic\Service\Interfaces\TokenParserInterface;
 use Drupal\auth_apic\UserManagement\ApicActivationInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Messenger\Messenger;
 
 class ApicUserActivationController extends ControllerBase {
 
-  protected $jwtParser;
+  /**
+   * @var \Drupal\auth_apic\Service\Interfaces\TokenParserInterface
+   */
+  protected TokenParserInterface $jwtParser;
 
-  protected $siteConfig;
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
+  protected SiteConfig $siteConfig;
 
-  protected $activation;
+  /**
+   * @var \Drupal\auth_apic\UserManagement\ApicActivationInterface
+   */
+  protected ApicActivationInterface $activation;
 
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
   protected $messenger;
 
+  /**
+   * ApicUserActivationController constructor.
+   *
+   * @param \Drupal\auth_apic\Service\Interfaces\TokenParserInterface $tokenParser
+   * @param \Drupal\ibm_apim\Service\SiteConfig $site_config
+   * @param \Drupal\auth_apic\UserManagement\ApicActivationInterface $activation_service
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   */
   public function __construct(TokenParserInterface $tokenParser,
                               SiteConfig $site_config,
                               ApicActivationInterface $activation_service,
@@ -40,7 +60,13 @@ class ApicUserActivationController extends ControllerBase {
     $this->messenger = $messenger;
   }
 
-  public static function create(ContainerInterface $container) {
+  /**
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *
+   * @return \Drupal\auth_apic\Controller\ApicUserActivationController|static
+   */
+  public static function create(ContainerInterface $container): ApicUserActivationController {
+    /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('auth_apic.jwtparser'),
       $container->get('ibm_apim.site_config'),
@@ -49,6 +75,9 @@ class ApicUserActivationController extends ControllerBase {
     );
   }
 
+  /**
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   */
   public function activate(): \Symfony\Component\HttpFoundation\RedirectResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
@@ -58,10 +87,12 @@ class ApicUserActivationController extends ControllerBase {
       return $this->redirect('<front>');
     }
 
-    $jwttoken = $this->jwtParser->parse($activationToken);
-    $this->activation->activate($jwttoken);
-
+    $jwtToken = $this->jwtParser->parse($activationToken);
+    if ($jwtToken !== NULL) {
+      $this->activation->activate($jwtToken);
+    }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $this->redirect('<front>');
   }
+
 }

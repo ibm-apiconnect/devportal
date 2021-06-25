@@ -20,10 +20,22 @@ use Psr\Log\LoggerInterface;
  */
 class Group {
 
-  private $state;
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  private StateInterface $state;
 
-  private $logger;
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  private LoggerInterface $logger;
 
+  /**
+   * Group constructor.
+   *
+   * @param \Drupal\Core\State\StateInterface $state
+   * @param \Psr\Log\LoggerInterface $logger
+   */
   public function __construct(StateInterface $state, LoggerInterface $logger) {
     $this->state = $state;
     $this->logger = $logger;
@@ -38,7 +50,7 @@ class Group {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $groups = $this->state->get('ibm_apim.groups');
-    if ($groups === null || empty($groups)) {
+    if ($groups === NULL || empty($groups)) {
       $groups = [];
     }
 
@@ -49,11 +61,11 @@ class Group {
   /**
    * get a specific group by url
    *
-   * @param $key
+   * @param string $key
    *
    * @return null|array
    */
-  public function get($key): ?array {
+  public function get(string $key): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     $group = NULL;
@@ -73,9 +85,9 @@ class Group {
   /**
    * Update all groups
    *
-   * @param $data array of groups keyed on url
+   * @param array $data array of groups keyed on url
    */
-  public function updateAll($data): void {
+  public function updateAll(array $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $data);
 
     if (isset($data)) {
@@ -92,10 +104,10 @@ class Group {
   /**
    * Update a specific group
    *
-   * @param $key
-   * @param $data
+   * @param string $key
+   * @param array $data
    */
-  public function update($key, $data): void {
+  public function update(string $key, array $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
     $corgService = \Drupal::service('ibm_apim.consumerorg');
 
@@ -107,7 +119,7 @@ class Group {
 
       //Remove old consumer orgs from this group
       if (isset($current_data[$key]['org_urls'])) {
-        foreach($current_data[$key]['org_urls'] as $org_url) {
+        foreach ($current_data[$key]['org_urls'] as $org_url) {
           $org = $corgService->get($org_url);
           if (isset($org) && $org->removeTag($data['url'])) {
             $corgService->createOrUpdateNode($org, 'internal');
@@ -118,9 +130,9 @@ class Group {
       $current_data[$key] = $data;
 
       // Update each consumer org in the group
-      foreach($data['org_urls'] as $org_url) {
+      foreach ($data['org_urls'] as $org_url) {
         $org = $corgService->get($org_url);
-        if($org->addTag($data['url'])) {
+        if (isset($org) && $org->addTag($data['url'])) {
           $corgService->createOrUpdateNode($org, 'internal');
         }
       }
@@ -134,9 +146,9 @@ class Group {
   /**
    * Delete a specific group
    *
-   * @param $key (group url)
+   * @param string $key (group url)
    */
-  public function delete($key): void {
+  public function delete(string $key): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     if (isset($key)) {
@@ -166,4 +178,5 @@ class Group {
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

@@ -133,7 +133,7 @@ class ApplicationCreateForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @return \Drupal\Core\Url
    */
   public function getCancelUrl(): Url {
     return Url::fromRoute('view.applications.page_1');
@@ -141,6 +141,7 @@ class ApplicationCreateForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \JsonException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -176,7 +177,10 @@ class ApplicationCreateForm extends FormBase {
           \Drupal::messenger()->addMessage(t('Error: No application credentials were returned.', []));
         }
 
-        $credsString = base64_encode(json_encode(['client_id' => $result->data['client_id'], 'client_secret' => $result->data['client_secret']]));
+        $credsString = base64_encode(json_encode([
+          'client_id' => $result->data['client_id'],
+          'client_secret' => $result->data['client_secret'],
+        ], JSON_THROW_ON_ERROR));
         $displayCredsUrl = Url::fromRoute('apic_app.display_creds', ['appId' => $result->data['id'], 'credentials' => $credsString]);
         $form_state->setRedirectUrl($displayCredsUrl);
       }
@@ -199,4 +203,5 @@ class ApplicationCreateForm extends FormBase {
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

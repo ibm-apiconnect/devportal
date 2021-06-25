@@ -39,11 +39,12 @@ function hook_consumerorg_update(NodeInterface $node, $data) {
 /**
  * Triggered when a consumer org is deleted
  *
+ * @param NodeInterface $node
+ *   The Drupal node representing this consumer org
+ *
  * @deprecated this hook will be removed. Please use hook_consumerorg_pre_delete
  *             or hook_consumerorg_post_delete instead.
  *
- * @param NodeInterface $node
- *   The Drupal node representing this consumer org
  */
 function hook_consumerorg_delete(NodeInterface $node) {
 

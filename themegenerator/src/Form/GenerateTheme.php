@@ -40,7 +40,7 @@ class GenerateTheme extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): GenerateTheme {
     // Load the service required to construct this class
     return new static($container->get('messenger'));
   }
@@ -170,4 +170,5 @@ class GenerateTheme extends FormBase {
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

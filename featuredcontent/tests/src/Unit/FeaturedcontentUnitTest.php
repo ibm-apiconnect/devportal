@@ -22,8 +22,8 @@ use Drupal\Tests\UnitTestCase;
  */
 class FeaturedcontentUnitTest extends UnitTestCase {
 
-  public function testTrue() {
-    $this->assertEquals(TRUE, TRUE);
+  public function testTrue(): void {
+    self::assertEquals(TRUE, TRUE);
   }
 
 }

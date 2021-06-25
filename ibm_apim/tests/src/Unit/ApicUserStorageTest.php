@@ -24,20 +24,44 @@ use Psr\Log\LoggerInterface;
 
 use Prophecy\Argument;
 
+/**
+ * @coversDefaultClass \Drupal\ibm_apim\Service\ApicUserStorage
+ *
+ * @group ibm_apim
+ */
 class ApicUserStorageTest extends AuthApicTestBaseClass {
 
-  /*
-   Dependencies of ApicUserStorage
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\Prophecy\Prophecy\ObjectProphecy
    */
   private $entityTypeManager;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\UserRegistryService|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $registryService;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\ApicUserService|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $userService;
+
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
+   */
   private $logger;
 
+  /**
+   * @var \Drupal\Core\Entity\EntityStorageInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $userStorage;
 
 
-  protected function setup() {
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  protected function setup(): void {
     parent::setup();
 
     $this->registryService = $this->prophet->prophesize(UserRegistryService::class);
@@ -50,12 +74,14 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $this->entityTypeManager->getStorage('user')->willReturn($this->userStorage->reveal());
   }
 
-  protected function tearDown() {
-    parent::tearDown();
-  }
-
   // register() tests
-  public function testRegisterNewUser() {
+
+  /**
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  public function testRegisterNewUser(): void {
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
@@ -76,7 +102,7 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $new_account->enforceIsNew()->shouldBeCalled();
     $new_account->save()->shouldBeCalled();
 
-    $this->logger->notice('Registration of apic user %name completed.',['%name' => 'andre'])->shouldBeCalled();
+    $this->logger->notice('Registration of apic user %name completed.', ['%name' => 'andre'])->shouldBeCalled();
 
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
@@ -85,22 +111,26 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $account = $service->register($user);
 
-    $this->assertNotNull($account);
+    self::assertNotNull($account);
 
   }
 
   /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage User could not be registered. There is already an account with username "andre"
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function testRegisterWithExistingUser() {
+  public function testRegisterWithExistingUser(): void {
+    $this->expectExceptionMessage("User could not be registered. There is already an account with username \"andre\"");
+    $this->expectException(\Exception::class);
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
     $user->setUsername('andre');
     $user->setMail('andre@example.com');
 
-    $this->userStorage->loadByProperties(['name' => 'andre', 'registry_url' => '/reg/url'])->willReturn([$this->prophet->prophesize(User::class)]);
+    $this->userStorage->loadByProperties(['name' => 'andre', 'registry_url' => '/reg/url'])
+      ->willReturn([$this->prophet->prophesize(User::class)]);
     $this->userStorage->loadByProperties(['mail' => 'andre@example.com'])->willReturn([]);
     $this->userService->getUserAccountFields(Argument::any())->shouldNotBeCalled();
     $this->userStorage->create(Argument::any())->shouldNotBeCalled();
@@ -115,11 +145,14 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service->register($user);
   }
 
-    /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage User could not be registered. There is already an account with email "andre@example.com"
+  /**
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function testRegisterWithExistingEmail() {
+  public function testRegisterWithExistingEmail(): void {
+    $this->expectExceptionMessage("User could not be registered. There is already an account with email \"andre@example.com\"");
+    $this->expectException(\Exception::class);
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
@@ -142,10 +175,13 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
   }
 
   /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage User could not be registered both a username and registry_url are required.
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function testRegisterWithNoUserName() {
+  public function testRegisterWithNoUserName(): void {
+    $this->expectExceptionMessage("User could not be registered both a username and registry_url are required.");
+    $this->expectException(\Exception::class);
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
@@ -160,10 +196,13 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
   }
 
   /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage User could not be registered both a username and registry_url are required.
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function testRegisterWithNoRegistryUrl() {
+  public function testRegisterWithNoRegistryUrl(): void {
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("User could not be registered both a username and registry_url are required.");
 
     $user = new ApicUser();
     $user->setUsername('andre');
@@ -178,7 +217,13 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
   }
 
   // load() tests
-  public function testLoadValid() {
+
+  /**
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  public function testLoadValid(): void {
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
@@ -186,11 +231,11 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $this->userStorage->loadByProperties([
       'name' => 'andre',
-      'registry_url' => '/reg/url'
+      'registry_url' => '/reg/url',
     ])->willReturn([$this->prophet->prophesize(User::class)]);
 
-    $this->logger->debug('loading %name in registry %registry', ['%name'=> 'andre', '%registry' => '/reg/url'])->shouldBeCalled();
-    $this->logger->debug('loaded %num users', ['%num'=> 1])->shouldBeCalled();
+    $this->logger->debug('loading %name in registry %registry', ['%name' => 'andre', '%registry' => '/reg/url'])->shouldBeCalled();
+    $this->logger->debug('loaded %num users', ['%num' => 1])->shouldBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -201,15 +246,18 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->load($user);
 
-    $this->assertNotNull($user);
+    self::assertNotNull($user);
 
   }
 
   /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage Multiple users (2) returned matching username "andre" in registry_url "/reg/url"
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function testLoadFailMultiple() {
+  public function testLoadFailMultiple(): void {
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Multiple users (2) returned matching username \"andre\" in registry_url \"/reg/url\"");
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
@@ -217,11 +265,11 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $this->userStorage->loadByProperties([
       'name' => 'andre',
-      'registry_url' => '/reg/url'
+      'registry_url' => '/reg/url',
     ])->willReturn([$this->prophet->prophesize(User::class), $this->prophet->prophesize(User::class)]);
 
-    $this->logger->debug('loading %name in registry %registry', ['%name'=> 'andre', '%registry' => '/reg/url'])->shouldBeCalled();
-    $this->logger->debug('loaded %num users', ['%num'=> 2])->shouldBeCalled();
+    $this->logger->debug('loading %name in registry %registry', ['%name' => 'andre', '%registry' => '/reg/url'])->shouldBeCalled();
+    $this->logger->debug('loaded %num users', ['%num' => 2])->shouldBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -231,10 +279,12 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
       $this->logger->reveal());
 
     $service->load($user);
-
   }
 
-  public function testLoadNone() {
+  /**
+   * @throws \Exception
+   */
+  public function testLoadNone(): void {
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
@@ -242,11 +292,11 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $this->userStorage->loadByProperties([
       'name' => 'andre',
-      'registry_url' => '/reg/url'
+      'registry_url' => '/reg/url',
     ])->willReturn([]);
 
-    $this->logger->debug('loading %name in registry %registry', ['%name'=> 'andre', '%registry' => '/reg/url'])->shouldBeCalled();
-    $this->logger->debug('loaded %num users', ['%num'=> 0])->shouldBeCalled();
+    $this->logger->debug('loading %name in registry %registry', ['%name' => 'andre', '%registry' => '/reg/url'])->shouldBeCalled();
+    $this->logger->debug('loaded %num users', ['%num' => 0])->shouldBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -257,37 +307,43 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->load($user);
 
-    $this->assertNull($user);
+    self::assertNull($user);
 
   }
 
   /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage Registry url is missing, unable to load user.
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function testLoadNoRegistryUrl() {
+  public function testLoadNoRegistryUrl(): void {
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Registry url is missing, unable to load user.");
 
     $user = new ApicUser();
     $user->setUsername('andre');
 
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
-                                   $this->registryService->reveal(),
-                                   $this->userService->reveal(),
-                                   $this->logger->reveal());
+      $this->registryService->reveal(),
+      $this->userService->reveal(),
+      $this->logger->reveal());
 
     $service->load($user);
-
   }
 
   // loadByUsername tests
-  public function testLoadByUsernameValid() {
+
+  /**
+   * @throws \Exception
+   */
+  public function testLoadByUsernameValid(): void {
 
     $this->userStorage->loadByProperties([
-      'name' => 'andre'
+      'name' => 'andre',
     ])->willReturn([$this->prophet->prophesize(User::class)]);
 
-    $this->logger->debug('loading %name', ['%name'=> 'andre'])->shouldBeCalled();
-    $this->logger->debug('loaded %num users', ['%num'=> 1])->shouldBeCalled();
+    $this->logger->debug('loading %name', ['%name' => 'andre'])->shouldBeCalled();
+    $this->logger->debug('loaded %num users', ['%num' => 1])->shouldBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -298,20 +354,22 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->loadByUsername('andre');
 
-    $this->assertNotNull($user);
+    self::assertNotNull($user);
   }
 
   /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage Multiple users (2) returned matching username "andre" unable to continue.
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function testLoadByUsernameFailMultiple() {
+  public function testLoadByUsernameFailMultiple(): void {
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Multiple users (2) returned matching username \"andre\" unable to continue.");
 
     $this->userStorage->loadByProperties([
-      'name' => 'andre'
+      'name' => 'andre',
     ])->willReturn([$this->prophet->prophesize(User::class), $this->prophet->prophesize(User::class)]);
 
-    $this->logger->debug('loading %name', ['%name'=> 'andre'])->shouldBeCalled();
+    $this->logger->debug('loading %name', ['%name' => 'andre'])->shouldBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -321,17 +379,19 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
       $this->logger->reveal());
 
     $service->loadByUsername('andre');
-
   }
 
-  public function testLoadByUsernameNoResults() {
+  /**
+   * @throws \Exception
+   */
+  public function testLoadByUsernameNoResults(): void {
 
     $this->userStorage->loadByProperties([
-      'name' => 'andre'
+      'name' => 'andre',
     ])->willReturn([]);
 
-    $this->logger->debug('loading %name', ['%name'=> 'andre'])->shouldBeCalled();
-    $this->logger->debug('loaded %num users', ['%num'=> 0])->shouldBeCalled();
+    $this->logger->debug('loading %name', ['%name' => 'andre'])->shouldBeCalled();
+    $this->logger->debug('loaded %num users', ['%num' => 0])->shouldBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -342,18 +402,22 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->loadByUsername('andre');
 
-    $this->assertNull($user);
+    self::assertNull($user);
   }
 
   // loadByEmailAddress() tests
-  public function testLoadByEmailAddressValid() {
+
+  /**
+   * @throws \Exception
+   */
+  public function testLoadByEmailAddressValid(): void {
 
     $this->userStorage->loadByProperties([
-      'mail' => 'andre@example.com'
+      'mail' => 'andre@example.com',
     ])->willReturn([$this->prophet->prophesize(User::class)]);
 
-    $this->logger->debug('loading by email: %mail', ['%mail'=> 'andre@example.com'])->shouldBeCalled();
-    $this->logger->debug('loaded by email %num users', ['%num'=> 1])->shouldBeCalled();
+    $this->logger->debug('loading by email: %mail', ['%mail' => 'andre@example.com'])->shouldBeCalled();
+    $this->logger->debug('loaded by email %num users', ['%num' => 1])->shouldBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -364,20 +428,22 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->loadUserByEmailAddress('andre@example.com');
 
-    $this->assertNotNull($user);
+    self::assertNotNull($user);
   }
 
   /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage Multiple users (2) returned matching email "andre@example.com" unable to continue.
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function testLoadByEmailAddressFailMultiple() {
+  public function testLoadByEmailAddressFailMultiple(): void {
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Multiple users (2) returned matching email \"andre@example.com\" unable to continue.");
 
     $this->userStorage->loadByProperties([
-      'mail' => 'andre@example.com'
+      'mail' => 'andre@example.com',
     ])->willReturn([$this->prophet->prophesize(User::class), $this->prophet->prophesize(User::class)]);
 
-    $this->logger->debug('loading by email: %mail', ['%mail'=> 'andre@example.com'])->shouldBeCalled();
+    $this->logger->debug('loading by email: %mail', ['%mail' => 'andre@example.com'])->shouldBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -387,17 +453,19 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
       $this->logger->reveal());
 
     $service->loadUserByEmailAddress('andre@example.com');
-
   }
 
-  public function testLoadByEmailAddressNoResults() {
+  /**
+   * @throws \Exception
+   */
+  public function testLoadByEmailAddressNoResults(): void {
 
     $this->userStorage->loadByProperties([
-      'mail' => 'andre@example.com'
+      'mail' => 'andre@example.com',
     ])->willReturn([]);
 
-    $this->logger->debug('loading by email: %mail', ['%mail'=> 'andre@example.com'])->shouldBeCalled();
-    $this->logger->debug('loaded by email %num users', ['%num'=> 0])->shouldBeCalled();
+    $this->logger->debug('loading by email: %mail', ['%mail' => 'andre@example.com'])->shouldBeCalled();
+    $this->logger->debug('loaded by email %num users', ['%num' => 0])->shouldBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -408,18 +476,22 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->loadUserByEmailAddress('andre@example.com');
 
-    $this->assertNull($user);
+    self::assertNull($user);
   }
 
   // loadUserByUrl tests
-  public function testLoadUserByUrlValid() {
+
+  /**
+   * @throws \Exception
+   */
+  public function testLoadUserByUrlValid(): void {
 
     $this->userStorage->loadByProperties([
-      'apic_url' => '/abc/1234'
+      'apic_url' => '/abc/1234',
     ])->willReturn([$this->prophet->prophesize(User::class)]);
 
-    $this->logger->debug('loading user by url %url', ['%url'=> '/abc/1234'])->shouldBeCalled();
-    $this->logger->debug('loaded %num users', ['%num'=> 1])->shouldBeCalled();
+    $this->logger->debug('loading user by url %url', ['%url' => '/abc/1234'])->shouldBeCalled();
+    $this->logger->debug('loaded %num users', ['%num' => 1])->shouldBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -430,20 +502,22 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->loadUserByUrl('/abc/1234');
 
-    $this->assertNotNull($user);
+    self::assertNotNull($user);
   }
 
   /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage Multiple users (2) with url "/abc/1234" unable to continue.
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function testLoadUserByUrlFailMultiple() {
+  public function testLoadUserByUrlFailMultiple(): void {
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Multiple users (2) with url \"/abc/1234\" unable to continue.");
 
     $this->userStorage->loadByProperties([
-      'apic_url' => '/abc/1234'
+      'apic_url' => '/abc/1234',
     ])->willReturn([$this->prophet->prophesize(User::class), $this->prophet->prophesize(User::class)]);
 
-    $this->logger->debug('loading user by url %url', ['%url'=> '/abc/1234'])->shouldBeCalled();
+    $this->logger->debug('loading user by url %url', ['%url' => '/abc/1234'])->shouldBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -456,14 +530,17 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
   }
 
-  public function testLoadUserByUrlNoResults() {
+  /**
+   * @throws \Exception
+   */
+  public function testLoadUserByUrlNoResults(): void {
 
     $this->userStorage->loadByProperties([
-      'apic_url' => '/abc/1234'
+      'apic_url' => '/abc/1234',
     ])->willReturn([]);
 
-    $this->logger->debug('loading user by url %url', ['%url'=> '/abc/1234'])->shouldBeCalled();
-    $this->logger->debug('loaded %num users', ['%num'=> 0])->shouldBeCalled();
+    $this->logger->debug('loading user by url %url', ['%url' => '/abc/1234'])->shouldBeCalled();
+    $this->logger->debug('loaded %num users', ['%num' => 0])->shouldBeCalled();
     $this->logger->notice(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -474,9 +551,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->loadUserByUrl('/abc/1234');
 
-    $this->assertNull($user);
+    self::assertNull($user);
   }
-
 
 
 }

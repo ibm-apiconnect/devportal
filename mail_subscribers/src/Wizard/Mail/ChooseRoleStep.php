@@ -60,13 +60,13 @@ class ChooseRoleStep extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): ?bool {
 
     if (empty($form_state->getUserInput()['role'])) {
       $form_state->setErrorByName('role', t('You must select a role.'));
       return FALSE;
     }
-
+    return NULL;
   }
 
   /**

@@ -1,9 +1,9 @@
 name: Application
 type: module
 description: Provides the Application node content type
-package: IBM API Connect
+package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9
-version: 8.x-3.0.85
+version: 8.x-3.1.59
 project: apic_app
 dependencies:
 - path
@@ -13,6 +13,7 @@ dependencies:
 - consumerorg:consumerorg
 - node
 - text
+- serialization
 - options
 - views
 - user

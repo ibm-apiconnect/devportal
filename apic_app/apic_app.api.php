@@ -41,15 +41,16 @@ function hook_apic_app_update(NodeInterface $node, $app) {
 /**
  * Triggered when an application is deleted
  *
- * @deprecated this hook will be removed. Please use hook_apic_app_pre_delete
- *             or hook_apic_app_post_delete instead.
- *
  * @param NodeInterface $node
  *   The Drupal node representing this application
  * @param array $data
  *   The array of data returned by API Manager (could be empty)
  * @param string $appId
  *   The ID of the application that has been deleted
+ *
+ * @deprecated this hook will be removed. Please use hook_apic_app_pre_delete
+ *             or hook_apic_app_post_delete instead.
+ *
  */
 function hook_apic_app_delete(NodeInterface $node, $data, $appId) {
 
@@ -74,7 +75,7 @@ function hook_apic_app_pre_delete(NodeInterface $node, $data) {
   // In this example we are gathering the client id's for all credentials on this application
   $clientids = [];
 
-  if(isset($data['application_credentials_refs'])) {
+  if (isset($data['application_credentials_refs'])) {
     foreach ($data['application_credentials_refs'] as $ref) {
       $credEntity = ApplicationCredentials::load($ref);
       if ($credEntity !== NULL) {
@@ -276,7 +277,7 @@ function hook_apic_app_clientsecret_reset(NodeInterface $node, $data, $appId, $c
 }
 
 /**
- * Alter the application placeholder image provided in \Drupal\apic_app\Application::getPlaceholderImage().
+ * Alter the application placeholder image provided in \Drupal\apic_app\Service\ApplicationService->getPlaceholderImage().
  * This can be used to define a specific placeholder image used when the consumer has not uploaded their own
  * custom image for their application.
  *
@@ -288,7 +289,7 @@ function hook_apic_app_modify_getplaceholderimage_alter(string &$placeholderImag
 }
 
 /**
- * Alter the application placeholder image provided in \Drupal\apic_app\Application::getImageForApp().
+ * Alter the application placeholder image provided in \Drupal\apic_app\Service\ApplicationService->getImageForApp().
  * This can be used to provide a full path to a specific image to use for an application overriding any custom
  * image they might have uploaded.
  *

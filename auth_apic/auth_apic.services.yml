@@ -42,12 +42,13 @@ services:
     class: Drupal\auth_apic\UserManagement\UserManagedSignUp
     arguments: ['@ibm_apim.mgmtserver',
                 '@ibm_apim.account',
-                '@ibm_apim.apicuser',
-                '@logger.channel.auth_apic']
+                '@logger.channel.auth_apic',
+                '@ibm_apim.site_config']
   auth_apic.nonusermanaged_signup:
     class: Drupal\auth_apic\UserManagement\NonUserManagedSignUp
     arguments: ['@ibm_apim.mgmtserver',
-                '@logger.channel.auth_apic']
+                '@logger.channel.auth_apic',
+                '@ibm_apim.site_config']
   auth_apic.login:
     class: Drupal\auth_apic\UserManagement\ApicLoginService
     arguments: ['@ibm_apim.mgmtserver',

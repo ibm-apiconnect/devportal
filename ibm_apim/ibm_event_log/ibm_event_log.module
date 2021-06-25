@@ -1,0 +1,111 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ *
+ * (C) Copyright IBM Corporation 2021
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ * Provides an activity feed of events.
+ */
+
+use Drupal\Core\Database\Query\Condition;
+use Drupal\Core\Render\Element;
+use Drupal\views\Plugin\views\query\QueryPluginBase;
+use Drupal\views\ViewExecutable;
+
+/**
+ * Implements hook_cron().
+ */
+function ibm_event_log_cron() {
+  if (function_exists('ibm_apim_entry_trace')) {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+  }
+
+  $event_service = \Drupal::service('ibm_apim.event_log');
+  if ($event_service !== NULL) {
+    $event_service->prune();
+  }
+
+  if (function_exists('ibm_apim_entry_trace')) {
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function ibm_event_log_theme(): array {
+  return [
+    'event_log' => [
+      'render element' => 'elements',
+    ],
+  ];
+}
+
+/**
+ * Prepares variables for event_log templates.
+ *
+ * Default template: event_log.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An array of elements to display in view mode.
+ *   - event_log: The EventLog object.
+ *   - view_mode: View mode; e.g., 'full', 'teaser', etc.
+ */
+function template_preprocess_event_log(array &$variables) {
+  $variables['view_mode'] = $variables['elements']['#view_mode'];
+
+  // Provide a distinct $teaser boolean.
+  $variables['teaser'] = $variables['view_mode'] === 'teaser';
+  $variables['event_log'] = $variables['elements']['#event_log'];
+  $variables['images_path'] = drupal_get_path('module', 'ibm_apim');
+
+  /** @var \Drupal\ibm_event_log\Entity\EventLog $event_log */
+  $event_log = $variables['event_log'];
+  $variables['timestamp'] = \Drupal::service('renderer')->render($variables['elements']['timestamp']);
+  unset($variables['elements']['timestamp']);
+
+  // Helpful $content variable for templates.
+  $variables += ['content' => []];
+  foreach (Element::children($variables['elements']) as $key) {
+    $variables['content'][$key] = $variables['elements'][$key];
+  }
+  // populate variables needed to actually render it!
+  $variables['output'] = \Drupal::service('ibm_apim.event_log')->createOutputMessage($event_log);
+}
+
+/**
+ * Implements hook_views_query_alter().
+ *
+ */
+function ibm_event_log_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
+  if ($view->storage->get('base_table') === 'event_logs') {
+    $orgUrl = '';
+    $org = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerorg();
+    if ($org !== NULL) {
+      $orgUrl = $org['url'];
+    }
+
+    // if we're on the app page then we need to filter by app and consumer org
+    $routeName = \Drupal::routeMatch()->getRouteName();
+    $node = \Drupal::routeMatch()->getParameter('node');
+    if ($routeName === 'apic_app.activity' && $node !== NULL) {
+      $and = (new Condition('AND'))
+        ->condition("event_logs.consumerorg_url", $orgUrl)
+        ->condition("event_logs.app_url", $node->apic_url->value);
+      $query->addWhere(null, $and);
+    } else {
+      // limit the view to only list the events in this consumerorg
+      $query->addWhere(null, "event_logs.consumerorg_url", $orgUrl, '=');
+    }
+
+  }
+}

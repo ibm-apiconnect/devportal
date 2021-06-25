@@ -13,6 +13,7 @@
 namespace Drupal\ibm_apim\Service;
 
 
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -28,23 +29,27 @@ class ApicUserStorage implements ApicUserStorageInterface {
   /**
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  private $userStorage;
+  private EntityStorageInterface $userStorage;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
    */
-  private $registryService;
+  private UserRegistryServiceInterface $registryService;
 
   /**
    * @var \Drupal\ibm_apim\Service\ApicUserService
    */
-  private $userService;
+  private ApicUserService $userService;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  private $logger;
+  private LoggerInterface $logger;
 
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function __construct(EntityTypeManagerInterface $entity_type_manager,
                               UserRegistryServiceInterface $registry_service,
                               ApicUserService $user_service,
@@ -56,9 +61,12 @@ class ApicUserStorage implements ApicUserStorageInterface {
     $this->logger = $logger;
   }
 
-
   /**
-   * @inheritdoc
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $user
+   *
+   * @return \Drupal\Core\Entity\EntityInterface|null
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
    */
   public function register(ApicUser $user): ?EntityInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
@@ -74,13 +82,13 @@ class ApicUserStorage implements ApicUserStorageInterface {
     $mail = $user->getMail();
 
     $account_search = $this->userStorage->loadByProperties(['name' => $name, 'registry_url' => $registry]);
-    if ($account = reset($account_search)) {
+    if (reset($account_search)) {
       throw new \Exception(sprintf('User could not be registered. There is already an account with username "%1s" in "%2s" registry.', $name, $registry));
     }
 
     if (!empty($mail)) { 
       $account_search = $this->userStorage->loadByProperties(['mail' => $mail]);
-      if ($account = reset($account_search)) {
+      if (reset($account_search)) {
         throw new \Exception(sprintf('User could not be registered. There is already an account with email "%1s".', $mail));
       }
     }
@@ -118,6 +126,10 @@ class ApicUserStorage implements ApicUserStorageInterface {
     return $account;
   }
 
+  /**
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
+   */
   public function load(ApicUser $user, bool $check_legacy_field = FALSE): ?EntityInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -127,7 +139,6 @@ class ApicUserStorage implements ApicUserStorageInterface {
       throw new \Exception('Registry url is missing, unable to load user.');
     }
 
-    $returnValue = NULL;
     $this->logger->debug('loading %name in registry %registry', ['%name'=> $user->getUsername(), '%registry' => $user->getApicUserRegistryUrl()]);
 
     $users = $this->userStorage->loadByProperties([
@@ -155,7 +166,7 @@ class ApicUserStorage implements ApicUserStorageInterface {
         $this->logger->debug('updating registry_url based on apic_user_registry_url');
         $account = \reset($users);
         $user_to_update = User::load($account->id());
-        if ($user_to_update->hasField('apic_user_registry_url') && $user_to_update->get('apic_user_registry_url')->value !== NULL) {
+        if ($user_to_update !== NULL && $user_to_update->hasField('apic_user_registry_url') && $user_to_update->get('apic_user_registry_url')->value !== NULL) {
           $this->logger->notice('updating user %uid registry_url with %apic_user_registry_url', [
             '%uid' =>$user_to_update->id(),
             '%apic_user_registry_url' => $user_to_update->get('apic_user_registry_url')->value
@@ -176,12 +187,14 @@ class ApicUserStorage implements ApicUserStorageInterface {
     return $returnValue;
   }
 
+  /**
+   * @throws \Exception
+   */
   public function loadByUsername(string $username): ?EntityInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
 
-    $returnValue = NULL;
     $this->logger->debug('loading %name', ['%name'=> $username]);
 
     $users = $this->userStorage->loadByProperties([
@@ -199,12 +212,14 @@ class ApicUserStorage implements ApicUserStorageInterface {
     return $returnValue;
   }
 
+  /**
+   * @throws \Exception
+   */
   public function loadUserByEmailAddress(string $email): ?EntityInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
 
-    $returnValue = NULL;
     $this->logger->debug('loading by email: %mail', ['%mail'=> $email]);
 
     $users = $this->userStorage->loadByProperties([
@@ -222,6 +237,11 @@ class ApicUserStorage implements ApicUserStorageInterface {
     return $returnValue;
   }
 
+  /**
+   * @param \Drupal\user\UserInterface $account
+   *
+   * @return \Drupal\user\UserInterface
+   */
   public function userLoginFinalize(UserInterface $account): UserInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $account->getAccountName());
@@ -236,12 +256,17 @@ class ApicUserStorage implements ApicUserStorageInterface {
     return $account;
   }
 
-  public function loadUserByUrl($url): ?AccountInterface {
+  /**
+   * @param $url
+   *
+   * @return \Drupal\Core\Entity\EntityInterface|null
+   * @throws \Exception
+   */
+  public function loadUserByUrl($url): ?EntityInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
 
-    $returnValue = NULL;
     $this->logger->debug('loading user by url %url', ['%url'=> $url]);
 
     $users = $this->userStorage->loadByProperties([

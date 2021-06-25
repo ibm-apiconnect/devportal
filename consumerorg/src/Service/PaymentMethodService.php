@@ -13,10 +13,13 @@
 
 namespace Drupal\consumerorg\Service;
 
+use Drupal\consumerorg\ApicType\PaymentMethodObj;
 use Drupal\consumerorg\Entity\PaymentMethod;
 use Drupal\Core\Url;
+use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\user\Entity\User;
 
 /**
  * Class to work with the Consumerorg content type, takes input from the JSON returned by
@@ -25,23 +28,25 @@ use Drupal\node\NodeInterface;
 class PaymentMethodService {
 
   /**
-   * @param $paymentMethodId
-   * @param $title
-   * @param $billingUrl
-   * @param $paymentMethodTypeUrl
-   * @param $consumerOrgUrl
-   * @param $configuration
+   * @param \Drupal\consumerorg\ApicType\PaymentMethodObj $paymentMethodObj
+   * @param bool $isDefault
    *
    * @return bool
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public static function create($paymentMethodId, $title, $billingUrl, $paymentMethodTypeUrl, $consumerOrgUrl, $configuration, $isDefault = true): bool {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $paymentMethodId);
+  public static function create(PaymentMethodObj $paymentMethodObj, bool $isDefault = TRUE): bool {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $paymentMethodObj->getId());
     $createdOrUpdated = TRUE;
     $paymentMethodEntityId = NULL;
 
+    // Add Activity Feed Event Log
+    $eventEntity = new ApicEvent();
+    $eventEntity->setArtifactType('payment_method');
+
+    $configuration = $paymentMethodObj->getConfiguration();
+
     $query = \Drupal::entityQuery('consumerorg_payment_method');
-    $query->condition('uuid', $paymentMethodId);
+    $query->condition('uuid', $paymentMethodObj->getId());
     $moduleHandler = \Drupal::service('module_handler');
     if ($moduleHandler->moduleExists('encrypt')) {
       $ibmApimConfig = \Drupal::config('ibm_apim.settings');
@@ -56,11 +61,13 @@ class PaymentMethodService {
       $entityId = array_shift($entityIds);
       $paymentMethodEntity = PaymentMethod::load($entityId);
       if ($paymentMethodEntity !== NULL) {
-        $paymentMethodEntity->set('billing_url', $billingUrl);
-        $paymentMethodEntity->set('title', $title);
-        $paymentMethodEntity->set('payment_method_type_url', $paymentMethodTypeUrl);
+        $paymentMethodEntity->set('billing_url', $paymentMethodObj->getBillingUrl());
+        $paymentMethodEntity->set('title', $paymentMethodObj->getTitle());
+        $paymentMethodEntity->set('payment_method_type_url', $paymentMethodObj->getPaymentMethodTypeUrl());
         $paymentMethodEntity->set('configuration', $configuration);
-        $paymentMethodEntity->set('consumerorg_url', $consumerOrgUrl);
+        $paymentMethodEntity->set('consumerorg_url', $paymentMethodObj->getOrgUrl());
+        $paymentMethodEntity->set('created_at', $paymentMethodObj->getCreatedAt());
+        $paymentMethodEntity->set('updated_at', $paymentMethodObj->getUpdatedAt());
         $paymentMethodEntity->save();
         $paymentMethodEntityId = $entityId;
         $createdOrUpdated = FALSE;
@@ -68,27 +75,31 @@ class PaymentMethodService {
     }
     if ($createdOrUpdated !== FALSE) {
       $newPayment = PaymentMethod::create([
-        'uuid' => $paymentMethodId,
-        'title' => $title,
-        'billing_url' => $billingUrl,
-        'payment_method_type_url' => $paymentMethodTypeUrl,
+        'uuid' => $paymentMethodObj->getId(),
+        'title' => $paymentMethodObj->getTitle(),
+        'billing_url' => $paymentMethodObj->getBillingUrl(),
+        'payment_method_type_url' => $paymentMethodObj->getPaymentMethodTypeUrl(),
         'configuration' => $configuration,
-        'consumerorg_url' => $consumerOrgUrl,
+        'consumerorg_url' => $paymentMethodObj->getOrgUrl(),
+        'created_at' => $paymentMethodObj->getCreatedAt(),
+        'updated_at' => $paymentMethodObj->getUpdatedAt(),
       ]);
       $newPayment->enforceIsNew();
       $newPayment->save();
       $query = \Drupal::entityQuery('consumerorg_payment_method');
-      $query->condition('uuid', $paymentMethodId);
+      $query->condition('uuid', $paymentMethodObj->getId());
       $entityIds = $query->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         $paymentMethodEntityId = array_shift($entityIds);
       }
     }
+    $eventEntity->setEvent('create');
+    $timestamp = $paymentMethodObj->getCreatedAt();
 
     // load the consumerorg
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
-    $query->condition('consumerorg_url.value', $consumerOrgUrl);
+    $query->condition('consumerorg_url.value', $paymentMethodObj->getOrgUrl());
 
     $nids = $query->execute();
     if (isset($nids) && !empty($nids)) {
@@ -96,20 +107,48 @@ class PaymentMethodService {
       $node = Node::load($nid);
       if (isset($node)) {
         $newArray = $node->consumerorg_payment_method_refs->getValue();
-        $found = false;
-        foreach ($newArray as $key=>$value) {
+        $found = FALSE;
+        foreach ($newArray as $key => $value) {
           if ($value['target_id'] === $paymentMethodEntityId) {
-            $found = true;
+            $found = TRUE;
           }
         }
         if ($found !== TRUE) {
           $newArray[] = ['target_id' => $paymentMethodEntityId];
         }
         $node->set('consumerorg_payment_method_refs', $newArray);
-        if (count($newArray) == 1 || $isDefault) {
+        if (count($newArray) === 1 || $isDefault) {
           $node->set('consumerorg_def_payment_ref', ['target_id' => $paymentMethodEntityId]);
         }
         $node->save();
+
+        if (\Drupal::currentUser()->isAuthenticated() && (int) \Drupal::currentUser()->id() !== 1) {
+          $current_user = User::load(\Drupal::currentUser()->id());
+          if ($current_user !== NULL) {
+            // we only set the user if we're running as someone other than admin
+            // if running as admin then we're likely doing things on behalf of the admin
+            // TODO we might want to check if there is a passed in user_url and use that too
+            $eventEntity->setUserUrl($current_user->get('apic_url')->value);
+          }
+        }
+
+        // if timestamp still not set default to current time
+        if ($timestamp === NULL) {
+          $timestamp = time();
+        }
+        // ensure there is a create event, and then see if we need to do an update one too
+        $eventEntity->setTimestamp((int) $timestamp);
+        $eventEntity->setArtifactUrl($paymentMethodObj->getOrgUrl() . '/payment-methods/' . $paymentMethodObj->getId());
+        $eventEntity->setConsumerOrgUrl($paymentMethodObj->getOrgUrl());
+        $eventEntity->setData(['method' => $paymentMethodObj->getTitle(), 'orgName' => $node->getTitle()]);
+        $eventLogService = \Drupal::service('ibm_apim.event_log');
+        $eventLogService->createIfNotExist($eventEntity);
+        if ($paymentMethodObj->getCreatedAt() !== NULL && $paymentMethodObj->getUpdatedAt() !== NULL && $paymentMethodObj->getUpdatedAt() !== $paymentMethodObj->getCreatedAt()) {
+          $updateEventEntity = clone $eventEntity;
+          $updateEventEntity->setEvent('update');
+          $updateEventEntity->setTimestamp((int) $paymentMethodObj->getUpdatedAt());
+          $eventLogService->createIfNotExist($updateEventEntity);
+        }
       }
     }
 
@@ -124,21 +163,18 @@ class PaymentMethodService {
    * @param $paymentMethod
    *
    * @return bool
+   * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \JsonException
    */
   public static function createOrUpdate($paymentMethod): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $returnValue = NULL;
     if (isset($paymentMethod['id'], $paymentMethod['billing_url'], $paymentMethod['payment_method_type_url'], $paymentMethod['configuration'])) {
+      $paymentMethodObject = new PaymentMethodObj();
+      $paymentMethodObject->createFromArray($paymentMethod);
 
-      $billingUrl = \Drupal::service('ibm_apim.apim_utils')->removeFullyQualifiedUrl($paymentMethod['billing_url']);
-      $paymentMethodTypeUrl = \Drupal::service('ibm_apim.apim_utils')->removeFullyQualifiedUrl($paymentMethod['payment_method_type_url']);
-      $paymentMethodId = $paymentMethod['id'];
-      $configuration = $paymentMethod['configuration'];
-      $consumerOrgUrl = $paymentMethod['consumer_org_url'] ?? NULL;
-      $title = $paymentMethod['title'] ?? $paymentMethodId;
-
-      $returnValue = self::create($paymentMethodId, $title, $billingUrl, $paymentMethodTypeUrl, $consumerOrgUrl, $configuration);
+      $returnValue = self::create($paymentMethodObject);
+      $consumerOrgUrl = $paymentMethod['consumer_org_url'];
       \Drupal::service('cache_tags.invalidator')->invalidateTags(['myorg:url:' . $consumerOrgUrl]);
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -150,7 +186,7 @@ class PaymentMethodService {
    * @param $paymentMethods
    *
    * @return \Drupal\node\NodeInterface
-   * @throws \JsonException
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function createOrUpdatePaymentMethodList($node, $paymentMethods): NodeInterface {
     if ($paymentMethods !== NULL && $node !== NULL) {
@@ -171,7 +207,8 @@ class PaymentMethodService {
             \Drupal::logger('consumerorg')
               ->warning('createOrUpdatePaymentMethodList: Error updating a payment method @entityId', ['@entityId' => $paymentMethod['id']]);
           }
-        } else {
+        }
+        else {
           \Drupal::logger('consumerorg')
             ->warning('createOrUpdatePaymentMethodList: Couldn\'t find payment method @entityId', ['@entityId' => $paymentMethod['id']]);
         }
@@ -191,7 +228,7 @@ class PaymentMethodService {
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public static function delete($paymentMethodId, $consumerOrgUrl) {
+  public static function delete($paymentMethodId, $consumerOrgUrl): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $paymentMethodId);
 
     $query = \Drupal::entityQuery('consumerorg_payment_method');
@@ -199,9 +236,11 @@ class PaymentMethodService {
 
     $entityIds = $query->execute();
     if (isset($entityIds) && !empty($entityIds)) {
-      $paymentEntities = PaymentMethod::loadMultiple($entityIds);
-      foreach ($paymentEntities as $paymentEntity) {
-        $paymentEntity->delete();
+      foreach (array_chunk($entityIds, 50) as $chunk) {
+        $paymentEntities = PaymentMethod::loadMultiple($chunk);
+        foreach ($paymentEntities as $paymentEntity) {
+          $paymentEntity->delete();
+        }
       }
     }
 

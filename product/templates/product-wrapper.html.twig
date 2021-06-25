@@ -49,10 +49,10 @@
           {% else %}
             {% set prodNode = product.nid %}
           {% endif %}
-          {% if api.enforced %}
+          {% if api.enforced and product.subscribable %}
             <div class="subscribeButton"><a href="{{- path('ibm_apim.subscription_wizard', {'productId': prodNode}) }}"
-                                            title="{{ 'Subscribe to this API'|t }}"
-                                            class="subscribeButton button">{{ 'Subscribe'|t }}</a></div>
+                                            title="{{ 'Get access to this API'|t }}"
+                                            class="subscribeButton button">{{ 'Get access'|t }}</a></div>
           {% endif %}
         {% endif %}
       </div>

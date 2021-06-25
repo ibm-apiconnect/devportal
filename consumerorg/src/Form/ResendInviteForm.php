@@ -32,17 +32,17 @@ class ResendInviteForm extends ConfirmFormBase {
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgService
    */
-  protected $consumerOrgService;
+  protected ConsumerOrgService $consumerOrgService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\Core\Extension\ThemeHandler
    */
-  protected $themeHandler;
+  protected ThemeHandler $themeHandler;
 
   protected $currentOrg;
 
@@ -54,9 +54,9 @@ class ResendInviteForm extends ConfirmFormBase {
   /**
    * The id of the invitation to resend
    *
-   * @var string
+   * @var string|NULL
    */
-  protected $inviteId;
+  protected ?string $inviteId;
 
   /**
    * ResendInviteForm constructor.
@@ -81,7 +81,7 @@ class ResendInviteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): ResendInviteForm {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('ibm_apim.user_utils'),
@@ -99,6 +99,7 @@ class ResendInviteForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function buildForm(array $form, FormStateInterface $form_state, $inviteId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -194,4 +195,5 @@ class ResendInviteForm extends ConfirmFormBase {
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

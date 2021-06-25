@@ -17,7 +17,7 @@
 }
 
 .apicProduct .apicProductHeader .vote-form .form-item,
-.productApiWrapper header.titleSection .vote-form .form-item{
+.productApiWrapper header.titleSection .vote-form .form-item {
   margin: 0;
 }
 
@@ -36,7 +36,6 @@
   display: none;
 }
 
-
 .apicProduct .field.field--name-product-version {
   margin: 0;
 }
@@ -44,6 +43,7 @@
 .productApiWrapper .productName .field--name-apic-rating {
   display: inline-block;
 }
+
 .productApiWrapper .apicProductTitleText .field--name-apic-rating .field--label {
   display: none;
 }
@@ -65,8 +65,7 @@
 
 .apicProductIcon,
 .apicApiIcon {
-  margin-right: 0.75rem
-;
+  margin-right: 0.75rem;
 }
 
 .route-productview .apicMainContent,
@@ -81,8 +80,8 @@
 .route-productapi .container section,
 .route-entitynodecanonical.page-node-type-product .container,
 .route-entitynodecanonical.page-node-type-product .container section,
-.route-ibm-apimsubscription-wizardstep .apicMainContent .region form.subscription-wizard-choose-plan{
-  padding:0;
+.route-ibm-apimsubscription-wizardstep .apicMainContent .region form.subscription-wizard-choose-plan {
+  padding: 0;
 }
 
 .apicProduct .apicProductHeader {
@@ -118,8 +117,8 @@
 }
 
 .apicProductTitleText {
-  display:flex;
-  align-items:baseline;
+  display: flex;
+  align-items: baseline;
   max-width: calc(100% - 6rem);
 }
 
@@ -130,7 +129,7 @@ h1.apiName {
   line-height: 40px;
   font-weight: 400;
   letter-spacing: 0px;
-  margin:0;
+  margin: 0;
 }
 
 .apicProductVersion {
@@ -207,6 +206,7 @@ ul.apicProductApiList {
   min-height: 64px;
   outline: 1px solid #e0e0e0;
 }
+
 .main-container .apicProductApiList li {
   margin-top: 0;
   margin-bottom: 0;
@@ -217,38 +217,29 @@ ul.apicProductApiList {
   width: 24px;
   height: 24px;
 }
-h3.field__label.label
-{
-  font-weight: 300;
-  font-size: 24px;
-}
 
 .apicProductContactInformation {
-  display:flex;
+  display: flex;
   flex-direction: row;
-
 }
 
 .apicProductContactInformation div {
   padding-right: 1rem;
 }
 
-.apicProductTermsOfService .tosContainer{
-  display:flex;
+.apicProductTermsOfService .tosContainer {
+  display: flex;
 }
 
-
-.apicProductTermsOfService  .termsOfService .field--name-product-terms-of-service {
+.apicProductTermsOfService .termsOfService .field--name-product-terms-of-service {
   margin: 0;
 }
 
 .apicProductTermsOfService div.collapse[aria-expanded="false"] {
-  display:block;
+  display: block;
   height: 0;
-  overflow:hidden;
+  overflow: hidden;
 }
-
-
 
 .apicProductTermsOfService a {
   padding-left: 1rem;
@@ -326,7 +317,7 @@ h3.field__label.label
 }
 
 .field.plans .subHeading p {
-  font-size:0.875rem;
+  font-size: 0.875rem;
 }
 
 .field.plans .tableKey {
@@ -338,8 +329,8 @@ h3.field__label.label
 
 .field.plans .planRequiresSubKey p,
 .multipleRateLimitsMessage {
-  font-size:0.875rem;
-  font-style:italic;
+  font-size: 0.875rem;
+  font-style: italic;
   padding: 0 1rem;
 }
 
@@ -380,7 +371,7 @@ h3.field__label.label
 }
 
 .productApiWrapper .titleInnerWrapper .leftTitle {
-  width: calc( 100% - 9rem );
+  width: calc(100% - 10rem);
 }
 
 @media screen and (max-width: 1024px) {
@@ -405,10 +396,11 @@ h3.field__label.label
 .apicTwistieIcon .fa {
   font-weight: bold;
   color: #393939;
+  transition: .2s;
 }
 
-.apicTwistieOpen .apicTwistieIcon {
-  transform: rotate(180deg);
+.apicTwistieIcon .fa.flip {
+  transform: rotate(-180deg);
 }
 
 .apicTwistieContent {
@@ -506,19 +498,24 @@ tfoot .apicFixedColumn {
 }
 
 .apicPlansTable tbody td:nth-of-type(odd),
-.apicPlansTable thead th:nth-of-type(even){
-	background:#EDF5FF;
+.apicPlansTable thead th:nth-of-type(even) {
+  background: #EDF5FF;
 }
 
 .apicPlansTable .planTitle {
   text-align: left;
 }
 
+.planTitle .text {
+  word-break: break-word; /* to support long, single-word plan titles */
+}
+
 .apicPlansTable .planTitle .planSubscribe {
   margin-top: 1rem;
 }
 
-.apicPlansTable .planTitle .planSubscribe .button {
+.apicPlansTable .planTitle .planSubscribe .button,
+.apicPlansTable .planTitle .planSubscribe button {
   margin-top: 0.5rem;
   height: 2.5rem;
 }
@@ -542,11 +539,11 @@ tfoot .apicFixedColumn {
 }
 
 .apicTableFixedColumn tbody tr.api-odd {
- /* background-color: #f0f3f6;*/
+  /* background-color: #f0f3f6;*/
 }
 
 .apicTableFixedColumn tbody tr.api-even {
- /* background-color: #ffffff; */
+  /* background-color: #ffffff; */
 }
 
 .apicFixedColumn .apicApiCell .apicTwistieTitle {
@@ -584,7 +581,7 @@ th .apicTableStandardCell {
 .planTableSelector .viewDetails,
 .planTableSelector .hideDetails {
   padding: 0.75rem;
-  font-size:0.875rem;
+  font-size: 0.875rem;
 }
 
 .planTableSelector a.showComparisonTable,
@@ -599,7 +596,8 @@ th .apicTableStandardCell {
 .planComparisonTable {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  width: fit-content;
 }
 
 .apicMixedProduct {
@@ -633,9 +631,8 @@ th .apicTableStandardCell {
   border: 1px solid #e0e0e0;
 }
 
-div[class*="planColumn"]:not(:last-of-type)
-{
-  border-right:none;
+div[class*="planColumn"]:not(:last-of-type) {
+  border-right: none;
 }
 
 .planTable .planDatabox {
@@ -666,7 +663,7 @@ div[class*="planColumn"]:not(:last-of-type)
   margin-top: 10px;
 }
 
-.planTable .title>.planSubscribe {
+.planTable .title > .planSubscribe {
   display: block;
   margin-top: 15px;
 }
@@ -687,6 +684,7 @@ div[class*="planColumn"]:not(:last-of-type)
   font-size: 0.8rem;
   max-width: 300px;
 }
+
 .planTable-cell table td.rateLimit,
 .planTable-cell table th.rateLimit {
   width: 110px;
@@ -696,35 +694,35 @@ div[class*="planColumn"]:not(:last-of-type)
   font-size: 1.2rem;
 }
 
-.get .verb{
+.get .verb {
   color: #4589ff;
 }
 
-.post .verb{
+.post .verb {
   color: #24a148;
 }
 
-.put .verb{
+.put .verb {
   color: #ee5396;
 }
 
-.delete .verb{
+.delete .verb {
   color: #fa4d56;
 }
 
-.options .verb{
+.options .verb {
   color: #0043ce;
 }
 
-.patch .verb{
+.patch .verb {
   color: #009d9a;
 }
 
-.head .verb{
+.head .verb {
   color: #a56eff;
 }
 
-.trace .verb{
+.trace .verb {
   color: #8a3800;
 }
 
@@ -733,12 +731,11 @@ div[class*="planColumn"]:not(:last-of-type)
   .planTableSelector {
     display: none;
   }
+
   .subHeading {
     flex-direction: row;
   }
-  .planComparisonTable {
-    display: none;
-  }
+
   .apicPlansList.hidden {
     display: block;
   }
@@ -776,7 +773,7 @@ div[class*="planColumn"]:not(:last-of-type)
 
 /* cards */
 .node--type-product.bx--card {
-  height: 19rem;
+  height: 20rem;
   border: none;
   box-shadow: none;
 }
@@ -787,7 +784,7 @@ div[class*="planColumn"]:not(:last-of-type)
 }
 
 
-.bx--card .apicProductCard{
+.bx--card .apicProductCard {
   padding-left: 1rem;
   padding-top: 1rem;
   padding-right: 1rem;
@@ -795,6 +792,10 @@ div[class*="planColumn"]:not(:last-of-type)
   display: grid;
   -ms-grid-columns: 50px auto;
   grid-template-columns: 50px auto;
+}
+
+.bx--card .apicProductCard .bx--about__icon {
+  margin: -0.25rem;
 }
 
 .bx--card .apicProductIcon {
@@ -812,8 +813,8 @@ div[class*="planColumn"]:not(:last-of-type)
   width: 13rem;
 }
 
-.bx--card .apicProductCardMain .bx--about__title--name a{
-  display:flex;
+.bx--card .apicProductCardMain .bx--about__title--name a {
+  display: flex;
   font-size: 0.875rem;
   line-height: 18px;
   word-break: break-word;
@@ -835,7 +836,7 @@ div[class*="planColumn"]:not(:last-of-type)
 .bx--card .apicProductDesc h1,
 .bx--card .apicProductDesc h2,
 .bx--card .apicProductDesc h3,
-.bx--card .apicProductDesc h4{
+.bx--card .apicProductDesc h4 {
   font-size: 75%;
   line-height: 0.85rem;
   -ms-grid-column: 1;
@@ -854,10 +855,6 @@ div[class*="planColumn"]:not(:last-of-type)
   line-height: 20px;
 }
 
-.bx--card .apicProductAPIs {
-  margin-top: 1rem;
-}
-
 .bx--card .apicProductCardApi {
   font-weight: normal;
   font-family: IBMPlexSans, 'IBM Plex Sans', sans-serif;
@@ -866,8 +863,14 @@ div[class*="planColumn"]:not(:last-of-type)
 }
 
 .bx--card .apicProductSeeAll {
-  font-weight: 600;
-  font-size:0.875rem;
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  font-weight: normal;
+  font-family: IBMPlexSans, 'IBM Plex Sans', sans-serif;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  padding-top: 0.5rem;
 }
 
 .apicProductState {
@@ -876,6 +879,7 @@ div[class*="planColumn"]:not(:last-of-type)
   padding: 8px;
   margin-left: 30px;
 }
+
 .apicProductCard .apicProductState {
   margin-left: 0;
   display: inline-block;
@@ -898,6 +902,7 @@ div[class*="planColumn"]:not(:last-of-type)
   right: 0;
   min-height: calc(100vh - 287px);
 }
+
 .Pane.vertical.Pane1 {
   flex: 0 0 auto;
   position: relative;
@@ -906,15 +911,18 @@ div[class*="planColumn"]:not(:last-of-type)
   border-right: 1px solid #dfe3e6;
   overflow: hidden;
 }
+
 .Pane.vertical.Pane2 {
   flex: 1 1 0%;
   position: relative;
   outline: none;
 }
+
 .embeddedDocPagesNav {
   display: inline-block;
   vertical-align: top;
 }
+
 .apicProduct .stretch {
   top: 0;
   bottom: 0;
@@ -928,12 +936,14 @@ div[class*="planColumn"]:not(:last-of-type)
   padding-left: 0;
   margin: 0;
 }
+
 .bx--side-nav__items {
   -ms-flex: 1 1;
   flex: 1 1;
   padding: 1rem 0 0;
   overflow: hidden;
 }
+
 .apicProduct .embeddedDocPagesNav .tocItem {
   margin-top: 0;
   margin-bottom: 0;
@@ -942,17 +952,21 @@ div[class*="planColumn"]:not(:last-of-type)
 .apicProduct .embeddedDocPagesNav a.selected {
   color: #0f62fe;
 }
+
 .apicProduct .embeddedDocPagesNav .tocHeader a {
   font-weight: 600;
 }
+
 .apicProduct .embeddedDocPagesNav a.selected {
   background-color: unset;
   border-left: 4px solid #0f62fe;
   font-weight: 600;
 }
+
 .apicProduct .embeddedDocPagesNav a {
   color: #161616;
 }
+
 .apicProduct .embeddedDocPagesNav a {
   font-size: 0.875rem;
   font-weight: 400;
@@ -964,21 +978,24 @@ div[class*="planColumn"]:not(:last-of-type)
   text-decoration: none;
   border-left: 4px solid transparent;
 }
+
 .apicProduct .embeddedDocPagesNav a,
 .apicProduct .embeddedDocPagesNav a:hover {
   cursor: pointer;
   text-decoration: none;
 }
+
 .apicProduct .truncate {
   white-space: nowrap;
   overflow: hidden;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
 }
+
 div.bx--side-nav__link,
 a.bx--side-nav__link,
 .bx--side-nav a.bx--header__menu-item,
-.bx--side-nav .bx--header__menu-title[aria-expanded='true']+.bx--header__menu {
+.bx--side-nav .bx--header__menu-title[aria-expanded='true'] + .bx--header__menu {
   outline: 2px solid transparent;
   outline-offset: -2px;
   font-size: .875rem;
@@ -993,21 +1010,25 @@ a.bx--side-nav__link,
   min-height: 2rem;
   padding: 0 1rem;
   text-decoration: none;
-  -webkit-transition: color 110ms,background-color 110ms,outline 110ms;
-  -o-transition: color 110ms,background-color 110ms,outline 110ms;
-  transition: color 110ms,background-color 110ms,outline 110ms;
+  -webkit-transition: color 110ms, background-color 110ms, outline 110ms;
+  -o-transition: color 110ms, background-color 110ms, outline 110ms;
+  transition: color 110ms, background-color 110ms, outline 110ms;
 }
+
 .apicProduct .embeddedDocPagesNav ul .tocItem a:hover,
 .apicProduct .embeddedDocPagesNav ul .tocItem a.selected {
   background-color: #e0e0e0;
   outline: none;
 }
+
 .apicProduct .embeddedDocPagesNav a.selected span {
   font-size: 0.875rem;
 }
+
 .apicProduct .embeddedDocPagesNav ul .tocItem span {
   font-size: 0.75rem;
 }
+
 .apicProduct .embeddedDocPagesNav ul.doc-tree--list {
   margin-left: 1rem;
 }
@@ -1022,3 +1043,228 @@ a.bx--side-nav__link,
   justify-content: space-between;
   color: #161616;
 }
+
+h3.field__label.label
+{
+  font-size: 1.25rem;
+  line-height:  1.75em;
+  font-weight: 400;
+  letter-spacing: 0px;
+}
+
+.apicPlans {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.apicPlans .planCard {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding: 2rem;
+  width: 18.75rem;
+  max-width: 100%;
+  margin-bottom: 1px;
+  margin-right: 2px;
+}
+
+.apicPlans .planCard .planLocked {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+}
+
+.apicPlans .planCard .planTitle {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  margin-right: 1rem;
+  height: 3.75rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.apicPlans .planCard .planDescription {
+  word-break: break-word;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  height: 3.375rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.apicPlans .planCard .btn.btn-sm {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.apicPlans .planCard .planViewDetails {
+  margin-top: auto;
+}
+
+.apicPlans .planCard .planApis {
+  margin-bottom: 1rem;
+}
+
+.planApiList {
+  list-style: none;
+  padding-left: 0;
+}
+
+.planApiList li {
+  display: flex;
+  height: 1rem;
+  margin-bottom: .5rem;
+}
+
+.planApiTitle {
+  margin-left: 0.4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.planApiVersion {
+  margin-left: 0.3rem;
+} 
+
+.planApiCheck svg{
+  height: 100%;
+}
+
+.planDetail--header {
+  width: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  position: relative;
+}
+
+.planDetail--subscribe {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.planDetail--subscribe btn {
+  width: 11rem;
+  text-align: left;
+}
+
+.planDetail--planInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.planDetail--info {
+  margin: 0 1rem;
+}
+
+.planDetail--modalClose {
+  align-self: flex-end;
+  padding: .4rem;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.planDetail--modalClose svg {
+  height: 100%;
+}
+
+.planDetail--modalClose svg .cls-1{
+  fill:#000000;
+}
+
+.planDetail--modalClose svg .cls-2{
+  fill: none;
+}
+
+.planDetail--content {
+  padding: 2rem;
+  max-height: 60vh;
+  overflow-y: scroll;
+}
+
+.plansTable {
+  width: 100%;
+}
+
+.plansTable th {
+  padding: 1rem;
+}
+
+.plansTable td {
+  padding: 1rem;
+}
+
+.apicTwistieIcon {
+  cursor: pointer;
+}
+
+.twistieRow {
+  transition: 1s;
+}
+
+.plansTable .tableRow {
+  width: 100%;
+  height: 3rem;
+}
+
+.plansTable tr.hiddenRow {
+  display: none;
+}
+
+.apicPlans .modal-dialog {
+  min-width: 75%; /* Modals are usualy dynamic widths but long operation paths make it jump around so this keeps them consistent */
+  max-width: 75%;
+}
+
+@media screen and (max-width: 640px) {
+  .apicPlans .modal-dialog {
+    min-width: 95%;
+    max-width: 95%;
+  }
+}
+
+.planApiCheckMark {
+  width: 1rem;
+  flex-shrink: 0;
+}
+
+.fixedPlanColumnWidth {
+  min-width: 8rem;
+}
+
+.planRatesAndBilling {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.planRatesAndBilling.hasRates {
+  height: auto;
+}
+
+.planRatesAndBilling.hasBilling {
+  height: 2rem;
+}
+
+.planRatesAndBilling.hasRates.hasBilling {
+  height: 5rem;
+}
+
+.planRatesAndBilling p {
+  margin-bottom: 0.3rem;
+}
+

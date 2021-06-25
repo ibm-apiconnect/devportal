@@ -48,7 +48,6 @@ function apim_profile_install() {
   $core_dependencies = [
     'node',
     'history',
-    'entity_reference',
     'block',
     'dynamic_page_cache',
     'page_cache',
@@ -231,6 +230,7 @@ function apim_profile_install() {
     'themegenerator',
     'mail_subscribers',
     'drushadmin',
+    'ibm_event_log'
   ];
   // enable our modules
   $module_installer = \Drupal::service('module_installer');
@@ -257,7 +257,10 @@ function apim_profile_install() {
     $theme_installer->install([$theme]);
   }
   // set connect_theme to be default
-  \Drupal::service('theme_handler')->setDefault('connect_theme');
+  \Drupal::configFactory()
+  ->getEditable('system.theme')
+  ->set('default', 'connect_theme')
+  ->save();
 
   \Drupal::configFactory()
     ->getEditable('node.settings')
@@ -265,7 +268,7 @@ function apim_profile_install() {
     ->save();
 
   // Ensure the translation fields are created in the database.
-  \Drupal::service('entity.definition_update_manager')->applyUpdates();
+  \Drupal::service('ibm_apim.apic_definition_update_manager')->applyUpdates();
 
   // Enable default permissions for system roles.
   user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, [
@@ -428,8 +431,7 @@ function apim_profile_main_menu_links() {
 }
 
 /**
- * @param string $menu_name
- * @param $forum_link
+ * @param $link
  */
 function add_forum_link_translations($link): void {
 
@@ -504,7 +506,6 @@ function add_apis_link_translations($link): void {
 }
 
 /**
- * @param string $menu_name
  * @param $link
  */
 function add_home_link_translations($link): void {
@@ -537,9 +538,6 @@ function add_home_link_translations($link): void {
 function apim_profile_login_menu_links() {
   $menu_name = 'login';
 
-  // Menu links need to be localized in all languages we support
-  $languages = \Drupal::languageManager()->getLanguages();
-
   $login_link = MenuLinkContent::create([
     'title' => t('Sign in'),
     'description' => t('Sign in to your account'),
@@ -565,8 +563,6 @@ function apim_profile_login_menu_links() {
 }
 
 /**
- * @param array $languages
- * @param string $menu_name
  * @param $link
  */
 function add_create_account_link_translations($link): void {
@@ -909,6 +905,24 @@ function apim_profile_place_blocks() {
   $block = Block::create($values);
   $block->save();
 
+  $values = [
+    'id' => 'apiconceptsblock',
+    'plugin' => 'ibm_apim_concepts',
+    'provider' => NULL,
+    'region' => 'disabled',
+    'settings' => [
+      'id' => 'ibm_apim_concepts',
+      'label' => 'Concepts overview',
+      'provider' => 'ibm_apim',
+      'label_display' => '0',
+    ],
+    'theme' => 'connect_theme',
+    'visibility' => [],
+    'weight' => 0,
+  ];
+  $block = Block::create($values);
+  $block->save();
+
   // ensure the no content blocks are in the disabled region but enabled
   // the connect_theme wont have been enabled when ibm_apim was installed
   $block = Block::load('noappsblock');
@@ -992,6 +1006,8 @@ function _apim_profile_enable_captcha_on_form($form_id) {
  * for every language that is enabled in the site. Translations found are loaded
  * in to the database. These translations are later used when menu links and
  * block content is created.
+ *
+ * @throws \Exception
  */
 function apim_profile_load_translations() {
   // Load sites/all/translations/apim_profile.LANGCODE.po in to the database
@@ -1051,6 +1067,8 @@ function apim_profile_update_8001() {
  * Upgrade to 2018.3.7
  *
  * Fix the products link in the getting started block
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apim_profile_update_8002() {
   $path = __DIR__;
@@ -1087,7 +1105,7 @@ function apim_profile_update_8004() {
   $moduleHandler = \Drupal::service('module_handler');
   if ($moduleHandler->moduleExists('search_api')) {
     $index = Index::load('default_index');
-    if (isset($index) && !empty($index)) {
+    if (isset($index)) {
       $index->setOption('index_directly', FALSE)->save();
     }
   }
@@ -1314,7 +1332,7 @@ function apim_profile_update_8017() {
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apim_profile_update_8018() {
-  \Drupal::service('entity.definition_update_manager')->applyUpdates();
+  \Drupal::service('ibm_apim.apic_definition_update_manager')->applyUpdates();
 
   $categoriesBlock = Block::load('tags');
   if ($categoriesBlock !== NULL) {
@@ -1428,7 +1446,7 @@ function apim_profile_update_8023() {
     $recipients = \Drupal::config('contact.form.feedback')->get('recipients');
     $siteEmail = \Drupal::config('system.site')->get('mail');
     foreach ($recipients as $key => $recipient) {
-      if ($recipient == "admin@example.com") {
+      if ($recipient === "admin@example.com") {
         $recipients[$key] = $siteEmail;
         $updated = TRUE;
       }
@@ -1456,8 +1474,12 @@ function apim_profile_update_8024() {
     ->save();
 }
 
-/*
+/**
  * Add back in missing apim_profile translations
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  */
 function apim_profile_update_8025() {
 
@@ -2115,6 +2137,9 @@ function apim_profile_update_8106() {
   }
 }
 
+/**
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
 function apim_profile_update_8107() {
   // add subscription wizard title block
   $block = Block::load('subwizardtitle');
@@ -2240,6 +2265,8 @@ function apim_profile_update_8110() {
 
 /**
  * Set a better default maintenance mode message
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apim_profile_update_8111() {
   \Drupal::service('config.factory')
@@ -2320,7 +2347,7 @@ function apim_profile_update_8112() {
   $moduleHandler = \Drupal::service('module_handler');
   if (!$moduleHandler->moduleExists('warmer')) {
     $entityTypes = \Drupal::config('warmer.settings')->get('warmers.entity.entity_types');
-    if (in_array('node:book', array_values($entityTypes), true)) {
+    if (in_array('node:book', array_values($entityTypes), TRUE)) {
       unset($entityTypes['node:book']);
     }
     \Drupal::configFactory()->getEditable('warmer.settings')->set('warmers.entity.entity_types', $entityTypes)->save();
@@ -2415,6 +2442,8 @@ function apim_profile_update_8117() {
 
 /**
  * Create AsyncAPI docs
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apim_profile_update_8201() {
   $path = __DIR__;
@@ -2485,9 +2514,157 @@ function apim_profile_update_8202() {
 }
 
 /**
+ * enable ibm_event_log module
+ */
+function apim_profile_update_8203() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('ibm_event_log')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->install(['ibm_event_log']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  }
+}
+
+/**
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_update_8204() {
+  $block = Block::load('apiconceptsblock');
+  if ($block === NULL) {
+    $values = [
+      'id' => 'apiconceptsblock',
+      'plugin' => 'ibm_apim_concepts',
+      'provider' => NULL,
+      'region' => 'disabled',
+      'settings' => [
+        'id' => 'ibm_apim_concepts',
+        'label' => 'Concepts overview',
+        'provider' => 'ibm_apim',
+        'label_display' => '0',
+      ],
+      'theme' => 'connect_theme',
+      'visibility' => [],
+      'weight' => 0,
+    ];
+    $block = Block::create($values);
+    $block->save();
+  }
+  // update faq page to remove filter
+  $view = Views::getView('faqs');
+  if ($view !== NULL) {
+    $exposed_form = $view->getDisplay()->getOption('exposed_form');
+    if ($exposed_form['options']['reset_button'] === TRUE) {
+      $exposed_form['options']['reset_button'] = FALSE;
+      $view->getDisplay()->setOption('exposed_form', $exposed_form);
+      $view->save();
+    }
+    $pager = $view->getDisplay()->getOption('pager');
+    if ($pager['options']['expose']['items_per_page'] === TRUE) {
+      $pager['options']['expose']['items_per_page'] = FALSE;
+      $view->getDisplay()->setOption('pager', $pager);
+      $view->save();
+    }
+    $filter = $view->getDisplay()->getOption('filters');
+    if (isset($filter['faqs_question'])) {
+      unset($filter['faqs_question']);
+      $view->getDisplay()->setOption('filters', $filter);
+      $view->save();
+    }
+  }
+}
+
+/**
+ * Update FAQ and Getting Started content after
+ * change to subscription and client credentials semantics
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ */
+function apim_profile_update_8205() {
+
+  // update block contents on homepage
+  // welcome page is managed by page_manager
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('page_manager')) {
+    $page = \Drupal::entityTypeManager()->getStorage('page')->load('welcome');
+    if ($page !== NULL) {
+      $variants_array = $page->getVariants();
+      $variant = reset($variants_array);
+      $content = $variant->calculateDependencies()['content'];
+      $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
+      module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
+
+      foreach ($content as $block_content_id) {
+        // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
+        // we just need the uuid from this.
+        $raw_block_content_id = explode(':', $block_content_id)[2];
+
+        $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
+        $block_content = reset($block_content_array);
+
+        if ($block_content !== NULL) {
+          // we have to match on the label of the block as we don't have anything else
+          $label = $block_content->get('info')->value;
+          switch ($label) {
+            case 'Getting Started [en]':
+              $block_content->set('body', [
+                'value' => get_localized_gsb_content('en'),
+                'format' => 'full_html',
+              ]);
+              $block_content->save();
+              add_getting_started_block_content_translations($block_content);
+              break;
+          }
+        }
+
+      }
+    }
+  }
+  module_load_include('inc', 'apim_profile', 'apim_profile.import_nodes');
+
+  $api_faq_node_ids = \Drupal::entityQuery('node')
+    ->condition('type', 'faq')
+    ->condition('title', 'Using our APIs')
+    ->execute();
+
+  if (count($api_faq_node_ids) === 1) {
+    $api_faq_node = \Drupal::entityTypeManager()->getStorage('node')->load(array_pop($api_faq_node_ids));
+    if ($api_faq_node !== NULL) {
+      $api_faq_node->set('faqs',get_localized_apis_content('en'));
+      $api_faq_node->save();
+      add_api_faq_node_translations($api_faq_node);
+    }
+  } else {
+    \Drupal::logger('apim_profile')
+    ->warning('Expected 1 node for FAQ "Using our APIs" but there were @count. Will not update the content.', ['@count' => count($api_faq_node_ids) ]);
+  }
+
+  $app_faq_node_ids = \Drupal::entityQuery('node')
+    ->condition('type', 'faq')
+    ->condition('title', 'Apps')
+    ->execute();
+
+  if (count($app_faq_node_ids) === 1) {
+    $app_faq_node = \Drupal::entityTypeManager()->getStorage('node')->load(array_pop($app_faq_node_ids));
+    if ($app_faq_node !== NULL) {
+      $app_faq_node->set('faqs',get_localized_apps_content('en'));
+      $app_faq_node->save();
+      add_app_faq_node_translations($app_faq_node);
+    }
+  } else {
+    \Drupal::logger('apim_profile')
+    ->warning('Expected 1 node for FAQ "Apps" but there were @count. Will not update the content.', ['@count' => count($app_faq_node_ids) ]);
+  }
+
+}
+
+
+/**
  * Implements hook_update_dependencies().
  */
-function apim_profile_update_dependencies() {
+function apim_profile_update_dependencies(): array {
   return [
     'apim_profile' => [
       // block_content 8600 must run before apim_profile 8002.

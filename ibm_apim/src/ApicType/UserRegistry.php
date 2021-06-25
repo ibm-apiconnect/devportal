@@ -12,34 +12,77 @@
 
 namespace Drupal\ibm_apim\ApicType;
 
-
+/**
+ * Class UserRegistry
+ *
+ * @package Drupal\ibm_apim\ApicType
+ */
 class UserRegistry {
 
-  private $id;
+  /**
+   * @var string|null
+   */
+  private ?string $id = NULL;
 
-  private $name;
+  /**
+   * @var string|null
+   */
+  private ?string $name = NULL;
 
-  private $title;
+  /**
+   * @var string|null
+   */
+  private ?string $title = NULL;
 
-  private $url;
+  /**
+   * @var string|null
+   */
+  private ?string $url = NULL;
 
-  private $summary;
+  /**
+   * @var string|null
+   */
+  private ?string $summary = NULL;
 
-  private $registry_type;
+  /**
+   * @var string|null
+   */
+  private ?string $registry_type = NULL;
 
-  private $user_managed = FALSE;
+  /**
+   * @var bool
+   */
+  private bool $user_managed = FALSE;
 
-  private $user_registry_managed = FALSE;
+  /**
+   * @var bool
+   */
+  private bool $user_registry_managed = FALSE;
 
-  private $onboarding = FALSE;
+  /**
+   * @var bool
+   */
+  private bool $onboarding = FALSE;
 
-  private $case_sensitive = FALSE;
+  /**
+   * @var bool
+   */
+  private bool $case_sensitive = FALSE;
 
-  private $identity_providers = [];
+  /**
+   * @var array
+   */
+  private array $identity_providers = [];
 
-  private $provider_type;
+  /**
+   * @var string|null
+   */
+  private ?string $provider_type = NULL;
 
-  private $redirect_enabled = FALSE;
+  /**
+   * @var bool
+   */
+  private bool $redirect_enabled = FALSE;
 
   /**
    * @return null|string
@@ -49,9 +92,9 @@ class UserRegistry {
   }
 
   /**
-   * @param null $id
+   * @param string|null $id
    */
-  public function setId($id): void {
+  public function setId(?string $id): void {
     $this->id = $id;
   }
 
@@ -63,9 +106,9 @@ class UserRegistry {
   }
 
   /**
-   * @param string $name
+   * @param string|null $name
    */
-  public function setName($name): void {
+  public function setName(?string $name): void {
     $this->name = $name;
   }
 
@@ -77,9 +120,9 @@ class UserRegistry {
   }
 
   /**
-   * @param string $title
+   * @param string|null $title
    */
-  public function setTitle($title): void {
+  public function setTitle(?string $title): void {
     $this->title = $title;
   }
 
@@ -91,9 +134,9 @@ class UserRegistry {
   }
 
   /**
-   * @param string $url
+   * @param string|null $url
    */
-  public function setUrl($url): void {
+  public function setUrl(?string $url): void {
     $this->url = $url;
   }
 
@@ -105,9 +148,9 @@ class UserRegistry {
   }
 
   /**
-   * @param string $summary
+   * @param string|null $summary
    */
-  public function setSummary($summary): void {
+  public function setSummary(?string $summary): void {
     $this->summary = $summary;
   }
 
@@ -119,9 +162,9 @@ class UserRegistry {
   }
 
   /**
-   * @param string $registry_type
+   * @param string|null $registry_type
    */
-  public function setRegistryType($registry_type): void {
+  public function setRegistryType(?string $registry_type): void {
     $this->registry_type = $registry_type;
   }
 
@@ -189,9 +232,9 @@ class UserRegistry {
   }
 
   /**
-   * @param string $provider_type
+   * @param string|null $provider_type
    */
-  public function setProviderType($provider_type): void {
+  public function setProviderType(?string $provider_type): void {
     $this->provider_type = $provider_type;
   }
 
@@ -229,11 +272,11 @@ class UserRegistry {
    * in this user registry. Returns NULL if there is no such IDP
    * or an array representing the IDP otherwise.
    *
-   * @param $idpNameToFind
+   * @param string $idpNameToFind
    *
    * @return array|null
    */
-  public function getIdentityProviderByName($idpNameToFind): ?array {
+  public function getIdentityProviderByName(string $idpNameToFind): ?array {
 
     $result = NULL;
 
@@ -253,11 +296,11 @@ class UserRegistry {
    * Determines if this user registry contains an identity provider
    * with the specified name.
    *
-   * @param $idpNameToFind
+   * @param string $idpNameToFind
    *
    * @return bool
    */
-  public function hasIdentityProviderNamed($idpNameToFind): bool {
+  public function hasIdentityProviderNamed(string $idpNameToFind): bool {
     return ($this->getIdentityProviderByName($idpNameToFind) !== NULL);
   }
 
@@ -278,15 +321,13 @@ class UserRegistry {
    * hard code the realm for that idp.
    *
    * @return null|string
-   * @deprecated
    */
   public function getRealm(): ?string {
     if (isset($this->getIdentityProviders()[0]['name'])) {
       return $this->getRealmForIdp($this->getIdentityProviders()[0]['name']);
     }
-    else {
-      return NULL;
-    }
+
+    return NULL;
   }
 
   /**
@@ -295,11 +336,7 @@ class UserRegistry {
    *
    * @param array $registryJson
    */
-  public function setValues($registryJson): void {
-
-    if (is_string($registryJson)) {
-      $registryJson = json_decode($registryJson, 1);
-    }
+  public function setValues(array $registryJson): void {
 
     $this->setId($registryJson['id']);
     $this->setName($registryJson['name']);
@@ -335,7 +372,7 @@ class UserRegistry {
     if (isset($registryJson['configuration']['provider_type'])) {
       $this->setProviderType($registryJson['configuration']['provider_type']);
     }
-    if (isset($registryJson['configuration']['features']) && in_array("proxy_redirect", $registryJson['configuration']['features'])) {
+    if (isset($registryJson['configuration']['features']) && in_array("proxy_redirect", $registryJson['configuration']['features'], TRUE)) {
       $this->setRedirectEnabled(TRUE);
     }
     else {

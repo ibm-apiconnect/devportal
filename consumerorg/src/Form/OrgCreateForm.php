@@ -33,32 +33,32 @@ class OrgCreateForm extends FormBase {
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgService
    */
-  protected $consumerOrgService;
+  protected ConsumerOrgService $consumerOrgService;
 
   /**
    * @var \Drupal\Core\Session\AccountInterface
    */
-  protected $currentUser;
+  protected AccountInterface $currentUser;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * @var \Drupal\Core\Extension\ThemeHandler
    */
-  protected $themeHandler;
+  protected ThemeHandler $themeHandler;
 
   /**
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
-  protected $entityFieldManager;
+  protected EntityFieldManagerInterface $entityFieldManager;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -97,7 +97,7 @@ class OrgCreateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): OrgCreateForm {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('current_user'),
@@ -180,7 +180,7 @@ class OrgCreateForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @return \Drupal\Core\Url
    */
   public function getCancelUrl(): Url {
     return Url::fromRoute('<front>');
@@ -217,7 +217,8 @@ class OrgCreateForm extends FormBase {
     if ($response->getMessage() !== NULL) {
       if ($response->success()) {
         $this->messenger->addMessage($response->getMessage());
-      } else {
+      }
+      else {
         $this->messenger->addError($response->getMessage());
       }
     }
@@ -228,4 +229,5 @@ class OrgCreateForm extends FormBase {
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

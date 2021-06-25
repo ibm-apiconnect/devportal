@@ -10,6 +10,7 @@
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
 namespace Drupal\ibm_apim\Plugin\Field\FieldType;
 
 use Drupal\Core\Field\FieldItemBase;
@@ -27,29 +28,29 @@ use Drupal\Core\TypedData\DataDefinition;
  *   default_widget = "registry_url_widget",
  * )
  */
-class RegistryUrlFieldItem extends FieldItemBase implements FieldItemInterface {
+class RegistryUrlFieldItem extends FieldItemBase {
 
   /**
    * {@inheritdoc}
    */
-  public static function schema(FieldStorageDefinitionInterface $field_definition) {
-    return array(
+  public static function schema(FieldStorageDefinitionInterface $field_definition): array {
+    return [
       // columns contains the values that the field will store
-      'columns' => array(
+      'columns' => [
         // List the values that the field will save. This
         // field will only save a single value, 'value'
-        'value' => array(
+        'value' => [
           'type' => 'varchar',
-          'length' => 255
-        ),
-      ),
-    );
+          'length' => 255,
+        ],
+      ],
+    ];
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
+  public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition): array {
     $properties = [];
     $properties['value'] = DataDefinition::create('string');
 
@@ -59,7 +60,7 @@ class RegistryUrlFieldItem extends FieldItemBase implements FieldItemInterface {
   /**
    * {@inheritdoc}
    */
-  public function isEmpty() {
+  public function isEmpty(): bool {
     $value = $this->get('value')->getValue();
     return $value === NULL || $value === '';
   }

@@ -13,120 +13,168 @@
 
 namespace Drupal\apic_app\Service;
 
-use Drupal\apic_app\Application;
-use Drupal\apic_app\SubscriptionService;
 use Drupal\ibm_apim\ApicRest;
+use Drupal\ibm_apim\Service\ApimUtils;
+use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\Entity\Node;
 
 class ApplicationRestService implements ApplicationRestInterface {
 
   /**
-   * @inheritDoc
+   * @var \Drupal\apic_app\Service\ApplicationService
    */
-  public function getApplicationDetails($url) {
+  protected ApplicationService $applicationService;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
+  protected UserUtils $userUtils;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\ApimUtils
+   */
+  protected ApimUtils $apimUtils;
+
+  /**
+   * @var \Drupal\apic_app\Service\SubscriptionService
+   */
+  protected SubscriptionService $subscriptionService;
+
+  /**
+   * ApplicationRestService constructor.
+   *
+   * @param \Drupal\apic_app\Service\ApplicationService $applicationService
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   * @param \Drupal\ibm_apim\Service\ApimUtils $apimUtils
+   * @param \Drupal\apic_app\Service\SubscriptionService $subscriptionService
+   */
+  public function __construct(ApplicationService $applicationService, UserUtils $userUtils, ApimUtils $apimUtils, SubscriptionService $subscriptionService) {
+    $this->applicationService = $applicationService;
+    $this->userUtils = $userUtils;
+    $this->apimUtils = $apimUtils;
+    $this->subscriptionService = $subscriptionService;
+  }
+  /**
+   * @inheritDoc
+   * @throws \Exception
+   */
+  public function getApplicationDetails($url): ?\stdClass {
     return $this->doGet($url);
   }
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function postApplication($url, $requestBody) {
+  public function postApplication($url, $requestBody): ?\stdClass {
     return $this->doPost($url, $requestBody);
   }
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function deleteApplication($url) {
+  public function deleteApplication($url): ?\stdClass {
     // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
-    Application::invalidateCaches();
+    $this->applicationService->invalidateCaches();
     return $this->doDelete($url);
   }
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function promoteApplication($url, $requestBody) {
+  public function promoteApplication($url, $requestBody): ?\stdClass {
     return $this->doPatch($url, $requestBody);
   }
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function patchApplication($url, $requestBody) {
+  public function patchApplication($url, $requestBody): ?\stdClass {
     return $this->doPatch($url, $requestBody);
   }
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function postCredentials($url, $requestBody) {
+  public function postCredentials($url, $requestBody): ?\stdClass {
     // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
-    Application::invalidateCaches();
+    $this->applicationService->invalidateCaches();
     return $this->doPost($url, $requestBody);
   }
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function deleteCredentials($url) {
+  public function deleteCredentials($url): ?\stdClass {
     // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
-    Application::invalidateCaches();
+    $this->applicationService->invalidateCaches();
     return $this->doDelete($url);
   }
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function patchCredentials($url, $requestBody) {
+  public function patchCredentials($url, $requestBody): ?\stdClass {
     // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
-    Application::invalidateCaches();
+    $this->applicationService->invalidateCaches();
     return $this->doPatch($url, $requestBody);
   }
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function patchSubscription($url, $requestBody) {
+  public function patchSubscription($url, $requestBody): ?\stdClass {
     return $this->doPatch($url, $requestBody);
   }
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function postClientId($url, $requestBody) {
+  public function postClientId($url, $requestBody): ?\stdClass {
     // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
-    Application::invalidateCaches();
+    $this->applicationService->invalidateCaches();
     return $this->doPost($url, $requestBody);
   }
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function postClientSecret($url, $requestBody) {
+  public function postClientSecret($url, $requestBody): ?\stdClass {
     // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
-    Application::invalidateCaches();
+    $this->applicationService->invalidateCaches();
     return $this->doPost($url, $requestBody);
   }
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function postSubscription($url, $requestBody) {
+  public function postSubscription($url, $requestBody): ?\stdClass {
     return $this->doPost($url, $requestBody);
   }
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function deleteSubscription($url) {
+  public function deleteSubscription($url): ?\stdClass {
     return $this->doDelete($url);
   }
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function postSecret($url, $requestBody) {
+  public function postSecret($url, $requestBody): ?\stdClass{
     return $this->doPut($url, $requestBody);
   }
 
@@ -138,7 +186,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @return \stdClass|null
    * @throws \Exception
    */
-  private function doGet($url) : ?\stdClass{
+  private function doGet($url): ?\stdClass {
     return ApicRest::get($url);
   }
 
@@ -151,7 +199,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @return \stdClass|null
    * @throws \Exception
    */
-  private function doPost($url, $requestBody) : ?\stdClass{
+  private function doPost($url, $requestBody): ?\stdClass {
     return ApicRest::post($url, $requestBody);
   }
 
@@ -164,7 +212,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @return \stdClass|null
    * @throws \Exception
    */
-  private function doPut($url, $requestBody) : ?\stdClass{
+  private function doPut($url, $requestBody): ?\stdClass {
     return ApicRest::put($url, $requestBody);
   }
 
@@ -176,7 +224,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @return \stdClass|null
    * @throws \Exception
    */
-  private function doDelete($url) : ?\stdClass{
+  private function doDelete($url): ?\stdClass {
     return ApicRest::delete($url);
   }
 
@@ -189,7 +237,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @return \stdClass|null
    * @throws \Exception
    */
-  private function doPatch($url, $requestBody) : ?\stdClass{
+  private function doPatch($url, $requestBody): ?\stdClass {
     return ApicRest::patch($url, $requestBody);
   }
 
@@ -206,33 +254,34 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
    */
-  public function createApplication($name, $summary, $oauthUrls, $certificate = NULL, $formState = NULL) {
+  public function createApplication($name, $summary, $oauthUrls, $certificate = NULL, $formState = NULL): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $result = NULL;
 
-    $org_url = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerOrg()['url'];
+    $org_url = $this->userUtils->getCurrentConsumerOrg()['url'];
 
 
-    if ($name === null || empty($name)) {
+    if ($name === NULL || empty($name)) {
       \Drupal::messenger()->addError(t('ERROR: Title is a required field.'));
     }
     else {
       $url = $org_url . '/apps';
-      if ($summary === null) {
+      if ($summary === NULL) {
         $summary = '';
       }
-      if ($oauthUrls === null) {
-        $oauthUrls = array();
+      if ($oauthUrls === NULL) {
+        $oauthUrls = [];
       }
       if (!\is_array($oauthUrls)) {
-        $oauthUrls = array($oauthUrls);
+        $oauthUrls = [$oauthUrls];
       }
 
-      $data = array(
+      $data = [
         'title' => $name,
-        'summary' => $summary
-      );
+        'summary' => $summary,
+      ];
 
       if (!empty($oauthUrls)) {
         $data['redirect_endpoints'] = $oauthUrls;
@@ -241,13 +290,13 @@ class ApplicationRestService implements ApplicationRestInterface {
       $ibm_apim_application_certificates = \Drupal::state()->get('ibm_apim.application_certificates');
       if ($ibm_apim_application_certificates) {
         $certificate = trim($certificate);
-        if ($certificate !== null && !empty($certificate)) {
+        if ($certificate !== NULL && !empty($certificate)) {
           $data['application_public_certificate_entry'] = $certificate;
         }
       }
       $config = \Drupal::config('ibm_apim.settings');
       if ((boolean) $config->get('show_placeholder_images')) {
-        $rawImage = Application::getRandomImageName($name);
+        $rawImage = $this->applicationService->getRandomImageName($name);
         $application_image_url = $_SERVER['HTTP_HOST'] . base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
         if ($_SERVER['HTTPS'] === 'on') {
           $application_image_url = 'https://' . $application_image_url;
@@ -258,19 +307,19 @@ class ApplicationRestService implements ApplicationRestInterface {
         $data['image_endpoint'] = $application_image_url;
       }
 
-      $customFields = Application::getCustomFields();
-      $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $formState);
+      $customFields = $this->applicationService->getCustomFields();
+      $customFieldValues = $this->userUtils->handleFormCustomFields($customFields, $formState);
       if (!empty($customFieldValues)) {
-        foreach($customFieldValues as $customField => $value) {
-          $customFieldValues[$customField] = json_encode($value);
+        foreach ($customFieldValues as $customField => $value) {
+          $customFieldValues[$customField] = json_encode($value, JSON_THROW_ON_ERROR);
         }
         $data['metadata'] = $customFieldValues;
       }
 
-      $result = $this->postApplication($url, json_encode($data));
+      $result = $this->postApplication($url, json_encode($data, JSON_THROW_ON_ERROR));
 
-      if ($result !== null && $result->code >= 200 && $result->code < 300) {
-        $data = array('client_id' => $result->data['client_id'], 'client_secret' => $result->data['client_secret']);
+      if ($result !== NULL && $result->code >= 200 && $result->code < 300) {
+        $data = ['client_id' => $result->data['client_id'], 'client_secret' => $result->data['client_secret']];
         // alter hook (pre-invoke)
         $moduleHandler = \Drupal::moduleHandler();
         $moduleHandler->alter('apic_app_modify_create', $data, $result->data['id'], $formState);
@@ -279,20 +328,20 @@ class ApplicationRestService implements ApplicationRestInterface {
 
         \Drupal::messenger()->addMessage(t('Application created successfully.'));
         $current_user = \Drupal::currentUser();
-        \Drupal::logger('apic_app')->notice('Application @appName created by @username', array(
+        \Drupal::logger('apic_app')->notice('Application @appName created by @username', [
           '@appName' => $name,
-          '@username' => $current_user->getAccountName()
-        ));
+          '@username' => $current_user->getAccountName(),
+        ]);
 
         $app_data = $result->data;
 
-        $nid = Application::createOrUpdateReturnNid($app_data, 'create', $formState);
+        $nid = $this->applicationService->createOrUpdateReturnNid($app_data, 'create', $formState);
 
         // Insert nid in to results so that callers don't have to do a db query to find it
         $result->data['nid'] = $nid;
 
         // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
-        Application::invalidateCaches();
+        $this->applicationService->invalidateCaches();
       }
     }
 
@@ -306,13 +355,15 @@ class ApplicationRestService implements ApplicationRestInterface {
    *
    * @param $appUrl
    * @param $planId
+   *
    * @return mixed
+   * @throws \Exception
    */
-  public function subscribeToPlan($appUrl = NULL, $planId = NULL) {
+  public function subscribeToPlan($appUrl = NULL, $planId = NULL): ?\stdClass {
 
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, array('appUrl' => $appUrl, 'planId' => $planId));
-    $result = null;
-    if ($appUrl !== null && $planId !== null) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['appUrl' => $appUrl, 'planId' => $planId]);
+    $result = NULL;
+    if ($appUrl !== NULL && $planId !== NULL) {
 
       $url = $appUrl . '/subscriptions';
 
@@ -320,35 +371,21 @@ class ApplicationRestService implements ApplicationRestInterface {
       [$productUrl, $planName] = $parts;
 
       // 'adjust' the product url if it isn't in the format that the consumer-api expects
-      $fullProductUrl = \Drupal::service('ibm_apim.apim_utils')->createFullyQualifiedUrl($productUrl);
+      $fullProductUrl = $this->apimUtils->createFullyQualifiedUrl($productUrl);
 
-      $data = array(
+      $data = [
         'product_url' => $fullProductUrl,
-        'plan' => $planName
-      );
+        'plan' => $planName,
+      ];
 
-      $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'product');
-      $query->condition('apic_url.value', $productUrl);
+      $result = $this->postSubscription($url, json_encode($data, JSON_THROW_ON_ERROR));
 
-      $nids = $query->execute();
-      $productNid = NULL;
-      $productNode = NULL;
-      $node = NULL;
-
-      if ($nids !== null && !empty($nids)) {
-        $productNid = array_shift($nids);
-        $productNode = Node::load($productNid);
-      }
-
-      $result = $this->postSubscription($url, json_encode($data));
-
-      if ($result !== null && $result->code >= 200 && $result->code < 300 && (!isset($result->data) || (isset($result->data) && !isset($result->data['errors'])))) {
+      if ($result !== NULL && $result->code >= 200 && $result->code < 300 && (!isset($result->data) || (isset($result->data) && !isset($result->data['errors'])))) {
         $query = \Drupal::entityQuery('node');
         $query->condition('type', 'application');
         $query->condition('apic_url.value', $appUrl);
         $dbNids = $query->execute();
-        if ($dbNids !== null && !empty($dbNids)) {
+        if ($dbNids !== NULL && !empty($dbNids)) {
           $appNid = array_shift($dbNids);
           $node = Node::load($appNid);
 
@@ -356,7 +393,7 @@ class ApplicationRestService implements ApplicationRestInterface {
           \Drupal::logger('apic_app')->notice('Application @appname requested subscription to @plan by @username', [
             '@appname' => $node->getTitle(),
             '@plan' => $productUrl . ':' . $planName,
-            '@username' => $currentUser->getAccountName()
+            '@username' => $currentUser->getAccountName(),
           ]);
 
           $subId = $result->data['id'] ?? '';
@@ -367,7 +404,7 @@ class ApplicationRestService implements ApplicationRestInterface {
             'appId' => $appUrl,
             'product_url' => $productUrl,
             'plan' => $planName,
-            'subId' => $subId
+            'subId' => $subId,
           ]);
 
           // Create subscription in our database if no approval was required
@@ -377,20 +414,55 @@ class ApplicationRestService implements ApplicationRestInterface {
             try {
               // TODO set billingUrl correctly
               $billingUrl = NULL;
-              $org_url = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerOrg()['url'];
-              SubscriptionService::create($appUrl, $sub['id'], $productUrl, $sub['plan'], $org_url, $state, $billingUrl);
+              $org_url = $this->userUtils->getCurrentConsumerOrg()['url'];
+              $this->subscriptionService->create($appUrl, $sub['id'], $productUrl, $sub['plan'], $org_url, $state, $billingUrl, $result->data);
             } catch (\Exception $e) {
 
             }
           }
+          $this->applicationService->invalidateCaches();
         }
       }
-    } else {
+    }
+    else {
       \Drupal::messenger()->addError(t('ERROR: Both the application URL and plan ID must be specified.'));
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $result;
+  }
+
+  /**
+   * A function to retrieve the details for a specified application from the public portal API
+   * This basically maps what we get from the portal api over to what we expect from the content_refresh or webhook apis
+   *
+   * @param string|null $appUrl
+   *
+   * @return array|null|string
+   * @throws \Exception
+   */
+  public function fetchFromAPIC(?string $appUrl = NULL) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $appUrl);
+    $returnApp = NULL;
+    if ($appUrl === 'new') {
+      return '';
+    }
+    $org = $this->userUtils->getCurrentConsumerOrg();
+    $consumerOrg = $org['url'];
+
+    if (!isset($consumerOrg)) {
+      \Drupal::messenger()->addError('Consumer organization not set.');
+      return NULL;
+    }
+
+    $result = $this->getApplicationDetails($appUrl);
+
+    if (isset($result, $result->data) && !isset($result->data['errors'])) {
+      $returnApp = $result->data;
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnApp);
+    return $returnApp;
   }
 
 }

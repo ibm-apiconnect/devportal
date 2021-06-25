@@ -23,20 +23,20 @@ use Drupal\ibm_apim\Rest\RestResponse;
 class MeResponse extends RestResponse {
 
   /**
-   * @var ApicUser
+   * @var ApicUser|null
    */
-  private $user;
+  private ?ApicUser $user = NULL;
 
   /**
-   * @param ApicUser $user
+   * @param \Drupal\ibm_apim\ApicType\ApicUser|null $user
    */
-  public function setUser(ApicUser $user): void {
+  public function setUser(?ApicUser $user): void {
     $this->user = $user;
   }
 
 
   /**
-   * @return ApicUser
+   * @return ApicUser|null
    */
   public function getUser(): ?ApicUser {
     return $this->user;

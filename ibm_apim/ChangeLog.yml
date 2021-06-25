@@ -1,4 +1,208 @@
 changes:
+  8.x-3.1.97:
+  - make modals look how they should - pt2
+  - make modals look how they should!
+  8.x-3.1.96:
+  - get current consumer org not correct
+  - get current consumer org not correct
+  - get current consumer org not correct
+  8.x-3.1.95:
+  - include our other entity types too
+  8.x-3.1.94:
+  - add utility function to delete users
+  8.x-3.1.93:
+  - More event log fixes v10.0 (#718)
+  8.x-3.1.92:
+  - fix invalid foreach args
+  8.x-3.1.91:
+  - fix subscription cleanup
+  8.x-3.1.90:
+  - missing strtotime
+  8.x-3.1.89: null
+  8.x-3.1.88:
+  - Update index to include timestamp (#716)
+  8.x-3.1.87:
+  - Check for event log using timestamp as well (#714)
+  8.x-3.1.86: null
+  8.x-3.1.85:
+  - add drush commands to nuke entities and nodes
+  - fix timestamp wrap
+  8.x-3.1.84:
+  - add utility function to check if a url is a consumer-api url
+  - fix WSOD for notifications (#712)
+  8.x-3.1.83:
+  - Indexes v10.0 (#711)
+  8.x-3.1.82:
+  - add drush command to clear bans
+  8.x-3.1.81:
+  - fix use new billing parser result (#708) (#709)
+  8.x-3.1.80:
+  - missing XSSfilter
+  8.x-3.1.79:
+  - fix add product_data to mock product node (#706) (#707)
+  8.x-3.1.78:
+  - fix WSOD
+  8.x-3.1.77:
+  - reference configuration_schema correctly
+  8.x-3.1.76:
+  - use dynamic weighting to ensure password policy is right after the password field
+  8.x-3.1.75: null
+  8.x-3.1.74:
+  - fix more test resources (#704) (#705)
+  - fix text alignment in sign in form
+  8.x-3.1.73:
+  - return empty token reponse on 201
+  - disabling debug options clears their drupal state
+  8.x-3.1.72:
+  - remove the blogs link if the blog view has been deleted
+  8.x-3.1.71:
+  - use ID to load the payment method schema
+  8.x-3.1.70:
+  - fix split billing text and trial text in two (#700) (#701)
+  8.x-3.1.69: null
+  8.x-3.1.68:
+  - default should be 30
+  - default should be 30
+  8.x-3.1.67:
+  - protect against NPE
+  8.x-3.1.66:
+  - Remove name,version from return (#698)
+  8.x-3.1.65:
+  - fix use actual apisafe name instead of label (#696) (#697)
+  8.x-3.1.64:
+  - Tempmerge (#695)
+  8.x-3.1.63:
+  - disable ip security features (#694)
+  8.x-3.1.62:
+  - deleting temp store too early
+  8.x-3.1.61:
+  - rename internal variables to be consistent
+  8.x-3.1.60:
+  - Fix custom entity autocomplete matcher (#693)
+  8.x-3.1.59:
+  - use chunking
+  8.x-3.1.58:
+  - feat rename subscribe (#689) (#691)
+  8.x-3.1.57: null
+  8.x-3.1.56:
+  - check if service exists before calling it
+  - feat add short descriptions for concepts (#688) (#690)
+  8.x-3.1.55: null
+  8.x-3.1.54:
+  - feat add short descriptions for concepts (#688)
+  8.x-3.1.53:
+  - attributes changed name
+  - refactor Application.php to be a service (#687)
+  8.x-3.1.52:
+  - add title breadcrumb to asyncapi pages
+  8.x-3.1.51:
+  - Speed up event log record look up
+  8.x-3.1.50:
+  - Add APIC Concepts block
+  8.x-3.1.49:
+  - Added support for account approvals
+  8.x-3.1.48:
+  - use "IBM API Developer Portal" instead of API Connect
+  8.x-3.1.47:
+  - Try catch theme as well (#681)
+  8.x-3.1.46:
+  - need to use productselect routing for apis
+  8.x-3.1.45:
+  - include cOrg invitation settings in config export
+  - include cOrg invitation settings in config export
+  8.x-3.1.44:
+  - sort out subscription inserts
+  8.x-3.1.43:
+  - Don't throw error on flush (#678) (#679)
+  8.x-3.1.42:
+  - update css for eventlog
+  8.x-3.1.41:
+  - include nodeid in the apilist output
+  8.x-3.1.40:
+  - add mock funcs
+  8.x-3.1.39:
+  - add support functions for disabling andre invitations
+  8.x-3.1.38:
+  - tidy eventlog css (#677)
+  8.x-3.1.37: null
+  8.x-3.1.36:
+  - timestamp spacing
+  8.x-3.1.35:
+  - Eventstyling (#675)
+  8.x-3.1.34:
+  - add CSS file and library
+  8.x-3.1.33: null
+  8.x-3.1.32:
+  - fix missing '
+  8.x-3.1.31:
+  - handle container not being ready
+  - add sort
+  - fix menu link
+  8.x-3.1.30:
+  - move service to avoid circular dependencies
+  - use dependency injection
+  - rename activity feed to Notifications
+  - wire up more events
+  8.x-3.1.29:
+  - flesh out the rest of the messages
+  8.x-3.1.28:
+  - wire up cred reset and resetSecret
+  8.x-3.1.27:
+  - use placeholder image for api provider
+  8.x-3.1.26:
+  - View and view based ACL
+  8.x-3.1.25:
+  - title Notifications tab
+  - move and rename org feed tab (#674)
+  8.x-3.1.24:
+  - only list events in this consumerorg
+  8.x-3.1.23:
+  - populate variables in the twig
+  8.x-3.1.22:
+  - q might not exist
+  8.x-3.1.21:
+  - get the integration with views working for eventlog entities
+  8.x-3.1.20:
+  - Fix listen function execution time logging
+  8.x-3.1.19:
+  - fix node title bug
+  8.x-3.1.18:
+  - need to set return if type specified
+  8.x-3.1.17:
+  - json parse errors in FVT
+  8.x-3.1.16:
+  - tabs in the wrong order
+  8.x-3.1.15:
+  - fix css mess
+  8.x-3.1.14:
+  - missing changes
+  - needs to be string
+  - fix up the activity feed tabs for org and app
+  8.x-3.1.13:
+  - need to use empty array not null
+  8.x-3.1.12:
+  - Tempmerge (#667)
+  8.x-3.1.11:
+  - fix unit tests (#663) (#664)
+  8.x-3.1.10:
+  - feat add events notification in org metrics (#656)
+  8.x-3.1.9: null
+  8.x-3.1.8:
+  - Merge pull request
+  - deprecated function
+  8.x-3.1.7:
+  - Log webhook event processing time
+  8.x-3.1.6: null
+  8.x-3.1.5:
+  - make ibm_apim load the event entity type
+  - need to load entity to flesh it out
+  8.x-3.1.4: null
+  8.x-3.1.3: null
+  8.x-3.1.2: null
+  8.x-3.1.1:
+  - Eventlog (#643)
+  8.x-3.1.0:
+  - update version 8.x-3.0.237 -> 8.x-3.1.0
   8.x-3.0.236: null
   8.x-3.0.235:
   - handle long corg names (#639)

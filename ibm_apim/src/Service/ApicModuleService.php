@@ -13,6 +13,7 @@
 namespace Drupal\ibm_apim\Service;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Extension\ModuleInstallerInterface;
 use Drupal\ibm_apim\Service\Interfaces\ApicModuleInterface;
@@ -23,32 +24,32 @@ class ApicModuleService implements ApicModuleInterface {
   /**
    * @var \Drupal\ibm_apim\Service\Utils
    */
-  private $utils;
+  private Utils $utils;
 
   /**
    * @var string
    */
-  private $sitePath;
+  private string $sitePath;
 
   /**
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  private $moduleHandler;
+  private ModuleHandlerInterface $moduleHandler;
 
   /**
    * @var \Drupal\Core\Extension\ModuleInstallerInterface
    */
-  private $moduleInstaller;
+  private ModuleInstallerInterface $moduleInstaller;
 
   /**
    * @var \Drupal\Core\Config\ImmutableConfig
    */
-  private $ibmSettingsConfig;
+  private ImmutableConfig $ibmSettingsConfig;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  private $logger;
+  private LoggerInterface $logger;
 
   public function __construct(Utils $utils,
                               string $site_path,
@@ -121,6 +122,9 @@ class ApicModuleService implements ApicModuleInterface {
    * @inheritDoc
    */
   public function purgeBlockListedModules(): bool {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__);
+    }
     $block_list =   $this->ibmSettingsConfig->get('module_blocklist');
     $uninstall_success = TRUE;
 

@@ -18,6 +18,11 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\ParamConverter\ParamConverterInterface;
 use Symfony\Component\Routing\Route;
 
+/**
+ * Class SubUuidParamConverter
+ *
+ * @package Drupal\apic_app\ParamConverter
+ */
 class SubUuidParamConverter implements ParamConverterInterface {
 
   /**
@@ -26,7 +31,7 @@ class SubUuidParamConverter implements ParamConverterInterface {
    * @param string $name
    * @param array $defaults
    *
-   * @return \Drupal\Core\Entity\EntityInterface|mixed|null
+   * @return \Drupal\Core\Entity\EntityInterface|null
    */
   public function convert($value, $definition, $name, array $defaults) {
     $returnValue = NULL;
@@ -44,6 +49,13 @@ class SubUuidParamConverter implements ParamConverterInterface {
     return $returnValue;
   }
 
+  /**
+   * @param mixed $definition
+   * @param string $name
+   * @param \Symfony\Component\Routing\Route $route
+   *
+   * @return bool
+   */
   public function applies($definition, $name, Route $route): bool {
     return (!empty($definition['type']) && $definition['type'] === 'apic_app.subid');
   }

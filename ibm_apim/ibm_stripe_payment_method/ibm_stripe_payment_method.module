@@ -16,7 +16,7 @@ use Drupal\Core\Cache\CacheableMetadata;
 
 function ibm_stripe_payment_method_form_alter(&$form, &$form_state, $form_id) {
   // Check when the right form is passed.
-  if ($form_id == 'payment_method_create_form') {
+  if ($form_id === 'payment_method_create_form') {
     $form['#attached']['library'][] = 'ibm_stripe_payment_method/stripeform';
   }
 }
@@ -29,6 +29,8 @@ function ibm_stripe_payment_method_form_alter(&$form, &$form_state, $form_id) {
  * @param &$form
  * @param $integration
  * @param $billing
+ *
+ * @throws \Stripe\Exception\ApiErrorException
  */
 function ibm_stripe_payment_method_consumerorg_payment_method_create_alter(&$form, $integration, $billing) {
   $stripeConfig = \Drupal::config('ibm_stripe_payment_method.settings');
@@ -103,8 +105,7 @@ function ibm_stripe_payment_method_consumerorg_payment_method_create_alter(&$for
     else {
       \Drupal::messenger()->addError(t('An error occurred while building the Stripe form. Please contact your system administrator.'));
       $form['description'] = ['#markup' => '<p>' . t('Unable to build form.') . '</p>'];
-      unset($form['title']);
-      unset($form['actions']['submit']);
+      unset($form['title'], $form['actions']['submit']);
     }
   }
 }

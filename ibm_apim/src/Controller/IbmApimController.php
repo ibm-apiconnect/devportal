@@ -21,17 +21,22 @@ use Drupal\node\Entity\Node;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
+/**
+ * Class IbmApimController
+ *
+ * @package Drupal\ibm_apim\Controller
+ */
 class IbmApimController extends ControllerBase {
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgService
    */
-  protected $consumerOrgService;
+  protected ConsumerOrgService $consumerOrgService;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -58,6 +63,7 @@ class IbmApimController extends ControllerBase {
    * @return \Drupal\Core\Controller\ControllerBase|\Drupal\ibm_apim\Controller\IbmApimController
    */
   public static function create(ContainerInterface $container) {
+    /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('ibm_apim.user_utils'),
       $container->get('ibm_apim.consumerorg'),
@@ -67,6 +73,7 @@ class IbmApimController extends ControllerBase {
 
   /**
    * @return array
+   * @throws \JsonException
    */
   public function version(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -82,13 +89,13 @@ class IbmApimController extends ControllerBase {
         $version .= '( ' . $yaml['build'] . ' )';
       }
     }
-    $markup = '<p>' . t('IBM API Connect Developer Portal version %ver', ['%ver' => $version]) . '</p>';
+    $markup = '<p>' . t('IBM API Developer Portal version %ver', ['%ver' => $version]) . '</p>';
     $moduleHandler = \Drupal::service('module_handler');
     if ($moduleHandler->moduleExists('apic_api')) {
       $filename = drupal_get_path('module', 'apic_api') . '/explorer/app/version.json';
       if (file_exists($filename)) {
         $contents = file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app/version.json');
-        $json = json_decode($contents, TRUE);
+        $json = json_decode($contents, TRUE, 512, JSON_THROW_ON_ERROR);
         $markup .= '<p>' . t('API Explorer version %ver (%build)', [
             '%ver' => $json['version']['version'],
             '%build' => $json['version']['buildDate'],
@@ -211,4 +218,5 @@ class IbmApimController extends ControllerBase {
       ],
     ];
   }
+
 }

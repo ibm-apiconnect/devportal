@@ -14,7 +14,7 @@
 namespace Drupal\Tests\consumerorg\Unit;
 
 
-use Drupal\ibm_apim\UserManagement\ApicAccountService;
+use Drupal\apic_app\Service\ApplicationService;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\consumerorg\Service\ConsumerOrgService;
@@ -23,15 +23,19 @@ use Drupal\consumerorg\Service\RoleService;
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Rest\RestResponse;
+use Drupal\ibm_apim\Service\ApicUserService;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_apim\UserManagement\ApicAccountService;
+use Drupal\ibm_apim\Service\EventLogService;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 use Prophecy\Prophet;
@@ -45,48 +49,111 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  */
 class ConsumerOrgServiceTest extends UnitTestCase {
 
-  private $prophet;
+  /**
+   * @var \Prophecy\Prophet
+   */
+  private Prophet $prophet;
 
   // dependencies of ConsumerOrgService
+
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
+   */
   private $logger;
 
-  private $siteconfig;
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig|\Prophecy\Prophecy\ObjectProphecy
+   */
+  private $siteConfig;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\ApimUtils|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $apimUtils;
 
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
   private $eventDispatcher;
 
+  /**
+   * @var \Drupal\Core\Session\AccountProxyInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $currentUser;
 
-  private $userQuery;
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
+  private $entityTypeManager;
 
+  /**
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $moduleHandler;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $apimServer;
 
+  /**
+   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $session;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $userUtils;
 
+  /**
+   * @var \Drupal\Core\Cache\CacheTagsInvalidatorInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $cacheTagsInvalidator;
 
+  /**
+   * @var \Drupal\consumerorg\Service\MemberService|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $memberService;
 
+  /**
+   * @var \Drupal\consumerorg\Service\RoleService|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $roleService;
 
+  /**
+   * @var \Drupal\ibm_apim\UserManagement\ApicAccountService|\Prophecy\Prophecy\ObjectProphecy
+   */
   private $apicAccountService;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\ApicUserService|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $userService;
 
-  protected function setup() {
+  /**
+   * @var \Drupal\Core\Entity\Query\QueryInterface
+   */
+  protected $userQuery;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\EventLogService|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $eventLogService;
+
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->logger = $this->prophet->prophesize(LoggerInterface::class);
 
-    $this->siteconfig = $this->prophet->prophesize(SiteConfig::class);
+    $this->siteConfig = $this->prophet->prophesize(SiteConfig::class);
     $this->apimUtils = $this->prophet->prophesize(ApimUtils::class);
     $this->eventDispatcher = $this->prophet->prophesize(EventDispatcherInterface::class);
     $this->currentUser = $this->prophet->prophesize(AccountProxyInterface::class);
-    $this->userQuery = $this->prophet->prophesize(EntityTypeManagerInterface::class);
+    $this->entityTypeManager = $this->prophet->prophesize(EntityTypeManagerInterface::class);
     $this->moduleHandler = $this->prophet->prophesize(ModuleHandlerInterface::class);
     $this->apimServer = $this->prophet->prophesize(ManagementServerInterface::class);
     $this->session = $this->prophet->prophesize(PrivateTempStoreFactory::class);
@@ -95,21 +162,27 @@ class ConsumerOrgServiceTest extends UnitTestCase {
     $this->memberService = $this->prophet->prophesize(MemberService::class);
     $this->roleService = $this->prophet->prophesize(RoleService::class);
     $this->apicAccountService = $this->prophet->prophesize(ApicAccountService::class);
-    $this->userService = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserService::class);
-
+    $this->userService = $this->prophet->prophesize(ApicUserService::class);
+    $this->userQuery = $this->prophet->prophesize(QueryInterface::class);
+    $this->eventLogService = $this->prophet->prophesize(EventLogService::class);
     $userStorage = $this->prophet->prophesize(EntityStorageInterface::class);
-    $this->userQuery->getStorage('user')->willReturn($userStorage->reveal());
-    $userStorage->getQuery()->willReturn(NULL); // TODO: implement per test when needed?
-
-
+    $this->entityTypeManager->getStorage('user')->willReturn($userStorage->reveal());
+    $userStorage->getQuery()->willReturn($this->userQuery); // TODO: implement per test when needed?
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
 
   // deleteMember
+
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
+   */
   public function testDeleteMemberValid(): void {
 
     $org = new ConsumerOrg();
@@ -136,11 +209,17 @@ class ConsumerOrgServiceTest extends UnitTestCase {
     $service = $this->createService();
     $response = $service->deleteMember($org, $member2);
 
-    $this->assertNotNull($response);
-    $this->assertTrue($response->success());
+    self::assertNotNull($response);
+    self::assertTrue($response->success());
 
   }
 
+  /**
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \JsonException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function testDeleteMemberErrorResponseFromApim(): void {
 
     $org = new ConsumerOrg();
@@ -166,8 +245,8 @@ class ConsumerOrgServiceTest extends UnitTestCase {
     $service = $this->createService();
     $response = $service->deleteMember($org, $member2);
 
-    $this->assertNotNull($response);
-    $this->assertFalse($response->success());
+    self::assertNotNull($response);
+    self::assertFalse($response->success());
 
   }
 
@@ -187,14 +266,16 @@ class ConsumerOrgServiceTest extends UnitTestCase {
 
   /**
    * @return \Drupal\consumerorg\Service\ConsumerOrgService
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   private function createService(): ConsumerOrgService {
-    $service = new ConsumerOrgService($this->logger->reveal(),
-      $this->siteconfig->reveal(),
+    return new ConsumerOrgService($this->logger->reveal(),
+      $this->siteConfig->reveal(),
       $this->apimUtils->reveal(),
       $this->eventDispatcher->reveal(),
       $this->currentUser->reveal(),
-      $this->userQuery->reveal(),
+      $this->entityTypeManager->reveal(),
       $this->moduleHandler->reveal(),
       $this->apimServer->reveal(),
       $this->session->reveal(),
@@ -203,10 +284,9 @@ class ConsumerOrgServiceTest extends UnitTestCase {
       $this->memberService->reveal(),
       $this->roleService->reveal(),
       $this->apicAccountService->reveal(),
-      $this->userService->reveal());
-    return $service;
+      $this->userService->reveal(),
+      $this->eventLogService->reveal());
   }
-
 
 }
 

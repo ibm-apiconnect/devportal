@@ -39,7 +39,7 @@ class SocialBlockForm extends ConfigFormBase {
    * @param \Drupal\Core\Messenger\Messenger $messenger
    */
   public function __construct(ConfigFactoryInterface $config_factory, Messenger $messenger) {
-    ConfigFormBase::__construct($config_factory);
+    parent::__construct($config_factory);
     $this->messenger = $messenger;
   }
 

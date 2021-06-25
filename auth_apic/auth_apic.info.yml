@@ -14,8 +14,8 @@ dependencies:
 - key
 - real_aes
 - session_based_temp_store
-package: IBM API Connect
+package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9
-version: 8.x-3.0.51
+version: 8.x-3.1.15
 project: auth_apic
 interface translation project: auth_apic

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- phpunit config for easy testing during development -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" colors="true" beStrictAboutTestsThatDoNotTestAnything="true" beStrictAboutOutputDuringTests="true" beStrictAboutChangesToGlobalState="true" failOnWarning="true" printerClass="\Drupal\Tests\Listeners\HtmlOutputPrinter" cacheResult="false" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
+  <coverage>
+    <include>
+      <directory suffix=".php">src</directory>
+    </include>
+  </coverage>
+  <php>
+    <!-- Set error reporting to E_ALL. -->
+    <ini name="error_reporting" value="32767" />
+    <!-- Do not limit the amount of memory tests take to run. -->
+    <ini name="memory_limit" value="-1" />
+  </php>
+  <testsuites>
+    <testsuite name="all">
+      <directory>tests</directory>
+    </testsuite>
+  </testsuites>
+  <listeners>
+    <listener class="\Drupal\Tests\Listeners\DrupalListener"></listener>
+  </listeners>
+</phpunit>

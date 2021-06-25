@@ -1,0 +1,36 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the search icon block
+ *
+ * @ingroup themeable
+ */
+#}
+{% if concepts is not empty %}
+<div class="ibmapimConcepts" role="search" aria-label="{{ 'Concepts'|t }}">
+  <div class="conceptContainer">
+    <h2 class="viewTitle">{{ 'Concepts overview'|t }}</h2>
+    <div class="apicConcepts">
+      <table>
+        <thead>
+        <tr>
+          <th id="concept">{{ 'Concept'|t }}</th>
+          <th id="description">{{ 'Description'|t }}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for concept in concepts %}
+          <tr class="concept-{% if loop.index is divisible by(2) %}even{% else %}odd{% endif %}">
+            <td headers="concept">
+              <a href="{{ concept.url }}">{{ concept.title }}</a>
+            </td>
+            <td headers="description">
+              {{ concept.description }}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}

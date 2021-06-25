@@ -15,10 +15,16 @@ namespace Drupal\Tests\auth_apic\Unit {
 
   use Drupal\auth_apic\JWTToken;
   use Drupal\auth_apic\UserManagement\ApicActivationService;
+  use Drupal\Core\Extension\ModuleHandlerInterface;
+  use Drupal\Core\Messenger\Messenger;
+  use Drupal\Core\Utility\LinkGenerator;
   use Drupal\ibm_apim\Rest\RestResponse;
+  use Drupal\ibm_apim\Service\ApicUserStorage;
+  use Drupal\ibm_apim\Service\APIMServer;
   use Drupal\Tests\auth_apic\Unit\UserManagement\AuthApicUserManagementBaseTestClass;
   use Prophecy\Argument;
   use Prophecy\Prophet;
+  use Psr\Log\LoggerInterface;
 
 
   /**
@@ -29,32 +35,53 @@ namespace Drupal\Tests\auth_apic\Unit {
    */
   class ApicActivationTest extends AuthApicUserManagementBaseTestClass {
 
+    /**
+     * @var \Drupal\ibm_apim\Service\APIMServer|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $mgmtServer;
 
+    /**
+     * @var \Drupal\ibm_apim\Service\ApicUserStorage|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $userStorage;
 
+    /**
+     * @var \Drupal\Core\Utility\LinkGenerator|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $linkGenerator;
 
+    /**
+     * @var \Drupal\Core\Messenger\Messenger|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $messenger;
 
+    /**
+     * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
+     */
     protected $logger;
 
+    /**
+     * @var \Drupal\Core\Extension\ModuleHandlerInterface|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $moduleHandler;
 
-    protected function setup() {
+    protected function setup(): void {
       $this->prophet = new Prophet();
-      $this->mgmtServer = $this->prophet->prophesize(\Drupal\ibm_apim\Service\APIMServer::class);
-      $this->userStorage = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserStorage::class);
-      $this->linkGenerator = $this->prophet->prophesize(\Drupal\Core\Utility\LinkGenerator::class);
-      $this->messenger = $this->prophet->prophesize(\Drupal\Core\Messenger\Messenger::class);
-      $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
-      $this->moduleHandler = $this->prophet->prophesize(\Drupal\Core\Extension\ModuleHandlerInterface::class);
+      $this->mgmtServer = $this->prophet->prophesize(APIMServer::class);
+      $this->userStorage = $this->prophet->prophesize(ApicUserStorage::class);
+      $this->linkGenerator = $this->prophet->prophesize(LinkGenerator::class);
+      $this->messenger = $this->prophet->prophesize(Messenger::class);
+      $this->logger = $this->prophet->prophesize(LoggerInterface::class);
+      $this->moduleHandler = $this->prophet->prophesize(ModuleHandlerInterface::class);
     }
 
-    protected function tearDown() {
+    protected function tearDown(): void {
       $this->prophet->checkPredictions();
     }
 
+    /**
+     * @throws \Exception
+     */
     public function testActivate(): void {
 
       $token = $this->createJwt();
@@ -77,17 +104,20 @@ namespace Drupal\Tests\auth_apic\Unit {
 
 
       $service = new ApicActivationService($this->mgmtServer->reveal(),
-                                            $this->userStorage->reveal(),
-                                            $this->linkGenerator->reveal(),
-                                            $this->messenger->reveal(),
-                                            $this->logger->reveal(),
-                                            $this->moduleHandler->reveal());
+        $this->userStorage->reveal(),
+        $this->linkGenerator->reveal(),
+        $this->messenger->reveal(),
+        $this->logger->reveal(),
+        $this->moduleHandler->reveal());
       $result = $service->activate($token);
 
-      $this->assertTrue($result);
+      self::assertTrue($result);
 
     }
 
+    /**
+     * @throws \Exception
+     */
     public function testActivate401FromMgmt(): void {
 
       $token = $this->createJwt();
@@ -102,7 +132,8 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->mgmtServer->activateFromJWT($token)->willReturn($mgmtServerResponse);
       $this->userStorage->loadUserByEmailAddress(Argument::any())->shouldNotBeCalled();
       $this->linkGenerator->generate(Argument::any(), Argument::any())->willReturn('dummy_link');
-      $this->messenger->addError('There was an error while processing your activation. Has this activation link already been used?')->shouldBeCalled();
+      $this->messenger->addError('There was an error while processing your activation. Has this activation link already been used?')
+        ->shouldBeCalled();
       $this->messenger->addMessage(Argument::any())->shouldNotBeCalled();
 
 
@@ -114,10 +145,13 @@ namespace Drupal\Tests\auth_apic\Unit {
         $this->moduleHandler->reveal());
       $result = $service->activate($token);
 
-      $this->assertFalse($result);
+      self::assertFalse($result);
 
     }
 
+    /**
+     * @throws \Exception
+     */
     public function testActivateGenericErrorFromMgmt(): void {
 
       $token = $this->createJwt();
@@ -144,10 +178,13 @@ namespace Drupal\Tests\auth_apic\Unit {
         $this->moduleHandler->reveal());
       $result = $service->activate($token);
 
-      $this->assertFalse($result);
+      self::assertFalse($result);
 
     }
 
+    /**
+     * @throws \Exception
+     */
     public function testActivateNoAccount(): void {
 
       $token = $this->createJwt();
@@ -173,7 +210,7 @@ namespace Drupal\Tests\auth_apic\Unit {
         $this->moduleHandler->reveal());
       $result = $service->activate($token);
 
-      $this->assertTrue($result);
+      self::assertTrue($result);
 
     }
 
@@ -181,13 +218,14 @@ namespace Drupal\Tests\auth_apic\Unit {
       $token = new JWTToken();
 
       $token->setUrl('/j/w/t');
-      $token->setPayload(['email'=>'andre@example.com']);
+      $token->setPayload(['email' => 'andre@example.com']);
 
       return $token;
 
     }
+
   }
 
- }
+}
 
 

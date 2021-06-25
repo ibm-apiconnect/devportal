@@ -18,6 +18,11 @@ use Drupal\Core\Url;
 use Drupal\ibm_apim\Wizard\IbmWizardStepBase;
 use Drupal\node\Entity\Node;
 
+/**
+ * Class ChoosePlanStep
+ *
+ * @package Drupal\ibm_apim\Wizard\Subscription
+ */
 class ChoosePlanStep extends IbmWizardStepBase {
 
   /**
@@ -29,6 +34,7 @@ class ChoosePlanStep extends IbmWizardStepBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
 
@@ -36,7 +42,6 @@ class ChoosePlanStep extends IbmWizardStepBase {
     if ($this->validateAccess()) {
       /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
       $temp_store_factory = \Drupal::service('session_based_temp_store');
-      /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
       $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
       // if referring page was not another part of the subscription wizard, store a reference to it in the drupal session
@@ -76,22 +81,23 @@ class ChoosePlanStep extends IbmWizardStepBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): ?bool {
 
     if (empty($form_state->getUserInput()['selectedPlan'])) {
       $form_state->setErrorByName('selectedPlan', t('You must select a plan that you want to subscribe to.'));
       return FALSE;
     }
 
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
     $temp_store_factory = \Drupal::service('session_based_temp_store');
-    /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
     $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
     $plan_bits = explode(':', $form_state->getUserInput()['selectedPlan']);

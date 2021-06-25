@@ -36,7 +36,7 @@ ERROR=0
 # all core modules (including experimental) are available in a single package.
 CORE_PROJECT_NAME="drupal"
 # get the core projects so we can see the version of core we have loaded.
-CORE_PROJECT_VERSION=$(drush pm-list --core --fields=version --no-field-labels --format=csv | head -1)
+CORE_PROJECT_VERSION=$(drush pm-list --core --field=version --format=csv | head -1)
 
 #DLLANGS=( de )
 #Include DLLANGS variable

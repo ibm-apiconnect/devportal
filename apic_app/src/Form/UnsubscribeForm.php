@@ -13,16 +13,18 @@
 
 namespace Drupal\apic_app\Form;
 
+use Drupal\apic_app\Entity\ApplicationSubscription;
 use Drupal\apic_app\Service\ApplicationRestInterface;
-use Drupal\apic_app\SubscriptionService;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -35,24 +37,24 @@ class UnsubscribeForm extends ConfirmFormBase {
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $node;
+  protected NodeInterface $node;
 
   /**
    * This represents the subscription entity
    *
    * @var \Drupal\apic_app\Entity\ApplicationSubscription
    */
-  protected $sub;
+  protected ApplicationSubscription $sub;
 
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
    */
-  protected $restService;
+  protected ApplicationRestInterface $restService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -75,7 +77,7 @@ class UnsubscribeForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): UnsubscribeForm {
     // Load the service required to construct this class
     return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'), $container->get('messenger'));
   }
@@ -91,8 +93,12 @@ class UnsubscribeForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $subId = NULL): array {
-    $this->node = $appId;
-    $this->sub = $subId;
+    if ($appId !== NULL) {
+      $this->node = $appId;
+    }
+    if ($subId !== NULL) {
+      $this->sub = $subId;
+    }
     $form = parent::buildForm($form, $form_state);
     $form['#attached']['library'][] = 'apic_app/basic';
 
@@ -155,18 +161,45 @@ class UnsubscribeForm extends ConfirmFormBase {
       if (isset($nids) && !empty($nids)) {
         $nids = array_values($nids);
       }
+      $productTitle = 'unknown';
       if (count($nids) < 1) {
         \Drupal::logger('apic_app')->warning('Unable to find product name and version for @productUrl. Found @size matches in db.',
           ['@productUrl' => $this->sub->product_url(), '@size' => count($nids)]);
-        $productTitle = 'unknown';
-        $theProduct = NULL;
       }
       else {
         $theProduct = Node::load($nids[0]);
-        $productTitle = $theProduct->getTitle();
+        if ($theProduct !== NULL) {
+          $productTitle = $theProduct->getTitle();
+        }
+      }
+      $subService = \Drupal::service('apic_app.subscriptions');
+      $subService->delete($this->sub->uuid());
+      \Drupal::service('apic_app.application')->invalidateCaches();
+
+      // Add Activity Feed Event Log
+      $eventEntity = new ApicEvent();
+      $eventEntity->setArtifactType('subscription');
+      if (\Drupal::currentUser()->isAuthenticated() && (int) \Drupal::currentUser()->id() !== 1) {
+        $current_user = User::load(\Drupal::currentUser()->id());
+        if ($current_user !== NULL) {
+          // we only set the user if we're running as someone other than admin
+          // if running as admin then we're likely doing things on behalf of the admin
+          // TODO we might want to check if there is a passed in user_url and use that too
+          $eventEntity->setUserUrl($current_user->get('apic_url')->value);
+        }
       }
 
-      SubscriptionService::delete($this->node->apic_url->value, $this->sub->uuid());
+      // We don't get sent a deleted time in the response so just use the current time instead
+      $eventEntity->setTimestamp(time());
+      $eventEntity->setEvent('delete');
+      $eventEntity->setArtifactUrl($url);
+      $eventEntity->setAppUrl($this->node->apic_url->value);
+      $eventEntity->setConsumerOrgUrl($this->node->application_consumer_org_url->value);
+      $utils = \Drupal::service('ibm_apim.utils');
+      $appTitle = $utils->truncate_string($this->node->getTitle());
+      $eventEntity->setData(['planName' => $this->sub->plan(), 'appName' => $appTitle, 'productUrl' => $productTitle]);
+      $eventLogService = \Drupal::service('ibm_apim.event_log');
+      $eventLogService->createIfNotExist($eventEntity);
 
       $this->messenger->addMessage(t('Application unsubscribed successfully.'));
       $currentUser = \Drupal::currentUser();

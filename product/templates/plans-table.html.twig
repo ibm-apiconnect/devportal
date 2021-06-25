@@ -1,0 +1,223 @@
+<div class="planComparisonTable">
+  {% if not enforcedOnly %}
+    <div class="apicMixedProduct">
+      <div class="alert short alert-info" role="alert">
+        <div class="alert-details">
+          <div class="alert-text-wrapper">
+            <h4 class="sr-only">{{ 'Informative message'|t }}</h4>
+            <ul class="item-list item-list--messages">
+              <li class="item item--message">
+                {{ 'This product contains both enforced and unenforced APIs. Plans are not applicable to any unenforced APIs.'| t }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  <div class="apicPlans">
+    {% for planid, plan in planList %}
+      <div class="planCard">
+
+        {% if plan.requiresApproval %}
+          {% set requireApproval = true %}
+          <div class="planLocked">
+            {{ locked_svg|raw }}
+          </div>
+        {% endif %}
+
+        <h2 class="planTitle productive-heading-03">
+          <span class="text" title="{{ plan.data.title }}">{{ plan.data.title }}</span>
+        </h2>
+
+        {% if plan.rateLimit or billing %}
+          <div class="planRatesAndBilling {{plan.rateLimit ? 'hasRates' : ''}} {{billing ? 'hasBilling' : ''}}">
+            {% if plan.rateLimit %}
+              <p class="productive-heading-02">
+                {% if plan.rateData is defined %}
+                  {% set multipleRates = true %}
+                  <span class="multiRateLimits"
+                        data-ratelimits="{{ plan.rateData }}"  data-placement="bottom" >{{ plan.rateLimit }}</span>
+                {% else %}
+                  {{ plan.rateLimit }}
+                {% endif %}
+              </p>
+            {% endif %}
+
+            {% if billing %}
+              <p class="productive-heading-02">
+                {{ plan.billing.billingText|raw }}
+              </p>
+              {% if plan.billing.trialPeriodText != "" %}
+                <p class="productive-heading-02">
+                  {{ plan.billing.trialPeriodText|raw }}
+                </p>
+              {% endif %}
+            {% endif %}
+          </div>
+        {% endif %}
+
+        {% if subscribable %}
+          <a class="btn btn-sm btn-primary"
+             href="{{ path('ibm_apim.subscription_wizard.noplan') }}/?productId={{ node.id }}&planTitle={{ plan.data.title }}&planId={{ planid }}">
+            {{ 'Select'|t }}
+          </a>
+        {% else %}
+          {% if content.product_state[0].value is defined and content.product_state[0].value is same as('deprecated') %}
+            {% set subscribeButtonAltText = 'This plan is deprecated'|t %}
+          {% else %}
+            {% set subscribeButtonAltText = 'This plan cannot be selected'|t %}
+          {% endif %}
+          <button class="btn subscribe btn-sm btn-primary" disabled title="{{ subscribeButtonAltText }}">{{ 'Select'|t }}</button>
+        {% endif %}
+
+        {% if plan.data.description is defined and plan.data.description is not empty %}
+          <div class="planDescription body-short-01">
+            <span title="{{ plan.data.description }}">{{ plan.data.description }}</span>
+          </div>
+        {% else %}
+          <div class="planDescription"></div>
+        {% endif %}
+
+        {% set numApis = plan.nodes|length %}
+
+        <div class="planApis">
+          {% if numApis == 0 %}
+            <p class="body-short-01">{{ 'There are no APIs in this plan' |t }}</p>
+          {% endif %}
+          {% if numApis > 4 %}
+            <p class="body-short-01">{{ '@number APIs including' |t({'@number': numApis}) }}</p>
+          {% endif %}
+
+          <ul class="planApiList">
+            {% for api in plan.nodes|slice(0, 5) %}
+              <li>
+                <div class="planApiCheckMark">
+                  {{ checkmark_svg|raw }}
+                </div>
+                <span class="planApiTitle body-short-01" title="{{api.title}}">
+                  {{ api.title }}
+                </span>
+                <span class="planApiVersion body-short-01">
+                  {{ api.version[0].value }}
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        {% if numApis != 0 %}
+          <div class="planViewDetails">
+            <a href="#" data-toggle="modal" data-target="#planModal{{ loop.index }}" class="planDetailsButton">{{ 'View details'|t }}</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <div id="planModal{{ loop.index }}" class="modal fade">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="planDetail--header">
+              <a onclick="Drupal.settings.plans.closeTwisties({{ loop.index }})" href="javascript:" data-toggle="modal"
+                 data-target="#planModal{{ loop.index }}" class="planDetail--modalClose" title={{ 'Close'|t }}>{{ close_svg|raw }}</a>
+              <h2 class="productive-heading-04">{{ plan.data.title }}</h2>
+              <div class="body-short-01">
+                {{ plan.data.description }}
+              </div>
+              <div class="planDetail--subscribe">
+                {% if subscribable %}
+                  <a class="btn btn-sm btn-primary"
+                     href="{{ path('ibm_apim.subscription_wizard.noplan') }}/?productId={{ node.id }}&planTitle={{ plan.data.title }}&planId={{ planid }}">
+                    {{ 'Select'|t }}
+                  </a>
+                {% else %}
+                  {% if content.product_state[0].value is defined and content.product_state[0].value is same as('deprecated') %}
+                    {% set subscribeButtonAltText = 'This plan is deprecated'|t %}
+                  {% else %}
+                    {% set subscribeButtonAltText = 'This plan cannot be selected'|t %}
+                  {% endif %}
+                  <button class="btn btn-sm btn-primary" disabled alt-text="{{ subscribeButtonAltText }}">{{ 'Select'|t }}</button>
+                {% endif %}
+                <div class="planDetail--planInfo">
+                  {% if plan.rateLimit %}
+                    <p class="planDetail--info productive-heading-02">
+                      {% if plan.rateData is defined %}
+                        {% set multipleRates = true %}
+                        <span class="multiRateLimits"
+                              data-ratelimits="{{ plan.rateData }}"  data-placement="bottom" >{{ plan.rateLimit }}</span>
+                      {% else %}
+                        {{ plan.rateLimit }}
+                      {% endif %}
+                    </p>
+                  {% endif %}
+                  {% if billing %}
+                    <p class="planDetail--info productive-heading-02">
+                      {{ plan.billing.billingText|raw }} {{ plan.billing.trialPeriodText|raw }}
+                    </p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="planDetail--content">
+              <p class="productive-heading-03">{{ 'APIs'|t }}</p>
+              <table class="plansTable">
+                <thead>
+                <tr>
+                  <th><span class="apicTwistieIcon" onclick="Drupal.settings.plans.toggleAllTwisties()" title={{ '"Expand / Collapse All API Details"'|t }}><i
+                            class="fa fa-angle-down" data-twistieheaderid="twistie_header"></i></span></th>
+                  <th>{{ 'Title'|t }}</th>
+                  <th>{{ 'Version'|t }}</th>
+                  <th>{{ 'Type'|t }}</th>
+                  <th class="fixedPlanColumnWidth">{{ 'Rate limits'|t }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for api in plan.nodes %}
+                  {% set rowIndex = loop.index %}
+                  <tr class="tableRow">
+                    <td><span class="apicTwistieIcon" onclick="Drupal.settings.plans.toggleTwistie({{ rowIndex }})" title={{ '"Expand / Collapse API Details"'|t }}><i
+                            class="fa fa-angle-down" data-twistieid="twistie_{{ rowIndex }}"></i></span></td>
+                    <td>{{ api.title }}</td>
+                    <td>{{ api.version[0].value }}</td>
+                    <td>{{ api.protocol }}</td>
+                    <td>
+                      {% if plan.rateData is defined %}
+                        {% set multipleRates = true %}
+                        <span class="multiRateLimits"
+                              data-ratelimits="{{ plan.rateData }}" data-placement="bottom" >{{ plan.rateLimit }}</span>
+                      {% else %}
+                        {{ plan.rateLimit }}
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% for resource, operations in api.resources %}
+                    {% for verb, operation in operations %}
+                      <tr data-twistierowid="row_{{ rowIndex }}" class="tableRow twistieRow hiddenRow">
+                        <td/>
+                        {% if verb matches '/^\\d+$/' %}
+                          <td colspan="3">{{ resource }}</td>
+                        {% else %}
+                          <td class="{{ verb|lower }}" colspan="3"><span class="verb">{{ verb }}</span> {{ resource }}
+                          </td>
+                        {% endif %}
+                        <td>
+                          {% if operation.rateData is defined %}
+                            {% set multipleRates = true %}
+                            <span class="multiRateLimits"
+                                  data-ratelimits="{{ operation.rateData }}"  data-placement="bottom" >{{ operation.rateLimit }}</span>
+                          {% else %}
+                            {{ operation.rateLimit }}
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  {% endfor %}
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>

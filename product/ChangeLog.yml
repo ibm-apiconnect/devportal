@@ -1,4 +1,106 @@
 changes:
+  8.x-3.1.47:
+  - empty apis array means all apis
+  8.x-3.1.46:
+  - fix invalid foreach arg
+  8.x-3.1.45:
+  - dont allow viewers to click on Get Access
+  8.x-3.1.44:
+  - Added visibility and subscribability tests (#210) (#211)
+  8.x-3.1.43:
+  - fix lookup apiname in product for plan filter (#202) (#209)
+  8.x-3.1.42:
+  - fix move get access button back to the right (#204) (#208)
+  8.x-3.1.41:
+  - remove leftover dpm (#206) (#207)
+  8.x-3.1.40:
+  - fix further plan card polish (#203) (#205)
+  8.x-3.1.39:
+  - fix pass product apis to new productplan service (#200) (#201)
+  8.x-3.1.38:
+  - Tempmerge (#199)
+  8.x-3.1.37:
+  - slight tweak to logic
+  8.x-3.1.36:
+  - polish plans tiles (#198)
+  8.x-3.1.35:
+  - if delete an api then remove the doc refs too
+  8.x-3.1.34:
+  - fix up some logic errors in updating doc refs
+  8.x-3.1.33:
+  - feat add expand all/shrink all twistie to plans modal (#196) (#197)
+  8.x-3.1.32:
+  - feat add billing info to modal (#193) (#195)
+  8.x-3.1.31:
+  - tidy product card (#194)
+  8.x-3.1.30:
+  - use chunking
+  8.x-3.1.29: null
+  8.x-3.1.28:
+  - move productplan service to ibm_apim to resolve cycle (#190)
+  8.x-3.1.27:
+  - not needed imports
+  8.x-3.1.26:
+  - refactor SubscriptionService to be a proper service
+  8.x-3.1.25:
+  - chore review comments
+  - feat lookup apis in a product's plans
+  8.x-3.1.24:
+  - small tweak to the strings to existing translations can be used
+  8.x-3.1.23:
+  - last few refrences ?
+  - ids arent going to be like titles
+  - needs to use ref not name
+  - safe name doesnt have periods
+  - can go back to just using ref
+  - use x-ibm-name properly
+  - assertEquals args the wrong way round
+  - use refs not names
+  - update unit test
+  - add tests for routing by nameversion
+  8.x-3.1.22:
+  - add tests for routing by nameversion
+  8.x-3.1.21:
+  - fix undo typo
+  - fix plans table tweaks
+  8.x-3.1.20:
+  - use "IBM API Developer Portal" instead of API Connect
+  8.x-3.1.19:
+  - translation
+  8.x-3.1.18:
+  - feat new plans cards/table (#180)
+  8.x-3.1.17: null
+  8.x-3.1.16:
+  - Fix bug with tags array
+  - Fix app subs cache
+  8.x-3.1.15:
+  - update product reference for replace
+  8.x-3.1.14: null
+  8.x-3.1.13: null
+  8.x-3.1.12:
+  - wire up more events
+  8.x-3.1.11:
+  - Reset cache after updating subscriptions
+  8.x-3.1.10: null
+  8.x-3.1.9:
+  - Fix product visibility
+  - disable the subscribe buttons
+  8.x-3.1.8:
+  - remove extra use line
+  8.x-3.1.7: null
+  8.x-3.1.6:
+  - use void
+  8.x-3.1.5:
+  - Speed up product delete
+  8.x-3.1.4:
+  - Improve product_replace webhook processing
+  8.x-3.1.3: null
+  8.x-3.1.2: null
+  8.x-3.1.1:
+  - Createdat (#157)
+  - update basic page references
+  8.x-3.1.0:
+  - update version 8.x-3.0.74 -> 8.x-3.1.0
   8.x-3.0.73:
   - handle long api and product titles in titlebar (#158)
   8.x-3.0.72:

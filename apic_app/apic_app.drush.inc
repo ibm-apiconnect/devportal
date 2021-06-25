@@ -10,12 +10,13 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
-use Drupal\apic_app\Application;
-use Drupal\apic_app\SubscriptionService;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Session\UserSession;
+use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\node\Entity\Node;
+use Drupal\user\Entity\User;
 
-function apic_app_drush_command() {
+function apic_app_drush_command(): array {
 
   $items['apic-app-cleanse-drush-command'] = [
     'description' => 'Clears the application entries back to a clean state.',
@@ -153,13 +154,23 @@ function drush_apic_app_cleanse_drush_command() {
   foreach ($nodes as $node) {
     $node->delete();
   }
-  if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+  if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchBack();
   }
   drush_log(dt('All application entries deleted.'), 'success');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param $content
+ * @param $event
+ * @param $func
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
+ */
 function drush_apic_app_createOrUpdate($content, $event, $func) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   if ($content !== NULL) {
@@ -168,7 +179,7 @@ function drush_apic_app_createOrUpdate($content, $event, $func) {
     // app_update webhook on application delete, which is superfluous so we can just drop this.
     if (isset($content['app_credentials']) && \sizeof($content['app_credentials']) === 0) {
       drush_log(dt('Drush app_createOrUpdate - no credentials in application @app, skipping', [
-        '@app' => $content['id']
+        '@app' => $content['id'],
       ]), 'warning');
     }
     else {
@@ -180,10 +191,10 @@ function drush_apic_app_createOrUpdate($content, $event, $func) {
         $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
       }
       if (is_string($content)) {
-        $content = json_decode($content, TRUE);
+        $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
       }
       $ref = $content['id'];
-      $createdOrUpdated = Application::createOrUpdate($content, $event, NULL);
+      $createdOrUpdated = \Drupal::service('apic_app.application')->createOrUpdate($content, $event, NULL);
       if ($createdOrUpdated) {
         drush_log(dt('Drush @func created application @app', [
           '@func' => $func,
@@ -200,7 +211,7 @@ function drush_apic_app_createOrUpdate($content, $event, $func) {
       if ($func !== 'MassUpdate' && $moduleHandler->moduleExists('views')) {
         views_invalidate_cache();
       }
-      if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+      if ((int) $originalUser->id() !== 1) {
         $accountSwitcher->switchBack();
       }
     }
@@ -211,18 +222,43 @@ function drush_apic_app_createOrUpdate($content, $event, $func) {
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param $app
+ * @param string $event
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
+ */
 function drush_apic_app_create($app, $event = 'app_create') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   drush_apic_app_createOrUpdate($app, $event, 'CreateApplication');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param $app
+ * @param string $event
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
+ */
 function drush_apic_app_update($app, $event = 'app_update') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   drush_apic_app_createOrUpdate($app, $event, 'UpdateApplication');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param $app
+ * @param string $event
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
+ */
 function drush_apic_app_delete($app, $event = 'app_del') {
   ibm_apim_entry_trace(__FUNCTION__);
   if ($app !== NULL) {
@@ -235,10 +271,10 @@ function drush_apic_app_delete($app, $event = 'app_del') {
     }
 
     if (is_string($app)) {
-      $app = json_decode($app, TRUE);
+      $app = json_decode($app, TRUE, 512, JSON_THROW_ON_ERROR);
     }
 
-    $rc = Application::deleteById($app['id'], $event);
+    $rc = \Drupal::service('apic_app.application')->deleteById($app['id'], $event);
     if ($rc === TRUE) {
       drush_log(dt('Drush DeleteApplication deleted application @app', ['@app' => $app['id']]), 'success');
       $moduleHandler = \Drupal::service('module_handler');
@@ -249,7 +285,7 @@ function drush_apic_app_delete($app, $event = 'app_del') {
     else {
       drush_log(dt('Drush DeleteApplication could not find application @app', ['@app' => $app['id']]), 'warning');
     }
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -259,21 +295,30 @@ function drush_apic_app_delete($app, $event = 'app_del') {
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param $subInput
+ * @param $event
+ * @param $func
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
+ */
 function drush_apic_app_createOrUpdatesub($subInput, $event, $func) {
   ibm_apim_entry_trace(__FUNCTION__, $subInput);
   // in case moderation is on we need to run as admin
   // save the current user so we can switch back at the end
-  $accountSwitcher = Drupal::service('account_switcher');
+  $accountSwitcher = \Drupal::service('account_switcher');
+  $subService = \Drupal::service('apic_app.subscriptions');
   $originalUser = \Drupal::currentUser();
   if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
   }
   if ($subInput !== NULL) {
     if (is_string($subInput)) {
-      $subInput = json_decode($subInput, TRUE);
+      $subInput = json_decode($subInput, TRUE, 512, JSON_THROW_ON_ERROR);
     }
     $ref = $subInput['id'];
-    $createdOrUpdated = SubscriptionService::createOrUpdate($subInput);
+    $createdOrUpdated = $subService->createOrUpdate($subInput);
     if ($createdOrUpdated) {
       drush_log(dt('Drush @func created subscription @sub', [
         '@func' => $func,
@@ -290,24 +335,44 @@ function drush_apic_app_createOrUpdatesub($subInput, $event, $func) {
   else {
     drush_log(dt('Drush @func No subscription provided', ['@func' => $func]), 'error');
   }
-  if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+  if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchBack();
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param $subInput
+ * @param string $event
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
+ */
 function drush_apic_app_createsub($subInput, $event = 'create_sub') {
   ibm_apim_entry_trace(__FUNCTION__, $subInput);
   drush_apic_app_createOrUpdatesub($subInput, $event, 'CreateSubscription');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param $subInput
+ * @param string $event
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
+ */
 function drush_apic_app_updatesub($subInput, $event = 'update_sub') {
   ibm_apim_entry_trace(__FUNCTION__, $subInput);
   drush_apic_app_createOrUpdatesub($subInput, $event, 'UpdateSubscription');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param $subInput
+ * @param string $event
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
 function drush_apic_app_deletesub($subInput, $event = 'delete_sub') {
   ibm_apim_entry_trace(__FUNCTION__, $subInput);
   $appUrl = $subInput['app_url'];
@@ -315,14 +380,34 @@ function drush_apic_app_deletesub($subInput, $event = 'delete_sub') {
   if ($appUrl !== NULL && $subId !== NULL) {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
-    $accountSwitcher = Drupal::service('account_switcher');
+    $accountSwitcher = \Drupal::service('account_switcher');
     $originalUser = \Drupal::currentUser();
     if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
-    SubscriptionService::delete($appUrl, $subId);
+    $subService = \Drupal::service('apic_app.subscriptions');
+    $subService->delete($subId);
+
+    if (isset($subInput['deleted_at'])) {
+      $timestamp = $subInput['deleted_at'];
+    }
+    else {
+      $timestamp = NULL;
+    }
+
+    // Get the application entity id
+    $appEntityId = null;
+    $result = Database::getConnection()
+      ->query("SELECT entity_id from node__apic_url WHERE apic_url_value = :appUrl", [':appUrl' => $subInput['app_url'] ]);
+    if ($result && $record = $result->fetch()) {
+      $appEntityId = $record->entity_id;
+    }
+    $subInput['uuid'] = $subId;
+    $subInput['consumerorg_url'] = $subInput['consumer_org_url'];
+    $subService->addEventLog('delete', $timestamp, $appEntityId, $subInput, $subInput['deleted_by']);
+
     drush_log(dt('Subscription deleted.'), 'success');
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -332,6 +417,15 @@ function drush_apic_app_deletesub($subInput, $event = 'delete_sub') {
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param array $apps
+ * @param string $event
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
+ */
 function drush_apic_app_massupdate($apps = [], $event = 'content_refresh') {
   ibm_apim_entry_trace(__FUNCTION__, count($apps));
   if (!empty($apps)) {
@@ -342,6 +436,13 @@ function drush_apic_app_massupdate($apps = [], $event = 'content_refresh') {
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param array $subs
+ * @param string $event
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
+ */
 function drush_apic_app_sub_massupdate($subs = [], $event = 'content_refresh') {
   ibm_apim_entry_trace(__FUNCTION__, count($subs));
   if (!empty($subs)) {
@@ -352,9 +453,15 @@ function drush_apic_app_sub_massupdate($subs = [], $event = 'content_refresh') {
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param array $appUrls
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
+ */
 function drush_apic_app_tidy($appUrls = []) {
   ibm_apim_entry_trace(__FUNCTION__, count($appUrls));
-  $appUrls = json_decode($appUrls, TRUE);
+  $appUrls = json_decode($appUrls, TRUE, 512, JSON_THROW_ON_ERROR);
   if (!empty($appUrls)) {
     $nids = [];
     $query = \Drupal::entityQuery('node');
@@ -368,24 +475,40 @@ function drush_apic_app_tidy($appUrls = []) {
     }
 
     foreach ($nids as $nid) {
-      Application::deleteNode($nid, 'content_refresh_tidy');
+      \Drupal::service('apic_app.application')->deleteNode($nid, 'content_refresh_tidy');
     }
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param $cred
+ * @param string $event
+ *
+ * @throws \JsonException
+ */
 function drush_apic_app_createcred($cred, $event = 'cred_create') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   drush_apic_app_createOrUpdateCred($cred, $event, 'CreateApplication');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param $cred
+ * @param string $event
+ *
+ * @throws \JsonException
+ */
 function drush_apic_app_updatecred($cred, $event = 'cred_update') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   drush_apic_app_createOrUpdateCred($cred, $event, 'UpdateApplication');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
+/**
+ * @param $cred
+ * @param string $event
+ */
 function drush_apic_app_deletecred($cred, $event = 'cred_del') {
   ibm_apim_entry_trace(__FUNCTION__);
   if ($cred !== NULL) {
@@ -409,15 +532,19 @@ function drush_apic_app_deletecred($cred, $event = 'cred_del') {
         $nid = array_shift($nids);
         $node = Node::load($nid);
         $credsService->deleteCredentials($node, $cred['id']);
-      } else {
-        drush_log(dt('Drush @func Node not found for @app_url', ['@func' => 'drush_apic_app_deletecred', '@app_url' => $cred['app_url']]), 'error');
+      }
+      else {
+        drush_log(dt('Drush @func Node not found for @app_url', [
+          '@func' => 'drush_apic_app_deletecred',
+          '@app_url' => $cred['app_url'],
+        ]), 'error');
       }
     }
     else {
       drush_log(dt('Drush @func app_url or id missing', ['@func' => 'drush_apic_app_deletecred']), 'error');
     }
 
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -433,7 +560,7 @@ function drush_apic_app_deletecred($cred, $event = 'cred_del') {
  * @param $event
  * @param $func
  *
- * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
  */
 function drush_apic_app_createOrUpdateCred($cred, $event, $func) {
   ibm_apim_entry_trace(__FUNCTION__, $cred);
@@ -446,7 +573,7 @@ function drush_apic_app_createOrUpdateCred($cred, $event, $func) {
   }
   if ($cred !== NULL) {
     if (is_string($cred)) {
-      $cred = json_decode($cred, TRUE);
+      $cred = json_decode($cred, TRUE, 512, JSON_THROW_ON_ERROR);
     }
     if (isset($cred['app_url'], $cred['id'])) {
       $query = \Drupal::entityQuery('node');
@@ -460,8 +587,12 @@ function drush_apic_app_createOrUpdateCred($cred, $event, $func) {
         $nid = array_shift($nids);
         $node = Node::load($nid);
         $credsService->createOrUpdateSingleCredential($node, $cred);
-      } else {
-        drush_log(dt('Drush @func Node not found for @app_url', ['@func' => 'drush_apic_app_createOrUpdateCred', '@app_url' => $cred['app_url']]), 'error');
+      }
+      else {
+        drush_log(dt('Drush @func Node not found for @app_url', [
+          '@func' => 'drush_apic_app_createOrUpdateCred',
+          '@app_url' => $cred['app_url'],
+        ]), 'error');
       }
     }
     else {
@@ -471,7 +602,7 @@ function drush_apic_app_createOrUpdateCred($cred, $event, $func) {
   else {
     drush_log(dt('Drush @func No credential provided', ['@func' => $func]), 'error');
   }
-  if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+  if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchBack();
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);

@@ -8,7 +8,6 @@
 namespace Drupal\apic_type_count\Controller;
 
 use Drupal\apic_api\Api;
-use Drupal\apic_app\Application;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\node\Entity\Node;
 use Drupal\product\Product;
@@ -44,6 +43,7 @@ class ApicNodeListController extends ControllerBase {
               $newResult['version'] = $node->apic_version->value;
               $newResult['title'] = $node->getTitle();
               $newResult['url'] = $node->apic_url->value;
+              $newResult['nid'] = $node->id();
               break;
             case 'api':
               $newResult['ref'] = $node->apic_ref->value;
@@ -52,21 +52,26 @@ class ApicNodeListController extends ControllerBase {
               $newResult['version'] = $node->apic_version->value;
               $newResult['title'] = $node->getTitle();
               $newResult['url'] = $node->apic_url->value;
+              $newResult['protocol'] = $node->api_oaiversion->value;
+              $newResult['nid'] = $node->id();
               break;
             case 'application':
               $newResult['name'] = $node->application_name->value;
               $newResult['id'] = $node->application_id->value;
               $newResult['title'] = $node->getTitle();
               $newResult['url'] = $node->apic_url->value;
+              $newResult['nid'] = $node->id();
               break;
             case 'consumerorg':
               $newResult['name'] = $node->consumerorg_name->value;
               $newResult['id'] = $node->consumerorg_id->value;
               $newResult['title'] = $node->getTitle();
               $newResult['url'] = $node->consumerorg_url->value;
+              $newResult['nid'] = $node->id();
               break;
             default:
               $newResult['title'] = $node->getTitle();
+              $newResult['nid'] = $node->id();
               break;
           }
           $returnResults[] = $newResult;
@@ -124,32 +129,31 @@ class ApicNodeListController extends ControllerBase {
         throw new AccessDeniedHttpException();
       }
     }
-    else {
+    elseif (preg_match('/^([A-Za-z0-9\-])+$/', $input)) {
       // We have an API ID, use it raw
       // Validate the format of the ID ([A-Za-z0-9\-]+)
-      if (preg_match('/^([A-Za-z0-9\-])+$/', $input)) {
-        // Load the Node as an ACL check that we have access to this API
-        $query = \Drupal::entityQuery('node');
-        $query->condition('type', 'api');
-        $query->condition('api_id.value', $input);
-        $nids = $query->execute();
 
-        if ($nids !== NULL && !empty($nids)) {
-          $nid = array_shift($nids);
-          $node = Node::load($nid);
-          if ($node !== NULL) {
-            $url = $node->apic_url->value;
-          }
-        }
-        else {
-          \Drupal::logger('apic_type_count')->error('getAPI: Caller denied access to load API', []);
-          throw new AccessDeniedHttpException();
+      // Load the Node as an ACL check that we have access to this API
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'api');
+      $query->condition('api_id.value', $input);
+      $nids = $query->execute();
+
+      if ($nids !== NULL && !empty($nids)) {
+        $nid = array_shift($nids);
+        $node = Node::load($nid);
+        if ($node !== NULL) {
+          $url = $node->apic_url->value;
         }
       }
       else {
-        \Drupal::logger('apic_type_count')->error('getAPI: invalid ID in request', []);
+        \Drupal::logger('apic_type_count')->error('getAPI: Caller denied access to load API', []);
         throw new AccessDeniedHttpException();
       }
+    }
+    else {
+      \Drupal::logger('apic_type_count')->error('getAPI: invalid ID in request', []);
+      throw new AccessDeniedHttpException();
     }
     if ($url !== NULL) {
       $json = Api::getApiForDrush($url);
@@ -205,32 +209,31 @@ class ApicNodeListController extends ControllerBase {
         throw new AccessDeniedHttpException();
       }
     }
-    else {
+    elseif (preg_match('/^([A-Za-z0-9\-])+$/', $input)) {
       // We have an ID, use it raw
       // Validate the format of the ID ([A-Za-z0-9\-]+)
-      if (preg_match('/^([A-Za-z0-9\-])+$/', $input)) {
-        // Load the Node as an ACL check that we have access to this node
-        $query = \Drupal::entityQuery('node');
-        $query->condition('type', 'product');
-        $query->condition('product_id.value', $input);
-        $nids = $query->execute();
 
-        if ($nids !== NULL && !empty($nids)) {
-          $nid = array_shift($nids);
-          $node = Node::load($nid);
-          if ($node !== NULL) {
-            $url = $node->apic_url->value;
-          }
-        }
-        else {
-          \Drupal::logger('apic_type_count')->error('getProduct: Caller denied access to load product', []);
-          throw new AccessDeniedHttpException();
+      // Load the Node as an ACL check that we have access to this node
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'product');
+      $query->condition('product_id.value', $input);
+      $nids = $query->execute();
+
+      if ($nids !== NULL && !empty($nids)) {
+        $nid = array_shift($nids);
+        $node = Node::load($nid);
+        if ($node !== NULL) {
+          $url = $node->apic_url->value;
         }
       }
       else {
-        \Drupal::logger('apic_type_count')->error('getProduct: invalid ID in request', []);
+        \Drupal::logger('apic_type_count')->error('getProduct: Caller denied access to load product', []);
         throw new AccessDeniedHttpException();
       }
+    }
+    else {
+      \Drupal::logger('apic_type_count')->error('getProduct: invalid ID in request', []);
+      throw new AccessDeniedHttpException();
     }
     if ($url !== NULL) {
       $json = Product::getProductForDrush($url);
@@ -247,33 +250,33 @@ class ApicNodeListController extends ControllerBase {
     $url = NULL;
     $json = NULL;
 
-      // We have an ID, use it raw
-      // Validate the format of the ID ([A-Za-z0-9\-]+)
-      if (preg_match('/^([A-Za-z0-9\-])+$/', $input)) {
-        // Load the Node as an ACL check that we have access to this node
-        $query = \Drupal::entityQuery('node');
-        $query->condition('type', 'application');
-        $query->condition('application_id.value', $input);
-        $nids = $query->execute();
+    // We have an ID, use it raw
+    // Validate the format of the ID ([A-Za-z0-9\-]+)
+    if (preg_match('/^([A-Za-z0-9\-])+$/', $input)) {
+      // Load the Node as an ACL check that we have access to this node
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'application');
+      $query->condition('application_id.value', $input);
+      $nids = $query->execute();
 
-        if ($nids !== NULL && !empty($nids)) {
-          $nid = array_shift($nids);
-          $node = Node::load($nid);
-          if ($node !== NULL) {
-            $url = $node->apic_url->value;
-          }
-        }
-        else {
-          \Drupal::logger('apic_type_count')->error('getApplication: Caller denied access to load application', []);
-          throw new AccessDeniedHttpException();
+      if ($nids !== NULL && !empty($nids)) {
+        $nid = array_shift($nids);
+        $node = Node::load($nid);
+        if ($node !== NULL) {
+          $url = $node->apic_url->value;
         }
       }
       else {
-        \Drupal::logger('apic_type_count')->error('getApplication: invalid ID in request', []);
+        \Drupal::logger('apic_type_count')->error('getApplication: Caller denied access to load application', []);
         throw new AccessDeniedHttpException();
       }
+    }
+    else {
+      \Drupal::logger('apic_type_count')->error('getApplication: invalid ID in request', []);
+      throw new AccessDeniedHttpException();
+    }
     if ($url !== NULL) {
-      $json = Application::getApplicationForDrush($url);
+      $json = \Drupal::service('apic_app.application')->getApplicationForDrush($url);
     }
     return $json;
   }
@@ -317,4 +320,5 @@ class ApicNodeListController extends ControllerBase {
     }
     return $json;
   }
+
 }

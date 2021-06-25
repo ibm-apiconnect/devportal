@@ -21,15 +21,15 @@ use Drupal\taxonomy\Entity\Term;
 
 class ApiTaxonomy {
 
-  protected $apicTaxonomy;
+  protected ApicTaxonomy $apicTaxonomy;
 
-  private $FORUM_VOCABULARY = 'forums';
+  private string $FORUM_VOCABULARY = 'forums';
 
-  private $TAGS_VOCABULARY = 'tags';
+  private string $TAGS_VOCABULARY = 'tags';
 
-  private $APIS_FORUM_CONTAINER = 'APIs';
+  private string $APIS_FORUM_CONTAINER = 'APIs';
 
-  private $PHASE_TERM = 'Phase';
+  private string $PHASE_TERM = 'Phase';
 
   public function __construct(ApicTaxonomy $apicTaxonomy) {
     $this->apicTaxonomy = $apicTaxonomy;
@@ -89,7 +89,7 @@ class ApiTaxonomy {
    */
   public function process_phase_tag($node, $origPhase): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
-    if ($node !== NULL && $origPhase !== NULL) {
+    if ($origPhase !== NULL) {
       $phase = ucfirst($origPhase);
 
       if ($phaseParentTerm = taxonomy_term_load_multiple_by_name($this->PHASE_TERM, $this->TAGS_VOCABULARY)) {
@@ -204,7 +204,7 @@ class ApiTaxonomy {
         }
       }
 
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
       \Drupal::logger('apic_api')->error('The following error occurred while attempting to create the forum for api %apiName: %e', [
         '%apiName' => $apiName,
         '%e' => $e,

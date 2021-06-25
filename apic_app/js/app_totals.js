@@ -14,10 +14,10 @@
  * JS for the "app_totals" block.
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   Drupal.behaviors.app_totals = {
-    attach: function (context) {
+    attach: function(context) {
 
 
     }

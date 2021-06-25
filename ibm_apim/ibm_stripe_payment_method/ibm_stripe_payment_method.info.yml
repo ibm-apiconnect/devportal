@@ -1,10 +1,10 @@
 name: 'APIC Monetization Stripe Integration'
 type: module
 description: 'Allowing creation of payment methods using Stripe as part of APIC monetization.'
-package: 'IBM API Connect'
+package: 'IBM API Developer Portal'
 core_version_requirement: ^8 || ^9
 version: 8.x-1.0.1
 project: ibm_stripe_payment_method
 dependencies:
-- ibm_apim
+  - ibm_apim
 interface translation project: ibm_stripe_payment_method

@@ -66,6 +66,14 @@ field.field.node.consumerorg.consumerorg_def_payment_ref:
   type: ibm_apim_config_object
   label: 'Default Payment Method Reference'
 
+field.field.node.consumerorg.apic_created_at:
+  type: ibm_apim_config_object
+  label: 'Creation time'
+
+field.field.node.consumerorg.apic_updated_at:
+  type: ibm_apim_config_object
+  label: 'Modification time'
+
 consumerorg.consumerorg_payment_method.*:
   type: content_entity
   label: 'Consumer Organization Payment Method'

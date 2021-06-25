@@ -24,6 +24,7 @@ use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\user\Entity\User;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ibm_apim\Service\Utils;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
@@ -33,22 +34,22 @@ class OidcRegisterForm extends FormBase {
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * @var \Drupal\ibm_apim\UserManagement\ApicAccountInterface
    */
-  protected $accountService;
+  protected ApicAccountInterface $accountService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\ibm_apim\Service\SiteConfig
    */
-  protected $siteConfig;
+  protected SiteConfig $siteConfig;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -58,30 +59,44 @@ class OidcRegisterForm extends FormBase {
   /**
    * @var \Drupal\ibm_apim\Service\ApicUserService
    */
-  protected $userService;
+  protected ApicUserService $userService;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
    */
-  protected $registryService;
+  protected UserRegistryServiceInterface $registryService;
 
   /**
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   protected $entity;
 
   protected $fields;
 
-  protected $utils;
-
-  protected $userStorage;
+  /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
+  protected Utils $utils;
 
   /**
-   * Constructs a new UserLoginForm.
+   * @var \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface
+   */
+  protected ApicUserStorageInterface $userStorage;
+
+  /**
+   * OidcRegisterForm constructor.
    *
-   * {@inheritdoc}
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\ibm_apim\UserManagement\ApicAccountInterface $account_service
+   * @param \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface $registry_service
+   * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
+   * @param \Drupal\ibm_apim\Service\ApicUserService $user_service
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\ibm_apim\Service\SiteConfig $site_config
+   * @param \Drupal\ibm_apim\Service\Utils $utils
+   * @param \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface $user_storage
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
@@ -106,9 +121,12 @@ class OidcRegisterForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *
+   * @return \Drupal\auth_apic\Form\OidcRegisterForm
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): OidcRegisterForm {
+    /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('entity_type.manager'),
       $container->get('ibm_apim.account'),
@@ -130,7 +148,12 @@ class OidcRegisterForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
 
@@ -167,7 +190,7 @@ class OidcRegisterForm extends FormBase {
       if ($this->entity !== NULL && $entity_form !== NULL) {
         foreach ($entity_form->getComponents() as $name => $options) {
           if ($name !== 'consumer_organization') {
-            $widget = null;
+            $widget = NULL;
             if (($name === 'mail' || $configuration = $entity_form->getComponent($name)) && isset($configuration['type']) && ($definition = $definitions[$name])) {
               $widget = \Drupal::service('plugin.manager.field.widget')->getInstance([
                 'field_definition' => $definition,
@@ -177,12 +200,11 @@ class OidcRegisterForm extends FormBase {
                 'configuration' => $configuration,
               ]);
             }
-          
-            if (isset($widget) && $this->entity->hasField($name) &&
-            $this->entity->{$name}->isEmpty() && $this->entity->get($name)->getFieldDefinition()->isRequired() ||
-            $name === 'mail' && $this->utils->endsWith($this->entity->get($name)->value, 'noemailinregistry@example.com') ||
-            $name === 'first_name' && $this->entity->{$name}->isEmpty() ||
-            $name === 'last_name' && $this->entity->{$name}->isEmpty()) {
+
+            if ((($name === 'first_name' || $name === 'last_name') && $this->entity->{$name}->isEmpty()) ||
+              ($name === 'mail' && $this->utils->endsWith($this->entity->get($name)->value, 'noemailinregistry@example.com')) ||
+              (isset($widget) && $this->entity->hasField($name) &&
+                $this->entity->{$name}->isEmpty() && $this->entity->get($name)->getFieldDefinition()->isRequired())) {
               $items = $this->entity->get($name);
               $items->filterEmptyItems();
               $form[$name] = $widget->form($items, $form, $form_state);
@@ -220,7 +242,7 @@ class OidcRegisterForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $userInputs = $form_state->getUserInput();
     foreach ($this->fields as $name) {
@@ -235,7 +257,7 @@ class OidcRegisterForm extends FormBase {
         }
       }
     }
-    if (isset($userInputs['mail'][0]['value']) && $this->userStorage->loadUserByEmailAddress($userInputs['mail'][0]['value']) !== null) {
+    if (isset($userInputs['mail'][0]['value']) && $this->userStorage->loadUserByEmailAddress($userInputs['mail'][0]['value']) !== NULL) {
       $form_state->setErrorByName('', t('A user with that email already exists.'));
     }
 
@@ -243,9 +265,14 @@ class OidcRegisterForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\TempStore\TempStoreException|\JsonException
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $editUser = $this->userService->parseRegisterForm($form_state);
     $userRegistry = $this->registryService->get($this->entity->get('registry_url')->value);
     if ($userRegistry !== NULL) {
@@ -255,7 +282,7 @@ class OidcRegisterForm extends FormBase {
     if (empty($editUser->getMail())) {
       $editUser->setMail($this->entity->get('mail')->value);
     }
-    $customFields =  $this->userService->getCustomUserFields();
+    $customFields = $this->userService->getCustomUserFields();
     $customFieldValues = $this->userUtils->handleFormCustomFields($customFields, $form_state);
     foreach ($customFieldValues as $customField => $value) {
       $editUser->addCustomField($customField, $value);

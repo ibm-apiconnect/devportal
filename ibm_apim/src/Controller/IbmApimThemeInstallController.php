@@ -24,18 +24,21 @@ use Drupal\ibm_apim\Service\Utils;
 use Drupal\system\Controller\ThemeController;
 use ScssPhp\ScssPhp\Compiler;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
- * Controller for theme handling.
+ * Class IbmApimThemeInstallController
+ *
+ * @package Drupal\ibm_apim\Controller
  */
 class IbmApimThemeInstallController extends ThemeController {
 
   /**
    * @var \Drupal\ibm_apim\Service\Utils
    */
-  private $utils;
+  private Utils $utils;
 
   /**
    * @var \Drupal\Core\Extension\ThemeInstallerInterface
@@ -77,6 +80,7 @@ class IbmApimThemeInstallController extends ThemeController {
   }
 
   public static function create(ContainerInterface $container) {
+    /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('ibm_apim.utils'),
       $container->get('theme_handler'),
@@ -100,7 +104,7 @@ class IbmApimThemeInstallController extends ThemeController {
    *   Throws access denied when no theme or token is set in the request or when
    *   the token is invalid.
    */
-  public function uninstall(Request $request) {
+  public function uninstall(Request $request): RedirectResponse {
     $theme = $request->query->get('theme');
     $config = $this->config('system.theme');
 
@@ -135,9 +139,9 @@ class IbmApimThemeInstallController extends ThemeController {
    * @param \Symfony\Component\HttpFoundation\Request $request
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse
-   * @throws \Drupal\Core\Extension\ExtensionNameLengthException
+   * @throws \Drupal\Core\Extension\ExtensionNameLengthException|\Drupal\Core\Extension\MissingDependencyException
    */
-  public function install(Request $request) {
+  public function install(Request $request): RedirectResponse {
     $theme = $request->query->get('theme');
 
     if (isset($theme)) {
@@ -180,9 +184,9 @@ class IbmApimThemeInstallController extends ThemeController {
    * @param \Symfony\Component\HttpFoundation\Request $request
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse
-   * @throws \Drupal\Core\Extension\ExtensionNameLengthException
+   * @throws \Drupal\Core\Extension\ExtensionNameLengthException|\Drupal\Core\Extension\MissingDependencyException
    */
-  public function setDefaultTheme(Request $request) {
+  public function setDefaultTheme(Request $request): RedirectResponse {
     $config = $this->configFactory->getEditable('system.theme');
     $theme = $request->query->get('theme');
 
@@ -239,7 +243,7 @@ class IbmApimThemeInstallController extends ThemeController {
    *   Throws access denied when no theme or token is set in the request or when
    *   the token is invalid.
    */
-  public function delete(Request $request) {
+  public function delete(Request $request): RedirectResponse {
     $theme = $request->query->get('theme');
 
     if (isset($theme) && !empty($theme)) {
@@ -258,7 +262,8 @@ class IbmApimThemeInstallController extends ThemeController {
             $this->messenger->addMessage($this->t('The %theme theme has been uninstalled.', ['%theme' => $theme]));
           }
         }
-      } else {
+      }
+      else {
         $this->messenger->addError($this->t('Only custom themes can be uninstalled. %theme is not a custom theme.', ['%theme' => $theme]));
       }
 
@@ -302,6 +307,7 @@ class IbmApimThemeInstallController extends ThemeController {
             $scss->addImportPath(preg_replace('#/+#', '/', implode('/', [$theme_path, $import_path])));
           }
         }
+        unset($import_path);
 
         $input_scss = $scss_compile_settings['input-scss'];
         if (!preg_match('/^[a-z0-9_\-.]+$/', $input_scss)) {
@@ -319,8 +325,8 @@ class IbmApimThemeInstallController extends ThemeController {
         $output_css_dir = preg_replace('#/+#', '/', implode('/', [$theme_path, dirname($output_css)]));
         $output_css_file = basename($output_css);
 
-        if (!is_dir($output_css_dir)) {
-          mkdir($output_css_dir, 0755, TRUE);
+        if (!is_dir($output_css_dir) && !mkdir($output_css_dir, 0755, TRUE) && !is_dir($output_css_dir)) {
+          throw new \RuntimeException(sprintf('Directory "%s" was not created', $output_css_dir));
         }
 
         $output_file = preg_replace('#/+#', '/', implode('/', [$output_css_dir, $output_css_file]));
@@ -330,4 +336,5 @@ class IbmApimThemeInstallController extends ThemeController {
       }
     }
   }
+
 }

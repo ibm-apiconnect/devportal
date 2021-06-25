@@ -14,6 +14,7 @@
 namespace Drupal\product;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
@@ -40,6 +41,8 @@ class Product {
    * @param string $event
    *
    * @return int|null|string
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function create($product, $event = 'publish') {
@@ -102,6 +105,9 @@ class Product {
       // duplicate node
       $node = $oldNode->createDuplicate();
 
+      // update any apirefs on basic pages
+      $this->updateBasicPageRefs($oldNode->id(), $node->id(), FALSE);
+
       // wipe all our fields to ensure they get set to new values
       $node->set('apic_tags', []);
 
@@ -133,6 +139,8 @@ class Product {
       $node->set('product_api_nids', NULL);
       $node->set('product_apis', NULL);
       $node->set('product_data', NULL);
+      $node->set('apic_created_at', NULL);
+      $node->set('apic_updated_at', NULL);
     }
     else {
       $node = \Drupal::entityTypeManager()->getStorage('node')->create([
@@ -175,7 +183,7 @@ class Product {
     }
 
     if ($node !== NULL && !$moduleHandler->moduleExists('workbench_moderation')) {
-      $node->setPublished(TRUE);
+      $node->setPublished();
       $node->save();
     }
 
@@ -211,6 +219,8 @@ class Product {
    * @param string $event
    *
    * @return \Drupal\node\NodeInterface|null
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function update(NodeInterface $node, $product, $event = 'content_refresh'): ?NodeInterface {
@@ -330,7 +340,10 @@ class Product {
               if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
                   // ensure the translation has a title as its a required field
-                  $translation = $node->addTranslation($lang, ['title' => $truncated_title, 'apic_description' => $product['catalog_product']['info']['x-ibm-languages']['description'][$lang]]);
+                  $translation = $node->addTranslation($lang, [
+                    'title' => $truncated_title,
+                    'apic_description' => $product['catalog_product']['info']['x-ibm-languages']['description'][$lang],
+                  ]);
                   $translation->save();
                 }
                 else {
@@ -358,7 +371,8 @@ class Product {
               if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
                   // ensure the translation has a title as its a required field
-                  $translation = $node->addTranslation($lang, ['title' => $truncated_title,
+                  $translation = $node->addTranslation($lang, [
+                    'title' => $truncated_title,
                     'apic_summary' => $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['summary'][$lang]),
                     1000,
                   ]);
@@ -430,7 +444,10 @@ class Product {
               if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
                   // ensure the translation has a title as its a required field
-                  $translation = $node->addTranslation($lang, ['title' => $truncated_title, 'product_terms_of_service' => $product['catalog_product']['info']['x-ibm-languages']['termsOfService'][$lang]]);
+                  $translation = $node->addTranslation($lang, [
+                    'title' => $truncated_title,
+                    'product_terms_of_service' => $product['catalog_product']['info']['x-ibm-languages']['termsOfService'][$lang],
+                  ]);
                   $translation->save();
                 }
                 else {
@@ -503,6 +520,15 @@ class Product {
         }
         $node->set('product_visibility_custom_tags', $productVisibilityCustomTags);
         $node->set('apic_url', $product['url']);
+
+        if (isset($product['created_at'])) {
+          // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
+          $node->set('apic_created_at', strtotime($product['created_at']));
+        }
+        if (isset($product['updated_at'])) {
+          // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
+          $node->set('apic_updated_at', strtotime($product['updated_at']));
+        }
 
         if (isset($product['catalog_product']['info']['x-pathalias'])) {
           $node->set('apic_pathalias', $product['catalog_product']['info']['x-pathalias']);
@@ -636,6 +662,8 @@ class Product {
    * @param $event
    *
    * @return bool
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function createOrUpdate($product, $event): bool {
@@ -674,6 +702,8 @@ class Product {
    * @param $nid
    * @param $event
    *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public static function deleteNode($nid, $event): void {
@@ -690,20 +720,19 @@ class Product {
         '@version' => $node->apic_version->value,
       ]);
 
-      //Delete all subscriptions for the product
-      $query = \Drupal::entityQuery('apic_app_application_subs');
-      $query->condition('product_url', $node->apic_url->value);
-      $subIds = $query->execute();
-
-      foreach (array_chunk($subIds, 50) as $chunk) {
-        $subEntities = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->loadMultiple($chunk);
-        if (!empty($subEntities)) {
-          \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->delete($subEntities);
-        }
+      if (isset($node->apic_url->value)) {
+        $subService = \Drupal::service('apic_app.subscriptions');
+        $subService->deleteAllSubsForProduct($node->apic_url->value);
       }
 
       $node->delete();
       unset($node);
+
+      // if deleting a product (and not part of lifecycle action like replace)
+      // then remove any trailing references to it from basic doc pages
+      if ($event === 'product_del' || $event === 'content_refresh') {
+        self::updateBasicPageRefs($nid, NULL, FALSE);
+      }
 
       \Drupal::logger('product')->notice('delete product nid=@prod', ['@prod' => $nid]);
     }
@@ -776,6 +805,8 @@ class Product {
    * @param $node
    *
    * @return bool
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public static function checkAccess($node): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -801,7 +832,7 @@ class Product {
         if (isset($entityIds) && !empty($entityIds)) {
           foreach ($entityIds as $entityId) {
             $sub = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->load($entityId);
-            if ($sub->product_url() === $node->apic_url->value) {
+            if ($sub !== NULL && $sub->product_url() === $node->apic_url->value) {
               $found = TRUE;
               break;
             }
@@ -856,6 +887,8 @@ class Product {
    * Returns a list of product node ids the current user can access
    *
    * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public static function listProducts(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -959,13 +992,15 @@ class Product {
             $additional = [[]];
             foreach ($entityIds as $entityId) {
               $sub = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->load($entityId);
-              $query = \Drupal::entityQuery('node');
-              $query->condition('type', 'product');
-              $query->condition('apic_url.value', $sub->product_url());
-              $results = $query->execute();
-              if ($results !== NULL && !empty($results)) {
-                $nids = array_values($results);
-                $additional[] = $nids;
+              if ($sub !== NULL) {
+                $query = \Drupal::entityQuery('node');
+                $query->condition('type', 'product');
+                $query->condition('apic_url.value', $sub->product_url());
+                $results = $query->execute();
+                if ($results !== NULL && !empty($results)) {
+                  $nids = array_values($results);
+                  $additional[] = $nids;
+                }
               }
             }
             $additional = array_merge(...$additional);
@@ -1000,6 +1035,8 @@ class Product {
       'apic_ref',
       'apic_image',
       'apic_attachments',
+      'apic_created_at',
+      'apic_updated_at',
       'product_api_nids',
       'product_apis',
       'product_contact_email',
@@ -1062,6 +1099,9 @@ class Product {
    * @param $nid
    *
    * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public static function getLinkedPages($nid): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $nid);
@@ -1087,14 +1127,16 @@ class Product {
     // process the nodes and build an array of the info we need
     $finalNids = array_unique($finalNids, SORT_NUMERIC);
     if ($finalNids !== NULL && !empty($finalNids)) {
-      $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($finalNids);
-      if ($nodes !== NULL) {
-        foreach ($nodes as $node) {
-          $docs[] = [
-            'title' => $node->getTitle(),
-            'nid' => $node->id(),
-            'url' => $node->toUrl()->toString(),
-          ];
+      foreach (array_chunk($finalNids, 50) as $chunk) {
+        $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($chunk);
+        if ($nodes !== NULL) {
+          foreach ($nodes as $node) {
+            $docs[] = [
+              'title' => $node->getTitle(),
+              'nid' => $node->id(),
+              'url' => $node->toUrl()->toString(),
+            ];
+          }
         }
       }
     }
@@ -1133,6 +1175,8 @@ class Product {
    * @param $url
    *
    * @return string (JSON)
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function getProductAsJson($url): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['url' => $url]);
@@ -1188,15 +1232,17 @@ class Product {
         $output['summary'] = $node->apic_summary->value;
         $output['description'] = $node->apic_description->value;
         $output['billing_url'] = $node->product_billing_url->value;
+        $output['created_at'] = $node->apic_created_at->value;
+        $output['updated_at'] = $node->apic_updated_at->value;
         $productApis = [];
         foreach ($node->product_apis->getValue() as $arrayValue) {
           $productApis[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
         }
         $output['apis'] = $productApis;
-        $output['view_enabled'] = (bool)(int)$node->product_view_enabled->value;
-        $output['subscribe_enabled'] = (bool)(int)$node->product_subscribe_enabled->value;
-        $output['visibility_public'] = (bool)(int)$node->product_visibility_public->value;
-        $output['visibility_authenticated'] = (bool)(int)$node->product_visibility_authenticated->value;
+        $output['view_enabled'] = (bool) (int) $node->product_view_enabled->value;
+        $output['subscribe_enabled'] = (bool) (int) $node->product_subscribe_enabled->value;
+        $output['visibility_public'] = (bool) (int) $node->product_visibility_public->value;
+        $output['visibility_authenticated'] = (bool) (int) $node->product_visibility_authenticated->value;
         $customOrgs = [];
         foreach ($node->product_visibility_custom_orgs->getValue() as $customOrg) {
           if ($customOrg['value'] !== NULL) {
@@ -1246,17 +1292,16 @@ class Product {
    */
   public static function clearAppCache($productUrl): void {
     $appUrls = [];
-    $query = \Drupal::entityQuery('apic_app_application_subs');
-    $query->condition('product_url', $productUrl);
-    $subIds = $query->execute();
+    $subIds = [];
+    $tags = [];
+    $options = ['target' => 'default'];
+    $result = Database::getConnection($options['target'])
+      ->query("SELECT id, app_url FROM apic_app_application_subs WHERE product_url = :product_url", [':product_url' => $productUrl], $options);
 
-    if (isset($subIds) && !empty($subIds)) {
-      foreach (array_chunk($subIds, 50) as $chunk) {
-        $subEntities = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->loadMultiple($chunk);
-        foreach ($subEntities as $sub) {
-          $appUrls[] = $sub->app_url();
-        }
-      }
+    foreach ($result as $record) {
+      $appUrls[] = $record->app_url;
+      $subIds[] = $record->id;
+      $tags[] = 'apic_app_application_subs:' . $record->id;
     }
     if (!empty($appUrls)) {
       $query = \Drupal::entityQuery('node');
@@ -1265,9 +1310,11 @@ class Product {
       $nids = $query->execute();
 
       foreach ($nids as $nid) {
-        $tags = ['application:' . $nid];
-        Cache::invalidateTags($tags);
+        $tags[] = 'application:' . $nid;
       }
+      Cache::invalidateTags($tags);
+      \Drupal::entityTypeManager()->getStorage('node')->resetCache($nids);
+      \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->resetCache($subIds);
     }
   }
 
@@ -1296,22 +1343,24 @@ class Product {
    */
   public static function findInitialEmbeddedDoc($productData = []): string {
     $returnValue = 'apisandplans';
-    $found = false;
+    $found = FALSE;
     if (isset($productData) && is_array($productData) && !empty($productData)) {
       foreach ($productData as $key => $embeddedDoc) {
-        if ($found === false && !isset($embeddedDoc['docs'])) {
+        if ($found === FALSE && !isset($embeddedDoc['docs'])) {
           $returnValue = $embeddedDoc['name'];
-          $found = true;
-        } elseif ($found === false && isset($embeddedDoc['docs'])) {
+          $found = TRUE;
+        }
+        elseif ($found === FALSE && isset($embeddedDoc['docs'])) {
           foreach ($embeddedDoc['docs'] as $childkey => $embeddedDocChild) {
-            if ($found === false && !isset($embeddedDocChild['docs'])) {
+            if ($found === FALSE && !isset($embeddedDocChild['docs'])) {
               $returnValue = $embeddedDocChild['name'];
-              $found = true;
-            } elseif ($found === false && isset($embeddedDocChild['docs'])) {
+              $found = TRUE;
+            }
+            elseif ($found === FALSE && isset($embeddedDocChild['docs'])) {
               foreach ($embeddedDocChild['docs'] as $grandchildkey => $embeddedDocGrandChild) {
-                if ($found === false && !isset($embeddedDocGrandChild['docs'])) {
+                if ($found === FALSE && !isset($embeddedDocGrandChild['docs'])) {
                   $returnValue = $embeddedDocGrandChild['name'];
-                  $found = true;
+                  $found = TRUE;
                 }
               }
             }
@@ -1353,4 +1402,172 @@ class Product {
     }
     return $docs;
   }
+
+  /**
+   * This function handles mass updates to subscriptions from lifecycle actions like
+   * product replace.
+   *
+   * @param $mapping
+   *
+   */
+  public static function processPlanMapping($mapping): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    if (isset($mapping)) {
+      if (isset($mapping['source'], $mapping['target'], $mapping['plans']) && !empty($mapping['plans'])) {
+        $sourceProductUrl = '/consumer-api/products/' . $mapping['source'];
+        $targetProductUrl = '/consumer-api/products/' . $mapping['target'];
+
+        // loop over the plans to update all the subscriptions
+        foreach ($mapping['plans'] as $planMap) {
+          if (isset($planMap['source'], $planMap['target'])) {
+            $options = ['target' => 'default'];
+            $result = Database::getConnection($options['target'])
+              ->update('apic_app_application_subs', $options)
+              ->fields(['plan' => $planMap['target'], 'product_url' => $targetProductUrl])
+              ->condition('product_url', $sourceProductUrl)
+              ->condition('plan', $planMap['source'])
+              ->execute();
+
+            $subIds = [];
+            $subscriptionsResult = Database::getConnection($options['target'])
+              ->select('apic_app_application_subs', 's')
+              ->fields('s', ['id'])
+              ->condition('s.product_url', $targetProductUrl)
+              ->condition('s.plan', $planMap['target'])
+              ->execute();
+
+            foreach ($subscriptionsResult as $sub) {
+              $subIds[] = $sub->id;
+            }
+            if (!empty($subIds)) {
+              \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->resetCache($subIds);
+            }
+          }
+          else {
+            \Drupal::logger('product')->error('ERROR: Missing required data in processPlanMapping plan map array', []);
+          }
+        }
+      }
+      else {
+        \Drupal::logger('product')->error('ERROR: Missing required data in processPlanMapping', []);
+      }
+    }
+    else {
+      \Drupal::logger('product')->error('ERROR: No processPlanMapping mapping provided', []);
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+  /**
+   * Update any basic page references to point to the new node
+   *
+   * @param $oldNid
+   * @param $newNid
+   * @param boolean $add
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public static function updateBasicPageRefs($oldNid, $newNid, bool $add = FALSE): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    if (isset($oldNid)) {
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'page')->condition('prodref', $oldNid, 'CONTAINS');
+      $nids = $query->execute();
+      if ($nids !== NULL && !empty($nids)) {
+        foreach ($nids as $nid) {
+          $node = Node::load($nid);
+          if ($node !== NULL) {
+            $newArray = $node->prodref->getValue();
+            foreach ($newArray as $key => $value) {
+              if ($value['target_id'] === (string) $oldNid) {
+                if (isset($newNid)) {
+                  if ($add === TRUE) {
+                    // add the new node to the list
+                    $newArray[]['target_id'] = (string) $newNid;
+                  }
+                  else {
+                    // replace existing node
+                    $newArray[$key]['target_id'] = (string) $newNid;
+                  }
+                }
+                else {
+                  // if no $newNid set then simply remove the old reference
+                  unset($newArray[$key]);
+                }
+              }
+            }
+            $node->set('prodref', $newArray);
+            $node->save();
+          }
+        }
+      }
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+  /**
+   * Find all plans in the product that contain the api
+   *
+   * @param $product - the product being looked in
+   * @param $apiref - the api being looked for
+   *
+   * @return array(plan_name => plan)
+   *
+   */
+  public static function getPlansThatContainApi(Node $product, string $apiRef): array {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
+
+    $plans = [];
+
+    if (isset($product, $apiRef)) {
+      $filterFunc = static function ($serializedApi) use ($apiRef) {
+        // data exists within serialization, can skip an unserialize here
+        return str_contains($serializedApi['value'], $apiRef);
+      };
+
+      if (isset($product->product_apis) && count(array_filter($product->product_apis->getValue(), $filterFunc)) > 0) {
+        $productPlans = [];
+        if (isset($product->product_plans)) {
+          foreach ($product->product_plans->getValue() as $arrayValue) {
+            $productPlans[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+          }
+        }
+
+        $productData = yaml_parse($product->product_data->value);
+
+        foreach ($productPlans as $productPlan) {
+          if (isset($productPlan['apis']) && !empty($productPlan['apis'])) {
+            foreach (array_keys($productPlan['apis']) as $apiKey) {
+              $productApiRef = $productData['apis'][$apiKey]['name'];
+              if ($productApiRef === $apiRef) {
+                $plans[$productPlan['name']] = $productPlan;
+              }
+            }
+            // if a plan has no 'apis', it contains all the api of the product
+          }
+          else {
+            $plans[$productPlan['name']] = $productPlan;
+          }
+        }
+      }
+    }
+    else {
+      \Drupal::logger('product')
+        ->error('Missing values for plan lookup - product:%productSet, apiRef:%apiRefSet', [
+          '%productSet' => isset($product),
+          '%apiRefSet' => isset($apiRef),
+        ]);
+    }
+
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $plans);
+    }
+
+    return $plans;
+  }
+
 }

@@ -21,6 +21,9 @@ use Drupal\Core\Routing\Access\AccessInterface;
  */
 class ClientSecretResetCheck implements AccessInterface {
 
+  /**
+   * @return \Drupal\Core\Access\AccessResult|\Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultNeutral
+   */
   public function access() {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $allowed = FALSE;
@@ -34,4 +37,5 @@ class ClientSecretResetCheck implements AccessInterface {
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $allowed);
     return AccessResult::allowedIf($allowed);
   }
+
 }

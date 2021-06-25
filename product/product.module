@@ -30,21 +30,24 @@ use Drupal\node\NodeInterface;
 use Drupal\product\Product;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ViewExecutable;
+use Drupal\views\Views;
 
 /* Permissions that can be granted */
+
 define('EDIT_ANY_PRODUCT_CONTENT_GRANT', 1);
 define('PUBLIC_PRODUCT_GRANT', 2);
 define('AUTHENTICATED_PRODUCT_GRANT', 3);
 define('SUBSCRIBED_TO_PRODUCT_GRANT', 4);
 define('ORG_PRODUCT_GRANT', 5);
 define('TAG_PRODUCT_GRANT', 6);
+define('HIDDEN_PRODUCT_GRANT', 7);
 
 /* Return the permission strings so that they can be displayed in the ACL log
  *
  * @param gid
  * @return string
  */
-function product_permission_value($gid) {
+function product_permission_value($gid): string {
   switch ($gid) {
     case EDIT_ANY_PRODUCT_CONTENT_GRANT:
       return 'EDIT_ANY_PRODUCT_CONTENT_GRANT';
@@ -58,6 +61,8 @@ function product_permission_value($gid) {
       return 'ORG_PRODUCT_GRANT';
     case TAG_PRODUCT_GRANT:
       return 'TAG_PRODUCT_GRANT';
+    case HIDDEN_PRODUCT_GRANT:
+      return 'HIDDEN_PRODUCT_GRANT';
     default:
       return 'Permission Value Not Known';
   }
@@ -77,12 +82,12 @@ function product_permission_value($gid) {
  *
  * Note: hook is called when rebuilding permissions
  */
-function product_node_access_records($node) {
+function product_node_access_records($node): array {
 
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
   $config = \Drupal::config('ibm_apim.settings');
-  $aclDebug = (boolean) $config->get('acl_debug');
+  $aclDebug = (bool) $config->get('acl_debug');
 
   $type = is_string($node) ? $node : $node->getType();
   $grants = [];
@@ -185,6 +190,18 @@ function product_node_access_records($node) {
         }
       }
     }
+    else {
+      // Set the hidden product grant.  We need to do this because if we just return an empty grants array
+      // ALL users will be able to view the product
+      $grants[] = [
+        'realm' => 'product',
+        'gid' => HIDDEN_PRODUCT_GRANT,
+        'grant_view' => 0,
+        'grant_update' => 0,
+        'grant_delete' => 0,
+        'priority' => 0,
+      ];
+    }
     if ($aclDebug === TRUE) {
       foreach ($grants as $grant) {
         \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
@@ -209,12 +226,12 @@ function product_node_access_records($node) {
  * Note: hook is not called at all when admin logged in
  * Note: hook is called on every login, logout and page load
  */
-function product_node_grants($account, $op) {
+function product_node_grants($account, $op): array {
 
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
   $config = \Drupal::config('ibm_apim.settings');
-  $aclDebug = (boolean) $config->get('acl_debug');
+  $aclDebug = (bool) $config->get('acl_debug');
 
   $grants = [];
   $grants['product'] = [];
@@ -372,6 +389,8 @@ function product_preprocess(&$variables, $hook, &$info) {
 
 /**
  * Implements hook_views_query_alter().
+ *
+ * @throws \Drupal\Component\Plugin\Exception\PluginException
  */
 function product_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
 
@@ -382,7 +401,9 @@ function product_views_query_alter(ViewExecutable $view, QueryPluginBase $query)
           $condition['field'] = 'node__product_api_nids.entity_id = :node_field_data_nid';
         }
       }
+      unset($condition);
     }
+    unset($condition_group);
     $configuration = [
       'type' => 'LEFT',
       'table' => 'node__product_api_nids',
@@ -392,12 +413,10 @@ function product_views_query_alter(ViewExecutable $view, QueryPluginBase $query)
       'operator' => '=',
     ];
 
-    $join = \Drupal\views\Views::pluginManager('join')
-      ->createInstance('standard', $configuration);
+    $join = Views::pluginManager('join')->createInstance('standard', $configuration);
     $rel = $query->addRelationship('node__product_api_nids', $join, 'node_field_data');
     $query->addTable('node__product_api_nids', $rel, $join, 'node__product_api_nids');
   }
-
 }
 
 /**
@@ -405,7 +424,6 @@ function product_views_query_alter(ViewExecutable $view, QueryPluginBase $query)
  *
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
- * @throws \Drupal\Core\Entity\EntityMalformedException
  */
 function product_preprocess_node(&$variables) {
   if ($variables['node']->getType() === 'product') {
@@ -413,13 +431,17 @@ function product_preprocess_node(&$variables) {
 
     $keySvg = file_get_contents(drupal_get_path('module', 'product') . '/images/key.svg');
     $lockedSvg = file_get_contents(drupal_get_path('module', 'product') . '/images/locked.svg');
+    $closeSvg = file_get_contents(drupal_get_path('module', 'product') . '/images/close.svg');
+    $checkmarkSvg = file_get_contents(drupal_get_path('module', 'product') . '/images/checkmark.svg');
     $variables['key_svg'] = $keySvg;
     $variables['locked_svg'] = $lockedSvg;
+    $variables['close_svg'] = $closeSvg;
+    $variables['checkmark_svg'] = $checkmarkSvg;
 
     // get global settings first
     $config = \Drupal::config('ibm_apim.settings');
-    $planService = \Drupal::service('product.plan');
-    $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
+    $planService = \Drupal::service('ibm_apim.product_plan');
+    $ibmApimShowPlaceholderImages = (bool) $config->get('show_placeholder_images');
     if ($ibmApimShowPlaceholderImages === NULL) {
       $ibmApimShowPlaceholderImages = TRUE;
     }
@@ -431,13 +453,13 @@ function product_preprocess_node(&$variables) {
     else {
       $variables['placeholderUrl'] = NULL;
     }
-    $ibmApimShowVersions = (boolean) $config->get('show_versions');
+    $ibmApimShowVersions = (bool) $config->get('show_versions');
     if ($ibmApimShowVersions === NULL) {
       $ibmApimShowVersions = TRUE;
     }
     $variables['showVersions'] = $ibmApimShowVersions;
 
-    $selfSignUpEnabled = (boolean) \Drupal::state()->get('ibm_apim.selfSignUpEnabled');
+    $selfSignUpEnabled = (bool) \Drupal::state()->get('ibm_apim.selfSignUpEnabled');
     if ($selfSignUpEnabled === NULL) {
       $selfSignUpEnabled = TRUE;
     }
@@ -474,8 +496,8 @@ function product_preprocess_node(&$variables) {
       // safety net to avoid blowing OOM - don't load APIs if there are more than 100
       $apiCount = count($apiNids);
       $enforcedCount = 0;
-      if ($apiCount > 0 && $apiCount < 100) {
-        $apis = Node::loadMultiple($apiNids);
+      foreach (array_chunk($apiNids, 50) as $chunk) {
+        $apis = Node::loadMultiple($chunk);
         $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
         foreach ($apis as $key => $api) {
           // ensure use the translated version of api nodes
@@ -500,7 +522,7 @@ function product_preprocess_node(&$variables) {
           $swagger = NULL;
           if (isset($api->api_swagger->value)) {
             $swagger = unserialize($api->api_swagger->value, ['allowed_classes' => FALSE]);
-            if (isset($swagger['x-ibm-configuration']) && $swagger['x-ibm-configuration']['enforced'] === true) {
+            if (isset($swagger['x-ibm-configuration']) && $swagger['x-ibm-configuration']['enforced'] === TRUE) {
               $enforcedCount++;
             }
           }
@@ -511,7 +533,6 @@ function product_preprocess_node(&$variables) {
             'swagger' => $swagger,
           ];
           $apiList[] = $listEntry;
-
         } // end for
       }
       $variables['apiList'] = $apiList;
@@ -525,15 +546,15 @@ function product_preprocess_node(&$variables) {
           $productPlans[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
         }
         $billing = FALSE;
-        $billingEnabled = (boolean) \Drupal::service('ibm_apim.billing')->isEnabled();
+        $billingEnabled = (bool) \Drupal::service('ibm_apim.billing')->isEnabled();
         if ($productPlans !== NULL && is_array($productPlans) && count($productPlans) > 0) {
           $productData = yaml_parse($variables['node']->product_data->value);
           foreach ($productPlans as $plan) {
             // check the plan name is actually set - this can be missing if it only consisted of DBCS chars in apim
             // its not valid though and there is an apim bug to get it fixed. We cannot continue without a plan name though!
-            if ($plan['name'] !== null && !empty(trim($plan['name']))) {
+            if ($plan['name'] !== NULL && !empty(trim($plan['name']))) {
               $planId = $variables['node']->apic_url->value . ':' . $plan['name'];
-              $planArray[$planId] = $planService->process($planId, $plan, $apiList, $apiRefs, $productData);
+              $planArray[$planId] = $planService->process($planId, $plan, $apiList, $productData['apis']);
               if (isset($plan['deploymentState'])) {
                 $planArray[$planId]['deploymentState'] = $plan['deploymentState'];
               }
@@ -550,7 +571,11 @@ function product_preprocess_node(&$variables) {
               if ($billingEnabled) {
                 // get price
                 $parseValue = $plan['billing'] ?? [];
-                $planArray[$planId]['billing-info'] = $planService->parseBilling($parseValue);
+
+                $billingInfo = $planService->parseBilling($parseValue);
+
+                $planArray[$planId]['billing']['billingText'] = $billingInfo['billingText'];
+                $planArray[$planId]['billing']['trialPeriodText'] = $billingInfo['trialPeriodText'];
               }
             }
             else {
@@ -632,7 +657,7 @@ function product_preprocess_node(&$variables) {
 function product_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
   switch ($form_id) {
     // remove link to delete our content type
-    case 'node_type_edit_form' :
+    case 'node_type_edit_form':
       if (isset($form['type']['#default_value'], $form['actions']['delete']) && $form['type']['#default_value'] === 'product') {
         unset($form['actions']['delete']);
       }
@@ -656,7 +681,7 @@ function product_form_alter(array &$form, FormStateInterface $form_state, $form_
  *
  * @return bool
  */
-function product_check_product_subscribe($node) {
+function product_check_product_subscribe($node): bool {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   $returnValue = FALSE;
   if ($node !== NULL) {
@@ -666,7 +691,9 @@ function product_check_product_subscribe($node) {
     if (\Drupal::currentUser()->isAnonymous()) {
       // even for anonymous we need to block subscribing to deprecated products
       $state = $node->product_state->value;
-      if ($state === NULL || empty($state) || mb_strtolower($state) !== 'deprecated') {
+      // if subscribe disabled then no one has access
+      $subscribeEnabled = (bool) $node->product_subscribe_enabled->value;
+      if ($state === NULL || empty($state) || (mb_strtolower($state) !== 'deprecated' && $subscribeEnabled === TRUE)) {
         $returnValue = TRUE;
       }
     }
@@ -679,7 +706,7 @@ function product_check_product_subscribe($node) {
         $state = $node->product_state->value;
         if ($state === NULL || empty($state) || mb_strtolower($state) !== 'deprecated') {
           // if subscribe disabled then no one has access
-          $subscribeEnabled = (boolean) $node->product_subscribe_enabled->value;
+          $subscribeEnabled = (bool) $node->product_subscribe_enabled->value;
           if ($subscribeEnabled === TRUE) {
             // now check specific access
 
@@ -707,7 +734,7 @@ function product_check_product_subscribe($node) {
                   $consumerOrg = $corgService->get($myOrg['url']);
                   if (isset($consumerOrg)) {
                     $tags = $consumerOrg->getTags();
-                    if ($tags !== NULL && is_array($tags) && count($tags) > 0) {
+                    if ($tags !== NULL && is_array($tags) && count($tags) > 0 && isset($visibility['subscribe']['group_urls'])) {
                       foreach ($visibility['subscribe']['group_urls'] as $customTag) {
                         if ($customTag !== NULL && !empty($customTag) && in_array($customTag, $tags, TRUE)) {
                           $returnValue = TRUE;
@@ -768,7 +795,7 @@ function product_menu_links_discovered_alter(&$links) {
  *
  * @return array
  */
-function product_theme($existing, $type, $theme, $path) {
+function product_theme($existing, $type, $theme, $path): array {
   return [
     'product_select' => [
       'variables' => [
@@ -790,7 +817,7 @@ function product_theme($existing, $type, $theme, $path) {
 /**
  * Implements hook_token_info().
  */
-function product_token_info() {
+function product_token_info(): array {
 
   $types['product'] = [
     'name' => t('Product'),
@@ -803,55 +830,55 @@ function product_token_info() {
     'needs-data' => 'product-plan',
   ];
 
-  $product['name'] = array(
+  $product['name'] = [
     'name' => t("Name"),
     'description' => t("The name of the product"),
-  );
-  $product['title'] = array(
+  ];
+  $product['title'] = [
     'name' => t("Title"),
     'description' => t("The title of the product"),
-  );
-  $product['id'] = array(
+  ];
+  $product['id'] = [
     'name' => t("ID"),
     'description' => t("The ID of the product"),
-  );
-  $product['state'] = array(
+  ];
+  $product['state'] = [
     'name' => t("State"),
     'description' => t("The state of the product"),
-  );
-  $product['apis'] = array(
+  ];
+  $product['apis'] = [
     'name' => t("APIs"),
     'description' => t("A comma separated list of APIs (name:version) within the product."),
-  );
-  $product['plans'] = array(
+  ];
+  $product['plans'] = [
     'name' => t("Plans"),
     'description' => t("A comma separated list of Plans names within the product."),
-  );
-  $product['image_url'] = array(
+  ];
+  $product['image_url'] = [
     'name' => t("Image URL"),
     'description' => t("The URL of the image for the product"),
-  );
+  ];
 
-  $plan['name'] = array(
+  $plan['name'] = [
     'name' => t("Name"),
     'description' => t("The name of a given plan within the product"),
-  );
-  $plan['title'] = array(
+  ];
+  $plan['title'] = [
     'name' => t("Title"),
     'description' => t("The title of the plan"),
-  );
-  $plan['description'] = array(
+  ];
+  $plan['description'] = [
     'name' => t("Description"),
     'description' => t("The description of the plan"),
-  );
-  $plan['approval'] = array(
+  ];
+  $plan['approval'] = [
     'name' => t("Approval required"),
     'description' => t("Whether the plan requires approval or not"),
-  );
-  $plan['rate-limits'] = array(
+  ];
+  $plan['rate-limits'] = [
     'name' => t("Rate limits"),
     'description' => t("A comma separated list of rate limit name value pairs the plan contains"),
-  );
+  ];
 
   return [
     'types' => $types,
@@ -871,7 +898,7 @@ function product_token_info() {
  *
  * @return array
  */
-function product_tokens($type, $tokens, array $data = [], array $options = []) {
+function product_tokens($type, $tokens, array $data = [], array $options = []): array {
 
   $replacements = [];
   if ($type === 'product' && !empty($data['product'])) {
@@ -896,7 +923,7 @@ function product_tokens($type, $tokens, array $data = [], array $options = []) {
           foreach ($product->product_apis->getValue() as $arrayValue) {
             $apis = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
             foreach ($apis as $prodRef) {
-              array_push($apisList, $prodRef);
+              $apisList[] = $prodRef;
             }
           }
           $replacements[$original] = implode(", ", $apisList);
@@ -906,15 +933,14 @@ function product_tokens($type, $tokens, array $data = [], array $options = []) {
           foreach ($product->product_plans->getValue() as $arrayValue) {
             $plan = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
 
-            array_push($plansList, $plan['name']);
-
+            $plansList[] = $plan['name'];
           }
 
           $replacements[$original] = implode(", ", $plansList);
           break;
         case 'image_url':
           $config = \Drupal::config('ibm_apim.settings');
-          $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
+          $ibmApimShowPlaceholderImages = (bool) $config->get('show_placeholder_images');
           $customImage = $product->apic_image;
           $customImageString = NULL;
 
@@ -927,7 +953,8 @@ function product_tokens($type, $tokens, array $data = [], array $options = []) {
           if ($customImageString !== NULL && !empty($customImageString)) {
             if (preg_match('/^http[s]?:\/\//', $customImageString) === 1) {
               $productImageUrl = $customImageString;
-            } else {
+            }
+            else {
               $productImageUrl = NULL;
             }
           }
@@ -962,8 +989,8 @@ function product_tokens($type, $tokens, array $data = [], array $options = []) {
           break;
         case 'rate-limits':
           $rateLimits = [];
-          foreach ($plan['rate-limits'] as $name => $limit) {
-            array_push($rateLimits, $name . ': ' . $limit['value']);
+          foreach ($plan['rate-limits'] as $planName => $limit) {
+            $rateLimits[] = $planName . ': ' . $limit['value'];
           }
           if (isset($rateLimits) && !empty($rateLimits)) {
             $replacements[$original] = implode(", ", $rateLimits);;

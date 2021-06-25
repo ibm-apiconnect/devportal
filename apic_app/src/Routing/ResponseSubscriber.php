@@ -23,17 +23,31 @@ use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 
 class ResponseSubscriber extends HttpExceptionSubscriberBase {
 
-  protected $currentUser;
+  /**
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected AccountInterface $currentUser;
 
+  /**
+   * ResponseSubscriber constructor.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   */
   public function __construct(AccountInterface $current_user) {
     $this->currentUser = $current_user;
   }
 
-  protected function getHandledFormats() : array{
+  /**
+   * @return string[]
+   */
+  protected function getHandledFormats(): array {
     return ['html'];
   }
 
-  public function on404(GetResponseForExceptionEvent $event) : void{
+  /**
+   * @param \Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent $event
+   */
+  public function on404(GetResponseForExceptionEvent $event): void {
     $request = $event->getRequest();
     $is_anonymous = $this->currentUser->isAnonymous();
     $pathInfo = $request->getPathInfo();
@@ -49,7 +63,8 @@ class ResponseSubscriber extends HttpExceptionSubscriberBase {
       $externalRedirect = UrlHelper::isExternal($login_uri);
       if ($externalRedirect) {
         $returnResponse = new TrustedRedirectResponse($login_uri);
-      } else {
+      }
+      else {
         $returnResponse = new RedirectResponse($login_uri);
       }
 

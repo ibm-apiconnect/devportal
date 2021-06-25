@@ -21,35 +21,80 @@ namespace Drupal\ibm_apim\ApicType;
  */
 class ApicUser {
 
-  private $username;
+  /**
+   * @var string|null
+   */
+  private ?string $username = NULL;
 
-  private $password;
+  /**
+   * @var string|null
+   */
+  private ?string $password = NULL;
 
-  private $mail;
+  /**
+   * @var string|null
+   */
+  private ?string $mail = NULL;
 
-  private $firstname;
+  /**
+   * @var string|null
+   */
+  private ?string $firstname = NULL;
 
-  private $lastname;
+  /**
+   * @var string|null
+   */
+  private ?string $lastname = NULL;
 
-  private $state;
+  /**
+   * @var string|null
+   */
+  private ?string $state = NULL;
 
-  private $url;
+  /**
+   * @var string|null
+   */
+  private ?string $url = NULL;
 
-  private $organization;
+  /**
+   * @var string|null
+   */
+  private ?string $organization = NULL;
 
-  private $consumerorgs;
+  /**
+   * @var array
+   */
+  private array $consumerorgs = [];
 
-  private $permissions;
+  /**
+   * @var array
+   */
+  private array $permissions = [];
 
-  private $apic_user_registry_url;
+  /**
+   * @var string|null
+   */
+  private ?string $apic_user_registry_url = NULL;
 
-  private $apic_idp;
+  /**
+   * @var string|null
+   */
+  private ?string $apic_idp = NULL;
 
-  private $authcode;
+  /**
+   * @var string|null
+   */
+  private ?string $authcode = NULL;
 
-  private $custom_fields;
+  /**
+   * @var array
+   */
+  private array $custom_fields = [];
 
-  private $metadata;
+  /**
+   * @var array
+   */
+  private array $metadata = [];
 
   /**
    * Constructor.
@@ -58,201 +103,205 @@ class ApicUser {
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function getUsername() {
+  public function getUsername(): ?string {
     return $this->username;
   }
 
   /**
-   * @param mixed $username
+   * @param string|null $username
    */
-  public function setUsername($username): void {
+  public function setUsername(?string $username): void {
     $this->username = $username;
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function getPassword() {
+  public function getPassword(): ?string {
     return $this->password;
   }
 
   /**
-   * @param mixed $password
+   * @param string|null $password
    */
-  public function setPassword($password): void {
+  public function setPassword(?string $password): void {
     $this->password = $password;
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function getMail() {
+  public function getMail(): ?string {
     return $this->mail;
   }
 
   /**
-   * @param mixed $mail
+   * @param string|null $mail
    */
-  public function setMail($mail): void {
+  public function setMail(?string $mail): void {
     $this->mail = $mail;
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function getFirstname() {
+  public function getFirstname(): ?string {
     return $this->firstname;
   }
 
   /**
-   * @param mixed $firstname
+   * @param string|null $firstname
    */
-  public function setFirstname($firstname): void {
+  public function setFirstname(?string $firstname): void {
     $this->firstname = $firstname;
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function getLastname() {
+  public function getLastname(): ?string {
     return $this->lastname;
   }
 
   /**
-   * @param mixed $lastname
+   * @param string|null $lastname
    */
-  public function setLastname($lastname): void {
+  public function setLastname(?string $lastname): void {
     $this->lastname = $lastname;
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function getState() {
+  public function getState(): ?string {
     return $this->state;
   }
 
   /**
-   * @param mixed $state
+   * @param string|null $state
    */
-  public function setState($state): void {
+  public function setState(?string $state): void {
     $this->state = $state;
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function getAuthcode() {
+  public function getAuthcode(): ?string {
     return $this->authcode;
   }
 
   /**
-   * @param mixed $state
+   * @param string|null $code
    */
-  public function setAuthcode($code): void {
+  public function setAuthcode(?string $code): void {
     $this->authcode = $code;
   }
 
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function getUrl() {
+  public function getUrl(): ?string {
     return $this->url;
   }
 
   /**
    * the user's ID should be the last part of their URL
    *
-   * @return mixed
+   * @return string|null
    */
-  public function getId() {
+  public function getId(): ?string {
     return basename($this->url);
   }
 
   /**
-   * @param mixed $url
+   * @param string|null $url
    */
-  public function setUrl($url): void {
+  public function setUrl(?string $url): void {
     $this->url = $url;
   }
 
   /**
-   * @return mixed
+   * @return array
    */
-  public function getConsumerorgs() {
+  public function getConsumerorgs(): array {
     return $this->consumerorgs;
   }
 
   /**
-   * @param mixed $consumerorgs
+   * @param array $consumerorgs
    */
-  public function setConsumerorgs($consumerorgs): void {
+  public function setConsumerorgs(array $consumerorgs): void {
     $this->consumerorgs = $consumerorgs;
   }
 
   /**
-   * @return mixed
+   * @return array
    */
-  public function getPermissions() {
+  public function getPermissions(): array {
     return $this->permissions;
   }
 
   /**
-   * @param mixed $permissions
+   * @param array $permissions
    */
-  public function setPermissions($permissions): void {
+  public function setPermissions(array $permissions): void {
     $this->permissions = $permissions;
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function getApicUserRegistryUrl() {
+  public function getApicUserRegistryUrl(): ?string {
     return $this->apic_user_registry_url;
   }
 
   /**
-   * @param mixed $apic_user_registry_url
+   * @param string|null $apic_user_registry_url
    */
-  public function setApicUserRegistryUrl($apic_user_registry_url): void {
+  public function setApicUserRegistryUrl(?string $apic_user_registry_url): void {
     $this->apic_user_registry_url = $apic_user_registry_url;
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function getApicIdp() {
+  public function getApicIdp(): ?string {
     return $this->apic_idp;
   }
 
   /**
-   * @param mixed $apic_idp
+   * @param string|null $apic_idp
    */
-  public function setApicIdp($apic_idp): void {
+  public function setApicIdp(?string $apic_idp): void {
     $this->apic_idp = $apic_idp;
   }
 
   /**
-   * @return mixed
+   * Get the string name provided on the register form
+   *
+   * @return string|null
    */
-  public function getOrganization() {
+  public function getOrganization(): ?string {
     return $this->organization;
   }
 
   /**
-   * @param mixed $organization
+   * This is the org name provided on the register form
+   *
+   * @param string|null $organization
    */
-  public function setOrganization($organization): void {
+  public function setOrganization(?string $organization): void {
     $this->organization = $organization;
   }
 
-    /**
-   * @return mixed
+  /**
+   * @return array
    */
-  public function getCustomFields() {
+  public function getCustomFields(): array {
     if (!isset($this->custom_fields)) {
       $this->custom_fields = [];
     }
@@ -260,16 +309,21 @@ class ApicUser {
   }
 
   /**
-   * @param mixed $customFields
+   * @param array $customFields
    */
-  public function setCustomFields($customFields): void {
+  public function setCustomFields(array $customFields): void {
     if (empty($customFields)) {
       $this->custom_fields = [];
-    } else {
+    }
+    else {
       $this->custom_fields = $customFields;
     }
   }
 
+  /**
+   * @param $field
+   * @param $value
+   */
   public function addCustomField($field, $value): void {
     if (!isset($this->custom_fields)) {
       $this->custom_fields = [];
@@ -277,7 +331,10 @@ class ApicUser {
     $this->custom_fields[$field] = $value;
   }
 
-  public function getMetadata() {
+  /**
+   * @return array
+   */
+  public function getMetadata(): array {
     if (!isset($this->metadata)) {
       $this->metadata = [];
     }
@@ -285,12 +342,13 @@ class ApicUser {
   }
 
   /**
-   * @param mixed $metadata
+   * @param array $metadata
    */
-  public function setMetadata($metadata): void {
+  public function setMetadata(array $metadata): void {
     if (empty($metadata)) {
       $this->metadata = [];
-    } else {
+    }
+    else {
       $this->metadata = $metadata;
     }
   }
@@ -300,6 +358,8 @@ class ApicUser {
    * convert array to object
    *
    * @param array $content
+   *
+   * @throws \JsonException
    */
   public function createFromArray(array $content): void {
     $apimUtils = \Drupal::service('ibm_apim.apim_utils');
@@ -358,9 +418,9 @@ class ApicUser {
     }
 
     $customFields = \Drupal::service('ibm_apim.apicuser')->getCustomUserFields();
-    foreach($customFields as $field) {
+    foreach ($customFields as $field) {
       if (array_key_exists($field, $content)) {
-        $this->addCustomField($field, json_decode($content[$field], true));
+        $this->addCustomField($field, json_decode($content[$field], TRUE, 512, JSON_THROW_ON_ERROR));
       }
     }
   }
@@ -369,6 +429,7 @@ class ApicUser {
    * convert object to array
    *
    * @return array
+   * @throws \JsonException
    */
   public function toArray(): array {
     $content = [];
@@ -413,11 +474,12 @@ class ApicUser {
       $content['authcode'] = $this->authcode;
     }
     $customFields = \Drupal::service('ibm_apim.apicuser')->getCustomUserFields();
-    foreach($customFields as $field) {
+    foreach ($customFields as $field) {
       if (isset($this->custom_fields[$field])) {
-        $content[$field] = json_encode($this->custom_fields[$field]);
+        $content[$field] = json_encode($this->custom_fields[$field], JSON_THROW_ON_ERROR);
       }
     }
     return $content;
   }
+
 }

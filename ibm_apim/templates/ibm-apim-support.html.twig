@@ -11,24 +11,27 @@
   <div id="support-wrapper">
     <div class="supportContentWrapper">
       <div class="faqDiv">
+        <h2 class="viewTitle">{{ 'Frequently asked questions'|t }}</h2>
         {{ drupal_view('faqs', 'page_1') }}
+        {{ drupal_entity('block','apiconceptsblock') }}
       </div>
       <div class="contactDiv">
         {% if forum %}
           <div class="forumDiv">
             <h2>{{ 'Search Developer Forum'|t }}</h2>
             <p>{% set forum_path = path('forum.index') %}{% trans %}
-              Connect to our <a href="{{ forum_path }}">developer forum</a> to ask questions and search content from experienced developers.
+                Connect to our <a href="{{ forum_path }}">developer
+                  forum</a> to ask questions and search content from experienced developers.
               {% endtrans %}</p>
           </div>
         {% endif %}
         {% if contact %}
           <div class="contactFormDiv">
             <h2>{{ 'Provide Feedback'|t }}</h2>
-              <a href="#feedback" class="feedbackToggle" data-toggle="collapse">{{ 'Tell us what you think.'|t }}</a>
-              <div id="feedback" class="collapse feedbackCollapse">
-                {{ drupal_entity('block','contactblock') }}
-              </div>
+            <a href="#feedback" class="feedbackToggle" data-toggle="collapse">{{ 'Tell us what you think.'|t }}</a>
+            <div id="feedback" class="collapse feedbackCollapse">
+              {{ drupal_entity('block','contactblock') }}
+            </div>
           </div>
         {% endif %}
         {% if social %}

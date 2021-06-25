@@ -14,6 +14,7 @@
 namespace Drupal\apic_app\Service;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\ibm_apim\Service\Utils;
 
 class CertificateService {
@@ -21,11 +22,20 @@ class CertificateService {
   /**
    * @var \Drupal\ibm_apim\Service\Utils
    */
-  protected $utils;
+  protected Utils $utils;
 
-  protected $ibm_apim_config;
+  /**
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected ImmutableConfig $ibm_apim_config;
 
-  public function __construct(Utils $utils, ConfigFactoryInterface $ibm_apim_config ) {
+  /**
+   * CertificateService constructor.
+   *
+   * @param \Drupal\ibm_apim\Service\Utils $utils
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $ibm_apim_config
+   */
+  public function __construct(Utils $utils, ConfigFactoryInterface $ibm_apim_config) {
     $this->utils = $utils;
     $this->ibm_apim_config = $ibm_apim_config->get('ibm_apim.settings');
   }
@@ -33,18 +43,18 @@ class CertificateService {
   /**
    * Cleanup the certificate based on the settings
    *
-   * @param string $certificate
+   * @param string|NULL $certificate
    *
    * @return string
    */
-  public function cleanup($certificate) : string{
-    if ($certificate === null) {
+  public function cleanup(?string $certificate): string {
+    if ($certificate === NULL) {
       $certificate = '';
     }
-    if ((boolean) $this->ibm_apim_config->get('certificate_strip_prefix') === true) {
+    if ((boolean) $this->ibm_apim_config->get('certificate_strip_prefix') === TRUE) {
       $certificate = $this->stripPrefix($certificate);
     }
-    if ((boolean) $this->ibm_apim_config->get('certificate_strip_newlines') === true) {
+    if ((boolean) $this->ibm_apim_config->get('certificate_strip_newlines') === TRUE) {
       $certificate = $this->stripNewlines($certificate);
     }
 
@@ -58,16 +68,16 @@ class CertificateService {
    *
    * @return string
    */
-  public function stripNewlines($certificate) : string{
-    if ($certificate === null) {
+  public function stripNewlines($certificate): string {
+    if ($certificate === NULL) {
       $certificate = '';
     }
-    $whitespaceInPrefix = false;
+    $whitespaceInPrefix = FALSE;
     if ($this->utils->startsWith($certificate, '-----BEGIN CERTIFICATE-----')) {
-      $whitespaceInPrefix = true;
+      $whitespaceInPrefix = TRUE;
     }
 
-    $certificate = str_replace([' ', '\t','\n','\r','\0','\x0B'],'', $certificate);
+    $certificate = str_replace([' ', '\t', '\n', '\r', '\0', '\x0B'], '', $certificate);
     if ($whitespaceInPrefix) {
       // reinstate the space char in the prefix and suffix
       $certificate = str_replace(['BEGINCERTIFICATE', 'ENDCERTIFICATE'], ['BEGIN CERTIFICATE', 'END CERTIFICATE'], $certificate);
@@ -83,13 +93,11 @@ class CertificateService {
    *
    * @return string
    */
-  public function stripPrefix($certificate) : string{
-    if ($certificate === null) {
+  public function stripPrefix($certificate): string {
+    if ($certificate === NULL) {
       $certificate = '';
     }
-    $certificate = str_replace(['-----BEGIN CERTIFICATE-----', '-----END CERTIFICATE-----'], '', $certificate);
-
-    return $certificate;
+    return str_replace(['-----BEGIN CERTIFICATE-----', '-----END CERTIFICATE-----'], '', $certificate);
   }
 
 }

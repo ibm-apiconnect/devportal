@@ -21,14 +21,14 @@ interface RestResponseInterface {
   /**
    * Set status code.
    *
-   * @param $code
+   * @param int|null $code
    */
-  public function setCode($code): void;
+  public function setCode(?int $code): void;
 
   /**
    * Get status code.
    *
-   * @return int
+   * @return int|null
    *   Status code.
    */
   public function getCode(): ?int;
@@ -36,14 +36,14 @@ interface RestResponseInterface {
   /**
    * Set headers.
    *
-   * @param $headers
+   * @param array|null $headers
    */
-  public function setHeaders($headers): void;
+  public function setHeaders(?array $headers): void;
 
   /**
    * Get headers.
    *
-   * @return array
+   * @return array|null
    *   HTTP headers
    */
   public function getHeaders(): ?array;
@@ -51,14 +51,14 @@ interface RestResponseInterface {
   /**
    * Set data.
    *
-   * @param $data
+   * @param array|null $data
    */
-  public function setData($data): void;
+  public function setData(?array $data): void;
 
   /**
    * Get HTTP response body.
    *
-   * @return array
+   * @return array|null
    *   HTTP response body.
    */
   public function getData(): ?array;
@@ -66,14 +66,14 @@ interface RestResponseInterface {
   /**
    * Set errors.
    *
-   * @param $errors
+   * @param array|null $errors
    */
-  public function setErrors($errors): void;
+  public function setErrors(?array $errors): void;
 
   /**
    * Get errors.
    *
-   * @return array
+   * @return array|null
    *   Errors.
    */
   public function getErrors(): ?array;

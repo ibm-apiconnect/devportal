@@ -14,8 +14,10 @@
 namespace Drupal\ibm_apim\UserManagement\Mocks;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\State\State;
+use Drupal\Core\TempStore\PrivateTempStore;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
@@ -34,24 +36,36 @@ class MockApicAccountService implements ApicAccountInterface {
   /**
    * Temp store for session data.
    *
-   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory
+   * @var \Drupal\Core\TempStore\PrivateTempStore
    */
-  protected $sessionStore;
+  protected PrivateTempStore $sessionStore;
 
   /**
    * Management server.
    *
    * @var \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface
    */
-  protected $mgmtServer;
+  protected ManagementServerInterface $mgmtServer;
 
-  protected $userStorage;
+  /**
+   * @var \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface
+   */
+  protected ApicUserStorageInterface $userStorage;
 
-  protected $state;
+  /**
+   * @var \Drupal\Core\State\State
+   */
+  protected State $state;
 
-  protected $provider = 'auth_apic';
+  /**
+   * @var string
+   */
+  protected string $provider = 'auth_apic';
 
-  protected $messenger;
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected Messenger $messenger;
 
   /**
    * MockApicAccountService constructor.
@@ -60,6 +74,7 @@ class MockApicAccountService implements ApicAccountInterface {
    * @param \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface $mgmtInterface
    * @param \Drupal\Core\State\State $state
    * @param \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface $user_storage
+   * @param \Drupal\Core\Messenger\Messenger $messenger
    */
   public function __construct(PrivateTempStoreFactory $tempStoreFactory,
                               ManagementServerInterface $mgmtInterface,
@@ -76,20 +91,21 @@ class MockApicAccountService implements ApicAccountInterface {
 
   /**
    * @inheritDoc
+   * @throws \Exception
    */
-  public function registerApicUser(ApicUser $apicUser): ?EntityInterface {
+  public function registerApicUser(ApicUser $user): ?EntityInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $apicUser->getUsername());
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $user->getUsername());
     }
     $returnValue = NULL;
     try {
 
       // The code inside this if statement isn't valid in the unit test environment where we have no Drupal instance
       if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
-        $returnValue = $this->loadUserFromDatabase($apicUser);
+        $returnValue = $this->loadUserFromDatabase($user);
       }
       if ($returnValue === NULL) {
-        $account = $this->userStorage->register($apicUser);
+        $account = $this->userStorage->register($user);
         $returnValue = $account;
       }
     } catch (\Exception $e) {
@@ -113,45 +129,53 @@ class MockApicAccountService implements ApicAccountInterface {
   /**
    * @inheritDoc
    */
-  public function updateLocalAccount(ApicUser $user): ?UserInterface {
+  public function updateLocalAccount(ApicUser $user) {
 
-    $dbuser = $this->loadUserFromDatabase($user);
-    if ($dbuser !== NULL) {
-      $dbuser->set('first_name', $user->getFirstname());
-      $dbuser->set('last_name', $user->getLastname());
-      $dbuser->set('mail', $user->getMail());
-      $dbuser->save();
+    $dbUser = $this->loadUserFromDatabase($user);
+    if ($dbUser !== NULL) {
+      $dbUser->set('first_name', $user->getFirstname());
+      $dbUser->set('last_name', $user->getLastname());
+      $dbUser->set('mail', $user->getMail());
+      $dbUser->save();
     }
 
     $this->messenger->addStatus('MOCKED SERVICE:: Your account has been updated.');
-    return $dbuser;
+    return $dbUser;
   }
 
 
   /**
    * @inheritDoc
    */
-  public function updateLocalAccountRoles(ApicUser $user, $roles): bool {
+  public function updateLocalAccountRoles(ApicUser $user, array $roles): bool {
 
-    $dbuser = $this->loadUserFromDatabase($user);
-    // Splat all of the old roles
-    $existingRoles = $dbuser->getRoles();
-    foreach ($existingRoles as $role) {
-      $dbuser->removeRole($role);
-    }
+    $dbUser = $this->loadUserFromDatabase($user);
+    if ($dbUser !== NULL){
+      // Splat all of the old roles
+      $existingRoles = $dbUser->getRoles();
+      foreach ($existingRoles as $role) {
+        $dbUser->removeRole($role);
+      }
 
-    // Add all of the new roles
-    unset($roles['authenticated']);          // This isn't a 'proper' role so remove it
-    foreach ($roles as $role) {
-      if ($role !== 'authenticated') {
-        $dbuser->addRole($role);
+      // Add all of the new roles
+      unset($roles['authenticated']);          // This isn't a 'proper' role so remove it
+      foreach ($roles as $role) {
+        if ($role !== 'authenticated') {
+          $dbUser->addRole($role);
+        }
       }
     }
 
     return TRUE;
   }
 
-  public function saveCustomFields($apicUser, $user, $form_state, $view_mode): void {
+  /**
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $apic_user
+   * @param $user
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   * @param $view_mode
+   */
+  public function saveCustomFields(ApicUser $apic_user, $user, FormStateInterface $form_state, $view_mode): void {
     \Drupal::logger('ibm_apim_mocks')->error('MockApicAccountService::saveCustomFields not implemented');
   }
 
@@ -164,14 +188,16 @@ class MockApicAccountService implements ApicAccountInterface {
    */
   public function createOrUpdateLocalAccount(ApicUser $user): ?UserInterface {
     \Drupal::logger('ibm_apim_mocks')->warning('MockApicAccountService::createOrUpdateLocalAccount not implemented');
+    return null;
   }
 
   /**
    * @param \Drupal\ibm_apim\ApicType\ApicUser $user
+   *
+   * @return \Drupal\Core\Entity\EntityInterface|null
    */
-  private function loadUserFromDatabase(ApicUser $user) {
-    $user = $this->userStorage->load($user);
-    return $user;
+  private function loadUserFromDatabase(ApicUser $user): ?EntityInterface {
+    return $this->userStorage->load($user);
   }
 
 }

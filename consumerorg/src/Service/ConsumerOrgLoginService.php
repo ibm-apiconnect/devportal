@@ -17,18 +17,42 @@ use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Class ConsumerOrgLoginService
+ *
+ * @package Drupal\consumerorg\Service
+ */
 class ConsumerOrgLoginService implements ConsumerOrgLoginInterface {
 
-  private $orgService;
-  private $logger;
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
+  private ConsumerOrgService $orgService;
 
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  private LoggerInterface $logger;
 
+  /**
+   * ConsumerOrgLoginService constructor.
+   *
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $org_service
+   * @param \Psr\Log\LoggerInterface $logger
+   */
   public function __construct(ConsumerOrgService $org_service,
                               LoggerInterface $logger) {
     $this->orgService = $org_service;
     $this->logger = $logger;
   }
 
+  /**
+   * @param \Drupal\consumerorg\ApicType\ConsumerOrg $consumerorg
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $user
+   *
+   * @return \Drupal\consumerorg\ApicType\ConsumerOrg|null
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
   public function createOrUpdateLoginOrg(ConsumerOrg $consumerorg, ApicUser $user): ?ConsumerOrg {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $consumerorg->getUrl());
@@ -61,18 +85,11 @@ class ConsumerOrgLoginService implements ConsumerOrgLoginInterface {
 
     // regardless of whether we just created the org or not, we may need to update membership
     // if this user is not listed already as a member of the org, add them
-    if ($theOrg !== NULL && $theOrg->isMember($user->getUrl()) === FALSE) {
-
+    $consumerorg->addMembers($theOrg->getMembers());
+    $consumerorg->addRoles($theOrg->getRoles());
+    if ($theOrg->isMember($user->getUrl()) === FALSE) {
       // get existing members and roles so they can be preserved
-      $consumerorg->addMembers($theOrg->getMembers());
-      $consumerorg->addRoles($theOrg->getRoles());
-
       $this->orgService->createOrUpdateNode($consumerorg, 'login-update-members');
-    }
-    else {
-      // while we aren't updating a node, ensure we are returning an accurate representation of the org
-      $consumerorg->addMembers($theOrg->getMembers());
-      $consumerorg->addRoles($theOrg->getRoles());
     }
 
     if (\function_exists('ibm_apim_exit_trace')) {

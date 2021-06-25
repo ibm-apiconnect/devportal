@@ -17,20 +17,20 @@ use Prophecy\Prophet;
 
 abstract class AuthApicTestBaseClass extends UnitTestCase {
 
-  protected $prophet;
+  protected Prophet $prophet;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
   /**
    * Common base for createAccountStub and createBlockedAccountStub
    *
-   * @return mixed
+   * @return \Drupal\user\Entity\User|\Prophecy\Prophecy\ObjectProphecy
    */
   protected function createAccountBase() {
     $account = $this->prophet->prophesize(\Drupal\user\Entity\User::class);
@@ -44,7 +44,7 @@ abstract class AuthApicTestBaseClass extends UnitTestCase {
     $account->get('mail')->willReturn($this->createSimpleObject('value', 'abc@me.com'));
     $account->get('apic_user_registry_url')->willReturn($this->createSimpleObject('value', '/registry/idp1'));
     $account->get('registry_url')->willReturn($this->createSimpleObject('value', '/registry/idp1'));
-    $account->get('apic_state')->willReturn($this->createSimpleObject('value','enabled'));
+    $account->get('apic_state')->willReturn($this->createSimpleObject('value', 'enabled'));
     $first_time_field = $this->prophet->prophesize(\Drupal\Core\Field\FieldItemList::class);
     $first_time_field->getString()->willReturn('0');
     $account->get('first_time_login')->willReturn($first_time_field);
@@ -74,6 +74,7 @@ abstract class AuthApicTestBaseClass extends UnitTestCase {
 
   /**
    * Create a valid unblocked user
+   *
    * @return mixed
    */
   protected function createAccountStub() {
@@ -86,6 +87,7 @@ abstract class AuthApicTestBaseClass extends UnitTestCase {
 
   /**
    * Create a blocked user
+   *
    * @return mixed
    */
   protected function createBlockedAccountStub() {
@@ -122,7 +124,7 @@ abstract class AuthApicTestBaseClass extends UnitTestCase {
     $account = $this->createAccountBase();
     $account->get('status')->willReturn($this->createSimpleObject('value', 1));
     $account->isBlocked()->willReturn(FALSE);
-    $account->get('apic_state')->willReturn($this->createSimpleObject('value','pending'));
+    $account->get('apic_state')->willReturn($this->createSimpleObject('value', 'pending'));
 
     return $account->reveal();
   }

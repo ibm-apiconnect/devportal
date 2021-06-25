@@ -15,17 +15,35 @@ namespace Drupal\ibm_apim\ApicType;
 
 class AnalyticsServiceDefinition {
 
-  private $id;
+  /**
+   * @var string|null
+   */
+  private ?string $id = NULL;
 
-  private $name;
+  /**
+   * @var string|null
+   */
+  private ?string $name = NULL;
 
-  private $title;
+  /**
+   * @var string|null
+   */
+  private ?string $title = NULL;
 
-  private $summary;
+  /**
+   * @var string|null
+   */
+  private ?string $summary = NULL;
 
-  private $client_endpoint;
+  /**
+   * @var string|null
+   */
+  private ?string $clientEndpoint = NULL;
 
-  private $client_endpoint_tls_client_profile_url;
+  /**
+   * @var string|null
+   */
+  private ?string $clientEndpointTlsClientProfileUrl = NULL;
 
   /**
    * @return string|null
@@ -35,9 +53,9 @@ class AnalyticsServiceDefinition {
   }
 
   /**
-   * @param string $id
+   * @param string|null $id
    */
-  public function setId($id): void {
+  public function setId(?string $id): void {
     $this->id = $id;
   }
 
@@ -49,9 +67,9 @@ class AnalyticsServiceDefinition {
   }
 
   /**
-   * @param string $name
+   * @param string|null $name
    */
-  public function setName($name): void {
+  public function setName(?string $name): void {
     $this->name = $name;
   }
 
@@ -63,9 +81,9 @@ class AnalyticsServiceDefinition {
   }
 
   /**
-   * @param string $title
+   * @param string|null $title
    */
-  public function setTitle($title): void {
+  public function setTitle(?string $title): void {
     $this->title = $title;
   }
 
@@ -77,9 +95,9 @@ class AnalyticsServiceDefinition {
   }
 
   /**
-   * @param string $summary
+   * @param string|null $summary
    */
-  public function setSummary($summary): void {
+  public function setSummary(?string $summary): void {
     $this->summary = $summary;
   }
 
@@ -87,28 +105,28 @@ class AnalyticsServiceDefinition {
    * @return string|null
    */
   public function getClientEndpoint(): ?string {
-    return $this->client_endpoint;
+    return $this->clientEndpoint;
   }
 
   /**
-   * @param string $client_endpoint
+   * @param string|null $clientEndpoint
    */
-  public function setClientEndpoint(string $client_endpoint): void {
-    $this->client_endpoint = $client_endpoint;
+  public function setClientEndpoint(?string $clientEndpoint): void {
+    $this->clientEndpoint = $clientEndpoint;
   }
 
   /**
    * @return string|null
    */
   public function getClientEndpointTlsClientProfileUrl(): ?string {
-    return $this->client_endpoint_tls_client_profile_url;
+    return $this->clientEndpointTlsClientProfileUrl;
   }
 
   /**
-   * @param string $client_endpoint_tls_client_profile_url
+   * @param string|null $clientEndpointTlsClientProfileUrl
    */
-  public function setClientEndpointTlsClientProfileUrl(string $client_endpoint_tls_client_profile_url): void {
-    $this->client_endpoint_tls_client_profile_url = $client_endpoint_tls_client_profile_url;
+  public function setClientEndpointTlsClientProfileUrl(?string $clientEndpointTlsClientProfileUrl): void {
+    $this->clientEndpointTlsClientProfileUrl = $clientEndpointTlsClientProfileUrl;
   }
 
   /**
@@ -155,4 +173,5 @@ class AnalyticsServiceDefinition {
     $output['clientEndpointTlsClientProfileURL'] = $this->getClientEndpointTlsClientProfileUrl();
     return $output;
   }
+
 }

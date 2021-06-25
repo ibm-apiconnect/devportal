@@ -20,13 +20,16 @@ use Drupal\Core\Routing\Access\AccessInterface;
  */
 class AnalyticsAccessCheck implements AccessInterface {
 
-  public function access() : AccessResult{
+  /**
+   * @return \Drupal\Core\Access\AccessResult
+   */
+  public function access(): AccessResult {
     $allowed = FALSE;
     $config = \Drupal::config('ibm_apim.settings');
     $show_analytics = (boolean) $config->get('show_analytics');
-    
+
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
-    if(isset($analytics_service)) {
+    if (isset($analytics_service)) {
       $analyticsClientUrl = $analytics_service->getClientEndpoint();
       $current_user = \Drupal::currentUser();
       if ($show_analytics === TRUE && isset($analyticsClientUrl) && !$current_user->isAnonymous() && (int) $current_user->id() !== 1) {
@@ -36,4 +39,5 @@ class AnalyticsAccessCheck implements AccessInterface {
 
     return AccessResult::allowedIf($allowed);
   }
+
 }

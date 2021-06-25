@@ -54,7 +54,7 @@ class StripeConfigForm extends ConfigFormBase {
     }
 
     $form['intro'] = [
-      '#markup' => t('IBM API Connect Stripe Integration Settings'),
+      '#markup' => t('IBM API Developer Portal Stripe Integration Settings'),
       '#weight' => -20,
     ];
 
@@ -91,16 +91,15 @@ class StripeConfigForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
 
     // Validate the secret key.
     if (!empty($form_state->getValue('secret_key'))) {
-        try {
-            \Stripe\Stripe::setApiKey($form_state->getValue('secret_key'));
-        }
-        catch (\Stripe\Exception\ApiErrorException $e) {
-            $form_state->setError($form['secret_key'], $this->t('Invalid secret key.'));
-        }
+      try {
+        \Stripe\Stripe::setApiKey($form_state->getValue('secret_key'));
+      } catch (\Stripe\Exception\ApiErrorException $e) {
+        $form_state->setError($form['secret_key'], $this->t('Invalid secret key.'));
+      }
     }
   }
 
@@ -129,4 +128,5 @@ class StripeConfigForm extends ConfigFormBase {
 
     parent::submitForm($form, $form_state);
   }
+
 }

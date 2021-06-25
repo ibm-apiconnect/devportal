@@ -21,13 +21,9 @@ use Drupal\ibm_apim\Service\UserRegistryService;
 class MockUserRegistryService extends UserRegistryService {
 
   /**
-   * get a specific user_registry by url
-   *
-   * @param $key
-   *
-   * @return null|\Drupal\ibm_apim\ApicType\UserRegistry
+   * @inheritDoc
    */
-  public function get($key): ?UserRegistry {
+  public function get(string $key): ?UserRegistry {
 
     $registry = parent::get($key);
 
@@ -35,12 +31,18 @@ class MockUserRegistryService extends UserRegistryService {
       $registry = $this->createMockRegistry();
     }
 
-    $this->logger->debug('MockUserRegistryService::get(%key) returning %registryName' ,['%key' => $key, '%registryName' => $registry->getName()]);
+    $this->logger->debug('MockUserRegistryService::get(%key) returning %registryName', [
+      '%key' => $key,
+      '%registryName' => $registry->getName(),
+    ]);
 
     return $registry;
   }
 
-  public function updateAll($data): bool {
+  /**
+   * @inheritDoc
+   */
+  public function updateAll(array $data): bool {
     $this->logger->debug('MockUserRegistryService::updateAll() with %data', ['%data' => serialize($data)]);
     return parent::updateAll($data);
   }

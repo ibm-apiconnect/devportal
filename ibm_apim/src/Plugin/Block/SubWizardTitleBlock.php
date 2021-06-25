@@ -29,7 +29,7 @@ class SubWizardTitleBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  public function build() {
+  public function build(): array {
     $build = [];
 
     $current_route = \Drupal::routeMatch()->getRouteName();
@@ -42,7 +42,6 @@ class SubWizardTitleBlock extends BlockBase {
     if (isset($current_route) && in_array($current_route, $wizard_routes)) {
       /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
       $temp_store_factory = \Drupal::service('session_based_temp_store');
-      /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
       $temp_store = $temp_store_factory->get('ibm_apim.wizard');
       // First time through, the productId comes from the url
       $product_id = \Drupal::request()->query->get('productId');
@@ -70,7 +69,8 @@ class SubWizardTitleBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  public function getCacheMaxAge() {
+  public function getCacheMaxAge(): int {
     return 0;
   }
+
 }

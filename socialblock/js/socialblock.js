@@ -14,10 +14,10 @@
  * Setup masonry for the social block
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   Drupal.behaviors.socialblockSetup = {
-    attach: function (context) {
+    attach: function(context) {
 
       $('.socialblock.container').masonry({
         // options

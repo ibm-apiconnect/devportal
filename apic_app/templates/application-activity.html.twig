@@ -1,0 +1,103 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the application activity feed
+ *
+ * Variables available:
+ * - catalogId: the catalog ID
+ * - catalogName: urlencoded catalog name
+ * - porgId: provider organization ID
+ *
+ * @ingroup themeable
+ */
+#}
+
+<div class="applicationWrapper">
+  <header class="titleSection">
+    <div class="titleInnerWrapper">
+      <div class="leftTitle">
+        <div class="breadcrumb"><a href="{{- path('view.applications.page_1') }}">
+            {{ 'Applications'|t }}</a></div>
+        <div class="applicationTitle">
+          <div class="applicationLogo">
+            {% if node.image is defined and node.image|trim is not empty %}
+              <div class="apicAppIcon">
+                <img src="{{- node.image -}}" alt=""/>
+              </div>
+            {% endif %}</div>
+          <h1 class="applicationName">{{- node.title -}}</h1>
+
+        </div>
+      </div>
+      <div class="rightTitle">
+        {% if applifecycleEnabled and userHasAppManage %}
+          <div class="apicAppLifecycle apicAppActions">
+            {% if node.application_lifecycle_state|upper == 'DEVELOPMENT' %}
+              {% if node.application_lifecycle_pending is not defined or node.application_lifecycle_pending is empty %}
+                <a href="{{- path('apic_app.promote', {'appId': node.application_id}) -}}"
+                   class="button apicUpgradeApp"
+                   title="{{ 'Upgrade to production'|t }}">{{ 'Upgrade to production'|t }}</a>
+              {% else %}
+                <span>{{ 'Pending Upgrade'|t }}</span>
+              {% endif %}
+            {% endif %}
+          </div>
+        {% endif %}
+        {% if userHasAppManage %}
+          <div class="extraMenu">
+            <ul class="overflow-menu applicationMenu dropitmenu">
+              <li title="{{ 'Manage application'|t }}"><a title="{{ 'Manage application'|t }}" href="#" class="trigger">
+                <span class="dropit-icon">
+                <svg version="1.1" id="icon" xmlns="http://www.w3.org/2000/svg"
+                     xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                     width="32px" height="32px" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;"
+                     xml:space="preserve">
+                  <style type="text/css">.st0 {
+                      fill: none;
+                    }</style>
+                  <title>overflow-menu--vertical</title>
+                  <circle cx="16" cy="8" r="2"/>
+                  <circle cx="16" cy="16" r="2"/>
+                  <circle cx="16" cy="24" r="2"/>
+                  <rect id="_Transparent_Rectangle_" class="st0" width="32" height="32"/>
+                </svg></span></a>
+                <ul class="dropitmenu-submenu">
+                  <li class="editApplication"><a
+                        href="{{ path('apic_app.update', {'appId': node.application_id}) }}"
+                        title="{{ 'Edit App'|t }}">{{ 'Edit'|t }}</a>
+                  </li>
+                  {% if appImageUploadEnabled %}
+                    <li class="uploadImage"><a
+                          href="{{ path('apic_app.image_upload', {'appId': node.application_id}) }}"
+                          title="{{ 'Upload image'|t }}">{{ 'Upload image'|t }}</a>
+                    </li>
+                  {% endif %}
+                  <li class="deleteApplication"><a
+                        href="{{ path('apic_app.delete', {'appId': node.application_id}) }}"
+                        title="{{ 'Delete App'|t }}">{{ 'Delete'|t }}</a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+      <div class="applicationTabs">
+        <ul>
+          {% if analytics_access %}
+            <li><a class="dashboardApplication"
+                   href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Dashboard'|t }}</a></li>
+          {% endif %}
+          <li><a class="subscriptionsApplication"
+                 href="{{- path('apic_app.subscriptions', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
+          <li class="selected activityApplication"><a href="#">{{ 'Notifications'|t }}</a></li>
+        </ul>
+      </div>
+    </div>
+  </header>
+  <div class="contentInnerWrapper ibmapimActivity ibmapimAppActivity" id="contentWrapper">
+    <div class="activityContainer ">
+      {{ drupal_view('notifications', 'page_1') }}
+    </div>
+  </div>
+</div>

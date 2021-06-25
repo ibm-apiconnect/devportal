@@ -31,7 +31,6 @@ class ApiController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\RedirectResponse|array
    */
   public function apiView(NodeInterface $apiNode = NULL) {
-    $returnValue = NULL;
     if ($apiNode !== NULL && $apiNode->bundle() === 'api') {
       $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
       $build = $view_builder->view($apiNode, 'full');
@@ -52,7 +51,6 @@ class ApiController extends ControllerBase {
    * @return string
    */
   public function apiTitle(NodeInterface $apiNode = NULL): string {
-    $returnValue = NULL;
     if ($apiNode !== NULL && $apiNode->bundle() === 'api') {
       $returnValue = $apiNode->getTitle() . ' - ' . \Drupal::config('system.site')->get('name');
     }
@@ -63,4 +61,5 @@ class ApiController extends ControllerBase {
     }
     return $returnValue;
   }
+
 }

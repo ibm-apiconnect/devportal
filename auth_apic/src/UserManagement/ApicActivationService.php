@@ -14,6 +14,7 @@ namespace Drupal\auth_apic\UserManagement;
 
 
 use Drupal\auth_apic\JWTToken;
+use Drupal\Core\Config\Config;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Messenger\MessengerInterface;
@@ -28,37 +29,37 @@ class ApicActivationService implements ApicActivationInterface {
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface
    */
-  private $mgmtServer;
+  private ManagementServerInterface $mgmtServer;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface
    */
-  private $userStorage;
+  private ApicUserStorageInterface $userStorage;
 
   /**
    * @var \Drupal\Core\Utility\LinkGeneratorInterface
    */
-  private $linkGenerator;
+  private LinkGeneratorInterface $linkGenerator;
 
   /**
    * @var \Drupal\Core\Messenger\MessengerInterface
    */
-  private $messenger;
+  private MessengerInterface $messenger;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  private $logger;
+  private LoggerInterface $logger;
 
   /**
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * @var \Drupal\Core\Config\Config
    */
-  protected $system_site_config;
+  protected Config $system_site_config;
 
   public function __construct(ManagementServerInterface $mgmt_server,
                        ApicUserStorageInterface $user_storage,

@@ -22,17 +22,44 @@ use Prophecy\Argument;
 use Prophecy\Prophet;
 use Psr\Log\LoggerInterface;
 
+/**
+ * @coversDefaultClass \Drupal\ibm_apim\Service\UsersFieldDataService
+ *
+ * @group ibm_apim
+ */
 class UsersFieldDataServiceTest extends UnitTestCase {
 
-  private $prophet;
+  /**
+   * @var \Prophecy\Prophet
+   */
+  private Prophet $prophet;
 
+  /**
+   * @var \Drupal\Core\Database\Connection|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $database;
+
+  /**
+   * @var \Psr\Log\LoggerInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $logger;
+
+  /**
+   * @var \Drupal\Core\Database\Schema|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $schema;
+
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $entityTypeManager;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $userRegistryService;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->database = $this->prophet->prophesize(Connection::class);
     $this->logger = $this->prophet->prophesize(LoggerInterface::class);
@@ -43,7 +70,7 @@ class UsersFieldDataServiceTest extends UnitTestCase {
     $this->database->schema()->willReturn($this->schema->reveal());
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
@@ -61,7 +88,8 @@ class UsersFieldDataServiceTest extends UnitTestCase {
       ->will(function ($args) use ($schema) {
         $schema->indexExists('users_field_data', 'user__name__registry')->willReturn(TRUE);
       });
-    $this->logger->notice('Creating %index in %table.', ['%index' => 'user__name__registry', '%table' => 'users_field_data'])->shouldBeCalled();
+    $this->logger->notice('Creating %index in %table.', ['%index' => 'user__name__registry', '%table' => 'users_field_data'])
+      ->shouldBeCalled();
 
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -70,26 +98,28 @@ class UsersFieldDataServiceTest extends UnitTestCase {
       $this->entityTypeManager->reveal(),
       $this->userRegistryService->reveal());
 
-    $this->assertTrue($service->addNameAndRegistryUniqueKey());
+    self::assertTrue($service->addNameAndRegistryUniqueKey());
 
   }
 
   public function testAddUniqueKeyNoField(): void {
 
     $this->schema->fieldExists('users_field_data', 'registry_url')->willReturn(FALSE);
-    $this->schema->indexExists(Argument::any())->shouldNotBeCalled();
     $this->schema->indexExists('users_field_data', 'user__name__registry')->willReturn(FALSE);
-    $this->schema->dropUniqueKey(Argument::any())->shouldNotBeCalled();
-    $this->schema->addUniqueKey(Argument::any())->shouldNotBeCalled();
+    $this->schema->dropUniqueKey(Argument::any(), Argument::any())->shouldNotBeCalled();
+    $this->schema->addUniqueKey(Argument::any(), Argument::any(), Argument::any())->shouldNotBeCalled();
 
     $service = new UsersFieldDataService($this->database->reveal(),
       $this->logger->reveal(),
       $this->entityTypeManager->reveal(),
       $this->userRegistryService->reveal());
 
-    $this->logger->error('%field is not available in %table. Unable to create unique key.', ['%field' => 'registry_url', '%table' => 'users_field_data'])->shouldBeCalled();
+    $this->logger->error('%field is not available in %table. Unable to create unique key.', [
+      '%field' => 'registry_url',
+      '%table' => 'users_field_data',
+    ])->shouldBeCalled();
 
-    $this->assertFalse($service->addNameAndRegistryUniqueKey());
+    self::assertFalse($service->addNameAndRegistryUniqueKey());
 
   }
 
@@ -99,14 +129,15 @@ class UsersFieldDataServiceTest extends UnitTestCase {
 
     $this->schema->fieldExists('users_field_data', 'registry_url')->willReturn(TRUE);
     $this->schema->indexExists('users_field_data', 'user__name')->willReturn(FALSE);
-    $this->schema->dropUniqueKey(Argument::any())->shouldNotBeCalled();
+    $this->schema->dropUniqueKey(Argument::any(), Argument::any())->shouldNotBeCalled();
     $this->schema->indexExists('users_field_data', 'user__name__registry')->willReturn(FALSE);
     $this->schema->addUniqueKey('users_field_data', 'user__name__registry', ['name', 'registry_url', 'langcode'])
       ->shouldBeCalled()
       ->will(function ($args) use ($schema) {
         $schema->indexExists('users_field_data', 'user__name__registry')->willReturn(TRUE);
       });
-    $this->logger->notice('Creating %index in %table.', ['%index' => 'user__name__registry', '%table' => 'users_field_data'])->shouldBeCalled();
+    $this->logger->notice('Creating %index in %table.', ['%index' => 'user__name__registry', '%table' => 'users_field_data'])
+      ->shouldBeCalled();
 
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -115,7 +146,7 @@ class UsersFieldDataServiceTest extends UnitTestCase {
       $this->entityTypeManager->reveal(),
       $this->userRegistryService->reveal());
 
-    $this->assertTrue($service->addNameAndRegistryUniqueKey());
+    self::assertTrue($service->addNameAndRegistryUniqueKey());
 
   }
 
@@ -126,7 +157,7 @@ class UsersFieldDataServiceTest extends UnitTestCase {
     $this->schema->dropUniqueKey('users_field_data', 'user__name')->shouldBeCalled();
     $this->logger->notice('Dropping %index from %table.', ['%index' => 'user__name', '%table' => 'users_field_data'])->shouldBeCalled();
     $this->schema->indexExists('users_field_data', 'user__name__registry')->willReturn(TRUE);
-    $this->schema->addUniqueKey(Argument::any())->shouldNotBeCalled();
+    $this->schema->addUniqueKey(Argument::any(), Argument::any(), Argument::any())->shouldNotBeCalled();
 
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -135,7 +166,7 @@ class UsersFieldDataServiceTest extends UnitTestCase {
       $this->entityTypeManager->reveal(),
       $this->userRegistryService->reveal());
 
-    $this->assertTrue($service->addNameAndRegistryUniqueKey());
+    self::assertTrue($service->addNameAndRegistryUniqueKey());
 
   }
 
@@ -143,10 +174,10 @@ class UsersFieldDataServiceTest extends UnitTestCase {
 
     $this->schema->fieldExists('users_field_data', 'registry_url')->willReturn(TRUE);
     $this->schema->indexExists('users_field_data', 'user__name')->willReturn(FALSE);
-    $this->schema->dropUniqueKey(Argument::any())->shouldNotBeCalled();
+    $this->schema->dropUniqueKey(Argument::any(), Argument::any())->shouldNotBeCalled();
 
     $this->schema->indexExists('users_field_data', 'user__name__registry')->willReturn(TRUE);
-    $this->schema->addUniqueKey(Argument::any())->shouldNotBeCalled();
+    $this->schema->addUniqueKey(Argument::any(), Argument::any(), Argument::any())->shouldNotBeCalled();
 
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -155,11 +186,9 @@ class UsersFieldDataServiceTest extends UnitTestCase {
       $this->entityTypeManager->reveal(),
       $this->userRegistryService->reveal());
 
-    $this->assertTrue($service->addNameAndRegistryUniqueKey());
+    self::assertTrue($service->addNameAndRegistryUniqueKey());
 
   }
-
-
 
 
 }

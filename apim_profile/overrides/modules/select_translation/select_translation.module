@@ -1,0 +1,109 @@
+<?php
+
+/**
+ * @file
+ * Main module file.
+ */
+
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\node\Entity\Node;
+
+/**
+ * Parse the mode argument.
+ *
+ * Parse the mode argument and replace 'current' and 'default' with the actual
+ * language codes.
+ *
+ * @param string $mode
+ *   A string describing the mode, see the documentation below.
+ *
+ * @return array
+ *   An array of language codes representing the order of preference to use
+ *   when selecting a translation, the value 'original' is used for the
+ *   original translation.
+ */
+function select_translation_parse_mode($mode) {
+  if ($mode == 'original') {
+    $lang_list = ['current'];
+  }
+  elseif ($mode == 'default') {
+    $lang_list = ['current', 'default'];
+  }
+  else {
+    $lang_list = explode(',', $mode);
+    foreach ($lang_list as $i => $v) {
+      $lang_list[$i] = strtolower(trim($v));
+    }
+  }
+  $lang_list[] = 'original';
+
+  $default_language = \Drupal::languageManager()->getDefaultLanguage()->getId();
+  $current_language = \Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE)->getId();
+
+  foreach ($lang_list as $i => $v) {
+    if ($v == 'default') {
+      $lang_list[$i] = $default_language;
+    }
+    elseif ($v == 'current') {
+      $lang_list[$i] = $current_language;
+    }
+  }
+  return array_unique($lang_list);
+}
+
+/**
+ * Returns the selected translation of the given node.
+ *
+ * The value of the mode string can be:
+ *
+ * - 'original', in which case the function will return a node following this
+ *   preference order:
+ *     + the node in the current language, if available;
+ *     + the node in the original language, otherwise.
+ *
+ * - 'default', in which case the function will return a node following this
+ *   preference order:
+ *     + the node in the current language, if available;
+ *     + the node in the default language, if available;
+ *     + the node in the original language, otherwise.
+ *
+ * - a comma separated list of language codes, in which case it will return
+ *   the first available node translation.
+ *
+ *   In that list, the special value 'current' refers to the current
+ *   interface language, 'default' refers to the site default language, and
+ *   'original' to the node original language. If no match is found the node
+ *   in the original language is returned.
+ *
+ * @param int $nid
+ *   The node id.
+ * @param string $mode
+ *   The mode specifying how the translation should be selected.
+ *
+ * @return \Drupal\node\Entity\Node
+ *   The Node entity in the selected translation, or the original translation
+ *   if one from $mode cannot be selected, or NULL if the node cannot be
+ *   found.
+ */
+function select_translation_of_node($nid, $mode = 'default') {
+  $node = Node::load($nid);
+  if (!$node) {
+    return NULL;
+  }
+
+  $lang_list = select_translation_parse_mode($mode);
+
+  foreach ($lang_list as $m) {
+    if ($m == 'original') {
+      return $node->getUntranslated();
+    }
+    elseif ($node->hasTranslation($m)) {
+      return $node->getTranslation($m);
+    }
+  }
+
+  // Assuming that select_translation_parse_mode() always appends 'original'
+  // to the list of languages, the code below should be unreachable.
+  assert(FALSE);
+  return NULL;
+}

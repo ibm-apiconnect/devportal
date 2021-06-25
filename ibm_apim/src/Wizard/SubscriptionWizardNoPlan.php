@@ -15,18 +15,26 @@ namespace Drupal\ibm_apim\Wizard;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ctools\Wizard\FormWizardBase;
+use Drupal\ibm_apim\Wizard\Subscription\ChooseApplicationStep;
+use Drupal\ibm_apim\Wizard\Subscription\ConfirmSubscribe;
+use Drupal\ibm_apim\Wizard\Subscription\SubscribeSummary;
 
+/**
+ * Class SubscriptionWizardNoPlan
+ *
+ * @package Drupal\ibm_apim\Wizard
+ */
 class SubscriptionWizardNoPlan extends FormWizardBase {
 
   /**
-   * {@inheritdoc}
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string
    */
   public function getWizardLabel() {
     return t('Subscription Wizard');
   }
 
   /**
-   * {@inheritdoc}
+   * @return string
    */
   public function getMachineLabel(): string {
     return 'subscription_wizard.noplan';
@@ -47,17 +55,17 @@ class SubscriptionWizardNoPlan extends FormWizardBase {
 
     $steps['chooseapp'] = [
       'title' => t('Select Application'),
-      'form' => 'Drupal\ibm_apim\Wizard\Subscription\ChooseApplicationStep',
+      'form' => ChooseApplicationStep::class,
     ];
 
     $steps['confirm'] = [
       'title' => t('Subscribe'),
-      'form' => 'Drupal\ibm_apim\Wizard\Subscription\ConfirmSubscribe',
+      'form' => ConfirmSubscribe::class,
     ];
 
     $steps['summary'] = [
       'title' => t('Summary'),
-      'form' => 'Drupal\ibm_apim\Wizard\Subscription\SubscribeSummary',
+      'form' => SubscribeSummary::class,
     ];
 
     return $steps;
@@ -71,7 +79,7 @@ class SubscriptionWizardNoPlan extends FormWizardBase {
    *
    * @return array
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     $form = parent::buildForm($form, $form_state);
     if (isset($form['actions']['previous'])) {
       $form['actions']['previous']['#value'] = t('Back');
@@ -79,10 +87,10 @@ class SubscriptionWizardNoPlan extends FormWizardBase {
     }
     $cached_values = $form_state->getTemporaryValue('wizard');
     $step = $this->getStep($cached_values);
-    if ($step === 'confirm') {
-      // commented out since this seems to break the wizard and the summary screen never appears
-      //$form['actions']['submit']['#value'] = t('Subscribe');
-    }
+    //if ($step === 'confirm') {
+    // commented out since this seems to break the wizard and the summary screen never appears
+    //$form['actions']['submit']['#value'] = t('Subscribe');
+    //}
     // using php union operator to get the cancel button at the beginning of the array
     $form['actions'] = [
         '#type' => 'link',
@@ -93,4 +101,5 @@ class SubscriptionWizardNoPlan extends FormWizardBase {
 
     return $form;
   }
+
 }

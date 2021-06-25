@@ -14,7 +14,7 @@
 /**
  * Implements hook_schema().
  */
-function mail_subscribers_schema() {
+function mail_subscribers_schema(): array {
   $schema['mail_subscribers_spool'] = [
     'description' => 'Table holds e-mails that are being send on cron.',
     'fields' => [

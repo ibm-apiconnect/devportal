@@ -14,8 +14,10 @@
 namespace Drupal\Tests\ibm_apim\Unit;
 
 use Drupal\ibm_apim\Service\ApimUtils;
+use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Prophet;
+use Psr\Log\LoggerInterface;
 
 /**
  * @coversDefaultClass \Drupal\ibm_apim\Service\ApimUtils
@@ -24,22 +26,31 @@ use Prophecy\Prophet;
  */
 class ApimUtilsTest extends UnitTestCase {
 
-  private $prophet;
+  /**
+   * @var \Prophecy\Prophet
+   */
+  private Prophet $prophet;
 
   /*
    Dependencies of ApimUtils.
    */
+  /**
+   * @var \Psr\Log\LoggerInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $logger;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $siteConfig;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
-    $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
-    $this->siteConfig = $this->prophet->prophesize(\Drupal\ibm_apim\Service\SiteConfig::class);
+    $this->logger = $this->prophet->prophesize(LoggerInterface::class);
+    $this->siteConfig = $this->prophet->prophesize(SiteConfig::class);
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
@@ -52,7 +63,7 @@ class ApimUtilsTest extends UnitTestCase {
 
     $result = $utils->createFullyQualifiedUrl('/url/path/only');
 
-    $this->assertEquals('https://hostname/url/path/only', $result, 'Unexpected fully qualified url');
+    self::assertEquals('https://hostname/url/path/only', $result, 'Unexpected fully qualified url');
 
   }
 
@@ -63,7 +74,7 @@ class ApimUtilsTest extends UnitTestCase {
 
     $result = $utils->createFullyQualifiedUrl('/consumer-api/url/path/only');
 
-    $this->assertEquals('https://hostname/consumer-api/url/path/only', $result, 'Unexpected fully qualified url');
+    self::assertEquals('https://hostname/consumer-api/url/path/only', $result, 'Unexpected fully qualified url');
 
   }
 
@@ -74,7 +85,7 @@ class ApimUtilsTest extends UnitTestCase {
 
     $result = $utils->createFullyQualifiedUrl('/url/path/only');
 
-    $this->assertEquals('https://consumer-api-hostname/url/path/only', $result, 'Unexpected fully qualified url');
+    self::assertEquals('https://consumer-api-hostname/url/path/only', $result, 'Unexpected fully qualified url');
 
   }
 
@@ -85,7 +96,7 @@ class ApimUtilsTest extends UnitTestCase {
 
     $result = $utils->createFullyQualifiedUrl('https://hostname/url/path/only');
 
-    $this->assertEquals('https://hostname/url/path/only', $result, 'Unexpected fully qualified url');
+    self::assertEquals('https://hostname/url/path/only', $result, 'Unexpected fully qualified url');
 
   }
 
@@ -98,7 +109,7 @@ class ApimUtilsTest extends UnitTestCase {
 
     $result = $utils->removeFullyQualifiedUrl('https://hostname/url/path/only');
 
-    $this->assertEquals('/url/path/only', $result, 'Unexpected stripped url');
+    self::assertEquals('/url/path/only', $result, 'Unexpected stripped url');
 
   }
 
@@ -109,7 +120,7 @@ class ApimUtilsTest extends UnitTestCase {
 
     $result = $utils->removeFullyQualifiedUrl('https://hostname/consumer-api/url/path/only');
 
-    $this->assertEquals('/consumer-api/url/path/only', $result, 'Unexpected stripped url');
+    self::assertEquals('/consumer-api/url/path/only', $result, 'Unexpected stripped url');
 
   }
 
@@ -120,7 +131,7 @@ class ApimUtilsTest extends UnitTestCase {
 
     $result = $utils->removeFullyQualifiedUrl('https://hostname/consumer-api/url/path/only');
 
-    $this->assertEquals('/consumer-api/url/path/only', $result, 'Unexpected stripped url');
+    self::assertEquals('/consumer-api/url/path/only', $result, 'Unexpected stripped url');
 
   }
 
@@ -131,7 +142,7 @@ class ApimUtilsTest extends UnitTestCase {
 
     $result = $utils->removeFullyQualifiedUrl('https://consumer-apic-hostname/consumer-api/url/path/only');
 
-    $this->assertEquals('/consumer-api/url/path/only', $result, 'Unexpected stripped url');
+    self::assertEquals('/consumer-api/url/path/only', $result, 'Unexpected stripped url');
 
   }
 
@@ -142,7 +153,7 @@ class ApimUtilsTest extends UnitTestCase {
 
     $result = $utils->removeFullyQualifiedUrl('/url/path/only');
 
-    $this->assertEquals('/url/path/only', $result, 'Unexpected stripped url');
+    self::assertEquals('/url/path/only', $result, 'Unexpected stripped url');
 
   }
 

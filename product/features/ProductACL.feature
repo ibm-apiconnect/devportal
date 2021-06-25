@@ -22,27 +22,34 @@ Feature: ProductACL
     And I should not see the text "Log in"
 
     # Create a public product, check that it's visible
-    Given I publish a product with the name "product:1_@now", id "productId1_@now" and visibility "pub" true
+    Given I publish a product with the name "product:1_@now", id "productId1_@now" and visibility "pub" true true
     Given I am on "/product/product:1_@now"
     Then the response status code should be 200
 
     # Create an authenticated product, check that it's visible
-    Given I publish a product with the name "product:2_@now", id "productId2_@now" and visibility "auth" true
+    Given I publish a product with the name "product:2_@now", id "productId2_@now" and visibility "auth" true true
     Given I am on "/product/product:2_@now"
     Then the response status code should be 200
 
     # Create an organisation product, check that it's visible
-    Given I publish a product with the name "product:3_@now", id "productId3_@now" and visibility "org_urls" "/consumer-orgs/1234/5678/a18843f3e4b07631568a159d"
+    Given I publish a product with the name "product:3_@now", id "productId3_@now" and visibility "org_urls" "/consumer-orgs/1234/5678/a18843f3e4b07631568a159d" true
     Given I am on "/product/product:3_@now"
     Then the response status code should be 200
 
     # Create a tagged product, check that it's visible
-    Given I publish a product with the name "product:4_@now", id "productId4_@now" and visibility "tags" "testers"
+    Given I publish a product with the name "product:4_@now", id "productId4_@now" and visibility "tags" "testers" true
     Given I am on "/product/product:4_@now"
     Then the response status code should be 200
 
+    Given I publish a product with the name "product:5_@now", id "productId5_@now" and visibility "auth" true false
+    Given I am on "/product/product:5_@now"
+    Then the response status code should be 404
+
     # Now log in as andre two
     Given I am not logged in
+    And I am on "/product/product:5_@now"
+    Then the response status code should be 404
+
     Given I am logged in as "andre_two"
     Then I should not see the text "Unrecognized username or password"
     And I should not see the text "Log in"
@@ -63,5 +70,7 @@ Feature: ProductACL
     Given I am on "/product/product:4_@now"
     Then the response status code should be 404
 
+    Given I am on "/product/product:5_@now"
+    Then the response status code should be 404
 #    Given I publish a product with the name "product:5_@now", id "productId5_@now" and visibility "subs" true
 # todo: test subscription.  Need to create an app and subscribe to the product:5_@now

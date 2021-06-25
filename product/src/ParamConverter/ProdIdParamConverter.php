@@ -33,7 +33,7 @@ class ProdIdParamConverter implements ParamConverterInterface {
       if (isset($nids) && !empty($nids)) {
         $nid = array_shift($nids);
         $returnValue = Node::load($nid);
-        if ($returnValue !== null) {
+        if ($returnValue !== NULL) {
           // ensure use the translated version of api nodes
           $hasTranslation = $returnValue->hasTranslation($lang_code);
           if ($hasTranslation === TRUE) {
@@ -48,4 +48,5 @@ class ProdIdParamConverter implements ParamConverterInterface {
   public function applies($definition, $name, Route $route): bool {
     return (!empty($definition['type']) && $definition['type'] === 'product.id');
   }
+
 }

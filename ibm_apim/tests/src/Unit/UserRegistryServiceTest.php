@@ -28,22 +28,28 @@ use Psr\Log\LoggerInterface;
  */
 class UserRegistryServiceTest extends UnitTestCase {
 
-  private $prophet;
+  /**
+   * @var \Prophecy\Prophet
+   */
+  private Prophet $prophet;
 
-  /*
-   Dependencies of service.
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
    */
   protected $logger;
 
+  /**
+   * @var \Drupal\Core\State\State|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $state;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->logger = $this->prophet->prophesize(LoggerInterface::class);
     $this->state = $this->prophet->prophesize(State::class);
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
@@ -66,7 +72,7 @@ class UserRegistryServiceTest extends UnitTestCase {
 
     $result = $service->getDefaultRegistry();
 
-    $this->assertEquals('/user/registry/url', $result->getUrl(), 'Unexpected default registry url');
+    self::assertEquals('/user/registry/url', $result->getUrl(), 'Unexpected default registry url');
 
   }
 
@@ -89,7 +95,7 @@ class UserRegistryServiceTest extends UnitTestCase {
 
     $result = $service->getDefaultRegistry();
 
-    $this->assertEquals('/fallback/url', $result->getUrl(), 'Unexpected default registry url');
+    self::assertEquals('/fallback/url', $result->getUrl(), 'Unexpected default registry url');
 
   }
 
@@ -116,7 +122,7 @@ class UserRegistryServiceTest extends UnitTestCase {
 
     $result = $service->getDefaultRegistry();
 
-    $this->assertEquals('/lur/one', $result->getUrl(), 'Unexpected default registry url');
+    self::assertEquals('/lur/one', $result->getUrl(), 'Unexpected default registry url');
 
   }
 
@@ -142,7 +148,7 @@ class UserRegistryServiceTest extends UnitTestCase {
 
     $result = $service->getDefaultRegistry();
 
-    $this->assertEquals('/ldap/one', $result->getUrl(), 'Unexpected default registry url');
+    self::assertEquals('/ldap/one', $result->getUrl(), 'Unexpected default registry url');
 
   }
 
@@ -165,7 +171,7 @@ class UserRegistryServiceTest extends UnitTestCase {
 
     $result = $service->getDefaultRegistry();
 
-    $this->assertNull($result, 'Unexpected default registry url');
+    self::assertNull($result, 'Unexpected default registry url');
 
   }
 
@@ -175,7 +181,7 @@ class UserRegistryServiceTest extends UnitTestCase {
 
     $urs = [
       '/reg/1' => $this->createRegistryAsArray('1'),
-      '/reg/2' => $this->createRegistryAsArray('2')
+      '/reg/2' => $this->createRegistryAsArray('2'),
     ];
 
     $expected_ur1 = new UserRegistry();
@@ -186,14 +192,14 @@ class UserRegistryServiceTest extends UnitTestCase {
 
     $expected = [
       '/reg/1' => $expected_ur1,
-      '/reg/2' => $expected_ur2
+      '/reg/2' => $expected_ur2,
     ];
 
     $this->state->set('ibm_apim.user_registries', $expected)->shouldBeCalled();
 
     $service = new UserRegistryService($this->state->reveal(), $this->logger->reveal());
     $success = $service->updateAll($urs);
-    $this->assertTrue($success);
+    self::assertTrue($success);
 
   }
 
@@ -202,27 +208,34 @@ class UserRegistryServiceTest extends UnitTestCase {
 
     $urs = [
       '/reg/1' => $this->createLURReg('/reg/1'),
-      '/reg/2' => $this->createLURReg('/reg/2')
+      '/reg/2' => $this->createLURReg('/reg/2'),
     ];
 
     $this->state->set('ibm_apim.user_registries', $urs)->shouldBeCalled();
 
     $service = new UserRegistryService($this->state->reveal(), $this->logger->reveal());
     $success = $service->updateAll($urs);
-    $this->assertTrue($success);
+    self::assertTrue($success);
 
   }
 
   public function testUpdateAllNoInput(): void {
+    $this->expectExceptionMessage("Argument 1 passed to Drupal\ibm_apim\Service\UserRegistryService::updateAll() must be of the type array, null given");
+    $this->expectException(\TypeError::class);
 
     $this->state->set('ibm_apim.user_registries', Argument::any())->shouldNotBeCalled();
 
     $service = new UserRegistryService($this->state->reveal(), $this->logger->reveal());
     $success = $service->updateAll(NULL);
-    $this->assertFalse($success);
+    self::assertFalse($success);
 
   }
 
+  /**
+   * @param $url
+   *
+   * @return \Drupal\ibm_apim\ApicType\UserRegistry
+   */
   private function createLURReg($url): UserRegistry {
     $reg = new UserRegistry();
     $reg->setUrl($url);
@@ -230,6 +243,11 @@ class UserRegistryServiceTest extends UnitTestCase {
     return $reg;
   }
 
+  /**
+   * @param $url
+   *
+   * @return \Drupal\ibm_apim\ApicType\UserRegistry
+   */
   private function createLDAPReg($url): UserRegistry {
     $reg = new UserRegistry();
     $reg->setUrl($url);
@@ -237,7 +255,12 @@ class UserRegistryServiceTest extends UnitTestCase {
     return $reg;
   }
 
-  private function createRegistryAsArray($id): array  {
+  /**
+   * @param $id
+   *
+   * @return array
+   */
+  private function createRegistryAsArray($id): array {
     return [
       'id' => $id,
       'name' => 'lur' . $id,
@@ -249,7 +272,7 @@ class UserRegistryServiceTest extends UnitTestCase {
       'user_registry_managed' => FALSE,
       'onboarding' => TRUE,
       'case_sensitive' => TRUE,
-      'identity_providers' => []
+      'identity_providers' => [],
     ];
   }
 

@@ -7,14 +7,14 @@
  */
 #}
 {%- set classes = [
-'node',
-'node--id-' ~ node.id,
-('node--type-' ~ node.bundle)|clean_class,
-view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
-('productNodeID-' ~ node.id)|clean_class,
-('productTitle-' ~ node.title[0].value)|clean_class,
-('productVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
-('productState-' ~ content.product_state['#items'][0].value)|clean_class
+  'node',
+  'node--id-' ~ node.id,
+  ('node--type-' ~ node.bundle)|clean_class,
+  view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
+  ('productNodeID-' ~ node.id)|clean_class,
+  ('productTitle-' ~ node.title[0].value)|clean_class,
+  ('productVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
+  ('productState-' ~ content.product_state['#items'][0].value)|clean_class
 ] -%}
 <article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
   {% if content.apic_pathalias['#items'][0].value is defined and content.apic_pathalias['#items'][0].value is not empty %}
@@ -40,17 +40,17 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
             <span class="apicProductTeaserVersion">{{- content.apic_version -}}</span>
           {% endif %}
         </a>
-	    <span class="apicApiCount">
+        <span class="apicApiCount">
 	      {% trans %}
-        ({{ count }} API included)
+          ({{ count }} API included)
         {% plural apiCount %}
-        ({{ count }} APIs included)
+          ({{ count }} APIs included)
         {% endtrans %}
 	    </span>
       </h2>
       {% if content.apic_summary['#items'][0].value is defined and content.apic_summary['#items'][0].value is not empty %}
         <div class="apicProductDesc summary"
-            title="{{- content.apic_summary['#items'][0].value|striptags -}}">{{ content.apic_summary }}</div>
+             title="{{- content.apic_summary['#items'][0].value|striptags -}}">{{ content.apic_summary }}</div>
       {% else %}
         <div class="apicProductDesc"
              title="{{- content.apic_description['#items'][0].value|striptags -}}">{{ content.apic_description }}</div>

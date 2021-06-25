@@ -29,6 +29,8 @@ class IbmApimNodeController extends NodeController {
    *   if there is only one node type defined for the site, the function
    *   will return a RedirectResponse to the node add page for that one node
    *   type.
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function addPage() {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

@@ -16,6 +16,11 @@ namespace Drupal\ibm_apim\Controller;
 use Drupal\Core\Url;
 use Drupal\system\Controller\SystemController;
 
+/**
+ * Class IbmApimThemeController
+ *
+ * @package Drupal\ibm_apim\Controller
+ */
 class IbmApimThemeController extends SystemController {
 
   /**
@@ -26,7 +31,7 @@ class IbmApimThemeController extends SystemController {
     $build = parent::themesPage();
     if (is_array($build) && !empty($build)) {
       foreach ($build as $buildKey => $buildComponent) {
-        if (isset($buildComponent['#theme_groups']) && isset($buildComponent['#theme_groups']['installed']) && !empty($buildComponent['#theme_groups']['installed'])) {
+        if (isset($buildComponent['#theme_groups']['installed']) && !empty($buildComponent['#theme_groups']['installed'])) {
           foreach ($buildComponent['#theme_groups']['installed'] as $installedKey => $theme_group) {
             if (isset($theme_group->operations) && !empty($theme_group->operations)) {
               foreach ($theme_group->operations as $operationKey => $operation) {
@@ -39,7 +44,7 @@ class IbmApimThemeController extends SystemController {
             }
           }
         }
-        if (isset($buildComponent['#theme_groups']) && isset($buildComponent['#theme_groups']['uninstalled']) && !empty($buildComponent['#theme_groups']['uninstalled'])) {
+        if (isset($buildComponent['#theme_groups']['uninstalled']) && !empty($buildComponent['#theme_groups']['uninstalled'])) {
           foreach ($buildComponent['#theme_groups']['uninstalled'] as $installedKey => $theme_group) {
             if (isset($theme_group->operations) && !empty($theme_group->operations)) {
               foreach ($theme_group->operations as $operationKey => $operation) {

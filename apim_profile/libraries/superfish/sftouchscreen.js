@@ -5,7 +5,7 @@
  * Built as a part of the Superfish project for Drupal (http://drupal.org/project/superfish)
  * Found any bug? have any cool ideas? contact me right away! http://drupal.org/user/619294/contact
  *
- * jQuery version: 1.7 or higher.
+ * jQuery version: 1.3.x or higher.
  *
  * Dual licensed under the MIT and GPL licenses:
  *  http://www.opensource.org/licenses/mit-license.php
@@ -30,13 +30,13 @@
         var item = $(this),
         parent = item.closest('li');
         if (options.disableHover){
-          parent.off('mouseenter mouseleave');
+          parent.unbind('mouseenter mouseleave');
         }
         if (options.behaviour == 2){
           if (parent.children('a.menuparent,span.nolink.menuparent').length > 0 && parent.children('ul').children('.sf-clone-parent').length == 0){
             var
             // Cloning the hyperlink of the parent menu item.
-            cloneLink = parent.children('a.menuparent').clone(),
+            cloneLink = parent.children('a.menuparent,span.nolink.menuparent').clone(),
             // Wrapping the hyerplinks in <li>.
             cloneLink = $('<li class="sf-clone-parent" />').html(cloneLink);
             // Removing unnecessary stuff.
@@ -46,7 +46,7 @@
           }
         }
         // No .toggle() here as it's not possible to reset it.
-        item.on(eventHandler[0], function(event){
+        item.bind(eventHandler[0], function(event){
           // Already clicked?
           if (item.hasClass('sf-clicked')){
             // Depending on the preferred behaviour, either proceed to the URL.
@@ -72,7 +72,7 @@
         });
       });
 
-      $(document).on(eventHandler[1], function(event){
+      $(document).bind(eventHandler[1], function(event){
         if (menu.not(event.target) && menu.has(event.target).length === 0){
           menu.find('.sf-clicked').removeClass('sf-clicked');
           menu.find('li:has(ul)').hideSuperfishUl();

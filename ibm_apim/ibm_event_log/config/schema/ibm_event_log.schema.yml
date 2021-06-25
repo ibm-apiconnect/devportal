@@ -1,0 +1,39 @@
+ibm_event_log.event_log.*:
+  type: content_entity
+  label: 'IBM Notifications Event Log Entity'
+  mapping:
+    id:
+      type: integer
+      label: 'Identifier'
+    artifact_type:
+      type: string
+      label: 'Artifact type'
+    artifact_url:
+      type: string
+      label: 'Artifact URL'
+    event:
+      type: string
+      label: 'Event type'
+    data:
+      type: string
+      label: 'Data'
+    user_url:
+      type: string
+      label: 'User URL'
+    consumerorg_url:
+      type: string
+      label: 'Consumer Organization URL'
+    timestamp:
+      type: integer
+      label: 'Timestamp'
+
+
+ibm_event_log.settings:
+  type: config_object
+  label: 'IBM Notifications Event Log configuration settings'
+  mapping:
+    retention_days:
+      type: string
+      label: 'Retention days'
+
+

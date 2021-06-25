@@ -20,7 +20,6 @@
  */
 
 use Drupal\apic_api\Api;
-use Drupal\apic_app\Application;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Access\AccessResultAllowed;
 use Drupal\Core\Access\AccessResultForbidden;
@@ -47,7 +46,7 @@ define('EDIT_ANY_API_CONTENT_GRANT', 1);
  * @param gid
  * @return string
  */
-function api_permission_value($gid) {
+function api_permission_value($gid): string {
   switch ($gid) {
     case EDIT_ANY_API_CONTENT_GRANT:
       return 'EDIT_ANY_API_CONTENT_GRANT';
@@ -78,7 +77,7 @@ function api_permission_value($gid) {
  *
  * Note: hook is called when rebuilding permissions
  */
-function apic_api_node_access_records($node) {
+function apic_api_node_access_records($node): array {
 
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
@@ -158,7 +157,7 @@ WHERE  (pub.entity_id = ' . $prod->entity_id . ')', [], $options);
               'grant_delete' => 0,
               'priority' => 0,
             ];
-            
+
             if ((int) $row->product_visibility_public_value === 1) {
 
               // Create a grant for subscription base on the apic_url if the API's product is depcrecated 
@@ -274,7 +273,7 @@ WHERE  (pub.entity_id = ' . $prod->entity_id . ')', [], $options);
  * Note: hook is not called at all when admin logged in
  * Note: hook is called on every login, logout and page load
  */
-function apic_api_node_grants($account, $op) {
+function apic_api_node_grants($account, $op): array {
 
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
@@ -395,7 +394,7 @@ function apic_api_preprocess_node(&$variables): void {
     $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
     $renderApiSchemaView = (boolean) $config->get('render_api_schema_view');
     $api_max_depth = $config->get('api_max_depth');
-    if ($api_max_depth === null || !is_int($api_max_depth) || $api_max_depth < 2 || $api_max_depth > 25) {
+    if ($api_max_depth === NULL || !is_int($api_max_depth) || $api_max_depth < 2 || $api_max_depth > 25) {
       $api_max_depth = 9;
     }
     $variables['apiMaxDepth'] = $api_max_depth;
@@ -445,12 +444,12 @@ function apic_api_preprocess_node(&$variables): void {
     $variables['custom_fields'] = $diff;
 
     $swagger = unserialize($variables['node']->api_swagger->value, ['allowed_classes' => FALSE]);
-    $enforced = true;
+    $enforced = TRUE;
     if (isset($swagger['x-ibm-configuration']) && array_key_exists('enforced', $swagger['x-ibm-configuration'])) {
       $enforced = $swagger['x-ibm-configuration']['enforced'];
     }
-    if ($enforced !== true && $enforced !== false) {
-      $enforced = true;
+    if ($enforced !== TRUE && $enforced !== FALSE) {
+      $enforced = TRUE;
     }
     $variables['enforced'] = $enforced;
 
@@ -508,7 +507,14 @@ function apic_api_preprocess_node(&$variables): void {
         $defaultCodeSnippetLang = $firstEnabled;
       }
       if (!$currentUser->isAnonymous() && (int) $currentUser->id() !== 1 && \Drupal::service('module_handler')->moduleExists('apic_app')) {
-        $apps = Application::listApplications();
+        $selectedProductNid = \Drupal::routeMatch()->getRawParameter('prodNode');
+        $apps = \Drupal::service('apic_app.application')->listApplications();
+
+        $plans = [];
+        if (isset($selectedProductNid)) {
+          $plans = Product::getPlansThatContainApi(Node::load($selectedProductNid), $variables['node']->apic_ref->value);
+        }
+
         foreach ($apps as $app) {
           $application = Node::load($app);
           $credentials = [];
@@ -527,16 +533,28 @@ function apic_api_preprocess_node(&$variables): void {
               foreach ($application->application_redirect_endpoints->getValue() as $arrayValue) {
                 $redirectUris[] = $arrayValue['value'];
               }
+
+              $subscribed = FALSE;
+              foreach (array_keys($plans) as $planName) {
+                if (\Drupal::service('apic_app.application')->isApplicationSubscribed($application, $selectedProductNid, $planName)) {
+                  $subscribed = TRUE;
+                  break;
+                }
+              }
+
               $applications[] = [
-                'name' => $application->getTitle(),
+                'title' => $application->getTitle(),
+                'name' => $application->application_name->value,
                 'summary' => $application->apic_summary->value,
                 'redirectUri' => $redirectUris,
                 'credentials' => $credentials,
+                'subscribed' => $subscribed,
               ];
             }
           }
         }
       }
+
       $customImage = $variables['node']->apic_image;
       $customImageString = NULL;
       if ($customImage !== NULL && !empty($customImage)) {
@@ -631,12 +649,14 @@ function apic_api_preprocess_node(&$variables): void {
       $variables['docpages'] = $docPages;
 
       $utils = \Drupal::service('ibm_apim.utils');
-      $options = array(
-        'absolute'   => TRUE,
-      );
-      $apiTypeDocs = ['asyncapi' => Url::fromUri('internal:/asyncapi', $options)->toString(),
+      $options = [
+        'absolute' => TRUE,
+      ];
+      $apiTypeDocs = [
+        'asyncapi' => Url::fromUri('internal:/asyncapi', $options)->toString(),
         'kafka' => Url::fromUri('internal:/asyncapi-kafka', $options)->toString(),
-        'mq' => Url::fromUri('internal:/asyncapi-mq', $options)->toString()];
+        'mq' => Url::fromUri('internal:/asyncapi-mq', $options)->toString(),
+      ];
 
       $variables['#attached']['library'][] = 'apic_api/explorer';
       $variables['#attached']['drupalSettings']['api']['explorer']['apis'] = [unserialize($variables['node']->api_swagger->value, ['allowed_classes' => FALSE])];
@@ -658,17 +678,21 @@ function apic_api_preprocess_node(&$variables): void {
         'languages' => $codeSnippetLangs,
         'defaultLanguage' => $defaultCodeSnippetLang,
         'tryIt' => $enableApiTest,
-        'validateSwagger'=> $enableApiValidation,
+        'validateSwagger' => $enableApiValidation,
         'apiMaxDepth' => $variables['apiMaxDepth'],
         'onReady' => 'portalExplorerReady',
-        'wsdlRetrieverURL' => Url::fromRoute('apic_api.retrievewsdl', ['api' => $variables['node']->apic_ref->value, 'endpoint' => 'REPLACE_THIS_VALUE'])->setAbsolute()->toString(),
+        'wsdlRetrieverURL' => Url::fromRoute('apic_api.retrievewsdl', [
+          'api' => $variables['node']->apic_ref->value,
+          'endpoint' => 'REPLACE_THIS_VALUE',
+        ])->setAbsolute()->toString(),
         'explorerDir' => base_path() . drupal_get_path('module', 'apic_api') . '/explorer/app/',
         'locale' => $utils->convert_lang_name(\Drupal::languageManager()->getCurrentLanguage()->getId()),
         'loggedIn' => !$currentUser->isAnonymous(),
         'loginLink' => Url::fromRoute('user.login', ['redirectTo' => Url::fromRoute('<current>')->getInternalPath()])->toString(),
         'isApicPortal' => TRUE,
         'apicPortalUserId' => $currentUser->id(),
-        'apicPortalNewAppLink' => Url::fromRoute('apic_app.create', ['redirectTo' => Url::fromRoute('<current>')->getInternalPath()])->toString(),
+        'apicPortalNewAppLink' => Url::fromRoute('apic_app.create', ['redirectTo' => Url::fromRoute('<current>')->getInternalPath()])
+          ->toString(),
       ];
       if ($infoSectionEntries !== NULL && !empty($infoSectionEntries)) {
         $variables['#attached']['drupalSettings']['api']['explorer']['options']['infoSectionEntries'] = [$infoSectionEntries];
@@ -682,7 +706,8 @@ function apic_api_preprocess_node(&$variables): void {
       if ($renderApiSchemaView === TRUE) {
         $variables['#attached']['drupalSettings']['api']['explorer']['options']['renderSchemaView'] = TRUE;
       }
-    } else if ($variables['view_mode'] === 'embedded') {
+    }
+    elseif ($variables['view_mode'] === 'embedded') {
       $prodNode = \Drupal::routeMatch()->getRawParameter('prodNode');
       if (isset($prodNode)) {
         $variables['prodNode'] = $prodNode;
@@ -755,11 +780,13 @@ function apic_api_menu_links_discovered_alter(&$links) {
  *
  * @param $libraries
  * @param $extension
+ *
+ * @throws \JsonException
  */
 function apic_api_library_info_alter(&$libraries, $extension) {
   if (array_key_exists('explorer', $libraries) && file_exists(drupal_get_path('module', 'apic_api') . '/explorer/app/asset-manifest.json')) {
     $string = file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app/asset-manifest.json');
-    $json = json_decode($string, TRUE);
+    $json = json_decode($string, TRUE, 512, JSON_THROW_ON_ERROR);
     if (isset($json['main.js']) && file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app' . $json['main.js'])) {
       $libraries['explorer']['js']['explorer/app' . $json['main.js']] = [
         'weight' => -1,
@@ -790,14 +817,25 @@ function apic_api_library_info_alter(&$libraries, $extension) {
  * @param $viewMode
  */
 function apic_api_node_view(array &$build, NodeInterface $node, $display, $viewMode) {
-  if ($viewMode === 'full' && $node->getType() === 'api') {
-    $currentUser = \Drupal::currentUser();
-    if (!$currentUser->isAnonymous() && (int) $currentUser->id() !== 1) {
-      // cache this api per devorg
-      $userUtils = \Drupal::service('ibm_apim.user_utils');
-      $org = $userUtils->getCurrentConsumerOrg();
-      $tags = ['consumerorg:' . Html::cleanCssIdentifier($org['url'])];
-      $build['#cache']['tags'] = array_merge($build['#cache']['tags'], $tags);
+  if ($node->getType() === 'api') {
+    if ($viewMode === 'full') {
+      $currentUser = \Drupal::currentUser();
+      if (!$currentUser->isAnonymous() && (int) $currentUser->id() !== 1) {
+        // cache this api per devorg
+        $userUtils = \Drupal::service('ibm_apim.user_utils');
+        $org = $userUtils->getCurrentConsumerOrg();
+        $tags = ['consumerorg:' . Html::cleanCssIdentifier($org['url'])];
+        $build['#cache']['tags'] = array_merge($build['#cache']['tags'], $tags);
+      }
+    }
+    elseif ($viewMode === 'embedded') {
+      // cache this api based on the prodNode in the URL
+      if (isset($build['#cache']['contexts'])) {
+        $build['#cache']['contexts'] = array_merge($build['#cache']['contexts'], ['url']);
+      }
+      else {
+        $build['#cache']['contexts'] = ['url'];
+      }
     }
   }
 }
@@ -805,45 +843,45 @@ function apic_api_node_view(array &$build, NodeInterface $node, $display, $viewM
 /**
  * Implements hook_token_info().
  */
-function apic_api_token_info() {
+function apic_api_token_info(): array {
 
   $type = [
     'name' => t('API'),
     'description' => t('Tokens related to an individual API'),
     'needs-data' => 'api',
   ];
-  $api['name'] = array(
+  $api['name'] = [
     'name' => t("Name"),
     'description' => t("The name of the API"),
-  );
-  $api['version'] = array(
+  ];
+  $api['version'] = [
     'name' => t("Version"),
     'description' => t("The version of the API"),
-  );
-  $api['title'] = array(
+  ];
+  $api['title'] = [
     'name' => t("Title"),
     'description' => t("The title of the API"),
-  );
-  $api['id'] = array(
+  ];
+  $api['id'] = [
     'name' => t("ID"),
     'description' => t("The ID of the API"),
-  );
-  $api['state'] = array(
+  ];
+  $api['state'] = [
     'name' => t("State"),
     'description' => t("The current state the API is in"),
-  );
-  $api['protocol'] = array(
+  ];
+  $api['protocol'] = [
     'name' => t("Protocol"),
     'description' => t("The protocol of the API"),
-  );
-  $api['oai_version'] = array(
+  ];
+  $api['oai_version'] = [
     'name' => t("OAI Version"),
     'description' => t("The OAI version of the API"),
-  );
-  $api['image_url'] = array(
+  ];
+  $api['image_url'] = [
     'name' => t("Image URL"),
     'description' => t("The URL of the image for the api"),
-  );
+  ];
 
   return [
     'types' => ['api' => $type],
@@ -863,7 +901,7 @@ function apic_api_token_info() {
  *
  * @return array
  */
-function apic_api_tokens($type, $tokens, array $data = [], array $options = []) {
+function apic_api_tokens($type, $tokens, array $data = [], array $options = []): array {
 
   $replacements = [];
   if ($type === 'api' && !empty($data['api'])) {
@@ -907,7 +945,8 @@ function apic_api_tokens($type, $tokens, array $data = [], array $options = []) 
           if ($customImageString !== NULL && !empty($customImageString)) {
             if (preg_match('/^http[s]?:\/\//', $customImageString) === 1) {
               $productImageUrl = $customImageString;
-            } else {
+            }
+            else {
               $productImageUrl = NULL;
             }
           }

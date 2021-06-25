@@ -22,7 +22,7 @@ use Drupal\Core\Session\AccountInterface;
  * @Block(
  *   id = "ibm_apim_search_icon",
  *   admin_label = @Translation("Search Icon Block"),
- *   category = @Translation("IBM API Connect")
+ *   category = @Translation("IBM API Developer Portal")
  * )
  */
 class SearchIconBlock extends BlockBase {

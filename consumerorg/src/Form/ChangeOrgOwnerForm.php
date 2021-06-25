@@ -22,6 +22,8 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_event_log\ApicType\ApicEvent;
+use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -34,27 +36,27 @@ class ChangeOrgOwnerForm extends FormBase {
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgService
    */
-  protected $consumerOrgService;
+  protected ConsumerOrgService $consumerOrgService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\ibm_apim\Service\ApimUtils
    */
-  protected $apimUtils;
+  protected ApimUtils $apimUtils;
 
   /**
    * @var \Drupal\Core\Extension\ThemeHandler
    */
-  protected $themeHandler;
+  protected ThemeHandler $themeHandler;
 
   /**
    * @var \Drupal\Core\Session\AccountProxyInterface
    */
-  protected $currentUser;
+  protected AccountProxyInterface $currentUser;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -83,7 +85,7 @@ class ChangeOrgOwnerForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): ChangeOrgOwnerForm {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('ibm_apim.user_utils'),
@@ -103,6 +105,7 @@ class ChangeOrgOwnerForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -155,7 +158,7 @@ class ChangeOrgOwnerForm extends FormBase {
             foreach ($roles as $role) {
               if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
                 // use translated role names if possible
-                switch($role->getTitle()) {
+                switch ($role->getTitle()) {
                   case 'Administrator':
                     $roles_array[$role->getUrl()] = t('Administrator');
                     break;
@@ -216,7 +219,7 @@ class ChangeOrgOwnerForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @return \Drupal\Core\Url
    */
   public function getCancelUrl(): Url {
     return Url::fromRoute('ibm_apim.myorg');
@@ -245,6 +248,30 @@ class ChangeOrgOwnerForm extends FormBase {
           '@orgname' => $this->currentOrg->getTitle(),
           '@username' => $this->currentUser->getAccountName(),
         ]);
+        // Add Activity Feed Event Log
+        $eventEntity = new ApicEvent();
+        $eventEntity->setArtifactType('consumer_org');
+        if (\Drupal::currentUser()->isAuthenticated() && (int) \Drupal::currentUser()->id() !== 1) {
+          $current_user = User::load(\Drupal::currentUser()->id());
+          if ($current_user !== NULL) {
+            // we only set the user if we're running as someone other than admin
+            // if running as admin then we're likely doing things on behalf of the admin
+            // TODO we might want to check if there is a passed in user_url and use that too
+            $eventEntity->setUserUrl($current_user->get('apic_url')->value);
+          }
+        }
+        $members = $this->consumerOrgService->getMembers($this->currentOrg->apic_url->value);
+        $owner = $members[$new_owner];
+        if ($owner === NULL) {
+          $owner = $new_owner;
+        }
+        $eventEntity->setTimestamp(time());
+        $eventEntity->setEvent('change_owner');
+        $eventEntity->setArtifactUrl($this->currentOrg->apic_url->value);
+        $eventEntity->setConsumerOrgUrl($this->currentOrg->apic_url->value);
+        $eventEntity->setData(['owner' => $owner, 'orgName' => $this->currentOrg->getTitle()]);
+        $eventLogService = \Drupal::service('ibm_apim.event_log');
+        $eventLogService->createIfNotExist($eventEntity);
       }
       else {
         $this->messenger->addError(t('Error updating the organization owner. Contact the system administrator.'));
@@ -253,4 +280,5 @@ class ChangeOrgOwnerForm extends FormBase {
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

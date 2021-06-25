@@ -24,6 +24,6 @@ interface ApicUserStorageInterface {
   public function load(ApicUser $user): ?EntityInterface;
   public function loadUserByEmailAddress(string $email): ?EntityInterface;
   public function userLoginFinalize(UserInterface $account): UserInterface;
-  public function loadUserByUrl($url): ?AccountInterface;
+  public function loadUserByUrl($url): ?EntityInterface;
 
 }

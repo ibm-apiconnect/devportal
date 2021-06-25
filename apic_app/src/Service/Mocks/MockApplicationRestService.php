@@ -13,7 +13,6 @@
 
 namespace Drupal\apic_app\Service\Mocks;
 
-use Drupal\apic_app\Application;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 
 class MockApplicationRestService implements ApplicationRestInterface {
@@ -23,10 +22,12 @@ class MockApplicationRestService implements ApplicationRestInterface {
    *
    * @var array
    */
-  protected $appsList = [
+  protected array $appsList = [
     '12345' => [
       'orgID' => '123456',
       'id' => '12345',
+      'updated_at' => '2021-02-26T12:18:58.995Z',
+      'created_at' => '2021-02-26T12:18:58.995Z',
       'url' => 'https://example.com/apps/123456/12345',
       'name' => 'app12345xyz',
       'oauthRedirectURI' => '',
@@ -47,11 +48,13 @@ class MockApplicationRestService implements ApplicationRestInterface {
       'type' => 'PRODUCTION',
       'state' => 'PUBLISHED',
       'consumer_org_url' => '/consumer-orgs/1234/5678/123456',
-      'org_url' => '/consumer-orgs/1234/5678/123456'
+      'org_url' => '/consumer-orgs/1234/5678/123456',
     ],
     '23456' => [
       'orgID' => '123456',
       'id' => '23456',
+      'updated_at' => '2021-02-26T12:18:58.995Z',
+      'created_at' => '2021-02-26T12:18:58.995Z',
       'url' => 'https://example.com/apps/123456/23456',
       'name' => 'app23456',
       'oauthRedirectURI' => '',
@@ -73,16 +76,18 @@ class MockApplicationRestService implements ApplicationRestInterface {
           'client_secret' => 'myclientsecret2',
           'id' => '23456-2345678901',
           'description' => 'second creds',
-        ]
+        ],
       ],
       'public' => TRUE,
       'enabled' => TRUE,
       'consumer_org_url' => '/consumer-orgs/1234/5678/123456',
-      'org_url' => '/consumer-orgs/1234/5678/123456'
+      'org_url' => '/consumer-orgs/1234/5678/123456',
     ],
     '34567' => [
       'orgID' => '123456',
       'id' => '34567',
+      'updated_at' => '2021-02-26T12:18:58.995Z',
+      'created_at' => '2021-02-26T12:18:58.995Z',
       'url' => 'https://example.com/apps/123456/34567',
       'oauthRedirectURI' => '',
       'promoteTo' => '',
@@ -103,11 +108,13 @@ class MockApplicationRestService implements ApplicationRestInterface {
       'public' => TRUE,
       'enabled' => TRUE,
       'consumer_org_url' => '/consumer-orgs/1234/5678/123456',
-      'org_url' => '/consumer-orgs/1234/5678/123456'
+      'org_url' => '/consumer-orgs/1234/5678/123456',
     ],
     '45678' => [
       'orgID' => '123456',
       'id' => '45678',
+      'updated_at' => '2021-02-26T12:18:58.995Z',
+      'created_at' => '2021-02-26T12:18:58.995Z',
       'url' => 'https://example.com/apps/123456/45678',
       'oauthRedirectURI' => '',
       'promoteTo' => '',
@@ -128,14 +135,14 @@ class MockApplicationRestService implements ApplicationRestInterface {
       'public' => TRUE,
       'enabled' => TRUE,
       'consumer_org_url' => '/consumer-orgs/1234/5678/123456',
-      'org_url' => '/consumer-orgs/1234/5678/123456'
+      'org_url' => '/consumer-orgs/1234/5678/123456',
     ],
   ];
 
   /**
    * @inheritDoc
    */
-  public function getApplicationDetails($url) {
+  public function getApplicationDetails($url): ?\stdClass {
     \Drupal::logger('mock')->info('getApplicationDetails input: %var.', ['%var' => serialize($url)]);
 
     $data = [];
@@ -146,7 +153,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
     foreach ($appList as $key => $app) {
       // need the cast to string here or it doesnt work
       if (\Drupal::service('ibm_apim.utils')->endsWith($url, (string) $key) === TRUE) {
-        $data = $appList[$key];
+        $data = $app;
       }
     }
     return $this->doREST($data);
@@ -158,15 +165,17 @@ class MockApplicationRestService implements ApplicationRestInterface {
    *
    * @param $url
    * @param $requestBody
+   *
    * @return object
+   * @throws \JsonException
    */
-  public function postApplication($url, $requestBody) {
+  public function postApplication($url, $requestBody): ?\stdClass {
     \Drupal::logger('mock')->info('postApplication input: %url, %var.', [
       '%url' => serialize($url),
       '%var' => serialize($requestBody),
     ]);
     $data = [];
-    $requestBody = json_decode($requestBody, TRUE);
+    $requestBody = json_decode($requestBody, TRUE, 512, JSON_THROW_ON_ERROR);
     $apps = \Drupal::state()->get('mock.appList');
     if (!isset($apps) || empty($apps)) {
       $apps = [];
@@ -186,9 +195,10 @@ class MockApplicationRestService implements ApplicationRestInterface {
    * Delete the app from our state version of the app list
    *
    * @param $url
+   *
    * @return object
    */
-  public function deleteApplication($url) {
+  public function deleteApplication($url): ?\stdClass {
     \Drupal::logger('mock')->info('deleteApplication input: %url.', ['%url' => serialize($url)]);
     $data = [];
     $appList = \Drupal::state()->get('mock.appList');
@@ -198,7 +208,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
     $apps = [];
     foreach ($appList as $key => $app) {
       if (strpos($url, (string) $key) === FALSE) {
-        $apps[$key] = $appList[$key];
+        $apps[$key] = $app;
       }
     }
     \Drupal::state()->set('mock.appList', $apps);
@@ -209,7 +219,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
   /**
    * @inheritDoc
    */
-  public function promoteApplication($url, $requestBody) {
+  public function promoteApplication($url, $requestBody): ?\stdClass {
     $data = [];
 
     return $this->doREST($data);
@@ -217,16 +227,17 @@ class MockApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
+   * @throws \JsonException
    */
-  public function patchApplication($url, $requestBody) {
+  public function patchApplication($url, $requestBody): ?\stdClass {
     \Drupal::logger('mock')->info('putApplication input: %url, %var.', [
       '%url' => serialize($url),
       '%var' => serialize($requestBody),
     ]);
     $data = [];
-    $requestBody = json_decode($requestBody, TRUE);
+    $requestBody = json_decode($requestBody, TRUE, 512, JSON_THROW_ON_ERROR);
     $appList = \Drupal::state()->get('mock.appList');
-    if ($appList === null) {
+    if ($appList === NULL) {
       $appList = [];
     }
     foreach ($appList as $key => $app) {
@@ -251,15 +262,17 @@ class MockApplicationRestService implements ApplicationRestInterface {
    *
    * @param $url
    * @param $requestBody
+   *
    * @return object
+   * @throws \JsonException
    */
-  public function postCredentials($url, $requestBody) {
+  public function postCredentials($url, $requestBody): ?\stdClass {
     \Drupal::logger('mock')->info('postCredentials input: %url, %var.', [
       '%url' => serialize($url),
       '%var' => serialize($requestBody),
     ]);
     $data = [];
-    $requestBody = json_decode($requestBody, TRUE);
+    $requestBody = json_decode($requestBody, TRUE, 512, JSON_THROW_ON_ERROR);
     $appList = \Drupal::state()->get('mock.appList');
     if (!isset($appList) || empty($appList)) {
       $appList = $this->appsList;
@@ -285,9 +298,10 @@ class MockApplicationRestService implements ApplicationRestInterface {
    * delete a set of creds
    *
    * @param $url
+   *
    * @return object
    */
-  public function deleteCredentials($url) {
+  public function deleteCredentials($url): ?\stdClass {
     \Drupal::logger('mock')->info('deleteCredentials input: %url.', ['%url' => serialize($url)]);
     $data = [];
     $appList = \Drupal::state()->get('mock.appList');
@@ -317,9 +331,10 @@ class MockApplicationRestService implements ApplicationRestInterface {
    *
    * @param $url
    * @param $requestBody
+   *
    * @return object
    */
-  public function patchCredentials($url, $requestBody) {
+  public function patchCredentials($url, $requestBody): ?\stdClass {
     \Drupal::logger('mock')->info('putCredentials input: %url, %var.', [
       '%url' => serialize($url),
       '%var' => serialize($requestBody),
@@ -350,7 +365,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
   /**
    * @inheritDoc
    */
-  public function patchSubscription($url, $requestBody) {
+  public function patchSubscription($url, $requestBody): ?\stdClass {
     $data = [];
 
     return $this->doREST($data);
@@ -359,7 +374,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
   /**
    * @inheritDoc
    */
-  public function postClientId($url, $requestBody) {
+  public function postClientId($url, $requestBody): ?\stdClass {
     $data = [];
 
     return $this->doREST($data);
@@ -368,7 +383,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
   /**
    * @inheritDoc
    */
-  public function postClientSecret($url, $requestBody) {
+  public function postClientSecret($url, $requestBody): ?\stdClass {
     $data = [];
 
     return $this->doREST($data);
@@ -377,7 +392,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
   /**
    * @inheritDoc
    */
-  public function postSubscription($url, $requestBody) {
+  public function postSubscription($url, $requestBody): ?\stdClass {
     $data = [];
 
     return $this->doREST($data);
@@ -386,7 +401,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
   /**
    * @inheritDoc
    */
-  public function deleteSubscription($url) {
+  public function deleteSubscription($url): ?\stdClass {
     $data = [];
 
     return $this->doREST($data);
@@ -395,7 +410,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
   /**
    * @inheritDoc
    */
-  public function postSecret($url, $requestBody) {
+  public function postSecret($url, $requestBody): ?\stdClass {
     $data = [];
 
     return $this->doREST($data);
@@ -409,7 +424,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
    *
    * @return object
    */
-  private function doREST($data, $code = 200) {
+  private function doREST($data, $code = 200): object {
     return (object) [
       'data' => $data,
       'code' => $code,
@@ -421,31 +436,59 @@ class MockApplicationRestService implements ApplicationRestInterface {
    * Registers a new application in the management appliance
    *
    * @param $name
-   * @param $description
-   * @param $oauthUrl
+   * @param $summary
+   * @param $oauthUrls
+   * @param null $certificate
    * @param null $formState
    *
-   * @return object
+   * @return \stdClass|null
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
    */
-  public function createApplication($name, $description, $oauthUrl, $formState = NULL) {
+  public function createApplication($name, $summary, $oauthUrls, $certificate = NULL, $formState = NULL): ?\stdClass {
 
-    $data = array(
+    $data = [
       'name' => $name,
-      'description' => $description,
-      'oauthRedirectURI' => $oauthUrl
-    );
+      'summary' => $summary
+    ];
+    if ($oauthUrls === NULL) {
+      $oauthUrls = [];
+    }
+    if (!\is_array($oauthUrls)) {
+      $oauthUrls = [$oauthUrls];
+    }
 
-    $result = $this->postApplication('randomstring', json_encode($data));
+    if (!empty($oauthUrls)) {
+      $data['redirect_endpoints'] = $oauthUrls;
+    }
+
+    $result = $this->postApplication('randomstring', json_encode($data, JSON_THROW_ON_ERROR));
 
     // Insert nid in to results so that callers don't have to do a db query to find it
-    $app_data = Application::fetchFromAPIC($result->data['url']);
-    $nid = Application::create($app_data, 'create');
+    $app_data = \Drupal::service('apic_app.rest_service')->fetchFromAPIC($result->data['url']);
+    $nid = \Drupal::service('apic_app.application')->create($app_data, 'create');
 
     $result->data['nid'] = $nid;
 
     return $result;
 
+  }
+
+  public function fetchFromAPIC(?string $appUrl = NULL) {
+    $data = [];
+    $appList = \Drupal::state()->get('mock.appList');
+    if (!isset($appList) || empty($appList)) {
+      $appList = [];
+    }
+    foreach ($appList as $key => $app) {
+      // need the cast to string here or it doesnt work
+      if (\Drupal::service('ibm_apim.utils')->endsWith($appUrl, (string) $key) === TRUE) {
+        $data = $app;
+      }
+    }
+    return $data;
   }
 
 }

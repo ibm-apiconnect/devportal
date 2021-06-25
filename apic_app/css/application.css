@@ -118,6 +118,7 @@
 .applicationWrapper .titleInnerWrapper .rightTitle {
   display: flex;
   align-items: center;
+  width: 3rem;
 }
 .applicationWrapper .rightTitle .applicationMenu {
   margin-left: 16px;
@@ -127,12 +128,16 @@
   align-items: center;
 }
 .applicationWrapper .contentInnerWrapper {
-  padding-top: 32px;
+  padding-top: 2rem;
 }
 
 .applicationWrapper .titleSection .leftTitle {
   margin-bottom: 1rem;
   width: calc(100% - 3rem);
+}
+
+.applicationWrapper .enforcedEventsNotification {
+  margin: 1rem 0 0 3rem;
 }
 
 /* tabs in application details view */
@@ -198,7 +203,6 @@
   color: #161616;
   font-size: .875rem;
   font-weight: 600;
-  line-height: 1.125rem;
   letter-spacing: .16px;
 }
 
@@ -221,6 +225,7 @@
   padding: 1rem;
   display: flex;
   justify-content: space-between;
+  align-items: start;
 }
 .applicationCredentials .credentialsTable .credentialsHeader .credentialsTitle,
 .applicationSubscriptions .subscriptionsTable .subscriptionsHeader .subscriptionsTitle {
@@ -246,6 +251,10 @@
 }
 .applicationCredentials .credentialsTable .credentialsContent {
   padding: 0 1rem 1rem;
+}
+.applicationCredentials .credentialsTable .credentialsHeader .credentialsActions {
+ display: flex;
+ align-items: center;
 }
 .clientIDContainer,
 .clientSecretContainer {
@@ -396,6 +405,7 @@
   vertical-align: top;
   height: auto;
   background-color: transparent;
+  top: calc(50% - 0.5rem);
 }
 .bx--global-light-ui .field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.active,
 .bx--global-light-ui .field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.focus,
@@ -470,7 +480,7 @@
   background-color: #5aa700;
 }
 
-.apicAppStatus.suspended:before {
+.apicAppStatus.disabled:before {
   background-color: #5a6872;
 }
 

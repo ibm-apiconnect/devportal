@@ -24,9 +24,9 @@ class MockUserUtils extends UserUtils {
    *
    * @param $data
    *
-   * @return bool|string
+   * @return string
    */
-  public function decryptData($data) {
+  public function decryptData($data): string {
 
     // As we are not calling out to the script on the file system, we can only handle known values.
     // Extend this list as required for additional tests.
@@ -39,10 +39,6 @@ class MockUserUtils extends UserUtils {
     if ($data === '!BASE64_SIV_ENC!_AWtlJMmO2L285jmrO/FU82STYYQ/j1WIc84tNXIY6XLtAAAAGcI1pFNzJwwt5ibLCP7ktxD7wSDwat4J0Mk/qI+sE0b1') {
       return 'alreadyActive@example.com';
     }
-    if ($data === '!BASE64_SIV_ENC!_AebI4e5L+ws45CuqiodINDRlMc8OVaVhQfUXy75Dyn07AAAAE/ujLm0W+vb0guTqRgn6DDG7R2H6Re7gaSkAJeNg7+8v') {
-      return 'invalid@example.com';
-    }
-
     return 'invalid@example.com';
 
   }

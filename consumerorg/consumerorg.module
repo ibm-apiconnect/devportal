@@ -23,6 +23,7 @@ use Drupal\consumerorg\ApicType\Role;
 use Drupal\Core\Access\AccessResultAllowed;
 use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Access\AccessResultNeutral;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ibm_apim\ApicType\ApicUser;
@@ -44,7 +45,7 @@ define('CONSUMERORG_GRANT', 1);
  *
  * Note: hook is called when rebuilding permissions
  */
-function consumerorg_node_access_records($node) {
+function consumerorg_node_access_records($node): array {
 
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
@@ -93,7 +94,7 @@ function consumerorg_node_access_records($node) {
  * Note: hook is not called at all when admin logged in
  * Note: hook is called on every login, logout and page load
  */
-function consumerorg_node_grants($account, $op) {
+function consumerorg_node_grants($account, $op): array {
 
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
@@ -162,7 +163,7 @@ function consumerorg_node_access(NodeInterface $node, $operation, AccountInterfa
  *
  * Implements hook_entity_access().
  */
-function consumerorg_entity_access(\Drupal\Core\Entity\EntityInterface $entity, $operation, \Drupal\Core\Session\AccountInterface $account) {
+function consumerorg_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
   if ($entity->bundle() === 'consumerorg_payment_method') {
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $org = $userUtils->getCurrentConsumerorg();
@@ -320,21 +321,23 @@ function consumerorg_preprocess_node(&$variables): void {
 
       foreach ($members as &$member) {
         $roles = [];
-        foreach ($member['role_urls'] as $role_url) {
-          $role = $orgRoles[array_search($role_url, array_column($orgRoles, 'url'), FALSE)];
-          // use translated role names if possible
-          switch ($role->getTitle()) {
-            case 'Administrator':
-              $role->setTitle(t('Administrator'));
-              break;
-            case 'Developer':
-              $role->setTitle(t('Developer'));
-              break;
-            case 'Viewer':
-              $role->setTitle(t('Viewer'));
-              break;
+        if (array_key_exists('role_urls', $member)) {
+          foreach ($member['role_urls'] as $role_url) {
+            $role = $orgRoles[array_search($role_url, array_column($orgRoles, 'url'), TRUE)];
+            // use translated role names if possible
+            switch ($role->getTitle()) {
+              case 'Administrator':
+                $role->setTitle(t('Administrator'));
+                break;
+              case 'Developer':
+                $role->setTitle(t('Developer'));
+                break;
+              case 'Viewer':
+                $role->setTitle(t('Viewer'));
+                break;
+            }
+            $roles[] = $role;
           }
-          $roles[] = $role;
         }
         $member['roles'] = $roles;
       }
@@ -373,6 +376,13 @@ function consumerorg_preprocess_node(&$variables): void {
       if (isset($billingAccessCheck)) {
         $variables['billing_access'] = $billingAccessCheck->isAllowed();
       }
+      $consumerorg_url = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerOrg()['url'];
+      if ($consumerorg_url !== NULL && $consumerorg_url === $variables['node']->consumerorg_url->value) {
+        $variables['notifications_access'] = TRUE;
+      } else {
+        $variables['notifications_access'] = FALSE;
+      }
+      $consumerOrgInvitationEnabled = \Drupal::service('ibm_apim.site_config')->isConsumerOrgInvitationEnabled();
       $tabs = [];
       // tabs should be an array of additional tabs, eg. [{'title' => 'tab title', 'path' => '/tab/path'}, ... ]
       \Drupal::moduleHandler()->alter('consumerorg_myorg_tabs', $tabs, $nodeArray);
@@ -391,6 +401,7 @@ function consumerorg_preprocess_node(&$variables): void {
       $variables['myorg_can_transfer_owner'] = $canTransferOwner;
       $variables['myorg_can_rename_org'] = $canRenameOrg;
       $variables['myorg_can_delete_org'] = $canDeleteOrg;
+      $variables['consumer_org_invitation_enabled'] = $consumerOrgInvitationEnabled;
       $variables['custom_fields'] = $custom_fields;
 
       // display a suitable message to explain why the user does not have edit access
@@ -492,7 +503,7 @@ function consumerorg_menu_links_discovered_alter(&$links) {
  *
  * @return array
  */
-function consumerorg_theme($existing, $type, $theme, $path) {
+function consumerorg_theme($existing, $type, $theme, $path): array {
   return [
     'consumerorg_select_block' => [
       'variables' => [
@@ -517,7 +528,7 @@ function consumerorg_theme($existing, $type, $theme, $path) {
 /**
  * Implements hook_token_info().
  */
-function consumerorg_token_info() {
+function consumerorg_token_info(): array {
 
   $type = [
     'name' => t('Consumer organization'),
@@ -525,18 +536,18 @@ function consumerorg_token_info() {
     'needs-data' => 'consumer-org',
   ];
 
-  $consumerOrg['name'] = array(
+  $consumerOrg['name'] = [
     'name' => t("Name"),
     'description' => t("The name of the consumer organization"),
-  );
-  $consumerOrg['title'] = array(
+  ];
+  $consumerOrg['title'] = [
     'name' => t("Title"),
     'description' => t("The title of the consumer organization"),
-  );
-  $consumerOrg['id'] = array(
+  ];
+  $consumerOrg['id'] = [
     'name' => t("ID"),
     'description' => t("The ID of the consumer organization"),
-  );
+  ];
 
   return [
     'types' => ['consumer-org' => $type],
@@ -556,7 +567,7 @@ function consumerorg_token_info() {
  *
  * @return array
  */
-function consumerorg_tokens($type, $tokens, array $data = [], array $options = []) {
+function consumerorg_tokens($type, $tokens, array $data = [], array $options = []): array {
 
   $replacements = [];
   if ($type === 'consumer-org' && !empty($data['consumer-org'])) {

@@ -1,4 +1,125 @@
 changes:
+  8.x-3.1.58:
+  - make modals look how they should!
+  8.x-3.1.57:
+  - clear caches when subscribe and unsubscribe
+  8.x-3.1.56:
+  - More event log updates
+  8.x-3.1.55:
+  - avoid stacktrace in test run
+  8.x-3.1.54:
+  - need to clear cache
+  - need to clear cache when update app
+  8.x-3.1.53:
+  - dont show links to viewers that cant use them
+  8.x-3.1.52:
+  - Ensure event logs are created or updated correctly (#261)
+  8.x-3.1.51:
+  - dont show notifications link to admin
+  8.x-3.1.50:
+  - New indexes v10.0 (#259)
+  8.x-3.1.49:
+  - quote handling wrong - just let twig handle it
+  8.x-3.1.48:
+  - fix missing quotes in twig template
+  8.x-3.1.47: null
+  8.x-3.1.46:
+  - feat Introduce methods to filter applications by subscriptions (#252) (#253)
+  8.x-3.1.45:
+  - invalidate caches
+  8.x-3.1.44:
+  - feat add helper text to subscription blocks (#249) (#251)
+  8.x-3.1.43:
+  - missing app delete event
+  8.x-3.1.42:
+  - Tempmerge (#250)
+  8.x-3.1.41:
+  - very small tweaks to buttons on multi-value fields
+  8.x-3.1.40:
+  - selected should be same line height as non-selected
+  8.x-3.1.39: null
+  8.x-3.1.38:
+  - fix css width on app page
+  - Tabtitle (#248)
+  8.x-3.1.37:
+  - use chunking
+  8.x-3.1.36:
+  - 502 subscribe rename v10 (#247)
+  8.x-3.1.35: null
+  8.x-3.1.34:
+  - Services (#245)
+  8.x-3.1.33: null
+  8.x-3.1.32:
+  - refactor SubscriptionService to be a proper service
+  8.x-3.1.31:
+  - add function to list the credentials in the current consumer org
+  8.x-3.1.30:
+  - Refactor subscription event log
+  8.x-3.1.29:
+  - Refactor subscription create / update
+  8.x-3.1.28:
+  - use "IBM API Developer Portal" instead of API Connect
+  8.x-3.1.27:
+  - need to use productselect routing for apis
+  8.x-3.1.26: null
+  8.x-3.1.25:
+  - change app status terminology (#239)
+  8.x-3.1.24:
+  - Fix app subscription cache
+  8.x-3.1.23: null
+  8.x-3.1.22: null
+  8.x-3.1.21:
+  - tweak to isset line to avoid error
+  - handle consumer_org_url in one payload but org_url in another
+  8.x-3.1.20:
+  - fix css for suspended app
+  8.x-3.1.19:
+  - need to use string not null
+  8.x-3.1.18: null
+  8.x-3.1.17:
+  - event service has moved
+  - rename activity feed Notifications
+  - wire up more events
+  8.x-3.1.16:
+  - wire up subscription events
+  8.x-3.1.15:
+  - wire up cred reset and resetSecret
+  8.x-3.1.14:
+  - wire up cred create, update, delete
+  8.x-3.1.13:
+  - ensure timestamp is int
+  - Make sure there is an App create event and not just an update
+  8.x-3.1.12:
+  - View and view based ACL
+  8.x-3.1.11:
+  - title notifications tab routing
+  - rename actvity feed
+  8.x-3.1.10: null
+  8.x-3.1.9:
+  - missing changes
+  - fix up the activity feed tabs for org and app
+  8.x-3.1.8: null
+  8.x-3.1.7:
+  - fix rearrange notification in application
+  - feat add notification for events in application metrics (#225)
+  8.x-3.1.6: null
+  8.x-3.1.5:
+  - use void
+  8.x-3.1.4:
+  - Subscription service webhook improvements
+  8.x-3.1.3:
+  - add consumer org to the cache tag list
+  8.x-3.1.2: null
+  8.x-3.1.1:
+  - stop running strtotime twice
+  - typo
+  - need to use timestamp field type for timestamps!
+  - fix up app tests
+  - fix up app tests
+  - store apic created_at and updated_at timestamps (#220)
+  - store apic created_at and updated_at timestamps
+  8.x-3.1.0:
+  - update version 8.x-3.0.85 -> 8.x-3.1.0
   8.x-3.0.84:
   - classes dont exist
   - classes dont exist

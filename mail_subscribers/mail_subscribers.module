@@ -13,6 +13,7 @@
 use Drupal\Core\Database\Database;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Implements hook_cron().
@@ -60,8 +61,7 @@ function mail_subscribers_mail($key, &$message, $params) {
  * @param $fields
  *   Keyed array with tokens as keys and description as values.
  *
- * @return
- *   A themed table with all tokens.
+ * @return mixed A themed table with all tokens.
  *
  * @todo: Add help for other tokens
  */
@@ -82,7 +82,7 @@ function mail_subscribers_token_help($fields) {
 /**
  * Implements hook_token_info().
  */
-function mail_subscribers_token_info() {
+function mail_subscribers_token_info(): array {
   module_load_include('helpers.inc', 'mail_subscribers');
   $data = [];
   foreach (_mail_subscribers_email_message_property_info() as $key => $info) {
@@ -114,7 +114,7 @@ function mail_subscribers_token_info() {
  *
  * @return array
  */
-function mail_subscribers_tokens($type, $tokens, array $data = [], array $options = []) {
+function mail_subscribers_tokens($type, $tokens, array $data = [], array $options = []): array {
   $replacements = [];
   if ($type === 'mail_subscribers_email_message' && !empty($data['mail_subscribers_email_message'])) {
     foreach ($tokens as $name => $original) {
@@ -180,17 +180,20 @@ function mail_subscribers_batch_deliver($message, &$context) {
  * @param $results
  * @param $operations
  *
- * @return \Symfony\Component\HttpFoundation\RedirectResponse
+ * @return \Symfony\Component\HttpFoundation\RedirectResponse|NULL
  */
-function mail_subscribers_batch_deliver_finished($success, $results, $operations) {
+function mail_subscribers_batch_deliver_finished($success, $results, $operations): ?RedirectResponse {
   if ($success) {
     foreach ($results as $result) {
       \Drupal::messenger()->addMessage($result);
     }
 
     // Redirect to summary page of wizard
-    return new \Symfony\Component\HttpFoundation\RedirectResponse(
+    return new RedirectResponse(
       Url::fromRoute('mail_subscribers.product_wizard.step', ['step' => 'summary'])->toString());
+  }
+  else {
+    return NULL;
   }
 }
 
@@ -224,7 +227,6 @@ function mail_subscribers_preprocess(&$variables, $hook, &$info) {
     }
   }
 
-
 }
 
 /**
@@ -242,7 +244,7 @@ function mail_subscribers_theme_suggestions_ctools_wizard_trail_alter(array &$su
  *
  * @return array
  */
-function mail_subscribers_theme() {
+function mail_subscribers_theme(): array {
   $themeTemplates = [];
   $themeTemplates['mail_subscribers_ctools_wizard_trail'] = [
     'template' => 'mail-subscribers-ctools-wizard-trail',

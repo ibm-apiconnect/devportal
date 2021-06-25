@@ -21,6 +21,11 @@ use Drupal\Core\Routing\RouteMatch;
  */
 class IbmFieldTypeCheck implements AccessInterface {
 
+  /**
+   * @param \Drupal\Core\Routing\RouteMatch|null $routeMatch
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   */
   public function access(RouteMatch $routeMatch = NULL): AccessResult {
     $allowed = TRUE;
 
@@ -44,7 +49,7 @@ class IbmFieldTypeCheck implements AccessInterface {
             }
           }
           elseif ($config_parts[1] === 'application' && $moduleHandler->moduleExists('apic_app')) {
-            $ibm_fields = \Drupal\apic_app\Application::getIBMFields();
+            $ibm_fields = \Drupal::service('apic_app.application')->getIBMFields();
             if (in_array($config_parts[2], $ibm_fields, FALSE)) {
               $allowed = FALSE;
             }

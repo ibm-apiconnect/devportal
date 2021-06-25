@@ -28,29 +28,47 @@ namespace Drupal\Tests\auth_apic\Unit {
    */
   class UserManagedSignUpTest extends AuthApicUserManagementBaseTestClass {
 
-    /*
-     Dependencies of UserManagedSignUp service.
+    /**
+     * @var \Drupal\ibm_apim\Service\APIMServer|\Prophecy\Prophecy\ObjectProphecy
      */
     protected $mgmtServer;
 
+    /**
+     * @var \Drupal\ibm_apim\UserManagement\ApicAccountService|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $userManager;
 
+    /**
+     * @var \Drupal\ibm_apim\Service\ApicUserService|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $userService;
 
+    /**
+     * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
+     */
     protected $logger;
 
-    protected function setup() {
+    /**
+    * @var \Prophecy\Prophecy\ObjectProphecy|\Drupal\ibm_apim\Service\SiteConfig
+    */
+    protected $siteConfig;
+
+    protected function setup(): void {
       $this->prophet = new Prophet();
       $this->mgmtServer = $this->prophet->prophesize(\Drupal\ibm_apim\Service\APIMServer::class);
       $this->userManager = $this->prophet->prophesize(\Drupal\ibm_apim\UserManagement\ApicAccountService::class);
       $this->userService = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserService::class);
       $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
+      $this->siteConfig = $this->prophet->prophesize(\Drupal\ibm_apim\Service\SiteConfig::class);
     }
 
-    protected function tearDown() {
+    protected function tearDown(): void {
       $this->prophet->checkPredictions();
     }
 
+    /**
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
     public function testUserManagedSignUpSuccess(): void {
 
       $user = $this->createUser();
@@ -67,14 +85,17 @@ namespace Drupal\Tests\auth_apic\Unit {
 
       $service = new UserManagedSignUp($this->mgmtServer->reveal(),
         $this->userManager->reveal(),
-        $this->userService->reveal(),
-        $this->logger->reveal());
+        $this->logger->reveal(),
+        $this->siteConfig->reveal());
       $result = $service->signUp($user);
 
-      $this->assertTrue($result->success());
-      $this->assertEquals('<front>', $result->getRedirect());
+      self::assertTrue($result->success());
+      self::assertEquals('<front>', $result->getRedirect());
     }
 
+    /**
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
     public function testUserManagedSignUpMgmtFailure(): void {
 
       $user = $this->createUser();
@@ -85,17 +106,21 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->mgmtServer->postSignUp($user)->willReturn($mgmtServerResponse);
 
       $this->logger->notice(Argument::any())->shouldNotBeCalled();
-      $this->logger->error('unexpected management server response on sign up for @username', ['@username' => $user->getUsername()])->shouldBeCalled();
+      $this->logger->error('unexpected management server response on sign up for @username', ['@username' => $user->getUsername()])
+        ->shouldBeCalled();
 
       $service = new UserManagedSignUp($this->mgmtServer->reveal(),
         $this->userManager->reveal(),
-        $this->userService->reveal(),
-        $this->logger->reveal());
+        $this->logger->reveal(),
+        $this->siteConfig->reveal());
       $result = $service->signUp($user);
-      $this->assertEquals(FALSE, $result->success());
-      $this->assertEquals('There was a problem registering your new account. Please contact your system administrator.', $result->getMessage());
+      self::assertEquals(FALSE, $result->success());
+      self::assertEquals('There was a problem registering your new account. Please contact your system administrator.', $result->getMessage());
     }
 
+    /**
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
     public function testUserManagedSignUpRegisterError(): void {
 
       $user = $this->createUser();
@@ -111,13 +136,13 @@ namespace Drupal\Tests\auth_apic\Unit {
 
       $service = new UserManagedSignUp($this->mgmtServer->reveal(),
         $this->userManager->reveal(),
-        $this->userService->reveal(),
-        $this->logger->reveal());
+        $this->logger->reveal(),
+        $this->siteConfig->reveal());
       $result = $service->signUp($user);
 
-      $this->assertFalse($result->success());
-      $this->assertEquals('There was an error registering your account. Please contact your system administrator.', $result->getMessage());
-      $this->assertEquals('<front>', $result->getRedirect());
+      self::assertFalse($result->success());
+      self::assertEquals('There was an error registering your account. Please contact your system administrator.', $result->getMessage());
+      self::assertEquals('<front>', $result->getRedirect());
     }
 
     private function createUser(): ApicUser {

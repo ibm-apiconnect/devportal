@@ -23,6 +23,11 @@ use Drupal\user\Entity\User;
  */
 class AnalyticsAccessCheck implements AccessInterface {
 
+  /**
+   * @param \Drupal\node\NodeInterface|null $node
+   *
+   * @return \Drupal\Core\Access\AccessResult|\Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultNeutral
+   */
   public function access(NodeInterface $node = NULL) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $allowed = FALSE;
@@ -36,17 +41,20 @@ class AnalyticsAccessCheck implements AccessInterface {
       }
 
       $user = User::load($current_user->id());
-      $user_url = $user->get('apic_url')->value;
-      $portal_analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
-      if(isset($portal_analytics_service)) {
-        $analyticsClientUrl = $portal_analytics_service->getClientEndpoint();
-      }
+      if ($user !== NULL) {
+        $user_url = $user->get('apic_url')->value;
+        $portal_analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
+        if (isset($portal_analytics_service)) {
+          $analyticsClientUrl = $portal_analytics_service->getClientEndpoint();
+        }
 
-      if (isset($node) && isset($org) && $node->application_consumer_org_url->value == $org->getUrl() && isset($analyticsClientUrl)) {
-        $allowed = $org->hasPermission($user_url, 'app-analytics:view') || $org->hasPermission($user_url, 'subscription:manage');
+        if (isset($node, $org, $analyticsClientUrl) && $node->application_consumer_org_url->value === $org->getUrl()) {
+          $allowed = $org->hasPermission($user_url, 'app-analytics:view') || $org->hasPermission($user_url, 'subscription:manage');
+        }
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $allowed);
     return AccessResult::allowedIf($allowed)->addCacheableDependency($node);
   }
+
 }

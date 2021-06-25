@@ -49,7 +49,7 @@ Feature: Application Rendering
     And I should not see the text "Dashboard"
     And I should not see the text "API Stats"
     And I should see the text "Credentials"
-    And I should see the text "Subscriptions"
+    And I should see the text "Product subscriptions"
     And I should see the text "PRODUCT"
     And I should see the text "PLAN"
     And there are no errors
@@ -125,10 +125,10 @@ Feature: Application Rendering
     Then I should see the text "MyApp2"
     And I should not see the text "Dashboard"
     And I should not see the text "API Stats"
-    And I should see the text "Subscriptions"
+    And I should see the text "Product subscriptions"
     And I should see the text "Credentials"
     And there are no errors
-    When I should see the text "Subscriptions"
+    When I should see the text "Product subscriptions"
     Then I should see the text "Pet Store"
     And I should see the text "View documentation"
     And I should see the text "Unsubscribe"

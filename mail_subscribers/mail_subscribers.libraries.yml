@@ -2,4 +2,4 @@ basic:
   version: 1.x
   css:
     component:
-      css/subscribewizard.css: {}
+      css/subscribewizard.css: { }

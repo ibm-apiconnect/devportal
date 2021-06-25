@@ -5,14 +5,14 @@ namespace Drupal\apic_app\Entity;
 @trigger_error('The ' . __NAMESPACE__ . '\Credentials is deprecated in 2018.4.1.10 
 Instead, use \Drupal\apic_app\Entity\ApplicationCredentials.', E_USER_DEPRECATED);
 
-use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\apic_app\CredentialsInterface;
+use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 
 /**
  * @deprecated in 8.x-2.0.39 (APIC v2018.4.1.10)
- * 
+ *
  * Defines a Credentials entity class.
  *
  * @ConfigEntityType(
@@ -216,4 +216,5 @@ class Credentials extends ConfigEntityBase implements CredentialsInterface {
 
     return $fields;
   }
+
 }

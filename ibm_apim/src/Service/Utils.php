@@ -52,9 +52,9 @@ class Utils {
    * @param int $length
    * @param string $append
    *
-   * @return array|string
+   * @return string
    */
-  public function truncate_string($string, $length = 191, $append = '…') {
+  public function truncate_string($string, $length = 191, $append = '…'): string {
     $string = trim($string);
     if (mb_strlen($string) > $length) {
       $string = mb_substr($string, 0, $length - mb_strlen($append));
@@ -205,8 +205,7 @@ class Utils {
       $decimals = 4;
     }
 
-    $number = number_format($number, $decimals, $dec_point, $thousands_sep);
-    return $number;
+    return number_format($number, $decimals, $dec_point, $thousands_sep);
   }
 
   /**
@@ -216,7 +215,7 @@ class Utils {
    */
   public function analytics_translations(): array {
 
-    $translations = [
+    return [
       'api_calls' => t('API Calls'),
       'api_stats' => t('API Stats'),
       'subscriptions' => t('Subscriptions'),
@@ -244,7 +243,6 @@ class Utils {
       '7days' => t('7 days'),
       '30days' => t('30 days'),
     ];
-    return $translations;
   }
 
   /**
@@ -341,7 +339,8 @@ class Utils {
 
           foreach ($submodules as $sm) {
             if ($moduleHandler->moduleExists($sm)) {
-              \Drupal::logger('ibm_apim')->info('getDisabledCustomModules: not listing %cm as sub-module %sm is still enabled', ['%cm' => $cm, '%sm' => $sm]);
+              \Drupal::logger('ibm_apim')
+                ->info('getDisabledCustomModules: not listing %cm as sub-module %sm is still enabled', ['%cm' => $cm, '%sm' => $sm]);
               $enabled_submodule = TRUE;
             }
           }
@@ -362,7 +361,8 @@ class Utils {
           }
         }
         else {
-          \Drupal::logger('ibm_apim')->debug('getDisabledCustomModules: info.yml not found or module marked as hidden for %cm.', ['%cm' => $cm]);
+          \Drupal::logger('ibm_apim')
+            ->debug('getDisabledCustomModules: info.yml not found or module marked as hidden for %cm.', ['%cm' => $cm]);
         }
 
       }

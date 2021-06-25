@@ -32,33 +32,33 @@ interface PermissionsServiceInterface {
   /**
    * get a specific permissions object by url
    *
-   * @param $key
+   * @param string $key
    *
    * @return null|array
    */
-  public function get($key): ?array;
+  public function get(string $key): ?array;
 
   /**
    * Update all permissions objects
    *
-   * @param $data array of permissions objects keyed on url
+   * @param array $data array of permissions objects keyed on url
    */
-  public function updateAll($data): void;
+  public function updateAll(array $data): void;
 
   /**
    * Update a specific permissions object
    *
-   * @param $key
-   * @param $data
+   * @param string $key
+   * @param array $data
    */
-  public function update($key, $data): void;
+  public function update(string $key, array $data): void;
 
   /**
    * Delete a specific permissions object
    *
-   * @param $key (url)
+   * @param string $key (url)
    */
-  public function delete($key): void;
+  public function delete(string $key): void;
 
   /**
    * Delete all current permissions objects

@@ -2,6 +2,6 @@ adminform:
   version: 1.x
   css:
     component:
-      css/generator.css: {}
+      css/generator.css: { }
   js:
-    js/generator.js: {}
+    js/generator.js: { }

@@ -24,20 +24,20 @@ interface ApicRestInterface {
    * @param string $auth
    *          The authorization string to use, the default is the current user
    *
-   * @param bool $getting_config
+   * @param bool $gettingConfig
    *          Getting /portal/config or not
    *
-   * @param bool $message_errors
+   * @param bool $messageErrors
    *          Log errors or not
    *
-   * @param bool $returnresult
+   * @param bool $returnResult
    *          return entire result object or just data
    *
    * @return null|\stdClass
    *
    * @see _ibm_apim_call_base()
    */
-  public static function get($url, $auth = 'user', $getting_config = FALSE, $message_errors = TRUE, $returnresult = FALSE): ?\stdClass;
+  public static function get(string $url, $auth = 'user', $gettingConfig = FALSE, $messageErrors = TRUE, $returnResult = FALSE): ?\stdClass;
 
   /**
    * A helper function to use when submitting an IBM API POST call
@@ -58,7 +58,7 @@ interface ApicRestInterface {
    *
    * @see _ibm_apim_call_base()
    */
-  public static function post($url, $data, $auth = 'user', $messageErrors = TRUE): ?\stdClass;
+  public static function post(string $url, string $data, $auth = 'user', $messageErrors = TRUE): ?\stdClass;
 
   /**
    * A helper function to use when submitting an IBM API PUT call
@@ -76,7 +76,7 @@ interface ApicRestInterface {
    *
    * @see _ibm_apim_call_base()
    */
-  public static function put($url, $data, $auth = 'user'): ?\stdClass;
+  public static function put(string $url, string $data, $auth = 'user'): ?\stdClass;
 
   /**
    * A helper function to use when submitting an IBM API PATCH call
@@ -94,7 +94,7 @@ interface ApicRestInterface {
    *
    * @see _ibm_apim_call_base()
    */
-  public static function patch($url, $data, $auth = 'user'): ?\stdClass;
+  public static function patch(string $url, string $data, $auth = 'user'): ?\stdClass;
 
   /**
    * A helper function to use when submitting an IBM API DELETE call
@@ -111,7 +111,7 @@ interface ApicRestInterface {
    *
    * @see _ibm_apim_call_base()
    */
-  public static function delete($url, $auth = 'user'): ?\stdClass;
+  public static function delete(string $url, $auth = 'user'): ?\stdClass;
 
   /**
    * A helper function to use when submitting an IBM API GET call to get RAW data
@@ -123,26 +123,26 @@ interface ApicRestInterface {
    * @param string $auth
    *          The authorization string to use, the default is the current user
    *
-   * @param bool $getting_config
+   * @param bool $gettingConfig
    *          Getting /portal/config or not
    *
-   * @param bool $message_errors
+   * @param bool $messageErrors
    *          Log errors or not
    *
-   * @param bool $returnresult
+   * @param bool $returnResult
    *          return entire result object or just data
    *
    * @return null|\stdClass
    *
    * @see _ibm_apim_call_base()
    */
-  public static function raw($url, $auth = 'user', $getting_config = FALSE, $message_errors = FALSE, $returnresult = TRUE): ?\stdClass;
+  public static function raw(string $url, $auth = 'user', $gettingConfig = FALSE, $messageErrors = FALSE, $returnResult = TRUE): ?\stdClass;
 
 
   /**
    * Used when proxying requests to the management node, for example analytics or downloading files
    *
-   * @param $url
+   * @param string $url
    * @param string $verb
    * @param null $node
    * @param bool $filter
@@ -151,6 +151,6 @@ interface ApicRestInterface {
    *
    * @return mixed
    */
-  public static function proxy($url, $verb = 'GET', $node = NULL, $filter = FALSE, $data = NULL, $extraHeaders = NULL);
+  public static function proxy(string $url, $verb = 'GET', $node = NULL, $filter = FALSE, $data = NULL, $extraHeaders = NULL);
 
 }

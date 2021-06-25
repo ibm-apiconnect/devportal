@@ -21,9 +21,15 @@ use Psr\Log\LoggerInterface;
  */
 class AnalyticsService {
 
-  private $state;
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  private StateInterface $state;
 
-  private $logger;
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  private LoggerInterface $logger;
 
   public function __construct(StateInterface $state, LoggerInterface $logger) {
     $this->state = $state;
@@ -41,7 +47,7 @@ class AnalyticsService {
     $analytics_services = $this->state->get('ibm_apim.analytics_services');
 
     if ($analytics_services === null || empty($analytics_services)) {
-      $this->logger->warning('Found no analytics services in the catalog state. Potentially missing data from APIM.');
+      $this->logger->debug('No analytics services found.');
       $analytics_services = [];
     }
 
@@ -78,7 +84,7 @@ class AnalyticsService {
    *
    * @param $data array of analytics services
    */
-  public function updateAll($data): void {
+  public function updateAll(array $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $data);
 
     if (isset($data)) {

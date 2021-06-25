@@ -13,10 +13,10 @@
  * Setup global config for analytics
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   Drupal.behaviors.subsAnalyticsConfig = {
-    attach: function (context) {
+    attach: function(context) {
 
       if (drupalSettings.analytics && drupalSettings.analytics.analyticsDir) {
         window.apiConnectAnalytics = [];
@@ -31,12 +31,8 @@
             refreshRate: '1m'
           },
           user: {
-            context: {
-
-            },
-            config: {
-
-            }
+            context: {},
+            config: {}
           }
         });
         if (!drupalSettings.anv) {
@@ -46,7 +42,7 @@
         if (!drupalSettings.anv.appIdFilter) {
           drupalSettings.anv.appIdFilter = anv.createFilter({
             "field": "app_id",
-            "values": [drupalSettings.application.id],
+            "values": [ drupalSettings.application.id ],
             "selectedValue": drupalSettings.application.id
           });
         }
@@ -54,7 +50,7 @@
         if (!drupalSettings.anv.static1hTime) {
           drupalSettings.anv.static1hTime = anv.createTime({
             "field": "datetime",
-            "values": ["1h"],
+            "values": [ "1h" ],
             "selectedValue": "1h"
           });
         }
@@ -64,22 +60,22 @@
             "id": "subscriptions",
             "time": drupalSettings.anv.static1hTime,
             "timeType": "single",
-            "filters": [drupalSettings.anv.appIdFilter],
-            "vis": [{
+            "filters": [ drupalSettings.anv.appIdFilter ],
+            "vis": [ {
               "type": "meter",
-              "metrics": [{
+              "metrics": [ {
                 "field": "product_name.keyword",
                 "type": "split",
                 "size": 10,
                 "th": true
-              }],
+              } ],
               "metadata": {
                 "icon": "default",
                 "description": "_plan_name_",
                 "info": "_billing.amount_",
                 "total": "_rate_limit.*.limit_"
               }
-            }],
+            } ],
             "metadata": {
               "scrollable": true,
               "title": drupalSettings.analytics.translations.subscriptions,

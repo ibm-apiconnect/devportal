@@ -10,10 +10,10 @@
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
 namespace Drupal\ibm_apim\Plugin\DataType;
 
 use Drupal\Core\TypedData\Plugin\DataType\StringData;
-use Drupal\Core\TypedData\Type\StringInterface;
 
 /**
  * The registry_url_field data type.
@@ -25,6 +25,6 @@ use Drupal\Core\TypedData\Type\StringInterface;
  *   label = @Translation("Registry URL Field")
  * )
  */
-class RegistryUrlField extends StringData implements StringInterface {
+class RegistryUrlField extends StringData {
 
 }

@@ -55,7 +55,7 @@ abstract class Json {
   /**
    * @param $jsonString
    *
-   * @return bool|mixed|string
+   * @return array|false|string|string[]
    */
   public static function clean($jsonString) {
     if (!is_string($jsonString) || !$jsonString) {
@@ -82,9 +82,10 @@ abstract class Json {
    * @param int $depth
    *
    * @return false|string
+   * @throws \JsonException
    */
   public static function encode($value, $options = 0, $depth = 512) {
-    return \json_encode($value, $options, $depth);
+    return \json_encode($value, JSON_THROW_ON_ERROR | $options, $depth);
   }
 
   /**
@@ -94,23 +95,20 @@ abstract class Json {
    * @param int $options
    *
    * @return mixed|null
+   * @throws \JsonException
    */
   public static function decode($jsonString, $asArray = TRUE, $depth = 512, $options = JSON_BIGINT_AS_STRING) {
     if (!is_string($jsonString) || !$jsonString) {
       return NULL;
     }
-    $result = \json_decode($jsonString, $asArray, $depth, $options);
-    if ($result === NULL) {
-      switch (self::getLastError()) {
-        case JSON_ERROR_SYNTAX :
-          // Try to clean json string if syntax error occurred
-          $jsonString = self::clean($jsonString);
-          $result = \json_decode($jsonString, $asArray, $depth, $options);
-          break;
-        default:
-          // Unsupported error
-      }
+    try {
+      $result = \json_decode($jsonString, $asArray, $depth, JSON_THROW_ON_ERROR | $options);
+    } catch (\JsonException $e) {
+      // Try to clean json string if syntax error occurred
+      $jsonString = self::clean($jsonString);
+      $result = \json_decode($jsonString, $asArray, $depth, JSON_THROW_ON_ERROR | $options);
     }
     return $result;
   }
+
 }

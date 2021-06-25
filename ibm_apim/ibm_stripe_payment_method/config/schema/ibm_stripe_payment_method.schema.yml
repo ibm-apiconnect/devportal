@@ -56,7 +56,7 @@ ibm_stripe_payment_method_config_object:
 
 ibm_stripe_payment_method.settings:
   type: config_object
-  label: 'IBM API Connect Stripe monetization configuration settings'
+  label: 'IBM API Developer Portal Stripe monetization configuration settings'
   mapping:
     publishable_key:
       type: string

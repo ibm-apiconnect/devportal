@@ -16,11 +16,12 @@ use Drupal\auth_apic\UserManagement\ApicUserDeleteInterface;
 use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Messenger\Messenger;
 
 /**
  * Delete form for users.
@@ -30,27 +31,27 @@ class ApicUserDeleteForm extends ConfirmFormBase {
   /**
    * @var array
    */
-  protected $ownedOrgs;
+  protected array $ownedOrgs;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgService
    */
-  protected $orgService;
+  protected ConsumerOrgService $orgService;
 
   /**
    * @var \Drupal\auth_apic\UserManagement\ApicUserDeleteInterface
    */
-  protected $deleteService;
+  protected ApicUserDeleteInterface $deleteService;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -72,7 +73,8 @@ class ApicUserDeleteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): ApicUserDeleteForm {
+    /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('ibm_apim.user_utils'),
       $container->get('ibm_apim.consumerorg'),
@@ -149,7 +151,7 @@ class ApicUserDeleteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
+  public function getDescription(): TranslatableMarkup {
     if (sizeof($this->ownedOrgs) === 1) {
       $description = $this->t('Are you sure you want to delete your account? This action cannot be undone. This action will also remove the organization you own. This permanently removes access to the organization, and all of its applications and subscriptions, for all members of the organization. Please note that once an organization has been deleted, it cannot be reactivated. You might want to consider changing ownership of your Developer organizations, before deleting your account.');
     }
@@ -162,14 +164,14 @@ class ApicUserDeleteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getConfirmText() {
+  public function getConfirmText(): TranslatableMarkup {
     return $this->t('Delete');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getQuestion() {
+  public function getQuestion(): TranslatableMarkup {
     return $this->t('Are you sure you want to delete your account?');
   }
 
@@ -184,7 +186,7 @@ class ApicUserDeleteForm extends ConfirmFormBase {
    * @param array $form
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *
-   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Core\Entity\EntityStorageException|\Drupal\Core\TempStore\TempStoreException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

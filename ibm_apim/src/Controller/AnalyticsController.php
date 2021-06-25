@@ -13,6 +13,7 @@
 
 namespace Drupal\ibm_apim\Controller;
 
+use Drupal\apic_api\Service\ApiUtils;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicRest;
@@ -28,13 +29,35 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AnalyticsController extends ControllerBase {
 
-  protected $userUtils;
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
+  protected UserUtils $userUtils;
 
-  protected $siteConfig;
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
+  protected SiteConfig $siteConfig;
 
-  protected $utils;
+  /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
+  protected Utils $utils;
 
-  private $requestStack;
+  /**
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  private RequestStack $requestStack;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\AnalyticsService
+   */
+  private AnalyticsService $analyticsService;
+
+  /**
+   * @var \Drupal\apic_api\Service\ApiUtils
+   */
+  protected ApiUtils $apiUtils;
 
   /**
    * AnalyticsController constructor.
@@ -44,17 +67,27 @@ class AnalyticsController extends ControllerBase {
    * @param \Drupal\ibm_apim\Service\AnalyticsService $analytics_service
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    * @param \Drupal\ibm_apim\Service\Utils $utils
+   * @param \Drupal\apic_api\Service\ApiUtils $apiUtils
    */
-  public function __construct(UserUtils $userUtils, SiteConfig $config, AnalyticsService $analytics_service, RequestStack $request_stack, Utils $utils) {
+  public function __construct(UserUtils $userUtils, SiteConfig $config, AnalyticsService $analytics_service, RequestStack $request_stack, Utils $utils, ApiUtils $apiUtils) {
     $this->userUtils = $userUtils;
     $this->siteConfig = $config;
     $this->analyticsService = $analytics_service;
     $this->requestStack = $request_stack;
     $this->utils = $utils;
+    $this->apiUtils = $apiUtils;
   }
 
-  public static function create(ContainerInterface $container) {
-    return new static($container->get('ibm_apim.user_utils'), $container->get('ibm_apim.site_config'), $container->get('ibm_apim.analytics'), $container->get('request_stack'), $container->get('ibm_apim.utils'));
+  public static function create(ContainerInterface $container): AnalyticsController {
+    /** @noinspection PhpParamsInspection */
+    return new static(
+      $container->get('ibm_apim.user_utils'),
+      $container->get('ibm_apim.site_config'),
+      $container->get('ibm_apim.analytics'),
+      $container->get('request_stack'),
+      $container->get('ibm_apim.utils'),
+      $container->get('apic_api.utils')
+    );
   }
 
 
@@ -67,7 +100,7 @@ class AnalyticsController extends ControllerBase {
   public function analytics(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $consumer_org = $this->userUtils->getCurrentConsumerorg();
+    $consumerOrg = $this->userUtils->getCurrentConsumerorg();
 
     $catalogId = $this->siteConfig->getEnvId();
     $catalogName = $this->siteConfig->getCatalog()['title'];
@@ -75,15 +108,18 @@ class AnalyticsController extends ControllerBase {
     $consumerorgId = NULL;
     $consumerorgNid = NULL;
     $consumerorgTitle = NULL;
-    if (isset($consumer_org['url'])) {
+
+    $eventsFound = $this->apiUtils->areEventAPIsPresent();
+
+    if (isset($consumerOrg['url'])) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
-      $query->condition('consumerorg_url.value', $consumer_org['url']);
-      $consumerorgresults = $query->execute();
-      if (isset($consumerorgresults) && !empty($consumerorgresults)) {
-        $consumerorgNid = array_shift($consumerorgresults);
+      $query->condition('consumerorg_url.value', $consumerOrg['url']);
+      $consumerorgResults = $query->execute();
+      if (isset($consumerorgResults) && !empty($consumerorgResults)) {
+        $consumerorgNid = array_shift($consumerorgResults);
         $consumerorg = Node::load($consumerorgNid);
-        if ($consumerorg !== null) {
+        if ($consumerorg !== NULL) {
           $consumerorgId = $consumerorg->consumerorg_id->value;
           $consumerorgTitle = $consumerorg->getTitle();
         }
@@ -129,6 +165,7 @@ class AnalyticsController extends ControllerBase {
       'consumerorgTitle' => $consumerorgTitle,
       'node' => $nodeArray,
       'tabs' => $tabs,
+      'eventsFound' => $eventsFound,
     ]);
 
     return [
@@ -144,6 +181,7 @@ class AnalyticsController extends ControllerBase {
       ],
       '#node' => $nodeArray,
       '#tabs' => $tabs,
+      '#eventsFound' => $eventsFound,
     ];
   }
 
@@ -153,29 +191,31 @@ class AnalyticsController extends ControllerBase {
    * @param \Symfony\Component\HttpFoundation\Request $request
    *
    * @return \Symfony\Component\HttpFoundation\Response
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \Exception
    */
-  public function analyticsProxy(Request $request) {
+  public function analyticsProxy(Request $request): Response {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     // disable caching for this page
     \Drupal::service('page_cache_kill_switch')->trigger();
-    $consumer_org = $this->userUtils->getCurrentConsumerorg();
-    $consumerorgId = NULL;
+    $consumerOrg = $this->userUtils->getCurrentConsumerorg();
+    $consumerOrgId = NULL;
 
-    if (isset($consumer_org) && isset($consumer_org['url'])) {
-      $portal_analytics_service = $this->analyticsService->getDefaultService();
-      if (isset($portal_analytics_service)) {
-        $analyticsClientUrl = $portal_analytics_service->getClientEndpoint();
+    if (isset($consumerOrg['url'])) {
+      $portalAnalyticsService = $this->analyticsService->getDefaultService();
+      if (isset($portalAnalyticsService)) {
+        $analyticsClientUrl = $portalAnalyticsService->getClientEndpoint();
         if (isset($analyticsClientUrl)) {
           $query = \Drupal::entityQuery('node');
           $query->condition('type', 'consumerorg');
-          $query->condition('consumerorg_url.value', $consumer_org['url']);
+          $query->condition('consumerorg_url.value', $consumerOrg['url']);
           $consumerOrgResults = $query->execute();
           if (isset($consumerOrgResults) && !empty($consumerOrgResults)) {
             $first = array_shift($consumerOrgResults);
             $consumerorg = Node::load($first);
-            if ($consumerorg !== null) {
-              $consumerorgId = $consumerorg->consumerorg_id->value;
+            if ($consumerorg !== NULL) {
+              $consumerOrgId = $consumerorg->consumerorg_id->value;
             }
 
             $pOrgId = $this->siteConfig->getOrgId();
@@ -186,7 +226,7 @@ class AnalyticsController extends ControllerBase {
             $url = $analyticsClientUrl . '/api/apiconnect/anv';
 
             $verb = 'POST';
-            $url = $url . '?org_id=' . $pOrgId . '&catalog_id=' . $catalogId . '&developer_org_id=' . $consumerorgId . '&manage=true&dashboard=true';
+            $url .= '?org_id=' . $pOrgId . '&catalog_id=' . $catalogId . '&developer_org_id=' . $consumerOrgId . '&manage=true&dashboard=true';
 
             \Drupal::logger('ibm_apim')->debug('Analytics proxy URL is: %url, verb is %verb', [
               '%url' => $url,
@@ -197,20 +237,20 @@ class AnalyticsController extends ControllerBase {
 
             // Need to use Mutual TLS on the Analytics Client Endpoint
             $mutualAuth = [];
-            $analytics_tls_client = $portal_analytics_service->getClientEndpointTlsClientProfileUrl();
-            if (isset($analytics_tls_client)) {
-              $client_endpoint_tls_client_profile_url = $analytics_tls_client;
-              $tls_profiles = \Drupal::service('ibm_apim.tls_client_profiles')->getAll();
-              if (isset($tls_profiles) && !empty($tls_profiles)) {
-                foreach ($tls_profiles as $tls_profile) {
-                  if ($tls_profile->getUrl() === $client_endpoint_tls_client_profile_url) {
-                    $keyfile = $tls_profile->getKeyFile();
+            $analyticsTlsClient = $portalAnalyticsService->getClientEndpointTlsClientProfileUrl();
+            if (isset($analyticsTlsClient)) {
+              $clientEndpointTlsClientProfileUrl = $analyticsTlsClient;
+              $tlsProfiles = \Drupal::service('ibm_apim.tls_client_profiles')->getAll();
+              if (isset($tlsProfiles) && !empty($tlsProfiles)) {
+                foreach ($tlsProfiles as $tlsProfile) {
+                  if ($tlsProfile->getUrl() === $clientEndpointTlsClientProfileUrl) {
+                    $keyfile = $tlsProfile->getKeyFile();
                     if (isset($keyfile)) {
                       $mutualAuth['keyFile'] = $keyfile;
                     }
-                    $certfile = $tls_profile->getCertFile();
-                    if ($certfile) {
-                      $mutualAuth['certFile'] = $certfile;
+                    $certFile = $tlsProfile->getCertFile();
+                    if ($certFile) {
+                      $mutualAuth['certFile'] = $certFile;
                     }
                   }
                 }
@@ -221,16 +261,16 @@ class AnalyticsController extends ControllerBase {
             }
             $headers[] = 'kbn-xsrf: 5.5.1';
 
-            $response_object = ApicRest::proxy($url, $verb, NULL, TRUE, $data, $headers, $mutualAuth);
-            $filtered = $response_object['content'];
-            if (!isset($response_object['statusCode'])) {
-              $response_object['statusCode'] = 200;
+            $responseObject = ApicRest::proxy($url, $verb, NULL, TRUE, $data, $headers, $mutualAuth);
+            $filtered = $responseObject['content'];
+            if (!isset($responseObject['statusCode'])) {
+              $responseObject['statusCode'] = 200;
             }
-            if (!isset($response_object['headers'])) {
-              $response_object['headers'] = [];
+            if (!isset($responseObject['headers'])) {
+              $responseObject['headers'] = [];
             }
 
-            $response = new Response($filtered, $response_object['statusCode'], $response_object['headers']);
+            $response = new Response($filtered, $responseObject['statusCode'], $responseObject['headers']);
           }
           else {
             $response = new Response(t('Invalid consumer organization.'), 400);

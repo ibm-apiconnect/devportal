@@ -9,6 +9,7 @@
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
 namespace Drupal\mail_subscribers\Event;
 
 use Symfony\Component\EventDispatcher\Event;
@@ -25,7 +26,7 @@ class AllMailAddedEvent extends Event {
    *
    * @var int
    */
-  public $count;
+  public int $count;
 
   /**
    * Constructs the object.
@@ -33,7 +34,7 @@ class AllMailAddedEvent extends Event {
    * @param int $count
    *   The message count.
    */
-  public function __construct($count) {
+  public function __construct(int $count) {
     $this->count = $count;
   }
 

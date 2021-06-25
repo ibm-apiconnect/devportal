@@ -24,27 +24,27 @@ class ApicUserDeleteService implements ApicUserDeleteInterface {
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface
    */
-  private $mgmtServer;
+  private ManagementServerInterface $mgmtServer;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface
    */
-  private $userStorage;
+  private ApicUserStorageInterface $userStorage;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  private $logger;
+  private LoggerInterface $logger;
 
   /**
    * @var \Drupal\Core\Session\AccountProxyInterface
    */
-  private $currentUser;
+  private AccountProxyInterface $currentUser;
 
   public function __construct(ManagementServerInterface $mgmt_server,
-                       ApicUserStorageInterface $user_storage,
-                       LoggerInterface $logger,
-                       AccountProxyInterface $current_user) {
+                              ApicUserStorageInterface $user_storage,
+                              LoggerInterface $logger,
+                              AccountProxyInterface $current_user) {
     $this->mgmtServer = $mgmt_server;
     $this->userStorage = $user_storage;
     $this->logger = $logger;
@@ -61,7 +61,7 @@ class ApicUserDeleteService implements ApicUserDeleteInterface {
     $mgmtResponse = $this->mgmtServer->deleteMe();
     $userManagerResponse = new UserManagerResponse();
 
-    if ((int) $mgmtResponse->getCode() === 200) { // DELETE /me should return 200 with me resource
+    if ($mgmtResponse !== NULL && (int) $mgmtResponse->getCode() === 200) { // DELETE /me should return 200 with me resource
       // we have successfully deleted in apim, now to clean things up locally (drupal account)
 
       $this->logger->notice('Account deleted in apim by @username', [
@@ -79,7 +79,7 @@ class ApicUserDeleteService implements ApicUserDeleteInterface {
     }
 
     if (\function_exists('ibm_apim_exit_trace')) {
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $userManagerResponse !== NULL ? $userManagerResponse->success() : NULL);
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $userManagerResponse->success());
     }
     return $userManagerResponse;
   }
@@ -109,7 +109,7 @@ class ApicUserDeleteService implements ApicUserDeleteInterface {
     }
 
     if ($id !== NULL) {
-      $this->logger->notice('Deleting user - id = @id', ['@id'=> $id]);
+      $this->logger->notice('Deleting user - id = @id', ['@id' => $id]);
       user_cancel([], $id, 'user_cancel_reassign');
       $response = TRUE;
     }
@@ -122,4 +122,5 @@ class ApicUserDeleteService implements ApicUserDeleteInterface {
     }
     return $response;
   }
+
 }

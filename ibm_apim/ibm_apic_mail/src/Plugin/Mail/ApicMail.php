@@ -40,22 +40,22 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * @var \Drupal\Core\Render\RendererInterface
    */
-  protected $renderer;
+  protected RendererInterface $renderer;
 
   /**
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * @var \Drupal\Core\Messenger\MessengerInterface
    */
-  protected $messenger;
+  protected MessengerInterface $messenger;
 
   /**
    * ApicMail constructor.
@@ -107,7 +107,8 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
 
       if ($message['body'] === NULL) {
         $message['body'] = '';
-      } else {
+      }
+      else {
         $message['body'] = $message['body']->__toString();
       }
     }
@@ -121,6 +122,7 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
    * @param array $message
    *
    * @return bool
+   * @throws \Exception
    */
   public function mail(array $message): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -186,6 +188,7 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
    * @param $message
    *
    * @return bool
+   * @throws \Exception
    */
   private function call($url, $message): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -193,43 +196,56 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
 
     $to = self::parse_mailboxes($message['to']);
 
-    $requestBody = [
-      'to' => implode(',', array_values($to)),
-      'subject' => $message['subject'],
-      'body' => $message['body'],
-      'content_type' => 'html',
-    ];
-    // do not set a from address - use the sender address configured in the CM
+    $toValues = implode(',', array_values($to));
+    if (isset($toValues)) {
+      $requestBody = [
+        'to' => $toValues,
+        'subject' => $message['subject'],
+        'body' => $message['body'],
+        'content_type' => 'html',
+      ];
+      // do not set a from address - use the sender address configured in the CM
 
-    if (array_key_exists('cc', $message)) {
-      $requestBody['cc'] = implode(',', self::parse_mailboxes($message['cc']));
-    } elseif (isset($message['headers']['Cc']) && !empty($message['headers']['Cc'])) {
-      $requestBody['cc'] = implode(',', self::parse_mailboxes($message['headers']['Cc']));
-    }
-    elseif (isset($message['headers']['Cc']) && !empty($message['headers']['Cc'])) {
-      $requestBody['cc'] = implode(',', self::parse_mailboxes($message['headers']['Cc']));
-    }
-    if (array_key_exists('bcc', $message)) {
-      $requestBody['bcc'] = implode(',', self::parse_mailboxes($message['bcc']));
-    } elseif (isset($message['headers']['Bcc']) && !empty($message['headers']['Bcc'])) {
-      $requestBody['bcc'] = implode(',', self::parse_mailboxes($message['headers']['Bcc']));
-    }
-    elseif (isset($message['headers']['Bcc']) && !empty($message['headers']['Bcc'])) {
-      $requestBody['bcc'] = implode(',', self::parse_mailboxes($message['headers']['Bcc']));
-    }
-
-    try {
-      $result = ApicRest::post($url, json_encode($requestBody), 'platform');
-      if (isset($result) && $result->code >= 200 && $result->code < 300) {
-        $returnValue = TRUE;
+      if (array_key_exists('cc', $message) && !empty($message['cc'])) {
+        $requestBody['cc'] = implode(',', self::parse_mailboxes($message['cc']));
       }
-    } catch (RestResponseParseException $e) {
-      \Drupal::logger('ibm_apic_mail')->info('call: RestResponseParseException %code %message', [
-        '%message' => $e->getMessage(),
-        '%code' => $e->getCode(),
-      ]);
+      elseif (isset($message['headers']['Cc']) && !empty($message['headers']['Cc'])) {
+        $requestBody['cc'] = implode(',', self::parse_mailboxes($message['headers']['Cc']));
+      }
+      if (array_key_exists('bcc', $message) && !empty($message['bcc'])) {
+        $requestBody['bcc'] = implode(',', self::parse_mailboxes($message['bcc']));
+      }
+      elseif (isset($message['headers']['Bcc']) && !empty($message['headers']['Bcc'])) {
+        $requestBody['bcc'] = implode(',', self::parse_mailboxes($message['headers']['Bcc']));
+      }
+
+      try {
+        $json = json_encode($requestBody, JSON_THROW_ON_ERROR);
+        if ($json !== NULL) {
+          $result = ApicRest::post($url, $json, 'platform');
+          if (isset($result) && $result->code >= 200 && $result->code < 300) {
+            $returnValue = TRUE;
+          }
+        }
+      } catch (\JsonException $e) {
+        \Drupal::logger('ibm_apic_mail')->info('call: JsonException %code %message', [
+          '%message' => $e->getMessage(),
+          '%code' => $e->getCode(),
+        ]);
+        $returnValue = FALSE;
+      } catch (\Exception $e) {
+        \Drupal::logger('ibm_apic_mail')->info('call: Exception %code %message', [
+          '%message' => $e->getMessage(),
+          '%code' => $e->getCode(),
+        ]);
+        $returnValue = FALSE;
+      }
+    }
+    else {
+      \Drupal::logger('ibm_apic_mail')->info('call: No recipients provided');
       $returnValue = FALSE;
     }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     return $returnValue;
   }
@@ -283,4 +299,5 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $mailboxes;
   }
+
 }

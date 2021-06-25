@@ -15,13 +15,31 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
   use Drupal\auth_apic\UserManagement\ApicLoginService;
   use Drupal\consumerorg\ApicType\ConsumerOrg;
+  use Drupal\consumerorg\Service\ConsumerOrgLoginService;
+  use Drupal\Core\Entity\Entity\EntityFormDisplay;
+  use Drupal\Core\Entity\EntityStorageInterface;
+  use Drupal\Core\Entity\EntityTypeManagerInterface;
+  use Drupal\Core\Extension\ModuleHandlerInterface;
+  use Drupal\Core\Field\FieldItemList;
+  use Drupal\Core\Session\AccountProxyInterface;
+  use Drupal\Core\TempStore\PrivateTempStore;
+  use Drupal\Core\TempStore\PrivateTempStoreFactory;
   use Drupal\ibm_apim\ApicType\ApicUser;
+  use Drupal\ibm_apim\ApicType\UserRegistry;
   use Drupal\ibm_apim\Rest\MeResponse;
   use Drupal\ibm_apim\Rest\TokenResponse;
-  use Prophecy\Argument;
   use Drupal\ibm_apim\Service\ApicUserService;
+  use Drupal\ibm_apim\Service\ApicUserStorage;
+  use Drupal\ibm_apim\Service\APIMServer;
   use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
+  use Drupal\ibm_apim\Service\SiteConfig;
+  use Drupal\ibm_apim\Service\UserUtils;
   use Drupal\ibm_apim\Service\Utils;
+  use Drupal\ibm_apim\UserManagement\ApicAccountService;
+  use Drupal\user\Entity\User;
+  use Drupal\user\UserStorageInterface;
+  use Prophecy\Argument;
+  use Psr\Log\LoggerInterface;
 
   /**
    * @coversDefaultClass \Drupal\auth_apic\UserManagement\ApicLoginService
@@ -29,73 +47,130 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
    */
   class ApicLoginServiceTest extends AuthApicUserManagementBaseTestClass {
 
-    /*
-     Dependencies of ApicLoginService
+    /**
+     * @var \Drupal\ibm_apim\Service\APIMServer|\Prophecy\Prophecy\ObjectProphecy
      */
     protected $mgmtServer;
 
+    /**
+     * @var \Drupal\ibm_apim\UserManagement\ApicAccountService|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $accountService;
 
+    /**
+     * @var \Drupal\ibm_apim\Service\UserUtils|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $userUtils;
 
+    /**
+     * @var \Drupal\ibm_apim\Service\ApicUserStorage|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $userStorage;
 
+    /**
+     * @var \Drupal\Core\TempStore\PrivateTempStoreFactory|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $tempStore;
 
+    /**
+     * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
+     */
     protected $logger;
 
+    /**
+     * @var \Drupal\ibm_apim\Service\SiteConfig|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $siteConfig;
 
+    /**
+     * @var \Drupal\Core\Session\AccountProxyInterface|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $currentUser;
 
+    /**
+     * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $entityTypeManager;
 
+    /**
+     * @var \Drupal\user\UserStorageInterface|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $drupalUser;
 
+    /**
+     * @var \Drupal\consumerorg\Service\ConsumerOrgLoginService|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $consumerOrgLogin;
 
+    /**
+     * @var \Drupal\Core\TempStore\PrivateTempStore|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $sessionStore;
 
+    /**
+     * @var \Drupal\ibm_apim\Service\ApicUserService|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $userService;
-    
+
+    /**
+     * @var \Drupal\Core\Entity\Entity\EntityFormDisplay|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $entityFormDisplay;
 
+    /**
+     * @var \Drupal\Core\Extension\ModuleHandlerInterface|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $moduleHandler;
 
+    /**
+     * @var \Drupal\Core\Entity\EntityStorageInterface|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $entityFormDisplayStorage;
 
-  protected $userRegistryService;
+    /**
+     * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface|\Prophecy\Prophecy\ObjectProphecy
+     */
+    protected $userRegistryService;
 
-  protected $utils;
+    /**
+     * @var \Drupal\ibm_apim\Service\Utils|\Prophecy\Prophecy\ObjectProphecy
+     */
+    protected $utils;
 
-  protected $oidcRegistry;
+    /**
+     * @var \Drupal\ibm_apim\ApicType\UserRegistry|\Prophecy\Prophecy\ObjectProphecy
+     */
+    protected $oidcRegistry;
 
-    protected function setup() {
+    /**
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     */
+    protected function setup(): void {
       parent::setup();
 
 
-      $this->mgmtServer = $this->prophet->prophesize(\Drupal\ibm_apim\Service\APIMServer::class);
-      $this->accountService = $this->prophet->prophesize(\Drupal\ibm_apim\UserManagement\ApicAccountService::class);
-      $this->userUtils = $this->prophet->prophesize(\Drupal\ibm_apim\Service\UserUtils::class);
-      $this->userStorage = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserStorage::class);
-      $this->tempStore = $this->prophet->prophesize(\Drupal\Core\TempStore\PrivateTempStoreFactory::class);
-      $this->sessionStore = $this->prophet->prophesize(\Drupal\Core\TempStore\PrivateTempStore::class);
-      $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
-      $this->siteConfig = $this->prophet->prophesize(\Drupal\ibm_apim\Service\SiteConfig::class);
-      $this->currentUser = $this->prophet->prophesize(\Drupal\Core\Session\AccountProxyInterface::class);
-      $this->entityTypeManager = $this->prophet->prophesize(\Drupal\Core\Entity\EntityTypeManagerInterface::class);
-      $this->consumerOrgLogin = $this->prophet->prophesize(\Drupal\consumerorg\Service\ConsumerOrgLoginService::class);
-      $this->userService = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserService::class);
-      $this->entityFormDisplay = $this->prophet->prophesize(\Drupal\Core\Entity\Entity\EntityFormDisplay::class);
-      $this->entityFormDisplayStorage = $this->prophet->prophesize(\Drupal\Core\Entity\EntityStorageInterface::class);
-      $this->drupalUser = $this->prophet->prophesize(\Drupal\user\UserStorageInterface::class);
-      $this->moduleHandler =  $this->prophet->prophesize(\Drupal\Core\Extension\ModuleHandlerInterface::class);
-      $this->userRegistryService = $this->prophet->prophesize(\Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface::class);
-      $this->utils =  $this->prophet->prophesize(\Drupal\ibm_apim\Service\Utils::class);
-      
-      
-      $this->moduleHandler->moduleExists('terms_of_use')->willReturn(false);
-      $this->oidcRegistry = $this->prophet->prophesize(\Drupal\ibm_apim\ApicType\UserRegistry::class);
+      $this->mgmtServer = $this->prophet->prophesize(APIMServer::class);
+      $this->accountService = $this->prophet->prophesize(ApicAccountService::class);
+      $this->userUtils = $this->prophet->prophesize(UserUtils::class);
+      $this->userStorage = $this->prophet->prophesize(ApicUserStorage::class);
+      $this->tempStore = $this->prophet->prophesize(PrivateTempStoreFactory::class);
+      $this->sessionStore = $this->prophet->prophesize(PrivateTempStore::class);
+      $this->logger = $this->prophet->prophesize(LoggerInterface::class);
+      $this->siteConfig = $this->prophet->prophesize(SiteConfig::class);
+      $this->currentUser = $this->prophet->prophesize(AccountProxyInterface::class);
+      $this->entityTypeManager = $this->prophet->prophesize(EntityTypeManagerInterface::class);
+      $this->consumerOrgLogin = $this->prophet->prophesize(ConsumerOrgLoginService::class);
+      $this->userService = $this->prophet->prophesize(ApicUserService::class);
+      $this->entityFormDisplay = $this->prophet->prophesize(EntityFormDisplay::class);
+      $this->entityFormDisplayStorage = $this->prophet->prophesize(EntityStorageInterface::class);
+      $this->drupalUser = $this->prophet->prophesize(UserStorageInterface::class);
+      $this->moduleHandler = $this->prophet->prophesize(ModuleHandlerInterface::class);
+      $this->userRegistryService = $this->prophet->prophesize(UserRegistryServiceInterface::class);
+      $this->utils = $this->prophet->prophesize(Utils::class);
+
+      $this->moduleHandler->moduleExists('terms_of_use')->willReturn(FALSE);
+      $this->oidcRegistry = $this->prophet->prophesize(UserRegistry::class);
       $this->oidcRegistry->getRegistryType()->willReturn('oidc');
 
       $this->entityTypeManager->getStorage('entity_form_display')->willReturn($this->entityFormDisplayStorage);
@@ -106,16 +181,19 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
     }
 
-    protected function tearDown() {
-      parent::tearDown();
-    }
-
-
     public function testLoginServiceCreate(): void {
       $service = $this->generateServiceUnderTest();
-      $this->assertNotEmpty($service);
+      self::assertNotEmpty($service);
     }
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \JsonException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
     public function testLoginSuccessNoRefreshToken(): void {
 
       $user = $this->generateLoginUser();
@@ -130,7 +208,8 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
       $this->userService->parseDrupalAccount($accountStub)->willReturn($user);
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())->shouldBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())
+        ->shouldBeCalled();
       $this->userService->getCustomUserFields()->willReturn([]);
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->willReturn(['url' => '/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
@@ -148,17 +227,26 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertTrue($response->success());
-      $this->assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
+      self::assertTrue($response->success());
+      self::assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
     }
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \JsonException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     * @throws \Exception
+     */
     public function testLoginSuccessWithRefreshToken(): void {
 
       $user = $this->generateLoginUser();
 
       $accountStub = $this->createAccountStub();
 
-      $tokenResponse = $this->generateTokenResponse(true);
+      $tokenResponse = $this->generateTokenResponse(TRUE);
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
       $meResponse = $this->createMeResponse($user);
@@ -166,7 +254,8 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
       $this->userService->parseDrupalAccount($accountStub)->willReturn($user);
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())->shouldBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())
+        ->shouldBeCalled();
       $this->userService->getCustomUserFields()->willReturn([]);
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->willReturn(['url' => '/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
@@ -184,10 +273,18 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertTrue($response->success());
-      $this->assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
+      self::assertTrue($response->success());
+      self::assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
     }
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \JsonException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
     public function testLoginFailNoBearerToken(): void {
       $user = new ApicUser();
       $user->setUsername('abc');
@@ -200,16 +297,24 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->accountService->createOrUpdateLocalAccount(Argument::any())->shouldNotBeCalled();
       $this->userStorage->userLoginFinalize(Argument::any())->shouldNotBeCalled();
       $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
-      $this->userUtils->setOrgSessionData(Argument::any())->shouldNotBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
+      $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any(), Argument::any())->shouldNotBeCalled();
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertFalse($response->success());
-      $this->assertEquals('Unable to retrieve bearer token, please contact the system administrator.', $response->getMessage());
+      self::assertFalse($response->success());
+      self::assertEquals('Unable to retrieve bearer token, please contact the system administrator.', $response->getMessage());
     }
 
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \JsonException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
     public function testLoginFailGetMeFail(): void {
       $user = new ApicUser();
       $user->setUsername('abc');
@@ -229,15 +334,24 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->accountService->createOrUpdateLocalAccount(Argument::any())->shouldNotBeCalled();
       $this->userStorage->userLoginFinalize(Argument::any())->shouldNotBeCalled();
       $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
-      $this->userUtils->setOrgSessionData(Argument::any())->shouldNotBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
+      $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any(), Argument::any())->shouldNotBeCalled();
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertFalse($response->success());
-      $this->assertEquals('a:1:{i:0;s:9:"something";}', $response->getMessage()); // urgh
+      self::assertFalse($response->success());
+      self::assertEquals('a:1:{i:0;s:9:"something";}', $response->getMessage()); // urgh
     }
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \JsonException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     * @throws \Exception
+     */
     public function testLoginFailBlockedUser(): void {
 
       $user = $this->generateLoginUser();
@@ -255,7 +369,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->userService->getCustomUserFields()->willReturn([]);
 
       $this->sessionStore->set('auth', Argument::any())->shouldNotBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any(), Argument::any())->shouldNotBeCalled();
       $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
       $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
       $this->userStorage->userLoginFinalize(Argument::any())->shouldNotBeCalled();
@@ -265,11 +379,20 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertFalse($response->success());
-      $this->assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
+      self::assertFalse($response->success());
+      self::assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
 
     }
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \JsonException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     * @throws \Exception
+     */
     public function testLoginWithNoConsumerorg(): void {
 
       $user = $this->generateLoginUser();
@@ -291,7 +414,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
 
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any(), Argument::any())->shouldNotBeCalled();
 
       $this->userUtils->setCurrentConsumerorg(NULL)->shouldBeCalled();
       $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
@@ -305,11 +428,20 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertTrue($response->success());
-      $this->assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
+      self::assertTrue($response->success());
+      self::assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
 
     }
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \JsonException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     * @throws \Exception
+     */
     public function testUserIsPending(): void {
 
       $user = $this->generateLoginUser();
@@ -326,7 +458,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
 
       $this->accountService->createOrUpdateLocalAccount(Argument::any())->shouldNotBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any(), Argument::any())->shouldNotBeCalled();
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
       $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
@@ -334,17 +466,28 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
       $this->logger->notice('@username [UID=@uid] logged in.', Argument::any())->shouldNotBeCalled();
       $this->logger->notice('attempted login by blocked user: @username [UID=@uid].', Argument::any())->shouldNotBeCalled();
-      $this->logger->error("Invalid login attempt for %user, state is %state.", ["%user" => "abc", "%state" => "pending"])->shouldBeCalled();
-      $this->logger->error("Login failed for %user - user failed validation check based on information from apim.", ["%user" => "abc"])->shouldBeCalled();
+      $this->logger->error("Invalid login attempt for %user, state is %state.", ["%user" => "abc", "%state" => "pending"])
+        ->shouldBeCalled();
+      $this->logger->error("Login failed for %user - user failed validation check based on information from apim.", ["%user" => "abc"])
+        ->shouldBeCalled();
 
       $this->logger->error('Login failed - login is not permitted.')->shouldBeCalled();
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertFalse($response->success());
+      self::assertFalse($response->success());
 
     }
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \JsonException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     * @throws \Exception
+     */
     public function testUserHasNoState(): void {
 
       $user = $this->generateLoginUser();
@@ -361,7 +504,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
 
       $this->accountService->createOrUpdateLocalAccount(Argument::any())->shouldNotBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any(), Argument::any())->shouldNotBeCalled();
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
       $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
@@ -369,17 +512,27 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
       $this->logger->notice('@username [UID=@uid] logged in.', Argument::any())->shouldNotBeCalled();
       $this->logger->notice('attempted login by blocked user: @username [UID=@uid].', Argument::any())->shouldNotBeCalled();
-      $this->logger->error("Login failed for %user - user failed validation check based on information from apim.", ["%user" => "abc"])->shouldBeCalled();
-      $this->logger->error("Invalid login attempt for %user, apic state cannot be determined.",["%user" => "abc"])->shouldBeCalled();
+      $this->logger->error("Login failed for %user - user failed validation check based on information from apim.", ["%user" => "abc"])
+        ->shouldBeCalled();
+      $this->logger->error("Invalid login attempt for %user, apic state cannot be determined.", ["%user" => "abc"])->shouldBeCalled();
 
       $this->logger->error('Login failed - login is not permitted.')->shouldBeCalled();
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertFalse($response->success());
+      self::assertFalse($response->success());
 
     }
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \JsonException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     * @throws \Exception
+     */
     public function testNoUsernameFromAPIM(): void {
 
       $user = $this->generateLoginUser();
@@ -396,7 +549,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
 
       $this->accountService->createOrUpdateLocalAccount(Argument::any())->shouldNotBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any(), Argument::any())->shouldNotBeCalled();
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
       $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
@@ -404,17 +557,27 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
       $this->logger->notice('@username [UID=@uid] logged in.', Argument::any())->shouldNotBeCalled();
       $this->logger->notice('attempted login by blocked user: @username [UID=@uid].', Argument::any())->shouldNotBeCalled();
-      $this->logger->error( "login attempt with invalid user. Username and registry url needed.")->shouldBeCalled();
-      $this->logger->error("Login failed for %user - user failed validation check based on information from apim.", ["%user" => NULL])->shouldBeCalled();
+      $this->logger->error("login attempt with invalid user. Username and registry url needed.")->shouldBeCalled();
+      $this->logger->error("Login failed for %user - user failed validation check based on information from apim.", ["%user" => NULL])
+        ->shouldBeCalled();
 
       $this->logger->error('Login failed - login is not permitted.')->shouldBeCalled();
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertFalse($response->success());
+      self::assertFalse($response->success());
 
     }
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \JsonException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     * @throws \Exception
+     */
     public function testNoRegistryUrlFromAPIM(): void {
 
       $user = $this->generateLoginUser();
@@ -431,7 +594,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
 
       $this->accountService->createOrUpdateLocalAccount(Argument::any())->shouldNotBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any(), Argument::any())->shouldNotBeCalled();
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
       $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
@@ -439,18 +602,28 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
       $this->logger->notice('@username [UID=@uid] logged in.', Argument::any())->shouldNotBeCalled();
       $this->logger->notice('attempted login by blocked user: @username [UID=@uid].', Argument::any())->shouldNotBeCalled();
-      $this->logger->error( "login attempt with invalid user. Username and registry url needed.")->shouldBeCalled();
-      $this->logger->error("Login failed for %user - user failed validation check based on information from apim.", ["%user" => 'abc'])->shouldBeCalled();
+      $this->logger->error("login attempt with invalid user. Username and registry url needed.")->shouldBeCalled();
+      $this->logger->error("Login failed for %user - user failed validation check based on information from apim.", ["%user" => 'abc'])
+        ->shouldBeCalled();
 
       $this->logger->error('Login failed - login is not permitted.')->shouldBeCalled();
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertFalse($response->success());
+      self::assertFalse($response->success());
 
     }
 
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \JsonException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     * @throws \Exception
+     */
     public function testValidateEnabledNoUserInDB(): void {
       $user = $this->generateLoginUser();
 
@@ -465,7 +638,8 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn(NULL);
       $this->userService->parseDrupalAccount($accountStub)->willReturn($user);
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())->shouldBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())
+        ->shouldBeCalled();
       $this->userService->getCustomUserFields()->willReturn([]);
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->willReturn(['url' => '/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
@@ -480,12 +654,21 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertTrue($response->success());
-      $this->assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
+      self::assertTrue($response->success());
+      self::assertEquals(1, $response->getUid(), 'Expected user id from logged in user.');
 
     }
 
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \JsonException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     * @throws \Exception
+     */
     public function testLoginAsExternalAdmin(): void {
 
       $user = $this->generateLoginUser();
@@ -501,7 +684,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
       $this->accountService->createOrUpdateLocalAccount(Argument::any())->shouldNotBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any(), Argument::any())->shouldNotBeCalled();
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
       $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
@@ -510,15 +693,24 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->logger->notice('@username [UID=@uid] logged in.', Argument::any())->shouldNotBeCalled();
       $this->logger->notice('attempted login by blocked user: @username [UID=@uid].', Argument::any())->shouldNotBeCalled();
 
-      $this->logger->error("Login failed because %name user from external registry is prohibited.",["%name" => "admin"])->shouldBeCalled();
+      $this->logger->error("Login failed because %name user from external registry is prohibited.", ["%name" => "admin"])->shouldBeCalled();
       $this->logger->error('Login failed - login is not permitted.')->shouldBeCalled();
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertFalse($response->success());
+      self::assertFalse($response->success());
 
     }
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \JsonException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     * @throws \Exception
+     */
     public function testLoginAsExternalAnonymous(): void {
 
       $user = $this->generateLoginUser();
@@ -534,7 +726,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
       $this->accountService->createOrUpdateLocalAccount(Argument::any())->shouldNotBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any(), Argument::any())->shouldNotBeCalled();
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
       $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
@@ -543,17 +735,25 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->logger->notice('@username [UID=@uid] logged in.', Argument::any())->shouldNotBeCalled();
       $this->logger->notice('attempted login by blocked user: @username [UID=@uid].', Argument::any())->shouldNotBeCalled();
 
-      $this->logger->error("Login failed because %name user from external registry is prohibited.",["%name" => "Anonymous"])->shouldBeCalled();
+      $this->logger->error("Login failed because %name user from external registry is prohibited.", ["%name" => "Anonymous"])
+        ->shouldBeCalled();
       $this->logger->error('Login failed - login is not permitted.')->shouldBeCalled();
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertFalse($response->success());
+      self::assertFalse($response->success());
 
     }
 
 
-    public function testLoginViaAzCodeValid() {
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \JsonException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException|\Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
+    public function testLoginViaAzCodeValid(): void {
 
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
@@ -562,10 +762,18 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->userService->getCustomUserFields()->willReturn([]);
       $response = $service->loginViaAzCode('validCode', '/reg/oidc1');
 
-      $this->assertEquals('<front>', $response);
+      self::assertEquals('<front>', $response);
     }
 
-    public function testLoginViaAzCodeErrorOnApimAuthenticate() {
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \JsonException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     */
+    public function testLoginViaAzCodeErrorOnApimAuthenticate(): void {
 
       $badUser = new ApicUser();
       $badUser->setAuthcode('bad');
@@ -577,19 +785,26 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $service = $this->generateServiceUnderTest();
       $response = $service->loginViaAzCode('bad', '/reg/oidc1');
 
-      $this->assertEquals('ERROR', $response);
+      self::assertEquals('ERROR', $response);
     }
 
-    public function testLoginViaAzCodeFirstTime() {
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \JsonException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException|\Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
+    public function testLoginViaAzCodeFirstTime(): void {
 
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
       $this->userService->getCustomUserFields()->willReturn([]);
       $this->userRegistryService->get('/reg/oidc1')->willReturn($this->oidcRegistry);
 
-      $first_time_user = $this->prophet->prophesize(\Drupal\user\Entity\User::class);
+      $first_time_user = $this->prophet->prophesize(User::class);
 
-      $first_time_field = $this->prophet->prophesize(\Drupal\Core\Field\FieldItemList::class);
+      $first_time_field = $this->prophet->prophesize(FieldItemList::class);
 
       $first_time_field->getString()->willReturn('1');
       $first_time_user->get('first_time_login')->willReturn($first_time_field);
@@ -604,11 +819,18 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $service = $this->generateServiceUnderTest();
       $response = $service->loginViaAzCode('validCode', '/reg/oidc1');
 
-      $this->assertEquals('ibm_apim.get_started', $response);
+      self::assertEquals('ibm_apim.get_started', $response);
 
     }
 
-    public function testLoginViaAzCodeCreateNewOrg(){
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \JsonException|\Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
+    public function testLoginViaAzCodeCreateNewOrg(): void {
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
       $this->userService->getCustomUserFields()->willReturn([]);
@@ -620,11 +842,18 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $service = $this->generateServiceUnderTest();
       $response = $service->loginViaAzCode('validCode', '/reg/oidc1');
 
-      $this->assertEquals('consumerorg.create', $response);
+      self::assertEquals('consumerorg.create', $response);
 
     }
 
-    public function testLoginViaAzCodeNoOrgNoPerms(){
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \JsonException|\Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
+    public function testLoginViaAzCodeNoOrgNoPerms(): void {
 
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
@@ -637,9 +866,18 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $service = $this->generateServiceUnderTest();
       $response = $service->loginViaAzCode('validCode', '/reg/oidc1');
 
-      $this->assertEquals('ibm_apim.noperms', $response);
+      self::assertEquals('ibm_apim.noperms', $response);
     }
 
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \JsonException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     * @throws \Exception
+     */
     public function testLoginFailMoreThanOneUserAlreadyInDBWithEmailAddress(): void {
 
       $user = $this->generateLoginUser();
@@ -655,7 +893,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willThrow($multipleEmailHitsException);
 
       $this->accountService->createOrUpdateLocalAccount(Argument::any())->shouldNotBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any())->shouldNotBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any(), Argument::any())->shouldNotBeCalled();
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->shouldNotBeCalled();
       $this->userUtils->setOrgSessionData()->shouldNotBeCalled();
@@ -663,20 +901,24 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->userStorage->userLoginFinalize(Argument::any())->shouldNotBeCalled();
 
       $this->logger->notice('@username [UID=@uid] logged in.', ['@username' => 'abc', '@uid' => '1'])->shouldNotBeCalled();
-      $this->logger->error( 'Login failed because there was a problem searching for users based on email: %message',
+      $this->logger->error('Login failed because there was a problem searching for users based on email: %message',
         ["%message" => 'Multiple users (2) returned matching email "andre@example.com" unable to continue.'])->shouldBeCalled();
-      $this->logger->error( "Login failed - login is not permitted.")->shouldBeCalled();
+      $this->logger->error("Login failed - login is not permitted.")->shouldBeCalled();
 
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
-      $this->assertFalse($response->success());
+      self::assertFalse($response->success());
 
     }
 
 
     // Helper Functions for login().
 
-
+    /**
+     * @param \Drupal\ibm_apim\ApicType\ApicUser $user
+     *
+     * @return \Drupal\ibm_apim\Rest\MeResponse
+     */
     private function createMeResponse(ApicUser $user): MeResponse {
 
       $meResponse = new MeResponse();
@@ -707,7 +949,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
      */
     private function generateServiceUnderTest(): ApicLoginService {
 
-      $service = new ApicLoginService($this->mgmtServer->reveal(),
+      return new ApicLoginService($this->mgmtServer->reveal(),
         $this->accountService->reveal(),
         $this->userUtils->reveal(),
         $this->userStorage->reveal(),
@@ -719,14 +961,17 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
         $this->consumerOrgLogin->reveal(),
         $this->userService->reveal(),
         $this->moduleHandler->reveal(),
-        $this->userRegistryService->reveal(), 
+        $this->userRegistryService->reveal(),
         $this->utils->reveal());
-
-
-      return $service;
     }
 
-    private function setUpOidcLoginTest() {
+    /**
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \Exception
+     */
+    private function setUpOidcLoginTest(): ApicUser {
       $loginUser = new ApicUser();
       $loginUser->setUsername('');
       $loginUser->setPassword('');
@@ -757,15 +1002,16 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
       $this->userStorage->loadUserByEmailAddress('oidcandre@example.com')->willReturn(NULL);
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
-      $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())->shouldBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())
+        ->shouldBeCalled();
       $this->userUtils->setCurrentConsumerorg(Argument::any())->willReturn(['url' => '/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
       $this->userUtils->getCurrentConsumerorg()->willReturn(['url' => '/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
       $this->userUtils->setOrgSessionData()->shouldBeCalled();
       $this->userStorage->userLoginFinalize($accountStub)->shouldBeCalled();
 
-      $first_time_user = $this->prophet->prophesize(\Drupal\user\Entity\User::class);
+      $first_time_user = $this->prophet->prophesize(User::class);
 
-      $first_time_field = $this->prophet->prophesize(\Drupal\Core\Field\FieldItemList::class);
+      $first_time_field = $this->prophet->prophesize(FieldItemList::class);
 
       $first_time_field->getString()->willReturn('0');
       $first_time_user->get('first_time_login')->willReturn($first_time_field);
@@ -780,7 +1026,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
     /**
      * @return \Drupal\ibm_apim\ApicType\ApicUser
      */
-    private function generateLoginUser(): \Drupal\ibm_apim\ApicType\ApicUser {
+    private function generateLoginUser(): ApicUser {
       $user = new ApicUser();
       $user->setUsername('abc');
       $user->setPassword('123');
@@ -789,9 +1035,11 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
     }
 
     /**
+     * @param bool $addRefreshToken
+     *
      * @return \Drupal\ibm_apim\Rest\TokenResponse
      */
-    private function generateTokenResponse($addRefreshToken = false): \Drupal\ibm_apim\Rest\TokenResponse {
+    private function generateTokenResponse($addRefreshToken = FALSE): TokenResponse {
       $tokenResponse = new TokenResponse();
       $tokenResponse->setBearerToken('aBearerToken');
       $tokenResponse->setExpiresIn('12345');

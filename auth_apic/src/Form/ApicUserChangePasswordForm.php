@@ -17,6 +17,7 @@ use Drupal\change_pwd_page\Form\ChangePasswordForm;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Password\PasswordInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -25,7 +26,6 @@ use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Messenger\Messenger;
 
 class ApicUserChangePasswordForm extends ChangePasswordForm {
 
@@ -62,6 +62,11 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   protected $messenger;
 
   /**
+   * @var \Drupal\Core\Password\PasswordInterface
+   */
+  protected PasswordInterface $password_hasher;
+
+  /**
    * Constructs a ChangePasswordForm object.
    *
    * @param \Drupal\Core\Session\AccountInterface $account
@@ -86,7 +91,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
                               ApicPasswordInterface $apic_password,
                               EntityTypeManagerInterface $entity_type_manager,
                               Messenger $messenger) {
-    parent::__construct($password_hasher, $account);
+    parent::__construct($password_hasher);
     $this->account = $account;
     $this->moduleHandler = $module_handler;
     $this->logger = $logger;
@@ -101,6 +106,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
+    /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('current_user'),
       $container->get('module_handler'),
@@ -121,7 +127,11 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   }
 
   /**
-   * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   * @param \Drupal\user\UserInterface|null $user
+   *
+   * @return array
    */
   public function buildForm(array $form, FormStateInterface $form_state, UserInterface $user = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -260,7 +270,8 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   }
 
   /**
-   * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -275,9 +286,6 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       if ($show_password_policy_status) {
         if (!isset($form)) {
           $form = [];
-        }
-        if (!isset($form['account']['roles'])) {
-          $form['account']['roles'] = ['authenticated'];
         }
         if (!isset($form['account']['roles']['#default_value'])) {
           $form['account']['roles']['#default_value'] = ['authenticated'];
@@ -300,7 +308,11 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   }
 
   /**
-   * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -344,7 +356,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   }
 
   /**
-   * @return \Drupal\Core\Entity\EntityInterface|null|static
+   * @return \Drupal\Core\Entity\EntityBase|\Drupal\Core\Entity\EntityInterface|\Drupal\Core\Session\AccountInterface|\Drupal\user\Entity\User|null
    */
   public function getEntity() {
     $current_user = $this->currentUser();

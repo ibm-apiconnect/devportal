@@ -22,11 +22,16 @@ use Drupal\ibm_apim\Service\SiteConfig;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * APIC settings form.
+ * Class AdminForm
+ *
+ * @package Drupal\ibm_apim\Form
  */
 class AdminForm extends ConfigFormBase {
 
-  protected $siteConfig;
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
+  protected SiteConfig $siteConfig;
 
   /**
    * AdminForm constructor.
@@ -39,7 +44,13 @@ class AdminForm extends ConfigFormBase {
     $this->siteConfig = $config;
   }
 
+  /**
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *
+   * @return \Drupal\Core\Form\ConfigFormBase|\Drupal\ibm_apim\Form\AdminForm|static
+   */
   public static function create(ContainerInterface $container) {
+    /** @noinspection PhpParamsInspection */
     return new static($container->get('config.factory'), $container->get('ibm_apim.site_config'));
   }
 
@@ -66,11 +77,11 @@ class AdminForm extends ConfigFormBase {
     $apim_host = $this->siteConfig->parseApimHost();
 
     $form['intro'] = [
-      '#markup' => t('This form allows the configuration of different settings of this IBM API Connect Developer Portal.'),
+      '#markup' => t('This form allows the configuration of different settings of this IBM API Developer Portal.'),
       '#weight' => -30,
     ];
     $form['apim_host'] = [
-      '#markup' => t('IBM API Connect Management Service URL: @hostname', [
+      '#markup' => t('IBM API Management Service URL: @hostname', [
         '@hostname' => Html::escape($apim_host['url']),
       ]),
       '#weight' => -20,
@@ -207,14 +218,14 @@ class AdminForm extends ConfigFormBase {
       '#title' => t('Enable the OIDC register form.'),
       '#default_value' => $config->get('enable_oidc_register_form'),
       '#weight' => -1,
-      '#description' => t('If checked then users will be redirected to a form before being sent to the OIDC provider when registering with OIDC.'),
+      '#description' => t('If checked then users will be redirected to a form before being sent to the OIDC provider when registering with OIDC. The form will always be shown on owner invitation.'),
     ];
     $form['config']['enable_oidc_login_form'] = [
       '#type' => 'checkbox',
       '#title' => t('Enable the OIDC login form.'),
       '#default_value' => $config->get('enable_oidc_login_form'),
       '#weight' => -1,
-      '#description' => t('If checked then users will be redirected to a form before being sent to the OIDC provider when logging in with OIDC.'),
+      '#description' => t('If checked then users will be redirected to a form before being sent to the OIDC provider when logging in with OIDC. The form will always be shown on owner invitation.'),
     ];
     // code snippets options
     $form['categories'] = [
@@ -438,9 +449,10 @@ class AdminForm extends ConfigFormBase {
       '#weight' => 20,
     ];
     $defaults_for_api = $config->get('proxy_for_api.');
-    if ($defaults_for_api === null) {
+    if ($defaults_for_api === NULL) {
       $defaults_for_api = ['CONSUMER', 'PLATFORM', 'ANALYTICS'];
-    } else {
+    }
+    else {
       $defaults_for_api = explode(',', $config->get('proxy_for_api.'));
     }
     $form['proxy']['proxy_for_api'] = [
@@ -448,7 +460,7 @@ class AdminForm extends ConfigFormBase {
       '#options' => [
         'CONSUMER' => t('Consumer API'),
         'PLATFORM' => t('Platform API'),
-        'ANALYTICS' => t('Analytics API')
+        'ANALYTICS' => t('Analytics API'),
       ],
       '#title' => t('If enabled, use the Proxy for Consumer, Platform or Analytics APIs'),
       '#description' => t('Select whether to use the proxy for the Consumer, Platform or Analytics APIs. All are selected by default.'),
@@ -585,7 +597,7 @@ class AdminForm extends ConfigFormBase {
       $query->condition('status', 1);
       $nids = $query->execute();
       if ($nids !== NULL && !empty($nids)) {
-        foreach ($nids as $key => $nid) {
+        foreach ($nids as $nid) {
           $batch['operations'][] = ['\Drupal\apic_api\Api::processCategoriesForNode', [$nid]];
         }
       }
@@ -596,7 +608,7 @@ class AdminForm extends ConfigFormBase {
       $query->condition('status', 1);
       $nids = $query->execute();
       if ($nids !== NULL && !empty($nids)) {
-        foreach ($nids as $key => $nid) {
+        foreach ($nids as $nid) {
           $batch['operations'][] = ['\Drupal\product\Product::processCategoriesForNode', [$nid]];
         }
       }
@@ -605,11 +617,12 @@ class AdminForm extends ConfigFormBase {
         batch_set($batch);
       }
 
-      if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+      if ((int) $originalUser->id() !== 1) {
         $accountSwitcher->switchBack();
       }
     }
 
     parent::submitForm($form, $form_state);
   }
+
 }

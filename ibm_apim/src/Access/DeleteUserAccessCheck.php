@@ -21,6 +21,9 @@ use Drupal\Core\Routing\Access\AccessInterface;
  */
 class DeleteUserAccessCheck implements AccessInterface {
 
+  /**
+   * @return \Drupal\Core\Access\AccessResult
+   */
   public function access(): AccessResult {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $allowed = FALSE;

@@ -10,11 +10,12 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
+use Drupal\node\Entity\Node;
 use Drupal\product\Product;
 use Drupal\apic_api\Api;
 use Drupal\Core\Session\UserSession;
 
-function product_drush_command() {
+function product_drush_command(): array {
   $items = [];
   $items['product-cleanse-drush-command'] = [
     'description' => 'Clears the product entries back to a clean state.',
@@ -79,6 +80,11 @@ function product_drush_command() {
   return $items;
 }
 
+/**
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ */
 function drush_product_cleanse_drush_command() {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   // in case moderation is on we need to run as admin
@@ -93,7 +99,7 @@ function drush_product_cleanse_drush_command() {
   foreach ($nodes as $node) {
     $node->delete();
   }
-  if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+  if ((int) $originalUser->id() !== 1) {
     $accountSwitcher->switchBack();
   }
   drush_log(dt('All Product entries deleted.', []), 'success');
@@ -105,7 +111,7 @@ function drush_product_cleanse_drush_command() {
  * @param $event
  * @param $func
  *
- * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
  */
 function drush_product_createOrUpdate($content, $event, $func) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -119,7 +125,7 @@ function drush_product_createOrUpdate($content, $event, $func) {
       $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
     if (is_string($content)) {
-      $content = json_decode($content, TRUE);
+      $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
     }
 
     if (isset ($content['product'])) {
@@ -156,7 +162,7 @@ function drush_product_createOrUpdate($content, $event, $func) {
 
       Product::clearAppCache($content['product']['url']);
 
-      if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+      if ((int) $originalUser->id() !== 1) {
         $accountSwitcher->switchBack();
       }
 
@@ -179,7 +185,7 @@ function drush_product_createOrUpdate($content, $event, $func) {
  * @param $content
  * @param string $event
  *
- * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
  */
 function drush_product_create($content, $event = 'product_lifecycle') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -191,7 +197,7 @@ function drush_product_create($content, $event = 'product_lifecycle') {
  * @param $content
  * @param string $event
  *
- * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
  */
 function drush_product_update($content, $event = 'product_update') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -202,6 +208,8 @@ function drush_product_update($content, $event = 'product_update') {
 /**
  * @param $product
  * @param $event
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function drush_product_delete($product, $event = 'product_del') {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
@@ -225,6 +233,10 @@ function drush_product_delete($product, $event = 'product_del') {
     $nids = $query->execute();
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
+      $productNode = Node::load($nid);
+      if ($productNode !== NULL) {
+        $productUrl = $productNode->apic_url->value;
+      }
       Product::deleteNode($nid, $event);
       drush_log(dt('Drush DeleteProduct deleted Product @prod', ['@prod' => $product['product']['id']]), 'success');
     }
@@ -248,11 +260,12 @@ function drush_product_delete($product, $event = 'product_del') {
         }
       }
     }
+
     $moduleHandler = \Drupal::service('module_handler');
     if ($moduleHandler->moduleExists('views')) {
       views_invalidate_cache();
     }
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -265,28 +278,50 @@ function drush_product_delete($product, $event = 'product_del') {
 /**
  * @param $content
  *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
  */
 function drush_product_supersede($content) {
   ibm_apim_entry_trace(__FUNCTION__);
   if ($content !== NULL) {
     if (is_string($content)) {
-      $content = json_decode($content, TRUE);
+      $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
     }
     // We should have two products in the content['products'] array
     if (sizeof($content['products']) === 2) {
       foreach ($content['products'] as $product) {
         if ($product['state'] === 'deprecated') {
-          $deprecatedProdUrl = $product['url'];
           drush_product_update(['product' => $product], 'product_supersede');
+
+          $deprecatedProdUrl = $product['url'];
+          $query = \Drupal::entityQuery('node');
+          $query->condition('type', 'product');
+          $query->condition('apic_ref.value', $product['name'] . ':' . $product['version']);
+          $nids = $query->execute();
+          if ($nids !== NULL && !empty($nids)) {
+            $oldNid = array_shift($nids);
+          }
         }
         elseif ($product['state'] === 'published') {
           drush_product_create(['product' => $product], 'product_supersede');
+
+          $query = \Drupal::entityQuery('node');
+          $query->condition('type', 'product');
+          $query->condition('apic_ref.value', $product['name'] . ':' . $product['version']);
+          $nids = $query->execute();
+          if ($nids !== NULL && !empty($nids)) {
+            $newNid = array_shift($nids);
+          }
         }
         else {
           // this shouldn't happen
           drush_log(dt('Drush product supersede : found a product in a strange lifecycle state \'@state\'. Expected \'published\' or \'deprecated\'.', ['@state' => $product['state']]), 'error');
         }
+      }
+      if (isset($oldNid, $newNid)) {
+        Product::updateBasicPageRefs($oldNid, $newNid, true);
       }
       // process apis
       // check if any APIs are in retired state, if so delete them too
@@ -316,12 +351,16 @@ function drush_product_supersede($content) {
         if (isset($subIds) && !empty($subIds)) {
           foreach (array_chunk($subIds, 50) as $chunk) {
             $subEntities = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->loadMultiple($chunk);
-            foreach($subEntities as $sub) {
+            foreach ($subEntities as $sub) {
               $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties(['apic_url' => $sub->get('app_url')->value]);
-              if (count($nodes) == 1) {
+              if (count($nodes) === 1) {
                 array_pop($nodes)->save();
-              } else {
-                drush_log(dt('Drush product supersede : incorrect number of applications with url \'@url\' found. Should be 1 but was @count.', ['@url' => $deprecatedProdUrl,'@count' => count($nodes)]), 'error');
+              }
+              else {
+                drush_log(dt('Drush product supersede : incorrect number of applications with url \'@url\' found. Should be 1 but was @count.', [
+                  '@url' => $deprecatedProdUrl,
+                  '@count' => count($nodes),
+                ]), 'error');
               }
             }
           }
@@ -345,32 +384,22 @@ function drush_product_supersede($content) {
 /**
  * @param $content
  *
- * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
  */
 function drush_product_replace($content) {
   ibm_apim_entry_trace(__FUNCTION__);
   if ($content !== NULL) {
     if (is_string($content)) {
-      $content = json_decode($content, TRUE);
+      $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
     }
     // We should have two products in the content['products'] array
     if (sizeof($content['products']) === 2) {
-      foreach ($content['products'] as $product) {
-        if ($product['state'] === 'retired') {
-          drush_product_delete($product, 'product_replace');
-        }
-        elseif ($product['state'] === 'deprecated') {
-          drush_product_update(['product' => $product], 'product_replace');
-        }
-        elseif ($product['state'] === 'published') {
-          drush_product_create(['product' => $product], 'product_replace');
-        }
-        else {
-          // this shouldn't happen
-          drush_log(dt('Drush product replace : found a product in a strange lifecycle state \'@state\'. Expected \'published\', \'deprecated\' or \'retired\'.', ['@state' => $product['state']]), 'error');
-        }
+      // if there happens to be a plan mapping then handle it
+      if (isset($content['plan_map']) && !empty($content['plan_map'])) {
+        Product::processPlanMapping($content['plan_map']);
       }
-      // process apis
+
+      // process apis - do this before products so that we can create any new published apis first
       // check if any APIs are in retired state, if so delete them too
       if (isset($content['consumer_apis']) && !empty($content['consumer_apis'])) {
         foreach ($content['consumer_apis'] as $consumer_api) {
@@ -390,10 +419,49 @@ function drush_product_replace($content) {
       }
       drush_apic_api_massupdate($content['consumer_apis'], 'product_supersede');
 
-      // if there happens to be a plan mapping then handle it
-      if (isset($content['plan_map']) && !empty($content['plan_map'])) {
-        Product::processPlanMapping($content['plan_map']);
+      foreach ($content['products'] as $product) {
+        if ($product['state'] === 'retired') {
+          $query = \Drupal::entityQuery('node');
+          $query->condition('type', 'product');
+          $query->condition('apic_ref.value', $product['name'] . ':' . $product['version']);
+          $nids = $query->execute();
+          if ($nids !== NULL && !empty($nids)) {
+            $oldNid = array_shift($nids);
+          }
+
+          drush_product_delete($product, 'product_replace');
+        }
+        elseif ($product['state'] === 'deprecated') {
+          drush_product_update(['product' => $product], 'product_replace');
+
+          $query = \Drupal::entityQuery('node');
+          $query->condition('type', 'product');
+          $query->condition('apic_ref.value', $product['name'] . ':' . $product['version']);
+          $nids = $query->execute();
+          if ($nids !== NULL && !empty($nids)) {
+            $oldNid = array_shift($nids);
+          }
+        }
+        elseif ($product['state'] === 'published') {
+          drush_product_create(['product' => $product], 'product_replace');
+
+          $query = \Drupal::entityQuery('node');
+          $query->condition('type', 'product');
+          $query->condition('apic_ref.value', $product['name'] . ':' . $product['version']);
+          $nids = $query->execute();
+          if ($nids !== NULL && !empty($nids)) {
+            $newNid = array_shift($nids);
+          }
+        }
+        else {
+          // this shouldn't happen
+          drush_log(dt('Drush product replace : found a product in a strange lifecycle state \'@state\'. Expected \'published\', \'deprecated\' or \'retired\'.', ['@state' => $product['state']]), 'error');
+        }
       }
+      if (isset($oldNid, $newNid)) {
+        Product::updateBasicPageRefs($oldNid, $newNid, false);
+      }
+
       $moduleHandler = \Drupal::service('module_handler');
       if ($moduleHandler->moduleExists('views')) {
         views_invalidate_cache();
@@ -407,14 +475,14 @@ function drush_product_replace($content) {
 }
 
 /**
- * @param array $products
+ * @param string $products
  * @param string $event
  *
- * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
  */
-function drush_product_massupdate($products = [], $event = 'content_refresh') {
-  ibm_apim_entry_trace(__FUNCTION__, count($products));
-  $products = json_decode($products, TRUE);
+function drush_product_massupdate(string $products, $event = 'content_refresh') {
+  ibm_apim_entry_trace(__FUNCTION__, strlen($products));
+  $products = json_decode($products, TRUE, 512, JSON_THROW_ON_ERROR);
   if (!empty($products)) {
     foreach ($products as $product) {
       drush_product_createOrUpdate($product, $event, 'MassUpdate');
@@ -428,11 +496,14 @@ function drush_product_massupdate($products = [], $event = 'content_refresh') {
 }
 
 /**
- * @param array $prodRefs
+ * @param string $prodRefs
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ * @throws \JsonException
  */
-function drush_product_tidy($prodRefs = []) {
+function drush_product_tidy(string $prodRefs) {
   ibm_apim_entry_trace(__FUNCTION__, count($prodRefs));
-  $prodRefs = json_decode($prodRefs, TRUE);
+  $prodRefs = json_decode($prodRefs, TRUE, 512, JSON_THROW_ON_ERROR);
   if (!empty($prodRefs)) {
     $nids = [];
     $query = \Drupal::entityQuery('node');

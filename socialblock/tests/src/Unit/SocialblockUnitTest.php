@@ -23,7 +23,7 @@ use Drupal\Tests\UnitTestCase;
 class SocialblockUnitTest extends UnitTestCase {
 
   public function testTrue(): void {
-    $this->assertEquals(TRUE, TRUE);
+    self::assertEquals(TRUE, TRUE);
   }
 
 }

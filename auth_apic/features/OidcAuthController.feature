@@ -38,7 +38,7 @@ Feature: Sign in/ Sign up via an OIDC provider
     And I should see the text "Error while authenticating user. Please contact your system administrator."
     And there are no warnings
     And there are no messages
-      
+
   Scenario: Invalid - Error in params
     Given I am not logged in
     And I am at "/ibm_apim/oauth2/redirect?error=We%20got%20an%20error"
@@ -65,7 +65,7 @@ Feature: Sign in/ Sign up via an OIDC provider
     And I should see the text "Missing Client ID parameter. Contact your system administrator."
     And there are no warnings
     And there are no messages
-    
+
   Scenario: Portal as redirect - Missing State
     Given I am not logged in
     And I am at "/ibm_apim/oauth2/authorize?client_id=clientId&redirect_uri=/ibm_apim/oauth2/redirect&realm=consumer:orgId:envId/trueRealm&response_type=code"
@@ -74,7 +74,7 @@ Feature: Sign in/ Sign up via an OIDC provider
     And I should see the text "Missing state parameter. Contact your system administrator."
     And there are no warnings
     And there are no messages
-    
+
   Scenario: Portal as redirect - Missing Redirect
     Given I am not logged in
     And I am at "/ibm_apim/oauth2/authorize?client_id=clientId&state=czozOiJrZXkiOw==&realm=consumer:orgId:envId/trueRealm&response_type=code"
@@ -83,7 +83,7 @@ Feature: Sign in/ Sign up via an OIDC provider
     And I should see the text "Missing redirect uri parameter. Contact your system administrator."
     And there are no warnings
     And there are no messages
-    
+
   Scenario: Portal as redirect - Missing Realm
     Given I am not logged in
     And I am at "/ibm_apim/oauth2/authorize?client_id=clientId&state=czozOiJrZXkiOw==&redirect_uri=/ibm_apim/oauth2/redirect&response_type=code"
@@ -92,7 +92,7 @@ Feature: Sign in/ Sign up via an OIDC provider
     And I should see the text "Missing realm parameter. Contact your system administrator."
     And there are no warnings
     And there are no messages
-    
+
   Scenario: Portal as redirect - Missing Response code
     Given I am not logged in
     And I am at "/ibm_apim/oauth2/authorize?client_id=clientId&state=czozOiJrZXkiOw==&redirect_uri=/ibm_apim/oauth2/redirect&realm=consumer:orgId:envId/trueRealm"
@@ -101,7 +101,7 @@ Feature: Sign in/ Sign up via an OIDC provider
     And I should see the text "Error: Missing or incorrect response type parameter. Contact your system administrator."
     And there are no warnings
     And there are no messages
-    
+
   Scenario: Portal as redirect - Wrong Client ID
     Given I am not logged in
     And I am at "/ibm_apim/oauth2/authorize?client_id=wrongclientId&state=czozOiJrZXkiOw==&redirect_uri=/ibm_apim/oauth2/redirect&realm=consumer:orgId:envId/trueRealm&response_type=code"
@@ -110,7 +110,7 @@ Feature: Sign in/ Sign up via an OIDC provider
     And I should see the text "Invalid client_id parameter. Contact your system administrator."
     And there are no warnings
     And there are no messages
-    
+
   Scenario: Portal as redirect - Invalid redirect uri
     Given I am not logged in
     And I am at "/ibm_apim/oauth2/authorize?client_id=clientId&state=czozOiJrZXkiOw==&redirect_uri=www.fail.com/ibm_apim/oauth2/redirect&realm=consumer:orgId:envId/trueRealm&response_type=code"

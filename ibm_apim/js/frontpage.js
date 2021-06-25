@@ -14,10 +14,10 @@
  * Setup masonry for get help block & apps subscribe wizard
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   Drupal.behaviors.frontpageSetup = {
-    attach: function (context) {
+    attach: function(context) {
 
       $('.get_help').masonry({
         // options

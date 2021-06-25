@@ -14,7 +14,6 @@
 namespace Drupal\apic_app\Entity;
 
 use Drupal\apic_app\ApplicationSubscriptionInterface;
-use Drupal\Core\Entity\ContentEntity;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -31,6 +30,9 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *     singular = @Translation("application subscription"),
  *     plural = @Translation("application subscriptions"),
  *   ),
+ *   handlers = {
+ *     "storage_schema" = "Drupal\apic_app\ApplicationSubscriptionSchema",
+ *   },
  *   fieldable = FALSE,
  *   translatable = FALSE,
  *   base_table = "apic_app_application_subs",
@@ -98,6 +100,20 @@ class ApplicationSubscription extends ContentEntityBase implements ApplicationSu
   protected $billing_url;
 
   /**
+   * APIC Creation timestamp
+   *
+   * @var int
+   */
+  protected $created_at;
+
+  /**
+   * APIC Modification timestamp
+   *
+   * @var int
+   */
+  protected $updated_at;
+
+  /**
    * {@inheritdoc}
    */
   public function id() {
@@ -157,6 +173,20 @@ class ApplicationSubscription extends ContentEntityBase implements ApplicationSu
   /**
    * {@inheritdoc}
    */
+  public function created_at() {
+    return $this->created_at;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function updated_at() {
+    return $this->updated_at;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = [];
 
@@ -202,6 +232,19 @@ class ApplicationSubscription extends ContentEntityBase implements ApplicationSu
       ->setDescription(t('The URL of the consumer organization which owns the Application'))
       ->setReadOnly(TRUE);
 
+    $fields['created_at'] = BaseFieldDefinition::create('timestamp')
+      ->setLabel(t('Creation time'))
+      ->setDescription(t('The APIC creation timestamp'))
+      ->setDefaultValue(0)
+      ->setReadOnly(TRUE);
+
+    $fields['updated_at'] = BaseFieldDefinition::create('timestamp')
+      ->setLabel(t('Modification time'))
+      ->setDescription(t('The APIC modification timestamp'))
+      ->setDefaultValue(0)
+      ->setReadOnly(TRUE);
+
     return $fields;
   }
+
 }

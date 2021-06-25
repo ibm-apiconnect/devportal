@@ -20,9 +20,15 @@ use Psr\Log\LoggerInterface;
  */
 class Billing {
 
-  private $state;
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  private StateInterface $state;
 
-  private $logger;
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  private LoggerInterface $logger;
 
   public function __construct(StateInterface $state, LoggerInterface $logger) {
     $this->state = $state;
@@ -66,11 +72,11 @@ class Billing {
   /**
    * get a specific billing object by url
    *
-   * @param $key
+   * @param string $key
    *
    * @return null|array|string
    */
-  public function get($key) {
+  public function get(string $key) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     $bill = NULL;
@@ -90,9 +96,9 @@ class Billing {
   /**
    * Update all billing objects
    *
-   * @param $data array of billing objects keyed on url
+   * @param array $data array of billing objects keyed on url
    */
-  public function updateAll($data): void {
+  public function updateAll(array $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $data);
 
     if (isset($data)) {
@@ -106,7 +112,7 @@ class Billing {
       }
       foreach ($data as $bill) {
         $bill_url = $bill['billing_url'];
-        if ($moduleHandler->moduleExists('encrypt') && isset($encryptionService, $encryptionProfile)) {
+        if (isset($encryptionService, $encryptionProfile) && $moduleHandler->moduleExists('encrypt')) {
           $bill = $encryptionService->encrypt(serialize($bill), $encryptionProfile);
         }
         $billings[$bill_url] = $bill;
@@ -120,10 +126,10 @@ class Billing {
   /**
    * Update a specific billing object
    *
-   * @param $key
-   * @param $data
+   * @param string $key
+   * @param array $data
    */
-  public function update($key, $data): void {
+  public function update(string $key, array $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     if (isset($key, $data)) {
@@ -150,9 +156,9 @@ class Billing {
   /**
    * Delete a specific billing object
    *
-   * @param $key (url)
+   * @param string $key (url)
    */
-  public function delete($key): void {
+  public function delete(string $key): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     if (isset($key)) {
@@ -186,11 +192,11 @@ class Billing {
   /**
    * Return a decrypted version of a given billing object
    *
-   * @param $key - billing URL
+   * @param string $key - billing URL
    *
    * @return array|null
    */
-  public function decrypt($key): ?array {
+  public function decrypt(string $key): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
     $data = NULL;
     if (isset($key)) {

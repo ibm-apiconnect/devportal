@@ -15,6 +15,8 @@ namespace Drupal\apictest\Context;
 
 use Behat\Gherkin\Node\TableNode;
 use Drupal\apic_api\Api;
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
@@ -23,10 +25,16 @@ class ApiContext extends RawDrupalContext {
 
   private $tempObject = NULL;
 
-  private $testDataDirectory = __DIR__ . '/../../../../testdata';
+  private string $testDataDirectory = __DIR__ . '/../../../../testdata';
+
+  /**
+   * @var bool|\stdClass|\stdClass[]
+   */
+  private bool $useMockServices = TRUE;
 
   /**
    * @Given apis:
+   * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
    */
   public function createApis(TableNode $table): void {
 
@@ -49,16 +57,18 @@ class ApiContext extends RawDrupalContext {
       $object = $this->createApiWithDocument($row['title'], $row['id'], $row['document']);
 
       $api = new Api();
-      $nid = $api->create($object);
+      $api->create($object);
 
     }
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
 
   /**
    * @Given I publish an api with the name :name, id :id and categories :categories
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
    */
   public function iPublishAnApiWithTheNameIdAndCategories($name, $id, $categories): void {
     $object = $this->createApiObject($name, $id, $categories);
@@ -79,13 +89,14 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Then I should have an api with the name :name, id :id and categories :categories
+   * @throws \Exception
    */
   public function iShouldHaveAnApiWithTheNameIdAndCategories($name, $id, $categories): void {
     $results = $this->searchForApiByTitle($name);
 
     if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
-      $api = Node::load($querynid);
+      $queryNid = array_shift($results);
+      $api = Node::load($queryNid);
 
       if ($api !== NULL && $api->get('api_id')->value === $id && $api->get('api_xibmname')->value === $name) {
         print("The api with the name $name and id $id was created successfully. ");
@@ -134,6 +145,8 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Given I publish an api with the name :name and categories :categories and create_taxonomies_from_categories is false
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
    */
   public function iPublishAnApiWithTheNameAndCategoriesAndCreateTaxonomiesFromCategoriesIsFalse($name, $categories): void {
 
@@ -149,9 +162,12 @@ class ApiContext extends RawDrupalContext {
 
     // Remove any existing terms within the tags vocabulary
     $tids = \Drupal::entityQuery('taxonomy_term')->condition('vid', 'tags')->execute();
-    $controller = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
-    $entities = $controller->loadMultiple($tids);
-    $controller->delete($entities);
+    try {
+      $controller = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+      $entities = $controller->loadMultiple($tids);
+      $controller->delete($entities);
+    } catch (InvalidPluginDefinitionException | PluginNotFoundException $e) {
+    }
 
     $api = new Api();
     $nid = $api->create($object);
@@ -161,13 +177,14 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Then I should have an api with name :name and no taxonomies for the categories :categories
+   * @throws \Exception
    */
   public function iShouldHaveAnApiWithNameAndNoTaxonomiesForTheCategories($name, $categories): void {
     $results = $this->searchForApiByTitle($name);
 
     if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
-      $api = Node::load($querynid);
+      $queryNid = array_shift($results);
+      $api = Node::load($queryNid);
 
       if ($api !== NULL && $api->get('api_xibmname')->value === $name) {
         print("The api with the name $name was created successfully. ");
@@ -191,6 +208,8 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Given I publish an api with the name :name and the phase :phase and autotag_with_phase is true
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
    */
   public function iPublishAnApiWithTheNameAndAutotagWithPhaseIsTrue($name, $phase): void {
     $object = $this->createApiObject($name, '12345', NULL, $phase);
@@ -208,13 +227,14 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Then I should have an api with the name :name tagged with the phase :phase
+   * @throws \Exception
    */
   public function iShouldHaveAnApiWithTheNameTaggedWithThePhase($name, $phase): void {
     $results = $this->searchForApiByTitle($name);
 
     if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
-      $api = Node::load($querynid);
+      $queryNid = array_shift($results);
+      $api = Node::load($queryNid);
 
       if ($api !== NULL && $api->get('api_xibmname')->value === $name) {
         print("The api with the name $name was created successfully. ");
@@ -263,6 +283,7 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Given I publish an api with the name :name and autocreate_apiforum is true
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function iPublishAnApiWithTheNameAndAutocreateApiforumIsTrue($name): void {
     $object = $this->createApiObject($name);
@@ -280,13 +301,14 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Then I should have an api and a forum both with the name :name
+   * @throws \Exception
    */
   public function iShouldHaveAnApiWithTheNameAndAForumWithTheName($name): void {
     $results = $this->searchForApiByTitle($name);
 
     if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
-      $api = Node::load($querynid);
+      $queryNid = array_shift($results);
+      $api = Node::load($queryNid);
 
       if ($api !== NULL && $api->get('api_xibmname')->value === $name) {
         print("The api with the name $name was created successfully. ");
@@ -324,6 +346,8 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Given I publish an api with the name :name and autocreate_apiforum is false
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
    */
   public function iPublishAnApiWithTheNameAndAutocreateApiforumIsFalse($name): void {
     $object = $this->createApiObject($name);
@@ -341,13 +365,14 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Then I should have an api name :name and no forum
+   * @throws \Exception
    */
   public function iShouldHaveAnApiNameAndNoForum($name): void {
     $results = $this->searchForApiByTitle($name);
 
     if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
-      $api = Node::load($querynid);
+      $queryNid = array_shift($results);
+      $api = Node::load($queryNid);
 
       if ($api !== NULL && $api->get('api_xibmname')->value === $name) {
         print("The api with the name $name was created successfully. ");
@@ -361,7 +386,7 @@ class ApiContext extends RawDrupalContext {
         print("The forum for the api with the name $name was successfully NOT created");
       }
       else {
-        var_dump(taxonomy_term_load_multiple_by_name($name, 'forums'));
+        //var_dump(taxonomy_term_load_multiple_by_name($name, 'forums'));
         throw new \Exception("The forum with the name $name exists");
       }
     }
@@ -369,6 +394,8 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Given I publish an api with the name :name and id :id
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
    */
   public function iPublishAnApiWithTheNameAndId($name, $id): void {
     $this->tempObject = $this->createApiObject($name, $id);
@@ -386,6 +413,7 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @When I update the api to have the url :url
+   * @throws \Exception
    */
   public function iUpdateTheApiToHaveTheUrl($url): void {
     $object = $this->tempObject;
@@ -404,6 +432,7 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Then I should have an api with the id :id and url :url
+   * @throws \Exception
    */
   public function iShouldHaveAnApiWithTheIdAndUrl($id, $url): void {
     $apiName = $this->tempObject['consumer_api']['info']['name'];
@@ -411,8 +440,8 @@ class ApiContext extends RawDrupalContext {
     $results = $this->searchForApiByTitle($apiName);
 
     if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
-      $api = Node::load($querynid);
+      $queryNid = array_shift($results);
+      $api = Node::load($queryNid);
 
       if ($api !== NULL && $api->api_id->value === $id && $api->apic_url->value === $url) {
         print("The api with the id $id and url $url was found successfully. ");
@@ -425,6 +454,8 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Given I publish an api with the name :name
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
    */
   public function iPublishAnApiWithTheName($name): void {
     $object = $this->createApiObject($name);
@@ -442,6 +473,8 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @When I delete the api with the name :name
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
    */
   public function iDeleteTheApiWithTheName($name): void {
     $results = $this->searchForApiByTitle($name);
@@ -462,6 +495,7 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Then I should no longer have an api with the name :name
+   * @throws \Exception
    */
   public function iShouldNoLongerHaveAnApiWithTheName($name): void {
     $query = \Drupal::entityQuery('node');
@@ -478,18 +512,19 @@ class ApiContext extends RawDrupalContext {
   }
 
   /**
-   * @Then I should have an api name :name visible by :switchto
+   * @Then I should have an api name :name visible by :switchTo
+   * @throws \Exception
    */
-  public function iShouldHaveAnApiNameVisibleBy($name, $switchto): void {
+  public function iShouldHaveAnApiNameVisibleBy($name, $switchTo): void {
     $accountSwitcher = \Drupal::service('account_switcher');
     $original_user = \Drupal::currentUser();
-    $users = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['name' => $switchto]);
+    $users = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['name' => $switchTo]);
     $user = reset($users);
     if ($user) {
       $accountSwitcher->switchTo(User::load($user->id()));
     }
     else {
-      throw new \Exception("Unable to switch to user $switchto");
+      throw new \Exception("Unable to switch to user $switchTo");
     }
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'api');
@@ -497,11 +532,11 @@ class ApiContext extends RawDrupalContext {
     $results = $query->execute();
 
     if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
-      $api = Node::load($querynid);
+      $queryNid = array_shift($results);
+      $api = Node::load($queryNid);
 
       if ($api !== NULL && $api->get('api_xibmname')->value === $name) {
-        print("$switchto is able to see API $name");
+        print("$switchTo is able to see API $name");
       }
       else {
         throw new \Exception("The returned api did not have a name of $name");
@@ -514,6 +549,7 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Then the api named :name should be visible
+   * @throws \Exception
    */
   public function iShouldHaveAnApiNameVisible($name): void {
 
@@ -528,8 +564,8 @@ class ApiContext extends RawDrupalContext {
     print('Query results: ' . serialize($results) . PHP_EOL);
 
     if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
-      $api = Node::load($querynid);
+      $queryNid = array_shift($results);
+      $api = Node::load($queryNid);
 
       if ($api !== NULL && $api->get('api_xibmname')->value === $name) {
         print("API $name exists and is visible");
@@ -545,6 +581,7 @@ class ApiContext extends RawDrupalContext {
 
   /**
    * @Then the api named :name should not be visible
+   * @throws \Exception
    */
   public function iShouldHaveAnApiNameNotVisible($name): void {
 
@@ -558,8 +595,8 @@ class ApiContext extends RawDrupalContext {
     print('Query results: ' . serialize($results) . PHP_EOL);
 
     if ($results !== NULL && !empty($results)) {
-      //      $querynid = array_shift($results);
-      //      $api = Node::load($querynid);
+      //      $queryNid = array_shift($results);
+      //      $api = Node::load($queryNid);
       //      if ($api !== NULL && $api->get('api_xibmname')->value === $name) {
       throw new \Exception("API $name exists and is visible");
     }
@@ -576,6 +613,7 @@ class ApiContext extends RawDrupalContext {
    * @param null $document
    *
    * @return array
+   * @throws \JsonException
    */
   private function createApiWithDocument($title, $id = '12345', $document = NULL): array {
 
@@ -585,7 +623,7 @@ class ApiContext extends RawDrupalContext {
 
     if ($document && file_exists($this->testDataDirectory . '/apis/' . $document)) {
       $string = file_get_contents($this->testDataDirectory . '/apis/' . $document);
-      $json = json_decode($string, TRUE);
+      $json = json_decode($string, TRUE, 512, JSON_THROW_ON_ERROR);
       $object['consumer_api'] = $json;
       $object['encoded_consumer_api'] = base64_encode($string);
     }
@@ -605,6 +643,7 @@ class ApiContext extends RawDrupalContext {
    * @param null $phase
    *
    * @return array
+   * @throws \JsonException
    */
   private function createApiObject($name, $id = '12345', $categories = NULL, $phase = NULL): array {
 
@@ -619,8 +658,11 @@ class ApiContext extends RawDrupalContext {
     $object['consumer_api']['info']['x-pathalias'] = $name;
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';
+    $object['created_at'] = '2021-02-26T12:18:58.995Z';
+    $object['updated_at'] = '2021-02-26T12:18:58.995Z';
     $object['consumer_api']['x-ibm-configuration'] = [];
     $object['consumer_api']['x-ibm-configuration']['type'] = 'rest';
+    $object['consumer_api']['x-ibm-configuration']['enforced'] = TRUE;
 
     if ($categories) {
       $object['consumer_api']['x-ibm-configuration']['categories'] = [$categories];
@@ -628,17 +670,17 @@ class ApiContext extends RawDrupalContext {
     if ($phase) {
       $object['consumer_api']['x-ibm-configuration']['phase'] = $phase;
     }
-    $object['encoded_consumer_api'] = base64_encode(json_encode($object['consumer_api']));
+    $object['encoded_consumer_api'] = base64_encode(json_encode($object['consumer_api'], JSON_THROW_ON_ERROR));
 
     return $object;
   }
 
   /**
-   * Retruns any api type nodes with a matching title
+   * Returns any api type nodes with a matching title
    *
    * @param $name
    *
-   * @return mixed
+   * @return array|int
    */
   private function searchForApiByTitle($name) {
     $query = \Drupal::entityQuery('node');
@@ -647,4 +689,5 @@ class ApiContext extends RawDrupalContext {
 
     return $query->execute();
   }
+
 }

@@ -9,6 +9,7 @@
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
 namespace Drupal\ibm_apim\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
@@ -27,13 +28,14 @@ class AdminMessagesBlock extends BlockBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function build() {
+  public function build(): array {
 
     // this is an evil hack to update the site URLs in content that needs it
     // this has to be done as part of a user browsing session since drush doesnt know what the site URL is
     $update_site_url = \Drupal::state()->get('ibm_apim.update_site_url');
-    if (defined('DRUPAL_ROOT') && $update_site_url === true) {
+    if (defined('DRUPAL_ROOT') && $update_site_url === TRUE) {
       require_once DRUPAL_ROOT . '/profiles/apim_profile/apim_profile.homepage.inc';
       if (function_exists('apim_profile_update_forum_block')) {
         apim_profile_update_forum_block();
@@ -44,11 +46,11 @@ class AdminMessagesBlock extends BlockBase {
     // clear cookies when navigating away from user management pages
     $current_route = \Drupal::routeMatch()->getRouteName();
     if ($current_route !== 'user.login' && $current_route !== 'user.register' && $current_route !== 'auth_apic.azcode') {
-      $sessionStore = \Drupal::service('session_based_temp_store')->get('auth_apic_invitation_token');
+      $sessionStore = \Drupal::service('session_based_temp_store')->get('auth_apic_storage');
       $sessionStore->delete('invitation_object');
     }
 
-    $build = array();
+    $build = [];
     $current_user = \Drupal::currentUser();
     if (isset($current_user)) {
       $user = User::load($current_user->id());
@@ -61,11 +63,11 @@ class AdminMessagesBlock extends BlockBase {
     }
 
     $status_messages = \Drupal::state()->get('ibm_apim.status_messages');
-    $messages = array();
+    $messages = [];
 
     if (is_array($status_messages)) {
-      foreach($status_messages as $status_message) {
-        if (!isset($status_message['role']) || (isset($status_message['role']) && isset($user) && $user->hasRole($status_message['role']))) {
+      foreach ($status_messages as $status_message) {
+        if (!isset($status_message['role']) || (isset($status_message['role'], $user) && $user->hasRole($status_message['role']))) {
           $messages[] = $status_message['text'];
         }
       }
@@ -73,7 +75,7 @@ class AdminMessagesBlock extends BlockBase {
 
     $errors = [];
     $config_set = (boolean) \Drupal::service('ibm_apim.site_config')->isSet();
-    if ($config_set === null || $config_set === FALSE) {
+    if ($config_set === NULL || $config_set === FALSE) {
       $messages['config'][] = t('FATAL: Initial portal configuration has not been received from the API Manager. Contact your system administrator before continuing further. This will prevent almost all portal functionality from working including user login.');
       $errors[] = 'No portal config received.';
     }
@@ -94,7 +96,7 @@ class AdminMessagesBlock extends BlockBase {
     }
     $clientId = \Drupal::service('ibm_apim.site_config')->getClientId();
     $clientSecret = \Drupal::service('ibm_apim.site_config')->getClientSecret();
-    if (!isset($clientId) || empty($clientId) || !isset($clientSecret) || empty($clientSecret)) {
+    if (!isset($clientId, $clientSecret) || empty($clientId) || empty($clientSecret)) {
       $messages['config'][] = t('FATAL: Site credentials are missing. Contact your system administrator before continuing further. This will prevent almost all portal functionality from working including user login.');
       $errors[] = 'Site credentials are missing.';
     }
@@ -111,7 +113,7 @@ class AdminMessagesBlock extends BlockBase {
 
     if (!empty($errors)) {
       \Drupal::logger('ibm_apim')->error('AdminMessagesBlock FATAL ERRORS: %data.', [
-        '%data' => implode(',', $errors)
+        '%data' => implode(',', $errors),
       ]);
     }
 
@@ -122,7 +124,7 @@ class AdminMessagesBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  public function getCacheMaxAge() {
+  public function getCacheMaxAge(): int {
     return 0;
   }
 

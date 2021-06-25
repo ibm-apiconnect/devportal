@@ -507,7 +507,6 @@ th, td {
   }
 }
 
-.apicMyOrg .memberIcon svg,
 .plans svg.key {
   background:transparent;
   fill: $brand-primary;
@@ -1019,4 +1018,48 @@ body.bx--global-light-ui.context--user-password {
 }
 .path-filter ul {
   line-height: 1.175rem;
+}
+
+.productive-heading-02 {
+  @include type-style('productive-heading-02');
+}
+
+.productive-heading-03 {
+  @include type-style('productive-heading-03');
+}
+
+.productive-heading-04 {
+  @include type-style('productive-heading-04');
+}
+
+.body-short-01 {
+  @include type-style('body-short-01');
+  height: 1.1rem; // stop low hanging letters from clipping
+}
+
+.planDetail--header {
+  background-color: $ui-background;
+}
+
+.planDetail--content {
+  background-color: $ui-background;
+}
+
+.plansTable thead {
+  background-color: $table-header-bg;
+}
+
+.planCard {
+  background-color: $card-bg;
+}
+
+.plansTable .tableRow {
+  border-bottom: 1px solid $table-row-border;
+}
+
+.apicConcepts {
+  background-color: $ui-background;
+}
+.apicConcepts table tr {
+  border-bottom: 1px solid $ui-03;
 }

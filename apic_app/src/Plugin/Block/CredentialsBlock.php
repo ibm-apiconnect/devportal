@@ -18,6 +18,7 @@
 
 namespace Drupal\apic_app\Plugin\Block;
 
+use Drupal\Component\Utility\Html;
 use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
@@ -34,7 +35,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @Block(
  *   id = "app_credentials",
  *   admin_label = @Translation("Application Credentials"),
- *   category = @Translation("IBM API Connect (Application)")
+ *   category = @Translation("IBM API Developer Portal (Application)")
  * )
  *
  */
@@ -43,21 +44,42 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgService
    */
-  protected $consumerOrgService;
+  protected ConsumerOrgService $consumerOrgService;
 
+  /**
+   * CredentialsBlock constructor.
+   *
+   * @param array $configuration
+   * @param $plugin_id
+   * @param $plugin_definition
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumerOrgService
+   */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, UserUtils $userUtils, ConsumerOrgService $consumerOrgService) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->userUtils = $userUtils;
     $this->consumerOrgService = $consumerOrgService;
   }
 
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition, $container->get('ibm_apim.user_utils'), $container->get('ibm_apim.consumerorg'));
+  /**
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   * @param array $configuration
+   * @param string $plugin_id
+   * @param mixed $plugin_definition
+   *
+   * @return \Drupal\apic_app\Plugin\Block\CredentialsBlock|static
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): CredentialsBlock {
+    return new static($configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('ibm_apim.user_utils'),
+      $container->get('ibm_apim.consumerorg'));
   }
 
   /**
@@ -80,32 +102,38 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
     return AccessResult::allowedIf($allowed);
   }
 
-  public function getCacheContexts() {
+  /**
+   * @return array|string[]
+   */
+  public function getCacheContexts(): array {
     //if you depends on \Drupal::routeMatch()
     //you must set context of this block with 'route' context tag.
     //Every new route this block will rebuild
     return Cache::mergeContexts(parent::getCacheContexts(), ['route']);
   }
 
-  public function getCacheTags() {
-    //With this when your node change your block will rebuild
+  /**
+   * @return array
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   */
+  public function getCacheTags(): array {
+    $org = $this->userUtils->getCurrentConsumerOrg();
+    $tags = Cache::mergeTags(parent::getCacheTags(), ['consumerorg:' . Html::cleanCssIdentifier($org['url'])]);
+
+    // With this when your node change your block will rebuild
     if ($node = \Drupal::routeMatch()->getParameter('node')) {
-      //if there is node add its cachetag
-      return Cache::mergeTags(parent::getCacheTags(), ['node:' . $node->id()]);
+      // if there is node add its cachetag
+      $tags = Cache::mergeTags($tags, ['node:' . $node->id()]);
     }
-    else {
-      //Return default tags instead.
-      return parent::getCacheTags();
-    }
+    return $tags;
   }
 
   /**
    * {@inheritdoc}
    */
   public function build(): array {
-    $userUtils = \Drupal::service('ibm_apim.user_utils');
     $node = \Drupal::routeMatch()->getParameter('node');
-    $userHasAppManage = $userUtils->checkHasPermission('app:manage');
+    $userHasAppManage = $this->userUtils->checkHasPermission('app:manage');
     $credentials = [];
     $credsArray = $node->application_credentials_refs->referencedEntities();
     foreach ($credsArray as $cred) {
@@ -132,7 +160,7 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
         'enabled' => TRUE,
         'image_path' => drupal_get_path('module', 'apic_app'),
       ];
-      $libraries[]  = 'clipboardjs/drupal';
+      $libraries[] = 'clipboardjs/drupal';
     }
     else {
       $clipboard = ['enabled' => FALSE];
@@ -156,4 +184,5 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
       ],
     ];
   }
+
 }

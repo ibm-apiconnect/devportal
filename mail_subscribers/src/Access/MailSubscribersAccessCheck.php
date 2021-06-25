@@ -36,4 +36,5 @@ class MailSubscribersAccessCheck implements AccessInterface {
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $allowed);
     return AccessResult::allowedIf($allowed)->addCacheableDependency($account);
   }
+
 }

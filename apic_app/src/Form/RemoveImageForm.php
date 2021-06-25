@@ -33,17 +33,17 @@ class RemoveImageForm extends ConfirmFormBase {
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $node;
+  protected NodeInterface $node;
 
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
    */
-  protected $restService;
+  protected ApplicationRestInterface $restService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -67,7 +67,7 @@ class RemoveImageForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): RemoveImageForm {
     // Load the service required to construct this class
     return new static($container->get('apic_app.rest_service'), $container->get('ibm_apim.user_utils'),
       $container->get('messenger'));
@@ -84,7 +84,9 @@ class RemoveImageForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
-    $this->node = $appId;
+    if ($appId !== NULL) {
+      $this->node = $appId;
+    }
     $form = parent::buildForm($form, $form_state);
     $form['#attached']['library'][] = 'apic_app/basic';
 
@@ -122,6 +124,12 @@ class RemoveImageForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

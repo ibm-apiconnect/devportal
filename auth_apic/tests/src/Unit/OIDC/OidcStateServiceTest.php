@@ -25,19 +25,42 @@ use Prophecy\Prophet;
  */
 class OidcStateServiceTest extends UnitTestCase {
 
-  private $prophet;
+  /**
+   * @var \Prophecy\Prophet
+   */
+  private Prophet $prophet;
 
-  /*
-   Dependencies of OidcStateService.
+  /**
+   * @var \Drupal\Core\State\StateInterface|\Prophecy\Prophecy\ObjectProphecy
    */
   protected $state;
+
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
+   */
   protected $logger;
+
+  /**
+   * @var \Drupal\encrypt\EncryptServiceInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $encryptService;
+
+  /**
+   * @var \Drupal\encrypt\EncryptionProfileManagerInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $encryptionProfileManager;
+
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Symfony\Component\HttpFoundation\Session\Session
+   */
   protected $session;
+
+  /**
+   * @var \Drupal\Component\Datetime\Time|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $time;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->state = $this->prophet->prophesize('Drupal\Core\State\StateInterface');
     $this->logger = $this->prophet->prophesize('Psr\Log\LoggerInterface');
@@ -47,27 +70,29 @@ class OidcStateServiceTest extends UnitTestCase {
     $this->time = $this->prophet->prophesize('Drupal\Component\Datetime\Time');
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
   /**
    * store($data) tests
+   *
+   * @throws \Drupal\encrypt\Exception\EncryptException
    */
-  public function testStoreValid() {
+  public function testStoreValid(): void {
 
-    $data = array('registry_url' => '/registry/url');
+    $data = ['registry_url' => '/registry/url'];
     $key = '12345678:/registry/url:testsession123';
     $encrypted_key = 'ENCRYPTED_KEY';
     $encrypted_data = 'ENCRYPTED_DATA';
 
-    $state_key =  'auth_apic.oidc_state';
+    $state_key = 'auth_apic.oidc_state';
     $encryption_profile_name = 'socialblock';
     $encryptionProfile = $this->prophet->prophesize('Drupal\encrypt\Entity\EncryptionProfile')->reveal();
 
-    $initial_state = array('one' => array());
+    $initial_state = ['one' => []];
     // note - storing with unencrypted key as this is within the service.
-    $updated_state = \array_merge($initial_state, array($key => $encrypted_data));
+    $updated_state = \array_merge($initial_state, [$key => $encrypted_data]);
 
     // required for the key.
     $this->session->getId()->willReturn('testsession123');
@@ -85,8 +110,8 @@ class OidcStateServiceTest extends UnitTestCase {
     $service = $this->getServiceUnderTest();
     $key = $service->store($data);
 
-    $this->assertNotNull($key, 'expected a key to be returned from store()');
-    $this->assertEquals($key, 'ENCRYPTED_KEY', 'unexpected encrypted key returned.');
+    self::assertNotNull($key, 'expected a key to be returned from store()');
+    self::assertEquals('ENCRYPTED_KEY', $key, 'unexpected encrypted key returned.');
 
   }
 
@@ -94,12 +119,12 @@ class OidcStateServiceTest extends UnitTestCase {
   /**
    * get(string $key) tests
    */
-  public function testGetValid() {
+  public function testGetValid(): void {
     $encrypted_key = 'ENCRYPTED_KEY';
     $encrypted_data = 'ENCRYPTED_DATA';
-    $initial_state = array('one' => $encrypted_data);
-    $initial_state_value_decrypted = array('registry_url' => '/registry/url');
-    $state_key =  'auth_apic.oidc_state';
+    $initial_state = ['one' => $encrypted_data];
+    $initial_state_value_decrypted = ['registry_url' => '/registry/url'];
+    $state_key = 'auth_apic.oidc_state';
     $encryption_profile_name = 'socialblock';
 
     $encryptionProfile = $this->prophet->prophesize('Drupal\encrypt\Entity\EncryptionProfile')->reveal();
@@ -107,27 +132,29 @@ class OidcStateServiceTest extends UnitTestCase {
 
     $this->state->get($state_key)->willReturn(serialize($initial_state));
     $this->encryptService->decrypt($encrypted_key, $encryptionProfile)->willReturn('one')->shouldBeCalled();
-    $this->encryptService->decrypt($encrypted_data, $encryptionProfile)->willReturn(serialize($initial_state_value_decrypted))->shouldBeCalled();
+    $this->encryptService->decrypt($encrypted_data, $encryptionProfile)
+      ->willReturn(serialize($initial_state_value_decrypted))
+      ->shouldBeCalled();
 
     $this->logger->error(Argument::any())->shouldNotBeCalled();
     $this->logger->warning(Argument::any())->shouldNotBeCalled();
 
     $service = $this->getServiceUnderTest();
     $data = $service->get($encrypted_key);
-    $this->assertNotNull($data, 'expected data to be returned from get()');
-    $this->assertEquals($data, $initial_state_value_decrypted, 'unexpected data returned from get()');
+    self::assertNotNull($data, 'expected data to be returned from get()');
+    self::assertEquals($data, $initial_state_value_decrypted, 'unexpected data returned from get()');
   }
 
 
   /**
    * delete(string $key) tests
    */
-  public function testDeleteValid() {
+  public function testDeleteValid(): void {
     $encrypted_key = 'ENCRYPTED_KEY';
-    $initial_state = array('one' => 'encrypted_data');
-    $updated_state = array();
+    $initial_state = ['one' => 'encrypted_data'];
+    $updated_state = [];
 
-    $state_key =  'auth_apic.oidc_state';
+    $state_key = 'auth_apic.oidc_state';
     $encryption_profile_name = 'socialblock';
 
     $encryptionProfile = $this->prophet->prophesize('Drupal\encrypt\Entity\EncryptionProfile')->reveal();
@@ -144,7 +171,7 @@ class OidcStateServiceTest extends UnitTestCase {
     $service = $this->getServiceUnderTest();
     $result = $service->delete($encrypted_key);
 
-    $this->assertTrue($result, 'expected success from delete()');
+    self::assertTrue($result, 'expected success from delete()');
 
   }
 
@@ -152,12 +179,12 @@ class OidcStateServiceTest extends UnitTestCase {
   /**
    * prune() tests
    */
-  public function testPruneValid() {
-    $initial_state = array('one' => 'encrypted_data', 'two' => 'more_encrypted_data');
-    $updated_state = array('two' => 'more_encrypted_data');
-    $data1 = array('registry_url' => '/user/reg1', 'created' => 1);
-    $data2 = array('registry_url' => '/user/reg2', 'created' => 3);
-    $state_key =  'auth_apic.oidc_state';
+  public function testPruneValid(): void {
+    $initial_state = ['one' => 'encrypted_data', 'two' => 'more_encrypted_data'];
+    $updated_state = ['two' => 'more_encrypted_data'];
+    $data1 = ['registry_url' => '/user/reg1', 'created' => 1];
+    $data2 = ['registry_url' => '/user/reg2', 'created' => 3];
+    $state_key = 'auth_apic.oidc_state';
     $encryption_profile_name = 'socialblock';
 
     $encryptionProfile = $this->prophet->prophesize('Drupal\encrypt\Entity\EncryptionProfile')->reveal();
@@ -173,23 +200,20 @@ class OidcStateServiceTest extends UnitTestCase {
     $service = $this->getServiceUnderTest();
     $count = $service->prune();
 
-    $this->assertEquals($count, 1, 'unexpected number of items pruned from state');
+    self::assertEquals(1, $count, 'unexpected number of items pruned from state');
   }
 
 
-
   /**
-   * @return \Drupal\auth_apic\Service\OidcRegistryService
+   * @return \Drupal\auth_apic\Service\OidcStateService
    */
   private function getServiceUnderTest(): OidcStateService {
-    $service = new OidcStateService($this->state->reveal(),
+    return new OidcStateService($this->state->reveal(),
       $this->encryptService->reveal(),
       $this->encryptionProfileManager->reveal(),
       $this->logger->reveal(),
       $this->session->reveal(),
       $this->time->reveal());
-
-    return $service;
   }
 
 

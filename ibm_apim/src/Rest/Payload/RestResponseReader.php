@@ -33,7 +33,7 @@ class RestResponseReader {
   /**
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * @var \Drupal\Core\Config\Config
@@ -146,8 +146,7 @@ class RestResponseReader {
     if (empty($response->data) || (empty($response->data['errors']) && empty($response->data['message']))) {
       throw new RestResponseParseException('No errors present in failed API call.');
     }
-    $details = empty($response->data['errors']) ? $response->data['message'] : $response->data['errors'];
-    return $details;
+    return empty($response->data['errors']) ? $response->data['message'] : $response->data['errors'];
 
   }
 

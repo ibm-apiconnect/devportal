@@ -21,12 +21,15 @@ use Drupal\Core\Routing\Access\AccessInterface;
  */
 class IbmCreateNodeTypeCheck implements AccessInterface {
 
+  /**
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface|null $node_type
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   */
   public function access(ConfigEntityInterface $node_type = NULL): AccessResult {
     $allowed = TRUE;
-    if (isset($node_type)) {
-      if (in_array($node_type->id(), ['application', 'api', 'product', 'consumerorg'])) {
-        $allowed = FALSE;
-      }
+    if (isset($node_type) && in_array($node_type->id(), ['application', 'api', 'product', 'consumerorg'])) {
+      $allowed = FALSE;
     }
 
     return AccessResult::allowedIf($allowed);

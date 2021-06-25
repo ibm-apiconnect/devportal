@@ -34,32 +34,32 @@ class PaymentMethodCreateForm extends FormBase {
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgService
    */
-  protected $consumerOrgService;
+  protected ConsumerOrgService $consumerOrgService;
 
   /**
    * @var \Drupal\Core\Session\AccountInterface
    */
-  protected $currentUser;
+  protected AccountInterface $currentUser;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * @var \Drupal\Core\Extension\ThemeHandler
    */
-  protected $themeHandler;
+  protected ThemeHandler $themeHandler;
 
   /**
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
-  protected $entityFieldManager;
+  protected EntityFieldManagerInterface $entityFieldManager;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -69,9 +69,9 @@ class PaymentMethodCreateForm extends FormBase {
   /**
    * @var \Drupal\ibm_apim\Service\ApimUtils
    */
-  protected $apimUtils;
+  protected ApimUtils $apimUtils;
 
-  protected $step = 1;
+  protected int $step = 1;
 
   protected $chosen_integration;
 
@@ -112,7 +112,7 @@ class PaymentMethodCreateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): PaymentMethodCreateForm {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('current_user'),
@@ -153,7 +153,9 @@ class PaymentMethodCreateForm extends FormBase {
         if (isset($billingProvider['payment_method_integration_urls'])) {
           foreach ($billingProvider['payment_method_integration_urls'] as $payment_method_integration_url) {
             // this uses a key based on the integration URL to prevent there being the same integration type listed twice
-            $integrations[$payment_method_integration_url] = $integrationService->get($payment_method_integration_url);
+            $urlIdParts = explode('/', $payment_method_integration_url);
+            $urlId = end($urlIdParts);
+            $integrations[$payment_method_integration_url] = $integrationService->getById($urlId);
           }
         }
       }
@@ -171,9 +173,9 @@ class PaymentMethodCreateForm extends FormBase {
     $form['actions']['#type'] = 'actions';
 
     $form['actions']['submit'] = [
-        '#type' => 'submit',
-        '#value' => t('Save'),
-      ];
+      '#type' => 'submit',
+      '#value' => t('Save'),
+    ];
 
     if ($integrations === NULL || empty($integrations)) {
       // no integrations found - abort
@@ -247,7 +249,7 @@ class PaymentMethodCreateForm extends FormBase {
       '#attributes' => ['class' => ['button', 'apicSecondary']],
     ];
     if (!isset($form['actions']['next'], $form['actions']['submit'])) {
-        $form['actions']['cancel']['#attributes']['style'] = ["margin-right:auto"];
+      $form['actions']['cancel']['#attributes']['style'] = ["margin-right:auto"];
     }
 
     $form['actions']['#weight'] = $max_weight + 1;
@@ -256,7 +258,7 @@ class PaymentMethodCreateForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @return \Drupal\Core\Url
    */
   public function getCancelUrl(): Url {
     return Url::fromRoute('ibm_apim.billing');
@@ -297,73 +299,73 @@ class PaymentMethodCreateForm extends FormBase {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       return;
     }
-    else {
-      // this is a generic submit handler that just takes whats in the form_state and sends it back to apim
-      $userUtils = \Drupal::service('ibm_apim.user_utils');
 
-      $org = $userUtils->getCurrentConsumerorg();
+    // this is a generic submit handler that just takes whats in the form_state and sends it back to apim
+    $userUtils = \Drupal::service('ibm_apim.user_utils');
 
-      $requestBody = ['configuration' => []];
-      foreach ($form_state->getValues() as $key => $value) {
-        if (!in_array($key, [
-          'title',
-          'billing_url',
-          'integration_type',
-          'is_default',
-          'submit',
-          'cancel',
-          'form_build_id',
-          'form_token',
-          'form_id',
-          'op',
-        ])) {
-          if (is_array($value) && isset($value[0]['value'])) {
-            $value = $value[0]['value'];
-          }
-          elseif (isset($value[0]) && is_array($value[0])) {
-            $value = array_values($value[0]);
-          }
-          $requestBody['configuration'][$key] = $value;
+    $org = $userUtils->getCurrentConsumerorg();
+
+    $requestBody = ['configuration' => []];
+    foreach ($form_state->getValues() as $key => $value) {
+      if (!in_array($key, [
+        'title',
+        'billing_url',
+        'integration_type',
+        'is_default',
+        'submit',
+        'cancel',
+        'form_build_id',
+        'form_token',
+        'form_id',
+        'op',
+      ])) {
+        if (is_array($value) && isset($value[0]['value'])) {
+          $value = $value[0]['value'];
         }
+        elseif (isset($value[0]) && is_array($value[0])) {
+          $value = array_values($value[0]);
+        }
+        $requestBody['configuration'][$key] = $value;
       }
-
-      $isDefault = (boolean) $form_state->getValue('is_default') === TRUE;
-      $title = $form_state->getValue('title');
-      $requestBody['title'] = $title;
-      $consumerOrgUrl = $org['url'];
-      $configuration = $requestBody['configuration'];
-      $integration = $integrationService->getByName($this->chosen_integration);
-
-      $requestBody['billing_url'] = $this->apimUtils->createFullyQualifiedUrl($this->billingUrl);
-      $requestBody['payment_method_type_url'] = $this->apimUtils->createFullyQualifiedUrl($integration['url']);
-
-      $response = \Drupal::service('ibm_apim.mgmtserver')->postPaymentMethod($org, $requestBody);
-      if ($response !== NULL) {
-        if ((int) $response->getCode() === 200 || (int) $response->getCode() === 201) {
-          $paymentMethodId = $response->getData()['id'];
-          $paymentMethodObject = [
-            'id' => $paymentMethodId,
-            'title' => $title,
-            'billing_url' => $this->billingUrl,
-            'payment_method_type_url' => $integration['url'],
-            'consumer_org_url' => $consumerOrgUrl,
-            'configuration' => $configuration,
-          ];
-          \Drupal::service('consumerorg.paymentmethod')->createOrUpdate($paymentMethodObject);
-          $this->messenger->addMessage(t('Successfully added your payment method'));
-        }
-        else {
-          \Drupal::logger('consumerorg')->error('Received @code code while creating payment method.', ['@code' => (int) $response->getCode()]);
-          $this->messenger->addError(t('Failed to add your payment method.'));
-        }
-      }
-
-      $form_state->setRedirectUrl($this->getCancelUrl());
     }
+
+    $isDefault = (boolean) $form_state->getValue('is_default') === TRUE;
+    $title = $form_state->getValue('title');
+    $requestBody['title'] = $title;
+    $consumerOrgUrl = $org['url'];
+    $configuration = $requestBody['configuration'];
+    $integration = $integrationService->getByName($this->chosen_integration);
+
+    $requestBody['billing_url'] = $this->apimUtils->createFullyQualifiedUrl($this->billingUrl);
+    $requestBody['payment_method_type_url'] = $this->apimUtils->createFullyQualifiedUrl($integration['url']);
+
+    $response = \Drupal::service('ibm_apim.mgmtserver')->postPaymentMethod($org, $requestBody);
+    if ($response !== NULL) {
+      if ((int) $response->getCode() === 200 || (int) $response->getCode() === 201) {
+        $paymentMethodId = $response->getData()['id'];
+        $paymentMethodObject = [
+          'id' => $paymentMethodId,
+          'title' => $title,
+          'billing_url' => $this->billingUrl,
+          'payment_method_type_url' => $integration['url'],
+          'consumer_org_url' => $consumerOrgUrl,
+          'configuration' => $configuration,
+        ];
+        \Drupal::service('consumerorg.paymentmethod')->createOrUpdate($paymentMethodObject);
+        $this->messenger->addMessage(t('Successfully added your payment method'));
+      }
+      else {
+        \Drupal::logger('consumerorg')
+          ->error('Received @code code while creating payment method.', ['@code' => (int) $response->getCode()]);
+        $this->messenger->addError(t('Failed to add your payment method.'));
+      }
+    }
+
+    $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 
-  function getBillingProviderForIntegration() {
+  private function getBillingProviderForIntegration(): void {
     $integrationService = \Drupal::service('ibm_apim.payment_method_schema');
     $billingProviders = \Drupal::service('ibm_apim.billing')->getAll();
     foreach ($billingProviders as $billing_url => $billingProvider) {
@@ -371,7 +373,9 @@ class PaymentMethodCreateForm extends FormBase {
       // get the integrations for this billing provider, stop once found first one with this integration
       if (isset($billingProvider['payment_method_integration_urls']) && $this->billingUrl === NULL) {
         foreach ($billingProvider['payment_method_integration_urls'] as $payment_method_integration_url) {
-          $possible_int = $integrationService->get($payment_method_integration_url);
+          $urlIdParts = explode('/', $payment_method_integration_url);
+          $urlId = end($urlIdParts);
+          $possible_int = $integrationService->getById($urlId);
           if (isset($possible_int['name']) && $possible_int['name'] === $this->chosen_integration) {
             // found the billing provider we're looking for
             $this->billingUrl = $billing_url;
@@ -380,4 +384,5 @@ class PaymentMethodCreateForm extends FormBase {
       }
     }
   }
+
 }

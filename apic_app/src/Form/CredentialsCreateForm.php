@@ -20,7 +20,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\node\NodeInterface;
+use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -33,17 +35,17 @@ class CredentialsCreateForm extends FormBase {
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $node;
+  protected NodeInterface $node;
 
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
    */
-  protected $restService;
+  protected ApplicationRestInterface $restService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -53,7 +55,7 @@ class CredentialsCreateForm extends FormBase {
   /**
    * @var \Drupal\apic_app\Service\CredentialsService
    */
-  protected $credsService;
+  protected CredentialsService $credsService;
 
   /**
    * CredentialsCreateForm constructor.
@@ -73,7 +75,7 @@ class CredentialsCreateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): CredentialsCreateForm {
     // Load the service required to construct this class
     return new static($container->get('apic_app.rest_service'),
       $container->get('ibm_apim.user_utils'),
@@ -93,7 +95,9 @@ class CredentialsCreateForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $this->node = $appId;
+    if ($appId !== NULL) {
+      $this->node = $appId;
+    }
     $moduleHandler = \Drupal::service('module_handler');
 
     $form['intro'] = [
@@ -146,6 +150,7 @@ class CredentialsCreateForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \JsonException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -156,7 +161,7 @@ class CredentialsCreateForm extends FormBase {
 
     $url = $appUrl . '/credentials';
     $data = ['title' => $title, 'summary' => $summary];
-    $result = $this->restService->postCredentials($url, json_encode($data));
+    $result = $this->restService->postCredentials($url, json_encode($data, JSON_THROW_ON_ERROR));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       $currentUser = \Drupal::currentUser();
       \Drupal::logger('apic_app')->notice('New credentials created for application @appName by @username', [
@@ -192,6 +197,39 @@ class CredentialsCreateForm extends FormBase {
       }
       $this->node = $this->credsService->createOrUpdateSingleCredential($this->node, $newCred);
 
+      // Add Activity Feed Event Log
+      $eventEntity = new ApicEvent();
+      $eventEntity->setArtifactType('credential');
+      if (\Drupal::currentUser()->isAuthenticated() && (int) \Drupal::currentUser()->id() !== 1) {
+        $current_user = User::load(\Drupal::currentUser()->id());
+        if ($current_user !== NULL) {
+          // we only set the user if we're running as someone other than admin
+          // if running as admin then we're likely doing things on behalf of the admin
+          // TODO we might want to check if there is a passed in user_url and use that too
+          $eventEntity->setUserUrl($current_user->get('apic_url')->value);
+        }
+      }
+      $timestamp = $data['created_at'];
+      // if timestamp still not set default to current time
+      if ($timestamp === NULL) {
+        $timestamp = time();
+      }
+      else {
+        // if it is set then ensure its epoch not a string
+        // intentionally done this way round since strtotime on null might lead to odd effects
+        $timestamp = strtotime($timestamp);
+      }
+      $eventEntity->setTimestamp((int) $timestamp);
+      $eventEntity->setEvent('create');
+      $eventEntity->setArtifactUrl($newCred['url']);
+      $eventEntity->setAppUrl($newCred['app_url']);
+      $eventEntity->setConsumerOrgUrl($newCred['consumerorg_url']);
+      $utils = \Drupal::service('ibm_apim.utils');
+      $appTitle = $utils->truncate_string($this->node->getTitle());
+      $eventEntity->setData(['name' => $newCred['title'], 'appName' => $appTitle]);
+      $eventLogService = \Drupal::service('ibm_apim.event_log');
+      $eventLogService->createIfNotExist($eventEntity);
+
       // Calling all modules implementing 'hook_apic_app_creds_create':
       $moduleHandler = \Drupal::moduleHandler();
       $moduleHandler->invokeAll('apic_app_creds_create', [
@@ -200,12 +238,18 @@ class CredentialsCreateForm extends FormBase {
         'credId' => $data['id'],
       ]);
 
-      $credsString = base64_encode(json_encode($data));
-      $displayCredsUrl = Url::fromRoute('apic_app.display_creds', ['appId' => $this->node->application_id->value, 'credentials' => $credsString]);
-    } else {
+      $credsString = base64_encode(json_encode($data, JSON_THROW_ON_ERROR));
+      $displayCredsUrl = Url::fromRoute('apic_app.display_creds', [
+        'appId' => $this->node->application_id->value,
+        'credentials' => $credsString,
+      ]);
+      \Drupal::service('apic_app.application')->invalidateCaches();
+    }
+    else {
       $displayCredsUrl = $this->getCancelUrl();
     }
     $form_state->setRedirectUrl($displayCredsUrl);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

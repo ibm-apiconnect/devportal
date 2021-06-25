@@ -22,7 +22,10 @@ use Drupal\Core\Url;
  */
 class ApicTheme extends Theme {
 
-  public $title;
+  /**
+   * @var string|null
+   */
+  public ?string $title = null;
 
   /**
    * ApicTheme constructor.
@@ -152,6 +155,7 @@ class ApicTheme extends Theme {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\Updater\UpdaterException
    */
   public static function canUpdateDirectory($directory): bool {
     $info = static::getExtensionInfo($directory);

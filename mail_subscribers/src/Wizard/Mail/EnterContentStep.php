@@ -98,7 +98,7 @@ class EnterContentStep extends FormBase {
       '#type' => 'textfield',
       '#default_value' => !empty($subject) ? $subject : '',
       '#title' => $this->t('Subject'),
-      '#element_validate' => array('token_element_validate'),
+      '#element_validate' => ['token_element_validate'],
     ];
 
     $form['message'] = [
@@ -110,7 +110,7 @@ class EnterContentStep extends FormBase {
       '#allowed_formats' => ['basic_html', 'plain_text'],
       '#rows' => 10,
       '#description' => $this->t('Enter the body of the message. You can use tokens in the message.'),
-      '#element_validate' => array('token_element_validate'),
+      '#element_validate' => ['token_element_validate'],
     ];
 
     if (!\Drupal::moduleHandler()->moduleExists('token')) {
@@ -127,7 +127,7 @@ class EnterContentStep extends FormBase {
         '#description' => $this->t('You can use the following tokens in the subject or message.'),
       ];
 
-      $cached_values = $form_state->getTemporaryValue('wizard', $cached_values);
+      $cached_values = $form_state->getTemporaryValue('wizard');
 
       switch ($cached_values['objectType']) {
         case 'all':
@@ -153,7 +153,7 @@ class EnterContentStep extends FormBase {
       $form['token']['tokens'] = [
         '#theme' => 'token_tree_link',
         '#token_types' => $token_types,
-        '#global_types' => TRUE
+        '#global_types' => TRUE,
       ];
 
     }
@@ -213,7 +213,7 @@ class EnterContentStep extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): ?bool {
 
     if (empty($form_state->getUserInput()['subject'])) {
       $form_state->setErrorByName('subject', $this->t('You must enter a Subject.'));
@@ -223,6 +223,7 @@ class EnterContentStep extends FormBase {
       $form_state->setErrorByName('message', $this->t('You must enter some content for the message.'));
       return FALSE;
     }
+    return NULL;
   }
 
   /**

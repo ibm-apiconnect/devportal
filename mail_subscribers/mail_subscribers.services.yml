@@ -1,12 +1,12 @@
 services:
   mail_subscribers.access_checker:
     class: Drupal\mail_subscribers\Access\MailSubscribersAccessCheck
-    arguments: ['@current_user']
+    arguments: [ '@current_user' ]
     tags:
       - { name: access_check, applies_to: _mail_subscribers_access_check }
   mail_subscribers.mail_service:
     class: Drupal\mail_subscribers\Service\MailService
-    arguments: ['@ibm_apim.user_storage',
-                '@entity_type.manager',
-                '@email.validator'
-                ]
+    arguments: [ '@ibm_apim.user_storage',
+                 '@entity_type.manager',
+                 '@email.validator'
+    ]

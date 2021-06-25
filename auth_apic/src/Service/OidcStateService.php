@@ -17,18 +17,41 @@ use Drupal\Component\Datetime\Time;
 use Drupal\Core\State\StateInterface;
 use Drupal\encrypt\EncryptionProfileManagerInterface;
 use Drupal\encrypt\EncryptServiceInterface;
+use Drupal\encrypt\Exception\EncryptException;
+use Drupal\encrypt\Exception\EncryptionMethodCanNotDecryptException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Session\Session;
 
 class OidcStateService implements OidcStateServiceInterface {
 
-  private $state;
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  private StateInterface $state;
 
-  private $encryptService;
-  private $encryptionProfileManager;
-  private $logger;
+  /**
+   * @var \Drupal\encrypt\EncryptServiceInterface
+   */
+  private EncryptServiceInterface $encryptService;
 
-  private $session;
+  /**
+   * @var \Drupal\encrypt\EncryptionProfileManagerInterface
+   */
+  private EncryptionProfileManagerInterface $encryptionProfileManager;
+
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  private LoggerInterface $logger;
+
+  /**
+   * @var \Symfony\Component\HttpFoundation\Session\Session
+   */
+  private Session $session;
+
+  /**
+   * @var \Drupal\Component\Datetime\Time
+   */
   private $time;
 
   private $encryptionProfile = NULL;
@@ -54,6 +77,7 @@ class OidcStateService implements OidcStateServiceInterface {
 
   /**
    * @inheritDoc
+   * @throws \Drupal\encrypt\Exception\EncryptException
    */
   public function store($data) {
     if (function_exists('ibm_apim_entry_trace')) {
@@ -62,7 +86,7 @@ class OidcStateService implements OidcStateServiceInterface {
 
     $key = NULL;
     // we need a registry url to generate a key
-    if (isset($data) && isset($data['registry_url'])) {
+    if (isset($data['registry_url'])) {
       // KEY = created_time:registry_url:sessionid
       $key = $this->time->getCurrentTime() . ':' . $data['registry_url'] . ':' . $this->session->getId();
     }
@@ -114,19 +138,18 @@ class OidcStateService implements OidcStateServiceInterface {
       }
       return unserialize($data, ['allowed_classes' => FALSE]);
     }
-    else {
-      if (function_exists('ibm_apim_exit_trace')) {
-        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      }
-      return NULL;
+
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
+    return NULL;
 
   }
 
   /**
    * @inheritDoc
    */
-  public function delete(string $key) {
+  public function delete(string $key): bool {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -143,22 +166,20 @@ class OidcStateService implements OidcStateServiceInterface {
         }
         return TRUE;
       }
-      else {
-        $this->logger->warning('Unable to delete item from oidc state');
-        if (function_exists('ibm_apim_exit_trace')) {
-          ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, FALSE);
-        }
-        return FALSE;
-      }
 
-    }
-    else {
-      $this->logger->error('Unable to decrypt key');
+      $this->logger->warning('Unable to delete item from oidc state');
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, FALSE);
       }
       return FALSE;
+
     }
+
+    $this->logger->error('Unable to decrypt key');
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, FALSE);
+    }
+    return FALSE;
 
   }
 
@@ -176,7 +197,10 @@ class OidcStateService implements OidcStateServiceInterface {
     $TTL = 86400; # 24hrs
     foreach ($all_state as $key => $encrypted_value) {
       // TODO: $key contains timestamp
-      $value = $this->encryptService->decrypt($encrypted_value, $this->getEncryptionProfile());
+      try {
+        $value = $this->encryptService->decrypt($encrypted_value, $this->getEncryptionProfile());
+      } catch (EncryptException | EncryptionMethodCanNotDecryptException $e) {
+      }
       if (isset($value['created']) && ($now > ((int) $value['created'] + $TTL))) {
         unset($all_state[$key]);
         $prune_count++;
@@ -191,7 +215,7 @@ class OidcStateService implements OidcStateServiceInterface {
   }
 
 
-  private function getEncryptionProfile() {
+  private function getEncryptionProfile(): ?\Drupal\encrypt\EncryptionProfileInterface {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -214,6 +238,9 @@ class OidcStateService implements OidcStateServiceInterface {
     return $this->encryptionProfile;
   }
 
+  /**
+   * @return array|mixed
+   */
   public function getAllOidcState() {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -232,7 +259,10 @@ class OidcStateService implements OidcStateServiceInterface {
     return unserialize($all_state, ['allowed_classes' => FALSE]);
   }
 
-  public function saveAllOidcState($state) {
+  /**
+   * @param $state
+   */
+  public function saveAllOidcState($state): void {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }

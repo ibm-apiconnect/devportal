@@ -25,7 +25,7 @@ class ThemegeneratorUnitTest extends UnitTestCase {
   public function testTrue(): void {
     $found = TRUE;
 
-    $this->assertTrue($found, 'True is not true');
+    self::assertTrue($found, 'True is not true');
   }
 
 }

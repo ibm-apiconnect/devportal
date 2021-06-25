@@ -10,8 +10,8 @@
  ********************************************************** {COPYRIGHT-END} **/
 
 Drupal.behaviors.apicbilling = {
-  attach: function (context, settings) {
-    setTimeout(function () {
+  attach: function(context, settings) {
+    setTimeout(function() {
       var billing_label = 'Update Card Details';
       var billing_logoPath = '/modules/product/images/product_05.png';
       var billing_key = '';
@@ -37,14 +37,14 @@ Drupal.behaviors.apicbilling = {
         targetUrl = Drupal.settings.billing_endpoint;
       }
 
-      jQuery("#billing_clear").click(function () {
+      jQuery("#billing_clear").click(function() {
         jQuery("#card_ending").val("");
         jQuery("#card_expiring").val("");
         jQuery("#billing_name").val("");
         jQuery("#billing_email").val("");
       });
       var handler = StripeCheckout.configure({
-        key: billing_key, image: billing_logoPath, locale: "auto", panelLabel: billing_label, token: function (token) {
+        key: billing_key, image: billing_logoPath, locale: "auto", panelLabel: billing_label, token: function(token) {
           jQuery("#card_ending").val(token.card.last4);
           jQuery("#card_expiring").val(token.card.exp_month + "/" + token.card.exp_year);
           jQuery("#billing_name").val(token.card.name);
@@ -82,13 +82,17 @@ Drupal.behaviors.apicbilling = {
           jQuery.ajax(targetUrl + '/' + encoded_token, xhrOpts);
         }
       });
-      document.getElementById("billing_button").addEventListener("click", function (e) {
+      document.getElementById("billing_button").addEventListener("click", function(e) {
         handler.open({
-          name: billing_siteName, description: billing_description, zipCode: true, billingAddress: true, allowRememberMe: false
+          name: billing_siteName,
+          description: billing_description,
+          zipCode: true,
+          billingAddress: true,
+          allowRememberMe: false
         });
         e.preventDefault();
       });
-      window.addEventListener("popstate", function () {
+      window.addEventListener("popstate", function() {
         handler.close();
       });
     }, 0);

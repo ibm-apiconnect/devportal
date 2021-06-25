@@ -8,7 +8,6 @@ dependencies:
     - better_exposed_filters
     - node
     - user
-    - views_autocomplete_filters
 id: faqs
 label: FAQs
 module: views
@@ -16,7 +15,6 @@ description: 'List of FAQ nodes for use in the Support page'
 tag: ''
 base_table: node_field_data
 base_field: nid
-core: 8.x
 display:
   default:
     display_plugin: default
@@ -43,27 +41,35 @@ display:
         type: bef
         options:
           submit_button: Apply
-          reset_button: true
+          reset_button: false
           reset_button_label: Reset
           exposed_sorts_label: 'Sort by'
           expose_sort_order: true
           sort_asc_label: Asc
           sort_desc_label: Desc
-          input_required: false
           text_input_required: 'Select any filter and click on Apply to see results'
+          text_input_required_format: full_html
           bef:
             general:
+              autosubmit: false
+              autosubmit_exclude_textfield: false
+              autosubmit_textfield_delay: 500
+              autosubmit_hide: false
+              input_required: false
               allow_secondary: false
               secondary_label: 'Advanced options'
-              autosubmit: false
-              autosubmit_hide: false
+              secondary_open: false
+            pager:
+              plugin_id: default
+              advanced:
+                is_secondary: false
             keys:
               bef_format: default
               more_options:
                 is_secondary: false
                 rewrite:
                   filter_rewrite_values: ''
-          text_input_required_format: full_html
+          input_required: false
       pager:
         type: full
         options:
@@ -77,7 +83,7 @@ display:
             first: '« First'
             last: 'Last »'
           expose:
-            items_per_page: true
+            items_per_page: false
             items_per_page_label: 'Items per page'
             items_per_page_options: '5, 10, 25, 50'
             items_per_page_options_all: false
@@ -150,6 +156,8 @@ display:
           id: status
           expose:
             operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
           group: 1
         type:
           id: type
@@ -160,54 +168,9 @@ display:
           entity_type: node
           entity_field: type
           plugin_id: bundle
-        faqs_question:
-          id: faqs_question
-          table: node__faqs
-          field: faqs_question
-          relationship: none
-          group_type: group
-          admin_label: ''
-          operator: contains
-          value: ''
-          group: 1
-          exposed: true
           expose:
-            operator_id: faqs_question_op
-            label: Filter
-            description: 'Only show frequently asked questions containing specific keywords'
-            use_operator: false
-            operator: faqs_question_op
-            identifier: faqs_question
-            required: false
-            remember: false
-            multiple: false
-            remember_roles:
-              authenticated: authenticated
-              anonymous: '0'
-              superuser: '0'
-              forum_moderator: '0'
-              content_author: '0'
-              administrator: '0'
-            autocomplete_filter: 1
-            autocomplete_min_chars: '0'
-            autocomplete_items: '10'
-            autocomplete_field: ''
-            autocomplete_raw_suggestion: 1
-            autocomplete_raw_dropdown: 1
-            autocomplete_dependent: 0
-          is_grouped: false
-          group_info:
-            label: ''
-            description: ''
-            identifier: ''
-            optional: true
-            widget: select
-            multiple: false
-            remember: false
-            default_group: All
-            default_group_multiple: {  }
-            group_items: {  }
-          plugin_id: views_autocomplete_filters_string
+            operator_limit_selection: false
+            operator_list: {  }
         langcode:
           id: langcode
           table: node_field_data
@@ -233,6 +196,8 @@ display:
             remember_roles:
               authenticated: authenticated
             reduce: false
+            operator_limit_selection: false
+            operator_list: {  }
           is_grouped: false
           group_info:
             label: ''
@@ -277,7 +242,6 @@ display:
       contexts:
         - 'languages:language_content'
         - 'languages:language_interface'
-        - url
         - url.query_args
         - 'user.node_grants:view'
         - user.permissions
@@ -288,14 +252,14 @@ display:
     display_title: Page
     position: 1
     display_options:
-      display_extenders: {  }
+      display_extenders:
+        ajax_history: {  }
       path: faq
     cache_metadata:
       max-age: -1
       contexts:
         - 'languages:language_content'
         - 'languages:language_interface'
-        - url
         - url.query_args
         - 'user.node_grants:view'
         - user.permissions

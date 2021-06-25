@@ -16,22 +16,31 @@
  * we can use @data() placeholders to dynamically inject
  * data in to our tests.
  */
+
 namespace Drupal\apictest\TestData;
 
 class TestData {
 
-  // directory containing the .json test data files
-  private $scenarioDirectory = __DIR__ . '/../../../../testdata';
+  /**
+   * directory containing the .json test data files
+   *
+   * @var string
+   */
+  private string $scenarioDirectory = __DIR__ . '/../../../../testdata';
 
-  // any array properties need marking as such for our processing later
-  private $arrayProperties = array(
+  /**
+   * any array properties need marking as such for our processing later
+   *
+   * @var array|string[]
+   */
+  private array $arrayProperties = [
     'andre',
     'consumerorg',
     'application',
     'api',
     'product',
-    'user_registries'
-  );
+    'user_registries',
+  ];
 
   public $rawScenario;
 
@@ -59,13 +68,13 @@ class TestData {
    *
    * @throws \Exception
    */
-  private function loadTestDataFromScenarioFile($scenarioFile) :void {
+  private function loadTestDataFromScenarioFile(string $scenarioFile): void {
 
     if (!file_exists($scenarioFile)) {
       throw new \Exception("Couldn't find a scenario file at $scenarioFile");
     }
 
-    $this->rawScenario = json_decode(file_get_contents($scenarioFile));
+    $this->rawScenario = json_decode(file_get_contents($scenarioFile), FALSE, 512, JSON_THROW_ON_ERROR);
 
   }
 
@@ -73,17 +82,17 @@ class TestData {
    * This function does the actual replacing of the @data(object.property)
    * injecting the data loaded from the selected scenario file.
    *
-   * @param String $parameter
+   * @param string|null $parameter
    *  the @data(object.property) string that needs data injecting in to it.
    *
    * @return string
    */
-  public function insertTestData($parameter) :string {
+  public function insertTestData(?string $parameter): string {
 
     // The @data(property) part of the string may be embedded in a larger string
     // e.g. /span/@title['@data(andre.mail)']. We need to extract the @data
     // bit and reinsert the replace part in to the full string.
-    $wholestring = $parameter;
+    $wholeString = $parameter;
 
     // TODO : this only supports one @data(...) element. Hopefully we don't need anything more complex!!
     $startPos = strpos($parameter, '@data');
@@ -91,20 +100,19 @@ class TestData {
     $length = $endPos - $startPos;
     $chunkToReplace = substr($parameter, $startPos, $length);
 
-    $searchString = str_replace('@data(', '', $chunkToReplace);
-    $searchString = str_replace(')', '', $searchString);
+    $searchString = str_replace(['@data(', ')'], '', $chunkToReplace);
 
     $replacement = $this->processPlaceholder($searchString);
 
     // now insert back in to the main string
 
-    return str_replace($chunkToReplace, $replacement, $wholestring);
+    return str_replace($chunkToReplace, $replacement, $wholeString);
   }
 
   /**
    * The main meat of the data injection functionality is in this function.
    *
-   * @param String $placeholder
+   * @param string|null $placeholder
    *  the @data(object.property) string that needs data injecting in to it
    *
    * @param array $partsCollectedSoFar
@@ -113,7 +121,7 @@ class TestData {
    *
    * @return mixed
    */
-  private function processPlaceholder($placeholder, $partsCollectedSoFar = array()) {
+  private function processPlaceholder(?string $placeholder, $partsCollectedSoFar = []) {
 
     #print "process placeholder for " . $placeholder . \PHP_EOL;
 
@@ -188,21 +196,21 @@ class TestData {
    *
    * @return array|null
    */
-  private function popNextProperty($argumentString) : ?array{
+  private function popNextProperty($argumentString): ?array {
 
     if ($argumentString === NULL || $argumentString === '') {
-      return array(NULL, NULL);
+      return [NULL, NULL];
     }
 
     $dotPosition = strpos($argumentString, '.');
 
     if ($dotPosition === FALSE) {
-      $returnValue = array($argumentString, NULL);
+      $returnValue = [$argumentString, NULL];
     }
     else {
       $property = substr($argumentString, 0, $dotPosition);
       $remainingString = substr($argumentString, $dotPosition + 1);
-      $returnValue = array($property, $remainingString);
+      $returnValue = [$property, $remainingString];
     }
     return $returnValue;
   }

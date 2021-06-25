@@ -17,25 +17,53 @@ use Drupal\ibm_apim\ApicType\ApicUser;
 
 class Member {
 
-  private $url;
+  /**
+   * @var string|NULL
+   */
+  private ?string $url = NULL;
 
-  private $state;
+  /**
+   * @var string|NULL
+   */
+  private ?string $state = NULL;
 
-  private $user_url;
+  /**
+   * @var string|NULL
+   */
+  private ?string $user_url = NULL;
 
-  /** @var ApicUser */
-  private $user;
+  /**
+   * @var \Drupal\ibm_apim\ApicType\ApicUser|NULL
+   */
+  private ?ApicUser $user = NULL;
 
-  private $role_urls = [];
+  /**
+   * @var array|NULL
+   */
+  private ?array $role_urls = [];
 
-  private $org_url;
+  /**
+   * @var string|NULL
+   */
+  private ?string $org_url = NULL;
+
+  /**
+   * @var string|null
+   */
+  private ?string $created_at = NULL;
+
+  /**
+   * @var string|null
+   */
+  private ?string $updated_at = NULL;
+
 
   /**
    * Gets the user that this member record relates to.
    *
-   * @return \Drupal\ibm_apim\ApicType\ApicUser
+   * @return \Drupal\ibm_apim\ApicType\ApicUser|null
    */
-  public function getUser(): ApicUser {
+  public function getUser(): ?ApicUser {
     return $this->user;
   }
 
@@ -44,21 +72,21 @@ class Member {
    *
    * @param \Drupal\ibm_apim\ApicType\ApicUser $user
    */
-  public function setUser($user): void {
+  public function setUser(ApicUser $user): void {
     $this->user = $user;
   }
 
   /**
-   * @return string
+   * @return string|null
    */
-  public function getUserUrl(): string {
+  public function getUserUrl(): ?string {
     return $this->user_url;
   }
 
   /**
-   * @param mixed $user_url
+   * @param string $user_url
    */
-  public function setUserUrl($user_url): void {
+  public function setUserUrl(string $user_url): void {
     $this->user_url = $user_url;
   }
 
@@ -77,63 +105,93 @@ class Member {
    *
    * @param array $role_urls
    */
-  public function setRoleUrls($role_urls): void {
+  public function setRoleUrls(array $role_urls): void {
     $this->role_urls = $role_urls;
   }
 
   /**
-   * @return string
+   * @return string|null
    */
-  public function getUrl(): string {
+  public function getUrl(): ?string {
     return $this->url;
   }
 
   /**
    * @param string $url
    */
-  public function setUrl($url): void {
+  public function setUrl(string $url): void {
     $this->url = $url;
   }
 
   /**
-   * @return string
+   * @return string|null
    */
-  public function getOrgUrl(): string {
+  public function getOrgUrl(): ?string {
     return $this->org_url;
   }
 
   /**
    * @param string $org_url
    */
-  public function setOrgUrl($org_url): void {
+  public function setOrgUrl(string $org_url): void {
     $this->org_url = $org_url;
   }
 
   /**
-   * @return string
+   * @return string|null
    */
-  public function getId(): string {
+  public function getId(): ?string {
     return basename($this->url);
   }
 
   /**
    * @return string
    */
-  public function getState(): string {
+  public function getState(): ?string {
     return $this->state;
   }
 
   /**
-   * @param string $state
+   * @param string|null $state
    */
-  public function setState($state): void {
+  public function setState(string $state): void {
     $this->state = $state;
+  }
+
+  /**
+   * @return string
+   */
+  public function getCreatedAt(): ?string {
+    return $this->created_at;
+  }
+
+  /**
+   * @param string $created_at
+   */
+  public function setCreatedAt(string $created_at): void {
+    $this->created_at = $created_at;
+  }
+
+  /**
+   * @return string
+   */
+  public function getUpdatedAt(): ?string {
+    return $this->updated_at;
+  }
+
+  /**
+   * @param string $updated_at
+   */
+  public function setUpdatedAt(string $updated_at): void {
+    $this->updated_at = $updated_at;
   }
 
   /**
    * convert array to object
    *
    * @param array $content
+   *
+   * @throws \JsonException
    */
   public function createFromArray(array $content): void {
 
@@ -145,7 +203,8 @@ class Member {
     }
     if (array_key_exists('user_url', $content)) {
       $this->setUserUrl($content['user_url']);
-    } elseif (array_key_exists('user', $content) && array_key_exists('url', $content['user'])) {
+    }
+    elseif (array_key_exists('user', $content) && array_key_exists('url', $content['user'])) {
       $this->setUserUrl($content['user']['url']);
     }
     if (array_key_exists('role_urls', $content)) {
@@ -153,6 +212,12 @@ class Member {
     }
     if (array_key_exists('org_url', $content)) {
       $this->setOrgUrl($content['org_url']);
+    }
+    if (array_key_exists('created_at', $content)) {
+      $this->setCreatedAt(strtotime($content['created_at']));
+    }
+    if (array_key_exists('updated_at', $content)) {
+      $this->setUpdatedAt(strtotime($content['updated_at']));
     }
     if (array_key_exists('user', $content)) {
       $user = new ApicUser();
@@ -165,6 +230,7 @@ class Member {
    * Convert object to array
    *
    * @return array
+   * @throws \JsonException
    */
   public function toArray(): array {
     $content = [];
@@ -183,9 +249,16 @@ class Member {
     if ($this->org_url !== NULL) {
       $content['org_url'] = $this->org_url;
     }
+    if ($this->created_at !== NULL) {
+      $content['created_at'] = $this->created_at;
+    }
+    if ($this->updated_at !== NULL) {
+      $content['updated_at'] = $this->updated_at;
+    }
     if ($this->user !== NULL) {
       $content['user'] = $this->user->toArray();
     }
     return $content;
   }
+
 }

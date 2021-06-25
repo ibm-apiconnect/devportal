@@ -35,19 +35,41 @@ namespace Drupal\Tests\auth_apic\Unit {
    */
   class ApicPasswordTest extends AuthApicUserManagementBaseTestClass {
 
+    /**
+     * @var \Drupal\ibm_apim\Service\APIMServer|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $mgmtServer;
 
+    /**
+     * @var \Drupal\Core\Messenger\Messenger|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $messenger;
 
+    /**
+     * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
+     */
     protected $logger;
 
+    /**
+     * @var \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $apicUserStorage;
 
+    /**
+     * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $entityTypeManager;
 
+    /**
+     * @var \Drupal\user\UserStorageInterface|\Prophecy\Prophecy\ObjectProphecy
+     */
     protected $drupalUserStorage;
 
-    protected function setup() {
+    /**
+     * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+     * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+     */
+    protected function setup(): void {
       $this->prophet = new Prophet();
       $this->mgmtServer = $this->prophet->prophesize(APIMServer::class);
       $this->messenger = $this->prophet->prophesize(Messenger::class);
@@ -60,10 +82,13 @@ namespace Drupal\Tests\auth_apic\Unit {
 
     }
 
-    protected function tearDown() {
+    protected function tearDown(): void {
       $this->prophet->checkPredictions();
     }
 
+    /**
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
     public function testChangePassword(): void {
       $goodResponse = new RestResponse();
       $goodResponse->setCode(204);
@@ -78,9 +103,12 @@ namespace Drupal\Tests\auth_apic\Unit {
 
       $service = $this->getApicPasswordService();
       $result = $service->changePassword($account, 'oldun', 'newun');
-      $this->assertTrue($result, 'positive result expected from change password.');
+      self::assertTrue($result, 'positive result expected from change password.');
     }
 
+    /**
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
     public function testChangePasswordFail(): void {
       $badResponse = new RestResponse();
       $badResponse->setCode(400);
@@ -94,11 +122,13 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = $this->getApicPasswordService();
 
       $result = $service->changePassword($account, 'oldun', 'newun');
-      $this->assertFalse($result, 'negative result expected from change password.');
+      self::assertFalse($result, 'negative result expected from change password.');
     }
 
     /**
      * Test successful (204) response from management server.
+     *
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
      */
     public function testResetPasswordSuccess(): void {
       $jwt = $this->createJWT();
@@ -113,11 +143,13 @@ namespace Drupal\Tests\auth_apic\Unit {
 
       $service = $this->getApicPasswordService();
       $rc = $service->resetPassword($jwt, $password);
-      $this->assertEquals(204, $rc);
+      self::assertEquals(204, $rc);
     }
 
     /**
      * Test with non-204 response from management server.
+     *
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
      */
     public function testResetPasswordFail(): void {
       $obj = $this->createJWT();
@@ -138,14 +170,14 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = $this->getApicPasswordService();
       $rc = $service->resetPassword($obj, $password);
 
-      $this->assertEquals(400, $rc);
+      self::assertEquals(400, $rc);
 
     }
 
-    public function testLookupAccountAdminByName() {
+    public function testLookupAccountAdminByName(): void {
 
       $admin = $this->prophet->prophesize(User::class);
-      $admin->getUsername()->willReturn('admin');
+      $admin->getAccountName()->willReturn('admin');
       $this->drupalUserStorage->load(1)->willReturn($admin->reveal());
 
       $this->logger->notice('lookUpAccount: identified user as admin account')->shouldBeCalled();
@@ -155,13 +187,13 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = $this->getApicPasswordService();
       $account = $service->lookupUpAccount('admin');
 
-      $this->assertNotNull($account);
+      self::assertNotNull($account);
     }
 
-    public function testLookupAccountAdminByEmail() {
+    public function testLookupAccountAdminByEmail(): void {
 
       $admin = $this->prophet->prophesize(User::class);
-      $admin->getUsername()->willReturn('admin');
+      $admin->getAccountName()->willReturn('admin');
 
       $mail_field = $this->prophet->prophesize(FieldItemList::class);
       $mail_field->getValue()->willReturn([['value' => 'admin@example.com']]);
@@ -175,13 +207,13 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = $this->getApicPasswordService();
       $account = $service->lookupUpAccount('admin@example.com');
 
-      $this->assertNotNull($account);
+      self::assertNotNull($account);
     }
 
-    public function testLookupAccountAndreByName() {
+    public function testLookupAccountAndreByName(): void {
 
       $admin = $this->prophet->prophesize(User::class);
-      $admin->getUsername()->willReturn('admin');
+      $admin->getAccountName()->willReturn('admin');
 
       $mail_field = $this->prophet->prophesize(FieldItemList::class);
       $mail_field->getValue()->willReturn([['value' => 'admin@example.com']]);
@@ -199,13 +231,13 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = $this->getApicPasswordService();
       $account = $service->lookupUpAccount('andre', '/reg/lur1');
 
-      $this->assertNotNull($account);
+      self::assertNotNull($account);
     }
 
-    public function testLookupAccountAndreByMailAddress() {
+    public function testLookupAccountAndreByMailAddress(): void {
 
       $admin = $this->prophet->prophesize(User::class);
-      $admin->getUsername()->willReturn('admin');
+      $admin->getAccountName()->willReturn('admin');
 
       $mail_field = $this->prophet->prophesize(FieldItemList::class);
       $mail_field->getValue()->willReturn([['value' => 'admin@example.com']]);
@@ -220,13 +252,13 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = $this->getApicPasswordService();
       $account = $service->lookupUpAccount('andre@example.com', '/reg/lur1');
 
-      $this->assertNotNull($account);
+      self::assertNotNull($account);
     }
 
-    public function testLookupAccountNotKnownByName() {
+    public function testLookupAccountNotKnownByName(): void {
 
       $admin = $this->prophet->prophesize(User::class);
-      $admin->getUsername()->willReturn('admin');
+      $admin->getAccountName()->willReturn('admin');
 
       $mail_field = $this->prophet->prophesize(FieldItemList::class);
       $mail_field->getValue()->willReturn([['value' => 'admin@example.com']]);
@@ -244,13 +276,13 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = $this->getApicPasswordService();
       $account = $service->lookupUpAccount('notknown', '/reg/lur1');
 
-      $this->assertNull($account);
+      self::assertNull($account);
     }
 
-    public function testLookupAccountNotKnownByMailAddress() {
+    public function testLookupAccountNotKnownByMailAddress(): void {
 
       $admin = $this->prophet->prophesize(User::class);
-      $admin->getUsername()->willReturn('admin');
+      $admin->getAccountName()->willReturn('admin');
 
       $mail_field = $this->prophet->prophesize(FieldItemList::class);
       $mail_field->getValue()->willReturn([['value' => 'admin@example.com']]);
@@ -265,7 +297,7 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = $this->getApicPasswordService();
       $account = $service->lookupUpAccount('notknown@example.com', '/reg/lur1');
 
-      $this->assertNull($account);
+      self::assertNull($account);
     }
 
     private function createJWT(): JWTToken {
@@ -278,16 +310,15 @@ namespace Drupal\Tests\auth_apic\Unit {
      * @return \Drupal\auth_apic\UserManagement\ApicPasswordService
      */
     private function getApicPasswordService(): ApicPasswordService {
-      $service = new ApicPasswordService($this->mgmtServer->reveal(),
+      return new ApicPasswordService($this->mgmtServer->reveal(),
         $this->messenger->reveal(),
         $this->logger->reveal(),
         $this->apicUserStorage->reveal(),
         $this->entityTypeManager->reveal());
-      return $service;
     }
 
   }
 
- }
+}
 
 

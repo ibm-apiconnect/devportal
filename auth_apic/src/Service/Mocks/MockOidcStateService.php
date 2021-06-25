@@ -16,9 +16,9 @@ use Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface;
 
 class MockOidcStateService implements OidcStateServiceInterface {
 
-  private $storage = [];
+  private array $storage = [];
 
-  public function __construct(){
+  public function __construct() {
     $stateObj = [];
     $stateObj['registry_url'] = 'valid';
     $this->storage["key"] = $stateObj;
@@ -30,22 +30,19 @@ class MockOidcStateService implements OidcStateServiceInterface {
    */
   public function store($data) {
   }
-  
+
   /**
    * {@inheritdoc}
    */
   public function get(string $key) {
-    if (array_key_exists($key, $this->storage)) {
-      return $this->storage[$key]; 
-    } else {
-      return null;
-    }
+    return $this->storage[$key] ?? NULL;
   }
-  
+
   /**
    * {@inheritdoc}
    */
-  public function delete(string $key) {
+  public function delete(string $key): bool {
+    return TRUE;
   }
 
   /**
@@ -63,6 +60,7 @@ class MockOidcStateService implements OidcStateServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function saveAllOidcState($state) {
+  public function saveAllOidcState($state): void {
   }
+
 }

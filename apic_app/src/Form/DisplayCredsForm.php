@@ -20,11 +20,13 @@ use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
+use JsonException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\apic_api\Service\ApiUtils;
 
 /**
-* Form to display the credentials of an application.
-*/
+ * Form to display the credentials of an application.
+ */
 class DisplayCredsForm extends FormBase {
 
   /**
@@ -35,14 +37,16 @@ class DisplayCredsForm extends FormBase {
   /**
    * @var \Drupal\Core\Extension\ModuleHandler
    */
-  protected $module_handler;
+  protected ModuleHandler $module_handler;
 
   /**
    * The node representing the application.
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $node;
+  protected NodeInterface $node;
+
+  protected ApiUtils $api_utils;
 
   protected $creds;
 
@@ -51,19 +55,23 @@ class DisplayCredsForm extends FormBase {
    *
    * @param \Drupal\Core\Messenger\Messenger $messenger
    * @param \Drupal\Core\Extension\ModuleHandler $module_handler
+   * @param \Drupal\Core\Extension\ModuleHandler $api_utils
    */
-  public function __construct(Messenger $messenger, ModuleHandler $module_handler) {
+  public function __construct(Messenger $messenger, ModuleHandler $module_handler, ApiUtils $api_utils) {
     $this->messenger = $messenger;
     $this->module_handler = $module_handler;
+    $this->api_utils = $api_utils;
   }
+
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): DisplayCredsForm {
     // Load the service required to construct this class
     return new static(
       $container->get('messenger'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('apic_api.utils')
     );
   }
 
@@ -78,20 +86,18 @@ class DisplayCredsForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credentials = NULL): array {
-    $this->node = $appId;
+    if ($appId !== NULL) {
+      $this->node = $appId;
+    }
     try {
       $this->creds = json_decode(base64_decode($credentials, FALSE), TRUE, 512, JSON_THROW_ON_ERROR);
-    } catch (\JsonException $e) {
+    } catch (JsonException $e) {
 
     }
     $form['#attached']['library'][] = 'apic_app/basic';
 
     if ($this->module_handler->moduleExists('clipboardjs')) {
       $form['#attached']['library'][] = 'clipboardjs/drupal';
-      $form['intro'] = [
-        '#markup' => '<span>' . t('The API Key and Secret have been generated for your application.') . '</span>',
-        '#weight' => 0,
-      ];
       if (isset($this->creds['client_id'])) {
         $form['client_id'] = [
           '#markup' => Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input id="clientIDInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientIDInputLabel" value="' . $this->creds['client_id'] . '" />
@@ -111,7 +117,8 @@ class DisplayCredsForm extends FormBase {
         ];
       }
 
-    } else {
+    }
+    else {
       if (isset($this->creds['client_id'])) {
         $form['client_id'] = [
           '#markup' => Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input class="form-control" id="client_id" readonly value="' . $this->creds['client_id'] . '"></div></div>'),
@@ -125,8 +132,16 @@ class DisplayCredsForm extends FormBase {
         ];
       }
     }
+    $form['intro'] = [
+      '#markup' => '<span>' . t('The API Key and Secret have been generated for your application.') . '</span>',
+      '#weight' => 0,
+    ];
+    $outro = '<p>' . t('The Secret will only be displayed here one time. Please copy your API Secret and keep it for your records.') . '</p>';
+    if ($this->api_utils->areEventAPIsPresent()) {
+      $outro = $outro . '<p>' . t('Application credentials are used when an API requires authentication. Depending on its use, it can be referred to as API key and secret in a HTTP authentication header, Client ID and secret in an OAuth flow or Kafka SASL username and password.') . '</p>';
+    }
     $form['outro'] = [
-      '#markup' => '<span>' . t('The Secret will only be displayed here one time. Please copy your API Secret and keep it for your records.') . '</span>',
+      '#markup' => $outro,
       '#weight' => 30,
     ];
     $form['actions'] = ['#type' => 'actions'];
@@ -141,7 +156,7 @@ class DisplayCredsForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @return \Drupal\Core\Url
    */
   public function getCancelUrl(): Url {
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();

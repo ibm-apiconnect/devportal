@@ -13,7 +13,7 @@
 
 namespace Drupal\apic_app\Form;
 
-use Drupal\apic_app\Application;
+use Drupal\apic_app\Service\ApplicationService;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\apic_app\Service\CertificateService;
 use Drupal\Core\Form\FormBase;
@@ -22,7 +22,9 @@ use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\ibm_apim\Service\Utils;
+use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\node\NodeInterface;
+use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -35,22 +37,22 @@ class ApplicationUpdateForm extends FormBase {
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $node;
+  protected NodeInterface $node;
 
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
    */
-  protected $restService;
+  protected ApplicationRestInterface $restService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\ibm_apim\Service\Utils
    */
-  protected $utils;
+  protected Utils $utils;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -60,8 +62,12 @@ class ApplicationUpdateForm extends FormBase {
   /**
    * @var \Drupal\apic_app\Service\CertificateService
    */
-  protected $certService;
+  protected CertificateService $certService;
 
+  /**
+   * @var \Drupal\apic_app\Service\ApplicationService
+   */
+  protected ApplicationService $applicationService;
 
   /**
    * ApplicationUpdateForm constructor.
@@ -71,31 +77,35 @@ class ApplicationUpdateForm extends FormBase {
    * @param \Drupal\ibm_apim\Service\Utils $utils
    * @param \Drupal\Core\Messenger\Messenger $messenger
    * @param \Drupal\apic_app\Service\CertificateService $certService
+   * @param \Drupal\apic_app\Service\ApplicationService $applicationService
    */
   public function __construct(
     ApplicationRestInterface $restService,
     UserUtils $userUtils,
     Utils $utils,
     Messenger $messenger,
-    CertificateService $certService) {
+    CertificateService $certService,
+    ApplicationService $applicationService) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->utils = $utils;
     $this->messenger = $messenger;
     $this->certService = $certService;
+    $this->applicationService = $applicationService;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): ApplicationUpdateForm {
     // Load the service required to construct this class
     return new static(
       $container->get('apic_app.rest_service'),
       $container->get('ibm_apim.user_utils'),
       $container->get('ibm_apim.utils'),
       $container->get('messenger'),
-      $container->get('apic_app.certificate')
+      $container->get('apic_app.certificate'),
+      $container->get('apic_app.application')
     );
   }
 
@@ -111,8 +121,9 @@ class ApplicationUpdateForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $this->node = $appId;
-
+    if ($appId !== NULL) {
+      $this->node = $appId;
+    }
     $form['#parents'] = [];
     $max_weight = 500;
 
@@ -155,7 +166,7 @@ class ApplicationUpdateForm extends FormBase {
     $ibmApimApplicationCertificates = (boolean) \Drupal::state()->get('ibm_apim.application_certificates');
     if ($ibmApimApplicationCertificates === TRUE) {
       // we do not store the certificate so have to retrieve it from apim in order to show current value
-      $app_data = Application::fetchFromAPIC($this->node->apic_url->value);
+      $app_data = $this->restService->fetchFromAPIC($this->node->apic_url->value);
 
       $form['certificate'] = [
         '#type' => 'textarea',
@@ -198,7 +209,7 @@ class ApplicationUpdateForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public function getCancelUrl(): Url {
     return $this->node->toUrl();
@@ -222,6 +233,9 @@ class ApplicationUpdateForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \JsonException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -260,23 +274,20 @@ class ApplicationUpdateForm extends FormBase {
           $data['application_public_certificate_entry'] = $certificate;
         }
       }
-      $imageURL = Application::getImageForApp($this->node, $name);
+      $imageURL = $this->applicationService->getImageForApp($this->node, $name);
       $data['image_endpoint'] = $imageURL;
 
-      $customFields = Application::getCustomFields();
+      $customFields = $this->applicationService->getCustomFields();
       $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $form_state);
       if (!empty($customFieldValues) && isset($this->node->get("application_data")->getValue()[0]['value'])) {
-        $appData = unserialize($this->node->get("application_data")->getValue()[0]['value']);
-        $metadata = [];
-        if (isset($appData['metadata'])) {
-          $metadata = $appData['metadata'];
-        }
+        $appData = unserialize($this->node->get("application_data")->getValue()[0]['value'], ['allowed_classes' => FALSE]);
+        $metadata = $appData['metadata'] ?? [];
         foreach ($customFieldValues as $customField => $value) {
-          $metadata[$customField] = json_encode($value);
+          $metadata[$customField] = json_encode($value, JSON_THROW_ON_ERROR);
         }
         $data['metadata'] = $metadata;
       }
-      $result = $this->restService->patchApplication($url, json_encode($data));
+      $result = $this->restService->patchApplication($url, json_encode($data, JSON_THROW_ON_ERROR));
       if (isset($result) && $result->code >= 200 && $result->code < 300) {
 
         $this->node->setTitle($this->utils->truncate_string($name));
@@ -286,6 +297,27 @@ class ApplicationUpdateForm extends FormBase {
           $this->node->set($customField, $value);
         }
         $this->node->save();
+
+        $eventEntity = new ApicEvent();
+        $eventEntity->setArtifactType('application');
+        if (\Drupal::currentUser()->isAuthenticated() && (int) \Drupal::currentUser()->id() !== 1) {
+          $current_user = User::load(\Drupal::currentUser()->id());
+          if ($current_user !== NULL) {
+            $eventEntity->setUserUrl($current_user->get('apic_url')->value);
+          }
+        }
+        if (isset($result->data['updated_at'])) {
+          $eventEntity->setTimestamp((int) strtotime($result->data['updated_at']));
+        }
+        $eventEntity->setEvent('update');
+        $eventEntity->setArtifactUrl($url);
+        $eventEntity->setAppUrl($url);
+        $eventEntity->setConsumerOrgUrl($this->node->application_consumer_org_url->value);
+        $utils = \Drupal::service('ibm_apim.utils');
+        $appTitle = $utils->truncate_string($this->node->getTitle());
+        $eventEntity->setData(['name' => $appTitle]);
+        $eventLogService = \Drupal::service('ibm_apim.event_log');
+        $eventLogService->createIfNotExist($eventEntity);
 
         $this->messenger->addMessage(t('Application updated successfully.'));
         $currentUser = \Drupal::currentUser();
@@ -298,6 +330,7 @@ class ApplicationUpdateForm extends FormBase {
         $moduleHandler = \Drupal::service('module_handler');
         $moduleHandler->invokeAll('apic_app_update', [$this->node, $result->data]);
 
+        \Drupal::service('apic_app.application')->invalidateCaches();
       }
       $form_state->setRedirectUrl($this->getCancelUrl());
     }

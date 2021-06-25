@@ -1,40 +1,41 @@
-<?php  
-/**  
- * @file  
- * Contains Drupal\ibm_apic_flood_control_ui\Form\FloodControlUIForm.  
- */  
-namespace Drupal\ibm_apic_flood_control_ui\Form;  
-use Drupal\Core\Form\ConfigFormBase;  
-use Drupal\Core\Form\FormStateInterface;  
+<?php
+/**
+ * @file
+ * Contains Drupal\ibm_apic_flood_control_ui\Form\FloodControlUIForm.
+ */
 
-class FloodControlUIForm extends ConfigFormBase {  
+namespace Drupal\ibm_apic_flood_control_ui\Form;
 
-  /**  
-   * {@inheritdoc}  
-   */  
-  protected function getEditableConfigNames() {  
-    return [  
-        'user.flood',
-        'ibm_apim.settings',
-        'contact.settings'
-    ];  
-  }  
+use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\FormStateInterface;
 
-  /**  
-   * {@inheritdoc}  
-   */  
-  public function getFormId() {  
-    return 'ibm_apic_flood_control_ui_form';  
-  }  
+class FloodControlUIForm extends ConfigFormBase {
 
-   /**  
-   * {@inheritdoc}  
-   */  
-  public function buildForm(array $form, FormStateInterface $form_state) {  
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEditableConfigNames(): array {
+    return [
+      'user.flood',
+      'ibm_apim.settings',
+      'contact.settings',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
+    return 'ibm_apic_flood_control_ui_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state): array {
 
     $form = parent::buildForm($form, $form_state);
     $flood_config = $this->config('user.flood');
-    $ibm_config = $this->config('ibm_apim.settings');
     $contact_config = $this->config('contact.settings');
 
     $form['intro'] = [
@@ -42,62 +43,62 @@ class FloodControlUIForm extends ConfigFormBase {
       '#weight' => -20,
     ];
 
-    $form['user'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Login Settings'),
-        '#access' => \Drupal::currentUser()->hasPermission('administer users'),
-    );
-    $form['user']['ip_limit'] = array(
-        '#type' => 'number',
-        '#title' => t('Failed IP login limit (min 1)'),
-        '#default_value' => $flood_config->get('ip_limit', 50),
-        '#min' => 1,
-    );
-    $form['user']['ip_window'] = array(
-        '#type' => 'number',
-        '#title' => $this->t('Failed IP login window in seconds (0 = Off)'),
-        '#default_value' => $flood_config->get('ip_window', 3600),
-        '#min' => 0,
-    );
-    $form['user']['user_limit'] = array(
-        '#type' => 'number',
-        '#title' => t('Failed User login limit (min 1)'),
-        '#default_value' => $flood_config->get('user_limit', 5),
-        '#min' => 1,
-    );
-    $form['user']['user_window'] = array(
-        '#type' => 'number',
-        '#title' => t('Failed User login window in seconds (0 = Off)'),
-        '#default_value' => $flood_config->get('user_window', 21600),
-        '#min' => 0,
-    );
+    $form['user'] = [
+      '#type' => 'fieldset',
+      '#title' => t('Login Settings'),
+      '#access' => \Drupal::currentUser()->hasPermission('administer users'),
+    ];
+    $form['user']['ip_limit'] = [
+      '#type' => 'number',
+      '#title' => t('Failed IP login limit (min 1)'),
+      '#default_value' => $flood_config->get('ip_limit'),
+      '#min' => 1,
+    ];
+    $form['user']['ip_window'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Failed IP login window in seconds (0 = Off)'),
+      '#default_value' => $flood_config->get('ip_window'),
+      '#min' => 0,
+    ];
+    $form['user']['user_limit'] = [
+      '#type' => 'number',
+      '#title' => t('Failed User login limit (min 1)'),
+      '#default_value' => $flood_config->get('user_limit'),
+      '#min' => 1,
+    ];
+    $form['user']['user_window'] = [
+      '#type' => 'number',
+      '#title' => t('Failed User login window in seconds (0 = Off)'),
+      '#default_value' => $flood_config->get('user_window'),
+      '#min' => 0,
+    ];
 
-    $form['contact'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Contact Forms'),
-        '#access' => \Drupal::currentUser()->hasPermission('administer contact forms'),
-    );
-    $form['contact']['flood']['limit'] = array(
-        '#type' => 'number',
-        '#title' => t('Emails sent limit'),
-        '#default_value' => $contact_config->get('flood.limit', 5),
-        '#min' => 0,
-    );
-    $form['contact']['flood']['interval'] = array(
-        '#type' => 'number',
-        '#title' => t('Emails sent window in seconds'),
-        '#default_value' => $contact_config->get('flood.interval', 3600),
-        '#min' => 0,
-    );
+    $form['contact'] = [
+      '#type' => 'fieldset',
+      '#title' => t('Contact Forms'),
+      '#access' => \Drupal::currentUser()->hasPermission('administer contact forms'),
+    ];
+    $form['contact']['flood']['limit'] = [
+      '#type' => 'number',
+      '#title' => t('Emails sent limit'),
+      '#default_value' => $contact_config->get('flood.limit'),
+      '#min' => 0,
+    ];
+    $form['contact']['flood']['interval'] = [
+      '#type' => 'number',
+      '#title' => t('Emails sent window in seconds'),
+      '#default_value' => $contact_config->get('flood.interval'),
+      '#min' => 0,
+    ];
 
     return $form;
 
-  }  
+  }
 
-   /**
+  /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $this->config('user.flood')
       ->set('ip_limit', $form_state->getValue('ip_limit'))
       ->set('ip_window', $form_state->getValue('ip_window'))
@@ -107,7 +108,7 @@ class FloodControlUIForm extends ConfigFormBase {
     $this->config('contact.settings')
       ->set('flood.limit', $form_state->getValue('limit'))
       ->set('flood.interval', $form_state->getValue('interval'))
-      ->save(); 
+      ->save();
   }
 
 } 

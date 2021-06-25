@@ -13,13 +13,11 @@
 
 namespace Drupal\apic_api;
 
-use Drupal\apic_api\Event\ApiCreateEvent;
-use Drupal\apic_api\Event\ApiDeleteEvent;
-use Drupal\apic_api\Event\ApiUpdateEvent;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\product\Product;
@@ -48,6 +46,7 @@ class Api {
    *
    * @return int|null|string
    * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
    */
   public function create($api, $event = 'publish') {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -60,7 +59,7 @@ class Api {
     $xIbmName = NULL;
 
     if (\is_string($api)) {
-      $api = json_decode($api, TRUE);
+      $api = json_decode($api, TRUE, 512, JSON_THROW_ON_ERROR);
     }
 
     if (isset($api['consumer_api']['info']['x-ibm-name'])) {
@@ -107,6 +106,9 @@ class Api {
       // duplicate node
       $node = $oldNode->createDuplicate();
 
+      // update any apirefs on basic pages
+      $this->updateBasicPageRefs($oldNode->id(), $node->id());
+
       // wipe all our fields to ensure they get set to new values
       $node->set('apic_tags', []);
 
@@ -129,6 +131,8 @@ class Api {
       $node->set('api_encodedswagger', NULL);
       $node->set('api_swaggertags', NULL);
       $node->set('api_state', NULL);
+      $node->set('apic_created_at', NULL);
+      $node->set('apic_updated_at', NULL);
     }
     else {
       $node = Node::create([
@@ -143,7 +147,7 @@ class Api {
     // get the update method to do the update for us
     $node = $this->update($node, $api, 'internal');
 
-    if ($node !==NULL && $oldTags !== NULL && !empty($oldTags)) {
+    if ($node !== NULL && $oldTags !== NULL && !empty($oldTags)) {
       $currentTags = $node->get('apic_tags')->getValue();
       if (!\is_array($currentTags)) {
         $currentTags = [];
@@ -166,7 +170,7 @@ class Api {
     }
 
     if ($node !== NULL && !$moduleHandler->moduleExists('workbench_moderation')) {
-      $node->setPublished(TRUE);
+      $node->setPublished();
       $node->save();
     }
 
@@ -184,10 +188,14 @@ class Api {
         $this->apiTaxonomy->create_api_forum($this->utils->truncate_string($api['consumer_api']['info']['title']), $api['consumer_api']['info']['description']);
       }
 
-      \Drupal::logger('apic_api')->notice('API @api @version created', ['@api' => $node->getTitle(), '@version' => $node->apic_version->value]);
+      \Drupal::logger('apic_api')->notice('API @api @version created', [
+        '@api' => $node->getTitle(),
+        '@version' => $node->apic_version->value,
+      ]);
 
       $nodeId = $node->id();
-    } else {
+    }
+    else {
       $nodeId = NULL;
     }
 
@@ -210,7 +218,6 @@ class Api {
     if ($node !== NULL) {
       $returnValue = NULL;
       module_load_include('inc', 'apic_api', 'apic_api.utils');
-      module_load_include('inc', 'apic_api', 'apic_api.tags');
       module_load_include('inc', 'apic_api', 'apic_api.files');
       $configService = \Drupal::service('ibm_apim.site_config');
       $hostVariable = $configService->getApimHost();
@@ -220,15 +227,20 @@ class Api {
 
       // filter out any retired apis and remove them
       if (array_key_exists('state', $api) && $api['state'] === 'retired') {
-        \Drupal::logger('apic_api')->error('Update api: retired API @apiName @version, deleting it.', ['@apiName' => $api['name'], '@version' => $api['consumer_api']['info']['version']]);
+        \Drupal::logger('apic_api')->notice('Update api: retired API @apiName @version, deleting it.', [
+          '@apiName' => $api['name'],
+          '@version' => $api['consumer_api']['info']['version'],
+        ]);
         self::deleteNode($node->id(), 'retired_api');
-        $node = NULL;
-      } else {
+        unset($node);
+      }
+      else {
         $truncated_title = $this->utils->truncate_string($api['consumer_api']['info']['title']);
         // title must be set, if not fall back on name
         if (isset($truncated_title) && !empty($truncated_title)) {
           $node->setTitle($truncated_title);
-        } else {
+        }
+        else {
           $node->setTitle($api['name']);
         }
         if (isset($api['consumer_api']['info']['x-ibm-languages']['title']) && !empty($api['consumer_api']['info']['x-ibm-languages']['title'])) {
@@ -285,7 +297,10 @@ class Api {
               if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
                   // ensure the translation has a title as its a required field
-                  $translation = $node->addTranslation($lang, ['title' => $truncated_title, 'apic_description' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang])]);
+                  $translation = $node->addTranslation($lang, [
+                    'title' => $truncated_title,
+                    'apic_description' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang]),
+                  ]);
                   $translation->save();
                 }
                 else {
@@ -325,7 +340,10 @@ class Api {
               if (\in_array($lang, $languageList, FALSE)) {
                 if (!$node->hasTranslation($lang)) {
                   // ensure the translation has a title as its a required field
-                  $translation = $node->addTranslation($lang, ['title' => $truncated_title, 'apic_summary' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages'][$summaryField][$lang], 1000)]);
+                  $translation = $node->addTranslation($lang, [
+                    'title' => $truncated_title,
+                    'apic_summary' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages'][$summaryField][$lang], 1000),
+                  ]);
                   $translation->save();
                 }
                 else {
@@ -351,24 +369,37 @@ class Api {
           $lowerType = mb_strtolower($api['consumer_api']['x-ibm-configuration']['type']);
           if ($lowerType === 'rest' || $lowerType === 'wsdl' || $lowerType === 'oauth' || $lowerType === 'graphql') {
             $apiType = $lowerType;
-          } elseif ($lowerType === 'asyncapi' || isset($api['consumer_api']['asyncapi'])) {
+          }
+          elseif ($lowerType === 'asyncapi' || isset($api['consumer_api']['asyncapi'])) {
             if (isset($api['consumer_api']['servers'])) {
               $protocol = array_values($api['consumer_api']['servers'])[0]['protocol'];
               $lowerProtocol = mb_strtolower($protocol);
               if ($lowerProtocol === 'kafka' || $lowerProtocol === 'kafka-secure') {
                 $apiType = 'kafka';
-              } elseif ($lowerProtocol === 'ibmmq' || $lowerProtocol === 'ibmmq-secure' || $lowerProtocol === 'amqp' || $lowerProtocol === 'amqps') {
+              }
+              elseif ($lowerProtocol === 'ibmmq' || $lowerProtocol === 'ibmmq-secure' || $lowerProtocol === 'amqp' || $lowerProtocol === 'amqps') {
                 $apiType = 'mq';
-              } else {
+              }
+              else {
                 $apiType = 'asyncapi';
               }
-            } else {
+            }
+            else {
               $apiType = 'asyncapi';
             }
           }
         }
         $node->set('api_protocol', $apiType);
         $node->set('apic_url', $api['url']);
+
+        if (isset($api['created_at'])) {
+          // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
+          $node->set('apic_created_at', strtotime($api['created_at']));
+        }
+        if (isset($api['updated_at'])) {
+          // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
+          $node->set('apic_updated_at', strtotime($api['updated_at']));
+        }
 
         if (!isset($api['consumer_api']['x-ibm-configuration']) || empty($api['consumer_api']['x-ibm-configuration'])) {
           $api['consumer_api']['x-ibm-configuration'] = '';
@@ -377,8 +408,10 @@ class Api {
         $oaiVersion = 2;
         if (isset($api['consumer_api']['openapi']) && $this->utils->startsWith($api['consumer_api']['openapi'], '3.')) {
           $oaiVersion = 3;
-        } elseif (isset($api['consumer_api']['asyncapi'])) {
+        }
+        elseif (isset($api['consumer_api']['asyncapi'])) {
           $oaiVersion = 'asyncapi2';
+          \Drupal::state()->set('ibm_apim.asyncapis_present', TRUE);
         }
         $node->set('api_oaiversion', $oaiVersion);
         $node->save();
@@ -395,7 +428,7 @@ class Api {
 
           // stored as base64 encoded string so can be passed through to explorer without PHP messing up empty objects / arrays
           if (!array_key_exists('encoded_consumer_api', $api) || empty($api['encoded_consumer_api'])) {
-            $api['encoded_consumer_api'] = base64_encode(json_encode($api['consumer_api']));
+            $api['encoded_consumer_api'] = base64_encode(json_encode($api['consumer_api'], JSON_THROW_ON_ERROR));
           }
           $node->set('api_encodedswagger', $api['encoded_consumer_api']);
 
@@ -417,7 +450,8 @@ class Api {
                   }
                 }
               }
-            } elseif (isset($api['consumer_api']['channels'])) {
+            }
+            elseif (isset($api['consumer_api']['channels'])) {
               foreach ($api['consumer_api']['channels'] as $path) {
                 foreach ($path as $verb => $operation) {
                   if (isset($path['tags'])) {
@@ -474,7 +508,7 @@ class Api {
               $attachments = $node->apic_attachments->getValue();
               if ($attachments !== NULL) {
                 foreach ($attachments as $key => $existingDoc) {
-                  $existingDocFile = \Drupal\file\Entity\File::load($existingDoc['target_id']);
+                  $existingDocFile = File::load($existingDoc['target_id']);
                   if ($existingDocFile !== NULL) {
                     $existingDocFileUri = $existingDocFile->getFileUri();
                     if ($existingDocFileUri !== NULL) {
@@ -509,7 +543,7 @@ class Api {
                 ];
               }
               elseif ($deleteFid !== -1 && $deleteFid !== $fileTemp->id()) {
-                $fileEntity = \Drupal\file\Entity\File::load($deleteFid);
+                $fileEntity = File::load($deleteFid);
                 if ($fileEntity !== NULL) {
                   $fileEntity->delete();
                 }
@@ -549,14 +583,17 @@ class Api {
           \Drupal::state()->set('ibm_apim.application_certificates', TRUE);
         }
 
-        if ($node !== NULL && $event !== 'internal') {
+        if ($event !== 'internal') {
           // Calling all modules implementing 'hook_apic_api_update':
           $moduleHandler->invokeAll('apic_api_update', ['node' => $node, 'data' => $api]);
 
         }
 
         if ($event !== 'internal') {
-          \Drupal::logger('apic_api')->notice('API @api @version updated', ['@api' => $node->getTitle(), '@version' => $node->apic_version->value]);
+          \Drupal::logger('apic_api')->notice('API @api @version updated', [
+            '@api' => $node->getTitle(),
+            '@version' => $node->apic_version->value,
+          ]);
         }
       }
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -578,7 +615,7 @@ class Api {
    * @param $event
    *
    * @return bool
-   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
    */
   public function createOrUpdate($api, $event): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $api['consumer_api']['info']['x-ibm-name'] . ':' . $api['consumer_api']['info']['version']);
@@ -624,7 +661,10 @@ class Api {
 
     $node = Node::load($nid);
     if ($node !== NULL) {
-      \Drupal::logger('apic_api')->notice('API @api @version deleted', ['@api' => $node->getTitle(), '@version' => $node->apic_version->value]);
+      \Drupal::logger('apic_api')->notice('API @api @version deleted', [
+        '@api' => $node->getTitle(),
+        '@version' => $node->apic_version->value,
+      ]);
 
       // Calling all modules implementing 'hook_apic_api_delete':
       $moduleHandler->invokeAll('apic_api_delete', ['node' => $node]);
@@ -637,9 +677,9 @@ class Api {
   }
 
   /**
-   * @return string - api icon for a given name
-   *
    * @param $name
+   *
+   * @return string - api icon for a given name
    *
    * @return string
    */
@@ -661,9 +701,9 @@ class Api {
   }
 
   /**
-   * @return string - path to placeholder image for a given name
-   *
    * @param $name
+   *
+   * @return string - path to placeholder image for a given name
    *
    * @return string
    */
@@ -677,9 +717,9 @@ class Api {
   }
 
   /**
-   * @return string - path to placeholder image for a given name
-   *
    * @param $name
+   *
+   * @return string - path to placeholder image for a given name
    *
    * @return string
    */
@@ -707,14 +747,16 @@ class Api {
       return TRUE;
     }
     $productNids = Product::listProducts();
-    $productNodes = Node::loadMultiple($productNids);
     $found = FALSE;
-    foreach ($productNodes as $productNode) {
-      foreach ($productNode->product_apis->getValue() as $arrayValue) {
-        $apis = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-        foreach ($apis as $prodRef) {
-          if ($prodRef['name'] === $node->apic_ref->value) {
-            $found = TRUE;
+    foreach (array_chunk($productNids, 50) as $chunk) {
+      $productNodes = Node::loadMultiple($chunk);
+      foreach ($productNodes as $productNode) {
+        foreach ($productNode->product_apis->getValue() as $arrayValue) {
+          $apis = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+          foreach ($apis as $prodRef) {
+            if ($prodRef['name'] === $node->apic_ref->value) {
+              $found = TRUE;
+            }
           }
         }
       }
@@ -727,6 +769,8 @@ class Api {
    * Return list of NIDs for all APIs the current user can access
    *
    * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public static function listApis(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -743,14 +787,16 @@ class Api {
       $results = $query->execute();
     }
     else {
-      $productNids = Product::listProducts();
-      $productNodes = Node::loadMultiple($productNids);
       $refArray = [];
-      foreach ($productNodes as $productNode) {
-        foreach ($productNode->product_apis->getValue() as $arrayValue) {
-          $apis = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-          foreach ($apis as $prodRef) {
-            $refArray[] = $prodRef['name'];
+      $productNids = Product::listProducts();
+      foreach (array_chunk($productNids, 50) as $chunk) {
+        $productNodes = Node::loadMultiple($chunk);
+        foreach ($productNodes as $productNode) {
+          foreach ($productNode->product_apis->getValue() as $arrayValue) {
+            $apis = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+            foreach ($apis as $prodRef) {
+              $refArray[] = $prodRef['name'];
+            }
           }
         }
       }
@@ -821,6 +867,8 @@ class Api {
       'apic_version',
       'apic_image',
       'apic_attachments',
+      'apic_created_at',
+      'apic_updated_at',
       'api_ibmconfiguration',
       'api_id',
       'api_oaiversion',
@@ -843,6 +891,7 @@ class Api {
    * @param $nid
    *
    * @return array
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public static function getLinkedPages($nid): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $nid);
@@ -868,14 +917,16 @@ class Api {
     // process the nodes and build an array of the info we need
     $finalNids = array_unique($finalNids, SORT_NUMERIC);
     if ($finalNids !== NULL && !empty($finalNids)) {
-      $nodes = Node::loadMultiple($finalNids);
-      if ($nodes !== NULL) {
-        foreach ($nodes as $node) {
-          $docs[] = [
-            'title' => $node->getTitle(),
-            'url' => $node->toUrl()->toString(),
-            'extractPortalContent' => TRUE,
-          ];
+      foreach (array_chunk($finalNids, 50) as $chunk) {
+        $nodes = Node::loadMultiple($chunk);
+        if ($nodes !== NULL) {
+          foreach ($nodes as $node) {
+            $docs[] = [
+              'title' => $node->getTitle(),
+              'url' => $node->toUrl()->toString(),
+              'extractPortalContent' => TRUE,
+            ];
+          }
         }
       }
     }
@@ -890,7 +941,7 @@ class Api {
    *
    * @return string (JSON)
    */
-  public static function getApiAsJson($url): string {
+  public function getApiAsJson($url): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['url' => $url]);
     $output = NULL;
     $query = \Drupal::entityQuery('node');
@@ -944,6 +995,8 @@ class Api {
         $output['type'] = $node->api_protocol->value;
         $output['summary'] = $node->apic_summary->value;
         $output['description'] = $node->apic_description->value;
+        $output['created_at'] = $node->apic_created_at->value;
+        $output['updated_at'] = $node->apic_updated_at->value;
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -968,4 +1021,40 @@ class Api {
       }
     }
   }
+
+  /**
+   * Update any basic page references to point to the new node
+   *
+   * @param $oldNid
+   * @param $newNid
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function updateBasicPageRefs($oldNid, $newNid): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    if (isset($oldNid, $newNid)) {
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'page')->condition('apiref', $oldNid, 'CONTAINS');
+      $nids = $query->execute();
+      if ($nids !== NULL && !empty($nids)) {
+        foreach ($nids as $nid) {
+          $node = Node::load($nid);
+          if ($node !== NULL) {
+            $newArray = $node->apiref->getValue();
+            foreach ($newArray as $key => $value) {
+              if ($value['target_id'] === (string) $oldNid) {
+                $newArray[$key]['target_id'] = (string) $newNid;
+              }
+            }
+            $node->set('apiref', $newArray);
+            $node->save();
+          }
+        }
+      }
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
 }

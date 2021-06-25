@@ -11,13 +11,19 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
-namespace Drupal\Tests\ibm_apim\Unit;
+namespace Drupal\Tests\ibm_apim\Unit\UserManagement;
 
+use Drupal\Core\Language\LanguageManager;
+use Drupal\ibm_apim\Service\ApicUserService;
+use Drupal\ibm_apim\Service\ApicUserStorage;
+use Drupal\ibm_apim\Service\APIMServer;
 use Drupal\ibm_apim\UserManagement\ApicAccountService;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Rest\MeResponse;
 use Drupal\Tests\auth_apic\Unit\Base\AuthApicTestBaseClass;
 use Prophecy\Argument;
+use Drupal\Core\Messenger\Messenger;
+use Psr\Log\LoggerInterface;
 
 /**
  * Called from various flows to register a user in the drupal db.
@@ -25,48 +31,61 @@ use Prophecy\Argument;
  * PHPUnit tests for:
  *    public function registerApicUser(ApicUser $user)
  *
+ * @coversDefaultClass \Drupal\ibm_apim\UserManagement\ApicAccountService
+ *
  * @group ibm_apim
  */
 class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
-  protected $prophet;
-
-  /*
-   Dependencies of ApicAccountService.
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
    */
   protected $logger;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\APIMServer|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $mgmtServer;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\ApicUserService|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $userService;
 
+  /**
+   * @var \Drupal\Core\Language\LanguageManager|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $languageManager;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\ApicUserStorage|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $userStorage;
+
+  /**
+   * @var \Drupal\Core\Messenger\Messenger|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $messenger;
 
   /**
    *
    */
-  protected function setup() {
+  protected function setup(): void {
     parent::setup();
-    $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
-    $this->mgmtServer = $this->prophet->prophesize(\Drupal\ibm_apim\Service\APIMServer::class);
-    $this->userService = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserService::class);
-    $this->languageManager = $this->prophet->prophesize(\Drupal\Core\Language\LanguageManager::class);
-    $this->userStorage = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserStorage::class);
-    $this->messenger = $this->prophet->prophesize('Drupal\Core\Messenger\Messenger');
+    $this->logger = $this->prophet->prophesize(LoggerInterface::class);
+    $this->mgmtServer = $this->prophet->prophesize(APIMServer::class);
+    $this->userService = $this->prophet->prophesize(ApicUserService::class);
+    $this->languageManager = $this->prophet->prophesize(LanguageManager::class);
+    $this->userStorage = $this->prophet->prophesize(ApicUserStorage::class);
+    $this->messenger = $this->prophet->prophesize(Messenger::class);
 
-  }
-
-  protected function tearDown() {
-    parent::tearDown();
   }
 
   /**
    * @return ApicAccountService
    */
   protected function createAccountService(): ApicAccountService {
-    $userManager = new ApicAccountService(
+    return new ApicAccountService(
       $this->logger->reveal(),
       $this->mgmtServer->reveal(),
       $this->userService->reveal(),
@@ -74,11 +93,14 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
       $this->userStorage->reveal(),
       $this->messenger->reveal()
     );
-    return $userManager;
   }
 
 
   // register tests
+
+  /**
+   * @throws \Exception
+   */
   public function testRegisterAndre(): void {
 
     $user = $this->createUser();
@@ -93,10 +115,13 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
     $user_manager = $this->createAccountService();
     $response = $user_manager->registerApicUser($user);
 
-    $this->assertNotNull($response, 'Expected a not null response from registerApicUser()');
+    self::assertNotNull($response, 'Expected a not null response from registerApicUser()');
 
   }
 
+  /**
+   * @throws \Exception
+   */
   public function testRegisterAndreAlreadyExists(): void {
 
     $user = $this->createUser();
@@ -111,10 +136,13 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
     $user_manager = $this->createAccountService();
     $response = $user_manager->registerApicUser($user);
 
-    $this->assertNull($response, 'Expected a null response from registerApicUser()');
+    self::assertNull($response, 'Expected a null response from registerApicUser()');
 
   }
 
+  /**
+   * @throws \Exception
+   */
   public function testRegisterAndreNoUsername(): void {
 
     $user = new ApicUser();
@@ -130,10 +158,13 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
     $user_manager = $this->createAccountService();
     $response = $user_manager->registerApicUser($user);
 
-    $this->assertNull($response, 'Expected a null response from registerApicUser()');
+    self::assertNull($response, 'Expected a null response from registerApicUser()');
 
   }
 
+  /**
+   * @throws \Exception
+   */
   public function testRegisterAndreNoRegistryUrl(): void {
 
     $user = new ApicUser();
@@ -149,11 +180,18 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
     $user_manager = $this->createAccountService();
     $response = $user_manager->registerApicUser($user);
 
-    $this->assertNull($response, 'Expected a null response from registerApicUser()');
+    self::assertNull($response, 'Expected a null response from registerApicUser()');
 
   }
 
   // edit profile tests
+
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Exception
+   */
   public function testEditUser(): void {
 
     $user = $this->createUser();
@@ -169,12 +207,18 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
     $userManager = $this->createAccountService();
     $apicUser = $userManager->updateApicAccount($user);
-    $this->assertNotNull($apicUser);
+    self::assertNotNull($apicUser);
     $result = $userManager->updateLocalAccount($apicUser);
-    $this->assertEquals($accountStub, $result);
+    self::assertEquals($accountStub, $result);
 
   }
 
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Exception
+   */
   public function testEditUserWithNoEmailAddress(): void {
 
     $user = $this->createUser();
@@ -188,14 +232,21 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
     $this->userStorage->load($user)->willReturn($accountStub);
 
     $this->logger->error(Argument::any())->shouldNotBeCalled();
-    $this->logger->notice('updateLocalAccount - email address not available. Not updating to maintain what is already in the database')->shouldBeCalled();
+    $this->logger->notice('updateLocalAccount - email address not available. Not updating to maintain what is already in the database')
+      ->shouldBeCalled();
 
     $service = $this->createAccountService();
     $result = $service->updateLocalAccount($user);
-    $this->assertNotNull($result);
+    self::assertNotNull($result);
 
   }
 
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Exception
+   */
   public function testEditUserWithUpdatedEmailAddress(): void {
 
     $user = $this->createUser();
@@ -211,15 +262,19 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
     $this->userStorage->load($user)->willReturn($account);
 
     $this->logger->error(Argument::any())->shouldNotBeCalled();
-    $this->logger->notice('updateLocalAccount - email address not available. Not updating to maintain what is already in the database')->shouldNotBeCalled();
+    $this->logger->notice('updateLocalAccount - email address not available. Not updating to maintain what is already in the database')
+      ->shouldNotBeCalled();
 
     $service = $this->createAccountService();
     $result = $service->updateLocalAccount($user);
-    $this->assertNotNull($result);
+    self::assertNotNull($result);
 
   }
 
 
+  /**
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   */
   public function testBadManagementNodeResponse(): void {
 
     $user = $this->createUser();
@@ -236,10 +291,13 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
     $userManager = $this->createAccountService();
     $result = $userManager->updateApicAccount($user);
-    $this->assertNull($result);
+    self::assertNull($result);
 
   }
 
+  /**
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   */
   public function testBadExternalAuthLoad(): void {
 
     $user = $this->createUser();
@@ -249,11 +307,15 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
     $userManager = $this->createAccountService();
     $result = $userManager->updateLocalAccount($user);
-    $this->assertNull($result);
+    self::assertNull($result);
 
   }
 
   // Helper functions:
+
+  /**
+   * @return \Drupal\ibm_apim\ApicType\ApicUser
+   */
   private function createUser(): ApicUser {
     $user = new ApicUser();
 
@@ -270,6 +332,9 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
   }
 
+  /**
+   * @return \Drupal\ibm_apim\Rest\MeResponse
+   */
   private function createMeResponse(): MeResponse {
     $meResponse = new MeResponse();
     $meResponse->setCode(200);

@@ -14,18 +14,18 @@
  * Mainly used by the password policy validator to respond to finishing typing instead of tabbing out
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
   Drupal.behaviors.delay_ajax_keyup = {
-    attach: function (context, settings) {
-      $('input.password-field.js-password-field').each(function () {
+    attach: function(context, settings) {
+      $('input.password-field.js-password-field').each(function() {
         var $self = $(this);
         var timeout = null;
         var delay = $self.data('delay') || 1000;
         var triggerEvent = $self.data('event') || "end_typing";
 
-        $self.keyup(function () {
+        $self.keyup(function() {
           clearTimeout(timeout);
-          timeout = setTimeout(function () {
+          timeout = setTimeout(function() {
             $self.trigger(triggerEvent);
           }, delay);
         });

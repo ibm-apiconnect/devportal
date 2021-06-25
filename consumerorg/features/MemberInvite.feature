@@ -131,3 +131,37 @@ Feature: Org member invitation
     And I should not see that "inviteduser@example.com" is a "viewer"
     And I should see the text "Pending"
     And there are no errors
+
+  @api
+  Scenario: As an org owner, I cannot send an org member invitation when invitation disabled
+    Given I am not logged in
+    Given consumer org invitation is disabled
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+    And I am logged in as "@data(andre.name)"
+    And I am at "/myorg"
+    Then I should not see the text "Invite"
+    When I go to "/myorg/invite"
+    Then I should get a "403" HTTP response
+    And I should see the text "Access denied"
+    And I should see the text "You are not authorized to access this page."
+
+  @api
+  Scenario: As an org owner, I can only send invitations to enabled roles
+    Given I am not logged in
+    Given consumer org invitation is enabled
+    Given consumer org invitation roles are administrator,developer
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+    And I am logged in as "@data(andre.name)"
+    And I am at "/myorg/invite"
+    Then I should not see the text "Viewer"
+    And there are no errors

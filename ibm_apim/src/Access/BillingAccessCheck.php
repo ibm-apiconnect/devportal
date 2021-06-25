@@ -20,6 +20,9 @@ use Drupal\Core\Routing\Access\AccessInterface;
  */
 class BillingAccessCheck implements AccessInterface {
 
+  /**
+   * @return \Drupal\Core\Access\AccessResult
+   */
   public function access(): AccessResult {
     $allowed = FALSE;
     $billingEnabled = \Drupal::service('ibm_apim.billing')->isEnabled();

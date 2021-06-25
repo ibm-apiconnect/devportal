@@ -10,12 +10,14 @@
  * US Government Users Restricted Rights - Use, duplication or disclosure
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
+
 namespace Drupal\ibm_apim\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 
 // TODO: should field_types be registry_url?
+
 /**
  * Plugin implementation of the registry_url formatter.
  *
@@ -32,7 +34,7 @@ class RegistryUrlFieldFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
-  public function settingsSummary() {
+  public function settingsSummary(): array {
     $summary = [];
     $summary[] = $this->t('Registry url settings summary.');
     return $summary;
@@ -41,7 +43,7 @@ class RegistryUrlFieldFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
-  public function viewElements(FieldItemListInterface $items, $langcode) {
+  public function viewElements(FieldItemListInterface $items, $langcode): array {
     $element = [];
 
     foreach ($items as $delta => $item) {

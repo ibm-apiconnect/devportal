@@ -1,6 +1,6 @@
 services:
   logger.ibmstdout:
     class: Drupal\ibm_log_stdout\Logger\Stdout
-    arguments: ['@logger.log_message_parser']
+    arguments: [ '@logger.log_message_parser' ]
     tags:
       - { name: logger }

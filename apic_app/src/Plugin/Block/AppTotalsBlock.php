@@ -32,7 +32,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @Block(
  *   id = "app_totals",
  *   admin_label = @Translation("Total Application API Calls"),
- *   category = @Translation("IBM API Connect (Application)")
+ *   category = @Translation("IBM API Developer Portal (Application)")
  * )
  *
  */
@@ -41,14 +41,30 @@ class AppTotalsBlock extends BlockBase implements ContainerFactoryPluginInterfac
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
+  /**
+   * AppTotalsBlock constructor.
+   *
+   * @param array $configuration
+   * @param $plugin_id
+   * @param $plugin_definition
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, UserUtils $userUtils) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->userUtils = $userUtils;
   }
 
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  /**
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   * @param array $configuration
+   * @param string $plugin_id
+   * @param mixed $plugin_definition
+   *
+   * @return \Drupal\apic_app\Plugin\Block\AppTotalsBlock|static
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): AppTotalsBlock {
     return new static($configuration, $plugin_id, $plugin_definition, $container->get('ibm_apim.user_utils'));
   }
 
@@ -61,14 +77,20 @@ class AppTotalsBlock extends BlockBase implements ContainerFactoryPluginInterfac
     return AccessResult::allowedIf(!$current_user->isAnonymous() && (int) $current_user->id() !== 1);
   }
 
-  public function getCacheContexts() {
+  /**
+   * @return array|string[]
+   */
+  public function getCacheContexts(): array {
     //if you depends on \Drupal::routeMatch()
     //you must set context of this block with 'route' context tag.
     //Every new route this block will rebuild
     return Cache::mergeContexts(parent::getCacheContexts(), ['route']);
   }
 
-  public function getCacheTags() {
+  /**
+   * @return array|string[]
+   */
+  public function getCacheTags(): ?array {
     //With this when your node change your block will rebuild
     if ($node = \Drupal::routeMatch()->getParameter('node')) {
       //if there is node add its cachetag
@@ -91,4 +113,5 @@ class AppTotalsBlock extends BlockBase implements ContainerFactoryPluginInterfac
       ],
     ];
   }
+
 }

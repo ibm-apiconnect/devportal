@@ -21,23 +21,33 @@ use Psr\Log\LoggerInterface;
  */
 class MockPermissionsService implements PermissionsServiceInterface {
 
-  private $state;
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  private StateInterface $state;
 
-  private $logger;
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  private LoggerInterface $logger;
 
-  private $permissionsMap = [];
+  /**
+   * @var array
+   */
+  private array $permissionsMap = [];
 
+  /**
+   * @throws \JsonException
+   */
   public function __construct(StateInterface $state, LoggerInterface $logger) {
     $this->state = $state;
     $this->logger = $logger;
 
-    $this->updateAll(json_decode(file_get_contents(drupal_get_path('module', 'ibm_apim') . '/src/Service/Mocks/MockData/permissions.json'), TRUE));
+    $this->updateAll(json_decode(file_get_contents(drupal_get_path('module', 'ibm_apim') . '/src/Service/Mocks/MockData/permissions.json'), TRUE, 512, JSON_THROW_ON_ERROR));
   }
 
   /**
-   * get all the permissions objects
-   *
-   * @return array an array of the permissions objects.
+   * @inheritDoc
    */
   public function getAll(): array {
     if ($this->permissionsMap === null) {
@@ -48,11 +58,7 @@ class MockPermissionsService implements PermissionsServiceInterface {
   }
 
   /**
-   * get a specific permissions object by url
-   *
-   * @param $key
-   *
-   * @return null|array
+   * @inheritDoc
    */
   public function get($key): ?array {
     $perm = NULL;
@@ -68,9 +74,7 @@ class MockPermissionsService implements PermissionsServiceInterface {
   }
 
   /**
-   * Update all permissions objects
-   *
-   * @param $data array of permissions objects keyed on url
+   * @inheritDoc
    */
   public function updateAll($data): void {
     if (isset($data)) {
@@ -83,10 +87,7 @@ class MockPermissionsService implements PermissionsServiceInterface {
   }
 
   /**
-   * Update a specific permissions object
-   *
-   * @param $key
-   * @param $data
+   * @inheritDoc
    */
   public function update($key, $data): void {
     if (isset($key, $data)) {
@@ -95,9 +96,7 @@ class MockPermissionsService implements PermissionsServiceInterface {
   }
 
   /**
-   * Delete a specific permissions object
-   *
-   * @param $key (url)
+   * @inheritDoc
    */
   public function delete($key): void {
     if (isset($key)) {
@@ -112,7 +111,7 @@ class MockPermissionsService implements PermissionsServiceInterface {
   }
 
   /**
-   * Delete all current permissions objects
+   * @inheritDoc
    */
   public function deleteAll(): void {
     $this->permissionsMap = [];

@@ -14,7 +14,6 @@
 namespace Drupal\apic_app\Form;
 
 use Drupal\apic_app\Service\ApplicationRestInterface;
-use Drupal\apic_app\SubscriptionService;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -37,14 +36,14 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $node;
+  protected NodeInterface $node;
 
   /**
    * This represents the subscription entity
    *
    * @var \Drupal\apic_app\Entity\ApplicationSubscription
    */
-  protected $sub;
+  protected \Drupal\apic_app\Entity\ApplicationSubscription $sub;
 
   /**
    * Plan reference
@@ -52,27 +51,27 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
    *
    * @var string
    */
-  protected $planRef;
+  protected string $planRef;
 
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
    */
-  protected $restService;
+  protected ApplicationRestInterface $restService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\ibm_apim\Service\ApimUtils
    */
-  protected $apimUtils;
+  protected ApimUtils $apimUtils;
 
   /**
    * @var \Drupal\ibm_apim\Service\Utils
    */
-  protected $utils;
+  protected Utils $utils;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -104,7 +103,7 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): MigrateSubscriptionForm {
     // Load the service required to construct this class
     return new static(
       $container->get('apic_app.rest_service'),
@@ -126,8 +125,12 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $subId = NULL, $planRef = NULL): array {
-    $this->node = $appId;
-    $this->sub = $subId;
+    if ($appId !== NULL) {
+      $this->node = $appId;
+    }
+    if ($subId !== NULL) {
+      $this->sub = $subId;
+    }
     $this->planRef = Html::escape($planRef);
     $form = parent::buildForm($form, $form_state);
     $form['#attached']['library'][] = 'apic_app/basic';
@@ -176,6 +179,7 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -196,7 +200,7 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
       'plan' => $planName,
     ];
 
-    $result = $this->restService->patchSubscription($url, json_encode($data));
+    $result = $this->restService->patchSubscription($url, json_encode($data, JSON_THROW_ON_ERROR));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       $this->messenger->addMessage(t('Application subscription migrated successfully.'));
       // Calling all modules implementing 'hook_apic_app_migrate':
@@ -215,7 +219,8 @@ class MigrateSubscriptionForm extends ConfirmFormBase {
       ]);
 
       // Update the subscription
-      SubscriptionService::createOrUpdate($result->data);
+      $subService = \Drupal::service('apic_app.subscriptions');
+      $subService->createOrUpdate($result->data);
 
     }
     $form_state->setRedirectUrl($this->getCancelUrl());

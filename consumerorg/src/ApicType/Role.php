@@ -15,21 +15,45 @@ namespace Drupal\consumerorg\ApicType;
 
 class Role {
 
-  public $id;
+  /**
+   * @var string|null
+   */
+  public ?string $id = NULL;
 
-  public $url;
+  /**
+   * @var string|null
+   */
+  public ?string $url = NULL;
 
-  public $name;
+  /**
+   * @var string|null
+   */
+  public ?string $name = NULL;
 
-  public $title;
+  /**
+   * @var string|null
+   */
+  public ?string $title = NULL;
 
-  public $summary;
+  /**
+   * @var string|null
+   */
+  public ?string $summary = NULL;
 
-  public $permissions;
+  /**
+   * @var array
+   */
+  public array $permissions = [];
 
-  public $scope;
+  /**
+   * @var string|null
+   */
+  public ?string $scope = NULL;
 
-  public $org_url;
+  /**
+   * @var string|null
+   */
+  public ?string $org_url = NULL;
 
   /**
    * @return string
@@ -41,7 +65,7 @@ class Role {
   /**
    * @param string $id
    */
-  public function setId($id): void {
+  public function setId(string $id): void {
     $this->id = $id;
   }
 
@@ -55,7 +79,7 @@ class Role {
   /**
    * @param string $url
    */
-  public function setUrl($url): void {
+  public function setUrl(string $url): void {
     $this->url = $url;
   }
 
@@ -69,7 +93,7 @@ class Role {
   /**
    * @param string $name
    */
-  public function setName($name): void {
+  public function setName(string $name): void {
     $this->name = $name;
   }
 
@@ -83,7 +107,7 @@ class Role {
   /**
    * @param string $title
    */
-  public function setTitle($title): void {
+  public function setTitle(string $title): void {
     $this->title = $title;
   }
 
@@ -97,7 +121,7 @@ class Role {
   /**
    * @param string $summary
    */
-  public function setSummary($summary): void {
+  public function setSummary(string $summary): void {
     $this->summary = $summary;
   }
 
@@ -114,7 +138,7 @@ class Role {
    *
    * @param array $permissions
    */
-  public function setPermissions($permissions = NULL): void {
+  public function setPermissions($permissions = []): void {
     if ($permissions === NULL) {
       $permissions = [];
     }
@@ -132,7 +156,7 @@ class Role {
   /**
    * @param string $scope
    */
-  public function setScope($scope): void {
+  public function setScope(string $scope): void {
     $this->scope = $scope;
   }
 
@@ -146,7 +170,7 @@ class Role {
   /**
    * @param string $org_url
    */
-  public function setOrgUrl($org_url): void {
+  public function setOrgUrl(string $org_url): void {
     $this->org_url = $org_url;
   }
 
@@ -175,7 +199,8 @@ class Role {
     // TODO: permissions has changed to permissions_urls, can this be cleaned up. Leaving for backwards compatability for the time being.
     if (array_key_exists('permissions', $content)) {
       $this->setPermissions($content['permissions']);
-    } elseif (array_key_exists('permission_urls', $content)) {
+    }
+    elseif (array_key_exists('permission_urls', $content)) {
       $this->setPermissions($content['permission_urls']);
     }
 
@@ -220,4 +245,5 @@ class Role {
     }
     return $content;
   }
+
 }

@@ -11,9 +11,9 @@
 <div class="apicForm {{ errorClass }}">
   <div class="apicFormHeader">
     {% if element['#error'] %}
-        <div class="error">{{ 'Subscription Error'|t }}</div>
+      <div class="error">{{ 'Subscription Error'|t }}</div>
     {% else %}
-        <div class="success">{{ 'Subscription Complete'|t }}</div>
+      <div class="success">{{ 'Subscription Complete'|t }}</div>
     {% endif %}
     <p>{{ element['#messages'].statusText }}</p>
   </div>
@@ -21,48 +21,48 @@
     <div class="apicFormContent">
       <table class="bx--data-table">
         <thead>
-          <tr>
-            <th id="product" class="product">{{ 'Product'|t }}</th>
-            <th id="application" class="application">{{ 'Application'|t }}</th>
-            <th id="plan" class="plan">{{ 'Plan'|t }}</th>
-            {% if element['#subscriptionDetails'].price %}
-              <th id="price" class="price">{{ 'Price'|t }}</th>
-            {% endif %}
-          </tr>
+        <tr>
+          <th id="product" class="product">{{ 'Product'|t }}</th>
+          <th id="application" class="application">{{ 'Application'|t }}</th>
+          <th id="plan" class="plan">{{ 'Plan'|t }}</th>
+          {% if element['#subscriptionDetails'].price %}
+            <th id="price" class="price">{{ 'Price'|t }}</th>
+          {% endif %}
+        </tr>
         </thead>
         <tbody>
-          <td class="product">
-            <a href="{{ path('product.view', {'prodNode': element['#subscriptionDetails'].productNodeId}) }}">
-              <img class="bx--about__icon" alt="{{ element['#subscriptionDetails'].productName }}"
-                  src="{{ element['#subscriptionDetails'].productIcon }}"/>
-            </a>
-            <a href="{{ path('product.view', {'prodNode': element['#subscriptionDetails'].productNodeId}) }}">
-              {{ element['#subscriptionDetails'].productName }}
-            </a>
-          </td>
+        <td class="product">
+          <a href="{{ path('product.view', {'prodNode': element['#subscriptionDetails'].productNodeId}) }}">
+            <img class="bx--about__icon" alt="{{ element['#subscriptionDetails'].productName }}"
+                 src="{{ element['#subscriptionDetails'].productIcon }}"/>
+          </a>
+          <a href="{{ path('product.view', {'prodNode': element['#subscriptionDetails'].productNodeId}) }}">
+            {{ element['#subscriptionDetails'].productName }}
+          </a>
+        </td>
 
 
-          <td class="application">
-            <a href="{{ path('entity.node.canonical', {'node' : element['#subscriptionDetails'].applicationNodeId}) }}">
-              {{ element['#subscriptionDetails'].applicationName }}
-            </a>
-          </td>
+        <td class="application">
+          <a href="{{ path('entity.node.canonical', {'node' : element['#subscriptionDetails'].applicationNodeId}) }}">
+            {{ element['#subscriptionDetails'].applicationName }}
+          </a>
+        </td>
 
-          <td class="plan">
-            {{ element['#subscriptionDetails'].planName }}
-          </td>
-          {% if element['#subscriptionDetails'].price %}
-            <td class="price">{{ element['#subscriptionDetails'].price }}</td>
-          {% endif %}
+        <td class="plan">
+          {{ element['#subscriptionDetails'].planName }}
+        </td>
+        {% if element['#subscriptionDetails'].price %}
+          <td class="price">{{ element['#subscriptionDetails'].price }}</td>
+        {% endif %}
         </tbody>
       </table>
     </div>
     <div class="apicFormFooter">
-    {% if element['#subscriptionDetails'].referer is defined %}
-      <a class="button"
-          href="{{ element['#subscriptionDetails'].referer}}">{{ 'Done'|t }}</a>
-    {% endif %}
-  </div>
+      {% if element['#subscriptionDetails'].referer is defined %}
+        <a class="button"
+           href="{{ element['#subscriptionDetails'].referer }}">{{ 'Done'|t }}</a>
+      {% endif %}
+    </div>
   {% else %}
     <div class="apic-user-form-wrapper">
       <form {{ attributes }}>

@@ -17,6 +17,10 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * APIC settings form.
+ *
+ * Class DevelForm
+ *
+ * @package Drupal\ibm_apim\Form
  */
 class DevelForm extends ConfigFormBase {
 
@@ -41,7 +45,7 @@ class DevelForm extends ConfigFormBase {
     $config = $this->config('ibm_apim.settings');
 
     $form['intro'] = [
-      '#markup' => t('IBM API Connect Development Settings'),
+      '#markup' => t('IBM API Developer Portal Development Settings'),
       '#weight' => -20,
     ];
 
@@ -115,6 +119,15 @@ class DevelForm extends ConfigFormBase {
         ->save();
       \Drupal::state()->set('ibm_apim.insecure', (bool) $form_state->getValue('insecure'));
     }
+    if ((bool) $form_state->getValue('apim_rest_trace') === FALSE) {
+      \Drupal::state()->set('ibm_apim.rest_requests', null);
+
+    }
+    if ((bool) $form_state->getValue('webhook_debug') === FALSE) {
+      \Drupal::state()->set('ibm_apim.webhook_payloads', null);
+      \Drupal::state()->set('ibm_apim.snapshot_webhook_payloads', null);
+    }
     parent::submitForm($form, $form_state);
   }
+
 }

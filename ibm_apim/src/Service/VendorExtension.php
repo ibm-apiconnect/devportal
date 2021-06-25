@@ -20,9 +20,15 @@ use Psr\Log\LoggerInterface;
  */
 class VendorExtension {
 
-  private $state;
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  private StateInterface $state;
 
-  private $logger;
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  private LoggerInterface $logger;
 
   public function __construct(StateInterface $state, LoggerInterface $logger) {
     $this->state = $state;
@@ -38,7 +44,7 @@ class VendorExtension {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $extensions = $this->state->get('ibm_apim.vendor_extensions');
-    if ($extensions === null || empty($extensions)) {
+    if ($extensions === NULL || empty($extensions)) {
       $extensions = [];
     }
 
@@ -49,11 +55,11 @@ class VendorExtension {
   /**
    * get a specific vendor extension by name
    *
-   * @param $key
+   * @param string $key
    *
    * @return null|array
    */
-  public function get($key): ?array {
+  public function get(string $key): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     $extension = NULL;
@@ -73,9 +79,9 @@ class VendorExtension {
   /**
    * Update all vendor extensions
    *
-   * @param $data array of vendor extensions keyed on name
+   * @param array $data array of vendor extensions keyed on name
    */
-  public function updateAll($data): void {
+  public function updateAll(array $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $data);
 
     if (isset($data)) {
@@ -92,10 +98,10 @@ class VendorExtension {
   /**
    * Update a specific vendor extension
    *
-   * @param $key
-   * @param $data
+   * @param string $key
+   * @param array $data
    */
-  public function update($key, $data): void {
+  public function update(string $key, array $data): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     if (isset($key, $data)) {
@@ -114,9 +120,9 @@ class VendorExtension {
   /**
    * Delete a specific vendor extension
    *
-   * @param $key (vendor extension name)
+   * @param string $key (vendor extension name)
    */
-  public function delete($key): void {
+  public function delete(string $key): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     if (isset($key)) {
@@ -146,4 +152,5 @@ class VendorExtension {
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

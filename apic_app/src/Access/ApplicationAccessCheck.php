@@ -24,6 +24,11 @@ use Drupal\user\Entity\User;
  */
 class ApplicationAccessCheck implements AccessInterface {
 
+  /**
+   * @param \Drupal\node\NodeInterface|null $application
+   *
+   * @return \Drupal\Core\Access\AccessResult|\Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultNeutral
+   */
   public function access(NodeInterface $application = NULL) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $allowed = FALSE;
@@ -42,7 +47,7 @@ class ApplicationAccessCheck implements AccessInterface {
 
       $user = User::load($current_user->id());
 
-      if($org->isMember($user->get('apic_url')->value)){
+      if ($user !== NULL && $org->isMember($user->get('apic_url')->value)) {
         $allowed = TRUE;
       }
 
@@ -50,4 +55,5 @@ class ApplicationAccessCheck implements AccessInterface {
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $allowed);
     return AccessResult::allowedIf($allowed)->addCacheableDependency($application);
   }
+
 }

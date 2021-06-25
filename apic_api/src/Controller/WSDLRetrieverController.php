@@ -26,7 +26,7 @@ class WSDLRetrieverController extends ControllerBase {
   /**
    * @var \Drupal\apic_api\Service\ApiUtils
    */
-  protected $apiUtils;
+  protected ApiUtils $apiUtils;
 
   /**
    * WSDLRetrieverController constructor.
@@ -58,7 +58,7 @@ class WSDLRetrieverController extends ControllerBase {
    * @param string $endpoint
    *
    * @return \Symfony\Component\HttpFoundation\Response|null
-   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Exception
    */
   public function retrieveWSDL($api = NULL, $endpoint = NULL): ?Response {
     $url = NULL;
@@ -143,7 +143,7 @@ class WSDLRetrieverController extends ControllerBase {
       $ep = base64_decode($endpoint, TRUE);
       if ($url !== NULL && $this->apiUtils->validateApiEndpoint($node, $ep)) {
         // URL encode the endpoint to send it to APIM
-        $url = $url . '?endpoint=' . urlencode($ep);
+        $url .= '?endpoint=' . urlencode($ep);
       }
       else {
         \Drupal::logger('apic_api')->error('WSDLRetrieverController: invalid ENDPOINT supplied for api', []);
@@ -211,8 +211,6 @@ class WSDLRetrieverController extends ControllerBase {
     }
 
     return $response;
-
   }
-
 
 }

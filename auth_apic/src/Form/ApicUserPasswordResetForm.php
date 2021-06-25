@@ -32,32 +32,32 @@ class ApicUserPasswordResetForm extends FormBase {
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * @var \Drupal\Core\Language\LanguageManagerInterface
    */
-  protected $languageManager;
+  protected LanguageManagerInterface $languageManager;
 
   /**
    * @var \Drupal\auth_apic\UserManagement\ApicPasswordInterface
    */
-  protected $apicPassword;
+  protected ApicPasswordInterface $apicPassword;
 
   /**
-   * @var \Drupal\Core\Session\AccountProxyInterface|\Drupal\Core\Session\AccountProxyInterface
+   * @var \Drupal\Core\Session\AccountProxyInterface
    */
-  protected $currentUser;
+  protected AccountProxyInterface $currentUser;
 
   /**
    * @var \Drupal\auth_apic\Service\Interfaces\TokenParserInterface
    */
-  protected $tokenParser;
+  protected TokenParserInterface $tokenParser;
 
   /**
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -92,9 +92,12 @@ class ApicUserPasswordResetForm extends FormBase {
   }
 
   /**
-   * {@inheritdoc}
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *
+   * @return \Drupal\auth_apic\Form\ApicUserPasswordResetForm
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): ApicUserPasswordResetForm {
+    /** @noinspection PhpParamsInspection */
     return new static($container->get('logger.channel.auth_apic'),
       $container->get('language_manager'),
       $container->get('auth_apic.password'),
@@ -137,13 +140,12 @@ class ApicUserPasswordResetForm extends FormBase {
 
       return $this->redirect('<front>');
     }
-    else {
-      $resetPasswordObject = $this->tokenParser->parse($token);
-      if ($resetPasswordObject === null || empty($resetPasswordObject)) {
-        $this->messenger->addError(t('Invalid token. Contact the system administrator for assistance.'));
-        $this->logger->notice('Invalid token: %token', ['%token' => $token]);
-        return $this->redirect('<front>');
-      }
+
+    $resetPasswordObject = $this->tokenParser->parse($token);
+    if ($resetPasswordObject === null || empty($resetPasswordObject)) {
+      $this->messenger->addError(t('Invalid token. Contact the system administrator for assistance.'));
+      $this->logger->notice('Invalid token: %token', ['%token' => $token]);
+      return $this->redirect('<front>');
     }
 
     $form['token'] = [
@@ -259,12 +261,10 @@ class ApicUserPasswordResetForm extends FormBase {
       $this->messenger->addStatus(t('Password successfully updated.'));
       // Success, user needs to login now that the password has been reset.
       $form_state->setRedirect('user.login');
-      return;
     }
     else {
       $this->messenger->addError(t('Invalid token. Try copy and pasting the link from the email manually or resetting your password again.'));
       $form_state->setRedirect('user.pass');
-      return;
     }
 
   }

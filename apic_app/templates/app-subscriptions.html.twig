@@ -2,7 +2,7 @@
   <div class="applicationSubscriptions">
     <div class="subscriptionsTable">
       <div class="subscriptionsHeader">
-        <div class="subscriptionsTitle">{{ 'Subscriptions'|t }}</div>
+        <div class="subscriptionsTitle">{{ 'Product subscriptions'|t }}</div>
       </div>
       <div class="subscriptionsContent">
         <table>
@@ -15,6 +15,7 @@
             {% else %}
               <th id="cost" class="cost"></th>
             {% endif %}
+            <th id="migrate" class="migrate">&nbsp;</th>
             <th id="action" class="action">&nbsp;</th>
           </tr>
           </thead>
@@ -29,13 +30,13 @@
               <tr>
                 <td class="product">
                   <a href="{{ path('product.view', {'prodNode': prodNode}) }}"
-                          title="{{ sub.product_title|striptags }}">
-                  {% if sub.application_image %}
-                    <div class="miniApplicationLogo"><img
-                        src="{{- sub.application_image -}}" alt=""/></div>
-                  {% endif %}
-                  {{ sub.product_title }}
-                  {% if showVersions %}({{ sub.product_version }}){% endif %} {% if sub.state != 'enabled' %}({{ 'Pending approval'|t }}){% endif %}
+                     title="{{ sub.product_title }}">
+                    {% if sub.application_image %}
+                      <div class="miniApplicationLogo"><img
+                            src="{{- sub.application_image -}}" alt=""/></div>
+                    {% endif %}
+                    {{ sub.product_title }}
+                    {% if showVersions %}({{ sub.product_version }}){% endif %} {% if sub.state != 'enabled' %}({{ 'Pending approval'|t }}){% endif %}
                   </a>
                 </td>
                 <td class="plan">{{ sub.plan_title }}</td>
@@ -46,28 +47,30 @@
                 {% endif %}
                 {% if sub.superseded_by_product %}
                   <td class="migrate">
-                    <a href="{{ path('apic_app.migrate_subscription', {'appId': node.application_id.value, 'subId': sub.subId, 'planRef': sub.superseded_by_product.product_ref}) }}">
-                      {% trans %} Migrate this subscription to plan '
-                        <em>{{ sub.superseded_by_product.plan_title|striptags }}</em>' in product '
-                        <em>{{ sub.superseded_by_product.product_title|striptags }}</em>' at version '
-                        <em>{{ sub.superseded_by_product.product_version|striptags }}</em>' {% endtrans %}
-                    </a>
+                    {% if userHasAppManage %}
+                      <a href="{{ path('apic_app.migrate_subscription', {'appId': node.application_id.value, 'subId': sub.subId, 'planRef': sub.superseded_by_product.product_ref}) }}">
+                        {% trans %} Migrate this subscription to plan '
+                          <em>{{ sub.superseded_by_product.plan_title }}</em>' in product '
+                          <em>{{ sub.superseded_by_product.product_title }}</em>' at version '
+                          <em>{{ sub.superseded_by_product.product_version }}</em>' {% endtrans %}
+                      </a>
+                    {% endif %}
                   </td>
                 {% else %}
                   <td class="migrate"></td>
                 {% endif %}
                 <td class="action" data-subid="{{ sub.id }}">
                   <ul class="overflow-menu subscriptionMenu dropitmenu">
-                    <li title="{% trans %}Manage {{ sub.product_title|striptags }} subscription{% endtrans %}">
+                    <li title="{% trans %}Manage {{ sub.product_title }} subscription{% endtrans %}">
                       <a href="#" class="trigger">
                           <span class="dropit-icon">
                             <svg version="1.1" id="icon" xmlns="http://www.w3.org/2000/svg"
-                              xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                              width="32px" height="32px" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;"
-                              xml:space="preserve">
+                                 xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                                 width="32px" height="32px" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;"
+                                 xml:space="preserve">
                               <style type="text/css">.st0 {
-                                fill: none;
-                              }</style>
+                                  fill: none;
+                                }</style>
                               <title>overflow-menu--vertical</title>
                               <circle cx="16" cy="8" r="2"/>
                               <circle cx="16" cy="16" r="2"/>
@@ -79,12 +82,14 @@
                       <ul class="dropitmenu-submenu">
                         <li class="viewDocumentation"><a
                               href="{{ path('product.view', {'prodNode': prodNode}) }}"
-                              title="{% trans %}View documentation for {{ sub.product_title|striptags }}{% endtrans %}">{{ 'View documentation'|t }}</a>
+                              title="{% trans %}View documentation for {{ sub.product_title }}{% endtrans %}">{{ 'View documentation'|t }}</a>
                         </li>
-                        <li class="unsubscribe"><a
-                              href="{{ path('apic_app.unsubscribe', {'appId': node.application_id.value, 'subId': sub.subId}) }}"
-                              title="{% trans %}Unsubscribe from {{ sub.product_title|striptags }}{% endtrans %}">{{ 'Unsubscribe'|t }}</a>
-                        </li>
+                        {% if userHasAppManage %}
+                          <li class="unsubscribe"><a
+                                href="{{ path('apic_app.unsubscribe', {'appId': node.application_id.value, 'subId': sub.subId}) }}"
+                                title="{% trans %}Unsubscribe from {{ sub.product_title }}{% endtrans %}">{{ 'Unsubscribe'|t }}</a>
+                          </li>
+                        {% endif %}
                       </ul>
                     </li>
                   </ul>

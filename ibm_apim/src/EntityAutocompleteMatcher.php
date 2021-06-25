@@ -17,17 +17,27 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Tags;
 use Drupal\node\Entity\Node;
 
+/**
+ * Class EntityAutocompleteMatcher
+ *
+ * @package Drupal\ibm_apim
+ */
+class EntityAutocompleteMatcher extends \Drupal\Core\Entity\EntityAutocompleteMatcher {
 
-class EntityAutocompleteMatcher extends \Drupal\Core\Entity\EntityAutocompleteMatcher
-{
-  public function getMatches($target_type, $selection_handler, $selection_settings, $string = '')
-  {
-    $matches = array();
-    $options = array(
-      'target_type' => $target_type,
-      'handler' => $selection_handler,
-      'handler_settings' => $selection_settings,
-    );
+  /**
+   * @param string $target_type
+   * @param string $selection_handler
+   * @param array $selection_settings
+   * @param string $string
+   *
+   * @return array
+   */
+  public function getMatches($target_type, $selection_handler, $selection_settings, $string = ''): array {
+    $matches = [];
+    $options = $selection_settings + [
+        'target_type' => $target_type,
+        'handler' => $selection_handler,
+      ];
     $handler = $this->selectionManager
       ->getInstance($options);
     if (isset($string)) {
@@ -55,16 +65,23 @@ class EntityAutocompleteMatcher extends \Drupal\Core\Entity\EntityAutocompleteMa
           $key = "{$label} ({$entity_id})";
           $key = preg_replace('/\\s\\s+/', ' ', str_replace("\n", '', trim(Html::decodeEntities(strip_tags($key)))));
           $key = Tags::encode($key);
-          $matches[] = array(
+          $matches[] = [
             'value' => $key,
             'label' => $label,
-          );
+          ];
         }
       }
     }
     return $matches;
   }
 
+  /**
+   * @param $entity_id
+   * @param $target_type
+   * @param $label
+   *
+   * @return mixed
+   */
   protected function getProductVersion($entity_id, $target_type, $label) {
     $product = Node::load($entity_id);
     if (isset($product)) {
@@ -72,10 +89,18 @@ class EntityAutocompleteMatcher extends \Drupal\Core\Entity\EntityAutocompleteMa
     }
   }
 
+  /**
+   * @param $entity_id
+   * @param $target_type
+   * @param $label
+   *
+   * @return mixed
+   */
   protected function getApiVersion($entity_id, $target_type, $label) {
     $api = Node::load($entity_id);
     if (isset($api)) {
       return $api->apic_version->value;
     }
   }
+
 }

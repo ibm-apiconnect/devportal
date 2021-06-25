@@ -15,6 +15,11 @@ namespace Drupal\ibm_apim\Service;
 
 use Drupal\consumerorg\ApicType\Member;
 
+/**
+ * Class MyOrgService
+ *
+ * @package Drupal\ibm_apim\Service
+ */
 class MyOrgService {
 
   public function __construct() {
@@ -22,7 +27,7 @@ class MyOrgService {
   }
 
   /**
-   * @param $orgmember
+   * @param \Drupal\consumerorg\ApicType\Member $orgmember
    *
    * @return array
    */
@@ -47,7 +52,7 @@ class MyOrgService {
     $details = $user->getUsername();
 
     if (!empty($user->getMail()) && $user->getMail() !== $user->getUsername()) {
-      $details = $details . ' (' . $user->getMail() . ')';
+      $details .= ' (' . $user->getMail() . ')';
     }
     $member['details'] = $details;
 

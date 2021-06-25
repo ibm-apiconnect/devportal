@@ -3,7 +3,7 @@
  * Javascript to generate Stripe token in PCI-compliant way.
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   'use strict';
 
@@ -24,12 +24,12 @@
   Drupal.behaviors.apicStripeForm = {
     card: null,
 
-    attach: function (context) {
+    attach: function(context) {
       var self = this;
       if (!drupalSettings.apicStripe || !drupalSettings.apicStripe.publishableKey) {
         return;
       }
-      $('.stripe-form', context).once('stripe-processed').each(function () {
+      $('.stripe-form', context).once('stripe-processed').each(function() {
         var $form = $(this).closest('form');
 
         // Create a Stripe client.
@@ -60,12 +60,12 @@
 
 
         // Input validation.
-        self.card.on('change', function (event) {
+        self.card.on('change', function(event) {
           stripeErrorHandler(event);
         });
 
         // Helper to handle the Stripe responses with errors.
-        var stripeErrorHandler = function (result) {
+        var stripeErrorHandler = function(result) {
           if (result.error) {
             // Inform the user if there was an error.
             // Display the message error in the payment form.
@@ -73,15 +73,14 @@
 
             // Allow the customer to re-submit the form.
             $form.find('button.form-submit').prop('disabled', false);
-          }
-          else {
+          } else {
             // Clean up error messages.
             $form.find('#payment-errors').html('');
           }
         };
 
         // Form submit.
-        $form.on('submit', function (e) {
+        $form.on('submit', function(e) {
           if ($('#stripe-payment-method-id', $form).val().length > 0) {
             return true;
           }
@@ -89,24 +88,24 @@
           if (!observer) {
             var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
             var observer = new MutationObserver(function(mutations) {
-                if ($('.page-load-progress-lock-screen').length > 0) {
-                    $('.page-load-progress-lock-screen').remove();
-                    $('body').css('overflow','inherit');
-                    observer.disconnect();
-                }
+              if ($('.page-load-progress-lock-screen').length > 0) {
+                $('.page-load-progress-lock-screen').remove();
+                $('body').css('overflow', 'inherit');
+                observer.disconnect();
+              }
             });
           }
 
-        //Don't create payment method title field is empty
-        if (!$("input[name='title']").val()) {
+          //Don't create payment method title field is empty
+          if (!$("input[name='title']").val()) {
             Drupal.apicStripe.displayError("Enter a title for your new payment method");
             stopLoading(observer);
             return false;
-        }
+          }
 
           if (drupalSettings.apicStripe.clientSecret === null) {
             // Try to create the Stripe token and submit the form.
-            stripe.createPaymentMethod('card', self.card).then(function (result) {
+            stripe.createPaymentMethod('card', self.card).then(function(result) {
               if (result.error) {
                 // Inform the user if there was an error.
                 stripeErrorHandler(result);
@@ -119,14 +118,13 @@
               }
             });
           } else {
-            stripe.handleCardSetup(drupalSettings.apicStripe.clientSecret, self.card).then(function (result) {
+            stripe.handleCardSetup(drupalSettings.apicStripe.clientSecret, self.card).then(function(result) {
               if (result.error) {
                 // Inform the user if there was an error.
                 stripeErrorHandler(result);
                 stopLoading(observer);
 
-              }
-              else {
+              } else {
                 observer.disconnect();
                 // Insert the payment method ID into the form so it gets submitted to
                 // the server.
@@ -146,12 +144,12 @@
       });
     },
 
-    detach: function (context, settings, trigger) {
+    detach: function(context, settings, trigger) {
       if (trigger !== 'unload') {
         return;
       }
       var self = this;
-      ['card',].forEach(function (i) {
+      [ 'card', ].forEach(function(i) {
         if (self[i] && self[i].length > 0) {
           self[i].unmount();
           self[i] = null;
@@ -167,14 +165,14 @@
 
   function stopLoading(observer) {
     if ($('.page-load-progress-lock-screen').length > 0) {
-        $('.page-load-progress-lock-screen').remove();
-        $('body').css('overflow','inherit');
+      $('.page-load-progress-lock-screen').remove();
+      $('body').css('overflow', 'inherit');
     } else {
-        observer.observe(document.body, {
-            childList: true, // observe direct children
-            subtree: false, // and lower descendants too
-            characterDataOldValue: false // pass old data to callback
-        });
+      observer.observe(document.body, {
+        childList: true, // observe direct children
+        subtree: false, // and lower descendants too
+        characterDataOldValue: false // pass old data to callback
+      });
     }
   }
 

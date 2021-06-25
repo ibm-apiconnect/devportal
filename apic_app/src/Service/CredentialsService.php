@@ -14,14 +14,27 @@
 namespace Drupal\apic_app\Service;
 
 use Drupal\apic_app\Entity\ApplicationCredentials;
-use Drupal\node\Entity\Node;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Database\Database;
+use Drupal\Core\TempStore\TempStoreException;
+use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\NodeInterface;
 
 class CredentialsService {
 
 
-  public function __construct() {
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
+  protected UserUtils $userUtils;
 
+  /**
+   * CredentialsService constructor.
+   *
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   */
+  public function __construct(UserUtils $userUtils) {
+    $this->userUtils = $userUtils;
   }
 
   /**
@@ -31,9 +44,8 @@ class CredentialsService {
    * @return \Drupal\node\NodeInterface
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function addCredentials($node, $cred): NodeInterface {
-    $node = $this->createOrUpdateSingleCredential($node, $cred);
-    return $node;
+  public function addCredentials(NodeInterface $node, array $cred): NodeInterface {
+    return $this->createOrUpdateSingleCredential($node, $cred);
   }
 
   /**
@@ -43,43 +55,40 @@ class CredentialsService {
    * @return \Drupal\node\NodeInterface
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function updateCredentials($node, $cred): NodeInterface {
-    $node = $this->createOrUpdateSingleCredential($node, $cred);
-    return $node;
+  public function updateCredentials(NodeInterface $node, $cred): NodeInterface {
+    return $this->createOrUpdateSingleCredential($node, $cred);
   }
 
   /**
-   * @param $node
-   * @param $credId
+   * @param $uuid
    *
-   * @return \Drupal\node\NodeInterface
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function deleteCredentials($node, $uuid): NodeInterface {
-    if (isset($node, $uuid)) {
-      // delete the credential entities
-      $query = \Drupal::entityQuery('apic_app_application_creds');
-      $query->condition('uuid', $uuid);
-      $entityIds = $query->execute();
-      if (isset($entityIds) && !empty($entityIds)) {
-        $credEntities = ApplicationCredentials::loadMultiple($entityIds);
-        foreach ($credEntities as $credEntity) {
-          $credEntity->delete();
-        }
-      }
+  public function deleteCredentials($uuid): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    if (isset($uuid)) {
 
-      $newCreds = [];
+      // Get the application node id for the given subscription id
+      $query = Database::getConnection()->select('apic_app_application_creds', 'c');
+      $query->join('node__application_credentials_refs', 'n', 'c.id = n.application_credentials_refs_target_id');
+      $result = $query
+        ->fields('n', ['entity_id'])
+        ->condition('c.uuid', $uuid)
+        ->execute();
+      if ($result !== NULL) {
+        $record = $result->fetch();
 
-      // Now ensure the app doesnt reference the deleted credential
-      $credentials = $node->application_credentials_refs->referencedEntities();
-      foreach ($credentials as $credential) {
-        if ($credential->uuid() !== $uuid) {
-          $newCreds[] = ['target_id' => $credential->id()];
-        }
+        // Delete the subscription from all relevant tables
+        Database::getConnection()
+          ->query("DELETE c, n, r FROM {apic_app_application_creds} c INNER JOIN {node__application_credentials_refs} n ON n.application_credentials_refs_target_id = c.id INNER JOIN {node_revision__application_credentials_refs} r ON r.application_credentials_refs_target_id = c.id WHERE c.uuid = :cred_id", [':cred_id' => $uuid]);
+
+        // Invalidate the tags and reset the cache of the application node
+        Cache::invalidateTags(['application:' . $record->entity_id]);
+        \Drupal::entityTypeManager()->getStorage('node')->resetCache([$record->entity_id]);
       }
-      $node->set('application_credentials_refs', $newCreds);
-      $node->save();
     }
-    return $node;
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 
   /**
@@ -89,7 +98,8 @@ class CredentialsService {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   private function createOrUpdateACredential($cred) {
-    $newEntityId = null;
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $newEntityId = NULL;
     if ($cred !== NULL) {
       if (isset($cred['consumer_org_url'])) {
         $cred['consumerorg_url'] = $cred['consumer_org_url'];
@@ -113,6 +123,12 @@ class CredentialsService {
         $credEntity->set('app_url', $cred['app_url']);
         $credEntity->set('summary', $cred['summary']);
         $credEntity->set('cred_url', $cred['url']);
+        if (isset($cred['created_at'])) {
+          $credEntity->set('created_at', strtotime($cred['created_at']));
+        }
+        if (isset($cred['updated_at'])) {
+          $credEntity->set('updated_at', strtotime($cred['updated_at']));
+        }
         $credEntity->save();
         $newEntityId = array_shift($entityIds);
         if (sizeof($credEntities) > 1) {
@@ -133,6 +149,12 @@ class CredentialsService {
           'consumerorg_url' => $cred['consumerorg_url'],
           'cred_url' => $cred['url'],
         ]);
+        if (isset($cred['created_at'])) {
+          $newCred->set('created_at', strtotime($cred['created_at']));
+        }
+        if (isset($cred['updated_at'])) {
+          $newCred->set('updated_at', strtotime($cred['updated_at']));
+        }
         $newCred->enforceIsNew();
         $newCred->save();
         $query = \Drupal::entityQuery('apic_app_application_creds');
@@ -143,6 +165,7 @@ class CredentialsService {
         }
       }
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $newEntityId;
   }
 
@@ -153,22 +176,26 @@ class CredentialsService {
    * @return \Drupal\node\NodeInterface
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function createOrUpdateSingleCredential($node, $cred): NodeInterface {
+  public function createOrUpdateSingleCredential(NodeInterface $node, array $cred): NodeInterface {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if ($node !== NULL && $cred !== NULL) {
 
       $newId = $this->createOrUpdateACredential($cred);
-      if ($newId !== null) {
+      if ($newId !== NULL) {
         $newArray = $node->application_credentials_refs->getValue();
-        if (!in_array(['target_id' => $newId], array_values($newArray), false)) {
+        if (!in_array(['target_id' => $newId], array_values($newArray), FALSE)) {
           $newArray[] = ['target_id' => $newId];
         }
 
         $node->set('application_credentials_refs', $newArray);
         $node->save();
-      } else {
-        \Drupal::logger('apic_app')->warning('createOrUpdateSingleCredential: Error updating a credential @credId', ['@credId' => $cred['id']]);
+      }
+      else {
+        \Drupal::logger('apic_app')
+          ->warning('createOrUpdateSingleCredential: Error updating a credential @credId', ['@credId' => $cred['id']]);
       }
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $node;
   }
 
@@ -178,22 +205,27 @@ class CredentialsService {
    *    This should be an array of the credentials using ID as a key
    *
    * @return \Drupal\node\NodeInterface
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function createOrUpdateCredentialsList($node, $creds): NodeInterface {
+  public function createOrUpdateCredentialsList(NodeInterface $node, array $creds): NodeInterface {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if ($creds !== NULL && $node !== NULL) {
       $newCreds = [];
-      foreach($creds as $cred) {
+      foreach ($creds as $cred) {
         $newId = $this->createOrUpdateACredential($cred);
-        if ($newId !== null) {
+        if ($newId !== NULL) {
           $newCreds[] = ['target_id' => $newId];
-        } else {
-          \Drupal::logger('apic_app')->warning('createOrUpdateCredentialsList: Error updating a credential @credId', ['@credId' => $cred['id']]);
+        }
+        else {
+          \Drupal::logger('apic_app')
+            ->warning('createOrUpdateCredentialsList: Error updating a credential @credId', ['@credId' => $cred['id']]);
         }
       }
       $oldCreds = $node->get('application_credentials_refs')->referencedEntities();
-      foreach($oldCreds as $cred) {
-        if (!in_array(['target_id' => $cred->id()], $newCreds)) {
+      foreach ($oldCreds as $cred) {
+        if (!in_array(['target_id' => $cred->id()], $newCreds, FALSE)) {
           \Drupal::entityTypeManager()->getStorage('apic_app_application_creds')->load($cred->id())->delete();
         }
       }
@@ -201,6 +233,7 @@ class CredentialsService {
       $node->set('application_credentials_refs', $newCreds);
       $node->save();
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $node;
   }
 
@@ -210,16 +243,43 @@ class CredentialsService {
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function updateClientId($credId, $client_id) : void {
+  public function updateClientId(string $credId, string $client_id): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if ($credId !== NULL && $client_id !== NULL) {
       $cred = ApplicationCredentials::load($credId);
-      if ($cred !== null) {
+      if ($cred !== NULL) {
         $cred->set('client_id', $client_id);
         $cred->save();
-      } else {
+      }
+      else {
         \Drupal::logger('apic_app')->warning('Credential @credId not found', ['@credId' => $credId]);
       }
     }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+  /**
+   * Get all the credential entities for the current consumer org
+   *
+   * @return array
+   */
+  public function listCredentials(): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $credEntityIds = [];
+    try {
+      $org = $this->userUtils->getCurrentConsumerOrg();
+    } catch (TempStoreException | \JsonException $e) {
+    }
+    if (isset($org['url'])) {
+      $query = \Drupal::entityQuery('apic_app_application_creds');
+      $query->condition('consumerorg_url', $org['url']);
+      $entityIds = $query->execute();
+      if (isset($entityIds) && !empty($entityIds)) {
+        $credEntityIds = $entityIds;
+      }
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $credEntityIds;
   }
 
 }

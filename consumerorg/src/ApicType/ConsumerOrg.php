@@ -12,44 +12,112 @@
 
 namespace Drupal\consumerorg\ApicType;
 
-
+/**
+ * Class ConsumerOrg
+ *
+ * @package Drupal\consumerorg\ApicType
+ */
 class ConsumerOrg {
 
-  private $name;
+  /**
+   * @var string|null
+   */
+  private ?string $name = NULL;
 
-  private $title;
+  /**
+   * @var string|null
+   */
+  private ?string $title = NULL;
 
-  private $summary;
+  /**
+   * @var string|null
+   */
+  private ?string $summary = NULL;
 
-  private $id;
+  /**
+   * @var string|null
+   */
+  private ?string $id = NULL;
 
-  private $state;
+  /**
+   * @var string|null
+   */
+  private ?string $state = NULL;
 
-  private $created_at;
+  /**
+   * @var string|null
+   */
+  private ?string $created_at = NULL;
 
-  private $updated_at;
+  /**
+   * @var string|null
+   */
+  private ?string $updated_at = NULL;
 
-  private $url;
+  /**
+   * @var string|null
+   */
+  private ?string $created_by = NULL;
 
-  private $org_url;
+  /**
+   * @var string|null
+   */
+  private ?string $updated_by = NULL;
 
-  private $catalog_url;
+  /**
+   * @var string|null
+   */
+  private ?string $url = NULL;
 
-  private $owner_url;
+  /**
+   * @var string|null
+   */
+  private ?string $org_url = NULL;
 
-  private $default_payment_method;
+  /**
+   * @var string|null
+   */
+  private ?string $catalog_url = NULL;
 
-  private $roles = [];
+  /**
+   * @var string|null
+   */
+  private ?string $owner_url = NULL;
 
-  private $members = [];
+  /**
+   * @var array
+   */
+  private array $default_payment_method = [];
 
-  private $invites = [];
+  /**
+   * @var array
+   */
+  private array $roles = [];
 
-  private $tags = [];
+  /**
+   * @var array
+   */
+  private array $members = [];
 
-  private $payment_methods = [];
+  /**
+   * @var array
+   */
+  private array $invites = [];
 
-  private $custom_fields = [];
+  /**
+   * @var array
+   */
+  private array $tags = [];
+
+  /**
+   * @var array
+   */
+  private array $payment_methods = [];
+
+  /**
+   * @var array
+   */
+  private array $custom_fields = [];
 
   /**
    * @return string
@@ -61,7 +129,7 @@ class ConsumerOrg {
   /**
    * @param string $name
    */
-  public function setName($name): void {
+  public function setName(string $name): void {
     $this->name = $name;
   }
 
@@ -75,7 +143,7 @@ class ConsumerOrg {
   /**
    * @param string $title
    */
-  public function setTitle($title): void {
+  public function setTitle(string $title): void {
     $this->title = $title;
   }
 
@@ -89,7 +157,7 @@ class ConsumerOrg {
   /**
    * @param string $summary
    */
-  public function setSummary($summary): void {
+  public function setSummary(string $summary): void {
     $this->summary = $summary;
   }
 
@@ -103,7 +171,7 @@ class ConsumerOrg {
   /**
    * @param string $id
    */
-  public function setId($id): void {
+  public function setId(string $id): void {
     $this->id = $id;
   }
 
@@ -117,7 +185,7 @@ class ConsumerOrg {
   /**
    * @param string $state
    */
-  public function setState($state): void {
+  public function setState(string $state): void {
     $this->state = $state;
   }
 
@@ -131,7 +199,7 @@ class ConsumerOrg {
   /**
    * @param string $created_at
    */
-  public function setCreatedAt($created_at): void {
+  public function setCreatedAt(string $created_at): void {
     $this->created_at = $created_at;
   }
 
@@ -145,8 +213,36 @@ class ConsumerOrg {
   /**
    * @param string $updated_at
    */
-  public function setUpdatedAt($updated_at): void {
+  public function setUpdatedAt(string $updated_at): void {
     $this->updated_at = $updated_at;
+  }
+
+  /**
+   * @return string
+   */
+  public function getCreatedBy(): ?string {
+    return $this->created_by;
+  }
+
+  /**
+   * @param string $created_by
+   */
+  public function setCreatedBy(string $created_by): void {
+    $this->created_by = $created_by;
+  }
+
+  /**
+   * @return string
+   */
+  public function getUpdatedBy(): ?string {
+    return $this->updated_by;
+  }
+
+  /**
+   * @param string $updated_by
+   */
+  public function setUpdatedBy(string $updated_by): void {
+    $this->updated_by = $updated_by;
   }
 
   /**
@@ -159,7 +255,7 @@ class ConsumerOrg {
   /**
    * @param string $url
    */
-  public function setUrl($url): void {
+  public function setUrl(string $url): void {
     $this->url = $url;
   }
 
@@ -173,7 +269,7 @@ class ConsumerOrg {
   /**
    * @param string $org_url
    */
-  public function setOrgUrl($org_url): void {
+  public function setOrgUrl(string $org_url): void {
     $this->org_url = $org_url;
   }
 
@@ -187,7 +283,7 @@ class ConsumerOrg {
   /**
    * @param string $catalog_url
    */
-  public function setCatalogUrl($catalog_url): void {
+  public function setCatalogUrl(string $catalog_url): void {
     $this->catalog_url = $catalog_url;
   }
 
@@ -201,7 +297,7 @@ class ConsumerOrg {
   /**
    * @param string $owner_url
    */
-  public function setOwnerUrl($owner_url): void {
+  public function setOwnerUrl(string $owner_url): void {
     $this->owner_url = $owner_url;
   }
 
@@ -215,7 +311,7 @@ class ConsumerOrg {
   /**
    * @param array $tags
    */
-  public function setTags($tags): void {
+  public function setTags(array $tags): void {
     if (is_array($tags)) {
       $this->tags = $tags;
     }
@@ -231,9 +327,9 @@ class ConsumerOrg {
    *
    * @return bool
    */
-  public function removeTag($tag) {
-    $key = array_search($tag, $this->tags);
-    if ($key !== false) {
+  public function removeTag(string $tag): bool {
+    $key = array_search($tag, $this->tags, TRUE);
+    if ($key !== FALSE) {
       unset($this->tags[$key]);
       return TRUE;
     }
@@ -247,8 +343,8 @@ class ConsumerOrg {
    *
    * @return bool
    */
-  public function addTag($tag): bool {
-    if (in_array($tag, $this->tags)) {
+  public function addTag(string $tag): bool {
+    if (in_array($tag, $this->tags, TRUE)) {
       return FALSE;
     }
     $this->tags[] = $tag;
@@ -265,7 +361,7 @@ class ConsumerOrg {
   /**
    * @param array $roles
    */
-  public function setRoles($roles): void {
+  public function setRoles(array $roles): void {
     $this->roles = $roles;
   }
 
@@ -337,7 +433,7 @@ class ConsumerOrg {
    *
    * @return Role
    */
-  public function getRoleFromUrl($url): ?Role {
+  public function getRoleFromUrl(string $url): ?Role {
     foreach ($this->roles as $existing_role) {
       if ($url !== NULL && $existing_role->getUrl() === $url) {
         return $existing_role;
@@ -364,7 +460,7 @@ class ConsumerOrg {
    *
    * @param array $members
    */
-  public function setMembers($members): void {
+  public function setMembers(array $members): void {
     $this->members = $members;
   }
 
@@ -393,7 +489,7 @@ class ConsumerOrg {
   public function getMemberEmails(): ?array {
     $members = $this->members;
     $emailList = [];
-    foreach($members as $member) {
+    foreach ($members as $member) {
       $emailList[] = $member->getUser()->getMail();
     }
     return array_unique($emailList);
@@ -413,7 +509,7 @@ class ConsumerOrg {
    *
    * @param array $invites
    */
-  public function setInvites($invites): void {
+  public function setInvites(array $invites): void {
     $this->invites = $invites;
   }
 
@@ -431,7 +527,7 @@ class ConsumerOrg {
    *
    * @param array $payment_methods
    */
-  public function setPaymentMethods($payment_methods): void {
+  public function setPaymentMethods(array $payment_methods): void {
     $this->payment_methods = $payment_methods;
   }
 
@@ -440,8 +536,14 @@ class ConsumerOrg {
    *
    * @return array
    */
-  public function getDefaultPaymentMethod() {
-    return $this->default_payment_method;
+  public function getDefaultPaymentMethod(): array {
+    if (isset($this->default_payment_method) && !empty($this->default_payment_method)) {
+      return $this->default_payment_method;
+    }
+    if (!empty($this->payment_methods)) {
+      return array_shift($this->payment_methods);
+    }
+    return [];
   }
 
   /**
@@ -449,7 +551,7 @@ class ConsumerOrg {
    *
    * @param array $default_payment_method
    */
-  public function setDefaultPaymentMethod($default_payment_method): void {
+  public function setDefaultPaymentMethod(array $default_payment_method): void {
     $this->default_payment_method = $default_payment_method;
   }
 
@@ -525,7 +627,7 @@ class ConsumerOrg {
    *
    * @return bool
    */
-  public function isOwner($userUrl): bool {
+  public function isOwner(string $userUrl): bool {
     return $this->getOwnerUrl() === $userUrl;
   }
 
@@ -537,7 +639,7 @@ class ConsumerOrg {
    *
    * @return array
    */
-  public function getRolesForMember($userUrl): array {
+  public function getRolesForMember(string $userUrl): array {
     $returnValue = [];
 
     if ($this->isMember($userUrl)) {
@@ -566,7 +668,7 @@ class ConsumerOrg {
    *
    * @return bool
    */
-  public function hasPermission($userUrl, $permissionName): bool {
+  public function hasPermission(string $userUrl, string $permissionName): bool {
     $returnValue = FALSE;
 
     $roles = $this->getRolesForMember($userUrl);
@@ -596,7 +698,7 @@ class ConsumerOrg {
   /**
    * @return array
    */
-  public function getCustomFields() {
+  public function getCustomFields(): array {
     if (!isset($this->custom_fields)) {
       $this->custom_fields = [];
     }
@@ -606,14 +708,19 @@ class ConsumerOrg {
   /**
    * @param array $customFields
    */
-  public function setCustomFields($customFields): void {
+  public function setCustomFields(array $customFields): void {
     if (empty($customFields)) {
       $this->custom_fields = [];
-    } else {
+    }
+    else {
       $this->custom_fields = $customFields;
     }
   }
 
+  /**
+   * @param $field
+   * @param $value
+   */
   public function addCustomField($field, $value): void {
     if (!isset($this->custom_fields)) {
       $this->custom_fields = [];

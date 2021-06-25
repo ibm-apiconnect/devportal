@@ -65,10 +65,10 @@
             </div>
           </div>
         {% endif %}
-        {% if edit_mode and (analytics_access or billing_access) %}
+        {% if edit_mode %}
           <div class="organizationTabs">
             <ul>
-              <li class="selected"><a href="#">{{ 'Manage'|t }}</a></li>
+              <li class="orgManage selected"><a href="#">{{ 'Manage'|t }}</a></li>
               {% if analytics_access %}
                 <li class="orgAnalytics">
                   <a href="{{- path('ibm_apim.analytics') -}}">{{ 'Analytics'|t }}</a>
@@ -78,6 +78,11 @@
                 <li class="orgBilling">
                   <a href="{{- path('ibm_apim.billing') -}}">{{ 'Billing'|t }}</a>
                 </li>
+              {% endif %}
+              {% if notifications_access %}
+              <li class="orgActivity">
+                <a href="{{- path('ibm_apim.activity') -}}">{{ 'Notifications'|t }}</a>
+              </li>
               {% endif %}
               {% if tabs is not empty %}
                 {% for tab in tabs %}
@@ -128,7 +133,7 @@
       <div class="memberSection">
         <div class="memberHeader">
           <h3>{{ 'Members'|t }}</h3>
-          {% if edit_mode and myorg_has_member_manage_perm %}
+          {% if edit_mode and myorg_has_member_manage_perm and consumer_org_invitation_enabled %}
             <div class="apicNewUserWrapper">
               <a class="button apicNewUser orgInvite" href="{{ url('consumerorg.invite') }}"
                  title="{{ 'Invite other users to join your consumer organization'|t }}">
@@ -161,8 +166,10 @@
                     <div class="noContentTextContainer noMembersTextContainer">
                       <span
                           class="noContentText noMembersText firstLine">{{ "You don't currently have any members."|t }}</span>
-                      <span
-                          class="noContentText noMembersText secondLine">{{ "Click Invite to invite new members."|t }}</span>
+                      {% if consumer_org_invitation_enabled %}
+                        <span
+                            class="noContentText noMembersText secondLine">{{ "Click Invite to invite new members."|t }}</span>
+                      {% endif %}
                     </div>
                   </div>
                 </td>

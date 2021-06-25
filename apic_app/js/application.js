@@ -9,7 +9,7 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   /**
    * Provides JS click actions for multiple credential tabs on application page
@@ -17,7 +17,7 @@
    * @type {{attach: Drupal.behaviors.multipleCredentials.attach}}
    */
   Drupal.behaviors.multipleCredentials = {
-    attach: function (context) {
+    attach: function(context) {
       // Find the tabs list.
       const tabsList = $(context).find('.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs ul');
 
@@ -35,7 +35,7 @@
       }
 
       // Add click handler to li.
-      $('li', tabsList).click(function () {
+      $('li', tabsList).click(function() {
         let client_id = '';
         let summary = '';
         const credid = $(this).attr('data-credid');
@@ -44,7 +44,7 @@
         // add it to this one
         $(this).addClass("selected");
         // update client ID value
-        $.each(drupalSettings.application.credentials, function (index, item) {
+        $.each(drupalSettings.application.credentials, function(index, item) {
           if (item.uuid === credid) {
             client_id = item['client_id'];
             // only display summary if its different to title
@@ -76,10 +76,10 @@
   };
 
   Drupal.behaviors.closeAppModalDialog = {
-    attach: function (context) {
+    attach: function(context) {
       // used for the result modal dialog from creating an app within the subscribe flow.
       // drupal doesnt seem to add a close button so need to do our own
-      $('#drupal-modal .modalAppResultContainer .modal-header .close').click(function (e) {
+      $('#drupal-modal .modalAppResultContainer .modal-header .close').click(function(e) {
         e.preventDefault();
 
         // This will close the dialog

@@ -59,11 +59,11 @@ class UserRegistryService implements UserRegistryServiceInterface {
   /**
    * get a specific user_registry by url
    *
-   * @param $key
+   * @param string $key
    *
    * @return null|UserRegistry
    */
-  public function get($key): ?UserRegistry {
+  public function get(string $key): ?UserRegistry {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
     }
@@ -96,7 +96,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
    *
    * @return bool
    */
-  public function updateAll($data): bool {
+  public function updateAll(array $data): bool {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -127,10 +127,10 @@ class UserRegistryService implements UserRegistryServiceInterface {
   /**
    * Update a specific user_registry
    *
-   * @param $key
-   * @param $data
+   * @param string $key
+   * @param array $data
    */
-  public function update($key, $data): void {
+  public function update(string $key, array $data): void {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
     }
@@ -155,9 +155,9 @@ class UserRegistryService implements UserRegistryServiceInterface {
   /**
    * Delete a specific user_registry
    *
-   * @param $key (user_registries url)
+   * @param string $key (user_registries url)
    */
-  public function delete($key): void {
+  public function delete(string $key): void {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
     }
@@ -173,7 +173,18 @@ class UserRegistryService implements UserRegistryServiceInterface {
           }
         }
         $this->state->set('ibm_apim.user_registries', $new_data);
-        // TODO this needs to delete all users from that user registry too
+      }
+      // delete all users from this user registry
+      $query = \Drupal::entityTypeManager()->getStorage('user')->getQuery();
+      $query->condition('apic_user_registry_url', $key);
+      $results = $query->execute();
+      if ($results !== NULL && !empty($results)) {
+        foreach ($results as $id) {
+          // DO NOT DELETE THE ADMIN USER!
+          if ((int) $id > 1) {
+            user_cancel([], $id, 'user_cancel_reassign');
+          }
+        }
       }
     }
 
@@ -200,11 +211,11 @@ class UserRegistryService implements UserRegistryServiceInterface {
   }
 
   /**
-   * @param $identityProviderName
+   * @param string $identityProviderName
    *
    * @return UserRegistry|null
    */
-  public function getRegistryContainingIdentityProvider($identityProviderName): ?UserRegistry {
+  public function getRegistryContainingIdentityProvider(string $identityProviderName): ?UserRegistry {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -307,11 +318,11 @@ class UserRegistryService implements UserRegistryServiceInterface {
   }
 
   /**
-   * @param $url
+   * @param string|null $url
    *
-   * @return mixed|void
+   * @return void
    */
-  public function setDefaultRegistry($url) {
+  public function setDefaultRegistry(?string $url): void {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
     }

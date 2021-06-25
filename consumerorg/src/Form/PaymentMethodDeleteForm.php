@@ -34,24 +34,24 @@ class PaymentMethodDeleteForm extends ConfirmFormBase {
    *
    * @var string
    */
-  protected $paymentMethodId;
+  protected string $paymentMethodId;
 
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgService
    */
-  protected $consumerOrgService;
+  protected ConsumerOrgService $consumerOrgService;
 
   protected $currentOrg;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\Core\Extension\ThemeHandler
    */
-  protected $themeHandler;
+  protected ThemeHandler $themeHandler;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -81,7 +81,7 @@ class PaymentMethodDeleteForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): PaymentMethodDeleteForm {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('ibm_apim.user_utils'),
@@ -99,6 +99,7 @@ class PaymentMethodDeleteForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function buildForm(array $form, FormStateInterface $form_state, $paymentMethodId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -171,6 +172,7 @@ class PaymentMethodDeleteForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -192,4 +194,5 @@ class PaymentMethodDeleteForm extends ConfirmFormBase {
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

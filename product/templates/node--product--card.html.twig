@@ -7,15 +7,15 @@
  */
 #}
 {%- set classes = [
-'node',
-'node--id-' ~ node.id,
-('node--type-' ~ node.bundle)|clean_class,
-view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
-'bx--card',
-('productNodeID-' ~ node.id)|clean_class,
-('productTitle-' ~ node.title[0].value)|clean_class,
-('productVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
-('productState-' ~ content.product_state['#items'][0].value)|clean_class
+  'node',
+  'node--id-' ~ node.id,
+  ('node--type-' ~ node.bundle)|clean_class,
+  view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
+  'bx--card',
+  ('productNodeID-' ~ node.id)|clean_class,
+  ('productTitle-' ~ node.title[0].value)|clean_class,
+  ('productVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
+  ('productState-' ~ content.product_state['#items'][0].value)|clean_class
 ] -%}
 <article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
   {% if content.apic_pathalias['#items'][0].value is defined and content.apic_pathalias['#items'][0].value is not empty %}
@@ -34,7 +34,8 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
       </div>
     {% endif %}
     <div class="apicProductCardMain">
-      <div class="bx--about__title--name" data-toggle="tooltip" data-placement="bottom" title="{{- node.title[0].value -}}">
+      <div class="bx--about__title--name" data-toggle="tooltip" data-placement="bottom"
+           title="{{- node.title[0].value -}}">
         <a href="{{- path('product.view', {'prodNode': prodNode}) -}}" rel="bookmark">
           <span id="node-{{ node.id }}-title" class="apicProductName apicTruncate">{{- label -}}</span>
           {% if showVersions %}
@@ -77,7 +78,8 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
           {% else %}
             {% set apiNode = api.node.id %}
           {% endif %}
-          <div class="apicProductCardApi apicTruncate" data-toggle="tooltip" data-placement="bottom" title="{{- api.node.title[0].value -}}">
+          <div class="apicProductCardApi apicTruncate" data-toggle="tooltip" data-placement="bottom"
+               title="{{- api.node.title[0].value -}}">
             <a href="{{- path('product.api', {'prodNode': prodNode, 'apiNode': apiNode}) -}}" rel="bookmark">
               {{ api.node.title[0].value }}
               {% if showVersions %}
@@ -89,7 +91,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
       {% endfor %}
       {% if apiCount > 6 %}
         <div class="apicProductSeeAll"><a href="{{- path('product.view', {'prodNode': prodNode}) -}}"
-                                          rel="bookmark">...</a></div>
+                                          rel="bookmark">{{ 'View all'|t }}</a></div>
       {% endif %}
     </div>
   </div>

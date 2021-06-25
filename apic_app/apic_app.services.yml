@@ -13,22 +13,22 @@ services:
       - { name: paramconverter }
   apic_app.access_checker:
     class: Drupal\apic_app\Access\ApplicationAccessCheck
-    arguments: ['@apic_app.appid_converter']
+    arguments: [ '@apic_app.appid_converter' ]
     tags:
       - { name: access_check, applies_to: _application_access_check }
   apic_app.subscriptions_access_checker:
     class: Drupal\apic_app\Access\SubscriptionsAccessCheck
-    arguments: ['@apic_app.appid_converter']
+    arguments: [ '@apic_app.appid_converter' ]
     tags:
       - { name: access_check, applies_to: _application_subscriptions_access_check }
   apic_app.analytics_access_checker:
     class: Drupal\apic_app\Access\AnalyticsAccessCheck
-    arguments: ['@apic_app.appid_converter']
+    arguments: [ '@apic_app.appid_converter' ]
     tags:
       - { name: access_check, applies_to: _application_analytics_access_check }
   apic_app.developer_access_checker:
     class: Drupal\apic_app\Access\DeveloperAccessCheck
-    arguments: ['@apic_app.appid_converter']
+    arguments: [ '@apic_app.appid_converter' ]
     tags:
       - { name: access_check, applies_to: _application_developer_check }
   apic_app.allow_image_upload:
@@ -42,21 +42,38 @@ services:
   apic_app.allow_clientid_reset:
     class: Drupal\apic_app\Access\ClientIDResetCheck
     tags:
-      - { name: access_check, applies_to: _application_reset_clientid}
+      - { name: access_check, applies_to: _application_reset_clientid }
   apic_app.allow_clientsecret_reset:
     class: Drupal\apic_app\Access\ClientSecretResetCheck
     tags:
       - { name: access_check, applies_to: _application_reset_clientsecret }
   apic_app.rest_service:
     class: Drupal\apic_app\Service\ApplicationRestService
+    arguments: [ '@apic_app.application', '@ibm_apim.user_utils', '@ibm_apim.apim_utils', '@apic_app.subscriptions' ]
   apic_app.anonymous.response_subscriber:
     class: Drupal\apic_app\Routing\ResponseSubscriber
-    arguments: ['@current_user']
+    arguments: [ '@current_user' ]
     tags:
       - { name: event_subscriber }
   apic_app.certificate:
     class: Drupal\apic_app\Service\CertificateService
-    arguments: ['@ibm_apim.utils',
-                '@config.factory']
+    arguments: [ '@ibm_apim.utils',
+                 '@config.factory' ]
   apic_app.credentials:
     class: Drupal\apic_app\Service\CredentialsService
+    arguments: [ '@ibm_apim.user_utils' ]
+  apic_app.subscriptions:
+    class: Drupal\apic_app\Service\SubscriptionService
+    arguments: [ '@ibm_apim.user_utils', '@ibm_apim.apim_utils' ]
+  apic_app.application:
+    class: Drupal\apic_app\Service\ApplicationService
+    arguments: [ '@ibm_apim.user_utils',
+                 '@ibm_apim.apim_utils',
+                 '@ibm_apim.utils',
+                 '@ibm_apim.event_log',
+                 '@module_handler',
+                 '@apic_app.credentials',
+                 '@serializer',
+                 '@ibm_apim.site_config',
+                 '@ibm_apim.product_plan',
+                 '@entity_type.manager' ]

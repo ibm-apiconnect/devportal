@@ -7,8 +7,8 @@
 
 namespace Drupal\Tests\ghmarkdown\Unit;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\ghmarkdown\cebe\markdown\Parser;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * Base class for all Test cases.
@@ -17,48 +17,48 @@ use Drupal\ghmarkdown\cebe\markdown\Parser;
  */
 abstract class BaseMarkdownTest extends UnitTestCase {
 
-  protected $outputFileExtension = '.html';
+  protected string $outputFileExtension = '.html';
 
   abstract public function getDataPaths();
 
   /**
    * @return Parser
    */
-  abstract public function createMarkdown();
+  abstract public function createMarkdown(): Parser;
 
   /**
    * @dataProvider dataFiles
    */
-  public function testParse($path, $file) {
-    list($markdown, $html) = $this->getTestData($path, $file);
+  public function testParse($path, $file): void {
+    [$markdown, $html] = $this->getTestData($path, $file);
     // Different OS line endings should not affect test
     $html = str_replace(["\r\n", "\n\r", "\r"], "\n", $html);
 
     $m = $this->createMarkdown();
-    $this->assertEquals($html, $m->parse($markdown));
+    self::assertEquals($html, $m->parse($markdown));
   }
 
-  public function testUtf8() {
-    $this->assertSame("<p>абвгдеёжзийклмнопрстуфхцчшщъыьэюя</p>\n", $this->createMarkdown()
+  public function testUtf8(): void {
+    self::assertSame("<p>абвгдеёжзийклмнопрстуфхцчшщъыьэюя</p>\n", $this->createMarkdown()
       ->parse('абвгдеёжзийклмнопрстуфхцчшщъыьэюя'));
-    $this->assertSame("<p>there is a charater, 配</p>\n", $this->createMarkdown()->parse('there is a charater, 配'));
-    $this->assertSame("<p>Arabic Latter \"م (M)\"</p>\n", $this->createMarkdown()->parse('Arabic Latter "م (M)"'));
-    $this->assertSame("<p>電腦</p>\n", $this->createMarkdown()->parse('電腦'));
+    self::assertSame("<p>there is a charater, 配</p>\n", $this->createMarkdown()->parse('there is a charater, 配'));
+    self::assertSame("<p>Arabic Latter \"م (M)\"</p>\n", $this->createMarkdown()->parse('Arabic Latter "م (M)"'));
+    self::assertSame("<p>電腦</p>\n", $this->createMarkdown()->parse('電腦'));
 
-    $this->assertSame('абвгдеёжзийклмнопрстуфхцчшщъыьэюя', $this->createMarkdown()
+    self::assertSame('абвгдеёжзийклмнопрстуфхцчшщъыьэюя', $this->createMarkdown()
       ->parseParagraph('абвгдеёжзийклмнопрстуфхцчшщъыьэюя'));
-    $this->assertSame('there is a charater, 配', $this->createMarkdown()->parseParagraph('there is a charater, 配'));
-    $this->assertSame('Arabic Latter "م (M)"', $this->createMarkdown()->parseParagraph('Arabic Latter "م (M)"'));
-    $this->assertSame('電腦', $this->createMarkdown()->parseParagraph('電腦'));
+    self::assertSame('there is a charater, 配', $this->createMarkdown()->parseParagraph('there is a charater, 配'));
+    self::assertSame('Arabic Latter "م (M)"', $this->createMarkdown()->parseParagraph('Arabic Latter "م (M)"'));
+    self::assertSame('電腦', $this->createMarkdown()->parseParagraph('電腦'));
   }
 
-  public function testInvalidUtf8() {
+  public function testInvalidUtf8(): void {
     $m = $this->createMarkdown();
-    $this->assertEquals("<p><code>�</code></p>\n", $m->parse("`\x80`"));
-    $this->assertEquals('<code>�</code>', $m->parseParagraph("`\x80`"));
+    self::assertEquals("<p><code>�</code></p>\n", $m->parse("`\x80`"));
+    self::assertEquals('<code>�</code>', $m->parseParagraph("`\x80`"));
   }
 
-  public function pregData() {
+  public function pregData(): array {
     // http://en.wikipedia.org/wiki/Newline#Representations
     return [
       ["a\r\nb", "a\nb"],
@@ -76,20 +76,23 @@ abstract class BaseMarkdownTest extends UnitTestCase {
   /**
    * @dataProvider pregData
    */
-  public function testPregReplaceR($input, $exptected, $pexpect = NULL) {
-    $this->assertSame($exptected, $this->createMarkdown()->parseParagraph($input));
-    $this->assertSame($pexpect === NULL ? "<p>$exptected</p>\n" : "<p>$pexpect</p>\n", $this->createMarkdown()
+  public function testPregReplaceR($input, $exptected, $pexpect = NULL): void {
+    self::assertSame($exptected, $this->createMarkdown()->parseParagraph($input));
+    self::assertSame($pexpect === NULL ? "<p>$exptected</p>\n" : "<p>$pexpect</p>\n", $this->createMarkdown()
       ->parse($input));
   }
 
-  public function getTestData($path, $file) {
+  public function getTestData($path, $file): array {
     return [
       file_get_contents($this->getDataPaths()[$path] . '/' . $file . '.md'),
       file_get_contents($this->getDataPaths()[$path] . '/' . $file . $this->outputFileExtension),
     ];
   }
 
-  public function dataFiles() {
+  /**
+   * @throws \Exception
+   */
+  public function dataFiles(): array {
     $files = [];
     foreach ($this->getDataPaths() as $name => $src) {
       $handle = opendir($src);
@@ -109,4 +112,5 @@ abstract class BaseMarkdownTest extends UnitTestCase {
     }
     return $files;
   }
+
 }

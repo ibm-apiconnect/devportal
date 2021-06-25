@@ -21,6 +21,9 @@ use Drupal\Core\Routing\Access\AccessInterface;
  */
 class AuthenticatedNotAdminAccessCheck implements AccessInterface {
 
+  /**
+   * @return \Drupal\Core\Access\AccessResult
+   */
   public function access(): AccessResult {
     $allowed = FALSE;
     $current_user = \Drupal::currentUser();

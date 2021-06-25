@@ -24,9 +24,8 @@ class MockLDAPStateService extends State {
     if ($key === 'ibm_apim.readonly_idp') {
       return 1;
     }
-    else {
-      return parent::get($key, $default);
-    }
+
+    return parent::get($key, $default);
   }
 
 }

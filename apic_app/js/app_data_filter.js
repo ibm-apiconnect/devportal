@@ -14,10 +14,10 @@
  * JS for the "app_data_filter" block.
  */
 
-(function ($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings) {
 
   Drupal.behaviors.app_data_filter = {
-    attach: function (context) {
+    attach: function(context) {
 
 
     }

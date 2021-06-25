@@ -13,6 +13,8 @@
 namespace Drupal\ibm_apim\Service\Mocks;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Extension\ModuleInstallerInterface;
 use Drupal\Core\Menu\MenuLinkManagerInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\State\StateInterface;
@@ -33,7 +35,10 @@ use Psr\Log\LoggerInterface;
  */
 class MockSiteConfig extends SiteConfig {
 
-  private $state;
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  private StateInterface $state;
 
   /**
    * MockSiteConfig constructor.
@@ -50,14 +55,18 @@ class MockSiteConfig extends SiteConfig {
    * @param \Drupal\ibm_apim\Service\VendorExtension $vendorExtService
    * @param \Drupal\Core\Menu\MenuLinkManagerInterface $menuLinkManager
    * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   * @param \Drupal\Core\Extension\ModuleInstallerInterface $module_installer
    *
    * @throws \Exception
    */
   public function __construct(StateInterface $state, ConfigFactoryInterface $config_factory,
                               LoggerInterface $logger, UserRegistryServiceInterface $urService, Billing $billService,
                               PermissionsServiceInterface $permsService, AnalyticsService $analyticsService,
-                              TlsClientProfilesService $tlsProfilesService, Group $groupService, VendorExtension $vendorExtService, MenuLinkManagerInterface $menuLinkManager, Messenger $messenger) {
-    parent::__construct($state, $config_factory, $logger, $urService, $billService, $permsService, $analyticsService, $tlsProfilesService, $groupService, $vendorExtService, $menuLinkManager, $messenger);
+                              TlsClientProfilesService $tlsProfilesService, Group $groupService, VendorExtension $vendorExtService,
+                              MenuLinkManagerInterface $menuLinkManager, Messenger $messenger, ModuleHandlerInterface $module_handler,
+                              ModuleInstallerInterface $module_installer) {
+    parent::__construct($state, $config_factory, $logger, $urService, $billService, $permsService, $analyticsService, $tlsProfilesService, $groupService, $vendorExtService, $menuLinkManager, $messenger, $module_handler, $module_installer);
     $this->state = $state;
     $this->updateFromSnapshotFile();
   }
@@ -76,11 +85,14 @@ class MockSiteConfig extends SiteConfig {
       \Drupal::logger('apictest')->info('loading catalog-snapshot.json from @file', ['@file' => $catalog_snapshot_file]);
     }
 
-    $snapshot = json_decode(file_get_contents($catalog_snapshot_file), TRUE);
+    $snapshot = json_decode(file_get_contents($catalog_snapshot_file), TRUE, 512, JSON_THROW_ON_ERROR);
     $content = $snapshot['content'];
     $this->update($content);
   }
 
+  /**
+   * @inheritDoc
+   */
   protected function get(): array {
     $catalog_config = $this->state->get('ibm_apim.mock_site_config');
     if (!isset($catalog_config)) {
@@ -89,11 +101,17 @@ class MockSiteConfig extends SiteConfig {
     return $catalog_config;
   }
 
+  /**
+   * @inheritDoc
+   */
   public function isSet(): bool {
     $catalog_config = $this->get();
     return !empty($catalog_config);
   }
 
+  /**
+   * @inheritDoc
+   */
   public function update($config = NULL): void {
     if (!empty($config['catalog_setting']) && is_array($config['catalog_setting'])) {
       $config = array_merge($config, $config['catalog_setting']);
@@ -108,20 +126,39 @@ class MockSiteConfig extends SiteConfig {
     }
   }
 
+  /**
+   * @inheritDoc
+   */
   public function getOrgId(): ?string {
     return "orgId";
   }
 
   /**
-   * Get current catalog ID
-   *
-   * @return string|null
+   * @inheritDoc
    */
   public function getEnvId(): ?string {
     return "envId";
   }
 
-  public function getClientId() {
+  /**
+   * @inheritDoc
+   */
+  public function getClientId(): string {
     return "clientId";
   }
+
+  /**
+   * @return bool
+   */
+  public function isConsumerOrgInvitationEnabled(): bool {
+    return $this->state->get('ibm_apim.consumerOrgInvitationEnabled', TRUE);
+  }
+
+  /**
+   * @return array
+   */
+  public function getConsumerOrgInvitationRoles(): array {
+    return $this->state->get('ibm_apim.consumerOrgInvitationRoles', [ 'administrator', 'developer', 'viewer' ]);
+  }
+
 }

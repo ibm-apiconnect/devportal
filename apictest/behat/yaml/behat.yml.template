@@ -31,11 +31,8 @@ default:
       goutte:
         guzzle_parameters:
           verify: false
-      zombie:
-        node_modules_path: "PLATFORMDIR/vendor/drupal/drupal-extension/node_modules/"
       base_url: "SITEURL"
       default_session: goutte
-      javascript_session: zombie
     Drupal\DrupalExtension:
       api_driver: "drupal"
       drupal:

@@ -26,13 +26,25 @@ use Psr\Log\LoggerInterface;
  */
 class ApicUserService {
 
-  private $logger;
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  private LoggerInterface $logger;
 
-  private $state;
+  /**
+   * @var \Drupal\core\State\State
+   */
+  private State $state;
 
-  private $userRegistryService;
+  /**
+   * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
+   */
+  private UserRegistryServiceInterface $userRegistryService;
 
-  protected $messenger;
+  /**
+   * @var \Drupal\Core\Messenger\Messenger
+   */
+  protected Messenger $messenger;
 
   /**
    * ApicUserManager constructor.
@@ -64,7 +76,9 @@ class ApicUserService {
    *   ApicUser.
    */
   public function parseRegisterForm($form_state): ApicUser {
-
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__);
+    }
     $user = new ApicUser();
     $form_values = $form_state->getUserInput();
 
@@ -92,7 +106,9 @@ class ApicUserService {
     if (isset($form_values['consumerorg'])) {
       $user->setOrganization($form_values['consumerorg']);
     }
-
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__);
+    }
     return $user;
   }
 
@@ -100,9 +116,13 @@ class ApicUserService {
    * @param User $account
    *
    * @return \Drupal\ibm_apim\ApicType\ApicUser
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function parseDrupalAccount($account): ApicUser {
-
+  public function parseDrupalAccount(User $account): ApicUser {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__);
+    }
     $user = new ApicUser();
 
     if (isset($account->get('first_name')->getValue()[0]['value']) && $account->get('first_name')->getValue()[0]['value'] !== NULL) {
@@ -140,19 +160,27 @@ class ApicUserService {
         $user->addCustomField($field, $value);
       }
     }
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__);
+    }
     return $user;
-
   }
 
   /**
    * Get JSON payload for a user.
    *
    * @param \Drupal\ibm_apim\ApicType\ApicUser $user
+   * @param string $auth
    *
    * @return string
    *        JSON representation of the user.
+   * @throws \JsonException
    */
   public function getUserJSON(ApicUser $user, $auth = 'user'): string {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__);
+    }
+
     $data = [];
 
     if ($user->getApicUserRegistryUrl() !== NULL) {
@@ -181,7 +209,7 @@ class ApicUserService {
     $customFields = $user->getCustomFields();
     if (!empty($customFields)) {
       foreach ($customFields as $customField => $value) {
-        $customFields[$customField] = json_encode($value);
+        $customFields[$customField] = json_encode($value, JSON_THROW_ON_ERROR);
       }
 
       $apic_me = \Drupal::service('ibm_apim.mgmtserver')->getMe($auth);
@@ -191,11 +219,13 @@ class ApicUserService {
       }
       else {
         $this->messenger->addError(t('Your account was created/updated with errors. Please make sure your information was correctly saved in your account.'));
-        $this->logger->error((int) $apic_me->getCode() . ' code received while trying to retrieve user metadata.');
+        $this->logger->error('%code code received while trying to retrieve user metadata.', ['%code' => (int) $apic_me->getCode()]);
       }
     }
-
-    return json_encode($data);
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__);
+    }
+    return json_encode($data, JSON_THROW_ON_ERROR);
   }
 
   /**
@@ -206,6 +236,10 @@ class ApicUserService {
    * @return array
    */
   public function getUserAccountFields(ApicUser $user): array {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__);
+    }
+
     $data = [];
 
     $data['first_name'] = $user->getFirstname();
@@ -226,7 +260,9 @@ class ApicUserService {
         $data[$field] = $value;
       }
     }
-
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__);
+    }
     return $data;
   }
 
@@ -237,14 +273,17 @@ class ApicUserService {
    * @param $payload
    *
    * @return \Drupal\ibm_apim\ApicType\ApicUser
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \JsonException
    */
   public function getUserFromJSON($payload): ApicUser {
     if (function_exists('ibm_apim_entry_trace')) {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__);
     }
 
     if (is_string($payload)) {
-      $apicuser = json_decode($payload, TRUE);
+      $apicuser = json_decode($payload, TRUE, 512, JSON_THROW_ON_ERROR);
     }
     else {
       $apicuser = $payload;
@@ -265,7 +304,7 @@ class ApicUserService {
     $customFields = $this->getCustomUserFields();
     foreach ($customFields as $field) {
       $value = $apicuser['metadata'][$field];
-      $user->addCustomField($field, json_decode($value, TRUE));
+      $user->addCustomField($field, json_decode($value, TRUE, 512, JSON_THROW_ON_ERROR));
     }
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $user->getUsername());
@@ -282,7 +321,9 @@ class ApicUserService {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function getCustomUserFields($viewMode = 'default'): array {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__);
+    }
     $fields = [];
     $entity = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('user.user.' . $viewMode);
     if ($entity !== NULL) {
@@ -367,7 +408,9 @@ class ApicUserService {
       }
     }
 
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $fields);
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $fields);
+    }
     return $fields;
   }
 

@@ -33,17 +33,17 @@ class ApplicationPromotionForm extends ConfirmFormBase {
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $node;
+  protected NodeInterface $node;
 
   /**
    * @var \Drupal\apic_app\Service\ApplicationRestInterface
    */
-  protected $restService;
+  protected ApplicationRestInterface $restService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -66,7 +66,7 @@ class ApplicationPromotionForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): ApplicationPromotionForm {
     // Load the service required to construct this class
     return new static($container->get('apic_app.rest_service'),
       $container->get('ibm_apim.user_utils'),
@@ -84,7 +84,9 @@ class ApplicationPromotionForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
-    $this->node = $appId;
+    if ($appId !== NULL) {
+      $this->node = $appId;
+    }
     $form = parent::buildForm($form, $form_state);
     $form['#attached']['library'][] = 'apic_app/basic';
 
@@ -115,6 +117,7 @@ class ApplicationPromotionForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public function getCancelUrl(): Url {
     return $this->node->toUrl();
@@ -122,12 +125,13 @@ class ApplicationPromotionForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \JsonException|\Drupal\Core\Entity\EntityMalformedException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appId = $this->node->application_id->value;
     $url = $this->node->apic_url->value;
-    $result = $this->restService->promoteApplication($url, json_encode(['lifecycle_state_pending' => 'production']));
+    $result = $this->restService->promoteApplication($url, json_encode(['lifecycle_state_pending' => 'production'], JSON_THROW_ON_ERROR));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
       $this->messenger->addMessage($this->t('Application upgrade requested.'));
 

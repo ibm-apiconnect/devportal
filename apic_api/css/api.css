@@ -39,6 +39,10 @@
   content: ')';
 }
 
+.bx--card .apicApiCard .bx--about__icon {
+  margin: -0.125rem;
+}
+
 .apicApiName {
   max-width: 500px;
 }
@@ -64,11 +68,11 @@
   min-height: calc(100vh - 148px);
 }
 
-body.adminimal-admin-toolbar .explorerWrapper{
+body.adminimal-admin-toolbar .explorerWrapper {
   min-height: calc(100vh - 228px);
 }
 
-.productApiWrapper #innerWrapper > article:not(.apiprotocol-graphql)  {
+.productApiWrapper #innerWrapper > article:not(.apiprotocol-graphql) {
   border-top: 1px solid #dfe3e6;
 }
 
@@ -80,10 +84,12 @@ body.adminimal-admin-toolbar .explorerWrapper{
   margin: 0;
 }
 
-.apicCardFooter {
+.bx--card  .apicCardFooter {
   margin-top: 1rem;
-  padding-bottom: 1rem;
   width: 16.75rem;
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
 }
 
 .apicCardFooter .apicProtocol,
@@ -164,9 +170,11 @@ apiconnect-explorer .signInMessage {
   min-height: 14rem;
   margin: 0;
 }
+
 .apicProductApiList .views-bootstrap-list-group {
   padding: 0
 }
+
 .apicProductApiList .views-bootstrap-list-group .list-group-item {
   margin-left: 0;
   margin-right: 0;

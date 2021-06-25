@@ -29,10 +29,10 @@ class ApicRest implements ApicRestInterface {
    * @return \stdClass|null
    * @throws \Exception
    */
-  public static function get($url, $auth = 'user', $gettingConfig = FALSE, $messageErrors = TRUE, $returnResult = FALSE): ?\stdClass {
+  public static function get(string $url, $auth = 'user', $gettingConfig = FALSE, $messageErrors = TRUE, $returnResult = FALSE): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
-    $returnValue = NULL;
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__);
     return self::call_base($url, 'GET', $auth, NULL, $messageErrors, $returnResult, $gettingConfig);
   }
 
@@ -46,10 +46,10 @@ class ApicRest implements ApicRestInterface {
    * @return \stdClass|null
    * @throws \Exception
    */
-  public static function raw($url, $auth = 'user', $gettingConfig = FALSE, $messageErrors = TRUE, $returnResult = TRUE): ?\stdClass {
+  public static function raw(string $url, $auth = 'user', $gettingConfig = FALSE, $messageErrors = TRUE, $returnResult = TRUE): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
-    $returnValue = NULL;
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__);
     return self::call_base($url, 'GET', $auth, NULL, $messageErrors, $returnResult, $gettingConfig);
   }
 
@@ -62,10 +62,10 @@ class ApicRest implements ApicRestInterface {
    * @return \stdClass|null
    * @throws \Exception
    */
-  public static function post($url, $data, $auth = 'user', $messageErrors = TRUE): ?\stdClass {
+  public static function post(string $url, string $data, $auth = 'user', $messageErrors = TRUE): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
-    $returnValue = NULL;
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__);
     return self::call_base($url, 'POST', $auth, $data, $messageErrors);
   }
 
@@ -77,10 +77,10 @@ class ApicRest implements ApicRestInterface {
    * @return \stdClass|null
    * @throws \Exception
    */
-  public static function put($url, $data, $auth = 'user'): ?\stdClass {
+  public static function put(string $url, string $data, $auth = 'user'): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
-    $returnValue = NULL;
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__);
     return self::call_base($url, 'PUT', $auth, $data);
   }
 
@@ -94,10 +94,10 @@ class ApicRest implements ApicRestInterface {
    * @return \stdClass|null
    * @throws \Exception
    */
-  public static function patch($url, $data, $auth = 'user', $messageErrors = TRUE, $returnResult = FALSE): ?\stdClass {
+  public static function patch(string $url, string $data, $auth = 'user', $messageErrors = TRUE, $returnResult = FALSE): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
-    $returnValue = NULL;
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__);
     return self::call_base($url, 'PATCH', $auth, $data, $messageErrors, $returnResult, FALSE);
   }
 
@@ -108,18 +108,18 @@ class ApicRest implements ApicRestInterface {
    * @return \stdClass|null
    * @throws \Exception
    */
-  public static function delete($url, $auth = 'user'): ?\stdClass {
+  public static function delete(string $url, $auth = 'user'): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
-    $returnValue = NULL;
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__);
     return self::call_base($url, 'DELETE', $auth);
   }
 
   /**
-   * @param $url
+   * @param string $url
    * @param string $verb
-   * @param null $headers
-   * @param null $data
+   * @param array|null $headers
+   * @param string|null $data
    * @param bool $returnResult
    * @param null $insecure
    * @param null $providedCertificate
@@ -129,7 +129,7 @@ class ApicRest implements ApicRestInterface {
    * @return \stdClass|null
    * @throws \Exception
    */
-  public static function json_http_request($url, $verb = 'GET', $headers = NULL, $data = NULL, $returnResult = FALSE, $insecure = NULL, $providedCertificate = NULL, $notifyDrupal = TRUE, $apiType = 'consumer'): ?\stdClass {
+  public static function json_http_request(string $url, $verb = 'GET', $headers = NULL, $data = NULL, $returnResult = FALSE, $insecure = NULL, $providedCertificate = NULL, $notifyDrupal = TRUE, $apiType = 'consumer'): ?\stdClass {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$url, $verb]);
     }
@@ -211,7 +211,7 @@ class ApicRest implements ApicRestInterface {
       if (!isset($hostname)) {
         $hostname = '';
       }
-      curl_setopt($resource, CURLOPT_USERAGENT, 'IBM API Connect Developer Portal/' . $apicVersion['value'] . ' (' . $apicVersion['description'] . ') ' . $hostname);
+      curl_setopt($resource, CURLOPT_USERAGENT, 'IBM API Developer Portal/' . $apicVersion['value'] . ' (' . $apicVersion['description'] . ') ' . $hostname);
     }
 
     // Enable auto-accept of self-signed certificates if this
@@ -277,11 +277,18 @@ class ApicRest implements ApicRestInterface {
         '%request_id' => $result->headers['X-Request-ID'],
         '%verb' => $verb,
         '%url' => $url,
-        '%code' => $result->code
+        '%code' => $result->code,
       ]);
     }
 
     if ($apim_rest_trace === TRUE && \Drupal::hasContainer()) {
+      $restState = \Drupal::state()->get('ibm_apim.rest_requests');
+      $restState[] = [
+        'request' => [$verb, $url,$headers, $data],
+        'response' => $result,
+        'timestamp' => time(),
+      ];
+      \Drupal::state()->set('ibm_apim.rest_requests', $restState);
       \Drupal::logger('ibm_apim_rest')->debug('REST Trace output: %data.', [
         '%data' => serialize($result),
       ]);
@@ -304,13 +311,14 @@ class ApicRest implements ApicRestInterface {
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-    $decoded = json_decode($string, TRUE);
-    // handle not being fed valid JSON
-    if ($decoded === NULL) {
+    try {
+      $decoded = json_decode($string, TRUE, 512, JSON_THROW_ON_ERROR);
+    } catch (\JsonException $e) {
+      // handle not being fed valid JSON
       $decoded = [
         'content' => $string,
-        'json_last_error' => json_last_error(),
-        'json_last_error_msg' => json_last_error_msg(),
+        'json_last_error' => $e->getCode(),
+        'json_last_error_msg' => $e->getMessage(),
         'errors' => ['json.parse.error' => 'JSON parse error'],
       ];
     }
@@ -376,13 +384,13 @@ class ApicRest implements ApicRestInterface {
   /**
    * Where the real work to make a call to the IBM APIm API is done.
    *
-   * @param $url
+   * @param string $url
    *          The IBM APIm API URL
    *
-   * @param $verb
+   * @param string $verb
    *          The HTTP verb to use, must be in the list: GET, PUT, DELETE, POST
    *
-   * @param $auth
+   * @param string|null $auth
    *          The authorization string to use, the default is the current user. Other
    *          options are:
    *          clientid - which will use the catalog's client ID header
@@ -390,7 +398,7 @@ class ApicRest implements ApicRestInterface {
    *          NULL - use no authorization
    *          any other value - will be included in the Authorization: Basic header as is.
    *
-   * @param $data
+   * @param string|null $data
    *          A string containing the JSON data to submit to the IBM API
    *
    * @param bool $messageErrors
@@ -404,7 +412,7 @@ class ApicRest implements ApicRestInterface {
    * @return \stdClass|null
    * @throws \Exception
    */
-  private static function call_base($url, $verb, $auth = 'user', $data = NULL, $messageErrors = TRUE, $returnResult = FALSE, $gettingConfig = FALSE): ?\stdClass {
+  private static function call_base(string $url, string $verb, $auth = 'user', $data = NULL, $messageErrors = TRUE, $returnResult = FALSE, $gettingConfig = FALSE): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$url, $verb]);
     $utils = \Drupal::service('ibm_apim.utils');
     $session_store = \Drupal::service('tempstore.private')->get('ibm_apim');
@@ -445,12 +453,13 @@ class ApicRest implements ApicRestInterface {
 
     if ($auth === 'user') {
       // except anonymous and admin      
-      if (!$current_user->isAnonymous() && (int) $current_user->id() !== 1) {	        
+      if (!$current_user->isAnonymous() && (int) $current_user->id() !== 1) {
         $bearer_token = $session_store->get('auth');
         if (isset($bearer_token)) {
           $headers[] = 'Authorization: Bearer ' . $bearer_token;
         }
-      } else {
+      }
+      else {
         \Drupal::logger('ibm_apim')->info('call_base: Calling consumer API as admin or anonymous, not including bearer token.');
       }
     }
@@ -479,30 +488,33 @@ class ApicRest implements ApicRestInterface {
 
     if ($auth === 'platform' || $auth === 'platformtoken') {
       $apiType = 'platform';
-    } else {
+    }
+    else {
       $apiType = 'consumer';
     }
 
 
     $result = self::json_http_request($url, $verb, $headers, $data, $returnResult, NULL, NULL, TRUE, $apiType);
 
-    if (!$utils->endsWith($url,'/me/sign-out') && isset($result) && (int) $result->code === 401 && $session_store->get('refresh') !== null) {
+    if (!$utils->endsWith($url, '/me/sign-out') && isset($result) && (int) $result->code === 401 && $session_store->get('refresh') !== NULL) {
       $refresh_expires_in = $session_store->get('refresh_expires_in');
       if (!isset($refresh_expires_in) || (int) $refresh_expires_in > time()) {
         $refreshed = \Drupal::service('ibm_apim.mgmtserver')->refreshAuth();
         if ($refreshed) {
           $newHeaders = [];
           foreach ($headers as $header) {
-            if (strpos($header, 'Authorization: Bearer ') !== false) {
+            if (strpos($header, 'Authorization: Bearer ') !== FALSE) {
               $newHeaders[] = 'Authorization: Bearer ' . $session_store->get('auth');
-            } else {
+            }
+            else {
               $newHeaders[] = $header;
             }
           }
           $result = self::json_http_request($url, $verb, $newHeaders, $data, $returnResult, NULL, NULL, TRUE, $apiType);
           $expires_in = $session_store->get('expires_in');
         }
-      } else {
+      }
+      else {
         \Drupal::logger('ibm_apim')->notice('Refresh token has expired.');
       }
     }
@@ -517,7 +529,8 @@ class ApicRest implements ApicRestInterface {
           '%code' => $result->code,
           '%request_id' => $result->headers['X-Request-ID'],
         ]);
-      } else {
+      }
+      else {
         \Drupal::logger('ibm_apim')->info('call_base: %secs secs duration. END: %verb %url %code', [
           '%secs' => $secs,
           '%verb' => $verb,
@@ -537,7 +550,7 @@ class ApicRest implements ApicRestInterface {
         $returnValue = $result;
       }
     }
-    elseif (!$utils->endsWith($url,'/me/sign-out') && $current_user->isAuthenticated() && (int) $current_user->id() !== 1 && (isset($result) && ((int) $result->code === 401 || ($expires_in !== NULL && (int) $expires_in < time())))) {
+    elseif (!$utils->endsWith($url, '/me/sign-out') && $current_user->isAuthenticated() && (int) $current_user->id() !== 1 && (isset($result) && ((int) $result->code === 401 || ($expires_in !== NULL && (int) $expires_in < time())))) {
       // handle token having expired
       // force log the user out, they can login and try again
       \Drupal::logger('ibm_apim')->notice('Session expired based on token expires_in value. Forcing logout.');
@@ -549,7 +562,7 @@ class ApicRest implements ApicRestInterface {
       $response = new RedirectResponse($logout_url->toString());
       $request = \Drupal::request();
       $session = $request->getSession();
-      if ($session !== null) {
+      if ($session !== NULL) {
         $session->save();
       }
       $response->prepare($request);
@@ -573,7 +586,8 @@ class ApicRest implements ApicRestInterface {
             \Drupal::messenger()->addError(Xss::filter($error));
             $returnValue = $result;
           }
-        } else {
+        }
+        else {
           $returnValue = $result;
         }
       }
@@ -589,8 +603,8 @@ class ApicRest implements ApicRestInterface {
    * Generic API download proxy, used for documents and wsdls
    * if node is passed in then it will save the content as the swagger doc for that api
    *
-   * @param $url
-   * @param $verb
+   * @param string $url
+   * @param string|null $verb
    * @param null $node
    * @param bool $filter
    * @param null $data
@@ -600,7 +614,7 @@ class ApicRest implements ApicRestInterface {
    * @return null|array
    * @throws \Exception
    */
-  public static function proxy($url, $verb = 'GET', $node = NULL, $filter = FALSE, $data = NULL, $extraHeaders = NULL, $mutualAuth = NULL): ?array {
+  public static function proxy(string $url, $verb = 'GET', $node = NULL, $filter = FALSE, $data = NULL, $extraHeaders = NULL, $mutualAuth = NULL): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$url, $verb]);
 
     $utils = \Drupal::service('ibm_apim.utils');
@@ -714,7 +728,7 @@ class ApicRest implements ApicRestInterface {
     if (!isset($hostname)) {
       $hostname = '';
     }
-    curl_setopt($ch, CURLOPT_USERAGENT, 'IBM API Connect Developer Portal/' . $apicVersion['value'] . ' (' . $apicVersion['description'] . ') ' . $hostname);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'IBM API Developer Portal/' . $apicVersion['value'] . ' (' . $apicVersion['description'] . ') ' . $hostname);
 
     // Enable auto-accept of self-signed certificates if this
     // has been set in the module config by an admin.
@@ -801,7 +815,7 @@ class ApicRest implements ApicRestInterface {
 
   /**
    * @return array
-   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Exception
    */
   private static function getPlatformToken(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -825,30 +839,32 @@ class ApicRest implements ApicRestInterface {
       'client_secret' => $clientSecret,
       'grant_type' => 'client_credentials',
     ];
-    $result = self::post($url, json_encode($requestBody), 'platformtoken');
+    $result = self::post($url, json_encode($requestBody, JSON_THROW_ON_ERROR), 'platformtoken');
     if (isset($result) && (int) $result->code >= 200 && (int) $result->code < 300) {
       $data = $result->data;
       if (isset($data['access_token'])) {
         $token['access_token'] = $data['access_token'];
       }
       if (isset($data['expires_in'])) {
-        $token['expires_in'] = time() + (int)$data['expires_in'];
+        $token['expires_in'] = time() + (int) $data['expires_in'];
       }
       if (isset($data['token_type'])) {
         $token['token_type'] = $data['token_type'];
       }
       \Drupal::state()->set('ibm_apic_mail.token', $token);
     }
-    elseif ($result !== null) {
+    elseif ($result !== NULL) {
       \Drupal::logger('ibm_apim')->info('call: get platform token exception %code %message', [
         '%message' => $result->data,
         '%code' => $result->code,
       ]);
-    } else {
+    }
+    else {
       \Drupal::logger('ibm_apim')->info('call: get platform token exception: result not set');
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $token;
   }
+
 }

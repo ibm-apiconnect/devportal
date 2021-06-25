@@ -15,13 +15,13 @@ namespace Drupal\auth_apic\Service;
 use Drupal\auth_apic\JWTToken;
 use Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface;
 use Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface;
+use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\Utils;
 use Psr\Log\LoggerInterface;
-use Drupal\Core\Extension\ModuleHandler;
 
 
 /**
@@ -36,32 +36,32 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
   /**
    * @var \Drupal\Core\State\StateInterface
    */
-  protected $state;
+  protected StateInterface $state;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * @var \Drupal\ibm_apim\Service\Utils
    */
-  protected $utils;
+  protected Utils $utils;
 
   /**
    * @var \Drupal\ibm_apim\Service\ApimUtils
    */
-  protected $apimUtils;
+  protected ApimUtils $apimUtils;
 
   /**
    * @var \Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface
    */
-  protected $oidcStateService;
+  protected OidcStateServiceInterface $oidcStateService;
 
   /**
    * @var \Drupal\Core\Extension\ModuleHandler
    */
-  protected $moduleHandler;
+  protected ModuleHandler $moduleHandler;
 
 
   public function __construct(StateInterface $state,
@@ -79,14 +79,17 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
   }
 
   /**
-   * @inheritdoc
+   * @param \Drupal\ibm_apim\ApicType\UserRegistry $registry
+   * @param \Drupal\auth_apic\JWTToken|null $invitation_object
+   *
+   * @return array|null
    */
   public function getOidcMetadata(UserRegistry $registry, JWTToken $invitation_object = NULL): ?array {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
 
-    if ($registry->getRegistryType() !== 'oidc') {
+    if ($registry !== NULL && $registry->getRegistryType() !== 'oidc') {
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'non oidc registry');
       }
@@ -94,10 +97,9 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
       return NULL;
     }
     $info = [];
-    if ($registry) {
-      $info['az_url'] = $this->getOidcUrl($registry, $invitation_object);
-      $info['image'] = $this->getImageAsSvg($registry);
-    }
+    $info['az_url'] = $this->getOidcUrl($registry, $invitation_object);
+    $info['image'] = $this->getImageAsSvg($registry);
+
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -112,6 +114,7 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
    * @param \Drupal\auth_apic\JWTToken|NULL $invitation_object
    *
    * @return string|null
+   * @throws \Drupal\encrypt\Exception\EncryptException
    */
   private function getOidcUrl(UserRegistry $registry, JWTToken $invitation_object = NULL): ?string {
     if (function_exists('ibm_apim_entry_trace')) {
@@ -149,10 +152,10 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
 
     $redirect_uri = $host . $route;
 
-    $url = null;
     if ($registry->isRedirectEnabled()) {
       $url = $host . URL::fromRoute('auth_apic.az')->toString();
-    } else {
+    }
+    else {
       $url = $this->apimUtils->createFullyQualifiedUrl('/consumer-api/oauth2/authorize');
     }
 
@@ -177,9 +180,9 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
    *
    * @param \Drupal\ibm_apim\ApicType\UserRegistry $registry
    *
-   * @return string
+   * @return array|null
    */
-  private function getImageAsSvg(UserRegistry $registry) : ?array {
+  private function getImageAsSvg(UserRegistry $registry): ?array {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -202,23 +205,23 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
         case 'twitter':
           $image['html'] = '<i class="fa fa-twitter" aria-hidden="true" style="font-size: 19px;"></i>';
           $image['class'] = 'fa-twitter';
-          break; 
+          break;
         case 'windows_live':
           $image['html'] = '<i class="fa fa-windows" aria-hidden="true" style="font-size: 17px;"></i>';
           $image['class'] = 'fa-windows';
-          break; 
+          break;
         case 'linkedin':
           $image['html'] = '<i class="fa fa-linkedin-square" aria-hidden="true" style="font-size: 20px;"></i>';
           $image['class'] = 'fa-linkedin-square';
-          break; 
+          break;
         case 'google':
           $image['html'] = '<i class="fa fa-google" aria-hidden="true" style="font-size: 18px;"></i>';
           $image['class'] = 'fa-google';
-          break; 
+          break;
         case 'github':
           $image['html'] = '<i class="fa fa-github" aria-hidden="true" style="font-size: 21px;"></i>';
           $image['class'] = 'fa-github';
-          break; 
+          break;
       }
     }
     if (function_exists('ibm_apim_exit_trace')) {

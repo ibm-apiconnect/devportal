@@ -24,7 +24,7 @@ class ApicTestUtils {
    * Generates a "unique" id based on the current system timestamp.
    * (May not be unique if called very quickly in sequence but seems to be)
    *
-   * @return mixed
+   * @return array|string|string[]
    */
   public static function makeId() {
     return str_replace('.', '', microtime(1));
@@ -70,7 +70,7 @@ class ApicTestUtils {
 
     $permURLs = [];
     if ($perms !== NULL && !empty($perms)) {
-      foreach($perms as $permission) {
+      foreach ($perms as $permission) {
         $permURLs[] = $permission['url'];
       }
     }
@@ -100,7 +100,7 @@ class ApicTestUtils {
     $perms = self::getAllPermissionsFromMock();
     $permURLs = [];
     if ($perms !== NULL && !empty($perms)) {
-      foreach($perms as $permission) {
+      foreach ($perms as $permission) {
         $permURLs[] = $permission['url'];
       }
     }
@@ -204,50 +204,51 @@ class ApicTestUtils {
     \Drupal::service('ibm_apim.consumerorg')->createOrUpdateNode($org, 'ApicTestUtils::addMember');
   }
 
-    public static function addInvitationToOrg(ConsumerOrg $org, string $email, array $roles): void {
+  public static function addInvitationToOrg(ConsumerOrg $org, string $email, array $roles): void {
 
 
-        $invitations = $org->getInvites();
+    $invitations = $org->getInvites();
 
-        $id = self::makeId();
-        $invitation = [
-            'type' => 'member_invitation',
-            'api_version' => '2.0.0',
-            'email' => $email,
-            'id' => $id,
-            'url' => $org->getUrl() . '/member-invitations/' . $id,
-        ];
+    $id = self::makeId();
+    $invitation = [
+      'type' => 'member_invitation',
+      'api_version' => '2.0.0',
+      'email' => $email,
+      'id' => $id,
+      'url' => $org->getUrl() . '/member-invitations/' . $id,
+    ];
 
-        $roleUrls = [];
-        foreach ($roles as $role) {
-            $roleUrls[] = $role->getUrl();
-        }
-        //$member->setRoleUrls($roleUrls);
-        $invitation['role_urls'] = $roleUrls;
-
-        $invitations[] = $invitation;
-        $org->setInvites($invitations);
-
-        // Update the org in the database
-        \Drupal::service('ibm_apim.consumerorg')->createOrUpdateNode($org, 'ApicTestUtils::setInvites');
+    $roleUrls = [];
+    foreach ($roles as $role) {
+      $roleUrls[] = $role->getUrl();
     }
+    //$member->setRoleUrls($roleUrls);
+    $invitation['role_urls'] = $roleUrls;
+
+    $invitations[] = $invitation;
+    $org->setInvites($invitations);
+
+    // Update the org in the database
+    \Drupal::service('ibm_apim.consumerorg')->createOrUpdateNode($org, 'ApicTestUtils::setInvites');
+  }
 
   /**
    * When running with mocks we read all of the data from disk. This is done in the mock permissions service so we need to do likewise.
    * TODO: check for mocks parameter - is this code even called if not using mocks?
    *
    * @return array
+   * @throws \JsonException
    */
-    private static function getAllPermissionsFromMock() {
-      $all_perms = json_decode(file_get_contents(drupal_get_path('module', 'ibm_apim') . '/src/Service/Mocks/MockData/permissions.json'), TRUE);
-      $permissions = [];
-      foreach ($all_perms as $perm) {
-        $permissions[$perm['url']] = $perm;
-      }
-
-      //\Drupal::logger('PERMISSIONS DEBUG')->debug('getAllPermissionsFromMock returning: ' . \serialize($permissions));
-      return $permissions;
+  private static function getAllPermissionsFromMock(): array {
+    $all_perms = json_decode(file_get_contents(drupal_get_path('module', 'ibm_apim') . '/src/Service/Mocks/MockData/permissions.json'), TRUE, 512, JSON_THROW_ON_ERROR);
+    $permissions = [];
+    foreach ($all_perms as $perm) {
+      $permissions[$perm['url']] = $perm;
     }
+
+    //\Drupal::logger('PERMISSIONS DEBUG')->debug('getAllPermissionsFromMock returning: ' . \serialize($permissions));
+    return $permissions;
+  }
 
 
 }

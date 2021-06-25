@@ -35,17 +35,18 @@
   }
 }
 
-@media (max-width: 768px){
+@media (max-width: 768px) {
   .welcomebanner .bee {
-    display:none;
+    display: none;
   }
+
   .welcomebannertext {
     padding: 2rem 1rem 0 2rem;
     max-width: 100%;
   }
 }
 
-@media (max-width: 480px){
+@media (max-width: 480px) {
   .welcomebannertext {
     padding: 1rem 1rem 0 1rem;
     max-width: 100%;
@@ -126,15 +127,15 @@ section.block-go-ahead {
   display: flex;
 }
 
-.block-getting-started .startguide .gsstep div.placeholder{
- height: 48px;
- width: 48px;
- margin-left: 0;
- margin-right: auto;
- margin-top: 2rem;
+.block-getting-started .startguide .gsstep div.placeholder {
+  height: 48px;
+  width: 48px;
+  margin-left: 0;
+  margin-right: auto;
+  margin-top: 2rem;
 }
 
-#get-started-wrapper .startguide .gsstep div.placeholder{
+#get-started-wrapper .startguide .gsstep div.placeholder {
   height: 48px;
   width: 48px;
 }
@@ -158,8 +159,7 @@ section.block-go-ahead {
   margin: 0 0.75rem;
 }
 
-.gsstep h5
-{
+.gsstep h5 {
   font-weight: 600;
   font-family: 'IBM Plex Sans', sans-serif;
   line-height: 1.25;
@@ -188,7 +188,6 @@ section.block-go-ahead {
   padding: .75em 0;
   font-weight: 300;
 }
-
 
 
 @media screen and (max-width: 768px) {
@@ -283,7 +282,8 @@ section.block-go-ahead {
   justify-content: space-evenly;
   margin-top: 7%;
 }
-.ibmapimGetStarted .getStartedContentWrapper .exploreDiv ,
+
+.ibmapimGetStarted .getStartedContentWrapper .exploreDiv,
 .ibmapimGetStarted .getStartedContentWrapper .createAppDiv {
   margin-right: 2px;
 }
@@ -308,6 +308,7 @@ section.block-go-ahead {
   padding: 0;
   margin: unset;
 }
+
 .ibmapimGetStarted .getStartedContentWrapper .getStartedText {
   width: 100%;
   display: flex;
@@ -316,7 +317,8 @@ section.block-go-ahead {
   padding: 4rem 0 0.5rem;
   height: 100%;
 }
-.ibmapimGetStarted .getStartedContentWrapper .getStartedText h3{
+
+.ibmapimGetStarted .getStartedContentWrapper .getStartedText h3 {
   margin: 0;
   font-weight: 400;
 }
@@ -327,7 +329,7 @@ section.block-go-ahead {
   flex-wrap: wrap;
 }
 
-.ibmapimGetStarted .homepageLink .breadcrumb{
+.ibmapimGetStarted .homepageLink .breadcrumb {
   padding: 2rem 0;
 }
 
@@ -343,12 +345,14 @@ section.block-go-ahead {
   background-size: contain;
   background-repeat: no-repeat;
 }
+
 .route-ibm-apimnoperms .main-container.container .noPermsContentWrapper {
   width: 100%;
   border: 0;
   background-color: inherit;
   padding: 100px 2rem 2rem 300px;
 }
+
 .route-ibm-apimnoperms .main-container.container .row {
   margin: 40px;
   width: calc(100% - 80px);

@@ -25,7 +25,7 @@ use Drupal\Component\Utility\Unicode;
  *
  * @return array Header array with priority and receipt confirmation info
  */
-function _mail_subscribers_headers($receipt, $priority, $from, $additionalHeaders) {
+function _mail_subscribers_headers($receipt, $priority, $from, $additionalHeaders): array {
   $headers = [];
 
   // If receipt is requested, add headers.
@@ -90,7 +90,7 @@ function _mail_subscribers_headers($receipt, $priority, $from, $additionalHeader
  *
  * @return string
  */
-function _mail_subscribers_format_address($mail, $name, $encode = TRUE) {
+function _mail_subscribers_format_address($mail, $name, $encode = TRUE): string {
 
   // Do not format address on Windows based PHP systems or when $name is empty.
   if (empty($name) || (strpos(PHP_OS, 'WIN') === 0)) {
@@ -125,9 +125,9 @@ function _mail_subscribers_format_address($mail, $name, $encode = TRUE) {
  * @param boolean $plain_format
  *   Whether the e-mail should be sent in plain format.
  */
-function _mail_subscribers_prepare_mail(&$message, $plain_format = TRUE) {
+function _mail_subscribers_prepare_mail(array &$message, $plain_format = TRUE) {
   // Extract all variables/keys from the message.
-  extract($message);
+  extract($message, EXTR_OVERWRITE);
 
   /**
    * TODO: In the future, this module will be able to send an existing node.
@@ -191,7 +191,7 @@ function mail_subscribers_deliver($message) {
   }
 
   $key = 'direct';
-  $headers = unserialize($message->headers, ['allowed_classes' => false]);
+  $headers = unserialize($message->headers, ['allowed_classes' => FALSE]);
 
   $mail = [
     'to' => $message->to_mail,
@@ -201,18 +201,16 @@ function mail_subscribers_deliver($message) {
     'headers' => $headers,
   ];
 
-  $result = \Drupal::service('plugin.manager.mail')
+  return \Drupal::service('plugin.manager.mail')
     ->mail('mail_subscribers', $key, $message->to_mail, \Drupal::currentUser()
       ->getPreferredLangcode(), $mail, NULL, TRUE);
-
-  return $result;
 }
 
 /**
  * Returns property info for the Email Message
  */
-function _mail_subscribers_email_message_property_info() {
-  $propertyInfo = [
+function _mail_subscribers_email_message_property_info(): array {
+  return [
     'uid' => [
       'type' => 'integer',
       'label' => t('User ID'),
@@ -250,5 +248,4 @@ function _mail_subscribers_email_message_property_info() {
       'label' => t('E-mail headers (serialized)'),
     ],
   ];
-  return $propertyInfo;
 }

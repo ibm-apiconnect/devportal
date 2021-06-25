@@ -18,6 +18,11 @@ use Drupal\ibm_apim\Wizard\IbmWizardStepBase;
 use Drupal\node\Entity\Node;
 use Drupal\product\Product;
 
+/**
+ * Class ConfirmSubscribe
+ *
+ * @package Drupal\ibm_apim\Wizard\Subscription
+ */
 class ConfirmSubscribe extends IbmWizardStepBase {
 
   /**
@@ -29,6 +34,7 @@ class ConfirmSubscribe extends IbmWizardStepBase {
 
   /**
    * @inheritDoc
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
 
@@ -36,7 +42,6 @@ class ConfirmSubscribe extends IbmWizardStepBase {
     if ($this->validateAccess()) {
       /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
       $temp_store_factory = \Drupal::service('session_based_temp_store');
-      /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
       $temp_store = $temp_store_factory->get('ibm_apim.wizard');
       $product_name = $temp_store->get('productName');
       $plan_name = $temp_store->get('planName');
@@ -56,7 +61,7 @@ class ConfirmSubscribe extends IbmWizardStepBase {
         }
       }
 
-      if (isset($selectedPlan)) {
+      if (isset($selectedPlan) && $product_node !== NULL) {
         //Get the product image
         $moduleHandler = \Drupal::service('module_handler');
         $ibm_apim_show_placeholder_images = (boolean) \Drupal::config('ibm_apim.settings')->get('show_placeholder_images');
@@ -75,7 +80,7 @@ class ConfirmSubscribe extends IbmWizardStepBase {
 
       //Set the rate limit
       $form['#planInfo']['name'] = $plan_name;
-      $planService = \Drupal::service('product.plan');
+      $planService = \Drupal::service('ibm_apim.product_plan');
       if (isset($selectedPlan['rate-limits'])) {
         $rateLimit = array_shift($selectedPlan['rate-limits'])['value'];
         $form['#planInfo']['rateLimit'] = $planService->parseRateLimit($rateLimit);
@@ -88,15 +93,16 @@ class ConfirmSubscribe extends IbmWizardStepBase {
         $form['#billing'] = true;
         if (isset($product_node)) {
           $org_url = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerOrg();
-          $org_url = array_shift( $org_url );
           $corgService = \Drupal::service('ibm_apim.consumerorg');
-          $org = $corgService->get($org_url );
+          $org = $corgService->get($org_url['url']);
 
           if (isset($selectedPlan['billing'])) {
-            $form['#planInfo']['billingInfo'] = $planService->parseBilling($selectedPlan['billing']);
-            $form['#paymentMethod'] = $org->getDefaultPaymentMethod();
-            if (!empty($form['#paymentMethod']) && is_array($form['#paymentMethod'])) {
-              $form['#paymentMethod'] = $form['#paymentMethod'][0]->toArray();
+            $billingInfo = $planService->parseBilling($selectedPlan['billing']);
+
+            if(isset($billingInfo, $billingInfo['billingText'], $billingInfo['trialPeriodText'])) {
+              $form['#planInfo']['billingInfo'] = $billingInfo['billingText'] . ' ' . $billingInfo['trialPeriodText'];
+
+              $form['#paymentMethod'] = $org->getDefaultPaymentMethod();
             }
           }
         }
@@ -115,11 +121,11 @@ class ConfirmSubscribe extends IbmWizardStepBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
     $temp_store_factory = \Drupal::service('session_based_temp_store');
-    /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
     $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
     $applicationUrl = $temp_store->get('applicationUrl');

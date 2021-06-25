@@ -72,4 +72,5 @@ class GHMarkdown extends FilterBase {
     }
     return $returnValue;
   }
+
 }

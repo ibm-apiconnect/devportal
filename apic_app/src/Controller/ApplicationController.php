@@ -13,8 +13,10 @@
 
 namespace Drupal\apic_app\Controller;
 
-use Drupal\apic_app\Application;
+use Drupal\apic_app\Service\ApplicationService;
+use Drupal\apic_app\Form\ModalApplicationCreateForm;
 use Drupal\Component\Utility\Html;
+use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
 use Drupal\Core\Controller\ControllerBase;
@@ -23,10 +25,13 @@ use Drupal\file\Entity\File;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\ibm_apim\Service\Utils;
+use Drupal\ibm_apim\Service\EventLogService;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\product\Product;
+use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -34,26 +39,74 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ApplicationController extends ControllerBase {
 
-  protected $userUtils;
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
+  protected UserUtils $userUtils;
 
-  protected $siteConfig;
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
+  protected SiteConfig $siteConfig;
 
-  protected $utils;
+  /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
+  protected Utils $utils;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\EventLogService
+   */
+  protected EventLogService $eventLogService;
+
+  /**
+   * @var \Drupal\consumerorg\Service\ConsumerOrgService
+   */
+  protected ConsumerOrgService $consumerOrgService;
+
+  /**
+   * @var \Drupal\apic_app\Service\ApplicationService
+   */
+  protected ApplicationService $applicationService;
+
+  /**
+   * ApplicationController constructor.
+   *
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   * @param \Drupal\ibm_apim\Service\SiteConfig $config
+   * @param \Drupal\ibm_apim\Service\Utils $utils
+   * @param \Drupal\ibm_apim\Service\EventLogService $eventLogService
+   * @param \Drupal\consumerorg\Service\ConsumerOrgService $cOrgService
+   * @param \Drupal\apic_app\Service\ApplicationService $applicationService
+   */
   public function __construct(
     UserUtils $userUtils,
     SiteConfig $config,
-    Utils $utils) {
+    Utils $utils,
+    EventLogService $eventLogService,
+    ConsumerOrgService $cOrgService,
+    ApplicationService $applicationService) {
     $this->userUtils = $userUtils;
     $this->siteConfig = $config;
     $this->utils = $utils;
+    $this->eventLogService = $eventLogService;
+    $this->consumerOrgService = $cOrgService;
+    $this->applicationService = $applicationService;
   }
 
-  public static function create(ContainerInterface $container) {
+  /**
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *
+   * @return \Drupal\apic_app\Controller\ApplicationController|static
+   */
+  public static function create(ContainerInterface $container): ApplicationController {
     return new static(
       $container->get('ibm_apim.user_utils'),
       $container->get('ibm_apim.site_config'),
-      $container->get('ibm_apim.utils')
+      $container->get('ibm_apim.utils'),
+      $container->get('ibm_apim.event_log'),
+      $container->get('ibm_apim.consumerorg'),
+      $container->get('apic_app.application'),
     );
   }
 
@@ -64,25 +117,26 @@ class ApplicationController extends ControllerBase {
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse
    */
-  public function applicationView(NodeInterface $appId = NULL) {
+  public function applicationView(NodeInterface $appId = NULL): RedirectResponse {
     return $this->redirect('entity.node.canonical', ['node' => $appId->id()]);
   }
 
-  public function createApplicationModal() {
+  public function createApplicationModal(): AjaxResponse {
     $response = new AjaxResponse();
-    $form = \Drupal::getContainer()->get('form_builder')->getForm('Drupal\apic_app\Form\ModalApplicationCreateForm');
+    $form = \Drupal::getContainer()->get('form_builder')->getForm(ModalApplicationCreateForm::class);
     $response->addCommand(new OpenModalDialogCommand(t('Create an application'), $form, []));
     return $response;
   }
 
   /**
-   * Display graphs of analytics for the current application
+   * Activity feed for the current application
    *
    * @param NodeInterface|null $node
    *
    * @return array|Response
+   * @throws \Drupal\Core\TempStore\TempStoreException|\JsonException
    */
-  public function analytics(NodeInterface $node = NULL) {
+  public function activity(NodeInterface $node = NULL) {
     if (isset($node)) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
     }
@@ -96,22 +150,14 @@ class ApplicationController extends ControllerBase {
     $userHasSubView = $this->userUtils->checkHasPermission('subscription:view');
     $userHasSubManage = $this->userUtils->checkHasPermission('subscription:manage');
     $applifecycleEnabled = \Drupal::state()->get('ibm_apim.applifecycle_enabled');
+    $analytics_access = FALSE;
 
     $catalogId = $this->siteConfig->getEnvId();
     $catalogName = $this->siteConfig->getCatalog()['title'];
     $pOrgId = $this->siteConfig->getOrgId();
 
-    $theme = 'application_analytics';
-    $appnode = NULL;
-    $libraries = ['apic_app/basic', 'ibm_apim/analytics', 'apic_app/app_analytics_apicalls'];
-
-    $portal_analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
-    if (isset($portal_analytics_service)) {
-      $analyticsClientUrl = $portal_analytics_service->getClientEndpoint();
-    }
-    if (!isset($analyticsClientUrl)) {
-      $this->messenger->addError(t('Analytics Client URL is not set.'));
-    }
+    $theme = 'application_activity';
+    $libraries = ['apic_app/basic'];
 
     if (isset($node)) {
       $node = Node::load($node->id());
@@ -123,22 +169,17 @@ class ApplicationController extends ControllerBase {
         $appImageUploadEnabled = (boolean) $config->get('application_image_upload');
         $fid = $node->application_image->getValue();
         $application_image_url = NULL;
-        if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
+        if (isset($fid[0]['target_id']) && !empty($fid)) {
           $file = File::load($fid[0]['target_id']);
-          $application_image_url = $file->createFileUrl();
-        }
-        else {
-          if ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
-            $rawImage = Application::getRandomImageName($node->getTitle());
-            $application_image_url = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
+          if ($file !== NULL) {
+            $application_image_url = $file->createFileUrl();
           }
         }
-        if (isset($node->application_lifecycle_pending->value)) {
-          $lifecycle_pending = $node->application_lifecycle_pending->value;
+        elseif ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
+          $rawImage = $this->applicationService->getRandomImageName($node->getTitle());
+          $application_image_url = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
         }
-        else {
-          $lifecycle_pending = NULL;
-        }
+        $lifecycle_pending = $node->application_lifecycle_pending->value ?? NULL;
         $appnode = [
           'id' => $node->id(),
           'title' => $node->getTitle(),
@@ -147,6 +188,22 @@ class ApplicationController extends ControllerBase {
           'application_lifecycle_pending' => $lifecycle_pending,
           'application_lifecycle_state' => $node->application_lifecycle_state->value,
         ];
+
+        $portalAnalyticsService = \Drupal::service('ibm_apim.analytics')->getDefaultService();
+        if ($portalAnalyticsService !== NULL) {
+          $analyticsClientUrl = $portalAnalyticsService->getClientEndpoint();
+        }
+        $user = User::load($current_user->id());
+        if ($user !== NULL) {
+          $userUrl = $user->get('apic_url')->value;
+          $org = $this->consumerOrgService->get($node->application_consumer_org_url->value);
+        }
+        if ($org !== NULL && $analyticsClientUrl !== NULL && $userUrl !== NULL && $org->hasPermission($userUrl, 'app-analytics:view')) {
+          $analytics_access = TRUE;
+        }
+
+
+        $events = $this->eventLogService->getFeedForApplication($node->apic_url->value, 50);
       }
       else {
         \Drupal::logger('ibm_apim')->info('Not a valid application node: %node', ['%node' => $node->id()]);
@@ -158,18 +215,6 @@ class ApplicationController extends ControllerBase {
       return new Response(t('Not a valid application node.'), 400);
     }
 
-    $translations = $this->utils->analytics_translations();
-
-    $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString();
-    $drupalSettings = [
-      'anv' => [],
-      'analytics' => [
-        'proxyURL' => $url,
-        'translations' => $translations,
-        'analyticsDir' => base_path() . drupal_get_path('module', 'ibm_apim') . '/analytics',
-      ],
-      'application' => ['id' => $node->application_id->value],
-    ];
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, [
       'theme' => $theme,
@@ -182,11 +227,10 @@ class ApplicationController extends ControllerBase {
       'userHasSubManage' => $userHasSubManage,
       'appImageUploadEnabled' => $appImageUploadEnabled,
       'applifecycleEnabled' => $applifecycleEnabled,
+      'analytics_access' => $analytics_access,
+      'events' => $events,
     ]);
-    $nodeId = 0;
-    if ($node !== NULL) {
-      $nodeId = $node->id();
-    }
+    $nodeId = $node->id();
 
     $build = [
       '#theme' => $theme,
@@ -194,14 +238,15 @@ class ApplicationController extends ControllerBase {
       '#catalogName' => urlencode($catalogName),
       '#porgId' => $pOrgId,
       '#node' => $appnode,
+      '#events' => $events,
       '#userHasAppManage' => $userHasAppManage,
       '#userHasSubView' => $userHasSubView,
       '#userHasSubManage' => $userHasSubManage,
       '#applifecycleEnabled' => $applifecycleEnabled,
       '#appImageUploadEnabled' => $appImageUploadEnabled,
+      '#analytics_access' => $analytics_access,
       '#attached' => [
         'library' => $libraries,
-        'drupalSettings' => $drupalSettings,
       ],
       '#cache' => [
         'tags' => [
@@ -220,7 +265,8 @@ class ApplicationController extends ControllerBase {
    *
    * @param NodeInterface|null $node
    *
-   * @return array
+   * @return array|Response
+   * @throws \Drupal\Core\TempStore\TempStoreException|\JsonException
    */
   public function subscriptions(NodeInterface $node = NULL) {
     if (isset($node)) {
@@ -265,22 +311,17 @@ class ApplicationController extends ControllerBase {
         $appImageUploadEnabled = (boolean) $config->get('application_image_upload');
         $fid = $node->application_image->getValue();
         $application_image_url = NULL;
-        if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
+        if (isset($fid[0]['target_id']) && !empty($fid)) {
           $file = File::load($fid[0]['target_id']);
-          $application_image_url = $file->createFileUrl();
-        }
-        else {
-          if ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
-            $rawImage = Application::getRandomImageName($node->getTitle());
-            $application_image_url = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
+          if ($file !== NULL) {
+            $application_image_url = $file->createFileUrl();
           }
         }
-        if (isset($node->application_lifecycle_pending->value)) {
-          $lifecycle_pending = $node->application_lifecycle_pending->value;
+        elseif ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
+          $rawImage = $this->applicationService->getRandomImageName($node->getTitle());
+          $application_image_url = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
         }
-        else {
-          $lifecycle_pending = NULL;
-        }
+        $lifecycle_pending = $node->application_lifecycle_pending->value ?? NULL;
         $appnode = [
           'id' => $node->id(),
           'title' => $node->getTitle(),
@@ -309,9 +350,11 @@ class ApplicationController extends ControllerBase {
                 $fid = $product->apic_image->getValue();
                 $product_image_url = NULL;
                 $cost = t('Free');
-                if (isset($fid) && !empty($fid) && isset($fid[0]['target_id'])) {
+                if (isset($fid[0]['target_id']) && !empty($fid)) {
                   $file = File::load($fid[0]['target_id']);
-                  $product_image_url = $file->createFileUrl();
+                  if ($file !== NULL) {
+                    $product_image_url = $file->createFileUrl();
+                  }
                 }
                 elseif ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('product')) {
                   $rawImage = Product::getRandomImageName($product->getTitle());
@@ -329,7 +372,7 @@ class ApplicationController extends ControllerBase {
                     if (!isset($thisPlan['billing-model'])) {
                       $thisPlan['billing-model'] = [];
                     }
-                    $cost = \Drupal::service('product.plan')->parseBilling($thisPlan['billing-model']);
+                    $cost = \Drupal::service('ibm_apim.product_plan')->parseBilling($thisPlan['billing-model']);
                     $plan_title = $productPlans[$sub->plan()]['title'];
                   }
                 }
@@ -367,6 +410,12 @@ class ApplicationController extends ControllerBase {
     }
 
     $translations = $this->utils->analytics_translations();
+    $consumerorg_url = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerOrg()['url'];
+    if ($consumerorg_url !== NULL && $consumerorg_url === $node->application_consumer_org_url->value) {
+      $notifications_access = TRUE;
+    } else {
+      $notifications_access = FALSE;
+    }
 
     $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString();
     $drupalSettings = [
@@ -393,10 +442,7 @@ class ApplicationController extends ControllerBase {
       'node' => $appnode,
       'applifecycleEnabled' => $applifecycleEnabled,
     ]);
-    $nodeId = 0;
-    if ($node !== NULL) {
-      $nodeId = $node->id();
-    }
+    $nodeId = $node->id();
 
     $build = [
       '#theme' => $theme,
@@ -408,6 +454,7 @@ class ApplicationController extends ControllerBase {
       '#userHasSubView' => $userHasSubView,
       '#applifecycleEnabled' => $applifecycleEnabled,
       '#appImageUploadEnabled' => $appImageUploadEnabled,
+      '#notifications_access' => $notifications_access,
       '#node' => $appnode,
       '#attached' => [
         'library' => $libraries,

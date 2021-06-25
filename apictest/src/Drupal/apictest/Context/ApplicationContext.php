@@ -13,9 +13,10 @@
 namespace Drupal\apictest\Context;
 
 use Behat\Gherkin\Node\TableNode;
-use Drupal\apic_app\Application;
-use Drupal\apic_app\SubscriptionService;
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Utility\Random;
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
@@ -26,6 +27,11 @@ use Drupal\user\Entity\User;
 class ApplicationContext extends RawDrupalContext {
 
   private $createOrUpdateResult;
+
+  /**
+   * @var bool|\stdClass|\stdClass[]
+   */
+  private $useMockServices = TRUE;
 
   /**
    * @Given applications:
@@ -50,13 +56,14 @@ class ApplicationContext extends RawDrupalContext {
     foreach ($table as $row) {
       $this->createApplication($row['title'], $row['id'], '/consumer-orgs/1234/5678/' . $row['org_id']);
     }
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
 
   /**
    * @Given subscriptions:
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function createSubs(TableNode $table): void {
 
@@ -78,7 +85,7 @@ class ApplicationContext extends RawDrupalContext {
     foreach ($table as $row) {
       $this->createSubscription($row['org_id'], $row['app_id'], $row['sub_id'], $row['product'], $row['plan']);
     }
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -93,7 +100,8 @@ class ApplicationContext extends RawDrupalContext {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function createSubscription($org_id, $app_id, $sub_id, $product, $plan): void {
-    SubscriptionService::create('/apps/1234/5678/' . $org_id . '/apps/' . $app_id, $sub_id, '/catalogs/1234/5678/products/' . $product, $plan, '/apps/1234/5678/' . $org_id, 'enabled', NULL);
+    $subService = \Drupal::service('apic_app.subscriptions');
+    $subService->create('/apps/1234/5678/' . $org_id . '/apps/' . $app_id, $sub_id, '/catalogs/1234/5678/products/' . $product, $plan, '/apps/1234/5678/' . $org_id, 'enabled', NULL, '2021-02-26T12:18:58.995Z', '2021-02-26T12:18:58.995Z');
   }
 
   /**
@@ -113,30 +121,39 @@ class ApplicationContext extends RawDrupalContext {
     $object['id'] = $id;
     $object['url'] = str_replace('consumer-orgs', 'apps', $consumerorgurl) . '/apps/' . $id;
     $object['state'] = 'published';
+    $object['created_at'] = '2021-02-26T12:18:58.995Z';
+    $object['updated_at'] = '2021-02-26T12:18:58.995Z';
     $object['app_credentials'] = [
       [
         'client_id' => '11111111-78f0-48d1-a015-6a803fd64e8f',
         'client_secret' => 'fkvO2qWJQbtNB8zqcOMs2p1DPqhI0EuRB7Gfi1/tMrQ=',
         'id' => $id . 'cred-1234567',
-        'url'  => $object['url']  . '/credentials/' . $id . 'cred-1234567',
-        'title'  => 'cred-1234567',
-        'summary'  => 'cred-1234567',
-        'name'  => 'cred-1234567',
+        'url' => $object['url'] . '/credentials/' . $id . 'cred-1234567',
+        'title' => 'cred-1234567',
+        'summary' => 'cred-1234567',
+        'name' => 'cred-1234567',
         'app_url' => $object['url'],
+        'created_at' => '2021-02-26T12:18:58.995Z',
+        'updated_at' => '2021-02-26T12:18:58.995Z',
       ],
       [
         'client_id' => '22222222-78f0-48d1-a015-6a803fd64e8f',
         'client_secret' => 'fkvO2qWJQbtNB8zqcOMs2p1DPqhI0EuRB7Gfi1/tMrQ=',
         'id' => $id . 'cred-2345678',
-        'url'  => $object['url']  . '/credentials/' . $id . 'cred-2345678',
-        'title'  => 'cred-2345678',
-        'summary'  => 'cred-2345678',
-        'name'  => 'cred-2345678',
+        'url' => $object['url'] . '/credentials/' . $id . 'cred-2345678',
+        'title' => 'cred-2345678',
+        'summary' => 'cred-2345678',
+        'name' => 'cred-2345678',
         'app_url' => $object['url'],
+        'created_at' => '2021-02-26T12:18:58.995Z',
+        'updated_at' => '2021-02-26T12:18:58.995Z',
       ],
     ];
 
-    $nid = Application::create($object);
+    try {
+      $nid = \Drupal::service('apic_app.application')->create($object);
+    } catch (InvalidPluginDefinitionException | PluginNotFoundException | EntityStorageException $e) {
+    }
 
     print('Saved application ' . $name . ' (url=' . $object['url'] . ') as nid ' . $nid);
 
@@ -144,24 +161,25 @@ class ApplicationContext extends RawDrupalContext {
 
   /**
    * @Then I should have an application named :name id :id
+   * @throws \Exception
    */
   public function iHaveApplication($name, $id): void {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     //$query->condition('title', $name);
     $results = $query->execute();
-    $querynid = NULL;
-    $query2nid = NULL;
+    $queryNid = NULL;
+    $query2Nid = NULL;
     print('Query results: ' . serialize($results));
     if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
+      $queryNid = array_shift($results);
     }
 
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $org = $userUtils->getCurrentConsumerOrg();
     print('Current org: ' . serialize($org));
 
-    if ($querynid === NULL || empty($querynid)) {
+    if ($queryNid === NULL || empty($queryNid)) {
       throw new \Exception("An application with name $name was not found!");
     }
 
@@ -170,28 +188,29 @@ class ApplicationContext extends RawDrupalContext {
     $query->condition('application_id.value', $id);
     $results = $query->execute();
     if ($results !== NULL && !empty($results)) {
-      $query2nid = array_shift($results);
+      $query2Nid = array_shift($results);
     }
 
-    if ($query2nid === NULL || empty($query2nid)) {
+    if ($query2Nid === NULL || empty($query2Nid)) {
       throw new \Exception("An application with id $id was not found!");
     }
   }
 
   /**
-   * @Then The application with the name :name and id :id should not be visible to :switchto
+   * @Then The application with the name :name and id :id should not be visible to :switchTo
+   * @throws \Exception
    */
-  public function ApplicationShouldNotBeVisisbleTo($name, $id, $switchto): void {
+  public function ApplicationShouldNotBeVisibleTo($name, $id, $switchTo): void {
 
     // Switch to the userid provided
     $accountSwitcher = \Drupal::service('account_switcher');
-    $users = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['name' => $switchto]);
+    $users = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['name' => $switchTo]);
     $user = reset($users);
     if ($user) {
       $accountSwitcher->switchTo(\Drupal\user\Entity\User::load($user->id()));
     }
     else {
-      throw new \Exception("Unable to switch to user $switchto");
+      throw new \Exception("Unable to switch to user $switchTo");
     }
     $query2nid = NULL;
     $userUtils = \Drupal::service('ibm_apim.user_utils');
@@ -208,45 +227,50 @@ class ApplicationContext extends RawDrupalContext {
     }
     if ($query2nid !== NULL && !empty($query2nid) && $query2nid === $id) {
       // User could see the application; fail
-      throw new \Exception("User $switchto was able to view application with id $id!");
+      throw new \Exception("User $switchTo was able to view application with id $id!");
     }
     else {
       // User has some apps visible but could not see the one specified
-      print('User ' . $switchto . ' was unable to see application ' . $name);
+      print('User ' . $switchTo . ' was unable to see application ' . $name);
     }
   }
 
   /**
    * @When I update the application named :oldname to be called :name
+   * @throws \Exception
    */
-  public function iUpdateApplication($oldname, $name) {
+  public function iUpdateApplication($oldName, $name): void {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
-    $query->condition('title', $oldname);
+    $query->condition('title', $oldName);
     $results = $query->execute();
-    $querynid = NULL;
+    $queryNid = NULL;
     if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
+      $queryNid = array_shift($results);
     }
 
-    if ($querynid === NULL || empty($querynid)) {
-      throw new \Exception("An application with name $oldname was not found!");
+    if ($queryNid === NULL || empty($queryNid)) {
+      throw new \Exception("An application with name $oldName was not found!");
     }
-    $node = Node::load($querynid);
-    $random = new Random();
-    if ($name === NULL || empty($name)) {
-      $name = $random->name(8);
-    }
-    $object['name'] = $name;
-    $object['title'] = $name;
-    $object['id'] = $node->application_id->value;
-    $object['consumer_org_url'] = $node->application_consumer_org_url->value;
-    $object['redirect_urls'] = [$name];
-    $object['enabled'] = TRUE;
-    $object['url'] = 'https://localhost.com';
-    $object['state'] = 'published';
+    $node = Node::load($queryNid);
+    if ($node !== NULL) {
+      $random = new Random();
+      if ($name === NULL || empty($name)) {
+        $name = $random->name(8);
+      }
+      $object['name'] = $name;
+      $object['title'] = $name;
+      $object['id'] = $node->application_id->value;
+      $object['consumer_org_url'] = $node->application_consumer_org_url->value;
+      $object['redirect_urls'] = [$name];
+      $object['enabled'] = TRUE;
+      $object['url'] = 'https://localhost.com';
+      $object['state'] = 'published';
+      $object['created_at'] = '2021-02-26T12:18:58.995Z';
+      $object['updated_at'] = '2021-03-01T12:18:58.995Z';
 
-    $returned_node = Application::update($node, $object);
+      $returned_node = \Drupal::service('apic_app.application')->update($node, $object);
+    }
     if ($returned_node === NULL || empty($returned_node)) {
       throw new \Exception("Application update for name $name did not return a node!");
     }
@@ -254,8 +278,9 @@ class ApplicationContext extends RawDrupalContext {
 
   /**
    * @Given I do not have an application named :name
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function iDoNotHaveApplication($name) {
+  public function iDoNotHaveApplication($name): void {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('title', $name);
@@ -263,15 +288,18 @@ class ApplicationContext extends RawDrupalContext {
     if ($results !== NULL && !empty($results)) {
       $nid = array_shift($results);
       $node = Node::load($nid);
-      $node->delete();
-      unset($node);
+      if ($node !== NULL) {
+        $node->delete();
+        unset($node);
+      }
     }
   }
 
   /**
    * @Then I should not have an application named :name
+   * @throws \Exception
    */
-  public function iShouldNotHaveApplication($name) {
+  public function iShouldNotHaveApplication($name): void {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('title', $name);
@@ -286,8 +314,9 @@ class ApplicationContext extends RawDrupalContext {
 
   /**
    * @When I delete the application named :name
+   * @throws \Exception
    */
-  public function iDeleteApplication($name) {
+  public function iDeleteApplication($name): void {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('title', $name);
@@ -298,8 +327,10 @@ class ApplicationContext extends RawDrupalContext {
         throw new \Exception("Application named $name not found!");
       }
       $node = Node::load($nid);
-      $node->delete();
-      unset($node);
+      if ($node !== NULL) {
+        $node->delete();
+        unset($node);
+      }
     }
     else {
       throw new \Exception("Application named $name not found!");
@@ -309,8 +340,9 @@ class ApplicationContext extends RawDrupalContext {
   /**
    * @Then I delete all applications from the site
    * @Given I do not have any applications
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function iDoNotHaveAnyApplications() {
+  public function iDoNotHaveAnyApplications(): void {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = \Drupal::service('account_switcher');
@@ -319,13 +351,15 @@ class ApplicationContext extends RawDrupalContext {
       $accountSwitcher->switchTo(User::load(1));
     }
 
-    $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties(['type' => 'application']);
-
-    foreach ($nodes as $node) {
-      $node->delete();
+    try {
+      $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties(['type' => 'application']);
+      foreach ($nodes as $node) {
+        $node->delete();
+      }
+    } catch (InvalidPluginDefinitionException | PluginNotFoundException $e) {
     }
 
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
@@ -334,7 +368,7 @@ class ApplicationContext extends RawDrupalContext {
   /**
    * @Given I createOrUpdate an application named :name id :id consumerorgurl :consumerorgurl
    */
-  public function iCreateOrUpdateApplication($name, $id, $consumerorg) {
+  public function iCreateOrUpdateApplication($name, $id, $consumerorg): void {
     $random = new Random();
     if ($name === NULL || empty($name)) {
       $name = $random->name(8);
@@ -348,13 +382,19 @@ class ApplicationContext extends RawDrupalContext {
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';
     $object['state'] = 'published';
+    $object['created_at'] = '2021-02-26T12:18:58.995Z';
+    $object['updated_at'] = '2021-03-01T12:18:58.995Z';
 
-    $this->createOrUpdateResult = Application::createOrUpdate($object, 'internal');
+    try {
+      $this->createOrUpdateResult = \Drupal::service('apic_app.application')->createOrUpdate($object, 'internal');
+    } catch (InvalidPluginDefinitionException | PluginNotFoundException | EntityStorageException $e) {
+    }
     print("createOrUpdateResult: $this->createOrUpdateResult");
   }
 
   /**
    * @Then The createOrUpdate output should be :value
+   * @throws \Exception
    */
   public function theCreateOrUpdateValueShouldBe($value): void {
     if (!property_exists($this, 'createOrUpdateResult')) {
@@ -365,4 +405,5 @@ class ApplicationContext extends RawDrupalContext {
       throw new \Exception("createOrUpdateResult is not set to $value! Currently set to: $this->createOrUpdateResult");
     }
   }
+
 }

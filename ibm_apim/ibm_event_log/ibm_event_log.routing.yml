@@ -1,0 +1,17 @@
+ibm_event_log.activity_feed_json:
+  path: '/myorg/activityfeed'
+  defaults:
+    _controller: 'Drupal\ibm_event_log\Controller\EventLogController::renderJson'
+    _title: 'Activity Feed'
+  methods: [ GET ]
+  requirements:
+    _role: 'authenticated'
+    _ibm_apim_loggedin_not_admin_access_check: 'TRUE'
+
+ibm_event_log.settings:
+  path: '/admin/config/system/ibm_event_log'
+  defaults:
+    _form: 'Drupal\ibm_event_log\Form\ConfigForm'
+    _title: 'IBM APIC Activity Feed Settings'
+  requirements:
+    _permission: 'administer_apic'

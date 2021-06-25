@@ -21,6 +21,7 @@ use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -33,17 +34,17 @@ class RemoveUserForm extends ConfirmFormBase {
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgService
    */
-  protected $consumerOrgService;
+  protected ConsumerOrgService $consumerOrgService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  protected $userUtils;
+  protected UserUtils $userUtils;
 
   /**
    * @var \Drupal\Core\Extension\ThemeHandler
    */
-  protected $themeHandler;
+  protected ThemeHandler $themeHandler;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -55,7 +56,7 @@ class RemoveUserForm extends ConfirmFormBase {
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $orgId;
+  protected NodeInterface $orgId;
 
   protected $currentOrg;
 
@@ -64,9 +65,9 @@ class RemoveUserForm extends ConfirmFormBase {
   /**
    * The id of the member to remove
    *
-   * @var string
+   * @var string|NULL
    */
-  protected $memberId;
+  protected ?string $memberId;
 
   /**
    * RemoveUserForm constructor.
@@ -91,7 +92,7 @@ class RemoveUserForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): RemoveUserForm {
     return new static(
       $container->get('ibm_apim.consumerorg'),
       $container->get('ibm_apim.user_utils'),
@@ -109,6 +110,7 @@ class RemoveUserForm extends ConfirmFormBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function buildForm(array $form, FormStateInterface $form_state, $memberId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -209,4 +211,5 @@ class RemoveUserForm extends ConfirmFormBase {
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

@@ -13,23 +13,39 @@
 namespace Drupal\Tests\auth_apic\Unit {
 
   use Drupal\auth_apic\UserManagement\ApicUserDeleteService;
+  use Drupal\Core\Entity\EntityInterface;
   use Drupal\ibm_apim\ApicType\ApicUser;
   use Drupal\ibm_apim\Rest\RestResponse;
   use Drupal\Tests\auth_apic\Unit\UserManagement\AuthApicUserManagementBaseTestClass;
   use Prophecy\Argument;
   use Prophecy\Prophet;
 
+  /**
+   * @group auth_apic
+   */
   class ApicUserDeleteServiceTest extends AuthApicUserManagementBaseTestClass {
 
+    /**
+     * @var \Drupal\ibm_apim\Service\APIMServer|\Prophecy\Prophecy\ObjectProphecy 
+     */
     protected $mgmtServer;
 
+    /**
+     * @var \Drupal\ibm_apim\Service\ApicUserStorage|\Prophecy\Prophecy\ObjectProphecy 
+     */
     protected $userStorage;
 
+    /**
+     * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface 
+     */
     protected $logger;
 
+    /**
+     * @var \Drupal\Core\Session\AccountProxyInterface|\Prophecy\Prophecy\ObjectProphecy 
+     */
     protected $currentUser;
 
-    protected function setup() {
+    protected function setup(): void {
       $this->prophet = new Prophet();
       $this->mgmtServer = $this->prophet->prophesize(\Drupal\ibm_apim\Service\APIMServer::class);
       $this->userStorage = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserStorage::class);
@@ -37,11 +53,14 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->currentUser = $this->prophet->prophesize(\Drupal\Core\Session\AccountProxyInterface::class);
     }
 
-    protected function tearDown() {
+    protected function tearDown(): void {
       $this->prophet->checkPredictions();
     }
 
-    public function testDeleteUser() {
+    /**
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
+    public function testDeleteUser(): void {
 
       $mgmtResponse = new RestResponse();
       $mgmtResponse->setCode(200);
@@ -60,11 +79,14 @@ namespace Drupal\Tests\auth_apic\Unit {
         $this->currentUser->reveal());
 
       $response = $service->deleteUser();
-      $this->assertTrue($response->success());
+      self::assertTrue($response->success());
 
     }
 
-    public function testDeleteUserMgmtFail() {
+    /**
+     * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+     */
+    public function testDeleteUserMgmtFail(): void {
 
       $mgmtResponse = new RestResponse();
       $mgmtResponse->setCode(400);
@@ -82,11 +104,11 @@ namespace Drupal\Tests\auth_apic\Unit {
         $this->currentUser->reveal());
 
       $response = $service->deleteUser();
-      $this->assertFalse($response->success());
+      self::assertFalse($response->success());
 
     }
 
-    public function testDeleteLocalAccountCurrentUser() {
+    public function testDeleteLocalAccountCurrentUser(): void {
 
       $this->currentUser->id()->willReturn(2);
       $this->logger->notice('Deleting user - id = @id', ['@id'=> 2])->shouldBeCalled();
@@ -98,17 +120,20 @@ namespace Drupal\Tests\auth_apic\Unit {
         $this->currentUser->reveal());
 
       $response = $service->deleteLocalAccount();
-      $this->assertTrue($response);
+      self::assertTrue($response);
 
     }
 
-    public function testDeleteLocalAccountProvidedUser() {
+    /**
+     * @throws \Exception
+     */
+    public function testDeleteLocalAccountProvidedUser(): void {
 
       $user = new ApicUser();
       $user->setUsername('andre');
       $user->setApicUserRegistryUrl('/reg/lur');
 
-      $account = $this->prophet->prophesize(\Drupal\Core\Entity\EntityInterface::class);
+      $account = $this->prophet->prophesize(EntityInterface::class);
       $account->id()->willReturn(3);
 
       $this->userStorage->load($user)->willReturn($account->reveal())->shouldBeCalled();
@@ -123,11 +148,14 @@ namespace Drupal\Tests\auth_apic\Unit {
         $this->currentUser->reveal());
 
       $response = $service->deleteLocalAccount($user);
-      $this->assertTrue($response);
+      self::assertTrue($response);
 
     }
 
-    public function testDeleteLocalAccountProvidedUserNoAccount() {
+    /**
+     * @throws \Exception
+     */
+    public function testDeleteLocalAccountProvidedUserNoAccount(): void {
 
       $user = new ApicUser();
       $user->setUsername('andre');
@@ -146,17 +174,20 @@ namespace Drupal\Tests\auth_apic\Unit {
         $this->currentUser->reveal());
 
       $response = $service->deleteLocalAccount($user);
-      $this->assertFalse($response);
+      self::assertFalse($response);
 
     }
 
-    public function testDeleteLocalAccountProvidedUserNoIdForAccount() {
+    /**
+     * @throws \Exception
+     */
+    public function testDeleteLocalAccountProvidedUserNoIdForAccount(): void {
 
       $user = new ApicUser();
       $user->setUsername('andre');
       $user->setApicUserRegistryUrl('/reg/lur');
 
-      $account = $this->prophet->prophesize(\Drupal\Core\Entity\EntityInterface::class);
+      $account = $this->prophet->prophesize(EntityInterface::class);
       $account->id()->willReturn(NULL);
 
       $this->userStorage->load($user)->willReturn($account->reveal())->shouldBeCalled();
@@ -172,7 +203,7 @@ namespace Drupal\Tests\auth_apic\Unit {
         $this->currentUser->reveal());
 
       $response = $service->deleteLocalAccount($user);
-      $this->assertFalse($response);
+      self::assertFalse($response);
 
     }
 

@@ -30,7 +30,7 @@ use Drupal\encrypt\Entity\EncryptionProfile;
  *
  * @return array
  */
-function socialblock_theme($existing, $type, $theme, $path) {
+function socialblock_theme($existing, $type, $theme, $path): array {
   return [
     'socialblock_block' => [
       'variables' => [

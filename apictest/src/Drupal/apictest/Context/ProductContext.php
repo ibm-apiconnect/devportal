@@ -14,6 +14,8 @@
 namespace Drupal\apictest\Context;
 
 use Behat\Gherkin\Node\TableNode;
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Utility\Random;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\Entity\Node;
@@ -22,10 +24,16 @@ use Drupal\user\Entity\User;
 
 class ProductContext extends RawDrupalContext {
 
-  private $testDataDirectory = __DIR__ . '/../../../../testdata';
+  private string $testDataDirectory = __DIR__ . '/../../../../testdata';
+
+  /**
+   * @var bool|\stdClass|\stdClass[]
+   */
+  private $useMockServices = TRUE;
 
   /**
    * @Given products:
+   * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
    */
   public function createProducts(TableNode $table): void {
 
@@ -48,16 +56,18 @@ class ProductContext extends RawDrupalContext {
       $object = $this->createProductWithDocument($row['name'], $row['title'], $row['id'], $row['document']);
 
       $product = new Product();
-      $nid = $product->create($object);
+      $product->create($object);
 
     }
-    if ($originalUser !== NULL && (int) $originalUser->id() !== 1) {
+    if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
   }
 
   /**
    * @Given I publish a product with the name :arg1, id :arg2 and categories :arg3
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
    */
   public function iPublishAProductWithNameIdCategories($name, $id, $categories): void {
     $random = new Random();
@@ -77,6 +87,8 @@ class ProductContext extends RawDrupalContext {
     $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
     $object['catalog_product']['visibility']['subscribe']['enabled'] = TRUE;
     $object['catalog_product']['visibility']['view']['type'] = 'public';
+    $object['created_at'] = '2021-02-26T12:18:58.995Z';
+    $object['updated_at'] = '2021-02-26T12:18:58.995Z';
 
     if (!(boolean) \Drupal::config('ibm_apim.settings')->get('categories')['create_taxonomies_from_categories']) {
       print("Setting 'create_taxonomies_from_categories' config to true. ");
@@ -100,6 +112,7 @@ class ProductContext extends RawDrupalContext {
 
   /**
    * @Then I should have a product with the name :arg1, id :arg2 and categories :arg3
+   * @throws \Exception
    */
   public function iShouldHaveAProductWithNameIdCategories($name, $id, $categories): void {
     $query = \Drupal::entityQuery('node');
@@ -108,8 +121,8 @@ class ProductContext extends RawDrupalContext {
     $results = $query->execute();
 
     if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
-      $product = Node::load($querynid);
+      $queryNid = array_shift($results);
+      $product = Node::load($queryNid);
 
       if ($product !== NULL && $product->get('product_id')->value === $id && $product->get('product_name')->value === $name) {
         print("The product with the name $name and id $id was created successfully. ");
@@ -134,7 +147,7 @@ class ProductContext extends RawDrupalContext {
         if ($terms[1]->name === 'Rugby') {
 
           // Make sure the id of the term was added to the product
-          if ($product->get('apic_tags')->getValue()[0]['target_id'] == $terms[1]->tid) {
+          if ($product->get('apic_tags')->getValue()[0]['target_id'] === $terms[1]->tid) {
             print('Categories where successfully created and linked to the product. ');
           }
           else {
@@ -156,6 +169,7 @@ class ProductContext extends RawDrupalContext {
 
   /**
    * @Given I publish a product with the name :name and categories :categories and create_taxonomies_from_categories is false
+   * @throws \Exception
    */
   public function iPublishAProductWithTheNameAndCategoriesAndCreateTaxonomiesFromCategoriesIsFalse($name, $categories): void {
     $random = new Random();
@@ -175,6 +189,8 @@ class ProductContext extends RawDrupalContext {
     $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
     $object['catalog_product']['visibility']['subscribe']['enabled'] = TRUE;
     $object['catalog_product']['visibility']['view']['type'] = 'public';
+    $object['created_at'] = '2021-02-26T12:18:58.995Z';
+    $object['updated_at'] = '2021-02-26T12:18:58.995Z';
 
     if ((boolean) \Drupal::config('ibm_apim.settings')->get('categories')['create_taxonomies_from_categories']) {
       print("Setting 'create_taxonomies_from_categories' config to false. ");
@@ -186,9 +202,12 @@ class ProductContext extends RawDrupalContext {
 
     // Remove any existing terms within the tags vocabulary
     $tids = \Drupal::entityQuery('taxonomy_term')->condition('vid', 'tags')->execute();
-    $controller = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
-    $entities = $controller->loadMultiple($tids);
-    $controller->delete($entities);
+    try {
+      $controller = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+      $entities = $controller->loadMultiple($tids);
+      $controller->delete($entities);
+    } catch (InvalidPluginDefinitionException | PluginNotFoundException $e) {
+    }
 
     $product = new Product();
     $nid = $product->create($object);
@@ -203,6 +222,7 @@ class ProductContext extends RawDrupalContext {
 
   /**
    * @Then I should have a product with name :name and no taxonomies for the categories :categories
+   * @throws \Exception
    */
   public function iShouldHaveAProductWithNameAndNoTaxonomiesForTheCategories($name, $categories): void {
     $query = \Drupal::entityQuery('node');
@@ -211,8 +231,8 @@ class ProductContext extends RawDrupalContext {
     $results = $query->execute();
 
     if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
-      $product = Node::load($querynid);
+      $queryNid = array_shift($results);
+      $product = Node::load($queryNid);
 
       if ($product !== NULL && $product->get('product_name')->value === $name) {
         print("The product with the name $name was created successfully. ");
@@ -236,9 +256,11 @@ class ProductContext extends RawDrupalContext {
   }
 
   /**
-   * @Given I publish a product with the name :arg1, id :arg2 and visibility :arg3 :arg4
+   * @Given I publish a product with the name :arg1, id :arg2 and visibility :arg3 :arg4 :arg5
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
    */
-  public function iPublishAProductWithNameIdVisibility($name, $id, $visi, $data): void {
+  public function iPublishAProductWithNameIdVisibility($name, $id, $visi, $data, $enabled): void {
     $random = new Random();
     if ($name === NULL || empty($name)) {
       $name = $random->name(8);
@@ -250,10 +272,16 @@ class ProductContext extends RawDrupalContext {
     $object['catalog_product']['info']['title'] = $name;
     $object['catalog_product']['info']['version'] = '1.0';
     $object['catalog_product']['info']['x-pathalias'] = $name;
+    $object['created_at'] = '2021-02-26T12:18:58.995Z';
+    $object['updated_at'] = '2021-02-26T12:18:58.995Z';
     $object['state'] = 'published';
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';
-    $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
+    if ($enabled === "false" || $enabled === "FALSE") {
+      $object['catalog_product']['visibility']['view']['enabled'] = 0;
+    } else {
+      $object['catalog_product']['visibility']['view']['enabled'] = true;
+    }
     switch ($visi) {
       case 'pub':
         // public; anyone can view
@@ -292,15 +320,100 @@ class ProductContext extends RawDrupalContext {
   }
 
   /**
+   * @Given I publish a product with the name :arg1, id :arg2, apis :arg3 and subscribility :arg4 :arg5 :arg6
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
+   */
+  public function iPublishAProductWithNameIdAPISubscribability($name, $id, $api, $sub, $data, $enabled): void {
+    $random = new Random();
+    if ($name === NULL || empty($name)) {
+      $name = $random->name(8);
+    }
+    $incApi = $api . ':1.0.0';
+    $object = [];
+    $object['created_at'] = '2021-02-26T12:18:58.995Z';
+    $object['updated_at'] = '2021-02-26T12:18:58.995Z';
+    $object['catalog_product'] = [];
+    $object['catalog_product']['info'] = [];
+    $object['catalog_product']['info']['name'] = $name;
+    $object['catalog_product']['info']['title'] = $name;
+    $object['catalog_product']['info']['x-pathalias'] = $name;
+    $object['catalog_product']['info']['version'] = '1.0.0';
+    $object['state'] = 'published';
+    $object['id'] = $id;
+    $object['url'] = 'https://localhost.com';
+    $object['product_plans'] = [["apis" => []]];
+    $object['catalog_product']['plans'] = [
+        "default-plan" => [
+                "rate-limits" => [
+                        "default" =>[
+                                "value" => "100/1hour"
+                                ]
+
+                        ],
+
+                "title" => "Default Plan",
+                "description" => "Default Plan",
+                "approval" => null,
+                "apis" => [
+                        $incApi => []
+
+                        ]
+
+        ]
+                ];
+    $object['catalog_product']['apis'] = [$incApi => ['name' => $incApi]];
+    $object['catalog_product']['visibility']['view']['enabled'] = true;
+    $object['catalog_product']['visibility']['view']['type'] = 'public';
+    if ($enabled === "false" || $enabled === "FALSE") {
+      $object['catalog_product']['visibility']['subscribe']['enabled'] = 0;
+    } else {
+      $object['catalog_product']['visibility']['subscribe']['enabled'] = true;
+    }
+    switch ($sub) {
+      case 'auth':
+        // authenticated: any authenticated user can view
+        $object['catalog_product']['visibility']['subscribe']['type'] = 'authenticated';
+        break;
+      case 'org_urls':
+        // organization: only people in the given orgs can view
+        $object['catalog_product']['visibility']['subscribe']['type'] = 'custom';
+        $object['catalog_product']['visibility']['subscribe']['org_urls'] = [$data];
+        break;
+      case 'tags':
+        // category: only people in an org with the right community string can view
+        $object['catalog_product']['visibility']['subscribe']['type'] = 'custom';
+        $object['catalog_product']['visibility']['subscribe']['group_urls'] = [$data];
+        break;
+      default:
+    }
+
+
+    $product = new Product();
+    $nid = $product->create($object);
+    // Make sure that the call returns a number
+    if ((int) $nid >= 0) {
+      print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
+    }
+    else {
+      throw new \Exception("Failed to create product with the name $name");
+    }
+  }
+
+  /**
    * @Given I publish a product with the name :arg1, id :arg2, apis :arg3 and visibility :arg4 :arg5
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
    */
   public function iPublishAProductWithNameIdAPIVisibility($name, $id, $api, $visi, $data): void {
     $random = new Random();
     if ($name === NULL || empty($name)) {
       $name = $random->name(8);
     }
-    $incapi = $api . ':1.0.0';
+    $incApi = $api . ':1.0.0';
     $object = [];
+    $object['created_at'] = '2021-02-26T12:18:58.995Z';
+    $object['updated_at'] = '2021-02-26T12:18:58.995Z';
     $object['catalog_product'] = [];
     $object['catalog_product']['info'] = [];
     $object['catalog_product']['info']['name'] = $name;
@@ -309,7 +422,7 @@ class ProductContext extends RawDrupalContext {
     $object['state'] = 'published';
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';
-    $object['catalog_product']['apis'] = [$incapi => ['name' => $incapi]];
+    $object['catalog_product']['apis'] = [$incApi => ['name' => $incApi]];
     $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
     switch ($visi) {
       case 'pub':
@@ -351,6 +464,8 @@ class ProductContext extends RawDrupalContext {
 
   /**
    * @Given I publish a product name :arg1, id :arg2, apis :arg3 and visible to org :arg4
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
    */
   public function iPublishAProductWithNameIdAPIsAndOrgVisibility($name, $id, $api, $org): void {
     $random = new Random();
@@ -358,6 +473,8 @@ class ProductContext extends RawDrupalContext {
       $name = $random->name(8);
     }
     $object = [];
+    $object['created_at'] = '2021-02-26T12:18:58.995Z';
+    $object['updated_at'] = '2021-02-26T12:18:58.995Z';
     $object['catalog_product'] = [];
     $object['catalog_product']['info'] = [];
     $object['catalog_product']['info']['name'] = $name;
@@ -384,6 +501,7 @@ class ProductContext extends RawDrupalContext {
 
   /**
    * @Then The product with the name :arg1 and id :arg2 should be visible
+   * @throws \Exception
    */
   public function iShouldHaveAProductWithNameIdVisible($name, $id): void {
 
@@ -399,11 +517,16 @@ class ProductContext extends RawDrupalContext {
 
     if ($results !== NULL && !empty($results)) {
       $product = Node::load(array_shift($results));
-      if ($product->get('product_id')->value === $id && $product->get('product_name')->value === $name) {
-        print("Product with the name $name and id $id exists and was viewable." . PHP_EOL);
+      if ($product !== NULL) {
+        if ($product->get('product_id')->value === $id && $product->get('product_name')->value === $name) {
+          print("Product with the name $name and id $id exists and was viewable." . PHP_EOL);
+        }
+        else {
+          throw new \Exception("The returned product did not have a name of $name or an id of $id");
+        }
       }
       else {
-        throw new \Exception("The returned product did not have a name of $name or an id of $id");
+        throw new \Exception("NULL product returned");
       }
     }
     else {
@@ -413,6 +536,7 @@ class ProductContext extends RawDrupalContext {
 
   /**
    * @Then The product with the name :arg1 and id :arg2 should not be visible
+   * @throws \Exception
    */
   public function iShouldHaveAProductWithNameIdNotVisible($name, $id): void {
 
@@ -427,8 +551,8 @@ class ProductContext extends RawDrupalContext {
     print('Query results: ' . serialize($results) . PHP_EOL);
 
     if ($results !== NULL && !empty($results)) {
-      $querynid = array_shift($results);
-      // $product = Node::load($querynid);
+      // $queryNid = array_shift($results);
+      // $product = Node::load($queryNid);
       // print('Product: ' . serialize($product) . PHP_EOL);
       //if ($product->get('product_id')->value === $id && $product->get('product_name')->value === $name) {
       throw new \Exception("Product with the name $name and id $id was viewable");
@@ -447,6 +571,7 @@ class ProductContext extends RawDrupalContext {
    * @param null $document
    *
    * @return array
+   * @throws \JsonException
    */
   private function createProductWithDocument($name, $title, $id = '12345', $document = NULL): array {
 
@@ -454,10 +579,12 @@ class ProductContext extends RawDrupalContext {
     $object['id'] = $id;
     $object['url'] = '/catalogs/1234/5678/products/' . $id;
     $object['state'] = 'published';
+    $object['created_at'] = '2021-02-26T12:18:58.995Z';
+    $object['updated_at'] = '2021-02-26T12:18:58.995Z';
 
     if ($document && file_exists($this->testDataDirectory . '/products/' . $document)) {
       $string = file_get_contents($this->testDataDirectory . '/products/' . $document);
-      $json = json_decode($string, TRUE);
+      $json = json_decode($string, TRUE, 512, JSON_THROW_ON_ERROR);
       $object['catalog_product'] = $json;
     }
     // overwrite what was in the document with what we were fed in

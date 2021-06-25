@@ -5,14 +5,14 @@ namespace Drupal\apic_app\Entity;
 @trigger_error('The ' . __NAMESPACE__ . '\Subscription is deprecated in 2018.4.1.10 
 Instead, use \Drupal\apic_app\Entity\ApplicationSubscription.', E_USER_DEPRECATED);
 
-use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\apic_app\SubscriptionInterface;
+use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 
 /**
  * @deprecated in 8.x-2.0.39 (APIC v2018.4.1.10)
- * 
+ *
  * Defines a Subscription entity class.
  *
  * @ConfigEntityType(
@@ -183,4 +183,5 @@ class Subscription extends ConfigEntityBase implements SubscriptionInterface {
 
     return $fields;
   }
+
 }

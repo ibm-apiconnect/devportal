@@ -23,9 +23,9 @@ use Psr\Log\LoggerInterface;
  */
 class JWTParser implements TokenParserInterface {
 
-  protected $logger;
+  protected LoggerInterface $logger;
 
-  protected $utils;
+  protected Utils $utils;
 
   public function __construct(LoggerInterface $logger,
                               Utils $utils) {
@@ -57,7 +57,7 @@ class JWTParser implements TokenParserInterface {
     $decoded_token = base64_decode($token);
 
     if (!$this->validate($decoded_token)) {
-      $this->logger->error('invalid invitation jwt');
+      $this->logger->error('invalid invitation JWT');
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }
@@ -70,11 +70,20 @@ class JWTParser implements TokenParserInterface {
     $elements = explode('.', $decoded_token);
 
     //$header = $elements[0];
-    $header = json_decode($this->utils->base64_url_decode($elements[0]), TRUE);
-    $payload = json_decode($this->utils->base64_url_decode($elements[1]), TRUE);
-
-    if (!isset($payload['scopes']) || !isset($payload['scopes']['url'])) {
-      $this->logger->error('payload.scopes.url not available in activation jwt');
+    try {
+      $header = json_decode($this->utils->base64_url_decode($elements[0]), TRUE, 512, JSON_THROW_ON_ERROR);
+      $payload = json_decode($this->utils->base64_url_decode($elements[1]), TRUE, 512, JSON_THROW_ON_ERROR);
+    } catch (\JsonException $e) {
+    }
+    if (!isset($payload['scopes']['url'])) {
+      $this->logger->error('payload.scopes.url not available in activation JWT');
+      if (function_exists('ibm_apim_exit_trace')) {
+        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      }
+      return NULL;
+    }
+    if (!isset($header)) {
+      $this->logger->error('header not set from activation JWT');
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }
@@ -91,8 +100,7 @@ class JWTParser implements TokenParserInterface {
     }
     $jwt->setUrl($url);
 
-    //$signature = $elements[2];
-    $signature = json_decode($this->utils->base64_url_decode($elements[2]), TRUE);
+    $signature = $elements[2];
 
     $jwt->setHeaders($header);
     $jwt->setPayload($payload);
@@ -120,7 +128,7 @@ class JWTParser implements TokenParserInterface {
     }
     $returnValue = TRUE;
     if (substr_count($token, '.') !== 2) {
-      $this->logger->error('Invalid jwt token. Expected 3 period separated elements.');
+      $this->logger->error('Invalid JWT token. Expected 3 period separated elements.');
       $returnValue = FALSE;
     }
     if (function_exists('ibm_apim_exit_trace')) {
@@ -128,4 +136,5 @@ class JWTParser implements TokenParserInterface {
     }
     return $returnValue;
   }
+
 }

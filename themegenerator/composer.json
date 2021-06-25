@@ -1,6 +1,6 @@
 {
   "name": "drupal/themegenerator",
-  "description": "APIC Sub-theme Generator",
+  "description": "IBM API Developer Portal Sub-theme Generator",
   "type": "drupal-module",
   "homepage": "https://github.com/ibm-apiconnect/devportal",
   "support": {

@@ -94,6 +94,14 @@ field.field.node.api.apic_version:
   type: ibm_apim_config_object
   label: 'Version'
 
+field.field.node.api.apic_created_at:
+  type: ibm_apim_config_object
+  label: 'Creation time'
+
+field.field.node.api.apic_updated_at:
+  type: ibm_apim_config_object
+  label: 'Modification time'
+
 field.field.node.api.comment:
   type: ibm_apim_config_object
   label: 'Comments'

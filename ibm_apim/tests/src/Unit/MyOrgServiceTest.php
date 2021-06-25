@@ -27,13 +27,16 @@ use Prophecy\Prophet;
  */
 class MyOrgServiceTest extends UnitTestCase {
 
-  private $prophet;
+  /**
+   * @var \Prophecy\Prophet
+   */
+  private Prophet $prophet;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
@@ -54,11 +57,11 @@ class MyOrgServiceTest extends UnitTestCase {
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);
 
-    $this->assertNotNull($result, 'nothing returned from service');
-    $this->assertEquals($result['name'], 'Andre Andresson', 'unexpected name');
-    $this->assertEquals($result['details'], 'andre (andre@example.com)', 'unexpected details');
-    $this->assertEquals($result['state'], 'active');
-    $this->assertEquals($result['id'], 'org'); // basename of member url
+    self::assertNotNull($result, 'nothing returned from service');
+    self::assertEquals('Andre Andresson', $result['name'], 'unexpected name');
+    self::assertEquals('andre (andre@example.com)', $result['details'], 'unexpected details');
+    self::assertEquals('active', $result['state']);
+    self::assertEquals('org', $result['id']); // basename of member url
 
   }
 
@@ -79,9 +82,9 @@ class MyOrgServiceTest extends UnitTestCase {
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);
 
-    $this->assertNotNull($result, 'nothing returned from service');
-    $this->assertEquals($result['name'], 'andre', 'unexpected name');
-    $this->assertEquals($result['details'], 'andre (andre@example.com)', 'unexpected details');
+    self::assertNotNull($result, 'nothing returned from service');
+    self::assertEquals('andre', $result['name'], 'unexpected name');
+    self::assertEquals('andre (andre@example.com)', $result['details'], 'unexpected details');
 
   }
 
@@ -102,9 +105,9 @@ class MyOrgServiceTest extends UnitTestCase {
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);
 
-    $this->assertNotNull($result, 'nothing returned from service');
-    $this->assertEquals($result['name'], 'andre', 'unexpected name');
-    $this->assertEquals($result['details'], 'andre (andre@example.com)', 'unexpected details');
+    self::assertNotNull($result, 'nothing returned from service');
+    self::assertEquals('andre', $result['name'], 'unexpected name');
+    self::assertEquals('andre (andre@example.com)', $result['details'], 'unexpected details');
 
   }
 
@@ -125,9 +128,9 @@ class MyOrgServiceTest extends UnitTestCase {
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);
 
-    $this->assertNotNull($result, 'nothing returned from service');
-    $this->assertEquals($result['name'], 'andre', 'unexpected name');
-    $this->assertEquals($result['details'], 'andre (andre@example.com)', 'unexpected details');
+    self::assertNotNull($result, 'nothing returned from service');
+    self::assertEquals('andre', $result['name'], 'unexpected name');
+    self::assertEquals('andre (andre@example.com)', $result['details'], 'unexpected details');
 
   }
 
@@ -148,8 +151,8 @@ class MyOrgServiceTest extends UnitTestCase {
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);
 
-    $this->assertNotNull($result, 'nothing returned from service');
-    $this->assertEquals($result['details'], 'andre', 'unexpected details');
+    self::assertNotNull($result, 'nothing returned from service');
+    self::assertEquals('andre', $result['details'], 'unexpected details');
 
   }
 
@@ -170,8 +173,8 @@ class MyOrgServiceTest extends UnitTestCase {
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);
 
-    $this->assertNotNull($result, 'nothing returned from service');
-    $this->assertEquals($result['details'], 'andre', 'unexpected details');
+    self::assertNotNull($result, 'nothing returned from service');
+    self::assertEquals('andre', $result['details'], 'unexpected details');
 
   }
 
@@ -192,8 +195,8 @@ class MyOrgServiceTest extends UnitTestCase {
     $service = new MyOrgService();
     $result = $service->prepareOrgMemberForDisplay($member);
 
-    $this->assertNotNull($result, 'nothing returned from service');
-    $this->assertEquals($result['details'], 'andre@example.com', 'unexpected details');
+    self::assertNotNull($result, 'nothing returned from service');
+    self::assertEquals('andre@example.com', $result['details'], 'unexpected details');
 
   }
 

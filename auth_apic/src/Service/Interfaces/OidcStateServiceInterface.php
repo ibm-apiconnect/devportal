@@ -18,9 +18,10 @@ interface OidcStateServiceInterface {
   /**
    * Store data in state.
    *
-   * @param $data data to be stored.
+   * @param $data
    *
-   * @return string encrypted key for the data.
+   * @return mixed
+   * @throws \Drupal\encrypt\Exception\EncryptException
    */
   public function store($data);
 
@@ -40,7 +41,7 @@ interface OidcStateServiceInterface {
    *
    * @return bool Success of deletion.
    */
-  public function delete(string $key);
+  public function delete(string $key): bool;
 
 
   /**
@@ -61,6 +62,6 @@ interface OidcStateServiceInterface {
    * save all state from the service
    * needed to by the updateEncryptionKey function
    */
-  public function saveAllOidcState($state);
+  public function saveAllOidcState($state): void;
 
 }

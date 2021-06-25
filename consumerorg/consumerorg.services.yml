@@ -19,36 +19,41 @@ services:
     class: Drupal\consumerorg\Access\DeleteOrgAccessCheck
     tags:
       - { name: access_check, applies_to: _consumerorg_delete_org_access_check }
+  consumerorg.invitation_access_checker:
+    class: Drupal\consumerorg\Access\InvitationAccessCheck
+    tags:
+      - { name: access_check, applies_to: _consumerorg_invitation_access_check }
   logger.channel.consumerorg:
     parent: logger.channel_base
-    arguments: ['consumerorg']
+    arguments: [ 'consumerorg' ]
   consumerorg.role:
     class: Drupal\consumerorg\Service\RoleService
   consumerorg.member:
     class: Drupal\consumerorg\Service\MemberService
-    arguments: ['@ibm_apim.apicuser']
+    arguments: [ '@ibm_apim.apicuser' ]
   ibm_apim.consumerorg:
     class: Drupal\consumerorg\Service\ConsumerOrgService
-    arguments: ['@logger.channel.consumerorg',
-                '@ibm_apim.site_config',
-                '@ibm_apim.apim_utils',
-                '@event_dispatcher',
-                '@current_user',
-                '@entity_type.manager',
-                '@module_handler',
-                '@ibm_apim.mgmtserver',
-                '@tempstore.private',
-                '@ibm_apim.user_utils',
-                '@cache_tags.invalidator',
-                '@consumerorg.member',
-                '@consumerorg.role',
-                '@ibm_apim.account',
-                '@ibm_apim.apicuser'
-               ]
+    arguments: [ '@logger.channel.consumerorg',
+                 '@ibm_apim.site_config',
+                 '@ibm_apim.apim_utils',
+                 '@event_dispatcher',
+                 '@current_user',
+                 '@entity_type.manager',
+                 '@module_handler',
+                 '@ibm_apim.mgmtserver',
+                 '@tempstore.private',
+                 '@ibm_apim.user_utils',
+                 '@cache_tags.invalidator',
+                 '@consumerorg.member',
+                 '@consumerorg.role',
+                 '@ibm_apim.account',
+                 '@ibm_apim.apicuser',
+                 '@ibm_apim.event_log'
+    ]
   consumerorg.login:
     class: Drupal\consumerorg\Service\ConsumerOrgLoginService
-    arguments: ['@ibm_apim.consumerorg',
-                '@logger.channel.consumerorg'
-                ]
+    arguments: [ '@ibm_apim.consumerorg',
+                 '@logger.channel.consumerorg'
+    ]
   consumerorg.paymentmethod:
     class: Drupal\consumerorg\Service\PaymentMethodService

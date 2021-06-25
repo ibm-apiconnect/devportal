@@ -31,17 +31,17 @@ class ApicUserProfileForm extends ProfileForm {
   /**
    * @var \Drupal\ibm_apim\UserManagement\ApicAccountInterface
    */
-  protected $accountService;
+  protected ApicAccountInterface $accountService;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
    */
-  protected $registryService;
+  protected UserRegistryServiceInterface $registryService;
 
   /**
    * @var \Drupal\Core\State\State
    */
-  protected $state;
+  protected State $state;
 
  /**
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
@@ -63,7 +63,13 @@ class ApicUserProfileForm extends ProfileForm {
     parent::__construct($entity_repository, $language_manager, $entity_type_bundle_info, $time);
   }
 
+  /**
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *
+   * @return \Drupal\auth_apic\Form\ApicUserProfileForm|\Drupal\Core\Entity\ContentEntityForm|\Drupal\user\AccountForm|static
+   */
   public static function create(ContainerInterface $container) {
+    /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('entity.repository'),
       $container->get('entity_type.manager'),
@@ -77,18 +83,25 @@ class ApicUserProfileForm extends ProfileForm {
   }
 
   /**
-   * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function form(array $form, FormStateInterface $form_state) {
+  public function form(array $form, FormStateInterface $form_state): array {
 
     $form = parent::form($form, $form_state);
     $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser()->id());
     // This is an internal field that shouldn't be displayed for anyone
     $form['consumer_organization']['#access'] = FALSE;
-
+    $registry = NULL;
     $formForUser = (int) $this->entity->get('uid')->value;
     $registryUrl = $this->entity->get('registry_url')->value;
-    $registry = $this->registryService->get($registryUrl);
+    if ($registryUrl !== NULL) {
+      $registry = $this->registryService->get($registryUrl);
+    }
 
     /* If the user is admin and they are editing another non-admin user, we need to prevent changes being made
      * as those changes can't be pushed back to APIC
@@ -169,7 +182,7 @@ class ApicUserProfileForm extends ProfileForm {
 
     $formForUser = (int) $this->entity->get('uid')->value;
 
-    // we need to add an email address field as account is supressed for all users except for
+    // we need to add an email address field as account is suppressed for all users except for
     // admin, unless it is another Administrator viewing admin.
     if ($formForUser !== 1 || (int) $this->currentUser()->id() !== 1) {
 
@@ -284,7 +297,7 @@ class ApicUserProfileForm extends ProfileForm {
     return $form;
   }
 
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): \Drupal\Core\Entity\ContentEntityInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     if ($form_state->getValue('registry_type') !== NULL && $form_state->getValue('registry_type') === 'lur') {
@@ -301,6 +314,10 @@ class ApicUserProfileForm extends ProfileForm {
     return parent::validateForm($form, $form_state);
   }
 
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $password = NULL;
@@ -353,6 +370,12 @@ class ApicUserProfileForm extends ProfileForm {
 
   }
 
+  /**
+   * @param $accountEmail
+   * @param string $knownValue
+   *
+   * @return bool
+   */
   private function knownEmptyEmailAddress($accountEmail, $knownValue = 'noemailinregistry@example.com'): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $accountEmail);
     $length = strlen($knownValue);

@@ -30,7 +30,7 @@ use Drupal\Core\Session\AccountInterface;
  * @Block(
  *   id = "consumer_org_select",
  *   admin_label = @Translation("Consumer organization Selection"),
- *   category = @Translation("IBM API Connect")
+ *   category = @Translation("IBM API Developer Portal")
  * )
  */
 class ConsumerOrgSelectorBlock extends BlockBase {
@@ -46,14 +46,14 @@ class ConsumerOrgSelectorBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  public function getCacheTags() {
+  public function getCacheTags(): array {
     return Cache::mergeTags(parent::getCacheTags(), ['consumer_org_select_block:uid:' . \Drupal::currentUser()->id()]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCacheContexts() {
+  public function getCacheContexts(): array {
     // Vary caching of this block per user.
     return Cache::mergeContexts(parent::getCacheContexts(), ['user']);
   }
@@ -61,7 +61,7 @@ class ConsumerOrgSelectorBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  public function getCacheMaxAge() {
+  public function getCacheMaxAge(): int {
     return 0;
   }
 
@@ -119,4 +119,5 @@ class ConsumerOrgSelectorBlock extends BlockBase {
       '#create_allowed' => $create_allowed,
     ];
   }
+
 }

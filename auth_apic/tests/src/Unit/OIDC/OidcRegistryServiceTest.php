@@ -27,18 +27,42 @@ use Prophecy\Prophet;
  */
 class OidcRegistryServiceTest extends UnitTestCase {
 
-  private $prophet;
+  /**
+   * @var \Prophecy\Prophet
+   */
+  private Prophet $prophet;
 
-  /*
-   Dependencies of OidcRegistryService.
+  /**
+   * @var \Drupal\Core\State\StateInterface|\Prophecy\Prophecy\ObjectProphecy
    */
   protected $state;
+
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
+   */
   protected $logger;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\Utils|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $utils;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\ApimUtils|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $apimUtils;
+
+  /**
+   * @var \Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $oidcStateService;
 
-  protected function setup() {
+  /**
+   * @var \Drupal\Core\Extension\ModuleHandler|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $moduleHandler;
+
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->state = $this->prophet->prophesize('Drupal\Core\State\StateInterface');
     $this->logger = $this->prophet->prophesize('Psr\Log\LoggerInterface');
@@ -48,14 +72,14 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->moduleHandler = $this->prophet->prophesize('Drupal\Core\Extension\ModuleHandler');
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
   /**
    * Positive test to get oidc metadata.
    */
-  public function testValidOidcMetadata() {
+  public function testValidOidcMetadata(): void {
 
     $oidc_registry = new UserRegistry();
     $oidc_registry->setRegistryType('oidc');
@@ -67,7 +91,8 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->state->get('ibm_apim.site_client_id')->willReturn('iamaclientid');
     $this->utils->base64_url_encode(Argument::any())->willReturn('base64encodedstate');
     $this->apimUtils->getHostUrl()->willReturn('https://portal.example.com');
-    $this->apimUtils->createFullyQualifiedUrl('/consumer-api/oauth2/authorize')->willReturn('https://mgmt.example.com/consumer-api/oauth2/authorize');
+    $this->apimUtils->createFullyQualifiedUrl('/consumer-api/oauth2/authorize')
+      ->willReturn('https://mgmt.example.com/consumer-api/oauth2/authorize');
 
     $service = $this->getServiceUnderTest();
     $response = $service->getOidcMetadata($oidc_registry);
@@ -76,28 +101,28 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->logger->error(Argument::any())->shouldNotBeCalled();
     $this->oidcStateService->store(Argument::any())->shouldBeCalled();
 
-    $this->assertNotNull($response, 'unexpected NULL response when gathering oidc metadata.');
-    $this->assertNotNull($response['az_url'], 'unexpected NULL az_url when gathering oidc metadata.');
-    $this->assertNotNull($response['image'], 'unexpected NULL image when gathering oidc metadata.');
+    self::assertNotNull($response, 'unexpected NULL response when gathering oidc metadata.');
+    self::assertNotNull($response['az_url'], 'unexpected NULL az_url when gathering oidc metadata.');
+    self::assertNotNull($response['image'], 'unexpected NULL image when gathering oidc metadata.');
 
 
-    $this->assertRegExp('/^https:\/\/mgmt.example.com\/consumer-api\/oauth2\/authorize?/', $response['az_url'], 'Expected start not found in authorization url.');
-    $this->assertRegExp('/client_id=iamaclientid/', $response['az_url'], 'Expected client_id query parameter not found in authorization url.');
-    $this->assertRegExp('/state=base64encodedstate/', $response['az_url'], 'Expected state query parameter not found in authorization url.');
-    $this->assertRegExp('/redirect_uri=https:\/\/portal.example.com\/test\/env/', $response['az_url'], 'Expected redirect_uri query parameter not found in authorization url.');
+    self::assertRegExp('/^https:\/\/mgmt.example.com\/consumer-api\/oauth2\/authorize?/', $response['az_url'], 'Expected start not found in authorization url.');
+    self::assertRegExp('/client_id=iamaclientid/', $response['az_url'], 'Expected client_id query parameter not found in authorization url.');
+    self::assertRegExp('/state=base64encodedstate/', $response['az_url'], 'Expected state query parameter not found in authorization url.');
+    self::assertRegExp('/redirect_uri=https:\/\/portal.example.com\/test\/env/', $response['az_url'], 'Expected redirect_uri query parameter not found in authorization url.');
     // TODO: note no realm ... see comment above.
-    $this->assertRegExp('/realm=/', $response['az_url'], 'Expected realm query parameter not found in authorization url.');
-    $this->assertRegExp('/esponse_type=code/', $response['az_url'], 'Expected response_code query parameter not found in authorization url.');
+    self::assertRegExp('/realm=/', $response['az_url'], 'Expected realm query parameter not found in authorization url.');
+    self::assertRegExp('/esponse_type=code/', $response['az_url'], 'Expected response_code query parameter not found in authorization url.');
 
-    //$this->assertEquals($response['az_url'], 'https://mgmt.example.com/consumer-api/oauth2/authorize?client_id=iamaclientid&state=base64encodedstate&redirect_uri=http://portal.example.com/test/env&realm=&response_type=code', 'Unexpected authorization url.');
-    $this->assertStringStartsWith('<svg ', $response['image']['html'], 'Unexpected image.');
+    //self::assertEquals($response['az_url'], 'https://mgmt.example.com/consumer-api/oauth2/authorize?client_id=iamaclientid&state=base64encodedstate&redirect_uri=http://portal.example.com/test/env&realm=&response_type=code', 'Unexpected authorization url.');
+    self::assertStringStartsWith('<svg ', $response['image']['html'], 'Unexpected image.');
 
   }
 
   /**
    * Valid - test with invitation object
    */
-  public function testValidOidcMetadataWithInvitationObject() {
+  public function testValidOidcMetadataWithInvitationObject(): void {
 
     $oidc_registry = new UserRegistry();
     $oidc_registry->setRegistryType('oidc');
@@ -109,7 +134,8 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->state->get('ibm_apim.site_client_id')->willReturn('iamaclientid');
     $this->utils->base64_url_encode(Argument::any())->willReturn('base64encodedstate');
     $this->apimUtils->getHostUrl()->willReturn('http://portal.example.com');
-    $this->apimUtils->createFullyQualifiedUrl('/consumer-api/oauth2/authorize')->willReturn('http://mgmt.example.com/consumer-api/oauth2/authorize');
+    $this->apimUtils->createFullyQualifiedUrl('/consumer-api/oauth2/authorize')
+      ->willReturn('http://mgmt.example.com/consumer-api/oauth2/authorize');
 
     $service = $this->getServiceUnderTest();
     $response = $service->getOidcMetadata($oidc_registry, $invitation_object);
@@ -118,12 +144,12 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->logger->error(Argument::any())->shouldNotBeCalled();
     $this->oidcStateService->store(Argument::any())->shouldBeCalled();
 
-    $this->assertNotNull($response, 'unexpected NULL response when gathering oidc metadata.');
-    $this->assertNotNull($response['az_url'], 'unexpected NULL az_url when gathering oidc metadata.');
-    $this->assertNotNull($response['image'], 'unexpected NULL image when gathering oidc metadata.');
+    self::assertNotNull($response, 'unexpected NULL response when gathering oidc metadata.');
+    self::assertNotNull($response['az_url'], 'unexpected NULL az_url when gathering oidc metadata.');
+    self::assertNotNull($response['image'], 'unexpected NULL image when gathering oidc metadata.');
 
-    $this->assertRegExp('/&token=blahdeblah$/', $response['az_url'], 'Expected token query parameter not found in authorization url.');
-    $this->assertStringStartsWith('<svg ', $response['image']['html'], 'Unexpected image.');
+    self::assertRegExp('/&token=blahdeblah$/', $response['az_url'], 'Expected token query parameter not found in authorization url.');
+    self::assertStringStartsWith('<svg ', $response['image']['html'], 'Unexpected image.');
 
   }
 
@@ -131,7 +157,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
   /**
    * Invalid - non oidc registry.
    */
-  public function testNonOidcRegistry() {
+  public function testNonOidcRegistry(): void {
     $non_oidc_registry = new UserRegistry();
     $non_oidc_registry->setRegistryType('lur');
 
@@ -141,14 +167,14 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $service = $this->getServiceUnderTest();
     $response = $service->getOidcMetadata($non_oidc_registry);
 
-    $this->assertNull($response, 'Excepted null response when not oidc registry.');
+    self::assertNull($response, 'Excepted null response when not oidc registry.');
 
   }
 
   /**
    * Invalid - no client id
    */
-  public function testNoClientId() {
+  public function testNoClientId(): void {
     $registry = new UserRegistry();
     $registry->setRegistryType('oidc');
 
@@ -160,7 +186,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $service = $this->getServiceUnderTest();
     $response = $service->getOidcMetadata($registry);
 
-    $this->assertNull($response['az_url'], 'Excepted null az_url when not oidc registry.');
+    self::assertNull($response['az_url'], 'Excepted null az_url when not oidc registry.');
 
   }
 
@@ -168,14 +194,12 @@ class OidcRegistryServiceTest extends UnitTestCase {
    * @return \Drupal\auth_apic\Service\OidcRegistryService
    */
   private function getServiceUnderTest(): \Drupal\auth_apic\Service\OidcRegistryService {
-    $service = new OidcRegistryService($this->state->reveal(),
+    return new OidcRegistryService($this->state->reveal(),
       $this->logger->reveal(),
       $this->utils->reveal(),
       $this->apimUtils->reveal(),
-      $this->oidcStateService->reveal(), 
+      $this->oidcStateService->reveal(),
       $this->moduleHandler->reveal());
-    return $service;
   }
-
 
 }

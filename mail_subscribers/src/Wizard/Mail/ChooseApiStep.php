@@ -51,13 +51,13 @@ class ChooseApiStep extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): ?bool {
 
     if (empty($form_state->getUserInput()['api'])) {
       $form_state->setErrorByName('api', t('You must select an API.'));
       return FALSE;
     }
-
+    return NULL;
   }
 
   /**

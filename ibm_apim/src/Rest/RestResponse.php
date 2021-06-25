@@ -20,13 +20,25 @@ use Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface;
  */
 class RestResponse implements RestResponseInterface {
 
-  private $code;
+  /**
+   * @var int|null
+   */
+  private ?int $code = NULL;
 
-  private $headers;
+  /**
+   * @var array|null
+   */
+  private ?array $headers = NULL;
 
-  private $data;
+  /**
+   * @var array|null
+   */
+  private ?array $data = NULL;
 
-  private $errors;
+  /**
+   * @var array|null
+   */
+  private ?array $errors = NULL;
 
   /**
    * Constructor.
@@ -37,16 +49,16 @@ class RestResponse implements RestResponseInterface {
   /**
    * Set status code.
    *
-   * @param $code
+   * @param int|null $code
    */
-  public function setCode($code): void {
+  public function setCode(?int $code): void {
     $this->code = $code;
   }
 
   /**
    * Get status code.
    *
-   * @return int
+   * @return int|null
    *   Status code.
    */
   public function getCode(): ?int {
@@ -56,16 +68,16 @@ class RestResponse implements RestResponseInterface {
   /**
    * Set headers.
    *
-   * @param $headers
+   * @param array|null $headers
    */
-  public function setHeaders($headers): void {
+  public function setHeaders(?array $headers): void {
     $this->headers = $headers;
   }
 
   /**
    * Get headers.
    *
-   * @return array
+   * @return array|null
    *   HTTP headers
    */
   public function getHeaders(): ?array {
@@ -75,16 +87,16 @@ class RestResponse implements RestResponseInterface {
   /**
    * Set data.
    *
-   * @param $data
+   * @param array|null $data
    */
-  public function setData($data): void {
+  public function setData(?array $data): void {
     $this->data = $data;
   }
 
   /**
    * Get HTTP response body.
    *
-   * @return array
+   * @return array|null
    *   HTTP response body.
    */
   public function getData(): ?array {
@@ -94,16 +106,16 @@ class RestResponse implements RestResponseInterface {
   /**
    * Set errors.
    *
-   * @param $errors
+   * @param array|null $errors
    */
-  public function setErrors($errors): void {
+  public function setErrors(?array $errors): void {
     $this->errors = $errors;
   }
 
   /**
    * Get errors.
    *
-   * @return array
+   * @return array|null
    *   Errors.
    */
   public function getErrors(): ?array {

@@ -12,6 +12,7 @@
  ********************************************************** {COPYRIGHT-END} **/
 
 use \Drupal\Core\Site\Settings;
+
 /**
  * @param $tagName
  *
@@ -61,7 +62,7 @@ function apic_api_random_image($apiName): string {
 function apic_api_get_string_from_zip($data): string {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   $draft = '';
-  $fileSystemService = \Drupal::service('file_system'); 
+  $fileSystemService = \Drupal::service('file_system');
   $file = $fileSystemService->realpath($fileSystemService->saveData($data, Settings::get('file_public_path')));
   $tempDir = apic_api_tempdir($fileSystemService->getTempDirectory());
   $zip = new ZipArchive();
@@ -143,7 +144,7 @@ function apic_api_deletedir($dir): void {
  *
  * @return array
  */
-function apic_api_remove_empty_elements($yaml): array {
+function apic_api_remove_empty_elements(array $yaml): array {
   if ($yaml !== NULL) {
     // if empty securityDefinitions and others then needs to be stdClass not array
     foreach ([
@@ -204,14 +205,14 @@ function apic_api_remove_empty_elements($yaml): array {
  *
  * @return array
  */
-function tidyYaml(&$yaml): array {
+function tidyYaml(array &$yaml): array {
   unset($prop);
   $isArray = is_array($yaml);
   if ($isArray) {
     foreach ($yaml as $prop => $value) {
-      $isArrayProp = is_array($yaml[$prop]);
+      $isArrayProp = is_array($value);
       if ($prop === 'schema') {
-        if ($isArrayProp === TRUE && empty($yaml[$prop])) {
+        if ($isArrayProp === TRUE && empty($value)) {
           unset($yaml[$prop]);
         }
         elseif ($isArrayProp === TRUE) {
@@ -220,10 +221,10 @@ function tidyYaml(&$yaml): array {
       }
       elseif ($prop === 'properties') {
 
-        if ($isArrayProp === TRUE && empty($yaml[$prop])) {
+        if ($isArrayProp === TRUE && empty($value)) {
           unset($yaml[$prop]);
           // handle empty objects now we've removed possibly their only attribute
-          if ($isArray === TRUE && empty($yaml)) {
+          if (empty($yaml)) {
             $yaml['type'] = 'object';
           }
         }

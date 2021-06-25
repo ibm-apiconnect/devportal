@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.apic_created_at
+    - node.type.application
+id: node.application.apic_created_at
+field_name: apic_created_at
+entity_type: node
+bundle: application
+label: 'Creation time'
+description: ''
+required: false
+translatable: false
+default_value_callback: ''
+settings: {  }
+field_type: timestamp

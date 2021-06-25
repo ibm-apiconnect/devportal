@@ -35,7 +35,7 @@ class ProductController extends ControllerBase {
    *
    * @var RequestStack
    */
-  public $request;
+  public RequestStack $request;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -56,7 +56,7 @@ class ProductController extends ControllerBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): ProductController {
     // Instantiates this form class.
     return new static(// Load the service required to construct this class.
       $container->get('request_stack'), $container->get('messenger'));
@@ -107,7 +107,6 @@ class ProductController extends ControllerBase {
    * @param \Drupal\node\NodeInterface $apiNode
    *
    * @return array|\Symfony\Component\HttpFoundation\RedirectResponse
-   * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public function productApi(NodeInterface $prodNode, NodeInterface $apiNode) {
     if ($prodNode !== NULL && $apiNode !== NULL && $prodNode->id() && $apiNode->id()) {
@@ -148,6 +147,7 @@ class ProductController extends ControllerBase {
               'title' => $prodNode->getTitle(),
               'version' => $prodNode->apic_version->value,
               'pathalias' => $prodNode->apic_pathalias->value,
+              'subscribable' => product_check_product_subscribe($prodNode)
             ];
           }
         }
@@ -164,11 +164,11 @@ class ProductController extends ControllerBase {
           $rawImage = Api::getRandomImageName($apiNode->getTitle());
           $apiImageUrl = base_path() . drupal_get_path('module', 'apic_api') . '/images/' . $rawImage;
         }
-        $enforced = true;
+        $enforced = TRUE;
         if (isset($apiNode->api_swagger->value)) {
           $swagger = unserialize($apiNode->api_swagger->value, ['allowed_classes' => FALSE]);
-          if (!isset($swagger['x-ibm-configuration']) || $swagger['x-ibm-configuration']['enforced'] === false) {
-            $enforced = false;
+          if (!isset($swagger['x-ibm-configuration']) || $swagger['x-ibm-configuration']['enforced'] === FALSE) {
+            $enforced = FALSE;
           }
         }
 
@@ -260,10 +260,10 @@ class ProductController extends ControllerBase {
 
       $productNids = Product::getProductsContainingAPI($apiNode->apic_ref->value);
       if (isset($productNids) && !empty($productNids)) {
-        $nodes = Node::loadMultiple($productNids);
         // if only one product found then just load it and redirect
-        if (count($nodes) === 1) {
-          $firstNode = reset($nodes);
+        if (count($productNids) === 1) {
+          $firstNid = reset($productNids);
+          $firstNode = Node::load($firstNid);
           $path = Url::fromRoute('product.api', ['prodNode' => $firstNode->id(), 'apiNode' => $apiNode->id()])
             ->setAbsolute()
             ->toString();
@@ -272,7 +272,9 @@ class ProductController extends ControllerBase {
           ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
           return NULL;
         }
-        else {
+
+        foreach (array_chunk($productNids, 50) as $chunk) {
+          $nodes = Node::loadMultiple($chunk);
           foreach ($nodes as $prodNode) {
             $products[] = [
               'nid' => $prodNode->id(),
@@ -299,4 +301,5 @@ class ProductController extends ControllerBase {
       '#attached' => $attached,
     ];
   }
+
 }

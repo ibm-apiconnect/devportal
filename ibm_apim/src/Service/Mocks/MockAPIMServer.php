@@ -20,8 +20,10 @@ use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Rest\MeResponse;
+use Drupal\ibm_apim\Rest\Payload\MeResponseReader;
 use Drupal\ibm_apim\Rest\Payload\RestResponseReader;
 use Drupal\ibm_apim\Rest\RestResponse;
+use Drupal\ibm_apim\Rest\UsersRegisterResponse;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 
 
@@ -40,7 +42,7 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * @var \Drupal\ibm_apim\Rest\Payload\RestResponseReader
    */
-  protected $restResponseReader;
+  protected RestResponseReader $restResponseReader;
 
 
   /**
@@ -48,20 +50,28 @@ class MockAPIMServer implements ManagementServerInterface {
    *
    * Used for logging etc.
    *
-   * @var string
+   * @var string|null
    */
-  protected $username;
+  protected ?string $username;
+
+  /**
+   * @var \Drupal\ibm_apim\Rest\Payload\MeResponseReader
+   */
+  private MeResponseReader $meResponseReader;
 
   /**
    * MockAPIMServer constructor.
    *
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
    * @param \Drupal\ibm_apim\Rest\Payload\RestResponseReader $rest_response_reader
+   * @param \Drupal\ibm_apim\Rest\Payload\MeResponseReader $me_response_reader
    */
   public function __construct(PrivateTempStoreFactory $temp_store_factory,
-                              RestResponseReader $rest_response_reader) {
+                              RestResponseReader $rest_response_reader,
+                              MeResponseReader $me_response_reader) {
     $this->sessionStore = $temp_store_factory->get('ibm_apim');
     $this->restResponseReader = $rest_response_reader;
+    $this->meResponseReader = $me_response_reader;
   }
 
   /**
@@ -74,6 +84,7 @@ class MockAPIMServer implements ManagementServerInterface {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
   public function getMe($auth = NULL): MeResponse {
 
@@ -85,8 +96,7 @@ class MockAPIMServer implements ManagementServerInterface {
     $response['lastLogin'] = time();
     $response['status'] = 1;
 
-    // TODO this seems wrong - MeResponse doesnt take any args?
-    return new MeResponse($response);
+    return $this->meResponseReader->read($response);
   }
 
   /**
@@ -111,12 +121,15 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function postUsersRegister(ApicUser $user): ?\Drupal\ibm_apim\Rest\UsersRegisterResponse {
+  public function postUsersRegister(ApicUser $user) {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::postUsersRegister() is missing!');
     return NULL;
   }
 
-  public function orgInvitationsRegister(JWTToken $obj, ApicUser $invitedUser) {
+  /**
+   * {@inheritdoc}
+   */
+  public function orgInvitationsRegister(JWTToken $obj, ApicUser $invitedUser): RestResponse {
     $response = new RestResponse();
 
     $response->setCode(204);
@@ -124,30 +137,36 @@ class MockAPIMServer implements ManagementServerInterface {
     return $response;
   }
 
-  public function forgotPassword($username, $realm) {
+  /**
+   * {@inheritdoc}
+   */
+  public function forgotPassword(string $username, ?string $realm) {
     $response = new RestResponse();
 
     $response->setCode(200);
-    $response->setData('forgotPassword mock response');
+    $response->setData(['forgotPassword mock response']);
 
     return $response;
   }
 
-  public function resetPassword(JWTToken $obj, $password): ?RestResponse {
+  /**
+   * {@inheritdoc}
+   */
+  public function resetPassword(JWTToken $obj, string $password): ?RestResponse {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::resetPassword() is missing!');
     return NULL;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function changePassword($old_password, $new_password): ?RestResponse {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::changePassword() is missing!');
     return NULL;
   }
 
   /**
-   * @param \Drupal\ibm_apim\ApicType\ApicUser $new_user
-   *
-   * @return \Drupal\ibm_apim\Rest\RestResponse|mixed|null
-   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * {@inheritdoc}
    */
   public function postSignUp(ApicUser $new_user) {
     $registry_service = \Drupal::service('ibm_apim.user_registry');
@@ -169,12 +188,18 @@ class MockAPIMServer implements ManagementServerInterface {
     return $this->restResponseReader->read($response);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function postSignOut(): RestResponse {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::postSignOut() is missing!');
     return new RestResponse();
   }
 
-  public function acceptInvite(JWTToken $token, ApicUser $acceptingUser, $orgTitle) {
+  /**
+   * {@inheritdoc}
+   */
+  public function acceptInvite(JWTToken $token, ApicUser $acceptingUser, string $orgTitle) {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::acceptInvite() is missing!');
     return NULL;
   }
@@ -191,7 +216,7 @@ class MockAPIMServer implements ManagementServerInterface {
       'url' => '/org/1',
       'id' => '123',
       'owner_url' => '/user/1',
-      'group_urls' => '/groups/1',
+      'group_urls' => ['/groups/1'],
       'members' => [
         [
           'type' => 'member',
@@ -233,7 +258,7 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * @inheritDoc
    */
-  public function postTransferConsumerOrg(ConsumerOrg $org, string $newOwnerUrl, $role = NULL) {
+  public function postTransferConsumerOrg(ConsumerOrg $org, string $newOwnerUrl, ?string $role = NULL) {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::postTransferConsumerOrg() is missing!');
     return NULL;
   }
@@ -308,7 +333,9 @@ class MockAPIMServer implements ManagementServerInterface {
     return new RestResponse();
   }
 
-
+  /**
+   * {@inheritdoc}
+   */
   public function get($url) {
     $utils = \Drupal::service('ibm_apim.utils');
     $host = \Drupal::service('ibm_apim.apim_utils')->getHostUrl();

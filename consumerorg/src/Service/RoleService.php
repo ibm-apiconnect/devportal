@@ -15,6 +15,11 @@ namespace Drupal\consumerorg\Service;
 
 use Drupal\consumerorg\ApicType\Role;
 
+/**
+ * Class RoleService
+ *
+ * @package Drupal\consumerorg\Service
+ */
 class RoleService {
 
   public function __construct() {
@@ -24,11 +29,11 @@ class RoleService {
   /**
    * Parse an ApicType/Role object out of the given JSON structure (e.g. from a webhook body or snapshot)
    *
-   * @param object $json
+   * @param array $json
    *
    * @return \Drupal\consumerorg\ApicType\Role
    */
-  public function createFromJSON($json): Role {
+  public function createFromJSON(array $json): Role {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $role = new Role();
 

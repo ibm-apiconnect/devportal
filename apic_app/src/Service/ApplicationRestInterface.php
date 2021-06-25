@@ -21,9 +21,9 @@ interface ApplicationRestInterface {
    *
    * @param $url - /apps/{org}/{app_id}
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function getApplicationDetails($url);
+  public function getApplicationDetails($url): ?\stdClass;
 
   /**
    * Create a new application in apim using
@@ -32,9 +32,9 @@ interface ApplicationRestInterface {
    * @param $url - /orgs/{org}/apps
    * @param $requestBody - json encoded request body
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function postApplication($url, $requestBody);
+  public function postApplication($url, $requestBody): ?\stdClass;
 
   /**
    * Delete an application in apim using
@@ -42,19 +42,20 @@ interface ApplicationRestInterface {
    *
    * @param $url - /apps/{org}/{app}
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function deleteApplication($url);
+  public function deleteApplication($url): ?\stdClass;
 
   /**
    * @param $name
-   * @param $description
-   * @param $oauthUrl
-   * @param $formState
+   * @param $summary
+   * @param $oauthUrls
+   * @param null $certificate
+   * @param null $formState
    *
-   * @return mixed
+   * @return \stdClass|null
    */
-  public function createApplication($name, $description, $oauthUrl, $formState);
+  public function createApplication($name, $summary, $oauthUrls, $certificate = NULL, $formState = NULL): ?\stdClass;
 
   /**
    * Promote an application in apim using the url provided
@@ -63,9 +64,9 @@ interface ApplicationRestInterface {
    * @param $url - /apps/{org}/{app}
    * @param $requestBody - json encoded request body
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function promoteApplication($url, $requestBody);
+  public function promoteApplication($url, $requestBody): ?\stdClass;
 
   /**
    * Update an existing application in apim using the
@@ -74,9 +75,9 @@ interface ApplicationRestInterface {
    * @param $url - /apps/{org}/{app}
    * @param $requestBody - json encoded request body
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function patchApplication($url, $requestBody);
+  public function patchApplication($url, $requestBody): ?\stdClass;
 
   /**
    * Create a new set of application credentials in apim
@@ -85,9 +86,9 @@ interface ApplicationRestInterface {
    * @param $url - /apps/{org}/{app}/credentials
    * @param $requestBody - json encoded request body
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function postCredentials($url, $requestBody);
+  public function postCredentials($url, $requestBody): ?\stdClass;
 
   /**
    * Delete a set of application credentials in apim
@@ -95,9 +96,9 @@ interface ApplicationRestInterface {
    *
    * @param $url - /apps/{org}/{app}/credentials/{credential}
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function deleteCredentials($url);
+  public function deleteCredentials($url): ?\stdClass;
 
   /**
    * Update an existing set of application credentials in apim
@@ -106,9 +107,9 @@ interface ApplicationRestInterface {
    * @param $url - /apps/{org}/{app}/credentials/{credential}
    * @param $requestBody - json encoded request body
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function patchCredentials($url, $requestBody);
+  public function patchCredentials($url, $requestBody): ?\stdClass;
 
   /**
    * Migrate an existing subscription in apim using
@@ -117,9 +118,9 @@ interface ApplicationRestInterface {
    * @param $url - /apps/{org}/{app}/subscriptions/{subscription}
    * @param $requestBody - json encoded request body
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function patchSubscription($url, $requestBody);
+  public function patchSubscription($url, $requestBody): ?\stdClass;
 
   /**
    * Reset an applications client id & secret in apim
@@ -128,9 +129,9 @@ interface ApplicationRestInterface {
    * @param $url - /apps/{org}/{app}/credentials/{credential}/reset
    * @param $requestBody - json encoded request body
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function postClientId($url, $requestBody);
+  public function postClientId($url, $requestBody): ?\stdClass;
 
   /**
    * Reset an applications client secret in apim
@@ -139,9 +140,9 @@ interface ApplicationRestInterface {
    * @param $url - /apps/{org}/{app}/credentials/{credential}/reset-client-secret
    * @param $requestBody - json encoded request body
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function postClientSecret($url, $requestBody);
+  public function postClientSecret($url, $requestBody): ?\stdClass;
 
   /**
    * Create an application subscription in apim
@@ -150,9 +151,9 @@ interface ApplicationRestInterface {
    * @param $url - /apps/{org}/{app}/subscriptions
    * @param $requestBody - json encoded request body
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function postSubscription($url, $requestBody);
+  public function postSubscription($url, $requestBody): ?\stdClass;
 
   /**
    * Deletes a subscription to an application in apim
@@ -160,9 +161,9 @@ interface ApplicationRestInterface {
    *
    * @param $url - /apps/{org}/{app}/subscriptions/{subscription}
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function deleteSubscription($url);
+  public function deleteSubscription($url): ?\stdClass;
 
   /**
    * Verify a client secret in apim using the
@@ -171,8 +172,8 @@ interface ApplicationRestInterface {
    * @param $url - /apps/{org}/{app}/credentials/{credential}/verify-client-secret
    * @param $requestBody - json encoded request body
    *
-   * @return mixed
+   * @return \stdClass|NULL
    */
-  public function postSecret($url, $requestBody);
+  public function postSecret($url, $requestBody): ?\stdClass;
 
 }

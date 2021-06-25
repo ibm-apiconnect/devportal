@@ -31,19 +31,38 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @Block(
  *   id = "new_application",
  *   admin_label = @Translation("New Application Link"),
- *   category = @Translation("IBM API Connect")
+ *   category = @Translation("IBM API Developer Portal")
  * )
  */
 class NewApplicationBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
-  protected $userUtils;
+  /**
+   * @var \Drupal\ibm_apim\Service\UserUtils
+   */
+  protected UserUtils $userUtils;
 
+  /**
+   * NewApplicationBlock constructor.
+   *
+   * @param array $configuration
+   * @param $plugin_id
+   * @param $plugin_definition
+   * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
+   */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, UserUtils $userUtils) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->userUtils = $userUtils;
   }
 
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  /**
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   * @param array $configuration
+   * @param string $plugin_id
+   * @param mixed $plugin_definition
+   *
+   * @return \Drupal\apic_app\Plugin\Block\NewApplicationBlock
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): NewApplicationBlock {
     return new static($configuration, $plugin_id, $plugin_definition, $container->get('ibm_apim.user_utils'));
   }
 
@@ -68,4 +87,5 @@ class NewApplicationBlock extends BlockBase implements ContainerFactoryPluginInt
       ],
     ];
   }
+
 }

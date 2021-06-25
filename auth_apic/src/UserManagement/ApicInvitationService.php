@@ -14,9 +14,9 @@ namespace Drupal\auth_apic\UserManagement;
 
 use Drupal\auth_apic\JWTToken;
 use Drupal\auth_apic\UserManagerResponse;
-use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
+use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Psr\Log\LoggerInterface;
 
 class ApicInvitationService implements ApicInvitationInterface {
@@ -24,17 +24,17 @@ class ApicInvitationService implements ApicInvitationInterface {
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface
    */
-  private $mgmtServer;
+  private ManagementServerInterface $mgmtServer;
 
   /**
    * @var \Drupal\ibm_apim\UserManagement\ApicAccountInterface
    */
-  private $accountService;
+  private ApicAccountInterface $accountService;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  private $logger;
+  private LoggerInterface $logger;
 
   public function __construct(ManagementServerInterface $mgmt_server,
                               ApicAccountInterface $account_service,

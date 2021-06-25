@@ -56,7 +56,7 @@ ibm_apim_config_object:
 
 ibm_apim.settings:
   type: config_object
-  label: 'IBM API Connect configuration settings'
+  label: 'IBM API Developer Portal configuration settings'
   mapping:
     autocreate_apiforum:
       type: boolean

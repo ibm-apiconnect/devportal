@@ -16,18 +16,22 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ctools\Event\WizardEvent;
 use Drupal\ctools\Wizard\FormWizardBase;
 use Drupal\ctools\Wizard\FormWizardInterface;
+use Drupal\mail_subscribers\Wizard\Mail\ChooseRoleStep;
+use Drupal\mail_subscribers\Wizard\Mail\ConfirmSend;
+use Drupal\mail_subscribers\Wizard\Mail\EnterContentStep;
+use Drupal\mail_subscribers\Wizard\Mail\MailSummary;
 
 class AllSubscribersWizard extends FormWizardBase {
 
   /**
-   * {@inheritdoc}
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string
    */
   public function getWizardLabel() {
     return t('Mail All Users Wizard');
   }
 
   /**
-   * {@inheritdoc}
+   * @return string
    */
   public function getMachineLabel(): string {
     return 'mail_all_subscribers_wizard';
@@ -36,7 +40,7 @@ class AllSubscribersWizard extends FormWizardBase {
   /**
    * {@inheritdoc}
    */
-  public function getRouteName() {
+  public function getRouteName(): string {
     return 'mail_subscribers.all_wizard.step';
   }
 
@@ -48,22 +52,22 @@ class AllSubscribersWizard extends FormWizardBase {
 
     $steps['choosesubs'] = [
       'title' => t('Select Users'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ChooseRoleStep',
+      'form' => ChooseRoleStep::class,
     ];
 
     $steps['entercontent'] = [
       'title' => t('Enter content'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\EnterContentStep',
+      'form' => EnterContentStep::class,
     ];
 
     $steps['confirm'] = [
       'title' => t('Confirm'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\ConfirmSend',
+      'form' => ConfirmSend::class,
     ];
 
     $steps['summary'] = [
       'title' => t('Summary'),
-      'form' => 'Drupal\mail_subscribers\Wizard\Mail\MailSummary',
+      'form' => MailSummary::class,
     ];
 
     return $steps;

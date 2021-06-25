@@ -31,7 +31,7 @@ class UploadImageForm extends FormBase {
    *
    * @var \Drupal\node\NodeInterface
    */
-  protected $node;
+  protected NodeInterface $node;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -50,7 +50,7 @@ class UploadImageForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): UploadImageForm {
     // Load the service required to construct this class
     return new static($container->get('messenger'));
   }
@@ -67,8 +67,9 @@ class UploadImageForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $this->node = $appId;
-
+    if ($appId !== NULL) {
+      $this->node = $appId;
+    }
     $form['intro'] = ['#markup' => '<p>' . t('Use this form to upload an image or icon for this application.') . '</p>'];
 
     $form['image'] = [
@@ -77,9 +78,9 @@ class UploadImageForm extends FormBase {
       '#description' => t('Upload a file, allowed extensions: jpg, jpeg, png, gif'),
     ];
     $form['remove'] = [
-        '#type' => 'submit',
-        '#value' => t('Remove image'),
-        '#submit' => ['::removeImage'],
+      '#type' => 'submit',
+      '#value' => t('Remove image'),
+      '#submit' => ['::removeImage'],
     ];
 
     $form['actions']['#type'] = 'actions';
@@ -106,7 +107,14 @@ class UploadImageForm extends FormBase {
     return $this->node->toUrl();
   }
 
-  public function cancelForm(array &$form, FormStateInterface $form_state) {
+  /**
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return \Drupal\Core\Form\FormStateInterface
+   * @throws \Drupal\Core\Entity\EntityMalformedException
+   */
+  public function cancelForm(array &$form, FormStateInterface $form_state): FormStateInterface {
     return $form_state->setRedirectUrl($this->getCancelUrl());
   }
 
@@ -115,10 +123,12 @@ class UploadImageForm extends FormBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *
    * @return \Drupal\Core\Form\FormStateInterface
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityMalformedException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function removeImage(array &$form, FormStateInterface $form_state) {
+  public function removeImage(array &$form, FormStateInterface $form_state): FormStateInterface {
     // clear the image
     $fid = $this->node->get("application_image")->getValue();
     if (isset($fid[0]['target_id'])) {
@@ -146,8 +156,15 @@ class UploadImageForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityMalformedException
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) :void{
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appId = $this->node->application_id->value;
     // Get name of the file that was left by form validate function.
@@ -194,4 +211,5 @@ class UploadImageForm extends FormBase {
     $form_state->setRedirectUrl($this->getCancelUrl());
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
+
 }

@@ -15,6 +15,7 @@ namespace Drupal\mail_subscribers\Service;
 
 use Drupal\Component\Utility\EmailValidator;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Mail\MailFormatHelper;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
@@ -23,16 +24,25 @@ use Drupal\user\Entity\User;
 
 class MailService {
 
-  protected $emailValidator;
-    
-  protected $nodeStorage;
-  
-  protected $userStorage;
+  protected EmailValidator $emailValidator;
 
-  protected $sent;
+  protected EntityStorageInterface $nodeStorage;
 
-  protected $operations;
+  protected ApicUserStorageInterface $userStorage;
 
+  protected int $sent;
+
+  protected array $operations;
+
+  /**
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
+  private EntityStorageInterface $subscriptionStorage;
+
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function __construct(ApicUserStorageInterface $user_storage,
                               EntityTypeManagerInterface $entityTypeManager,
                               EmailValidator $email_validator) {
@@ -290,14 +300,14 @@ class MailService {
 
       $query = $query = $this->subscriptionStorage->getQuery();
       $query->condition('product_url', $productUrl);
-      if ( isset($planName) && !empty($planName) ) {  // ignore any static analysis tool complaints about this line
-        $query->condition('plan',$planName);
+      if (isset($planName) && !empty($planName)) {  // ignore any static analysis tool complaints about this line
+        $query->condition('plan', $planName);
       }
       $entityIds = $query->execute();
       if ($entityIds !== NULL && !empty($entityIds)) {
         foreach ($entityIds as $entityId) {
           $sub = $this->subscriptionStorage->load($entityId);
-          if (!in_array($sub->consumerorg_url(), $orgs)) {
+          if ($sub !== NULL && !in_array($sub->consumerorg_url(), $orgs, TRUE)) {
             $orgs[] = $sub->consumerorg_url();
           }
         }
@@ -313,9 +323,11 @@ class MailService {
         $query->condition('consumerorg_url.value', $org);
         $nids = $query->execute();
         if ($nids !== NULL && !empty($nids)) {
-          $recipients = $recipients + $this->getConsumerOrgRecipients($nids, $type);
+          $recipients[] = $this->getConsumerOrgRecipients($nids, $type);
         }
       }
+      // this avoids doing array_merge in a loop
+      $recipients = array_merge(...$recipients);
     }
 
     if (\function_exists('ibm_apim_exit_trace')) {
@@ -351,6 +363,7 @@ class MailService {
    *
    * @param $consumerOrgNids
    * @param $type
+   *
    * @return array
    */
   public function getConsumerOrgRecipients($consumerOrgNids, $type): array {
@@ -375,14 +388,12 @@ class MailService {
         $consumerorgOwner = NULL;
         $consumerorgOwnerUrl = $node->get('consumerorg_owner')->value;
         $consumerorgOwnerAccount = $this->userStorage->loadUserByUrl($consumerorgOwnerUrl);
-        if ($consumerorgOwnerAccount !== NULL && $this->emailValidator->isValid($consumerorgOwnerAccount->getEmail()) ){
+        if ($consumerorgOwnerAccount !== NULL && $this->emailValidator->isValid($consumerorgOwnerAccount->getEmail())) {
           $consumerorgOwner = $consumerorgOwnerAccount->getEmail();
         }
-        if ($consumerorgOwner !== NULL && !empty($consumerorgOwner)) {
-          // Dont add the owner address if it is already in the recipients array
-          if (!in_array($consumerorgOwner, $orgRecipients)) {
-            $orgRecipients[] = $consumerorgOwner;
-          }
+        // Dont add the owner address if it is already in the recipients array
+        if ($consumerorgOwner !== NULL && !empty($consumerorgOwner) && !in_array($consumerorgOwner, $orgRecipients, TRUE)) {
+          $orgRecipients[] = $consumerorgOwner;
         }
         if (!empty($orgRecipients)) {
           $recipients[$node->id()] = $orgRecipients;
@@ -426,7 +437,7 @@ class MailService {
               if ($entityIds !== NULL && !empty($entityIds)) {
                 foreach ($entityIds as $entityId) {
                   $sub = $this->subscriptionStorage->load($entityId);
-                  if (!in_array($sub->consumerorg_url(), $orgs)) {
+                  if ($sub !== NULL && !in_array($sub->consumerorg_url(), $orgs, TRUE)) {
                     $orgs[] = $sub->consumerorg_url();
                   }
                 }
@@ -446,9 +457,11 @@ class MailService {
         $query->condition('consumerorg_url.value', $org);
         $nids = $query->execute();
         if ($nids !== NULL) {
-          $recipients = $recipients + $this->getConsumerOrgRecipients($nids, $type);
+          $recipients[] = $this->getConsumerOrgRecipients($nids, $type);
         }
       }
+      // this avoids doing array_merge in a loop
+      $recipients = array_merge(...$recipients);
     }
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, count($recipients));
@@ -492,7 +505,7 @@ class MailService {
     $query->condition('type', 'consumerorg');
     $nids = $query->execute();
     if ($nids !== NULL) {
-      $recipients = $recipients + $this->getConsumerOrgRecipients($nids, $type);
+      $recipients = $this->getConsumerOrgRecipients($nids, $type);
     }
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, count($recipients));
@@ -543,7 +556,7 @@ class MailService {
 
     $sendOriginal = NULL;
 
-    if ($mailParams['send_original'] !== null && (boolean) $mailParams['send_original'] === TRUE) {
+    if ($mailParams['send_original'] !== NULL && (boolean) $mailParams['send_original'] === TRUE) {
       $sendOriginal = $from['mail'];
     }
 
@@ -561,7 +574,7 @@ class MailService {
       'from' => $from,
       'mailBody' => $mailBody,
       'headers' => $headers,
-      'sendOriginal' => $sendOriginal
+      'sendOriginal' => $sendOriginal,
     ];
 
     $this->processMail($mailProperties);
@@ -589,7 +602,7 @@ class MailService {
    *
    * @param $mailProperties
    */
-  public function processMail($mailProperties) {
+  public function processMail($mailProperties): void {
     // Loop through each consumer org and process it's recipient list
     foreach ($mailProperties['toList'] as $orgId => $recipients) {
       if (!is_array($recipients)) {
@@ -603,7 +616,8 @@ class MailService {
       if ($mailProperties['mailParams']['objectType'] === 'all') {
         // Process the recipients per consumer org
         $this->processRecipients($mailProperties, $recipients, $context);
-      } else {
+      }
+      else {
 
         switch ($mailProperties['mailParams']['objectType']) {
           case 'all':
@@ -612,7 +626,7 @@ class MailService {
             // Set the product context for token replacement
             $product = Node::load($mailProperties['mailParams']['product']);
 
-            $this->processConsumerOrgProductApplications($consumerOrg, $product, null, $mailProperties, $recipients, $context);
+            $this->processConsumerOrgProductApplications($consumerOrg, $product, NULL, $mailProperties, $recipients, $context);
             break;
           case 'api':
             // Set the api context for token replacement
@@ -624,7 +638,7 @@ class MailService {
 
             // Get the applications belonging to the consumer org that is subscribed to each product containing the api
             foreach ($products as $product) {
-              $this->processConsumerOrgProductApplications($consumerOrg, $product, null, $mailProperties, $recipients, $context);
+              $this->processConsumerOrgProductApplications($consumerOrg, $product, NULL, $mailProperties, $recipients, $context);
             }
             break;
           case 'plan':
@@ -656,7 +670,7 @@ class MailService {
    * @param $recipients
    * @param $context
    */
-  public function processRecipients($mailProperties, $recipients, $context) {
+  public function processRecipients($mailProperties, $recipients, $context): void {
     $moduleHandler = \Drupal::moduleHandler();
 
     foreach ($recipients as $to) {
@@ -690,8 +704,10 @@ class MailService {
    *
    * @param $mailProperties
    * @param $to
+   *
+   * @throws \Exception
    */
-  public function queueMail($mailProperties, $to) {
+  public function queueMail($mailProperties, $to): void {
     $message = [
       'uid' => \Drupal::currentUser()->id(),
       'timestamp' => time(),
@@ -705,10 +721,11 @@ class MailService {
     ];
     //$message['format'] = $headers['Content-Type'];
 
-    if ($mailProperties['mailParams']['direct'] !== NULL && (boolean)$mailProperties['mailParams']['direct'] === TRUE) {
+    if ($mailProperties['mailParams']['direct'] !== NULL && (boolean) $mailProperties['mailParams']['direct'] === TRUE) {
       //$operations = ['mail_subscribers_batch_deliver', [$message]];
-      array_push($this->operations, ['mail_subscribers_batch_deliver', [$message]]);
-    } else {
+      $this->operations[] = ['mail_subscribers_batch_deliver', [$message]];
+    }
+    else {
       _mail_subscribers_prepare_mail($message);
       // Queue the message to the spool table.
       $options = ['target' => 'default'];
@@ -727,21 +744,24 @@ class MailService {
    * @param $consumerOrgUrl
    * @param $productUrl
    * @param $planName
-   * @return mixed
+   *
+   * @return \Drupal\Core\Entity\EntityBase[]|\Drupal\Core\Entity\EntityInterface[]|\Drupal\node\Entity\Node[]
    */
-  public function getApplicationsByConsumerOrgProduct($consumerOrgUrl, $productUrl, $planName) {
-    $query = $query = $this->subscriptionStorage->getQuery();
+  protected function getApplicationsByConsumerOrgProduct($consumerOrgUrl, $productUrl, $planName): ?array {
+    $query = $this->subscriptionStorage->getQuery();
     $query->condition('product_url', $productUrl);
     $query->condition('consumerorg_url', $consumerOrgUrl);
-    if ( isset($planName) && !empty($planName) ) {
-      $query->condition('plan',$planName);
+    if (isset($planName) && !empty($planName)) {
+      $query->condition('plan', $planName);
     }
     $appUrls = [];
     $entityIds = $query->execute();
     if ($entityIds !== NULL && !empty($entityIds)) {
       foreach ($entityIds as $entityId) {
         $sub = $this->subscriptionStorage->load($entityId);
-        $appUrls[] = $sub->app_url();
+        if ($sub !== NULL) {
+          $appUrls[] = $sub->app_url();
+        }
       }
     }
 
@@ -758,10 +778,12 @@ class MailService {
 
   /**
    * Gets the list of product nodes which contain the given API
+   *
    * @param $api
-   * @return mixed
+   *
+   * @return \Drupal\Core\Entity\EntityBase[]|\Drupal\Core\Entity\EntityInterface[]|\Drupal\node\Entity\Node[]
    */
-  function getProductsByApi($api) {
+  protected function getProductsByApi($api): ?array {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'product');
     $query->condition('product_apis.value', $api->get('apic_ref')->value, 'CONTAINS');
@@ -773,11 +795,13 @@ class MailService {
 
   /**
    * Finds and unserializes the plan with the given name from the given product
+   *
    * @param $planName
    * @param $product
+   *
    * @return mixed
    */
-  function getPlanFromProduct($planName, $product) {
+  protected function getPlanFromProduct($planName, $product) {
     foreach ($product->product_plans->getValue() as $arrayValue) {
       $productPlan = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
       if ($productPlan['name'] === $planName) {
@@ -785,10 +809,13 @@ class MailService {
       }
     }
 
-    \Drupal::logger('mail_subscribers')->warning('Did not find a plan with the name @plan in the product @product', array( '@plan' => $planName, '@product' => $product->product_name->value));
+    \Drupal::logger('mail_subscribers')->warning('Did not find a plan with the name @plan in the product @product', [
+      '@plan' => $planName,
+      '@product' => $product->product_name->value,
+    ]);
   }
 
-  function processConsumerOrgProductApplications($consumerOrg, $product, $planName, $mailProperties, $recipients, $context) {
+  protected function processConsumerOrgProductApplications($consumerOrg, $product, $planName, $mailProperties, $recipients, $context): void {
     // Set the product context for token replacement
     $context['product'] = $product;
 
@@ -801,4 +828,5 @@ class MailService {
       $this->processRecipients($mailProperties, $recipients, $context);
     }
   }
+
 }

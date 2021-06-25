@@ -13,12 +13,15 @@
 namespace Drupal\ibm_apim\Service;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\TempStore\PrivateTempStore;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
+use Drupal\user\UserStorageInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Component\Datetime\DateTimePlus;
@@ -31,68 +34,42 @@ class UserUtils {
   /**
    * @var \Drupal\Core\Session\AccountProxyInterface
    */
-  private $currentUser;
+  private AccountProxyInterface $currentUser;
 
   /**
    * @var \Drupal\Core\TempStore\PrivateTempStore
    */
-  private $sessionStore;
+  private PrivateTempStore $tempStore;
 
   /**
    * @var \Drupal\Core\State\StateInterface
    */
-  private $state;
+  private StateInterface $state;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  private $logger;
+  private LoggerInterface $logger;
 
   /**
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   * @var \Drupal\user\UserStorageInterface
    */
-  private $userStorage;
+  private UserStorageInterface $userStorage;
 
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function __construct(AccountProxyInterface $current_user,
                               PrivateTempStoreFactory $temp_store_factory,
                               StateInterface $state,
                               LoggerInterface $logger,
                               EntityTypeManagerInterface $entity_type_manager) {
     $this->currentUser = $current_user;
-    $this->sessionStore = $temp_store_factory->get('ibm_apim');
+    $this->tempStore = $temp_store_factory->get('ibm_apim');
     $this->state = $state;
     $this->logger = $logger;
     $this->userStorage = $entity_type_manager->getStorage('user');
-  }
-
-  /**
-   * Method for modules like TFA to check password
-   * If admin then use drupal core method
-   * Else using APIM authentication then use our method.
-   *
-   * @param $current_pass
-   * @param $account
-   *
-   * @return bool
-   */
-  public function checkPassword($current_pass, $account): bool {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $rc = FALSE;
-    $moduleHandler = \Drupal::service('module_handler');
-    if ((int) $this->currentUser->id() === 1) {
-      // Check password. (from user.module user_validate_current_pass()).
-      $uid = \Drupal::service('user.auth')->authenticate($account->getUsername(), $current_pass);
-
-      if (isset($uid)) {
-        $rc = TRUE;
-      }
-    }
-    elseif ($account !== NULL && $moduleHandler->moduleExists('auth_apic')) {
-      // TODO fix this since this function doesnt exist!
-      $rc = auth_apic_authenticate($account->getAccountName(), $current_pass);
-    }
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
-    return $rc;
   }
 
   /**
@@ -105,12 +82,12 @@ class UserUtils {
    *    belong to a consumer org or one is not set.
    *
    * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \JsonException
    */
   public function getCurrentConsumerorg(): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $rc = NULL;
     if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
-      $consumerorg = $this->sessionStore->get('current_consumer_organization');
+      $consumerorg = $this->tempStore->get('current_consumer_organization');
       if (isset($consumerorg) && !empty($consumerorg)) {
         $rc = $consumerorg;
       }
@@ -137,13 +114,13 @@ class UserUtils {
    *    The the current consumer org object or NULL if a user does not
    *    belong to a consumer org or one is not set.
    *
-   * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \Drupal\Core\TempStore\TempStoreException|\JsonException
    */
   public function resetCurrentConsumerorg(): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $rc = NULL;
     if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
-      $this->sessionStore->set('current_consumer_organization', NULL);
+      $this->tempStore->set('current_consumer_organization', NULL);
       $rc = $this->getCurrentConsumerorg();
     }
     else {
@@ -166,6 +143,7 @@ class UserUtils {
    *
    * @return null|array
    * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \JsonException
    */
   public function setCurrentConsumerorg($org_url = NULL): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $org_url);
@@ -173,7 +151,7 @@ class UserUtils {
     if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
       $org_urls = $this->loadConsumerorgs();
       $found = FALSE;
-      if ($org_urls && !empty($org_urls)) {
+      if ($org_urls) {
         // if haven't specified an org url, select the first one
         if (!isset($org_url)) {
           $org_url = reset($org_urls);
@@ -181,17 +159,17 @@ class UserUtils {
         if (in_array($org_url, $org_urls, FALSE)) {
           $found = TRUE;
           $org = ['url' => $org_url];
-          $this->sessionStore->set('current_consumer_organization', $org);
+          $this->tempStore->set('current_consumer_organization', $org);
         }
         if ($found !== TRUE) {
-          $this->sessionStore->set('current_consumer_organization', NULL);
+          $this->tempStore->set('current_consumer_organization', NULL);
         }
       }
       else {
-        $this->sessionStore->set('current_consumer_organization', NULL);
+        $this->tempStore->set('current_consumer_organization', NULL);
       }
 
-      $this->logger->notice('Setting current consumerorg to %data', ['%data' => json_encode($org, JSON_PRETTY_PRINT)]);
+      $this->logger->notice('Setting current consumerorg to %data', ['%data' => json_encode($org, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)]);
     }
     else {
       $this->logger->warning('Cannot set current consumerorg for anonymous users or admin');
@@ -203,11 +181,11 @@ class UserUtils {
   /**
    * Set session variables for the current consumerorg
    *
-   * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \Drupal\Core\TempStore\TempStoreException|\JsonException
    */
   public function setOrgSessionData(): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $this->sessionStore->set('permissions', []);
+    $this->tempStore->set('permissions', []);
     if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
 
       $current_org = $this->getCurrentConsumerorg();
@@ -222,13 +200,13 @@ class UserUtils {
         $consumerorg_url = $current_org['url'];
         $org_urls = $this->loadConsumerorgs();
 
-        if ($org_urls && !empty($org_urls) && isset($consumerorg_url) && in_array($consumerorg_url, $org_urls, FALSE)) {
+        if ($org_urls && isset($consumerorg_url) && in_array($consumerorg_url, $org_urls, FALSE)) {
           $consumerOrg = \Drupal::service('ibm_apim.consumerorg')->get($consumerorg_url);
           // store the current consumerorg in the session
           if (isset($consumerOrg)) {
             $org = ['url' => $consumerOrg->getUrl(), 'name' => $consumerOrg->getName()];
             $this->logger->debug('Storing current org in session: %org', ['%org' => serialize($org)]);
-            $this->sessionStore->set('current_consumer_organization', $org);
+            $this->tempStore->set('current_consumer_organization', $org);
 
             // total permissions for user is all permissions of all roles that the user has
             $perms = [];
@@ -259,7 +237,7 @@ class UserUtils {
               $this->logger->warning('Unable to load current user so cannot update roles and permissions');
             }
             $this->logger->debug('Storing permissions in session: %perms', ['%perms' => \serialize($perms)]);
-            $this->sessionStore->set('permissions', $perms);
+            $this->tempStore->set('permissions', $perms);
           }
           else {
             $this->logger->warning('No consumerorg retrieved for %consumerorg_url', ['%consumerorg_url' => $consumerorg_url]);
@@ -317,9 +295,11 @@ class UserUtils {
       $query->condition('consumerorg_owner.value', $user->get('apic_url')->value);
       $nids = $query->execute();
       if (isset($nids) && !empty($nids)) {
-        $nodes = Node::loadMultiple($nids);
-        foreach ($nodes as $node) {
-          $owned[] = $node->consumerorg_url->value;
+        foreach (array_chunk($nids, 50) as $chunk) {
+          $nodes = Node::loadMultiple($chunk);
+          foreach ($nodes as $node) {
+            $owned[] = $node->consumerorg_url->value;
+          }
         }
       }
     }
@@ -327,6 +307,9 @@ class UserUtils {
     return $owned;
   }
 
+  /**
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
   public function addConsumerOrgToUser($orgUrl, $account = NULL): bool {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $orgUrl);
@@ -342,27 +325,24 @@ class UserUtils {
       $account_id = (int) $account->id();
     }
 
-    if (!$this->currentUser->isAnonymous() && (int) $account_id !== 1) {
+    if (!$this->currentUser->isAnonymous() && (int) $account_id !== 1 && $account !== NULL) {
+      $org_urls = $account->get('consumerorg_url')->getValue();
 
-      if ($account !== NULL) {
-        $org_urls = $account->get('consumerorg_url')->getValue();
-
-        if (!empty($org_urls)) {
-          // update the consumerorg urls list set on the user object
-          $this->logger->debug('updating consumerorg urls list set on the user object');
-          foreach ($org_urls as $index => $valueArray) {
-            if ($valueArray['value'] === $orgUrl) {
-              $found = TRUE;
-            }
+      if (!empty($org_urls)) {
+        // update the consumerorg urls list set on the user object
+        $this->logger->debug('updating consumerorg urls list set on the user object');
+        foreach ($org_urls as $index => $valueArray) {
+          if ($valueArray['value'] === $orgUrl) {
+            $found = TRUE;
           }
         }
-        if (!$found) {
-          $this->logger->debug('adding org to consumerorg urls list ' . $orgUrl);
-          $org_urls[] = ['value' => $orgUrl];
-          $account->set('consumerorg_url', $org_urls);
-          $account->save();
-          $found = TRUE;
-        }
+      }
+      if (!$found) {
+        $this->logger->debug('adding org to consumerorg urls list %orgUrl', ['%orgUrl' => $orgUrl]);
+        $org_urls[] = ['value' => $orgUrl];
+        $account->set('consumerorg_url', $org_urls);
+        $account->save();
+        $found = TRUE;
       }
     }
     if (function_exists('ibm_apim_entry_trace')) {
@@ -371,25 +351,26 @@ class UserUtils {
     return $found;
   }
 
+  /**
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
   public function removeConsumerOrgFromUser($orgUrl, $account = NULL): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $orgUrl);
     $return = NULL;
     if ($account === NULL && !$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
       $account = User::load($this->currentUser->id());
     }
-    if (!$this->currentUser->isAnonymous() && (int) $account->id() !== 1) {
-      // update the consumerorg urls list set on the user object
-      if ($account !== NULL && !empty($account->consumerorg_url->getValue())) {
-        $org_urls = $account->consumerorg_url->getValue();
-        $new_org_urls = [];
-        foreach ($org_urls as $index => $valueArray) {
-          if ($valueArray['value'] !== $orgUrl) {
-            $new_org_urls[] = $valueArray;
-          }
+    // update the consumerorg urls list set on the user object
+    if (!$this->currentUser->isAnonymous() && (int) $account->id() !== 1 && !empty($account->consumerorg_url->getValue())) {
+      $org_urls = $account->consumerorg_url->getValue();
+      $new_org_urls = [];
+      foreach ($org_urls as $index => $valueArray) {
+        if ($valueArray['value'] !== $orgUrl) {
+          $new_org_urls[] = $valueArray;
         }
-        $account->set('consumerorg_url', $new_org_urls);
-        $account->save();
       }
+      $account->set('consumerorg_url', $new_org_urls);
+      $account->save();
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
@@ -449,7 +430,7 @@ class UserUtils {
     }
     $return = FALSE;
     if (!$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1 && isset($perm) && !empty($perm)) {
-      $perms = $this->sessionStore->get('permissions');
+      $perms = $this->tempStore->get('permissions');
       if (isset($perms) && !empty($perms)) {
         $return = in_array($perm, $perms, FALSE);
       }
@@ -499,7 +480,13 @@ class UserUtils {
     return $return;
   }
 
-  public function handleFormCustomFields($customFields, $formState) {
+  /**
+   * @param $customFields
+   * @param $formState
+   *
+   * @return array
+   */
+  public function handleFormCustomFields($customFields, $formState): array {
     $customFieldValues = [];
     if (!empty($customFields)) {
       $userInputs = $formState->getUserInput();
@@ -507,7 +494,7 @@ class UserUtils {
         $value = $formState->getValue($customField);
         if (isset($value[0]['value']) && $value[0]['value'] instanceof DateTimePlus) {
           $format = "Y-m-d";
-          if (isset($userInputs[$customField][0]['value']) && is_array($userInputs[$customField][0]['value']) && count($userInputs[$customField][0]['value']) == 2) {
+          if (isset($userInputs[$customField][0]['value']) && is_array($userInputs[$customField][0]['value']) && count($userInputs[$customField][0]['value']) === 2) {
             $format = "Y-m-d\Th:i:s";
           }
           $value = array_column($value, 'value');
@@ -515,22 +502,18 @@ class UserUtils {
             $value[$key] = $val->format($format);
           }
         }
-        else {
-          if (isset($userInputs[$customField]) && isset($value)) {
-            $input = $userInputs[$customField];
-            //Remove unnecessary fields based on user Input
-            if (is_array($input)) {
-              foreach (array_keys($value) as $key) {
-                if (!array_key_exists($key, $input)) {
-                  unset($value[$key]);
-                }
-                else {
-                  if (!empty($value[$key]) && is_array($value[$key])) {
-                    foreach (array_keys($value[$key]) as $attr) {
-                      if (is_array($input[$key]) && !array_key_exists($attr, $input[$key]) || $value[$key][$attr] == 'upload') {
-                        unset($value[$key][$attr]);
-                      }
-                    }
+        elseif (isset($userInputs[$customField], $value)) {
+          $input = $userInputs[$customField];
+          //Remove unnecessary fields based on user Input
+          if (is_array($input)) {
+            foreach (array_keys($value) as $key) {
+              if (!array_key_exists($key, $input)) {
+                unset($value[$key]);
+              }
+              elseif (!empty($value[$key]) && is_array($value[$key])) {
+                foreach (array_keys($value[$key]) as $attr) {
+                  if ((is_array($input[$key]) && !array_key_exists($attr, $input[$key])) || $value[$key][$attr] === 'upload') {
+                    unset($value[$key][$attr]);
                   }
                 }
               }
@@ -538,7 +521,7 @@ class UserUtils {
           }
         }
         //Don't need an array for only 1 element
-        if (is_array($value) && count($value) == 1) {
+        if (is_array($value) && count($value) === 1) {
           $value = array_pop($value);
         }
         $customFieldValues[$customField] = $value;

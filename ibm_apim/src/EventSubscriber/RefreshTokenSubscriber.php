@@ -12,10 +12,11 @@
 
 namespace Drupal\ibm_apim\EventSubscriber;
 
+use Drupal\Core\TempStore\PrivateTempStore;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
-use Symfony\Component\HttpKernel\Event\PostResponseEvent;
-use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
+use Symfony\Component\HttpKernel\Event\TerminateEvent;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Psr\Log\LoggerInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
@@ -27,26 +28,28 @@ class RefreshTokenSubscriber implements EventSubscriberInterface {
   /**
    * @var \Drupal\Core\TempStore\PrivateTempStore
    */
-  protected $sessionStore;
+  protected PrivateTempStore $sessionStore;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface
    */
-  protected $mgmtServer;
+  protected ManagementServerInterface $mgmtServer;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
-    /**
+  /**
    * APIMServer constructor.
    *
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
+   * @param \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface $mgmtServer
+   * @param \Psr\Log\LoggerInterface $logger
    */
   public function __construct(PrivateTempStoreFactory $temp_store_factory,
-                              ManagementServerInterface $mgmtServer, 
-                              LoggerInterface $logger ) {
+                              ManagementServerInterface $mgmtServer,
+                              LoggerInterface $logger) {
     $this->sessionStore = $temp_store_factory->get('ibm_apim');
     $this->mgmtServer = $mgmtServer;
     $this->logger = $logger;
@@ -54,10 +57,12 @@ class RefreshTokenSubscriber implements EventSubscriberInterface {
 
 
   /**
-   * @param \Symfony\Component\HttpKernel\Event\PostResponseEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\TerminateEvent $event
+   *
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
-  public function refreshAccessToken(PostResponseEvent $event) : void{
-    if (\Drupal::currentUser()->id() == 0 || \Drupal::currentUser()->id() == 1) {
+  public function refreshAccessToken(TerminateEvent $event): void {
+    if ((int) \Drupal::currentUser()->id() === 0 || (int) \Drupal::currentUser()->id() === 1) {
       return;
     }
 
@@ -66,22 +71,24 @@ class RefreshTokenSubscriber implements EventSubscriberInterface {
     $refresh_expires_in = $this->sessionStore->get('refresh_expires_in');
 
 
-    if (isset($refresh) && isset($expires_in) && (int) $expires_in < time()) {
-      $refreshed = false;
+    if (isset($refresh, $expires_in) && (int) $expires_in < time()) {
+      $refreshed = FALSE;
       if (!isset($refresh_expires_in) || (int) $refresh_expires_in > time()) {
         $refreshed = $this->mgmtServer->refreshAuth();
       }
       if (!$refreshed) {
-        $this->sessionStore->set('logout',true);
+        $this->sessionStore->set('logout', TRUE);
       }
     }
   }
 
-   /**
-   * @param \Symfony\Component\HttpKernel\Event\FilterResponseEvent $event
+  /**
+   * @param \Symfony\Component\HttpKernel\Event\ResponseEvent $event
+   *
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
-  public function forceLogOut(FilterResponseEvent $event) : void{
-    if (\Drupal::currentUser()->id() == 0 || \Drupal::currentUser()->id() == 1) {
+  public function forceLogOut(ResponseEvent $event): void {
+    if ((int) \Drupal::currentUser()->id() === 0 || (int) \Drupal::currentUser()->id() === 1) {
       return;
     }
 
@@ -91,11 +98,12 @@ class RefreshTokenSubscriber implements EventSubscriberInterface {
     $logout = $this->sessionStore->get('logout');
 
     if (\Drupal::currentUser()->isAuthenticated() &&
-    ($logout ||  (isset($expires_in) && (int) $expires_in < time() && (!isset($refresh) || (isset($refresh_expires_in) && (int) $refresh_expires_in < time()))))) {
+      ($logout || (isset($expires_in) && (int) $expires_in < time() && (!isset($refresh) || (isset($refresh_expires_in) && (int) $refresh_expires_in < time()))))) {
       if ($logout) {
-        $logout = $this->sessionStore->delete('logout');
+        $this->sessionStore->delete('logout');
         $this->logger->notice('Failed to refresh access token. Forcing logout.');
-      } else {
+      }
+      else {
         $this->logger->notice('Session expired based on token expires_in value. Forcing logout.');
       }
       // set a cookie so that we can display an error after we log the user out, picked up in AdminMessagesBlock
@@ -113,11 +121,12 @@ class RefreshTokenSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * @return array|mixed
+   * @return array
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[KernelEvents::TERMINATE][] = ['refreshAccessToken'];
     $events[KernelEvents::RESPONSE][] = ['forceLogOut'];
     return $events;
   }
+
 }

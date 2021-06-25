@@ -14,6 +14,7 @@ namespace Drupal\auth_apic\UserManagement;
 
 use Drupal\auth_apic\JWTToken;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\ibm_apim\ApicType\ApicUser;
@@ -27,28 +28,32 @@ class ApicPasswordService implements ApicPasswordInterface {
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface
    */
-  private $mgmtServer;
+  private ManagementServerInterface $mgmtServer;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
    */
-  private $messenger;
+  private Messenger $messenger;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  private $logger;
+  private LoggerInterface $logger;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface
    */
-  private $apicUserStorage;
+  private ApicUserStorageInterface $apicUserStorage;
 
   /**
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  private $drupalUserStorage;
+  private EntityStorageInterface $drupalUserStorage;
 
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   public function __construct(ManagementServerInterface $mgmt_server,
                               Messenger $messenger,
                               LoggerInterface $logger,
@@ -126,11 +131,11 @@ class ApicPasswordService implements ApicPasswordInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $lookup);
     }
-    $account = NULL;
 
     // identify whether this is admin (uid=1)
     $admin_account = $this->drupalUserStorage->load(1);
-    if ($lookup === $admin_account->getUsername() || $lookup === $admin_account->get('mail')->getValue()[0]['value']) {
+    if ($admin_account !== NULL && ($lookup === $admin_account->getAccountName() || $lookup === $admin_account->get('mail')
+          ->getValue()[0]['value'])) {
       $this->logger->notice('lookUpAccount: identified user as admin account');
       $account = $admin_account;
     }
@@ -155,4 +160,5 @@ class ApicPasswordService implements ApicPasswordInterface {
     }
     return $account;
   }
+
 }

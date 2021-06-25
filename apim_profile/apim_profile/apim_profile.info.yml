@@ -1,4 +1,4 @@
-name: 'IBM API Connect Developer Portal'
+name: 'IBM API Developer Portal'
 type: profile
 description: 'Provides modules to access the content in an API Manager node and a skeleton site which application developers can use to browse APIs.'
 core_version_requirement: ^8 || ^9
@@ -8,18 +8,17 @@ core_version_requirement: ^8 || ^9
 # The distribution_name property is used in the installer and other places as
 # a label for the software being installed.
 distribution:
-  name: 'IBM API Connect Developer Portal'
+  name: 'IBM API Developer Portal'
 
 # Required modules
-dependencies:
+install:
   - node
-  - entity_reference
   - history
   - block
-  - dynamic_page_cache
   - page_cache
   - filter
   - block_content
+  - dynamic_page_cache
   - breakpoint
   - color
   - config
@@ -132,6 +131,7 @@ dependencies:
   - ibm_log_stdout
   - ibm_apic_mail
   - ibm_apic_flood_control_ui
+  - ibm_event_log
   - auth_apic
   - consumerorg
   - apic_app

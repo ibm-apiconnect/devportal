@@ -1,4 +1,29 @@
 changes:
+  8.x-3.1.14:
+  - Show pending approval message on oidc login (#620) (#621)
+  8.x-3.1.13: null
+  8.x-3.1.12:
+  - Added support for account approvals
+  8.x-3.1.11:
+  - use "IBM API Developer Portal" instead of API Connect
+  8.x-3.1.10: null
+  8.x-3.1.9: null
+  8.x-3.1.8: null
+  8.x-3.1.7:
+  - handle a 201 too
+  8.x-3.1.6:
+  - need to have a UR title set even if no URs
+  8.x-3.1.5:
+  - fix corrupt file
+  - Tempmerge (#615)
+  8.x-3.1.4: null
+  8.x-3.1.3:
+  - use void
+  - deprecated function
+  8.x-3.1.2: null
+  8.x-3.1.1: null
+  8.x-3.1.0:
+  - update version 8.x-3.0.51 -> 8.x-3.1.0
   8.x-3.0.50: null
   8.x-3.0.49:
   - Added action parameter (#605)

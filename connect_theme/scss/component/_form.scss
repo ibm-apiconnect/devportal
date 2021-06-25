@@ -564,6 +564,7 @@ input[type="checkbox"].bx--checkbox {
 }
 
 .bx--global-light-ui .button,
+.bx--global-light-ui .mainProductContent button,
 .bx--global-light-ui .bx--btn,
 .bx--global-light-ui .btn {
   opacity: 1;
@@ -585,8 +586,8 @@ input[type="checkbox"].bx--checkbox {
   border: $button-border-width solid $btn-primary-border;
   box-shadow: none;
   &.btn-sm {
-    padding: $button-padding-sm;
-    height: 2rem;
+    padding: $button-padding-field;
+    height: 2.5rem;
   }
   &.btn-xs {
      padding: $button-padding-sm;

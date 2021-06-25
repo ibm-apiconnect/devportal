@@ -23,7 +23,8 @@
                 </div>
               </div>
               <div class="tweet_meta">
-                <a href="https://twitter.com/{{ post.handle }}/statuses/{{ post.tweet_id }}" target="_blank" rel="noopener"
+                <a href="https://twitter.com/{{ post.handle }}/statuses/{{ post.tweet_id }}" target="_blank"
+                   rel="noopener"
                    class="bird" title="{{ 'Open this tweet'|t }}"></a>
                 <div class="tweet_timestamp">{{ post.timestamp }}</div>
               </div>
@@ -60,7 +61,7 @@
             <div class="info">
               <div class="op">{% trans %}Posted in <span class="forum_name"><a href="{{ post.forum_url }}"
                                                                                title="{{ post.forum }}">{{ post.forum }}</a></span>
-                by <span class="op_name">{{ post.handle }}</span>{% endtrans %}
+                  by <span class="op_name">{{ post.handle }}</span>{% endtrans %}
               </div>
             </div>
           </div>

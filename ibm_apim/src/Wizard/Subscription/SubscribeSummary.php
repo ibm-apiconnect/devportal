@@ -12,13 +12,17 @@
 
 namespace Drupal\ibm_apim\Wizard\Subscription;
 
-use Drupal\apic_app\Application;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\file\Entity\File;
 use Drupal\ibm_apim\Wizard\IbmWizardStepBase;
 use Drupal\node\Entity\Node;
 use Drupal\product\Product;
 
+/**
+ * Class SubscribeSummary
+ *
+ * @package Drupal\ibm_apim\Wizard\Subscription
+ */
 class SubscribeSummary extends IbmWizardStepBase {
 
   /**
@@ -30,6 +34,7 @@ class SubscribeSummary extends IbmWizardStepBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
 
@@ -37,7 +42,6 @@ class SubscribeSummary extends IbmWizardStepBase {
     if ($this->validateAccess()) {
       /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
       $temp_store_factory = \Drupal::service('session_based_temp_store');
-      /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
       $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
       $product_name = $temp_store->get('productName');
@@ -75,7 +79,7 @@ class SubscribeSummary extends IbmWizardStepBase {
             }
           }
           elseif ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
-            $rawImage = Application::getRandomImageName($application_node->getTitle());
+            $rawImage = \Drupal::service('apic_app.application')->getRandomImageName($application_node->getTitle());
             $application_image = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
           }
         }
@@ -127,8 +131,7 @@ class SubscribeSummary extends IbmWizardStepBase {
       // allow other modules to modify the content on the summary panel
       \Drupal::moduleHandler()->alter('ibm_apim_subscription_wizard_summary', $form);
 
-      // blank out the form state - we've finished now
-      $temp_store->deleteAll();
+      // cant blank out the temp store quite yet as need it to render the page title
     }
 
     return $form;
@@ -136,11 +139,11 @@ class SubscribeSummary extends IbmWizardStepBase {
 
   /**
    * {@inheritdoc}
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
     $temp_store_factory = \Drupal::service('session_based_temp_store');
-    /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
     $temp_store = $temp_store_factory->get('ibm_apim.wizard');
     $temp_store->deleteAll();
 

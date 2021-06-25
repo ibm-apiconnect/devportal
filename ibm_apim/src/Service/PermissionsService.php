@@ -21,10 +21,22 @@ use Psr\Log\LoggerInterface;
  */
 class PermissionsService implements PermissionsServiceInterface {
 
-  private $state;
+  /**
+   * @var \Drupal\Core\State\StateInterface
+   */
+  private StateInterface $state;
 
-  private $logger;
+  /**
+   * @var \Psr\Log\LoggerInterface
+   */
+  private LoggerInterface $logger;
 
+  /**
+   * PermissionsService constructor.
+   *
+   * @param \Drupal\Core\State\StateInterface $state
+   * @param \Psr\Log\LoggerInterface $logger
+   */
   public function __construct(StateInterface $state, LoggerInterface $logger) {
     $this->state = $state;
     $this->logger = $logger;
@@ -50,11 +62,11 @@ class PermissionsService implements PermissionsServiceInterface {
   /**
    * get a specific permissions object by url
    *
-   * @param $key
+   * @param string $key
    *
    * @return null|array
    */
-  public function get($key): ?array {
+  public function get(string $key): ?array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $key);
 
     $perm = NULL;

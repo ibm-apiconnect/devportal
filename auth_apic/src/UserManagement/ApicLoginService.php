@@ -16,62 +16,63 @@ namespace Drupal\auth_apic\UserManagement;
 use Drupal\auth_apic\UserManagerResponse;
 use Drupal\consumerorg\Service\ConsumerOrgLoginInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\TempStore\PrivateTempStore;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\ibm_apim\ApicType\ApicUser;
-use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
+use Drupal\ibm_apim\Service\ApicUserService;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
+use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_apim\Service\Utils;
+use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
-use Drupal\ibm_apim\Service\ApicUserService;
-use \Drupal\Core\Extension\ModuleHandlerInterface;
-use \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
-use Drupal\ibm_apim\Service\Utils;
 
 class ApicLoginService implements ApicLoginServiceInterface {
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface
    */
-  private $mgmtServer;
+  private ManagementServerInterface $mgmtServer;
 
   /**
    * @var \Drupal\ibm_apim\UserManagement\ApicAccountInterface
    */
-  private $accountService;
+  private ApicAccountInterface $accountService;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
-  private $userUtils;
+  private UserUtils $userUtils;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface
    */
-  private $userStorage;
+  private ApicUserStorageInterface $userStorage;
 
   /**
    * @var \Drupal\Core\TempStore\PrivateTempStore
    */
-  protected $tempStore;
+  protected PrivateTempStore $tempStore;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  private $logger;
+  private LoggerInterface $logger;
 
   /**
    * @var \Drupal\ibm_apim\Service\SiteConfig
    */
-  private $siteConfig;
+  private SiteConfig $siteConfig;
 
   /**
    * @var \Drupal\Core\Session\AccountProxyInterface
    */
-  private $currentUser;
+  private AccountProxyInterface $currentUser;
 
   /**
    * @var \Drupal\user\UserStorageInterface
@@ -81,20 +82,32 @@ class ApicLoginService implements ApicLoginServiceInterface {
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgLoginInterface
    */
-  private $consumerorgLogin;
+  private ConsumerOrgLoginInterface $consumerorgLogin;
 
   /**
    * @var \Drupal\ibm_apim\Service\ApicUserService
    */
-  protected $userService;
+  protected ApicUserService $userService;
 
-  protected $entityTypeManager;
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected EntityTypeManagerInterface $entityTypeManager;
 
-  protected $moduleHandler;
+  /**
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected ModuleHandlerInterface $moduleHandler;
 
-  protected $userRegistryService;
+  /**
+   * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
+   */
+  protected UserRegistryServiceInterface $userRegistryService;
 
-  protected $utils;
+  /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
+  protected Utils $utils;
 
   public function __construct(ManagementServerInterface $mgmt_interface,
                               ApicAccountInterface $account_service,
@@ -128,7 +141,14 @@ class ApicLoginService implements ApicLoginServiceInterface {
   }
 
   /**
-   * @inheritDoc
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $user
+   *
+   * @return \Drupal\auth_apic\UserManagerResponse
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \JsonException
    */
   public function login(ApicUser $user): UserManagerResponse {
     if (\function_exists('ibm_apim_entry_trace')) {
@@ -150,9 +170,18 @@ class ApicLoginService implements ApicLoginServiceInterface {
       return $loginResponse;
     }
 
+    if (!$token_retrieved->getBearerToken()) {
+      // Should only enter with 201 response
+      $loginResponse->setSuccess(TRUE);
+      $loginResponse->setMessage('APPROVAL');
+      return $loginResponse;
+    }
+
     $apic_me = $this->mgmtServer->getMe($token_retrieved->getBearerToken());
-    $meuser = $apic_me->getUser();
-    $meuser->setApicUserRegistryUrl($user->getApicUserRegistryUrl());
+    $meUser = $apic_me->getUser();
+    if ($meUser !== NULL) {
+      $meUser->setApicUserRegistryUrl($user->getApicUserRegistryUrl());
+    }
 
     if ((int) $apic_me->getCode() !== 200) {
       $this->logger->error('failed to authenticate with APIM server');
@@ -161,7 +190,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
       $loginResponse->setMessage(serialize($apic_me->getData()));
     }
     else {
-      if ($meuser !== NULL && !$this->userLoginPermitted($meuser)) {
+      if ($meUser !== NULL && !$this->userLoginPermitted($meUser)) {
         $this->logger->error('Login failed - login is not permitted.');
         $loginResponse->setSuccess(FALSE);
       }
@@ -171,7 +200,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
         // in all cases check whether anything has been updated in the account.
         // the response from the management server is what we need to store.
         // Pull the existing account out of the drupal db or create it if it doesn't exist yet
-        $account = $this->accountService->createOrUpdateLocalAccount($meuser);
+        $account = $this->accountService->createOrUpdateLocalAccount($meUser);
         if ($account) {
           $localUser = $this->userService->parseDrupalAccount($account);
           $customFieldValues = $localUser->getCustomFields();
@@ -179,35 +208,41 @@ class ApicLoginService implements ApicLoginServiceInterface {
 
         // If it first time logging in and they have custom field data then probably a new register
         // so update apim with their data.
-        if ($account->get('first_time_login') !== NULL && $account->get('first_time_login')->getString() === '1' && !empty($customFieldValues)) {
-          $updated = false;
-          if (isset($token_retrieved)) {
-            $localUser->setUrl(null);
-            $apic_me = $this->mgmtServer->updateMe($localUser,$token_retrieved->getBearerToken());
-            if ($apic_me->getCode() == 200) {
-              $updated = true;
-            } else {
-              \Drupal::logger('auth_apic')->error('Received @code code while storing new users custom fields.', ['@code' => $apic_me->getCode()]);
+        if (!empty($customFieldValues) && $account->get('first_time_login') !== NULL && $account->get('first_time_login')
+            ->getString() === '1') {
+          $updated = FALSE;
+          if (isset($token_retrieved, $localUser)) {
+            $localUser->setUrl(NULL);
+            $apic_me = $this->mgmtServer->updateMe($localUser, $token_retrieved->getBearerToken());
+            if ($apic_me->getCode() === 200) {
+              $updated = TRUE;
             }
-          } else {
+            else {
+              \Drupal::logger('auth_apic')
+                ->error('Received @code code while storing new users custom fields.', ['@code' => $apic_me->getCode()]);
+            }
+          }
+          else {
             \Drupal::logger('auth_apic')->error("Couldn't get bearer token while storing new users custom fields.");
           }
           if (!$updated) {
             //Clear account of custom fields
             foreach (array_keys($customFieldValues) as $customField) {
-              $account->set($customField, null);
+              $account->set($customField, NULL);
             }
             $account->save();
-            \Drupal::messenger()->addMessage(t('There were errors while activating your account. Check the information in your profile is accurate'));
+            \Drupal::messenger()
+              ->addMessage(t('There were errors while activating your account. Check the information in your profile is accurate'));
           }
-        } else {
+        }
+        else {
           //Update custom fields on local
           $customFields = $this->userService->getCustomUserFields();
           if (!empty($customFields)) {
-            $metadata = $meuser->getMetadata();
-            foreach($customFields as $customField) {
+            $metadata = $meUser->getMetadata();
+            foreach ($customFields as $customField) {
               if (isset($metadata[$customField])) {
-                $account->set($customField, json_decode($metadata[$customField],true));
+                $account->set($customField, json_decode($metadata[$customField], TRUE, 512, JSON_THROW_ON_ERROR));
               }
             }
             $account->save();
@@ -220,7 +255,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
           $this->userStorage->userLoginFinalize($account);
 
           $this->logger->notice('@username [UID=@uid] logged in.', [
-            '@username' => $meuser->getUsername(),
+            '@username' => $meUser->getUsername(),
             '@uid' => $account->get('uid')->value,
           ]);
 
@@ -240,10 +275,9 @@ class ApicLoginService implements ApicLoginServiceInterface {
             $this->tempStore->set('refresh_expires_in', $refresh_expires_in);
           }
 
-          $this->processMeConsumerOrgs($meuser, $account);
+          $this->processMeConsumerOrgs($meUser, $account);
 
           $loginResponse->setSuccess(TRUE);
-          $loginResponse->setUid($account->get('uid')->value);
         }
         else {
           // user blocked in the portal database
@@ -252,8 +286,8 @@ class ApicLoginService implements ApicLoginServiceInterface {
             '@uid' => $account->get('uid')->value,
           ]);
           $loginResponse->setSuccess(FALSE);
-          $loginResponse->setUid($account->get('uid')->value);
         }
+        $loginResponse->setUid($account->get('uid')->value);
       }
     }
     if (\function_exists('ibm_apim_exit_trace')) {
@@ -262,7 +296,11 @@ class ApicLoginService implements ApicLoginServiceInterface {
     return $loginResponse;
   }
 
-  private function processMeConsumerOrgs(ApicUser $meuser, UserInterface $account) {
+  /**
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Core\TempStore\TempStoreException|\JsonException
+   */
+  private function processMeConsumerOrgs(ApicUser $meuser, UserInterface $account): void {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -309,23 +347,23 @@ class ApicLoginService implements ApicLoginServiceInterface {
    *  - validate the user retrieved from apim
    *  - check a number of restrictions on uniqueness of users in the site.
    *
-   * @param \Drupal\ibm_apim\ApicType\ApicUser $meuser
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $meUser
    *
    * @return bool
    */
-  private function userLoginPermitted(ApicUser $meuser): bool {
+  private function userLoginPermitted(ApicUser $meUser): bool {
     if (\function_exists('ibm_apim_entry_trace')) {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $meuser->getUsername());
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $meUser->getUsername());
     }
     $permitted = TRUE;
 
-    if ($this->userFromApimIsValid($meuser)) {
+    if ($this->userFromApimIsValid($meUser)) {
       // explicitly ban some usernames.
       $banned_usernames = ['admin', 'anonymous'];
 
-      $prohibited = in_array(strtolower($meuser->getUsername()), $banned_usernames);
+      $prohibited = in_array(strtolower($meUser->getUsername()), $banned_usernames);
       if ($prohibited) {
-        $this->logger->error('Login failed because %name user from external registry is prohibited.', ['%name' => $meuser->getUsername()]);
+        $this->logger->error('Login failed because %name user from external registry is prohibited.', ['%name' => $meUser->getUsername()]);
         $permitted = FALSE;
       }
       else {
@@ -333,13 +371,13 @@ class ApicLoginService implements ApicLoginServiceInterface {
         // The email address needs to be unique across user registries. Usernames do not have to be.
         $existingUserByMail = NULL;
         try {
-          $existingUserByMail = $this->userStorage->loadUserByEmailAddress($meuser->getMail());
+          $existingUserByMail = $this->userStorage->loadUserByEmailAddress($meUser->getMail());
         } catch (\Exception $e) {
           $this->logger->error('Login failed because there was a problem searching for users based on email: %message', ['%message' => $e->getMessage()]);
           $permitted = FALSE;
         }
 
-        $userRegistryUrl = $meuser->getApicUserRegistryUrl();
+        $userRegistryUrl = $meUser->getApicUserRegistryUrl();
         if ($existingUserByMail && (isset($existingUserByMail->registry_url) && $existingUserByMail->get('registry_url')->value !== $userRegistryUrl)) {
           $this->logger->error('Login failed because user with matching email address exists in a different registry.');
           $permitted = FALSE;
@@ -347,7 +385,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
       }
     }
     else {
-      $this->logger->error('Login failed for %user - user failed validation check based on information from apim.', ['%user' => $meuser->getUsername()]);
+      $this->logger->error('Login failed for %user - user failed validation check based on information from apim.', ['%user' => $meUser->getUsername()]);
       $permitted = FALSE;
     }
     if (\function_exists('ibm_apim_exit_trace')) {
@@ -357,8 +395,9 @@ class ApicLoginService implements ApicLoginServiceInterface {
   }
 
   /**
-   * This check is specifically to check that the data we get on login from the management server is valid. This is the response from GET /consumer-api/me?expand=true.
-   * Although we store data in the database we deliberately act on the latest information from the management server only on login.
+   * This check is specifically to check that the data we get on login from the management server is valid. This is the response from GET
+   * /consumer-api/me?expand=true. Although we store data in the database we deliberately act on the latest information from the management
+   * server only on login.
    *
    * This function checks:
    *    * The state of the user.
@@ -386,7 +425,10 @@ class ApicLoginService implements ApicLoginServiceInterface {
           $returnValue = TRUE; // enabled user... all is good.
         }
         else {
-          $this->logger->error('Invalid login attempt for %user, state is %state.', ['%user' => $loginUser->getUsername(), '%state' => $state]);
+          $this->logger->error('Invalid login attempt for %user, state is %state.', [
+            '%user' => $loginUser->getUsername(),
+            '%state' => $state,
+          ]);
         }
       }
       else {
@@ -403,6 +445,17 @@ class ApicLoginService implements ApicLoginServiceInterface {
     return $returnValue;
   }
 
+  /**
+   * @param $authCode
+   * @param $registryUrl
+   *
+   * @return string
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \JsonException
+   */
   public function loginViaAzCode($authCode, $registryUrl): string {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -418,7 +471,9 @@ class ApicLoginService implements ApicLoginServiceInterface {
     $apimResponse = $this->login($loginUser);
 
     if ($apimResponse->success()) {
-
+      if ($apimResponse->getMessage() === 'APPROVAL') {
+        return 'APPROVAL';
+      }
       $user = $this->drupalUser->load($this->currentUser->id());
 
       // on first time login we need to pick up the browser language regardless of where we are redirecting to.
@@ -428,20 +483,20 @@ class ApicLoginService implements ApicLoginServiceInterface {
       if ($firstTimeLogin) {
         $this->accountService->setDefaultLanguage($user);
       }
-      
+
       //Maybe store empty fields in an array and pass it as a session entity
-      $hasEmptyFields = false;
+      $hasEmptyFields = FALSE;
 
       if ($this->userRegistryService->get($registryUrl)->getRegistryType() === 'oidc') {
         $entity_form = $this->entityTypeManager->getStorage('entity_form_display')->load('user.user.register');
-
-        foreach ($entity_form->getComponents() as $name => $options) {
-          if ($user->hasField($name) && $name !== 'consumer_organization' && 
-            (empty($user->get($name)->value) && $user->get($name)->getFieldDefinition()->isRequired() ||
-            $name === 'mail' && $this->utils->endsWith($user->get($name)->value, 'noemailinregistry@example.com') ||
-            $name === 'first_name' && empty($user->get($name)->value) ||
-            $name === 'last_name' && empty($user->get($name)->value))) {
-            $hasEmptyFields = true;
+        if ($entity_form !== NULL) {
+          foreach ($entity_form->getComponents() as $name => $options) {
+            if ($user !== NULL && $user->hasField($name) && $name !== 'consumer_organization' &&
+              ((empty($user->get($name)->value) && $user->get($name)->getFieldDefinition()->isRequired()) ||
+                ($name === 'mail' && $this->utils->endsWith($user->get($name)->value, 'noemailinregistry@example.com')) ||
+                (($name === 'first_name' || $name === 'last_name') && empty($user->get($name)->value)))) {
+              $hasEmptyFields = TRUE;
+            }
           }
         }
       }
@@ -453,7 +508,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
         $redirectTo = 'ibm_apim.noperms';
         $message = 'redirect to ' . $redirectTo . ' as no consumer org set';
 
-      } 
+      }
       elseif ($firstTimeLogin && ($hasEmptyFields || $this->moduleHandler->moduleExists('terms_of_use'))) {
         // the user needs to fill in their required fields and accept ToU
         $redirectTo = 'auth_apic.oidc_register';
@@ -488,4 +543,5 @@ class ApicLoginService implements ApicLoginServiceInterface {
     }
     return $redirectTo;
   }
+
 }

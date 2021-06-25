@@ -12,11 +12,16 @@
 
 namespace Drupal\ibm_apim\Wizard\Subscription;
 
-use Drupal\apic_app\Application;
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Wizard\IbmWizardStepBase;
 
+/**
+ * Class ChooseApplicationStep
+ *
+ * @package Drupal\ibm_apim\Wizard\Subscription
+ */
 class ChooseApplicationStep extends IbmWizardStepBase {
 
   /**
@@ -28,6 +33,13 @@ class ChooseApplicationStep extends IbmWizardStepBase {
 
   /**
    * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
 
@@ -36,10 +48,9 @@ class ChooseApplicationStep extends IbmWizardStepBase {
 
       /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
       $temp_store_factory = \Drupal::service('session_based_temp_store');
-      /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
       $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
-      // if refering page was not another part of the subscription wizard, store a reference to it in the drupal session
+      // if referring page was not another part of the subscription wizard, store a reference to it in the drupal session
       if (strpos($_SERVER['HTTP_REFERER'], '/subscription') === FALSE && strpos($_SERVER['HTTP_REFERER'], '/login') === FALSE) {
         \Drupal::service('tempstore.private')->get('ibm_apim')->set('subscription_wizard_referer', $_SERVER['HTTP_REFERER']);
       }
@@ -55,7 +66,7 @@ class ChooseApplicationStep extends IbmWizardStepBase {
         $temp_store->set('planName', $plan_title);
         $temp_store->set('planId', $plan_id);
       } else {
-        $plan_title = $temp_store->get('planName');
+        $temp_store->get('planName');
         $plan_id = $temp_store->get('planId');
         $product_id = $temp_store->get('productId');
       }
@@ -69,7 +80,7 @@ class ChooseApplicationStep extends IbmWizardStepBase {
       $parts = explode(':', $plan_id);
       $product_url = $parts[0];
 
-      $allApps = Application::listApplications();
+      $allApps = \Drupal::service('apic_app.application')->listApplications();
       $allApps = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($allApps);
       $validApps = [];
       $suspendedApps = [];
@@ -80,7 +91,7 @@ class ChooseApplicationStep extends IbmWizardStepBase {
       // - if they are already subscribed to any plan in this product don't show them
       // - if there are no apps left to display after that, put up a message
 
-      foreach ($allApps as $nid => $nextApp) {
+      foreach ($allApps as $nextApp) {
         if (isset($nextApp->apic_state->value) && mb_strtoupper($nextApp->apic_state->value) === 'SUSPENDED') {
           $suspendedApps[] = $nextApp;
         }
@@ -135,6 +146,10 @@ class ChooseApplicationStep extends IbmWizardStepBase {
               'apicTertiary',
               'add-app'
             ],
+            'data-dialog-type' => 'modal',
+            'data-dialog-options' => Json::encode([
+              'width' => 560
+            ]),
           ],
           '#prefix' => '<div class="apicNewAppButton">',
           '#suffix' => '</div>',
@@ -168,22 +183,28 @@ class ChooseApplicationStep extends IbmWizardStepBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): ?bool {
 
     if (empty($form_state->getUserInput()['selectedApplication'])) {
       $form_state->setErrorByName('selectedApplication', t('You must select an application to create a subscription.'));
       return FALSE;
     }
 
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     /** @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $temp_store_factory */
     $temp_store_factory = \Drupal::service('session_based_temp_store');
-    /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
     $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
     $application = \Drupal::entityTypeManager()->getStorage('node')->load($form_state->getUserInput()['selectedApplication']);

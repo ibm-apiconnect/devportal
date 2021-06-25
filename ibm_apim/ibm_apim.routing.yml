@@ -2,7 +2,7 @@ ibm_apim.settings:
   path: '/admin/config/system/ibm_apim'
   defaults:
     _form: 'Drupal\ibm_apim\Form\AdminForm'
-    _title: 'Configure the IBM API Connect Developer Portal'
+    _title: 'Configure the IBM API Developer Portal'
   requirements:
     _permission: 'administer_apic'
 
@@ -10,7 +10,7 @@ ibm_apim.billing_settings:
   path: '/admin/config/system/apic_billing'
   defaults:
     _form: 'Drupal\ibm_apim\Form\BillingConfigForm'
-    _title: 'Configure the billing integration for the IBM APIC Developer Portal'
+    _title: 'Configure the billing integration for the IBM API Developer Portal'
   requirements:
     _permission: 'administer_apic'
     _ibm_apim_billing_admin_access_check: 'TRUE'
@@ -19,7 +19,7 @@ ibm_apim.devel:
   path: '/admin/config/development/ibm_apim'
   defaults:
     _form: 'Drupal\ibm_apim\Form\DevelForm'
-    _title: 'IBM APIC Development Settings'
+    _title: 'IBM Development Settings'
   requirements:
     _permission: 'administer_apic'
 
@@ -34,7 +34,7 @@ ibm_apim.version:
   path: '/ibm_apim/version'
   defaults:
     _controller: '\Drupal\ibm_apim\Controller\IbmApimController::version'
-    _title: 'IBM APIC Version'
+    _title: 'IBM API Developer Portal Version'
   requirements:
     _permission: 'access content'
 
@@ -98,6 +98,15 @@ ibm_apim.billing:
   requirements:
     _role: 'authenticated'
     _ibm_apim_billing_access_check: 'TRUE'
+
+ibm_apim.activity:
+  path: '/myorg/activity'
+  defaults:
+    _controller: '\Drupal\ibm_apim\Controller\MyOrgController::activity'
+    _title: 'Notifications'
+  requirements:
+    _role: 'authenticated'
+    _ibm_apim_loggedin_not_admin_access_check: 'TRUE'
 
 ibm_apim.subscription_wizard:
   path: '/subscription'

@@ -7,8 +7,8 @@ Feature: Sign-up
   Scenario: Viewing the registration form
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
     And I am at "/user/register"
     Then I should see the text "Create new account"
     And I should see the text "First Name"
@@ -35,8 +35,8 @@ Feature: Sign-up
   Scenario: Correctly completing the registration form
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
     And I am at "/user/register"
     Given I enter "Andre" for "First Name"
     And I enter "Andreson_@now" for "Last Name"
@@ -90,8 +90,8 @@ Feature: Sign-up
   Scenario: Trying to sign up with the same email address twice
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
     And I am at "/user/register"
     Given I enter "Andre" for "First Name"
     And I enter "Andreson_@now" for "Last Name"
@@ -127,9 +127,9 @@ Feature: Sign-up
   Scenario: View the sign up form with multiple registries
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
     When I am at "/user/register"
     Then I should see the text "Sign up with @data(user_registries[0].title)"
     And I should see "or" in the ".apic-user-form-or" element
@@ -144,8 +144,8 @@ Feature: Sign-up
     # Enabled is the default but set it again to make sure
     And ibm_apim settings config boolean property "enable_oidc_register_form" value is "true"
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | oidc | @data(user_registries[3].title)   | @data(user_registries[3].url)     | no           | yes     |
+      | type | title                           | url                           | user_managed | default |
+      | oidc | @data(user_registries[3].title) | @data(user_registries[3].url) | no           | yes     |
     When I am at "/user/register"
     Then I should see the text "Sign up with @data(user_registries[3].title)"
     And I should see the "Sign up" button
@@ -166,8 +166,8 @@ Feature: Sign-up
     Given I am not logged in
     And ibm_apim settings config boolean property "enable_oidc_register_form" value is "false"
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | oidc | @data(user_registries[3].title)   | @data(user_registries[3].url)     | no           | yes     |
+      | type | title                           | url                           | user_managed | default |
+      | oidc | @data(user_registries[3].title) | @data(user_registries[3].url) | no           | yes     |
     When I am at "/user/register"
     Then I should see the text "Sign up with @data(user_registries[3].title)"
     And I should see the link "@data(user_registries[3].title)"
@@ -189,9 +189,9 @@ Feature: Sign-up
     Given the cache has been cleared
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
     When I am at "/user/register"
     Then I should see the text "Sign up with @data(user_registries[0].title)"
     And I should see the link "@data(user_registries[2].title)"
@@ -203,9 +203,9 @@ Feature: Sign-up
   Scenario: Register form loads non default registry directly
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | lur  | @data(user_registries[1].title)   | @data(user_registries[1].url)     | yes           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | lur  | @data(user_registries[1].title) | @data(user_registries[1].url) | yes          | no      |
     When I am at "/user/register?registry_url=@data(user_registries[1].url)"
     Then I should see the text "Sign up with @data(user_registries[1].title)"
 
@@ -213,9 +213,9 @@ Feature: Sign-up
   Scenario: Register form handles invalid user registry url query parameter by using default registry
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
     When I am at "/user/register?registry_url=thisisnotvalid"
     Then I should see the text "Sign up with @data(user_registries[0].title)"
 
@@ -223,9 +223,9 @@ Feature: Sign-up
   Scenario: Register form handles valid but incorrect user registry url query parameter by using default registry
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
     When I am at "/user/register?registry_url=/consumer-api/user-registries/aaaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
     Then I should see the text "Sign up with @data(user_registries[0].title)"
 
@@ -233,9 +233,9 @@ Feature: Sign-up
     Given I am not logged in
     And ibm_apim settings config boolean property "enable_oidc_register_form" value is "false"
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | oidc | @data(user_registries[3].title)   | @data(user_registries[3].url)     | no           | yes     |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | no      |
+      | type | title                           | url                           | user_managed | default |
+      | oidc | @data(user_registries[3].title) | @data(user_registries[3].url) | no           | yes     |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | no      |
     And I am at "/user/register"
     Then I should not see the "Sign up" button
     And I should see a link with href including "/consumer-api/oauth2/authorize"
@@ -306,9 +306,9 @@ Feature: Sign-up
   Scenario: register second user (unique username and email address - success)
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | lur  | @data(user_registries[1].title)   | @data(user_registries[1].url)     | yes          | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | lur  | @data(user_registries[1].title) | @data(user_registries[1].url) | yes          | no      |
     Given users:
       | name              | mail              | pass                  | status | registry_url                  |
       | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      | @data(user_registries[0].url) |
@@ -331,11 +331,11 @@ Feature: Sign-up
   Scenario: sign up with username in the same registry - fail
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | lur  | @data(user_registries[1].title)   | @data(user_registries[1].url)     | yes          | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | lur  | @data(user_registries[1].title) | @data(user_registries[1].url) | yes          | no      |
     Given users:
-      | name                   | mail                   | pass                  | status | registry_url                  |
+      | name                   | mail                               | pass     | status | registry_url                  |
       | andre_existingusername | andre_existingusername@example.com | Qwert123 | 1      | @data(user_registries[0].url) |
     And I am at "/user/register"
     When I enter "andre_existingusername" for "Username"
@@ -356,11 +356,11 @@ Feature: Sign-up
   Scenario: sign up with existing email address in same registry - fail
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | lur  | @data(user_registries[1].title)   | @data(user_registries[1].url)     | yes          | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | lur  | @data(user_registries[1].title) | @data(user_registries[1].url) | yes          | no      |
     Given users:
-      | name                | mail                   | pass     | status | registry_url                  |
+      | name                | mail                            | pass     | status | registry_url                  |
       | andre_matchingemail | andre_matchingemail@example.com | Qwert123 | 1      | @data(user_registries[0].url) |
     And I am at "/user/register"
     When I enter "andre_@now" for "Username"
@@ -381,11 +381,11 @@ Feature: Sign-up
   Scenario: sign up with existing email address in different registry - fail
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | lur  | @data(user_registries[1].title)   | @data(user_registries[1].url)     | yes          | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | lur  | @data(user_registries[1].title) | @data(user_registries[1].url) | yes          | no      |
     Given users:
-      | name              | mail              | pass                  | status | registry_url                  |
+      | name                | mail                            | pass     | status | registry_url                  |
       | andre_matchingemail | andre_matchingemail@example.com | Qwert123 | 1      | @data(user_registries[0].url) |
     And I am at "/user/register?registry_url=@data(user_registries[1].url)"
     When I enter "AnotherAndre" for "Username"
@@ -406,11 +406,11 @@ Feature: Sign-up
   Scenario: sign up with same username in different registry - success.
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | lur  | @data(user_registries[1].title)   | @data(user_registries[1].url)     | yes          | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | lur  | @data(user_registries[1].title) | @data(user_registries[1].url) | yes          | no      |
     Given users:
-      | name              | mail              | pass                  | status | registry_url                  |
+      | name                | mail                       | pass     | status | registry_url                  |
       | andre_multiple_@now | andre_fromreg1@example.com | Qwert123 | 1      | @data(user_registries[0].url) |
     And I am at "/user/register?registry_url=@data(user_registries[1].url)"
     When I enter "andre_multiple_@now" for "Username"
@@ -431,9 +431,9 @@ Feature: Sign-up
   Scenario: View the sign up form with a writable ldap registry
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | no     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes          | yes     |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | no      |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | yes          | yes     |
     And I am at "/user/register"
     Then I should see the text "Sign up with @data(user_registries[2].title)"
     And I should see the text "Sign Up"
@@ -454,8 +454,8 @@ Feature: Sign-up
   Scenario: Correctly completing the registration form with writable ldap
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes          | yes     |
+      | type | title                           | url                           | user_managed | default |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | yes          | yes     |
     And I am at "/user/register"
     Then I should see the text "Sign up with @data(user_registries[2].title)"
     Given I enter "Andre" for "First Name"

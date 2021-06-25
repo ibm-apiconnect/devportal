@@ -15,73 +15,96 @@ namespace Drupal\auth_apic\Controller;
 
 use Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface;
 use Drupal\auth_apic\UserManagement\ApicLoginServiceInterface;
-use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\ApimUtils;
+use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
+use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\Utils;
-use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
-use Drupal\Core\Url;
+use Drupal\session_based_temp_store\SessionBasedTempStore;
 use Drupal\session_based_temp_store\SessionBasedTempStoreFactory;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Messenger\Messenger;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class ApicOidcAzCodeController extends ControllerBase {
+
   use StringTranslationTrait;
 
   /**
    * @var \Drupal\ibm_apim\Service\Utils
    */
-  protected $utils;
+  protected Utils $utils;
 
   /**
    * @var \Drupal\auth_apic\UserManagement\ApicLoginServiceInterface
    */
-  protected $loginService;
+  protected ApicLoginServiceInterface $loginService;
 
   /**
    * @var \Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface
    */
-  protected $oidcStateService;
+  protected OidcStateServiceInterface $oidcStateService;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
    */
-  protected $userRegistryService;
+  protected UserRegistryServiceInterface $userRegistryService;
 
   /**
    * @var \Drupal\ibm_apim\Service\ApimUtils
    */
-  protected $apimUtils;
+  protected ApimUtils $apimUtils;
 
   /**
    * @var \Drupal\ibm_apim\Service\SiteConfig
    */
-  protected $siteConfig;
+  protected SiteConfig $siteConfig;
 
   /**
    * @var \Psr\Log\LoggerInterface;
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
    */
   protected $messenger;
 
-  protected $authApicSessionStore;
+  /**
+   * @var \Drupal\session_based_temp_store\SessionBasedTempStore
+   */
+  protected SessionBasedTempStore $authApicSessionStore;
 
-  protected $requestService;
+  /**
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected RequestStack $requestService;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface
    */
-  protected $mgmtServer;
+  protected ManagementServerInterface $mgmtServer;
 
+  /**
+   * ApicOidcAzCodeController constructor.
+   *
+   * @param \Drupal\ibm_apim\Service\Utils $utils
+   * @param \Drupal\auth_apic\UserManagement\ApicLoginServiceInterface $login_service
+   * @param \Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface $oidc_state_service
+   * @param \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface $user_registry_service
+   * @param \Drupal\ibm_apim\Service\ApimUtils $apim_utils
+   * @param \Drupal\ibm_apim\Service\SiteConfig $site_config
+   * @param \Psr\Log\LoggerInterface $logger
+   * @param \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $sessionStoreFactory
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_service
+   * @param \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface $mgmtServer
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   */
   public function __construct(
     Utils $utils,
     ApicLoginServiceInterface $login_service,
@@ -102,13 +125,19 @@ class ApicOidcAzCodeController extends ControllerBase {
     $this->userRegistryService = $user_registry_service;
     $this->loginService = $login_service;
     $this->oidcStateService = $oidc_state_service;
-    $this->authApicSessionStore = $sessionStoreFactory->get('auth_apic_invitation_token');
+    $this->authApicSessionStore = $sessionStoreFactory->get('auth_apic_storage');
     $this->requestService = $request_service;
     $this->mgmtServer = $mgmtServer;
     $this->messenger = $messenger;
   }
 
-  public static function create(ContainerInterface $container) {
+  /**
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *
+   * @return \Drupal\auth_apic\Controller\ApicOidcAzCodeController|static
+   */
+  public static function create(ContainerInterface $container): ApicOidcAzCodeController {
+    /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('ibm_apim.utils'),
       $container->get('auth_apic.login'),
@@ -130,6 +159,10 @@ class ApicOidcAzCodeController extends ControllerBase {
   //   code=601e0142-55c2-406e-98e3-10ba1fa3f2e8
   //   &state=YToxOntzOjEyOiJyZWdpc3RyeV91cmwiO3M6NjY6Ii9jb25zdW1lci1hcGkvdXNlci1yZWdpc3RyaWVzL2ZmZDdkMGQ3LTViZTUtNDc3ZC1hYjdkLWFlZDAwNjFlZGJiMCI7fQ,,
   // There could also be an error in a response from APIM, which we need to handle
+  /**
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse|null
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   */
   public function processOidcRedirect(): ?\Symfony\Component\HttpFoundation\RedirectResponse {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__);
@@ -141,7 +174,11 @@ class ApicOidcAzCodeController extends ControllerBase {
     return $this->redirect($redirectLocation);
   }
 
-  public function validateOidcRedirect() {
+  /**
+   * @return string|null
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   */
+  public function validateOidcRedirect(): ?string {
     $error = $this->requestService->getCurrentRequest()->query->get('error');
     if (!empty($error)) {
       $errordes = $this->requestService->getCurrentRequest()->query->get('error_description');
@@ -179,27 +216,33 @@ class ApicOidcAzCodeController extends ControllerBase {
       // Clear the JWT from the session as we're done with it now
       $this->authApicSessionStore->delete('invitation_object');
       $this->authApicSessionStore->delete('action');
-      
+
       $redirect_location = $this->loginService->loginViaAzCode($authCode, $stateObj['registry_url']);
       if ($redirect_location === 'ERROR') {
         $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
         $redirect_location = '<front>';
-      } else if ($this->authApicSessionStore->get('redirect_to')) {
-        $this->requestService->getCurrentRequest()->query->set('destination', $this->authApicSessionStore->get('redirect_to'));
-        $this->authApicSessionStore->delete('redirect_to');
+      } else if ($redirect_location === 'APPROVAL') {
+        $this->messenger->addStatus($this->t('Your account was created successfully and is pending approval. You will receive an email with further instructions.'));
+        $redirect_location = '<front>';
+      }
+      else {
+        if ($this->authApicSessionStore->get('redirect_to')) {
+          $this->requestService->getCurrentRequest()->query->set('destination', $this->authApicSessionStore->get('redirect_to'));
+          $this->authApicSessionStore->delete('redirect_to');
+        }
       }
 
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }
       return $redirect_location;
-    } else {
-      $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
-      if (function_exists('ibm_apim_exit_trace')) {
-        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      }
-      return '<front>';
     }
+
+    $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
+    return '<front>';
   }
 
   // This handles a redirect from Google to proxy on to APIM as part of nested flow
@@ -212,6 +255,9 @@ class ApicOidcAzCodeController extends ControllerBase {
   //   &session_state=56b448705c0ddec28f20b0d36c34fd109e58661a..f13a
   //   &prompt=none
   // There could also be an error in a response from APIM, which we need to handle
+  /**
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse|null
+   */
   public function processApimOidcRedirect(): ?\Symfony\Component\HttpFoundation\RedirectResponse {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__);
@@ -222,14 +268,17 @@ class ApicOidcAzCodeController extends ControllerBase {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }
       return $this->redirect($redirectLocation);
-    } else {
-      if (function_exists('ibm_apim_exit_trace')) {
-        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      }
-      return new TrustedRedirectResponse($redirectLocation, 302);
     }
+
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
+    return new TrustedRedirectResponse($redirectLocation, 302);
   }
 
+  /**
+   * @return mixed|string
+   */
   public function validateApimOidcRedirect() {
     $error = $this->requestService->getCurrentRequest()->query->get('error');
     if (!empty($error)) {
@@ -264,11 +313,12 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
 
     // Pull out the apim state and only use that
-    $apimstate = null;
+    $apimState = NULL;
     if (($pos = strpos($state, "_")) !== FALSE) {
-      $apimstate = substr($state, $pos + 1);
+      $apimState = substr($state, $pos + 1);
       $state = substr($state, 0, $pos);
-    } else {
+    }
+    else {
       $this->messenger->addError($this->t('Error: Invalid state parameter. Contact your system administrator.'));
       $this->logger->error('validateApimOidcRedirect error: Invalid state parameter: ' . $state);
 
@@ -277,8 +327,8 @@ class ApicOidcAzCodeController extends ControllerBase {
       }
       return '<front>';
     }
-    $stateReceived = unserialize($this->utils->base64_url_decode($state));
-    $stateObj = null;
+    $stateReceived = unserialize($this->utils->base64_url_decode($state), ['allowed_classes' => FALSE]);
+    $stateObj = NULL;
     if (is_string($stateReceived)) {
       $stateObj = $this->oidcStateService->get($stateReceived);
     }
@@ -295,7 +345,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     $url = '/consumer-api/oauth2/redirect?';
     $parameters = $this->requestService->getCurrentRequest()->query->all();
     unset($parameters['q']);
-    $parameters['state'] = $apimstate;
+    $parameters['state'] = $apimState;
     $url .= http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);
 
 
@@ -306,20 +356,23 @@ class ApicOidcAzCodeController extends ControllerBase {
     if (!isset($code)) {
       $redirect_location = 'ERROR';
       $this->logger->error('validateApimOidcRedirect error: Response code not set');
-    } else if ($code !== 302) {
+    }
+    elseif ($code !== 302) {
       $redirect_location = 'ERROR';
       $this->logger->error('validateApimOidcRedirect error: Response code ' . $code);
-    } else if (!isset($headers['location'])) {
+    }
+    elseif (!isset($headers['location'])) {
       $redirect_location = 'ERROR';
       $this->logger->error('validateApimOidcRedirect error: Location header not set');
-    } else {
+    }
+    else {
       $redirect_location = $headers['location'];
     }
 
     if ($redirect_location === 'ERROR') {
-      
+
       $this->messenger->addError($this->t('Error: Error while authenticating user. Contact your system administrator.'));
-      
+
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }
@@ -335,26 +388,31 @@ class ApicOidcAzCodeController extends ControllerBase {
   // redirect_uri=https://portal.apimdev1084.hursley.ibm.com/demo/dev/ibm_apim/oidcredirect&
   // realm=consumer:285b1f76-5ff9-490b-a544-80de306e8595:f940cc2e-1663-4a77-8b79-2f5c835719de/google-oidc&
   // response_type=code
+  /**
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse|null
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   */
   public function processApimOidcAz(): ?\Symfony\Component\HttpFoundation\RedirectResponse {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__);
     }
 
     $redirectLocation = $this->validateApimOidcAz();
-    if ($redirectLocation === '<front>') {
-      if (function_exists('ibm_apim_exit_trace')) {
-        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      }
-      return $this->redirect($redirectLocation);
-    } else {
-      if (function_exists('ibm_apim_exit_trace')) {
-        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      }
-      return new TrustedRedirectResponse($redirectLocation, 302);
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
+    if ($redirectLocation === '<front>') {
+      return $this->redirect($redirectLocation);
+    }
+
+    return new TrustedRedirectResponse($redirectLocation, 302);
   }
 
-  public function validateApimOidcAz() {
+  /**
+   * @return string|null
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   */
+  public function validateApimOidcAz(): ?string {
     $clientId = $this->requestService->getCurrentRequest()->query->get('client_id');
     if (empty($clientId)) {
       $this->messenger->addError($this->t('Error: Missing Client ID parameter. Contact your system administrator.'));
@@ -400,7 +458,8 @@ class ApicOidcAzCodeController extends ControllerBase {
       $this->messenger->addError($this->t('Error: Missing or incorrect response type parameter. Contact your system administrator.'));
       if (empty($responseType)) {
         $this->logger->error('validateApimOidcAz error: Missing response_type parameter');
-      } else {
+      }
+      else {
         $this->logger->error('validateApimOidcAz error: Incorrect response_type parameter: ' . $responseType);
       }
       if (function_exists('ibm_apim_exit_trace')) {
@@ -412,8 +471,8 @@ class ApicOidcAzCodeController extends ControllerBase {
     $title = $this->requestService->getCurrentRequest()->query->get('title');
 
     //Validates the state parameter
-    $stateReceived = unserialize($this->utils->base64_url_decode($state));
-    $stateObj = null;
+    $stateReceived = unserialize($this->utils->base64_url_decode($state), ['allowed_classes' => FALSE]);
+    $stateObj = NULL;
     if (is_string($stateReceived)) {
       $stateObj = $this->oidcStateService->get($stateReceived);
     }
@@ -457,10 +516,11 @@ class ApicOidcAzCodeController extends ControllerBase {
       }
       return '<front>';
     }
-    $route = null;
+
     if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
       $route = URL::fromRoute('auth_apic.azcode')->toString(TRUE)->getGeneratedUrl();
-    } else {
+    }
+    else {
       $route = '/incorrectRoute';
     }
     $host = $this->apimUtils->getHostUrl();
@@ -485,29 +545,38 @@ class ApicOidcAzCodeController extends ControllerBase {
     if (isset($invitation_object)) {
       $url .= '&token=' . $invitation_object->getDecodedJwt();
     }
-    if (isset($action) && ($action == 'signin' || $action == 'signup')) {
+    if (isset($action) && ($action === 'signin' || $action === 'signup')) {
       $url .= '&action=' . $action;
     }
-    if (isset($invitationScope) && $invitationScope == 'consumer-org' && isset($title)) {
+    if (isset($invitationScope) && $invitationScope === 'consumer-org' && isset($title)) {
       $url .= '&invitation_scope=consumer-org&title=' . $title;
     }
 
 
     $response = $this->mgmtServer->get($url);
-    $headers = $response->getHeaders();
-    $code = $response->getCode();
-    $headers = array_change_key_case($headers, CASE_LOWER);
-    if (!isset($code)) {
+    if ($response === NULL) {
       $redirect_location = 'ERROR';
-      $this->logger->error('validateApimOidcAz error: Response code not set');
-    } else if ($code !== 302) {
-      $redirect_location = 'ERROR';
-      $this->logger->error('validateApimOidcAz error: Response code ' . $code);
-    } else if (!isset($headers['location'])) {
-      $redirect_location = 'ERROR';
-      $this->logger->error('validateApimOidcAz error: Location header not set');
-    } else {
-      $redirect_location = $headers['location'];
+      $this->logger->error('validateApimOidcAz error: Response not set');
+    }
+    else {
+      $headers = $response->getHeaders();
+      $code = $response->getCode();
+      $headers = array_change_key_case($headers, CASE_LOWER);
+      if (!isset($code)) {
+        $redirect_location = 'ERROR';
+        $this->logger->error('validateApimOidcAz error: Response code not set');
+      }
+      elseif ($code !== 302) {
+        $redirect_location = 'ERROR';
+        $this->logger->error('validateApimOidcAz error: Response code ' . $code);
+      }
+      elseif (!isset($headers['location'])) {
+        $redirect_location = 'ERROR';
+        $this->logger->error('validateApimOidcAz error: Location header not set');
+      }
+      else {
+        $redirect_location = $headers['location'];
+      }
     }
 
     if ($redirect_location === 'ERROR') {
@@ -530,26 +599,29 @@ class ApicOidcAzCodeController extends ControllerBase {
       parse_str($url_array['query'], $query_array);
       if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
         $query_array['redirect_uri'] = $host . URL::fromRoute('auth_apic.azredir')->toString(TRUE)->getGeneratedUrl();
-      } else {
+      }
+      else {
         $query_array['redirect_uri'] = $host . '/route';
       }
       if (isset($url_array['port'])) {
-        $fixed_redirect = $url_array['scheme'] . '://' . $url_array['host']. ':' .$url_array['port'] . $url_array['path'] . '?' . http_build_query($query_array, '', '&', PHP_QUERY_RFC3986);
-      } else {
+        $fixed_redirect = $url_array['scheme'] . '://' . $url_array['host'] . ':' . $url_array['port'] . $url_array['path'] . '?' . http_build_query($query_array, '', '&', PHP_QUERY_RFC3986);
+      }
+      else {
         $fixed_redirect = $url_array['scheme'] . '://' . $url_array['host'] . $url_array['path'] . '?' . http_build_query($query_array, '', '&', PHP_QUERY_RFC3986);
       }
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }
       return $fixed_redirect;
-    } else {
-      $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
-      $this->logger->error('validateApimOidcAz error: Failed to parse redirect: ' . $redirect_location);
-
-      if (function_exists('ibm_apim_exit_trace')) {
-        ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      }
-      return '<front>';
     }
+
+    $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
+    $this->logger->error('validateApimOidcAz error: Failed to parse redirect: ' . $redirect_location);
+
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
+    return '<front>';
   }
+
 }

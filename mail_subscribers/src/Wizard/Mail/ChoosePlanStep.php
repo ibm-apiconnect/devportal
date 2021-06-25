@@ -40,7 +40,7 @@ class ChoosePlanStep extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): ChoosePlanStep {
     // Load the service required to construct this class
     return new static($container->get('messenger'));
   }
@@ -77,7 +77,7 @@ class ChoosePlanStep extends FormBase {
 
     $productPlans = [];
     foreach ($product->product_plans->getValue() as $arrayValue) {
-      $productPlans[] = unserialize($arrayValue['value'], ['allowed_classes' => false]);
+      $productPlans[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
     }
     if ($productPlans === NULL || empty($productPlans)) {
       $wizard_url = Link::fromTextAndUrl(t('Plan subscription wizard'), \Drupal\Core\Url::fromRoute('mail_subscribers.plan_wizard'));
@@ -106,11 +106,12 @@ class ChoosePlanStep extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): ?bool {
     if (empty($form_state->getUserInput())) {
       $form_state->setErrorByName('plan', t('You must select a plan.'));
       return FALSE;
     }
+    return NULL;
   }
 
   /**

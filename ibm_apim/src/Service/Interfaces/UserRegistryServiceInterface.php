@@ -33,33 +33,33 @@ interface UserRegistryServiceInterface {
   /**
    * get a specific user_registry by url
    *
-   * @param $key
+   * @param string $key
    *
    * @return null|UserRegistry
    */
-  public function get($key): ?UserRegistry;
+  public function get(string $key): ?UserRegistry;
 
   /**
    * Update all user_registries
    *
-   * @param $data array of user_registries keyed on url
+   * @param array $data array of user_registries keyed on url
    */
-  public function updateAll($data): bool;
+  public function updateAll(array $data): bool;
 
   /**
    * Update a specific user_registry
    *
-   * @param $key
-   * @param $data
+   * @param string $key
+   * @param array $data
    */
-  public function update($key, $data);
+  public function update(string $key, array $data);
 
   /**
    * Delete a specific user_registry
    *
-   * @param $key (user_registries url)
+   * @param string $key (user_registries url)
    */
-  public function delete($key);
+  public function delete(string $key);
 
   /**
    * Delete all current user registries
@@ -67,11 +67,11 @@ interface UserRegistryServiceInterface {
   public function deleteAll();
 
   /**
-   * @param $identityProviderName
+   * @param string $identityProviderName
    *
    * @return UserRegistry
    */
-  public function getRegistryContainingIdentityProvider($identityProviderName): ?UserRegistry;
+  public function getRegistryContainingIdentityProvider(string $identityProviderName): ?UserRegistry;
 
 
   /**
@@ -87,19 +87,19 @@ interface UserRegistryServiceInterface {
   /**
    * Set default registry for this site.
    *
-   * @param $url
+   * @param string|null $url
    *
    * @return mixed
    */
-  public function setDefaultRegistry($url);
+  public function setDefaultRegistry(?string $url);
 
 
   /**
    * Get the registry url which is used for the admin user.
    * This is not a real user registry that exists in apim or elsewhere.
    *
-   * @return string
+   * @return string|null
    */
-  public function getAdminRegistryUrl(): string;
+  public function getAdminRegistryUrl(): ?string;
 
 }

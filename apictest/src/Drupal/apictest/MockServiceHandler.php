@@ -33,7 +33,7 @@ class MockServiceHandler {
    *   Whether to use MockSiteConfig service or load individually mocked MockPermissionsService,
    *   MockUserRegistryService etc instead
    */
-  public static function install($siteDirectory, $modulesDirectory, $userRegistry = 'lur', $mockSiteConfig = TRUE): void {
+  public static function install(string $siteDirectory, string $modulesDirectory, $userRegistry = 'lur', $mockSiteConfig = TRUE): void {
     /*
      * This code came from : http://drupal.stackexchange.com/questions/197046/how-to-inject-a-fake-class-into-container-when-running-webtestbase-tests#comment237939_197060
      * (code from the Redis module for Drupal 8)
@@ -108,7 +108,7 @@ class MockServiceHandler {
    * @param string $siteDirectory
    *   Site directory on the portal node.
    */
-  public static function uninstall($siteDirectory): void {
+  public static function uninstall(string $siteDirectory): void {
 
     print 'Uninstalling mock services from ' . $siteDirectory . "\n";
 

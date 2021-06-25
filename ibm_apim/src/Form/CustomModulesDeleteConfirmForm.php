@@ -17,27 +17,33 @@ use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
 use Drupal\Core\Messenger\Messenger;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\Interfaces\ApicModuleInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * Class CustomModulesDeleteConfirmForm
+ *
+ * @package Drupal\ibm_apim\Form
+ */
 class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
 
   /**
    * @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface
    */
-  protected $keyValueExpirable;
+  protected KeyValueStoreExpirableInterface $keyValueExpirable;
 
   /**
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ApicModuleInterface
    */
-  protected $moduleService;
+  protected ApicModuleInterface $moduleService;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -49,8 +55,16 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
    *
    * @var array
    */
-  protected $modules = [];
+  protected array $modules = [];
 
+  /**
+   * CustomModulesDeleteConfirmForm constructor.
+   *
+   * @param \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $key_value_expirable
+   * @param \Psr\Log\LoggerInterface $logger
+   * @param \Drupal\ibm_apim\Service\Interfaces\ApicModuleInterface $module_service
+   * @param \Drupal\Core\Messenger\Messenger $messenger
+   */
   public function __construct(KeyValueStoreExpirableInterface $key_value_expirable,
                               LoggerInterface $logger,
                               ApicModuleInterface $module_service,
@@ -64,7 +78,8 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): CustomModulesDeleteConfirmForm {
+    /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('keyvalue.expirable')->get('ibm_apim_custommodule_delete'),
       $container->get('logger.channel.ibm_apim'),
@@ -76,14 +91,14 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getQuestion() {
+  public function getQuestion(): TranslatableMarkup {
     return $this->t('Confirm delete');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getConfirmText() {
+  public function getConfirmText(): TranslatableMarkup {
     return $this->t('Delete');
   }
 
@@ -97,7 +112,7 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
+  public function getDescription(): TranslatableMarkup {
     return $this->t('Would you like to continue with deleting these modules?');
   }
 
