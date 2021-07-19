@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2015, 2020
+ * (C) Copyright IBM Corporation 2015, 2021
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -4135,19 +4135,19 @@ function ibm_apim_select_developer_menu() {
     $count = count($result);
     if ($count == 1) {
       _ibm_apim_set_current_developer_org($result[0]['id']);
-      $markup .= '<div class="elipsis-names singleOrg" title="' . t("Current organization name: ") . filter_xss($result[0]['name']) . '">' . filter_xss($result[0]['name']) . '</div>';
+      $markup .= '<div class="elipsis-names singleOrg" title="' . t("Current organization name: ") . check_plain($result[0]['name']) . '">' . check_plain($result[0]['name']) . '</div>';
     }
     elseif ($count > 1) {
       $selected = ibm_apim_get_current_developer_org();
       if (!isset($selected) || empty($selected)) {
         $selected = _ibm_apim_set_current_developer_org($result[0]['id']);
       }
-      $selected_name = filter_xss($selected['name']);
+      $selected_name = check_plain($selected['name']);
       $selected_id = check_plain($selected['id']);
       $markup .= '<ul class="dropitmenu orgmenu"><li><a href="#"><div class="elipsis-names">' . $selected_name . '</div> <span class="dropit-icon ui-icon-triangle-1-s"></span></a>';
       $markup .= '<ul id="dropdown-menu" class="dropdown-menu">';
       foreach ($result as $developer_org) {
-        $markup .= '<li class="elipsis-names" title="' . filter_xss($developer_org['name']) . '">' . l(filter_xss($developer_org['name']), 'ibm_apim/org/' . check_plain($developer_org['id']), array(
+        $markup .= '<li class="elipsis-names" title="' . check_plain($developer_org['name']) . '">' . l(check_plain($developer_org['name']), 'ibm_apim/org/' . check_plain($developer_org['id']), array(
             'html' => TRUE,
             'attributes' => array('class' => array('elipsis-names'))
           )) . '</li>';
