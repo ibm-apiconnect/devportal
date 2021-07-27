@@ -12,10 +12,6 @@
   "repositories": [
     {
       "type": "composer",
-      "url": "https://eu.artifactory.swg-devops.com/artifactory/api/composer/apic-dev-portal-composer-local"
-    },
-    {
-      "type": "composer",
       "url": "https://packages.drupal.org/8"
     },
     {
