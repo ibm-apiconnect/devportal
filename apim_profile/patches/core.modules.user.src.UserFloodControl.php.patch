@@ -1,0 +1,11 @@
+--- core/modules/user/src/UserFloodControl.php	2021-06-16 13:31:16.000000000 +0100
++++ core/modules/user/src/UserFloodControl.php	2021-06-24 13:08:42.000000000 +0100
+@@ -56,7 +56,7 @@
+    * {@inheritdoc}
+    */
+   public function isAllowed($name, $threshold, $window = 3600, $identifier = NULL) {
+-    if ($this->flood->isAllowed($name, $threshold, $window, $identifier)) {
++    if ($this->flood->isAllowed($name, $threshold, $window, $identifier) || !(bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true)) {
+       return TRUE;
+     }
+     // Register flood control blocked login event.

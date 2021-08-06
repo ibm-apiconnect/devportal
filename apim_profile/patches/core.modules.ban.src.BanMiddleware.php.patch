@@ -1,0 +1,11 @@
+--- core/modules/ban/src/BanMiddleware.php	2021-06-16 13:31:16.000000000 +0100
++++ core/modules/ban/src/BanMiddleware.php	2021-06-24 12:40:04.000000000 +0100
+@@ -44,7 +44,7 @@
+    */
+   public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = TRUE) {
+     $ip = $request->getClientIp();
+-    if ($this->banIpManager->isBanned($ip)) {
++    if ($this->banIpManager->isBanned($ip) && (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true)) {
+       return new Response(new FormattableMarkup('@ip has been banned', ['@ip' => $ip]), 403);
+     }
+     return $this->httpKernel->handle($request, $type, $catch);

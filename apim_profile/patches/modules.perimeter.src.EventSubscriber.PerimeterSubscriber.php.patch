@@ -1,14 +1,14 @@
---- modules/perimeter/src/EventSubscriber/PerimeterSubscriber.php	2019-07-11 09:26:09.304172808 +0000
-+++ modules/perimeter/src/EventSubscriber/PerimeterSubscriber.php	2019-07-11 09:28:26.736656971 +0000
+--- modules/perimeter/src/EventSubscriber/PerimeterSubscriber.php.orig	2021-06-24 12:54:23.000000000 +0100
++++ modules/perimeter/src/EventSubscriber/PerimeterSubscriber.php	2021-06-24 12:54:23.000000000 +0100
 @@ -11,6 +11,7 @@
  use Drupal\ban\BanIpManager;
  use Drupal\Core\Config\ConfigFactoryInterface;
  use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 +use Drupal\Core\Site\Settings;
-
+ 
  /**
   * On page not found events, ban the IP if the request is suspicious.
-@@ -40,6 +41,10 @@
+@@ -40,11 +41,15 @@
     * On page not found events, ban the IP if the request is suspicious.
     */
    public function handleBannedUrls(Event $event) {
@@ -19,3 +19,9 @@
      $exception = $event->getException();
      if ($exception instanceof NotFoundHttpException) {
        $request_path = $event->getRequest()->getPathInfo();
+       $bannedPatterns = $this->configFactory->get('perimeter.settings')->get('not_found_exception_patterns');
+-      if (!empty($bannedPatterns)) {
++      if (!empty($bannedPatterns) && (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true)) {
+         foreach ($bannedPatterns as $pattern) {
+           $pattern = trim($pattern);
+           if (preg_match($pattern, $request_path)) {

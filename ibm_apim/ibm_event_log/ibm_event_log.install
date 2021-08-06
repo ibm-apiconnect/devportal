@@ -1,0 +1,189 @@
+<?php
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2021
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ * Installation and upgrade logic for the ibm_event_log module.
+ */
+
+use Drupal\views\Views;
+
+function ibm_event_log_update_8101() {
+  $view = Views::getView('notifications');
+  if ($view !== NULL) {
+    $style = $view->getDisplay()->getOption('style');
+    if (!isset($style['options']['grouping'])) {
+      $style['options']['grouping'] = [];
+      $style['options']['grouping'][] = [
+        'field' => 'timestamp',
+        'rendered' => TRUE,
+        'rendered_strip' => FALSE,
+      ];
+      $style['options']['row_class'] = '';
+      $style['options']['default_row_class'] = TRUE;
+      $style['options']['uses_fields'] = TRUE;
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
+    $row = $view->getDisplay()->getOption('row');
+    if (!isset($row['options']['relationship'])) {
+      $row['options']['relationship'] = 'none';
+      $row['options']['view_mode'] = 'default';
+      $view->getDisplay()->setOption('row', $row);
+      $view->save();
+    }
+    $fields = $view->getDisplay()->getOption('fields');
+    if (!isset($fields['timestamp'])) {
+      $fields['timstamp'] = [
+        'id' => 'timestamp',
+        'table' => 'event_logs',
+        'field' => 'timestamp',
+        'relationship' => 'none',
+        'group_type' => 'group',
+        'admin_label' => '',
+        'label' => '',
+        'exclude' => FALSE,
+        'alter' => [
+          'alter_text' => FALSE,
+          'text' => '',
+          'make_link' => FALSE,
+          'path' => '',
+          'absolute' => FALSE,
+          'external' => FALSE,
+          'replace_spaces' => FALSE,
+          'path_case' => 'none',
+          'trim_whitespace' => FALSE,
+          'alt' => '',
+          'rel' => '',
+          'link_class' => '',
+          'prefix' => '',
+          'suffix' => '',
+          'target' => '',
+          'nl2br' => FALSE,
+          'max_length' => 0,
+          'word_boundary' => TRUE,
+          'ellipsis' => TRUE,
+          'more_link' => FALSE,
+          'more_link_text' => '',
+          'more_link_path' => '',
+          'strip_tags' => FALSE,
+          'trim' => FALSE,
+          'preserve_tags' => '',
+          'html' => FALSE,
+        ],
+        'element_type' => '',
+        'element_class' => '',
+        'element_label_type' => '',
+        'element_label_class' => '',
+        'element_label_colon' => FALSE,
+        'element_wrapper_type' => '',
+        'element_wrapper_class' => '',
+        'element_default_classes' => TRUE,
+        'empty' => '',
+        'hide_empty' => FALSE,
+        'empty_zero' => FALSE,
+        'hide_alter_empty' => TRUE,
+        'click_sort_column' => 'value',
+        'type' => 'timestamp',
+        'settings' => [
+          'date_format' => 'custom',
+          'custom_date_format' => 'j M Y',
+          'timezone' => '',
+        ],
+        'group_column' => 'value',
+        'group_columns' => [],
+        'group_rows' => TRUE,
+        'delta_limit' => 0,
+        'delta_offset' => 0,
+        'delta_reversed' => FALSE,
+        'delta_first_last' => FALSE,
+        'multi_type' => 'separator',
+        'separator' => ', ',
+        'field_api_classes' => FALSE,
+        'entity_type' => 'event_log',
+        'entity_field' => 'timestamp',
+        'plugin_id' => 'field',
+      ];
+    }
+    if (!isset($fields['rendered_entity'])) {
+      $fields['rendered_entity'] = [
+        'id' => 'rendered_entity',
+        'table' => 'event_logs',
+        'field' => 'rendered_entity',
+        'relationship' => 'none',
+        'group_type' => 'group',
+        'admin_label' => '',
+        'label' => '',
+        'exclude' => FALSE,
+        'alter' => [
+          'alter_text' => FALSE,
+          'text' => '',
+          'make_link' => FALSE,
+          'path' => '',
+          'absolute' => FALSE,
+          'external' => FALSE,
+          'replace_spaces' => FALSE,
+          'path_case' => 'none',
+          'trim_whitespace' => FALSE,
+          'alt' => '',
+          'rel' => '',
+          'link_class' => '',
+          'prefix' => '',
+          'suffix' => '',
+          'target' => '',
+          'nl2br' => FALSE,
+          'max_length' => 0,
+          'word_boundary' => TRUE,
+          'ellipsis' => TRUE,
+          'more_link' => FALSE,
+          'more_link_text' => '',
+          'more_link_path' => '',
+          'strip_tags' => FALSE,
+          'trim' => FALSE,
+          'preserve_tags' => '',
+          'html' => FALSE,
+        ],
+        'element_type' => '',
+        'element_class' => '',
+        'element_label_type' => '',
+        'element_label_class' => '',
+        'element_label_colon' => FALSE,
+        'element_wrapper_type' => '',
+        'element_wrapper_class' => '',
+        'element_default_classes' => TRUE,
+        'empty' => '',
+        'hide_empty' => FALSE,
+        'empty_zero' => FALSE,
+        'hide_alter_empty' => TRUE,
+        'view_mode' => 'default',
+        'entity_type' => 'event_log',
+        'plugin_id' => 'rendered_entity',
+      ];
+    }
+    $view->getDisplay()->setOption('fields', $fields);
+    $view->save();
+
+    $cacheContexts = $view->getDisplay()->getCacheMetadata()->getCacheContexts();
+    if ($cacheContexts === null || !in_array('languages:language_content', $cacheContexts)) {
+      $cacheContexts[] = 'languages:language_content';
+      $view->getDisplay()->getCacheMetadata()->setCacheContexts($cacheContexts);
+      $view->save();
+    }
+    $view->chooseDisplay('page_1')->getDisplay();
+    $pageCacheContexts = $view->displayHandlers->get('page_1')->getCacheMetadata()->getCacheContexts();
+    if ($pageCacheContexts === null || !in_array('languages:language_content', $pageCacheContexts)) {
+      $pageCacheContexts[] = 'languages:language_content';
+      $view->displayHandlers->get('page_1')->getCacheMetadata()->setCacheContexts($pageCacheContexts);
+      $view->save();
+    }
+  }
+}

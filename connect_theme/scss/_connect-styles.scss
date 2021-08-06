@@ -784,6 +784,9 @@ section.block-go-ahead {
   color: $brand-primary;
 }
 
+.ibmapimNoPermissions .iconDiv svg {
+  fill: $modal-content-color;
+}
 // loading
 
 .page-load-progress-lock-screen .bx--loading__stroke {

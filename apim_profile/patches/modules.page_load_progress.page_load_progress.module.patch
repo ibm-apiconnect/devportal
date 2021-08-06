@@ -1,6 +1,15 @@
 --- modules/page_load_progress/page_load_progress.module	2019-04-25 11:25:54.000000000 +0100
 +++ modules/page_load_progress/page_load_progress.module	2019-04-25 11:33:31.000000000 +0100
-@@ -72,6 +72,7 @@
+@@ -32,7 +32,7 @@
+   $path = \Drupal::service('path.current')->getPath();
+   // Do not trim a trailing slash if that is the complete path.
+   $path = $path === '/' ? $path : rtrim($path, '/');
+-  $path_alias = mb_strtolower(\Drupal::service('path.alias_manager')->getAliasByPath($path));
++  $path_alias = mb_strtolower(\Drupal::service('path_alias.manager')->getAliasByPath($path));
+
+   $result = \Drupal::service('path.matcher')->matchPath($path_alias, $pages) || (($path != $path_alias) && \Drupal::service('path.matcher')->matchPath($path, $pages));
+   return is_negated($config) ? !$result : $result;
+@@ -71,6 +71,7 @@
        'elements' => $config->get('page_load_progress_elements'),
        'internal_links' => $config->get('page_load_progress_internal_links'),
        'esc_key' => $config->get('page_load_progress_esc_key'),

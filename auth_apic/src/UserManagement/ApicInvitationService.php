@@ -100,27 +100,33 @@ class ApicInvitationService implements ApicInvitationInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-
-    $invitationResponse = $this->mgmtServer->acceptInvite($token, $acceptingUser, $acceptingUser->getOrganization());
     $userMgrResponse = new UserManagerResponse();
 
-    if ((int) $invitationResponse->getCode() === 201) {
+    $acceptingOrg = $acceptingUser->getOrganization();
+    if ($acceptingOrg !== NULL) {
+      $invitationResponse = $this->mgmtServer->acceptInvite($token, $acceptingUser, $acceptingUser->getOrganization());
 
-      $this->logger->notice('invitation processed for @username', [
-        '@username' => $acceptingUser->getUsername(),
-      ]);
+      if ($invitationResponse !== NULL && (int) $invitationResponse->getCode() === 201) {
 
-      $userMgrResponse->setMessage(t('Invitation process complete. Please login to continue.'));
-      $userMgrResponse->setSuccess(TRUE);
-      $userMgrResponse->setRedirect('<front>');
-    }
-    else {
-      $this->logger->error('Error during acceptInvite:  @error', ['@error' => $invitationResponse->getErrors()[0]]);
+        $this->logger->notice('invitation processed for @username', [
+          '@username' => $acceptingUser->getUsername(),
+        ]);
+        $userMgrResponse->setMessage(t('Invitation process complete. Please login to continue.'));
+        $userMgrResponse->setSuccess(TRUE);
+      }
+      else {
+        $this->logger->error('Error during acceptInvite:  @error', ['@error' => $invitationResponse->getErrors()[0]]);
 
-      $userMgrResponse->setMessage(t('Error while accepting invitation: @error', ['@error' => $invitationResponse->getErrors()[0]]));
+        $userMgrResponse->setMessage(t('Error while accepting invitation: @error', ['@error' => $invitationResponse->getErrors()[0]]));
+        $userMgrResponse->setSuccess(FALSE);
+      }
+    } else {
+      $this->logger->error('Error during acceptInvite:  @error', ['@error' => 'The user does not have a consumer organization']);
+
+      $userMgrResponse->setMessage(t('Error while accepting invitation: @error', ['@error' => 'The user does not have a consumer organization']));
       $userMgrResponse->setSuccess(FALSE);
-      $userMgrResponse->setRedirect('<front>');
     }
+    $userMgrResponse->setRedirect('<front>');
 
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $userMgrResponse);

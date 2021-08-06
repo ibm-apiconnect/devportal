@@ -1,150 +1,100 @@
 changes:
-  8.x-3.1.21:
-  - set embedded mode to cache per url (#120)
-  8.x-3.1.20:
-  - feed through app name and title
-  8.x-3.1.19:
-  - feat mark applications with subscription status (#118) (#119)
-  8.x-3.1.18:
-  - Tempmerge (#117)
-  8.x-3.1.17:
-  - shouldnt be static
-  8.x-3.1.16:
-  - polish api tile
-  8.x-3.1.15:
-  - refactor the check for asyncapis to be much quicker
-  8.x-3.1.14:
-  - use chunking
-  8.x-3.1.13: null
-  8.x-3.1.12:
-  - no longer needed
-  - refactor Application.php to be a service (#116)
-  8.x-3.1.11:
-  - add tests for routing by nameversion
-  8.x-3.1.10:
-  - use "IBM API Developer Portal" instead of API Connect
-  8.x-3.1.9:
-  - move asyncapi detection to a utility function
-  8.x-3.1.8: null
-  8.x-3.1.7: null
-  8.x-3.1.6: null
-  8.x-3.1.5:
-  - wire up more events
-  8.x-3.1.4: null
-  8.x-3.1.3: null
-  8.x-3.1.2: null
-  8.x-3.1.1:
-  - Createdat (#109)
-  - update basic page references
-  8.x-3.1.0:
-  - update version 8.x-3.0.57 -> 8.x-3.1.0
-  8.x-3.0.56:
+  8.x-2.4.21:
+  - need to use definitive sort to avoid dupes with paging
+  8.x-2.4.20:
+  - more resilient
+  8.x-2.4.19: null
+  8.x-2.4.18:
+  - tags are urls not words
+  8.x-2.4.17:
+  - fix api access check
+  8.x-2.4.16:
+  - move check
+  - ensure attribute exists before checking it
+  - need to check ACL explicitly
+  8.x-2.4.15: null
+  8.x-2.4.14:
+  - merge mess
+  8.x-2.4.13: null
+  8.x-2.4.12: null
+  8.x-2.4.11:
   - handle title not being translated
-  8.x-3.0.55:
-  - feat Change API protocol separator (#111)
-  8.x-3.0.54:
-  - make sure api title is actually set
-  8.x-3.0.53:
-  - path alias test (#108)
-  8.x-3.0.52:
-  - use pathaliases
-  8.x-3.0.51:
-  - Add OAI3.1 support for info.summary
-  8.x-3.0.50: null
-  8.x-3.0.49: null
-  8.x-3.0.48:
+  8.x-2.4.10: null
+  8.x-2.4.9:
   - Fix card in api list view (#106)
-  8.x-3.0.47:
-  - change attribute name
-  - feed through the custom docs for asyncapi
-  8.x-3.0.46: null
-  8.x-3.0.45:
-  - add support for ibmmq protocol for asyncapi
-  8.x-3.0.44:
+  8.x-2.4.8:
+  - use pathaliases
+  - fix path alias test
+  - path alias test
+  - make sure api title is actually set
+  8.x-2.4.7:
   - get rid of warning in logs
-  8.x-3.0.43:
-  - Add drupal core compatibility info
-  8.x-3.0.42:
+  8.x-2.4.6:
   - Add tokens
-  8.x-3.0.41:
+  8.x-2.4.5:
   - hide the API State for unenforced APIs
-  8.x-3.0.40:
+  8.x-2.4.4:
   - add catchall type of AsyncAPI for protocol
-  8.x-3.0.39:
+  8.x-2.4.3:
   - Copyright statements for 2021
-  8.x-3.0.38:
+  8.x-2.4.2:
   - drush commands to get individual nodes
-  8.x-3.0.37:
+  8.x-2.4.1:
   - ensure custom fields are actual fields
-  8.x-3.0.36:
+  8.x-2.4.0:
+  - update version: 8.x-2.3.7 -> 8.x-2.4.0
+  8.x-2.3.6:
   - missing upgrade function maybe?
-  8.x-3.0.35:
+  8.x-2.3.5:
   - Translate custom strings in our views too
-  8.x-3.0.34:
+  8.x-2.3.4:
   - add the worker.js files to the library too
-  8.x-3.0.33:
+  8.x-2.3.3:
   - strip markdown from api descriptions
-  8.x-3.0.32:
+  8.x-2.3.2:
   - add ability to disable swagger validation
-  8.x-3.0.31:
-  - display api type on card view
-  8.x-3.0.30:
-  - whitespace formatting
-  8.x-3.0.29:
-  - pass apiMaxDepth through to explorer
-  8.x-3.0.28:
-  - backend support for asyncapis
-  - backend support for asyncapis
-  8.x-3.0.27:
+  8.x-2.3.1: null
+  8.x-2.3.0:
+  - update version: 8.x-2.2.16 -> 8.x-2.3.0
+  8.x-2.2.15:
   - add credentials name and title to the array fed to explorer
-  8.x-3.0.26: null
-  8.x-3.0.25:
+  8.x-2.2.14: null
+  8.x-2.2.13:
   - remove preview button from comments
-  8.x-3.0.24: null
-  8.x-3.0.23:
-  - missing comma from class names
+  8.x-2.2.12: null
+  8.x-2.2.11: null
+  8.x-2.2.10:
   - tidy up embedded api products
-  8.x-3.0.22:
+  8.x-2.2.9:
   - update views to use no content block
-  8.x-3.0.21:
+  8.x-2.2.8:
   - fix links from api titles
-  8.x-3.0.20:
+  8.x-2.2.7:
   - update icon images
-  8.x-3.0.19: null
-  8.x-3.0.18:
+  8.x-2.2.6: null
+  8.x-2.2.5:
   - minor tweak to css
-  8.x-3.0.17:
   - change api embedded view to carbon X design
-  8.x-3.0.16:
+  8.x-2.2.4:
   - restyle api card/tile (#102)
-  8.x-3.0.15:
+  8.x-2.2.3: null
+  8.x-2.2.2:
   - set default pagesize to be 10
-  8.x-3.0.14:
   - increase gutter for latest masonry views
-  8.x-3.0.13: null
-  8.x-3.0.12:
-  - Revert "add gutter widthin api view"
-  - add gutter widthin api view
-  8.x-3.0.11:
+  8.x-2.2.1: null
+  8.x-2.2.0:
+  - Update apic_api.info.yml
+  8.x-2.1.2:
   - remove Rules support from our code
-  8.x-3.0.10: null
-  8.x-3.0.9: null
-  8.x-3.0.8:
-  - fix api version in log message
-  - typo
-  8.x-3.0.7:
-  - handle admin and anon calling consumer apis
-  8.x-3.0.6:
-  - dont use platform auth for consumer apis
-  8.x-3.0.5:
-  - Removed use of deprecated functions
-  8.x-3.0.4:
-  - log the api version when we create/delete/update (#95)
-  8.x-3.0.3:
+  8.x-2.1.1:
+  - Tempmerge (#99)
+  8.x-2.1.0:
+  - update version: 8.x-2.0.35 -> 8.x-2.1.0
+  8.x-2.0.34: null
+  8.x-2.0.33:
   - fix missing id on title
-  8.x-3.0.2:
+  8.x-2.0.32:
   - few graphql css necessary tweaks
-  8.x-3.0.1: null
   8.x-2.0.31:
   - tidy up api explorer view
   8.x-2.0.30:

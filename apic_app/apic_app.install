@@ -582,7 +582,7 @@ function apic_app_update_8203() {
  *
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
-function apic_app_update_8301() {
+function apic_app_update_8204() {
   // Create a new field for the application module
   $fieldConfig = FieldConfig::create([
     'field_name' => 'apic_created_at',
@@ -640,7 +640,7 @@ function apic_app_update_8301() {
  * Set additional indexes on apic_app_application_subs and
  * apic_app_application_creds tables
  */
-function apic_app_update_8302() {
+function apic_app_update_8205() {
   $table = 'apic_app_application_creds';
   $classValue = ApplicationCredentialsSchema::class;
   applyTableIndexUpdates($table, $classValue, array('uuid', 'app_url'));
@@ -687,7 +687,7 @@ function apic_app_update_dependencies(): array {
       ],
     ],
     'apic_app' => [
-      8301 => [
+      8204 => [
         'consumerorg' => 8201,
       ],
     ],

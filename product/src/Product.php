@@ -815,7 +815,7 @@ class Product {
     if ($node !== NULL) {
 
       // if view disabled then no one has access
-      if ($node->product_view_enabled->value !== 1) {
+      if ((int) $node->product_view_enabled->value !== 1) {
         $viewEnabled = FALSE;
       }
       $userUtils = \Drupal::service('ibm_apim.user_utils');
@@ -846,17 +846,26 @@ class Product {
         if ((int) $node->product_visibility_public->value === 1) {
           $found = TRUE;
         }
-        elseif ((int) $node->product_visibility_authenticated->value === 1 && !\Drupal::currentUser()->isAnonymous()) {
+        elseif ((int) $node->product_visibility_authenticated->value === 1 && \Drupal::currentUser()->isAuthenticated()) {
           $found = TRUE;
         }
-        elseif ($nodeCustomOrgs !== NULL && isset($myorg['url'])) {
+        if ($nodeCustomOrgs !== NULL && isset($myorg['url'])) {
           foreach ($nodeCustomOrgs as $customOrg) {
             if (isset($customOrg['value']) && $customOrg['value'] === $myorg['url']) {
               $found = TRUE;
             }
           }
         }
-        elseif ($nodeCustomTags !== NULL && $myorg['url'] !== NULL) {
+        if ($found === FALSE && $nodeCustomTags !== NULL && $myorg['url'] !== NULL) {
+          $groups = [];
+          if ($nodeCustomTags !== NULL && \is_array($nodeCustomTags) && count($nodeCustomTags) > 0) {
+            foreach ($nodeCustomTags as $tag) {
+              if (isset($tag['value'])) {
+                $groups[] = $tag['value'];
+              }
+            }
+          }
+
           $query = \Drupal::entityQuery('node');
           $query->condition('type', 'consumerorg');
           $query->condition('consumerorg_url.value', $myorg['url']);
@@ -869,7 +878,7 @@ class Product {
               $tags = $consumerOrg->consumerorg_tags->getValue();
               if ($tags !== NULL && \is_array($tags) && count($tags) > 0) {
                 foreach ($nodeCustomTags as $customTag) {
-                  if (isset($customTag['value']) && \in_array($customTag['value'], $tags, FALSE)) {
+                  if (isset($customTag['value']) && \in_array($customTag['value'], $groups, FALSE)) {
                     $found = TRUE;
                   }
                 }
@@ -939,13 +948,13 @@ class Product {
           }
         }
         $myorg = $userUtils->getCurrentConsumerOrg();
-        if (isset($myorg['id'])) {
+        if (isset($myorg['url'])) {
           $query = \Drupal::entityQuery('node');
           $query->condition('type', 'product');
           $query->condition('status', 1);
           $query->condition('product_state.value', 'published');
           $query->condition('product_view_enabled.value', 1);
-          $query->condition('product_visibility_custom_orgs.value', $myorg['id'], 'CONTAINS');
+          $query->condition('product_visibility_custom_orgs.value', $myorg['url'], 'CONTAINS');
           $results = $query->execute();
           if ($results !== NULL && !empty($results)) {
             $nids = array_values($results);
@@ -956,7 +965,7 @@ class Product {
 
           $query = \Drupal::entityQuery('node');
           $query->condition('type', 'consumerorg');
-          $query->condition('consumerorg_id.value', $myorg['id']);
+          $query->condition('consumerorg_url.value', $myorg['url']);
           $consumerOrgResults = $query->execute();
           if ($consumerOrgResults !== NULL && !empty($consumerOrgResults)) {
             $consumerOrgNid = array_shift($consumerOrgResults);
@@ -965,13 +974,21 @@ class Product {
               $consumerOrg = \Drupal::entityTypeManager()->getStorage('node')->load($consumerOrgNid);
               if ($consumerOrg !== NULL) {
                 $tags = $consumerOrg->consumerorg_tags->getValue();
+                $groups = [];
                 if ($tags !== NULL && \is_array($tags) && count($tags) > 0) {
+                  foreach ($tags as $tag) {
+                    if (isset($tag['value'])) {
+                      $groups[] = $tag['value'];
+                    }
+                  }
+                }
+                if ($groups !== NULL && \is_array($groups) && count($groups) > 0) {
                   $query = \Drupal::entityQuery('node');
                   $query->condition('type', 'product');
                   $query->condition('status', 1);
                   $query->condition('product_state.value', 'published');
                   $query->condition('product_view_enabled.value', 1);
-                  $query->condition('product_visibility_custom_tags.value', $tags, 'IN');
+                  $query->condition('product_visibility_custom_tags.value', $groups, 'IN');
                   $results = $query->execute();
                   if ($results !== NULL && !empty($results)) {
                     $nids = array_values($results);

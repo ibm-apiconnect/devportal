@@ -230,7 +230,7 @@ function apim_profile_install() {
     'themegenerator',
     'mail_subscribers',
     'drushadmin',
-    'ibm_event_log'
+    'ibm_event_log',
   ];
   // enable our modules
   $module_installer = \Drupal::service('module_installer');
@@ -258,9 +258,9 @@ function apim_profile_install() {
   }
   // set connect_theme to be default
   \Drupal::configFactory()
-  ->getEditable('system.theme')
-  ->set('default', 'connect_theme')
-  ->save();
+    ->getEditable('system.theme')
+    ->set('default', 'connect_theme')
+    ->save();
 
   \Drupal::configFactory()
     ->getEditable('node.settings')
@@ -1490,35 +1490,36 @@ function apim_profile_update_8025() {
     $page = \Drupal::entityTypeManager()->getStorage('page')->load('welcome');
     if ($page !== NULL) {
       $variants_array = $page->getVariants();
-      $variant = reset($variants_array);
-      $content = $variant->calculateDependencies()['content'];
-      $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
-      module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
+      if ($variants_array !== NULL && !empty($variants_array)) {
+        $variant = reset($variants_array);
+        $content = $variant->calculateDependencies()['content'];
+        $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
+        module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
 
-      foreach ($content as $block_content_id) {
-        // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
-        // we just need the uuid from this.
-        $raw_block_content_id = explode(':', $block_content_id)[2];
+        foreach ($content as $block_content_id) {
+          // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
+          // we just need the uuid from this.
+          $raw_block_content_id = explode(':', $block_content_id)[2];
 
-        $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
-        $block_content = reset($block_content_array);
+          $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
+          $block_content = reset($block_content_array);
 
-        if ($block_content !== NULL) {
-          // we have to match on the label of the block as we don't have anything else
-          $label = $block_content->get('info')->value;
-          switch ($label) {
-            case 'Get Help [en]':
-              add_get_help_block_content_translations($block_content);
-              break;
-            case 'Getting Started [en]':
-              add_getting_started_block_content_translations($block_content);
-              break;
-            case 'Welcome Banner [en]':
-              add_welcome_block_translations($block_content);
-              break;
+          if ($block_content !== NULL && $block_content !== FALSE) {
+            // we have to match on the label of the block as we don't have anything else
+            $label = $block_content->get('info')->value;
+            switch ($label) {
+              case 'Get Help [en]':
+                add_get_help_block_content_translations($block_content);
+                break;
+              case 'Getting Started [en]':
+                add_getting_started_block_content_translations($block_content);
+                break;
+              case 'Welcome Banner [en]':
+                add_welcome_block_translations($block_content);
+                break;
+            }
           }
         }
-
       }
     }
   }
@@ -1763,65 +1764,67 @@ function apim_profile_update_8103() {
     $page = \Drupal::entityTypeManager()->getStorage('page')->load('welcome');
     if ($page !== NULL) {
       $variants_array = $page->getVariants();
-      $variant = reset($variants_array);
-      $variant_settings = $variant->get('variant_settings');
+      if ($variants_array !== NULL && !empty($variants_array)) {
+        $variant = reset($variants_array);
+        $variant_settings = $variant->get('variant_settings');
 
-      foreach ($variant_settings['blocks'] as $block_id => $block_settings) {
-        if (isset($block_settings['provider']) && $block_settings['provider'] === 'featuredcontent') {
-          if (isset($block_settings['numberOfTiles']) && $block_settings['numberOfTiles'] === 3) {
-            $variant_settings['blocks'][$block_id]['numberOfTiles'] = 6;
-            $variant->set('variant_settings', $variant_settings);
-            $variant->save();
+        foreach ($variant_settings['blocks'] as $block_id => $block_settings) {
+          if (isset($block_settings['provider']) && $block_settings['provider'] === 'featuredcontent') {
+            if (isset($block_settings['numberOfTiles']) && $block_settings['numberOfTiles'] === 3) {
+              $variant_settings['blocks'][$block_id]['numberOfTiles'] = 6;
+              $variant->set('variant_settings', $variant_settings);
+              $variant->save();
+            }
+          }
+          elseif (isset($block_settings['provider']) && $block_settings['provider'] === 'socialblock') {
+            if (isset($block_settings['twitterSearchParameter']) && $block_settings['twitterSearchParameter'] === 'IBMintegration') {
+              $variant_settings['blocks'][$block_id]['twitterSearchParameter'] = 'ibmcloud';
+              $variant->set('variant_settings', $variant_settings);
+              $variant->save();
+            }
           }
         }
-        elseif (isset($block_settings['provider']) && $block_settings['provider'] === 'socialblock') {
-          if (isset($block_settings['twitterSearchParameter']) && $block_settings['twitterSearchParameter'] === 'IBMintegration') {
-            $variant_settings['blocks'][$block_id]['twitterSearchParameter'] = 'ibmcloud';
-            $variant->set('variant_settings', $variant_settings);
-            $variant->save();
-          }
-        }
-      }
-      // update the get help SVGs
-      $content = $variant->calculateDependencies()['content'];
-      $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
-      $languages = \Drupal::languageManager()->getLanguages();
-      $oldString = '<path  d="M16,2C8.269,2,2,8.269,2,16s6.269,14,14,14c7.731,0,14-6.269,14-14S23.731,2,16,2z M16,28C9.383,28,4,22.617,4,16';
-      foreach ($content as $block_content_id) {
-        // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
-        // we just need the uuid from this.
-        $raw_block_content_id = explode(':', $block_content_id)[2];
-        $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
-        $block_content = reset($block_content_array);
-        if ($block_content !== NULL) {
-          // we have to match on the label of the block as we don't have anything else
-          $label = $block_content->get('info')->value;
-          if ($label === 'Get Help [en]') {
-            foreach ($languages as $language) {
-              $translation = $block_content->getTranslation($language->getId());
-              $body = $translation->get('body')->value;
-              if (strpos($body, $oldString) !== FALSE) {
-                $search0 = '<?xml version="1.0" encoding="iso-8859-1"?>';
-                $replace0 = '';
-                $body = str_replace($search0, $replace0, $body);
-                $search1 = 'viewBox="0 0 32 32" width="24" height="24" style="enable-background:new 0 0 32 32;" xml:space="preserve">';
-                $replace1 = 'viewBox="0 0 16 16" width="16" height="16" fill="currentColor" xml:space="preserve">';
-                $body = str_replace($search1, $replace1, $body);
-                // string below contains a tab character
-                $search2 = '<polygon  points="15.293,10.707 19.586,15 8,15 8,17 19.586,17 15.293,21.293 16.707,22.707 23.414,16 16.707,9.293    "/>';
-                $replace2 = '';
-                $body = str_replace($search2, $replace2, $body);
-                $search3 = '<path  d="M16,2C8.269,2,2,8.269,2,16s6.269,14,14,14c7.731,0,14-6.269,14-14S23.731,2,16,2z M16,28C9.383,28,4,22.617,4,16';
-                $replace3 = '<path  d="M9.3 3.7L13.1 7.5 1 7.5 1 8.5 13.1 8.5 9.3 12.3 10 13 15 8 10 3z"/>';
-                $body = str_replace($search3, $replace3, $body);
-                $search4 = 'S9.383,4,16,4c6.617,0,12,5.383,12,12S22.617,28,16,28z"/>';
-                $replace4 = '';
-                $body = str_replace($search4, $replace4, $body);
-                $translation->set('body', [
-                  'value' => $body,
-                  'format' => 'full_html',
-                ]);
-                $translation->save();
+        // update the get help SVGs
+        $content = $variant->calculateDependencies()['content'];
+        $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
+        $languages = \Drupal::languageManager()->getLanguages();
+        $oldString = '<path  d="M16,2C8.269,2,2,8.269,2,16s6.269,14,14,14c7.731,0,14-6.269,14-14S23.731,2,16,2z M16,28C9.383,28,4,22.617,4,16';
+        foreach ($content as $block_content_id) {
+          // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
+          // we just need the uuid from this.
+          $raw_block_content_id = explode(':', $block_content_id)[2];
+          $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
+          $block_content = reset($block_content_array);
+          if ($block_content !== NULL) {
+            // we have to match on the label of the block as we don't have anything else
+            $label = $block_content->get('info')->value;
+            if ($label === 'Get Help [en]') {
+              foreach ($languages as $language) {
+                $translation = $block_content->getTranslation($language->getId());
+                $body = $translation->get('body')->value;
+                if (strpos($body, $oldString) !== FALSE) {
+                  $search0 = '<?xml version="1.0" encoding="iso-8859-1"?>';
+                  $replace0 = '';
+                  $body = str_replace($search0, $replace0, $body);
+                  $search1 = 'viewBox="0 0 32 32" width="24" height="24" style="enable-background:new 0 0 32 32;" xml:space="preserve">';
+                  $replace1 = 'viewBox="0 0 16 16" width="16" height="16" fill="currentColor" xml:space="preserve">';
+                  $body = str_replace($search1, $replace1, $body);
+                  // string below contains a tab character
+                  $search2 = '<polygon  points="15.293,10.707 19.586,15 8,15 8,17 19.586,17 15.293,21.293 16.707,22.707 23.414,16 16.707,9.293    "/>';
+                  $replace2 = '';
+                  $body = str_replace($search2, $replace2, $body);
+                  $search3 = '<path  d="M16,2C8.269,2,2,8.269,2,16s6.269,14,14,14c7.731,0,14-6.269,14-14S23.731,2,16,2z M16,28C9.383,28,4,22.617,4,16';
+                  $replace3 = '<path  d="M9.3 3.7L13.1 7.5 1 7.5 1 8.5 13.1 8.5 9.3 12.3 10 13 15 8 10 3z"/>';
+                  $body = str_replace($search3, $replace3, $body);
+                  $search4 = 'S9.383,4,16,4c6.617,0,12,5.383,12,12S22.617,28,16,28z"/>';
+                  $replace4 = '';
+                  $body = str_replace($search4, $replace4, $body);
+                  $translation->set('body', [
+                    'value' => $body,
+                    'format' => 'full_html',
+                  ]);
+                  $translation->save();
+                }
               }
             }
           }
@@ -1846,48 +1849,50 @@ function apim_profile_update_8104() {
     $page = \Drupal::entityTypeManager()->getStorage('page')->load('welcome');
     if ($page !== NULL) {
       $variants_array = $page->getVariants();
-      $variant = reset($variants_array);
-      $content = $variant->calculateDependencies()['content'];
-      $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
-      module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
+      if ($variants_array !== NULL && !empty($variants_array)) {
+        $variant = reset($variants_array);
+        $content = $variant->calculateDependencies()['content'];
+        $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
+        module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
 
-      foreach ($content as $block_content_id) {
-        // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
-        // we just need the uuid from this.
-        $raw_block_content_id = explode(':', $block_content_id)[2];
+        foreach ($content as $block_content_id) {
+          // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
+          // we just need the uuid from this.
+          $raw_block_content_id = explode(':', $block_content_id)[2];
 
-        $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
-        $block_content = reset($block_content_array);
+          $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
+          $block_content = reset($block_content_array);
 
-        if ($block_content !== NULL) {
-          // we have to match on the label of the block as we don't have anything else
-          $label = $block_content->get('info')->value;
-          switch ($label) {
-            case 'Getting Started [en]':
-              add_getting_started_block_content_translations($block_content);
-              $translation = $block_content->getTranslation('en');
-              $translation->set('body', [
-                'value' => get_localized_gsb_content('en'),
-                'format' => 'full_html',
-              ]);
-              $translation->save();
-              break;
-            case 'Go Ahead [en]':
-              $go_ahead_block_id = $raw_block_content_id;
-              $block_content->delete();
-              break;
+          if ($block_content !== NULL && $block_content !== FALSE) {
+            // we have to match on the label of the block as we don't have anything else
+            $label = $block_content->get('info')->value;
+            switch ($label) {
+              case 'Getting Started [en]':
+                add_getting_started_block_content_translations($block_content);
+                $translation = $block_content->getTranslation('en');
+                $translation->set('body', [
+                  'value' => get_localized_gsb_content('en'),
+                  'format' => 'full_html',
+                ]);
+                $translation->save();
+                break;
+              case 'Go Ahead [en]':
+                $go_ahead_block_id = $raw_block_content_id;
+                $block_content->delete();
+                break;
+            }
           }
         }
-      }
 
-      // remove go ahead block from the page
-      $variant_settings = $variant->get('variant_settings');
-      if (isset($go_ahead_block_id)) {
-        foreach ($variant_settings['blocks'] as $block_id => $block_settings) {
-          if (isset($block_settings['id']) && $block_settings['id'] === 'block_content:' . $go_ahead_block_id) {
-            unset($variant_settings['blocks'][$block_id]);
-            $variant->set('variant_settings', $variant_settings);
-            $variant->save();
+        // remove go ahead block from the page
+        $variant_settings = $variant->get('variant_settings');
+        if (isset($go_ahead_block_id)) {
+          foreach ($variant_settings['blocks'] as $block_id => $block_settings) {
+            if (isset($block_settings['id']) && $block_settings['id'] === 'block_content:' . $go_ahead_block_id) {
+              unset($variant_settings['blocks'][$block_id]);
+              $variant->set('variant_settings', $variant_settings);
+              $variant->save();
+            }
           }
         }
       }
@@ -2591,34 +2596,36 @@ function apim_profile_update_8205() {
     $page = \Drupal::entityTypeManager()->getStorage('page')->load('welcome');
     if ($page !== NULL) {
       $variants_array = $page->getVariants();
-      $variant = reset($variants_array);
-      $content = $variant->calculateDependencies()['content'];
-      $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
-      module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
+      if ($variants_array !== NULL && !empty($variants_array)) {
+        $variant = reset($variants_array);
+        $content = $variant->calculateDependencies()['content'];
+        $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
+        module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
 
-      foreach ($content as $block_content_id) {
-        // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
-        // we just need the uuid from this.
-        $raw_block_content_id = explode(':', $block_content_id)[2];
+        foreach ($content as $block_content_id) {
+          // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
+          // we just need the uuid from this.
+          $raw_block_content_id = explode(':', $block_content_id)[2];
 
-        $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
-        $block_content = reset($block_content_array);
+          $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
+          $block_content = reset($block_content_array);
 
-        if ($block_content !== NULL) {
-          // we have to match on the label of the block as we don't have anything else
-          $label = $block_content->get('info')->value;
-          switch ($label) {
-            case 'Getting Started [en]':
-              $block_content->set('body', [
-                'value' => get_localized_gsb_content('en'),
-                'format' => 'full_html',
-              ]);
-              $block_content->save();
-              add_getting_started_block_content_translations($block_content);
-              break;
+          if ($block_content !== NULL && $block_content !== FALSE) {
+            // we have to match on the label of the block as we don't have anything else
+            $label = $block_content->get('info')->value;
+            switch ($label) {
+              case 'Getting Started [en]':
+                $block_content->set('body', [
+                  'value' => get_localized_gsb_content('en'),
+                  'format' => 'full_html',
+                ]);
+                $block_content->save();
+                add_getting_started_block_content_translations($block_content);
+                break;
+            }
           }
-        }
 
+        }
       }
     }
   }
@@ -2632,13 +2639,14 @@ function apim_profile_update_8205() {
   if (count($api_faq_node_ids) === 1) {
     $api_faq_node = \Drupal::entityTypeManager()->getStorage('node')->load(array_pop($api_faq_node_ids));
     if ($api_faq_node !== NULL) {
-      $api_faq_node->set('faqs',get_localized_apis_content('en'));
+      $api_faq_node->set('faqs', get_localized_apis_content('en'));
       $api_faq_node->save();
       add_api_faq_node_translations($api_faq_node);
     }
-  } else {
+  }
+  else {
     \Drupal::logger('apim_profile')
-    ->warning('Expected 1 node for FAQ "Using our APIs" but there were @count. Will not update the content.', ['@count' => count($api_faq_node_ids) ]);
+      ->warning('Expected 1 node for FAQ "Using our APIs" but there were @count. Will not update the content.', ['@count' => count($api_faq_node_ids)]);
   }
 
   $app_faq_node_ids = \Drupal::entityQuery('node')
@@ -2649,13 +2657,14 @@ function apim_profile_update_8205() {
   if (count($app_faq_node_ids) === 1) {
     $app_faq_node = \Drupal::entityTypeManager()->getStorage('node')->load(array_pop($app_faq_node_ids));
     if ($app_faq_node !== NULL) {
-      $app_faq_node->set('faqs',get_localized_apps_content('en'));
+      $app_faq_node->set('faqs', get_localized_apps_content('en'));
       $app_faq_node->save();
       add_app_faq_node_translations($app_faq_node);
     }
-  } else {
+  }
+  else {
     \Drupal::logger('apim_profile')
-    ->warning('Expected 1 node for FAQ "Apps" but there were @count. Will not update the content.', ['@count' => count($app_faq_node_ids) ]);
+      ->warning('Expected 1 node for FAQ "Apps" but there were @count. Will not update the content.', ['@count' => count($app_faq_node_ids)]);
   }
 
 }

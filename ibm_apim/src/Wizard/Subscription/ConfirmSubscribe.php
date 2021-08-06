@@ -82,8 +82,12 @@ class ConfirmSubscribe extends IbmWizardStepBase {
       $form['#planInfo']['name'] = $plan_name;
       $planService = \Drupal::service('ibm_apim.product_plan');
       if (isset($selectedPlan['rate-limits'])) {
-        $rateLimit = array_shift($selectedPlan['rate-limits'])['value'];
-        $form['#planInfo']['rateLimit'] = $planService->parseRateLimit($rateLimit);
+        if (count($selectedPlan['rate-limits']) > 1) {
+          $form['#planInfo']['rateLimit'] = 'multiple';
+        } else {
+          $rateLimit = array_shift($selectedPlan['rate-limits'])['value'];
+          $form['#planInfo']['rateLimit'] = $planService->parseRateLimit($rateLimit);
+        }
       }
 
       $form['#billing'] = false;

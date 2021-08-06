@@ -106,8 +106,8 @@ class EventLogService {
     $result = Database::getConnection()->query($queryString, $queryTerms);
 
     if (!$result->fetch()) {
-      // If a timestamp has not been provided set it to the current timestamp
-      if ($apicEvent->getTimestamp() === NULL || $apicEvent->getTimestamp() === 0) {
+      // If a timestamp has not been provided (or is greater than max int) set it to the current timestamp
+      if ($apicEvent->getTimestamp() === NULL || $apicEvent->getTimestamp() === 0 || $apicEvent->getTimestamp() >= 2147483647) {
         $apicEvent->setTimestamp(time());
       }
 
@@ -205,9 +205,17 @@ class EventLogService {
    */
   public function createOutputMessage(EventLog $event): array {
     $output = [];
+    $output['epoch'] = [
+      'value' => $event->getTimestamp(),
+      'formatted' => $event->getTimestamp(),
+    ];
     $output['timestamp'] = [
       'value' => $event->getTimestamp(),
       'formatted' => $this->dateFormatter->format($event->getTimestamp(), 'medium'),
+    ];
+    $output['time'] = [
+      'value' => $event->getTimestamp(),
+      'formatted' => $this->dateFormatter->format($event->getTimestamp(), 'custom', 'g:i:s A'),
     ];
     // if the User URL isn't set then assume the action was done by the provider
     $userUrl = $event->getUserUrl();

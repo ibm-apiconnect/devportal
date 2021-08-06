@@ -822,6 +822,20 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         '#weight' => 50,
       ];
       break;
+    case 'ban_ip_form':
+      $ipBanEnabled = (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true);
+      if (!$ipBanEnabled) {
+        \Drupal::messenger()->addWarning(t('IP based security is currently disabled for this portal service so IP address bans will not work.'));
+      }
+      break;
+    case 'restrict_by_ip_general_settings':
+    case 'restrict_by_ip_login_settings':
+    case 'restrict_by_ip_role_settings':
+      $ipBanEnabled = (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true);
+      if (!$ipBanEnabled) {
+        \Drupal::messenger()->addWarning(t('IP based security is currently disabled for this portal service so IP based restrictions will not work.'));
+      }
+      break;
   }
 
   // Look for any form provided by the contact module and remove preview button

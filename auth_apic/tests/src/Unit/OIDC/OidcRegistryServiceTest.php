@@ -106,13 +106,13 @@ class OidcRegistryServiceTest extends UnitTestCase {
     self::assertNotNull($response['image'], 'unexpected NULL image when gathering oidc metadata.');
 
 
-    self::assertRegExp('/^https:\/\/mgmt.example.com\/consumer-api\/oauth2\/authorize?/', $response['az_url'], 'Expected start not found in authorization url.');
-    self::assertRegExp('/client_id=iamaclientid/', $response['az_url'], 'Expected client_id query parameter not found in authorization url.');
-    self::assertRegExp('/state=base64encodedstate/', $response['az_url'], 'Expected state query parameter not found in authorization url.');
-    self::assertRegExp('/redirect_uri=https:\/\/portal.example.com\/test\/env/', $response['az_url'], 'Expected redirect_uri query parameter not found in authorization url.');
+    self::assertMatchesRegularExpression('/^https:\/\/mgmt.example.com\/consumer-api\/oauth2\/authorize?/', $response['az_url'], 'Expected start not found in authorization url.');
+    self::assertMatchesRegularExpression('/client_id=iamaclientid/', $response['az_url'], 'Expected client_id query parameter not found in authorization url.');
+    self::assertMatchesRegularExpression('/state=base64encodedstate/', $response['az_url'], 'Expected state query parameter not found in authorization url.');
+    self::assertMatchesRegularExpression('/redirect_uri=https:\/\/portal.example.com\/test\/env/', $response['az_url'], 'Expected redirect_uri query parameter not found in authorization url.');
     // TODO: note no realm ... see comment above.
-    self::assertRegExp('/realm=/', $response['az_url'], 'Expected realm query parameter not found in authorization url.');
-    self::assertRegExp('/esponse_type=code/', $response['az_url'], 'Expected response_code query parameter not found in authorization url.');
+    self::assertMatchesRegularExpression('/realm=/', $response['az_url'], 'Expected realm query parameter not found in authorization url.');
+    self::assertMatchesRegularExpression('/esponse_type=code/', $response['az_url'], 'Expected response_code query parameter not found in authorization url.');
 
     //self::assertEquals($response['az_url'], 'https://mgmt.example.com/consumer-api/oauth2/authorize?client_id=iamaclientid&state=base64encodedstate&redirect_uri=http://portal.example.com/test/env&realm=&response_type=code', 'Unexpected authorization url.');
     self::assertStringStartsWith('<svg ', $response['image']['html'], 'Unexpected image.');
@@ -148,7 +148,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
     self::assertNotNull($response['az_url'], 'unexpected NULL az_url when gathering oidc metadata.');
     self::assertNotNull($response['image'], 'unexpected NULL image when gathering oidc metadata.');
 
-    self::assertRegExp('/&token=blahdeblah$/', $response['az_url'], 'Expected token query parameter not found in authorization url.');
+    self::assertMatchesRegularExpression('/&token=blahdeblah$/', $response['az_url'], 'Expected token query parameter not found in authorization url.');
     self::assertStringStartsWith('<svg ', $response['image']['html'], 'Unexpected image.');
 
   }

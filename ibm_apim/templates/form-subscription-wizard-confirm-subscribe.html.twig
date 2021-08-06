@@ -59,10 +59,18 @@
           </td>
           <td class="application">{{ element['#applicationName'] }}</td>
           <td class="plan">
-            {% if element['#planInfo']['billingInfo'] %}
+            {% if element['#planInfo']['billingInfo'] and element['#planInfo']['rateLimit'] == 'multiple' %}
+              {{ element['#planInfo']['name'] }}: {% set sub_billing_info = element['#planInfo']['billingInfo'] %}{% trans %}Subscription of {{ sub_billing_info | raw }} for multiple rate limits{% endtrans %}
+            {% elseif element['#planInfo']['billingInfo'] and element['#planInfo']['rateLimit'] %}
               {{ element['#planInfo']['name'] }}: {% set sub_billing_info = element['#planInfo']['billingInfo'] %}{% trans %}Subscription of {{ sub_billing_info | raw }} for {{ element['#planInfo']['rateLimit'] }}{% endtrans %}
-            {% else %}
+            {% elseif element['#planInfo']['billingInfo'] %}
+              {{ element['#planInfo']['name'] }}: {% set sub_billing_info = element['#planInfo']['billingInfo'] %}{% trans %}Subscription of {{ sub_billing_info | raw }} for unlimited calls{% endtrans %}
+            {% elseif element['#planInfo']['rateLimit'] == 'multiple' %}
+              {{ element['#planInfo']['name'] }}: {% trans %}Free subscription for multiple rate limits{% endtrans %}
+            {% elseif element['#planInfo']['rateLimit']  %}
               {{ element['#planInfo']['name'] }}: {% trans %}Free subscription for {{ element['#planInfo']['rateLimit'] }}{% endtrans %}
+            {% else %}
+              {{ element['#planInfo']['name'] }}: {% trans %}Free subscription for unlimited calls{% endtrans %}
             {% endif %}
           </td>
           {% if element['#planInfo']['billingInfo'] %}

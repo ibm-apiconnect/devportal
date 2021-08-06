@@ -34,11 +34,12 @@ use Drupal\node\NodeInterface;
 use Drupal\product\Product;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /* Permissions that can be granted
  * Note that we also use permissions defined in product.module
  */
-define('EDIT_ANY_API_CONTENT_GRANT', 1);
+const EDIT_ANY_API_CONTENT_GRANT = 1;
 
 /* Return the permission strings so that they can be displayed in the ACL log
  * Most of these come from the product module
@@ -384,11 +385,12 @@ function apic_api_preprocess(&$variables, $hook, &$info) {
  *
  * @return void
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
- * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException|\Drupal\Core\Entity\EntityMalformedException
  */
 function apic_api_preprocess_node(&$variables): void {
   if ($variables['node']->getType() === 'api') {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
+
     // get global settings first
     $config = \Drupal::config('ibm_apim.settings');
     $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
@@ -454,6 +456,11 @@ function apic_api_preprocess_node(&$variables): void {
     $variables['enforced'] = $enforced;
 
     if ($variables['view_mode'] === 'full') {
+      $haveAccess = Api::checkAccess($variables['node']);
+      if (!$haveAccess) {
+        throw new AccessDeniedHttpException();
+      }
+
       $showCorsWarnings = (boolean) $config->get('show_cors_warnings');
       $soapSwaggerDownload = (boolean) $config->get('soap_swagger_download');
       $soapCodeSnippets = (boolean) $config->get('soap_codesnippets');
@@ -512,7 +519,10 @@ function apic_api_preprocess_node(&$variables): void {
 
         $plans = [];
         if (isset($selectedProductNid)) {
-          $plans = Product::getPlansThatContainApi(Node::load($selectedProductNid), $variables['node']->apic_ref->value);
+          $selectedProduct = Node::load($selectedProductNid);
+          if ($selectedProduct !== NULL) {
+            $plans = Product::getPlansThatContainApi($selectedProduct, $variables['node']->apic_ref->value);
+          }
         }
 
         foreach ($apps as $app) {

@@ -586,4 +586,3 @@ class SubscriptionService {
   }
 
 }
-

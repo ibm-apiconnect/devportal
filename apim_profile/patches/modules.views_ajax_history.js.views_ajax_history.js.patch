@@ -1,8 +1,8 @@
 --- modules/views_ajax_history/js/views_ajax_history.js	2019-06-06 13:36:40.000000000 +0100
 +++ modules/views_ajax_history/js/views_ajax_history.js	2019-06-06 13:41:10.000000000 +0100
-@@ -283,6 +283,21 @@
+@@ -314,6 +314,21 @@
    };
-
+ 
    /**
 +   * Parse a URL query string
 +   *
@@ -22,27 +22,22 @@
     * Override beforeSend to clean up the Ajax submission URL.
     *
     * @param {XMLHttpRequest} xmlhttprequest
-@@ -294,12 +309,18 @@
-     var data = (typeof options.data === 'string') ? parseQuery(options.data) : {};
-
-     if (data.view_name && options.type !== 'GET') {
--      // Override the URL to not contain any fields that were submitted.
--      var delimiter = drupalSettings.views.ajax_path.indexOf('?') === -1 ? '?' : '&';
--      options.url = drupalSettings.views.ajax_path + delimiter + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
-+      // Check that the Ajax call is coming from a View.
-+      if (typeof options.url != 'undefined' && options.url.indexOf('/views/ajax') != -1 && options.type !== 'GET') {
-+        var data = (typeof options.data === 'string') ? parseQuery(options.data) : {};
-+        if (data.view_name) {
-+          // Override the URL to not contain any fields that were submitted.
-+          var delimiter = drupalSettings.views.ajax_path.indexOf('?') === -1 ? '?' : '&';
-+          options.url = drupalSettings.views.ajax_path + delimiter + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
-+          // Call the original Drupal method with the right context.
-+          Drupal.ViewsAjaxHistory.beforeSend.apply(this, arguments);
+@@ -331,8 +346,16 @@
+       }
+       else {
+         // Override the URL to not contain any fields that were submitted.
+-        var delimiter = drupalSettings.views.ajax_path.indexOf('?') === -1 ? '?' : '&';
+-        options.url = drupalSettings.views.ajax_path + delimiter + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
++
++        // Check that the Ajax call is coming from a View.
++        if (typeof options.url != 'undefined' && options.url.indexOf('/views/ajax') != -1 && options.type !== 'GET') {
++          var data = (typeof options.data === 'string') ? parseQuery(options.data) : {};
++          if (data.view_name) {
++            // Override the URL to not contain any fields that were submitted.
++            var delimiter = drupalSettings.views.ajax_path.indexOf('?') === -1 ? '?' : '&';
++            options.url = drupalSettings.views.ajax_path + delimiter + Drupal.ajax.WRAPPER_FORMAT + '=drupal_ajax';
++          }
 +        }
-+      }
+       }
      }
--    // Call the original Drupal method with the right context.
--    Drupal.ViewsAjaxHistory.beforeSend.apply(this, arguments);
-   }
-
- })(jQuery, Drupal, drupalSettings);
+     // Call the original Drupal method with the right context.

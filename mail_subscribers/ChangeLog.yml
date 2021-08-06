@@ -1,46 +1,44 @@
 changes:
-  8.x-3.1.8:
-  - use "IBM API Developer Portal" instead of API Connect
-  8.x-3.1.7: null
-  8.x-3.1.6: null
-  8.x-3.1.5:
-  - need to set return if type specified
-  8.x-3.1.4:
-  - more tweaks to typing take2
-  - more tweaks to typing
-  - need to use correct interface
-  8.x-3.1.3: null
-  8.x-3.1.2:
-  - use void
-  8.x-3.1.1: null
-  8.x-3.1.0:
-  - update version 8.x-3.0.14 -> 8.x-3.1.0
-  8.x-3.0.13:
+  8.x-2.4.9: null
+  8.x-2.4.8: null
+  8.x-2.4.7:
   - Add drupal core compatibility info
-  8.x-3.0.12:
+  8.x-2.4.6:
   - Enable user tokens
-  8.x-3.0.11:
   - Additional mail subscriber fixes
   - Add tokens
-  8.x-3.0.10:
+  8.x-2.4.5:
   - Copyright statements for 2021
-  8.x-3.0.9:
+  8.x-2.4.4:
   - need to get values first
-  8.x-3.0.8:
+  8.x-2.4.3:
   - oops overwriting values we shouldnt
-  8.x-3.0.7:
+  8.x-2.4.2:
   - fix cache issues in mail subscriber wizard
-  8.x-3.0.6:
+  8.x-2.4.1:
   - add link to mail subscriber wizard to content menu
-  8.x-3.0.5:
+  8.x-2.4.0:
+  - update version: 8.x-2.3.3 -> 8.x-2.4.0
+  8.x-2.3.2: null
+  8.x-2.3.1: null
+  8.x-2.3.0:
+  - update version: 8.x-2.2.3 -> 8.x-2.3.0
+  8.x-2.2.2:
   - Submit -> Save
-  8.x-3.0.4:
+  8.x-2.2.1:
   - restyle progress indicator mailsubs wizard
-  8.x-3.0.3:
+  8.x-2.2.0:
+  - Update mail_subscribers.info.yml
+  8.x-2.1.3: null
+  8.x-2.1.2:
   - must return something
-  8.x-3.0.2:
+  8.x-2.1.1:
   - remove Rules support from our code
-  8.x-3.0.1: null
+  8.x-2.1.0:
+  - update version: 8.x-2.0.10 -> 8.x-2.1.0
+  8.x-2.0.9: null
+  8.x-2.0.8: null
+  8.x-2.0.7: null
   8.x-2.0.6:
   - copyright date
   8.x-2.0.5:

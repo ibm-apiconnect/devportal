@@ -558,8 +558,12 @@ class ConsumerOrgService {
           $eventEntity = new ApicEvent();
           $eventEntity->setArtifactType('member');
           $timestamp = $member->getCreatedAt();
+          // is_int not sufficient here, so use pattern matching instead
+          if ($timestamp !== NULL && !preg_match("/^\d+$/", $timestamp)) {
+            $timestamp = strtotime($timestamp);
+          }
           // if timestamp still not set default to current time
-          if ($timestamp === NULL || !is_int($timestamp)) {
+          if ($timestamp === NULL) {
             $timestamp = time();
           }
           $eventEntity->setTimestamp($timestamp);

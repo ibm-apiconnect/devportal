@@ -1,306 +1,214 @@
 changes:
-  8.x-3.1.39:
+  8.x-2.4.12:
+  - needs to be org_url not consumer_org_url
+  8.x-2.4.11:
+  - protect against running double strtotime
+  8.x-2.4.10:
   - we were double strtotime the timestamps === bang
-  8.x-3.1.38:
+  8.x-2.4.9: null
+  8.x-2.4.8:
   - need to check not empty
-  8.x-3.1.37:
   - get current consumer org not correct
   - get current consumer org not correct
-  8.x-3.1.36:
   - fix get default payment method
   - fix billing id
-  8.x-3.1.35:
-  - has to be entity id not table name
-  8.x-3.1.34:
-  - ensure timestamps are set for members
-  8.x-3.1.33:
-  - fix upgrade error
-  8.x-3.1.32:
-  - missing strtotime
-  8.x-3.1.31:
-  - set timestamps for members
-  - slight tweak to eventlog entities for consumer orgs
-  8.x-3.1.30:
-  - dont show notifications link to admin
-  8.x-3.1.29:
-  - Index consumer org url column
-  - do create and update event logs all the time (#235)
-  8.x-3.1.28:
-  - Index consumer org url column (#234)
-  8.x-3.1.27:
-  - use ID to load the payment method schema
-  8.x-3.1.26:
-  - Tempmerge (#232)
-  8.x-3.1.25:
-  - use chunking
-  8.x-3.1.24: null
-  8.x-3.1.23:
-  - Services (#231)
-  8.x-3.1.22:
-  - there might not be any roles
-  8.x-3.1.21:
-  - use "IBM API Developer Portal" instead of API Connect
-  8.x-3.1.20:
-  - Invitetests (#230)
-  8.x-3.1.19:
-  - only show invitation button if enabled
-  8.x-3.1.18: null
-  8.x-3.1.17: null
-  8.x-3.1.16:
-  - array not object
-  8.x-3.1.15: null
-  8.x-3.1.14:
-  - fix missing '
-  8.x-3.1.13:
-  - event service has moved
-  - use dependency injection
-  - use dependency injection
-  - wire up more payment methods
-  - wire up more events
-  8.x-3.1.12:
-  - Notitab (#228)
-  8.x-3.1.11:
-  - payment methods needs to be array not objects
-  8.x-3.1.10:
-  - fix object parsing
-  8.x-3.1.9: null
-  8.x-3.1.8:
-  - fix up the activity feed tabs for org and app
-  8.x-3.1.7:
-  - Tempmerge (#226)
-  8.x-3.1.6: null
-  8.x-3.1.5:
-  - entity_reference module is now empty and not needed
-  8.x-3.1.4:
-  - use void
-  8.x-3.1.3:
-  - deprecated function
-  8.x-3.1.2: null
-  8.x-3.1.1:
-  - Createdat (#221)
-  8.x-3.1.0:
-  - update version 8.x-3.0.108 -> 8.x-3.1.0
-  8.x-3.0.107:
+  8.x-2.4.7:
   - long corg name handling (#222)
-  8.x-3.0.106: null
-  8.x-3.0.105:
+  8.x-2.4.6:
   - Fix duplicate user exception
-  8.x-3.0.104: null
-  8.x-3.0.103:
+  8.x-2.4.5:
   - divisibleby is deprecated
   - Add drupal core compatibility info
-  8.x-3.0.102:
+  8.x-2.4.4:
   - Add tokens
-  8.x-3.0.101:
+  8.x-2.4.3:
   - Copyright statements for 2021
-  8.x-3.0.100:
+  8.x-2.4.2:
   - drush commands to get individual nodes
-  8.x-3.0.99:
+  8.x-2.4.1:
   - ensure custom fields are actual fields
-  8.x-3.0.98: null
-  8.x-3.0.97:
-  - Readding the account update (#214)
-  8.x-3.0.96:
-  - Removed test breaking code (#212)
-  8.x-3.0.95:
+  8.x-2.4.0:
+  - update version: 8.x-2.3.14 -> 8.x-2.4.0
+  8.x-2.3.13: null
+  8.x-2.3.12:
+  - reinstate fix
+  8.x-2.3.11:
+  - Removed test breaking code
   - try and get the tests to pass
   - Update user properly from consumerorg webhooks
   - Update user from member_update
-  8.x-3.0.94: null
-  8.x-3.0.93:
+  8.x-2.3.10:
   - use correct uuid in delete url
-  8.x-3.0.92:
+  8.x-2.3.9:
   - translate role names too
-  8.x-3.0.91: null
-  8.x-3.0.90: null
-  8.x-3.0.89: null
-  8.x-3.0.88: null
-  8.x-3.0.87:
+  8.x-2.3.8: null
+  8.x-2.3.7:
   - add AUTO_INCREMENT
   - add AUTO_INCREMENT
+  8.x-2.3.6:
   - make integer unsigned
   - make sure payment method entity installed
-  8.x-3.0.86: null
-  8.x-3.0.85:
+  8.x-2.3.5: null
+  8.x-2.3.4:
   - need to check if the table exists before doing the next bit too
   - only truncate table if it exists
-  8.x-3.0.84:
+  8.x-2.3.3:
   - oops missing translations for new config
-  8.x-3.0.83:
-  - different upgrade code needed
-  8.x-3.0.82:
-  - Integerid (#208)
-  8.x-3.0.81:
-  - fix aria label id for consumerorgs
-  8.x-3.0.80: null
-  8.x-3.0.79:
-  - need to set corg too
-  - dont allow people to invite if only have one role
-  8.x-3.0.78: null
-  8.x-3.0.77:
-  - ensure fields dont overflow payment methods
-  - ensure fields dont overflow payment methods
-  8.x-3.0.76:
-  - only display fields supposed to
-  8.x-3.0.75:
+  8.x-2.3.2: null
+  8.x-2.3.1: null
+  8.x-2.3.0:
+  - update version: 8.x-2.2.41 -> 8.x-2.3.0
+  8.x-2.2.40:
   - bug in payment method creation
-  8.x-3.0.74:
+  8.x-2.2.39:
   - need to set payment methods on the org
-  8.x-3.0.73:
-  - logic failure adding ref to the corg
-  8.x-3.0.72:
+  8.x-2.2.38: null
+  8.x-2.2.37:
+  - logic failure adding ref to the corg (#207)
+  8.x-2.2.36:
   - Payment title (#206)
-  8.x-3.0.71:
+  8.x-2.2.35:
   - Fixed multistep form and form errors (#205)
-  8.x-3.0.70:
+  8.x-2.2.34:
   - use the carbon X overflow icon
-  8.x-3.0.69: null
-  8.x-3.0.68:
-  - clear cache on success
-  - need to accept 201 response too
-  8.x-3.0.67: null
-  8.x-3.0.66:
+  8.x-2.2.33:
+  - Fixcreatepayment (#204)
+  8.x-2.2.32: null
+  8.x-2.2.31:
   - fix display of a single integration
   - dont allow 2 of the same integration
-  8.x-3.0.65: null
-  8.x-3.0.64:
+  8.x-2.2.30: null
+  8.x-2.2.29:
   - use title not name
   - use title not name
-  8.x-3.0.63: null
-  8.x-3.0.62:
+  8.x-2.2.28:
   - get the multi-step form working properly
   - fix button class
-  8.x-3.0.61: null
-  8.x-3.0.60:
+  8.x-2.2.27:
   - support multiple billing providers
   - support multiple billing providers
-  8.x-3.0.59:
-  - Update user custom fields from consumerorg webhooks/snapshots (#199)
-  8.x-3.0.58:
+  8.x-2.2.26:
+  - User custom fields v10.0.1 (#203)
+  8.x-2.2.25:
   - missing cancel buttons
-  8.x-3.0.57:
+  8.x-2.2.24:
   - Stop using placeholder payment id (#201)
-  8.x-3.0.56:
   - Fixed saving payment method name and added todo (#200)
-  8.x-3.0.55:
+  8.x-2.2.23: null
+  8.x-2.2.22:
   - use SVG from ibm_apim
-  8.x-3.0.54:
   - no content blocks for views
-  8.x-3.0.53:
+  8.x-2.2.21:
+  - Fix payment method created and removed name from config (#197) (#198)
+  8.x-2.2.20:
   - styling for payment methods
-  8.x-3.0.52: null
-  8.x-3.0.51:
-  - Fix payment method created and removed name from config (#197)
-  8.x-3.0.50:
+  8.x-2.2.19:
   - monetization schema change
+  8.x-2.2.18:
   - add payment method icons
-  8.x-3.0.49:
+  8.x-2.2.17:
   - add payment method styling
-  8.x-3.0.48:
+  8.x-2.2.16:
   - billing page no payment methods styling
-  8.x-3.0.47:
+  8.x-2.2.15:
   - minor tweak for my org page
-  8.x-3.0.46:
+  8.x-2.2.14:
   - fix test case
   - myorg page styling
-  8.x-3.0.45:
+  8.x-2.2.13:
   - Submit -> Save
-  8.x-3.0.44:
+  8.x-2.2.12:
   - remove glyph icons
-  8.x-3.0.43:
+  8.x-2.2.11:
   - first pass of styling for the billing tab
-  8.x-3.0.42:
+  8.x-2.2.10:
   - typo fixes
-  8.x-3.0.41:
-  - carbon x header changes (#196)
-  8.x-3.0.40:
+  8.x-2.2.9:
+  - carbon x header changes
+  8.x-2.2.8:
   - changes in apim endpoint
-  8.x-3.0.39:
+  8.x-2.2.7:
   - require a name for payment methods
-  8.x-3.0.38: null
-  8.x-3.0.37: null
-  8.x-3.0.36:
+  8.x-2.2.6: null
+  8.x-2.2.5:
   - wrong hook names
   - get the billing stuff working
-  8.x-3.0.35:
+  8.x-2.2.4:
   - remove ajax for now - just use a simple redirect link
-  8.x-3.0.34:
+  8.x-2.2.3:
   - fix tabs on billing page
-  8.x-3.0.33:
+  8.x-2.2.2:
   - make messages translatable
-  8.x-3.0.32: null
-  8.x-3.0.31:
-  - Small fix for default payment method (#193)
-  - Added support for default payment methods and changed a field type (#192)
-  8.x-3.0.30:
-  - Payment method create form displaying in modal (#191)
-  8.x-3.0.29: null
-  8.x-3.0.28:
+  8.x-2.2.1: null
+  8.x-2.2.0:
+  - Update consumerorg.info.yml
+  8.x-2.1.19: null
+  8.x-2.1.18:
+  - Monetisation flow v10.0.0 (#194)
+  8.x-2.1.17: null
+  8.x-2.1.16:
   - twig errors
   - add tests for billing
   - clear cache when change role
-  8.x-3.0.27: null
-  8.x-3.0.26:
+  8.x-2.1.15:
+  - Custom fields v10.0.0 (#189)
+  8.x-2.1.14: null
+  8.x-2.1.13:
   - fix templates mk2
   - fix templates
-  - Get consumerorg metadata before sending custom fields (#188)
   - add hook to allow additional tabs
-  8.x-3.0.25:
+  8.x-2.1.12:
   - restructure the payment method forms to handle different submodules
-  8.x-3.0.24:
+  8.x-2.1.11:
   - missing copyright statements
-  8.x-3.0.23:
+  8.x-2.1.10:
   - field name was too long!
   - wrong field ID
+  8.x-2.1.9:
   - syntax error
   - move the template for billing to the consumerorg module
   - add storage fields for default payment methods
   - add impl for deleting payment methods
-  8.x-3.0.22:
+  8.x-2.1.8:
   - add form for deleting payment methods
-  8.x-3.0.21:
+  8.x-2.1.7:
   - fix up the request schema for creating a payment method
-  8.x-3.0.20:
-  - Store customs (#187)
-  8.x-3.0.19:
+  8.x-2.1.6:
   - add default create payment method impl
-  8.x-3.0.18:
+  8.x-2.1.5:
   - render multi-pass form
-  8.x-3.0.17:
+  8.x-2.1.4:
   - fill out payment methods
-  8.x-3.0.16:
+  8.x-2.1.3:
   - put billing tab in place
-  8.x-3.0.15:
+  8.x-2.1.2:
   - remove Rules support from our code
-  8.x-3.0.14:
-  - payment_method access control
-  8.x-3.0.13:
-  - encrypt payment methods at rest (#185)
-  8.x-3.0.12: null
-  8.x-3.0.11: null
-  8.x-3.0.10:
-  - Paymententity (#184)
-  - update payment method entity (#183)
-  8.x-3.0.9:
-  - Allow multiple groups for a corg (#180)
-  8.x-3.0.8:
-  - Added a method for removing tags (#178)
-  8.x-3.0.7: null
-  8.x-3.0.6:
+  8.x-2.1.1:
+  - Tempmerge (#186)
+  8.x-2.1.0:
+  - update version: 8.x-2.0.26 -> 8.x-2.1.0
+  8.x-2.0.25:
+  - Allow multiple groups for a corg (#181)
+  8.x-2.0.24:
+  - Added a method for removing tags (#178) (#179)
+  8.x-2.0.23:
   - handle captcha not being enabled
   - add upgrade code to add the captchas
-  8.x-3.0.5:
+  8.x-2.0.22:
   - add captcha support into the invitation form tests
-  8.x-3.0.4:
+  8.x-2.0.21:
   - add honeypot and captcha to invite user form
-  8.x-3.0.3:
+  8.x-2.0.20:
   - comment out unreliable test
+  8.x-2.0.19:
   - make captcha optional
   - add honeypot for the resend invitation form
   - add captcha for the resend invitation form
-  8.x-3.0.2:
-  - Accessibility fixes (#176)
-  8.x-3.0.1: null
+  8.x-2.0.18:
+  - Accessibility fixes (#176) (#177)
+  8.x-2.0.17: null
+  8.x-2.0.16: null
+  8.x-2.0.15: null
   8.x-2.0.14:
   - update hook documentation
   - update data passed to delete hooks

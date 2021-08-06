@@ -1,290 +1,222 @@
 changes:
-  8.x-3.1.17:
-  - don't fill the users svg in org members table
-  8.x-3.1.16:
-  - separate out ckeditor icon css
-  8.x-3.1.15:
-  - fix add prod-heading-2 and clipping fix (#213) (#214)
-  8.x-3.1.14:
-  - Tempmerge (#212)
-  8.x-3.1.13:
-  - very small tweaks to buttons on multi-value fields
-  8.x-3.1.12:
-  - plans table polish
-  8.x-3.1.11:
-  - ensure jquery.once loaded for dropit
-  8.x-3.1.10:
-  - fix app and org menu dropdowns
-  8.x-3.1.9:
-  - fix use white background (#210) (#211)
-  8.x-3.1.8:
-  - fix dropit on list pages (#209)
-  8.x-3.1.7:
-  - Add APIC Concepts block
-  8.x-3.1.6:
-  - use "IBM API Developer Portal" instead of API Connect
-  8.x-3.1.5:
-  - feat add classes to support new plans table (#207) (#208)
-  8.x-3.1.4: null
-  8.x-3.1.3:
-  - refine styling of button element
-  8.x-3.1.2: null
-  8.x-3.1.1: null
-  8.x-3.1.0:
-  - update version 8.x-3.0.129 -> 8.x-3.1.0
-  8.x-3.0.128:
+  8.x-2.4.6: null
+  8.x-2.4.5:
+  - apimesh/devportal#6746
+  8.x-2.4.4:
   - fix svg fonts
   - fix IBM Plex font path in theme
-  8.x-3.0.127:
-  - Cherry pick latest styling (#201)
-  8.x-3.0.126:
+  8.x-2.4.3:
   - remove padding on table for sub wizard
-  8.x-3.0.125:
   - style accordions to Carbon X (#198)
-  8.x-3.0.124:
+  8.x-2.4.2:
   - Add drupal core compatibility info
-  8.x-3.0.123:
+  8.x-2.4.1:
   - Copyright statements for 2021
-  8.x-3.0.122:
+  8.x-2.4.0:
+  - update version: 8.x-2.3.8 -> 8.x-2.4.0
+  8.x-2.3.7:
   - default breadcrumb padding
-  8.x-3.0.121:
   - smarten up overflow menu
-  8.x-3.0.120:
-  - ensure the buttons are at the bottom even with no apps
-  8.x-3.0.119: null
-  8.x-3.0.118:
+  - fix new app tile hover in sub wizard
   - support [disabled]
-  8.x-3.0.117:
+  8.x-2.3.6:
+  - ensure the buttons are at the bottom even with no apps
+  8.x-2.3.5:
   - need to wrap text for longer langs
-  8.x-3.0.116:
+  8.x-2.3.4:
   - change focus offset
-  8.x-3.0.115:
+  8.x-2.3.3:
   - dont make section headings links
-  8.x-3.0.114:
+  8.x-2.3.2:
   - Styling for embedded docs in products
-  8.x-3.0.113:
-  - basic styling for forum posts
-  8.x-3.0.112:
-  - remove grey table header for forum list
-  8.x-3.0.111:
-  - styling for blog posts
-  8.x-3.0.110:
-  - styling for comments
-  8.x-3.0.109:
-  - styling for comment filter formats page
-  8.x-3.0.108:
-  - 403/404 error page styling
-  8.x-3.0.107:
-  - Style the nopermission page
-  8.x-3.0.106:
-  - style the maintenance mode page
-  8.x-3.0.105:
-  - Use form-actions class (#196)
-  8.x-3.0.104:
-  - color ratio AVT for forums and wizard
-  8.x-3.0.103:
-  - make sure aria-label is set to something
-  8.x-3.0.102:
-  - add aria-label
-  8.x-3.0.101:
-  - add headers attributes
-  8.x-3.0.100:
-  - use eye icon on password fields
-  8.x-3.0.99:
-  - need password fields to be inline-block
-  8.x-3.0.98:
-  - theming for view_password
-  8.x-3.0.97:
+  8.x-2.3.1: null
+  8.x-2.3.0:
+  - update version: 8.x-2.2.83 -> 8.x-2.3.0
+  8.x-2.2.82:
   - add height restriction to apicCard
-  8.x-3.0.96:
+  8.x-2.2.81:
   - remove background color for collapsible region button
-  8.x-3.0.95:
+  8.x-2.2.80:
   - dialog styling for delete account
-  8.x-3.0.94:
+  8.x-2.2.79:
   - hover colour from dropit menu
-  8.x-3.0.93:
+  8.x-2.2.78:
   - responsiveness fixes
-  8.x-3.0.92:
+  8.x-2.2.77:
   - responsiveness fixes
-  8.x-3.0.91:
+  8.x-2.2.76:
   - text area borders
-  8.x-3.0.90:
+  8.x-2.2.75:
   - sort out the bottom border on search and login menu
-  8.x-3.0.89:
+  8.x-2.2.74:
   - fix navbar active trail
-  8.x-3.0.88:
+  8.x-2.2.73:
   - fix navbar active trail
-  8.x-3.0.87:
+  8.x-2.2.72:
   - svg and label sizes on app subs page
-  8.x-3.0.86:
+  8.x-2.2.71:
   - left align the forgot password link
-  8.x-3.0.85:
+  8.x-2.2.70:
   - make signup spacing correct
-  8.x-3.0.84:
+  8.x-2.2.69:
   - add support for ghost buttons
-  8.x-3.0.83:
+  8.x-2.2.68:
   - add correct hover to nav
-  8.x-3.0.82:
+  8.x-2.2.67:
   - remove explorer ul padding
-  8.x-3.0.81:
+  8.x-2.2.66:
   - add support for ghost buttons
-  8.x-3.0.80:
+  8.x-2.2.65:
   - get rid of strange transition on tabs in explorer
-  8.x-3.0.79:
+  8.x-2.2.64:
   - hack to fix ckeditor
-  8.x-3.0.78:
+  8.x-2.2.63:
   - lock scssphp to 1.1.1
-  8.x-3.0.77:
+  8.x-2.2.62:
   - fix user page tabs styling
-  8.x-3.0.76:
+  8.x-2.2.61:
   - styling the autologout dialog
-  8.x-3.0.75:
+  8.x-2.2.60:
   - tabs for editing content and wysiwyg editor
-  8.x-3.0.74:
+  8.x-2.2.59:
   - new form for app creds
-  8.x-3.0.73:
+  8.x-2.2.58:
   - make tabs look like carbon x
-  8.x-3.0.72:
+  8.x-2.2.57:
   - update theme screenshot
-  8.x-3.0.71:
+  8.x-2.2.56:
   - remove uppercase table headings
-  8.x-3.0.70:
+  8.x-2.2.55:
   - trivial css tweaks for apps subs page
-  8.x-3.0.69:
+  8.x-2.2.54:
   - alignment for user mgmt forms
-  8.x-3.0.68: null
-  8.x-3.0.67:
+  8.x-2.2.53:
   - fix inline notification styling to be carbon x
-  8.x-3.0.66:
-  - fix Carbon hover, focus, active styling
-  8.x-3.0.65:
+  - fix Carbon hover, focus, active styling (#195)
+  8.x-2.2.52:
   - missing page background on user reset
-  8.x-3.0.64:
+  8.x-2.2.51:
   - get started page refresh
-  8.x-3.0.63:
+  8.x-2.2.50:
   - use carbon svg icons for ckeditor
-  8.x-3.0.62:
+  8.x-2.2.49:
   - fix footer color variable
-  8.x-3.0.61:
+  8.x-2.2.48:
   - remove placeholder font-style override
-  8.x-3.0.60:
+  8.x-2.2.47:
   - further styling for wizard headers (#193)
-  8.x-3.0.59:
+  8.x-2.2.46:
   - fix obscure filefox bug
-  8.x-3.0.58:
+  8.x-2.2.45:
   - ckeditor css
-  8.x-3.0.57:
   - ckeditor css
-  8.x-3.0.56:
+  8.x-2.2.44:
   - update subscribe wizard (#192)
-  8.x-3.0.55:
+  8.x-2.2.43:
   - use modal style for delete payment methods
-  8.x-3.0.54:
+  8.x-2.2.42:
   - use modal styling for create payment method
-  8.x-3.0.53:
+  8.x-2.2.41:
   - client id width
-  8.x-3.0.52:
+  8.x-2.2.40:
   - fix card font
-  8.x-3.0.51:
+  8.x-2.2.39:
   - use correct font families
-  8.x-3.0.50:
+  8.x-2.2.38:
   - restyle user account tabs
-  8.x-3.0.49:
+  8.x-2.2.37:
   - remove top margin
-  8.x-3.0.48:
+  8.x-2.2.36:
   - styling for forum link block
-  8.x-3.0.47:
+  8.x-2.2.35:
   - some basic styling for the forum list page
-  8.x-3.0.46:
+  8.x-2.2.34:
   - add sidebar block to forum pages
-  8.x-3.0.45:
+  8.x-2.2.33:
   - card view
-  8.x-3.0.44:
+  8.x-2.2.32:
   - default teaser view
-  8.x-3.0.43:
+  8.x-2.2.31:
   - styling for forum posts
-  8.x-3.0.42:
+  8.x-2.2.30:
   - new spacing for cards in sub view
-  8.x-3.0.41:
+  8.x-2.2.29:
   - sort out local tabs to look carbon x
-  8.x-3.0.40:
+  8.x-2.2.28:
+  - Carbon css for subscribe wizard (#190) (#191)
+  8.x-2.2.27:
   - use carbon X close icon for notifications
-  8.x-3.0.39:
+  8.x-2.2.26:
   - restyle modal-like forms
-  8.x-3.0.38:
-  - Carbon css for subscribe wizard (#190)
-  8.x-3.0.37:
+  8.x-2.2.25:
   - colours for no content text
-  8.x-3.0.36:
+  8.x-2.2.24:
   - ensure dropdown item danger precedence
-  8.x-3.0.35:
+  8.x-2.2.23:
   - restyle all headers to IDE Carbon X
-  8.x-3.0.34:
+  8.x-2.2.22:
   - styling for payment methods
-  8.x-3.0.33:
+  8.x-2.2.21:
   - billing page no payment methods styling
-  8.x-3.0.32:
+  8.x-2.2.20:
   - minor tweak for my org page
-  8.x-3.0.31:
+  8.x-2.2.19:
   - carbon x for register and reset pwd
-  8.x-3.0.30:
+  8.x-2.2.18:
   - carbon x for login panel
-  8.x-3.0.29:
+  8.x-2.2.17:
   - myorg page styling
-  8.x-3.0.28:
-  - Start of css changes for subscription confirmation and summary (#188)
-  8.x-3.0.27:
+  8.x-2.2.16:
   - footer styling
-  8.x-3.0.26:
+  8.x-2.2.15:
   - restyle social block tiles
-  8.x-3.0.25:
+  8.x-2.2.14:
   - danger button borders and delete act
-  8.x-3.0.24:
+  8.x-2.2.13:
   - add secondary and tertiary color vars
-  8.x-3.0.23:
+  8.x-2.2.12:
   - restyle of common components
-  8.x-3.0.22:
+  8.x-2.2.11:
   - restyle progress indicator (#189)
-  8.x-3.0.21:
+  8.x-2.2.10:
   - restyle app card
-  8.x-3.0.20:
+  8.x-2.2.9:
   - restyle api card/tile
-  8.x-3.0.19:
+  8.x-2.2.8:
   - update notification styling
-  8.x-3.0.18:
+  8.x-2.2.7:
   - update views filter (#187)
-  8.x-3.0.17:
+  8.x-2.2.6:
   - restyle product tile/card
-  8.x-3.0.16:
+  8.x-2.2.5:
   - new plex fonts
-  8.x-3.0.15:
+  8.x-2.2.4:
   - new bootstrap
-  8.x-3.0.14:
+  8.x-2.2.3:
   - refine header (#184)
-  8.x-3.0.13: null
-  8.x-3.0.12:
+  8.x-2.2.2:
   - first pass of move to Carbon X (#183)
-  8.x-3.0.11:
+  8.x-2.2.1: null
+  8.x-2.2.0:
+  - Update connect_theme.info.yml
+  8.x-2.1.3: null
+  8.x-2.1.2:
   - add copyright statement
-  8.x-3.0.10:
-  - update default favicon
-  8.x-3.0.9:
-  - Added default type for status messages
-  8.x-3.0.8:
+  8.x-2.1.1:
+  - Tempmerge (#182)
+  8.x-2.1.0:
+  - update version: 8.x-2.0.20 -> 8.x-2.1.0
+  8.x-2.0.19:
+  - Added default type for status messages (#180)
+  8.x-2.0.18:
   - Show checkmark in high contrast mode (#177)
-  8.x-3.0.7:
+  8.x-2.0.17:
   - Fixed accessibility outlines for firefox
-  8.x-3.0.6:
-  - Revert "Merge branch 'v10.0.0'"
-  8.x-3.0.5:
+  - More accessibility fixes
+  - Fixed outline for firefox
+  8.x-2.0.16: null
+  8.x-2.0.15:
   - fix page template twig
-  8.x-3.0.4:
-  - a11y fix
-  8.x-3.0.3:
-  - fix missing id on title
-  8.x-3.0.2:
-  - padding for create button in wizard
-  8.x-3.0.1: null
   8.x-2.0.11:
   - copyright date
   8.x-2.0.10:

@@ -31,16 +31,17 @@ use Drupal\product\Product;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /* Permissions that can be granted */
 
-define('EDIT_ANY_PRODUCT_CONTENT_GRANT', 1);
-define('PUBLIC_PRODUCT_GRANT', 2);
-define('AUTHENTICATED_PRODUCT_GRANT', 3);
-define('SUBSCRIBED_TO_PRODUCT_GRANT', 4);
-define('ORG_PRODUCT_GRANT', 5);
-define('TAG_PRODUCT_GRANT', 6);
-define('HIDDEN_PRODUCT_GRANT', 7);
+const EDIT_ANY_PRODUCT_CONTENT_GRANT = 1;
+const PUBLIC_PRODUCT_GRANT = 2;
+const AUTHENTICATED_PRODUCT_GRANT = 3;
+const SUBSCRIBED_TO_PRODUCT_GRANT = 4;
+const ORG_PRODUCT_GRANT = 5;
+const TAG_PRODUCT_GRANT = 6;
+const HIDDEN_PRODUCT_GRANT = 7;
 
 /* Return the permission strings so that they can be displayed in the ACL log
  *
@@ -318,6 +319,8 @@ WHERE (id.consumerorg_url_value = '" . $orgUrl . "')", [], $options);
  * @param \Drupal\Core\Session\AccountInterface $account
  *
  * @return \Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultForbidden|\Drupal\Core\Access\AccessResultNeutral
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  */
 function product_node_access(NodeInterface $node, $operation, AccountInterface $account) {
   $type = $node->type;
@@ -539,6 +542,11 @@ function product_preprocess_node(&$variables) {
       $variables['unenforcedOnly'] = $enforcedCount === 0;
       $variables['enforcedOnly'] = $enforcedCount === $apiCount;
       if ($variables['view_mode'] === 'full' || $variables['view_mode'] === 'subscribewizard') {
+        $haveAccess = Product::checkAccess($variables['node']);
+        if (!$haveAccess) {
+          throw new AccessDeniedHttpException();
+        }
+
         // pre-process the list of plans in the product
         $planArray = [];
         $productPlans = [];
@@ -724,9 +732,11 @@ function product_check_product_subscribe($node): bool {
                 $returnValue = TRUE;
               }
               elseif ($myOrg['url'] !== NULL && mb_strtolower($visibility['subscribe']['type']) === 'custom') {
-                foreach ($visibility['subscribe']['org_urls'] as $customOrg) {
-                  if ($customOrg === $myOrg['url']) {
-                    $returnValue = TRUE;
+                if (isset($visibility['subscribe']['org_urls'])) {
+                  foreach ($visibility['subscribe']['org_urls'] as $customOrg) {
+                    if ($customOrg === $myOrg['url']) {
+                      $returnValue = TRUE;
+                    }
                   }
                 }
                 if ($returnValue === FALSE) {

@@ -23,6 +23,7 @@ use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\ApimUtils;
+use Drupal\user\Entity\User;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -348,9 +349,19 @@ class PaymentMethodCreateForm extends FormBase {
           'title' => $title,
           'billing_url' => $this->billingUrl,
           'payment_method_type_url' => $integration['url'],
-          'consumer_org_url' => $consumerOrgUrl,
+          'org_url' => $consumerOrgUrl,
           'configuration' => $configuration,
+          'url' => $response->getData()['url'],
+          'updated_at' => $response->getData()['updated_at'],
+          'created_at' => $response->getData()['created_at'],
         ];
+        $current_user = User::load(\Drupal::currentUser()->id());
+        if ($current_user !== NULL && (int)$current_user->id() !== 1) {
+          // we only set the user if we're running as someone other than admin
+          // if running as admin then we're likely doing things on behalf of the admin
+          $paymentMethodObject['created_by'] = $current_user->get('apic_url')->value;
+          $paymentMethodObject['updated_by'] = $current_user->get('apic_url')->value;
+        }
         \Drupal::service('consumerorg.paymentmethod')->createOrUpdate($paymentMethodObject);
         $this->messenger->addMessage(t('Successfully added your payment method'));
       }

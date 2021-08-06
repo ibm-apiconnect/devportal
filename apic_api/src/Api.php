@@ -738,6 +738,8 @@ class Api {
    * @param $node
    *
    * @return bool
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public static function checkAccess($node): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
@@ -752,11 +754,9 @@ class Api {
       $productNodes = Node::loadMultiple($chunk);
       foreach ($productNodes as $productNode) {
         foreach ($productNode->product_apis->getValue() as $arrayValue) {
-          $apis = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-          foreach ($apis as $prodRef) {
-            if ($prodRef['name'] === $node->apic_ref->value) {
-              $found = TRUE;
-            }
+          $api = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+          if (isset($api['name']) && $api['name'] === $node->apic_ref->value) {
+            $found = TRUE;
           }
         }
       }

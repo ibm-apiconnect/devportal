@@ -412,7 +412,7 @@ class UserUtils {
       }
       $perm[$account->id()] = $perms;
     }
-    $return = isset($perm[$account->id()][$string]);
+    $return = in_array($string, array_values($perm[$account->id()]), TRUE);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $return);
     return $return;
   }
