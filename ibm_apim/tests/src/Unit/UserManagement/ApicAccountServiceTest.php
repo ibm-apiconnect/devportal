@@ -29,36 +29,51 @@ use Prophecy\Argument;
  */
 class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
-  protected $prophet;
-
-  /*
-   Dependencies of ApicAccountService.
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
    */
   protected $logger;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\APIMServer|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $mgmtServer;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\ApicUserService|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $userService;
 
+  /**
+   * @var \Drupal\Core\Language\LanguageManager|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $languageManager;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\ApicUserStorage|\Prophecy\Prophecy\ObjectProphecy
+   */
   protected $userStorage;
+
+  /**
+   * @var \Drupal\Core\Messenger\Messenger|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $messenger;
 
   /**
    *
    */
-  protected function setup() {
+  protected function setup(): void {
     parent::setup();
     $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
     $this->mgmtServer = $this->prophet->prophesize(\Drupal\ibm_apim\Service\APIMServer::class);
     $this->userService = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserService::class);
     $this->languageManager = $this->prophet->prophesize(\Drupal\Core\Language\LanguageManager::class);
     $this->userStorage = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserStorage::class);
-    $this->messenger = $this->prophet->prophesize('Drupal\Core\Messenger\Messenger');
+    $this->messenger = $this->prophet->prophesize(\Drupal\Core\Messenger\Messenger::class);
 
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     parent::tearDown();
   }
 
@@ -66,7 +81,7 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
    * @return ApicAccountService
    */
   protected function createAccountService(): ApicAccountService {
-    $userManager = new ApicAccountService(
+    return new ApicAccountService(
       $this->logger->reveal(),
       $this->mgmtServer->reveal(),
       $this->userService->reveal(),
@@ -74,11 +89,14 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
       $this->userStorage->reveal(),
       $this->messenger->reveal()
     );
-    return $userManager;
   }
 
 
   // register tests
+
+  /**
+   * @throws \Exception
+   */
   public function testRegisterAndre(): void {
 
     $user = $this->createUser();
@@ -97,6 +115,9 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
   }
 
+  /**
+   * @throws \Exception
+   */
   public function testRegisterAndreAlreadyExists(): void {
 
     $user = $this->createUser();
@@ -115,6 +136,9 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
   }
 
+  /**
+   * @throws \Exception
+   */
   public function testRegisterAndreNoUsername(): void {
 
     $user = new ApicUser();
@@ -134,6 +158,9 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
   }
 
+  /**
+   * @throws \Exception
+   */
   public function testRegisterAndreNoRegistryUrl(): void {
 
     $user = new ApicUser();
@@ -154,6 +181,13 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
   }
 
   // edit profile tests
+
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Exception
+   */
   public function testEditUser(): void {
 
     $user = $this->createUser();
@@ -175,6 +209,12 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
   }
 
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Exception
+   */
   public function testEditUserWithNoEmailAddress(): void {
 
     $user = $this->createUser();
@@ -196,6 +236,12 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
   }
 
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   * @throws \Exception
+   */
   public function testEditUserWithUpdatedEmailAddress(): void {
 
     $user = $this->createUser();
@@ -220,6 +266,9 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
   }
 
 
+  /**
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   */
   public function testBadManagementNodeResponse(): void {
 
     $user = $this->createUser();
@@ -240,6 +289,9 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
   }
 
+  /**
+   * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
+   */
   public function testBadExternalAuthLoad(): void {
 
     $user = $this->createUser();
@@ -254,6 +306,10 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
   }
 
   // Helper functions:
+
+  /**
+   * @return \Drupal\ibm_apim\ApicType\ApicUser
+   */
   private function createUser(): ApicUser {
     $user = new ApicUser();
 
@@ -270,6 +326,9 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
   }
 
+  /**
+   * @return \Drupal\ibm_apim\Rest\MeResponse
+   */
   private function createMeResponse(): MeResponse {
     $meResponse = new MeResponse();
     $meResponse->setCode(200);

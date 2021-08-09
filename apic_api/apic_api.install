@@ -384,7 +384,7 @@ function apic_api_update_8116() {
   }
 
   $view_id = 'product_content';
-  $view_storage = \Drupal::service('entity.manager')->getStorage('view');
+  $view_storage = \Drupal::service('entity_type.manager')->getStorage('view');
   if ($view_storage->load($view_id) === NULL) {
     $vitems = [
       'id' => 'product_content',
@@ -899,6 +899,40 @@ function apic_api_update_8119() {
   if ($embeddedFormDisplay !== NULL) {
     $embeddedFormDisplay->setComponent('apic_pathalias', $fieldValues);
     $embeddedFormDisplay->save();
+  }
+}
+
+/**
+ * Fix view sort
+ */
+function apic_api_update_8120() {
+  // update product_content to use ID based sort
+  $view = Views::getView('product_content');
+  if ($view !== NULL) {
+    $sorts = $view->getDisplay()->getOption('sorts');
+    if (($sorts !== NULL) && isset($sorts['created'])) {
+      unset($sorts['created']);
+    }
+    if (($sorts !== NULL) && !isset($sorts['nid'])) {
+      $sorts['nid'] = [
+        'id' => 'nid',
+        'table' => 'node_field_data',
+        'field' => 'nid',
+        'relationship' => 'none',
+        'group_type' => 'group',
+        'admin_label' => '',
+        'order' => 'DESC',
+        'exposed' => FALSE,
+        'expose' => [
+          'label' => '',
+        ],
+        'entity_type' => 'node',
+        'entity_field' => 'nid',
+        'plugin_id' => 'standard',
+      ];
+    }
+    $view->getDisplay()->setOption('sorts', $sorts);
+    $view->save();
   }
 }
 

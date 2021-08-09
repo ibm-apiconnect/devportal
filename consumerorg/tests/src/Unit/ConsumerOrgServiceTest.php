@@ -78,7 +78,7 @@ class ConsumerOrgServiceTest extends UnitTestCase {
 
   protected $userService;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->logger = $this->prophet->prophesize(LoggerInterface::class);
 
@@ -104,7 +104,7 @@ class ConsumerOrgServiceTest extends UnitTestCase {
 
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 

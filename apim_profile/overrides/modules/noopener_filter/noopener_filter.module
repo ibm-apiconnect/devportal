@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Noopener Filter module.
+ */
+
+/**
+ * Implements hook_link_alter().
+ */
+function noopener_filter_link_alter(&$variables) {
+  if (!(bool)\Drupal::config('noopener_filter.settings')->get('filter_links')) {
+    return;
+  }
+
+  if (!empty($variables['options']['attributes']['target']) && $variables['options']['attributes']['target'] === '_blank') {
+    if (empty($variables['options']['attributes']['rel']) || !in_array('noopener', $variables['options']['attributes']['rel'], TRUE)) {
+      $variables['options']['attributes']['rel'][] = 'noopener';
+    }
+  }
+}

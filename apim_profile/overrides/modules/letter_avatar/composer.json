@@ -1,0 +1,19 @@
+{
+  "name": "drupal/letter_avatar",
+  "description": "Integration with Letter Avatar generator",
+  "type": "drupal-module",
+  "homepage": "http://drupal.org/project/letter_avatar",
+  "authors": [
+    {
+      "name": "Daniel Phin",
+      "email": "pro@danielph.in",
+      "homepage": "http://danielph.in",
+      "role": "Maintainer"
+    }
+  ],
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
+  "require": {
+    "tequilarapido/letter-avatar": "~1.0"
+  }
+}

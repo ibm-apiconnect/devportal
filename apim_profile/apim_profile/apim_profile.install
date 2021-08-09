@@ -45,7 +45,6 @@ function apim_profile_install() {
   $core_dependencies = [
     'node',
     'history',
-    'entity_reference',
     'block',
     'dynamic_page_cache',
     'page_cache',
@@ -249,7 +248,10 @@ function apim_profile_install() {
     $theme_installer->install([$theme]);
   }
   // set connect_theme to be default
-  \Drupal::service('theme_handler')->setDefault('connect_theme');
+  \Drupal::configFactory()
+  ->getEditable('system.theme')
+  ->set('default', 'connect_theme')
+  ->save();
 
   \Drupal::configFactory()
     ->getEditable('node.settings')
@@ -257,7 +259,7 @@ function apim_profile_install() {
     ->save();
 
   // Ensure the translation fields are created in the database.
-  \Drupal::service('entity.definition_update_manager')->applyUpdates();
+  \Drupal::service('ibm_apim.apic_definition_update_manager')->applyUpdates();
 
   // Enable default permissions for system roles.
   user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, [
@@ -1243,7 +1245,7 @@ function apim_profile_update_8017() {
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apim_profile_update_8018() {
-  \Drupal::service('entity.definition_update_manager')->applyUpdates();
+  \Drupal::service('ibm_apim.apic_definition_update_manager')->applyUpdates();
 
   $categoriesBlock = Block::load('tags');
   if ($categoriesBlock !== NULL) {
@@ -1393,38 +1395,36 @@ function apim_profile_update_8025() {
     $page = \Drupal::entityTypeManager()->getStorage('page')->load('welcome');
     if ($page !== NULL) {
       $variants_array = $page->getVariants();
-      $variant = reset($variants_array);
-      $content = $variant->calculateDependencies()['content'];
-      $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
-      module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
+      if ($variants_array !== NULL && !empty($variants_array)) {
+        $variant = reset($variants_array);
+        $content = $variant->calculateDependencies()['content'];
+        $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
+        module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
 
-      foreach ($content as $block_content_id) {
-        // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
-        // we just need the uuid from this.
-        $raw_block_content_id = explode(':', $block_content_id)[2];
+        foreach ($content as $block_content_id) {
+          // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
+          // we just need the uuid from this.
+          $raw_block_content_id = explode(':', $block_content_id)[2];
 
-        $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
-        $block_content = reset($block_content_array);
+          $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
+          $block_content = reset($block_content_array);
 
-        if ($block_content !== NULL) {
-          // we have to match on the label of the block as we don't have anything else
-          $label = $block_content->get('info')->value;
-          switch ($label) {
-            case 'Go Ahead [en]':
-              add_go_ahead_block_content_translations($block_content);
-              break;
-            case 'Get Help [en]':
-              add_get_help_block_content_translations($block_content);
-              break;
-            case 'Getting Started [en]':
-              add_getting_started_block_content_translations($block_content);
-              break;
-            case 'Welcome Banner [en]':
-              add_welcome_block_translations($block_content);
-              break;
+          if ($block_content !== NULL && $block_content !== FALSE) {
+            // we have to match on the label of the block as we don't have anything else
+            $label = $block_content->get('info')->value;
+            switch ($label) {
+              case 'Get Help [en]':
+                add_get_help_block_content_translations($block_content);
+                break;
+              case 'Getting Started [en]':
+                add_getting_started_block_content_translations($block_content);
+                break;
+              case 'Welcome Banner [en]':
+                add_welcome_block_translations($block_content);
+                break;
+            }
           }
         }
-
       }
     }
   }
@@ -1550,6 +1550,41 @@ function apim_profile_update_8031() {
     $module_installer = \Drupal::service('module_installer');
     $module_installer->uninstall(['flood_unblock']);
     \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  }
+}
+
+/**
+ * work around bug in image_captcha upgrade that leaves the fonts not set
+ */
+function apim_profile_update_8032() {
+  $image_captcha_fonts_preview_map_cache = \Drupal::config('image_captcha.settings')->get('image_captcha_fonts_preview_map_cache');
+  if (!isset($image_captcha_fonts_preview_map_cache) || empty($image_captcha_fonts_preview_map_cache)) {
+    $image_captcha_fonts_preview_map_cache = [
+      'ced5d84285b76ebcaa40beb0b5c0efc54aca6a6d347da73638673906d5cda331' => [
+        'uri' => 'modules/captcha/image_captcha/fonts/Tuffy/Tuffy_Bold.ttf',
+        'filename' => 'Tuffy_Bold.ttf',
+        'name' => 'Tuffy_Bold',
+      ],
+      '3438abc85ac58eaab01cd741b1c3f9bb5dd3b9be3c079b1a7851884135608b2f' => [
+        'uri' => 'modules/captcha/image_captcha/fonts/Tuffy/Tuffy.ttf',
+        'filename' => 'Tuffy.ttf',
+        'name' => 'Tuffy',
+      ],
+      '984e950858126332ff4905c76efeb723ee1aa185c07f80537ce57c26be1cc0c5' => [
+        'uri' => 'modules/captcha/image_captcha/fonts/Tesox/tesox.ttf',
+        'filename' => 'tesox.ttf',
+        'name' => 'tesox',
+      ],
+    ];
+    $image_captcha_fonts = [
+      '3438abc85ac58eaab01cd741b1c3f9bb5dd3b9be3c079b1a7851884135608b2f' => '3438abc85ac58eaab01cd741b1c3f9bb5dd3b9be3c079b1a7851884135608b2f',
+      '984e950858126332ff4905c76efeb723ee1aa185c07f80537ce57c26be1cc0c5' => '984e950858126332ff4905c76efeb723ee1aa185c07f80537ce57c26be1cc0c5',
+    ];
+    \Drupal::service('config.factory')
+      ->getEditable('image_captcha.settings')
+      ->set('image_captcha_fonts_preview_map_cache', $image_captcha_fonts_preview_map_cache)
+      ->set('image_captcha_fonts', $image_captcha_fonts)
+      ->save(TRUE);
   }
 }
 

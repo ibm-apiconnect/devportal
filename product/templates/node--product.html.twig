@@ -245,10 +245,10 @@
                       {% endfor %}
                     </tr>
                     </thead>
-                    <tbody class="apicPlansTableBody">
+                    <tbody class="apicPlansTableBody hidden">
                     {% if apiList is defined and apiList is not empty %}
                     {% for api in apiList %}
-                      <tr class="api-{% if loop.index is divisibleby(2) %}even{% else %}odd{% endif %}">
+                      <tr class="api-{% if loop.index is divisible by(2) %}even{% else %}odd{% endif %}">
                         <th class="apicFixedColumn">
                           <div class="apicApiCell">
                             <div class="apicTwistieTitle">
@@ -280,7 +280,7 @@
                           </td>
                         {% endfor %}
                       </tr>
-                      <tr class="apicTwistieRow api-{% if loop.index is divisibleby(2) %}even{% else %}odd{% endif %}">
+                      <tr class="apicTwistieRow api-{% if loop.index is divisible by(2) %}even{% else %}odd{% endif %}">
                         <th class="apicFixedColumn">
                           {% for pathSegment, path in api.swagger.paths %}
                             {% for verb, operation in path %}
@@ -344,7 +344,7 @@
                       </td>
                     {% endfor %}
                     </tr>
-                    <tr class="apicTwistieRow api-{% if loop.index is divisibleby(2) %}even{% else %}odd{% endif %}">
+                    <tr class="apicTwistieRow api-{% if loop.index is divisible by(2) %}even{% else %}odd{% endif %}">
                       <th class="apicFixedColumn">
                         {% for pathSegment, path in api.swagger.paths %}
                           {% for verb, operation in path %}

@@ -26,18 +26,37 @@ use Prophecy\Argument;
 
 class ApicUserStorageTest extends AuthApicTestBaseClass {
 
-  /*
-   Dependencies of ApicUserStorage
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\Prophecy\Prophecy\ObjectProphecy 
    */
   private $entityTypeManager;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\UserRegistryService|\Prophecy\Prophecy\ObjectProphecy 
+   */
   private $registryService;
+
+  /**
+   * @var \Drupal\ibm_apim\Service\ApicUserService|\Prophecy\Prophecy\ObjectProphecy 
+   */
   private $userService;
+
+  /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface 
+   */
   private $logger;
 
+  /**
+   * @var \Drupal\Core\Entity\EntityStorageInterface|\Prophecy\Prophecy\ObjectProphecy 
+   */
   private $userStorage;
 
 
-  protected function setup() {
+  /**
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  protected function setup(): void {
     parent::setup();
 
     $this->registryService = $this->prophet->prophesize(UserRegistryService::class);
@@ -50,12 +69,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $this->entityTypeManager->getStorage('user')->willReturn($this->userStorage->reveal());
   }
 
-  protected function tearDown() {
-    parent::tearDown();
-  }
-
   // register() tests
-  public function testRegisterNewUser() {
+  public function testRegisterNewUser(): void {
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
@@ -85,15 +100,13 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $account = $service->register($user);
 
-    $this->assertNotNull($account);
+    self::assertNotNull($account);
 
   }
 
-  /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage User could not be registered. There is already an account with username "andre"
-   */
-  public function testRegisterWithExistingUser() {
+  public function testRegisterWithExistingUser(): void {
+    $this->expectExceptionMessage("User could not be registered. There is already an account with username \"andre\"");
+    $this->expectException(\Exception::class);
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
@@ -115,11 +128,9 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service->register($user);
   }
 
-    /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage User could not be registered. There is already an account with email "andre@example.com"
-   */
-  public function testRegisterWithExistingEmail() {
+  public function testRegisterWithExistingEmail(): void {
+    $this->expectExceptionMessage("User could not be registered. There is already an account with email \"andre@example.com\"");
+    $this->expectException(\Exception::class);
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
@@ -141,11 +152,9 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service->register($user);
   }
 
-  /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage User could not be registered both a username and registry_url are required.
-   */
-  public function testRegisterWithNoUserName() {
+  public function testRegisterWithNoUserName(): void {
+    $this->expectExceptionMessage("User could not be registered both a username and registry_url are required.");
+    $this->expectException(\Exception::class);
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
@@ -159,11 +168,9 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service->register($user);
   }
 
-  /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage User could not be registered both a username and registry_url are required.
-   */
-  public function testRegisterWithNoRegistryUrl() {
+  public function testRegisterWithNoRegistryUrl(): void {
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("User could not be registered both a username and registry_url are required.");
 
     $user = new ApicUser();
     $user->setUsername('andre');
@@ -178,7 +185,7 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
   }
 
   // load() tests
-  public function testLoadValid() {
+  public function testLoadValid(): void {
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
@@ -201,15 +208,13 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->load($user);
 
-    $this->assertNotNull($user);
+    self::assertNotNull($user);
 
   }
 
-  /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage Multiple users (2) returned matching username "andre" in registry_url "/reg/url"
-   */
-  public function testLoadFailMultiple() {
+  public function testLoadFailMultiple(): void {
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Multiple users (2) returned matching username \"andre\" in registry_url \"/reg/url\"");
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
@@ -231,10 +236,12 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
       $this->logger->reveal());
 
     $service->load($user);
-
   }
 
-  public function testLoadNone() {
+  /**
+   * @throws \Exception
+   */
+  public function testLoadNone(): void {
 
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
@@ -257,15 +264,13 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->load($user);
 
-    $this->assertNull($user);
+    self::assertNull($user);
 
   }
 
-  /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage Registry url is missing, unable to load user.
-   */
-  public function testLoadNoRegistryUrl() {
+  public function testLoadNoRegistryUrl(): void {
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Registry url is missing, unable to load user.");
 
     $user = new ApicUser();
     $user->setUsername('andre');
@@ -276,11 +281,14 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
                                    $this->logger->reveal());
 
     $service->load($user);
-
   }
 
   // loadByUsername tests
-  public function testLoadByUsernameValid() {
+
+  /**
+   * @throws \Exception
+   */
+  public function testLoadByUsernameValid(): void {
 
     $this->userStorage->loadByProperties([
       'name' => 'andre'
@@ -298,14 +306,12 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->loadByUsername('andre');
 
-    $this->assertNotNull($user);
+    self::assertNotNull($user);
   }
 
-  /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage Multiple users (2) returned matching username "andre" unable to continue.
-   */
-  public function testLoadByUsernameFailMultiple() {
+  public function testLoadByUsernameFailMultiple(): void {
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Multiple users (2) returned matching username \"andre\" unable to continue.");
 
     $this->userStorage->loadByProperties([
       'name' => 'andre'
@@ -321,10 +327,12 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
       $this->logger->reveal());
 
     $service->loadByUsername('andre');
-
   }
 
-  public function testLoadByUsernameNoResults() {
+  /**
+   * @throws \Exception
+   */
+  public function testLoadByUsernameNoResults(): void {
 
     $this->userStorage->loadByProperties([
       'name' => 'andre'
@@ -342,11 +350,15 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->loadByUsername('andre');
 
-    $this->assertNull($user);
+    self::assertNull($user);
   }
 
   // loadByEmailAddress() tests
-  public function testLoadByEmailAddressValid() {
+
+  /**
+   * @throws \Exception
+   */
+  public function testLoadByEmailAddressValid(): void {
 
     $this->userStorage->loadByProperties([
       'mail' => 'andre@example.com'
@@ -364,14 +376,12 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->loadUserByEmailAddress('andre@example.com');
 
-    $this->assertNotNull($user);
+    self::assertNotNull($user);
   }
 
-  /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage Multiple users (2) returned matching email "andre@example.com" unable to continue.
-   */
-  public function testLoadByEmailAddressFailMultiple() {
+  public function testLoadByEmailAddressFailMultiple(): void {
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Multiple users (2) returned matching email \"andre@example.com\" unable to continue.");
 
     $this->userStorage->loadByProperties([
       'mail' => 'andre@example.com'
@@ -387,10 +397,12 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
       $this->logger->reveal());
 
     $service->loadUserByEmailAddress('andre@example.com');
-
   }
 
-  public function testLoadByEmailAddressNoResults() {
+  /**
+   * @throws \Exception
+   */
+  public function testLoadByEmailAddressNoResults(): void {
 
     $this->userStorage->loadByProperties([
       'mail' => 'andre@example.com'
@@ -408,11 +420,15 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->loadUserByEmailAddress('andre@example.com');
 
-    $this->assertNull($user);
+    self::assertNull($user);
   }
 
   // loadUserByUrl tests
-  public function testLoadUserByUrlValid() {
+
+  /**
+   * @throws \Exception
+   */
+  public function testLoadUserByUrlValid(): void {
 
     $this->userStorage->loadByProperties([
       'apic_url' => '/abc/1234'
@@ -430,14 +446,12 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->loadUserByUrl('/abc/1234');
 
-    $this->assertNotNull($user);
+    self::assertNotNull($user);
   }
 
-  /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage Multiple users (2) with url "/abc/1234" unable to continue.
-   */
-  public function testLoadUserByUrlFailMultiple() {
+  public function testLoadUserByUrlFailMultiple(): void {
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Multiple users (2) with url \"/abc/1234\" unable to continue.");
 
     $this->userStorage->loadByProperties([
       'apic_url' => '/abc/1234'
@@ -456,7 +470,10 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
   }
 
-  public function testLoadUserByUrlNoResults() {
+  /**
+   * @throws \Exception
+   */
+  public function testLoadUserByUrlNoResults(): void {
 
     $this->userStorage->loadByProperties([
       'apic_url' => '/abc/1234'
@@ -474,7 +491,7 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
 
     $user = $service->loadUserByUrl('/abc/1234');
 
-    $this->assertNull($user);
+    self::assertNull($user);
   }
 
 

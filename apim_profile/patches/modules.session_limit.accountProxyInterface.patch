@@ -1,6 +1,6 @@
 --- modules/session_limit/src/Services/SessionLimit.php	2019-10-30 14:32:31.000000000 +0000
 +++ modules/session_limit/src/Services/SessionLimit.php	2019-10-30 14:33:31.000000000 +0000
-@@ -13,7 +13,7 @@
+@@ -15,7 +15,7 @@
  use Symfony\Component\HttpKernel\KernelEvents;
  use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  use Drupal\Core\Database\Connection;
@@ -9,7 +9,7 @@
  use Drupal\Core\Session\SessionManager;
  use Drupal\Core\Extension\ModuleHandler;
  use Drupal\Core\Config\ConfigFactory;
-@@ -96,7 +96,7 @@
+@@ -105,7 +105,7 @@
     *   The event dispatcher service.
     * @param RouteMatchInterface $routeMatch
     *   The Route.
@@ -18,12 +18,12 @@
     *   The current user.
     * @param SessionManager $sessionManager
     *   Session manager.
-@@ -105,7 +105,7 @@
-    * @param ConfigFactory $configFactory
-    *   Config factory.
+@@ -116,7 +116,7 @@
+    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+    *   The messenger.
     */
--  public function __construct(Connection $database, EventDispatcherInterface $eventDispatcher, RouteMatchInterface $routeMatch, AccountProxy $currentUser, SessionManager $sessionManager, ModuleHandler $moduleHandler, ConfigFactory $configFactory) {
-+  public function __construct(Connection $database, EventDispatcherInterface $eventDispatcher, RouteMatchInterface $routeMatch, AccountProxyInterface $currentUser, SessionManager $sessionManager, ModuleHandler $moduleHandler, ConfigFactory $configFactory) {
+-  public function __construct(Connection $database, EventDispatcherInterface $eventDispatcher, RouteMatchInterface $routeMatch, AccountProxy $currentUser, SessionManager $sessionManager, ModuleHandler $moduleHandler, ConfigFactory $configFactory, MessengerInterface $messenger) {
++  public function __construct(Connection $database, EventDispatcherInterface $eventDispatcher, RouteMatchInterface $routeMatch, AccountProxyInterface $currentUser, SessionManager $sessionManager, ModuleHandler $moduleHandler, ConfigFactory $configFactory, MessengerInterface $messenger) {
      $this->routeMatch = $routeMatch;
      $this->database = $database;
      $this->eventDispatcher = $eventDispatcher;

@@ -37,7 +37,7 @@ class OidcStateServiceTest extends UnitTestCase {
   protected $session;
   protected $time;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->state = $this->prophet->prophesize('Drupal\Core\State\StateInterface');
     $this->logger = $this->prophet->prophesize('Psr\Log\LoggerInterface');
@@ -47,14 +47,14 @@ class OidcStateServiceTest extends UnitTestCase {
     $this->time = $this->prophet->prophesize('Drupal\Component\Datetime\Time');
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
   /**
    * store($data) tests
    */
-  public function testStoreValid() {
+  public function testStoreValid(): void {
 
     $data = array('registry_url' => '/registry/url');
     $key = '12345678:/registry/url:testsession123';
@@ -94,7 +94,7 @@ class OidcStateServiceTest extends UnitTestCase {
   /**
    * get(string $key) tests
    */
-  public function testGetValid() {
+  public function testGetValid(): void {
     $encrypted_key = 'ENCRYPTED_KEY';
     $encrypted_data = 'ENCRYPTED_DATA';
     $initial_state = array('one' => $encrypted_data);
@@ -122,7 +122,7 @@ class OidcStateServiceTest extends UnitTestCase {
   /**
    * delete(string $key) tests
    */
-  public function testDeleteValid() {
+  public function testDeleteValid(): void {
     $encrypted_key = 'ENCRYPTED_KEY';
     $initial_state = array('one' => 'encrypted_data');
     $updated_state = array();
@@ -152,7 +152,7 @@ class OidcStateServiceTest extends UnitTestCase {
   /**
    * prune() tests
    */
-  public function testPruneValid() {
+  public function testPruneValid(): void {
     $initial_state = array('one' => 'encrypted_data', 'two' => 'more_encrypted_data');
     $updated_state = array('two' => 'more_encrypted_data');
     $data1 = array('registry_url' => '/user/reg1', 'created' => 1);

@@ -381,7 +381,7 @@ function ibm_apim_preprocess_html(&$variables) {
   }
 
   $currentPath = \Drupal::service('path.current')->getPath();
-  $currentPathAlias = \Drupal::service('path.alias_manager')->getAliasByPath($currentPath);
+  $currentPathAlias = \Drupal::service('path_alias.manager')->getAliasByPath($currentPath);
   $variables['current_path'] = $currentPathAlias;
   $variables['attributes']['class'][] = Html::cleanCssIdentifier('context-' . $currentPathAlias);
   // add user registry type to body
@@ -736,6 +736,20 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         '#markup' => '<p>' . t('This functionality will be available in a future release of the IBM API Connect command line client.') . '</p>',
         '#weight' => 50,
       ];
+      break;
+    case 'ban_ip_form':
+      $ipBanEnabled = (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true);
+      if (!$ipBanEnabled) {
+        \Drupal::messenger()->addWarning(t('IP based security is currently disabled for this portal service so IP address bans will not work.'));
+      }
+      break;
+    case 'restrict_by_ip_general_settings':
+    case 'restrict_by_ip_login_settings':
+    case 'restrict_by_ip_role_settings':
+      $ipBanEnabled = (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true);
+      if (!$ipBanEnabled) {
+        \Drupal::messenger()->addWarning(t('IP based security is currently disabled for this portal service so IP based restrictions will not work.'));
+      }
       break;
   }
 
@@ -1285,13 +1299,15 @@ function ibm_apim_language_switch_links_alter(&$links, $type, $path) {
     // check whether the q query parameter is superfluous, if it is just drop it.
     // NOTE, when it is just a lang code this is side effect of running url negotiation via the language switcher running with nginx.
 
-    $is_currentpath = $link['query']['q'] === ltrim($pathUrl, '/');
-    $is_empty = $link['query']['q'] === '';
-    $is_lang_prefix =  preg_match('@^[a-zA-Z-]+' . $pathUrl . '@', $link['query']['q']);
-    $is_langcode = array_key_exists($link['query']['q'], $languages);
+    if (isset($link['query']['q'])) {
+      $is_currentpath = $link['query']['q'] === ltrim($pathUrl, '/');
+      $is_empty = $link['query']['q'] === '';
+      $is_lang_prefix =  preg_match('@^[a-zA-Z-]+' . $pathUrl . '@', $link['query']['q']);
+      $is_langcode = array_key_exists($link['query']['q'], $languages);
 
-    if (isset($link['query']['q']) && ($is_currentpath || $is_empty || $is_lang_prefix || $is_langcode)) {
-      unset($link['query']['q']);
+      if ($is_currentpath || $is_empty || $is_lang_prefix || $is_langcode) {
+        unset($link['query']['q']);
+      }
     }
   }
   // needed to prevent weird side effects since by reference above

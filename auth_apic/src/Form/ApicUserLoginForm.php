@@ -95,9 +95,16 @@ class ApicUserLoginForm extends UserLoginForm {
   protected $invitationService;
   
   /**
+   * @var \Drupal\Core\Flood\FloodInterface
+   */
+  protected $flood;
+
+  /**
    * @var \Drupal\Core\Messenger\Messenger
    */
   protected $messenger;
+
+  protected $chosen_registry;
 
   /**
    * Constructs a new UserLoginForm.
@@ -121,6 +128,7 @@ class ApicUserLoginForm extends UserLoginForm {
                               ApicInvitationInterface $invitation_service,
                               Messenger $messenger) {
     parent::__construct($flood, $user_storage, $user_auth, $renderer);
+    $this->flood = $flood;
     $this->logger = $logger;
     $this->accountService = $account_service;
     $this->userRegistryService = $user_registry_service;
@@ -201,7 +209,7 @@ class ApicUserLoginForm extends UserLoginForm {
     // work out what user registries are enabled on this catalog
     $registries = $this->userRegistryService->getAll();
 
-    $chosen_registry = $this->userRegistryService->getDefaultRegistry();
+    $this->chosen_registry = $this->userRegistryService->getDefaultRegistry();
     $chosen_registry_url = \Drupal::request()->query->get('registry_url');
     $hide_admin_registry = (bool) $this->ibmSettingsConfig->get('hide_admin_registry');
 
@@ -216,22 +224,37 @@ class ApicUserLoginForm extends UserLoginForm {
       return $baseForm;
     }
 
-    if (!empty($chosen_registry_url) && array_key_exists($chosen_registry_url, $registries) && ($this->apimUtils->sanitizeRegistryUrl($chosen_registry_url) === 1 || $chosen_registry_url === $this->userRegistryService->getAdminRegistryUrl())) {
-      $chosen_registry = $registries[$chosen_registry_url];
+    if (!empty($chosen_registry_url) && array_key_exists($chosen_registry_url, $registries) && ($chosen_registry_url === $this->userRegistryService->getAdminRegistryUrl() || $this->apimUtils->sanitizeRegistryUrl($chosen_registry_url) === 1)) {
+      $this->chosen_registry = $registries[$chosen_registry_url];
+    }
+  
+    if ($this->chosen_registry !== NULL) {
+      $chosenRegistryURL = $this->chosen_registry->getUrl();
+      $chosenRegistryTitle = $this->chosen_registry->getTitle();
+    } else {
+      // if no UR then fallback on using the admin UR (only an issue if we didnt get a UR from APIM)
+      $this->chosen_registry = $registries[$this->userRegistryService->getAdminRegistryUrl()];
+      if ($this->chosen_registry !== NULL) {
+        $chosenRegistryURL = $this->chosen_registry->getUrl();
+        $chosenRegistryTitle = $this->chosen_registry->getTitle();
+      } else {
+        $chosenRegistryURL = 'error';
+        $chosenRegistryTitle = 'ERROR';
+      }
     }
 
     // store registry_url for validate/submit
     $form['registry_url'] = [
       '#type' => 'hidden',
-      '#value' => $chosen_registry->getUrl(),
+      '#value' => $chosenRegistryURL,
     ];
 
     // store registry_url for template
-    $form['#registry_url']['registry_url'] = $chosen_registry->getUrl();
+    $form['#registry_url']['registry_url'] = $chosenRegistryURL;
 
 
     if (sizeof($registries) > 1) {
-      $other_registries = array_diff_key($registries, [$chosen_registry->getUrl() => $chosen_registry]);
+      $other_registries = array_diff_key($registries, [$chosenRegistryURL => $this->chosen_registry]);
     }
 
     // build the form
@@ -245,7 +268,7 @@ class ApicUserLoginForm extends UserLoginForm {
     $form['headers_container']['signin_label'] = [
       '#type' => 'html_tag',
       '#tag' => 'div',
-      '#value' => t('Sign in with @registryName', ['@registryName' => $chosen_registry->getTitle()]),
+      '#value' => t('Sign in with @registryName', ['@registryName' => $chosenRegistryTitle]),
       '#attributes' => ['class' => ['apic-user-form-subheader']],
       '#weight' => -1000,
     ];
@@ -273,25 +296,25 @@ class ApicUserLoginForm extends UserLoginForm {
     $baseForm['#prefix'] = '<div class="apic-user-form-inner-wrapper">';
     $baseForm['#suffix'] = '</div>';
 
-    if ($chosen_registry->getRegistryType() === 'oidc') {
+    if ($this->chosen_registry !== NULL && $this->chosen_registry->getRegistryType() === 'oidc') {
       // for oidc we don't need to present a username/ password + submit form... just a button.
 
-      $oidc_info = $this->oidcService->getOidcMetadata($chosen_registry, $jwt);
+      $oidc_info = $this->oidcService->getOidcMetadata($this->chosen_registry, $jwt);
       $button = [
         '#type' => 'html_tag',
         '#tag' => 'span',
         '#attributes' => [
           'class' => [
             'apic-user-registry-button',
-            'apic-user-registry-' . $chosen_registry->getRegistryType(),
+            'apic-user-registry-' . $this->chosen_registry->getRegistryType(),
           ],
         ],
-        '#name' => $chosen_registry->getName(),
-        '#url' => $chosen_registry->getUrl(),
+        '#name' => $this->chosen_registry->getName(),
+        '#url' => $this->chosen_registry->getUrl(),
         '#limit_validation_errors' => [],
-        '#prefix' => '<a class="chosen-registry-button registry-button generic-button button" href="' . $oidc_info['az_url'] . '" title="' . $this->t('Sign in using @ur', ['@ur' => $chosen_registry->getTitle()]) . '">' .
+        '#prefix' => '<a class="chosen-registry-button registry-button generic-button button" href="' . $oidc_info['az_url'] . '" title="' . $this->t('Sign in using @ur', ['@ur' => $this->chosen_registry->getTitle()]) . '">' .
           $oidc_info['image'] .
-          '<span class="registry-name">' . $chosen_registry->getTitle() . '</span>
+          '<span class="registry-name">' . $this->chosen_registry->getTitle() . '</span>
                       </a>',
 
       ];
@@ -309,7 +332,7 @@ class ApicUserLoginForm extends UserLoginForm {
       $baseForm['pass']['#required'] = FALSE;
       $baseForm['pass']['#attributes'] = ['autocomplete' => 'off'];
 
-      if ($chosen_registry->getUrl() === $this->userRegistryService->getAdminRegistryUrl()) {
+      if ($chosenRegistryURL === $this->userRegistryService->getAdminRegistryUrl()) {
         $baseForm['actions']['submit']['#value'] = t('Sign in');
         unset($baseForm['actions']['submit']['#icon']);
       }
@@ -469,7 +492,7 @@ class ApicUserLoginForm extends UserLoginForm {
 
       $admin = $this->userStorage->load(1);
       // special case the admin user and log in via standard drupal mechanism.
-      if ($admin !== NULL && $name === $admin->getUsername()) {
+      if ($admin !== NULL && $name === $admin->getAccountName()) {
 
         if ($jwt !== NULL) {
           $this->messenger->addError(t('admin user is not allowed when signing in an invited user.'));

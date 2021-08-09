@@ -1,4 +1,33 @@
 changes:
+  8.x-1.8.14:
+  - fix rendering if api plans table
+  8.x-1.8.13:
+  - need to do ACL checks on /product/x/api/Y
+  8.x-1.8.12:
+  - fix custom group product acl checks
+  8.x-1.8.11:
+  - fix custom group product acl checks
+  8.x-1.8.10:
+  - fix custom product acl checks
+  8.x-1.8.9: null
+  8.x-1.8.8: null
+  8.x-1.8.7:
+  - need to cast to int to fix ACL check
+  - need to check ACL explicitly
+  8.x-1.8.6:
+  - More divis by
+  8.x-1.8.5:
+  - fix conflicts
+  8.x-1.8.4:
+  - add 9 req
+  - use void
+  8.x-1.8.3:
+  - Improve product_replace webhook processing
+  8.x-1.8.2: null
+  8.x-1.8.1:
+  - update basic page references
+  8.x-1.8.0:
+  - update version 8.x-1.7.7 -> 8.x-1.8.0
   8.x-1.7.6:
   - handle title not being translated
   8.x-1.7.5:

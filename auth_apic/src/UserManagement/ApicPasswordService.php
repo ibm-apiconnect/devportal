@@ -130,7 +130,7 @@ class ApicPasswordService implements ApicPasswordInterface {
 
     // identify whether this is admin (uid=1)
     $admin_account = $this->drupalUserStorage->load(1);
-    if ($lookup === $admin_account->getUsername() || $lookup === $admin_account->get('mail')->getValue()[0]['value']) {
+    if ($lookup === $admin_account->getAccountName() || $lookup === $admin_account->get('mail')->getValue()[0]['value']) {
       $this->logger->notice('lookUpAccount: identified user as admin account');
       $account = $admin_account;
     }

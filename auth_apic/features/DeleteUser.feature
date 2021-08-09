@@ -116,8 +116,8 @@ Feature: Delete user
   Scenario: Andre org owner with writable LDAP - click delete
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes           | yes     |
+      | type | title                           | url                           | user_managed | default |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | yes          | yes     |
     Given users:
       | name              | mail              | pass                  | status | registry_url                  |
       | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      | @data(user_registries[2].url) |

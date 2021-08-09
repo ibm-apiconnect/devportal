@@ -198,21 +198,20 @@ display:
           entity_type: node
           plugin_id: select_translation_filter
       sorts:
-        created:
-          id: created
+        nid:
+          id: nid
           table: node_field_data
-          field: created
-          order: DESC
-          entity_type: node
-          entity_field: created
-          plugin_id: date
+          field: nid
           relationship: none
           group_type: group
           admin_label: ''
+          order: DESC
           exposed: false
           expose:
             label: ''
-          granularity: second
+          entity_type: node
+          entity_field: nid
+          plugin_id: standard
       title: 'Product Content'
       header: {  }
       footer: {  }

@@ -197,7 +197,7 @@
               if (options.accordionButton == 1 && parent.children('a.menuparent,span.nolink.menuparent').length > 0 && parent.children('ul').children('li.sf-clone-parent').length == 0){
                 var
                 // Cloning the hyperlink of the parent menu item.
-                cloneLink = parent.children('a.menuparent').clone();
+                cloneLink = parent.children('a.menuparent,span.nolink.menuparent').clone();
                 // Removing unnecessary classes and element(s).
                 cloneLink.removeClass('menuparent sf-with-ul').children('.sf-sub-indicator').remove();
                 // Wrapping the hyerplinks in <li>.
@@ -288,10 +288,7 @@
       menu = $(this).eq(s),
       mode = options.mode;
       // The rest is crystal clear, isn't it? :)
-      if (menu.children('li').length == 0){
-        // Skip empty menu which will not be visible and don't want to suddenly make it visible.
-      }
-      else if (mode == 'always_active'){
+      if (mode == 'always_active'){
         convert(menu);
       }
       else if (mode == 'window_width'){

@@ -24,6 +24,8 @@ use Drupal\product\Product;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Controller routines for product routes.
@@ -107,7 +109,8 @@ class ProductController extends ControllerBase {
    * @param \Drupal\node\NodeInterface $apiNode
    *
    * @return array|\Symfony\Component\HttpFoundation\RedirectResponse
-   * @throws \Drupal\Core\Entity\EntityMalformedException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function productApi(NodeInterface $prodNode, NodeInterface $apiNode) {
     if ($prodNode !== NULL && $apiNode !== NULL && $prodNode->id() && $apiNode->id()) {
@@ -133,6 +136,11 @@ class ProductController extends ControllerBase {
     $product = '';
 
     if ($prodNode !== NULL && $prodNode->bundle() === 'product') {
+      $haveAccess = Product::checkAccess($prodNode);
+      if (!$haveAccess) {
+        throw new AccessDeniedHttpException();
+      }
+
       if ($apiNode !== NULL && $apiNode->bundle() === 'api') {
         // check this product actually includes the specified API
         $prodRefs = [];
@@ -274,6 +282,9 @@ class ProductController extends ControllerBase {
             ];
           }
         }
+      } else {
+        ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+        throw new NotFoundHttpException();
       }
     }
     else {

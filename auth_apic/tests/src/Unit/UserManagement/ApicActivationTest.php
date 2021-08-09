@@ -41,7 +41,7 @@ namespace Drupal\Tests\auth_apic\Unit {
 
     protected $moduleHandler;
 
-    protected function setup() {
+    protected function setup(): void {
       $this->prophet = new Prophet();
       $this->mgmtServer = $this->prophet->prophesize(\Drupal\ibm_apim\Service\APIMServer::class);
       $this->userStorage = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserStorage::class);
@@ -51,7 +51,7 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->moduleHandler = $this->prophet->prophesize(\Drupal\Core\Extension\ModuleHandlerInterface::class);
     }
 
-    protected function tearDown() {
+    protected function tearDown(): void {
       $this->prophet->checkPredictions();
     }
 

@@ -1,4 +1,27 @@
 changes:
+  8.x-1.8.10: null
+  8.x-1.8.9:
+  - need to use definitive sort to avoid dupes with paging
+  - need to use definitive sort to avoid dupes with paging
+  8.x-1.8.8: null
+  8.x-1.8.7:
+  - tags are urls not words
+  8.x-1.8.6:
+  - fix api access check
+  8.x-1.8.5:
+  - move check
+  - ensure attribute exists before checking it
+  - need to check ACL explicitly
+  8.x-1.8.4:
+  - need to use productselect routing for apis
+  8.x-1.8.3:
+  - add 9 req
+  - remove deprecated entity.manager
+  8.x-1.8.2: null
+  8.x-1.8.1:
+  - update basic page references
+  8.x-1.8.0:
+  - update version 8.x-1.7.6 -> 8.x-1.8.0
   8.x-1.7.5:
   - handle title not being translated
   8.x-1.7.4:

@@ -47,8 +47,11 @@ function apim_profile_create_terms_page() {
   $node->save();
   add_terms_node_translations($node);
 
-  $source = '/node/' . $node->id();
-  \Drupal::service('path.alias_storage')->save($source, '/tsandcs');
+  $path_alias = \Drupal::entityTypeManager()->getStorage('path_alias')->create([
+    'source' => '/node/' . $node->id(),
+    'alias' => '/tsandcs',
+  ]);
+  \Drupal::entityTypeManager()->getStorage('path_alias')->save($path_alias);
 
   $link = MenuLinkContent::create([
     'title' => t('Terms and Conditions', [], ['langcode' => 'en']),
@@ -135,8 +138,11 @@ function apim_profile_create_privacy_page() {
   $node->save();
   add_privacy_node_translations($node);
 
-  $source = '/node/' . $node->id();
-  \Drupal::service('path.alias_storage')->save($source, '/privacy');
+  $path_alias = \Drupal::entityTypeManager()->getStorage('path_alias')->create([
+    'source' => '/node/' . $node->id(),
+    'alias' => '/privacy',
+  ]);
+  \Drupal::entityTypeManager()->getStorage('path_alias')->save($path_alias);
 
   $link = MenuLinkContent::create([
     'title' => t('Privacy Policy', [], ['langcode' => 'en']),
@@ -368,4 +374,3 @@ function get_localized_apps_content($langcode) {
   );
   return $array;
 }
-

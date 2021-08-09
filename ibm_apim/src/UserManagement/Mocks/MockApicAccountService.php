@@ -16,13 +16,14 @@ namespace Drupal\ibm_apim\UserManagement\Mocks;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\State\State;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
-use Drupal\Core\Messenger\Messenger;
 
 /**
  * Mock of the ApicAccountService service.
@@ -130,7 +131,7 @@ class MockApicAccountService implements ApicAccountInterface {
   /**
    * @inheritDoc
    */
-  public function updateLocalAccountRoles(ApicUser $user, $roles): bool {
+  public function updateLocalAccountRoles(ApicUser $user, array $roles): bool {
 
     $dbuser = $this->loadUserFromDatabase($user);
     // Splat all of the old roles
@@ -150,7 +151,13 @@ class MockApicAccountService implements ApicAccountInterface {
     return TRUE;
   }
 
-  public function saveCustomFields($apicUser, $user, $form_state, $view_mode): void {
+  /**
+   * @param \Drupal\ibm_apim\ApicType\ApicUser $apic_user
+   * @param $user
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   * @param $view_mode
+   */
+  public function saveCustomFields(ApicUser $apic_user, $user, FormStateInterface $form_state, $view_mode): void {
     \Drupal::logger('ibm_apim_mocks')->error('MockApicAccountService::saveCustomFields not implemented');
   }
 

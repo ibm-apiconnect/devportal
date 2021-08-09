@@ -1131,7 +1131,7 @@ class ConsumerOrgService {
    */
   public function isConsumerorgAssociatedWithAccount($consumerorg_url, $account): bool {
     if ($account !== NULL) {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$consumerorg_url, $account->getUsername()]);
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$consumerorg_url, $account->getAccountName()]);
     }
     else {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$consumerorg_url]);

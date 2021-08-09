@@ -99,7 +99,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
                               FloodInterface $flood,
                               ApicPasswordInterface $password_service,
                               Messenger $messenger) {
-    parent::__construct($user_storage, $language_manager);
+    parent::__construct($user_storage, $language_manager, $config_factory, $flood);
     $this->mgmtServer = $mgmtServer;
     $this->logger = $logger;
     $this->registryService = $registry_service;

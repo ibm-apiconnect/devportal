@@ -179,6 +179,7 @@ class ModalApplicationCreateForm extends FormBase {
       ],
     ];
 
+    $form['#attached']['library'][] = 'ibm_apim/modal';
     $form['#attached']['library'][] = 'apic_app/basic';
     $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
 

@@ -85,10 +85,12 @@ class ApicUserProfileForm extends ProfileForm {
     $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser()->id());
     // This is an internal field that shouldn't be displayed for anyone
     $form['consumer_organization']['#access'] = FALSE;
-
+    $registry = NULL;
     $formForUser = (int) $this->entity->get('uid')->value;
     $registryUrl = $this->entity->get('registry_url')->value;
-    $registry = $this->registryService->get($registryUrl);
+    if ($registryUrl !== NULL) {
+      $registry = $this->registryService->get($registryUrl);
+    }
 
     /* If the user is admin and they are editing another non-admin user, we need to prevent changes being made
      * as those changes can't be pushed back to APIC

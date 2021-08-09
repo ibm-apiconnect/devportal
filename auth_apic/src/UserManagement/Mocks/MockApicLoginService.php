@@ -52,7 +52,7 @@ class MockApicLoginService implements ApicLoginServiceInterface {
       }
 
       $loginuser = NULL;
-      $userStorage = \Drupal::service('entity.manager')->getStorage('user');
+      $userStorage = \Drupal::service('entity_type.manager')->getStorage('user');
 
       $searchProperties = ['name' => $user->getUsername()];
       $apicUserRegistryUrl = $user->getApicUserRegistryUrl();
@@ -75,7 +75,7 @@ class MockApicLoginService implements ApicLoginServiceInterface {
         $users = User::loadMultiple($ids);
 
         foreach ($users as $listUser) {
-          if ($listUser->getUsername() === $username) {
+          if ($listUser->getAccountName() === $username) {
             $loginuser = $listUser;
             break;
           }

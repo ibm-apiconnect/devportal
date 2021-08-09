@@ -1,4 +1,440 @@
 changes:
+  8.x-20210714-0912:
+    commits:
+    - drupal sa-core-2021-004
+    - protect against captcha replay
+    - composer update
+    - update patch
+    - composer update to 9.2.1
+    modules:
+      ibm_apim:
+        8.x-1.10.23:
+        - oops wrong class name
+  8.x-20210713-1633:
+    commits: null
+    modules:
+      product:
+        8.x-1.8.14:
+        - fix rendering if api plans table
+      ibm_apim:
+        8.x-1.10.22:
+        - tweak css for new creds modal
+  8.x-20210707-1621:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.12.3:
+        - make modals look how they should!
+      ibm_apim:
+        8.x-1.10.21:
+        - make modals look how they should - pt2
+        - make modals look how they should!
+  8.x-20210629-1804:
+    commits:
+    - make upgrade code more resilient
+    modules:
+      ibm_apim:
+        8.x-1.10.20:
+        - check the provided application ID is actually in this corg
+  8.x-20210628-2221:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.9.7:
+        - assertRegExp is deprecated use assertMatchesRegularExpression instead
+        - see if this fixes the NPE in the test
+      apic_api:
+        8.x-1.8.10: null
+        8.x-1.8.9:
+        - need to use definitive sort to avoid dupes with paging
+        - need to use definitive sort to avoid dupes with paging
+  8.x-20210625-2221:
+    commits:
+    - update patches
+    - composer update
+    modules:
+      ibm_apim:
+        8.x-1.10.19:
+        - not correctly checking admin perms
+  8.x-20210624-2222:
+    commits: null
+    modules:
+      product:
+        8.x-1.8.13:
+        - need to do ACL checks on /product/x/api/Y
+      ibm_apim:
+        8.x-1.10.18:
+        - hide the IP settings if ip banning is off
+  8.x-20210624-1841:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.8.8: null
+        8.x-1.8.7:
+        - tags are urls not words
+  8.x-20210624-1721:
+    commits:
+    - dont ban based on IP if its been disabled
+    modules:
+      apic_api:
+        8.x-1.8.6:
+        - fix api access check
+  8.x-20210624-1553:
+    commits: null
+    modules:
+      product:
+        8.x-1.8.12:
+        - fix custom group product acl checks
+      ibm_apim:
+        8.x-1.10.17:
+        - hide the IP settings if ip banning is off
+  8.x-20210624-1437:
+    commits: null
+    modules:
+      product:
+        8.x-1.8.11:
+        - fix custom group product acl checks
+  8.x-20210624-1035:
+    commits: null
+    modules:
+      product:
+        8.x-1.8.10:
+        - fix custom product acl checks
+        8.x-1.8.9: null
+        8.x-1.8.8: null
+      apic_api:
+        8.x-1.8.5:
+        - move check
+        - ensure attribute exists before checking it
+        - need to check ACL explicitly
+  8.x-20210603-1023:
+    commits:
+    - patch for captchas when logged in
+    - update patch or cant install modules
+    - Revert "patch no longer needed"
+    - patch no longer needed
+    - update patch
+    - composer update
+    - see if using eu artifactory helps
+    - composer update
+    - fix slack messages
+    - try getting apim_profile to post to slack
+    - trivial composer lib updates
+    - try using different build label
+    - update twig_tweak to v3
+    - composer update
+    - fix formatting error on login if provide wrong password
+    - need to ensure captcha font is set
+    modules:
+      product:
+        8.x-1.8.7:
+        - need to cast to int to fix ACL check
+        - need to check ACL explicitly
+  8.x-20210521-1928:
+    commits:
+    - drupal security update
+    - composer update
+    modules:
+      ibm_apim:
+        8.x-1.10.16:
+        - protect against NPE
+  8.x-20210519-1829:
+    commits:
+    - fix error from field_group
+    - minor symfony update
+    modules:
+      connect_theme:
+        8.x-1.8.3:
+        - ensure jquery.once loaded for dropit
+        - fix app and org menu dropdowns
+  8.x-20210512-1041:
+    commits:
+    - composer update
+    - drupal module update
+    modules:
+      ibm_apim:
+        8.x-1.10.15: null
+      consumerorg:
+        8.x-1.9.6: null
+        8.x-1.9.5: null
+        8.x-1.9.4:
+        - enable self service onboarding
+        - there might not be any roles
+      connect_theme:
+        8.x-1.8.2:
+        - fix dropit on list pages (#209)
+  8.x-20210511-0942:
+    commits:
+    - need to clone theme repos too
+    - need to update what theme is being used
+    modules:
+      connect_theme:
+        8.x-1.8.1:
+        - add d9 req
+  8.x-20210508-2044:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.9.6:
+        - enable and disable onboarding
+        8.x-1.9.5:
+        - explicitly enable selfservice onboarding
+        8.x-1.9.4: null
+      apic_api:
+        8.x-1.8.4:
+        - need to use productselect routing for apis
+      ibm_apim:
+        8.x-1.10.14: null
+        8.x-1.10.13:
+        - deprecated event types
+        8.x-1.10.12: null
+        8.x-1.10.11:
+        - get rid of test failure when not set
+  8.x-20210508-1334:
+    commits: null
+    modules:
+      apictest:
+        8.x-1.10.8:
+        - yum not dnf
+  8.x-20210507-0921:
+    commits:
+    - update patch
+    - update patch
+    - composer update
+    modules:
+      auth_apic:
+        8.x-1.9.3:
+        - fix conflicts
+        - need to set flood var on our form
+      ibm_apim:
+        8.x-1.10.10:
+        - fix incorrect args for mock service
+      apictest:
+        8.x-1.10.7:
+        - see if this helps
+        8.x-1.10.6: null
+  8.x-20210504-1611:
+    commits:
+    - update image patch
+    - stop People page blowing up
+    - update profile composer (#496)
+    - update lock
+    modules:
+      auth_apic:
+        8.x-1.9.2: null
+  8.x-20210504-1058:
+    commits:
+    - Up apic-app version
+    - 9 2018.4.1 (#495)
+    modules:
+      ibm_apim:
+        8.x-1.10.9:
+        - Change to field
+  8.x-20210430-1626:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.10.8:
+        - Remove flag not in drush10
+        8.x-1.10.7:
+        - q might not exist
+  8.x-20210429-1625:
+    commits: null
+    modules:
+      product:
+        8.x-1.8.6:
+        - More divis by
+        8.x-1.8.5:
+        - fix conflicts
+      apic_app:
+        8.x-1.12.2: null
+      ibm_apim:
+        8.x-1.10.6:
+        - fix unit test
+        - tidy up some typing errors
+        - fix phpdoc
+        - Update messenger
+        8.x-1.10.5:
+        - Fix tests
+        - remove deprecated entity.manager
+      consumerorg:
+        8.x-1.9.3:
+        - dep divis
+  8.x-20210429-1410:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.9.1:
+        - fix tests
+        - fix tests
+        - need to not override existing method and use different name instead
+        - fix tests
+        - fix tests
+        - fix conflicts
+        - fix registry
+        - syntax fix
+        - add var
+        - missed file
+        - add 9 req
+        - fix conflicts
+        - dont pass in registry if not set
+        - only if url is not null
+        - fix render (#613)
+        - use void
+        - deprecated function
+        - remove deprecated entity.manager
+  8.x-20210429-1159:
+    commits: null
+    modules:
+      apictest:
+        8.x-1.10.5:
+        - dont call get with null
+  8.x-20210428-2223:
+    commits: null
+    modules:
+      apictest:
+        8.x-1.10.4:
+        - cp-registryuser
+  8.x-20210428-1625:
+    commits: null
+    modules:
+      socialblock:
+        8.x-1.8.1:
+        - add d9 req
+      product:
+        8.x-1.8.4:
+        - add 9 req
+        - use void
+      ghmarkdown:
+        8.x-1.8.1:
+        - add 9 req
+        - code smells
+      mail_subscribers:
+        8.x-1.8.1:
+        - add 9 req
+        - use void
+      themegenerator:
+        8.x-1.8.1:
+        - add d9 req
+      featuredcontent:
+        8.x-1.8.1:
+        - add 9 req
+      apic_api:
+        8.x-1.8.3:
+        - add 9 req
+        - remove deprecated entity.manager
+      apic_app:
+        8.x-1.12.1:
+        - fix conflicts
+        - use void
+        - fix conflicts
+      ibm_apim:
+        8.x-1.10.4:
+        - Add d9 req
+      consumerorg:
+        8.x-1.9.2:
+        - add d9 req
+      apictest:
+        8.x-1.10.3:
+        - Add 9 req
+  8.x-20210413-1027:
+    commits:
+    - different version of cshs
+    - fix patch
+    - drupal core update
+    modules:
+      ibm_apim:
+        8.x-1.10.3: null
+        8.x-1.10.2:
+        - fix conflicts (#671)
+        - Cp d9 (#670)
+        8.x-1.10.1:
+        - fix conflicts
+        - Use drupal logo on status page (#668)
+        - fix conflicts
+        - fix unit tests (#663)
+        - use our own entity update manager
+        - Merge pull request
+        - Use new alias service (#652)
+      consumerorg:
+        8.x-1.9.1:
+        - deprecated function
+        - entity_reference module is now empty and not needed
+        - fix conflicts
+        - Merge pull request
+      apictest:
+        8.x-1.10.2:
+        - deprecated function
+        - remove deprecated entity.manager
+        - use phpunit 9
+        - Merge pull request
+        - Remove zombie (#199)
+  8.x-20210412-0423:
+    commits: null
+    modules:
+      product:
+        8.x-1.8.3:
+        - Improve product_replace webhook processing
+  8.x-20210409-1623:
+    commits: null
+    modules:
+      product:
+        8.x-1.8.2: null
+        8.x-1.8.1:
+        - update basic page references
+      apic_api:
+        8.x-1.8.2: null
+  8.x-20210408-1256:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.8.1:
+        - update basic page references
+  8.x-20210406-1142:
+    commits: null
+    modules:
+      apictest:
+        8.x-1.10.1: null
+  8.x-20210324-2223:
+    commits:
+    - Update version for 2018.4.1.17
+    modules:
+      socialblock:
+        8.x-1.8.0:
+        - update version 8.x-1.7.2 -> 8.x-1.8.0
+      product:
+        8.x-1.8.0:
+        - update version 8.x-1.7.7 -> 8.x-1.8.0
+      ghmarkdown:
+        8.x-1.8.0:
+        - update version 8.x-1.7.1 -> 8.x-1.8.0
+      auth_apic:
+        8.x-1.9.0:
+        - update version 8.x-1.8.3 -> 8.x-1.9.0
+      mail_subscribers:
+        8.x-1.8.0:
+        - update version 8.x-1.7.1 -> 8.x-1.8.0
+      themegenerator:
+        8.x-1.8.0:
+        - update version 8.x-1.7.1 -> 8.x-1.8.0
+      featuredcontent:
+        8.x-1.8.0:
+        - update version 8.x-1.7.1 -> 8.x-1.8.0
+      apic_api:
+        8.x-1.8.0:
+        - update version 8.x-1.7.6 -> 8.x-1.8.0
+      apic_app:
+        8.x-1.12.0:
+        - update version 8.x-1.11.2 -> 8.x-1.12.0
+      ibm_apim:
+        8.x-1.10.0:
+        - update version 8.x-1.9.7 -> 8.x-1.10.0
+      consumerorg:
+        8.x-1.9.0:
+        - update version 8.x-1.8.2 -> 8.x-1.9.0
+      apictest:
+        8.x-1.10.0:
+        - update version 8.x-1.9.5 -> 8.x-1.10.0
   8.x-20210318-1701:
     commits: null
     modules:
@@ -1489,4 +1925,4 @@ changes:
         - update version: 8.x-1.1.46 -> 8.x-1.2.46
       apictest:
         8.x-1.3.55: null
-  8.x-20210324-2223:
+  8.x-20210722-1624:

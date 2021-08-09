@@ -1,0 +1,32 @@
+restrict_by_ip.general_settings:
+  path: '/admin/config/people/restrict_by_ip'
+  defaults:
+    _form: '\Drupal\restrict_by_ip\Form\GeneralSettingsForm'
+    _title: 'Restrict By IP'
+  requirements:
+    _permission: 'administer restrict by ip'
+
+restrict_by_ip.login_settings:
+  path: '/admin/config/people/restrict_by_ip/login'
+  defaults:
+    _form: '\Drupal\restrict_by_ip\Form\LoginSettingsForm'
+    _title: 'Restrict login by IP'
+  requirements:
+    _permission: 'administer restrict by ip'
+
+restrict_by_ip.user_settings:
+  path: '/admin/config/people/restrict_by_ip/login/user'
+  defaults:
+    _form: '\Drupal\restrict_by_ip\Form\UserSettingsForm'
+    _title: 'Restrict login by IP'
+  requirements:
+    _permission: 'administer restrict by ip'
+
+restrict_by_ip.role_settings:
+  path: '/admin/config/people/restrict_by_ip/role'
+  defaults:
+    _form: '\Drupal\restrict_by_ip\Form\RoleSettingsForm'
+    _title: 'Restrict role by IP'
+  requirements:
+    _permission: 'administer restrict by ip'
+

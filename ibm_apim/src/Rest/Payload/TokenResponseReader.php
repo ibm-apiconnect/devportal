@@ -44,8 +44,7 @@ class TokenResponseReader extends RestResponseReader {
    * @param $response
    * @param null $response_object
    *
-   * //@return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|null
-   * @return \Drupal\auth_apic\Rest\TokenResponse|null
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|null
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
   public function read($response, $response_object = NULL): ?RestResponseInterface {

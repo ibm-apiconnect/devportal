@@ -33,6 +33,7 @@ Feature: Sign in/ Sign up via an OIDC provider
   @api
   Scenario: Sign in successful but not in a consumer org - onboarding enabled
     Given I am not logged in
+    Given self service onboarding is enabled
     Given users:
       | name      | mail                  | pass     | status |
       | oidcandre | oidcandre@example.com | oidcoidc | 1      |
@@ -45,6 +46,7 @@ Feature: Sign in/ Sign up via an OIDC provider
   @api
   Scenario: Sign in successful but not in a consumer org - onboarding disabled
     Given I am not logged in
+    Given self service onboarding is disabled
     Given users:
       | name      | mail                  | pass     | status |
       | oidcandre | oidcandre@example.com | oidcoidc | 1      |

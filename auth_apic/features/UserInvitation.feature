@@ -113,9 +113,9 @@ Feature: User Invitation Controller
   Scenario: Member invitation sign up with lur registry
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
     When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJM1lqSTBORGt4TkMwMk16UmpMVFJtTTJNdE9ERTJZUzFoTXpFd1lUQmpaR1JtTUdNaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YldWdFltVnlRR1Y0WVcxd2JHVXVZMjl0SWl3aWFYTnpJam9pU1VKTklFRlFTU0JEYjI1dVpXTjBJaXdpZEc5clpXNWZkSGx3WlNJNkltbHVkbWwwWVhScGIyNGlMQ0pwWVhRaU9qRTFOVGt6TURrME9UY3NJbVY0Y0NJNk1UVTFPVFE0TWpJNU55d2ljMk52Y0dWeklqcDdJbWx1ZG1sMFlYUnBiMjRpT2lJdlkyOXVjM1Z0WlhJdFlYQnBMMjl5WjNNdk9EWTVOR014WkdZdE16WXlOQzAwT0RnNUxXRXhZVGN0TlRZeE5URXdNamxoWmpGbUwyMWxiV0psY2kxcGJuWnBkR0YwYVc5dWN5OHhZek5tT0dWbVpTMDFOelZpTFRRd09XSXRZVFZtT0MwNFlUTTBNVEEyTmpFeE9HUWlMQ0oxY213aU9pSXZZMjl1YzNWdFpYSXRZWEJwTDI5eVozTXZPRFk1TkdNeFpHWXRNell5TkMwME9EZzVMV0V4WVRjdE5UWXhOVEV3TWpsaFpqRm1MMjFsYldKbGNpMXBiblpwZEdGMGFXOXVjeTh4WXpObU9HVm1aUzAxTnpWaUxUUXdPV0l0WVRWbU9DMDRZVE0wTVRBMk5qRXhPR1FpTENKaFkzUnBiMjV6SWpwYkluSmxaMmx6ZEdWeUlpd2lZV05qWlhCMElsMHNJbkpsWVd4dElqb2lZMjl1YzNWdFpYSTZNR013WVdVelpqSXRZalEzTkMwME1ETTBMVGd6TjJJdFlUSTBZelptTkRaa05XRTJPakEzWlRrNVlUUTNMV0ZrTXpJdE5HSXlOeTFpWlRJNExXVmxNR1F5TVRsak1qazJaaUo5ZlEuQkl5V0JFOGhiU25RdHk4NlJzNHRVMnhtdjN6ZVd0MmlGNjZJaXlDUUo3bw=="
     And I should see "To complete your invitation, fill out any required fields below."
     And I should see the text "Username"
@@ -134,9 +134,9 @@ Feature: User Invitation Controller
   Scenario: Org owner invitation sign up with lur registry
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
     When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJd04yUmtNMkl3TkMwNU9HSTRMVFF4TW1JdE9HWTNOQzB6TVRFMU9UbGpZV1U1TkdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YjNKbmIzZHVaWEpBWlhoaGJYQnNaUzVqYjIwaUxDSnBjM01pT2lKSlFrMGdRVkJKSUVOdmJtNWxZM1FpTENKMGIydGxibDkwZVhCbElqb2lhVzUyYVhSaGRHbHZiaUlzSW1saGRDSTZNVFUxT1RNd09USTVNQ3dpWlhod0lqb3hOVFU1TkRneU1Ea3dMQ0p6WTI5d1pYTWlPbnNpYVc1MmFYUmhkR2x2YmlJNklpOWpiMjV6ZFcxbGNpMWhjR2t2YjNKbkxXbHVkbWwwWVhScGIyNXpMMkU1TlRjeE9UQXpMVGcxTkdJdE5HRTJaUzA0TmpObUxUZzJORGRtTVRNeU9UUTJOQ0lzSW5WeWJDSTZJaTlqYjI1emRXMWxjaTFoY0drdmIzSm5MV2x1ZG1sMFlYUnBiMjV6TDJFNU5UY3hPVEF6TFRnMU5HSXROR0UyWlMwNE5qTm1MVGcyTkRkbU1UTXlPVFEyTkNJc0ltRmpkR2x2Ym5NaU9sc2ljbVZuYVhOMFpYSWlMQ0poWTJObGNIUWlYU3dpY21WaGJHMGlPaUpqYjI1emRXMWxjam93WXpCaFpUTm1NaTFpTkRjMExUUXdNelF0T0RNM1lpMWhNalJqTm1ZME5tUTFZVFk2TURkbE9UbGhORGN0WVdRek1pMDBZakkzTFdKbE1qZ3RaV1V3WkRJeE9XTXlPVFptSW4xOS5GalJkNzZUUFZjdDhVaU5IRjJBamdXQzdNMDEwMldOWU8zMk5McGw1ajhz"
     And I should see "To complete your invitation, fill out any required fields below."
     And I should see the text "Username"
@@ -155,9 +155,9 @@ Feature: User Invitation Controller
   Scenario: Member invitation sign up with ldap registry
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
     When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJM1lqSTBORGt4TkMwMk16UmpMVFJtTTJNdE9ERTJZUzFoTXpFd1lUQmpaR1JtTUdNaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YldWdFltVnlRR1Y0WVcxd2JHVXVZMjl0SWl3aWFYTnpJam9pU1VKTklFRlFTU0JEYjI1dVpXTjBJaXdpZEc5clpXNWZkSGx3WlNJNkltbHVkbWwwWVhScGIyNGlMQ0pwWVhRaU9qRTFOVGt6TURrME9UY3NJbVY0Y0NJNk1UVTFPVFE0TWpJNU55d2ljMk52Y0dWeklqcDdJbWx1ZG1sMFlYUnBiMjRpT2lJdlkyOXVjM1Z0WlhJdFlYQnBMMjl5WjNNdk9EWTVOR014WkdZdE16WXlOQzAwT0RnNUxXRXhZVGN0TlRZeE5URXdNamxoWmpGbUwyMWxiV0psY2kxcGJuWnBkR0YwYVc5dWN5OHhZek5tT0dWbVpTMDFOelZpTFRRd09XSXRZVFZtT0MwNFlUTTBNVEEyTmpFeE9HUWlMQ0oxY213aU9pSXZZMjl1YzNWdFpYSXRZWEJwTDI5eVozTXZPRFk1TkdNeFpHWXRNell5TkMwME9EZzVMV0V4WVRjdE5UWXhOVEV3TWpsaFpqRm1MMjFsYldKbGNpMXBiblpwZEdGMGFXOXVjeTh4WXpObU9HVm1aUzAxTnpWaUxUUXdPV0l0WVRWbU9DMDRZVE0wTVRBMk5qRXhPR1FpTENKaFkzUnBiMjV6SWpwYkluSmxaMmx6ZEdWeUlpd2lZV05qWlhCMElsMHNJbkpsWVd4dElqb2lZMjl1YzNWdFpYSTZNR013WVdVelpqSXRZalEzTkMwME1ETTBMVGd6TjJJdFlUSTBZelptTkRaa05XRTJPakEzWlRrNVlUUTNMV0ZrTXpJdE5HSXlOeTFpWlRJNExXVmxNR1F5TVRsak1qazJaaUo5ZlEuQkl5V0JFOGhiU25RdHk4NlJzNHRVMnhtdjN6ZVd0MmlGNjZJaXlDUUo3bw=="
     When I click "@data(user_registries[2].title)"
     And I should see "To complete your invitation, fill out any required fields below."
@@ -177,9 +177,9 @@ Feature: User Invitation Controller
   Scenario: Org owner invitation sign up with ldap registry
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
     When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJd04yUmtNMkl3TkMwNU9HSTRMVFF4TW1JdE9HWTNOQzB6TVRFMU9UbGpZV1U1TkdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YjNKbmIzZHVaWEpBWlhoaGJYQnNaUzVqYjIwaUxDSnBjM01pT2lKSlFrMGdRVkJKSUVOdmJtNWxZM1FpTENKMGIydGxibDkwZVhCbElqb2lhVzUyYVhSaGRHbHZiaUlzSW1saGRDSTZNVFUxT1RNd09USTVNQ3dpWlhod0lqb3hOVFU1TkRneU1Ea3dMQ0p6WTI5d1pYTWlPbnNpYVc1MmFYUmhkR2x2YmlJNklpOWpiMjV6ZFcxbGNpMWhjR2t2YjNKbkxXbHVkbWwwWVhScGIyNXpMMkU1TlRjeE9UQXpMVGcxTkdJdE5HRTJaUzA0TmpObUxUZzJORGRtTVRNeU9UUTJOQ0lzSW5WeWJDSTZJaTlqYjI1emRXMWxjaTFoY0drdmIzSm5MV2x1ZG1sMFlYUnBiMjV6TDJFNU5UY3hPVEF6TFRnMU5HSXROR0UyWlMwNE5qTm1MVGcyTkRkbU1UTXlPVFEyTkNJc0ltRmpkR2x2Ym5NaU9sc2ljbVZuYVhOMFpYSWlMQ0poWTJObGNIUWlYU3dpY21WaGJHMGlPaUpqYjI1emRXMWxjam93WXpCaFpUTm1NaTFpTkRjMExUUXdNelF0T0RNM1lpMWhNalJqTm1ZME5tUTFZVFk2TURkbE9UbGhORGN0WVdRek1pMDBZakkzTFdKbE1qZ3RaV1V3WkRJeE9XTXlPVFptSW4xOS5GalJkNzZUUFZjdDhVaU5IRjJBamdXQzdNMDEwMldOWU8zMk5McGw1ajhz"
     When I click "@data(user_registries[2].title)"
     And I should see "To complete your invitation, fill out any required fields below."
@@ -198,9 +198,33 @@ Feature: User Invitation Controller
 
   Scenario: Member invitation sign up with oidc registry
     Given I am not logged in
+    # Enabled is the default but set it again to make sure
+    And ibm_apim settings config boolean property "enable_oidc_register_form" value is "true"
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | oidc | @data(user_registries[3].title)   | @data(user_registries[3].url)     | no           | yes     |
+      | type | title                           | url                           | user_managed | default |
+      | oidc | @data(user_registries[3].title) | @data(user_registries[3].url) | no           | yes     |
+    When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJM1lqSTBORGt4TkMwMk16UmpMVFJtTTJNdE9ERTJZUzFoTXpFd1lUQmpaR1JtTUdNaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YldWdFltVnlRR1Y0WVcxd2JHVXVZMjl0SWl3aWFYTnpJam9pU1VKTklFRlFTU0JEYjI1dVpXTjBJaXdpZEc5clpXNWZkSGx3WlNJNkltbHVkbWwwWVhScGIyNGlMQ0pwWVhRaU9qRTFOVGt6TURrME9UY3NJbVY0Y0NJNk1UVTFPVFE0TWpJNU55d2ljMk52Y0dWeklqcDdJbWx1ZG1sMFlYUnBiMjRpT2lJdlkyOXVjM1Z0WlhJdFlYQnBMMjl5WjNNdk9EWTVOR014WkdZdE16WXlOQzAwT0RnNUxXRXhZVGN0TlRZeE5URXdNamxoWmpGbUwyMWxiV0psY2kxcGJuWnBkR0YwYVc5dWN5OHhZek5tT0dWbVpTMDFOelZpTFRRd09XSXRZVFZtT0MwNFlUTTBNVEEyTmpFeE9HUWlMQ0oxY213aU9pSXZZMjl1YzNWdFpYSXRZWEJwTDI5eVozTXZPRFk1TkdNeFpHWXRNell5TkMwME9EZzVMV0V4WVRjdE5UWXhOVEV3TWpsaFpqRm1MMjFsYldKbGNpMXBiblpwZEdGMGFXOXVjeTh4WXpObU9HVm1aUzAxTnpWaUxUUXdPV0l0WVRWbU9DMDRZVE0wTVRBMk5qRXhPR1FpTENKaFkzUnBiMjV6SWpwYkluSmxaMmx6ZEdWeUlpd2lZV05qWlhCMElsMHNJbkpsWVd4dElqb2lZMjl1YzNWdFpYSTZNR013WVdVelpqSXRZalEzTkMwME1ETTBMVGd6TjJJdFlUSTBZelptTkRaa05XRTJPakEzWlRrNVlUUTNMV0ZrTXpJdE5HSXlOeTFpWlRJNExXVmxNR1F5TVRsak1qazJaaUo5ZlEuQkl5V0JFOGhiU25RdHk4NlJzNHRVMnhtdjN6ZVd0MmlGNjZJaXlDUUo3bw=="
+    And I should see "To complete your invitation, fill out any required fields below."
+    And I should see the link "@data(user_registries[3].title)"
+    And I should see a link with href including "/consumer-api/oauth2/authorize"
+    And I should not see the text "Username"
+    # no consumer org field for oidc ever
+    And I should not see the text "Consumer organization"
+    # check we are not on an LUR form
+    And I should not see the text "Email address"
+    And I should not see the text "First Name"
+    And I should not see the text "Last Name"
+    And I should not see the text "Confirm password"
+    Then there are no errors
+    And there are no warnings
+    And there are no messages
+
+  Scenario: Member invitation sign up with oidc registry with OIDC register form disabled
+    Given I am not logged in
+    And ibm_apim settings config boolean property "enable_oidc_register_form" value is "false"
+    Given userregistries:
+      | type | title                           | url                           | user_managed | default |
+      | oidc | @data(user_registries[3].title) | @data(user_registries[3].url) | no           | yes     |
     When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJM1lqSTBORGt4TkMwMk16UmpMVFJtTTJNdE9ERTJZUzFoTXpFd1lUQmpaR1JtTUdNaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YldWdFltVnlRR1Y0WVcxd2JHVXVZMjl0SWl3aWFYTnpJam9pU1VKTklFRlFTU0JEYjI1dVpXTjBJaXdpZEc5clpXNWZkSGx3WlNJNkltbHVkbWwwWVhScGIyNGlMQ0pwWVhRaU9qRTFOVGt6TURrME9UY3NJbVY0Y0NJNk1UVTFPVFE0TWpJNU55d2ljMk52Y0dWeklqcDdJbWx1ZG1sMFlYUnBiMjRpT2lJdlkyOXVjM1Z0WlhJdFlYQnBMMjl5WjNNdk9EWTVOR014WkdZdE16WXlOQzAwT0RnNUxXRXhZVGN0TlRZeE5URXdNamxoWmpGbUwyMWxiV0psY2kxcGJuWnBkR0YwYVc5dWN5OHhZek5tT0dWbVpTMDFOelZpTFRRd09XSXRZVFZtT0MwNFlUTTBNVEEyTmpFeE9HUWlMQ0oxY213aU9pSXZZMjl1YzNWdFpYSXRZWEJwTDI5eVozTXZPRFk1TkdNeFpHWXRNell5TkMwME9EZzVMV0V4WVRjdE5UWXhOVEV3TWpsaFpqRm1MMjFsYldKbGNpMXBiblpwZEdGMGFXOXVjeTh4WXpObU9HVm1aUzAxTnpWaUxUUXdPV0l0WVRWbU9DMDRZVE0wTVRBMk5qRXhPR1FpTENKaFkzUnBiMjV6SWpwYkluSmxaMmx6ZEdWeUlpd2lZV05qWlhCMElsMHNJbkpsWVd4dElqb2lZMjl1YzNWdFpYSTZNR013WVdVelpqSXRZalEzTkMwME1ETTBMVGd6TjJJdFlUSTBZelptTkRaa05XRTJPakEzWlRrNVlUUTNMV0ZrTXpJdE5HSXlOeTFpWlRJNExXVmxNR1F5TVRsak1qazJaaUo5ZlEuQkl5V0JFOGhiU25RdHk4NlJzNHRVMnhtdjN6ZVd0MmlGNjZJaXlDUUo3bw=="
     And I should see "To complete your invitation, fill out any required fields below."
     And I should see the link "@data(user_registries[3].title)"
@@ -220,9 +244,9 @@ Feature: User Invitation Controller
   Scenario: Org owner invitation sign up with oidc registry
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | oidc | @data(user_registries[3].title)   | @data(user_registries[3].url)     | no           | yes     |
-    When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJd04yUmtNMkl3TkMwNU9HSTRMVFF4TW1JdE9HWTNOQzB6TVRFMU9UbGpZV1U1TkdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YjNKbmIzZHVaWEpBWlhoaGJYQnNaUzVqYjIwaUxDSnBjM01pT2lKSlFrMGdRVkJKSUVOdmJtNWxZM1FpTENKMGIydGxibDkwZVhCbElqb2lhVzUyYVhSaGRHbHZiaUlzSW1saGRDSTZNVFUxT1RNd09USTVNQ3dpWlhod0lqb3hOVFU1TkRneU1Ea3dMQ0p6WTI5d1pYTWlPbnNpYVc1MmFYUmhkR2x2YmlJNklpOWpiMjV6ZFcxbGNpMWhjR2t2YjNKbkxXbHVkbWwwWVhScGIyNXpMMkU1TlRjeE9UQXpMVGcxTkdJdE5HRTJaUzA0TmpObUxUZzJORGRtTVRNeU9UUTJOQ0lzSW5WeWJDSTZJaTlqYjI1emRXMWxjaTFoY0drdmIzSm5MV2x1ZG1sMFlYUnBiMjV6TDJFNU5UY3hPVEF6TFRnMU5HSXROR0UyWlMwNE5qTm1MVGcyTkRkbU1UTXlPVFEyTkNJc0ltRmpkR2x2Ym5NaU9sc2ljbVZuYVhOMFpYSWlMQ0poWTJObGNIUWlYU3dpY21WaGJHMGlPaUpqYjI1emRXMWxjam93WXpCaFpUTm1NaTFpTkRjMExUUXdNelF0T0RNM1lpMWhNalJqTm1ZME5tUTFZVFk2TURkbE9UbGhORGN0WVdRek1pMDBZakkzTFdKbE1qZ3RaV1V3WkRJeE9XTXlPVFptSW4xOS5GalJkNzZUUFZjdDhVaU5IRjJBamdXQzdNMDEwMldOWU8zMk5McGw1ajhz"
+      | type | title                           | url                           | user_managed | default |
+      | oidc | @data(user_registries[3].title) | @data(user_registries[3].url) | no           | yes     |
+    When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJM1lqSTBORGt4TkMwMk16UmpMVFJtTTJNdE9ERTJZUzFoTXpFd1lUQmpaR1JtTUdNaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YldWdFltVnlRR1Y0WVcxd2JHVXVZMjl0SWl3aWFYTnpJam9pU1VKTklFRlFTU0JEYjI1dVpXTjBJaXdpZEc5clpXNWZkSGx3WlNJNkltbHVkbWwwWVhScGIyNGlMQ0pwWVhRaU9qRTFOVGt6TURrME9UY3NJbVY0Y0NJNk1UVTFPVFE0TWpJNU55d2ljMk52Y0dWeklqcDdJbWx1ZG1sMFlYUnBiMjRpT2lJdlkyOXVjM1Z0WlhJdFlYQnBMMjl5WjNNdk9EWTVOR014WkdZdE16WXlOQzAwT0RnNUxXRXhZVGN0TlRZeE5URXdNamxoWmpGbUwyMWxiV0psY2kxcGJuWnBkR0YwYVc5dWN5OHhZek5tT0dWbVpTMDFOelZpTFRRd09XSXRZVFZtT0MwNFlUTTBNVEEyTmpFeE9HUWlMQ0oxY213aU9pSXZZMjl1YzNWdFpYSXRZWEJwTDI5eVozTXZPRFk1TkdNeFpHWXRNell5TkMwME9EZzVMV0V4WVRjdE5UWXhOVEV3TWpsaFpqRm1MMjFsYldKbGNpMXBiblpwZEdGMGFXOXVjeTh4WXpObU9HVm1aUzAxTnpWaUxUUXdPV0l0WVRWbU9DMDRZVE0wTVRBMk5qRXhPR1FpTENKaFkzUnBiMjV6SWpwYkluSmxaMmx6ZEdWeUlpd2lZV05qWlhCMElsMHNJbkpsWVd4dElqb2lZMjl1YzNWdFpYSTZNR013WVdVelpqSXRZalEzTkMwME1ETTBMVGd6TjJJdFlUSTBZelptTkRaa05XRTJPakEzWlRrNVlUUTNMV0ZrTXpJdE5HSXlOeTFpWlRJNExXVmxNR1F5TVRsak1qazJaaUo5ZlEuQkl5V0JFOGhiU25RdHk4NlJzNHRVMnhtdjN6ZVd0MmlGNjZJaXlDUUo3bw=="
     And I should see "To complete your invitation, fill out any required fields below."
     And I should see the link "@data(user_registries[3].title)"
     And I should see a link with href including "/consumer-api/oauth2/authorize"
@@ -242,9 +266,9 @@ Feature: User Invitation Controller
   Scenario: Member invitation sign up with writable ldap registry
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | yes          | no      |
     When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJM1lqSTBORGt4TkMwMk16UmpMVFJtTTJNdE9ERTJZUzFoTXpFd1lUQmpaR1JtTUdNaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YldWdFltVnlRR1Y0WVcxd2JHVXVZMjl0SWl3aWFYTnpJam9pU1VKTklFRlFTU0JEYjI1dVpXTjBJaXdpZEc5clpXNWZkSGx3WlNJNkltbHVkbWwwWVhScGIyNGlMQ0pwWVhRaU9qRTFOVGt6TURrME9UY3NJbVY0Y0NJNk1UVTFPVFE0TWpJNU55d2ljMk52Y0dWeklqcDdJbWx1ZG1sMFlYUnBiMjRpT2lJdlkyOXVjM1Z0WlhJdFlYQnBMMjl5WjNNdk9EWTVOR014WkdZdE16WXlOQzAwT0RnNUxXRXhZVGN0TlRZeE5URXdNamxoWmpGbUwyMWxiV0psY2kxcGJuWnBkR0YwYVc5dWN5OHhZek5tT0dWbVpTMDFOelZpTFRRd09XSXRZVFZtT0MwNFlUTTBNVEEyTmpFeE9HUWlMQ0oxY213aU9pSXZZMjl1YzNWdFpYSXRZWEJwTDI5eVozTXZPRFk1TkdNeFpHWXRNell5TkMwME9EZzVMV0V4WVRjdE5UWXhOVEV3TWpsaFpqRm1MMjFsYldKbGNpMXBiblpwZEdGMGFXOXVjeTh4WXpObU9HVm1aUzAxTnpWaUxUUXdPV0l0WVRWbU9DMDRZVE0wTVRBMk5qRXhPR1FpTENKaFkzUnBiMjV6SWpwYkluSmxaMmx6ZEdWeUlpd2lZV05qWlhCMElsMHNJbkpsWVd4dElqb2lZMjl1YzNWdFpYSTZNR013WVdVelpqSXRZalEzTkMwME1ETTBMVGd6TjJJdFlUSTBZelptTkRaa05XRTJPakEzWlRrNVlUUTNMV0ZrTXpJdE5HSXlOeTFpWlRJNExXVmxNR1F5TVRsak1qazJaaUo5ZlEuQkl5V0JFOGhiU25RdHk4NlJzNHRVMnhtdjN6ZVd0MmlGNjZJaXlDUUo3bw=="
     When I click "@data(user_registries[2].title)"
     And I should see "To complete your invitation, fill out any required fields below."
@@ -265,9 +289,9 @@ Feature: User Invitation Controller
   Scenario: Org owner invitation sign up with writable ldap registry
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | yes          | no      |
     When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJd04yUmtNMkl3TkMwNU9HSTRMVFF4TW1JdE9HWTNOQzB6TVRFMU9UbGpZV1U1TkdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YjNKbmIzZHVaWEpBWlhoaGJYQnNaUzVqYjIwaUxDSnBjM01pT2lKSlFrMGdRVkJKSUVOdmJtNWxZM1FpTENKMGIydGxibDkwZVhCbElqb2lhVzUyYVhSaGRHbHZiaUlzSW1saGRDSTZNVFUxT1RNd09USTVNQ3dpWlhod0lqb3hOVFU1TkRneU1Ea3dMQ0p6WTI5d1pYTWlPbnNpYVc1MmFYUmhkR2x2YmlJNklpOWpiMjV6ZFcxbGNpMWhjR2t2YjNKbkxXbHVkbWwwWVhScGIyNXpMMkU1TlRjeE9UQXpMVGcxTkdJdE5HRTJaUzA0TmpObUxUZzJORGRtTVRNeU9UUTJOQ0lzSW5WeWJDSTZJaTlqYjI1emRXMWxjaTFoY0drdmIzSm5MV2x1ZG1sMFlYUnBiMjV6TDJFNU5UY3hPVEF6TFRnMU5HSXROR0UyWlMwNE5qTm1MVGcyTkRkbU1UTXlPVFEyTkNJc0ltRmpkR2x2Ym5NaU9sc2ljbVZuYVhOMFpYSWlMQ0poWTJObGNIUWlYU3dpY21WaGJHMGlPaUpqYjI1emRXMWxjam93WXpCaFpUTm1NaTFpTkRjMExUUXdNelF0T0RNM1lpMWhNalJqTm1ZME5tUTFZVFk2TURkbE9UbGhORGN0WVdRek1pMDBZakkzTFdKbE1qZ3RaV1V3WkRJeE9XTXlPVFptSW4xOS5GalJkNzZUUFZjdDhVaU5IRjJBamdXQzdNMDEwMldOWU8zMk5McGw1ajhz"
     When I click "@data(user_registries[2].title)"
     And I should see "To complete your invitation, fill out any required fields below."

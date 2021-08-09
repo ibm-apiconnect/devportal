@@ -39,7 +39,7 @@ namespace Drupal\Tests\auth_apic\Unit {
 
     protected $logger;
 
-    protected function setup() {
+    protected function setup(): void {
       $this->prophet = new Prophet();
       $this->mgmtServer = $this->prophet->prophesize(\Drupal\ibm_apim\Service\APIMServer::class);
       $this->userManager = $this->prophet->prophesize(\Drupal\ibm_apim\UserManagement\ApicAccountService::class);
@@ -47,7 +47,7 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
     }
 
-    protected function tearDown() {
+    protected function tearDown(): void {
       $this->prophet->checkPredictions();
     }
 

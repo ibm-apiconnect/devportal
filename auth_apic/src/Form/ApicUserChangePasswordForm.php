@@ -276,9 +276,6 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
         if (!isset($form)) {
           $form = [];
         }
-        if (!isset($form['account']['roles'])) {
-          $form['account']['roles'] = ['authenticated'];
-        }
         if (!isset($form['account']['roles']['#default_value'])) {
           $form['account']['roles']['#default_value'] = ['authenticated'];
         }

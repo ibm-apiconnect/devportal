@@ -1,0 +1,10 @@
+--- modules/warmer/drush.services.yml	2021-04-14 11:30:50.000000000 +0100
++++ modules/warmer/drush.services.yml	2021-04-14 11:29:33.000000000 +0100
+@@ -1,6 +1,6 @@
+ services:
+   warmer.commands:
+     class: \Drupal\warmer\Commands\WarmerCommands
+-    arguments: ['@plugin.manager.warmer', '@warmer.queue_manager', '@queue.commands']
++    arguments: ['@plugin.manager.warmer', '@warmer.queue_manager', '@warmer.drush8queuecommand']
+     tags:
+       - { name: drush.command }

@@ -13,10 +13,12 @@
 
 namespace Drupal\product;
 
+use Drupal\Core\Database\Database;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 
 /**
@@ -100,6 +102,9 @@ class Product {
 
       // duplicate node
       $node = $oldNode->createDuplicate();
+
+      // update any apirefs on basic pages
+      $this->updateBasicPageRefs($oldNode->id(), $node->id());
 
       // wipe all our fields to ensure they get set to new values
       $node->set('apic_tags', []);
@@ -750,7 +755,7 @@ class Product {
     if ($node !== NULL) {
 
       // if view disabled then no one has access
-      if ($node->product_view_enabled->value !== 1) {
+      if ((int) $node->product_view_enabled->value !== 1) {
         $viewEnabled = FALSE;
       }
       $userUtils = \Drupal::service('ibm_apim.user_utils');
@@ -781,17 +786,26 @@ class Product {
         if ((int) $node->product_visibility_public->value === 1) {
           $found = TRUE;
         }
-        elseif ((int) $node->product_visibility_authenticated->value === 1 && !\Drupal::currentUser()->isAnonymous()) {
+        elseif ((int) $node->product_visibility_authenticated->value === 1 && \Drupal::currentUser()->isAuthenticated()) {
           $found = TRUE;
         }
-        elseif ($nodeCustomOrgs !== NULL && isset($myorg['url'])) {
+        if ($nodeCustomOrgs !== NULL && isset($myorg['url'])) {
           foreach ($nodeCustomOrgs as $customOrg) {
             if (isset($customOrg['value']) && $customOrg['value'] === $myorg['url']) {
               $found = TRUE;
             }
           }
         }
-        elseif ($nodeCustomTags !== NULL && $myorg['url'] !== NULL) {
+        if ($found === FALSE && $nodeCustomTags !== NULL && $myorg['url'] !== NULL) {
+          $groups = [];
+          if ($nodeCustomTags !== NULL && \is_array($nodeCustomTags) && count($nodeCustomTags) > 0) {
+            foreach ($nodeCustomTags as $tag) {
+              if (isset($tag['value'])) {
+                $groups[] = $tag['value'];
+              }
+            }
+          }
+
           $query = \Drupal::entityQuery('node');
           $query->condition('type', 'consumerorg');
           $query->condition('consumerorg_url.value', $myorg['url']);
@@ -804,7 +818,7 @@ class Product {
               $tags = $consumerOrg->consumerorg_tags->getValue();
               if ($tags !== NULL && \is_array($tags) && count($tags) > 0) {
                 foreach ($nodeCustomTags as $customTag) {
-                  if (isset($customTag['value']) && \in_array($customTag['value'], $tags, FALSE)) {
+                  if (isset($customTag['value']) && \in_array($customTag['value'], $groups, FALSE)) {
                     $found = TRUE;
                   }
                 }
@@ -872,13 +886,13 @@ class Product {
           }
         }
         $myorg = $userUtils->getCurrentConsumerOrg();
-        if (isset($myorg['id'])) {
+        if (isset($myorg['url'])) {
           $query = \Drupal::entityQuery('node');
           $query->condition('type', 'product');
           $query->condition('status', 1);
           $query->condition('product_state.value', 'published');
           $query->condition('product_view_enabled.value', 1);
-          $query->condition('product_visibility_custom_orgs.value', $myorg['id'], 'CONTAINS');
+          $query->condition('product_visibility_custom_orgs.value', $myorg['url'], 'CONTAINS');
           $results = $query->execute();
           if ($results !== NULL && !empty($results)) {
             $nids = array_values($results);
@@ -889,7 +903,7 @@ class Product {
 
           $query = \Drupal::entityQuery('node');
           $query->condition('type', 'consumerorg');
-          $query->condition('consumerorg_id.value', $myorg['id']);
+          $query->condition('consumerorg_url.value', $myorg['url']);
           $consumerOrgResults = $query->execute();
           if ($consumerOrgResults !== NULL && !empty($consumerOrgResults)) {
             $consumerOrgNid = array_shift($consumerOrgResults);
@@ -898,13 +912,21 @@ class Product {
               $consumerOrg = \Drupal::entityTypeManager()->getStorage('node')->load($consumerOrgNid);
               if ($consumerOrg !== NULL) {
                 $tags = $consumerOrg->consumerorg_tags->getValue();
+                $groups = [];
                 if ($tags !== NULL && \is_array($tags) && count($tags) > 0) {
+                  foreach ($tags as $tag) {
+                    if (isset($tag['value'])) {
+                      $groups[] = $tag['value'];
+                    }
+                  }
+                }
+                if ($groups !== NULL && \is_array($groups) && count($groups) > 0) {
                   $query = \Drupal::entityQuery('node');
                   $query->condition('type', 'product');
                   $query->condition('status', 1);
                   $query->condition('product_state.value', 'published');
                   $query->condition('product_view_enabled.value', 1);
-                  $query->condition('product_visibility_custom_tags.value', $tags, 'IN');
+                  $query->condition('product_visibility_custom_tags.value', $groups, 'IN');
                   $results = $query->execute();
                   if ($results !== NULL && !empty($results)) {
                     $nids = array_values($results);
@@ -1151,17 +1173,11 @@ class Product {
    */
   public static function clearAppCache($productUrl): void {
     $appUrls = [];
-    $query = \Drupal::entityQuery('apic_app_application_subs');
-    $query->condition('product_url', $productUrl);
-    $subIds = $query->execute();
-
-    if (isset($subIds) && !empty($subIds)) {
-      foreach (array_chunk($subIds, 50) as $chunk) {
-        $subEntities = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->loadMultiple($chunk);
-        foreach ($subEntities as $sub) {
-          $appUrls[] = $sub->app_url();
-        }
-      }
+    $options = ['target' => 'default'];
+    $result = Database::getConnection($options['target'])
+      ->query("SELECT app_url FROM apic_app_application_subs WHERE product_url = :product_url", [':product_url' => $productUrl ], $options);
+    foreach ($result as $record) {
+      $appUrls[] = $record->app_url;
     }
     if (!empty($appUrls)) {
       $query = \Drupal::entityQuery('node');
@@ -1257,5 +1273,78 @@ class Product {
       }
     }
     return $docs;
+  }
+
+  /**
+   * This function handles mass updates to subscriptions from lifecycle actions like
+   * product replace.
+   *
+   * @param $mapping
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public static function processPlanMapping($mapping): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, null);
+    if (isset($mapping)) {
+      if (isset($mapping['source'], $mapping['target'], $mapping['plans']) && !empty($mapping['plans'])) {
+        $sourceProductUrl = '/consumer-api/products/' . $mapping['source'];
+        $targetProductUrl = '/consumer-api/products/' . $mapping['target'];
+
+        // loop over the plans to update all the subscriptions
+        foreach($mapping['plans'] as $planMap) {
+          if (isset($planMap['source'], $planMap['target'])) {
+            $options = ['target' => 'default'];
+            $result = Database::getConnection($options['target'])
+              ->update('apic_app_application_subs', $options)
+              ->fields(['plan' => $planMap['target'], 'product_url' => $targetProductUrl])
+              ->condition('product_url', $sourceProductUrl)
+              ->condition('plan', $planMap['source'])
+              ->execute();
+          } else {
+            \Drupal::logger('product')->error('ERROR: Missing required data in processPlanMapping plan map array', []);
+          }
+        }
+      } else {
+        \Drupal::logger('product')->error('ERROR: Missing required data in processPlanMapping', []);
+      }
+    } else {
+      \Drupal::logger('product')->error('ERROR: No processPlanMapping mapping provided', []);
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+  /**
+   * Update any basic page references to point to the new node
+   *
+   * @param $oldNid
+   * @param $newNid
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function updateBasicPageRefs($oldNid, $newNid): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, null);
+
+    if (isset($oldNid, $newNid)) {
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'page')->condition('prodref', $oldNid, 'CONTAINS');
+      $nids = $query->execute();
+      if ($nids !== NULL && !empty($nids)) {
+        foreach ($nids as $nid) {
+          $node = Node::load($nid);
+          if ($node !== NULL) {
+            $newArray = $node->prodref->getValue();
+            foreach ($newArray as $key => $value) {
+              if ($value['target_id'] === (string) $oldNid) {
+                $newArray[$key]['target_id'] = (string) $newNid;
+              }
+            }
+            $node->set('prodref', $newArray);
+            $node->save();
+          }
+        }
+      }
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 }

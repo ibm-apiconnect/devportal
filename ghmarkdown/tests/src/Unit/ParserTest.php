@@ -7,8 +7,8 @@
 
 namespace Drupal\Tests\ghmarkdown\Unit;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\ghmarkdown\cebe\markdown\Parser;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * Test case for the parser base class.
@@ -18,17 +18,17 @@ use Drupal\ghmarkdown\cebe\markdown\Parser;
  */
 class ParserTest extends UnitTestCase {
 
-  public function testMarkerOrder() {
+  public function testMarkerOrder(): void {
     $parser = new TestParser();
     $parser->markers = [
       '[' => 'parseMarkerA',
       '[[' => 'parseMarkerB',
     ];
 
-    $this->assertEquals("<p>Result is A</p>\n", $parser->parse('Result is [abc]'));
-    $this->assertEquals("<p>Result is B</p>\n", $parser->parse('Result is [[abc]]'));
-    $this->assertEquals('Result is A', $parser->parseParagraph('Result is [abc]'));
-    $this->assertEquals('Result is B', $parser->parseParagraph('Result is [[abc]]'));
+    self::assertEquals("<p>Result is A</p>\n", $parser->parse('Result is [abc]'));
+    self::assertEquals("<p>Result is B</p>\n", $parser->parse('Result is [[abc]]'));
+    self::assertEquals('Result is A', $parser->parseParagraph('Result is [abc]'));
+    self::assertEquals('Result is B', $parser->parseParagraph('Result is [[abc]]'));
 
     $parser = new TestParser();
     $parser->markers = [
@@ -36,53 +36,81 @@ class ParserTest extends UnitTestCase {
       '[' => 'parseMarkerA',
     ];
 
-    $this->assertEquals("<p>Result is A</p>\n", $parser->parse('Result is [abc]'));
-    $this->assertEquals("<p>Result is B</p>\n", $parser->parse('Result is [[abc]]'));
-    $this->assertEquals('Result is A', $parser->parseParagraph('Result is [abc]'));
-    $this->assertEquals('Result is B', $parser->parseParagraph('Result is [[abc]]'));
+    self::assertEquals("<p>Result is A</p>\n", $parser->parse('Result is [abc]'));
+    self::assertEquals("<p>Result is B</p>\n", $parser->parse('Result is [[abc]]'));
+    self::assertEquals('Result is A', $parser->parseParagraph('Result is [abc]'));
+    self::assertEquals('Result is B', $parser->parseParagraph('Result is [[abc]]'));
   }
 
-  public function testMaxNestingLevel() {
+  public function testMaxNestingLevel(): void {
     $parser = new TestParser();
     $parser->markers = [
       '[' => 'parseMarkerC',
     ];
 
     $parser->maximumNestingLevel = 3;
-    $this->assertEquals("(C-a(C-b(C-c)))", $parser->parseParagraph('[a[b[c]]]'));
+    self::assertEquals("(C-a(C-b(C-c)))", $parser->parseParagraph('[a[b[c]]]'));
     $parser->maximumNestingLevel = 2;
-    $this->assertEquals("(C-a(C-b[c]))", $parser->parseParagraph('[a[b[c]]]'));
+    self::assertEquals("(C-a(C-b[c]))", $parser->parseParagraph('[a[b[c]]]'));
     $parser->maximumNestingLevel = 1;
-    $this->assertEquals("(C-a[b[c]])", $parser->parseParagraph('[a[b[c]]]'));
+    self::assertEquals("(C-a[b[c]])", $parser->parseParagraph('[a[b[c]]]'));
   }
 
-  public function testKeepZeroAlive() {
+  public function testKeepZeroAlive(): void {
     $parser = new TestParser();
 
-    $this->assertEquals("0", $parser->parseParagraph("0"));
-    $this->assertEquals("<p>0</p>\n", $parser->parse("0"));
+    self::assertEquals("0", $parser->parseParagraph("0"));
+    self::assertEquals("<p>0</p>\n", $parser->parse("0"));
   }
+
 }
 
+/**
+ * Class TestParser
+ *
+ * @package Drupal\Tests\ghmarkdown\Unit
+ */
 class TestParser extends Parser {
 
-  public $markers = [];
+  /**
+   * @var array
+   */
+  public array $markers = [];
 
-  protected function inlineMarkers() {
+  /**
+   * @return array
+   */
+  protected function inlineMarkers(): array {
     return $this->markers;
   }
 
-  protected function parseMarkerA($text) {
+  /**
+   * @param $text
+   *
+   * @return array
+   */
+  protected function parseMarkerA($text): array {
     return [['text', 'A'], strrpos($text, ']') + 1];
   }
 
-  protected function parseMarkerB($text) {
+  /**
+   * @param $text
+   *
+   * @return array
+   */
+  protected function parseMarkerB($text): array {
     return [['text', 'B'], strrpos($text, ']') + 1];
   }
 
-  protected function parseMarkerC($text) {
+  /**
+   * @param $text
+   *
+   * @return array
+   */
+  protected function parseMarkerC($text): array {
     $terminatingMarkerPos = strrpos($text, ']');
     $inside = $this->parseInline(substr($text, 1, $terminatingMarkerPos - 1));
     return [['text', '(C-' . $this->renderAbsy($inside) . ')'], $terminatingMarkerPos + 1];
   }
+
 }

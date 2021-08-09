@@ -2,8 +2,8 @@ name: Socialblock
 type: module
 description: Displays active forum topics and tweets
 package: IBM API Connect
-core: 8.x
-version: 8.x-1.7.2
+core_version_requirement: ^8 || ^9
+version: 8.x-1.8.2
 project: socialblock
 configure: socialblock.form
 dependencies:

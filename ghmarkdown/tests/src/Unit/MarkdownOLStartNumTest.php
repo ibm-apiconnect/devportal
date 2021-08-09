@@ -17,15 +17,16 @@ use Drupal\ghmarkdown\cebe\markdown\Markdown;
  */
 class MarkdownOLStartNumTest extends BaseMarkdownTest {
 
-  public function createMarkdown() {
+  public function createMarkdown(): Markdown {
     $markdown = new Markdown();
     $markdown->keepListStartNumber = TRUE;
     return $markdown;
   }
 
-  public function getDataPaths() {
+  public function getDataPaths(): array {
     return [
       'markdown-data' => __DIR__ . '/markdown-ol-start-num-data',
     ];
   }
+
 }

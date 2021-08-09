@@ -17,27 +17,30 @@ use Drupal\ghmarkdown\cebe\markdown\GithubMarkdown;
  */
 class GithubMarkdownTest extends BaseMarkdownTest {
 
-  public function createMarkdown() {
+  public function createMarkdown(): GithubMarkdown {
     return new GithubMarkdown();
   }
 
-  public function getDataPaths() {
+  public function getDataPaths(): array {
     return [
       'markdown-data' => __DIR__ . '/markdown-data',
       'github-data' => __DIR__ . '/github-data',
     ];
   }
 
-  public function testNewlines() {
+  public function testNewlines(): void {
     $markdown = $this->createMarkdown();
-    $this->assertEquals("This is text<br />\nnewline\nnewline.", $markdown->parseParagraph("This is text  \nnewline\nnewline."));
+    self::assertEquals("This is text<br />\nnewline\nnewline.", $markdown->parseParagraph("This is text  \nnewline\nnewline."));
     $markdown->enableNewlines = TRUE;
-    $this->assertEquals("This is text<br />\nnewline<br />\nnewline.", $markdown->parseParagraph("This is text  \nnewline\nnewline."));
+    self::assertEquals("This is text<br />\nnewline<br />\nnewline.", $markdown->parseParagraph("This is text  \nnewline\nnewline."));
 
-    $this->assertEquals("<p>This is text</p>\n<p>newline<br />\nnewline.</p>\n", $markdown->parse("This is text\n\nnewline\nnewline."));
+    self::assertEquals("<p>This is text</p>\n<p>newline<br />\nnewline.</p>\n", $markdown->parse("This is text\n\nnewline\nnewline."));
   }
 
-  public function dataFiles() {
+  /**
+   * @throws \Exception
+   */
+  public function dataFiles(): array {
     $files = parent::dataFiles();
     foreach ($files as $i => $f) {
       // skip files that are different in github MD
@@ -51,14 +54,14 @@ class GithubMarkdownTest extends BaseMarkdownTest {
     return $files;
   }
 
-  public function testKeepZeroAlive() {
+  public function testKeepZeroAlive(): void {
     $parser = $this->createMarkdown();
 
-    $this->assertEquals("0", $parser->parseParagraph("0"));
-    $this->assertEquals("<p>0</p>\n", $parser->parse("0"));
+    self::assertEquals("0", $parser->parseParagraph("0"));
+    self::assertEquals("<p>0</p>\n", $parser->parse("0"));
   }
 
-  public function testAutoLinkLabelingWithEncodedUrl() {
+  public function testAutoLinkLabelingWithEncodedUrl(): void {
     $parser = $this->createMarkdown();
 
     $utfText = "\xe3\x81\x82\xe3\x81\x84\xe3\x81\x86\xe3\x81\x88\xe3\x81\x8a";
@@ -66,9 +69,10 @@ class GithubMarkdownTest extends BaseMarkdownTest {
     $utfEncodedUrl = "http://example.com/" . urlencode($utfText);
     $eucEncodedUrl = "http://example.com/" . urlencode(mb_convert_encoding($utfText, 'EUC-JP', 'UTF-8'));
 
-    $this->assertStringEndsWith(">{$utfNaturalUrl}</a>", $parser->parseParagraph($utfNaturalUrl), "Natural UTF-8 URL needs no conversion.");
-    $this->assertStringEndsWith(">{$utfNaturalUrl}</a>", $parser->parseParagraph($utfEncodedUrl), "Encoded UTF-8 URL will be converted to readable format.");
-    $this->assertStringEndsWith(">{$eucEncodedUrl}</a>", $parser->parseParagraph($eucEncodedUrl), "Non UTF-8 URL should never be converted.");
+    self::assertStringEndsWith(">{$utfNaturalUrl}</a>", $parser->parseParagraph($utfNaturalUrl), "Natural UTF-8 URL needs no conversion.");
+    self::assertStringEndsWith(">{$utfNaturalUrl}</a>", $parser->parseParagraph($utfEncodedUrl), "Encoded UTF-8 URL will be converted to readable format.");
+    self::assertStringEndsWith(">{$eucEncodedUrl}</a>", $parser->parseParagraph($eucEncodedUrl), "Non UTF-8 URL should never be converted.");
     // See: \cebe\markdown\inline\UrlLinkTrait::renderAutoUrl
   }
+
 }

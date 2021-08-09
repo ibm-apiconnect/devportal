@@ -98,7 +98,7 @@
 
   Drupal.behaviors.dropit = {
     attach: function (context, settings) {
-      $(".dropitmenu", context).dropit();
+      $(".dropitmenu", document.body).once().dropit();
     }
   };
 

@@ -1,15 +1,25 @@
 --- core/modules/forum/src/Controller/ForumController.php	2018-01-24 14:25:02.000000000 +0000
 +++ core/modules/forum/src/Controller/ForumController.php	2018-01-24 14:28:41.000000000 +0000
-@@ -330,7 +330,12 @@
+@@ -328,19 +328,16 @@
+             'title' => $this->t('Log in to post new content in the forum.'),
              'url' => Url::fromRoute('user.login', [], ['query' => $this->getDestinationArray()]),
            ],
+-          // Without this workaround, the action links will be rendered as <li>
+-          // with no wrapping <ul> element.
+-          // @todo Find a better way for this in https://www.drupal.org/node/3181052.
+-          '#prefix' => '<ul class="action-links">',
+-          '#suffix' => '</ul>',
          ];
 +        $links['#prefix'] = '<ul class="forum-actions-wrapper">';
 +        $links['#suffix'] = '</ul>';
        }
-+    } else {
+     }
+     else {
+       // Without this workaround, the action links will be rendered as <li> with
+       // no wrapping <ul> element.
+       // @todo Find a better way for this in https://www.drupal.org/node/3181052.
+-      $links['#prefix'] = '<ul class="action-links">';
 +      $links['#prefix'] = '<ul class="forum-actions-wrapper">';
-+      $links['#suffix'] = '</ul>';
+       $links['#suffix'] = '</ul>';
      }
      return $links;
-   }

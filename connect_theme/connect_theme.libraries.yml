@@ -51,6 +51,7 @@ dropit:
     scripts/dropit.js: {}
   dependencies:
     - core/jquery
+    - core/jquery.once
 
 overflowhandler:
   version: 3.0

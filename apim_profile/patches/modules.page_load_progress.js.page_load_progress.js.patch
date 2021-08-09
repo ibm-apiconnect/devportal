@@ -7,6 +7,7 @@
 -      var screen_lock = '<div class="page-load-progress-lock-screen page-load-progress-hidden">\n\
 -                         <div class="page-load-progress-throbber"></div>\n\
 -                         </div>';
+-      var body = $('body', context, settings);
 +      var screen_lock = '<div class="bx--loading-overlay page-load-progress-lock-screen page-load-progress-hidden">\n' +
 +        '<div data-loading class="bx--loading">\n' +
 +        '  <svg class="bx--loading__svg" viewBox="-75 -75 150 150">\n' +
@@ -16,7 +17,7 @@
 +        '  </svg>\n' +
 +        '</div>\n' +
 +        '</div>';
-       var body = $('body', context, settings);
++       var body = $('body');
  
        // Add the screen lock behavior for each configured element.
 @@ -84,7 +90,7 @@

@@ -22,7 +22,7 @@ use Drupal\Tests\UnitTestCase;
  */
 class FeaturedcontentUnitTest extends UnitTestCase {
 
-  public function testTrue() {
+  public function testTrue(): void {
     $this->assertEquals(TRUE, TRUE);
   }
 

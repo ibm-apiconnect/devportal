@@ -29,7 +29,7 @@ namespace Drupal\Tests\auth_apic\Unit {
 
     protected $currentUser;
 
-    protected function setup() {
+    protected function setup(): void {
       $this->prophet = new Prophet();
       $this->mgmtServer = $this->prophet->prophesize(\Drupal\ibm_apim\Service\APIMServer::class);
       $this->userStorage = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserStorage::class);
@@ -37,11 +37,11 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->currentUser = $this->prophet->prophesize(\Drupal\Core\Session\AccountProxyInterface::class);
     }
 
-    protected function tearDown() {
+    protected function tearDown(): void {
       $this->prophet->checkPredictions();
     }
 
-    public function testDeleteUser() {
+    public function testDeleteUser(): void {
 
       $mgmtResponse = new RestResponse();
       $mgmtResponse->setCode(200);
@@ -64,7 +64,7 @@ namespace Drupal\Tests\auth_apic\Unit {
 
     }
 
-    public function testDeleteUserMgmtFail() {
+    public function testDeleteUserMgmtFail(): void {
 
       $mgmtResponse = new RestResponse();
       $mgmtResponse->setCode(400);
@@ -86,7 +86,7 @@ namespace Drupal\Tests\auth_apic\Unit {
 
     }
 
-    public function testDeleteLocalAccountCurrentUser() {
+    public function testDeleteLocalAccountCurrentUser(): void {
 
       $this->currentUser->id()->willReturn(2);
       $this->logger->notice('Deleting user - id = @id', ['@id'=> 2])->shouldBeCalled();
@@ -102,7 +102,7 @@ namespace Drupal\Tests\auth_apic\Unit {
 
     }
 
-    public function testDeleteLocalAccountProvidedUser() {
+    public function testDeleteLocalAccountProvidedUser(): void {
 
       $user = new ApicUser();
       $user->setUsername('andre');
@@ -127,7 +127,7 @@ namespace Drupal\Tests\auth_apic\Unit {
 
     }
 
-    public function testDeleteLocalAccountProvidedUserNoAccount() {
+    public function testDeleteLocalAccountProvidedUserNoAccount(): void {
 
       $user = new ApicUser();
       $user->setUsername('andre');
@@ -150,7 +150,7 @@ namespace Drupal\Tests\auth_apic\Unit {
 
     }
 
-    public function testDeleteLocalAccountProvidedUserNoIdForAccount() {
+    public function testDeleteLocalAccountProvidedUserNoIdForAccount(): void {
 
       $user = new ApicUser();
       $user->setUsername('andre');

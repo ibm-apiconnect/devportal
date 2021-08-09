@@ -70,7 +70,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
   protected $oidcRegistry;
 
-    protected function setup() {
+    protected function setup(): void {
       parent::setup();
 
 
@@ -106,7 +106,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
     }
 
-    protected function tearDown() {
+    protected function tearDown(): void {
       parent::tearDown();
     }
 
@@ -553,7 +553,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
     }
 
 
-    public function testLoginViaAzCodeValid() {
+    public function testLoginViaAzCodeValid(): void {
 
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
@@ -565,7 +565,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->assertEquals('<front>', $response);
     }
 
-    public function testLoginViaAzCodeErrorOnApimAuthenticate() {
+    public function testLoginViaAzCodeErrorOnApimAuthenticate(): void {
 
       $badUser = new ApicUser();
       $badUser->setAuthcode('bad');
@@ -580,7 +580,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->assertEquals('ERROR', $response);
     }
 
-    public function testLoginViaAzCodeFirstTime() {
+    public function testLoginViaAzCodeFirstTime(): void {
 
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
@@ -608,7 +608,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
     }
 
-    public function testLoginViaAzCodeCreateNewOrg(){
+    public function testLoginViaAzCodeCreateNewOrg(): void {
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
       $this->userService->getCustomUserFields()->willReturn([]);
@@ -624,7 +624,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
     }
 
-    public function testLoginViaAzCodeNoOrgNoPerms(){
+    public function testLoginViaAzCodeNoOrgNoPerms(): void {
 
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
@@ -726,7 +726,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       return $service;
     }
 
-    private function setUpOidcLoginTest() {
+    private function setUpOidcLoginTest(): ApicUser {
       $loginUser = new ApicUser();
       $loginUser->setUsername('');
       $loginUser->setPassword('');

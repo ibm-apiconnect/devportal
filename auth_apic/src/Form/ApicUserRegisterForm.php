@@ -170,7 +170,14 @@ class ApicUserRegisterForm extends RegisterForm {
   }
 
   /**
-   * @inheritdoc
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *
+   * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   * @throws \Exception
    */
   public function form(array $form, FormStateInterface $form_state) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

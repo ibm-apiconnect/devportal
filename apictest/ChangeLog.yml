@@ -1,4 +1,24 @@
 changes:
+  8.x-1.10.8:
+  - yum not dnf
+  8.x-1.10.7:
+  - see if this helps
+  8.x-1.10.6: null
+  8.x-1.10.5:
+  - dont call get with null
+  8.x-1.10.4:
+  - cp-registryuser
+  8.x-1.10.3:
+  - Add 9 req
+  8.x-1.10.2:
+  - deprecated function
+  - remove deprecated entity.manager
+  - use phpunit 9
+  - Merge pull request
+  - Remove zombie (#199)
+  8.x-1.10.1: null
+  8.x-1.10.0:
+  - update version 8.x-1.9.5 -> 8.x-1.10.0
   8.x-1.9.4:
   - pathalias test data
   8.x-1.9.3:

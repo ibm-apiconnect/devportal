@@ -35,7 +35,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
     {% endif %}
     <div class="apicApiTeaserMain">
       <h2>
-        <a href="{{- path('apic_api.view', {'apiNode': apiNode}) -}}" rel="bookmark">
+        <a href="{{- path('product.select', {'apiNode': apiNode}) -}}" rel="bookmark">
           <span id="node-{{ node.id }}-title" class="apicApiName apicTruncate">{{- label -}}</span>
           {% if showVersions %}
             <span class="apicApiTeaserVersion">{{- content.apic_version -}}</span>

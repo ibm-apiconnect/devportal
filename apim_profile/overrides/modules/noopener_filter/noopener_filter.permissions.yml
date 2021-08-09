@@ -1,0 +1,3 @@
+administer noopener filter:
+  title: 'Administer Noopener filter'
+  description: 'Enables the ability to change the noopener filter settings.'

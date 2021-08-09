@@ -192,7 +192,7 @@ services:
                 '@messenger']
   ibm_apim.user_storage:
     class: Drupal\ibm_apim\Service\ApicUserStorage
-    arguments: ['@entity.manager',
+    arguments: ['@entity_type.manager',
                 '@ibm_apim.user_registry',
                 '@ibm_apim.apicuser',
                 '@logger.channel.ibm_apim']
@@ -214,3 +214,11 @@ services:
                 '@module_installer',
                 '@config.factory',
                 '@logger.channel.ibm_apim']
+  ibm_apim.apic_definition_update_manager:
+    class: Drupal\ibm_apim\Entity\ApicEntityDefinitionUpdateManager
+    arguments: [ '@entity.definition_update_manager',
+                 '@entity.last_installed_schema.repository',
+                 '@entity_type.manager',
+                 '@entity_type.listener',
+                 '@entity_field.manager',
+                 '@field_storage_definition.listener' ]

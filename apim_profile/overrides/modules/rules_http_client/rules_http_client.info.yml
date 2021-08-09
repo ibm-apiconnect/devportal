@@ -1,0 +1,16 @@
+# Rules HTTP Client Module.
+name: Rules HTTP Client
+description: Provides an action for making http requests.
+package: Rules
+
+type: module
+# core: 8.x
+
+dependencies:
+  - drupal:rules
+
+# Information added by Drupal.org packaging script on 2017-07-11
+version: '8.x-1.0'
+core_version_requirement: ^8.8 || ^9
+project: 'rules_http_client'
+datestamp: 1499766553

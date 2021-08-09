@@ -111,7 +111,7 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function postUsersRegister(ApicUser $user) : ?\Drupal\auth_apic\Rest\UsersRegisterResponse{
+  public function postUsersRegister(ApicUser $user) : ?\Drupal\ibm_apim\Rest\UsersRegisterResponse{
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::postUsersRegister() is missing!');
     return NULL;
   }

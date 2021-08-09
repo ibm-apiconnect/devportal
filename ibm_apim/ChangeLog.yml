@@ -1,4 +1,60 @@
 changes:
+  8.x-1.10.23:
+  - oops wrong class name
+  8.x-1.10.22:
+  - tweak css for new creds modal
+  8.x-1.10.21:
+  - make modals look how they should - pt2
+  - make modals look how they should!
+  8.x-1.10.20:
+  - check the provided application ID is actually in this corg
+  8.x-1.10.19:
+  - not correctly checking admin perms
+  8.x-1.10.18:
+  - hide the IP settings if ip banning is off
+  8.x-1.10.17:
+  - hide the IP settings if ip banning is off
+  8.x-1.10.16:
+  - protect against NPE
+  8.x-1.10.15: null
+  8.x-1.10.14: null
+  8.x-1.10.13:
+  - deprecated event types
+  8.x-1.10.12: null
+  8.x-1.10.11:
+  - get rid of test failure when not set
+  8.x-1.10.10:
+  - fix incorrect args for mock service
+  8.x-1.10.9:
+  - Change to field
+  8.x-1.10.8:
+  - Remove flag not in drush10
+  8.x-1.10.7:
+  - q might not exist
+  8.x-1.10.6:
+  - fix unit test
+  - tidy up some typing errors
+  - fix phpdoc
+  - Update messenger
+  8.x-1.10.5:
+  - Fix tests
+  - remove deprecated entity.manager
+  8.x-1.10.4:
+  - Add d9 req
+  8.x-1.10.3: null
+  8.x-1.10.2:
+  - fix conflicts (#671)
+  - Cp d9 (#670)
+  8.x-1.10.1:
+  - fix conflicts
+  - Use drupal logo on status page (#668)
+  - fix conflicts
+  - fix unit tests (#663)
+  - use our own entity update manager
+  - Merge pull request
+  - Use new alias service (#652)
+  8.x-1.10.0:
+  - update version 8.x-1.9.7 -> 8.x-1.10.0
   8.x-1.9.6:
   - delete users when deleting a UR
   8.x-1.9.5:

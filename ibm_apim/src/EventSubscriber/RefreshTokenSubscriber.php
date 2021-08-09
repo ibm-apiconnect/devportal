@@ -14,8 +14,8 @@ namespace Drupal\ibm_apim\EventSubscriber;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
-use Symfony\Component\HttpKernel\Event\PostResponseEvent;
-use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
+use Symfony\Component\HttpKernel\Event\TerminateEvent;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Psr\Log\LoggerInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
@@ -54,10 +54,12 @@ class RefreshTokenSubscriber implements EventSubscriberInterface {
 
 
   /**
-   * @param \Symfony\Component\HttpKernel\Event\PostResponseEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\TerminateEvent $event
+   *
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
-  public function refreshAccessToken(PostResponseEvent $event) : void{
-    if (\Drupal::currentUser()->id() == 0 || \Drupal::currentUser()->id() == 1) {
+  public function refreshAccessToken(TerminateEvent $event): void {
+    if ((int) \Drupal::currentUser()->id() === 0 || (int) \Drupal::currentUser()->id() === 1) {
       return;
     }
 
@@ -77,11 +79,13 @@ class RefreshTokenSubscriber implements EventSubscriberInterface {
     }
   }
 
-   /**
-   * @param \Symfony\Component\HttpKernel\Event\FilterResponseEvent $event
+  /**
+   * @param \Symfony\Component\HttpKernel\Event\ResponseEvent $event
+   *
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
-  public function forceLogOut(FilterResponseEvent $event) : void{
-    if (\Drupal::currentUser()->id() == 0 || \Drupal::currentUser()->id() == 1) {
+  public function forceLogOut(ResponseEvent $event): void {
+    if ((int) \Drupal::currentUser()->id() === 0 || (int) \Drupal::currentUser()->id() === 1) {
       return;
     }
 
@@ -113,7 +117,7 @@ class RefreshTokenSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * @return array|mixed
+   * @return array
    */
   public static function getSubscribedEvents() {
     $events[KernelEvents::TERMINATE][] = ['refreshAccessToken'];

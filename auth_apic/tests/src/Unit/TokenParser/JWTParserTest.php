@@ -36,13 +36,13 @@ class JWTParserTest extends UnitTestCase {
 
   protected $utils;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
     $this->utils = $this->prophet->prophesize(\Drupal\ibm_apim\Service\Utils::class);
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
@@ -93,10 +93,9 @@ class JWTParserTest extends UnitTestCase {
   /**
    * Parse NULL.
    *
-   * @expectedException \Exception
    */
   public function testParseNULL(): void {
-
+    $this->expectException(\Exception::class);
     $parser = new JWTParser($this->logger->reveal(), $this->utils->reveal());
     $parser->parse(NULL);
 

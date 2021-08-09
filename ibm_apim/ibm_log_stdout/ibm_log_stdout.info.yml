@@ -2,4 +2,4 @@ name: 'Log to Standard Out'
 type: module
 description: 'Log to standard out and standard error for better docker integration'
 package: 'IBM API Connect'
-core: 8.x
+core_version_requirement: ^8 || ^9

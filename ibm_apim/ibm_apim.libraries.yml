@@ -47,3 +47,11 @@ validate_password:
   js:
     js/zxcvbn.js: {}
     js/validatePassword.js: {}
+
+modal:
+  version: 1.x
+  css:
+    component:
+      css/modal.css: { }
+  js:
+    js/modal.js: {}

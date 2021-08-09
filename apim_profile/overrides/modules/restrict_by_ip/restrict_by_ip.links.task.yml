@@ -1,0 +1,24 @@
+restrict_by_ip.general_settings:
+  route_name: restrict_by_ip.general_settings
+  title: General Settings
+  base_route: restrict_by_ip.general_settings
+
+restrict_by_ip.login_settings:
+  route_name: restrict_by_ip.login_settings
+  title: Restrict login by IP
+  base_route: restrict_by_ip.general_settings
+
+restrict_by_ip.login_settings_sub:
+  route_name: restrict_by_ip.login_settings
+  title: Global Restrictions
+  parent_id: restrict_by_ip.login_settings
+
+restrict_by_ip.user_settings:
+  route_name: restrict_by_ip.user_settings
+  title: User restrictions
+  parent_id: restrict_by_ip.login_settings
+
+restrict_by_ip.role_settings:
+  route_name: restrict_by_ip.role_settings
+  title: Restrict role by IP
+  base_route: restrict_by_ip.general_settings

@@ -1,0 +1,5 @@
+noopener_filter.settings:
+  title: 'Noopener filter settings'
+  description: 'Change settings for noopener filter'
+  parent: system.admin_config_content
+  route_name: noopener_filter.settings

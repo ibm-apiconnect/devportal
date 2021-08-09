@@ -27,11 +27,11 @@ class UtilsTest extends UnitTestCase {
   private $prophet;
 
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 

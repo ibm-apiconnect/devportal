@@ -13,6 +13,7 @@
 namespace Drupal\ibm_apim\Wizard\Subscription;
 
 use Drupal\apic_app\Application;
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Wizard\IbmWizardStepBase;
@@ -130,6 +131,10 @@ class ChooseApplicationStep extends IbmWizardStepBase {
               'use-ajax',
               'button',
             ],
+            'data-dialog-type' => 'modal',
+            'data-dialog-options' => Json::encode([
+              'width' => 560
+            ]),
           ],
           '#prefix' => '<div class="apicNewAppButton">',
           '#suffix' => '</div>',
@@ -166,6 +171,13 @@ class ChooseApplicationStep extends IbmWizardStepBase {
       $form_state->setErrorByName('selectedApplication', t('You must select an application to create a subscription.'));
       return FALSE;
     }
+    $application = \Drupal::entityTypeManager()->getStorage('node')->load($form_state->getUserInput()['selectedApplication']);
+    $userUtils = \Drupal::service('ibm_apim.user_utils');
+    $org = $userUtils->getCurrentConsumerOrg();
+    if (!isset($application, $org['url']) || $application->application_consumer_org_url->value !== $org['url']) {
+      $form_state->setErrorByName('selectedApplication', t('Invalid application: Provide a valid application to create a subscription.'));
+      return FALSE;
+    }
 
   }
 
@@ -177,9 +189,11 @@ class ChooseApplicationStep extends IbmWizardStepBase {
     $temp_store_factory = \Drupal::service('session_based_temp_store');
     /** @var \Drupal\session_based_temp_store\SessionBasedTempStore $temp_store */
     $temp_store = $temp_store_factory->get('ibm_apim.wizard');
+    $userUtils = \Drupal::service('ibm_apim.user_utils');
+    $org = $userUtils->getCurrentConsumerOrg();
 
     $application = \Drupal::entityTypeManager()->getStorage('node')->load($form_state->getUserInput()['selectedApplication']);
-    if ($application !== NULL) {
+    if (isset($application, $org['url']) && $application->application_consumer_org_url->value === $org['url']) {
       $temp_store->set('applicationUrl', $application->get('apic_url')->value);
       $temp_store->set('applicationName', $application->getTitle());
       $temp_store->set('applicationNodeId', $form_state->getUserInput()['selectedApplication']);

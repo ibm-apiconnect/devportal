@@ -15,8 +15,8 @@ Feature: Forgot Password
   Scenario: Request new password for andre user (non-admin) - via username
     Given I am not logged in
     Given users:
-      | name           | mail                     | pass     | status |
-      | forgotpwtest   | forgotpwtest@example.com | Qwert123 | 1      |
+      | name         | mail                     | pass     | status |
+      | forgotpwtest | forgotpwtest@example.com | Qwert123 | 1      |
     Given consumerorgs:
       | title               | name                | id    | owner        |
       | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | forgotpwtest |
@@ -33,8 +33,8 @@ Feature: Forgot Password
   Scenario: Request new password for andre user (non-admin) - via email address
     Given I am not logged in
     Given users:
-      | name           | mail                     | pass     | status |
-      | forgotpwtest   | forgotpwtest@example.com | Qwert123 | 1      |
+      | name         | mail                     | pass     | status |
+      | forgotpwtest | forgotpwtest@example.com | Qwert123 | 1      |
     Given consumerorgs:
       | title               | name                | id    | owner        |
       | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | forgotpwtest |
@@ -47,20 +47,20 @@ Feature: Forgot Password
     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
     And I am at "/user/login"
 
-   @api
-   Scenario: Request new password for admin user - username
-     Given I am not logged in
-     Given users:
-       | name              | mail              | pass                  | status |
-       | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
-     And I am at "/user/password"
-     And I enter "admin" for "name"
-     When I press the "Submit" button
-     Then there are no errors
-     And there are no warnings
-     And there are messages
-     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
-     And I am at "/user/login"
+  @api
+  Scenario: Request new password for admin user - username
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
+    And I am at "/user/password"
+    And I enter "admin" for "name"
+    When I press the "Submit" button
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
+    And I am at "/user/login"
 
   @api
   Scenario: Request new password for admin user - email address
@@ -109,9 +109,9 @@ Feature: Forgot Password
     Given the cache has been cleared
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
     When I am at "/user/password"
     Then I should see the text "Reset Password"
     And I should see the text "@data(user_registries[0].title)"
@@ -127,8 +127,8 @@ Feature: Forgot Password
     Given the cache has been cleared
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | yes     |
+      | type | title                           | url                           | user_managed | default |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | yes     |
     When I am at "/user/password"
     And I should see the text "@data(user_registries[2].title)"
     And I should see the text "If you have forgotten your 'admin' password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your authentication provider."
@@ -138,9 +138,9 @@ Feature: Forgot Password
     Given the cache has been cleared
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
     When I am at "/user/password"
     Then I should see the text "@data(user_registries[0].title)"
     And I should see the link "@data(user_registries[2].title)"
@@ -153,13 +153,13 @@ Feature: Forgot Password
   Scenario: Forgot password form for multiple users with the same name
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | yes     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | no           | no      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
     Given users:
-      | name           | mail                   | pass     |status | registry_url                  |
-      | forgotpw       | andre_lur@example.com  | Qwert123 | 1     | @data(user_registries[0].url) |
-      | forgotpw       | andre_ldap@example.com | Qwert123 | 1     | @data(user_registries[2].url) |
+      | name     | mail                   | pass     | status | registry_url                  |
+      | forgotpw | andre_lur@example.com  | Qwert123 | 1      | @data(user_registries[0].url) |
+      | forgotpw | andre_ldap@example.com | Qwert123 | 1      | @data(user_registries[2].url) |
     When I am at "/user/password"
     And I enter "forgotpw" for "name"
     And I press the "Submit" button
@@ -181,9 +181,9 @@ Feature: Forgot Password
     Given the cache has been cleared
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | no     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes           | yes      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | no      |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | yes          | yes     |
     When I am at "/user/password"
     Then I should see the text "Reset Password"
     And I should see the text "@data(user_registries[2].title)"
@@ -203,12 +203,12 @@ Feature: Forgot Password
     Given the cache has been cleared
     Given I am not logged in
     Given userregistries:
-      | type | title                             | url                               | user_managed | default |
-      | lur  | @data(user_registries[0].title)   | @data(user_registries[0].url)     | yes          | no     |
-      | ldap | @data(user_registries[2].title)   | @data(user_registries[2].url)     | yes           | yes      |
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | no      |
+      | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | yes          | yes     |
     Given users:
-      | name           | mail                     | pass     | status |
-      | forgotpwtest   | forgotpwtest@example.com | Qwert123 | 1      |
+      | name         | mail                     | pass     | status |
+      | forgotpwtest | forgotpwtest@example.com | Qwert123 | 1      |
     Given consumerorgs:
       | title               | name                | id    | owner        |
       | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | forgotpwtest |

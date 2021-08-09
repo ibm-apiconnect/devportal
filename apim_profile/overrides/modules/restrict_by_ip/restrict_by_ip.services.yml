@@ -1,0 +1,15 @@
+services:
+  restrict_by_ip.ip_tools:
+    class: Drupal\restrict_by_ip\IPTools
+    arguments: ["@config.factory"]
+  restrict_by_ip.login_firewall:
+    class: Drupal\restrict_by_ip\LoginFirewall
+    arguments: ["@restrict_by_ip.ip_tools","@config.factory","@logger.factory","@unrouted_url_assembler"]
+  restrict_by_ip.firewall_subscriber:
+    class: Drupal\restrict_by_ip\EventSubscriber\FirewallSubscriber
+    arguments: ["@restrict_by_ip.login_firewall","@current_user"]
+    tags:
+      - { name: event_subscriber }
+  restrict_by_ip.role_firewall:
+      class: Drupal\restrict_by_ip\RoleFirewall
+      arguments: ["@restrict_by_ip.ip_tools","@config.factory","@entity_type.manager"]

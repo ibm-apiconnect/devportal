@@ -13,9 +13,6 @@
 
 namespace Drupal\apic_api;
 
-use Drupal\apic_api\Event\ApiCreateEvent;
-use Drupal\apic_api\Event\ApiDeleteEvent;
-use Drupal\apic_api\Event\ApiUpdateEvent;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
@@ -106,6 +103,9 @@ class Api {
 
       // duplicate node
       $node = $oldNode->createDuplicate();
+
+      // update any apirefs on basic pages
+      $this->updateBasicPageRefs($oldNode->id(), $node->id());
 
       // wipe all our fields to ensure they get set to new values
       $node->set('apic_tags', []);
@@ -667,6 +667,8 @@ class Api {
    * @param $node
    *
    * @return bool
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public static function checkAccess($node): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
@@ -678,11 +680,12 @@ class Api {
     $productNids = Product::listProducts();
     $productNodes = Node::loadMultiple($productNids);
     $found = FALSE;
-    foreach ($productNodes as $productNode) {
-      foreach ($productNode->product_apis->getValue() as $arrayValue) {
-        $apis = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-        foreach ($apis as $prodRef) {
-          if ($prodRef['name'] === $node->apic_ref->value) {
+    foreach (array_chunk($productNids, 50) as $chunk) {
+      $productNodes = Node::loadMultiple($chunk);
+      foreach ($productNodes as $productNode) {
+        foreach ($productNode->product_apis->getValue() as $arrayValue) {
+          $api = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+          if (isset($api['name']) && $api['name'] === $node->apic_ref->value) {
             $found = TRUE;
           }
         }
@@ -901,5 +904,40 @@ class Api {
         }
       }
     }
+  }
+
+  /**
+   * Update any basic page references to point to the new node
+   *
+   * @param $oldNid
+   * @param $newNid
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function updateBasicPageRefs($oldNid, $newNid): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, null);
+
+    if (isset($oldNid, $newNid)) {
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'page')->condition('apiref', $oldNid, 'CONTAINS');
+      $nids = $query->execute();
+      if ($nids !== NULL && !empty($nids)) {
+        foreach ($nids as $nid) {
+          $node = Node::load($nid);
+          if ($node !== NULL) {
+            $newArray = $node->apiref->getValue();
+            foreach ($newArray as $key => $value) {
+              if ($value['target_id'] === (string) $oldNid) {
+                $newArray[$key]['target_id'] = (string) $newNid;
+              }
+            }
+            $node->set('apiref', $newArray);
+            $node->save();
+          }
+        }
+      }
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 }

@@ -59,7 +59,7 @@ class MeResponseReader extends RestResponseReader {
    *
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   * @param \Drupal\pathauto\MessengerInterface $messenger
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    * @param \Psr\Log\LoggerInterface $logger
    * @param \Drupal\ibm_apim\Service\ApimUtils $apim_utils
    * @param \Drupal\ibm_apim\Service\Utils $utils
@@ -85,7 +85,7 @@ class MeResponseReader extends RestResponseReader {
    * @param $response
    * @param null $response_object
    *
-   * @return \Drupal\auth_apic\Rest\MeResponse
+   * @return \Drupal\ibm_apim\Rest\MeResponse
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException
    */
   public function read($response, $response_object = NULL): ?RestResponseInterface {

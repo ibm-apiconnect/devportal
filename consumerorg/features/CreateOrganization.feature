@@ -11,6 +11,7 @@ Feature: Create consumer organization
       | title                     | name                     | id                     | owner             |
       | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     And I am logged in as "@data(andre.name)"
+    Given self service onboarding is enabled
     And I am at "/myorg/create"
     #Should I also be testing the action to click on "Create organization"?
     Then I should see the text "Create new consumer organization"
@@ -28,6 +29,7 @@ Feature: Create consumer organization
       | title                     | name                     | id                     | owner             |
       | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     And I am logged in as "@data(andre.name)"
+    Given self service onboarding is enabled
     And I am at "/myorg/create"
     When I enter "New org1" for "title[0][value]"
     And I press the "Submit" button
@@ -61,6 +63,7 @@ Feature: Create consumer organization
       | title                     | name                     | id                     | owner             |
       | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     And I am logged in as "@data(andre.name)"
+    Given self service onboarding is enabled
     And I am at "/myorg/create"
     When I enter "New org1,&-!" for "title[0][value]"
     And I press the "Submit" button

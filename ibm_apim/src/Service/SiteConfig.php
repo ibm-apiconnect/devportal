@@ -403,17 +403,16 @@ class SiteConfig {
       }
 
       // if selfSignUpEnabled is disabled then disable user registration
-      if ($config_data['consumer_self_service_onboarding'] !== NULL && (boolean) $config_data['consumer_self_service_onboarding'] === FALSE) {
-        $this->state->set('ibm_apim.selfSignUpEnabled', FALSE);
-        $this->configFactory->getEditable('user.settings')->set('register', UserInterface::REGISTER_ADMINISTRATORS_ONLY)->save();
-        $this->setCreateAccountLinkEnabled(FALSE);
-        // TODO hide create new org link
-      }
-      elseif ($config_data['consumer_self_service_onboarding'] !== NULL && (boolean) $config_data['consumer_self_service_onboarding'] === TRUE) {
+      if (isset($config_data['consumer_self_service_onboarding']) && (boolean) $config_data['consumer_self_service_onboarding'] === TRUE) {
         $this->state->set('ibm_apim.selfSignUpEnabled', TRUE);
         $this->configFactory->getEditable('user.settings')->set('register', UserInterface::REGISTER_VISITORS)->save();
         $this->setCreateAccountLinkEnabled(TRUE);
         // TODO show create new org link
+      } else {
+        $this->state->set('ibm_apim.selfSignUpEnabled', FALSE);
+        $this->configFactory->getEditable('user.settings')->set('register', UserInterface::REGISTER_ADMINISTRATORS_ONLY)->save();
+        $this->setCreateAccountLinkEnabled(FALSE);
+        // TODO hide create new org link
       }
 
       if (isset($config_data['analytics'])) {

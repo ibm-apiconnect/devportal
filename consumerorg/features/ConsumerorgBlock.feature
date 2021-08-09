@@ -9,6 +9,7 @@ Feature: Consumer Organization Block
       | name              | mail              | pass                  | status |
       | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
     Given I am logged in as "@data(admin.name)"
+    Given self service onboarding is enabled
     Given I am on the homepage
     Then I should see the text "admin"
 #    I cannot check for not seeing text "Organization" because there is an admin menu option of "Consumer organization"
@@ -26,6 +27,7 @@ Feature: Consumer Organization Block
       | title                     | name                     | id                     | owner             |
       | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.mail) |
     Given I am logged in as "@data(andre.mail)"
+    Given self service onboarding is enabled
     Given I am on the homepage
     Then I should see the text "@data(andre.consumerorg.title)"
     And I should see the text "My organization"
@@ -43,6 +45,7 @@ Feature: Consumer Organization Block
       | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | @data(andre[0].consumerorg.id) | @data(andre[0].mail) |
       | @data(andre[1].consumerorg.title) | @data(andre[1].consumerorg.name) | @data(andre[1].consumerorg.id) | @data(andre[0].mail) |
     Given I am logged in as "@data(andre[0].mail)"
+    Given self service onboarding is enabled
     Given I am on the homepage
     Then I should see the text "@data(andre[0].consumerorg.title)"
     And I should see the text "@data(andre[1].consumerorg.title)"

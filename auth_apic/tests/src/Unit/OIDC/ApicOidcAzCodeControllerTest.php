@@ -48,7 +48,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   protected $store;
 
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->logger = $this->prophet->prophesize('Psr\Log\LoggerInterface');
     $this->apimUtils = $this->prophet->prophesize('Drupal\ibm_apim\Service\ApimUtils');
@@ -89,11 +89,11 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->requestStack->query = $this->query;
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
-  public function testValidateOidcRedirect() {
+  public function testValidateOidcRedirect(): void {
     $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');
@@ -109,7 +109,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->assertEquals($this->controller->validateOidcRedirect(), "https://correctRedirectLocation.com");
   }
 
-  public function testValidateOidcRedirectError() {
+  public function testValidateOidcRedirectError(): void {
     $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
     $this->query->get('error')->willReturn('code 20805');
     $this->query->get('error_description')->willReturn('Server crashed');
@@ -118,7 +118,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->assertEquals($this->controller->validateOidcRedirect(), "<front>");
   }
 
-  public function testValidateOidcRedirectMissingCode() {
+  public function testValidateOidcRedirectMissingCode(): void {
     $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn();
@@ -127,7 +127,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->assertEquals($this->controller->validateOidcRedirect(), "<front>");
   }
 
-  public function testValidateOidcRedirectMissingState() {
+  public function testValidateOidcRedirectMissingState(): void {
     $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('code');
@@ -137,7 +137,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->assertEquals($this->controller->validateOidcRedirect(), "<front>");
   }
 
-  public function testValidateOidcRedirectIncorrectState() {
+  public function testValidateOidcRedirectIncorrectState(): void {
     $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');
@@ -149,7 +149,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->assertEquals($this->controller->validateOidcRedirect(), "<front>");
   }
 
-  public function testValidateOidcRedirectLoginFailed() {
+  public function testValidateOidcRedirectLoginFailed(): void {
     $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');

@@ -41,7 +41,7 @@ class ProductPlanServiceTest extends UnitTestCase {
    */
   protected $utils;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->languageManager = $this->prophet->prophesize(\Drupal\Core\Language\LanguageManagerInterface::class);
     $this->translationManager = $this->prophet->prophesize(\Drupal\Core\StringTranslation\TranslationManager::class);
@@ -87,7 +87,7 @@ class ProductPlanServiceTest extends UnitTestCase {
     });
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 

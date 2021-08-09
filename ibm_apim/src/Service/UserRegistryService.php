@@ -103,7 +103,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
     if (isset($data)) {
       $user_registries = [];
       foreach ($data as $ur) {
-        if (gettype($ur) === 'object' && $ur instanceof UserRegistry) {
+        if (is_object($ur) && $ur instanceof UserRegistry) {
           $user_registries[$ur->getUrl()] = $ur;
         }
         else {

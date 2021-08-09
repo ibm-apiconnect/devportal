@@ -1,4 +1,37 @@
 changes:
+  8.x-1.9.7:
+  - assertRegExp is deprecated use assertMatchesRegularExpression instead
+  - see if this fixes the NPE in the test
+  8.x-1.9.6:
+  - enable and disable onboarding
+  8.x-1.9.5:
+  - explicitly enable selfservice onboarding
+  8.x-1.9.4: null
+  8.x-1.9.3:
+  - fix conflicts
+  - need to set flood var on our form
+  8.x-1.9.2: null
+  8.x-1.9.1:
+  - fix tests
+  - fix tests
+  - need to not override existing method and use different name instead
+  - fix tests
+  - fix tests
+  - fix conflicts
+  - fix registry
+  - syntax fix
+  - add var
+  - missed file
+  - add 9 req
+  - fix conflicts
+  - dont pass in registry if not set
+  - only if url is not null
+  - fix render (#613)
+  - use void
+  - deprecated function
+  - remove deprecated entity.manager
+  8.x-1.9.0:
+  - update version 8.x-1.8.3 -> 8.x-1.9.0
   8.x-1.8.2:
   - fix logic
   - hide change password link for ro registries

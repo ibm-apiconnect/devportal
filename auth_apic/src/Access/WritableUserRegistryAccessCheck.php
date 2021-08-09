@@ -44,10 +44,11 @@ class WritableUserRegistryAccessCheck implements AccessInterface {
       $user = User::load($account->id());
       if ($user !== NULL) {
         $registry_url = $user->get('registry_url')->value;
-        $registryService = \Drupal::service('ibm_apim.user_registry');
-        $registry = $registryService->get($registry_url);
-
-        if (!$registry) {
+        if ($registry_url !== NULL) {
+          $registryService = \Drupal::service('ibm_apim.user_registry');
+          $registry = $registryService->get($registry_url);
+        }
+        if (!isset($registry)) {
           \Drupal::logger('auth_apic')->error('No registry found for %class', ['%class' => __CLASS__]);
           $allowed = FALSE;
         }
@@ -66,6 +67,7 @@ class WritableUserRegistryAccessCheck implements AccessInterface {
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $allowed);
     return AccessResult::allowedIf($allowed);
   }
+
 }
 
 

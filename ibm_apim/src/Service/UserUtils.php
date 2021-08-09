@@ -356,13 +356,13 @@ class UserUtils {
             }
           }
         }
-        if (!$found) {
-          $this->logger->debug('adding org to consumerorg urls list '.$orgUrl);
-          $org_urls[] = ['value' => $orgUrl];
-          $account->set('consumerorg_url', $org_urls);
-          $account->save();
-          $found = TRUE;
-        }
+      }
+      if (!$found) {
+        $this->logger->debug('adding org to consumerorg urls list %orgUrl', ['%orgUrl' => $orgUrl]);
+        $org_urls[] = ['value' => $orgUrl];
+        $account->set('consumerorg_url', $org_urls);
+        $account->save();
+        $found = TRUE;
       }
     }
     if (function_exists('ibm_apim_entry_trace')) {
@@ -431,7 +431,7 @@ class UserUtils {
       }
       $perm[$account->id()] = $perms;
     }
-    $return = isset($perm[$account->id()][$string]);
+    $return = in_array($string, array_values($perm[$account->id()]), TRUE);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $return);
     return $return;
   }
@@ -523,7 +523,7 @@ class UserUtils {
                 unset($value[$key]);
               } else if (!empty($value[$key]) && is_array($value[$key])) {
                 foreach(array_keys($value[$key]) as $attr) {
-                  if (is_array($input[$key]) && !array_key_exists($attr, $input[$key]) || $value[$key][$attr] == 'upload') {
+                  if (is_array($input[$key]) && (!array_key_exists($attr, $input[$key]) || $value[$key][$attr] === 'upload')) {
                     unset($value[$key][$attr]);
                   }
                 }

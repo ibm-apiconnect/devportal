@@ -1,0 +1,5 @@
+restrict_by_ip.general_settings:
+  title: Restrict by IP
+  parent: user.admin_index
+  description: General settings for Restrict by IP module.
+  route_name: restrict_by_ip.general_settings

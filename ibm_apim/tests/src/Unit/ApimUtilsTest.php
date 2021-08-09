@@ -33,13 +33,13 @@ class ApimUtilsTest extends UnitTestCase {
 
   protected $siteConfig;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
     $this->siteConfig = $this->prophet->prophesize(\Drupal\ibm_apim\Service\SiteConfig::class);
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 

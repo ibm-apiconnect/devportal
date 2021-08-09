@@ -32,7 +32,7 @@ class UsersFieldDataServiceTest extends UnitTestCase {
   protected $entityTypeManager;
   protected $userRegistryService;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->database = $this->prophet->prophesize(Connection::class);
     $this->logger = $this->prophet->prophesize(LoggerInterface::class);
@@ -43,7 +43,7 @@ class UsersFieldDataServiceTest extends UnitTestCase {
     $this->database->schema()->willReturn($this->schema->reveal());
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 

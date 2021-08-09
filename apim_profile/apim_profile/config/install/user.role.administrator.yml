@@ -89,7 +89,6 @@ permissions:
   - 'administer site configuration'
   - 'administer slick'
   - 'administer software updates'
-  - 'administer swiftmailer'
   - 'administer taxonomy'
   - 'administer taxonomy_term display'
   - 'administer taxonomy_term fields'

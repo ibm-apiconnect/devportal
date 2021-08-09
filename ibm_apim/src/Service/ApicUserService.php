@@ -190,7 +190,7 @@ class ApicUserService {
         $data['metadata'] = array_merge($getMeUser->getMetadata(),$customFields);
       } else {
         $this->messenger->addError(t('Your account was created/updated with errors. Please make sure your information was correctly saved in your account.'));
-        $this->logger->error((int) $apic_me->getCode() . ' code received while trying to retrieve user metadata.');
+        $this->logger->error('%code code received while trying to retrieve user metadata.', ['%code' => (int) $apic_me->getCode()]);
       }
     }
 

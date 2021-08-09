@@ -79,7 +79,7 @@ class MailServiceUnitTest extends UnitTestCase {
 
   protected $emailValidation;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->emailValidator = $this->prophet->prophesize(\Drupal\Component\Utility\EmailValidator::class);
 
@@ -123,7 +123,7 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->entitySubscriptionStorage->getQuery()->willReturn($this->subscriptionQuery->reveal());
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 

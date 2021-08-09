@@ -37,13 +37,13 @@ class UserRegistryServiceTest extends UnitTestCase {
 
   protected $state;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->logger = $this->prophet->prophesize(LoggerInterface::class);
     $this->state = $this->prophet->prophesize(State::class);
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 

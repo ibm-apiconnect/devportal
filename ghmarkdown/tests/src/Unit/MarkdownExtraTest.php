@@ -10,14 +10,15 @@ use Drupal\ghmarkdown\cebe\markdown\MarkdownExtra;
  */
 class MarkdownExtraTest extends BaseMarkdownTest {
 
-  public function createMarkdown() {
+  public function createMarkdown(): MarkdownExtra {
     return new MarkdownExtra();
   }
 
-  public function getDataPaths() {
+  public function getDataPaths(): array {
     return [
       'markdown-data' => __DIR__ . '/markdown-data',
       'extra-data' => __DIR__ . '/extra-data',
     ];
   }
+
 }

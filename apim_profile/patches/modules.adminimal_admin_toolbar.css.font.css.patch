@@ -5,31 +5,31 @@
 +/* Use local Plex instead of using Open Sans webfont from Google CDN */
  @font-face {
 -  font-family: 'Open Sans';
-+  font-family: 'IBM Plex';
++  font-family: 'IBM Plex Sans', sans-serif;
    font-style: normal;
    font-weight: 300;
 -  src: local('Open Sans Light'), local('OpenSans-Light'), url(https://themes.googleusercontent.com/static/fonts/opensans/v6/DXI1ORHCpsQm3Vp6mXoaTRsxEYwM7FgeyaSgU71cLG0.woff) format('woff');
-+  src: url('../../../themes/connect_theme/fonts/IBMPlexSans-Light.woff') format('woff')
++  src: url('../../../themes/connect_theme/fonts/sans/IBMPlexSans-Light.woff') format('woff')
  }
  @font-face {
 -  font-family: 'Open Sans';
-+  font-family: 'IBM Plex';
++  font-family: 'IBM Plex Sans', sans-serif;
    font-style: normal;
    font-weight: 400;
 -  src: local('Open Sans'), local('OpenSans'), url(https://themes.googleusercontent.com/static/fonts/opensans/v6/uYKcPVoh6c5R0NpdEY5A-Q.woff) format('woff');
-+  src: url('../../../themes/connect_theme/fonts/IBMPlexSans-Light.woff') format('woff')
++  src: url('../../../themes/connect_theme/fonts/sans/IBMPlexSans-Normal.woff') format('woff')
  }
  @font-face {
 -  font-family: 'Open Sans';
-+  font-family: 'IBM Plex';
++  font-family: 'IBM Plex Sans', sans-serif;
    font-style: normal;
 -  font-weight: 600;
 -  src: local('Open Sans Semibold'), local('OpenSans-Semibold'), url(https://themes.googleusercontent.com/static/fonts/opensans/v6/MTP_ySUJH_bn48VBG8sNShsxEYwM7FgeyaSgU71cLG0.woff) format('woff');
-+  font-weight: 700;
-+  src: url('../../../themes/connect_theme/fonts/IBMPlexSans-Light.woff') format('woff')
++  font-weight: 600;
++  src: url('../../../themes/connect_theme/fonts/sans/IBMPlexSans-SemiBold.woff') format('woff')
  }
  
  .adminimal-admin-toolbar .toolbar {
 -  font-family: "Open Sans", sans-serif;
-+  font-family: "IBM Plex";
++  font-family: "IBM Plex Sans", sans-serif;
  }

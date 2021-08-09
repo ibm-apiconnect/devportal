@@ -18,6 +18,7 @@
 
 namespace Drupal\ibm_apim\UserManagement;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -226,7 +227,7 @@ class ApicAccountService implements ApicAccountInterface {
   /**
    * @inheritDoc
    */
-  public function updateLocalAccountRoles(ApicUser $user, $roles): bool {
+  public function updateLocalAccountRoles(ApicUser $user, array $roles): bool {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -303,16 +304,16 @@ class ApicAccountService implements ApicAccountInterface {
   /**
    * @{inheritdoc}
    *
-   * @param \Drupal\ibm_apim\ApicType\ApicUser $apic_user
+   * @param ApicUser $apic_user
    * @param \Drupal\user\Entity\User $user
-   * @param \Drupal\user\Entity\User $form_state
+   * @param FormStateInterface $form_state
    * @param string $view_mode
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function saveCustomFields($apic_user, $user, $form_state, $view_mode = 'register'): void {
+  public function saveCustomFields(ApicUser $apic_user, $user, FormStateInterface $form_state, $view_mode = 'register'): void {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }

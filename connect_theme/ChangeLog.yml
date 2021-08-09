@@ -1,4 +1,13 @@
 changes:
+  8.x-1.8.3:
+  - ensure jquery.once loaded for dropit
+  - fix app and org menu dropdowns
+  8.x-1.8.2:
+  - fix dropit on list pages (#209)
+  8.x-1.8.1:
+  - add d9 req
+  8.x-1.8.0:
+  - update version 8.x-1.7.1 -> 8.x-1.8.0
   8.x-1.7.0:
   - update version: 8.x-1.6.3 -> 8.x-1.7.0
   8.x-1.6.2:

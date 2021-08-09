@@ -12,9 +12,9 @@ Feature: APIACL
       | andre_one | andre_one@example.com | Qwert123 | 1      |
       | andre_two | andre_two@example.com | Qwert123 | 1      |
     Given consumerorgs:
-      | title          | name           | id                       | owner     | tags    |
-      | a1_consumerorg | a1-consumerorg | a18843f3e4b07631568a159d | andre_one | testers |
-      | a2_consumerorg | a2-consumerorg | a28843f3e4b07631568a159d | andre_two | others  |
+      | title          | name           | id                       | owner     | tags                           |
+      | a1_consumerorg | a1-consumerorg | a18843f3e4b07631568a159d | andre_one | /consumer-api/groups/567804321 |
+      | a2_consumerorg | a2-consumerorg | a28843f3e4b07631568a159d | andre_two | /consumer-api/groups/455223456 |
 # For this to work, we need to create an API and then include it in a product
     Given I am logged in as "andre_one"
     Then I should not see the text "Unrecognized username or password"
@@ -22,7 +22,7 @@ Feature: APIACL
     Given I publish a product with the name "product1_@now", id "product1_@now", apis "api1_@now" and visibility "pub" true
     Given I publish a product with the name "product2_@now", id "product2_@now", apis "api2_@now" and visibility "auth" true
     Given I publish a product with the name "product3_@now", id "product3_@now", apis "api3_@now" and visibility "org_urls" "/consumer-orgs/1234/5678/a18843f3e4b07631568a159d"
-    Given I publish a product with the name "product4_@now", id "product4_@now", apis "api4_@now" and visibility "tags" "testers"
+    Given I publish a product with the name "product4_@now", id "product4_@now", apis "api4_@now" and visibility "tags" "/consumer-api/groups/567804321"
     Given I publish an api with the name "api1_@now"
     Given I publish an api with the name "api2_@now"
     Given I publish an api with the name "api3_@now"

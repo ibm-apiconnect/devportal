@@ -30,6 +30,8 @@ use Drupal\node\NodeInterface;
 use Drupal\product\Product;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+
 
 /* Permissions that can be granted */
 define('EDIT_ANY_PRODUCT_CONTENT_GRANT', 1);
@@ -232,7 +234,7 @@ function product_node_grants($account, $op) {
   if ($userUtils->explicitUserAccess('edit any product content')) {
     $grants['product'][] = EDIT_ANY_PRODUCT_CONTENT_GRANT;
   }
- 
+
   // Subscriptions and tags are only set for orgs, so only run that code
   // if the user is in a development organisation
   $myOrg = $userUtils->getCurrentConsumerOrg();
@@ -301,6 +303,8 @@ WHERE (id.consumerorg_url_value = '" . $orgUrl . "')", [], $options);
  * @param \Drupal\Core\Session\AccountInterface $account
  *
  * @return \Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultForbidden|\Drupal\Core\Access\AccessResultNeutral
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  */
 function product_node_access(NodeInterface $node, $operation, AccountInterface $account) {
   $type = $node->type;
@@ -510,6 +514,11 @@ function product_preprocess_node(&$variables) {
       }
       $variables['apiList'] = $apiList;
       if ($variables['view_mode'] === 'full' || $variables['view_mode'] === 'subscribewizard') {
+        $haveAccess = Product::checkAccess($variables['node']);
+        if (!$haveAccess) {
+          throw new AccessDeniedHttpException();
+        }
+
         // pre-process the list of plans in the product
         $planArray = [];
         $productPlans = [];
@@ -688,7 +697,7 @@ function product_check_product_subscribe($node) {
                 }
                 if ($returnValue === FALSE) {
                   $corgService = \Drupal::service('ibm_apim.consumerorg');
-                  $consumerOrg = $corgService->get($myOrg['url']); 
+                  $consumerOrg = $corgService->get($myOrg['url']);
                   if (isset($consumerOrg)) {
                     $tags = $consumerOrg->getTags();
                     if ($tags !== NULL && is_array($tags) && count($tags) > 0) {

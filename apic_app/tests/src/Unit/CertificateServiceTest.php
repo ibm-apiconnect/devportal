@@ -39,7 +39,7 @@ class CertificateServiceTest extends UnitTestCase {
 
   protected $configFactory;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->utils = $this->prophet->prophesize(\Drupal\ibm_apim\Service\Utils::class);
     $this->configFactory = $this->prophet->prophesize(\Drupal\Core\Config\ConfigFactory::class);
@@ -52,7 +52,7 @@ class CertificateServiceTest extends UnitTestCase {
     $this->utils->startsWith(Argument::containingString('-----BEGIN CERTIFICATE-----'), '-----BEGIN CERTIFICATE-----')->willReturn(TRUE);
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 

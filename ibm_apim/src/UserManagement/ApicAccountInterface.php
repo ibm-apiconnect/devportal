@@ -14,6 +14,7 @@
 namespace Drupal\ibm_apim\UserManagement;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
@@ -55,12 +56,12 @@ interface ApicAccountInterface {
    *
    * @param ApicUser $user
    *  the user to update
-   * @param array roles
+   * @param array $roles
    *  the complete list of roles to set for this user
    *
    * @return bool
    */
-  public function updateLocalAccountRoles(ApicUser $user, $roles): bool;
+  public function updateLocalAccountRoles(ApicUser $user, array $roles): bool;
 
   /**
    * Updates the user profile of an apim user.
@@ -73,16 +74,15 @@ interface ApicAccountInterface {
   public function updateApicAccount(ApicUser $user): ?ApicUser ;
 
   /**
-   * @param $apic_user ApicUser
-   * @param $user user account
-   * @param $form_state user.register form state
-   * @param $view_mode entity view mode
-   *
+   * @param ApicUser $apic_user
+   * @param $user
+   * @param FormStateInterface $form_state
+   * @param $view_mode
    */
-  public function saveCustomFields($apic_user, $user, $form_state, $view_mode): void;
+  public function saveCustomFields(ApicUser $apic_user, $user, FormStateInterface $form_state, $view_mode): void;
 
   /**
-   * @param $user user account
+   * @param $user
    */
   public function setDefaultLanguage($user): void;
 

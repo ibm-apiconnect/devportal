@@ -39,7 +39,7 @@ view_mode ? ('node--view-mode-' ~ view_mode)|clean_class
         {% if prodNode %}
           <a href="{{- path('product.api', {'prodNode': prodNode, 'apiNode': apiNode}) -}}" rel="bookmark">
         {% else %}
-          <a href="{{- path('apic_api.view', {'apiNode': apiNode}) -}}" rel="bookmark">
+          <a href="{{- path('product.select', {'apiNode': apiNode}) -}}" rel="bookmark">
         {% endif %}
           <span id="node-{{ node.id }}-title" class="apicApiName apicTruncate">{{- label -}}</span>
           {% if showVersions %}

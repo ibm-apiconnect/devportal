@@ -1,4 +1,13 @@
 changes:
+  8.x-1.12.3:
+  - make modals look how they should!
+  8.x-1.12.2: null
+  8.x-1.12.1:
+  - fix conflicts
+  - use void
+  - fix conflicts
+  8.x-1.12.0:
+  - update version 8.x-1.11.2 -> 8.x-1.12.0
   8.x-1.11.1:
   - use x path alias from subscriptions if present (#223)
   8.x-1.11.0:

@@ -47,7 +47,7 @@ namespace Drupal\Tests\auth_apic\Unit {
 
     protected $drupalUserStorage;
 
-    protected function setup() {
+    protected function setup(): void {
       $this->prophet = new Prophet();
       $this->mgmtServer = $this->prophet->prophesize(APIMServer::class);
       $this->messenger = $this->prophet->prophesize(Messenger::class);
@@ -60,7 +60,7 @@ namespace Drupal\Tests\auth_apic\Unit {
 
     }
 
-    protected function tearDown() {
+    protected function tearDown(): void {
       $this->prophet->checkPredictions();
     }
 
@@ -142,10 +142,10 @@ namespace Drupal\Tests\auth_apic\Unit {
 
     }
 
-    public function testLookupAccountAdminByName() {
+    public function testLookupAccountAdminByName(): void {
 
       $admin = $this->prophet->prophesize(User::class);
-      $admin->getUsername()->willReturn('admin');
+      $admin->getAccountName()->willReturn('admin');
       $this->drupalUserStorage->load(1)->willReturn($admin->reveal());
 
       $this->logger->notice('lookUpAccount: identified user as admin account')->shouldBeCalled();
@@ -158,10 +158,10 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->assertNotNull($account);
     }
 
-    public function testLookupAccountAdminByEmail() {
+    public function testLookupAccountAdminByEmail(): void {
 
       $admin = $this->prophet->prophesize(User::class);
-      $admin->getUsername()->willReturn('admin');
+      $admin->getAccountName()->willReturn('admin');
 
       $mail_field = $this->prophet->prophesize(FieldItemList::class);
       $mail_field->getValue()->willReturn([['value' => 'admin@example.com']]);
@@ -178,10 +178,10 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->assertNotNull($account);
     }
 
-    public function testLookupAccountAndreByName() {
+    public function testLookupAccountAndreByName(): void {
 
       $admin = $this->prophet->prophesize(User::class);
-      $admin->getUsername()->willReturn('admin');
+      $admin->getAccountName()->willReturn('admin');
 
       $mail_field = $this->prophet->prophesize(FieldItemList::class);
       $mail_field->getValue()->willReturn([['value' => 'admin@example.com']]);
@@ -202,10 +202,10 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->assertNotNull($account);
     }
 
-    public function testLookupAccountAndreByMailAddress() {
+    public function testLookupAccountAndreByMailAddress(): void {
 
       $admin = $this->prophet->prophesize(User::class);
-      $admin->getUsername()->willReturn('admin');
+      $admin->getAccountName()->willReturn('admin');
 
       $mail_field = $this->prophet->prophesize(FieldItemList::class);
       $mail_field->getValue()->willReturn([['value' => 'admin@example.com']]);
@@ -223,10 +223,10 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->assertNotNull($account);
     }
 
-    public function testLookupAccountNotKnownByName() {
+    public function testLookupAccountNotKnownByName(): void {
 
       $admin = $this->prophet->prophesize(User::class);
-      $admin->getUsername()->willReturn('admin');
+      $admin->getAccountName()->willReturn('admin');
 
       $mail_field = $this->prophet->prophesize(FieldItemList::class);
       $mail_field->getValue()->willReturn([['value' => 'admin@example.com']]);
@@ -247,10 +247,10 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->assertNull($account);
     }
 
-    public function testLookupAccountNotKnownByMailAddress() {
+    public function testLookupAccountNotKnownByMailAddress(): void {
 
       $admin = $this->prophet->prophesize(User::class);
-      $admin->getUsername()->willReturn('admin');
+      $admin->getAccountName()->willReturn('admin');
 
       $mail_field = $this->prophet->prophesize(FieldItemList::class);
       $mail_field->getValue()->willReturn([['value' => 'admin@example.com']]);

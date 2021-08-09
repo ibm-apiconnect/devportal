@@ -33,7 +33,7 @@ class MockServiceHandler {
    *   Whether to use MockSiteConfig service or load individually mocked MockPermissionsService,
    *   MockUserRegistryService etc instead
    */
-  public static function install($siteDirectory, $modulesDirectory, $userRegistry = 'lur', $mockSiteConfig = TRUE): void {
+  public static function install(string $siteDirectory, string $modulesDirectory, $userRegistry = 'lur', $mockSiteConfig = TRUE): void {
     /*
      * This code came from : http://drupal.stackexchange.com/questions/197046/how-to-inject-a-fake-class-into-container-when-running-webtestbase-tests#comment237939_197060
      * (code from the Redis module for Drupal 8)
@@ -69,13 +69,9 @@ class MockServiceHandler {
     $contents = file_get_contents($settingsPhp);
     $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/auth_apic/src/Tests/auth_apic_mock.services.yml\';';
     $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/apic_app/src/Tests/application_mock.services.yml\';';
+    $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/ibm_apim/src/Service/Mocks/mock_ibm_apim.services.yml\';';
 
-    if (!$mockSiteConfig) {
-      // Use either these mocks ...
-      $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/ibm_apim/src/Service/Mocks/mock_ibm_apim.services.yml\';';
-    }
-    else {
-      // ... or just mock the whole of the site config service
+    if ($mockSiteConfig) {
       $contents .= "\n\n" . '$settings[\'container_yamls\'][] = \'' . $modulesDirectory . '/ibm_apim/src/Service/Mocks/mock_site_config.services.yml\';';
     }
 
@@ -112,7 +108,7 @@ class MockServiceHandler {
    * @param string $siteDirectory
    *   Site directory on the portal node.
    */
-  public static function uninstall($siteDirectory): void {
+  public static function uninstall(string $siteDirectory): void {
 
     print 'Uninstalling mock services from ' . $siteDirectory . "\n";
 

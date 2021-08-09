@@ -13,15 +13,15 @@
 namespace Drupal\ibm_apim\EventSubscriber;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 class RemoveXGeneratorSubscriber implements EventSubscriberInterface {
 
   /**
-   * @param \Symfony\Component\HttpKernel\Event\FilterResponseEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\ResponseEvent $event
    */
-  public function RemoveXGenerator(FilterResponseEvent $event) : void{
+  public function RemoveXGenerator(ResponseEvent $event): void {
     $response = $event->getResponse();
     $response->headers->remove('X-Generator');
   }

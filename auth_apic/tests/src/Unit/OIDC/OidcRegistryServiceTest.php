@@ -38,7 +38,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
   protected $apimUtils;
   protected $oidcStateService;
 
-  protected function setup() {
+  protected function setup(): void {
     $this->prophet = new Prophet();
     $this->state = $this->prophet->prophesize('Drupal\Core\State\StateInterface');
     $this->logger = $this->prophet->prophesize('Psr\Log\LoggerInterface');
@@ -47,14 +47,14 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->oidcStateService = $this->prophet->prophesize('Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface');
   }
 
-  protected function tearDown() {
+  protected function tearDown(): void {
     $this->prophet->checkPredictions();
   }
 
   /**
    * Positive test to get oidc metadata.
    */
-  public function testValidOidcMetadata() {
+  public function testValidOidcMetadata(): void {
 
     $oidc_registry = new UserRegistry();
     $oidc_registry->setRegistryType('oidc');
@@ -80,13 +80,13 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->assertNotNull($response['image'], 'unexpected NULL image when gathering oidc metadata.');
 
 
-    $this->assertRegExp('/^https:\/\/mgmt.example.com\/consumer-api\/oauth2\/authorize?/', $response['az_url'], 'Expected start not found in authorization url.');
-    $this->assertRegExp('/client_id=iamaclientid/', $response['az_url'], 'Expected client_id query parameter not found in authorization url.');
-    $this->assertRegExp('/state=base64encodedstate/', $response['az_url'], 'Expected state query parameter not found in authorization url.');
-    $this->assertRegExp('/redirect_uri=https:\/\/portal.example.com\/test\/env/', $response['az_url'], 'Expected redirect_uri query parameter not found in authorization url.');
+    self::assertMatchesRegularExpression('/^https:\/\/mgmt.example.com\/consumer-api\/oauth2\/authorize?/', $response['az_url'], 'Expected start not found in authorization url.');
+    self::assertMatchesRegularExpression('/client_id=iamaclientid/', $response['az_url'], 'Expected client_id query parameter not found in authorization url.');
+    self::assertMatchesRegularExpression('/state=base64encodedstate/', $response['az_url'], 'Expected state query parameter not found in authorization url.');
+    self::assertMatchesRegularExpression('/redirect_uri=https:\/\/portal.example.com\/test\/env/', $response['az_url'], 'Expected redirect_uri query parameter not found in authorization url.');
     // TODO: note no realm ... see comment above.
-    $this->assertRegExp('/realm=/', $response['az_url'], 'Expected realm query parameter not found in authorization url.');
-    $this->assertRegExp('/esponse_type=code/', $response['az_url'], 'Expected response_code query parameter not found in authorization url.');
+    self::assertMatchesRegularExpression('/realm=/', $response['az_url'], 'Expected realm query parameter not found in authorization url.');
+    self::assertMatchesRegularExpression('/esponse_type=code/', $response['az_url'], 'Expected response_code query parameter not found in authorization url.');
 
     //$this->assertEquals($response['az_url'], 'https://mgmt.example.com/consumer-api/oauth2/authorize?client_id=iamaclientid&state=base64encodedstate&redirect_uri=http://portal.example.com/test/env&realm=&response_type=code', 'Unexpected authorization url.');
     $this->assertStringStartsWith('<svg ', $response['image'], 'Unexpected image.');
@@ -96,7 +96,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
   /**
    * Valid - test with invitation object
    */
-  public function testValidOidcMetadataWithInvitationObject() {
+  public function testValidOidcMetadataWithInvitationObject(): void {
 
     $oidc_registry = new UserRegistry();
     $oidc_registry->setRegistryType('oidc');
@@ -121,8 +121,8 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->assertNotNull($response['az_url'], 'unexpected NULL az_url when gathering oidc metadata.');
     $this->assertNotNull($response['image'], 'unexpected NULL image when gathering oidc metadata.');
 
-    $this->assertRegExp('/&token=blahdeblah$/', $response['az_url'], 'Expected token query parameter not found in authorization url.');
-    $this->assertStringStartsWith('<svg ', $response['image'], 'Unexpected image.');
+    self::assertMatchesRegularExpression('/&token=blahdeblah$/', $response['az_url'], 'Expected token query parameter not found in authorization url.');
+    self::assertStringStartsWith('<svg ', $response['image']['html'], 'Unexpected image.');
 
   }
 
@@ -130,7 +130,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
   /**
    * Invalid - non oidc registry.
    */
-  public function testNonOidcRegistry() {
+  public function testNonOidcRegistry(): void {
     $non_oidc_registry = new UserRegistry();
     $non_oidc_registry->setRegistryType('lur');
 
@@ -147,7 +147,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
   /**
    * Invalid - no client id
    */
-  public function testNoClientId() {
+  public function testNoClientId(): void {
     $registry = new UserRegistry();
     $registry->setRegistryType('oidc');
 

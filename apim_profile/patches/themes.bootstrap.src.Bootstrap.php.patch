@@ -1,6 +1,6 @@
 --- themes/bootstrap/src/Bootstrap.php	2017-08-25 08:32:27.000000000 +0100
 +++ themes/bootstrap/src/Bootstrap.php	2017-08-25 08:34:26.000000000 +0100
-@@ -339,8 +339,11 @@
+@@ -339,8 +339,13 @@
          'contains' => [
            // Primary class.
            t('Confirm')->render()            => 'primary',
@@ -9,6 +9,8 @@
            t('Log in')->render()             => 'primary',
 +          t('Sign in')->render()             => 'primary',
 +          t('Subscribe')->render()             => 'primary',
++          t('Save')->render()              => 'primary',
++          t('Verify')->render()              => 'primary',
            t('Submit')->render()             => 'primary',
            t('Search')->render()             => 'primary',
            t('Settings')->render()           => 'primary',
