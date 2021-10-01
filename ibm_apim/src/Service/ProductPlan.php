@@ -293,15 +293,15 @@ class ProductPlan {
             $operationRateData = NULL;
             if ($planRateData !== NULL) {
               $operationRateData = $planRateData;
-              unset($operationRateData['bursts']);
+              unset($operationRateData['#bursts']);
             }
             if (isset($resource['rate-limits'])) {
               if (count($resource['rate-limits']) > 1) {
-                $operationRateData = ['rates' => []];
-                $operationRateData['rateLabel'] = $this->translationManager->translate('Rate limits');
-                $operationRateData['burstLabel'] = $this->translationManager->translate('Burst limits');
+                $operationRateData = ['#rates' => []];
+                $operationRateData['#rateLabel'] = $this->translationManager->translate('Rate limits');
+                $operationRateData['#burstLabel'] = $this->translationManager->translate('Burst limits');
                 foreach ($resource['rate-limits'] as $rateLimit) {
-                  $operationRateData['rates'][] = $this->parseRateLimit($rateLimit['value']);
+                  $operationRateData['#rates'][] = $this->parseRateLimit($rateLimit['value']);
                 }
                 $rateLimit = $this->translationManager->translate('@count rate limits *', ['@count' => count($resource['rate-limits'])]);
               }

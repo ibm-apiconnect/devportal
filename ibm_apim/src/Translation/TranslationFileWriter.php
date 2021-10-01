@@ -15,6 +15,7 @@ namespace Drupal\ibm_apim\Translation;
 
 use Drupal\Component\Gettext\PoHeader;
 use Drupal\Component\Gettext\PoStreamWriter;
+use Throwable;
 
 class TranslationFileWriter {
 
@@ -67,7 +68,7 @@ class TranslationFileWriter {
         $writer->writeItem($item);
       }
       $writer->close();
-    } catch (\Exception $exception) {
+    } catch (Throwable $exception) {
       throw $exception;
     }
   }

@@ -16,6 +16,7 @@ namespace Drupal\Tests\ibm_apim\Unit;
 use Drupal\ibm_apim\JsonStreamingParser\CollectionListener;
 use Drupal\Tests\UnitTestCase;
 use JsonStreamingParser\Parser;
+use Throwable;
 
 /**
  * @coversDefaultClass \Drupal\ibm_apim\Service\ApicUserService
@@ -36,7 +37,7 @@ class CollectionListenerTest extends UnitTestCase {
       $parser = new Parser($stream, $listener);
       $parser->parse();
       fclose($stream);
-    } catch (\Exception $e) {
+    } catch (Throwable $e) {
       fclose($stream);
       throw $e;
     }

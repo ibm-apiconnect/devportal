@@ -1,4 +1,10 @@
 changes:
+  8.x-2.6.1:
+  - missing close tag
+  8.x-2.6.0:
+  - update version 8.x-2.5.1 -> 8.x-2.6.0
+  8.x-2.5.0:
+  - update version 8.x-2.4.7 -> 8.x-2.5.0
   8.x-2.4.6: null
   8.x-2.4.5:
   - apimesh/devportal#6746

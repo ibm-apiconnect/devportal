@@ -185,7 +185,7 @@ class ApicRest implements ApicRestInterface {
             curl_setopt($resource, CURLOPT_PROXYUSERPWD, $proxy_auth);
           }
           curl_setopt($resource, CURLOPT_FOLLOWLOCATION, TRUE);
-          $apim_rest_trace = (boolean) \Drupal::config('ibm_apim.settings')->get('apim_rest_trace');
+          $apim_rest_trace = (boolean) \Drupal::config('ibm_apim.devel_settings')->get('apim_rest_trace');
           if ($apim_rest_trace === TRUE) {
             \Drupal::logger('ibm_apim_rest')->debug('Proxy URL: %data', ['%data' => $proxy_url]);
           }
@@ -219,7 +219,7 @@ class ApicRest implements ApicRestInterface {
     self::curl_set_accept_ssl($resource, $insecure, $providedCertificate);
 
     if (\Drupal::hasContainer()) {
-      $apim_rest_trace = (boolean) \Drupal::config('ibm_apim.settings')->get('apim_rest_trace');
+      $apim_rest_trace = (boolean) \Drupal::config('ibm_apim.devel_settings')->get('apim_rest_trace');
       if ($apim_rest_trace === TRUE) {
         curl_setopt($resource, CURLOPT_VERBOSE, TRUE);
         \Drupal::logger('ibm_apim_rest')->debug('Payload: %data', ['%data' => serialize($data)]);
@@ -696,7 +696,7 @@ class ApicRest implements ApicRestInterface {
             curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxy_auth);
           }
           curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
-          $apim_rest_trace = (boolean) \Drupal::config('ibm_apim.settings')->get('apim_rest_trace');
+          $apim_rest_trace = (boolean) \Drupal::config('ibm_apim.devel_settings')->get('apim_rest_trace');
           if ($apim_rest_trace === TRUE) {
             \Drupal::logger('ibm_apim_rest')->debug('Proxy URL: %data', ['%data' => $proxy_url]);
           }
@@ -711,7 +711,7 @@ class ApicRest implements ApicRestInterface {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 
     if (\Drupal::hasContainer()) {
-      $apim_rest_trace = (boolean) \Drupal::config('ibm_apim.settings')->get('apim_rest_trace');
+      $apim_rest_trace = (boolean) \Drupal::config('ibm_apim.devel_settings')->get('apim_rest_trace');
       if ($apim_rest_trace === TRUE) {
         curl_setopt($ch, CURLOPT_VERBOSE, TRUE);
         \Drupal::logger('ibm_apim_rest')->debug('Payload: %data', ['%data' => serialize($data)]);

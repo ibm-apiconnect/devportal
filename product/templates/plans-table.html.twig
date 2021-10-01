@@ -73,7 +73,7 @@
 
         {% if plan.data.description is defined and plan.data.description is not empty %}
           <div class="planDescription body-short-01">
-            <span title="{{ plan.data.description }}">{{ plan.data.description }}</span>
+            <span title="{{ plan.data.description }}">{{ plan.data.description|markdown }}</span>
           </div>
         {% else %}
           <div class="planDescription"></div>
@@ -121,7 +121,7 @@
                  data-target="#planModal{{ loop.index }}" class="planDetail--modalClose" title={{ 'Close'|t }}>{{ close_svg|raw }}</a>
               <h2 class="productive-heading-04">{{ plan.data.title }}</h2>
               <div class="body-short-01">
-                {{ plan.data.description }}
+                {{ plan.data.description|markdown }}
               </div>
               <div class="planDetail--subscribe">
                 {% if subscribable %}

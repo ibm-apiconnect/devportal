@@ -23,13 +23,14 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\ibm_apim\Service\SiteConfig;
-use Drupal\session_based_temp_store\SessionBasedTempStore;
-use Drupal\session_based_temp_store\SessionBasedTempStoreFactory;
+use Drupal\Core\TempStore\PrivateTempStore;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
-class ApicUserInvitationController extends ControllerBase {
+class ApicUserInvitationController extends ControllerBase
+{
 
   // session store for invitation token will use a short lifetime - 15 minutes
   public const INVITATION_COOKIE_TIMEOUT = 900;
@@ -45,9 +46,9 @@ class ApicUserInvitationController extends ControllerBase {
   protected SiteConfig $siteConfig;
 
   /**
-   * @var \Drupal\session_based_temp_store\SessionBasedTempStore
+   * @var \Drupal\Core\TempStore\PrivateTempStore
    */
-  protected SessionBasedTempStore $sessionStore;
+  protected PrivateTempStore $sessionStore;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface
@@ -84,7 +85,7 @@ class ApicUserInvitationController extends ControllerBase {
    *
    * @param \Drupal\auth_apic\Service\Interfaces\TokenParserInterface $tokenParser
    * @param \Drupal\ibm_apim\Service\SiteConfig $site_config
-   * @param \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $tempStoreFactory
+   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $tempStoreFactory
    * @param \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface $user_storage
    * @param \Psr\Log\LoggerInterface $logger
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
@@ -94,7 +95,7 @@ class ApicUserInvitationController extends ControllerBase {
    */
   public function __construct(TokenParserInterface $tokenParser,
                               SiteConfig $site_config,
-                              SessionBasedTempStoreFactory $tempStoreFactory,
+                              PrivateTempStoreFactory $tempStoreFactory,
                               ApicUserStorageInterface $user_storage,
                               LoggerInterface $logger,
                               AccountProxyInterface $current_user,
@@ -122,7 +123,7 @@ class ApicUserInvitationController extends ControllerBase {
     return new static(
       $container->get('auth_apic.jwtparser'),
       $container->get('ibm_apim.site_config'),
-      $container->get('session_based_temp_store'),
+      $container->get('tempstore.private'),
       $container->get('ibm_apim.user_storage'),
       $container->get('logger.channel.auth_apic'),
       $container->get('current_user'),
@@ -176,11 +177,11 @@ class ApicUserInvitationController extends ControllerBase {
     // redirect based on whether we think this user has an account or needs to register
     if (isset($existing_account)) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'invitation of existing user');
-      return $this->redirect('user.login');
+      return $this->redirect('user.login', ['token' => $invitationToken]);
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'invitation of new user');
-    return $this->redirect('user.register');
+    return $this->redirect('user.register', ['token' => $invitationToken]);
 
   }
 

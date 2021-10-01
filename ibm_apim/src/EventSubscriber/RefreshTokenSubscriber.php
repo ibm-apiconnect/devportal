@@ -70,7 +70,7 @@ class RefreshTokenSubscriber implements EventSubscriberInterface {
     $expires_in = $this->sessionStore->get('expires_in');
     $refresh_expires_in = $this->sessionStore->get('refresh_expires_in');
 
-
+    $this->sessionStore->delete('logout');
     if (isset($refresh, $expires_in) && (int) $expires_in < time()) {
       $refreshed = FALSE;
       if (!isset($refresh_expires_in) || (int) $refresh_expires_in > time()) {
@@ -98,7 +98,7 @@ class RefreshTokenSubscriber implements EventSubscriberInterface {
     $logout = $this->sessionStore->get('logout');
 
     if (\Drupal::currentUser()->isAuthenticated() &&
-      ($logout || (isset($expires_in) && (int) $expires_in < time() && (!isset($refresh) || (isset($refresh_expires_in) && (int) $refresh_expires_in < time()))))) {
+      ($logout && (!isset($expires_in) || (int) $expires_in < time()) || (isset($expires_in) && (int) $expires_in < time() && (!isset($refresh) || (isset($refresh_expires_in) && (int) $refresh_expires_in < time()))))) {
       if ($logout) {
         $this->sessionStore->delete('logout');
         $this->logger->notice('Failed to refresh access token. Forcing logout.');

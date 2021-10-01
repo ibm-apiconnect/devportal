@@ -5,8 +5,9 @@
  *
  * Variables available:
  * - selected_name: The name of the currently selected consumer organization.
+ * - selected_id: The ID of the currently selected consumer organization.
  * - orgs: The array of consumerorgs this user is in.
- *   each org = array('title'=>'My Org', 'link_object'=>'/foo/123')
+ *   each org = array('title'=>'My Org', 'link_object'=>'/foo/123', 'id' => '123')
  *
  * @ingroup themeable
  */
@@ -37,7 +38,7 @@
         {% endif %}
         <li class="selectorg" disabled>{{ 'Select organization'|t }}</li>
         {% for org in orgs %}
-          <li class="elipsis-names consumerorg" {% if org.title == selected_name %}selected=true{% endif %}
+          <li class="elipsis-names consumerorg" {% if org.id == selected_id %}selected=true{% endif %}
               title="{{ org.title }}">{{ org.link_object }}</li>
         {% endfor %}
       </ul>

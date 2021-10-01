@@ -1,4 +1,9 @@
 changes:
+  8.x-2.6.2:
+  - add twig markdown filter
+  8.x-2.6.1: null
+  8.x-2.6.0:
+  - update version 8.x-2.5.0 -> 8.x-2.6.0
   8.x-2.4.3: null
   8.x-2.4.2: null
   8.x-2.4.1:

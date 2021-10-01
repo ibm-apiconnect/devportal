@@ -13,6 +13,7 @@
 namespace Drupal\ibm_apim\Translation;
 
 use Drupal\Component\Gettext\PoStreamReader;
+use Throwable;
 
 /**
  * Class PotFileReader
@@ -64,7 +65,7 @@ class TranslationFileReader {
 
     try {
       $reader->open();
-    } catch (\Exception $exception) {
+    } catch (Throwable $exception) {
       throw $exception;
     }
 

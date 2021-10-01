@@ -31,14 +31,15 @@ use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
-use Drupal\session_based_temp_store\SessionBasedTempStore;
-use Drupal\session_based_temp_store\SessionBasedTempStoreFactory;
+use Drupal\Core\TempStore\PrivateTempStore;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\user\Entity\User;
 use Drupal\user\Form\UserLoginForm;
 use Drupal\user\UserAuthInterface;
 use Drupal\user\UserStorageInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\auth_apic\Service\Interfaces\TokenParserInterface;
 
 class ApicUserLoginForm extends UserLoginForm {
 
@@ -78,9 +79,9 @@ class ApicUserLoginForm extends UserLoginForm {
   protected OidcRegistryServiceInterface $oidcService;
 
   /**
-   * @var \Drupal\session_based_temp_store\SessionBasedTempStore
+   * @var \Drupal\Core\TempStore\PrivateTempStore
    */
-  protected SessionBasedTempStore $authApicSessionStore;
+  protected PrivateTempStore $authApicSessionStore;
 
   /**
    * @var \Drupal\Core\Config\Config
@@ -101,6 +102,11 @@ class ApicUserLoginForm extends UserLoginForm {
    * @var \Drupal\Core\Flood\FloodInterface
    */
   protected $flood;
+
+  /**
+   * @var \Drupal\auth_apic\Service\Interfaces\TokenParserInterface
+   */
+  protected TokenParserInterface $jwtParser;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -128,7 +134,7 @@ class ApicUserLoginForm extends UserLoginForm {
    * @param \Drupal\ibm_apim\Service\UserUtils $user_utils
    * @param \Drupal\ibm_apim\Service\SiteConfig $site_config
    * @param \Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface $oidc_service
-   * @param \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $session_store_factory
+   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $session_store_factory
    * @param \Drupal\Core\Config\Config $ibm_settings_config
    * @param \Drupal\auth_apic\UserManagement\ApicLoginServiceInterface $login_service
    * @param \Drupal\auth_apic\UserManagement\ApicInvitationInterface $invitation_service
@@ -146,12 +152,13 @@ class ApicUserLoginForm extends UserLoginForm {
                               UserUtils $user_utils,
                               SiteConfig $site_config,
                               OidcRegistryServiceInterface $oidc_service,
-                              SessionBasedTempStoreFactory $session_store_factory,
+                              PrivateTempStoreFactory $session_store_factory,
                               Config $ibm_settings_config,
                               ApicLoginServiceInterface $login_service,
                               ApicInvitationInterface $invitation_service,
                               Messenger $messenger,
-                              ModuleHandler $module_handler) {
+                              ModuleHandler $module_handler,
+                              TokenParserInterface $token_parser) {
     parent::__construct($flood, $user_storage, $user_auth, $renderer);
     $this->flood = $flood;
     $this->logger = $logger;
@@ -167,6 +174,7 @@ class ApicUserLoginForm extends UserLoginForm {
     $this->invitationService = $invitation_service;
     $this->messenger = $messenger;
     $this->moduleHandler = $module_handler;
+    $this->jwtParser = $token_parser;
   }
 
   /**
@@ -188,12 +196,13 @@ class ApicUserLoginForm extends UserLoginForm {
       $container->get('ibm_apim.user_utils'),
       $container->get('ibm_apim.site_config'),
       $container->get('auth_apic.oidc'),
-      $container->get('session_based_temp_store'),
+      $container->get('tempstore.private'),
       $container->get('config.factory')->get('ibm_apim.settings'),
       $container->get('auth_apic.login'),
       $container->get('auth_apic.invitation'),
       $container->get('messenger'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('auth_apic.jwtparser')
     );
   }
 
@@ -562,6 +571,11 @@ class ApicUserLoginForm extends UserLoginForm {
       $password = $form_state->getValue('pass');
       $corg = $form_state->getValue('consumer_org');
 
+      $inviteToken = \Drupal::request()->query->get('token');
+      if ($inviteToken !== NULL) {
+        $jwt = $this->jwtParser->parse($inviteToken);
+        $this->authApicSessionStore->set('invitation_object', $jwt);
+      }
       // maybe this was an invited user?
       $jwt = $this->authApicSessionStore->get('invitation_object');
 
@@ -597,6 +611,9 @@ class ApicUserLoginForm extends UserLoginForm {
             $response = $this->invitationService->acceptInvite($jwt, $login_user);
 
             if ($response->success() === TRUE) {
+              if ($response->getMessage()) {
+                $this->messenger->addStatus($response->getMessage());
+              }
               $response = $this->loginService->login($login_user);
             }
           }

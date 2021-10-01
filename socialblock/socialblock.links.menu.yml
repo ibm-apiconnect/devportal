@@ -1,5 +1,5 @@
 socialblock.form:
   title: 'IBM Social Block'
-  description: 'Configure settings for the IBM Social Block.'
+  description: 'Configure settings for the IBM Social Block'
   route_name: socialblock.form
   parent: 'system.admin_config_services'

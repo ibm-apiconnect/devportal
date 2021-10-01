@@ -33,7 +33,13 @@ class ProductContext extends RawDrupalContext {
 
   /**
    * @Given products:
-   * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
+   *
+   * @param \Behat\Gherkin\Node\TableNode $table
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \JsonException
    */
   public function createProducts(TableNode $table): void {
 
@@ -61,6 +67,25 @@ class ProductContext extends RawDrupalContext {
     }
     if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
+    }
+  }
+
+  /**
+   * @Given I have no products or apis
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function iHaveNoProductsOrApis():void {
+    $query = \Drupal::entityQuery('node');
+    $group = $query->orConditionGroup()
+      ->condition('type', 'product')
+      ->condition('type', 'api');
+    $query->condition($group);
+    $results = $query->execute();
+    foreach ($results as $nid) {
+      $node = Node::load($nid);
+      if ($node !== NULL) {
+        $node->delete();
+      }
     }
   }
 
@@ -344,24 +369,24 @@ class ProductContext extends RawDrupalContext {
     $object['url'] = 'https://localhost.com';
     $object['product_plans'] = [["apis" => []]];
     $object['catalog_product']['plans'] = [
-        "default-plan" => [
-                "rate-limits" => [
-                        "default" =>[
-                                "value" => "100/1hour"
-                                ]
+      "default-plan" => [
+              "rate-limits" => [
+                      "default" =>[
+                              "value" => "100/1hour"
+                              ]
 
-                        ],
+                      ],
 
-                "title" => "Default Plan",
-                "description" => "Default Plan",
-                "approval" => null,
-                "apis" => [
-                        $incApi => []
+              "title" => "Default Plan",
+              "description" => "Default Plan",
+              "approval" => null,
+              "apis" => [
+                      $incApi => []
 
-                        ]
+                      ]
 
-        ]
-                ];
+      ]
+    ];
     $object['catalog_product']['apis'] = [$incApi => ['name' => $incApi]];
     $object['catalog_product']['visibility']['view']['enabled'] = true;
     $object['catalog_product']['visibility']['view']['type'] = 'public';
@@ -401,11 +426,11 @@ class ProductContext extends RawDrupalContext {
   }
 
   /**
-   * @Given I publish a product with the name :arg1, id :arg2, apis :arg3 and visibility :arg4 :arg5
+   * @Given I publish a product with the name :arg1, id :arg2, apis :arg3 and visibility :arg4 :arg5 :arg6
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \Exception
    */
-  public function iPublishAProductWithNameIdAPIVisibility($name, $id, $api, $visi, $data): void {
+  public function iPublishAProductWithNameIdAPIVisibility($name, $id, $api, $visi, $data, $enabled): void {
     $random = new Random();
     if ($name === NULL || empty($name)) {
       $name = $random->name(8);
@@ -419,11 +444,36 @@ class ProductContext extends RawDrupalContext {
     $object['catalog_product']['info']['name'] = $name;
     $object['catalog_product']['info']['title'] = $name;
     $object['catalog_product']['info']['version'] = '1.0.0';
+    $object['catalog_product']['info']['x-pathalias'] = $name;
     $object['state'] = 'published';
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';
+    $object['product_plans'] = [["apis" => []]];
+    $object['catalog_product']['plans'] = [
+      "default-plan" => [
+              "rate-limits" => [
+                      "default" =>[
+                              "value" => "100/1hour"
+                              ]
+
+                      ],
+
+              "title" => "Default Plan",
+              "description" => "Default Plan",
+              "approval" => null,
+              "apis" => [
+                      $incApi => []
+
+                      ]
+
+      ]
+    ];
     $object['catalog_product']['apis'] = [$incApi => ['name' => $incApi]];
-    $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
+    if ($enabled === "false" || $enabled === "FALSE") {
+      $object['catalog_product']['visibility']['view']['enabled'] = 0;
+    } else {
+      $object['catalog_product']['visibility']['view']['enabled'] = true;
+    }
     switch ($visi) {
       case 'pub':
         // public; anyone can view

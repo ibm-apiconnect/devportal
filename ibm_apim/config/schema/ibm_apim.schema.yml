@@ -100,18 +100,6 @@ ibm_apim.settings:
     email_as_username:
       type: boolean
       label: 'Usernames are email addresses'
-    acl_debug:
-      type: boolean
-      label: 'Enable debug information for ACL node access checks (enabling will cause a performance impact)'
-    webhook_debug:
-      type: boolean
-      label: 'Enable webhook payload storage for debug purposes (enabling will cause a performance impact)'
-    entry_exit_trace:
-      type: boolean
-      label: 'Enable method entry / exit trace (enabling will cause a performance impact)'
-    apim_rest_trace:
-      type: boolean
-      label: 'Enable API Manager REST interface debug (enabling will cause a performance impact)'
     allow_consumerorg_rename:
       type: boolean
       label: 'Allow consumer organization owners to rename their organization'
@@ -213,6 +201,9 @@ ibm_apim.settings:
     proxy_for_api:
       type: string
       label: 'Use Proxy for Consumer or Platform APIs'
+    router_type:
+      type: string
+      label: 'Select what type of router to use with the API explorer.'
     bgsync:
       type: mapping
       label: 'Background Sync Options'
@@ -238,6 +229,23 @@ ibm_apim.settings:
     api_max_depth:
       type: integer
       label: 'The maximum depth in layers for API objects to process examples'
+
+ibm_apim.devel_settings:
+  type: config_object
+  label: 'IBM API Developer Portal development settings'
+  mapping:
+    acl_debug:
+      type: boolean
+      label: 'Enable debug information for ACL node access checks (enabling will cause a performance impact)'
+    webhook_debug:
+      type: boolean
+      label: 'Enable webhook payload storage for debug purposes (enabling will cause a performance impact)'
+    entry_exit_trace:
+      type: boolean
+      label: 'Enable method entry / exit trace (enabling will cause a performance impact)'
+    apim_rest_trace:
+      type: boolean
+      label: 'Enable API Manager REST interface debug (enabling will cause a performance impact)'
 
 comment.type.comment:
   type: config_object

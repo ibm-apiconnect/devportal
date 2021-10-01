@@ -1,4 +1,25 @@
 changes:
+  8.x-2.6.8:
+  - move devel settings to their own config object
+  8.x-2.6.7:
+  - Use the member's id as array-key
+  8.x-2.6.6:
+  - member timestamps are int not string
+  - allow default payment method to be null
+  8.x-2.6.5:
+  - remove add button if billing method conf'd
+  8.x-2.6.4:
+  - wrong url
+  - wrong url
+  - fix payment method type error
+  - fix payment method type error
+  8.x-2.6.3:
+  - Switch to catching Throwable
+  8.x-2.6.2:
+  - use id to select current one not title
+  8.x-2.6.1: null
+  8.x-2.6.0:
+  - update version 8.x-2.5.0 -> 8.x-2.6.0
   8.x-2.4.12:
   - needs to be org_url not consumer_org_url
   8.x-2.4.11:

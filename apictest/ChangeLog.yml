@@ -1,4 +1,14 @@
 changes:
+  8.x-2.6.3:
+  - move devel settings to their own config object
+  8.x-2.6.2:
+  - add function to delete all apis and products
+  8.x-2.6.1:
+  - improved product publishing (#215) (#216)
+  8.x-2.6.0:
+  - update version 8.x-2.5.1 -> 8.x-2.6.0
+  8.x-2.5.0:
+  - update version 8.x-2.4.16 -> 8.x-2.5.0
   8.x-2.4.15: null
   8.x-2.4.14:
   - Merge pull request

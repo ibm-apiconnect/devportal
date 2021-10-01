@@ -62,14 +62,14 @@ class ApicUser {
   private ?string $organization = NULL;
 
   /**
-   * @var array
+   * @var array|null
    */
-  private array $consumerorgs = [];
+  private ?array $consumerorgs = [];
 
   /**
-   * @var array
+   * @var array|null
    */
-  private array $permissions = [];
+  private ?array $permissions = [];
 
   /**
    * @var string|null
@@ -87,14 +87,14 @@ class ApicUser {
   private ?string $authcode = NULL;
 
   /**
-   * @var array
+   * @var array|null
    */
-  private array $custom_fields = [];
+  private ?array $custom_fields = [];
 
   /**
-   * @var array
+   * @var array|null
    */
-  private array $metadata = [];
+  private ?array $metadata = [];
 
   /**
    * Constructor.
@@ -225,30 +225,30 @@ class ApicUser {
   }
 
   /**
-   * @return array
+   * @return array|null
    */
-  public function getConsumerorgs(): array {
+  public function getConsumerorgs(): ?array {
     return $this->consumerorgs;
   }
 
   /**
-   * @param array $consumerorgs
+   * @param array|null $consumerorgs
    */
-  public function setConsumerorgs(array $consumerorgs): void {
+  public function setConsumerorgs(?array $consumerorgs): void {
     $this->consumerorgs = $consumerorgs;
   }
 
   /**
-   * @return array
+   * @return array|null
    */
-  public function getPermissions(): array {
+  public function getPermissions(): ?array {
     return $this->permissions;
   }
 
   /**
-   * @param array $permissions
+   * @param array|null $permissions
    */
-  public function setPermissions(array $permissions): void {
+  public function setPermissions(?array $permissions): void {
     $this->permissions = $permissions;
   }
 
@@ -311,7 +311,7 @@ class ApicUser {
   /**
    * @param array $customFields
    */
-  public function setCustomFields(array $customFields): void {
+  public function setCustomFields(?array $customFields): void {
     if (empty($customFields)) {
       $this->custom_fields = [];
     }
@@ -344,7 +344,7 @@ class ApicUser {
   /**
    * @param array $metadata
    */
-  public function setMetadata(array $metadata): void {
+  public function setMetadata(?array $metadata): void {
     if (empty($metadata)) {
       $this->metadata = [];
     }
@@ -404,11 +404,15 @@ class ApicUser {
     if (array_key_exists('organization', $content)) {
       $this->setOrganization($content['organization']);
     }
-    if (array_key_exists('consumerorgs', $content)) {
+    if (array_key_exists('consumerorgs', $content) && !empty($content['consumerorgs'])) {
       $this->setConsumerorgs($content['consumerorgs']);
+    } else {
+      $this->setConsumerorgs([]);
     }
-    if (array_key_exists('permissions', $content)) {
+    if (array_key_exists('permissions', $content) && !empty($content['permissions'])) {
       $this->setPermissions($content['permissions']);
+    } else {
+      $this->setPermissions([]);
     }
     if (array_key_exists('apic_idp', $content)) {
       $this->setApicIdp($content['apic_idp']);

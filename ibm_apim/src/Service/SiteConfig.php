@@ -24,6 +24,7 @@ use Drupal\ibm_apim\Service\Interfaces\PermissionsServiceInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Functionality for handling configuration updates
@@ -256,7 +257,7 @@ class SiteConfig {
             ]);
             $returnValue = NULL;
           }
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
           $this->logger->error('Get apim hostname exception: %data.', [
             '%data' => $e->getMessage(),
           ]);
@@ -294,7 +295,7 @@ class SiteConfig {
           $scheme = parse_url($hostvariable, PHP_URL_SCHEME);
           $port = (int) parse_url($hostvariable, PHP_URL_PORT);
           $path = parse_url($hostvariable, PHP_URL_PATH);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
         }
       }
       if (!isset($host)) {
@@ -637,7 +638,7 @@ class SiteConfig {
           ]);
           $returnValue = FALSE;
         }
-      } catch (\Exception $e) {
+      } catch (Throwable $e) {
         $this->logger->error('Get isInCloud exception: %data.', [
           '%data' => $e->getMessage(),
         ]);
@@ -865,7 +866,7 @@ class SiteConfig {
         // uninstalling module but not dependencies.
         try {
           $this->moduleInstaller->uninstall([$modToRemove], TRUE);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
           $this->logger->warning('Exception while deleting IBM Cloud incompatible module: %module', ['%module' => $modToRemove]);
           $this->logger->debug('%module uninstall exception message : %message', [
             '%module' => $modToRemove,
@@ -880,6 +881,10 @@ class SiteConfig {
 
     // disable the flood IP based rules
     $this->configFactory->getEditable('user.flood')->set('ip_window', 0)->set('ip_limit', 1000)->save();
+  }
+
+  public function getInvitationTTL() {
+    return $this->state->get('ibm_apim.site_config')["invitation_ttl"];
   }
 
 }

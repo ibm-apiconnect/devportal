@@ -10,6 +10,8 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Database\Database;
 use Drupal\node\Entity\Node;
 use Drupal\product\Product;
 use Drupal\apic_api\Api;
@@ -236,8 +238,26 @@ function drush_product_delete($product, $event = 'product_del') {
       $productNode = Node::load($nid);
       if ($productNode !== NULL) {
         $productUrl = $productNode->apic_url->value;
+        // Get apps subscribed to the product
+        $subIds = Product::getSubIdsFromProductUrl($productUrl);
+        if (!empty($subIds)) {
+          $tags = [];
+          $appEntityIds = Product::getAppIdsFromSubIds($subIds);
+
+          foreach ($appEntityIds as $appId) {
+            $tags[] = 'node:' . $appId;
+          }
+        }
       }
+
       Product::deleteNode($nid, $event);
+
+      // Clear the cache
+      if (isset($tags, $appEntityIds) && (!empty($tags) || !empty($appEntityIds))) {
+        Cache::invalidateTags($tags);
+        \Drupal::entityTypeManager()->getStorage('node')->resetCache($appEntityIds);
+      }
+
       drush_log(dt('Drush DeleteProduct deleted Product @prod', ['@prod' => $product['product']['id']]), 'success');
     }
     else {
@@ -384,7 +404,48 @@ function drush_product_supersede($content) {
 /**
  * @param $content
  *
+ * @throws JsonException
+ * @throws Throwable
+ */
+function drush_product_migrate_subscriptions($content) {
+  ibm_apim_entry_trace(__FUNCTION__);
+  if ($content !== NULL) {
+    if (is_string($content)) {
+      $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
+    }
+
+    if (isset($content['plan_map']) && !empty($content['plan_map']) && isset($content['subscription_urls']) && !empty($content['subscription_urls'])) {
+      Product::processPlanMappingWithSubscriptionUrls($content['plan_map'], $content['subscription_urls']);
+    }
+  }
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
+
+/**
+ * @param $content
+ *
+ * @throws JsonException
+ * @throws Throwable
+ */
+function drush_product_execute_migration_target($content) {
+  ibm_apim_entry_trace(__FUNCTION__);
+  if ($content !== NULL) {
+    if (is_string($content)) {
+      $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
+    }
+
+    if (isset($content['plan_map']) && !empty($content['plan_map'])) {
+      Product::processPlanMapping($content['plan_map']);
+    }
+  }
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
+
+/**
+ * @param $content
+ *
  * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
+ * @throws Throwable
  */
 function drush_product_replace($content) {
   ibm_apim_entry_trace(__FUNCTION__);

@@ -13,10 +13,6 @@ show_mtls_header: true
 email_as_username: true
 application_image_upload: true
 hide_admin_registry: false
-acl_debug: false
-webhook_debug: false
-entry_exit_trace: false
-apim_rest_trace: false
 render_api_schema_view: true
 allow_consumerorg_creation: true
 allow_consumerorg_rename: true
@@ -42,6 +38,7 @@ codesnippets:
   swift: true
   c: false
   csharp: false
+router_type: 'hash'
 bgsync:
   email_enabled: true
   email_subject: '[site:name] - Background sync has failed'

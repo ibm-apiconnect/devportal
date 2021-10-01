@@ -40,6 +40,7 @@ use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Throwable;
 
 /**
  * Class to work with the consumerorg content type, takes input from the JSON returned by
@@ -594,7 +595,7 @@ class ConsumerOrgService {
               $this->logger->notice('registering new account for %username based on member data.', ['%username' => $user->getUsername()]);
               try {
                 $userAccount = $this->accountService->registerApicUser($user);
-              } catch (\Exception $e) {
+              } catch (Throwable $e) {
                 // Quietly ignore errors from duplicate users to prevent webhooks from blowing up.
                 $this->logger->notice('Failed creating apic user %username, ignoring exception', ['%username' => $user->getUsername()]);
               }

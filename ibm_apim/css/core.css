@@ -39,6 +39,70 @@
   padding: 0;
 }
 
+@media screen and (max-width: 640px) {
+  .route-ibm-apimmyorg .apicMainContent.main-container,
+  .route-ibm-apimbilling .apicMainContent.main-container,
+  .route-ibm-apimactivity .apicMainContent.main-container,
+  .route-ibm-apimanalytics .apicMainContent.main-container {
+    margin-top: 0;
+  }
+
+  .apicMyOrgMembers table {
+    display: flex;
+    overflow: hidden;
+  }
+
+  .apicMyOrgMembers table thead {
+    display: flex;
+    flex-shrink: 0;
+    min-width: min-content;
+  }
+
+  .apicMyOrg .apicMyOrgMembers table th {
+    text-align: left;
+    justify-content: center;
+  }
+
+  .apicMyOrg .apicMyOrgMembers th:first-child {
+    padding-top: 1.25rem;
+  }
+
+  .apicMyOrg .apicMyOrgMembers th:first-child,
+  .apicMyOrg .apicMyOrgMembers td:first-child {
+    height: 3.25rem;
+  }
+
+  .apicMyOrgMembers table tbody {
+    display: flex;
+    position: relative;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .apicMyOrgMembers table tr {
+    display: flex;
+    flex-direction: column;
+    min-width: min-content;
+    flex-shrink: 0;
+  }
+
+  .apicMyOrgMembers table td,
+  .apicMyOrgMembers table th {
+    display: block;
+    height: 2rem;
+    padding: 1rem;
+  }
+
+  .apicMyOrgMembers table td {
+    border-left: 0;
+  }
+
+  .apicMyOrgMembers table th:not(:last-child),
+  .apicMyOrgMembers table td:not(:last-child) {
+    border-bottom: 0;
+  }
+}
+
 .route-ibm-apimmyorg .apicMainContent,
 .route-ibm-apimbilling .apicMainContent,
 .route-ibm-apimactivity .apicMainContent,

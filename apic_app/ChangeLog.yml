@@ -1,4 +1,29 @@
 changes:
+  8.x-2.6.11:
+  - make sure view password is loaded correctly
+  8.x-2.6.10:
+  - Fix subscriptions
+  8.x-2.6.9:
+  - need to ensure > 0 too
+  8.x-2.6.8:
+  - move devel settings to their own config object
+  8.x-2.6.7: null
+  8.x-2.6.6:
+  - get rid of coding error in intellij
+  - another fix needed for strtotime
+  8.x-2.6.5:
+  - typo
+  - defend against trying to put value greater than max int
+  - defend against trying to put value greater than max int
+  8.x-2.6.4:
+  - defend against trying to put value greater than max int
+  8.x-2.6.3:
+  - Switch to catching Throwable
+  8.x-2.6.2:
+  - should be type=button to stop refresh
+  8.x-2.6.1: null
+  8.x-2.6.0:
+  - update version 8.x-2.5.0 -> 8.x-2.6.0
   8.x-2.4.18:
   - make modals look how they should!
   8.x-2.4.17:

@@ -46,7 +46,7 @@ class AdminMessagesBlock extends BlockBase {
     // clear cookies when navigating away from user management pages
     $current_route = \Drupal::routeMatch()->getRouteName();
     if ($current_route !== 'user.login' && $current_route !== 'user.register' && $current_route !== 'auth_apic.azcode') {
-      $sessionStore = \Drupal::service('session_based_temp_store')->get('auth_apic_storage');
+      $sessionStore = \Drupal::service('tempstore.private')->get('auth_apic_storage');
       $sessionStore->delete('invitation_object');
     }
 

@@ -94,7 +94,7 @@ function drush_drushadmin_theme_delete($theme_name) {
           // clear all caches otherwise reinstalling the same theme will fail
           try {
             drupal_flush_all_caches();
-          } catch (\Exception $e) {
+          } catch (Throwable $e) {
           }
           \Drupal::logger("drushadmin")->notice("!theme_name deleted.", ['!theme_name' => $inputTheme]);
         }
@@ -126,7 +126,7 @@ function drush_drushadmin_module_delete($module_name) {
         // clear all caches otherwise reinstalling the same module will fail
         try {
           drupal_flush_all_caches();
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
         }
         \Drupal::logger("drushadmin")->notice("!module_name deleted.", ['!module_name' => $inputModule]);
       }

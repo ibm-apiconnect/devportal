@@ -85,7 +85,7 @@ class GenerateTheme extends FormBase {
       '#title' => t('Sub-theme type'),
       '#options' => $options,
       '#description' => t('Your sub-theme can be setup to use either CSS or SCSS. SCSS is an extension to CSS and is for more advanced theme developers.'),
-      '#default_value' => 'css',
+      '#default_value' => 'scss',
     ];
 
     $template_options = [

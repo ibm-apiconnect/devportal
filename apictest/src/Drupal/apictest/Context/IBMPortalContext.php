@@ -446,9 +446,9 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    * @Then Enable ACLDebug
    */
   public function enableACLDebug(): void {
-    if (!(boolean) \Drupal::config('ibm_apim.settings')->get('acl_debug')) {
+    if (!(boolean) \Drupal::config('ibm_apim.devel_settings')->get('acl_debug')) {
       print('Setting \'acl_debug\' config to true. ');
-      \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->set('acl_debug', TRUE)->save();
+      \Drupal::service('config.factory')->getEditable('ibm_apim.devel_settings')->set('acl_debug', TRUE)->save();
     }
   }
 
@@ -456,9 +456,9 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    * @Then Disable ACLDebug
    */
   public function disableACLDebug(): void {
-    if (!(boolean) \Drupal::config('ibm_apim.settings')->get('acl_debug')) {
+    if (!(boolean) \Drupal::config('ibm_apim.devel_settings')->get('acl_debug')) {
       print('Setting \'acl_debug\' config to false. ');
-      \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->set('acl_debug', FALSE)->save();
+      \Drupal::service('config.factory')->getEditable('ibm_apim.devel_settings')->set('acl_debug', FALSE)->save();
     }
   }
 
@@ -1421,10 +1421,6 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       ->set('application_image_upload', TRUE)
       ->set('hide_admin_registry', FALSE)
       ->set('disable_etags', FALSE)
-      ->set('entry_exit_trace', FALSE)
-      ->set('apim_rest_trace', FALSE)
-      ->set('acl_debug', FALSE)
-      ->set('webhook_debug', FALSE)
       ->set('cron_drush', FALSE)
       ->set('allow_consumerorg_creation', TRUE)
       ->set('allow_consumerorg_rename', TRUE)
@@ -1441,6 +1437,11 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       ->set('codesnippets', $codesnippets)
       ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer'])
       ->save();
+    \Drupal::service('config.factory')->getEditable('ibm_apim.devel_settings')
+      ->set('entry_exit_trace', FALSE)
+      ->set('apim_rest_trace', FALSE)
+      ->set('acl_debug', FALSE)
+      ->set('webhook_debug', FALSE)->save();
   }
 
   private function resetToDefaultRegistry(): void {

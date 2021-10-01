@@ -176,7 +176,9 @@ services:
     arguments: [ '@database',
                  '@logger.channel.ibm_apim',
                  '@entity_type.manager',
-                 '@ibm_apim.user_registry'
+                 '@ibm_apim.user_registry',
+                 '@ibm_apim.site_config',
+                 '@datetime.time'
     ]
     tags:
       - { name: ibm_apim }

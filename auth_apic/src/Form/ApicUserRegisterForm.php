@@ -29,8 +29,8 @@ use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
-use Drupal\session_based_temp_store\SessionBasedTempStore;
-use Drupal\session_based_temp_store\SessionBasedTempStoreFactory;
+use Drupal\Core\TempStore\PrivateTempStore;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\user\RegisterForm;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -39,6 +39,7 @@ use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Extension\ModuleHandler;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Drupal\auth_apic\Service\Interfaces\TokenParserInterface;
 
 /**
  * Self sign up / create new user form.
@@ -78,9 +79,9 @@ class ApicUserRegisterForm extends RegisterForm {
   protected OidcRegistryServiceInterface $oidcService;
 
   /**
-   * @var \Drupal\session_based_temp_store\SessionBasedTempStore
+   * @var \Drupal\Core\TempStore\PrivateTempStore
    */
-  protected SessionBasedTempStore $authApicSessionStore;
+  protected PrivateTempStore $authApicSessionStore;
 
   /**
    * @var \Drupal\auth_apic\UserManagement\SignUpInterface
@@ -108,6 +109,11 @@ class ApicUserRegisterForm extends RegisterForm {
   protected CacheBackendInterface $cacheBackend;
 
   /**
+   * @var \Drupal\auth_apic\Service\Interfaces\TokenParserInterface
+   */
+  protected TokenParserInterface $jwtParser;
+
+  /**
    * @var \Drupal\Core\Messenger\Messenger
    */
   protected $messenger;
@@ -127,14 +133,15 @@ class ApicUserRegisterForm extends RegisterForm {
                               TimeInterface $time = NULL,
                               ApimUtils $apim_utils,
                               OidcRegistryServiceInterface $oidc_service,
-                              SessionBasedTempStoreFactory $sessionStoreFactory,
+                              PrivateTempStoreFactory $sessionStoreFactory,
                               SignUpInterface $user_managed_signup,
                               SignUpInterface $non_user_managed_signup,
                               ApicInvitationInterface $invitation_service,
                               ApicUserStorageInterface $user_storage,
                               CacheBackendInterface $cache_backend,
                               Messenger $messenger,
-                              ModuleHandler $module_handler) {
+                              ModuleHandler $module_handler,
+                              TokenParserInterface $token_parser) {
     parent::__construct($entity_repository, $language_manager, $entity_type_bundle_info, $time);
     $this->logger = $logger;
     $this->accountService = $account_service;
@@ -150,6 +157,7 @@ class ApicUserRegisterForm extends RegisterForm {
     $this->cacheBackend = $cache_backend;
     $this->messenger = $messenger;
     $this->moduleHandler = $module_handler;
+    $this->jwtParser = $token_parser;
   }
 
   /**
@@ -170,14 +178,15 @@ class ApicUserRegisterForm extends RegisterForm {
       $container->get('datetime.time'),
       $container->get('ibm_apim.apim_utils'),
       $container->get('auth_apic.oidc'),
-      $container->get('session_based_temp_store'),
+      $container->get('tempstore.private'),
       $container->get('auth_apic.usermanaged_signup'),
       $container->get('auth_apic.nonusermanaged_signup'),
       $container->get('auth_apic.invitation'),
       $container->get('ibm_apim.user_storage'),
       $container->get('cache.default'),
       $container->get('messenger'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('auth_apic.jwtparser')
     );
   }
 
@@ -243,6 +252,11 @@ class ApicUserRegisterForm extends RegisterForm {
 
       // if we are on the invited user flow, there will be a JWT in the session so grab that
       // we can use this to pre-populate the email field
+      $inviteToken = \Drupal::request()->query->get('token');
+      if ($inviteToken !== NULL) {
+        $jwt = $this->jwtParser->parse($inviteToken);
+        $this->authApicSessionStore->set('invitation_object', $jwt);
+      }
       $jwt = $this->authApicSessionStore->get('invitation_object');
       if ($jwt !== NULL) {
         $form['#message']['message'] = t('To complete your invitation, fill out any required fields below.');

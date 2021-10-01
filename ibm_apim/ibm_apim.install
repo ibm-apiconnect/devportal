@@ -234,3 +234,23 @@ function ibm_apim_update_8203() {
     }
   }
 }
+
+/**
+ * Sets the router type option to hash by default
+ */
+function ibm_apim_update_8204() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('router_type', 'hash')
+    ->save();
+}
+
+/**
+ * Sets what time the daily cron should run
+ */
+function ibm_apim_update_8205() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('daily_cron_time', '05:00')
+    ->save();
+}

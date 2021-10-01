@@ -56,7 +56,7 @@ function apic_api_save_wsdl($apiId, $data, $fileName = NULL) {
     }
     ibm_apim_exit_trace(__FUNCTION__, $apiImgDir . '/' . $apiId . '/' . $fileName);
     return $fileTemp;
-  } catch (Exception $e) {
+  } catch (Throwable $e) {
     \Drupal::logger('apic_api')->notice('Save of WSDL to filesystem failed with: %data', ['%data' => $e->getMessage()]);
     ibm_apim_exit_trace(__FUNCTION__, NULL);
     return NULL;

@@ -1,4 +1,20 @@
 changes:
+  8.x-2.6.8:
+  - Fixed sign in on member invitations
+  8.x-2.6.7:
+  - Fix for strict samesite (#641)
+  8.x-2.6.6:
+  - prune oidc states (#635) (#636)
+  8.x-2.6.5:
+  - Added pending_approval state (#634)
+  8.x-2.6.4:
+  - Switch to catching Throwable
+  8.x-2.6.3:
+  - Change invites from sessionBasedTempStore to privateTempStore (#625) (#629)
+  8.x-2.6.2: null
+  8.x-2.6.1: null
+  8.x-2.6.0:
+  - update version 8.x-2.5.0 -> 8.x-2.6.0
   8.x-2.4.8:
   - assertRegExp is deprecated use assertMatchesRegularExpression instead
   - see if this fixes the NPE in the test

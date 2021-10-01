@@ -164,7 +164,7 @@ class ApicEvent {
    */
   public function setTimestamp(int $timestamp): void {
     // cowardly refuse to set timestamp to greater than max int
-    if ($timestamp < 2147483647) {
+    if ($timestamp < 2147483647 && $timestamp > 0) {
       $this->timestamp = $timestamp;
     }
   }

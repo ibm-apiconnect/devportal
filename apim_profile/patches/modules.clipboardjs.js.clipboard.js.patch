@@ -1,0 +1,14 @@
+--- modules/clipboardjs/js/clipboard.js	2021-07-05 10:07:41.000000000 +0100
++++ modules/clipboardjs/js/clipboard.js	2021-07-05 10:47:46.000000000 +0100
+@@ -18,7 +18,10 @@
+       Drupal.clipboard.on('success', function (e) {
+         let alertStyle = $(e.trigger).data('clipboardAlert');
+         let alertText = $(e.trigger).data('clipboardAlertText');
+-        let target = $(e.trigger).data('clipboardTarget');
++        let target = $(e.trigger.parentNode).find('input');
++        if (!$(target.length)) {
++          target = $(e.trigger).data('clipboardTarget');
++        }
+ 
+         // Display as alert.
+         if (alertStyle === 'alert') {

@@ -91,12 +91,12 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   protected $messenger;
 
   /**
-   * @var \Drupal\session_based_temp_store\SessionBasedTempStoreFactory|\Prophecy\Prophecy\ObjectProphecy
+   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory|\Prophecy\Prophecy\ObjectProphecy
    */
   protected $storeFactory;
 
   /**
-   * @var \Drupal\session_based_temp_store\SessionBasedTempStore|\Prophecy\Prophecy\ObjectProphecy
+   * @var \Drupal\Core\TempStore\PrivateTempStore|\Prophecy\Prophecy\ObjectProphecy
    */
   protected $store;
 
@@ -115,8 +115,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->userRegistryService = $this->prophet->prophesize('Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface');
     $this->loginService = $this->prophet->prophesize('Drupal\auth_apic\UserManagement\ApicLoginServiceInterface');
     $this->oidcStateService = $this->prophet->prophesize('Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface');
-    $this->storeFactory = $this->prophet->prophesize('Drupal\session_based_temp_store\SessionBasedTempStoreFactory');
-    $this->store = $this->prophet->prophesize('Drupal\session_based_temp_store\SessionBasedTempStore');
+    $this->storeFactory = $this->prophet->prophesize('Drupal\Core\TempStore\PrivateTempStoreFactory');
+    $this->store = $this->prophet->prophesize('Drupal\Core\TempStore\PrivateTempStore');
     $this->requestStack = $this->prophet->prophesize('Symfony\Component\HttpFoundation\RequestStack');
     $this->query = $this->prophet->prophesize('Symfony\Component\HttpFoundation\ParameterBag');
     $this->mgmtServer = $this->prophet->prophesize('Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface');

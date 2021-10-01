@@ -349,13 +349,11 @@ class FeaturedContentBlock extends BlockBase {
           }
           $data['version'] = $rawNode->apic_version->value;
           $data['id'] = $rawNode->api_id->value;
-          if (isset($rawNode->apic_image)) {
-            $fid = $fid[0]['target_id'] ?? $rawNode->apic_image->getValue();
-          }
+          $fid = $rawNode->apic_image->getValue();
           $imageUrl = NULL;
-          if ($fid !== NULL && !empty($fid)) {
-            $file = File::load($fid);
-            if ($file !== NULL) {
+          if (isset($fid[0]['target_id'])) {
+            $file = File::load($fid[0]['target_id']);
+            if (isset($file)) {
               $imageUrl = $file->createFileUrl();
             }
           }
@@ -377,14 +375,11 @@ class FeaturedContentBlock extends BlockBase {
           }
           $data['id'] = $rawNode->product_id->value;
           $data['version'] = $rawNode->apic_version->value;
-          $fid = NULL;
-          if (isset($rawNode->apic_image)) {
-            $fid = $fid[0]['target_id'] ?? $rawNode->apic_image->getValue();
-          }
+          $fid = $rawNode->apic_image->getValue();
           $imageUrl = NULL;
-          if ($fid !== NULL && !empty($fid)) {
-            $file = File::load($fid);
-            if ($file !== NULL) {
+          if (isset($fid[0]['target_id'])) {
+            $file = File::load($fid[0]['target_id']);
+            if (isset($file)) {
               $imageUrl = $file->createFileUrl();
             }
           }

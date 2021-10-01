@@ -38,6 +38,9 @@
             {% if showVersions %}
               <span class="apicProductVersion apiVersion">{{- api.version -}}</span>
             {% endif %}
+            {% if api.state %}
+              <div class="apicApiState {{api.state |clean_class}}"><span class='icon'></span><span class='text'>{{api.state}}</span></div>
+            {% endif %}
             {{ drupal_field('apic_rating', 'node', api.nid) }}
           </div>
         </div>

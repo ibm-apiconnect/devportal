@@ -48,14 +48,14 @@ class Member {
   private ?string $org_url = NULL;
 
   /**
-   * @var string|null
+   * @var int|null
    */
-  private ?string $created_at = NULL;
+  private ?int $created_at = NULL;
 
   /**
-   * @var string|null
+   * @var int|null
    */
-  private ?string $updated_at = NULL;
+  private ?int $updated_at = NULL;
 
 
   /**
@@ -159,30 +159,30 @@ class Member {
   }
 
   /**
-   * @return string
+   * @return int
    */
-  public function getCreatedAt(): ?string {
+  public function getCreatedAt(): ?int {
     return $this->created_at;
   }
 
   /**
-   * @param string $created_at
+   * @param int $created_at
    */
-  public function setCreatedAt(string $created_at): void {
+  public function setCreatedAt(int $created_at): void {
     $this->created_at = $created_at;
   }
 
   /**
-   * @return string
+   * @return int
    */
-  public function getUpdatedAt(): ?string {
+  public function getUpdatedAt(): ?int {
     return $this->updated_at;
   }
 
   /**
-   * @param string $updated_at
+   * @param int $updated_at
    */
-  public function setUpdatedAt(string $updated_at): void {
+  public function setUpdatedAt(int $updated_at): void {
     $this->updated_at = $updated_at;
   }
 

@@ -83,10 +83,11 @@ class ApicNodeListController extends ControllerBase {
 
   /**
    * @param $input
+   * @param string|null $outputType
    *
-   * @return array|null
+   * @return array|string|null
    */
-  public static function getAPI($input): ?array {
+  public static function getAPI($input, string $outputType = NULL) {
     $url = NULL;
     $json = NULL;
 
@@ -156,17 +157,22 @@ class ApicNodeListController extends ControllerBase {
       throw new AccessDeniedHttpException();
     }
     if ($url !== NULL) {
-      $json = Api::getApiForDrush($url);
+      if ($outputType === 'document') {
+        $json = Api::getApiDocumentForDrush($url);
+      } else {
+        $json = Api::getApiForDrush($url);
+      }
     }
     return $json;
   }
 
   /**
    * @param $input
+   * @param string|null $outputType
    *
    * @return array|null
    */
-  public static function getProduct($input): ?array {
+  public static function getProduct($input, string $outputType = NULL): ?array {
     $url = NULL;
     $json = NULL;
 
@@ -236,7 +242,11 @@ class ApicNodeListController extends ControllerBase {
       throw new AccessDeniedHttpException();
     }
     if ($url !== NULL) {
-      $json = Product::getProductForDrush($url);
+      if ($outputType === 'document') {
+        $json = Product::getProductDocumentForDrush($url);
+      } else {
+        $json = Product::getProductForDrush($url);
+      }
     }
     return $json;
   }

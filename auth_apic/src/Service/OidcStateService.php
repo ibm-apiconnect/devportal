@@ -196,12 +196,8 @@ class OidcStateService implements OidcStateServiceInterface {
     $now = $this->time->getCurrentTime();
     $TTL = 86400; # 24hrs
     foreach ($all_state as $key => $encrypted_value) {
-      // TODO: $key contains timestamp
-      try {
-        $value = $this->encryptService->decrypt($encrypted_value, $this->getEncryptionProfile());
-      } catch (EncryptException | EncryptionMethodCanNotDecryptException $e) {
-      }
-      if (isset($value['created']) && ($now > ((int) $value['created'] + $TTL))) {
+      $created = (int) explode(":", $key)[0];
+      if (isset($created) && ($now > ($created + $TTL))) {
         unset($all_state[$key]);
         $prune_count++;
       }

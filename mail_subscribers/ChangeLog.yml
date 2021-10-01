@@ -1,4 +1,11 @@
 changes:
+  8.x-2.6.3:
+  - Csrollbackfix (#51)
+  8.x-2.6.2:
+  - Fix mail subscribers token replacement
+  8.x-2.6.1: null
+  8.x-2.6.0:
+  - update version 8.x-2.5.0 -> 8.x-2.6.0
   8.x-2.4.9: null
   8.x-2.4.8: null
   8.x-2.4.7:

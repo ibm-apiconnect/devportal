@@ -82,7 +82,7 @@ function apic_api_node_access_records($node): array {
 
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-  $config = \Drupal::config('ibm_apim.settings');
+  $config = \Drupal::config('ibm_apim.devel_settings');
   $aclDebug = (boolean) $config->get('acl_debug');
 
   $type = is_string($node) ? $node : $node->getType();
@@ -278,7 +278,7 @@ function apic_api_node_grants($account, $op): array {
 
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-  $config = \Drupal::config('ibm_apim.settings');
+  $config = \Drupal::config('ibm_apim.devel_settings');
   $aclDebug = (boolean) $config->get('acl_debug');
 
   $grants = [];
@@ -469,6 +469,7 @@ function apic_api_preprocess_node(&$variables): void {
       $certificateStripNewlines = (boolean) $config->get('certificate_strip_newlines');
       $certificateStripPrefix = (boolean) $config->get('certificate_strip_prefix');
       $codeSnippetLangs = [];
+      $routerType = $config->get('router_type', 'hash');
       $codeSnippets = $config->get('codesnippets');
       $firstEnabled = NULL;
       foreach ($codeSnippets as $lang => $enabled) {
@@ -703,6 +704,7 @@ function apic_api_preprocess_node(&$variables): void {
         'apicPortalUserId' => $currentUser->id(),
         'apicPortalNewAppLink' => Url::fromRoute('apic_app.create', ['redirectTo' => Url::fromRoute('<current>')->getInternalPath()])
           ->toString(),
+        'routerType'=> $routerType,
       ];
       if ($infoSectionEntries !== NULL && !empty($infoSectionEntries)) {
         $variables['#attached']['drupalSettings']['api']['explorer']['options']['infoSectionEntries'] = [$infoSectionEntries];

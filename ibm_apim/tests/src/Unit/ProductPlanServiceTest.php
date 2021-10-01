@@ -680,7 +680,7 @@ class ProductPlanServiceTest extends UnitTestCase {
         '/pets' => [
           'GET' => [
             'rateLimit' => '2 rate limits *',
-            'rateData' => '{"rates":["20 calls per hour","50 calls per hour"],"rateLabel":"Rate limits","burstLabel":"Burst limits"}',
+            'rateData' => '{"#rates":["20 calls per hour","50 calls per hour"],"#rateLabel":"Rate limits","#burstLabel":"Burst limits"}',
             'op' => $plan['apis']['petstore']['operations'][0],
           ],
         ],
@@ -753,7 +753,7 @@ class ProductPlanServiceTest extends UnitTestCase {
           ],
           'POST' => [
             'rateLimit' => '2 rate limits *',
-            'rateData' => '{"#rates":["100 calls per hour","500 calls per hour"],"#bursts":[],"#rateLabel":"Rate limits","#burstLabel":"Burst limits"}',
+            'rateData' => '{"#rates":["100 calls per hour","500 calls per hour"],"#rateLabel":"Rate limits","#burstLabel":"Burst limits"}',
             'op' => $plan['apis']['petstore']['operations'][1],
           ],
         ],
