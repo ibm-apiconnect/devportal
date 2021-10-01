@@ -1,4 +1,6 @@
 changes:
+  8.x-2.7.0:
+  - update version 8.x-2.6.9 -> 8.x-2.7.0
   8.x-2.6.8:
   - Fix subscriptions
   8.x-2.6.7:

@@ -1,4 +1,6 @@
 changes:
+  8.x-2.7.0:
+  - update version 8.x-2.6.3 -> 8.x-2.7.0
   8.x-2.6.2:
   - make scss the default
   8.x-2.6.1: null
