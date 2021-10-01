@@ -20,6 +20,7 @@ use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Throwable;
 
 /**
  * Class to work with the Product content type, takes input from the JSON returned by
@@ -1281,6 +1282,33 @@ class Product {
   }
 
   /**
+   * Returns the actual product document for returning to drush
+   *
+   * @param $url
+   *
+   * @return array
+   */
+  public static function getProductDocumentForDrush($url): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['url' => $url]);
+    $output = [];
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', 'product');
+    $query->condition('apic_url.value', $url);
+
+    $nids = $query->execute();
+
+    if ($nids !== NULL && !empty($nids)) {
+      $nid = array_shift($nids);
+      $node = Node::load($nid);
+      if ($node !== NULL) {
+        $output = yaml_parse($node->product_data->value);
+      }
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $output;
+  }
+
+  /**
    * Used by the batch API from the AdminForm
    *
    * @param $nid
@@ -1303,36 +1331,68 @@ class Product {
   }
 
   /**
-   * Clears the cache of all applications that have a subscription to the given product url
+   * Clears the cache of all applications that have a subscription to the given product url.
+   * Optionally takes an array of subscription ids to obtain the app entity ids from
    *
    * @param $productUrl
+   * @param null $subIds
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public static function clearAppCache($productUrl): void {
-    $appUrls = [];
-    $subIds = [];
-    $tags = [];
-    $options = ['target' => 'default'];
-    $result = Database::getConnection($options['target'])
-      ->query("SELECT id, app_url FROM apic_app_application_subs WHERE product_url = :product_url", [':product_url' => $productUrl], $options);
-
-    foreach ($result as $record) {
-      $appUrls[] = $record->app_url;
-      $subIds[] = $record->id;
-      $tags[] = 'apic_app_application_subs:' . $record->id;
+  public static function clearAppCache($productUrl, $subIds = null): void {
+    if (!isset($subIds)) {
+      $subIds = self::getSubIdsFromProductUrl($productUrl);
     }
-    if (!empty($appUrls)) {
-      $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'application');
-      $query->condition('apic_url', $appUrls, 'IN');
-      $nids = $query->execute();
 
-      foreach ($nids as $nid) {
-        $tags[] = 'application:' . $nid;
+    // If any subscriptions where found get the ids of the application they belong to and reset the relevant caches
+    if (!empty($subIds)) {
+      $tags = [];
+      $appEntityIds = self::getAppIdsFromSubIds($subIds);
+
+      foreach ($appEntityIds as $appId) {
+        $tags[] = 'node:' . $appId;
       }
+
       Cache::invalidateTags($tags);
-      \Drupal::entityTypeManager()->getStorage('node')->resetCache($nids);
       \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->resetCache($subIds);
+      \Drupal::entityTypeManager()->getStorage('node')->resetCache($appEntityIds);
     }
+  }
+
+  /**
+   * @param $productUrl
+   * @return array
+   */
+  public static function getSubIdsFromProductUrl($productUrl): array {
+    $subIds = [];
+
+    $result = Database::getConnection()
+      ->query("SELECT id FROM {apic_app_application_subs} WHERE product_url = :product_url", [':product_url' => $productUrl]);
+    foreach ($result as $record) {
+      $subIds[] = $record->id;
+    }
+
+    return $subIds;
+  }
+
+  /**
+   * @param $subIds
+   * @return array
+   */
+  public static function getAppIdsFromSubIds($subIds): array {
+    $appEntityIds = [];
+    $appResult = Database::getConnection()
+      ->select('node__application_subscription_refs', 's')
+      ->fields('s', ['entity_id'])
+      ->condition('application_subscription_refs_target_id', $subIds, 'IN')
+      ->execute();
+
+    foreach ($appResult as $app) {
+      $appEntityIds[] = $app->entity_id;
+    }
+
+    return $appEntityIds;
   }
 
   /**
@@ -1422,10 +1482,106 @@ class Product {
 
   /**
    * This function handles mass updates to subscriptions from lifecycle actions like
+   * product migrate subscriptions.  It differs from processPalnMapping because it expects
+   * the mapping to contain an array of subscription urls to migrate.
+   *
+   * @param $mapping
+   *
+   * @throws Throwable
+   */
+  public static function processPlanMappingWithSubscriptionUrls($mapping, $subscriptionUrls): void {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    if (isset($mapping)) {
+      if (isset($mapping['source'], $mapping['target'], $mapping['plans'], $subscriptionUrls) && !empty($mapping['plans']) && !empty($subscriptionUrls)) {
+        $sourceProductUrl = '/consumer-api/products/' . $mapping['source'];
+        $targetProductUrl = '/consumer-api/products/' . $mapping['target'];
+
+        $subUuids = [];
+        foreach ($subscriptionUrls as $subUrl) {
+          $urlParts = explode('/', $subUrl);
+          $subUuids[] = end($urlParts);
+        }
+
+        $db = Database::getConnection();
+
+        // Perform this in a transaction so we can roll back any deleted subscriptions if an error occurs
+        $transaction = $db->startTransaction();
+
+        try {
+
+          foreach (array_chunk($subUuids, 1000) as $chunk) {
+            // Find the subscription records of any app subscribed to the source product (in the list of uuids) that already has a subscription to the target product
+            $result = $db->query("SELECT uuid FROM {apic_app_application_subs} s WHERE s.product_url = :source_product_url AND s.uuid IN (:sub_uuids[]) AND EXISTS (SELECT id FROM {apic_app_application_subs} s2 WHERE s.app_url = s2.app_url AND s2.product_url = :target_product_url);", [':source_product_url' => $sourceProductUrl, ':target_product_url' => $targetProductUrl, ':sub_uuids[]' => $chunk]);
+
+            if ($result && $subsToDelete = $result->fetchCol()) {
+              foreach ($subsToDelete as $sub) {
+                \Drupal::logger('product')->info('Found an app that already has a subscription to the target product @t as well as to the source product.  Deleting the subscription record with uuid @uuid that was subscribed to the source product @s', ['@t' => $targetProductUrl, '@uuid' => $sub, '@s' => $sourceProductUrl]);
+              }
+              // Delete the subscription(s) from all relevant tables
+              $db->query("DELETE s, n, r FROM {apic_app_application_subs} s INNER JOIN {node__application_subscription_refs} n ON n.application_subscription_refs_target_id = s.id INNER JOIN {node_revision__application_subscription_refs} r ON r.application_subscription_refs_target_id = s.id WHERE s.uuid IN (:sub_uuids[])", [':sub_uuids[]' => $subsToDelete]);
+            } else {
+              \Drupal::logger('product')->info('Did not find any applications with existing subscriptions to the target product as well as to the source product.  Nothing to delete');
+            }
+          }
+
+          // loop over the plans to update all the relevant subscriptions
+          foreach ($mapping['plans'] as $planMap) {
+            if (isset($planMap['source'], $planMap['target'])) {
+              $options = ['target' => 'default'];
+              foreach (array_chunk($subUuids, 1000) as $chunk) {
+                Database::getConnection($options['target'])
+                  ->update('apic_app_application_subs', $options)
+                  ->fields(['plan' => $planMap['target'], 'product_url' => $targetProductUrl])
+                  ->condition('product_url', $sourceProductUrl)
+                  ->condition('plan', $planMap['source'])
+                  ->condition('uuid', $chunk, 'IN')
+                  ->execute();
+              }
+
+              $subIds = [];
+              $subscriptionsResult = Database::getConnection($options['target'])
+                ->select('apic_app_application_subs', 's')
+                ->fields('s', ['id'])
+                ->condition('s.product_url', $targetProductUrl)
+                ->condition('s.plan', $planMap['target'])
+                ->execute();
+
+              foreach ($subscriptionsResult as $sub) {
+                $subIds[] = $sub->id;
+              }
+            } else {
+              \Drupal::logger('product')->error('ERROR: Missing required data in processPlanMapping plan map array', []);
+            }
+          }
+        } catch (Throwable $e) {
+          $transaction->rollBack();
+          throw $e;
+        }
+        unset($transaction);
+
+        // If any subscriptions where found get the ids of the application they belong to and reset the relevant caches
+        if (!empty($subIds)) {
+          self::clearAppCache($targetProductUrl, $subIds);
+        }
+      }
+      else {
+        \Drupal::logger('product')->error('ERROR: Missing required data in processPlanMapping', []);
+      }
+    }
+    else {
+      \Drupal::logger('product')->error('ERROR: No processPlanMapping mapping provided', []);
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+  }
+
+
+  /**
+   * This function handles mass updates to subscriptions from lifecycle actions like
    * product replace.
    *
    * @param $mapping
    *
+   * @throws Throwable
    */
   public static function processPlanMapping($mapping): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -1433,36 +1589,56 @@ class Product {
       if (isset($mapping['source'], $mapping['target'], $mapping['plans']) && !empty($mapping['plans'])) {
         $sourceProductUrl = '/consumer-api/products/' . $mapping['source'];
         $targetProductUrl = '/consumer-api/products/' . $mapping['target'];
+        $subIds = [];
+        $db = Database::getConnection();
 
-        // loop over the plans to update all the subscriptions
-        foreach ($mapping['plans'] as $planMap) {
-          if (isset($planMap['source'], $planMap['target'])) {
-            $options = ['target' => 'default'];
-            $result = Database::getConnection($options['target'])
-              ->update('apic_app_application_subs', $options)
-              ->fields(['plan' => $planMap['target'], 'product_url' => $targetProductUrl])
-              ->condition('product_url', $sourceProductUrl)
-              ->condition('plan', $planMap['source'])
-              ->execute();
+        // Perform this in a transaction so we can roll back any deleted subscriptions if an error occurs
+        $transaction = $db->startTransaction();
+        try {
+          // Find the subscription records of any app subscribed to the source product that already has a subscription to the target product
+          $result = $db->query("SELECT uuid FROM {apic_app_application_subs} s WHERE s.product_url = :source_product_url AND EXISTS (SELECT id FROM {apic_app_application_subs} s2 WHERE s.app_url = s2.app_url AND s2.product_url = :target_product_url);", [':source_product_url' => $sourceProductUrl, ':target_product_url' => $targetProductUrl]);
 
-            $subIds = [];
-            $subscriptionsResult = Database::getConnection($options['target'])
-              ->select('apic_app_application_subs', 's')
-              ->fields('s', ['id'])
-              ->condition('s.product_url', $targetProductUrl)
-              ->condition('s.plan', $planMap['target'])
-              ->execute();
-
-            foreach ($subscriptionsResult as $sub) {
-              $subIds[] = $sub->id;
+          if ($result && $subsToDelete = $result->fetchCol()) {
+            foreach ($subsToDelete as $sub) {
+              \Drupal::logger('product')->info('Found an app that already has a subscription to the target product @t as well as to the source product.  Deleting the subscription record with uuid @uuid that was subscribed to the source product @s', ['@t' => $targetProductUrl, '@uuid' => $sub, '@s' => $sourceProductUrl]);
             }
-            if (!empty($subIds)) {
-              \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->resetCache($subIds);
+            // Delete the subscription(s) from all relevant tables
+            $db->query("DELETE s, n, r FROM {apic_app_application_subs} s INNER JOIN {node__application_subscription_refs} n ON n.application_subscription_refs_target_id = s.id INNER JOIN {node_revision__application_subscription_refs} r ON r.application_subscription_refs_target_id = s.id WHERE s.uuid IN (:sub_uuids[])", [':sub_uuids[]' => $subsToDelete]);
+          } else {
+            \Drupal::logger('product')->info('Did not find any applications with existing subscriptions to the target product as well as to the source product.  Nothing to delete');
+          }
+          // loop over the plans to update all the subscriptions
+          foreach ($mapping['plans'] as $planMap) {
+            if (isset($planMap['source'], $planMap['target'])) {
+              $options = ['target' => 'default'];
+              $db->update('apic_app_application_subs', $options)
+                ->fields(['plan' => $planMap['target'], 'product_url' => $targetProductUrl])
+                ->condition('product_url', $sourceProductUrl)
+                ->condition('plan', $planMap['source'])
+                ->execute();
+
+              $subscriptionsResult = $db->select('apic_app_application_subs', 's')
+                ->fields('s', ['id'])
+                ->condition('s.product_url', $targetProductUrl)
+                ->condition('s.plan', $planMap['target'])
+                ->execute();
+
+              foreach ($subscriptionsResult as $sub) {
+                $subIds[] = $sub->id;
+              }
+            } else {
+              \Drupal::logger('product')->error('ERROR: Missing required data in processPlanMapping plan map array', []);
             }
           }
-          else {
-            \Drupal::logger('product')->error('ERROR: Missing required data in processPlanMapping plan map array', []);
-          }
+        } catch (Throwable $e) {
+          $transaction->rollback();
+          throw $e;
+        }
+        unset($transaction);
+
+        // If any subscriptions where found get the ids of the application they belong to and reset the relevant caches
+        if (!empty($subIds)) {
+          self::clearAppCache($targetProductUrl, $subIds);
         }
       }
       else {

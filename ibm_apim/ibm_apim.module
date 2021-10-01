@@ -1125,7 +1125,7 @@ function ibm_apim_password_policy_check_constraints(array $form, FormStateInterf
  * @param null|mixed $args
  */
 function ibm_apim_entry_trace($function = 'undefined', $args = NULL) {
-  $entryExitTrace = (boolean) \Drupal::config('ibm_apim.settings')->get('entry_exit_trace');
+  $entryExitTrace = (boolean) \Drupal::config('ibm_apim.devel_settings')->get('entry_exit_trace');
   if ($entryExitTrace === TRUE) {
     \Drupal::logger('ibm_apim')->debug('%function ENTRY Trace input: %data.', [
       '%function' => $function,
@@ -1141,7 +1141,7 @@ function ibm_apim_entry_trace($function = 'undefined', $args = NULL) {
  * @param null|mixed $response
  */
 function ibm_apim_exit_trace($function = 'undefined', $response = NULL) {
-  $entryExitTrace = (boolean) \Drupal::config('ibm_apim.settings')->get('entry_exit_trace');
+  $entryExitTrace = (boolean) \Drupal::config('ibm_apim.devel_settings')->get('entry_exit_trace');
   if ($entryExitTrace === TRUE) {
     \Drupal::logger('ibm_apim')->debug('%function EXIT Trace return: %data.', [
       '%function' => $function,
@@ -1313,7 +1313,7 @@ function ibm_apim_preprocess_form(&$variables) {
   $variables['enable_signup_link'] = \Drupal::state()->get('ibm_apim.selfSignUpEnabled', 0);
 
   // if there is an invitation token in the session, allow the login link to be displayed regardless of onboarding enabled/disabled
-  $sessionStore = \Drupal::service('session_based_temp_store')->get('auth_apic_storage');
+  $sessionStore = \Drupal::service('tempstore.private')->get('auth_apic_storage');
   $jwt = $sessionStore->get('invitation_object');
   if ($jwt !== NULL) {
     $variables['enable_signup_link'] = TRUE;
@@ -1436,6 +1436,38 @@ function ibm_apim_user_logout($account) {
         }
       }
     }
-
   }
+}
+
+function ibm_apim_cron() {
+  $now = \Drupal::time()->getRequestTime();
+  if (_ibm_apim_shouldRun($now)) {
+    \Drupal::service('ibm_apim.db_usersfielddata')->deleteExpiredPendingApprovalUsers();
+    \Drupal::state()->set('ibm_apim.last_cron', $now);
+  }
+}
+
+/**
+ * @param $now
+ *
+ * @return bool
+ */
+function _ibm_apim_shouldRun($now): bool {
+  $scheduled = \Drupal::config('ibm_apim.settings')->get('daily_cron_time');
+  if ($scheduled === null) {
+    $scheduled = '05:00';
+  }
+  $timezone = new \DateTimeZone(\Drupal::config('system.date')->get('timezone')['default']);;
+
+  $timestamp_last = \Drupal::state()->get('ibm_apim.last_cron') ?? 0;
+  $last = \DateTime::createFromFormat('U', $timestamp_last)
+    ->setTimezone($timezone);
+  $next = clone $last;
+
+  $next->setTime(...explode(':', $scheduled));
+  // If the cron ran on the same calendar day it should have, add one day.
+  if ($next->getTimestamp() <= $last->getTimestamp()) {
+    $next->modify('+1 day');
+  }
+  return $next->getTimestamp() <= $now;
 }

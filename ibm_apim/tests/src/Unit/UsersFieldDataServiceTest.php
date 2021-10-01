@@ -21,6 +21,8 @@ use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 use Prophecy\Prophet;
 use Psr\Log\LoggerInterface;
+use Drupal\ibm_apim\Service\SiteConfig;
+use Drupal\Component\Datetime\Time;
 
 /**
  * @coversDefaultClass \Drupal\ibm_apim\Service\UsersFieldDataService
@@ -59,6 +61,16 @@ class UsersFieldDataServiceTest extends UnitTestCase {
    */
   protected $userRegistryService;
 
+    /**
+   * @var Drupal\ibm_apim\Service\SiteConfig|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $siteConfig;
+
+      /**
+   * @var Drupal\Component\Datetime\Time|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $time;
+
   protected function setup(): void {
     $this->prophet = new Prophet();
     $this->database = $this->prophet->prophesize(Connection::class);
@@ -66,6 +78,8 @@ class UsersFieldDataServiceTest extends UnitTestCase {
     $this->schema = $this->prophet->prophesize(Schema::class);
     $this->entityTypeManager = $this->prophet->prophesize(EntityTypeManagerInterface::class);
     $this->userRegistryService = $this->prophet->prophesize(UserRegistryServiceInterface::class);
+    $this->siteConfig = $this->prophet->prophesize(SiteConfig::class);
+    $this->time = $this->prophet->prophesize(Time::class);
 
     $this->database->schema()->willReturn($this->schema->reveal());
   }
@@ -96,7 +110,10 @@ class UsersFieldDataServiceTest extends UnitTestCase {
     $service = new UsersFieldDataService($this->database->reveal(),
       $this->logger->reveal(),
       $this->entityTypeManager->reveal(),
-      $this->userRegistryService->reveal());
+      $this->userRegistryService->reveal(),
+      $this->siteConfig->reveal(),
+      $this->time->reveal()
+    );
 
     self::assertTrue($service->addNameAndRegistryUniqueKey());
 
@@ -112,7 +129,10 @@ class UsersFieldDataServiceTest extends UnitTestCase {
     $service = new UsersFieldDataService($this->database->reveal(),
       $this->logger->reveal(),
       $this->entityTypeManager->reveal(),
-      $this->userRegistryService->reveal());
+      $this->userRegistryService->reveal(),
+      $this->siteConfig->reveal(),
+      $this->time->reveal()
+    );
 
     $this->logger->error('%field is not available in %table. Unable to create unique key.', [
       '%field' => 'registry_url',
@@ -144,7 +164,10 @@ class UsersFieldDataServiceTest extends UnitTestCase {
     $service = new UsersFieldDataService($this->database->reveal(),
       $this->logger->reveal(),
       $this->entityTypeManager->reveal(),
-      $this->userRegistryService->reveal());
+      $this->userRegistryService->reveal(),
+      $this->siteConfig->reveal(),
+      $this->time->reveal()
+    );
 
     self::assertTrue($service->addNameAndRegistryUniqueKey());
 
@@ -164,7 +187,10 @@ class UsersFieldDataServiceTest extends UnitTestCase {
     $service = new UsersFieldDataService($this->database->reveal(),
       $this->logger->reveal(),
       $this->entityTypeManager->reveal(),
-      $this->userRegistryService->reveal());
+      $this->userRegistryService->reveal(),
+      $this->siteConfig->reveal(),
+      $this->time->reveal()
+    );
 
     self::assertTrue($service->addNameAndRegistryUniqueKey());
 
@@ -184,7 +210,10 @@ class UsersFieldDataServiceTest extends UnitTestCase {
     $service = new UsersFieldDataService($this->database->reveal(),
       $this->logger->reveal(),
       $this->entityTypeManager->reveal(),
-      $this->userRegistryService->reveal());
+      $this->userRegistryService->reveal(),
+      $this->siteConfig->reveal(),
+      $this->time->reveal()
+    );
 
     self::assertTrue($service->addNameAndRegistryUniqueKey());
 

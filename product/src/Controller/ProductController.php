@@ -189,6 +189,7 @@ class ProductController extends ControllerBase {
           'pathalias' => $apiNode->apic_pathalias->value,
           'image_url' => $apiImageUrl,
           'enforced' => $enforced,
+          'state' => $apiNode->api_state->value,
         ];
 
         if (!$found) {

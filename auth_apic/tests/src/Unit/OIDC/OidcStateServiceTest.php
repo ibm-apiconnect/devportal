@@ -180,8 +180,8 @@ class OidcStateServiceTest extends UnitTestCase {
    * prune() tests
    */
   public function testPruneValid(): void {
-    $initial_state = ['one' => 'encrypted_data', 'two' => 'more_encrypted_data'];
-    $updated_state = ['two' => 'more_encrypted_data'];
+    $initial_state = ['0000000000:one' => 'encrypted_data', '9999999999:two' => 'more_encrypted_data'];
+    $updated_state = ['9999999999:two' => 'more_encrypted_data'];
     $data1 = ['registry_url' => '/user/reg1', 'created' => 1];
     $data2 = ['registry_url' => '/user/reg2', 'created' => 3];
     $state_key = 'auth_apic.oidc_state';

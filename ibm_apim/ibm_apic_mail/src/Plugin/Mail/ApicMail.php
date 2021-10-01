@@ -25,6 +25,7 @@ use Drupal\ibm_apim\Rest\Exception\RestResponseParseException;
 use Html2Text\Html2Text;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Throwable;
 
 /**
  * Provides an 'ApicMail' plugin to send emails.
@@ -233,7 +234,7 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
           '%code' => $e->getCode(),
         ]);
         $returnValue = FALSE;
-      } catch (\Exception $e) {
+      } catch (Throwable $e) {
         \Drupal::logger('ibm_apic_mail')->info('call: Exception %code %message', [
           '%message' => $e->getMessage(),
           '%code' => $e->getCode(),

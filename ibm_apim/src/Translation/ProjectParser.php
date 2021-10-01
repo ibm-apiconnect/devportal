@@ -12,6 +12,8 @@
 
 namespace Drupal\ibm_apim\Translation;
 
+use Throwable;
+
 /**
  * Class ProjectParser
  *
@@ -63,7 +65,7 @@ class ProjectParser {
         foreach ($info->getPoFiles() as $language => $poFile) {
           $translation_files[$language] = new TranslationSplitter($info->getPotFile(), $poFile, $language);
         }
-      } catch (\Exception $exception) {
+      } catch (Throwable $exception) {
         echo "Exception found when parsing project: " . $project . ", skipping it. Exception: " . $exception;
       }
       $this->fulltranslations[$project] = $translation_files;

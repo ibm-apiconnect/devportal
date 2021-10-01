@@ -52,9 +52,9 @@ class PaymentMethodObj {
   private ?string $title = NULL;
 
   /**
-   * @var array|null
+   * @var string|array|null
    */
-  private ?array $configuration = [];
+  private $configuration = [];
 
   /**
    * @var string|null
@@ -107,9 +107,9 @@ class PaymentMethodObj {
   }
 
   /**
-   * @param string $title
+   * @param string|null $title
    */
-  public function setTitle(string $title): void {
+  public function setTitle(?string $title): void {
     $this->title = $title;
   }
 
@@ -156,72 +156,72 @@ class PaymentMethodObj {
   }
 
   /**
-   * @return string
+   * @return string|null
    */
   public function getCreatedAt(): ?string {
     return $this->created_at;
   }
 
   /**
-   * @param string $created_at
+   * @param string|null $created_at
    */
-  public function setCreatedAt(string $created_at): void {
+  public function setCreatedAt(?string $created_at): void {
     $this->created_at = $created_at;
   }
 
   /**
-   * @return string
+   * @return string|null
    */
   public function getUpdatedAt(): ?string {
     return $this->updated_at;
   }
 
   /**
-   * @param string $updated_at
+   * @param string|null $updated_at
    */
-  public function setUpdatedAt(string $updated_at): void {
+  public function setUpdatedAt(?string $updated_at): void {
     $this->updated_at = $updated_at;
   }
 
   /**
-   * @return string
+   * @return string|null
    */
   public function getCreatedBy(): ?string {
     return $this->created_by;
   }
 
   /**
-   * @param string $created_by
+   * @param string|null $created_by
    */
-  public function setCreatedBy(string $created_by): void {
+  public function setCreatedBy(?string $created_by): void {
     $this->created_by = $created_by;
   }
 
   /**
-   * @return string
+   * @return string|null
    */
   public function getUpdatedBy(): ?string {
     return $this->updated_by;
   }
 
   /**
-   * @param string $updated_by
+   * @param string|null $updated_by
    */
-  public function setUpdatedBy(string $updated_by): void {
+  public function setUpdatedBy(?string $updated_by): void {
     $this->updated_by = $updated_by;
   }
 
   /**
-   * @return array
+   * @return string|array
    */
-  public function getConfiguration(): ?array {
+  public function getConfiguration() {
     return $this->configuration;
   }
 
   /**
-   * @param array $configuration
+   * @param string|array $configuration
    */
-  public function setConfiguration(array $configuration): void {
+  public function setConfiguration($configuration): void {
     $this->configuration = $configuration;
   }
 

@@ -1,4 +1,21 @@
 changes:
+  8.x-2.6.9:
+  - Remove unnecessary use statement
+  8.x-2.6.8:
+  - move devel settings to their own config object
+  8.x-2.6.7:
+  - add support for getting artifact document back via drush
+  8.x-2.6.6:
+  - fix up acl tests
+  8.x-2.6.5: null
+  8.x-2.6.4:
+  - Added api ACL tests
+  8.x-2.6.3: null
+  8.x-2.6.2:
+  - Switch to catching Throwable
+  8.x-2.6.1: null
+  8.x-2.6.0:
+  - update version 8.x-2.5.0 -> 8.x-2.6.0
   8.x-2.4.21:
   - need to use definitive sort to avoid dupes with paging
   8.x-2.4.20:

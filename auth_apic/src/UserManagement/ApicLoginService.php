@@ -31,6 +31,7 @@ use Drupal\ibm_apim\Service\Utils;
 use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 class ApicLoginService implements ApicLoginServiceInterface {
 
@@ -372,7 +373,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
         $existingUserByMail = NULL;
         try {
           $existingUserByMail = $this->userStorage->loadUserByEmailAddress($meUser->getMail());
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
           $this->logger->error('Login failed because there was a problem searching for users based on email: %message', ['%message' => $e->getMessage()]);
           $permitted = FALSE;
         }

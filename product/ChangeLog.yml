@@ -1,4 +1,24 @@
 changes:
+  8.x-2.6.8:
+  - Fix subscriptions
+  8.x-2.6.7:
+  - needs to return as yaml so needs parsing
+  - add support for getting artifact document back via drush
+  8.x-2.6.6:
+  - fix up ACL tests
+  8.x-2.6.5:
+  - show api state (#214)
+  8.x-2.6.4:
+  - Added visibility tests (#217) (#224)
+  8.x-2.6.3:
+  - Fix multiple subscriptions issue
+  - Fix caching problems
+  - Add support for new webhooks
+  8.x-2.6.2:
+  - use twig markdown filter
+  8.x-2.6.1: null
+  8.x-2.6.0:
+  - update version 8.x-2.5.0 -> 8.x-2.6.0
   8.x-2.4.22:
   - need to do ACL checks on /product/x/api/Y
   8.x-2.4.21:

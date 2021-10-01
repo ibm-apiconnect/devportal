@@ -22,6 +22,7 @@ Feature: Forgot Password
       | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | forgotpwtest |
     Given I am at "/user/password"
     And I enter "forgotpwtest" for "name"
+    And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Submit" button
     Then there are no errors
     And there are no warnings
@@ -40,6 +41,7 @@ Feature: Forgot Password
       | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | forgotpwtest |
     Given I am at "/user/password"
     And I enter "forgotpwtest@example.com" for "name"
+    And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Submit" button
     Then there are no errors
     And there are no warnings
@@ -55,6 +57,7 @@ Feature: Forgot Password
       | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
     And I am at "/user/password"
     And I enter "admin" for "name"
+    And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Submit" button
     Then there are no errors
     And there are no warnings
@@ -70,6 +73,7 @@ Feature: Forgot Password
       | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
     And I am at "/user/password"
     And I enter "@data(admin.mail)" for "name"
+    And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Submit" button
     Then there are no errors
     And there are no warnings
@@ -85,6 +89,7 @@ Feature: Forgot Password
     Given I am not logged in
     Given I am at "/user/password"
     And I enter "this_is_not_a_user" for "name"
+    And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Submit" button
     Then there are no errors
     And there are no warnings
@@ -97,6 +102,7 @@ Feature: Forgot Password
     Given I am not logged in
     Given I am at "/user/password"
     And I enter "this_is_not_a_user@example.com" for "name"
+    And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Submit" button
     Then there are no errors
     And there are no warnings
@@ -162,6 +168,7 @@ Feature: Forgot Password
       | forgotpw | andre_ldap@example.com | Qwert123 | 1      | @data(user_registries[2].url) |
     When I am at "/user/password"
     And I enter "forgotpw" for "name"
+    And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Submit" button
     Then there are no errors
     And there are no warnings
@@ -169,6 +176,7 @@ Feature: Forgot Password
     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
     And I am at "/user/password?registry_url=@data(user_registries[2].url)"
     And I enter "forgotpw" for "name"
+    And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Submit" button
     Then there are no errors
     And there are no warnings
@@ -214,6 +222,7 @@ Feature: Forgot Password
       | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | forgotpwtest |
     Given I am at "/user/password"
     And I enter "forgotpwtest" for "name"
+    And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Submit" button
     Then there are no errors
     And there are no warnings

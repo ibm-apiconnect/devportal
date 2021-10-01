@@ -67,8 +67,11 @@ class UserManagedSignUp implements SignUpInterface {
 
     if ($mgmtResponse !== NULL && ((int) $mgmtResponse->getCode() === 201 || (int) $mgmtResponse->getCode() === 204)) {
       // user will need to accept invitation so invite as pending.
-      $user->setState('pending');
-
+      if ($this->siteConfig->isAccountapprovalsEnabled()) {
+        $user->setState('pending_approval');
+      } else {
+        $user->setState('pending');
+      }
       $register_response = $this->accountService->registerApicUser($user);
 
       if ($register_response !== NULL) {

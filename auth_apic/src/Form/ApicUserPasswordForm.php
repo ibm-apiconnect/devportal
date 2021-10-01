@@ -24,8 +24,8 @@ use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
-use Drupal\session_based_temp_store\SessionBasedTempStore;
-use Drupal\session_based_temp_store\SessionBasedTempStoreFactory;
+use Drupal\Core\TempStore\PrivateTempStore;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\user\Form\UserPasswordForm;
 use Drupal\user\UserInterface;
 use Drupal\user\UserStorageInterface;
@@ -84,9 +84,9 @@ class ApicUserPasswordForm extends UserPasswordForm {
   protected OidcRegistryServiceInterface $oidcService;
 
   /**
-   * @var \Drupal\session_based_temp_store\SessionBasedTempStore
+   * @var \Drupal\Core\TempStore\PrivateTempStore
    */
-  protected SessionBasedTempStore $authApicSessionStore;
+  protected PrivateTempStore $authApicSessionStore;
 
   /**
    * ApicUserPasswordForm constructor.
@@ -102,7 +102,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
    * @param \Drupal\auth_apic\UserManagement\ApicPasswordInterface $password_service
    * @param \Drupal\Core\Messenger\Messenger $messenger
    * @param \Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface $oidc_service
-   * @param \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $session_store_factory
+   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $session_store_factory
    */
   public function __construct(UserStorageInterface $user_storage,
                               LanguageManagerInterface $language_manager,
@@ -115,7 +115,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
                               ApicPasswordInterface $password_service,
                               Messenger $messenger,
                               OidcRegistryServiceInterface $oidc_service,
-                              SessionBasedTempStoreFactory $session_store_factory) {
+                              PrivateTempStoreFactory $session_store_factory) {
     parent::__construct($user_storage, $language_manager, $config_factory, $flood);
     $this->mgmtServer = $mgmtServer;
     $this->logger = $logger;
@@ -146,7 +146,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
       $container->get('auth_apic.password'),
       $container->get('messenger'),
       $container->get('auth_apic.oidc'),
-      $container->get('session_based_temp_store'),
+      $container->get('tempstore.private'),
     );
   }
 

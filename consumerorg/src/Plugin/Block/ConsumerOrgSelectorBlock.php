@@ -72,6 +72,7 @@ class ConsumerOrgSelectorBlock extends BlockBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $myorgs = [];
     $selected_name = NULL;
+    $selected_id = NULL;
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
     $orgs = $userUtils->loadConsumerorgs();
@@ -96,16 +97,20 @@ class ConsumerOrgSelectorBlock extends BlockBase {
       $selected_org_full = $consumerOrgService->get($selected['url']);
       if (!empty($selected_org_full)) {
         $selected_name = $selected_org_full->getTitle();
+        $selected_id = $selected_org_full->getId();
       }
       foreach ($orgs as $consumer_org) {
         $title = $consumer_org;
-        $node = $consumerOrgService->get($consumer_org);
+        $id = $consumer_org;
+        $cOrg = $consumerOrgService->get($consumer_org);
         $consumer_org_url = str_replace('/', '_', $consumer_org);
-        if ($node !== NULL) {
-          $title = $node->getTitle();
+        if ($cOrg !== NULL) {
+          $title = $cOrg->getTitle();
+          $id = $cOrg->getId();
         }
         $myorgs[] = [
           'title' => $title,
+          'id' => $id,
           'link_object' => Link::createFromRoute($title, 'ibm_apim.consumerorg_selection', ['orgUrl' => $consumer_org_url], $options)
             ->toString(),
         ];
@@ -116,6 +121,7 @@ class ConsumerOrgSelectorBlock extends BlockBase {
       '#theme' => 'consumerorg_select_block',
       '#orgs' => $myorgs,
       '#selected_name' => $selected_name,
+      '#selected_id' => $selected_id,
       '#create_allowed' => $create_allowed,
     ];
   }

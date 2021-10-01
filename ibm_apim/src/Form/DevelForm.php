@@ -35,14 +35,14 @@ class DevelForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   protected function getEditableConfigNames(): array {
-    return ['ibm_apim.settings'];
+    return ['ibm_apim.devel_settings'];
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
-    $config = $this->config('ibm_apim.settings');
+    $config = $this->config('ibm_apim.devel_settings');
 
     $form['intro'] = [
       '#markup' => t('IBM API Developer Portal Development Settings'),
@@ -111,7 +111,7 @@ class DevelForm extends ConfigFormBase {
     $isInCloud = (boolean) \Drupal::service('ibm_apim.site_config')->isInCloud();
     if ($isInCloud !== TRUE) {
       // Set the submitted configuration setting
-      $this->config('ibm_apim.settings')
+      $this->config('ibm_apim.devel_settings')
         ->set('entry_exit_trace', (bool) $form_state->getValue('entry_exit_trace'))
         ->set('apim_rest_trace', (bool) $form_state->getValue('apim_rest_trace'))
         ->set('webhook_debug', (bool) $form_state->getValue('webhook_debug'))

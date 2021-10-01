@@ -85,9 +85,9 @@ class ConsumerOrg {
   private ?string $owner_url = NULL;
 
   /**
-   * @var array
+   * @var array|null
    */
-  private array $default_payment_method = [];
+  private ?array $default_payment_method = [];
 
   /**
    * @var array
@@ -110,9 +110,9 @@ class ConsumerOrg {
   private array $tags = [];
 
   /**
-   * @var array
+   * @var array|null
    */
-  private array $payment_methods = [];
+  private ?array $payment_methods = [];
 
   /**
    * @var array
@@ -516,7 +516,7 @@ class ConsumerOrg {
   /**
    * Gets the payment methods of this org.
    *
-   * @return array
+   * @return array|null
    */
   public function getPaymentMethods(): ?array {
     return $this->payment_methods;
@@ -525,18 +525,18 @@ class ConsumerOrg {
   /**
    * Sets the payment methods of this org.
    *
-   * @param array $payment_methods
+   * @param ?array $payment_methods
    */
-  public function setPaymentMethods(array $payment_methods): void {
+  public function setPaymentMethods(?array $payment_methods): void {
     $this->payment_methods = $payment_methods;
   }
 
   /**
    * Gets the payment methods of this org.
    *
-   * @return array
+   * @return array|null
    */
-  public function getDefaultPaymentMethod(): array {
+  public function getDefaultPaymentMethod(): ?array {
     if (isset($this->default_payment_method) && !empty($this->default_payment_method)) {
       return $this->default_payment_method;
     }
@@ -549,9 +549,9 @@ class ConsumerOrg {
   /**
    * Sets the payment methods of this org.
    *
-   * @param array $default_payment_method
+   * @param ?array $default_payment_method
    */
-  public function setDefaultPaymentMethod(array $default_payment_method): void {
+  public function setDefaultPaymentMethod(?array $default_payment_method): void {
     $this->default_payment_method = $default_payment_method;
   }
 

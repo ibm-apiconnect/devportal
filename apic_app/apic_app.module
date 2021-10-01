@@ -47,7 +47,7 @@ function apic_app_node_access_records($node): array {
 
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-  $config = \Drupal::config('ibm_apim.settings');
+  $config = \Drupal::config('ibm_apim.devel_settings');
   $aclDebug = (boolean) $config->get('acl_debug');
 
   $type = is_string($node) ? $node : $node->getType();
@@ -96,7 +96,7 @@ function apic_app_node_grants($account, $op): array {
 
   ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-  $config = \Drupal::config('ibm_apim.settings');
+  $config = \Drupal::config('ibm_apim.devel_settings');
   $aclDebug = (boolean) $config->get('acl_debug');
 
   $grants = [];

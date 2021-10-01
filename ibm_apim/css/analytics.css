@@ -84,3 +84,13 @@
   box-shadow: none;
   border: 0;
 }
+
+@media screen and (max-width: 640px) {
+  .analyticsWidgetContainer {
+    display:block;
+  }
+
+  .analyticsWidgetContainer > div {
+    margin: 1rem;
+  }
+}

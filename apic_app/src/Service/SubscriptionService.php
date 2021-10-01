@@ -18,11 +18,11 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Database;
 use Drupal\Core\TempStore\TempStoreException;
-use Drupal\Driver\Exception\Exception;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\user\Entity\User;
+use Throwable;
 
 /**
  * Class to work with the Application content type, takes input from the JSON returned by
@@ -61,26 +61,24 @@ class SubscriptionService {
    * @param string $consumerOrgUrl
    * @param string $state
    * @param string|NULL $billingUrl
-   * @param string|NULL $created_at
-   * @param string|NULL $updated_at
+   * @param $subscription
    *
    * @return bool
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  //public function create(string $appUrl, string $subId, string $product, string $plan, string $consumerOrgUrl, $state = 'enabled', $billingUrl = NULL, $created_at = NULL, $updated_at = NULL): bool {
   public function create(string $appUrl, string $subId, string $product, string $plan, string $consumerOrgUrl, $state = 'enabled', $billingUrl = NULL, $subscription): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$appUrl, $subId]);
-    $subscriptionExists = FALSE;
     $created = FALSE;
-    $updated = FALSE;
     $appUrl = Html::escape($this->apimUtils->removeFullyQualifiedUrl($appUrl));
     $product = Html::escape($product);
     $billingUrl = Html::escape($this->apimUtils->removeFullyQualifiedUrl($billingUrl));
     $plan = Html::escape($plan);
-    $created_at = (isset($subscription['created_at'])) ? $subscription['created_at'] : NULL;
-    $updated_at = (isset($subscription['updated_at'])) ? $subscription['updated_at'] : NULL;
-    $created_by = (isset($subscription['created_by'])) ? $subscription['created_by'] : NULL;
-    $updated_by = (isset($subscription['updated_by'])) ? $subscription['updated_by'] : NULL;
+    $created_at = $subscription['created_at'] ?? NULL;
+    $updated_at = $subscription['updated_at'] ?? NULL;
+    $created_by = $subscription['created_by'] ?? NULL;
+    $updated_by = $subscription['updated_by'] ?? NULL;
     $consumerOrgUrl = Html::escape($this->apimUtils->removeFullyQualifiedUrl($consumerOrgUrl));
 
     // Only allow state to be enabled, disabled or pending
@@ -101,12 +99,31 @@ class SubscriptionService {
       'consumerorg_url' => $consumerOrgUrl
     ];
 
-    if (isset($created_at)) {
-      $fields['created_at'] = strtotime($created_at);
+    if (is_string($created_at)) {
+      // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
+      $timestamp = strtotime($created_at);
+      if ($timestamp < 2147483647 && $timestamp > 0) {
+        $created_at = $timestamp;
+      } else {
+        $created_at = time();
+      }
+    } else {
+      $created_at = time();
     }
-    if (isset($updated_at)) {
-      $fields['updated_at'] = strtotime($updated_at);
+    $fields['created_at'] = $created_at;
+
+    if (is_string($updated_at)) {
+      // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
+      $timestamp = strtotime($updated_at);
+      if ($timestamp < 2147483647 && $timestamp > 0) {
+        $updated_at = $timestamp;
+      } else {
+        $updated_at = time();
+      }
+    } else {
+      $updated_at = time();
     }
+    $fields['updated_at'] = $updated_at;
 
     // See if we need to update an existing record first
     [$subscriptionExists, $appEntityId, $updated] = $this->update($result, $fields);
@@ -172,11 +189,6 @@ class SubscriptionService {
       $eventEntity->setUserUrl($byUserUrl);
     }
 
-    if ($timestamp !== NULL) {
-      $timestamp = strtotime($timestamp);
-      $eventEntity->setTimestamp((int) $timestamp);
-    }
-
     // Get the product title - this is done now instead of when rendering the notifications since the product might get deleted before then
     $productTitle = $this->getProductTile($fields['product_url']);
     $eventEntity->setArtifactUrl($fields['app_url'] . '/subscriptions/' . $fields['uuid']);
@@ -186,8 +198,7 @@ class SubscriptionService {
 
     if ($event === 'create' && isset($fields['updated_at']) && $fields['updated_at'] !== $timestamp) {
       $createEventEntity = clone $eventEntity;
-      $timestamp = strtotime($fileds['updated_at']);
-      $createEventEntity->setTimestamp((int) $timestamp);
+      $createEventEntity->setTimestamp($fields['updated_at']);
       $createEventEntity->setEvent('update');
       $eventLogService->createIfNotExist($createEventEntity);
     }
@@ -322,7 +333,7 @@ class SubscriptionService {
           $db->query("INSERT INTO {" . $table . "} VALUES ('application', 0, :eid, :rid, :lang, :delta, :subId)",
             [':eid' => $record->entity_id, ':rid' => $record->revision_id, ':lang' => $record->langcode, ':delta' => $delta, ':subId' => $subscriptionEntityId]);
         }
-      } catch (Exception $e) {
+      } catch (Throwable $e) {
         $transaction->rollback();
         \Drupal::logger('apic_app')->error('Failed to insert the reference for subscription @s to application @a', ['@s' => $subscriptionEntityId, '@a' => $appUrl]);
       }
@@ -451,7 +462,7 @@ class SubscriptionService {
    * @return mixed
    */
   private function getAppEntityIdByUrl($appUrl) {
-    $id;
+    $id = null;
     $result = Database::getConnection()
       ->query("SELECT entity_id FROM {node__apic_url} WHERE apic_url_value = :appUrl", [':appUrl' => $appUrl]);
 
@@ -538,10 +549,10 @@ class SubscriptionService {
     $appEntityId = null;
     $newSub = ApplicationSubscription::create($fields);
     if (isset($createdAt)) {
-      $newSub->set('created_at', strtotime($createdAt));
+      $newSub->set('created_at', $createdAt);
     }
     if (isset($updatedAt)) {
-      $newSub->set('updated_at', strtotime($updatedAt));
+      $newSub->set('updated_at', $updatedAt);
     }
     $newSub->enforceIsNew();
     $newSub->save();

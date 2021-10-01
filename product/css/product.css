@@ -374,6 +374,35 @@ ul.apicProductApiList {
   width: calc(100% - 10rem);
 }
 
+.apicApiState {
+  margin-right:15px;
+}
+
+.apicApiState .text {
+  text-transform: capitalize;
+}
+
+.apicApiState .icon {
+  margin:0px 5px;
+  border-radius: 100px;
+  width:15px;
+  height:15px;
+  border:1px solid lightgray;
+  display: inline-block;
+}
+
+.apicApiState.online .icon {
+  border-color: green;
+  background: green;
+}
+
+
+.apicApiState.offline .icon,
+.apicApiState.archived .icon {
+  border-color: lightgray;
+  background: none;
+}
+
 @media screen and (max-width: 1024px) {
   .apicProductName {
     max-width: 300px;
@@ -1091,7 +1120,8 @@ h3.field__label.label
   word-break: break-word;
   margin-bottom: 1rem;
   overflow: hidden;
-  height: 3.375rem;
+  min-height: 3.375rem;
+  height: auto;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -1143,6 +1173,10 @@ h3.field__label.label
   flex-direction: column;
   padding: 2rem;
   position: relative;
+}
+.planDetail--header .body-short-01 {
+  min-height: 1.1rem;
+  height: auto;
 }
 
 .planDetail--subscribe {

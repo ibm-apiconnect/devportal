@@ -12,3 +12,11 @@
  
      }
    }
+
+@@ -535,6 +535,7 @@
+       ->select('captcha_sessions', 'cs')
+       ->fields('cs', ['solution'])
+       ->condition('csid', $csid)
++      ->condition('status', CAPTCHA_STATUS_UNSOLVED)
+       ->execute()
+       ->fetchField();

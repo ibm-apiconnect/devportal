@@ -186,6 +186,11 @@ class ModalApplicationCreateForm extends FormBase {
     if ($moduleHandler->moduleExists('clipboardjs')) {
       $form['#attached']['library'][] = 'clipboardjs/drupal';
     }
+    if ($moduleHandler->moduleExists('view_password')) {
+      // Adding js for the view_password lib since it only attaches to forms by default.
+      $form['#attached']['library'][] = 'view_password/pwd_lb';
+      $form['#attributes']['class'][] = 'pwd-see';
+    }
 
     // remove any admin fields if they exist
     if (isset($form['revision_log'])) {
@@ -310,7 +315,7 @@ class ModalApplicationCreateForm extends FormBase {
           $credsForm['client_id'] = [
             '#markup' => Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input id="clientIDInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientIDInputLabel" value="' . $clientId . '" />
                 <div id="hiddenClientIDInput" class="offscreen-field">' . $clientId . '</div>
-                <button class="clipboardjs-button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientIDInput">
+                <button class="clipboardjs-button" type="button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientIDInput">
                   ' . file_get_contents(drupal_get_path('module', 'apic_app') . "/images/clipboard.svg") . '</button></div>'),
             '#weight' => 10,
           ];
@@ -318,7 +323,7 @@ class ModalApplicationCreateForm extends FormBase {
           $credsForm['client_secret'] = [
             '#markup' => Markup::create('<div class="clientSecretContainer"><label for="client_secret" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input id="clientSecretInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientSecretInputLabel" value="' . $clientSecret . '" />
                 <div id="hiddenClientSecretInput" class="offscreen-field">' . $clientSecret . '</div>
-                <button class="clipboardjs-button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientSecretInput">
+                <button class="clipboardjs-button" type="button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientSecretInput">
                   ' . file_get_contents(drupal_get_path('module', 'apic_app') . "/images/clipboard.svg") . '</button></div>'),
             '#weight' => 20,
           ];
@@ -345,6 +350,7 @@ class ModalApplicationCreateForm extends FormBase {
         if ($moduleHandler->moduleExists('view_password')) {
           // Adding js for the view_password lib since it only attaches to forms by default.
           $credsForm['#attached']['library'][] = 'view_password/pwd_lb';
+          $credsForm['#attributes']['class'][] = 'pwd-see';
         }
 
         $response->addCommand(new OpenModalDialogCommand(t('Credentials for your new application'), $credsForm));

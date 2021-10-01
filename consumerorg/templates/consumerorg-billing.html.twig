@@ -86,13 +86,13 @@
     </header>
     <div class="ibmapimBilling">
       <div class="paymentMethodPage">
-        <div class="addPaymentMethod">
-          <a class="button apicNewPaymentMethod" href="{{ url('consumerorg.billing_add_payment') }}"
-             title="{{ 'Add a new payment method for your consumer organization'|t }}">
-            <span>{{ 'Add'|t }}</span>
-          </a>
-        </div>
         {% if node.payment_methods is empty %}
+          <div class="addPaymentMethod">
+            <a class="button apicNewPaymentMethod" href="{{ url('consumerorg.billing_add_payment') }}"
+               title="{{ 'Add a new payment method for your consumer organization'|t }}">
+              <span>{{ 'Add'|t }}</span>
+            </a>
+          </div>
           <div class="apicNoContent paymentMethodContainer noPaymentMethods">
             <div
                 class="noContentImage svgContainer">{% include images_path ~ '/images/EmptyState-Nothinglarge.svg' %}</div>

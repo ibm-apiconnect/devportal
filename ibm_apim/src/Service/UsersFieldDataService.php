@@ -19,6 +19,9 @@ use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\ibm_apim\Service\Interfaces\UsersFieldDataServiceInterface;
 use Psr\Log\LoggerInterface;
 use \Drupal\user\Entity\User;
+use Drupal\ibm_apim\Service\SiteConfig;
+use Drupal\Component\Datetime\Time;
+
 
 /**
  * Class UsersFieldDataService
@@ -77,15 +80,29 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
    */
   protected Connection $database;
 
+    /**
+   * @var Drupal\ibm_apim\Service\SiteConfig
+   */
+  protected SiteConfig $siteConfig;
+
+      /**
+   * @var Drupal\Component\Datetime\Time
+   */
+  protected Time $time;
+
   public function __construct(Connection $database,
                               LoggerInterface $logger,
                               EntityTypeManagerInterface $entity_type_manager,
-                              UserRegistryServiceInterface $user_registry_service) {
+                              UserRegistryServiceInterface $user_registry_service,
+                              SiteConfig $site_config,
+                              Time $time) {
     $this->schema = $database->schema();
     $this->database = $database;
     $this->logger = $logger;
     $this->entityTypeManager = $entity_type_manager;
     $this->userRegistryService = $user_registry_service;
+    $this->siteConfig = $site_config;
+    $this->time = $time;
   }
 
   /**
@@ -208,4 +225,25 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
     }
   }
 
+  /**
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  public function deleteExpiredPendingApprovalUsers(): void {
+    $now = $this->time->getCurrentTime();
+    $approvalInvtitationTTLs =  2*$this->siteConfig->getInvitationTTL();
+    $query = \Drupal::entityQuery('user');
+    $query->condition('apic_state', 'pending_approval');
+    $query->condition('created', $now - $approvalInvtitationTTLs, "<=" );
+    $uids = $query->execute();
+    if (!empty($uids)) {
+      foreach (array_chunk($uids, 50) as $chunk) {
+        $users = User::loadMultiple($chunk);
+        foreach ($users as $user) {
+          $user->delete();
+        }
+      }
+    }
+  }
 }

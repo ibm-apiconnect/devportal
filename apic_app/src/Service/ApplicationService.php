@@ -313,13 +313,27 @@ class ApplicationService {
           'updated_at' => $app['updated_at'],
         ];
       }
-      if (isset($app['created_at'])) {
+      if (array_key_exists('created_at', $app) && is_string($app['created_at'])) {
         // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
-        $node->set('apic_created_at', strtotime($app['created_at']));
+        $timestamp = strtotime($app['created_at']);
+        if ($timestamp < 2147483647 && $timestamp > 0) {
+          $node->set('apic_created_at', $timestamp);
+        } else {
+          $node->set('apic_created_at', time());
+        }
+      } else {
+        $node->set('apic_created_at', time());
       }
-      if (isset($app['updated_at'])) {
+      if (array_key_exists('updated_at', $app) && is_string($app['updated_at'])) {
         // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
-        $node->set('apic_updated_at', strtotime($app['updated_at']));
+        $timestamp = strtotime($app['updated_at']);
+        if ($timestamp < 2147483647 && $timestamp > 0) {
+          $node->set('apic_updated_at', $timestamp);
+        } else {
+          $node->set('apic_updated_at', time());
+        }
+      } else {
+        $node->set('apic_updated_at', time());
       }
       $node->save();
       $node = $this->credentialsService->createOrUpdateCredentialsList($node, $creds);

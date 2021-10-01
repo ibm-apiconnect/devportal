@@ -73,9 +73,29 @@ function apic_type_count_drush_command(): array {
       'default' => 'json',
     ],
   ];
+  $items['apic_type_count-apidocument'] = [
+    'description' => 'Get an API document',
+    'aliases' => ['apidocument'],
+    'arguments' => [
+      'input' => 'The API ID or name:version',
+    ],
+    'outputformat' => [
+      'default' => 'string',
+    ],
+  ];
   $items['apic_type_count-productget'] = [
     'description' => 'Get a product',
     'aliases' => ['productget'],
+    'arguments' => [
+      'input' => 'The product ID or name:version',
+    ],
+    'outputformat' => [
+      'default' => 'json',
+    ],
+  ];
+  $items['apic_type_count-productdocument'] = [
+    'description' => 'Get a product document',
+    'aliases' => ['productdocument'],
     'arguments' => [
       'input' => 'The product ID or name:version',
     ],
@@ -342,7 +362,40 @@ function drush_apic_type_count_apiget($input): ?array {
 
     try {
       $results = ApicNodeListController::getAPI($input);
-    } catch (\Exception $e) {
+    } catch (Throwable $e) {
+      \Drupal::logger("apic_type_count")
+        ->error("An exception occurred. That may mean the api does not exist or you do not have access to it.");
+    }
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+  }
+  else {
+    \Drupal::logger("apic_type_count")->error("No input provided.");
+  }
+  return $results;
+}
+
+/**
+ * @param $input
+ *
+ * @return string|null
+ */
+function drush_apic_type_count_apidocument($input): ?string {
+  $results = NULL;
+  if ($input !== NULL) {
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
+    try {
+      $results = ApicNodeListController::getAPI($input, 'document');
+    } catch (Throwable $e) {
       \Drupal::logger("apic_type_count")
         ->error("An exception occurred. That may mean the api does not exist or you do not have access to it.");
     }
@@ -374,7 +427,39 @@ function drush_apic_type_count_productget($input): ?array {
     }
     try {
       $results = ApicNodeListController::getProduct($input);
-    } catch (\Exception $e) {
+    } catch (Throwable $e) {
+      \Drupal::logger("apic_type_count")
+        ->error("An exception occurred. That may mean the product does not exist or you do not have access to it.");
+    }
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+  }
+  else {
+    \Drupal::logger("apic_type_count")->error("No input provided.");
+  }
+  return $results;
+}
+
+/**
+ * @param $input
+ *
+ * @return array|null
+ */
+function drush_apic_type_count_productdocument($input): ?array {
+  $results = NULL;
+  if ($input !== NULL) {
+    // in case moderation is on we need to run as admin
+    // save the current user so we can switch back at the end
+    $accountSwitcher = Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+    try {
+      $results = ApicNodeListController::getProduct($input, 'document');
+    } catch (Throwable $e) {
       \Drupal::logger("apic_type_count")
         ->error("An exception occurred. That may mean the product does not exist or you do not have access to it.");
     }
@@ -407,7 +492,7 @@ function drush_apic_type_count_applicationget($input): ?array {
 
     try {
       $results = ApicNodeListController::getApplication($input);
-    } catch (\Exception $e) {
+    } catch (Throwable $e) {
       \Drupal::logger("apic_type_count")
         ->error("An exception occurred. That may mean the application does not exist or you do not have access to it.");
     }
@@ -440,7 +525,7 @@ function drush_apic_type_count_consumerorgget($input): ?array {
 
     try {
       $results = ApicNodeListController::getConsumerorg($input);
-    } catch (\Exception $e) {
+    } catch (Throwable $e) {
       \Drupal::logger("apic_type_count")
         ->error("An exception occurred. That may mean the consumer organization does not exist or you do not have access to it.");
     }
@@ -471,7 +556,7 @@ function drush_apic_type_count_apic_config(): ?array {
 
   try {
     $results = ApicConfigController::getConfig();
-  } catch (\Exception $e) {
+  } catch (Throwable $e) {
     \Drupal::logger("apic_type_count")->error("An exception occurred.");
   }
 

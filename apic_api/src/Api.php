@@ -22,6 +22,7 @@ use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\product\Product;
 use Exception;
+use Throwable;
 
 /**
  * Class to work with the API content type, takes input from the JSON returned by
@@ -480,7 +481,7 @@ class Api {
             }
           }
           $node->save();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
           \Drupal::logger('apic_api')
             ->notice('Update of Open API document to database failed with: %data', ['%data' => $e->getMessage()]);
         }
@@ -560,7 +561,7 @@ class Api {
               try {
                 $node->set('api_wsdl', $serialized);
                 $node->save();
-              } catch (Exception $e) {
+              } catch (Throwable $e) {
                 \Drupal::logger('apic_api')
                   ->notice('Save of WSDL to database failed with: %data', ['%data' => $e->getMessage()]);
               }
@@ -997,6 +998,34 @@ class Api {
         $output['description'] = $node->apic_description->value;
         $output['created_at'] = $node->apic_created_at->value;
         $output['updated_at'] = $node->apic_updated_at->value;
+      }
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    return $output;
+  }
+
+  /**
+   * Returns the base64encoded string of an API document for returning to drush
+   * Intentionally uses the base64encoded doc to avoid PHP messing up [] and {}
+   *
+   * @param $url
+   *
+   * @return string
+   */
+  public static function getApiDocumentForDrush($url): string {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, ['url' => $url]);
+    $output = '';
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', 'api');
+    $query->condition('apic_url.value', $url);
+
+    $nids = $query->execute();
+
+    if ($nids !== NULL && !empty($nids)) {
+      $nid = array_shift($nids);
+      $node = Node::load($nid);
+      if ($node !== NULL) {
+        $output = $node->api_encodedswagger->value;
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

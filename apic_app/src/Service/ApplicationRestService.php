@@ -17,6 +17,7 @@ use Drupal\ibm_apim\ApicRest;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\Entity\Node;
+use Throwable;
 
 class ApplicationRestService implements ApplicationRestInterface {
 
@@ -56,7 +57,7 @@ class ApplicationRestService implements ApplicationRestInterface {
   }
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function getApplicationDetails($url): ?\stdClass {
     return $this->doGet($url);
@@ -64,7 +65,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function postApplication($url, $requestBody): ?\stdClass {
     return $this->doPost($url, $requestBody);
@@ -72,7 +73,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function deleteApplication($url): ?\stdClass {
     // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
@@ -82,7 +83,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function promoteApplication($url, $requestBody): ?\stdClass {
     return $this->doPatch($url, $requestBody);
@@ -90,7 +91,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function patchApplication($url, $requestBody): ?\stdClass {
     return $this->doPatch($url, $requestBody);
@@ -98,7 +99,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function postCredentials($url, $requestBody): ?\stdClass {
     // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
@@ -108,7 +109,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function deleteCredentials($url): ?\stdClass {
     // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
@@ -118,7 +119,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function patchCredentials($url, $requestBody): ?\stdClass {
     // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
@@ -128,7 +129,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function patchSubscription($url, $requestBody): ?\stdClass {
     return $this->doPatch($url, $requestBody);
@@ -136,7 +137,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function postClientId($url, $requestBody): ?\stdClass {
     // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
@@ -146,7 +147,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function postClientSecret($url, $requestBody): ?\stdClass {
     // invalidate any nodes cached for this consumer org (e.g. apis with an app list)
@@ -156,7 +157,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function postSubscription($url, $requestBody): ?\stdClass {
     return $this->doPost($url, $requestBody);
@@ -164,7 +165,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function deleteSubscription($url): ?\stdClass {
     return $this->doDelete($url);
@@ -172,7 +173,7 @@ class ApplicationRestService implements ApplicationRestInterface {
 
   /**
    * @inheritDoc
-   * @throws \Exception
+   * @throws Exception
    */
   public function postSecret($url, $requestBody): ?\stdClass{
     return $this->doPut($url, $requestBody);
@@ -184,7 +185,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param $url
    *
    * @return \stdClass|null
-   * @throws \Exception
+   * @throws Exception
    */
   private function doGet($url): ?\stdClass {
     return ApicRest::get($url);
@@ -197,7 +198,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param $requestBody
    *
    * @return \stdClass|null
-   * @throws \Exception
+   * @throws Exception
    */
   private function doPost($url, $requestBody): ?\stdClass {
     return ApicRest::post($url, $requestBody);
@@ -210,7 +211,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param $requestBody
    *
    * @return \stdClass|null
-   * @throws \Exception
+   * @throws Exception
    */
   private function doPut($url, $requestBody): ?\stdClass {
     return ApicRest::put($url, $requestBody);
@@ -222,7 +223,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param $url
    *
    * @return \stdClass|null
-   * @throws \Exception
+   * @throws Exception
    */
   private function doDelete($url): ?\stdClass {
     return ApicRest::delete($url);
@@ -235,7 +236,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param $requestBody
    *
    * @return \stdClass|null
-   * @throws \Exception
+   * @throws Exception
    */
   private function doPatch($url, $requestBody): ?\stdClass {
     return ApicRest::patch($url, $requestBody);
@@ -254,7 +255,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
-   * @throws \Exception
+   * @throws Exception
    */
   public function createApplication($name, $summary, $oauthUrls, $certificate = NULL, $formState = NULL): ?\stdClass {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -357,7 +358,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param $planId
    *
    * @return mixed
-   * @throws \Exception
+   * @throws Throwable
    */
   public function subscribeToPlan($appUrl = NULL, $planId = NULL): ?\stdClass {
 
@@ -416,7 +417,7 @@ class ApplicationRestService implements ApplicationRestInterface {
               $billingUrl = NULL;
               $org_url = $this->userUtils->getCurrentConsumerOrg()['url'];
               $this->subscriptionService->create($appUrl, $sub['id'], $productUrl, $sub['plan'], $org_url, $state, $billingUrl, $result->data);
-            } catch (\Exception $e) {
+            } catch (Throwable $e) {
 
             }
           }
@@ -439,7 +440,7 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param string|null $appUrl
    *
    * @return array|null|string
-   * @throws \Exception
+   * @throws Exception
    */
   public function fetchFromAPIC(?string $appUrl = NULL) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $appUrl);

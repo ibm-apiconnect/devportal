@@ -107,7 +107,7 @@ class EventLogService {
 
     if (!$result->fetch()) {
       // If a timestamp has not been provided (or is greater than max int) set it to the current timestamp
-      if ($apicEvent->getTimestamp() === NULL || $apicEvent->getTimestamp() === 0 || $apicEvent->getTimestamp() >= 2147483647) {
+      if ($apicEvent->getTimestamp() === NULL || $apicEvent->getTimestamp() <= 0 || $apicEvent->getTimestamp() >= 2147483647) {
         $apicEvent->setTimestamp(time());
       }
 

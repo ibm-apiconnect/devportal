@@ -25,8 +25,8 @@ use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\Utils;
-use Drupal\session_based_temp_store\SessionBasedTempStore;
-use Drupal\session_based_temp_store\SessionBasedTempStoreFactory;
+use Drupal\Core\TempStore\PrivateTempStore;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -76,9 +76,9 @@ class ApicOidcAzCodeController extends ControllerBase {
   protected $messenger;
 
   /**
-   * @var \Drupal\session_based_temp_store\SessionBasedTempStore
+   * @var \Drupal\Core\TempStore\PrivateTempStore
    */
-  protected SessionBasedTempStore $authApicSessionStore;
+  protected PrivateTempStore $authApicSessionStore;
 
   /**
    * @var \Symfony\Component\HttpFoundation\RequestStack
@@ -100,7 +100,7 @@ class ApicOidcAzCodeController extends ControllerBase {
    * @param \Drupal\ibm_apim\Service\ApimUtils $apim_utils
    * @param \Drupal\ibm_apim\Service\SiteConfig $site_config
    * @param \Psr\Log\LoggerInterface $logger
-   * @param \Drupal\session_based_temp_store\SessionBasedTempStoreFactory $sessionStoreFactory
+   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $sessionStoreFactory
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_service
    * @param \Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface $mgmtServer
    * @param \Drupal\Core\Messenger\Messenger $messenger
@@ -113,7 +113,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     ApimUtils $apim_utils,
     SiteConfig $site_config,
     LoggerInterface $logger,
-    SessionBasedTempStoreFactory $sessionStoreFactory,
+    PrivateTempStoreFactory $sessionStoreFactory,
     RequestStack $request_service,
     ManagementServerInterface $mgmtServer,
     Messenger $messenger
@@ -146,7 +146,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       $container->get('ibm_apim.apim_utils'),
       $container->get('ibm_apim.site_config'),
       $container->get('logger.channel.auth_apic'),
-      $container->get('session_based_temp_store'),
+      $container->get('tempstore.private'),
       $container->get('request_stack'),
       $container->get('ibm_apim.mgmtserver'),
       $container->get('messenger')

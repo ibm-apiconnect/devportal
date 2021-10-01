@@ -23,8 +23,8 @@
 {% import _self as menus %}
 
 {#
-  We call a macro which calls itself to render the full tree.
-  @see http://twig.sensiolabs.org/doc/tags/macro.html
+We call a macro which calls itself to render the full tree.
+@see http://twig.sensiolabs.org/doc/tags/macro.html
 #}
 
 {{ menus.menu_links(items, user, user_picture, attributes, base_path, directory, 0) }}
@@ -42,16 +42,17 @@
               </span>
             {% endif %}
           </div>
-        <ul class="dropitmenu-submenu">
-          {% for item in items %}
-            <li{{ item.attributes }}>
-              {{ link(item.title, item.url) }}
-              {% if item.below %}
-                {{ menus.menu_links(item.below, user, user_picture, attributes, menu_level + 1) }}
-              {% endif %}
-            </li>
-          {% endfor %}
-        </ul>
+          <ul class="dropitmenu-submenu">
+            {% for item in items %}
+              <li{{ item.attributes }}>
+                {{ link(item.title, item.url) }}
+                {% if item.below %}
+                  {{ menus.menu_links(item.below, user, user_picture, attributes, menu_level + 1) }}
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </a>
       </li>
     </ul>
   {% endif %}

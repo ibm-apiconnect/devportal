@@ -18,6 +18,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Mail\MailFormatHelper;
 use Drupal\ibm_apim\Service\ApicTaxonomy;
 use Drupal\taxonomy\Entity\Term;
+use Throwable;
 
 class ApiTaxonomy {
 
@@ -204,7 +205,7 @@ class ApiTaxonomy {
         }
       }
 
-    } catch (\Exception $e) {
+    } catch (Throwable $e) {
       \Drupal::logger('apic_api')->error('The following error occurred while attempting to create the forum for api %apiName: %e', [
         '%apiName' => $apiName,
         '%e' => $e,

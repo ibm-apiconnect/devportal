@@ -360,6 +360,11 @@ function apim_profile_install() {
     ->set('cdn_provider', '')
     ->save();
 
+  \Drupal::service('config.factory')
+    ->getEditable('connect_theme.settings')
+    ->set('tooltip_enabled', 0)
+    ->save();
+
   // configure captcha
   apim_profile_captcha_config();
 
@@ -653,10 +658,6 @@ function apim_profile_default_apic_config() {
     ->set('application_image_upload', TRUE)
     ->set('hide_admin_registry', FALSE)
     ->set('disable_etags', FALSE)
-    ->set('entry_exit_trace', FALSE)
-    ->set('apim_rest_trace', FALSE)
-    ->set('acl_debug', FALSE)
-    ->set('webhook_debug', FALSE)
     ->set('cron_drush', FALSE)
     ->set('allow_consumerorg_creation', TRUE)
     ->set('allow_consumerorg_rename', TRUE)
@@ -667,8 +668,16 @@ function apim_profile_default_apic_config() {
     ->set('certificate_strip_prefix', TRUE)
     ->set('categories', $categories)
     ->set('codesnippets', $codesnippets)
-    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
+    ->set('router_type', 'hash')
+    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync', 'swiftmailer', 'simple_html_mail'])
     ->save();
+
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.devel_settings')
+    ->set('entry_exit_trace', FALSE)
+    ->set('apim_rest_trace', FALSE)
+    ->set('acl_debug', FALSE)
+    ->set('webhook_debug', FALSE)->save();
 
   \Drupal::service('config.factory')
     ->getEditable('locale.settings')
@@ -973,6 +982,7 @@ function apim_profile_captcha_config() {
     ->set('add_captcha_description', FALSE)
     ->save();
 
+  _apim_profile_enable_captcha_on_form('user_pass');
   _apim_profile_enable_captcha_on_form('user_register_form');
   _apim_profile_enable_captcha_on_form('contact_message_feedback_form');
   _apim_profile_enable_captcha_on_form('contact_message_personal_form');
@@ -1470,7 +1480,7 @@ function apim_profile_update_8024() {
   }
   \Drupal::service('config.factory')
     ->getEditable('ibm_apim.settings')
-    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
+    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync', 'swiftmailer', 'simple_html_mail'])
     ->save();
 }
 
@@ -1631,7 +1641,7 @@ function apim_profile_update_8027() {
 function apim_profile_update_8028() {
   \Drupal::service('config.factory')
     ->getEditable('ibm_apim.settings')
-    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
+    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync', 'swiftmailer', 'simple_html_mail'])
     ->save();
 }
 
@@ -2669,6 +2679,67 @@ function apim_profile_update_8205() {
 
 }
 
+/**
+ * Enable captcha on password reset page if not already there
+ */
+function apim_profile_update_8206() {
+  try {
+    _apim_profile_enable_captcha_on_form('user_pass');
+  } catch (Throwable $e) {
+    // just ignore it
+  }
+}
+
+/**
+ * Update blocklist variable
+ */
+function apim_profile_update_8207() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync', 'swiftmailer', 'simple_html_mail'])
+    ->save();
+}
+
+/**
+ * Need to make sure devel_settings are set
+ */
+function apim_profile_update_8208() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.devel_settings')
+    ->set('entry_exit_trace', FALSE)
+    ->set('apim_rest_trace', FALSE)
+    ->set('acl_debug', FALSE)
+    ->set('webhook_debug', FALSE)->save();
+
+  // remove the devel settings from the config array
+  $data = \Drupal::service('config.factory')->get('ibm_apim.settings')->get();
+  unset($data['entry_exit_trace'], $data['apim_rest_trace'], $data['acl_debug'], $data['webhook_debug']);
+
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->setData($data)
+    ->save();
+
+  // if we're missing config then just reset to the defaults
+  if (!array_key_exists('categories', $data) || !array_key_exists('allow_consumerorg_creation', $data)) {
+    apim_profile_default_apic_config();
+  }
+  // ensure router type is set
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('router_type', 'hash')
+    ->save();
+}
+
+/**
+ * enable view_password module for the modal_application_create_form form too
+ */
+function apim_profile_update_8209() {
+  \Drupal::configFactory()
+    ->getEditable('view_password.settings')
+    ->set('form_ids', 'user_login_form,user_register_form,apic_change_pwd_form,display_app_credentials_form,apic_resetpw,modal_application_create_form')
+    ->save(TRUE);
+}
 
 /**
  * Implements hook_update_dependencies().

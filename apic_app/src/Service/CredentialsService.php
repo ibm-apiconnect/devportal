@@ -123,11 +123,27 @@ class CredentialsService {
         $credEntity->set('app_url', $cred['app_url']);
         $credEntity->set('summary', $cred['summary']);
         $credEntity->set('cred_url', $cred['url']);
-        if (isset($cred['created_at'])) {
-          $credEntity->set('created_at', strtotime($cred['created_at']));
+        if (array_key_exists('created_at', $cred) && is_string($cred['created_at'])) {
+          // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
+          $timestamp = strtotime($cred['created_at']);
+          if ($timestamp < 2147483647 && $timestamp > 0) {
+            $credEntity->set('created_at', $timestamp);
+          } else {
+            $credEntity->set('created_at', time());
+          }
+        } else {
+          $credEntity->set('created_at', time());
         }
-        if (isset($cred['updated_at'])) {
-          $credEntity->set('updated_at', strtotime($cred['updated_at']));
+        if (array_key_exists('updated_at', $cred) && is_string($cred['updated_at'])) {
+          // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
+          $timestamp = strtotime($cred['updated_at']);
+          if ($timestamp < 2147483647 && $timestamp > 0) {
+            $credEntity->set('updated_at', $timestamp);
+          } else {
+            $credEntity->set('updated_at', time());
+          }
+        } else {
+          $credEntity->set('updated_at', time());
         }
         $credEntity->save();
         $newEntityId = array_shift($entityIds);

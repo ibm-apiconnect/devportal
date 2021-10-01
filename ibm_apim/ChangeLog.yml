@@ -1,4 +1,50 @@
 changes:
+  8.x-2.6.20: null
+  8.x-2.6.19:
+  - only run for enabled themes
+  8.x-2.6.18:
+  - add drush command for compiling theme scss
+  8.x-2.6.17:
+  - Always set samesite cookie attriubte to Lax
+  8.x-2.6.16:
+  - translate routing options
+  - translate routing options
+  8.x-2.6.15:
+  - Double check if a user session has expired
+  8.x-2.6.14:
+  - ensure scheduled time is set
+  8.x-2.6.13:
+  - need to ensure > 0 too
+  8.x-2.6.12:
+  - move devel settings to their own config object
+  8.x-2.6.11:
+  - add support for getting artifact document back via drush
+  8.x-2.6.10:
+  - handle null arrays for site_content_refresh
+  8.x-2.6.9:
+  - Fixed tests
+  - Clear expired pending approval users
+  8.x-2.6.8:
+  - dont allow disabling search_api
+  8.x-2.6.7: null
+  8.x-2.6.6:
+  - corg page  responsiveness (#727)
+  8.x-2.6.5:
+  - Remove unnecessary use statement
+  - Switch to catching Throwable
+  - New webhook events
+  - Report webhook processing errors
+  8.x-2.6.4: null
+  8.x-2.6.3:
+  - update test
+  - update test
+  - missing
+  - check the provided application ID is actually in this corg
+  8.x-2.6.2:
+  - Change invites from sessionBasedTenpStore to privateTempStore
+  8.x-2.6.1: null
+  8.x-2.6.0:
+  - update version 8.x-2.5.0 -> 8.x-2.6.0
   8.x-2.4.40:
   - handle multiple rate limits
   8.x-2.4.39:

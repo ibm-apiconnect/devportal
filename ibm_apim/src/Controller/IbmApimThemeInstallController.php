@@ -280,7 +280,7 @@ class IbmApimThemeInstallController extends ThemeController {
    *
    * @param $theme
    */
-  private function compile_scss($theme): void {
+  public function compile_scss($theme): void {
     if (isset($theme)) {
       $themes = $this->themeHandler->listInfo();
       // this theme is using scss and may need it build into css

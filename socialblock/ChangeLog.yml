@@ -1,4 +1,9 @@
 changes:
+  8.x-2.6.2:
+  - remove . to match existing string
+  8.x-2.6.1: null
+  8.x-2.6.0:
+  - update version 8.x-2.5.0 -> 8.x-2.6.0
   8.x-2.4.6: null
   8.x-2.4.5:
   - missing version info

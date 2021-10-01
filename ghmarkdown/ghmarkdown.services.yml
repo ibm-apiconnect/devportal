@@ -1,0 +1,5 @@
+services:
+  ghmarkdown.twig_extension:
+    class: Drupal\ghmarkdown\TwigExtension\MarkdownExtension
+    tags:
+      - { name: twig.extension }

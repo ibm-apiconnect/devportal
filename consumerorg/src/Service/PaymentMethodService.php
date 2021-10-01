@@ -174,7 +174,7 @@ class PaymentMethodService {
       $paymentMethodObject->createFromArray($paymentMethod);
 
       $returnValue = self::create($paymentMethodObject);
-      $consumerOrgUrl = $paymentMethod['consumer_org_url'];
+      $consumerOrgUrl = $paymentMethod['org_url'];
       \Drupal::service('cache_tags.invalidator')->invalidateTags(['myorg:url:' . $consumerOrgUrl]);
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -193,7 +193,7 @@ class PaymentMethodService {
       $newPaymentMethods = [];
 
       foreach ($paymentMethods as $paymentMethod) {
-        $paymentMethod['consumer_org_url'] = $node->consumerorg_url->value;
+        $paymentMethod['org_url'] = $node->consumerorg_url->value;
         $createdOrUpdated = self::createOrUpdate($paymentMethod);
         $query = \Drupal::entityQuery('consumerorg_payment_method');
         $query->condition('uuid', $paymentMethod['id']);

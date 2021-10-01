@@ -19,6 +19,7 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\UserSession;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicType\ApicUser;
+use Drupal\ibm_apim\Controller\IbmApimThemeInstallController;
 use Drupal\ibm_apim\JsonStreamingParser\CollectionListener;
 use Drupal\product\Product;
 use Drupal\search_api\Entity\Index;
@@ -356,6 +357,13 @@ function ibm_apim_drush_command() {
     'description' => 'Disable IP based security features in IBM Cloud',
     'aliases' => ['disableipsec'],
   ];
+  $items['ibm_apim-compile-theme-scss'] = [
+    'description' => 'Compiles SCSS for a theme',
+    'aliases' => ['compilescss'],
+    'arguments' => [
+      'themeName' => 'Name of the theme to compile the SCSS for',
+    ],
+  ];
   return $items;
 }
 
@@ -489,6 +497,13 @@ function drush_ibm_apim_listen() {
   drush_log(dt('Drush ibm_apim_listen listening to stdin'), 'success');
   $listenStart = microtime(TRUE);
 
+  // save the current user so we can switch back at the end
+  $accountSwitcher = Drupal::service('account_switcher');
+  $originalUser = \Drupal::currentUser();
+  if ((int) $originalUser->id() !== 1) {
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+  }
+
   // Incoming payload is always of the format : <event> {content}
   // where <event> is an argument we were called with and {content} a json object
   // read from stdin
@@ -507,7 +522,7 @@ function drush_ibm_apim_listen() {
     }
 
     try {
-      $webhookDebug = (bool) \Drupal::config('ibm_apim.settings')
+      $webhookDebug = (bool) \Drupal::config('ibm_apim.devel_settings')
         ->get('webhook_debug');
       if ($webhookDebug === TRUE) {
         $webhookPayloads = \Drupal::state()->get('ibm_apim.webhook_payloads');
@@ -535,6 +550,12 @@ function drush_ibm_apim_listen() {
           case 'product_replace':
             // map both product replace webhooks to the same code
             drush_product_replace($content);
+            break;
+          case 'product_migrate_subscriptions':
+            drush_product_migrate_subscriptions($content);
+            break;
+          case 'execute_migration_target':
+            drush_product_execute_migration_target($content);
             break;
           case 'product_del':
             drush_product_delete($content);
@@ -681,7 +702,7 @@ function drush_ibm_apim_listen() {
         drush_log(dt('No content provided for webhook command @cmd', ['@cmd' => $command]), 'warning');
       }
       $attempt = 0;
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
 
       drush_log(dt('Attempt @attempt. Caught exception in drush_ibm_apim_listen: @message', [
         '@attempt' => $attempt,
@@ -707,7 +728,7 @@ function drush_ibm_apim_listen() {
 
       if ($attempt > 2) {
         //Only try 3 times then give up.
-        drush_log(dt('Giving up'), 'warning');
+        drush_log(dt('listen_done: Giving up. @cmd ( @time )', ['@cmd' => $command, '@time' => round(microtime(TRUE) - $start, 3) . 's']), 'warning');
         $attempt = 0;
       }
     }
@@ -717,6 +738,10 @@ function drush_ibm_apim_listen() {
       $command = trim(fgets(STDIN));
       $content = '';
     }
+  }
+
+  if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+    $accountSwitcher->switchBack();
   }
 
   drush_log(dt('Drush ibm_apim_listen exiting ( @time )', ['@time' => round(microtime(TRUE) - $listenStart, 3) . 's']), 'success');
@@ -746,7 +771,7 @@ function drush_ibm_apim_request_refresh() {
     $url = $host_pieces['scheme'] . '://' . $host_pieces['host'] . ':' . $host_pieces['port'] . '/catalogs/' . $namespace . '/webhooks/snapshot';
     Drupal\ibm_apim\ApicRest::patch($url, NULL, 'clientid', TRUE, TRUE);
     drush_print('[[0]] Content Refresh Requested');
-  } catch (Exception $e) {
+  } catch (Throwable $e) {
     // When we have a system to test against, we need to work out what the relevant errors actually are here
     echo 'Caught exception: ', $e->getMessage(), "\n";
 
@@ -788,9 +813,16 @@ function drush_ibm_apim_request_refresh() {
  */
 function drush_ibm_apim_content_refresh() {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
+  $startTime = time();
   $UUID = drush_get_option('uuid');
   drush_log(dt('Drush ibm_apim_content_refresh start processing'), 'success');
 
+  // save the current user so we can switch back at the end
+  $accountSwitcher = Drupal::service('account_switcher');
+  $originalUser = \Drupal::currentUser();
+  if ((int) $originalUser->id() !== 1) {
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+  }
 
   // Incoming payload is always of the format : { 'type': foo, ... }
   // where type is the type of incoming object
@@ -798,15 +830,22 @@ function drush_ibm_apim_content_refresh() {
   $handle = @fopen("/tmp/snapshot.$UUID/snapshot.stream.$UUID.file", "r");
   //$input = trim(fgets(STDIN));
 
-  $listener = new CollectionListener('processContent', $UUID);
+  // This is a hacky way of essentially passing another parameter to the collection listener
+  // we add the start time to the uuid and then split it on the delimiter in the listener
+  $listener = new CollectionListener('processContent', $UUID . '|' . $startTime);
   try {
     $parser = new Parser($handle, $listener);
     $parser->parse();
     fclose($handle);
-  } catch (Exception $e) {
+  } catch (Throwable $e) {
     fclose($handle);
     throw $e;
   }
+
+  if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+    $accountSwitcher->switchBack();
+  }
+
   drush_log(dt('Drush ibm_apim_content_refresh exiting'), 'success');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
   exitClean();
@@ -816,12 +855,14 @@ function drush_ibm_apim_content_refresh() {
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function processContent($content, $UUID) {
-
+  $UUIDParts = explode("|", $UUID);
+  $UUID = $UUIDParts[0];
+  $startTime = $UUIDParts[1];
   $type = $content['type'];
   if (!isset($type)) {
     $type = 'error';
   }
-  $webhookDebug = (bool) \Drupal::config('ibm_apim.settings')
+  $webhookDebug = (bool) \Drupal::config('ibm_apim.devel_settings')
     ->get('webhook_debug');
   if ($webhookDebug === TRUE) {
     $webhookPayloads = \Drupal::state()
@@ -1010,7 +1051,7 @@ function processContent($content, $UUID) {
           break;
         case 'close_stream':
           // reached the end of the snapshot payload
-          drush_ibm_apim_clearup($UUID);
+          drush_ibm_apim_clearup($UUID, $startTime);
 
           // assert that the index_directly value of the search_api module's default_index is
           // set correctly according to the number of nodes in the site
@@ -1026,7 +1067,7 @@ function processContent($content, $UUID) {
     else {
       drush_log(dt('No content provided for webhook', []), 'warning');
     }
-  } catch (Exception $e) {
+  } catch (Throwable $e) {
     drush_log(dt('Caught exception in drush_ibm_apim_content_refresh: @message', [
       '@message' => $e->getMessage(),
     ]), 'warning');
@@ -1075,16 +1116,16 @@ function drush_ibm_apim_delete_tokens() {
  * Used for the streamed objects from content refresh snapshot payload
  *
  * @param $UUID
+ * @param $startTime
  *
  * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
  * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  * @throws \Drupal\Core\Entity\EntityStorageException
  * @throws \JsonException
  */
-function drush_ibm_apim_clearup($UUID) {
+function drush_ibm_apim_clearup($UUID, $startTime) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up after content_refresh'), 'success');
-
 
   // remove any products in our db that were not returned by apim
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up products'), 'success');
@@ -1292,6 +1333,7 @@ function drush_ibm_apim_clearup($UUID) {
 
   // Delete all users from db with duplicate emails
   \Drupal::service('ibm_apim.db_usersfielddata')->deleteUsersWithDuplicateEmails();
+  \Drupal::service('ibm_apim.db_usersfielddata')->deleteExpiredPendingApprovalUsers();
 
   // remove any users that were not in the snapshot from apim
   if (file_exists("/tmp/snapshot.$UUID/content_refresh_users.$UUID.json")) {
@@ -1330,9 +1372,13 @@ function drush_ibm_apim_clearup($UUID) {
 
     if (!empty($performBatch)) {
       \Drupal::logger('ibm_apim')->notice('Processing batch delete of users...');
-      $batch = &batch_get();
-      $batch['progressive'] = FALSE;
-      batch_process();
+      $batch =& batch_get();
+      if (function_exists('drush_backend_batch_process')) {
+        drush_backend_batch_process();
+      } else {
+        $batch['progressive'] = FALSE;
+        batch_process();
+      }
     }
   }
 
@@ -1468,9 +1514,26 @@ function drush_ibm_apim_clearup($UUID) {
     }
   }
 
-  // clear the sync_error array if all parsed successfully
-  \Drupal::state()->set('ibm_apim.sync_errors', []);
+  $errors = \Drupal::state()->get('ibm_apim.sync_errors');
+  if ($errors !== NULL && !empty($errors)) {
+    $errorInCurrentSnapshot = FALSE;
 
+    foreach ($errors as $error) {
+      if ($error['timestamp'] >= $startTime) {
+        drush_log(dt('Drush drush_ibm_apim_clearup found an error in ibm_apim.sync_errors from this snapshot processing run, not clearing sync_errors'), 'warning');
+        $errorInCurrentSnapshot = TRUE;
+        break;
+      }
+    }
+
+    if ($errorInCurrentSnapshot === FALSE) {
+      drush_log(dt('Drush drush_ibm_apim_clearup did not find any errors in ibm_apim.sync_errors from this snapshot processing run, clearing previous sync_errors'), 'success');
+      // clear the sync_error array if all parsed successfully
+      \Drupal::state()->set('ibm_apim.sync_errors', []);
+    }
+  } else {
+    drush_log(dt('Drush drush_ibm_apim_clearup ibm_apim.sync_errors state var was empty, nothing to do'), 'success');
+  }
   drush_log(dt('Drush drush_ibm_apim_clearup exiting'), 'success');
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
@@ -1554,7 +1617,7 @@ function drush_ibm_apim_checkapimcert($url, $insecure, $provided_cert) {
     $insecureBool = ($insecure === 'true');
     Drupal\ibm_apim\ApicRest::json_http_request($url, 'GET', NULL, NULL, TRUE, $insecureBool, $provided_cert, FALSE);
     drush_print('[[0]] APIM certificate check complete');
-  } catch (Exception $e) {
+  } catch (Throwable $e) {
 
     echo 'Caught exception: ', $e->getMessage(), "\n";
 
@@ -1871,7 +1934,7 @@ function drush_ibm_apim_apicuser_create($apicUser, $event = 'user_create') {
 
         try {
           $userManager->registerApicUser($createUser);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
           // Quietly ignore errors from duplicate users to prevent webhooks from blowing up.
           drush_print('Failed creating apic user ' . $apicUser['username'] . ', ignoring exception');
         }
@@ -3208,7 +3271,40 @@ function drush_ibm_apim_update_block_translations() {
  * Disable IP based security features
  */
 function drush_ibm_apim_disable_ipsecurity() {
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+  }
   \Drupal::service('ibm_apim.site_config')->disableIPSecurityFeatures();
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+  }
+}
+
+/**
+ * @param $themeName
+ */
+function drush_ibm_apim_compile_theme_scss($themeName) {
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+  }
+  if (isset($themeName)) {
+    $themeHandler = \Drupal::service('theme_handler');
+    if ($themeHandler->themeExists($themeName)) {
+      $themeController = new IbmApimThemeInstallController(
+        \Drupal::service('ibm_apim.utils'),
+        \Drupal::service('theme_handler'),
+        \Drupal::service('extension.list.theme'),
+        \Drupal::service('theme_installer'),
+        \Drupal::service('config.factory'),
+        \Drupal::service('messenger'));
+      $themeController->compile_scss($themeName);
+    } else {
+      drush_log(t('This function can only be used for enabled themes.'));
+    }
+  }
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+  }
 }
 
 /**

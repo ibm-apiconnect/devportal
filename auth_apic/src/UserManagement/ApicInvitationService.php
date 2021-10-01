@@ -103,7 +103,8 @@ class ApicInvitationService implements ApicInvitationInterface {
     $userMgrResponse = new UserManagerResponse();
 
     $acceptingOrg = $acceptingUser->getOrganization();
-    if ($acceptingOrg !== NULL) {
+    $isMemberInvitation = strpos($token->getUrl(), '/member-invitations/');
+    if ($isMemberInvitation || $acceptingOrg !== NULL) {
       $invitationResponse = $this->mgmtServer->acceptInvite($token, $acceptingUser, $acceptingUser->getOrganization());
 
       if ($invitationResponse !== NULL && (int) $invitationResponse->getCode() === 201) {
@@ -111,7 +112,11 @@ class ApicInvitationService implements ApicInvitationInterface {
         $this->logger->notice('invitation processed for @username', [
           '@username' => $acceptingUser->getUsername(),
         ]);
-        $userMgrResponse->setMessage(t('Invitation process complete. Please login to continue.'));
+        if ($isMemberInvitation) {
+          $userMgrResponse->setMessage(t('Invitation process complete.'));
+        } else {
+          $userMgrResponse->setMessage(t('Invitation process complete. Please login to continue.'));
+        }
         $userMgrResponse->setSuccess(TRUE);
       }
       else {

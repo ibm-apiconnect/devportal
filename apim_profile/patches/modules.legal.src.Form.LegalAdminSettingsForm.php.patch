@@ -1,0 +1,25 @@
+--- modules/legal/src/Form/LegalAdminSettingsForm.php
++++ modules/legal/src/Form/LegalAdminSettingsForm.php
+@@ -64,13 +64,8 @@ class LegalAdminSettingsForm extends ConfigFormBase {
+       '#default_value' => $config->get('user_profile_display'),
+     ];
+ 
+-    $form['accept_every_login'] = [
+-      '#type'          => 'checkbox',
+-      '#title'         => $this->t('Ask to accept T&Cs on every login'),
+-      '#default_value' => $config->get('accept_every_login'),
+-    ];
+ 
+     return parent::buildForm($form, $form_state);
+   }
+
+  /**
+@@ -83,7 +78,7 @@ class LegalAdminSettingsForm extends ConfigFormBase {
+     $this->configFactory->getEditable('legal.settings')
+       ->set('except_roles', $values['except_roles'])
+       ->set('user_profile_display', $values['user_profile_display'])
+-      ->set('accept_every_login', $values['accept_every_login'])
++      ->set('accept_every_login', 0)
+       ->save();
+ 
+     $this->messenger()->addMessage($this->t('Configuration changes have been saved.'));

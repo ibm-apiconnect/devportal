@@ -72,8 +72,7 @@ class AdminForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
-
-    $config = $this->config('ibm_apim.settings');
+    $config = \Drupal::service('config.factory')->getEditable('ibm_apim.settings');
     $apim_host = $this->siteConfig->parseApimHost();
 
     $form['intro'] = [
@@ -349,6 +348,9 @@ class AdminForm extends ConfigFormBase {
       '#weight' => 0,
     ];
     $codesnippets = $config->get('codesnippets');
+    if ($codesnippets === NULL) {
+      $codesnippets = [];
+    }
     $form['codesnippets']['codesnippets_curl'] = [
       '#type' => 'checkbox',
       '#title' => t('cURL'),
@@ -408,6 +410,26 @@ class AdminForm extends ConfigFormBase {
       '#title' => t('C#'),
       '#default_value' => $codesnippets['csharp'],
       '#weight' => 10,
+    ];
+
+    $form['explorer'] = [
+      '#type' => 'fieldset',
+      '#title' => t('API Explorer'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    ];
+
+    $form['explorer']['router_type'] = [
+      '#type' => 'select',
+      '#options' => [
+        'hash' => t('Hash routing'),
+        'memory' => t('Memory routing'),
+      ],
+      '#title' => t('Router type'),
+      '#description' => t('Select what type of router to use with the API explorer.'),
+      '#default_value' => $config->get('router_type'),
+      '#required' => TRUE,
+      '#weight' => 30,
     ];
 
     // code snippets options
@@ -574,6 +596,7 @@ class AdminForm extends ConfigFormBase {
       ->set('proxy_auth', $form_state->getValue('proxy_auth'))
       ->set('categories', $categories)
       ->set('codesnippets', $codesnippets)
+      ->set('router_type', $form_state->getValue('router_type'))
       ->save();
 
     // If we're just enabling categories then we should go process all the apis & products in our db to check them for categories

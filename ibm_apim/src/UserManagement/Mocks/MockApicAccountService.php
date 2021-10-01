@@ -24,6 +24,7 @@ use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\user\UserInterface;
+use Throwable;
 
 /**
  * Mock of the ApicAccountService service.
@@ -108,7 +109,7 @@ class MockApicAccountService implements ApicAccountInterface {
         $account = $this->userStorage->register($user);
         $returnValue = $account;
       }
-    } catch (\Exception $e) {
+    } catch (Throwable $e) {
       throw $e;
     }
 

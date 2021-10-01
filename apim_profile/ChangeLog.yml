@@ -1,4 +1,331 @@
 changes:
+  8.x-20210917-1621:
+    commits:
+    - fix version for func
+    - make sure view password is loaded correctly
+    modules:
+      apic_app:
+        8.x-2.6.11:
+        - make sure view password is loaded correctly
+  8.x-20210917-0804:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-2.6.8:
+        - Fixed sign in on member invitations
+  8.x-20210915-1621:
+    commits:
+    - drupal security updates
+    modules:
+      featuredcontent:
+        8.x-2.6.2:
+        - load custom icons properly
+  8.x-20210914-1622:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-2.6.7:
+        - Fix for strict samesite (#641)
+      ibm_apim:
+        8.x-2.6.20: null
+        8.x-2.6.19:
+        - only run for enabled themes
+        8.x-2.6.18:
+        - add drush command for compiling theme scss
+  8.x-20210913-1021:
+    commits:
+    - composer update
+    - make sure we're calling isNew on a user
+    - make sure we're calling isNew on a user
+    modules:
+      themegenerator:
+        8.x-2.6.2:
+        - make scss the default
+  8.x-20210910-1621:
+    commits: null
+    modules:
+      socialblock:
+        8.x-2.6.2:
+        - remove . to match existing string
+  8.x-20210907-1022:
+    commits:
+    - Tc2dev/20210809 (#530) (#531)
+    modules:
+      ibm_apim:
+        8.x-2.6.17:
+        - Always set samesite cookie attriubte to Lax
+  8.x-20210902-1021:
+    commits:
+    - new drupal core
+    modules:
+      ibm_apim:
+        8.x-2.6.16:
+        - translate routing options
+        - translate routing options
+  8.x-20210901-1621:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-2.6.15:
+        - Double check if a user session has expired
+  8.x-20210901-1404:
+    commits: null
+    modules:
+      product:
+        8.x-2.6.8:
+        - Fix subscriptions
+      apic_api:
+        8.x-2.6.9:
+        - Remove unnecessary use statement
+      apic_app:
+        8.x-2.6.10:
+        - Fix subscriptions
+  8.x-20210831-2221:
+    commits:
+    - router_type is not being set
+    modules:
+      ibm_apim:
+        8.x-2.6.14:
+        - ensure scheduled time is set
+  8.x-20210826-1621:
+    commits:
+    - move devel settings to their own config object
+    - composer update
+    modules:
+      apic_api:
+        8.x-2.6.8:
+        - move devel settings to their own config object
+      apic_app:
+        8.x-2.6.9:
+        - need to ensure > 0 too
+        8.x-2.6.8:
+        - move devel settings to their own config object
+      ibm_apim:
+        8.x-2.6.13:
+        - need to ensure > 0 too
+        8.x-2.6.12:
+        - move devel settings to their own config object
+      consumerorg:
+        8.x-2.6.8:
+        - move devel settings to their own config object
+      apictest:
+        8.x-2.6.3:
+        - move devel settings to their own config object
+  8.x-20210825-2221:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-2.6.11:
+        - add support for getting artifact document back via drush
+  8.x-20210825-1021:
+    commits:
+    - update admin_toolbar
+    modules:
+      consumerorg:
+        8.x-2.6.7:
+        - Use the member's id as array-key
+  8.x-20210823-1021:
+    commits:
+    - Added patches for legal
+    modules:
+      product:
+        8.x-2.6.7:
+        - needs to return as yaml so needs parsing
+        - add support for getting artifact document back via drush
+      apic_api:
+        8.x-2.6.7:
+        - add support for getting artifact document back via drush
+  8.x-20210820-1621:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-2.6.6:
+        - prune oidc states (#635) (#636)
+  8.x-20210817-2222:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-2.6.10:
+        - handle null arrays for site_content_refresh
+      consumerorg:
+        8.x-2.6.6:
+        - member timestamps are int not string
+        - allow default payment method to be null
+  8.x-20210816-1642:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-2.6.5:
+        - Added pending_approval state (#634)
+      ibm_apim:
+        8.x-2.6.9:
+        - Fixed tests
+        - Clear expired pending approval users
+  8.x-20210816-1341:
+    commits: null
+    modules:
+      apic_app:
+        8.x-2.6.7: null
+        8.x-2.6.6:
+        - get rid of coding error in intellij
+        - another fix needed for strtotime
+  8.x-20210813-1130:
+    commits: null
+    modules:
+      apic_app:
+        8.x-2.6.5:
+        - typo
+        - defend against trying to put value greater than max int
+        - defend against trying to put value greater than max int
+  8.x-20210813-1022:
+    commits: null
+    modules:
+      apic_app:
+        8.x-2.6.4:
+        - defend against trying to put value greater than max int
+  8.x-20210812-1622:
+    commits:
+    - drupal core security update
+    modules:
+      ibm_apim:
+        8.x-2.6.8:
+        - dont allow disabling search_api
+  8.x-20210811-1621:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-2.6.5:
+        - remove add button if billing method conf'd
+        8.x-2.6.4:
+        - wrong url
+        - wrong url
+        - fix payment method type error
+        - fix payment method type error
+      connect_theme:
+        8.x-2.6.1:
+        - missing close tag
+  8.x-20210811-1253:
+    commits: null
+    modules:
+      apic_api:
+        8.x-2.6.6:
+        - fix up acl tests
+  8.x-20210810-1621:
+    commits:
+    - blocklist swiftmailer and simple_html_mail
+    modules:
+      product:
+        8.x-2.6.6:
+        - fix up ACL tests
+        8.x-2.6.5:
+        - show api state (#214)
+        8.x-2.6.4:
+        - Added visibility tests (#217) (#224)
+      apic_api:
+        8.x-2.6.5: null
+        8.x-2.6.4:
+        - Added api ACL tests
+      apictest:
+        8.x-2.6.2:
+        - add function to delete all apis and products
+        8.x-2.6.1:
+        - improved product publishing (#215) (#216)
+  8.x-20210810-1022:
+    commits: null
+    modules:
+      product:
+        8.x-2.6.3:
+        - Fix multiple subscriptions issue
+        - Fix caching problems
+        - Add support for new webhooks
+        8.x-2.6.2:
+        - use twig markdown filter
+      ghmarkdown:
+        8.x-2.6.2:
+        - add twig markdown filter
+      auth_apic:
+        8.x-2.6.4:
+        - Switch to catching Throwable
+      mail_subscribers:
+        8.x-2.6.3:
+        - Csrollbackfix (#51)
+      apic_api:
+        8.x-2.6.3: null
+        8.x-2.6.2:
+        - Switch to catching Throwable
+      apic_app:
+        8.x-2.6.3:
+        - Switch to catching Throwable
+        8.x-2.6.2:
+        - should be type=button to stop refresh
+      ibm_apim:
+        8.x-2.6.7: null
+        8.x-2.6.6:
+        - corg page  responsiveness (#727)
+        8.x-2.6.5:
+        - Remove unnecessary use statement
+        - Switch to catching Throwable
+        - New webhook events
+        - Report webhook processing errors
+        8.x-2.6.4: null
+        8.x-2.6.3:
+        - update test
+        - update test
+        - missing
+        - check the provided application ID is actually in this corg
+      consumerorg:
+        8.x-2.6.3:
+        - Switch to catching Throwable
+        8.x-2.6.2:
+        - use id to select current one not title
+  8.x-20210808-1333:
+    commits:
+    - oops accidentally reverted the module update
+    - drupal core update
+    - upgrade cshs and view_password
+    - Tc2dev/20210608 (#519) (#521)
+    modules:
+      auth_apic:
+        8.x-2.6.3:
+        - Change invites from sessionBasedTempStore to privateTempStore (#625) (#629)
+      mail_subscribers:
+        8.x-2.6.2:
+        - Fix mail subscribers token replacement
+      ibm_apim:
+        8.x-2.6.2:
+        - Change invites from sessionBasedTenpStore to privateTempStore
+  8.x-20210629-1621:
+    commits:
+    - Update version for 10.0.1.5
+    modules:
+      socialblock:
+        8.x-2.6.1: null
+      product:
+        8.x-2.6.1: null
+      ghmarkdown:
+        8.x-2.6.1: null
+      auth_apic:
+        8.x-2.6.2: null
+      mail_subscribers:
+        8.x-2.6.1: null
+      themegenerator:
+        8.x-2.6.1: null
+      featuredcontent:
+        8.x-2.6.1: null
+      apic_api:
+        8.x-2.6.1: null
+      apic_app:
+        8.x-2.6.1: null
+      ibm_apim:
+        8.x-2.6.1: null
+      consumerorg:
+        8.x-2.6.1: null
+      apictest:
+        8.x-2.6.0:
+        - update version 8.x-2.5.1 -> 8.x-2.6.0
+      connect_theme:
+        8.x-2.6.0:
+        - update version 8.x-2.5.1 -> 8.x-2.6.0
   8.x-20210628-1629:
     commits: null
     modules:
@@ -4240,4 +4567,4 @@ changes:
         - try to make it more tolerant of yum issues
         8.x-1.3.132:
         - try to make it more tolerant of yum issues
-  8.x-20210629-1621:
+  8.x-20210921-1419:
