@@ -1,0 +1,10 @@
+instana_eum_config:
+  version: 1.x
+  header: true
+  js:
+    js/instana_config.js: {}
+    https://eum.instana.io/eum.min.js: { type: external, attributes: { defer: true, crossorigin: 'anonymous' } }
+  dependencies:
+    - core/jquery.once
+    - core/drupalSettings
+    - core/drupal

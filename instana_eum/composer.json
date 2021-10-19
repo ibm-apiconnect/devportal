@@ -1,0 +1,12 @@
+{
+    "name": "drupal/instana_eum",
+    "description": "Configures Instana End User Monitoring Beacon Module",
+    "type": "drupal-module",
+    "homepage": "https://github.com/ibm-apiconnect/devportal",
+    "support": {
+      "issues": "https://github.com/ibm-apiconnect/devportal",
+      "source": "https://github.com/ibm-apiconnect/devportal"
+    },
+    "license": "GPL-2.0-or-later",
+    "minimum-stability": "dev"
+}

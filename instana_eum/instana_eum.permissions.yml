@@ -1,0 +1,4 @@
+configure instana:
+  title: 'Configure the Instana EUM module'
+  description: 'Setup the parameters to connect Drupal to Instana.'
+  restrict access: true
