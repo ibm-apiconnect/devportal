@@ -14,6 +14,7 @@ namespace Drupal\Tests\auth_apic\Unit\Base;
 
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Prophet;
+use Prophecy\Argument;
 
 abstract class AuthApicTestBaseClass extends UnitTestCase {
 
@@ -34,6 +35,7 @@ abstract class AuthApicTestBaseClass extends UnitTestCase {
    */
   protected function createAccountBase() {
     $account = $this->prophet->prophesize(\Drupal\user\Entity\User::class);
+    $account->set('apic_state', Argument::any())->willReturn(NULL);
 
     $account->get('name')->willReturn($this->createSimpleObject('value', 'andre'));
 
@@ -81,7 +83,7 @@ abstract class AuthApicTestBaseClass extends UnitTestCase {
     $account = $this->createAccountBase();
     $account->get('status')->willReturn($this->createSimpleObject('value', 1));
     $account->isBlocked()->willReturn(FALSE);
-
+    $account->delete()->willReturn(null);
     return $account->reveal();
   }
 

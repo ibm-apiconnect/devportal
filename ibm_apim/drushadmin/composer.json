@@ -1,0 +1,15 @@
+{
+  "name": "drupal/drushadmin",
+  "description": "APIC Drush Administration commands",
+  "type": "drupal-module",
+  "homepage": "https://github.com/ibm-apiconnect/devportal",
+  "support": {
+    "issues": "https://github.com/ibm-apiconnect/devportal",
+    "source": "https://github.com/ibm-apiconnect/devportal"
+  },
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
+  "require-dev": {
+    "phpunit/phpunit": "5.5.*"
+  }
+}

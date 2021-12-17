@@ -190,6 +190,7 @@ class ApplicationController extends ControllerBase {
         ];
 
         $portalAnalyticsService = \Drupal::service('ibm_apim.analytics')->getDefaultService();
+        $analyticsClientUrl = NULL;
         if ($portalAnalyticsService !== NULL) {
           $analyticsClientUrl = $portalAnalyticsService->getClientEndpoint();
         }
@@ -299,7 +300,7 @@ class ApplicationController extends ControllerBase {
       $analyticsClientUrl = $portal_analytics_service->getClientEndpoint();
     }
     if (!isset($analyticsClientUrl)) {
-      $this->messenger->addError(t('Analytics Client URL is not set.'));
+      \Drupal::service('messenger')->addError(t('Analytics Client URL is not set.'));
     }
     if (isset($node)) {
       $node = Node::load($node->id());

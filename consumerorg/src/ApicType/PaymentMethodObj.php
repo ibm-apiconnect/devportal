@@ -55,7 +55,7 @@ class PaymentMethodObj {
    * @var string|array|null
    */
   private $configuration = [];
-
+  
   /**
    * @var string|null
    */

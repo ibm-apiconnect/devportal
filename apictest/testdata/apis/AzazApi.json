@@ -1,0 +1,113 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "x-ibm-name": "Azaz_0.9-api",
+    "title": "AZaz API",
+    "description": "API for AZ az 09.",
+    "version": "1.0.0",
+    "x-pathalias": "Azaz_0.9-api"
+  },
+  "schemes": ["https"],
+  "host": "example.com",
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "x-ibm-configuration": {
+    "enforced": true,
+    "testable": true,
+    "phase": "realized",
+    "cors": {
+      "enabled": true
+    }
+  },
+  "paths": {
+    "/weather/forecast": {
+      "get": {
+        "summary": "Retrieve the 3 day forecast for a location",
+        "description": "Retrieve the locations weather forecast descriptions for the next 3 days and nights",
+        "operationId": "getWeather",
+        "externalDocs": {
+          "url": "http://www.weather.com",
+          "description": "Documentation with user guide and sample clients."
+        },
+        "tags": ["Weather"],
+        "parameters": [
+          {
+            "name": "zip",
+            "type": "string",
+            "in": "query",
+            "description": "A 5 number zip code"
+          },
+          {
+            "name": "country",
+            "type": "string",
+            "in": "query",
+            "description": "A 2 letter country code"
+          },
+          {
+            "name": "lat",
+            "type": "string",
+            "in": "query",
+            "description": "A latitude value between -90 and 90"
+          },
+          {
+            "name": "lon",
+            "type": "string",
+            "in": "query",
+            "description": "A longitude value between -180 and 180"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "408": {
+            "description": "Request Timeout"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    }
+  },
+  "basePath": "/AZaz",
+  "tags": [
+    {
+      "name": "Weather",
+      "description": "Sample API to get weather forecast data"
+    }
+  ],
+  "securityDefinitions": {
+    "client-secret": {
+      "type": "apiKey",
+      "description": "Client secret in the header",
+      "in": "header",
+      "name": "X-IBM-Client-Secret"
+    },
+    "client-id": {
+      "type": "apiKey",
+      "description": "API key in the header",
+      "in": "header",
+      "name": "X-IBM-Client-Id"
+    },
+    "oauth-1": {
+      "type": "oauth2",
+      "description": "OAuth2 security",
+      "flow": "password",
+      "scopes": {
+        "scope1": "Find out about the weather"
+      },
+      "tokenUrl": "https://example.com/si/sb/oauth/oauth2/token"
+    }
+  },
+  "security": [
+    {
+      "client-secret": [],
+      "client-id": [],
+      "oauth-1": ["scope1"]
+    }
+  ]
+}

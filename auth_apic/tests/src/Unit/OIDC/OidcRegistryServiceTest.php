@@ -149,7 +149,6 @@ class OidcRegistryServiceTest extends UnitTestCase {
     self::assertNotNull($response['image'], 'unexpected NULL image when gathering oidc metadata.');
 
     self::assertMatchesRegularExpression('/&token=blahdeblah$/', $response['az_url'], 'Expected token query parameter not found in authorization url.');
-    self::assertStringStartsWith('<svg ', $response['image']['html'], 'Unexpected image.');
 
   }
 

@@ -85,6 +85,14 @@ class MockApicLoginService implements ApicLoginServiceInterface {
 
     if ($loginuser !== NULL) {
       user_login_finalize($loginuser);
+
+      if ($username === 'andre_member_exists') {
+        $loginuser->set("consumerorg_url", "/consumer-orgs/1234/5678/a18843f3e4b07631568a159d")->save();
+      }
+      if ($username === 'andre_owner_exists') {
+        $loginuser->set("consumerorg_url", "/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958")->save();
+      }
+
       $umResponse->setSuccess(TRUE);
       $umResponse->setUid($loginuser->id());
 

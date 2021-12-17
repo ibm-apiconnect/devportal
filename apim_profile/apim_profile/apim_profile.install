@@ -669,7 +669,7 @@ function apim_profile_default_apic_config() {
     ->set('categories', $categories)
     ->set('codesnippets', $codesnippets)
     ->set('router_type', 'hash')
-    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync', 'swiftmailer', 'simple_html_mail'])
+    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
     ->save();
 
   \Drupal::service('config.factory')
@@ -2691,19 +2691,28 @@ function apim_profile_update_8206() {
 }
 
 /**
- * Update blocklist variable
+ * Remove blocklist variable
  */
-function apim_profile_update_8207() {
+function apim_profile_update_8208() {
   \Drupal::service('config.factory')
     ->getEditable('ibm_apim.settings')
-    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync', 'swiftmailer', 'simple_html_mail'])
+    ->delete('module_blocklist');
+}
+
+/**
+ * disable bootstrap tooltips
+ */
+function apim_profile_update_8209() {
+  \Drupal::service('config.factory')
+    ->getEditable('connect_theme.settings')
+    ->set('tooltip_enabled', 0)
     ->save();
 }
 
 /**
  * Need to make sure devel_settings are set
  */
-function apim_profile_update_8208() {
+function apim_profile_update_8210() {
   \Drupal::service('config.factory')
     ->getEditable('ibm_apim.devel_settings')
     ->set('entry_exit_trace', FALSE)
@@ -2734,11 +2743,24 @@ function apim_profile_update_8208() {
 /**
  * enable view_password module for the modal_application_create_form form too
  */
-function apim_profile_update_8209() {
+function apim_profile_update_8211() {
   \Drupal::configFactory()
     ->getEditable('view_password.settings')
     ->set('form_ids', 'user_login_form,user_register_form,apic_change_pwd_form,display_app_credentials_form,apic_resetpw,modal_application_create_form')
     ->save(TRUE);
+}
+
+/**
+ * enable drush_language module
+ */
+function apim_profile_update_8212() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('drush_language')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->install(['drush_language']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  }
 }
 
 /**

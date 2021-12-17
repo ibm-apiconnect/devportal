@@ -699,10 +699,10 @@ function apic_api_preprocess_node(&$variables): void {
         'explorerDir' => base_path() . drupal_get_path('module', 'apic_api') . '/explorer/app/',
         'locale' => $utils->convert_lang_name(\Drupal::languageManager()->getCurrentLanguage()->getId()),
         'loggedIn' => !$currentUser->isAnonymous(),
-        'loginLink' => Url::fromRoute('user.login', ['redirectTo' => Url::fromRoute('<current>')->getInternalPath()])->toString(),
+        'loginLink' => Url::fromRoute('user.login', ['redirectto' => Url::fromRoute('<current>')->getInternalPath()])->toString(),
         'isApicPortal' => TRUE,
         'apicPortalUserId' => $currentUser->id(),
-        'apicPortalNewAppLink' => Url::fromRoute('apic_app.create', ['redirectTo' => Url::fromRoute('<current>')->getInternalPath()])
+        'apicPortalNewAppLink' => Url::fromRoute('apic_app.create', ['redirectto' => Url::fromRoute('<current>')->getInternalPath()])
           ->toString(),
         'routerType'=> $routerType,
       ];

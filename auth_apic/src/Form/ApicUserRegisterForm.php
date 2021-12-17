@@ -206,7 +206,7 @@ class ApicUserRegisterForm extends RegisterForm {
     $member_invitation = FALSE;
 
     if (!\Drupal::currentUser()->isAnonymous()) {
-      if (\Drupal::request()->getPathInfo() === '/user/oidcregister') {
+      if (\Drupal::request()->getPathInfo() === '/user/oidcfirsttime') {
         $form = parent::form($form, $form_state);
       } else {
         $this->messenger->addError(t('Permission denied.'));

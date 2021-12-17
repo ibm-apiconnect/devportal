@@ -257,9 +257,9 @@ class ProductController extends ControllerBase {
   /**
    * @param \Drupal\node\NodeInterface|NULL $apiNode
    *
-   * @return NULL|array
+   * @return NULL|array|RedirectResponse
    */
-  public function select(NodeInterface $apiNode = NULL): ?array {
+  public function select(NodeInterface $apiNode = NULL) {
     $products = [];
 
     if ($apiNode !== NULL && $apiNode->id()) {
@@ -280,7 +280,7 @@ class ProductController extends ControllerBase {
           $response = new RedirectResponse($path);
           $response->send();
           ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-          return NULL;
+          return $response;
         }
 
         foreach (array_chunk($productNids, 50) as $chunk) {

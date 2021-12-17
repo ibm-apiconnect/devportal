@@ -178,7 +178,6 @@ function ibm_event_log_update_8101() {
       $view->getDisplay()->getCacheMetadata()->setCacheContexts($cacheContexts);
       $view->save();
     }
-    $view->chooseDisplay('page_1')->getDisplay();
     $pageCacheContexts = $view->displayHandlers->get('page_1')->getCacheMetadata()->getCacheContexts();
     if ($pageCacheContexts === null || !in_array('languages:language_content', $pageCacheContexts)) {
       $pageCacheContexts[] = 'languages:language_content';

@@ -1,0 +1,44 @@
+{
+  "info": {
+    "version": "1.0.0",
+    "title": "AZaz Product",
+    "name": "AZaz_0.9",
+    "x-pathalias": "Azaz_0.9"
+  },
+  "apis": {
+    "azaz-api1.0.0": {
+      "name": "Azaz_0.9-api:1.0.0"
+    }
+  },
+  "gateways": [
+    "datapower-api-gateway"
+  ],
+  "product": "1.0.0",
+  "visibility": {
+    "view": {
+      "enabled": true,
+      "type": "public",
+      "tags": [],
+      "orgs": []
+    },
+    "subscribe": {
+      "enabled": true,
+      "type": "authenticated",
+      "tags": [],
+      "orgs": []
+    }
+  },
+  "plans": {
+    "default": {
+      "title": "Default Plan",
+      "description": "Default Plan",
+      "approval": false,
+      "rate-limits": {
+        "default": {
+          "value": "100/hour",
+          "hard-limit": false
+        }
+      }
+    }
+  }
+}

@@ -1511,7 +1511,7 @@ class Product {
 
           foreach (array_chunk($subUuids, 1000) as $chunk) {
             // Find the subscription records of any app subscribed to the source product (in the list of uuids) that already has a subscription to the target product
-            $result = $db->query("SELECT uuid FROM {apic_app_application_subs} s WHERE s.product_url = :source_product_url AND s.uuid IN (:sub_uuids[]) AND EXISTS (SELECT id FROM {apic_app_application_subs} s2 WHERE s.app_url = s2.app_url AND s2.product_url = :target_product_url);", [':source_product_url' => $sourceProductUrl, ':target_product_url' => $targetProductUrl, ':sub_uuids[]' => $chunk]);
+            $result = $db->query("SELECT uuid FROM {apic_app_application_subs} s WHERE s.product_url = :source_product_url AND s.uuid IN (:sub_uuids[]) AND EXISTS (SELECT id FROM {apic_app_application_subs} s2 WHERE s.app_url = s2.app_url AND s2.product_url = :target_product_url AND :target_product_url <> :source_product_url) ;", [':source_product_url' => $sourceProductUrl, ':target_product_url' => $targetProductUrl, ':sub_uuids[]' => $chunk]);
 
             if ($result && $subsToDelete = $result->fetchCol()) {
               foreach ($subsToDelete as $sub) {

@@ -512,7 +512,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
       }
       elseif ($firstTimeLogin && ($hasEmptyFields || $this->moduleHandler->moduleExists('terms_of_use'))) {
         // the user needs to fill in their required fields and accept ToU
-        $redirectTo = 'auth_apic.oidc_register';
+        $redirectTo = 'auth_apic.oidc_first_time_login';
         $message = 'successful authentication, first time login redirect to ' . $redirectTo;
 
       }

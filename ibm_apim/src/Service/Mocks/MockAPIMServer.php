@@ -132,7 +132,7 @@ class MockAPIMServer implements ManagementServerInterface {
   public function orgInvitationsRegister(JWTToken $obj, ApicUser $invitedUser): RestResponse {
     $response = new RestResponse();
 
-    $response->setCode(204);
+    $response->setCode(201);
 
     return $response;
   }
@@ -199,9 +199,14 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function acceptInvite(JWTToken $token, ApicUser $acceptingUser, string $orgTitle) {
-    \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::acceptInvite() is missing!');
-    return NULL;
+  public function acceptInvite(JWTToken $token, ApicUser $acceptingUser, ?string $orgTitle) {
+    $response = new RestResponse();
+
+    if ($orgTitle) {
+      $this->createConsumerOrg(new ConsumerOrg());
+    }
+    $response->setCode(201);    
+    return $response;
   }
 
   /**
@@ -217,6 +222,7 @@ class MockAPIMServer implements ManagementServerInterface {
       'id' => '123',
       'owner_url' => '/user/1',
       'group_urls' => ['/groups/1'],
+      'url' => "/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958",
       'members' => [
         [
           'type' => 'member',

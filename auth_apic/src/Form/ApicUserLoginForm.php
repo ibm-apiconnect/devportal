@@ -222,6 +222,11 @@ class ApicUserLoginForm extends UserLoginForm {
     $is_owner_invitation = FALSE;
 
     // if we are on the invited user flow, there will be a JWT in the session so grab that
+    $inviteToken = \Drupal::request()->query->get('token');
+    if ($inviteToken !== NULL) {
+      $jwt = $this->jwtParser->parse($inviteToken);
+      $this->authApicSessionStore->set('invitation_object', $jwt);
+    }
     $jwt = $this->authApicSessionStore->get('invitation_object');
     if ($jwt !== NULL) {
       $form['#message']['message'] = t('To complete your invitation, sign in to an existing account or sign up to create a new account.');
@@ -571,11 +576,6 @@ class ApicUserLoginForm extends UserLoginForm {
       $password = $form_state->getValue('pass');
       $corg = $form_state->getValue('consumer_org');
 
-      $inviteToken = \Drupal::request()->query->get('token');
-      if ($inviteToken !== NULL) {
-        $jwt = $this->jwtParser->parse($inviteToken);
-        $this->authApicSessionStore->set('invitation_object', $jwt);
-      }
       // maybe this was an invited user?
       $jwt = $this->authApicSessionStore->get('invitation_object');
 
@@ -784,6 +784,9 @@ class ApicUserLoginForm extends UserLoginForm {
         // this is for the 404 redirect from the apic_app module
         $destination = \Drupal::request()->get('redirectto');
         if (isset($destination) && !empty($destination)) {
+          if ($destination[0] !== '/' && $destination[0] !== '?' && $destination[0] !== '#') {
+            $destination = '/' . $destination;
+          }
           $form_state->setRedirectUrl(Url::fromUserInput($destination));
         }
         else {

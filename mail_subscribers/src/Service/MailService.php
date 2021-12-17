@@ -529,11 +529,9 @@ class MailService {
     $headers = _mail_subscribers_headers($mailParams['receipt'], $mailParams['priority'], $from['mail'], $mailParams['headers']);
 
     if ($mailParams['message']['format'] === 'plain_text') {
-      $plainFormat = TRUE;
       $headers['Content-Type'] = 'text/plain';
     }
     else {
-      $plainFormat = FALSE;
       $headers['Content-Type'] = 'text/html';
     }
 
@@ -548,12 +546,6 @@ class MailService {
     }
 
     $mailBody = $mailParams['message']['value'];
-    $moduleHandler = \Drupal::moduleHandler();
-    if ($plainFormat === FALSE && (!$moduleHandler->moduleExists('mimemail') || (\Drupal::config('mimemail.settings')
-            ->get('format') === 'plain_text'))) {
-      // seem to have been given HTML but need to send in plaintext
-      $mailBody = MailFormatHelper::htmlToText($mailParams['message']['value']);
-    }
 
     $mailProperties = [
       'mailParams' => $mailParams,

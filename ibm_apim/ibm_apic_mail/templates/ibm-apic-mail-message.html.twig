@@ -1,0 +1,102 @@
+{#
+/**
+ * @file
+ * Default template to format a HTML email using the IBM APIC Mail module.
+ *
+ * Copy this file in your default theme folder to create a custom themed email.
+ * If you modify this template you MUST be sure to keep the html, body, and
+ * header tags. This template should produce a fully-formed HTML document.
+ * Failure to include these will result in a malformed email and possibly
+ * errors shown to the user when sending email.
+ *
+ * To override this template for all emails sent by a given module,
+ * rename this template to ibm-apic-mail-messages--[module].html.twig.
+ *
+ * To override this template for a specific email sent by a given module,
+ * rename this template to ibm-apic-mail-messages--[module]--[key].html.twig.
+ *
+ * Available variables:
+ * - attributes: HTML attributes for the body element of the message.
+ * - key: The message identifier.
+ * - module: The machine name of the sending module.
+ * - css: Content of mail.css from the active theme's css folder (if it exists).
+ * - recipient: The recipient of the message.
+ * - subject: The message subject.
+ * - body: The message body.
+ * - logo: The URL to the theme logo.png file if it exists
+ *
+ * @see template_preprocess_ibm_apic_mail_message()
+ *
+ * @ingroup themeable
+ */
+#}
+{% set classes = module ? (key ? module ~ '-' ~ key) %}
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>{{ 'Mail message template'|t }}</title>
+
+  <style type="text/css">
+    {% if css %}
+    {{ css }}
+    {% endif %}
+  </style>
+
+</head>
+<body id="mail-body"{{ attributes.addClass(classes) }}>
+<table id="mail-table" role="presentation">
+  <tr>
+    <td align="center">
+      <table id="main-table" role="presentation">
+        <tr>
+          <td>
+            <div class="rowPad"></div>
+          </td>
+        </tr>
+        <tr>
+          <td align="left">
+            <div id="header">
+              {% if logo %}
+                <a href="{{ url('<front>') }}" rel="bookmark">
+                  <img src="{{ logo }}" alt="{{ 'Site logo'|t }}"/>
+                </a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div id="center">
+              <div id="main">
+                {{ body|raw }}
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div id="footer">
+              <a href="{{ url('<front>') }}" rel="bookmark">{{ drupal_config('system.site', 'name') }}</a>
+              {% if tsandcs %}
+                <a href="{{ tsandcs }}" rel="bookmark">{{ 'Terms and Conditions'|t }}</a>
+              {% endif %}
+              {% if privacy %}
+                <a href="{{ privacy }}" rel="bookmark">{{ 'Privacy Policy'|t }}</a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="rowPad"></div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+
+</table>
+</body>
+</html>

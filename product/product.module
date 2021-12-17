@@ -621,6 +621,16 @@ function product_preprocess_node(&$variables) {
         $customDocs = $productData['x-embedded-doc'];
       }
       $variables['initial_embeddeddoc'] = Product::findInitialEmbeddedDoc($customDocs);
+
+      // custom extensions
+      $customExtensions = [];
+      foreach (array_keys($productData['info']) as $key) {
+        if (strpos($key, 'x-') === 0) {
+          $keyName = substr($key, strlen('x-'));
+          $customExtensions[$keyName] = $productData['info'][$key];
+        }
+      }
+      $variables['custom_extensions'] = $customExtensions;
     }
 
     // custom fields

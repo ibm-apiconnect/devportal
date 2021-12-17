@@ -1,0 +1,21 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a 'avatar_preview_radio' #type form element.
+ *
+ * Available variables:
+ * - attributes: A list of HTML attributes for the wrapper element.
+ * - image: Optional avatar preview image.
+ * - radio: A radio element.
+ *
+ * @see template_preprocess_avatar_preview_radio()
+ *
+ * @ingroup themeable
+ */
+#}
+<div{{ attributes }}>
+  {% if image %}
+  <span>{{ image }}</span>
+  {% endif %}
+  {{ radio }}
+</div>

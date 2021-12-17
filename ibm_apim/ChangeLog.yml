@@ -1,465 +1,714 @@
 changes:
-  8.x-2.6.20: null
-  8.x-2.6.19:
-  - only run for enabled themes
-  8.x-2.6.18:
-  - add drush command for compiling theme scss
-  8.x-2.6.17:
-  - Always set samesite cookie attriubte to Lax
-  8.x-2.6.16:
-  - translate routing options
-  - translate routing options
-  8.x-2.6.15:
-  - Double check if a user session has expired
-  8.x-2.6.14:
-  - ensure scheduled time is set
-  8.x-2.6.13:
-  - need to ensure > 0 too
-  8.x-2.6.12:
-  - move devel settings to their own config object
-  8.x-2.6.11:
-  - add support for getting artifact document back via drush
-  8.x-2.6.10:
-  - handle null arrays for site_content_refresh
-  8.x-2.6.9:
-  - Fixed tests
-  - Clear expired pending approval users
-  8.x-2.6.8:
-  - dont allow disabling search_api
-  8.x-2.6.7: null
-  8.x-2.6.6:
-  - corg page  responsiveness (#727)
-  8.x-2.6.5:
-  - Remove unnecessary use statement
-  - Switch to catching Throwable
-  - New webhook events
-  - Report webhook processing errors
-  8.x-2.6.4: null
-  8.x-2.6.3:
-  - update test
-  - update test
-  - missing
-  - check the provided application ID is actually in this corg
-  8.x-2.6.2:
-  - Change invites from sessionBasedTenpStore to privateTempStore
-  8.x-2.6.1: null
-  8.x-2.6.0:
-  - update version 8.x-2.5.0 -> 8.x-2.6.0
-  8.x-2.4.40:
-  - handle multiple rate limits
-  8.x-2.4.39:
-  - not correctly checking admin perms
-  8.x-2.4.38:
-  - hide the IP settings if ip banning is off
-  8.x-2.4.37:
-  - hide the IP settings if ip banning is off
-  8.x-2.4.36:
-  - group notifications by day
-  8.x-2.4.35:
-  - protect against running double strtotime
-  8.x-2.4.34:
+  8.x-3.3.17:
+  - Billingfix (#779)
+  8.x-3.3.16:
+  - remove visual hidden check for checkboxes (#778)
+  8.x-3.3.15:
+  - Add clipboard js to subscription wizard (#776)
+  8.x-3.3.14:
+  - Accessibility (#772) (#773)
+  8.x-3.3.13:
+  - need better type checking
+  8.x-3.3.12:
+  - More access (#769) (#770)
+  8.x-3.3.11:
+  - check modules for empty description (#768)
+  8.x-3.3.10:
+  - set table to be presentation for accessibility
+  8.x-3.3.9:
+  - be more consistent with message
+  8.x-3.3.8:
+  - ensure a valid product ID is passed in
+  8.x-3.3.7: null
+  8.x-3.3.6:
+  - Added activation_update and actvation_del webhooks
+  8.x-3.3.5:
+  - Should be deleted not set to empty
+  8.x-3.3.4:
+  - git -> gitci
+  8.x-3.3.3:
+  - fix version bump
+  - refactor Jenkinsfile for the new portal.groovy
+  8.x-3.3.2: null
+  8.x-3.3.1:
+  - Update ibm_apim.info.yml
+  8.x-3.2.0:
+  - update version 8.x-3.1.98 -> 8.x-3.2.0
+  8.x-3.1.97:
   - make modals look how they should - pt2
-  8.x-2.4.33:
   - make modals look how they should!
-  8.x-2.4.32: null
-  8.x-2.4.31:
+  8.x-3.1.96:
   - get current consumer org not correct
   - get current consumer org not correct
   - get current consumer org not correct
+  8.x-3.1.95:
   - include our other entity types too
-  8.x-2.4.30:
-  - fix conflicts (#682)
-  8.x-2.4.29:
-  - Don't throw error on flush (#678)
-  8.x-2.4.28: null
-  8.x-2.4.27: null
-  8.x-2.4.26: null
-  8.x-2.4.25:
-  - delete users when deleting a UR
-  8.x-2.4.24:
-  - Removed deprecated from getRealm
-  8.x-2.4.23: null
-  8.x-2.4.22:
-  - remove annoying .idea files too
+  8.x-3.1.94:
+  - add utility function to delete users
+  8.x-3.1.93:
+  - More event log fixes v10.0 (#718)
+  8.x-3.1.92:
+  - fix invalid foreach args
+  8.x-3.1.91:
+  - fix subscription cleanup
+  8.x-3.1.90:
+  - missing strtotime
+  8.x-3.1.89: null
+  8.x-3.1.88:
+  - Update index to include timestamp (#716)
+  8.x-3.1.87:
+  - Check for event log using timestamp as well (#714)
+  8.x-3.1.86: null
+  8.x-3.1.85:
+  - add drush commands to nuke entities and nodes
+  - fix timestamp wrap
+  8.x-3.1.84:
+  - add utility function to check if a url is a consumer-api url
+  - fix WSOD for notifications (#712)
+  8.x-3.1.83:
+  - Indexes v10.0 (#711)
+  8.x-3.1.82:
+  - add drush command to clear bans
+  8.x-3.1.81:
+  - fix use new billing parser result (#708) (#709)
+  8.x-3.1.80:
+  - missing XSSfilter
+  8.x-3.1.79:
+  - fix add product_data to mock product node (#706) (#707)
+  8.x-3.1.78:
+  - fix WSOD
+  8.x-3.1.77:
+  - reference configuration_schema correctly
+  8.x-3.1.76:
+  - use dynamic weighting to ensure password policy is right after the password field
+  8.x-3.1.75: null
+  8.x-3.1.74:
+  - fix more test resources (#704) (#705)
+  - fix text alignment in sign in form
+  8.x-3.1.73:
+  - return empty token reponse on 201
+  - disabling debug options clears their drupal state
+  8.x-3.1.72:
+  - remove the blogs link if the blog view has been deleted
+  8.x-3.1.71:
+  - use ID to load the payment method schema
+  8.x-3.1.70:
+  - fix split billing text and trial text in two (#700) (#701)
+  8.x-3.1.69: null
+  8.x-3.1.68:
+  - default should be 30
+  - default should be 30
+  8.x-3.1.67:
+  - protect against NPE
+  8.x-3.1.66:
+  - Remove name,version from return (#698)
+  8.x-3.1.65:
+  - fix use actual apisafe name instead of label (#696) (#697)
+  8.x-3.1.64:
+  - Tempmerge (#695)
+  8.x-3.1.63:
+  - disable ip security features (#694)
+  8.x-3.1.62:
+  - deleting temp store too early
+  8.x-3.1.61:
+  - rename internal variables to be consistent
+  8.x-3.1.60:
+  - Fix custom entity autocomplete matcher (#693)
+  8.x-3.1.59:
+  - use chunking
+  8.x-3.1.58:
+  - feat rename subscribe (#689) (#691)
+  8.x-3.1.57: null
+  8.x-3.1.56:
+  - check if service exists before calling it
+  - feat add short descriptions for concepts (#688) (#690)
+  8.x-3.1.55: null
+  8.x-3.1.54:
+  - feat add short descriptions for concepts (#688)
+  8.x-3.1.53:
+  - attributes changed name
+  - refactor Application.php to be a service (#687)
+  8.x-3.1.52:
+  - add title breadcrumb to asyncapi pages
+  8.x-3.1.51:
+  - Speed up event log record look up
+  8.x-3.1.50:
+  - Add APIC Concepts block
+  8.x-3.1.49:
+  - Added support for account approvals
+  8.x-3.1.48:
+  - use "IBM API Developer Portal" instead of API Connect
+  8.x-3.1.47:
+  - Try catch theme as well (#681)
+  8.x-3.1.46:
+  - need to use productselect routing for apis
+  8.x-3.1.45:
+  - include cOrg invitation settings in config export
+  - include cOrg invitation settings in config export
+  8.x-3.1.44:
+  - sort out subscription inserts
+  8.x-3.1.43:
+  - Don't throw error on flush (#678) (#679)
+  8.x-3.1.42:
+  - update css for eventlog
+  8.x-3.1.41:
+  - include nodeid in the apilist output
+  8.x-3.1.40:
+  - add mock funcs
+  8.x-3.1.39:
+  - add support functions for disabling andre invitations
+  8.x-3.1.38:
+  - tidy eventlog css (#677)
+  8.x-3.1.37: null
+  8.x-3.1.36:
+  - timestamp spacing
+  8.x-3.1.35:
+  - Eventstyling (#675)
+  8.x-3.1.34:
+  - add CSS file and library
+  8.x-3.1.33: null
+  8.x-3.1.32:
+  - fix missing '
+  8.x-3.1.31:
+  - handle container not being ready
+  - add sort
+  - fix menu link
+  8.x-3.1.30:
+  - move service to avoid circular dependencies
+  - use dependency injection
+  - rename activity feed to Notifications
+  - wire up more events
+  8.x-3.1.29:
+  - flesh out the rest of the messages
+  8.x-3.1.28:
+  - wire up cred reset and resetSecret
+  8.x-3.1.27:
+  - use placeholder image for api provider
+  8.x-3.1.26:
+  - View and view based ACL
+  8.x-3.1.25:
+  - title Notifications tab
+  - move and rename org feed tab (#674)
+  8.x-3.1.24:
+  - only list events in this consumerorg
+  8.x-3.1.23:
+  - populate variables in the twig
+  8.x-3.1.22:
+  - q might not exist
+  8.x-3.1.21:
+  - get the integration with views working for eventlog entities
+  8.x-3.1.20:
+  - Fix listen function execution time logging
+  8.x-3.1.19:
+  - fix node title bug
+  8.x-3.1.18:
+  - need to set return if type specified
+  8.x-3.1.17:
+  - json parse errors in FVT
+  8.x-3.1.16:
+  - tabs in the wrong order
+  8.x-3.1.15:
+  - fix css mess
+  8.x-3.1.14:
+  - missing changes
+  - needs to be string
+  - fix up the activity feed tabs for org and app
+  8.x-3.1.13:
+  - need to use empty array not null
+  8.x-3.1.12:
+  - Tempmerge (#667)
+  8.x-3.1.11:
+  - fix unit tests (#663) (#664)
+  8.x-3.1.10:
+  - feat add events notification in org metrics (#656)
+  8.x-3.1.9: null
+  8.x-3.1.8:
+  - Merge pull request
+  - deprecated function
+  8.x-3.1.7:
+  - Log webhook event processing time
+  8.x-3.1.6: null
+  8.x-3.1.5:
+  - make ibm_apim load the event entity type
+  - need to load entity to flesh it out
+  8.x-3.1.4: null
+  8.x-3.1.3: null
+  8.x-3.1.2: null
+  8.x-3.1.1:
+  - Eventlog (#643)
+  8.x-3.1.0:
+  - update version 8.x-3.0.237 -> 8.x-3.1.0
+  8.x-3.0.236: null
+  8.x-3.0.235:
   - handle long corg names (#639)
-  - fix fix overflow on search cards (#640) (#642)
-  8.x-2.4.21:
-  - hide API endpoint from the error message
-  8.x-2.4.20: null
-  8.x-2.4.19:
+  - fix fix overflow on search cards (#640) (#641)
+  8.x-3.0.234:
+  - need to delete subs not in apim (#637)
+  8.x-3.0.233:
   - limit how many errors we store (#636)
-  - need to delete subs not in apim
-  8.x-2.4.18:
-  - Fix duplicate user exception (#634)
-  8.x-2.4.17:
+  8.x-3.0.232: null
+  8.x-3.0.231:
+  - Fix duplicate user exception
+  8.x-3.0.230:
+  - make sure group url is set
+  8.x-3.0.229:
+  - make sure group is set
+  8.x-3.0.228:
   - logic failure being called twice
-  8.x-2.4.16:
+  8.x-3.0.227:
+  - force some strings to be translated
+  8.x-3.0.226:
+  - hide API endpoint from the error message
+  8.x-3.0.225:
+  - Fix for a test
+  8.x-3.0.224: null
+  8.x-3.0.223:
   - get rid of warning in test run logs
-  8.x-2.4.15:
+  8.x-3.0.222: null
+  8.x-3.0.221:
   - drupal 9 compatibility info
   - Add drupal core compatibility info
+  8.x-3.0.220:
   - Remove users not in the snapshot
-  8.x-2.4.14:
+  8.x-3.0.219:
   - Modify autocomplete labels
-  8.x-2.4.13:
+  8.x-3.0.218:
   - Copyright statements for 2021
-  8.x-2.4.12:
+  8.x-3.0.217:
   - use translatable block for blogs view
-  8.x-2.4.11:
+  8.x-3.0.216:
   - only return an analytics service if have exactly 1
-  8.x-2.4.10:
+  8.x-3.0.215:
   - expand default UR too
-  8.x-2.4.9:
+  8.x-3.0.214:
   - rename to apic-config
-  8.x-2.4.8:
+  8.x-3.0.213: null
+  8.x-3.0.212:
   - remove ERROR string
   - fix error handling in drush commands
-  8.x-2.4.7:
+  8.x-3.0.211:
   - drush commands to get site config
-  8.x-2.4.6:
+  8.x-3.0.210:
   - drush commands to get individual nodes
-  8.x-2.4.5:
+  8.x-3.0.209:
   - drush_log is deprecated
-  8.x-2.4.4:
+  8.x-3.0.208:
   - theme not module
-  8.x-2.4.3:
+  8.x-3.0.207:
   - ensure custom fields are actual fields
-  8.x-2.4.2: null
-  8.x-2.4.1:
-  - use translations
+  8.x-3.0.206:
   - handle modules with no strings
-  8.x-2.4.0:
-  - update version: 8.x-2.3.31 -> 8.x-2.4.0
-  8.x-2.3.30: null
-  8.x-2.3.29: null
-  8.x-2.3.28:
+  8.x-3.0.205:
+  - use translations
+  8.x-3.0.204: null
+  8.x-3.0.203:
+  - add even more scary messages
+  8.x-3.0.202: null
+  8.x-3.0.201:
+  - wrong classes in phpdoc signatures
+  8.x-3.0.200:
+  - extra ibm fields
+  8.x-3.0.199: null
+  8.x-3.0.198: null
+  8.x-3.0.197:
   - try and get the tests to pass
-  8.x-2.3.27:
+  8.x-3.0.196:
   - Mock update returns user
-  8.x-2.3.26:
+  8.x-3.0.195:
   - Handle redirect on logout (#622)
-  8.x-2.3.25: null
-  8.x-2.3.24:
-  - Return the user (#620)
-  8.x-2.3.23:
-  - Don't set name to null or empty (#617) (#618)
-  8.x-2.3.22:
+  8.x-3.0.194: null
+  8.x-3.0.193:
+  - Return the user
+  8.x-3.0.192:
+  - Don't set name to null or empty (#617)
+  8.x-3.0.191:
   - alignment and spacing in billing tab
+  8.x-3.0.190:
   - use alert template for stripe error msg (#616)
-  8.x-2.3.21:
+  8.x-3.0.189:
   - use an actual error
-  8.x-2.3.20: null
-  8.x-2.3.19:
+  8.x-3.0.188: null
+  8.x-3.0.187:
   - add cancel button
   - rename Previous to be "Back"
-  8.x-2.3.18:
+  8.x-3.0.186:
   - missing import
-  8.x-2.3.17:
+  8.x-3.0.185:
   - remove fudge factor
-  8.x-2.3.16:
+  8.x-3.0.184:
   - add ability to disable swagger validation
-  8.x-2.3.15:
+  8.x-3.0.183:
   - Fixed sign out loop bug (#614)
-  8.x-2.3.14: null
-  8.x-2.3.13:
+  8.x-3.0.182: null
+  8.x-3.0.181:
   - add new drush command to update block translations
-  8.x-2.3.12:
+  8.x-3.0.180:
   - warnings from invalid messages - not translatable
-  8.x-2.3.11:
+  8.x-3.0.179:
   - need to get the explicit string back
+  8.x-3.0.178:
   - More stripe (#612)
+  8.x-3.0.177:
   - Removed credentials webhook code (#611)
-  8.x-2.3.10:
-  - Add configuration fields to stripe form (#610)
-  8.x-2.3.9:
+  8.x-3.0.176:
+  - Add configuration fields to stripe form
+  8.x-3.0.175:
   - update usage help
-  8.x-2.3.8:
+  8.x-3.0.174:
   - need to check if the table exists for paymentmethods
-  8.x-2.3.7:
-  - Options to enable forms for oidc flows (#606) (#608)
-  8.x-2.3.6:
+  8.x-3.0.173:
+  - Options to enable forms for oidc flows (#606)
+  8.x-3.0.172:
   - more missing translations for config
-  8.x-2.3.5:
+  8.x-3.0.171:
   - stop deletion of activated themes
+  8.x-3.0.170:
   - fix module check
-  8.x-2.3.4: null
-  8.x-2.3.3:
-  - ensure master and 10.0.1 are in sync
-  - fix mock
-  8.x-2.3.2:
-  - remove duplicate function - merge issue
-  8.x-2.3.1: null
-  8.x-2.3.0:
-  - update version: 8.x-2.2.77 -> 8.x-2.3.0
-  8.x-2.2.76:
+  8.x-3.0.169:
+  - Separate on commas
+  8.x-3.0.168:
+  - improve help text
+  8.x-3.0.167: null
+  8.x-3.0.166:
+  - dont try and call apim during test runs
+  8.x-3.0.165: null
+  8.x-3.0.164:
+  - add drush commands to delete custom modules and themes
+  8.x-3.0.163:
+  - Style the nopermission page
+  8.x-3.0.162:
+  - Use strict cookies unless using OIDC (#602)
+  8.x-3.0.161:
+  - get drush to set var and block to do the work
+  8.x-3.0.160:
+  - pass apiMaxDepth through to explorer
+  8.x-3.0.159:
+  - only display fields supposed to
+  8.x-3.0.158:
   - fix path to file
-  8.x-2.2.75:
+  8.x-3.0.157:
   - Change name to title
-  8.x-2.2.74:
+  8.x-3.0.156:
   - dont display link to create apps in wizard
-  8.x-2.2.73:
+  8.x-3.0.155: null
+  8.x-3.0.154:
   - Fixed some more bugs
   - Fixed build and submit errors
   - Error handling in stripe module
   - Fixed submission and form styling
-  8.x-2.2.72:
+  8.x-3.0.153:
   - hide revision info from normal users
-  8.x-2.2.71:
+  8.x-3.0.152: null
+  8.x-3.0.151:
   - minor styling for my org
-  8.x-2.2.70:
   - minor styling for no content view
-  8.x-2.2.69:
+  8.x-3.0.150:
   - hover colour from dropit menu
-  8.x-2.2.68:
+  8.x-3.0.149:
   - responsiveness fixes
-  8.x-2.2.67:
+  8.x-3.0.148:
   - responsiveness fixes
-  8.x-2.2.66: null
-  8.x-2.2.65: null
-  8.x-2.2.64:
+  8.x-3.0.147: null
+  8.x-3.0.146: null
+  8.x-3.0.145:
   - minor styling for user edit page
   - support page polish
   - node padding top
-  8.x-2.2.63:
+  8.x-3.0.144:
   - basic hierarchical taxonomy menu block styling
-  8.x-2.2.62:
+  8.x-3.0.143:
   - svg and label sizes on app subs page
-  8.x-2.2.61: null
-  8.x-2.2.60:
+  8.x-3.0.142: null
+  8.x-3.0.141:
   - left align the forgot password link
   - make signup spacing correct
-  8.x-2.2.59:
+  8.x-3.0.140:
   - fix user page tabs styling
-  8.x-2.2.58:
+  8.x-3.0.139:
   - make tabs look like carbon x
-  8.x-2.2.57:
+  8.x-3.0.138:
   - override some analytics styling to make it carbon x
-  8.x-2.2.56:
+  8.x-3.0.137:
   - alignment for user mgmt forms
-  8.x-2.2.55:
+  8.x-3.0.136:
   - more defensive
-  8.x-2.2.54:
+  8.x-3.0.135:
   - add link to config settings
-  8.x-2.2.53:
+  8.x-3.0.134:
   - add drush command to run when site url changes
-  8.x-2.2.52:
+  8.x-3.0.133:
   - add tests for getting started page to ibm_apim
-  8.x-2.2.51: null
-  8.x-2.2.50:
+  8.x-3.0.132: null
+  8.x-3.0.131:
   - tidy css
   - getting started page refresh (#599)
-  8.x-2.2.49:
+  8.x-3.0.130:
   - hide my blog link for normal users
-  8.x-2.2.48:
+  8.x-3.0.129:
   - fix how block content is loaded
-  8.x-2.2.47:
+  8.x-3.0.128:
   - add update function to update the blocks later
-  8.x-2.2.46:
+  8.x-3.0.127:
   - inline the SVG
-  8.x-2.2.45:
-  - update subscribe wizard (#598)
-  8.x-2.2.44: null
-  8.x-2.2.43:
+  8.x-3.0.126: null
+  8.x-3.0.125:
   - include product version too
   - add new subscription header block
-  8.x-2.2.42:
+  8.x-3.0.124: null
+  8.x-3.0.123:
   - see if can fix why blocks not getting created correctly
-  8.x-2.2.41: null
-  8.x-2.2.40:
+  - update subscribe wizard (#598)
+  8.x-3.0.122:
   - ignore hash on updateall
-  - User custom fields v10.0.1 (#597)
-  8.x-2.2.39:
+  8.x-3.0.121:
   - use url not billing_url
-  8.x-2.2.38:
+  8.x-3.0.120:
   - fix no content blocks
-  8.x-2.2.37:
+  8.x-3.0.119:
+  - Update user custom fields from consumerorg webhooks/snapshot and login (#594)
+  8.x-3.0.118:
   - use correct font families
-  8.x-2.2.36:
+  8.x-3.0.117:
   - restyle user account and edit page
-  8.x-2.2.35:
+  8.x-3.0.116:
   - show error if subscribe wizard accessed incorrectly
-  8.x-2.2.34:
+  8.x-3.0.115:
   - do avatar generation on user insert
-  8.x-2.2.33:
+  8.x-3.0.114:
   - restyle modal-like forms
-  8.x-2.2.32: null
-  8.x-2.2.31:
+  8.x-3.0.113: null
+  8.x-3.0.112: null
+  8.x-3.0.111:
+  - minor css
   - minor css
   - replace SVGs
-  8.x-2.2.30: null
-  8.x-2.2.29: null
-  8.x-2.2.28:
+  8.x-3.0.110: null
+  8.x-3.0.109: null
+  8.x-3.0.108:
   - add the SVG!
   - fix path to svg
   - fix no empty block inc file
   - no content blocks for views
-  8.x-2.2.27: null
-  8.x-2.2.26:
+  8.x-3.0.107:
   - use info mode for password validator when empty
-  - Clean subscribe v10.0.1 (#592)
-  8.x-2.2.25:
+  8.x-3.0.106:
   - restyle all headers to IDE Carbon X
-  8.x-2.2.24:
+  8.x-3.0.105:
   - styling for payment methods
-  8.x-2.2.23:
+  8.x-3.0.104:
   - use the git based layout for the admin one time link form too
-  8.x-2.2.22:
+  8.x-3.0.103: null
+  8.x-3.0.102:
+  - Fixed subscribe form
   - monetization schema change
-  8.x-2.2.21:
+  8.x-3.0.101:
+  - Fixed subscribe form
+  8.x-3.0.100:
   - check in the login gif
   - add payment method styling
-  8.x-2.2.20:
+  8.x-3.0.99:
   - billing page no payment methods styling
-  8.x-2.2.19:
+  8.x-3.0.98:
   - minor tweak
-  8.x-2.2.18:
+  8.x-3.0.97:
   - minor tweak for my org page
-  8.x-2.2.17:
+  8.x-3.0.96:
   - carbon x for register and reset pwd
-  8.x-2.2.16: null
-  8.x-2.2.15:
+  8.x-3.0.95: null
+  8.x-3.0.94:
   - remove some padding
   - carbon x for login panel
-  8.x-2.2.14:
+  8.x-3.0.93:
   - myorg page styling
-  8.x-2.2.13: null
-  8.x-2.2.12: null
-  8.x-2.2.11:
+  8.x-3.0.92:
+  - Make subscription form look more like the design (#590)
+  8.x-3.0.91:
   - update getting started on homepage
-  8.x-2.2.10:
+  8.x-3.0.90:
   - add getting started images and tidy
-  8.x-2.2.9:
+  8.x-3.0.89:
   - Refresh welcome page banner (#589)
-  8.x-2.2.8:
+  8.x-3.0.88: null
+  8.x-3.0.87:
   - fix banner text
   - change search icon block (#588)
+  - change search icon block
+  8.x-3.0.86:
   - support for textarea, descriptions
-  8.x-2.2.7: null
-  8.x-2.2.6:
-  - wrong hook names
+  8.x-3.0.85: null
+  8.x-3.0.84: null
+  8.x-3.0.83:
   - get the billing stuff working
-  8.x-2.2.5:
+  8.x-3.0.82:
   - remove ajax for now - just use a simple redirect link
-  8.x-2.2.4:
+  8.x-3.0.81:
   - fix tabs on billing page
-  8.x-2.2.3:
+  8.x-3.0.80:
   - billing page styling
-  8.x-2.2.2:
+  8.x-3.0.79:
   - make messages translatable
-  8.x-2.2.1: null
-  8.x-2.2.0:
-  - Update ibm_apim.info.yml
-  8.x-2.1.37: null
-  8.x-2.1.36: null
-  8.x-2.1.35:
-  - Made mock consistent with actual implementation (#579) (#584)
-  - Dupe fix v10.0.0 (#586)
-  8.x-2.1.34:
-  - Monetisation flow v10.0.0 (#583)
-  8.x-2.1.33:
+  8.x-3.0.78:
+  - Changes form based on chosen plan and payment methods (#582)
+  8.x-3.0.77:
+  - Delete loaded user (#581)
+  8.x-3.0.76:
+  - Made mock consistent with actual implementation (#579)
+  8.x-3.0.75: null
+  8.x-3.0.74:
+  - Make sure uid being deleted is in array (#580)
   - masonry library has a new name
-  8.x-2.1.32:
-  - Force user log out on token expiry (#574) (#575)
-  8.x-2.1.31:
+  8.x-3.0.73: null
+  8.x-3.0.72:
+  - Form displaying billing info (#578)
+  - Billing page (#577)
+  8.x-3.0.71:
+  - Force user log out on token expiry (#574)
+  8.x-3.0.70:
   - Add a render test for the analytics page
-  8.x-2.1.30:
-  - Custom fields v10.0.0 (#573)
-  8.x-2.1.29:
+  8.x-3.0.69:
   - fix templates mk2
-  8.x-2.1.28:
+  8.x-3.0.68:
   - fix templates
-  8.x-2.1.27:
+  8.x-3.0.67: null
+  8.x-3.0.66:
+  - Stopped metadata being sent during sign up
+  - Fixed tests
+  - Save custom user fields after and handle datetime fields
   - add hook to allow additional tabs
-  8.x-2.1.26:
   - add hook to allow modification of the summary panel
-  8.x-2.1.25:
   - enable ibm_create_payment_method by default
-  8.x-2.1.24:
-  - Added unit test (#566) (#570)
-  8.x-2.1.23:
   - use a select field instead of text entry
-  8.x-2.1.22: null
-  8.x-2.1.21:
+  8.x-3.0.65:
   - restructure the payment method forms to handle different submodules
-  8.x-2.1.20:
+  8.x-3.0.64:
   - add attribution
   - skeleton stripe support
   - missing copyright statements
-  8.x-2.1.19:
+  8.x-3.0.63:
   - apimesh/devportal#5177
-  8.x-2.1.18:
+  8.x-3.0.62: null
+  8.x-3.0.61:
   - move the template for billing to the consumerorg module
-  8.x-2.1.17:
+  8.x-3.0.60:
+  - dont throw errors if it isnt an error
+  8.x-3.0.59:
   - use hash for deleteall too
-  8.x-2.1.16:
+  8.x-3.0.58:
   - add link to delete payment methods
-  8.x-2.1.15:
+  8.x-3.0.57:
   - special case the required array
-  8.x-2.1.14:
+  8.x-3.0.56:
   - support OAI3 style format and types
-  8.x-2.1.13:
+  8.x-3.0.55: null
+  8.x-3.0.54:
   - support hash attribute on integrations
-  8.x-2.1.12:
+  8.x-3.0.53:
+  - Added unit test (#566)
+  8.x-3.0.52:
   - add default create payment method impl
-  8.x-2.1.11:
+  8.x-3.0.51:
   - create deletetokens drush command
-  8.x-2.1.10:
+  8.x-3.0.50:
   - honour the configuration schema always
-  8.x-2.1.9:
+  8.x-3.0.49:
   - add support for the listen command handling integrations
-  8.x-2.1.8:
+  8.x-3.0.48:
   - render multi-pass form
-  8.x-2.1.7:
+  8.x-3.0.47:
   - add some classes
-  8.x-2.1.6:
+  8.x-3.0.46:
   - fill out payment methods
-  8.x-2.1.5:
+  8.x-3.0.45:
   - put billing tab in place
-  8.x-2.1.4:
+  8.x-3.0.44:
   - remove routing that doesnt exist anymore
   - dont retrieve all billing objects if dont need to
-  8.x-2.1.3:
-  - encrypt the billing objects too
+  8.x-3.0.43:
   - remove Rules support from our code
-  8.x-2.1.2:
+  8.x-3.0.42:
+  - encrypt the billing objects too
+  8.x-3.0.41: null
+  8.x-3.0.40:
+  - fix mock
+  - try to see why unit tests failing
+  8.x-3.0.39:
   - fix issue with immutable config
-  8.x-2.1.1:
-  - Tempmerge (#565)
-  8.x-2.1.0:
-  - update version: 8.x-2.0.63 -> 8.x-2.1.0
-  8.x-2.0.62:
-  - Consistency changes (#554)
-  8.x-2.0.61:
+  8.x-3.0.38: null
+  8.x-3.0.37:
+  - blacklist -> blocklist
+  8.x-3.0.36:
+  - fix missing function
+  8.x-3.0.35:
+  - need to not have ibm_apim depend on consumerorg
+  - encrypt payment methods at rest
+  8.x-3.0.34:
+  - Some cleanup to stop JSON Parse error.
+  8.x-3.0.33:
+  - put anon back
+  - Handle admin user calling the consumer APIs.
+  8.x-3.0.32: null
+  8.x-3.0.31:
+  - need to load user before deleting it
+  8.x-3.0.30: null
+  8.x-3.0.29:
+  - updated test
+  - Removed use of deprecated functions
+  - Replaced drupal set message and entity manager
+  8.x-3.0.28:
+  - payment method schema service
+  8.x-3.0.27:
+  - update billing function for configured_billing
+  8.x-3.0.26:
+  - update KC links for v10
+  8.x-3.0.25:
+  - Consistency changes (#553)
+  8.x-3.0.24: null
+  8.x-3.0.23:
   - Wipe corg from group before refilling
   - Added removal of consumer orgs from groups
-  8.x-2.0.60:
+  8.x-3.0.22:
   - Reverted change
-  8.x-2.0.59:
+  8.x-3.0.21: null
+  8.x-3.0.20:
   - Updated tests
+  8.x-3.0.19: null
+  8.x-3.0.18:
   - fixed undefined function
   - Made test work for any site
-  8.x-2.0.58: null
-  8.x-2.0.57:
-  - Fixed behat tests for oidc (#543) (#544)
-  8.x-2.0.56: null
-  8.x-2.0.55:
-  - Fixed login bugs caused by wrong password (#541)
-  8.x-2.0.54:
-  - Refresh tokens periodically (#536) (#537)
-  8.x-2.0.53:
-  - Accessibility fixes (#534)
-  8.x-2.0.52:
+  8.x-3.0.17:
+  - Fixed behat tests for oidc (#543)
+  8.x-3.0.16: null
+  8.x-3.0.15:
+  - Fixed login bugs caused by wrong password
+  8.x-3.0.14:
+  - Refresh tokens periodically (#536)
+  8.x-3.0.13:
+  - Accessibility fixes
+  8.x-3.0.12:
   - a little more userform padding
-  8.x-2.0.51:
   - user design form finesse
-  8.x-2.0.50: null
-  8.x-2.0.49: null
-  8.x-2.0.48:
+  8.x-3.0.11:
+  - Don't check empty Strings
+  - Check if user has email
+  8.x-3.0.10: null
+  8.x-3.0.9:
   - missing alt tag
   - dont need to use article here
-  8.x-2.0.47:
+  8.x-3.0.8:
+  - fixed tests
+  - Clear up duplicate emails
+  - Block duplicate emails
+  8.x-3.0.7:
+  - Refresh token logging improvements (#529)
+  8.x-3.0.6:
+  - log when 'drush listen' has processed an event (#528)
+  8.x-3.0.5: null
+  8.x-3.0.4: null
+  8.x-3.0.3:
   - php fix
+  8.x-3.0.2:
   - missing mock data
+  8.x-3.0.1: null
   8.x-2.0.46:
   - Updated Interface
   - Behat test working

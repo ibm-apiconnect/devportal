@@ -27,6 +27,7 @@ use Drupal\ibm_apim\Exception\ModuleInstallationBlocked;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Implementation of hook_init().
@@ -639,7 +640,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         }
       }
       // blocklist some modules
-      $moduleBlocklist = \Drupal::config('ibm_apim.settings')->get('module_blocklist');
+      $moduleBlocklist = \Drupal::service('ibm_apim.site_config')->getBlockList();
       if (isset($moduleBlocklist) && !empty($moduleBlocklist)) {
         foreach ($form['modules'] as $modulePackage => $modules) {
           if (!is_array($modules)) {
@@ -666,8 +667,24 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       }
       $form['actions']['submit']['#value'] = t('Enable');
 
+
+      foreach ($form['modules'] as $modulePackage => $modules) {
+        if (!is_array($modules)) {
+          continue;
+        }
+        foreach ($modules as $moduleName => $module_info) {
+          if (is_array($module_info) && array_key_exists('description', $module_info) && is_array($module_info['description'])) {
+            $outputstring = $module_info['description']['#markup'];
+            if ($outputstring instanceof TranslatableMarkup && $outputstring->render() === "") {
+              $form['modules'][$modulePackage][$moduleName]['description']['#markup'] .= $module_info['name']['#markup'];
+            }
+          }
+        }
+      }
+
       $existingModulesMsg = $form['modules']['#prefix'] ?? '';
       $form['modules']['#prefix'] = $existingModulesMsg . '<p>' . t('Below is a list of installed modules. Modules that are installed and enabled are shown with a selected check box. To enable a module, select the check box against the module name, and click Enable.') . '</p>';
+
 
       break;
     case 'system_modules_uninstall':
@@ -823,17 +840,19 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       ];
       break;
     case 'ban_ip_form':
-      $ipBanEnabled = (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true);
+      $ipBanEnabled = (bool) \Drupal::state()->get('ibm_apim.ip_ban_enabled', TRUE);
       if (!$ipBanEnabled) {
-        \Drupal::messenger()->addWarning(t('IP based security is currently disabled for this portal service so IP address bans will not work.'));
+        \Drupal::messenger()
+          ->addWarning(t('IP based security is currently disabled for this portal service so IP address bans will not work.'));
       }
       break;
     case 'restrict_by_ip_general_settings':
     case 'restrict_by_ip_login_settings':
     case 'restrict_by_ip_role_settings':
-      $ipBanEnabled = (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true);
+      $ipBanEnabled = (bool) \Drupal::state()->get('ibm_apim.ip_ban_enabled', TRUE);
       if (!$ipBanEnabled) {
-        \Drupal::messenger()->addWarning(t('IP based security is currently disabled for this portal service so IP based restrictions will not work.'));
+        \Drupal::messenger()
+          ->addWarning(t('IP based security is currently disabled for this portal service so IP based restrictions will not work.'));
       }
       break;
   }
@@ -865,7 +884,7 @@ function ibm_apim_local_tasks_alter(&$local_tasks) {
  * @throws \Drupal\ibm_apim\Exception\ModuleInstallationBlocked
  */
 function ibm_apim_module_preinstall($module) {
-  $moduleBlocklist = \Drupal::config('ibm_apim.settings')->get('module_blocklist');
+  $moduleBlocklist = \Drupal::service('ibm_apim.site_config')->getBlockList();
   if (!$moduleBlocklist || !in_array($module, $moduleBlocklist, FALSE)) {
     return;
   }
@@ -1448,13 +1467,31 @@ function ibm_apim_cron() {
 }
 
 /**
+ * Preprocess variables for table templates.
+ */
+function ibm_apim_preprocess_table(&$variables) {
+  if (function_exists('ibm_apim_entry_trace')) {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+  }
+
+  // accessibility fix for the pending module updates page
+  if (isset($variables['attributes']['class']) && in_array('update', array_values($variables['attributes']['class']), TRUE)) {
+    $variables['attributes']['role'] = 'presentation';
+  }
+
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+  }
+}
+
+/**
  * @param $now
  *
  * @return bool
  */
 function _ibm_apim_shouldRun($now): bool {
   $scheduled = \Drupal::config('ibm_apim.settings')->get('daily_cron_time');
-  if ($scheduled === null) {
+  if ($scheduled === NULL) {
     $scheduled = '05:00';
   }
   $timezone = new \DateTimeZone(\Drupal::config('system.date')->get('timezone')['default']);;
@@ -1470,4 +1507,39 @@ function _ibm_apim_shouldRun($now): bool {
     $next->modify('+1 day');
   }
   return $next->getTimestamp() <= $now;
+}
+
+function ibm_apim_preprocess_input__radio(&$variables) {
+  if (isset($variables['attributes']['aria-describedby'])) {
+    unset($variables['attributes']['aria-describedby']);
+  }
+}
+
+function ibm_apim_preprocess_input__checkbox(&$variables) {
+  if (isset($variables['attributes']['aria-describedby'], $variables["element"]["#attributes"]["name"])) {
+    unset($variables['attributes']['aria-describedby']);
+  }
+}
+
+function ibm_apim_preprocess_form_element(&$variables) {
+  if (isset($variables['label'], $variables['element']['#type'])) {
+    $type = $variables['element']['#type'];
+    $variables['label']['#element_type'] = $type;
+  }
+  if (isset($type, $variables['element']['#array_parents']) && $type == 'textarea' && in_array('widget',$variables['element']['#array_parents']) ) {
+    $variables['label']['#is_widget'] = TRUE;
+  }
+}
+
+function ibm_apim_preprocess_form_element_label(&$variables) {
+  if (!empty($variables['element']['#is_widget']) || $variables['element']['#element_type'] === 'item') {
+    unset($variables['element']['#attributes']['for']);
+    unset($variables['attributes']['for']);
+  }
+}
+
+function ibm_apim_preprocess_block(&$variables) {
+  if (isset($variables['plugin_id'], $variables["attributes"]["role"]) && $variables['plugin_id'] == 'help_block') {
+    unset($variables["attributes"]["role"]);
+  }
 }

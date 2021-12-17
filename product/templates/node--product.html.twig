@@ -172,6 +172,15 @@
               {% endfor %}
             </div>
           {% endif %}
+          {% if custom_extensions is defined and custom_extensions is not empty %}
+            <div class="productCustomAttributes">
+              {% for keyName, keyValue in custom_extensions %}
+                <div class="productCustomAttribute {{ keyName|clean_class }}">
+                  <span class="productCustomAttributeKey">{{ keyName }}</span>: <span class="productCustomAttributeValue">{{ keyValue }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
           <div class="field apis">
             <h3 class="field__label label">{{ 'APIs'|t }}</h3>
             <ul class="apicProductApiList">

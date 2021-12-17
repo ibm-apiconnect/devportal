@@ -1,0 +1,5 @@
+services:
+  apic_app.commands:
+    class: Drupal\apic_app\Commands\ApicAppCommands
+    tags:
+      - { name: drush.command }

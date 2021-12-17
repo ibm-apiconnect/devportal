@@ -11,6 +11,7 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
+use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 
 /**
@@ -105,6 +106,64 @@ function connect_theme_preprocess_field(&$variables) {
 
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_exit_trace(__FUNCTION__, NULL);
+  }
+}
+
+/**
+ * Add aria-labelledby to selects and the cshs field
+ *
+ * @param $variables
+ */
+function connect_theme_preprocess_form_element(&$variables) {
+  if (isset($variables['element']['#type'], $variables['element']['#id'])) {
+    $type = $variables['element']['#type'];
+    $variables['label']['#element_type'] = $type;
+    if (($type === 'cshs' || $type === 'select') && !isset($variables['attributes']['aria-labelledby'])) {
+      $variables['label']['#attributes']['id'] = $variables['element']['#id'] . '-label';
+      // special case for CSHS fields
+      if ($variables['element']['#id'] === 'edit-term-node-tid-depth') {
+        $variables['label']['#attributes']['id'] = 'edit-term-node-tid-depth--level-0-label';
+        $variables['label']['#attributes']['for'] = 'edit-term-node-tid-depth--level-0';
+      }
+    }
+  }
+}
+
+/**
+ * Set the ID on label fields so that aria-labelledby can pick it up
+ *
+ * @param $variables
+ */
+function connect_theme_preprocess_form_element_label(&$variables) {
+  if (isset($variables['element']['#attributes']['for'])) {
+    $for = $variables['element']['#attributes']['for'];
+  } elseif (isset($variables['attributes']['for'])) {
+    $for = $variables['attributes']['for'];
+  }
+  if (isset($for) && !isset($variables['attributes']['id'])) {
+    $variables['attributes']['id'] = $for . '-label';
+    // special case for CSHS fields
+    if ($for === 'edit-term-node-tid-depth') {
+      $variables['attributes']['id'] = 'edit-term-node-tid-depth--level-0-label';
+      $for = 'edit-term-node-tid-depth--level-0';
+    }
+  }
+  if (isset($for)) {
+    $variables['element']['#attributes']['for'] = $for;
+  }
+  if ($variables['element']['#element_type'] === 'item') {
+    unset($variables['element']['#attributes']['for']);
+    unset($variables['attributes']['for']);
+  }
+}
+
+/**
+ * @param $variables
+ */
+function connect_theme_preprocess_select(&$variables) {
+  // dont include CSHS fields here because they're special and the select is generated from JS
+  if (isset($variables['element']['#id']) && !isset($variables['attributes']['aria-labelledby']) && $variables['element']['#id'] !== 'edit-term-node-tid-depth') {
+    $variables['attributes']['aria-labelledby'] = $variables['element']['#id'] . '-label';
   }
 }
 
@@ -305,7 +364,31 @@ function connect_theme_preprocess_form_user_reset_pwd(&$variables) {
  */
 function connect_theme_preprocess_page_title(&$variables) {
   $node = \Drupal::request()->attributes->get('node');
-  if ($node && $node->bundle() === 'forum') {
+  if ($node instanceof NodeInterface && $node->bundle() === 'forum') {
     $variables['title'] = t('Forums');
+  }
+}
+
+/**
+ * Implements hook_preprocess_radios().
+ */
+function connect_theme_preprocess_radios(&$variables) {
+    if (!isset($variables['attributes']['role'])) {
+      $variables['attributes']['role'] = "radiogroup";
+    }
+    if (!isset($variables['attributes']['aria-label']) && isset($variables['element']['#title'])) {
+      $variables['attributes']['aria-label'] = $variables['element']['#title'];
+    }
+}
+
+function connect_theme_preprocess_input__radio(&$variables) {
+    if (isset($variables['attributes']['aria-describedby'])) {
+      unset($variables['attributes']['aria-describedby']);
+    }
+}
+
+function connect_theme_preprocess_input__checkbox(&$variables) {
+  if (isset($variables['attributes']['aria-describedby'], $variables["element"]["#attributes"]["name"])) {
+    unset($variables['attributes']['aria-describedby']);
   }
 }

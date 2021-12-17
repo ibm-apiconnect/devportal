@@ -12,8 +12,7 @@
 
 namespace Drupal\ibm_apim\Service;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Config\ImmutableConfig;
+use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Extension\ModuleInstallerInterface;
 use Drupal\ibm_apim\Service\Interfaces\ApicModuleInterface;
@@ -42,9 +41,9 @@ class ApicModuleService implements ApicModuleInterface {
   private ModuleInstallerInterface $moduleInstaller;
 
   /**
-   * @var \Drupal\Core\Config\ImmutableConfig
+   * @var \Drupal\ibm_apim\Service\SiteConfig
    */
-  private ImmutableConfig $ibmSettingsConfig;
+  private SiteConfig $site_config;
 
   /**
    * @var \Psr\Log\LoggerInterface
@@ -55,13 +54,13 @@ class ApicModuleService implements ApicModuleInterface {
                               string $site_path,
                               ModuleHandlerInterface $module_handler,
                               ModuleInstallerInterface $module_installer,
-                              ConfigFactoryInterface $config_factory,
+                              SiteConfig $site_config,
                               LoggerInterface $logger) {
     $this->utils = $utils;
     $this->sitePath = $site_path;
     $this->moduleHandler = $module_handler;
     $this->moduleInstaller = $module_installer;
-    $this->ibmSettingsConfig = $config_factory->get('ibm_apim.settings');
+    $this->siteConfig = $site_config;
     $this->logger = $logger;
   }
 
@@ -125,7 +124,7 @@ class ApicModuleService implements ApicModuleInterface {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__);
     }
-    $block_list =   $this->ibmSettingsConfig->get('module_blocklist');
+    $block_list = $this->siteConfig->getBlockList();
     $uninstall_success = TRUE;
 
     // initially check if any of the modules are running, and uninstall if so.

@@ -27,3 +27,14 @@ if (!file_exists(__DIR__ . '/css')) {
   mkdir(__DIR__ . '/css', 0755, TRUE);
 }
 file_put_contents(__DIR__ . '/css/style.css', $cssOut);
+
+$scss = new Compiler();
+
+$scss->addImportPath('scss/');
+
+$cssOut = $scss->compile('@import "mail.scss";');
+
+if (!file_exists(__DIR__ . '/css')) {
+  mkdir(__DIR__ . '/css', 0755, TRUE);
+}
+file_put_contents(__DIR__ . '/css/mail.css', $cssOut);

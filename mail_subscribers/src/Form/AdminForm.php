@@ -51,7 +51,7 @@ class AdminForm extends ConfigFormBase {
     $form['from']['from_name'] = [
       '#type' => 'textfield',
       '#title' => t('Sender\'s name'),
-      '#description' => t("Enter the sender's human readable name."),
+      '#description' => t("Enter the sender's human readable name. Note: this value is not used by the APIC Email Provider, it will use the From address configured in the API Manager instead."),
       '#default_value' => $fromName ?? $siteConfig->get('name'),
       '#maxlen' => 255,
     ];
@@ -59,7 +59,7 @@ class AdminForm extends ConfigFormBase {
     $form['from']['from_mail'] = [
       '#type' => 'textfield',
       '#title' => t('Sender\'s email'),
-      '#description' => t("Enter the sender's email address."),
+      '#description' => t("Enter the sender's email address. Note: this value is not used by the APIC Email Provider, it will use the From address configured in the API Manager instead."),
       '#required' => TRUE,
       '#default_value' => $fromMail ?? $siteConfig->get('mail'),
       '#maxlen' => 255,

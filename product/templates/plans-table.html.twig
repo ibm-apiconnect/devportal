@@ -57,11 +57,28 @@
           </div>
         {% endif %}
 
+        {% if plan.custom is defined and plan.custom is not empty %}
+          <div class="planCustomAttributes">
+            {% for keyName, keyValue in plan.custom %}
+              <div class="planCustomAttribute {{ keyName|clean_class }}">
+                <span class="planCustomAttributeKey">{{ keyName }}</span>: <span class="planCustomAttributeValue">{{ keyValue }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
         {% if subscribable %}
-          <a class="btn btn-sm btn-primary"
-             href="{{ path('ibm_apim.subscription_wizard.noplan') }}/?productId={{ node.id }}&planTitle={{ plan.data.title }}&planId={{ planid }}">
-            {{ 'Select'|t }}
-          </a>
+          {% if elements['#view_mode'] == 'subscribewizard' %}
+            <a class="btn btn-sm btn-primary"
+              href="{{ path('ibm_apim.subscription_wizard') }}/chooseapp?productId={{ node.id }}&planTitle={{ plan.data.title }}&planId={{ planid }}">
+              {{ 'Select'|t }}
+            </a>
+          {% else %}
+            <a class="btn btn-sm btn-primary"
+              href="{{ path('ibm_apim.subscription_wizard.noplan') }}/?productId={{ node.id }}&planTitle={{ plan.data.title }}&planId={{ planid }}">
+              {{ 'Select'|t }}
+            </a>
+          {% endif %}
         {% else %}
           {% if content.product_state[0].value is defined and content.product_state[0].value is same as('deprecated') %}
             {% set subscribeButtonAltText = 'This plan is deprecated'|t %}
@@ -123,6 +140,15 @@
               <div class="body-short-01">
                 {{ plan.data.description|markdown }}
               </div>
+              {% if plan.custom is defined and plan.custom is not empty %}
+                <div class="planCustomAttributes">
+                  {% for keyName, keyValue in plan.custom %}
+                    <div class="planCustomAttribute {{ keyName|clean_class }}">
+                      <span class="planCustomAttributeKey">{{ keyName }}</span>: <span class="planCustomAttributeValue">{{ keyValue }}</span>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
               <div class="planDetail--subscribe">
                 {% if subscribable %}
                   <a class="btn btn-sm btn-primary"

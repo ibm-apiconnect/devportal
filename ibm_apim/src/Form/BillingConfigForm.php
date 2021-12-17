@@ -130,6 +130,9 @@ class BillingConfigForm extends ConfigFormBase {
       ->save();
 
     parent::submitForm($form, $form_state);
+
+    // clear all caches
+    drupal_flush_all_caches();
   }
 
 }

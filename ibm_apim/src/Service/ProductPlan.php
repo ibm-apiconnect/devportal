@@ -253,7 +253,7 @@ class ProductPlan {
 
     $nodes = [];
 
-    foreach ($plan['apis'] as $key => $planApi) {     
+    foreach ($plan['apis'] as $key => $planApi) {
       $apiSafeName = Html::getClass($productApis[$key]['name']);
 
       $api = $apiNodeMap[$apiSafeName];
@@ -343,7 +343,8 @@ class ProductPlan {
         }
         elseif (isset($apiDocument['paths'])) {
           $apiNode['resources'] = $this->generateLimitsForPaths($apiDocument['paths'], $planRateLimit, $planRateData);
-        } else {
+        }
+        else {
           $apiNode['resources'] = [];
         }
       }
@@ -404,11 +405,37 @@ class ProductPlan {
         $planArray['nodes'] = $this->processAllProductApis($apiList, $lang_code, $parsedRateLimit['planRateLimit'], $tooltip);
       }
     }
+    $planArray['custom'] = $this->parseCustomExtensions($plan);
 
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__FUNCTION__, NULL);
     }
     return $planArray;
+  }
+
+  /**
+   * Include any custom attributes in the plan in the array fed to twig
+   *
+   * @param $plan
+   *
+   * @return array
+   */
+  public function parseCustomExtensions($plan): array {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__FUNCTION__, NULL);
+    }
+    $returnValue = [];
+    foreach (array_keys($plan) as $key) {
+      if (strpos($key, 'x-') === 0) {
+        $keyName = substr($key, strlen('x-'));
+        $returnValue[$keyName] = $plan[$key];
+      }
+    }
+
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__FUNCTION__, NULL);
+    }
+    return $returnValue;
   }
 
   /**
@@ -563,7 +590,7 @@ class ProductPlan {
       ibm_apim_entry_trace(__FUNCTION__, NULL);
     }
 
-    $billingText = ''.$this->translationManager->translate('Free');
+    $billingText = '' . $this->translationManager->translate('Free');
     $trialPeriodText = '';
 
     if (isset($billing['billing'], $billing['currency'])) {
@@ -573,14 +600,14 @@ class ProductPlan {
       $price = $currencyFormatter->format($billing['price'], $billing['currency']);
       // special case to avoid displaying $0.00
       if (!((float) $billing['price'] > 0)) {
-        $billingText = ''.$this->translationManager->translate('Free');
+        $billingText = '' . $this->translationManager->translate('Free');
       }
       else {
-        $billingText = ''.$this->translationManager->formatPlural($billing['period'], '@price per @period-unit', '@price per @period @period-unit', [
-          '@price' => $price,
-          '@period' => $billing['period'],
-          '@period-unit' => $this->timePeriodLookup($billing['period'], $billing['period-unit']),
-        ]);
+        $billingText = '' . $this->translationManager->formatPlural($billing['period'], '@price per @period-unit', '@price per @period @period-unit', [
+            '@price' => $price,
+            '@period' => $billing['period'],
+            '@period-unit' => $this->timePeriodLookup($billing['period'], $billing['period-unit']),
+          ]);
       }
       if (isset($billing['trial-period'], $billing['trial-period-unit'])) {
         // special case to avoid displaying (0 days trial period)
@@ -589,10 +616,10 @@ class ProductPlan {
         }
         else {
           $trialPeriodText .= $this->translationManager
-              ->formatPlural($billing['trial-period'], ' (@length @period-unit trial period)', ' (@length @period-unit trial period)', [
-                '@length' => $billing['trial-period'],
-                '@period-unit' => $this->timePeriodLookup($billing['trial-period'], $billing['trial-period-unit']),
-              ]);
+            ->formatPlural($billing['trial-period'], ' (@length @period-unit trial period)', ' (@length @period-unit trial period)', [
+              '@length' => $billing['trial-period'],
+              '@period-unit' => $this->timePeriodLookup($billing['trial-period'], $billing['trial-period-unit']),
+            ]);
         }
       }
     }
@@ -603,7 +630,7 @@ class ProductPlan {
 
     return [
       'billingText' => $billingText,
-      'trialPeriodText' => $trialPeriodText
+      'trialPeriodText' => $trialPeriodText,
     ];
   }
 

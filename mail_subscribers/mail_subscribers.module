@@ -48,10 +48,13 @@ function mail_subscribers_mail($key, &$message, $params) {
     $message['subject'] = $params['subject'];
 
     // Set the body.
-    $message['body'][0] = Markup::create($params['body']);
+    $message['body'] = $params['body'];
 
     // Add additional headers.
-    $message['headers'] += $params['headers'];
+    if (!array_key_exists('headers', $message)) {
+      $message['headers'] = [];
+    }
+    $message['headers'] = array_merge($message['headers'], $params['headers']);
   }
 }
 

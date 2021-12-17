@@ -1,0 +1,20 @@
+--- core/themes/seven/templates/classy/form/form-element.html.twig	2021-11-17 17:45:56.946883668 +0000
++++ core/themes/seven/templates/classy/form/form-element.html.twig	2021-11-17 17:45:43.630830273 +0000
+@@ -64,7 +64,7 @@
+   ]
+ %}
+ <div{{ attributes.addClass(classes) }}>
+-  {% if label_display in ['before', 'invisible'] %}
++  {% if label_display == 'before' %}
+     {{ label }}
+   {% endif %}
+   {% if prefix is not empty %}
+@@ -79,7 +79,7 @@
+   {% if suffix is not empty %}
+     <span class="field-suffix">{{ suffix }}</span>
+   {% endif %}
+-  {% if label_display == 'after' %}
++  {% if label_display in ['invisible','after'] %}
+     {{ label }}
+   {% endif %}
+   {% if errors %}

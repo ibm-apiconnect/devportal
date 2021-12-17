@@ -17,7 +17,7 @@
 {{ attach_library('ibm_apim/core') }}
 {{ attach_library('apic_app/basic') }}
 <div class="apicSubAppCard">
-  <button id="node-{{ node.id }}" {{ attributes.addClass(classes) }} type="submit" name="selectedApplication"
+  <button id="node-{{ node.id }}" {{ attributes.addClass(classes).removeAttribute('role') }} type="submit" name="selectedApplication"
           value="{{ node.id }}" aria-label="{{ node.title[0].value }}">
     <div class="apicAppCard">
       {% if content.application_image is defined and content.application_image|render|trim is not empty %}

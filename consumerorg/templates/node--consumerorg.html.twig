@@ -101,7 +101,7 @@
         <div class="customFields">
           {% for custom_field in custom_fields %}
             <div class="{{ custom_field|clean_class }}">
-              {{ myorg[custom_field] }}
+              {{ content[custom_field] }}
             </div>
           {% endfor %}
         </div>

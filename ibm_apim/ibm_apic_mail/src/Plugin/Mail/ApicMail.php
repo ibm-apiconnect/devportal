@@ -11,18 +11,18 @@
 
 namespace Drupal\ibm_apic_mail\Plugin\Mail;
 
-use Drupal\Component\Render\MarkupInterface;
-use Drupal\Component\Utility\Html;
-use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Mail\MailInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\ibm_apim\ApicRest;
-use Drupal\ibm_apim\Rest\Exception\RestResponseParseException;
 use Html2Text\Html2Text;
+use Pelago\Emogrifier\CssInliner;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Throwable;
@@ -59,18 +59,34 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
   protected MessengerInterface $messenger;
 
   /**
+   * The theme handler service.
+   *
+   * @var \Drupal\Core\Extension\ThemeHandlerInterface
+   */
+  protected ThemeHandlerInterface $themeHandler;
+
+  /**
+   * @var \Drupal\Core\Config\ConfigFactory
+   */
+  protected ConfigFactory $configFactory;
+
+  /**
    * ApicMail constructor.
    *
    * @param \Psr\Log\LoggerInterface $logger
    * @param \Drupal\Core\Render\RendererInterface $renderer
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   * @param \Drupal\Core\Extension\ThemeHandlerInterface $themeHandler
+   * @param \Drupal\Core\Config\ConfigFactory $configFactory
    */
-  public function __construct(LoggerInterface $logger, RendererInterface $renderer, ModuleHandlerInterface $module_handler, MessengerInterface $messenger) {
+  public function __construct(LoggerInterface $logger, RendererInterface $renderer, ModuleHandlerInterface $module_handler, MessengerInterface $messenger, ThemeHandlerInterface $themeHandler, ConfigFactory $configFactory) {
     $this->logger = $logger;
     $this->renderer = $renderer;
     $this->moduleHandler = $module_handler;
     $this->messenger = $messenger;
+    $this->themeHandler = $themeHandler;
+    $this->configFactory = $configFactory;
   }
 
   /**
@@ -81,7 +97,9 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
       $container->get('logger.channel.ibm_apic_mail'),
       $container->get('renderer'),
       $container->get('module_handler'),
-      $container->get('messenger')
+      $container->get('messenger'),
+      $container->get('theme_handler'),
+      $container->get('config.factory')
     );
   }
 
@@ -96,23 +114,64 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
    */
   public function format(array $message): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $message = $this->massageMessageBody($message);
+
+    $module = $message['module'];
+    $key = $message['key'];
+    $to = $message['to'];
+    $subject = $message['subject'];
+    $body = $message['body'];
+    $line_endings = Settings::get('mail_line_endings', PHP_EOL);
+    // some modules send an array of bodies so merge them
+    if (is_array($body)) {
+      $body = implode($line_endings, $body);
+    }
+    // avoid creating Markup of Markup since the mail subscriber wizard can loop round twice
+    if (strpos($body, '<meta http-equiv') === FALSE) {
+      $body = Markup::create(trim($body));
+    }
 
     // Get applicable format.
     $applicable_format = 'text/html';
 
     // Theme message if format is set to be HTML.
     if ($applicable_format === 'text/html') {
-      $converter = new Html2Text($message['body']);
+      $converter = new Html2Text($body);
       $message['plain'] = $converter->getText();
 
-      if ($message['body'] === NULL) {
-        $message['body'] = '';
-      }
-      else {
-        $message['body'] = $message['body']->__toString();
+      if ($body === NULL) {
+        $body = '';
       }
     }
+
+    $body = [
+      '#theme' => 'ibm_apic_mail_message',
+      '#module' => $module,
+      '#key' => $key,
+      '#recipient' => $to,
+      '#subject' => $subject,
+      '#body' => $body,
+    ];
+
+    // Check for the existence of a mail.css file in the default theme css folder.
+    $theme = $this->themeHandler->getDefault();
+    $mailstyle = drupal_get_path('theme', $theme) . '/css/mail.css';
+    if (is_file($mailstyle)) {
+      $css = file_get_contents($mailstyle);
+      $body['#css'] = $css;
+    }
+    // check for theme logo file
+    // need to explicitly feed in the default theme to avoid it using seven for admins
+    $default_theme = $this->configFactory->get('system.theme')->get('default');
+    $body['#logo'] = theme_get_setting('logo.url', $default_theme);
+
+    // avoid creating Markup of Markup since the mail subscriber wizard can loop round twice
+    if (!$body['#body'] instanceof Markup || strpos($body['#body']->__toString(), '<html>') === FALSE) {
+      $body = $this->renderer->renderPlain($body);
+      // inline any CSS so it works in gmail
+      $body = CssInliner::fromHtml($body)->inlineCss()->render();
+    }
+
+    $message['body'] = $body;
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $message;
@@ -144,42 +203,6 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     return $returnValue;
-  }
-
-  /**
-   * Massages the message body into the format expected for rendering.
-   *
-   * @param array $message
-   *   The message.
-   *
-   * @return array
-   */
-  public function massageMessageBody(array $message): array {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    // Get default mail line endings and merge all lines in the e-mail body
-    // separated by the mail line endings. Keep Markup objects and escape others
-    // and then treat the result as safe markup.
-    $line_endings = Settings::get('mail_line_endings', PHP_EOL);
-    $applicable_format = 'text/html';
-    $filter_format = filter_fallback_format();
-    $message['body'] = Markup::create(implode($line_endings, array_map(function ($body) use ($applicable_format, $filter_format) {
-      // If the body contains no html tags but the applicable format is HTML,
-      // we can assume newlines will need be converted to <br>.
-      if ($applicable_format === 'text/html' && mb_strlen(strip_tags($body)) === mb_strlen($body)) {
-        // The default fallback format is 'plain_text', which escapes markup,
-        // converts new lines to <br> and converts URLs to links.
-        $build = [
-          '#type' => 'processed_text',
-          '#text' => $body,
-          '#format' => $filter_format,
-        ];
-        $body = $this->renderer->renderPlain($build);
-      }
-      // If $item is not marked safe then it will be escaped.
-      return $body instanceof MarkupInterface ? $body : Html::escape($body);
-    }, $message['body'])));
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    return $message;
   }
 
   /**

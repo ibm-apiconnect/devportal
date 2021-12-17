@@ -1,8 +1,8 @@
 mail_subscribers.settings:
   title: 'Email subscriber settings'
   route_name: mail_subscribers.settings
-  parent: user.admin_index
-  description: 'Configuration for the subscriber email wizards.'
+  parent: system.admin_config_system
+  description: 'Configuration for the email subscriber wizard.'
   weight: -11
 
 mail_subscribers.startWizard:

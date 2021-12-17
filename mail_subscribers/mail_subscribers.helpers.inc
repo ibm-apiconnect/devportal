@@ -136,45 +136,12 @@ function _mail_subscribers_prepare_mail(array &$message, $plain_format = TRUE) {
    */
   $key = 'direct';
 
-  // Build message parameters.
-  $params = [];
-
-  $params['from_name'] = $from_name;
-  $params['from_mail'] = $from_mail;
-  $params['from_formatted'] = _mail_subscribers_format_address($from_mail, $from_name);
-
-  $params['to_name'] = $to_name;
-  $params['to_mail'] = $to_mail;
-  $to_mail_formatted = [];
-  foreach (explode(',', $to_mail) as $addr) {
-    $to_mail_formatted[] = _mail_subscribers_format_address($addr, $to_name);
-  }
-  $params['to_formatted'] = implode(', ', $to_mail_formatted);
-  $params['subject'] = $subject;
-  $params['body'] = $body;
-  $params['headers'] = $headers;
-  $params['format'] = $headers['Content-Type'];
-
-  $mimeMail = \Drupal::moduleHandler()->moduleExists('mimemail');
-
-  // Call Drupal standard mail function, but without sending.
-  $mail = \Drupal::service('plugin.manager.mail')
-    ->mail('mail_subscribers', $key, $params['to_formatted'], \Drupal::languageManager()
-      ->getDefaultLanguage()
-      ->getId(), $params, $params['from_formatted'], FALSE);
-
-  // Add additional Mime Mail post processing.
-  if ($mimeMail) {
-    // We want to spool the Subject decoded.
-    $mail['subject'] = Unicode::mimeHeaderDecode($mail['subject']);
-  }
-
   // Updating message with data from generated mail
-  $message['to_mail'] = $mail['to'];
-  $message['from_mail'] = $mail['from'];
-  $message['subject'] = $mail['subject'];
-  $message['body'] = $mail['body'];
-  $message['headers'] = serialize($mail['headers']);
+  $message['to_mail'] = $to_mail;
+  $message['from_mail'] = $from_mail;
+  $message['subject'] = $subject;
+  $message['body'] = $body;
+  $message['headers'] = $headers;
 }
 
 /**

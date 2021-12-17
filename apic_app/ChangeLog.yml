@@ -1,197 +1,307 @@
 changes:
-  8.x-2.6.11:
-  - make sure view password is loaded correctly
-  8.x-2.6.10:
-  - Fix subscriptions
-  8.x-2.6.9:
-  - need to ensure > 0 too
-  8.x-2.6.8:
-  - move devel settings to their own config object
-  8.x-2.6.7: null
-  8.x-2.6.6:
-  - get rid of coding error in intellij
-  - another fix needed for strtotime
-  8.x-2.6.5:
-  - typo
-  - defend against trying to put value greater than max int
-  - defend against trying to put value greater than max int
-  8.x-2.6.4:
-  - defend against trying to put value greater than max int
-  8.x-2.6.3:
-  - Switch to catching Throwable
-  8.x-2.6.2:
-  - should be type=button to stop refresh
-  8.x-2.6.1: null
-  8.x-2.6.0:
-  - update version 8.x-2.5.0 -> 8.x-2.6.0
-  8.x-2.4.18:
+  8.x-3.3.7:
+  - use correct named upgrade functions
+  8.x-3.3.6:
+  - Fixed access checks and css (#283)
+  8.x-3.3.5:
+  - Added redirects for application create (#280)
+  8.x-3.3.4:
+  - git -> gitci
+  8.x-3.3.3:
+  - refactor Jenkinsfile for the new portal.groovy
+  8.x-3.3.2: null
+  8.x-3.3.1:
+  - Update apic_app.info.yml
+  8.x-3.2.0:
+  - update version 8.x-3.1.59 -> 8.x-3.2.0
+  8.x-3.1.58:
   - make modals look how they should!
-  8.x-2.4.17:
+  8.x-3.1.57:
   - clear caches when subscribe and unsubscribe
-  8.x-2.4.16: null
-  8.x-2.4.15: null
-  8.x-2.4.14:
-  - delete subs for a product when product deleted
-  8.x-2.4.13:
+  8.x-3.1.56:
+  - More event log updates
+  8.x-3.1.55:
+  - avoid stacktrace in test run
+  8.x-3.1.54:
+  - need to clear cache
+  - need to clear cache when update app
+  8.x-3.1.53:
+  - dont show links to viewers that cant use them
+  8.x-3.1.52:
+  - Ensure event logs are created or updated correctly (#261)
+  8.x-3.1.51:
+  - dont show notifications link to admin
+  8.x-3.1.50:
+  - New indexes v10.0 (#259)
+  8.x-3.1.49:
+  - quote handling wrong - just let twig handle it
+  8.x-3.1.48:
+  - fix missing quotes in twig template
+  8.x-3.1.47: null
+  8.x-3.1.46:
+  - feat Introduce methods to filter applications by subscriptions (#252) (#253)
+  8.x-3.1.45:
+  - invalidate caches
+  8.x-3.1.44:
+  - feat add helper text to subscription blocks (#249) (#251)
+  8.x-3.1.43:
+  - missing app delete event
+  8.x-3.1.42:
+  - Tempmerge (#250)
+  8.x-3.1.41:
+  - very small tweaks to buttons on multi-value fields
+  8.x-3.1.40:
+  - selected should be same line height as non-selected
+  8.x-3.1.39: null
+  8.x-3.1.38:
+  - fix css width on app page
+  - Tabtitle (#248)
+  8.x-3.1.37:
+  - use chunking
+  8.x-3.1.36:
+  - 502 subscribe rename v10 (#247)
+  8.x-3.1.35: null
+  8.x-3.1.34:
+  - Services (#245)
+  8.x-3.1.33: null
+  8.x-3.1.32:
+  - refactor SubscriptionService to be a proper service
+  8.x-3.1.31:
+  - add function to list the credentials in the current consumer org
+  8.x-3.1.30:
+  - Refactor subscription event log
+  8.x-3.1.29:
+  - Refactor subscription create / update
+  8.x-3.1.28:
+  - use "IBM API Developer Portal" instead of API Connect
+  8.x-3.1.27:
+  - need to use productselect routing for apis
+  8.x-3.1.26: null
+  8.x-3.1.25:
+  - change app status terminology (#239)
+  8.x-3.1.24:
+  - Fix app subscription cache
+  8.x-3.1.23: null
+  8.x-3.1.22: null
+  8.x-3.1.21:
+  - tweak to isset line to avoid error
+  - handle consumer_org_url in one payload but org_url in another
+  8.x-3.1.20:
+  - fix css for suspended app
+  8.x-3.1.19:
+  - need to use string not null
+  8.x-3.1.18: null
+  8.x-3.1.17:
+  - event service has moved
+  - rename activity feed Notifications
+  - wire up more events
+  8.x-3.1.16:
+  - wire up subscription events
+  8.x-3.1.15:
+  - wire up cred reset and resetSecret
+  8.x-3.1.14:
+  - wire up cred create, update, delete
+  8.x-3.1.13:
+  - ensure timestamp is int
+  - Make sure there is an App create event and not just an update
+  8.x-3.1.12:
+  - View and view based ACL
+  8.x-3.1.11:
+  - title notifications tab routing
+  - rename actvity feed
+  8.x-3.1.10: null
+  8.x-3.1.9:
+  - missing changes
+  - fix up the activity feed tabs for org and app
+  8.x-3.1.8: null
+  8.x-3.1.7:
+  - fix rearrange notification in application
+  - feat add notification for events in application metrics (#225)
+  8.x-3.1.6: null
+  8.x-3.1.5:
+  - use void
+  8.x-3.1.4:
+  - Subscription service webhook improvements
+  8.x-3.1.3:
+  - add consumer org to the cache tag list
+  8.x-3.1.2: null
+  8.x-3.1.1:
+  - stop running strtotime twice
+  - typo
+  - need to use timestamp field type for timestamps!
+  - fix up app tests
+  - fix up app tests
+  - store apic created_at and updated_at timestamps (#220)
+  - store apic created_at and updated_at timestamps
+  8.x-3.1.0:
+  - update version 8.x-3.0.85 -> 8.x-3.1.0
+  8.x-3.0.84:
   - classes dont exist
   - classes dont exist
-  8.x-2.4.12:
+  8.x-3.0.83:
   - use x path alias from subscriptions if present (#223)
-  8.x-2.4.11:
+  8.x-3.0.82:
   - add link to product title (#222)
-  8.x-2.4.10: null
-  8.x-2.4.9:
+  8.x-3.0.81:
   - deal with long app names (#221)
+  8.x-3.0.80:
   - send app_create down the create path too
-  8.x-2.4.8:
+  8.x-3.0.79:
   - Add drupal core compatibility info
-  8.x-2.4.7:
+  8.x-3.0.78:
   - handle placeholders being disabled
-  8.x-2.4.6:
+  8.x-3.0.77:
   - Add tokens
-  8.x-2.4.5:
+  8.x-3.0.76:
   - Copyright statements for 2021
-  8.x-2.4.4:
+  8.x-3.0.75:
   - fix error handling in drush commands
-  8.x-2.4.3:
+  8.x-3.0.74:
   - drush commands to get individual nodes
-  8.x-2.4.2:
+  8.x-3.0.73:
   - ensure custom fields are actual fields
-  8.x-2.4.1:
+  8.x-3.0.72:
   - Fix subscription table layout
-  8.x-2.4.0:
-  - update version: 8.x-2.3.24 -> 8.x-2.4.0
-  8.x-2.3.23: null
-  8.x-2.3.22:
+  8.x-3.0.71: null
+  8.x-3.0.70: null
+  8.x-3.0.69: null
+  8.x-3.0.68:
   - need title to be translatable
-  8.x-2.3.21:
+  8.x-3.0.67:
   - missing upgrade function maybe?
-  8.x-2.3.20:
+  8.x-3.0.66:
   - Translate custom strings in our views too
-  8.x-2.3.19:
+  8.x-3.0.65:
   - spacing for app title without analytics
-  8.x-2.3.18:
+  8.x-3.0.64:
   - make sure really not visible
-  8.x-2.3.17: null
-  8.x-2.3.16:
+  8.x-3.0.63: null
+  8.x-3.0.62:
   - wrong target id
   - still visible on FF on create app - move further left
-  8.x-2.3.15:
+  8.x-3.0.61:
   - update the hidden field too
-  8.x-2.3.14:
+  8.x-3.0.60:
   - use a hidden field for the credentials for clipboardjs
-  8.x-2.3.13:
+  8.x-3.0.59:
   - invalidate app cache when creds change
-  8.x-2.3.12:
+  8.x-3.0.58:
   - JS needs fixiing for multiple credentials
-  8.x-2.3.11:
+  8.x-3.0.57:
   - whitespace formatting
   - use a subId paramconverter
   - use a credId paramconverter
-  8.x-2.3.10:
-  - use uuids for credentials params
+  8.x-3.0.56: null
+  8.x-3.0.55:
   - Fixes for credentials
-  8.x-2.3.9:
+  8.x-3.0.54:
   - need to auto-increment
-  8.x-2.3.8: null
-  8.x-2.3.7:
+  8.x-3.0.53: null
+  8.x-3.0.52:
   - add AUTO_INCREMENT
   - add AUTO_INCREMENT
+  8.x-3.0.51:
   - make integer unsigned
-  8.x-2.3.6:
+  8.x-3.0.50: null
+  8.x-3.0.49:
   - need to check if the table exists before doing the next bit too
-  8.x-2.3.5:
   - only truncate table if it exists
-  8.x-2.3.4: null
-  8.x-2.3.3:
+  8.x-3.0.48: null
+  8.x-3.0.47:
   - more missing translations for config
   - oops missing translations for new config
-  8.x-2.3.2: null
-  8.x-2.3.1: null
-  8.x-2.3.0:
-  - update version: 8.x-2.2.27 -> 8.x-2.3.0
-  8.x-2.2.26:
+  8.x-3.0.46:
+  - different upgrade code needed
+  8.x-3.0.45:
+  - Integerid (#209)
+  8.x-3.0.44:
+  - use eye icon on password fields
+  8.x-3.0.43:
   - use modal form for new creds
-  8.x-2.2.25:
+  8.x-3.0.42:
   - svg and label sizes on app subs page
-  8.x-2.2.24:
-  - new form for app creds (#208)
-  8.x-2.2.23:
+  8.x-3.0.41: null
+  8.x-3.0.40:
+  - no idea why this test is now failing
+  - button was renamed - update tests
+  - button was renamed - update tests
+  - missing data from mocks
+  - new form for app creds
+  8.x-3.0.39:
   - make tabs look like carbon x
-  8.x-2.2.22:
+  8.x-3.0.38:
   - very minor padding
-  8.x-2.2.21: null
-  8.x-2.2.20:
+  8.x-3.0.37: null
+  8.x-3.0.36: null
+  8.x-3.0.35:
   - remove uppercase table headings
-  8.x-2.2.19: null
-  8.x-2.2.18:
+  8.x-3.0.34:
   - use the correct + svg
   - make button tertiary
   - use the carbon X overflow icon
-  8.x-2.2.17:
-  - update subscribe wizard (#207)
-  8.x-2.2.16:
+  8.x-3.0.33:
   - ensure urls are relative not fully qualified
-  8.x-2.2.15: null
-  8.x-2.2.14:
-  - fix app tests
+  8.x-3.0.32:
+  - update subscribe wizard (#207)
+  8.x-3.0.31:
+  - fix app tests (#206)
+  8.x-3.0.30:
   - fix display of client ids
-  8.x-2.2.13:
+  8.x-3.0.29:
   - add copy to clipboard button for creds
-  8.x-2.2.12:
+  8.x-3.0.28:
   - use correct font families
-  8.x-2.2.11:
+  8.x-3.0.27:
   - restyle modal-like forms (#205)
-  8.x-2.2.10:
+  8.x-3.0.26:
   - new combined sort filter
   - update views to use no content block
-  8.x-2.2.9:
+  8.x-3.0.25:
   - restyle all headers to IDE Carbon X
-  8.x-2.2.8:
+  8.x-3.0.24:
   - Submit -> Save
-  8.x-2.2.7:
+  8.x-3.0.23:
   - update icons
+  8.x-3.0.22:
   - tidy up app creds checkbox padding
-  8.x-2.2.6:
+  8.x-3.0.21:
   - remove glyph icons
-  8.x-2.2.5:
+  8.x-3.0.20:
   - restyle app card/tile (#204)
-  8.x-2.2.4:
+  8.x-3.0.19:
   - restyle view filter (#203)
-  8.x-2.2.3: null
-  8.x-2.2.2:
+  8.x-3.0.18:
   - set default pagesize to be 10
+  8.x-3.0.17:
   - increase gutter for latest masonry views
-  8.x-2.2.1: null
-  8.x-2.2.0:
-  - Update apic_app.info.yml
-  8.x-2.1.6:
+  8.x-3.0.16:
   - comment out test for now
-  8.x-2.1.5: null
-  8.x-2.1.4:
-  - Custom fields v10.0.0 (#202)
+  8.x-3.0.15:
   - pass formState through to the alter hook
-  8.x-2.1.3:
+  8.x-3.0.14: null
+  8.x-3.0.13:
+  - Get metadata from db before sending custom fields (#200)
+  8.x-3.0.12:
   - missing copyright
-  8.x-2.1.2:
+  8.x-3.0.11:
+  - Store custom fields in apim (#199)
+  8.x-3.0.10:
   - remove Rules support from our code
-  8.x-2.1.1:
-  - Tempmerge (#198)
-  8.x-2.1.0:
-  - update version: 8.x-2.0.50 -> 8.x-2.1.0
-  8.x-2.0.49: null
-  8.x-2.0.48:
-  - Show credential name when deleting (#194) (#195)
-  8.x-2.0.47:
-  - Append id (#191) (#192)
-  8.x-2.0.46:
-  - Accessibility fixes (#189) (#190)
-  8.x-2.0.45: null
-  8.x-2.0.44:
+  8.x-3.0.9:
+  - Removed use of deprecated functions (#197)
+  8.x-3.0.8: null
+  8.x-3.0.7: null
+  8.x-3.0.6:
+  - Show credential name when deleting (#194)
+  8.x-3.0.5:
+  - Append id (#191)
+  8.x-3.0.4:
+  - Accessibility fixes (#189)
+  8.x-3.0.3:
   - add title to the a href
-  8.x-2.0.43:
+  8.x-3.0.2:
   - fix missing id on title
-  8.x-2.0.42: null
+  8.x-3.0.1: null
   8.x-2.0.41:
   - temporarily disable test
   8.x-2.0.40: null

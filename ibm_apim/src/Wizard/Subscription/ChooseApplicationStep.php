@@ -16,6 +16,7 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Wizard\IbmWizardStepBase;
+use Drupal\product\Product;
 
 /**
  * Class ChooseApplicationStep
@@ -51,7 +52,7 @@ class ChooseApplicationStep extends IbmWizardStepBase {
       $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
       // if referring page was not another part of the subscription wizard, store a reference to it in the drupal session
-      if (strpos($_SERVER['HTTP_REFERER'], '/subscription') === FALSE && strpos($_SERVER['HTTP_REFERER'], '/login') === FALSE) {
+      if (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], '/subscription') === FALSE && strpos($_SERVER['HTTP_REFERER'], '/login') === FALSE) {
         \Drupal::service('tempstore.private')->get('ibm_apim')->set('subscription_wizard_referer', $_SERVER['HTTP_REFERER']);
       }
 
@@ -71,10 +72,13 @@ class ChooseApplicationStep extends IbmWizardStepBase {
         $product_id = $temp_store->get('productId');
       }
       $product_node = \Drupal::entityTypeManager()->getStorage('node')->load($product_id);
-      if ($product_node !== NULL) {
+      if ($product_node !== NULL && $product_node->bundle() === 'product' && Product::checkAccess($product_node)) {
         $temp_store->set('productName', $product_node->getTitle());
         $temp_store->set('productUrl', $product_node->get('apic_url')->value);
         $productName = $product_node->getTitle();
+      } else {
+        \Drupal::messenger()->addWarning(t('The specified arguments were not correct.'));
+        $temp_store->delete('productId');
       }
 
       $parts = explode(':', $plan_id);
@@ -122,7 +126,7 @@ class ChooseApplicationStep extends IbmWizardStepBase {
             ['%number' => sizeof($suspendedApps)]);
       }
 
-      if (!empty($subscribedApps)) {
+      if (!empty($subscribedApps) && !empty($productName)) {
         $form['#messages']['subscribedAppsNotice'] = \Drupal::translation()
           ->formatPlural(sizeof($subscribedApps), 'There is %number application that is already subscribed to the %product product. It is not displayed in this list.', 'There are %number applications that are already subscribed to the %product product. They are not displayed in this list.', [
             '%number' => sizeof($subscribedApps),
@@ -132,7 +136,8 @@ class ChooseApplicationStep extends IbmWizardStepBase {
 
       $config = \Drupal::config('ibm_apim.settings');
       $show_register_app = (boolean) $config->get('show_register_app');
-      if ($show_register_app === TRUE) {
+      if ($show_register_app === TRUE && isset($productName) && !empty($productName)) {
+        // the productName check here is to ensure we were fed a valid productId
         $form['#createNewApp'] = [
           '#type' => 'link',
           '#title' => $this->t('Create Application'),
@@ -162,7 +167,8 @@ class ChooseApplicationStep extends IbmWizardStepBase {
       // this empty div is used to put the new apps in
       $form['newApps'] = ['#markup' => "<div class='apicNewAppsList'></div>"];
 
-      if (!empty($validApps)) {
+      if (!empty($validApps) && isset($productName) && !empty($productName)) {
+        // the productName check here is to ensure we were fed a valid productId
         $form['apps'] = \Drupal::entityTypeManager()->getViewBuilder('node')->viewMultiple($validApps, 'subscribewizard');
         $form['apps']['#prefix'] = "<div class='apicSubscribeAppsList'>";
         $form['apps']['#suffix'] = '</div>';
@@ -171,9 +177,13 @@ class ChooseApplicationStep extends IbmWizardStepBase {
         $form['#messages']['noAppsNotice'] = t('There are no applications that can be subscribed to this Plan.');
       }
 
+      $moduleHandler = \Drupal::service('module_handler');
       // Attach the library for pop-up dialogs/modals.
       $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
       $form['#attached']['library'][] = 'apic_app/basic';
+      if ($moduleHandler->moduleExists('clipboardjs')) {
+        $form['#attached']['library'][] = 'clipboardjs/drupal';
+      }
 
     }
 

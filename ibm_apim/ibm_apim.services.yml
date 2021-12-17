@@ -224,7 +224,7 @@ services:
                  '@site.path',
                  '@module_handler',
                  '@module_installer',
-                 '@config.factory',
+                 '@ibm_apim.site_config',
                  '@logger.channel.ibm_apim' ]
   ibm_apim.apic_definition_update_manager:
     class: Drupal\ibm_apim\Entity\ApicEntityDefinitionUpdateManager

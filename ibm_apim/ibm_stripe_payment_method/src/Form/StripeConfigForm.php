@@ -40,6 +40,10 @@ class StripeConfigForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $config = $this->config('ibm_stripe_payment_method.settings');
 
+    $billingProviderConfig = unserialize(\Drupal::config('ibm_apim.settings')->get('billing_providers'), ['allowed_classes' => FALSE]);
+    if (!isset($billingProviderConfig) || empty($billingProviderConfig)) {
+      \Drupal::messenger()->addWarning(t('No billing provider is currently configured in the portal. Go to /admin/config/system/apic_billing to set the billing provider mapping.'));
+    }
 
     $publishableKey = $config->get('publishable_key');
     $secretKey = $config->get('secret_key');

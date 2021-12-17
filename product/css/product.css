@@ -95,7 +95,7 @@
 }
 
 .apicProduct .apicProductBody {
-  padding: 0 3rem;
+  padding: 2rem;
 }
 
 .apicProduct .apicProductHeader .breadcrumb,
@@ -120,6 +120,11 @@
   display: flex;
   align-items: baseline;
   max-width: calc(100% - 6rem);
+}
+
+.field.apis .field__label.label,
+.field.plans .field__label.label {
+  margin-top: 0;
 }
 
 h1.productName,
@@ -1160,7 +1165,7 @@ h3.field__label.label
 
 .planApiVersion {
   margin-left: 0.3rem;
-}
+} 
 
 .planApiCheck svg{
   height: 100%;
@@ -1277,6 +1282,20 @@ h3.field__label.label
 
 .fixedPlanColumnWidth {
   min-width: 8rem;
+}
+
+.planCustomAttributes,
+.productCustomAttributes {
+  margin-bottom: 1rem;
+}
+
+.planCustomAttributes .planCustomAttribute .planCustomAttributeKey,
+.productCustomAttributes .productCustomAttribute .productCustomAttributeKey {
+  text-transform: capitalize;
+}
+
+.modal-content .planCustomAttributes {
+  margin-top: 1rem;
 }
 
 .planRatesAndBilling {

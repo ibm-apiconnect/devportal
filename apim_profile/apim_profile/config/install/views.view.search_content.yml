@@ -296,7 +296,7 @@ display:
     display_title: Page
     position: 1
     display_options:
-      display_extend:
+      display_extenders:
         ajax_history:
           enable_history: true
       path: search/content

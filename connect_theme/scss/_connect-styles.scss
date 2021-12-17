@@ -291,7 +291,7 @@ p:last-child,
 }
 
 .help-block, .control-group .help-inline {
-  color: $gray-light;
+  color: lighten($text-color, 25%);
   font-size: 12px;
   margin: 5px 0 10px;
   padding: 0;
@@ -784,9 +784,6 @@ section.block-go-ahead {
   color: $brand-primary;
 }
 
-.ibmapimNoPermissions .iconDiv svg {
-  fill: $modal-content-color;
-}
 // loading
 
 .page-load-progress-lock-screen .bx--loading__stroke {

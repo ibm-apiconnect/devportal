@@ -2,3 +2,7 @@ import-paths:
   - scss
 input-scss: scss/overrides.scss
 output-css: css/style.css
+mail-import-paths:
+  - scss
+mail-input-scss: scss/mail-overrides.scss
+mail-output-css: css/mail.css

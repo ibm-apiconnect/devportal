@@ -49,10 +49,6 @@ function ibm_apim_drush_command() {
       'clientsecret' => 'The catalog client secret',
     ],
   ];
-  $items['ibm_apim-bgsync'] = [
-    'description' => 'Runs background sync',
-    'aliases' => ['bgsync'],
-  ];
   $items['ibm_apim-listen'] = [
     'description' => 'Listens to stdin and runs the drush commands piped in',
     'aliases' => ['listen'],
@@ -559,6 +555,12 @@ function drush_ibm_apim_listen() {
             break;
           case 'product_del':
             drush_product_delete($content);
+            break;
+          case 'activation_update':
+              drush_ibm_apim_activation_update($content);
+              break;
+          case 'activation_del':
+            drush_ibm_apim_activation_del($content);
             break;
           case 'api_del':
             drush_apic_api_delete($content);
@@ -1529,7 +1531,7 @@ function drush_ibm_apim_clearup($UUID, $startTime) {
     if ($errorInCurrentSnapshot === FALSE) {
       drush_log(dt('Drush drush_ibm_apim_clearup did not find any errors in ibm_apim.sync_errors from this snapshot processing run, clearing previous sync_errors'), 'success');
       // clear the sync_error array if all parsed successfully
-      \Drupal::state()->set('ibm_apim.sync_errors', []);
+      \Drupal::state()->delete('ibm_apim.sync_errors');
     }
   } else {
     drush_log(dt('Drush drush_ibm_apim_clearup ibm_apim.sync_errors state var was empty, nothing to do'), 'success');
@@ -2227,6 +2229,117 @@ function drush_ibm_apim_user_createOrUpdate($apicUser, $event = 'user_update') {
     }
   }
 
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+  }
+}
+
+/**
+ * @param $apicUser
+ * @param string $event
+ *
+ * @throws \JsonException
+ */
+function drush_ibm_apim_activation_del($activation) {
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+  }
+  // in case moderation is on we need to run as admin
+  // save the current user so we can switch back at the end
+  $accountSwitcher = Drupal::service('account_switcher');
+  $originalUser = \Drupal::currentUser();
+  if ((int) $originalUser->id() !== 1) {
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+  }
+  if (is_string($activation)) {
+    $activation = json_decode($activation, TRUE, 512, JSON_THROW_ON_ERROR);
+  }
+
+
+  // check if user already exists in Drupal DB
+  $deleteUser = new ApicUser();
+  $deleteUser->setUsername($activation['username']);
+  $deleteUser->setApicUserRegistryUrl($activation['user_registry_url']);
+
+  if ($deleteUser->getUsername() === NULL || $deleteUser->getApicUserRegistryUrl() === NULL) {
+    drush_print('Unable to check if user already exists because of missing data. Skipping .');
+  } else {
+    $userStorage = \Drupal::service('ibm_apim.user_storage');
+    $user = $userStorage->load($deleteUser);
+    if ($user === NULL || $user === FALSE) {
+      drush_print('Nothing to delete as user does not exist: ' . $activation['username']);
+    }
+    else if ($user->apic_state->value !== 'pending_approval') {
+      drush_print($activation['username'] . ' is not in pending_approval state. Skipping rejection.');
+    } 
+    else if ($activation['root_operation'] === 'task_rejection') {  
+      // ensure they have been removed from all corg membership  
+      $delete_service = \Drupal::service('auth_apic.delete_user');
+      drush_print('Deleting apic user ' . $activation['username']);
+      $delete_service->deleteLocalAccount($deleteUser);
+    }
+  }
+
+  if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+    $accountSwitcher->switchBack();
+  }
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+  }
+}
+
+/**
+ * @param $apicUser
+ * @param string $event
+ *
+ * @throws \JsonException
+ */
+function drush_ibm_apim_activation_update($activation) {
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+  }
+  // in case moderation is on we need to run as admin
+  // save the current user so we can switch back at the end
+  $accountSwitcher = Drupal::service('account_switcher');
+  $originalUser = \Drupal::currentUser();
+  if ((int) $originalUser->id() !== 1) {
+    $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+  }
+  if (is_string($activation)) {
+    $activation = json_decode($activation, TRUE, 512, JSON_THROW_ON_ERROR);
+  }
+
+
+  // check if user already exists in Drupal DB
+  $editUser = new ApicUser();
+  $editUser->setUsername($activation['username']);
+  $editUser->setApicUserRegistryUrl($activation['user_registry_url']);
+
+  if ($editUser->getUsername() === NULL || $editUser->getApicUserRegistryUrl() === NULL) {
+    drush_print('Unable to check if user already exists because of missing data. Skipping .');
+  } else {
+    $userStorage = \Drupal::service('ibm_apim.user_storage');
+    $user = $userStorage->load($editUser);
+    if ($user === NULL || $user === FALSE) {
+      drush_print('Nothing to update as user does not exist: ' . $activation['username']);
+    }
+    else if ($user->apic_state->value !== 'pending_approval') {
+      drush_print($activation['username'] . ' is not in pending_approval state. Skipping approval.');
+    } 
+    else if ($activation['root_operation'] === 'task_approval') {
+      $editUser->setFirstname($activation['first_name']);
+      $editUser->setLastname($activation['last_name']);
+      $editUser->setMail($activation['email']);
+      $editUser->setState("pending");
+      drush_print('Approving apic user ' . $activation['username']);
+      $accountService = \Drupal::service('ibm_apim.account');
+      $accountService->updateLocalAccount($editUser);
+    }
+  }
+
+  if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+    $accountSwitcher->switchBack();
+  }
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_exit_trace(__FUNCTION__, NULL);
   }

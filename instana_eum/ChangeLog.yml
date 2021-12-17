@@ -1,2 +1,12 @@
 changes:
+  8.x-3.3.2:
+  - add placeholder unit test
+  - fix build script
+  - update URL
+  - add copyright
+  8.x-3.3.1:
+  - Update Jenkinsfile
+  - Update Jenkinsfile
+  - Update instana_eum.info.yml
+  - Update instana_eum.info.yml
   8.x-4.0.1: null

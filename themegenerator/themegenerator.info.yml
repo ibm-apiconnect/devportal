@@ -3,7 +3,7 @@ type: module
 description: Generate an IBM API Connect sub-theme
 package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9
-version: 8.x-2.6.3
+version: 8.x-3.3.5
 project: themegenerator
 dependencies:
 - ibm_apim:ibm_apim

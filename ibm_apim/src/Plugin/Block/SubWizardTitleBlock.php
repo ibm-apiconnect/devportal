@@ -14,6 +14,7 @@ namespace Drupal\ibm_apim\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
 use Drupal\node\Entity\Node;
+use Drupal\product\Product;
 
 /**
  * Provides a block to add the title to the subscription wizard.
@@ -53,7 +54,7 @@ class SubWizardTitleBlock extends BlockBase {
       $productVersion = '';
       if (isset($product_id)) {
         $product_node = Node::load($product_id);
-        if ($product_node !== NULL) {
+        if ($product_node !== NULL && $product_node->bundle() === 'product' && Product::checkAccess($product_node)) {
           $productTitle = $product_node->getTitle();
           $productVersion = $product_node->apic_version->value;
         }

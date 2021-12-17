@@ -111,10 +111,10 @@ auth_apic.deleteuser:
     _ibm_apim_delete_user_access_check: 'TRUE'
     _ibm_apim_loggedin_not_admin_access_check: 'TRUE'
 
-auth_apic.oidc_register:
-  path: '/user/oidcregister'
+auth_apic.oidc_first_time_login:
+  path: '/user/oidcfirsttime'
   defaults:
-    _form: 'Drupal\auth_apic\Form\OidcRegisterForm'
+    _form: 'Drupal\auth_apic\Form\OidcFirstTimeLoginForm'
     _title: 'Oidc Sign Up'
   requirements:
     _access: 'TRUE'

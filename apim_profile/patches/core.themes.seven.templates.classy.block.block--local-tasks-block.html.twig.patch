@@ -1,0 +1,12 @@
+--- core/themes/seven/templates/classy/block/block--local-tasks-block.html.twig	2021-11-22 18:35:28.356000000 +0000
++++ core/themes/seven/templates/classy/block/block--local-tasks-block.html.twig	2021-11-23 15:57:53.624000000 +0000
+@@ -7,7 +7,8 @@
+ #}
+ {% block content %}
+   {% if content %}
+-    <nav class="tabs" role="navigation" aria-label="{{ 'Tabs'|t }}">
++    {% set aria_label = configuration.label ? configuration.label|replace({' ': ''}) : 'Tabs'|t %}
++    <nav class="tabs" role="navigation" aria-label="{{ aria_label }}">
+       {{ content }}
+     </nav>
+   {% endif %}

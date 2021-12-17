@@ -67,11 +67,11 @@ class IbmApimThemeInstallController extends ThemeController {
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    */
-  public function __construct(Utils $utils,
-                              ThemeHandlerInterface $theme_handler,
-                              ThemeExtensionList $theme_list,
+  public function __construct(Utils                   $utils,
+                              ThemeHandlerInterface   $theme_handler,
+                              ThemeExtensionList      $theme_list,
                               ThemeInstallerInterface $theme_installer,
-                              ConfigFactoryInterface $config_factory, MessengerInterface $messenger) {
+                              ConfigFactoryInterface  $config_factory, MessengerInterface $messenger) {
     $this->utils = $utils;
     $this->themeInstaller = $theme_installer;
     $this->themeList = $theme_list;
@@ -333,6 +333,49 @@ class IbmApimThemeInstallController extends ThemeController {
 
         file_put_contents($output_file, $cssOut);
 
+        if (array_key_exists('mail-import-paths', $scss_compile_settings) && array_key_exists('mail-input-scss', $scss_compile_settings) && array_key_exists('mail-output-css', $scss_compile_settings)) {
+          // email SCSS
+          $scss = new Compiler();
+          // add the base_theme scss paths
+          $scss->addImportPath(drupal_get_path('theme', 'connect_theme') . '/scss');
+
+          // add specified theme paths
+          $scss->addImportPath($theme_path);
+
+          $mail_import_paths = $scss_compile_settings['mail-import-paths'];
+
+          foreach ($mail_import_paths as &$mail_import_path) {
+            if (preg_match('/^[a-zA-Z0-9_\-\/.]+$/', $mail_import_path)) {
+              $scss->addImportPath(preg_replace('#/+#', '/', implode('/', [$theme_path, $mail_import_path])));
+            }
+          }
+          unset($mail_import_path);
+
+          $mail_input_scss = $scss_compile_settings['mail-input-scss'];
+          if (!preg_match('/^[a-z0-9_\-.]+$/', $mail_input_scss)) {
+            $mail_input_scss = 'scss/mail-overrides.scss';
+          }
+
+          $mailScssIn = file_get_contents(preg_replace('#/+#', '/', implode('/', [$theme_path, $mail_input_scss])));
+          $mailCssOut = $scss->compile($mailScssIn);
+
+          $mail_output_css = $scss_compile_settings['mail-output-css'];
+          if (!preg_match('/^[a-z0-9_\-.]+$/', $mail_output_css)) {
+            $mail_output_css = 'css/mail.css';
+          }
+
+          $mail_output_css_dir = preg_replace('#/+#', '/', implode('/', [$theme_path, dirname($mail_output_css)]));
+          $mail_output_css_file = basename($mail_output_css);
+
+          if (!is_dir($mail_output_css_dir) && !mkdir($mail_output_css_dir, 0755, TRUE) && !is_dir($mail_output_css_dir)) {
+            throw new \RuntimeException(sprintf('Directory "%s" was not created', $mail_output_css_dir));
+          }
+
+          $mail_output_file = preg_replace('#/+#', '/', implode('/', [$mail_output_css_dir, $mail_output_css_file]));
+
+          file_put_contents($mail_output_file, $mailCssOut);
+
+        }
       }
     }
   }

@@ -106,7 +106,8 @@ abstract class Json {
     } catch (\JsonException $e) {
       // Try to clean json string if syntax error occurred
       $jsonString = self::clean($jsonString);
-      $result = \json_decode($jsonString, $asArray, $depth, JSON_THROW_ON_ERROR | $options);
+      /** @noinspection JsonEncodingApiUsageInspection */
+      $result = \json_decode($jsonString, $asArray);
     }
     return $result;
   }

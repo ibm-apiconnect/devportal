@@ -474,34 +474,36 @@ function apim_profile_create_asyncapi_pages() {
   \Drupal::entityTypeManager()->getStorage('path_alias')->save($path_alias);
 }
 
-function get_localized_asyncapi_content($langcode) {
-  $html = t('<h2>What is an asynchronous API?</h2>
-<p>Instead of the immediate request-response mechanism of synchronous APIs, asynchronous APIs are event-based. This means that when your application uses an asynchronous API, it does not need to poll or know when to request data because your application subscribes to a stream of events, and will receive events as they become available.</p>
-<p>For example, a HTTP-based orders API may expose a \'GET\' operation on the path \'/orders\'. As a consumer of the API, your application would need to make repeated requests to the \'/orders\' path to know when there are any new orders.</p>
-<p>In comparison, as a consumer of an asynchronous API, your application would subscribe to the orders event stream and receive new order events as they arrive.</p>
-<h2>What is AsyncAPI?</h2>
-<p> AsyncAPI is a specification for describing asynchronous APIs, similar to the way OpenAPI is a specification for describing synchronous HTTP APIs.</p>
-<p>The key difference is that while OpenAPI describes paths and the request and response for an operation, AsyncAPI describes channels that contain events together with the structure of an event.</p>', [], ['langcode' => $langcode]);
+function get_localized_asyncapi_content($langcode): string {
+  // done using multiple strings as the translation process has a maximum line length
+  $html = t('<h2>What is an asynchronous API?</h2>', [], ['langcode' => $langcode]);
+  $html .= t('<p>Instead of the immediate request-response mechanism of synchronous APIs, asynchronous APIs are event-based. This means that when your application uses an asynchronous API, it does not need to poll or know when to request data because your application subscribes to a stream of events, and will receive events as they become available.</p>', [], ['langcode' => $langcode]);
+  $html .= t('<p>For example, an HTTP-based orders API may expose a \'GET\' operation on the path \'/orders\'. As a consumer of the API, your application would need to make repeated requests to the \'/orders\' path to know when there are any new orders.</p>', [], ['langcode' => $langcode]);
+  $html .= t('<p>In comparison, as a consumer of an asynchronous API, your application would subscribe to the orders event stream and receive new order events as they arrive.</p>', [], ['langcode' => $langcode]);
+  $html .= t('<h2>What is AsyncAPI?</h2>', [], ['langcode' => $langcode]);
+  $html .= t('<p> AsyncAPI is a specification for describing asynchronous APIs, similar to the way OpenAPI is a specification for describing synchronous HTTP APIs.</p>', [], ['langcode' => $langcode]);
+  $html .= t('<p>The key difference is that while OpenAPI describes paths and the request and response for an operation, AsyncAPI describes channels that contain events together with the structure of an event.</p>', [], ['langcode' => $langcode]);
   return $html;
 }
 
-function get_localized_kafka_content($langcode) {
-  $html = t('<h2>What is Kafka?</h2>
-<p>This asynchronous API is implemented using the Apache Kafka protocol. It is a publish-subscribe events platform designed to be fault-tolerant, providing a high-throughput and low-latency platform for handling real-time data feeds.</p>
-<p>Kafka runs as a cluster of one or more servers (Kafka brokers). The load is balanced across the cluster by distributing it amongst the servers.</p>
-<h3>Key concepts</h3>
-<h4>Topic</h4>
-<p>A stream of messages is stored in categories called topics. Topics are represented as channels in an AsyncAPI document. Each topic comprises one or more partitions. Each partition is an ordered list of messages. The messages on a partition are each given a monotonically increasing number called the offset.</p>
-<h4>Message/Record</h4>
-<p>The unit of data in Kafka which comprises two parts: headers and value. Headers are commonly used for data about the message and the value is the body of the message.</p>
-<h4>Producer</h4>
-<p>A process that publishes streams of messages to Kafka topics. A producer can publish to one or more topics and can optionally choose the partition that stores the data.</p>
-<h4>Consumer</h4>
-<p>A process that consumes messages from Kafka topics and processes the feed of messages. A consumer can consume from one or more topics or partitions.</p>
-<h4>Consumer group</h4>
-<p>A named group of one or more consumers that together consume the messages from a set of topics. Each consumer in the group reads messages from specific partitions that it is assigned to. Each partition is assigned to one consumer in the group only. Assignment is controlled by the \'client.id\' and \'group.id\' Consumer properties.</p>
-<h3>Consuming from this API</h3>
-<p>You will require a Kafka client to connect and subscribe. Kafka client libraries are available for a variety of programming languages, and the sample code for each channel is a starting point for using a Java Kafka client to consume events using a Kafka Consumer.</p>', [], ['langcode' => $langcode]);
+function get_localized_kafka_content($langcode): string {
+  // done using multiple strings as the translation process has a maximum line length
+  $html = t('<h2>What is Kafka?</h2>', [], ['langcode' => $langcode]);
+  $html .= t('<p>This asynchronous API is implemented using the Apache Kafka protocol. It is a publish-subscribe events platform designed to be fault-tolerant, providing a high-throughput and low-latency platform for handling real-time data feeds.</p>', [], ['langcode' => $langcode]);
+  $html .= t('<p>Kafka runs as a cluster of one or more servers (Kafka brokers). The load is balanced across the cluster by distributing it amongst the servers.</p>', [], ['langcode' => $langcode]);
+  $html .= t('<h3>Key concepts</h3>', [], ['langcode' => $langcode]);
+  $html .= t('<h4>Topic</h4>', [], ['langcode' => $langcode]);
+  $html .= t('<p>A stream of messages is stored in categories called topics. Topics are represented as channels in an AsyncAPI document. Each topic comprises one or more partitions. Each partition is an ordered list of messages. The messages on a partition are each given a monotonically increasing number called the offset.</p>', [], ['langcode' => $langcode]);
+  $html .= t('<h4>Message/Record</h4>', [], ['langcode' => $langcode]);
+  $html .= t('<p>The unit of data in Kafka which comprises two parts: headers and value. Headers are commonly used for data about the message and the value is the body of the message.</p>', [], ['langcode' => $langcode]);
+  $html .= t('<h4>Producer</h4>', [], ['langcode' => $langcode]);
+  $html .= t('<p>A process that publishes streams of messages to Kafka topics. A producer can publish to one or more topics and can optionally choose the partition that stores the data.</p>', [], ['langcode' => $langcode]);
+  $html .= t('<h4>Consumer</h4>', [], ['langcode' => $langcode]);
+  $html .= t('<p>A process that consumes messages from Kafka topics and processes the feed of messages. A consumer can consume from one or more topics or partitions.</p>', [], ['langcode' => $langcode]);
+  $html .= t('<h4>Consumer group</h4>', [], ['langcode' => $langcode]);
+  $html .= t('<p>A named group of one or more consumers that together consume the messages from a set of topics. Each consumer in the group reads messages from specific partitions that it is assigned to. Each partition is assigned to one consumer in the group only. Assignment is controlled by the \'client.id\' and \'group.id\' Consumer properties.</p>', [], ['langcode' => $langcode]);
+  $html .= t('<h3>Consuming from this API</h3>', [], ['langcode' => $langcode]);
+  $html .= t('<p>You will require a Kafka client to connect and subscribe. Kafka client libraries are available for a variety of programming languages, and the sample code for each channel is a starting point for using a Java Kafka client to consume events using a Kafka Consumer.</p>', [], ['langcode' => $langcode]);
   return $html;
 }
 

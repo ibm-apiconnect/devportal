@@ -1,0 +1,42 @@
+// import connect variables
+@import "connect-variables";
+
+// place your override variables here
+
+// import everything from connect_theme mail template as a starting point
+@import "mail";
+
+// place further styling overrides here
+$mono-01: #777677;
+$mono-02: #595859;
+$mono-03: #a6a5a6;
+
+$white-01: #fff;
+$white-02: #fbf8f8;
+$gray-01: #eaeaea;
+$gray-02: #d8d8d8;
+$gray-03: #c0bfc0;
+$gray-04: #949394;
+$gray-05: #464646;
+
+$dark-gray-01: #272727;
+$black-01: #000;
+
+#mail-table {
+  background: $gray-01;
+}
+
+#header,
+#footer {
+  background-color: $gray-05;
+  color: $white-01;
+
+  a {
+    color: $white-01;
+  }
+}
+
+#main {
+  background-color: $white-01;
+  color: $black-01;
+}

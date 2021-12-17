@@ -198,6 +198,7 @@ class ApicAccountService implements ApicAccountInterface {
       $account->set('apic_user_registry_url', $user->getApicUserRegistryUrl());
       $account->set('registry_url', $user->getApicUserRegistryUrl());
       $account->set('apic_url', $user->getUrl());
+      $account->set('apic_state', $user->getState());
 
       //Add the custom fields to the user
       $customFields = $this->userService->getCustomUserFields();

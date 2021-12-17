@@ -585,7 +585,12 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       'catalog_url' => '/api/catalogs/b33d299b-7eca-45ad-bca1-151323974cea/f3149806-a4b4-4e80-ae99-683ac7c98047',
       'url' => '/api/catalogs/b33d299b-7eca-45ad-bca1-151323974cea/f3149806-a4b4-4e80-ae99-683ac7c98047/configured-billings/e30e74c1-38d7-4e2f-87c5-1c522de70ff3',
     ];
-    $billingService->updateAll([$billingObject]);
+    $billingProviders = [$billingObject];
+    $billingService->updateAll($billingProviders);
+    $newMapping = [$billingObject['name'] => 'ibm_create_payment_method'];
+    \Drupal::configFactory()->getEditable('ibm_apim.settings')
+      ->set('billing_providers', serialize($newMapping))
+      ->save();
   }
 
   /**
@@ -935,7 +940,9 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
           $row['first_time_login'] = 0;
         }
         $basicUser->uid = $user->id();
-        $this->getUserManager()->addUser($basicUser);
+        if (!isset($row['delete'])) {
+          $this->getUserManager()->addUser($basicUser);
+        }
         $this->getUserManager()->setCurrentUser($basicUser);
         $this->apicUsers[$user->getAccountName()] = $basicUser;
       }
@@ -1435,13 +1442,20 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       ->set('proxy_auth', NULL)
       ->set('categories', $categories)
       ->set('codesnippets', $codesnippets)
-      ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer'])
       ->save();
     \Drupal::service('config.factory')->getEditable('ibm_apim.devel_settings')
       ->set('entry_exit_trace', FALSE)
       ->set('apim_rest_trace', FALSE)
       ->set('acl_debug', FALSE)
       ->set('webhook_debug', FALSE)->save();
+  }
+
+  /**
+   * Only to be used for tests where user has already been deleted from the db
+   * @Then clear users
+   */
+  public function clearUsers(): void {
+    $this->getUserManager()->clearUsers();
   }
 
   private function resetToDefaultRegistry(): void {

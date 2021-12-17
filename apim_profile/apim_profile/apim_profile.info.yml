@@ -139,6 +139,7 @@ install:
   - product
   - themegenerator
   - drushadmin
+  - drush_language
 
 
 themes:

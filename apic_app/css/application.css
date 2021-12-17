@@ -116,9 +116,8 @@
   justify-content: space-between;
 }
 .applicationWrapper .titleInnerWrapper .rightTitle {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  width: 3rem;
 }
 .applicationWrapper .rightTitle .applicationMenu {
   margin-left: 16px;
@@ -133,7 +132,6 @@
 
 .applicationWrapper .titleSection .leftTitle {
   margin-bottom: 1rem;
-  width: calc(100% - 3rem);
 }
 
 .applicationWrapper .enforcedEventsNotification {

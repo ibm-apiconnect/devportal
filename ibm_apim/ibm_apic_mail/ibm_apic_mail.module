@@ -1,0 +1,71 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2021
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ * Provides APIC Mail integration.
+ */
+
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_theme().
+ */
+function ibm_apic_mail_theme() {
+  return [
+    'ibm_apic_mail_message' => [
+      'variables' => [
+        'module' => '',
+        'key' => '',
+        'recipient' => '',
+        'subject' => '',
+        'body' => '',
+        'css' => NULL,
+        'logo' => NULL,
+        'tsandcs' => NULL,
+        'privacy' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function template_preprocess_ibm_apic_mail_message(array &$variables) {
+  $variables['module'] = str_replace('_', '-', $variables['module']);
+  $variables['key'] = str_replace('_', '-', $variables['key']);
+  $variables['tsandcs'] = Url::fromUri('internal:/tsandcs')->setAbsolute()->toString();
+  $variables['privacy'] = Url::fromUri('internal:/privacy')->setAbsolute()->toString();
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ *
+ * The template used is the one that is most specific. The theme system
+ * looks for templates starting at the end of the $hook array and works
+ * towards the beginning, so for the core user module's 'password_reset'
+ * email the order of precedence for selecting the template used will be:
+ * 1. ibm-apic-mail-message--user--password-reset.html.twig
+ * 2. ibm-apic-mail-message--user.html.twig
+ * 3. ibm-apic-mail-message.html.twig
+ * Note that ibm-apic-mail-message.html.twig is the default template for
+ * messages sent by the IBM APIC Mail module, and will be used by default
+ * unless a more-specific template is found.
+ */
+function ibm_apic_mail_theme_suggestions_ibm_apic_mail_message(array $variables) {
+  return [
+    'ibm_apic_mail_message__' . $variables['module'],
+    'ibm_apic_mail_message__' . $variables['module'] . '__' . $variables['key'],
+  ];
+}

@@ -160,7 +160,13 @@ class DisplayCredsForm extends FormBase {
    */
   public function getCancelUrl(): Url {
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
-    if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
+    $destination = \Drupal::request()->get('redirectto');
+    if (isset($destination) && !empty($destination)) {
+      if ($destination[0] !== '/' && $destination[0] !== '?' && $destination[0] !== '#') {
+        $destination = '/' . $destination;
+      }
+      $url = Url::fromUserInput($destination);
+    } else if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
       $url = Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
     }
     else {

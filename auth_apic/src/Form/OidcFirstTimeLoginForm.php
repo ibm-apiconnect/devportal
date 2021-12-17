@@ -29,7 +29,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ibm_apim\Service\Utils;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 
-class OidcRegisterForm extends FormBase {
+class OidcFirstTimeLoginForm extends FormBase {
 
   /**
    * @var \Psr\Log\LoggerInterface
@@ -86,7 +86,7 @@ class OidcRegisterForm extends FormBase {
   protected ApicUserStorageInterface $userStorage;
 
   /**
-   * OidcRegisterForm constructor.
+   * OidcFirstTimeLoginForm constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    * @param \Drupal\ibm_apim\UserManagement\ApicAccountInterface $account_service
@@ -123,9 +123,9 @@ class OidcRegisterForm extends FormBase {
   /**
    * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
    *
-   * @return \Drupal\auth_apic\Form\OidcRegisterForm
+   * @return \Drupal\auth_apic\Form\OidcFirstTimeLoginForm
    */
-  public static function create(ContainerInterface $container): OidcRegisterForm {
+  public static function create(ContainerInterface $container): OidcFirstTimeLoginForm {
     /** @noinspection PhpParamsInspection */
     return new static(
       $container->get('entity_type.manager'),
@@ -144,7 +144,7 @@ class OidcRegisterForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId(): string {
-    return 'oidc_register_form';
+    return 'oidc_first_time_login';
   }
 
   /**
@@ -309,7 +309,7 @@ class OidcRegisterForm extends FormBase {
       $this->accountService->updateLocalAccount($apicUser);
     }
     else {
-      $form_state->setRedirect('auth_apic.oidc_register');
+      $form_state->setRedirect('auth_apic.oidc_first_time_login');
     }
 
   }

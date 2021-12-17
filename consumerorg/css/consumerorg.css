@@ -68,6 +68,10 @@
   text-overflow: ellipsis;
 }
 
+.apicMyOrg .customFields {
+  margin: 0 0 0.8rem 0;
+}
+
 @media screen and (max-width: 1024px) {
   .apicCOrgName {
     max-width: 300px;
