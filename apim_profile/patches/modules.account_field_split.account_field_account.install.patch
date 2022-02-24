@@ -1,0 +1,17 @@
+--- modules/account_field_split/account_field_split.install	2022-01-26 11:34:22.000000000 +0000
++++ modules/account_field_split/account_field_split.install	2022-01-26 11:34:50.000000000 +0000
+@@ -9,12 +9,12 @@
+  * Implements hook_enable().
+  */
+ function account_field_split_install() {
+-  module_set_weight('account_field_split', 101);
++  module_set_weight('account_field_split', 9);
+ }
+
+ /**
+  * Run the module alter after other modules.
+  */
+ function account_field_split_update_9001() {
+-  module_set_weight('account_field_split', 101);
++  module_set_weight('account_field_split', 9);
+ }

@@ -650,10 +650,6 @@ function apim_profile_default_apic_config() {
     ->set('application_image_upload', TRUE)
     ->set('hide_admin_registry', FALSE)
     ->set('disable_etags', FALSE)
-    ->set('entry_exit_trace', FALSE)
-    ->set('apim_rest_trace', FALSE)
-    ->set('acl_debug', FALSE)
-    ->set('webhook_debug', FALSE)
     ->set('cron_drush', FALSE)
     ->set('allow_consumerorg_creation', TRUE)
     ->set('allow_consumerorg_rename', TRUE)
@@ -665,7 +661,15 @@ function apim_profile_default_apic_config() {
     ->set('categories', $categories)
     ->set('codesnippets', $codesnippets)
     ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync'])
+    ->set('example_array_items', 3)
     ->save();
+
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.devel_settings')
+    ->set('entry_exit_trace', FALSE)
+    ->set('apim_rest_trace', FALSE)
+    ->set('acl_debug', FALSE)
+    ->set('webhook_debug', FALSE)->save();
 
   \Drupal::service('config.factory')
     ->getEditable('locale.settings')
@@ -953,9 +957,8 @@ function apim_profile_load_translations() {
     }
     else {
       $result = Gettext::fileToDatabase($file, $options);
-
       // Validate that strings were loaded in properly
-      if ((isset($result->additions, $result->updates) && $result->additions === 0 && $result->updates === 0) || (!isset($result->skipped) || $result->skipped !== 0)) {
+      if ((isset($result['additions'], $result['updates']) && $result['additions'] === 0 && $result['updates'] === 0) || (!isset($result['skips']) && $result['skips'] !== 0)) {
         \Drupal::logger('apim_profile')
           ->error('Translation import for language @lang failed to add any new strings to the database.', ['@lang' => $file->langcode]);
       }
@@ -1585,6 +1588,34 @@ function apim_profile_update_8032() {
       ->set('image_captcha_fonts_preview_map_cache', $image_captcha_fonts_preview_map_cache)
       ->set('image_captcha_fonts', $image_captcha_fonts)
       ->save(TRUE);
+  }
+}
+
+/**
+ * Need to make sure devel_settings are set
+ */
+function apim_profile_update_8033() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.devel_settings')
+    ->set('entry_exit_trace', FALSE)
+    ->set('apim_rest_trace', FALSE)
+    ->set('acl_debug', FALSE)
+    ->set('webhook_debug', FALSE)->save();
+
+  // remove the devel settings from the config array
+  $data = \Drupal::service('config.factory')->get('ibm_apim.settings')->get();
+  unset($data['entry_exit_trace'], $data['apim_rest_trace'], $data['acl_debug'], $data['webhook_debug']);
+
+  if (!empty($data)) {
+    \Drupal::service('config.factory')
+      ->getEditable('ibm_apim.settings')
+      ->setData($data)
+      ->save();
+  }
+
+  // if we're missing config then just reset to the defaults
+  if (!array_key_exists('categories', $data) || !array_key_exists('allow_consumerorg_creation', $data)) {
+    apim_profile_default_apic_config();
   }
 }
 

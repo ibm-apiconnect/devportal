@@ -1,0 +1,49 @@
+--- modules/slick/slick.install	2022-02-14 09:55:35.000000000 +0000
++++ modules/slick/slick.install	2022-02-14 09:56:37.000000000 +0000
+@@ -45,6 +45,46 @@
+ }
+ 
+ /**
++ * Implements hook_uninstall().
++ */
++function slick_uninstall() {
++  // @todo use blazy_filter_cleanup('slick'); at Blazy 3+ instead.
++  // Or remove when core filter takes care of its own plugins removal cleanly.
++  $config_factory = \Drupal::configFactory();
++  $config_storage = \Drupal::service('config.storage');
++
++  $module = 'slick';
++  $filter = "filters.{$module}_filter";
++
++  // Removes unclean slick_filter references, see #3257390.
++  foreach ($config_storage->listAll('filter.format') as $config_name) {
++    $config = $config_factory->getEditable($config_name);
++    $plugin = $config->get($filter);
++
++    if ($plugin) {
++      $dependencies = $config->get('dependencies');
++      $modules = array_diff($dependencies['module'], [$module]);
++
++      $config
++        ->clear($filter)
++        ->set('dependencies.module', $modules)
++        ->save(TRUE);
++    }
++  }
++
++  // Just to be safe and sure, reset filter_formats cache, etc.
++  if (function_exists('drupal_static_reset')) {
++    drupal_static_reset('filter_formats');
++  }
++
++  \Drupal::entityTypeManager()->getStorage('filter_format')->resetCache();
++
++  // Clear plugin manager caches.
++  \Drupal::getContainer()->get('plugin.cache_clearer')->clearCachedDefinitions();
++}
++
++
++/**
+  * Added pauseOnFocus option.
+  */
+ function slick_update_8201() {

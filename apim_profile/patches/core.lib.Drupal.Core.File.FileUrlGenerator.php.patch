@@ -1,0 +1,13 @@
+--- core/lib/Drupal/Core/File/FileUrlGenerator.php	2022-02-16 14:02:38.085821261 +0000
++++ core/lib/Drupal/Core/File/FileUrlGenerator.php	2022-02-16 14:07:02.830461840 +0000
+@@ -91,6 +91,10 @@
+
+     if (!$scheme) {
+       $baseUrl = $relative ? base_path() : $this->requestStack->getCurrentRequest()->getSchemeAndHttpHost() . base_path();
++      // added by IBM for subpath sites
++      if (isset($GLOBALS['real_base_url']) && isset($GLOBALS['real_base_host']) && $GLOBALS['real_base_url'] != $GLOBALS['real_base_host']) {
++        $baseUrl = $GLOBALS['real_base_url'] . "/";
++      }
+       return $this->generatePath($baseUrl, $uri);
+     }
+     elseif ($scheme == 'http' || $scheme == 'https' || $scheme == 'data') {

@@ -1,4 +1,426 @@
 changes:
+  8.x-20220215-0826:
+    commits:
+    - use correct versions
+    - pull in right version of ibm_apim
+    - composer update to fix svg cve
+    modules:
+      auth_apic:
+        8.x-1.10.11:
+        - moved custom field code (#675)
+        - Improved invitation tests (#667)
+      apic_app:
+        8.x-1.13.5:
+        - Address type 2018.4.1 (#291)
+      consumerorg:
+        8.x-1.10.7:
+        - Address type 2018.4.1 (#251)
+  8.x-20220209-1722:
+    commits:
+    - fix slick uninstall
+    modules:
+      ibm_apim:
+        8.x-1.11.18: null
+  8.x-20220203-1722:
+    commits:
+    - drupal core 9.3.5
+    modules:
+      product:
+        8.x-1.9.9:
+        - use product node id not pathalias
+  8.x-20220131-1721:
+    commits:
+    - no longer needed
+    - drupal core 9.3.4
+    - composer update
+    modules:
+      ibm_apim:
+        8.x-1.11.17:
+        - Address type (#786) (#793)
+  8.x-20220121-1121:
+    commits:
+    - remove vuln
+    - fp19
+    - Remove overrides (#591)
+    modules:
+      featuredcontent:
+        8.x-1.9.5:
+        - use pathalias if set
+  8.x-20220120-2321:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.11.16: null
+  8.x-20220111-1722:
+    commits:
+    - update date picker too
+    - drupal core 9.3.3
+    - Remove overrides 2018.4.1 (#578)
+    - patch no longer needed
+    - composer update
+    - crop module with php 8.1
+    modules:
+      ibm_apim:
+        8.x-1.11.15:
+        - Changes for improved invitation tests (#790)
+  8.x-20220110-0521:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.10.10:
+        - Add invitation token fallback
+  8.x-20220108-1545:
+    commits: null
+    modules:
+      product:
+        8.x-1.9.8: null
+      apic_api:
+        8.x-1.9.11: null
+      ibm_apim:
+        8.x-1.11.14: null
+  8.x-20220107-2321:
+    commits: null
+    modules:
+      product:
+        8.x-1.9.7:
+        - Revert "refactor taxonomy services"
+        8.x-1.9.6:
+        - refactor taxonomy services
+      apic_api:
+        8.x-1.9.10:
+        - Revert "refactor taxonomy services"
+        8.x-1.9.9:
+        - refactor taxonomy services
+      ibm_apim:
+        8.x-1.11.13:
+        - Revert "refactor taxonomy services"
+        - Revert "refactor taxonomy services pt 2"
+        8.x-1.11.12:
+        - refactor taxonomy services pt 2
+        8.x-1.11.11: null
+        8.x-1.11.10:
+        - refactor taxonomy services
+  8.x-20220107-1722:
+    commits: null
+    modules:
+      apic_api:
+        8.x-1.9.8: null
+  8.x-20220106-1641:
+    commits:
+    - fix translation adding (#573) (#576)
+    modules:
+      apic_api:
+        8.x-1.9.7:
+        - remove deprecated function calls
+  8.x-20220106-0521:
+    commits:
+    - don't load translations on install (#569) (#572)
+    modules:
+      apic_api:
+        8.x-1.9.6:
+        - Added example_array_items explorer option
+  8.x-20211126-0939:
+    commits:
+    - Added default value for example_array_items explorer option (#566)
+    - update patch
+    - composer update
+    - Remove from bin as well (#563)
+    - composer update (#558) (#561)
+    - composer update for drupal core 9.2.10
+    modules:
+      ibm_apim:
+        8.x-1.11.9:
+        - Added setting for example_array_items explorer option (#782)
+  8.x-20211125-1707:
+    commits: null
+    modules:
+      product:
+        8.x-1.9.5:
+        - ensure oldNode is actually set
+        - need a node id before this update will work
+        - need a node id before this update will work
+      apic_api:
+        8.x-1.9.5:
+        - need a node id before this update will work
+  8.x-20211123-1435:
+    commits:
+    - Don't yum install stuff in the site template
+    modules:
+      apictest:
+        8.x-1.11.4:
+        - Don't yum install stuff in the site template
+  8.x-20211116-1723:
+    commits:
+    - SA-CORE-2021-011
+    modules:
+      product:
+        8.x-1.9.4:
+        - fix basic page refs in products
+  8.x-20211103-1621:
+    commits:
+    - composer update
+    - composer update
+    modules:
+      themegenerator:
+        8.x-1.9.3:
+        - missing the drupal 9 compat line
+  8.x-20211102-2221:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.10.9:
+        - Rename OidcRegisterForm to OidcFirstTimeLoginForm (#654) (#662)
+  8.x-20211015-1022:
+    commits:
+    - composer update
+    - make sure we're calling isNew on a user
+    - fix conflicts
+    modules:
+      auth_apic:
+        8.x-1.10.8: null
+  8.x-20211013-2222:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.11.8:
+        - fix conflicts
+  8.x-20211013-1615:
+    commits: null
+    modules:
+      socialblock:
+        8.x-1.9.2:
+        - git -> gitci
+      product:
+        8.x-1.9.3:
+        - git -> gitci
+      ghmarkdown:
+        8.x-1.9.2:
+        - git -> gitci
+      auth_apic:
+        8.x-1.10.7:
+        - git -> gitci
+      mail_subscribers:
+        8.x-1.9.2:
+        - git -> gitci
+      themegenerator:
+        8.x-1.9.2:
+        - git -> gitci
+      featuredcontent:
+        8.x-1.9.4:
+        - git -> gitci
+      apic_api:
+        8.x-1.9.4:
+        - git -> gitci
+      apic_app:
+        8.x-1.13.4:
+        - git -> gitci
+      ibm_apim:
+        8.x-1.11.7:
+        - git -> gitci
+      consumerorg:
+        8.x-1.10.6:
+        - git -> gitci
+  8.x-20211013-1022:
+    commits:
+    - git -> gitci
+    modules:
+      apictest:
+        8.x-1.11.3:
+        - git -> gitci
+      connect_theme:
+        8.x-1.9.2:
+        - git -> gitci
+  8.x-20211011-1622:
+    commits:
+    - composer update
+    modules:
+      ibm_apim:
+        8.x-1.11.6: null
+  8.x-20211011-1423:
+    commits: null
+    modules:
+      socialblock:
+        8.x-1.9.1:
+        - refactor Jenkinsfile for the new portal.groovy
+      product:
+        8.x-1.9.2:
+        - use BUILD_DIR
+        - throw error correctly
+        - refactor Jenkinsfile for the new portal.groovy
+      ghmarkdown:
+        8.x-1.9.1:
+        - refactor Jenkinsfile for the new portal.groovy
+      auth_apic:
+        8.x-1.10.6:
+        - refactor Jenkinsfile for the new portal.groovy
+      mail_subscribers:
+        8.x-1.9.1:
+        - refactor Jenkinsfile for the new portal.groovy
+      themegenerator:
+        8.x-1.9.1:
+        - refactor Jenkinsfile for the new portal.groovy
+      ibm_apim:
+        8.x-1.11.5:
+        - use BUILD_DIR
+        - throw error correctly
+        - refactor Jenkinsfile for the new portal.groovy
+      consumerorg:
+        8.x-1.10.5:
+        - refactor Jenkinsfile for the new portal.groovy
+  8.x-20211007-1622:
+    commits:
+    - refactor Jenkinsfile for the new portal.groovy
+    modules:
+      featuredcontent:
+        8.x-1.9.3:
+        - refactor Jenkinsfile for the new portal.groovy
+      apic_api:
+        8.x-1.9.3:
+        - refactor Jenkinsfile for the new portal.groovy
+      apic_app:
+        8.x-1.13.3:
+        - refactor Jenkinsfile for the new portal.groovy
+      apictest:
+        8.x-1.11.2:
+        - refactor Jenkinsfile for the new portal.groovy
+      connect_theme:
+        8.x-1.9.1:
+        - refactor Jenkinsfile for the new portal.groovy
+  8.x-20210917-1622:
+    commits:
+    - composer update
+    - Update Jenkinsfile
+    - dont post on abort
+    - composer update
+    - drupal contrib module update
+    modules:
+      product:
+        8.x-1.9.1:
+        - controller shouldnt return null
+  8.x-20210917-1021:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.10.5:
+        - Fixed sign in on member invitations
+  8.x-20210914-1022:
+    commits:
+    - drupal security updates
+    modules:
+      featuredcontent:
+        8.x-1.9.2:
+        - load custom icons properly
+  8.x-20210901-1040:
+    commits:
+    - composer update
+    - new drupal core
+    modules:
+      auth_apic:
+        8.x-1.10.4:
+        - comment out test for builds (#639)
+  8.x-20210825-2221:
+    commits:
+    - move devel settings to their own config object
+    - composer update
+    modules:
+      apic_api:
+        8.x-1.9.2:
+        - move devel settings to their own config object
+      apic_app:
+        8.x-1.13.2:
+        - move devel settings to their own config object
+      ibm_apim:
+        8.x-1.11.4:
+        - move devel settings to their own config object
+      consumerorg:
+        8.x-1.10.4:
+        - move devel settings to their own config object
+      apictest:
+        8.x-1.11.1:
+        - move devel settings to their own config object
+  8.x-20210817-0938:
+    commits:
+    - update admin_toolbar
+    modules:
+      auth_apic:
+        8.x-1.10.3:
+        - Switch to catching Throwable
+      apic_api:
+        8.x-1.9.1:
+        - Switch to catching Throwable
+      apic_app:
+        8.x-1.13.1:
+        - Switch to catching Throwable
+      ibm_apim:
+        8.x-1.11.3:
+        - Switch to catching Throwable
+      consumerorg:
+        8.x-1.10.3:
+        - Use the member's id as array-key
+        8.x-1.10.2:
+        - Use the member's email as array-key
+        8.x-1.10.1:
+        - Replace Exception with Throwable
+  8.x-20210813-0828:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.11.2:
+        - dont allow disabling search_api
+  8.x-20210809-0943:
+    commits:
+    - fix cshs version
+    - oops these modules shouldnt be in 2018
+    - shouldnt have legal in this release
+    - drupal core security update
+    modules:
+      auth_apic:
+        8.x-1.10.2:
+        - Change invites from sessionBasedTempStore to privateTempStore (#625) (#631)
+      ibm_apim:
+        8.x-1.11.1:
+        - Change invites from sessionBasedTenpStore to privateTempStore
+  8.x-20210722-1624:
+    commits:
+    - Update version for 2018.4.1.18
+    modules:
+      socialblock:
+        8.x-1.9.0:
+        - update version 8.x-1.8.2 -> 8.x-1.9.0
+      product:
+        8.x-1.9.0:
+        - update version 8.x-1.8.15 -> 8.x-1.9.0
+      ghmarkdown:
+        8.x-1.9.0:
+        - update version 8.x-1.8.2 -> 8.x-1.9.0
+      auth_apic:
+        8.x-1.10.1: null
+      mail_subscribers:
+        8.x-1.9.0:
+        - update version 8.x-1.8.2 -> 8.x-1.9.0
+      themegenerator:
+        8.x-1.9.0:
+        - update version 8.x-1.8.2 -> 8.x-1.9.0
+      featuredcontent:
+        8.x-1.9.1: null
+      apic_api:
+        8.x-1.9.0:
+        - update version 8.x-1.8.11 -> 8.x-1.9.0
+      apic_app:
+        8.x-1.13.0:
+        - update version 8.x-1.12.4 -> 8.x-1.13.0
+      ibm_apim:
+        8.x-1.11.0:
+        - update version 8.x-1.10.24 -> 8.x-1.11.0
+      consumerorg:
+        8.x-1.10.0:
+        - update version 8.x-1.9.7 -> 8.x-1.10.0
+      apictest:
+        8.x-1.11.0:
+        - update version 8.x-1.10.9 -> 8.x-1.11.0
+      connect_theme:
+        8.x-1.9.0:
+        - update version 8.x-1.8.4 -> 8.x-1.9.0
   8.x-20210714-0912:
     commits:
     - drupal sa-core-2021-004
@@ -1925,4 +2347,4 @@ changes:
         - update version: 8.x-1.1.46 -> 8.x-1.2.46
       apictest:
         8.x-1.3.55: null
-  8.x-20210722-1624:
+  8.x-20220215-1022:

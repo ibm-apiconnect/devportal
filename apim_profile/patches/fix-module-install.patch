@@ -15,9 +15,9 @@
 
 --- core/lib/Drupal/Core/Routing/RequestContext.php
 +++ core/lib/Drupal/Core/Routing/RequestContext.php
-@@ -27,6 +27,20 @@ class RequestContext extends SymfonyRequestContext {
+@@ -19,6 +19,20 @@
    protected $completeBaseUrl;
- 
+
    /**
 +   * The base path relative to the location of index.php.
 +   *
@@ -36,20 +36,21 @@
     * Populates the context from the current request from the request stack.
     *
     * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-@@ -47,6 +61,9 @@ public function fromRequest(Request $request) {
-     if (isset($GLOBALS['base_url'])) {
+@@ -38,6 +52,10 @@
        $this->setCompleteBaseUrl($GLOBALS['base_url']);
      }
+
 +    if (isset($GLOBALS['base_path'])) {
 +      $this->setIndexPhpBasePath($GLOBALS['base_path']);
 +    }
++
+     return parent::fromRequest($request);
    }
- 
-   /**
-@@ -69,4 +86,25 @@ public function setCompleteBaseUrl($complete_base_url) {
+
+@@ -61,4 +79,24 @@
      $this->completeBaseUrl = $complete_base_url;
    }
- 
+
 +  /**
 +   * Sets the index php base path.
 +   *
@@ -70,7 +71,6 @@
 +  public function getIndexPhpBasePath() {
 +    return $this->indexPhpBasePath;
 +  }
-+
  }
 
 --- core/lib/Drupal/Core/Utility/UnroutedUrlAssembler.php	2017-09-01 10:55:31.010064346 +0000
@@ -81,11 +81,11 @@
  use Drupal\Core\PathProcessor\OutboundPathProcessorInterface;
 +use Drupal\Core\Routing\RequestContext;
  use Symfony\Component\HttpFoundation\RequestStack;
- 
+
  /**
 @@ -29,19 +30,29 @@
    protected $pathProcessor;
- 
+
    /**
 +   * The request context.
 +   *
@@ -112,20 +112,20 @@
      $this->pathProcessor = $path_processor;
 +    $this->requestContext = $request_context;
    }
- 
+
    /**
 @@ -123,7 +134,7 @@
      $uri = ltrim($uri, '/');
- 
+
      // Add any subdirectory where Drupal is installed.
 -    $current_base_path = $request->getBasePath() . '/';
 +    $current_base_path = $this->requestContext->getIndexPhpBasePath();
- 
+
      if ($options['absolute']) {
        $current_base_url = $request->getSchemeAndHttpHost() . $current_base_path;
 @@ -151,6 +162,7 @@
      $prefix = empty($uri) ? rtrim($options['prefix'], '/') : $options['prefix'];
- 
+
      $uri = str_replace('%2F', '/', rawurlencode($prefix . $uri));
 +    $uri = $options['script'] && ($uri != '') ? '/' . trim($uri, '/') : $uri;
      $query = $options['query'] ? ('?' . UrlHelper::buildQuery($options['query'])) : '';
@@ -146,12 +146,12 @@
    }
 @@ -627,7 +626,7 @@
      batch_set($batch);
- 
+
      // @todo Revisit once https://www.drupal.org/node/2548095 is in.
 -    return batch_process(Url::fromUri('base://results'), Url::fromUri('base://start'));
 +    return batch_process(Url::fromUri('base://update.php/results', ['script' => '']), Url::fromUri('base://update.php/start', ['script' => '']));
    }
- 
+
    /**
 
 --- core/modules/system/system.module
