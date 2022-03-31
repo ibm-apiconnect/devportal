@@ -33,11 +33,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class CustomModulesDeleteForm extends FormBase {
 
   /**
-   * @var string
-   */
-  protected string $sitePath;
-
-  /**
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
   protected ModuleHandlerInterface $moduleHandler;
@@ -60,17 +55,14 @@ class CustomModulesDeleteForm extends FormBase {
   /**
    * CustomModulesDeleteForm constructor.
    *
-   * @param string $site_path
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    * @param \Psr\Log\LoggerInterface $logger
    * @param \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $key_value_expirable
    * @param \Drupal\ibm_apim\Service\Utils $utils
    */
-  public function __construct(string $site_path,
-                              ModuleHandlerInterface $module_handler,
-                              LoggerInterface $logger,
+  public function __construct(ModuleHandlerInterface          $module_handler,
+                              LoggerInterface                 $logger,
                               KeyValueStoreExpirableInterface $key_value_expirable, Utils $utils) {
-    $this->sitePath = $site_path;
     $this->moduleHandler = $module_handler;
     $this->logger = $logger;
     $this->keyValueExpirable = $key_value_expirable;
@@ -85,7 +77,6 @@ class CustomModulesDeleteForm extends FormBase {
   public static function create(ContainerInterface $container): CustomModulesDeleteForm {
     /** @noinspection PhpParamsInspection */
     return new static(
-      $container->get('site.path'),
       $container->get('module_handler'),
       $container->get('logger.channel.ibm_apim'),
       $container->get('keyvalue.expirable')->get('ibm_apim_custommodule_delete'),

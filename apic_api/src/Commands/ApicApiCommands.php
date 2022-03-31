@@ -51,7 +51,7 @@ class ApicApiCommands extends DrushCommands {
     if ((int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
-    \Drupal::logger('apic_api')->info(dt('All API entries deleted.'));
+    \Drupal::logger('apic_api')->info('All API entries deleted.');
     ibm_apim_exit_trace(__FUNCTION__, NULL);
   }
 

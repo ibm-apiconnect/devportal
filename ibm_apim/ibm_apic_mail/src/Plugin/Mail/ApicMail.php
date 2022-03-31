@@ -154,7 +154,7 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
 
     // Check for the existence of a mail.css file in the default theme css folder.
     $theme = $this->themeHandler->getDefault();
-    $mailstyle = drupal_get_path('theme', $theme) . '/css/mail.css';
+    $mailstyle = \Drupal::service('extension.list.theme')->getPath($theme) . '/css/mail.css';
     if (is_file($mailstyle)) {
       $css = file_get_contents($mailstyle);
       $body['#css'] = $css;

@@ -257,14 +257,14 @@ function connect_theme_preprocess_menu(&$variables) {
   }
 
   $variables['base_path'] = base_path();
-  $variables['directory'] = drupal_get_path('theme', 'connect_theme');
+  $variables['directory'] = \Drupal::service('extension.list.theme')->getPath('connect_theme');
   $current_user = \Drupal::currentUser();
   if (!$current_user->isAnonymous()) {
     $entity = User::load($current_user->id());
     if ($entity !== NULL && $entity->user_picture->isEmpty() === FALSE) {
       $image = $entity->user_picture;
       $uri = $image->entity->getFileUri();
-      $variables['user_picture'] = file_create_url($uri);
+      $variables['user_picture'] =  \Drupal::service('file_url_generator')->generateAbsoluteString($uri);
     }
     else {
       $variables['user_picture'] = '';
@@ -287,7 +287,7 @@ function connect_theme_preprocess_status_messages(&$variables) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
 
-  $variables['directory'] = drupal_get_path('theme', 'connect_theme');
+  $variables['directory'] = \Drupal::service('extension.list.theme')->getPath('connect_theme');
 
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_exit_trace(__FUNCTION__, NULL);

@@ -54,7 +54,10 @@ class JWTParser implements TokenParserInterface {
     }
 
     $jwt = new JWTToken();
-    $decoded_token = base64_decode($token);
+    $decoded_token = $token;
+    if ($this->isBase64($decoded_token)) {
+      $decoded_token = base64_decode($decoded_token);
+    }
 
     if (!$this->validate($decoded_token)) {
       $this->logger->error('invalid invitation JWT');
@@ -135,6 +138,10 @@ class JWTParser implements TokenParserInterface {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     }
     return $returnValue;
+  }
+
+  public function isBase64($token) {
+    return (bool) preg_match('/^([A-Za-z0-9+\/]{4})*([A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{2}==)?$/', $token);
   }
 
 }

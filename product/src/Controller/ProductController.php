@@ -171,7 +171,7 @@ class ProductController extends ControllerBase {
         }
         elseif ($ibmApimShowPlaceholderImages === TRUE) {
           $rawImage = Api::getRandomImageName($apiNode->getTitle());
-          $apiImageUrl = base_path() . drupal_get_path('module', 'apic_api') . '/images/' . $rawImage;
+          $apiImageUrl = base_path() . \Drupal::service('extension.list.module')->getPath('apic_api') . '/images/' . $rawImage;
         }
         $enforced = TRUE;
         if (isset($apiNode->api_swagger->value)) {

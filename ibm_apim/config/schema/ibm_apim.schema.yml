@@ -109,6 +109,9 @@ ibm_apim.settings:
     allow_consumerorg_delete:
       type: boolean
       label: 'Allow users to delete their consumer organizations'
+    allow_consumerorg_change_owner:
+      type: boolean
+      label: 'Allow users to change the owner of their consumer organizations'
     allow_user_delete:
       type: boolean
       label: 'Allow users to delete their accounts'
@@ -204,6 +207,9 @@ ibm_apim.settings:
     router_type:
       type: string
       label: 'Select what type of router to use with the API explorer.'
+    example_array_items:
+      type: integer
+      label: 'Set the number of example items that should be generated for arrays'
     bgsync:
       type: mapping
       label: 'Background Sync Options'

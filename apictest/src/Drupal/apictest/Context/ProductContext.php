@@ -157,7 +157,7 @@ class ProductContext extends RawDrupalContext {
       }
 
       // Make sure the parent term was created from the categories
-      if ($terms = taxonomy_term_load_multiple_by_name('Sport', 'tags')) {
+      if ($terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(['name' => 'Sport', 'vid' => 'tags'])) {
 
         $terms = \Drupal::entityTypeManager()
           ->getStorage('taxonomy_term')

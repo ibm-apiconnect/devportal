@@ -97,7 +97,7 @@ services:
                  '@plugin.manager.menu.link',
                  '@messenger',
                  '@module_handler',
-                 '@module_installer']
+                 '@module_installer' ]
   ibm_apim.node_type_checker:
     class: Drupal\ibm_apim\Access\IbmNodeTypeCheck
     tags:
@@ -169,6 +169,7 @@ services:
       - { name: ibm_apim }
   ibm_apim.myorgsvc:
     class: Drupal\ibm_apim\Service\MyOrgService
+    arguments: [ '@file_url_generator' ]
     tags:
       - { name: ibm_apim }
   ibm_apim.db_usersfielddata:
@@ -221,7 +222,7 @@ services:
   ibm_apim.module:
     class: Drupal\ibm_apim\Service\ApicModuleService
     arguments: [ '@ibm_apim.utils',
-                 '@site.path',
+                 '%site.path%',
                  '@module_handler',
                  '@module_installer',
                  '@ibm_apim.site_config',
@@ -237,7 +238,8 @@ services:
   ibm_apim.event_log:
     class: Drupal\ibm_apim\Service\EventLogService
     arguments: [ '@date.formatter',
-                 '@ibm_apim.user_storage' ]
+                 '@ibm_apim.user_storage',
+                 '@file_url_generator' ]
   ibm_apim.product_plan:
     class: Drupal\ibm_apim\Service\ProductPlan
     arguments: [ '@language_manager', '@string_translation', '@ibm_apim.utils' ]

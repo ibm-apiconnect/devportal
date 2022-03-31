@@ -48,7 +48,7 @@ class GenerateTheme extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormID(): string {
+  public function getFormId(): string {
     return 'themegenerator_generate_theme';
   }
 
@@ -111,8 +111,8 @@ class GenerateTheme extends FormBase {
       '#value' => t('Generate'),
     ];
     $form['#attached']['library'][] = 'themegenerator/adminform';
-    $form['#attached']['drupalSettings']['themegenerator']['adminform']['module_path'] = base_path() . drupal_get_path('module', 'themegenerator');
-    $form['#attached']['drupalSettings']['themegenerator']['adminform']['connect_theme_path'] = base_path() . drupal_get_path('theme', 'connect_theme');
+    $form['#attached']['drupalSettings']['themegenerator']['adminform']['module_path'] = base_path() . \Drupal::service('extension.list.module')->getPath('themegenerator');
+    $form['#attached']['drupalSettings']['themegenerator']['adminform']['connect_theme_path'] = base_path() . \Drupal::service('extension.list.theme')->getPath('connect_theme');
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $form;
@@ -157,7 +157,7 @@ class GenerateTheme extends FormBase {
     $theme = Generator::generate($name, $type, $template);
 
     if ($theme !== NULL && !empty($theme)) {
-      $url = file_create_url($theme['zipPath']);
+      $url = \Drupal::service('file_url_generator')->generateAbsoluteString($theme['zipPath']);
       $messageHtml = '<a href="' . $url . '">' . $name . '.zip</a>';
       $messageHtml = \Drupal\Core\Render\Markup::create($messageHtml);
       $this->messenger->addMessage(t('Success. Your sub-theme can be downloaded here: @htmlLink. This download will be available for 24 hours.', [

@@ -30,12 +30,12 @@ use Throwable;
  */
 class Api {
 
-  protected $apiTaxonomy;
+  protected $apicTaxonomy;
 
   protected $utils;
 
   public function __construct() {
-    $this->apiTaxonomy = \Drupal::service('apic_api.taxonomy');
+    $this->apicTaxonomy = \Drupal::service('ibm_apim.taxonomy');
     $this->utils = \Drupal::service('ibm_apim.utils');
   }
 
@@ -94,7 +94,7 @@ class Api {
         $totalTags = [];
       }
 
-      $existingApiTags = $this->apiTaxonomy->separate_categories($totalTags, $existingCategories);
+      $existingApiTags = $this->apicTaxonomy->separate_categories($totalTags, $existingCategories);
       $oldTags = [];
       if (is_array($existingApiTags) && !empty($existingApiTags)) {
         foreach ($existingApiTags as $tag) {
@@ -186,7 +186,7 @@ class Api {
         if (!isset($api['consumer_api']['info']['description'])) {
           $api['consumer_api']['info']['description'] = '';
         }
-        $this->apiTaxonomy->create_api_forum($this->utils->truncate_string($api['consumer_api']['info']['title']), $api['consumer_api']['info']['description']);
+        $this->apicTaxonomy->create_api_forum($this->utils->truncate_string($api['consumer_api']['info']['title']), $api['consumer_api']['info']['description']);
       }
 
       \Drupal::logger('apic_api')->notice('API @api @version created', [
@@ -572,12 +572,12 @@ class Api {
         // API Categories
         $categoriesEnabled = (boolean) $config->get('categories')['enabled'];
         if ($categoriesEnabled === TRUE && isset($api['consumer_api']['x-ibm-configuration']['categories'])) {
-          $this->apiTaxonomy->process_categories($api, $node);
+          $this->apicTaxonomy->process_api_categories($api, $node);
         }
 
         $phaseTagging = (boolean) $config->get('autotag_with_phase');
         if ($phaseTagging === TRUE && isset($api['consumer_api']['x-ibm-configuration']['phase'])) {
-          $this->apiTaxonomy->process_phase_tag($node, $api['consumer_api']['x-ibm-configuration']['phase']);
+          $this->apicTaxonomy->process_phase_tag($node, $api['consumer_api']['x-ibm-configuration']['phase']);
         }
         // enable application certificates if we find an API that uses it
         if (isset($api['consumer_api']['x-ibm-configuration']['application-authentication']['certificate']) && (boolean) $api['consumer_api']['x-ibm-configuration']['application-authentication']['certificate'] === TRUE) {
@@ -710,7 +710,7 @@ class Api {
    */
   public static function getPlaceholderImage($name): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $name);
-    $returnValue = Url::fromUri('internal:/' . drupal_get_path('module', 'apic_api') . '/images/' . self::getRandomImageName($name))
+    $returnValue = Url::fromUri('internal:/' . \Drupal::service('extension.list.module')->getPath('apic_api') . '/images/' . self::getRandomImageName($name))
       ->toString();
     \Drupal::moduleHandler()->alter('api_getplaceholderimage', $returnValue);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
@@ -727,7 +727,7 @@ class Api {
   public static function getPlaceholderImageURL($name): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $name);
     $rawImage = self::getRandomImageName($name);
-    $returnValue = base_path() . drupal_get_path('module', 'apic_api') . '/images/' . $rawImage;
+    $returnValue = base_path() . \Drupal::service('extension.list.module')->getPath('apic_api') . '/images/' . $rawImage;
     \Drupal::moduleHandler()->alter('api_getplaceholderimageurl', $returnValue);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     return $returnValue;
@@ -1045,7 +1045,7 @@ class Api {
       if ($node !== NULL) {
         $api = unserialize($node->api_swagger->value, ['allowed_classes' => FALSE]);
         if (isset($api['x-ibm-configuration']['categories'])) {
-          $this->apiTaxonomy->process_categories($api, $node);
+          $this->apicTaxonomy->process_api_categories($api, $node);
         }
       }
     }

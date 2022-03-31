@@ -1289,11 +1289,15 @@ function drush_ibm_apim_clearup($UUID, $startTime) {
       $entityIds[] = $item;
     }
   }
+  $moduleHandler = \Drupal::service('module_handler');
   if (isset($entityIds) && !empty($entityIds)) {
     foreach (array_chunk($entityIds, 50) as $chunk) {
       $subEntities = ApplicationSubscription::loadMultiple($chunk);
       foreach ($subEntities as $subEntity) {
+        $subId = $subEntity->id();
+        $moduleHandler->invokeAll('apic_app_subscription_pre_delete', ['subId' => $subId]);
         $subEntity->delete();
+        $moduleHandler->invokeAll('apic_app_subscription_post_delete', ['subId' => $subId]);
       }
     }
   }
@@ -1569,8 +1573,8 @@ function drush_ibm_apim_updateconfig($config) {
 function drush_ibm_apim_updateconfigfile($filename) {
   ibm_apim_entry_trace(__FUNCTION__, $filename);
   drush_log(dt('Updating site config using file: @filename', ['@filename' => $filename]), 'success');
-  if ($filename !== NULL && file_exists(drupal_get_path('module', 'apictest') . '/' . $filename)) {
-    $string = file_get_contents(drupal_get_path('module', 'apictest') . '/' . $filename);
+  if ($filename !== NULL && file_exists(\Drupal::service('extension.list.module')->getPath('apictest') . '/' . $filename)) {
+    $string = file_get_contents(\Drupal::service('extension.list.module')->getPath('apictest') . '/' . $filename);
     drush_ibm_apim_updateconfig($string);
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -3428,4 +3432,3 @@ function exitClean() {
   drush_set_context('DRUSH_EXIT_CODE', DRUSH_SUCCESS);
   exit(0);
 }
-

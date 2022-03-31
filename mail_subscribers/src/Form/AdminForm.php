@@ -24,7 +24,7 @@ class AdminForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormID(): string {
+  public function getFormId(): string {
     return 'mail_subscribers_admin_settings';
   }
 

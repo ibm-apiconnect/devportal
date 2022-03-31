@@ -55,7 +55,7 @@ class MockApicPasswordService implements ApicPasswordInterface {
    * @inheritDoc
    */
   public function lookupUpAccount(string $reset_password_for, string $registry_url = NULL): ?EntityInterface {
-    \Drupal::logger('mock_auth_apic')->debug(__CLASS__ . '::' . __FUNCTION__ . ': TODO IMPL');
+    \Drupal::logger('mock_auth_apic')->debug('@class::@function: TODO IMPL', ['@class' => __CLASS__, '@function' => __FUNCTION__]);
     return NULL;
   }
 

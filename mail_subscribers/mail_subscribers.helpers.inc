@@ -11,6 +11,7 @@
  ********************************************************** {COPYRIGHT-END} **/
 
 use Drupal\Component\Utility\Unicode;
+use Symfony\Component\Mime\Header\UnstructuredHeader;
 
 /**
  * Build header array with priority and receipt confirmation settings.
@@ -97,7 +98,7 @@ function _mail_subscribers_format_address($mail, $name, $encode = TRUE): string 
     $returnValue = $mail;
   }
   else {
-    $name = ($encode ? Unicode::mimeHeaderEncode($name) : $name);
+    $name = ($encode ? $mail_subject = (new UnstructuredHeader('subject', $name))->getBodyAsString() : $name);
     $returnValue = sprintf('"%s" <%s>', $name, $mail);
   }
   return $returnValue;
@@ -159,11 +160,11 @@ function mail_subscribers_deliver($message) {
 
   $key = 'direct';
   $headers = unserialize($message->headers, ['allowed_classes' => FALSE]);
-
+  $subject = (new UnstructuredHeader('subject', $message->subject))->getBodyAsString();
   $mail = [
     'to' => $message->to_mail,
     'from' => $message->from_mail,
-    'subject' => Unicode::mimeHeaderEncode($message->subject),
+    'subject' => $subject,
     'body' => $message->body,
     'headers' => $headers,
   ];

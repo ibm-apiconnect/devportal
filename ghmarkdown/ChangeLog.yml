@@ -1,4 +1,10 @@
 changes:
+  8.x-3.3.9: null
+  8.x-3.3.8: null
+  8.x-3.3.7:
+  - Update Jenkinsfile
+  - Update ChangeLog.yml
+  - Update ghmarkdown.info.yml
   8.x-3.3.5:
   - git -> gitci
   8.x-3.3.4: null

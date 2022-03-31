@@ -1007,11 +1007,15 @@ class IbmApimCommands extends DrushCommands {
         $entityIds[] = $item;
       }
     }
+    $moduleHandler = \Drupal::service('module_handler');
     if (isset($entityIds) && !empty($entityIds)) {
       foreach (array_chunk($entityIds, 50) as $chunk) {
         $subEntities = ApplicationSubscription::loadMultiple($chunk);
         foreach ($subEntities as $subEntity) {
+          $subId = $subEntity->id();
+          $moduleHandler->invokeAll('apic_app_subscription_pre_delete', ['subId' => $subId]);
           $subEntity->delete();
+          $moduleHandler->invokeAll('apic_app_subscription_post_delete', ['subId' => $subId]);
         }
       }
     }
@@ -1274,8 +1278,8 @@ class IbmApimCommands extends DrushCommands {
   public function drush_ibm_apim_updateconfigfile($filename): void {
     ibm_apim_entry_trace(__FUNCTION__, $filename);
     \Drupal::logger('ibm_apim')->info('Updating site config using file: @filename', ['@filename' => $filename]);
-    if ($filename !== NULL && file_exists(drupal_get_path('module', 'apictest') . '/' . $filename)) {
-      $string = file_get_contents(drupal_get_path('module', 'apictest') . '/' . $filename);
+    if ($filename !== NULL && file_exists(\Drupal::service('extension.list.module')->getPath('apictest') . '/' . $filename)) {
+      $string = file_get_contents(\Drupal::service('extension.list.module')->getPath('apictest') . '/' . $filename);
       $this->drush_ibm_apim_updateconfig($string);
     }
     ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -1423,21 +1427,21 @@ class IbmApimCommands extends DrushCommands {
     $merge_dir = $input->getOption('merge_dir');
 
     if (!is_dir($required_pot_dir)) {
-      \Drupal::logger('ibm_apim')->error("Required .pot directory does not exist: $required_pot_dir");
+      \Drupal::logger('ibm_apim')->error("Required .pot directory does not exist: @required_pot_dir", ['@required_pot_dir' => $required_pot_dir]);
       return;
     }
 
     if (!is_dir($existing_drupal_po_dir)) {
-      \Drupal::logger('ibm_apim')->error("Existing .po directory does not exist: $existing_drupal_po_dir");
+      \Drupal::logger('ibm_apim')->error("Existing .po directory does not exist: @existing_drupal_po_dir", ['@existing_drupal_po_dir' => $existing_drupal_po_dir]);
       return;
     }
 
     if ($platform_dir === '') {
-      \Drupal::logger('ibm_apim')->notice('No platform_dir provided, using DRUPAL_ROOT: ' . DRUPAL_ROOT);
+      \Drupal::logger('ibm_apim')->notice('No platform_dir provided, using DRUPAL_ROOT: @DRUPAL_ROOT', ['@DRUPAL_ROOT' => DRUPAL_ROOT]);
       $platform_dir = DRUPAL_ROOT;
     }
     if (!is_dir($platform_dir)) {
-      \Drupal::logger('ibm_apim')->error("Invalid platform dir: '$platform_dir'");
+      \Drupal::logger('ibm_apim')->error("Invalid platform dir: '@platform_dir'", ['@platform_dir' => $platform_dir]);
       return;
     }
 
@@ -1465,12 +1469,12 @@ class IbmApimCommands extends DrushCommands {
     $outputDir = $input->getOption('output_dir');
 
     if (!is_dir($dropDir)) {
-      \Drupal::logger('ibm_apim')->error("Required new drop directory does not exist: $dropDir");
+      \Drupal::logger('ibm_apim')->error("Required new drop directory does not exist: @dropDir", ['@dropDir' => $dropDir]);
       return;
     }
 
     if (!is_dir($originalExportDir)) {
-      \Drupal::logger('ibm_apim')->error("Exported files directory does not exist: $originalExportDir");
+      \Drupal::logger('ibm_apim')->error("Exported files directory does not exist: @originalExportDir", ['@originalExportDir' => $originalExportDir]);
       return;
     }
 
@@ -1498,12 +1502,12 @@ class IbmApimCommands extends DrushCommands {
     $outputDir = $input->getOption('output_dir');
 
     if (!is_file($masterFile)) {
-      \Drupal::logger('ibm_apim')->error("Master file not found: $masterFile");
+      \Drupal::logger('ibm_apim')->error("Master file not found: @masterFile", ['@masterFile' => $masterFile]);
       return;
     }
 
     if (!is_file($secondaryFile)) {
-      \Drupal::logger('ibm_apim')->error("Secondary file not found: $secondaryFile");
+      \Drupal::logger('ibm_apim')->error("Secondary file not found: @secondaryFile", ['@secondaryFile' => $secondaryFile]);
       return;
     }
 
@@ -3009,6 +3013,7 @@ function drush_ibm_apim_activation_update($activation) {
    * @option string $extended_output
    *   Log additional output about the config uuids that get set
    * @aliases assert_config_uuids
+   * @throws \Exception
    */
   public function drush_ibm_apim_assert_config_uuids(InputInterface $input) {
     if (function_exists('ibm_apim_exit_trace')) {
@@ -3021,7 +3026,7 @@ function drush_ibm_apim_activation_update($activation) {
     if ($sourceDir !== '') {
       if (file_exists($sourceDir) && is_dir($sourceDir)) {
         $sync = new FileStorage($sourceDir);
-        \Drupal::logger('ibm_apim')->info('Using provided source dir ' . $sourceDir);
+        \Drupal::logger('ibm_apim')->info('Using provided source dir @sourceDir', ['@sourceDir' => $sourceDir]);
       }
       else {
         throw new \Exception('The provided source dir \'' . $sourceDir . '\' does not exist');
@@ -3039,11 +3044,11 @@ function drush_ibm_apim_activation_update($activation) {
         $sync->write($name, $data);
 
         if ($extendedOutput !== '') {
-          \Drupal::logger('ibm_apim')->info('Setting UUID of \'' . $name . '\' to \'' . $uuid . '\'');
+          \Drupal::logger('ibm_apim')->info('Setting UUID of \'@name\' to \'@uuid\'', ['@name' => $name, '@uuid' => $uuid]);
         }
       }
       elseif ($extendedOutput !== '') {
-        \Drupal::logger('ibm_apim')->info('The running site does not have any config with name \'' . $name . '\', not updating the UUID');
+        \Drupal::logger('ibm_apim')->info('The running site does not have any config with name \'@name\', not updating the UUID', ['@name' => $name]);
       }
     }
 
@@ -3212,11 +3217,11 @@ function drush_ibm_apim_activation_update($activation) {
         if ($index->getOption('index_directly') !== $indexDirectly) {
           $index->setOption('index_directly', $indexDirectly)->save();
 
-          \Drupal::logger('ibm_apim')->info(t('Set index_directly value to @value', ['@value' => $indexDirectly ? 'true' : 'false']));
+          \Drupal::logger('ibm_apim')->info('Set index_directly value to @value', ['@value' => $indexDirectly ? 'true' : 'false']);
         }
         else {
           \Drupal::logger('ibm_apim')
-            ->notice(t('index_directly value @value matched, no action needed', ['@value' => $indexDirectly ? 'true' : 'false']));
+            ->notice('index_directly value @value matched, no action needed', ['@value' => $indexDirectly ? 'true' : 'false']);
         }
       }
     }
@@ -3238,10 +3243,10 @@ function drush_ibm_apim_activation_update($activation) {
     $moduleService = \Drupal::service('ibm_apim.module');
     $result = $moduleService->purgeBlockListedModules();
     if ($result) {
-      \Drupal::logger('ibm_apim')->info(t('All blocklisted modules purged.'));
+      \Drupal::logger('ibm_apim')->info('All blocklisted modules purged.');
     }
     else {
-      \Drupal::logger('ibm_apim')->error(t('Error purging blocklisted modules.'));
+      \Drupal::logger('ibm_apim')->error('Error purging blocklisted modules.');
     }
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -3334,7 +3339,7 @@ function drush_ibm_apim_activation_update($activation) {
         \Drupal::service('messenger'));
       $themeController->compile_scss($themeName);
       } else {
-        \Drupal::logger('ibm_apim')->info(t('This function can only be used for enabled themes.'));
+        \Drupal::logger('ibm_apim')->info('This function can only be used for enabled themes.');
       }
     }
     if (function_exists('ibm_apim_exit_trace')) {

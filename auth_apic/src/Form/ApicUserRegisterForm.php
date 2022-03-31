@@ -40,6 +40,7 @@ use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Extension\ModuleHandler;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Drupal\auth_apic\Service\Interfaces\TokenParserInterface;
+use Drupal\ibm_apim\Service\Utils;
 
 /**
  * Self sign up / create new user form.
@@ -121,6 +122,11 @@ class ApicUserRegisterForm extends RegisterForm {
   protected $chosen_registry;
 
   /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
+  protected Utils $utils;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(EntityRepositoryInterface $entity_repository,
@@ -141,7 +147,9 @@ class ApicUserRegisterForm extends RegisterForm {
                               CacheBackendInterface $cache_backend,
                               Messenger $messenger,
                               ModuleHandler $module_handler,
-                              TokenParserInterface $token_parser) {
+                              TokenParserInterface $token_parser,
+                              Utils $utils
+                              ) {
     parent::__construct($entity_repository, $language_manager, $entity_type_bundle_info, $time);
     $this->logger = $logger;
     $this->accountService = $account_service;
@@ -158,6 +166,7 @@ class ApicUserRegisterForm extends RegisterForm {
     $this->messenger = $messenger;
     $this->moduleHandler = $module_handler;
     $this->jwtParser = $token_parser;
+    $this->utils = $utils;
   }
 
   /**
@@ -186,7 +195,8 @@ class ApicUserRegisterForm extends RegisterForm {
       $container->get('cache.default'),
       $container->get('messenger'),
       $container->get('module_handler'),
-      $container->get('auth_apic.jwtparser')
+      $container->get('auth_apic.jwtparser'),
+      $container->get('ibm_apim.utils')
     );
   }
 
@@ -252,12 +262,14 @@ class ApicUserRegisterForm extends RegisterForm {
 
       // if we are on the invited user flow, there will be a JWT in the session so grab that
       // we can use this to pre-populate the email field
-      $inviteToken = \Drupal::request()->query->get('token');
-      if ($inviteToken !== NULL) {
-        $jwt = $this->jwtParser->parse($inviteToken);
-        $this->authApicSessionStore->set('invitation_object', $jwt);
-      }
       $jwt = $this->authApicSessionStore->get('invitation_object');
+      if ($jwt === NULL) {
+        $inviteToken = \Drupal::request()->query->get('token');
+        if ($inviteToken !== NULL) {
+          $jwt = $this->jwtParser->parse($inviteToken);
+          $this->authApicSessionStore->set('invitation_object', $jwt);
+        }
+      }
       if ($jwt !== NULL) {
         $form['#message']['message'] = t('To complete your invitation, fill out any required fields below.');
 
@@ -728,7 +740,9 @@ class ApicUserRegisterForm extends RegisterForm {
       $loaded_user = $this->userStorage->load($new_user);
       if ($loaded_user) {
         $this->accountService->setDefaultLanguage($loaded_user);
-        $this->accountService->saveCustomFields($new_user, $loaded_user, $form_state, 'register');
+        $customFields = $this->userService->getCustomUserFields('register');
+        $customFieldValues = $this->utils->handleFormCustomFields($customFields, $form_state);
+        $this->utils->saveCustomFields($loaded_user, $customFields, $customFieldValues, FALSE);
       }
 
       $this->messenger->addStatus($response->getMessage());

@@ -73,14 +73,6 @@ interface ApicAccountInterface {
   public function updateApicAccount(ApicUser $user): ?ApicUser;
 
   /**
-   * @param ApicUser $apic_user
-   * @param $user
-   * @param FormStateInterface $form_state
-   * @param $view_mode
-   */
-  public function saveCustomFields(ApicUser $apic_user, $user, FormStateInterface $form_state, $view_mode): void;
-
-  /**
    * @param $user
    */
   public function setDefaultLanguage($user): void;

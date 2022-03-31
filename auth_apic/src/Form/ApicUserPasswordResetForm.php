@@ -167,7 +167,6 @@ class ApicUserPasswordResetForm extends FormBase {
     if ($this->moduleHandler->moduleExists('password_policy')) {
       $showPasswordPolicy = _password_policy_show_policy();
     }
-
     if ($showPasswordPolicy) {
       $user = User::load($form_state->getFormObject()->getEntity()->id());
       // required for password_policy
@@ -254,7 +253,6 @@ class ApicUserPasswordResetForm extends FormBase {
     }
 
     $resetPasswordObject = unserialize($token, ['allowed_classes' => TRUE]);
-
     $responseCode = $this->apicPassword->resetPassword($resetPasswordObject, $password);
 
     if ($responseCode >= 200 && $responseCode < 300) {

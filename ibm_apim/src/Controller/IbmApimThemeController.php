@@ -60,7 +60,7 @@ class IbmApimThemeController extends SystemController {
                 }
               }
               // add Delete option to custom themes
-              $themeInstallDir = \Drupal::service('site.path') . '/themes';
+              $themeInstallDir = \Drupal::getContainer()->getParameter('site.path') . '/themes';
               if (mb_strpos($theme_group->getPath(), $themeInstallDir) === 0) {
 
                 $themeInfo = $build[$buildKey]['#theme_groups']['uninstalled'][$installedKey]->info;

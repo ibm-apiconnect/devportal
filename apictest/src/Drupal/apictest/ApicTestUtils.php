@@ -240,7 +240,7 @@ class ApicTestUtils {
    * @throws \JsonException
    */
   private static function getAllPermissionsFromMock(): array {
-    $all_perms = json_decode(file_get_contents(drupal_get_path('module', 'ibm_apim') . '/src/Service/Mocks/MockData/permissions.json'), TRUE, 512, JSON_THROW_ON_ERROR);
+    $all_perms = json_decode(file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/src/Service/Mocks/MockData/permissions.json'), TRUE, 512, JSON_THROW_ON_ERROR);
     $permissions = [];
     foreach ($all_perms as $perm) {
       $permissions[$perm['url']] = $perm;

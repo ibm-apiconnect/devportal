@@ -170,16 +170,6 @@ class MockApicAccountService implements ApicAccountInterface {
     return TRUE;
   }
 
-  /**
-   * @param \Drupal\ibm_apim\ApicType\ApicUser $apic_user
-   * @param $user
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   * @param $view_mode
-   */
-  public function saveCustomFields(ApicUser $apic_user, $user, FormStateInterface $form_state, $view_mode): void {
-    \Drupal::logger('ibm_apim_mocks')->error('MockApicAccountService::saveCustomFields not implemented');
-  }
-
   public function setDefaultLanguage($user): void {
     \Drupal::logger('ibm_apim_mocks')->warning('MockApicAccountService::setDefaultLanguage not implemented');
   }

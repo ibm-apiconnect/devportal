@@ -7,9 +7,6 @@ services:
     class: Drupal\apic_api\ParamConverter\ApiNidOrPathParamConverter
     tags:
       - { name: paramconverter }
-  apic_api.taxonomy:
-    class: Drupal\apic_api\Service\ApiTaxonomy
-    arguments: [ '@ibm_apim.taxonomy' ]
   apic_api.utils:
     class: Drupal\apic_api\Service\ApiUtils
     arguments: [ '@state' ]

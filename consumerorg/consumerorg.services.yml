@@ -48,7 +48,8 @@ services:
                  '@consumerorg.role',
                  '@ibm_apim.account',
                  '@ibm_apim.apicuser',
-                 '@ibm_apim.event_log'
+                 '@ibm_apim.event_log',
+                 '@ibm_apim.utils',
     ]
   consumerorg.login:
     class: Drupal\consumerorg\Service\ConsumerOrgLoginService

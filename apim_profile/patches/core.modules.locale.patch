@@ -7,12 +7,12 @@ diff -Naur core/modules/locale.orig/src/PluralFormula.php core/modules/locale/sr
   */
 -class PluralFormula implements PluralFormulaInterface {
 +class PluralFormula implements PluralFormulaInterface, PluralFormulaStringInterface {
- 
+
    /**
     * @var \Drupal\Core\Language\LanguageManagerInterface
 @@ -41,6 +41,13 @@
    protected $formulae;
- 
+
    /**
 +   * The string representation of the plural formula, keyed by langcode.
 +   *
@@ -45,7 +45,7 @@ diff -Naur core/modules/locale.orig/src/PluralFormula.php core/modules/locale/sr
      $this->loadFormulae();
 @@ -90,6 +109,14 @@
    }
- 
+
    /**
 +   * {@inheritdoc}
 +   */
@@ -60,7 +60,7 @@ diff -Naur core/modules/locale.orig/src/PluralFormula.php core/modules/locale/sr
     * @return array
 @@ -101,10 +128,20 @@
    }
- 
+
    /**
 +   * Loads the formula strings and stores them on the object.
 +   */
@@ -78,7 +78,7 @@ diff -Naur core/modules/locale.orig/src/PluralFormula.php core/modules/locale/sr
 +    $this->formulaStrings = NULL;
      return $this;
    }
- 
+
 diff -Naur core/modules/locale.orig/src/PluralFormulaStringInterface.php core/modules/locale/src/PluralFormulaStringInterface.php
 --- core/modules/locale/src/PluralFormulaStringInterface.php	1970-01-01 00:00:00.000000000 +0000
 +++ core/modules/locale/src/PluralFormulaStringInterface.php	2017-09-08 11:57:21.256203898 +0000
@@ -120,10 +120,10 @@ diff -Naur core/modules/locale.orig/src/PluralFormulaStringInterface.php core/mo
 diff -Naur core/modules/locale.orig/src/PoDatabaseWriter.php core/modules/locale/src/PoDatabaseWriter.php
 --- core/modules/locale/src/PoDatabaseWriter.php	2017-09-08 11:56:30.056091345 +0000
 +++ core/modules/locale/src/PoDatabaseWriter.php	2017-09-08 11:57:21.280203953 +0000
-@@ -168,7 +168,9 @@
+@@ -178,7 +178,9 @@
        $plural = $header->getPluralForms();
        if (isset($plural) && $p = $header->parsePluralForms($plural)) {
-         list($nplurals, $formula) = $p;
+         [$nplurals, $formula] = $p;
 -        \Drupal::service('locale.plural.formula')->setPluralFormula($langcode, $nplurals, $formula);
 +        \Drupal::service('locale.plural.formula')
 +          ->setPluralFormula($langcode, $nplurals, $formula)

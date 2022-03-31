@@ -1,4 +1,18 @@
 changes:
+  8.x-3.3.15: null
+  8.x-3.3.14:
+  - fix test code
+  8.x-3.3.13:
+  - fix test code
+  8.x-3.3.12:
+  - set default perms correctly
+  8.x-3.3.11:
+  - nodejs not needed here
+  8.x-3.3.10: null
+  8.x-3.3.9:
+  - Update Jenkinsfile
+  - Update ChangeLog.yml
+  - Update apictest.info.yml
   8.x-3.3.7:
   - make sure billing provider is set
   8.x-3.3.6:

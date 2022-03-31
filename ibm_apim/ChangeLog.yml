@@ -1,4 +1,22 @@
 changes:
+  8.x-3.3.32:
+  - custom field fix (#803) (#805)
+  8.x-3.3.31:
+  - customFix v10.0 (#801)
+  8.x-3.3.30: null
+  8.x-3.3.29:
+  - Fix php80 param order
+  8.x-3.3.28:
+  - new application block needs to be cached per user
+  8.x-3.3.27:
+  - fix storage of translations (#795)
+  8.x-3.3.26:
+  - missing settings
+  8.x-3.3.25: null
+  8.x-3.3.24:
+  - Update Jenkinsfile
+  - Update ChangeLog.yml
+  - Update ibm_apim.info.yml
   8.x-3.3.17:
   - Billingfix (#779)
   8.x-3.3.16:

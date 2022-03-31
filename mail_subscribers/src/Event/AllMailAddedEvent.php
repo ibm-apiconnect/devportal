@@ -12,7 +12,7 @@
 
 namespace Drupal\mail_subscribers\Event;
 
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Event that is fired when all e-mails have been added to the spool.

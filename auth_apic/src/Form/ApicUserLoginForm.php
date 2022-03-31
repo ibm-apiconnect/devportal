@@ -222,12 +222,14 @@ class ApicUserLoginForm extends UserLoginForm {
     $is_owner_invitation = FALSE;
 
     // if we are on the invited user flow, there will be a JWT in the session so grab that
-    $inviteToken = \Drupal::request()->query->get('token');
-    if ($inviteToken !== NULL) {
-      $jwt = $this->jwtParser->parse($inviteToken);
-      $this->authApicSessionStore->set('invitation_object', $jwt);
-    }
     $jwt = $this->authApicSessionStore->get('invitation_object');
+    if ($jwt === NULL) {
+      $inviteToken = \Drupal::request()->query->get('token');
+      if ($inviteToken !== NULL) {
+        $jwt = $this->jwtParser->parse($inviteToken);
+        $this->authApicSessionStore->set('invitation_object', $jwt);
+      }
+    }
     if ($jwt !== NULL) {
       $form['#message']['message'] = t('To complete your invitation, sign in to an existing account or sign up to create a new account.');
 

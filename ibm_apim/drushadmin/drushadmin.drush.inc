@@ -88,7 +88,7 @@ function drush_drushadmin_theme_delete($theme_name) {
     foreach ($inputThemes as $inputTheme) {
       // Check if the specified theme is disabled and is a custom theme
       if (!array_key_exists($inputTheme, $themes) && in_array($inputTheme, $customThemes, TRUE)) {
-        $item_path = drupal_get_path('theme', $inputTheme);
+        $item_path = \Drupal::service('extension.list.theme')->getPath($inputTheme);
         if (isset($item_path) && !empty($item_path)) {
           \Drupal::service('ibm_apim.utils')->file_delete_recursive($item_path);
           // clear all caches otherwise reinstalling the same theme will fail

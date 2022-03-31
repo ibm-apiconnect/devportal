@@ -29,7 +29,7 @@ class MockApicLoginService implements ApicLoginServiceInterface {
       return $this->oidcLogin($user);
     }
 
-    \Drupal::logger('mock_auth_apic')->debug('MOCKED: MockApicLoginService->login() with ' . \serialize($user));
+    \Drupal::logger('mock_auth_apic')->debug('MOCKED: MockApicLoginService->login() with @user',['@user' => \serialize($user)]);
     //\Drupal::messenger()->addStatus('MOCKED: MockApicLoginService->login()');
     // otherwise we are a non-oidc user.
     $password = $user->getPassword();

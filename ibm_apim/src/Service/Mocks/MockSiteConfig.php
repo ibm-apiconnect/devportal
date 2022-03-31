@@ -81,7 +81,7 @@ class MockSiteConfig extends SiteConfig {
       $catalog_snapshot_file = $_ENV['catalog_snapshot_file'];
     }
     if (!isset($catalog_snapshot_file)) {
-      $catalog_snapshot_file = drupal_get_path('module', 'ibm_apim') . '/src/Service/Mocks/MockData/catalog-snapshot.json';
+      $catalog_snapshot_file = \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/src/Service/Mocks/MockData/catalog-snapshot.json';
       \Drupal::logger('apictest')->info('loading catalog-snapshot.json from @file', ['@file' => $catalog_snapshot_file]);
     }
 

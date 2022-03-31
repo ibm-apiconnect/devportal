@@ -141,7 +141,6 @@ class ApicAccountService implements ApicAccountInterface {
       $this->logger->notice('Registering new account in drupal database (username=@username)', ['@username' => $user->getUsername()]);
       $account = $this->userStorage->register($user);
     }
-
     $returnedAccount = $this->updateLocalAccount($user);
     if (isset($returnedAccount)) {
       $account = $returnedAccount;
@@ -204,11 +203,7 @@ class ApicAccountService implements ApicAccountInterface {
       $customFields = $this->userService->getCustomUserFields();
       if (!empty($customFields)) {
         $metadata = $user->getMetadata();
-        foreach($customFields as $customField) {
-          if (isset($metadata[$customField])) {
-            $account->set($customField, json_decode($metadata[$customField],true));
-          }
-        }
+        \Drupal::service('ibm_apim.utils')->saveCustomFields($account, $customFields, $metadata, TRUE);
       }
 
       // For all non-admin users, don't store their password in our database.
@@ -301,42 +296,6 @@ class ApicAccountService implements ApicAccountInterface {
     return $returnValue;
   }
 
-  /**
-   * @{inheritdoc}
-   *
-   * @param ApicUser $apic_user
-   * @param \Drupal\user\Entity\User $user
-   * @param FormStateInterface $form_state
-   * @param string $view_mode
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   * @throws \Drupal\Core\Entity\EntityStorageException
-   */
-  public function saveCustomFields(ApicUser $apic_user, $user, FormStateInterface $form_state, $view_mode = 'register'): void {
-    if (\function_exists('ibm_apim_entry_trace')) {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    }
-    $customFields = $this->userService->getCustomUserFields($view_mode);
-    $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $form_state);
-
-    if (isset($apic_user) && $user !== NULL && !empty($customFieldValues)) {
-      foreach ($customFieldValues as $customField => $value) {
-        if ($user->hasField($customField)) {
-          $this->logger->info('saving custom field: @customfield', ['@customfield' => $customField]);
-          if (isset($apic_user)) {
-            $apic_user->addCustomField($customField, $value);
-          }
-          $user->set($customField,$value);
-        }
-      }
-      $user->save();
-    }
-
-    if (\function_exists('ibm_apim_exit_trace')) {
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    }
-  }
 
   /**
    * @param \Drupal\user\Entity\User $user

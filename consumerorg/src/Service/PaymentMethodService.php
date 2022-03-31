@@ -51,9 +51,15 @@ class PaymentMethodService {
     if ($moduleHandler->moduleExists('encrypt')) {
       $ibmApimConfig = \Drupal::config('ibm_apim.settings');
       $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
-      $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
-      $encryptionService = \Drupal::service('encryption');
-      $configuration = $encryptionService->encrypt(serialize($configuration), $encryptionProfile);
+      if (isset($encryptionProfileName)) {
+        $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+        if ($encryptionProfile !== NULL) {
+          $encryptionService = \Drupal::service('encryption');
+          $configuration = $encryptionService->encrypt(serialize($configuration), $encryptionProfile);
+        }
+      } else {
+        \Drupal::logger('consumerorg')->warning('create: No payment method encryption profile set', []);
+      }
     }
 
     $entityIds = $query->execute();
@@ -287,9 +293,15 @@ class PaymentMethodService {
     if ($moduleHandler->moduleExists('encrypt')) {
       $ibmApimConfig = \Drupal::config('ibm_apim.settings');
       $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
-      $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
-      $encryptionService = \Drupal::service('encryption');
-      $configuration = unserialize($encryptionService->decrypt($configuration, $encryptionProfile), ['allowed_classes' => FALSE]);
+      if (isset($encryptionProfileName)) {
+        $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+        $encryptionService = \Drupal::service('encryption');
+        if ($encryptionProfile !== NULL) {
+          $configuration = unserialize($encryptionService->decrypt($configuration, $encryptionProfile), ['allowed_classes' => FALSE]);
+        }
+      } else {
+        \Drupal::logger('consumerorg')->warning('decryptConfiguration: No payment method encryption profile set', []);
+      }
     }
     return $configuration;
   }
@@ -327,7 +339,7 @@ class PaymentMethodService {
    */
   public static function getPlaceholderImage($name): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $name);
-    $returnValue = Url::fromUri('internal:/' . drupal_get_path('module', 'consumerorg') . '/images/' . self::getRandomImageName($name))
+    $returnValue = Url::fromUri('internal:/' . \Drupal::service('extension.list.module')->getPath('consumerorg') . '/images/' . self::getRandomImageName($name))
       ->toString();
     \Drupal::moduleHandler()->alter('consumerorg_get_paymentmethod_placeholderimage', $returnValue);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -344,7 +356,7 @@ class PaymentMethodService {
   public static function getPlaceholderImageURL($name): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $name);
     $rawImage = self::getRandomImageName($name);
-    $returnValue = base_path() . drupal_get_path('module', 'consumerorg') . '/images/' . $rawImage;
+    $returnValue = base_path() . \Drupal::service('extension.list.module')->getPath('consumerorg') . '/images/' . $rawImage;
     \Drupal::moduleHandler()->alter('consumerorg_get_paymentmethod_placeholderimageurl', $returnValue);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     return $returnValue;

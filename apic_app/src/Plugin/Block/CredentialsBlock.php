@@ -158,7 +158,7 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
     if ($moduleHandler->moduleExists('clipboardjs')) {
       $clipboard = [
         'enabled' => TRUE,
-        'image_path' => drupal_get_path('module', 'apic_app'),
+        'image_path' => \Drupal::service('extension.list.module')->getPath('apic_app'),
       ];
       $libraries[] = 'clipboardjs/drupal';
     }

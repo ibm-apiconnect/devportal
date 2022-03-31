@@ -10,7 +10,7 @@
  * restricted by GSA ADP Schedule Contract with IBM Corp.
  ********************************************************** {COPYRIGHT-END} **/
 
-namespace Drupal\ibm_apim;
+namespace Drupal\ibm_apim\Service;
 
 use Drupal\Core\Extension\ModuleInstaller;
 
@@ -19,7 +19,7 @@ use Drupal\Core\Extension\ModuleInstaller;
  *
  * Based on the module_blocklist module
  *
- * @package Drupal\ibm_apim
+ * @package Drupal\ibm_apim\Service
  */
 class ModuleBlocklistModuleInstaller extends ModuleInstaller {
 

@@ -1,4 +1,0 @@
-administer restrict by ip:
-  title: 'Administer restrict by ip'
-  description: 'Create, edit and delete rules for restricted IP login.'
-  restrict access: true

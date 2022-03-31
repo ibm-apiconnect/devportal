@@ -1,4 +1,10 @@
 changes:
+  8.x-3.3.8: null
+  8.x-3.3.7: null
+  8.x-3.3.6:
+  - Update Jenkinsfile
+  - Update ChangeLog.yml
+  - Update socialblock.info.yml
   8.x-3.3.4:
   - git -> gitci
   8.x-3.3.3:

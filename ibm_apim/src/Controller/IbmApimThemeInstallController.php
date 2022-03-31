@@ -253,7 +253,7 @@ class IbmApimThemeInstallController extends ThemeController {
       if (in_array($theme, $customThemes, TRUE)) {
         // Check if the specified theme is disabled
         if (!array_key_exists($theme, $themes)) {
-          $item_path = drupal_get_path('theme', $theme);
+          $item_path = \Drupal::service('extension.list.theme')->getPath($theme);
           if (isset($item_path) && !empty($item_path)) {
             $this->utils->file_delete_recursive($item_path);
             // clear all caches otherwise reinstalling the same theme will fail
@@ -284,7 +284,7 @@ class IbmApimThemeInstallController extends ThemeController {
     if (isset($theme)) {
       $themes = $this->themeHandler->listInfo();
       // this theme is using scss and may need it build into css
-      $theme_path = drupal_get_path('theme', $themes[$theme]->info['name']);
+      $theme_path = \Drupal::service('extension.list.theme')->getPath($themes[$theme]->info['name']);
       $filename = $theme_path . '/compile-scss.yml';
       if (file_exists($filename)) {
         $scss_compile_settings = yaml_parse_file($filename);
@@ -293,9 +293,9 @@ class IbmApimThemeInstallController extends ThemeController {
 
         $scss = new Compiler();
         // add the base_theme scss paths
-        $scss->addImportPath(drupal_get_path('theme', 'connect_theme') . '/bootstrap/stylesheets');
-        $scss->addImportPath(drupal_get_path('theme', 'connect_theme') . '/bootstrap/stylesheets/bootstrap');
-        $scss->addImportPath(drupal_get_path('theme', 'connect_theme') . '/scss');
+        $scss->addImportPath(\Drupal::service('extension.list.theme')->getPath('connect_theme') . '/bootstrap/stylesheets');
+        $scss->addImportPath(\Drupal::service('extension.list.theme')->getPath('connect_theme') . '/bootstrap/stylesheets/bootstrap');
+        $scss->addImportPath(\Drupal::service('extension.list.theme')->getPath('connect_theme') . '/scss');
 
         // add specified theme paths
         $scss->addImportPath($theme_path);
@@ -337,7 +337,7 @@ class IbmApimThemeInstallController extends ThemeController {
           // email SCSS
           $scss = new Compiler();
           // add the base_theme scss paths
-          $scss->addImportPath(drupal_get_path('theme', 'connect_theme') . '/scss');
+          $scss->addImportPath(\Drupal::service('extension.list.theme')->getPath('connect_theme') . '/scss');
 
           // add specified theme paths
           $scss->addImportPath($theme_path);

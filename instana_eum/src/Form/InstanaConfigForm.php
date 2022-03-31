@@ -1,20 +1,20 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2021
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\instana_eum\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
+
+/* +**************** {COPYRIGHT-TOP} ********************
+ * Licensed Materials - Property of IBM
+ *
+ * (C) Copyright IBM Corporation 2018, 2022
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ * **************** {COPYRIGHT-END} *********************
+ */
 
 /**
  * Instana settings form.
@@ -24,7 +24,7 @@ class InstanaConfigForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormID(): string {
+  public function getFormId(): string {
     return 'instana_eum_admin_settings';
   }
 
@@ -41,16 +41,12 @@ class InstanaConfigForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state): array {
 
     $config = $this->config('instana_eum.settings');
-    $siteConfig = \Drupal::config('system.site');
 
     $form['intro'] = [
-      '#markup' => t('Configures Instana End User Monitoring (EUM) beacon module. 
-        Please see the <a href="https://www.instana.com/docs/website_monitoring/" target="_blank">official documentation</a> for further details.'),
+      '#markup' => t('Configures Instana End User Monitoring (EUM) beacon module. Please see the <a href="https://www.instana.com/docs/website_monitoring/" target="_blank">official documentation</a> for further details.'),
       '#weight' => -30,
     ];
 
-
-    $apiKey = $config->get('api_key');
     $form['api_key'] = [
       '#type' => 'password',
       '#default_value' => $config->get('api_key') ?? '',
@@ -61,7 +57,6 @@ class InstanaConfigForm extends ConfigFormBase {
       '#attributes' => ['value' => $config->get('api_key')],
     ];
 
-    $reportingUrl = $config->get('reporting_url');
     $form['reporting_url'] = [
       '#type' => 'textfield',
       '#title' => t('Reporting URL'),
@@ -71,7 +66,6 @@ class InstanaConfigForm extends ConfigFormBase {
       '#maxlen' => 255,
     ];
 
-    $trackPages = $config->get('track_pages');
     $form['track_pages'] = [
       '#type' => 'checkbox',
       '#title' => t('Track individual pages'),
@@ -93,7 +87,6 @@ class InstanaConfigForm extends ConfigFormBase {
     <pre>ineum(\'meta\', \'version\', \'1.42.3\');</pre>
     <pre>ineum(\'ignoreUrls\', [/.*\/api\/data.*/]);</pre>';
 
-    $advancedSettings = $config->get('advanced_settings');
     $form['advanced_settings'] = [
       '#type' => 'textarea',
       '#title' => t('Advanced Settings'),

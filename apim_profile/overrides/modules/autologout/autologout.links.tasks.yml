@@ -1,4 +1,0 @@
-autologout.set_admin:
-  title: 'Settings'
-  route_name: autologout.set_admin
-  base_route: autologout.set_admin

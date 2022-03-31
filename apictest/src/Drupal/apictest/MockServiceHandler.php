@@ -87,7 +87,7 @@ class MockServiceHandler {
     }
     file_put_contents($settingsPhp, $contents);
 
-    self::clearCaches();
+    //self::clearCaches();
 
     // TEMPORARY DEBUG CODE
     print "\n\n";
@@ -123,7 +123,7 @@ class MockServiceHandler {
       print "WARNING: it was not possible to restore your site/settings.php file from a previous backup.\n";
     }
 
-    self::clearCaches();
+    //self::clearCaches();
 
     // TEMPORARY DEBUG CODE
     print "\n\n";

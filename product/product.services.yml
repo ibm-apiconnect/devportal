@@ -7,6 +7,3 @@ services:
     class: Drupal\product\ParamConverter\ProductNidOrPathParamConverter
     tags:
       - { name: paramconverter }
-  product.taxonomy:
-    class: Drupal\product\Service\ProductTaxonomy
-    arguments: [ '@ibm_apim.taxonomy' ]

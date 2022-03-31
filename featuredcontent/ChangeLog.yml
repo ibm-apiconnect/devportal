@@ -1,4 +1,12 @@
 changes:
+  8.x-3.3.9: null
+  8.x-3.3.8:
+  - needs to be node id not id
+  8.x-3.3.7: null
+  8.x-3.3.6:
+  - Update Jenkinsfile
+  - Update ChangeLog.yml
+  - Update featuredcontent.info.yml
   8.x-3.3.4:
   - git -> gitci
   8.x-3.3.3:

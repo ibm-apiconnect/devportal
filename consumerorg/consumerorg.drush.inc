@@ -644,6 +644,7 @@ function drush_consumerorg_member_update($payload, $event = 'member_update') {
   else {
     $members = $corg->getMembers();
     if ($members !== NULL && !empty($members)) {
+      $updated = false;
       foreach ($members as $key => $existingMember) {
         if ($existingMember->getUserUrl() === $payload['user_url']) {
           $members[$key]->setRoleUrls($payload['role_urls']);
@@ -655,15 +656,18 @@ function drush_consumerorg_member_update($payload, $event = 'member_update') {
           if (!empty($payload['updated_at'])) {
             $members[$key]->setUpdatedAt(strtotime($payload['updated_at']));
           }
+          $updated = true;
         }
       }
-      $corg->setMembers($members);
-      drush_log(dt('Updated member @username in consumer org @id', [
-        '@username' => $payload['user']['username'],
-        '@id' => $corg->getId(),
-      ]));
+      if ($updated) {
+        $corg->setMembers($members);
+        drush_log(dt('Updated member @username in consumer org @id', [
+          '@username' => $payload['user']['username'],
+          '@id' => $corg->getId(),
+        ]));
+      }
     }
-    else {
+    if (!$updated) {
       $member = new Member();
       $member->setUrl($payload['url']);
       $member->setUser($user_service->getUserFromJSON($payload['user']));

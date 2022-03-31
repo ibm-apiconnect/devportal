@@ -1,6 +1,6 @@
---- core/lib/Drupal/Core/StackMiddleware/ReverseProxyMiddleware.php	2019-02-20 12:00:33.187469790 +0000
-+++ core/lib/Drupal/Core/StackMiddleware/ReverseProxyMiddleware.php	2019-02-20 12:00:58.556809235 +0000
-@@ -62,7 +62,8 @@
+--- core/lib/Drupal/Core/StackMiddleware/ReverseProxyMiddleware.php	2021-12-20 14:42:16.000000000 +0000
++++ core/lib/Drupal/Core/StackMiddleware/ReverseProxyMiddleware.php	2021-12-20 14:43:49.000000000 +0000
+@@ -63,7 +63,8 @@
        if (count($proxies) > 0) {
          // Set the default value. This is the most relaxed setting possible and
          // not recommended for production.

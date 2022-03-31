@@ -16,6 +16,6 @@ dependencies:
 - session_based_temp_store
 package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9
-version: 8.x-3.3.8
+version: 8.x-3.3.16
 project: auth_apic
 interface translation project: auth_apic

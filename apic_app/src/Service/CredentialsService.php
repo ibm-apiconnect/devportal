@@ -19,6 +19,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\TempStore\TempStoreException;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\NodeInterface;
+use Drupal\Core\Extension\ModuleHandler;
 
 class CredentialsService {
 
@@ -29,11 +30,18 @@ class CredentialsService {
   protected UserUtils $userUtils;
 
   /**
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
+  protected ModuleHandler $moduleHandler;
+
+  /**
    * CredentialsService constructor.
    *
    * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
    */
-  public function __construct(UserUtils $userUtils) {
+  public function __construct(UserUtils $userUtils,
+                              ModuleHandler $moduleHandler) {
+    $this->moduleHandler = $moduleHandler;
     $this->userUtils = $userUtils;
   }
 
@@ -78,11 +86,13 @@ class CredentialsService {
         ->execute();
       if ($result !== NULL) {
         $record = $result->fetch();
+        $this->moduleHandler->invokeAll('apic_app_credential_pre_delete', ['credId' => $uuid]);    
 
         // Delete the subscription from all relevant tables
         Database::getConnection()
           ->query("DELETE c, n, r FROM {apic_app_application_creds} c INNER JOIN {node__application_credentials_refs} n ON n.application_credentials_refs_target_id = c.id INNER JOIN {node_revision__application_credentials_refs} r ON r.application_credentials_refs_target_id = c.id WHERE c.uuid = :cred_id", [':cred_id' => $uuid]);
 
+          $this->moduleHandler->invokeAll('apic_app_credential_post_delete', ['credId' => $uuid]);
         // Invalidate the tags and reset the cache of the application node
         Cache::invalidateTags(['application:' . $record->entity_id]);
         \Drupal::entityTypeManager()->getStorage('node')->resetCache([$record->entity_id]);
@@ -242,7 +252,10 @@ class CredentialsService {
       $oldCreds = $node->get('application_credentials_refs')->referencedEntities();
       foreach ($oldCreds as $cred) {
         if (!in_array(['target_id' => $cred->id()], $newCreds, FALSE)) {
-          \Drupal::entityTypeManager()->getStorage('apic_app_application_creds')->load($cred->id())->delete();
+          $credId = $cred->id();
+          $this->moduleHandler->invokeAll('apic_app_credential_pre_delete', ['credId' => $credId]);    
+          \Drupal::entityTypeManager()->getStorage('apic_app_application_creds')->load($credId)->delete();
+          $this->moduleHandler->invokeAll('apic_app_credential_post_delete', ['credId' => $credId]);    
         }
       }
       // update the application

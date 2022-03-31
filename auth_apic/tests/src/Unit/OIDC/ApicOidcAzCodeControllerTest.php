@@ -179,7 +179,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('error')->willReturn('code 20805');
     $this->query->get('error_description')->willReturn('Server crashed');
 
-    $this->logger->error(Argument::containingString('Server crashed'))->shouldBeCalled();
+    $this->logger->error("validateOidcRedirect error: @errordes", ["@errordes" => "Server crashed"])->shouldBeCalled();
     self::assertEquals("<front>", $this->controller->validateOidcRedirect());
   }
 
@@ -302,7 +302,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('error')->willReturn('code 20805');
     $this->query->get('error_description')->willReturn('Server died');
 
-    $this->logger->error(Argument::containingString('Server died'))->shouldBeCalled();
+    $this->logger->error("validateApimOidcRedirect error: @errordes", ["@errordes" => "Server died"])->shouldBeCalled();
     self::assertEquals("<front>", $this->controller->validateApimOidcRedirect());
   }
 
@@ -331,7 +331,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('state')->willReturn('badState');
     $this->query->get('code')->willReturn('code');
 
-    $this->logger->error(Argument::containingString('badState'))->shouldBeCalled();
+    $this->logger->error("validateApimOidcRedirect error: Invalid state parameter: @state", ["@state" => "badState"])->shouldBeCalled();
     self::assertEquals("<front>", $this->controller->validateApimOidcRedirect());
   }
 
@@ -345,7 +345,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->oidcStateService->get('badKey')->willReturn();
 
 
-    $this->logger->error(Argument::containingString('badState'))->shouldBeCalled();
+    $this->logger->error("validateApimOidcRedirect error: Invalid state parameter: @state", ["@state" => "badState"])->shouldBeCalled();
     self::assertEquals("<front>", $this->controller->validateApimOidcRedirect());
   }
 
@@ -371,7 +371,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $result->setData([]);
     $this->mgmtServer->get($arg)->willReturn($result);
 
-    $this->logger->error(Argument::containingString('400'))->shouldBeCalled();
+    $this->logger->error("validateApimOidcRedirect error: Response code @code", ["@code" => 400])->shouldBeCalled();
     self::assertEquals("<front>", $this->controller->validateApimOidcRedirect());
   }
 
@@ -537,7 +537,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('realm')->willReturn('realm');
     $this->query->get('response_type')->willReturn('data');
 
-    $this->logger->error(Argument::containingString("data"))->shouldBeCalled();
+    $this->logger->error("validateApimOidcAz error: Incorrect response_type parameter: @responseType", ["@responseType" => "data"])
+      ->shouldBeCalled();
     self::assertEquals("<front>", $this->controller->validateApimOidcAz());
   }
 
@@ -554,7 +555,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('title')->willReturn();
     $this->utils->base64_url_decode('badState')->willReturn();
 
-    $this->logger->error(Argument::containingString("badState"))->shouldBeCalled();
+    $this->logger->error("validateApimOidcAz error: Invalid state parameter: @state", ["@state" => "badState"])->shouldBeCalled();
     self::assertEquals("<front>", $this->controller->validateApimOidcAz());
   }
 
@@ -587,7 +588,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $result->setData([]);
     $this->mgmtServer->get($arg)->willReturn($result);
 
-    $this->logger->error(Argument::containingString("wrongRegistryUrl"))->shouldBeCalled();
+    $this->logger->error("validateApimOidcAz error: Invalid user registry url: @registryUrl", ["@registryUrl" => "wrongRegistryUrl"])
+      ->shouldBeCalled();
     self::assertEquals('<front>', $this->controller->validateApimOidcAz());
   }
 
@@ -609,7 +611,10 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->userRegistryService->get('registryUrl')->willReturn($userRegistry);
     $userRegistry->getRealm()->willReturn('trueRealm');
 
-    $this->logger->error(Argument::containingString("wrongRealm"))->shouldBeCalled();
+    $this->logger->error("validateApimOidcAz error: Invalid realm parameter: @realm does not match @getrealm", [
+      "@realm" => "wrongRealm",
+      "@getrealm" => "trueRealm",
+    ])->shouldBeCalled();
     self::assertEquals('<front>', $this->controller->validateApimOidcAz());
   }
 
@@ -631,7 +636,10 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->userRegistryService->get('registryUrl')->willReturn($userRegistry);
     $userRegistry->getRealm()->willReturn('trueRealm');
 
-    $this->logger->error(Argument::containingString("wrongClientId"))->shouldBeCalled();
+    $this->logger->error("validateApimOidcAz error: Invalid client_id parameter: @clientId does not match @getclientId", [
+      "@clientId" => "clientId",
+      "@getclientId" => "wrongClientId",
+    ])->shouldBeCalled();
     self::assertEquals('<front>', $this->controller->validateApimOidcAz());
   }
 
@@ -653,7 +661,11 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->userRegistryService->get('registryUrl')->willReturn($userRegistry);
     $userRegistry->getRealm()->willReturn('trueRealm');
 
-    $this->logger->error(Argument::containingString("https://correctRedirectLocation.com/badRoute"))->shouldBeCalled();
+    $this->logger->error("validateApimOidcAz error: Invalid redirect_uri parameter: @redirectUri does not match @expectedRedirectUri",
+      [
+        "@redirectUri" => "https://correctRedirectLocation.com/badRoute",
+        "@expectedRedirectUri" => "https://correctRedirectLocation.com/incorrectRoute",
+      ])->shouldBeCalled();
     self::assertEquals('<front>', $this->controller->validateApimOidcAz());
   }
 
@@ -688,7 +700,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $result->setData([]);
     $this->mgmtServer->get($arg)->willReturn($result);
 
-    $this->logger->error(Argument::containingString("400"))->shouldBeCalled();
+    $this->logger->error("validateApimOidcAz error: Response code @code", ["@code" => 400])->shouldBeCalled();
     self::assertEquals('<front>', $this->controller->validateApimOidcAz());
   }
 
@@ -758,7 +770,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $result->setData([]);
     $this->mgmtServer->get($arg)->willReturn($result);
 
-    $this->logger->error(Argument::containingString($url))->shouldBeCalled();
+    $this->logger->error("validateApimOidcAz error: Failed to parse redirect: @redirect_location", ["@redirect_location" => $url])->shouldBeCalled();
     self::assertEquals('<front>', $this->controller->validateApimOidcAz());
   }
 

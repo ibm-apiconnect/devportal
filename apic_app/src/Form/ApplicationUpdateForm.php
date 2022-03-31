@@ -278,7 +278,7 @@ class ApplicationUpdateForm extends FormBase {
       $data['image_endpoint'] = $imageURL;
 
       $customFields = $this->applicationService->getCustomFields();
-      $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $form_state);
+      $customFieldValues = $this->utils->handleFormCustomFields($customFields, $form_state);
       if (!empty($customFieldValues) && isset($this->node->get("application_data")->getValue()[0]['value'])) {
         $appData = unserialize($this->node->get("application_data")->getValue()[0]['value'], ['allowed_classes' => FALSE]);
         $metadata = $appData['metadata'] ?? [];
@@ -293,9 +293,7 @@ class ApplicationUpdateForm extends FormBase {
         $this->node->setTitle($this->utils->truncate_string($name));
         $this->node->set('apic_summary', $summary);
         $this->node->set('application_redirect_endpoints', $oauthEndpoints);
-        foreach ($customFieldValues as $customField => $value) {
-          $this->node->set($customField, $value);
-        }
+        $this->utils->saveCustomFields($this->node, $customFields, $customFieldValues, FALSE);
         $this->node->save();
 
         $eventEntity = new ApicEvent();

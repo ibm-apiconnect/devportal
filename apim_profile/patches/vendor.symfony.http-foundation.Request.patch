@@ -1,0 +1,22 @@
+--- vendor/symfony/http-foundation/Request.php	2022-02-21 13:35:47.000000000 +0000
++++ vendor/symfony/http-foundation/Request.php	2022-03-09 11:24:19.226050197 +0000
+@@ -1150,9 +1150,16 @@
+      */
+     public function getHost()
+     {
+-        if ($this->isFromTrustedProxy() && $host = $this->getTrustedValues(self::HEADER_X_FORWARDED_HOST)) {
+-            $host = $host[0];
+-        } elseif (!$host = $this->headers->get('HOST')) {
++
++        // apimesh/devportal#7594 - we have commented the code related to X_FORWARDED_HOST and trusted proxies here
++        // as this creates issues in OCP environments where sometimes getTrustedValues() returns values which
++        // cause us to use the wrong hostname to search for a cookie which won't exist. This then means authorize.php
++        // will reject calls such as UI theme upload as it can't find the cookie to authenticate the user.
++
++        //if ($this->isFromTrustedProxy() && $host = $this->getTrustedValues(self::HEADER_X_FORWARDED_HOST)) {
++        //    $host = $host[0];
++        //} elseif (!$host = $this->headers->get('HOST')) {
++        if (!$host = $this->headers->get('HOST')) {
+             if (!$host = $this->server->get('SERVER_NAME')) {
+                 $host = $this->server->get('SERVER_ADDR', '');
+             }

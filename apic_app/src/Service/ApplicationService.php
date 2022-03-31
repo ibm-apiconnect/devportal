@@ -342,19 +342,12 @@ class ApplicationService {
 
       if ($formState !== NULL && !empty($formState)) {
         $customFields = $this->getCustomFields();
-        $customFieldValues = $this->userUtils->handleFormCustomFields($customFields, $formState);
-        foreach ($customFieldValues as $customField => $value) {
-          $node->set($customField, $value);
-        }
+        $customFieldValues = $this->utils->handleFormCustomFields($customFields, $formState);
+        $this->utils->saveCustomFields($node, $customFields, $customFieldValues, FALSE);
       }
       elseif (!empty($app['metadata'])) {
         $customFields = $this->getCustomFields();
-        foreach ($customFields as $customField) {
-          if (isset($app['metadata'][$customField])) {
-            $value = json_decode($app['metadata'][$customField], TRUE, 512, JSON_THROW_ON_ERROR);
-            $node->set($customField, $value);
-          }
-        }
+        $this->utils->saveCustomFields($node, $customFields, $app['metadata'], TRUE);
       }
 
       // ensure this application links to all its subscriptions
@@ -564,7 +557,10 @@ class ApplicationService {
         foreach (array_chunk($entityIds, 50) as $chunk) {
           $subEntities = ApplicationSubscription::loadMultiple($chunk);
           foreach ($subEntities as $subEntity) {
+            $subId = $subEntity->id();
+            $this->moduleHandler->invokeAll('apic_app_subscription_pre_delete', ['subId' => $subId]);
             $subEntity->delete();
+            $this->moduleHandler->invokeAll('apic_app_subscription_post_delete', ['subId' => $subId]);
           }
         }
       }
@@ -575,9 +571,12 @@ class ApplicationService {
       $entityIds = $query->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         foreach (array_chunk($entityIds, 50) as $chunk) {
-          $subEntities = ApplicationCredentials::loadMultiple($chunk);
-          foreach ($subEntities as $subEntity) {
-            $subEntity->delete();
+          $credEntities = ApplicationCredentials::loadMultiple($chunk);
+          foreach ($credEntities as $credEntity) {
+            $credId = $credEntity->id();
+            $this->moduleHandler->invokeAll('apic_app_credential_pre_delete', ['credId' => $credId]);
+            $credEntity->delete();
+            $this->moduleHandler->invokeAll('apic_app_credential_post_delete', ['credId' => $credId]);
           }
         }
       }
@@ -625,7 +624,7 @@ class ApplicationService {
    * @return bool
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function deleteById($id = NULL, $event): bool {
+  public function deleteById($id, $event): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $id);
     $returnValue = FALSE;
     if (isset($id)) {
@@ -659,7 +658,7 @@ class ApplicationService {
    * @return bool
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function deleteByUrl($url = NULL, $event): bool {
+  public function deleteByUrl($url, $event): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
     $returnValue = FALSE;
     if (isset($url)) {
@@ -717,7 +716,7 @@ class ApplicationService {
    */
   public function getPlaceholderImage($name): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $name);
-    $placeholderImage = Url::fromUri('internal:/' . drupal_get_path('module', 'apic_app') . '/images/' . $this->getRandomImageName($name))
+    $placeholderImage = Url::fromUri('internal:/' . \Drupal::service('extension.list.module')->getPath('apic_app') . '/images/' . $this->getRandomImageName($name))
       ->toString();
     $this->moduleHandler->alter('apic_app_modify_getplaceholderimage', $placeholderImage);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $placeholderImage);
@@ -750,7 +749,7 @@ class ApplicationService {
         $name = $node->getTitle();
       }
       $rawImage = $this->getRandomImageName($name);
-      $appImage = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
+      $appImage = base_path() . \Drupal::service('extension.list.module')->getPath('apic_app') . '/images/' . $rawImage;
       $this->moduleHandler->alter('apic_app_modify_getimageforapp', $appImage);
     }
     else {
@@ -903,7 +902,7 @@ class ApplicationService {
             }
             elseif ($ibmApimShowPlaceholderImages === TRUE && $this->moduleHandler->moduleExists('product')) {
               $rawImage = Product::getRandomImageName($product->getTitle());
-              $productImageUrl = base_path() . drupal_get_path('module', 'product') . '/images/' . $rawImage;
+              $productImageUrl = base_path() . \Drupal::service('extension.list.module')->getPath('product') . '/images/' . $rawImage;
             }
           }
           $supersedingProduct = NULL;
@@ -921,52 +920,52 @@ class ApplicationService {
               }
               $cost = $this->productPlan->parseBilling($thisPlan['billing-model']);
               $planTitle = $productPlans[$sub->plan()]['title'];
-            }
-            if (isset($productPlans[$sub->plan()]['superseded-by'])) {
-              $supersededByProductUrl = $productPlans[$sub->plan()]['superseded-by']['product_url'];
-              $supersededByPlan = $productPlans[$sub->plan()]['superseded-by']['plan'];
-              // dont display a link for superseded-by targets that are what we're already subscribed to
-              // apim shouldn't really allow that, but it does, so try to handle it best we can
-              if ($supersededByProductUrl !== $sub->product_url() || $supersededByPlan !== $sub->plan()) {
-                $supersededByRef = $this->utils->base64_url_encode($supersededByProductUrl . ':' . $supersededByPlan);
-                $supersededByTitle = NULL;
-                $supersededByVersion = NULL;
 
-                $query = \Drupal::entityQuery('node');
-                $query->condition('type', 'product');
-                $query->condition('status', 1);
-                $query->condition('apic_url.value', $supersededByProductUrl);
-                $results = $query->execute();
-                $fullPlanTitle = NULL;
-                if (isset($results) && !empty($results)) {
-                  $nid = array_shift($results);
-                  $fullProduct = Node::load($nid);
-                  if ($fullProduct !== NULL) {
-                    $productYaml = yaml_parse($fullProduct->product_data->value);
-                    $supersededByTitle = $productYaml['info']['title'];
-                    $supersededByVersion = $productYaml['info']['version'];
-                    $fullProductPlans = [];
-                    $fullProductPlan = '';
-                    foreach ($fullProduct->product_plans->getValue() as $arrayValue) {
-                      $fullProductPlan = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-                      $fullProductPlans[$fullProductPlan['name']] = $fullProductPlan;
-                    }
-                    if (isset($fullProductPlan, $fullProductPlans[$fullProductPlan])) {
-                      $fullPlanTitle = $fullProductPlans[$fullProductPlan]['title'];
+              if (isset($thisPlan['superseded-by'])) {
+                $supersededByProductUrl = $thisPlan['superseded-by']['product_url'];
+                $supersededByPlan = $thisPlan['superseded-by']['plan'];
+                // dont display a link for superseded-by targets that are what we're already subscribed to
+                // apim shouldn't really allow that, but it does, so try to handle it best we can
+                if ($supersededByProductUrl !== $sub->product_url() || $supersededByPlan !== $sub->plan()) {
+                  $supersededByRef = $this->utils->base64_url_encode($supersededByProductUrl . ':' . $supersededByPlan);
+                  $supersededByProductTitle = NULL;
+                  $supersededByProductVersion = NULL;
+                  $supersededByPlanTitle = NULL;
+
+                  $query = \Drupal::entityQuery('node');
+                  $query->condition('type', 'product');
+                  $query->condition('status', 1);
+                  $query->condition('apic_url.value', $supersededByProductUrl);
+                  $results = $query->execute();
+
+                  if (isset($results) && !empty($results)) {
+                    $nid = array_shift($results);
+                    $supersededByProduct = Node::load($nid);
+                    if ($supersededByProduct !== NULL) {
+                      $productYaml = yaml_parse($supersededByProduct->product_data->value);
+                      $supersededByProductTitle = $productYaml['info']['title'];
+                      $supersededByProductVersion = $productYaml['info']['version'];
+                      foreach ($supersededByProduct->product_plans->getValue() as $arrayValue) {
+                        $supersededByProductPlan = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+                        if ($supersededByProductPlan['name'] === $supersededByPlan) {
+                          $supersededByPlanTitle = $supersededByProductPlan['title'];
+                          break;
+                        }
+                      }
                     }
                   }
-                }
-                if (!isset($fullPlanTitle) || empty($fullPlanTitle)) {
-                  $fullPlanTitle = $supersededByPlan;
-                }
+                  if (!isset($supersededByPlanTitle) || empty($supersededByPlanTitle)) {
+                    $supersededByPlanTitle = $supersededByPlan;
+                  }
 
-                $supersedingProduct = [
-                  'product_ref' => $supersededByRef,
-                  'plan' => $supersededByPlan,
-                  'plan_title' => $fullPlanTitle,
-                  'product_title' => $supersededByTitle,
-                  'product_version' => $supersededByVersion,
-                ];
+                  $supersedingProduct = [
+                    'product_ref' => $supersededByRef,
+                    'plan' => $supersededByPlan,
+                    'plan_title' => $supersededByPlanTitle,
+                    'product_title' => $supersededByProductTitle,
+                    'product_version' => $supersededByProductVersion,
+                  ];
+                }
               }
             }
           }

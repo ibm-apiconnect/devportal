@@ -1,4 +1,11 @@
 changes:
+  8.x-3.3.12: null
+  8.x-3.3.11: null
+  8.x-3.3.10: null
+  8.x-3.3.9:
+  - Update Jenkinsfile
+  - Update ChangeLog.yml
+  - Update connect_theme.info.yml
   8.x-3.3.7:
   - minor fix (#222) (#223)
   8.x-3.3.6:

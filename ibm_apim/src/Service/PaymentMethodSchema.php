@@ -217,25 +217,27 @@ class PaymentMethodSchema {
    *
    */
   public function storeTranslations(array $integration): void {
-    if (isset($integration['x-ibm-languages'])) {
+    if (isset($integration['integration']['configuration_schema'])) {
       $localeStorage = \Drupal::service('locale.storage');
       $utils = \Drupal::service('ibm_apim.utils');
       try {
-        foreach ($integration['x-ibm-languages'] as $key => $translations) {
-          $string = $localeStorage->findString(['source' => $integration[$key]]);
-          if (is_null($string)) {
-            $string = new SourceString();
-            $string->setString($integration[$key]);
-            $string->setStorage($localeStorage);
-            $string->save();
-          }
-          foreach ($translations as $langcode => $translation) {
-            $langcode = $utils->convert_lang_name_to_drupal($langcode);
-            $localeStorage->createTranslation([
-              'lid' => $string->lid,
-              'language' => $langcode,
-              'translation' => $translation,
-            ])->save();
+        foreach ($integration['integration']['configuration_schema'] as $key => $field) {
+          if (isset($field['x-ibm-languages'])) {
+            $string = $localeStorage->findString(['source' => $field['x-ibm-label']]);
+            if (is_null($string)) {
+              $string = new SourceString();
+              $string->setString($field['x-ibm-label']);
+              $string->setStorage($localeStorage);
+              $string->save();
+            }
+            foreach ($field['x-ibm-languages']['x-ibm-label'] as $langcode => $translation) {
+              $langcode = $utils->convert_lang_name_to_drupal($langcode);
+              $localeStorage->createTranslation([
+                'lid' => $string->lid,
+                'language' => $langcode,
+                'translation' => $translation,
+              ])->save();
+            }
           }
         }
       } catch (\Drupal\locale\StringStorageException $e) {

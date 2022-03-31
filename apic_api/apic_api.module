@@ -161,7 +161,7 @@ WHERE  (pub.entity_id = ' . $prod->entity_id . ')', [], $options);
 
             if ((int) $row->product_visibility_public_value === 1) {
 
-              // Create a grant for subscription base on the apic_url if the API's product is depcrecated 
+              // Create a grant for subscription base on the apic_url if the API's product is depcrecated
               if ($row->product_state_value === 'deprecated' && isset($row->apic_url_value)) {
                 $apic_url = str_replace('/', '_', $row->apic_url_value);
                 $grants[] = [
@@ -357,20 +357,21 @@ function apic_api_preprocess(&$variables, $hook, &$info) {
         $themeName = \Drupal::theme()->getActiveTheme()->getName();
         $themePath = \Drupal::theme()->getActiveTheme()->getPath();
         if (file_exists($themePath . '/templates/node/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $themeName);
-          $info['path'] = drupal_get_path('theme', $themeName) . '/templates/node';
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates/node';
           $info['template'] = $templateFileName;
         }
         elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $themeName);
-          $info['path'] = drupal_get_path('theme', $themeName) . '/templates';
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates';
           $info['template'] = $templateFileName;
         }
         else {
-          $templateFilePath = drupal_get_path('module', 'apic_api') . '/templates/' . $templateFileName . '.html.twig';
+          $templateFilePath = \Drupal::service('extension.list.module')
+              ->getPath('apic_api') . '/templates/' . $templateFileName . '.html.twig';
           if (file_exists($templateFilePath)) {
-            $info['theme path'] = drupal_get_path('module', 'apic_api');
-            $info['path'] = drupal_get_path('module', 'apic_api') . '/templates';
+            $info['theme path'] = \Drupal::service('extension.list.module')->getPath('apic_api');
+            $info['path'] = \Drupal::service('extension.list.module')->getPath('apic_api') . '/templates';
             $info['template'] = $templateFileName;
           }
         }
@@ -405,8 +406,7 @@ function apic_api_preprocess_node(&$variables): void {
     }
     $variables['showPlaceholders'] = $ibmApimShowPlaceholderImages;
     if ($ibmApimShowPlaceholderImages) {
-      $rawImage = Api::getRandomImageName($variables['node']->getTitle());
-      $variables['placeholderUrl'] = base_path() . drupal_get_path('module', 'apic_api') . '/images/' . $rawImage;
+      $variables['placeholderUrl'] = Api::getPlaceholderImageURL($variables['node']->getTitle());
     }
     else {
       $variables['placeholderUrl'] = NULL;
@@ -470,6 +470,7 @@ function apic_api_preprocess_node(&$variables): void {
       $certificateStripPrefix = (boolean) $config->get('certificate_strip_prefix');
       $codeSnippetLangs = [];
       $routerType = $config->get('router_type', 'hash');
+      $exampleArrayItems = (int) $config->get('example_array_items') ?: 3;
       $codeSnippets = $config->get('codesnippets');
       $firstEnabled = NULL;
       foreach ($codeSnippets as $lang => $enabled) {
@@ -516,6 +517,17 @@ function apic_api_preprocess_node(&$variables): void {
       }
       if (!$currentUser->isAnonymous() && (int) $currentUser->id() !== 1 && \Drupal::service('module_handler')->moduleExists('apic_app')) {
         $selectedProductNid = \Drupal::routeMatch()->getRawParameter('prodNode');
+        // for x-pathalias then need to get the NID
+        if ((int) $selectedProductNid === 0) {
+          $pathQuery = Drupal::entityQuery('node');
+          $pathQuery->condition('type', 'product');
+          $pathQuery->condition('status', 1);
+          $pathQuery->condition('apic_pathalias.value', $selectedProductNid);
+          $pathNids = $pathQuery->execute();
+          if (count($pathNids) > 0) {
+            $selectedProductNid = array_key_first($pathNids);
+          }
+        }
         $apps = \Drupal::service('apic_app.application')->listApplications();
 
         $plans = [];
@@ -639,9 +651,12 @@ function apic_api_preprocess_node(&$variables): void {
         $config = \Drupal::config('ibm_apim.settings');
         $forumLinksEnabled = (boolean) $config->get('autocreate_apiforum');
         if ($forumLinksEnabled === TRUE) {
-          $cleanForumName = \Drupal::service('apic_api.taxonomy')
+          $cleanForumName = \Drupal::service('ibm_apim.taxonomy')
             ->sanitise_api_name(html_entity_decode($variables['node']->getTitle(), ENT_QUOTES));
-          $forumID = taxonomy_term_load_multiple_by_name($cleanForumName, 'forums');
+          $forumID = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties([
+            "name" => $cleanForumName,
+            "vid" => 'forums',
+          ]);
           if (!empty($forumID)) {
             reset($forumID);
             $firstKey = key($forumID);
@@ -696,7 +711,7 @@ function apic_api_preprocess_node(&$variables): void {
           'api' => $variables['node']->apic_ref->value,
           'endpoint' => 'REPLACE_THIS_VALUE',
         ])->setAbsolute()->toString(),
-        'explorerDir' => base_path() . drupal_get_path('module', 'apic_api') . '/explorer/app/',
+        'explorerDir' => base_path() . \Drupal::service('extension.list.module')->getPath('apic_api') . '/explorer/app/',
         'locale' => $utils->convert_lang_name(\Drupal::languageManager()->getCurrentLanguage()->getId()),
         'loggedIn' => !$currentUser->isAnonymous(),
         'loginLink' => Url::fromRoute('user.login', ['redirectto' => Url::fromRoute('<current>')->getInternalPath()])->toString(),
@@ -704,7 +719,8 @@ function apic_api_preprocess_node(&$variables): void {
         'apicPortalUserId' => $currentUser->id(),
         'apicPortalNewAppLink' => Url::fromRoute('apic_app.create', ['redirectto' => Url::fromRoute('<current>')->getInternalPath()])
           ->toString(),
-        'routerType'=> $routerType,
+        'routerType' => $routerType,
+        'exampleArrayItems' => $exampleArrayItems,
       ];
       if ($infoSectionEntries !== NULL && !empty($infoSectionEntries)) {
         $variables['#attached']['drupalSettings']['api']['explorer']['options']['infoSectionEntries'] = [$infoSectionEntries];
@@ -721,6 +737,7 @@ function apic_api_preprocess_node(&$variables): void {
     }
     elseif ($variables['view_mode'] === 'embedded') {
       $prodNode = \Drupal::routeMatch()->getRawParameter('prodNode');
+      // for x-pathalias then ok to keep using the alias, dont need the NID here
       if (isset($prodNode)) {
         $variables['prodNode'] = $prodNode;
       }
@@ -796,10 +813,12 @@ function apic_api_menu_links_discovered_alter(&$links) {
  * @throws \JsonException
  */
 function apic_api_library_info_alter(&$libraries, $extension) {
-  if (array_key_exists('explorer', $libraries) && file_exists(drupal_get_path('module', 'apic_api') . '/explorer/app/asset-manifest.json')) {
-    $string = file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app/asset-manifest.json');
+  if (array_key_exists('explorer', $libraries) && file_exists(\Drupal::service('extension.list.module')
+        ->getPath('apic_api') . '/explorer/app/asset-manifest.json')) {
+    $string = file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_api') . '/explorer/app/asset-manifest.json');
     $json = json_decode($string, TRUE, 512, JSON_THROW_ON_ERROR);
-    if (isset($json['main.js']) && file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app' . $json['main.js'])) {
+    if (isset($json['main.js']) && file_get_contents(\Drupal::service('extension.list.module')
+          ->getPath('apic_api') . '/explorer/app' . $json['main.js'])) {
       $libraries['explorer']['js']['explorer/app' . $json['main.js']] = [
         'weight' => -1,
         'minified' => TRUE,

@@ -79,9 +79,9 @@ class IbmApimController extends ControllerBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $version = '';
 
-    $filename = drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml';
+    $filename = 	\Drupal::service('extension.list.profile')->getPath('apim_profile') . '/apic_version.yaml';
     if (file_exists($filename)) {
-      $yaml = yaml_parse_file(drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml');
+      $yaml = yaml_parse_file(	\Drupal::service('extension.list.profile')->getPath('apim_profile') . '/apic_version.yaml');
       if (isset($yaml['version'])) {
         $version .= $yaml['version'];
       }
@@ -92,9 +92,9 @@ class IbmApimController extends ControllerBase {
     $markup = '<p>' . t('IBM API Developer Portal version %ver', ['%ver' => $version]) . '</p>';
     $moduleHandler = \Drupal::service('module_handler');
     if ($moduleHandler->moduleExists('apic_api')) {
-      $filename = drupal_get_path('module', 'apic_api') . '/explorer/app/version.json';
+      $filename = \Drupal::service('extension.list.module')->getPath('apic_api') . '/explorer/app/version.json';
       if (file_exists($filename)) {
-        $contents = file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app/version.json');
+        $contents = file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_api') . '/explorer/app/version.json');
         $json = json_decode($contents, TRUE, 512, JSON_THROW_ON_ERROR);
         $markup .= '<p>' . t('API Explorer version %ver (%build)', [
             '%ver' => $json['version']['version'],

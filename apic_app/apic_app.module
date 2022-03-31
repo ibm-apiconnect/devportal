@@ -177,20 +177,21 @@ function apic_app_preprocess(&$variables, $hook, &$info) {
         $themeName = \Drupal::theme()->getActiveTheme()->getName();
         $themePath = \Drupal::theme()->getActiveTheme()->getPath();
         if (file_exists($themePath . '/templates/node/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $themeName);
-          $info['path'] = drupal_get_path('theme', $themeName) . '/templates/node';
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates/node';
           $info['template'] = $templateFileName;
         }
         elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $themeName);
-          $info['path'] = drupal_get_path('theme', $themeName) . '/templates';
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates';
           $info['template'] = $templateFileName;
         }
         else {
-          $templateFilePath = drupal_get_path('module', 'apic_app') . '/templates/' . $templateFileName . '.html.twig';
+          $templateFilePath = \Drupal::service('extension.list.module')
+              ->getPath('apic_app') . '/templates/' . $templateFileName . '.html.twig';
           if (file_exists($templateFilePath)) {
-            $info['theme path'] = drupal_get_path('module', 'apic_app');
-            $info['path'] = drupal_get_path('module', 'apic_app') . '/templates';
+            $info['theme path'] = \Drupal::service('extension.list.module')->getPath('apic_app');
+            $info['path'] = \Drupal::service('extension.list.module')->getPath('apic_app') . '/templates';
             $info['template'] = $templateFileName;
           }
         }
@@ -218,7 +219,7 @@ function apic_app_preprocess_node(&$variables) {
     $variables['showPlaceholders'] = $ibmApimShowPlaceholderImages;
     if ($ibmApimShowPlaceholderImages) {
       $rawImage = \Drupal::service('apic_app.application')->getRandomImageName($variables['node']->getTitle());
-      $variables['placeholderUrl'] = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
+      $variables['placeholderUrl'] = base_path() . \Drupal::service('extension.list.module')->getPath('apic_app') . '/images/' . $rawImage;
     }
     else {
       $variables['placeholderUrl'] = NULL;
@@ -305,7 +306,8 @@ function apic_app_preprocess_node(&$variables) {
         $variables['#attached']['drupalSettings']['anv'] = [];
         $variables['#attached']['drupalSettings']['analytics']['proxyURL'] = $url;
         $variables['#attached']['drupalSettings']['analytics']['translations'] = $translations;
-        $variables['#attached']['drupalSettings']['analytics']['analyticsDir'] = base_path() . drupal_get_path('module', 'ibm_apim') . '/analytics';
+        $variables['#attached']['drupalSettings']['analytics']['analyticsDir'] = base_path() . \Drupal::service('extension.list.module')
+            ->getPath('ibm_apim') . '/analytics';
         $variables['#attached']['drupalSettings']['application']['id'] = $variables['node']->application_id->value;
         $variables['analytics_access'] = TRUE;
       }
@@ -315,7 +317,8 @@ function apic_app_preprocess_node(&$variables) {
       $consumerorg_url = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerOrg()['url'];
       if ($consumerorg_url !== NULL && $consumerorg_url === $variables['node']->application_consumer_org_url->value) {
         $variables['notifications_access'] = TRUE;
-      } else {
+      }
+      else {
         $variables['notifications_access'] = FALSE;
       }
     }
@@ -404,7 +407,9 @@ function apic_app_menu_links_discovered_alter(&$links) {
 function apic_app_theme($existing, $type, $theme, $path): array {
   return [
     'new_application' => [
-      'variables' => [],
+      'variables' => [
+        'access' => FALSE
+      ],
     ],
     'application_subscriptions' => [
       'variables' => [

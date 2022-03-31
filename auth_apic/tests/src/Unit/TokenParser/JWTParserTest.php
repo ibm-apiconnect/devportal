@@ -66,9 +66,10 @@ class JWTParserTest extends UnitTestCase {
 
     $parser = new JWTParser($this->logger->reveal(), $this->utils->reveal());
     $result = $parser->parse($this->getValidEncodedJWT());
+    self::assertEquals($this->getValidJWTObject(), $result, 'Unexpected token object produced from parser with encoded token');
 
-    self::assertEquals($this->getValidJWTObject(), $result, 'Unexpected token object produced from parser');
-
+    $result = $parser->parse($this->getValidJWT());
+    self::assertEquals($this->getValidJWTObject(), $result, 'Unexpected token object produced from parser with jwt token');
   }
 
   /**
@@ -111,7 +112,13 @@ class JWTParserTest extends UnitTestCase {
 
     $parser = new JWTParser($this->logger->reveal(), $this->utils->reveal());
     $parser->parse(NULL);
+  }
 
+  public function testIsBase64() {
+
+    $parser = new JWTParser($this->logger->reveal(), $this->utils->reveal());
+    self::assertFalse($parser->isBase64($this->getValidJWT()));
+    self::assertTrue($parser->isBase64($this->getValidEncodedJWT()));
   }
 
   /**

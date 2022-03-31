@@ -1,4 +1,13 @@
 changes:
+  8.x-3.3.15: null
+  8.x-3.3.14: null
+  8.x-3.3.13:
+  - remove references to 'admin'
+  8.x-3.3.12: null
+  8.x-3.3.11:
+  - Update Jenkinsfile
+  - Update ChangeLog.yml
+  - Update auth_apic.info.yml
   8.x-3.3.7:
   - added destination check before redirect on login (#660)
   8.x-3.3.6:

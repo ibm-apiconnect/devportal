@@ -178,7 +178,7 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
     ],
     'ibm_apim_noperms' => [
       'variables' => [
-        'images_path' => drupal_get_path('module', 'ibm_apim'),
+        'images_path' => \Drupal::service('extension.list.module')->getPath('ibm_apim'),
       ],
     ],
     'ibm_apim_support' => [
@@ -262,20 +262,20 @@ function ibm_apim_preprocess(&$variables, $hook, &$info) {
         $themeName = \Drupal::theme()->getActiveTheme()->getName();
         $themePath = \Drupal::theme()->getActiveTheme()->getPath();
         if (file_exists($themePath . '/templates/node/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $themeName);
-          $info['path'] = drupal_get_path('theme', $themeName) . '/templates/node';
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates/node';
           $info['template'] = $templateFileName;
         }
         elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $themeName);
-          $info['path'] = drupal_get_path('theme', $themeName) . '/templates';
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates';
           $info['template'] = $templateFileName;
         }
         else {
-          $templateFilePath = drupal_get_path('module', 'ibm_apim') . '/templates/' . $templateFileName . '.html.twig';
+          $templateFilePath = \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/templates/' . $templateFileName . '.html.twig';
           if (file_exists($templateFilePath)) {
-            $info['theme path'] = drupal_get_path('module', 'ibm_apim');
-            $info['path'] = drupal_get_path('module', 'ibm_apim') . '/templates';
+            $info['theme path'] = \Drupal::service('extension.list.module')->getPath('ibm_apim');
+            $info['path'] = \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/templates';
             $info['template'] = $templateFileName;
           }
         }
@@ -307,20 +307,20 @@ function ibm_apim_preprocess(&$variables, $hook, &$info) {
       $themeName = \Drupal::theme()->getActiveTheme()->getName();
       $themePath = \Drupal::theme()->getActiveTheme()->getPath();
       if (file_exists($themePath . '/templates/views/' . $templateFileName . '.html.twig')) {
-        $info['theme path'] = drupal_get_path('theme', $themeName);
-        $info['path'] = drupal_get_path('theme', $themeName) . '/templates/views';
+        $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+        $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates/views';
         $info['template'] = $templateFileName;
       }
       elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
-        $info['theme path'] = drupal_get_path('theme', $themeName);
-        $info['path'] = drupal_get_path('theme', $themeName) . '/templates';
+        $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+        $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates';
         $info['template'] = $templateFileName;
       }
       else {
-        $templateFilePath = drupal_get_path('module', $moduleName) . '/templates/' . $templateFileName . '.html.twig';
+        $templateFilePath = \Drupal::service('extension.list.module')->getPath($moduleName) . '/templates/' . $templateFileName . '.html.twig';
         if (file_exists($templateFilePath)) {
-          $info['theme path'] = drupal_get_path('module', $moduleName);
-          $info['path'] = drupal_get_path('module', $moduleName) . '/templates';
+          $info['theme path'] = \Drupal::service('extension.list.module')->getPath($moduleName);
+          $info['path'] = \Drupal::service('extension.list.module')->getPath($moduleName) . '/templates';
           $info['template'] = $templateFileName;
         }
       }
@@ -351,7 +351,7 @@ function ibm_apim_preprocess(&$variables, $hook, &$info) {
  * @param array $theme_registry
  */
 function ibm_apim_theme_registry_alter(&$theme_registry) {
-  $theme_registry['status_report_general_info']['path'] = drupal_get_path('module', 'ibm_apim') . '/templates';
+  $theme_registry['status_report_general_info']['path'] = \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/templates';
 }
 
 /**
@@ -361,9 +361,9 @@ function ibm_apim_theme_registry_alter(&$theme_registry) {
  * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  */
 function template_preprocess_status_report_general_info(&$variables) {
-  $fileName = drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml';
+  $fileName = 	\Drupal::service('extension.list.profile')->getPath('apim_profile') . '/apic_version.yaml';
   if (file_exists($fileName)) {
-    $yaml = yaml_parse_file(drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml');
+    $yaml = yaml_parse_file(	\Drupal::service('extension.list.profile')->getPath('apim_profile') . '/apic_version.yaml');
     $variables['apic'] = ['value' => $yaml['version'], 'description' => $yaml['build']];
   }
   else {
@@ -372,9 +372,9 @@ function template_preprocess_status_report_general_info(&$variables) {
 
   $moduleHandler = \Drupal::service('module_handler');
   if ($moduleHandler->moduleExists('apic_api')) {
-    $fileName = drupal_get_path('module', 'apic_api') . '/explorer/app/version.json';
+    $fileName = \Drupal::service('extension.list.module')->getPath('apic_api') . '/explorer/app/version.json';
     if (file_exists($fileName)) {
-      $contents = file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app/version.json');
+      $contents = file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_api') . '/explorer/app/version.json');
       $json = json_decode($contents, TRUE);
       $variables['explorer'] = [
         'value' => $json['version']['version'],
@@ -388,7 +388,7 @@ function template_preprocess_status_report_general_info(&$variables) {
 
   $customModules = [];
   $customThemes = [];
-  $sitePath = \Drupal::service('site.path');
+  $sitePath = \Drupal::getContainer()->getParameter('site.path');
   $dir = new DirectoryIterator($sitePath . '/modules');
   foreach ($dir as $fileInfo) {
     if ($fileInfo->isDir() && !$fileInfo->isDot()) {
@@ -1353,17 +1353,17 @@ function ibm_apim_preprocess_form(&$variables) {
  * @param $extension
  */
 function ibm_apim_library_info_alter(&$libraries, $extension) {
-  if (array_key_exists('analytics', $libraries) && file_exists(drupal_get_path('module', 'ibm_apim') . '/analytics/asset-manifest.json')) {
-    $string = file_get_contents(drupal_get_path('module', 'ibm_apim') . '/analytics/asset-manifest.json');
+  if (array_key_exists('analytics', $libraries) && file_exists(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/asset-manifest.json')) {
+    $string = file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/asset-manifest.json');
     $json = json_decode($string, TRUE);
-    if (isset($json['main.js']) && file_get_contents(drupal_get_path('module', 'ibm_apim') . '/analytics/' . $json['main.js'])) {
+    if (isset($json['main.js']) && file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/' . $json['main.js'])) {
       $libraries['analytics']['js']['analytics/' . $json['main.js']] = [
         'weight' => -1,
         'minified' => TRUE,
         'preprocess' => FALSE,
       ];
     }
-    if (isset($json['main.css']) && file_get_contents(drupal_get_path('module', 'ibm_apim') . '/analytics/' . $json['main.css'])) {
+    if (isset($json['main.css']) && file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/' . $json['main.css'])) {
       $libraries['analytics']['css']['component']['analytics/' . $json['main.css']] = [
         'weight' => -20,
       ];

@@ -53,10 +53,10 @@ class Generator {
       if (!mkdir($targetDir) && !is_dir($targetDir)) {
         throw new \RuntimeException(sprintf('Directory "%s" was not created', $targetDir));
       }
-      self::recursiveCopy(DRUPAL_ROOT . '/' . drupal_get_path('module', 'themegenerator') . '/stub/' . $type, $targetDir, $name);
+      self::recursiveCopy(DRUPAL_ROOT . '/' . \Drupal::service('extension.list.module')->getPath('themegenerator') . '/stub/' . $type, $targetDir, $name);
       // handle the different overrides files in the other templates
       if ($template !== 'connect_theme') {
-        $srcDir = DRUPAL_ROOT . '/' . drupal_get_path('module', 'themegenerator') . '/stub/templates/' . $template;
+        $srcDir = DRUPAL_ROOT . '/' . \Drupal::service('extension.list.module')->getPath('themegenerator') . '/stub/templates/' . $template;
         if (is_dir($srcDir)) {
           $srcFile = $srcDir . '/overrides.' . $type;
           $tgtFile = $targetDir . '/' . $type . '/overrides.' . $type;
