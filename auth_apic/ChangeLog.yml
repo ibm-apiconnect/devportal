@@ -1,4 +1,36 @@
 changes:
+  8.x-2.8.15: null
+  8.x-2.8.14:
+  - jwtSupport v10.0.1 (#674)
+  8.x-2.8.13: null
+  8.x-2.8.12:
+  - moved custom field code
+  8.x-2.8.11:
+  - Check session invite token before query parameter (#665)
+  8.x-2.8.10: null
+  8.x-2.8.9:
+  - string translations - auth_apic
+  - fix up unit tests 2 - auth_apic
+  - fix up unit tests - auth_apic
+  - deprecated functions - auth_apic
+  8.x-2.8.8:
+  - remove references to 'admin'
+  8.x-2.8.7:
+  - added destination check before redirect on login (#659)
+  8.x-2.8.6:
+  - Approval update v10.0.1 (#657)
+  8.x-2.8.5:
+  - Rename OidcRegisterForm to OidcFirstTimeLoginForm (#654)
+  8.x-2.8.4:
+  - git -> gitci
+  8.x-2.8.3:
+  - velox/analytics#1462 - refactor Jenkinsfile
+  8.x-2.8.2:
+  - Fixed invites for existing users (#648) (#649)
+  8.x-2.8.1:
+  - Improved invitation tests (#646) (#647)
+  8.x-2.8.0:
+  - update version 8.x-2.7.1 -> 8.x-2.8.0
   8.x-2.7.0:
   - update version 8.x-2.6.9 -> 8.x-2.7.0
   8.x-2.6.8:

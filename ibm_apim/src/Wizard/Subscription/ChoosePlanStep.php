@@ -17,6 +17,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Wizard\IbmWizardStepBase;
 use Drupal\node\Entity\Node;
+use Drupal\product\Product;
 
 /**
  * Class ChoosePlanStep
@@ -45,7 +46,7 @@ class ChoosePlanStep extends IbmWizardStepBase {
       $temp_store = $temp_store_factory->get('ibm_apim.wizard');
 
       // if referring page was not another part of the subscription wizard, store a reference to it in the drupal session
-      if (strpos($_SERVER['HTTP_REFERER'], '/subscription') === FALSE && strpos($_SERVER['HTTP_REFERER'], '/login') === FALSE) {
+      if (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], '/subscription') === FALSE && strpos($_SERVER['HTTP_REFERER'], '/login') === FALSE) {
         \Drupal::service('tempstore.private')->get('ibm_apim')->set('subscription_wizard_referer', $_SERVER['HTTP_REFERER']);
       }
 
@@ -65,13 +66,16 @@ class ChoosePlanStep extends IbmWizardStepBase {
       }
 
       $product_node = Node::load($product_id);
-      if ($product_node !== NULL) {
+      if ($product_node !== NULL && $product_node->bundle() === 'product' && Product::checkAccess($product_node)) {
         $product_node_build = \Drupal::entityTypeManager()->getViewBuilder('node')->view($product_node, 'subscribewizard');
 
         $form['product'] = $product_node_build;
 
         $temp_store->set('productId', $product_id);
         $temp_store->set('productName', $product_node->getTitle());
+      } else {
+        \Drupal::messenger()->addWarning(t('The specified arguments were not correct.'));
+        $temp_store->delete('productId');
       }
     }
 

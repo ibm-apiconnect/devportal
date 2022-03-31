@@ -34,6 +34,7 @@ use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_apim\Service\Utils;
 use Drupal\ibm_apim\UserManagement\ApicAccountService;
 use Drupal\ibm_apim\Service\EventLogService;
 use Drupal\Tests\UnitTestCase;
@@ -142,6 +143,11 @@ class ConsumerOrgServiceTest extends UnitTestCase {
   protected $eventLogService;
 
   /**
+   * @var \Drupal\ibm_apim\Service\Utils|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $utils;
+
+  /**
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
@@ -165,6 +171,7 @@ class ConsumerOrgServiceTest extends UnitTestCase {
     $this->userService = $this->prophet->prophesize(ApicUserService::class);
     $this->userQuery = $this->prophet->prophesize(QueryInterface::class);
     $this->eventLogService = $this->prophet->prophesize(EventLogService::class);
+    $this->utils = $this->prophet->prophesize(Utils::class);
     $userStorage = $this->prophet->prophesize(EntityStorageInterface::class);
     $this->entityTypeManager->getStorage('user')->willReturn($userStorage->reveal());
     $userStorage->getQuery()->willReturn($this->userQuery); // TODO: implement per test when needed?
@@ -285,7 +292,8 @@ class ConsumerOrgServiceTest extends UnitTestCase {
       $this->roleService->reveal(),
       $this->apicAccountService->reveal(),
       $this->userService->reveal(),
-      $this->eventLogService->reveal());
+      $this->eventLogService->reveal(),
+      $this->utils->reveal());
   }
 
 }

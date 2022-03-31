@@ -404,9 +404,9 @@ class SiteConfig {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     // update version number
-    $filename = drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml';
+    $filename = 	\Drupal::service('extension.list.profile')->getPath('apim_profile') . '/apic_version.yaml';
     if (file_exists($filename)) {
-      $yaml = yaml_parse_file(drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml');
+      $yaml = yaml_parse_file(	\Drupal::service('extension.list.profile')->getPath('apim_profile') . '/apic_version.yaml');
       $this->state->set('ibm_apim.version', ['value' => $yaml['version'], 'description' => $yaml['build']]);
     }
 
@@ -883,8 +883,22 @@ class SiteConfig {
     $this->configFactory->getEditable('user.flood')->set('ip_window', 0)->set('ip_limit', 1000)->save();
   }
 
+  /**
+   * Return an array of blocklisted modules for this platform
+   */
+  public function getBlockList(): array {
+    $fileName = \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/module_blocklist.json';
+    if (file_exists($fileName)) {
+      $contents = file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/module_blocklist.json');
+      $json = json_decode($contents, TRUE);
+      return $json["modules"];
+    }
+    return [];
+  }
+
   public function getInvitationTTL() {
     return $this->state->get('ibm_apim.site_config')["invitation_ttl"];
+
   }
 
 }

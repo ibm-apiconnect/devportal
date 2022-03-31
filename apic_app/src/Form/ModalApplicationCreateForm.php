@@ -316,7 +316,7 @@ class ModalApplicationCreateForm extends FormBase {
             '#markup' => Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input id="clientIDInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientIDInputLabel" value="' . $clientId . '" />
                 <div id="hiddenClientIDInput" class="offscreen-field">' . $clientId . '</div>
                 <button class="clipboardjs-button" type="button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientIDInput">
-                  ' . file_get_contents(drupal_get_path('module', 'apic_app') . "/images/clipboard.svg") . '</button></div>'),
+                  ' . file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_app') . "/images/clipboard.svg") . '</button></div>'),
             '#weight' => 10,
           ];
 
@@ -324,7 +324,7 @@ class ModalApplicationCreateForm extends FormBase {
             '#markup' => Markup::create('<div class="clientSecretContainer"><label for="client_secret" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input id="clientSecretInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientSecretInputLabel" value="' . $clientSecret . '" />
                 <div id="hiddenClientSecretInput" class="offscreen-field">' . $clientSecret . '</div>
                 <button class="clipboardjs-button" type="button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientSecretInput">
-                  ' . file_get_contents(drupal_get_path('module', 'apic_app') . "/images/clipboard.svg") . '</button></div>'),
+                  ' . file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_app') . "/images/clipboard.svg") . '</button></div>'),
             '#weight' => 20,
           ];
         }

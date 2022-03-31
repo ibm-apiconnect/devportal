@@ -1,4 +1,25 @@
 changes:
+  8.x-2.7.10: null
+  8.x-2.7.9:
+  - deprecated functions
+  8.x-2.7.8:
+  - minor fix (#222) (#224)
+  8.x-2.7.7:
+  - More access (#219) (#221)
+  8.x-2.7.6:
+  - set multi-select table description id
+  8.x-2.7.5:
+  - git -> gitci
+  8.x-2.7.4:
+  - velox/analytics#1462 - refactor Jenkinsfile
+  8.x-2.7.3:
+  - Fixed accessibility violations (#217)
+  8.x-2.7.2:
+  - make sure its not a string
+  8.x-2.7.1:
+  - delete invitation should be a modal form
+  8.x-2.7.0:
+  - update version 8.x-2.6.2 -> 8.x-2.7.0
   8.x-2.6.1:
   - missing close tag
   8.x-2.6.0:

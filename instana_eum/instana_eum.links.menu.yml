@@ -1,0 +1,6 @@
+instana_eum.admin:
+  title: 'Instana EUM Configuration'
+  description: 'Setup Instana EUM connection parameters.'
+  parent: system.admin_config_system
+  route_name: instana_eum.settings
+  weight: 100

@@ -227,11 +227,6 @@ class ApicLoginService implements ApicLoginServiceInterface {
             \Drupal::logger('auth_apic')->error("Couldn't get bearer token while storing new users custom fields.");
           }
           if (!$updated) {
-            //Clear account of custom fields
-            foreach (array_keys($customFieldValues) as $customField) {
-              $account->set($customField, NULL);
-            }
-            $account->save();
             \Drupal::messenger()
               ->addMessage(t('There were errors while activating your account. Check the information in your profile is accurate'));
           }
@@ -241,11 +236,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
           $customFields = $this->userService->getCustomUserFields();
           if (!empty($customFields)) {
             $metadata = $meUser->getMetadata();
-            foreach ($customFields as $customField) {
-              if (isset($metadata[$customField])) {
-                $account->set($customField, json_decode($metadata[$customField], TRUE, 512, JSON_THROW_ON_ERROR));
-              }
-            }
+            $this->utils->saveCustomFields($account, $customFields, $metadata, TRUE);
             $account->save();
           }
         }
@@ -275,7 +266,9 @@ class ApicLoginService implements ApicLoginServiceInterface {
           if (isset($refresh_expires_in)) {
             $this->tempStore->set('refresh_expires_in', $refresh_expires_in);
           }
-
+          if ($localUser) {
+            $meUser->setCustomFields($localUser->getCustomFields());
+          }
           $this->processMeConsumerOrgs($meUser, $account);
 
           $loginResponse->setSuccess(TRUE);
@@ -512,7 +505,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
       }
       elseif ($firstTimeLogin && ($hasEmptyFields || $this->moduleHandler->moduleExists('terms_of_use'))) {
         // the user needs to fill in their required fields and accept ToU
-        $redirectTo = 'auth_apic.oidc_register';
+        $redirectTo = 'auth_apic.oidc_first_time_login';
         $message = 'successful authentication, first time login redirect to ' . $redirectTo;
 
       }

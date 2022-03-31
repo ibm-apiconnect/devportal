@@ -204,20 +204,20 @@ function consumerorg_preprocess(&$variables, $hook, &$info) {
         $theme_name = \Drupal::theme()->getActiveTheme()->getName();
         $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
         if (\file_exists($theme_path . '/templates/node/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $theme_name);
-          $info['path'] = drupal_get_path('theme', $theme_name) . '/templates/node';
+          $info['theme path'] = 	\Drupal::service('extension.list.theme')->getPath($theme_name);
+          $info['path'] = 	\Drupal::service('extension.list.theme')->getPath($theme_name) . '/templates/node';
           $info['template'] = $templateFileName;
         }
         elseif (\file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $theme_name);
-          $info['path'] = drupal_get_path('theme', $theme_name) . '/templates';
+          $info['theme path'] = 	\Drupal::service('extension.list.theme')->getPath($theme_name);
+          $info['path'] = 	\Drupal::service('extension.list.theme')->getPath($theme_name) . '/templates';
           $info['template'] = $templateFileName;
         }
         else {
-          $templateFilePath = drupal_get_path('module', 'consumerorg') . '/templates/' . $templateFileName . '.html.twig';
+          $templateFilePath = \Drupal::service('extension.list.module')->getPath('consumerorg') . '/templates/' . $templateFileName . '.html.twig';
           if (\file_exists($templateFilePath)) {
-            $info['theme path'] = drupal_get_path('module', 'consumerorg');
-            $info['path'] = drupal_get_path('module', 'consumerorg') . '/templates';
+            $info['theme path'] = \Drupal::service('extension.list.module')->getPath('consumerorg');
+            $info['path'] = \Drupal::service('extension.list.module')->getPath('consumerorg') . '/templates';
             $info['template'] = $templateFileName;
           }
         }
@@ -388,7 +388,7 @@ function consumerorg_preprocess_node(&$variables): void {
       \Drupal::moduleHandler()->alter('consumerorg_myorg_tabs', $tabs, $nodeArray);
       $variables['tabs'] = $tabs;
       $variables['edit_mode'] = $editMode;
-      $variables['images_path'] = drupal_get_path('module', 'ibm_apim');
+      $variables['images_path'] = \Drupal::service('extension.list.module')->getPath('ibm_apim');
       $variables['myorg_title'] = $variables['node']->getTitle();
       $variables['myorg_name'] = $variables['node']->consumerorg_name->value;
       $variables['myorg_url'] = $variables['node']->consumerorg_url->value;
@@ -519,7 +519,7 @@ function consumerorg_theme($existing, $type, $theme, $path): array {
         'consumerorgId' => NULL,
         'consumerorgTitle' => NULL,
         'tabs' => [],
-        'images_path' => drupal_get_path('module', 'ibm_apim'),
+        'images_path' => \Drupal::service('extension.list.module')->getPath('ibm_apim'),
         'showPlaceholders' => TRUE,
       ],
     ],

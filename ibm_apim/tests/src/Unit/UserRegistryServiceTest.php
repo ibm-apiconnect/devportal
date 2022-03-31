@@ -219,18 +219,6 @@ class UserRegistryServiceTest extends UnitTestCase {
 
   }
 
-  public function testUpdateAllNoInput(): void {
-    $this->expectExceptionMessage("Argument 1 passed to Drupal\ibm_apim\Service\UserRegistryService::updateAll() must be of the type array, null given");
-    $this->expectException(\TypeError::class);
-
-    $this->state->set('ibm_apim.user_registries', Argument::any())->shouldNotBeCalled();
-
-    $service = new UserRegistryService($this->state->reveal(), $this->logger->reveal());
-    $success = $service->updateAll(NULL);
-    self::assertFalse($success);
-
-  }
-
   /**
    * @param $url
    *

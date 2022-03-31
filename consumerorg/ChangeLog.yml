@@ -1,4 +1,31 @@
 changes:
+  8.x-2.7.13: null
+  8.x-2.7.12:
+  - check encryption profile name is set before using it
+  8.x-2.7.11:
+  - Create new member from member_update (#253)
+  8.x-2.7.10: null
+  8.x-2.7.9: null
+  8.x-2.7.8:
+  - ensure metadata is set
+  - fix unit test
+  - moved custom field code
+  - address type custom field for consumerorgs
+  8.x-2.7.7:
+  - Special cased address type custom field
+  8.x-2.7.6:
+  - deprecated functions - consumerorg
+  8.x-2.7.5: null
+  8.x-2.7.4:
+  - include invitation email address in eventlogs
+  8.x-2.7.3:
+  - custom fields not displaying
+  8.x-2.7.2:
+  - git -> gitci
+  8.x-2.7.1:
+  - velox/analytics#1462 - refactor Jenkinsfile
+  8.x-2.7.0:
+  - update version 8.x-2.6.9 -> 8.x-2.7.0
   8.x-2.6.8:
   - move devel settings to their own config object
   8.x-2.6.7:

@@ -16,6 +16,8 @@ use DirectoryIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
+use Drupal\Component\Datetime\DateTimePlus;
+use Exception;
 
 /**
  * Miscellaneous utility functions.
@@ -275,7 +277,7 @@ class Utils {
   public function getCustomThemeDirectories(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $custom_modules = [];
-    $sitePath = \Drupal::service('site.path');
+    $sitePath = \Drupal::getContainer()->getParameter('site.path');
     $dir = new DirectoryIterator($sitePath . '/themes');
     foreach ($dir as $fileinfo) {
       if ($fileinfo->isDir() && !$fileinfo->isDot()) {
@@ -294,7 +296,7 @@ class Utils {
   public function getCustomModuleDirectories(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $custom_modules = [];
-    $sitePath = \Drupal::service('site.path');
+    $sitePath = \Drupal::getContainer()->getParameter('site.path');
     $dir = new DirectoryIterator($sitePath . '/modules');
     foreach ($dir as $fileinfo) {
       if ($fileinfo->isDir() && !$fileinfo->isDot()) {
@@ -321,7 +323,7 @@ class Utils {
     $custom_module_dirs = $this->getCustomModuleDirectories();
 
     $uninstall_list = [];
-    $sitePath = \Drupal::service('site.path');
+    $sitePath = \Drupal::getContainer()->getParameter('site.path');
     $moduleHandler = \Drupal::service('module_handler');
 
     foreach ($custom_module_dirs as $cm) {
@@ -404,7 +406,7 @@ class Utils {
   public function getSubModules(string $parent): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $parent);
     $subs = [];
-    $sitePath = \Drupal::service('site.path');
+    $sitePath = \Drupal::getContainer()->getParameter('site.path');
     $dir = new RecursiveDirectoryIterator($sitePath . '/modules/' . $parent);
     $ite = new RecursiveIteratorIterator($dir);
     $files = new RegexIterator($ite, '/^.+\.info.yml$/i', RegexIterator::GET_MATCH);
@@ -426,4 +428,129 @@ class Utils {
 
   }
 
+
+   /**
+   * @param $customFields
+   * @param $formState
+   *
+   * @return array
+   */
+  public function handleFormCustomFields($customFields, $formState): array {
+    $customFieldValues = [];
+    if (!empty($customFields)) {
+      $userInputs = $formState->getUserInput();
+      foreach ($customFields as $customField) {
+        $value = $formState->getValue($customField);
+        if (isset($value[0]['value']) && $value[0]['value'] instanceof DateTimePlus) {
+          $format = "Y-m-d";
+          if (isset($userInputs[$customField][0]['value']) && is_array($userInputs[$customField][0]['value']) && count($userInputs[$customField][0]['value']) === 2) {
+            $format = "Y-m-d\TH:i:s";
+          }
+          $value = array_column($value, 'value');
+          foreach ($value as $key => $val) {
+            if (isset($val)) {
+              $value[$key] = $val->format($format);
+            }
+          }
+        }
+        elseif (isset($userInputs[$customField], $value)) {
+          $input = $userInputs[$customField];
+          //Remove unnecessary fields based on user Input
+          if (is_array($input)) {
+            foreach (array_keys($value) as $key) {
+              if (!array_key_exists($key, $input)) {
+                unset($value[$key]);
+              }
+              elseif (!empty($value[$key]) && is_array($value[$key])) {
+                foreach (array_keys($value[$key]) as $attr) {
+                  if ((is_array($input[$key]) && !array_key_exists($attr, $input[$key])) || $value[$key][$attr] === 'upload') {
+                    unset($value[$key][$attr]);
+                  }
+                }
+              }
+            }
+          }
+        }
+        //Don't need an array for only 1 element
+        if (is_array($value) && count($value) === 1) {
+          $value = array_pop($value);
+        }
+        $customFieldValues[$customField] = $value;
+      }
+    }
+    return $customFieldValues;
+  }
+
+  /**
+   * @{inheritdoc}
+   *
+   * @param ApicUser $apic_user
+   * @param \Drupal\user\Entity\User $user
+   * @param FormStateInterface $form_state
+   * @param string $view_mode
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function saveCustomFields($node, $customFields, $customFieldValues, $isJSON): void {
+    if (\function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
+    if (isset($node) && !empty($customFields)) {
+      foreach ($customFields as $customField) {
+        $isList = False;
+        if ($node->hasField($customField)) {
+          if (isset($customFieldValues[$customField])) {
+            $value = $customFieldValues[$customField];
+            if ($isJSON) {
+              if (strpos($value, '[') === 0) {  
+                $isList = True;
+              }
+              $value = json_decode($value, True, 512, JSON_THROW_ON_ERROR);
+            }
+            \Drupal::logger('ibm_apim')->info('saving custom field: @customfield', ['@customfield' => $customField]);
+            $type = $node->get($customField)->getFieldDefinition()->getType();
+            if ($isList || (!$isJSON && is_array($value))) {
+              $valueToSave = [];
+              foreach ($value as $element) {
+                $element = $this->handleFieldType($element, $type);
+                $valueToSave[] = $element;
+              }
+              $value = $valueToSave;
+            } else {
+              $value = $this->handleFieldType($value, $type); 
+            }
+            $node->set($customField,$value);
+          }
+        }
+        $node->save();
+      }
+
+    if (\function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
+  }
+}
+
+  private function handleFieldType($value, $type) { 
+    if ($type === 'address') {
+      if (isset($value['address'])) {
+        $value = $value['address'];
+      }
+    }
+    if ($type === 'timestamp') {
+      try {
+        if (is_array($value)) {
+          $value = array_shift($value);
+        }
+        $time = DateTimePlus::createFromFormat('Y-m-d\TH:i:s', $value);
+        if ($time) {
+          $value = $time->getTimestamp();
+        }
+      } catch (Exception $e) {
+      }
+    }
+    return $value;
+  }
 }

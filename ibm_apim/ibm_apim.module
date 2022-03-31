@@ -27,6 +27,7 @@ use Drupal\ibm_apim\Exception\ModuleInstallationBlocked;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Implementation of hook_init().
@@ -177,7 +178,7 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
     ],
     'ibm_apim_noperms' => [
       'variables' => [
-        'images_path' => drupal_get_path('module', 'ibm_apim'),
+        'images_path' => \Drupal::service('extension.list.module')->getPath('ibm_apim'),
       ],
     ],
     'ibm_apim_support' => [
@@ -261,20 +262,20 @@ function ibm_apim_preprocess(&$variables, $hook, &$info) {
         $themeName = \Drupal::theme()->getActiveTheme()->getName();
         $themePath = \Drupal::theme()->getActiveTheme()->getPath();
         if (file_exists($themePath . '/templates/node/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $themeName);
-          $info['path'] = drupal_get_path('theme', $themeName) . '/templates/node';
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates/node';
           $info['template'] = $templateFileName;
         }
         elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $themeName);
-          $info['path'] = drupal_get_path('theme', $themeName) . '/templates';
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates';
           $info['template'] = $templateFileName;
         }
         else {
-          $templateFilePath = drupal_get_path('module', 'ibm_apim') . '/templates/' . $templateFileName . '.html.twig';
+          $templateFilePath = \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/templates/' . $templateFileName . '.html.twig';
           if (file_exists($templateFilePath)) {
-            $info['theme path'] = drupal_get_path('module', 'ibm_apim');
-            $info['path'] = drupal_get_path('module', 'ibm_apim') . '/templates';
+            $info['theme path'] = \Drupal::service('extension.list.module')->getPath('ibm_apim');
+            $info['path'] = \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/templates';
             $info['template'] = $templateFileName;
           }
         }
@@ -306,20 +307,20 @@ function ibm_apim_preprocess(&$variables, $hook, &$info) {
       $themeName = \Drupal::theme()->getActiveTheme()->getName();
       $themePath = \Drupal::theme()->getActiveTheme()->getPath();
       if (file_exists($themePath . '/templates/views/' . $templateFileName . '.html.twig')) {
-        $info['theme path'] = drupal_get_path('theme', $themeName);
-        $info['path'] = drupal_get_path('theme', $themeName) . '/templates/views';
+        $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+        $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates/views';
         $info['template'] = $templateFileName;
       }
       elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
-        $info['theme path'] = drupal_get_path('theme', $themeName);
-        $info['path'] = drupal_get_path('theme', $themeName) . '/templates';
+        $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+        $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates';
         $info['template'] = $templateFileName;
       }
       else {
-        $templateFilePath = drupal_get_path('module', $moduleName) . '/templates/' . $templateFileName . '.html.twig';
+        $templateFilePath = \Drupal::service('extension.list.module')->getPath($moduleName) . '/templates/' . $templateFileName . '.html.twig';
         if (file_exists($templateFilePath)) {
-          $info['theme path'] = drupal_get_path('module', $moduleName);
-          $info['path'] = drupal_get_path('module', $moduleName) . '/templates';
+          $info['theme path'] = \Drupal::service('extension.list.module')->getPath($moduleName);
+          $info['path'] = \Drupal::service('extension.list.module')->getPath($moduleName) . '/templates';
           $info['template'] = $templateFileName;
         }
       }
@@ -350,7 +351,7 @@ function ibm_apim_preprocess(&$variables, $hook, &$info) {
  * @param array $theme_registry
  */
 function ibm_apim_theme_registry_alter(&$theme_registry) {
-  $theme_registry['status_report_general_info']['path'] = drupal_get_path('module', 'ibm_apim') . '/templates';
+  $theme_registry['status_report_general_info']['path'] = \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/templates';
 }
 
 /**
@@ -360,9 +361,9 @@ function ibm_apim_theme_registry_alter(&$theme_registry) {
  * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
  */
 function template_preprocess_status_report_general_info(&$variables) {
-  $fileName = drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml';
+  $fileName = 	\Drupal::service('extension.list.profile')->getPath('apim_profile') . '/apic_version.yaml';
   if (file_exists($fileName)) {
-    $yaml = yaml_parse_file(drupal_get_path('profile', 'apim_profile') . '/apic_version.yaml');
+    $yaml = yaml_parse_file(	\Drupal::service('extension.list.profile')->getPath('apim_profile') . '/apic_version.yaml');
     $variables['apic'] = ['value' => $yaml['version'], 'description' => $yaml['build']];
   }
   else {
@@ -371,9 +372,9 @@ function template_preprocess_status_report_general_info(&$variables) {
 
   $moduleHandler = \Drupal::service('module_handler');
   if ($moduleHandler->moduleExists('apic_api')) {
-    $fileName = drupal_get_path('module', 'apic_api') . '/explorer/app/version.json';
+    $fileName = \Drupal::service('extension.list.module')->getPath('apic_api') . '/explorer/app/version.json';
     if (file_exists($fileName)) {
-      $contents = file_get_contents(drupal_get_path('module', 'apic_api') . '/explorer/app/version.json');
+      $contents = file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_api') . '/explorer/app/version.json');
       $json = json_decode($contents, TRUE);
       $variables['explorer'] = [
         'value' => $json['version']['version'],
@@ -387,7 +388,7 @@ function template_preprocess_status_report_general_info(&$variables) {
 
   $customModules = [];
   $customThemes = [];
-  $sitePath = \Drupal::service('site.path');
+  $sitePath = \Drupal::getContainer()->getParameter('site.path');
   $dir = new DirectoryIterator($sitePath . '/modules');
   foreach ($dir as $fileInfo) {
     if ($fileInfo->isDir() && !$fileInfo->isDot()) {
@@ -639,7 +640,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         }
       }
       // blocklist some modules
-      $moduleBlocklist = \Drupal::config('ibm_apim.settings')->get('module_blocklist');
+      $moduleBlocklist = \Drupal::service('ibm_apim.site_config')->getBlockList();
       if (isset($moduleBlocklist) && !empty($moduleBlocklist)) {
         foreach ($form['modules'] as $modulePackage => $modules) {
           if (!is_array($modules)) {
@@ -666,8 +667,24 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       }
       $form['actions']['submit']['#value'] = t('Enable');
 
+
+      foreach ($form['modules'] as $modulePackage => $modules) {
+        if (!is_array($modules)) {
+          continue;
+        }
+        foreach ($modules as $moduleName => $module_info) {
+          if (is_array($module_info) && array_key_exists('description', $module_info) && is_array($module_info['description'])) {
+            $outputstring = $module_info['description']['#markup'];
+            if ($outputstring instanceof TranslatableMarkup && $outputstring->render() === "") {
+              $form['modules'][$modulePackage][$moduleName]['description']['#markup'] .= $module_info['name']['#markup'];
+            }
+          }
+        }
+      }
+
       $existingModulesMsg = $form['modules']['#prefix'] ?? '';
       $form['modules']['#prefix'] = $existingModulesMsg . '<p>' . t('Below is a list of installed modules. Modules that are installed and enabled are shown with a selected check box. To enable a module, select the check box against the module name, and click Enable.') . '</p>';
+
 
       break;
     case 'system_modules_uninstall':
@@ -823,17 +840,19 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       ];
       break;
     case 'ban_ip_form':
-      $ipBanEnabled = (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true);
+      $ipBanEnabled = (bool) \Drupal::state()->get('ibm_apim.ip_ban_enabled', TRUE);
       if (!$ipBanEnabled) {
-        \Drupal::messenger()->addWarning(t('IP based security is currently disabled for this portal service so IP address bans will not work.'));
+        \Drupal::messenger()
+          ->addWarning(t('IP based security is currently disabled for this portal service so IP address bans will not work.'));
       }
       break;
     case 'restrict_by_ip_general_settings':
     case 'restrict_by_ip_login_settings':
     case 'restrict_by_ip_role_settings':
-      $ipBanEnabled = (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true);
+      $ipBanEnabled = (bool) \Drupal::state()->get('ibm_apim.ip_ban_enabled', TRUE);
       if (!$ipBanEnabled) {
-        \Drupal::messenger()->addWarning(t('IP based security is currently disabled for this portal service so IP based restrictions will not work.'));
+        \Drupal::messenger()
+          ->addWarning(t('IP based security is currently disabled for this portal service so IP based restrictions will not work.'));
       }
       break;
   }
@@ -865,7 +884,7 @@ function ibm_apim_local_tasks_alter(&$local_tasks) {
  * @throws \Drupal\ibm_apim\Exception\ModuleInstallationBlocked
  */
 function ibm_apim_module_preinstall($module) {
-  $moduleBlocklist = \Drupal::config('ibm_apim.settings')->get('module_blocklist');
+  $moduleBlocklist = \Drupal::service('ibm_apim.site_config')->getBlockList();
   if (!$moduleBlocklist || !in_array($module, $moduleBlocklist, FALSE)) {
     return;
   }
@@ -1334,17 +1353,17 @@ function ibm_apim_preprocess_form(&$variables) {
  * @param $extension
  */
 function ibm_apim_library_info_alter(&$libraries, $extension) {
-  if (array_key_exists('analytics', $libraries) && file_exists(drupal_get_path('module', 'ibm_apim') . '/analytics/asset-manifest.json')) {
-    $string = file_get_contents(drupal_get_path('module', 'ibm_apim') . '/analytics/asset-manifest.json');
+  if (array_key_exists('analytics', $libraries) && file_exists(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/asset-manifest.json')) {
+    $string = file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/asset-manifest.json');
     $json = json_decode($string, TRUE);
-    if (isset($json['main.js']) && file_get_contents(drupal_get_path('module', 'ibm_apim') . '/analytics/' . $json['main.js'])) {
+    if (isset($json['main.js']) && file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/' . $json['main.js'])) {
       $libraries['analytics']['js']['analytics/' . $json['main.js']] = [
         'weight' => -1,
         'minified' => TRUE,
         'preprocess' => FALSE,
       ];
     }
-    if (isset($json['main.css']) && file_get_contents(drupal_get_path('module', 'ibm_apim') . '/analytics/' . $json['main.css'])) {
+    if (isset($json['main.css']) && file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/' . $json['main.css'])) {
       $libraries['analytics']['css']['component']['analytics/' . $json['main.css']] = [
         'weight' => -20,
       ];
@@ -1448,13 +1467,31 @@ function ibm_apim_cron() {
 }
 
 /**
+ * Preprocess variables for table templates.
+ */
+function ibm_apim_preprocess_table(&$variables) {
+  if (function_exists('ibm_apim_entry_trace')) {
+    ibm_apim_entry_trace(__FUNCTION__, NULL);
+  }
+
+  // accessibility fix for the pending module updates page
+  if (isset($variables['attributes']['class']) && in_array('update', array_values($variables['attributes']['class']), TRUE)) {
+    $variables['attributes']['role'] = 'presentation';
+  }
+
+  if (function_exists('ibm_apim_exit_trace')) {
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+  }
+}
+
+/**
  * @param $now
  *
  * @return bool
  */
 function _ibm_apim_shouldRun($now): bool {
   $scheduled = \Drupal::config('ibm_apim.settings')->get('daily_cron_time');
-  if ($scheduled === null) {
+  if ($scheduled === NULL) {
     $scheduled = '05:00';
   }
   $timezone = new \DateTimeZone(\Drupal::config('system.date')->get('timezone')['default']);;
@@ -1470,4 +1507,39 @@ function _ibm_apim_shouldRun($now): bool {
     $next->modify('+1 day');
   }
   return $next->getTimestamp() <= $now;
+}
+
+function ibm_apim_preprocess_input__radio(&$variables) {
+  if (isset($variables['attributes']['aria-describedby'])) {
+    unset($variables['attributes']['aria-describedby']);
+  }
+}
+
+function ibm_apim_preprocess_input__checkbox(&$variables) {
+  if (isset($variables['attributes']['aria-describedby'], $variables["element"]["#attributes"]["name"])) {
+    unset($variables['attributes']['aria-describedby']);
+  }
+}
+
+function ibm_apim_preprocess_form_element(&$variables) {
+  if (isset($variables['label'], $variables['element']['#type'])) {
+    $type = $variables['element']['#type'];
+    $variables['label']['#element_type'] = $type;
+  }
+  if (isset($type, $variables['element']['#array_parents']) && $type == 'textarea' && in_array('widget',$variables['element']['#array_parents']) ) {
+    $variables['label']['#is_widget'] = TRUE;
+  }
+}
+
+function ibm_apim_preprocess_form_element_label(&$variables) {
+  if (!empty($variables['element']['#is_widget']) || $variables['element']['#element_type'] === 'item') {
+    unset($variables['element']['#attributes']['for']);
+    unset($variables['attributes']['for']);
+  }
+}
+
+function ibm_apim_preprocess_block(&$variables) {
+  if (isset($variables['plugin_id'], $variables["attributes"]["role"]) && $variables['plugin_id'] == 'help_block') {
+    unset($variables["attributes"]["role"]);
+  }
 }

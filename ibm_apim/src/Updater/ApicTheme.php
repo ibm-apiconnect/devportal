@@ -122,7 +122,7 @@ class ApicTheme extends Theme {
   /**
    * Returns the directory where a theme should be installed.
    *
-   * If the theme is already installed, drupal_get_path() will return a valid
+   * If the theme is already installed, \Drupal::service('extension.list.theme')->getPath() will return a valid
    * path and we should install it there. If we're installing a new theme, we
    * always want it to go into /themes, since that's where all the
    * documentation recommends users install their themes, and there's no way
@@ -134,8 +134,8 @@ class ApicTheme extends Theme {
    *   The absolute path of the directory.
    */
   public function getInstallDirectory(): ?string {
-    if ($this->isInstalled() && ($relative_path = drupal_get_path('theme', $this->name))) {
-      // The return value of drupal_get_path() is always relative to the site,
+    if ($this->isInstalled() && ($relative_path = \Drupal::service('extension.list.theme')->getPath($this->name))) {
+      // The return value of \Drupal::service('extension.list.theme')->getPath() is always relative to the site,
       // so prepend DRUPAL_ROOT.
       $returnValue = DRUPAL_ROOT . '/' . dirname($relative_path);
     }
@@ -150,7 +150,7 @@ class ApicTheme extends Theme {
    * {@inheritdoc}
    */
   public static function getRootDirectoryRelativePath(): string {
-    return \Drupal::service('site.path') . '/themes';
+    return \Drupal::getContainer()->getParameter('site.path') . '/themes';
   }
 
   /**

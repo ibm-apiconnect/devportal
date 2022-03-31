@@ -136,7 +136,7 @@ class AnalyticsController extends ControllerBase {
       'analytics' => [
         'proxyURL' => $url,
         'translations' => $translations,
-        'analyticsDir' => base_path() . drupal_get_path('module', 'ibm_apim') . '/analytics',
+        'analyticsDir' => base_path() . \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics',
       ],
     ];
 

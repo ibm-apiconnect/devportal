@@ -221,6 +221,47 @@ function hook_apic_app_unsubscribe(NodeInterface $node, $data, $appId, $product_
 }
 
 /**
+ * Triggered before a subscription is deleted
+ *
+ * @param string $subId
+ *   The subscription ID
+ */
+function hook_apic_app_subscription_pre_delete($subId) {
+
+}
+
+/**
+ * Triggered after a subscription is deleted
+ *
+ * @param string $subId
+ *   The subscription ID
+ */
+function hook_apic_app_subscription_post_delete($subId) {
+
+}
+
+/**
+ * Triggered before a credential is deleted
+ *
+ * @param string $credId
+ *   The credential ID
+ */
+function hook_apic_app_credential_pre_delete($credId) {
+
+}
+
+/**
+ * Triggered after a credential is deleted
+ *
+ * @param string $credId
+ *   The credential ID
+ */
+function hook_apic_app_credential_post_delete($credId) {
+
+}
+
+
+/**
  * Triggered when a custom application image is created
  *
  * @param NodeInterface $node
@@ -285,7 +326,7 @@ function hook_apic_app_clientsecret_reset(NodeInterface $node, $data, $appId, $c
  *   The path to a placeholder image file.
  */
 function hook_apic_app_modify_getplaceholderimage_alter(string &$placeholderImage) {
-  $placeholderImage = Url::fromUri('internal:/' . drupal_get_path('module', 'mycustommodule') . '/images/foo.png')->toString();
+  $placeholderImage = Url::fromUri('internal:/' . \Drupal::service('extension.list.module')->getPath('mycustommodule') . '/images/foo.png')->toString();
 }
 
 /**

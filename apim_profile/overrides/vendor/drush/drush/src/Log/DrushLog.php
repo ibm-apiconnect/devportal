@@ -1,0 +1,1 @@
+/opt/drush/vendor/drush/drush/src/Log/DrushLog.php

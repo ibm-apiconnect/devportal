@@ -51,10 +51,16 @@ function ibm_stripe_payment_method_consumerorg_payment_method_create_alter(&$for
     if ($moduleHandler->moduleExists('encrypt')) {
       $ibmApimConfig = \Drupal::config('ibm_apim.settings');
       $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
-      $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
-      $encryptionService = \Drupal::service('encryption');
-      $publishableKey = $encryptionService->decrypt($publishableKey, $encryptionProfile);
-      $secretKey = $encryptionService->decrypt($secretKey, $encryptionProfile);
+      if (isset($encryptionProfileName)) {
+        $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+        $encryptionService = \Drupal::service('encryption');
+        if ($encryptionProfile !== NULL) {
+          $publishableKey = $encryptionService->decrypt($publishableKey, $encryptionProfile);
+          $secretKey = $encryptionService->decrypt($secretKey, $encryptionProfile);
+        }
+      } else {
+        \Drupal::logger('ibm_stripe_payment_method')->warning('ibm_stripe_payment_method_consumerorg_payment_method_create_alter: No payment method encryption profile set', []);
+      }
     }
     $setup_intent = NULL;
     try {

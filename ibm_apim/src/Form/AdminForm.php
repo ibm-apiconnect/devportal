@@ -57,7 +57,7 @@ class AdminForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormID(): string {
+  public function getFormId(): string {
     return 'ibm_apim_admin_settings';
   }
 
@@ -208,7 +208,7 @@ class AdminForm extends ConfigFormBase {
       '#title' => t('Hide the admin registry on the login form.'),
       '#default_value' => $config->get('hide_admin_registry'),
       '#weight' => -10,
-      '#description' => t('Hide the admin user registry on the login form. 
+      '#description' => t('Hide the admin user registry on the login form.
                            The login form for admin can be found at
                            :url', [':url' => Url::fromRoute('user.login', [], ['query' => ['registry_url' => '/admin']])->toString()]),
     ];
@@ -418,7 +418,18 @@ class AdminForm extends ConfigFormBase {
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     ];
-
+    $form['explorer']['example_array_items'] = [
+      '#type' => 'number',
+      '#min' => 1,
+      '#max' => 10,
+      '#title' => 'Example Array Items',
+      '#required' => true,
+      '#maxlength' => 2,
+      '#description' => t('Set the number of example items that should be generated for arrays'),
+      '#default_value' => (int) $config->get('example_array_items') ?: 3,
+      '#required' => TRUE,
+      '#weight' => 30,
+    ];
     $form['explorer']['router_type'] = [
       '#type' => 'select',
       '#options' => [
@@ -597,6 +608,7 @@ class AdminForm extends ConfigFormBase {
       ->set('categories', $categories)
       ->set('codesnippets', $codesnippets)
       ->set('router_type', $form_state->getValue('router_type'))
+      ->set('example_array_items', (int) $form_state->getValue('example_array_items'))
       ->save();
 
     // If we're just enabling categories then we should go process all the apis & products in our db to check them for categories
@@ -646,6 +658,9 @@ class AdminForm extends ConfigFormBase {
     }
 
     parent::submitForm($form, $form_state);
+
+    // clear all caches
+    drupal_flush_all_caches();
   }
 
 }

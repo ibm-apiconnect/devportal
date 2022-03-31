@@ -13,6 +13,7 @@
 namespace Drupal\Tests\ibm_apim\Unit;
 
 use Drupal\consumerorg\ApicType\Member;
+use Drupal\Core\File\FileUrlGenerator;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\MyOrgService;
 use Drupal\Tests\UnitTestCase;
@@ -34,6 +35,7 @@ class MyOrgServiceTest extends UnitTestCase {
 
   protected function setup(): void {
     $this->prophet = new Prophet();
+    $this->fileUrlGenerator = $this->prophet->prophesize(FileUrlGenerator::class);
   }
 
   protected function tearDown(): void {
@@ -54,7 +56,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member->setUser($user);
     $member->setRoleUrls([]);
 
-    $service = new MyOrgService();
+    $service = new MyOrgService($this->fileUrlGenerator->reveal());
     $result = $service->prepareOrgMemberForDisplay($member);
 
     self::assertNotNull($result, 'nothing returned from service');
@@ -79,7 +81,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member->setUser($user);
     $member->setRoleUrls([]);
 
-    $service = new MyOrgService();
+    $service = new MyOrgService($this->fileUrlGenerator->reveal());
     $result = $service->prepareOrgMemberForDisplay($member);
 
     self::assertNotNull($result, 'nothing returned from service');
@@ -102,7 +104,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member->setUser($user);
     $member->setRoleUrls([]);
 
-    $service = new MyOrgService();
+    $service = new MyOrgService($this->fileUrlGenerator->reveal());
     $result = $service->prepareOrgMemberForDisplay($member);
 
     self::assertNotNull($result, 'nothing returned from service');
@@ -125,7 +127,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member->setUser($user);
     $member->setRoleUrls([]);
 
-    $service = new MyOrgService();
+    $service = new MyOrgService($this->fileUrlGenerator->reveal());
     $result = $service->prepareOrgMemberForDisplay($member);
 
     self::assertNotNull($result, 'nothing returned from service');
@@ -148,7 +150,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member->setUser($user);
     $member->setRoleUrls([]);
 
-    $service = new MyOrgService();
+    $service = new MyOrgService($this->fileUrlGenerator->reveal());
     $result = $service->prepareOrgMemberForDisplay($member);
 
     self::assertNotNull($result, 'nothing returned from service');
@@ -170,7 +172,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member->setUser($user);
     $member->setRoleUrls([]);
 
-    $service = new MyOrgService();
+    $service = new MyOrgService($this->fileUrlGenerator->reveal());
     $result = $service->prepareOrgMemberForDisplay($member);
 
     self::assertNotNull($result, 'nothing returned from service');
@@ -192,7 +194,7 @@ class MyOrgServiceTest extends UnitTestCase {
     $member->setUser($user);
     $member->setRoleUrls([]);
 
-    $service = new MyOrgService();
+    $service = new MyOrgService($this->fileUrlGenerator->reveal());
     $result = $service->prepareOrgMemberForDisplay($member);
 
     self::assertNotNull($result, 'nothing returned from service');

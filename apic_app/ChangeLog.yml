@@ -1,4 +1,30 @@
 changes:
+  8.x-2.8.11:
+  - Fix app page with superseded products
+  8.x-2.8.10:
+  - fix php blowing up due to variable not set
+  8.x-2.8.9: null
+  8.x-2.8.8:
+  - Fix another php80 param order issue
+  - Fix php80 param order error
+  - new application block needs to be cached per user
+  8.x-2.8.7:
+  - More hooks v10.0.1 (#290)
+  8.x-2.8.6:
+  - cleaned up custom field code
+  - Save address type custom fields
+  8.x-2.8.5:
+  - deprecated functions - application
+  8.x-2.8.4:
+  - Fixed access checks and css (#282)
+  8.x-2.8.3:
+  - Added redirects for application create (#279)
+  8.x-2.8.2:
+  - git -> gitci
+  8.x-2.8.1:
+  - velox/analytics#1462 - refactor Jenkinsfile
+  8.x-2.8.0:
+  - update version 8.x-2.7.0 -> 8.x-2.8.0
   8.x-2.6.11:
   - make sure view password is loaded correctly
   8.x-2.6.10:

@@ -3,7 +3,7 @@ type: module
 description: Provides the Application node content type
 package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9
-version: 8.x-2.7.0
+version: 8.x-2.8.12
 project: apic_app
 dependencies:
 - path

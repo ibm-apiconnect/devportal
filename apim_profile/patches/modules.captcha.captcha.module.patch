@@ -2,18 +2,17 @@
 +++ modules/captcha/captcha.module	2021-06-21 12:41:43.000000000 +0100
 @@ -221,8 +221,9 @@
        }
- 
+
        // Get placement in form and insert in form.
 -      $captcha_placement = _captcha_get_captcha_placement($form_id, $form);
 -      $captchaService->insertCaptchaElement($form, $captcha_placement, $captcha_element);
 +      if ($captcha_placement = _captcha_get_captcha_placement($form_id, $form)) {
 +        $captchaService->insertCaptchaElement($form, $captcha_placement, $captcha_element);
 +      }
- 
+
      }
    }
-
-@@ -535,6 +535,7 @@
+@@ -534,6 +535,7 @@
        ->select('captcha_sessions', 'cs')
        ->fields('cs', ['solution'])
        ->condition('csid', $csid)

@@ -43,7 +43,7 @@ class MockPermissionsService implements PermissionsServiceInterface {
     $this->state = $state;
     $this->logger = $logger;
 
-    $this->updateAll(json_decode(file_get_contents(drupal_get_path('module', 'ibm_apim') . '/src/Service/Mocks/MockData/permissions.json'), TRUE, 512, JSON_THROW_ON_ERROR));
+    $this->updateAll(json_decode(file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/src/Service/Mocks/MockData/permissions.json'), TRUE, 512, JSON_THROW_ON_ERROR));
   }
 
   /**

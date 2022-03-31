@@ -40,14 +40,14 @@
             {% set admin_only = element['admin_only'] %}
             {% if admin_only %}
               {% trans %}
-                If you have forgotten your 'admin' password, you can reset it here.
+                If you have forgotten your local administrator password, you can reset it here.
               {% endtrans %}
               {% trans %}
                 Your {{ registry_title }} account is managed externally and you must contact your authentication provider.
               {% endtrans %}
             {% else %}
               {% trans %}
-                If you have forgotten the password for your {{ registry_title }} account or 'admin', you can reset it here.
+                If you have forgotten the password for your {{ registry_title }} account or a local administrator, you can reset it here.
               {% endtrans %}
             {% endif %}
             {{ children }}

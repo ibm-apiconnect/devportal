@@ -23,7 +23,7 @@ class StripeConfigForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormID(): string {
+  public function getFormId(): string {
     return 'ibm_stripe_payment_method_config_settings';
   }
 
@@ -40,6 +40,10 @@ class StripeConfigForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $config = $this->config('ibm_stripe_payment_method.settings');
 
+    $billingProviderConfig = unserialize(\Drupal::config('ibm_apim.settings')->get('billing_providers'), ['allowed_classes' => FALSE]);
+    if (!isset($billingProviderConfig) || empty($billingProviderConfig)) {
+      \Drupal::messenger()->addWarning(t('No billing provider is currently configured in the portal. Go to /admin/config/system/apic_billing to set the billing provider mapping.'));
+    }
 
     $publishableKey = $config->get('publishable_key');
     $secretKey = $config->get('secret_key');
@@ -47,10 +51,16 @@ class StripeConfigForm extends ConfigFormBase {
     if ($moduleHandler->moduleExists('encrypt')) {
       $ibmApimConfig = \Drupal::config('ibm_apim.settings');
       $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
-      $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
-      $encryptionService = \Drupal::service('encryption');
-      $publishableKey = $encryptionService->decrypt($publishableKey, $encryptionProfile);
-      $secretKey = $encryptionService->decrypt($secretKey, $encryptionProfile);
+      if (isset($encryptionProfileName)) {
+        $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+        $encryptionService = \Drupal::service('encryption');
+        if ($encryptionProfile !== NULL) {
+          $publishableKey = $encryptionService->decrypt($publishableKey, $encryptionProfile);
+          $secretKey = $encryptionService->decrypt($secretKey, $encryptionProfile);
+        }
+      } else {
+        \Drupal::logger('ibm_stripe_payment_method')->warning('StripeConfigForm: No payment method encryption profile set', []);
+      }
     }
 
     $form['intro'] = [
@@ -116,10 +126,16 @@ class StripeConfigForm extends ConfigFormBase {
     if ($moduleHandler->moduleExists('encrypt')) {
       $ibmApimConfig = \Drupal::config('ibm_apim.settings');
       $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
-      $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
-      $encryptionService = \Drupal::service('encryption');
-      $publishableKey = $encryptionService->encrypt($publishableKey, $encryptionProfile);
-      $secretKey = $encryptionService->encrypt($secretKey, $encryptionProfile);
+      if (isset($encryptionProfileName)) {
+        $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+        $encryptionService = \Drupal::service('encryption');
+        if ($encryptionProfile !== NULL) {
+          $publishableKey = $encryptionService->encrypt($publishableKey, $encryptionProfile);
+          $secretKey = $encryptionService->encrypt($secretKey, $encryptionProfile);
+        }
+      } else {
+        \Drupal::logger('ibm_stripe_payment_method')->warning('StripeConfigForm: No payment method encryption profile set', []);
+      }
     }
     $this->config('ibm_stripe_payment_method.settings')
       ->set('publishable_key', $publishableKey)

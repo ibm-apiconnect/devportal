@@ -110,13 +110,50 @@ Feature: User Invitation Controller
     And I should see "To complete your invitation, sign in to an existing account or sign up to create a new account."
     And I should not see the link "admin"
 
+  @api
+  Scenario: Member invitation sign in with lur registry
+    Given I am not logged in
+    Given users:
+      | name                     | mail                                   | pass     | status | first_time_login |
+      | andre_one                | andre_one@example.com                  | Qwert123 | 1      | 0                |
+      | andre_member_exists      | andre.member@example.com               | Qwert123 | 1      | 0                |
+    Given consumerorgs:
+      | title          | name           | id                       | owner     |
+      | a1_consumerorg | a1-consumerorg | a18843f3e4b07631568a159d | andre_one |
+    When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJM1lqSTBORGt4TkMwMk16UmpMVFJtTTJNdE9ERTJZUzFoTXpFd1lUQmpaR1JtTUdNaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YldWdFltVnlRR1Y0WVcxd2JHVXVZMjl0SWl3aWFYTnpJam9pU1VKTklFRlFTU0JEYjI1dVpXTjBJaXdpZEc5clpXNWZkSGx3WlNJNkltbHVkbWwwWVhScGIyNGlMQ0pwWVhRaU9qRTFOVGt6TURrME9UY3NJbVY0Y0NJNk1UVTFPVFE0TWpJNU55d2ljMk52Y0dWeklqcDdJbWx1ZG1sMFlYUnBiMjRpT2lJdlkyOXVjM1Z0WlhJdFlYQnBMMjl5WjNNdk9EWTVOR014WkdZdE16WXlOQzAwT0RnNUxXRXhZVGN0TlRZeE5URXdNamxoWmpGbUwyMWxiV0psY2kxcGJuWnBkR0YwYVc5dWN5OHhZek5tT0dWbVpTMDFOelZpTFRRd09XSXRZVFZtT0MwNFlUTTBNVEEyTmpFeE9HUWlMQ0oxY213aU9pSXZZMjl1YzNWdFpYSXRZWEJwTDI5eVozTXZPRFk1TkdNeFpHWXRNell5TkMwME9EZzVMV0V4WVRjdE5UWXhOVEV3TWpsaFpqRm1MMjFsYldKbGNpMXBiblpwZEdGMGFXOXVjeTh4WXpObU9HVm1aUzAxTnpWaUxUUXdPV0l0WVRWbU9DMDRZVE0wTVRBMk5qRXhPR1FpTENKaFkzUnBiMjV6SWpwYkluSmxaMmx6ZEdWeUlpd2lZV05qWlhCMElsMHNJbkpsWVd4dElqb2lZMjl1YzNWdFpYSTZNR013WVdVelpqSXRZalEzTkMwME1ETTBMVGd6TjJJdFlUSTBZelptTkRaa05XRTJPakEzWlRrNVlUUTNMV0ZrTXpJdE5HSXlOeTFpWlRJNExXVmxNR1F5TVRsak1qazJaaUo5ZlEuQkl5V0JFOGhiU25RdHk4NlJzNHRVMnhtdjN6ZVd0MmlGNjZJaXlDUUo3bw=="
+    Then I should be on "/user/login"
+    Given I enter "andre_member_exists for "Username"
+    And I enter "Qwert123" for "Password"
+    When I press the "Sign in" button
+#    Then I should be on the homepage - this is where the user should be, c
+    Then I should see "Invitation process complete."
+    And there are no errors
+    And there are no warnings
+
+      @api
+  Scenario: Org Owner invitation sign in with lur registry
+    Given I am not logged in
+    Given users:
+      | name                     | mail                                   | pass     | status | first_time_login |
+      | andre_owner_exists      | andre.orgowner@example.com              | Qwert123 | 1      | 0                |
+    When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJd04yUmtNMkl3TkMwNU9HSTRMVFF4TW1JdE9HWTNOQzB6TVRFMU9UbGpZV1U1TkdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YjNKbmIzZHVaWEpBWlhoaGJYQnNaUzVqYjIwaUxDSnBjM01pT2lKSlFrMGdRVkJKSUVOdmJtNWxZM1FpTENKMGIydGxibDkwZVhCbElqb2lhVzUyYVhSaGRHbHZiaUlzSW1saGRDSTZNVFUxT1RNd09USTVNQ3dpWlhod0lqb3hOVFU1TkRneU1Ea3dMQ0p6WTI5d1pYTWlPbnNpYVc1MmFYUmhkR2x2YmlJNklpOWpiMjV6ZFcxbGNpMWhjR2t2YjNKbkxXbHVkbWwwWVhScGIyNXpMMkU1TlRjeE9UQXpMVGcxTkdJdE5HRTJaUzA0TmpObUxUZzJORGRtTVRNeU9UUTJOQ0lzSW5WeWJDSTZJaTlqYjI1emRXMWxjaTFoY0drdmIzSm5MV2x1ZG1sMFlYUnBiMjV6TDJFNU5UY3hPVEF6TFRnMU5HSXROR0UyWlMwNE5qTm1MVGcyTkRkbU1UTXlPVFEyTkNJc0ltRmpkR2x2Ym5NaU9sc2ljbVZuYVhOMFpYSWlMQ0poWTJObGNIUWlYU3dpY21WaGJHMGlPaUpqYjI1emRXMWxjam93WXpCaFpUTm1NaTFpTkRjMExUUXdNelF0T0RNM1lpMWhNalJqTm1ZME5tUTFZVFk2TURkbE9UbGhORGN0WVdRek1pMDBZakkzTFdKbE1qZ3RaV1V3WkRJeE9XTXlPVFptSW4xOS5GalJkNzZUUFZjdDhVaU5IRjJBamdXQzdNMDEwMldOWU8zMk5McGw1ajhz"
+    Then I should be on "/user/login"
+    Given I enter "andre_owner_exists for "Username"
+    And I enter "Qwert123" for "Password"
+    And I enter "Consorg" for "Consumer organization"
+    When I press the "Sign in" button
+#    Then I should be on the homepage - this is where the user should be, c
+    Then I should see "Invitation process complete."
+    And there are no errors
+    And there are no warnings
+
   Scenario: Member invitation sign up with lur registry
     Given I am not logged in
     Given userregistries:
       | type | title                           | url                           | user_managed | default |
       | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
       | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
-    When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJM1lqSTBORGt4TkMwMk16UmpMVFJtTTJNdE9ERTJZUzFoTXpFd1lUQmpaR1JtTUdNaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YldWdFltVnlRR1Y0WVcxd2JHVXVZMjl0SWl3aWFYTnpJam9pU1VKTklFRlFTU0JEYjI1dVpXTjBJaXdpZEc5clpXNWZkSGx3WlNJNkltbHVkbWwwWVhScGIyNGlMQ0pwWVhRaU9qRTFOVGt6TURrME9UY3NJbVY0Y0NJNk1UVTFPVFE0TWpJNU55d2ljMk52Y0dWeklqcDdJbWx1ZG1sMFlYUnBiMjRpT2lJdlkyOXVjM1Z0WlhJdFlYQnBMMjl5WjNNdk9EWTVOR014WkdZdE16WXlOQzAwT0RnNUxXRXhZVGN0TlRZeE5URXdNamxoWmpGbUwyMWxiV0psY2kxcGJuWnBkR0YwYVc5dWN5OHhZek5tT0dWbVpTMDFOelZpTFRRd09XSXRZVFZtT0MwNFlUTTBNVEEyTmpFeE9HUWlMQ0oxY213aU9pSXZZMjl1YzNWdFpYSXRZWEJwTDI5eVozTXZPRFk1TkdNeFpHWXRNell5TkMwME9EZzVMV0V4WVRjdE5UWXhOVEV3TWpsaFpqRm1MMjFsYldKbGNpMXBiblpwZEdGMGFXOXVjeTh4WXpObU9HVm1aUzAxTnpWaUxUUXdPV0l0WVRWbU9DMDRZVE0wTVRBMk5qRXhPR1FpTENKaFkzUnBiMjV6SWpwYkluSmxaMmx6ZEdWeUlpd2lZV05qWlhCMElsMHNJbkpsWVd4dElqb2lZMjl1YzNWdFpYSTZNR013WVdVelpqSXRZalEzTkMwME1ETTBMVGd6TjJJdFlUSTBZelptTkRaa05XRTJPakEzWlRrNVlUUTNMV0ZrTXpJdE5HSXlOeTFpWlRJNExXVmxNR1F5TVRsak1qazJaaUo5ZlEuQkl5V0JFOGhiU25RdHk4NlJzNHRVMnhtdjN6ZVd0MmlGNjZJaXlDUUo3bw=="
+    When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJM1lqSTBORGt4TkMwMk16UmpMVFJtTTJNdE9ERTJZUzFoTXpFd1lUQmpaR1JtTUdNaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNWNMMkVpTENKemRXSWlPaUp1WEM5aElpd2laVzFoYVd3aU9pSmhibVJ5WlM1dFpXMWlaWEl1YVc1MmFYUmxRR1Y0WVcxd2JHVXVZMjl0SWl3aWFYTnpJam9pU1VKTklFRlFTU0JEYjI1dVpXTjBJaXdpZEc5clpXNWZkSGx3WlNJNkltbHVkbWwwWVhScGIyNGlMQ0pwWVhRaU9qRTFOVGt6TURrME9UY3NJbVY0Y0NJNk1UVTFPVFE0TWpJNU55d2ljMk52Y0dWeklqcDdJbWx1ZG1sMFlYUnBiMjRpT2lKY0wyTnZibk4xYldWeUxXRndhVnd2YjNKbmMxd3ZPRFk1TkdNeFpHWXRNell5TkMwME9EZzVMV0V4WVRjdE5UWXhOVEV3TWpsaFpqRm1YQzl0WlcxaVpYSXRhVzUyYVhSaGRHbHZibk5jTHpGak0yWTRaV1psTFRVM05XSXROREE1WWkxaE5XWTRMVGhoTXpReE1EWTJNVEU0WkNJc0luVnliQ0k2SWx3dlkyOXVjM1Z0WlhJdFlYQnBYQzl2Y21kelhDODROamswWXpGa1ppMHpOakkwTFRRNE9Ea3RZVEZoTnkwMU5qRTFNVEF5T1dGbU1XWmNMMjFsYldKbGNpMXBiblpwZEdGMGFXOXVjMXd2TVdNelpqaGxabVV0TlRjMVlpMDBNRGxpTFdFMVpqZ3RPR0V6TkRFd05qWXhNVGhrSWl3aVlXTjBhVzl1Y3lJNld5SnlaV2RwYzNSbGNpSXNJbUZqWTJWd2RDSmRMQ0p5WldGc2JTSTZJbU52Ym5OMWJXVnlPakJqTUdGbE0yWXlMV0kwTnpRdE5EQXpOQzA0TXpkaUxXRXlOR00yWmpRMlpEVmhOam93TjJVNU9XRTBOeTFoWkRNeUxUUmlNamN0WW1VeU9DMWxaVEJrTWpFNVl6STVObVlpZlgwLC5zaWduYXR1cmU="
     And I should see "To complete your invitation, fill out any required fields below."
     And I should see the text "Username"
     And I should see the text "Email address"
@@ -126,10 +163,19 @@ Feature: User Invitation Controller
     And I should not see the text "Consumer organization"
     And I should see the text "Password"
     And I should see the text "Confirm password"
+    Given I enter "andre_member" for "Username"
+    And I enter "andre.member.invite@example.com" for "Email address"
+    And I enter "Andre" for "First Name"
+    And I enter "Member" for "Last Name"
+    And I enter "Qwert123" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And if the field "captcha_response" is present, enter the value "@captcha"
+    When I press the "Sign up" button
     # Password policy is an error :(
     # Then there are no errors
+    Then I should see "Invitation process complete."
     And there are no warnings
-    And there are no messages
+    And there are no errors
 
   Scenario: Org owner invitation sign up with lur registry
     Given I am not logged in
@@ -137,7 +183,7 @@ Feature: User Invitation Controller
       | type | title                           | url                           | user_managed | default |
       | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
       | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
-    When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJd04yUmtNMkl3TkMwNU9HSTRMVFF4TW1JdE9HWTNOQzB6TVRFMU9UbGpZV1U1TkdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YjNKbmIzZHVaWEpBWlhoaGJYQnNaUzVqYjIwaUxDSnBjM01pT2lKSlFrMGdRVkJKSUVOdmJtNWxZM1FpTENKMGIydGxibDkwZVhCbElqb2lhVzUyYVhSaGRHbHZiaUlzSW1saGRDSTZNVFUxT1RNd09USTVNQ3dpWlhod0lqb3hOVFU1TkRneU1Ea3dMQ0p6WTI5d1pYTWlPbnNpYVc1MmFYUmhkR2x2YmlJNklpOWpiMjV6ZFcxbGNpMWhjR2t2YjNKbkxXbHVkbWwwWVhScGIyNXpMMkU1TlRjeE9UQXpMVGcxTkdJdE5HRTJaUzA0TmpObUxUZzJORGRtTVRNeU9UUTJOQ0lzSW5WeWJDSTZJaTlqYjI1emRXMWxjaTFoY0drdmIzSm5MV2x1ZG1sMFlYUnBiMjV6TDJFNU5UY3hPVEF6TFRnMU5HSXROR0UyWlMwNE5qTm1MVGcyTkRkbU1UTXlPVFEyTkNJc0ltRmpkR2x2Ym5NaU9sc2ljbVZuYVhOMFpYSWlMQ0poWTJObGNIUWlYU3dpY21WaGJHMGlPaUpqYjI1emRXMWxjam93WXpCaFpUTm1NaTFpTkRjMExUUXdNelF0T0RNM1lpMWhNalJqTm1ZME5tUTFZVFk2TURkbE9UbGhORGN0WVdRek1pMDBZakkzTFdKbE1qZ3RaV1V3WkRJeE9XTXlPVFptSW4xOS5GalJkNzZUUFZjdDhVaU5IRjJBamdXQzdNMDEwMldOWU8zMk5McGw1ajhz"
+    When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJd04yUmtNMkl3TkMwNU9HSTRMVFF4TW1JdE9HWTNOQzB6TVRFMU9UbGpZV1U1TkdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNWNMMkVpTENKemRXSWlPaUp1WEM5aElpd2laVzFoYVd3aU9pSmhibVJ5WlM1dmQyNWxjaTVwYm5acGRHVkFaWGhoYlhCc1pTNWpiMjBpTENKcGMzTWlPaUpKUWswZ1FWQkpJRU52Ym01bFkzUWlMQ0owYjJ0bGJsOTBlWEJsSWpvaWFXNTJhWFJoZEdsdmJpSXNJbWxoZENJNk1UVTFPVE13T1RJNU1Dd2laWGh3SWpveE5UVTVORGd5TURrd0xDSnpZMjl3WlhNaU9uc2lhVzUyYVhSaGRHbHZiaUk2SWx3dlkyOXVjM1Z0WlhJdFlYQnBYQzl2Y21jdGFXNTJhWFJoZEdsdmJuTmNMMkU1TlRjeE9UQXpMVGcxTkdJdE5HRTJaUzA0TmpObUxUZzJORGRtTVRNeU9UUTJOQ0lzSW5WeWJDSTZJbHd2WTI5dWMzVnRaWEl0WVhCcFhDOXZjbWN0YVc1MmFYUmhkR2x2Ym5OY0wyRTVOVGN4T1RBekxUZzFOR0l0TkdFMlpTMDROak5tTFRnMk5EZG1NVE15T1RRMk5DSXNJbUZqZEdsdmJuTWlPbHNpY21WbmFYTjBaWElpTENKaFkyTmxjSFFpWFN3aWNtVmhiRzBpT2lKamIyNXpkVzFsY2pvd1l6QmhaVE5tTWkxaU5EYzBMVFF3TXpRdE9ETTNZaTFoTWpSak5tWTBObVExWVRZNk1EZGxPVGxoTkRjdFlXUXpNaTAwWWpJM0xXSmxNamd0WldVd1pESXhPV015T1RabUluMTkuc2lnbmF0dXJl"
     And I should see "To complete your invitation, fill out any required fields below."
     And I should see the text "Username"
     And I should see the text "Email address"
@@ -147,10 +193,19 @@ Feature: User Invitation Controller
     And I should see the text "Consumer organization"
     And I should see the text "Password"
     And I should see the text "Confirm password"
+    Given I enter "andre_owner" for "Username"
+    And I enter "andre.owner.invite@example.com" for "Email address"
+    And I enter "Andre" for "First Name"
+    And I enter "Owner" for "Last Name"
+    And I enter "Consorg" for "Consumer organization"
+    And I enter "Qwert123" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And if the field "captcha_response" is present, enter the value "@captcha"
+    When I press the "Sign up" button
     # Password policy is an error :(
-    # Then there are no errors
+    Then I should see "Invitation process complete."
     And there are no warnings
-    And there are no messages
+    And there are no errors
 
   Scenario: Member invitation sign up with ldap registry
     Given I am not logged in

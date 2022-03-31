@@ -340,7 +340,7 @@ class ApicUserProfileForm extends ProfileForm {
     }
     $editUser->setApicUserRegistryUrl($this->entity->get('registry_url')->value);
     $customFields =  \Drupal::service('ibm_apim.apicuser')->getCustomUserFields();
-    $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $form_state);
+    $customFieldValues = \Drupal::service('ibm_apim.utils')->handleFormCustomFields($customFields, $form_state);
     foreach($customFieldValues as $customField => $value) {
       $editUser->addCustomField($customField, $value);
     }

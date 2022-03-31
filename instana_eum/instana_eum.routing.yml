@@ -1,0 +1,9 @@
+instana_eum.settings:
+  path: '/admin/config/system/instana_eum'
+  defaults:
+    _form: 'Drupal\instana_eum\Form\InstanaConfigForm'
+    _title: 'Configure the Instana EUM module'
+  requirements:
+    _permission: 'configure instana'
+  options:
+    _admin_route: TRUE

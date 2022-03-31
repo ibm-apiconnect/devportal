@@ -106,17 +106,17 @@ class ApicOidcAzCodeController extends ControllerBase {
    * @param \Drupal\Core\Messenger\Messenger $messenger
    */
   public function __construct(
-    Utils $utils,
-    ApicLoginServiceInterface $login_service,
-    OidcStateServiceInterface $oidc_state_service,
+    Utils                        $utils,
+    ApicLoginServiceInterface    $login_service,
+    OidcStateServiceInterface    $oidc_state_service,
     UserRegistryServiceInterface $user_registry_service,
-    ApimUtils $apim_utils,
-    SiteConfig $site_config,
-    LoggerInterface $logger,
-    PrivateTempStoreFactory $sessionStoreFactory,
-    RequestStack $request_service,
-    ManagementServerInterface $mgmtServer,
-    Messenger $messenger
+    ApimUtils                    $apim_utils,
+    SiteConfig                   $site_config,
+    LoggerInterface              $logger,
+    PrivateTempStoreFactory      $sessionStoreFactory,
+    RequestStack                 $request_service,
+    ManagementServerInterface    $mgmtServer,
+    Messenger                    $messenger
   ) {
     $this->apimUtils = $apim_utils;
     $this->siteConfig = $site_config;
@@ -182,8 +182,11 @@ class ApicOidcAzCodeController extends ControllerBase {
     $error = $this->requestService->getCurrentRequest()->query->get('error');
     if (!empty($error)) {
       $errordes = $this->requestService->getCurrentRequest()->query->get('error_description');
-      $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator. Error: ' . $error . ' Description: ' . $errordes));
-      $this->logger->error('validateOidcRedirect error: ' . $errordes);
+      $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator. Error: @error Description: @errordes', [
+        '@error' => $error,
+        '@errordes' => $errordes,
+      ]));
+      $this->logger->error('validateOidcRedirect error: @errordes', ['@errordes' => $errordes]);
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }
@@ -221,14 +224,17 @@ class ApicOidcAzCodeController extends ControllerBase {
       if ($redirect_location === 'ERROR') {
         $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
         $redirect_location = '<front>';
-      } else if ($redirect_location === 'APPROVAL') {
-        $this->messenger->addStatus($this->t('Your account was created successfully and is pending approval. You will receive an email with further instructions.'));
-        $redirect_location = '<front>';
       }
       else {
-        if ($this->authApicSessionStore->get('redirect_to')) {
-          $this->requestService->getCurrentRequest()->query->set('destination', $this->authApicSessionStore->get('redirect_to'));
-          $this->authApicSessionStore->delete('redirect_to');
+        if ($redirect_location === 'APPROVAL') {
+          $this->messenger->addStatus($this->t('Your account was created successfully and is pending approval. You will receive an email with further instructions.'));
+          $redirect_location = '<front>';
+        }
+        else {
+          if ($this->authApicSessionStore->get('redirect_to')) {
+            $this->requestService->getCurrentRequest()->query->set('destination', $this->authApicSessionStore->get('redirect_to'));
+            $this->authApicSessionStore->delete('redirect_to');
+          }
         }
       }
 
@@ -283,8 +289,11 @@ class ApicOidcAzCodeController extends ControllerBase {
     $error = $this->requestService->getCurrentRequest()->query->get('error');
     if (!empty($error)) {
       $errordes = $this->requestService->getCurrentRequest()->query->get('error_description');
-      $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator. Error: ' . $error . ' Description: ' . $errordes));
-      $this->logger->error('validateApimOidcRedirect error: ' . $errordes);
+      $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator. Error: @error Description: @errordes', [
+        '@error' => $error,
+        '@errordes' => $errordes,
+      ]));
+      $this->logger->error('validateApimOidcRedirect error: @errordes', ['@errordes' => $errordes]);
 
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -320,7 +329,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     else {
       $this->messenger->addError($this->t('Error: Invalid state parameter. Contact your system administrator.'));
-      $this->logger->error('validateApimOidcRedirect error: Invalid state parameter: ' . $state);
+      $this->logger->error('validateApimOidcRedirect error: Invalid state parameter: @state', ['@state' => $state]);
 
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -334,7 +343,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     if (!isset($stateObj)) {
       $this->messenger->addError($this->t('Error: Invalid state parameter. Contact your system administrator.'));
-      $this->logger->error('validateApimOidcRedirect error: Invalid state parameter: ' . $state);
+      $this->logger->error('validateApimOidcRedirect error: Invalid state parameter: @state', ['@state' => $state]);
 
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -359,7 +368,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     elseif ($code !== 302) {
       $redirect_location = 'ERROR';
-      $this->logger->error('validateApimOidcRedirect error: Response code ' . $code);
+      $this->logger->error('validateApimOidcRedirect error: Response code @code', ['@code' => $code]);
     }
     elseif (!isset($headers['location'])) {
       $redirect_location = 'ERROR';
@@ -460,7 +469,7 @@ class ApicOidcAzCodeController extends ControllerBase {
         $this->logger->error('validateApimOidcAz error: Missing response_type parameter');
       }
       else {
-        $this->logger->error('validateApimOidcAz error: Incorrect response_type parameter: ' . $responseType);
+        $this->logger->error('validateApimOidcAz error: Incorrect response_type parameter: @responseType', ['@responseType' => $responseType]);
       }
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -478,7 +487,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     if (!isset($stateObj)) {
       $this->messenger->addError($this->t('Error: Invalid state parameter. Contact your system administrator.'));
-      $this->logger->error('validateApimOidcAz error: Invalid state parameter: ' . $state);
+      $this->logger->error('validateApimOidcAz error: Invalid state parameter: @state', ['@state' => $state]);
 
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -490,7 +499,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     $userRegistry = $this->userRegistryService->get($stateObj['registry_url']);
     if (!isset($userRegistry)) {
       $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
-      $this->logger->error('validateApimOidcAz error: Invalid user registry url: ' . $stateObj['registry_url']);
+      $this->logger->error('validateApimOidcAz error: Invalid user registry url: @registryUrl', ['@registryUrl' => $stateObj['registry_url']]);
 
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -499,7 +508,10 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
     if ($realm !== $userRegistry->getRealm()) {
       $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
-      $this->logger->error('validateApimOidcAz error: Invalid realm parameter: ' . $realm . ' does not match ' . $userRegistry->getRealm());
+      $this->logger->error('validateApimOidcAz error: Invalid realm parameter: @realm does not match @getrealm', [
+        '@realm' => $realm,
+        '@getrealm' => $userRegistry->getRealm(),
+      ]);
 
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -509,7 +521,10 @@ class ApicOidcAzCodeController extends ControllerBase {
 
     if ($clientId !== $this->siteConfig->getClientId()) {
       $this->messenger->addError($this->t('Error: Invalid client_id parameter. Contact your system administrator.'));
-      $this->logger->error('validateApimOidcAz error: Invalid client_id parameter: ' . $clientId . ' does not match ' . $this->siteConfig->getClientId());
+      $this->logger->error('validateApimOidcAz error: Invalid client_id parameter: @clientId does not match @getclientId', [
+        '@clientId' => $clientId,
+        '@getclientId' => $this->siteConfig->getClientId(),
+      ]);
 
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -527,8 +542,10 @@ class ApicOidcAzCodeController extends ControllerBase {
     $expectedRedirectUri = $host . $route;
     if ($redirectUri !== $expectedRedirectUri && $redirectUri !== '/ibm_apim/oauth2/redirect') {
       $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
-      $this->logger->error('validateApimOidcAz error: Invalid redirect_uri parameter: ' . $redirectUri . ' does not match ' . $expectedRedirectUri);
-
+      $this->logger->error('validateApimOidcAz error: Invalid redirect_uri parameter: @redirectUri does not match @expectedRedirectUri', [
+        '@redirectUri' => $redirectUri,
+        '@expectedRedirectUri' => $expectedRedirectUri,
+      ]);
       if (function_exists('ibm_apim_exit_trace')) {
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       }
@@ -568,7 +585,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       }
       elseif ($code !== 302) {
         $redirect_location = 'ERROR';
-        $this->logger->error('validateApimOidcAz error: Response code ' . $code);
+        $this->logger->error('validateApimOidcAz error: Response code @code', ['@code' => $code]);
       }
       elseif (!isset($headers['location'])) {
         $redirect_location = 'ERROR';
@@ -616,7 +633,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
 
     $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
-    $this->logger->error('validateApimOidcAz error: Failed to parse redirect: ' . $redirect_location);
+    $this->logger->error('validateApimOidcAz error: Failed to parse redirect: @redirect_location', ['@redirect_location' => $redirect_location]);
 
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

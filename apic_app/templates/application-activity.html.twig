@@ -87,9 +87,12 @@
           {% if analytics_access %}
             <li><a class="dashboardApplication"
                    href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Dashboard'|t }}</a></li>
-          {% endif %}
-          <li><a class="subscriptionsApplication"
+            <li><a class="subscriptionsApplication"
                  href="{{- path('apic_app.subscriptions', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
+          {% else %}
+            <li><a class="subscriptionsApplication"
+                  href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
+          {% endif %}
           <li class="selected activityApplication"><a href="#">{{ 'Notifications'|t }}</a></li>
         </ul>
       </div>

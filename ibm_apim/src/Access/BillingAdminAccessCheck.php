@@ -27,7 +27,7 @@ class BillingAdminAccessCheck implements AccessInterface {
     $allowed = FALSE;
     $billingEnabled = \Drupal::service('ibm_apim.billing')->isEnabled();
     $current_user = \Drupal::currentUser();
-    if ($billingEnabled === TRUE && !$current_user->isAnonymous() && (int) $current_user->id() === 1) {
+    if ($billingEnabled === TRUE && !$current_user->isAnonymous() && \Drupal::currentUser()->hasPermission('administer_apic')) {
       $allowed = TRUE;
     }
 

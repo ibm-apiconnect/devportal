@@ -26,13 +26,23 @@
                 {% endif %}
                 <div class="featuredcontentNodeTitle">
                   {% if nodeType == 'api' %}
-                    <a href="{{- path('apic_api.view', {'apiNode': node.nid}) -}}"
+                    {% if node.apic_pathalias is defined and node.apic_pathalias is not empty %}
+                      {% set apiNode = node.apic_pathalias %}
+                    {% else %}
+                      {% set apiNode = node.nid %}
+                    {% endif %}
+                    <a href="{{- path('apic_api.view', {'apiNode': apiNode}) -}}"
                        rel="bookmark">{{ node.title }}
                       {% if showVersions %}
                         <span class="featuredcontentNodeVersion">{{ node.version }}</span>
                       {% endif %}</a>
                   {% else %}
-                    <a href="{{- path('product.view', {'prodNode': node.nid}) -}}"
+                    {% if node.apic_pathalias is defined and node.apic_pathalias is not empty %}
+                      {% set prodNode = node.apic_pathalias %}
+                    {% else %}
+                      {% set prodNode = node.nid %}
+                    {% endif %}
+                    <a href="{{- path('product.view', {'prodNode': prodNode}) -}}"
                        rel="bookmark">{{ node.title }}
                       {% if showVersions %}
                         <span class="featuredcontentNodeVersion">{{ node.version }}</span>

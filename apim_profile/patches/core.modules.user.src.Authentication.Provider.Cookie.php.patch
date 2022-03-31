@@ -1,0 +1,12 @@
+--- core/modules/user/src/Authentication/Provider/Cookie.php	2022-02-16 15:03:07.000000000 +0000
++++ core/modules/user/src/Authentication/Provider/Cookie.php	2022-02-16 15:03:33.000000000 +0000
+@@ -72,7 +72,8 @@
+   public function applies(Request $request) {
+     $applies = $request->hasSession() && $this->sessionConfiguration->hasSession($request);
+     if (!$applies && $request->query->has('check_logged_in')) {
+-      $domain = ltrim(ini_get('session.cookie_domain'), '.') ?: $request->getHttpHost();
++      global $apic_cookie_domain;
++      $domain = ltrim(ini_get('session.cookie_domain'), '.') ?: $apic_cookie_domain;
+       $this->messenger->addMessage($this->t('To log in to this site, your browser must accept cookies from the domain %domain.', ['%domain' => $domain]), 'error');
+     }
+     return $applies;

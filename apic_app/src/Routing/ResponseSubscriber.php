@@ -19,7 +19,7 @@ use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
+use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 
 class ResponseSubscriber extends HttpExceptionSubscriberBase {
 
@@ -45,9 +45,9 @@ class ResponseSubscriber extends HttpExceptionSubscriberBase {
   }
 
   /**
-   * @param \Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\ExceptionEvent $event
    */
-  public function on404(GetResponseForExceptionEvent $event): void {
+  public function on404(ExceptionEvent $event): void {
     $request = $event->getRequest();
     $is_anonymous = $this->currentUser->isAnonymous();
     $pathInfo = $request->getPathInfo();

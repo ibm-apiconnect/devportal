@@ -66,7 +66,7 @@ function template_preprocess_event_log(array &$variables) {
   // Provide a distinct $teaser boolean.
   $variables['teaser'] = $variables['view_mode'] === 'teaser';
   $variables['event_log'] = $variables['elements']['#event_log'];
-  $variables['images_path'] = drupal_get_path('module', 'ibm_apim');
+  $variables['images_path'] = \Drupal::service('extension.list.module')->getPath('ibm_apim');
 
   /** @var \Drupal\ibm_event_log\Entity\EventLog $event_log */
   $event_log = $variables['event_log'];

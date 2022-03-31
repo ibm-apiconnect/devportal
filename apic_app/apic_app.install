@@ -573,7 +573,7 @@ function apic_app_update_8203() {
     }
     \Drupal::logger('apic_app: ')->notice('Successfully applied updates');
   } catch (EntityStorageException $e) {
-    \Drupal::logger('apic_app: ')->notice($e->getMessage());
+    \Drupal::logger('apic_app: ')->notice('error: @error', ['@error' => $e->getMessage()]);
   }
 }
 
@@ -631,7 +631,7 @@ function apic_app_update_8204() {
     }
     \Drupal::logger('apic_app: ')->notice('Successfully applied entity updates');
   } catch (EntityStorageException $e) {
-    \Drupal::logger('apic_app: ')->notice($e->getMessage());
+    \Drupal::logger('apic_app: ')->notice('error: @error', ['@error' => $e->getMessage()]);
   }
 }
 

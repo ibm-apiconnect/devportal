@@ -185,20 +185,20 @@ function auth_apic_preprocess(&$variables, $hook, &$info) {
       $theme_name = \Drupal::theme()->getActiveTheme()->getName();
       $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
       if (file_exists($theme_path . '/templates/form/' . $templateFileName . '.html.twig')) {
-        $info['theme path'] = drupal_get_path('theme', $theme_name);
-        $info['path'] = drupal_get_path('theme', $theme_name) . '/templates/form';
+        $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($theme_name);
+        $info['path'] = \Drupal::service('extension.list.theme')->getPath($theme_name) . '/templates/form';
         $info['template'] = $templateFileName;
       }
       elseif (file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
-        $info['theme path'] = drupal_get_path('theme', $theme_name);
-        $info['path'] = drupal_get_path('theme', $theme_name) . '/templates';
+        $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($theme_name);
+        $info['path'] = \Drupal::service('extension.list.theme')->getPath($theme_name) . '/templates';
         $info['template'] = $templateFileName;
       }
       else {
-        $templateFilePath = drupal_get_path('module', 'auth_apic') . '/templates/' . $templateFileName . '.html.twig';
+        $templateFilePath = \Drupal::service('extension.list.module')->getPath('auth_apic') . '/templates/' . $templateFileName . '.html.twig';
         if (file_exists($templateFilePath)) {
-          $info['theme path'] = drupal_get_path('module', 'auth_apic');
-          $info['path'] = drupal_get_path('module', 'auth_apic') . '/templates';
+          $info['theme path'] = \Drupal::service('extension.list.module')->getPath('auth_apic');
+          $info['path'] = \Drupal::service('extension.list.module')->getPath('auth_apic') . '/templates';
           $info['template'] = $templateFileName;
         }
       }

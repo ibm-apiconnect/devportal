@@ -41,20 +41,22 @@ class Generator {
       $baseDir = $tempDir . '/themegenerator/' . $sessionId;
       $targetDir = DRUPAL_ROOT . '/' . $baseDir . '/' . $name;
 
-      if (!is_dir(DRUPAL_ROOT . '/' . $tempDir . '/themegenerator')) {
-        mkdir(DRUPAL_ROOT . '/' . $tempDir . '/themegenerator');
+      if (!is_dir(DRUPAL_ROOT . '/' . $tempDir . '/themegenerator') && !mkdir($concurrentDirectory = DRUPAL_ROOT . '/' . $tempDir . '/themegenerator') && !is_dir($concurrentDirectory)) {
+        throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
       }
-      if (!is_dir(DRUPAL_ROOT . '/' . $tempDir . '/themegenerator/' . $sessionId)) {
-        mkdir(DRUPAL_ROOT . '/' . $tempDir . '/themegenerator/' . $sessionId);
+      if (!is_dir(DRUPAL_ROOT . '/' . $tempDir . '/themegenerator/' . $sessionId) && !mkdir($concurrentDirectory = DRUPAL_ROOT . '/' . $tempDir . '/themegenerator/' . $sessionId) && !is_dir($concurrentDirectory)) {
+        throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
       }
       if (is_dir($targetDir)) {
         self::delTree($targetDir);
       }
-      mkdir($targetDir);
-      self::recursiveCopy(DRUPAL_ROOT . '/' . drupal_get_path('module', 'themegenerator') . '/stub/' . $type, $targetDir, $name);
+      if (!mkdir($targetDir) && !is_dir($targetDir)) {
+        throw new \RuntimeException(sprintf('Directory "%s" was not created', $targetDir));
+      }
+      self::recursiveCopy(DRUPAL_ROOT . '/' . \Drupal::service('extension.list.module')->getPath('themegenerator') . '/stub/' . $type, $targetDir, $name);
       // handle the different overrides files in the other templates
       if ($template !== 'connect_theme') {
-        $srcDir = DRUPAL_ROOT . '/' . drupal_get_path('module', 'themegenerator') . '/stub/templates/' . $template;
+        $srcDir = DRUPAL_ROOT . '/' . \Drupal::service('extension.list.module')->getPath('themegenerator') . '/stub/templates/' . $template;
         if (is_dir($srcDir)) {
           $srcFile = $srcDir . '/overrides.' . $type;
           $tgtFile = $targetDir . '/' . $type . '/overrides.' . $type;
@@ -81,11 +83,11 @@ class Generator {
       self::editTheme(DRUPAL_ROOT . '/' . $baseDir, $name);
 
       // create output directory
-      if (!is_dir(DRUPAL_ROOT . '/' . PublicStream::basePath() . '/themegenerator')) {
-        mkdir(DRUPAL_ROOT . '/' . PublicStream::basePath() . '/themegenerator');
+      if (!is_dir(DRUPAL_ROOT . '/' . PublicStream::basePath() . '/themegenerator') && !mkdir($concurrentDirectory = DRUPAL_ROOT . '/' . PublicStream::basePath() . '/themegenerator') && !is_dir($concurrentDirectory)) {
+        throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
       }
-      if (!is_dir(DRUPAL_ROOT . '/' . PublicStream::basePath() . '/themegenerator/' . $sessionId)) {
-        mkdir(DRUPAL_ROOT . '/' . PublicStream::basePath() . '/themegenerator/' . $sessionId);
+      if (!is_dir(DRUPAL_ROOT . '/' . PublicStream::basePath() . '/themegenerator/' . $sessionId) && !mkdir($concurrentDirectory = DRUPAL_ROOT . '/' . PublicStream::basePath() . '/themegenerator/' . $sessionId) && !is_dir($concurrentDirectory)) {
+        throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
       }
       // create the zip in temp dir
       $zipName = self::createZip($baseDir, $name);
@@ -119,8 +121,8 @@ class Generator {
     while (FALSE !== ($file = readdir($dir))) {
       if (($file !== '.') && ($file !== '..')) {
         if (is_dir($src . '/' . $file)) {
-          if (!is_dir($dst . '/' . $file)) {
-            mkdir($dst . '/' . $file);
+          if (!is_dir($dst . '/' . $file) && !mkdir($concurrentDirectory = $dst . '/' . $file) && !is_dir($concurrentDirectory)) {
+            throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
           }
           self::recursiveCopy($src . '/' . $file, $dst . '/' . $file, $name);
         }

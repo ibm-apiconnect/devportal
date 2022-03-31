@@ -286,7 +286,7 @@ class FeaturedContentBlock extends BlockBase {
       }
       switch (strtoupper($this->configuration['selectionType'])) {
         case static::CONST_UPDATED:
-          $query->sort('updated', 'ASC');
+          $query->sort('changed', 'ASC');
           break;
         case static::CONST_CREATED:
           $query->sort('created', 'ASC');
@@ -295,7 +295,7 @@ class FeaturedContentBlock extends BlockBase {
           $query->sort('created', 'DESC');
           break;
         case static::CONST_STALEST:
-          $query->sort('updated', 'DESC');
+          $query->sort('changed', 'DESC');
           break;
         case static::CONST_TITLE:
           $query->sort('title', 'ASC');
@@ -309,7 +309,7 @@ class FeaturedContentBlock extends BlockBase {
           break;
         default:
           // equates to CONST_UPDATED
-          $query->sort('updated', 'ASC');
+          $query->sort('changed', 'ASC');
           break;
       }
 
@@ -349,6 +349,7 @@ class FeaturedContentBlock extends BlockBase {
           }
           $data['version'] = $rawNode->apic_version->value;
           $data['id'] = $rawNode->api_id->value;
+          $data['apic_pathalias'] = $rawNode->apic_pathalias->value;
           $fid = $rawNode->apic_image->getValue();
           $imageUrl = NULL;
           if (isset($fid[0]['target_id'])) {
@@ -358,8 +359,7 @@ class FeaturedContentBlock extends BlockBase {
             }
           }
           elseif ($ibmApimShowPlaceholderImages === TRUE && $moduleHandler->moduleExists('apic_api')) {
-            $rawImage = Api::getRandomImageName($rawNode->getTitle());
-            $imageUrl = base_path() . drupal_get_path('module', 'apic_api') . '/images/' . $rawImage;
+            $imageUrl = Api::getPlaceholderImageURL($rawNode->getTitle());
           }
           $data['image'] = $imageUrl;
         }
@@ -375,6 +375,7 @@ class FeaturedContentBlock extends BlockBase {
           }
           $data['id'] = $rawNode->product_id->value;
           $data['version'] = $rawNode->apic_version->value;
+          $data['apic_pathalias'] = $rawNode->apic_pathalias->value;
           $fid = $rawNode->apic_image->getValue();
           $imageUrl = NULL;
           if (isset($fid[0]['target_id'])) {
@@ -384,8 +385,7 @@ class FeaturedContentBlock extends BlockBase {
             }
           }
           if ($imageUrl === NULL && $ibmApimShowPlaceholderImages === TRUE && $moduleHandler->moduleExists('product')) {
-            $rawImage = Product::getRandomImageName($rawNode->getTitle());
-            $imageUrl = base_path() . drupal_get_path('module', 'product') . '/images/' . $rawImage;
+            $imageUrl = Product::getPlaceholderImageURL($rawNode->getTitle());
           }
           $data['image'] = $imageUrl;
         }

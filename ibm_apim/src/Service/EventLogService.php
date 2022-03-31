@@ -16,6 +16,7 @@ namespace Drupal\ibm_apim\Service;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Datetime\DateFormatter;
+use Drupal\Core\File\FileUrlGenerator;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\ibm_event_log\Entity\EventLog;
@@ -43,14 +44,21 @@ class EventLogService {
   protected ApicUserStorage $apicUserStorage;
 
   /**
+   * @var \Drupal\Core\File\FileUrlGenerator
+   */
+  protected FileUrlGenerator $fileUrlGenerator;
+
+  /**
    * EventLogService constructor.
    *
    * @param \Drupal\Core\Datetime\DateFormatter $dateFormatter
    * @param \Drupal\ibm_apim\Service\ApicUserStorage $apicUserStorage
+   * @param \Drupal\Core\File\FileUrlGenerator $fileUrlGenerator
    */
-  public function __construct(DateFormatter $dateFormatter, ApicUserStorage $apicUserStorage) {
+  public function __construct(DateFormatter $dateFormatter, ApicUserStorage $apicUserStorage, FileUrlGenerator $fileUrlGenerator) {
     $this->dateFormatter = $dateFormatter;
     $this->apicUserStorage = $apicUserStorage;
+    $this->fileUrlGenerator = $fileUrlGenerator;
   }
 
   /**
@@ -87,7 +95,7 @@ class EventLogService {
    */
   public function createIfNotExist(ApicEvent $apicEvent): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    
+
     $queryString = "SELECT * FROM {event_logs} WHERE event = :event AND consumerorg_url = :corg AND artifact_url = :aurl AND artifact_type = :atype";
     $queryTerms = [
       ':event' => $apicEvent->getEvent(),
@@ -248,7 +256,7 @@ class EventLogService {
         if ($userAccount->user_picture->isEmpty() === FALSE) {
           $image = $userAccount->user_picture;
           $uri = $image->entity->getFileUri();
-          $avatar = file_create_url($uri);
+          $avatar = $this->fileUrlGenerator->generateAbsoluteString($uri);
         }
       }
       $output['action_by'] = [
@@ -417,8 +425,9 @@ class EventLogService {
           ]);
         }
         elseif ($event->getEvent() === 'delete') {
+          $member = $data['email'] ?? $data['member'];
           $message = t('The invitation for "@member" for the consumer organization named "@orgName" was deleted.', [
-            '@member' => $data['member'],
+            '@member' => $member,
             '@orgName' => $data['orgName'],
           ]);
         }

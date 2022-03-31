@@ -3,7 +3,7 @@ type: module
 description: Core IBM API Management integration
 package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9
-version: 8.x-2.6.21
+version: 8.x-2.7.40
 project: ibm_apim
 dependencies:
 - telephone

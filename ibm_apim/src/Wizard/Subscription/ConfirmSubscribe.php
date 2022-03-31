@@ -74,8 +74,7 @@ class ConfirmSubscribe extends IbmWizardStepBase {
           }
         }
         elseif ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('product')) {
-          $rawImage = Product::getRandomImageName($product_node->getTitle());
-          $product_image = base_path() . drupal_get_path('module', 'product') . '/images/' . $rawImage;
+          $product_image = Product::getPlaceholderImageURL($product_node->getTitle());
         }
 
       //Set the rate limit

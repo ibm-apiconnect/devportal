@@ -1,4 +1,19 @@
 changes:
+  8.x-2.8.7: null
+  8.x-2.8.6: null
+  8.x-2.8.5:
+  - fix unit test validation errors
+  - fix case of the getFormId function
+  8.x-2.8.4:
+  - deprecated functions - mail_subscribers
+  8.x-2.8.3:
+  - git -> gitci
+  8.x-2.8.2:
+  - velox/analytics#1462 - refactor Jenkinsfile
+  8.x-2.8.1:
+  - Link to the Mail subscriber settings form correctly
+  8.x-2.8.0:
+  - update version 8.x-2.7.1 -> 8.x-2.8.0
   8.x-2.7.0:
   - update version 8.x-2.6.4 -> 8.x-2.7.0
   8.x-2.6.3:

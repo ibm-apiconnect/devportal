@@ -106,7 +106,7 @@ class ApiContext extends RawDrupalContext {
       }
 
       // Make sure the parent term was created from the categories
-      if ($terms = taxonomy_term_load_multiple_by_name('Sport', 'tags')) {
+      if ($terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(['name' => 'Sport', 'vid' => 'tags'])) {
 
         $terms = \Drupal::entityTypeManager()
           ->getStorage('taxonomy_term')
@@ -244,7 +244,7 @@ class ApiContext extends RawDrupalContext {
       }
 
       // Make sure the term 'Realized' was created
-      if ($realized = taxonomy_term_load_multiple_by_name($phase, 'tags')) {
+      if ($realized = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(['name' => $phase, 'vid' => 'tags'])) {
         $realizedId = reset($realized)->id();
 
         // Make sure it's parent is the term 'Phase'
@@ -318,7 +318,7 @@ class ApiContext extends RawDrupalContext {
       }
 
       // Make sure the forum  was created
-      if ($forum = taxonomy_term_load_multiple_by_name($name, 'forums')) {
+      if ($forum = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(['name' => $name, 'vid' => 'forums'])) {
         $forumId = reset($forum)->id();
 
         // Make sure it's parent is the forum container 'APIs'
@@ -382,7 +382,7 @@ class ApiContext extends RawDrupalContext {
       }
 
       // Make sure the forum  was created
-      if (empty(taxonomy_term_load_multiple_by_name($name, 'forums'))) {
+      if (empty(\Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(['name' => $name, 'vid' => 'forums']))) {
         print("The forum for the api with the name $name was successfully NOT created");
       }
       else {

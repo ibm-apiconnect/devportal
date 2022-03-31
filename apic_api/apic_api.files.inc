@@ -43,7 +43,7 @@ function apic_api_save_wsdl($apiId, $data, $fileName = NULL) {
       \Drupal::service('file_system')->prepareDirectory($apiDir, FileSystemInterface::CREATE_DIRECTORY);
 
       // Saves a file to the specified destination and creates a database entry.
-      $fileTemp = file_save_data($data, $apiImgDir . '/' . $apiId . '/' . $fileName, FileSystemInterface::EXISTS_REPLACE);
+      $fileTemp = \Drupal::service('file.repository')->writeData($data, $apiImgDir . '/' . $apiId . '/' . $fileName, FileSystemInterface::EXISTS_REPLACE);
     }
     if ($fileTemp !== NULL) {
       \Drupal::logger('apic_api')->notice('Saved WSDL to filesystem for apiID: %apiID, filename: %filename', [

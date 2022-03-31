@@ -1,0 +1,3 @@
+{
+    "modules" : [ "domain", "theme_editor", "backup_migrate", "delete_all", "devel_themer", "php", "content_sync", "swiftmailer", "simple_html_mail" ]
+}

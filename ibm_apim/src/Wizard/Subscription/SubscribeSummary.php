@@ -80,7 +80,7 @@ class SubscribeSummary extends IbmWizardStepBase {
           }
           elseif ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
             $rawImage = \Drupal::service('apic_app.application')->getRandomImageName($application_node->getTitle());
-            $application_image = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
+            $application_image = base_path() . \Drupal::service('extension.list.module')->getPath('apic_app') . '/images/' . $rawImage;
           }
         }
 
@@ -96,8 +96,7 @@ class SubscribeSummary extends IbmWizardStepBase {
             }
           }
           elseif ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('product')) {
-            $rawImage = Product::getRandomImageName($product_node->getTitle());
-            $product_image = base_path() . drupal_get_path('module', 'product') . '/images/' . $rawImage;
+            $product_image = Product::getPlaceholderImageURL($product_node->getTitle());
           }
         }
 

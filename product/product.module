@@ -367,20 +367,20 @@ function product_preprocess(&$variables, $hook, &$info) {
         $themeName = \Drupal::theme()->getActiveTheme()->getName();
         $themePath = \Drupal::theme()->getActiveTheme()->getPath();
         if (file_exists($themePath . '/templates/node/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $themeName);
-          $info['path'] = drupal_get_path('theme', $themeName) . '/templates/node';
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates/node';
           $info['template'] = $templateFileName;
         }
         elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = drupal_get_path('theme', $themeName);
-          $info['path'] = drupal_get_path('theme', $themeName) . '/templates';
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates';
           $info['template'] = $templateFileName;
         }
         else {
-          $templateFilePath = drupal_get_path('module', 'product') . '/templates/' . $templateFileName . '.html.twig';
+          $templateFilePath = \Drupal::service('extension.list.module')->getPath('product') . '/templates/' . $templateFileName . '.html.twig';
           if (file_exists($templateFilePath)) {
-            $info['theme path'] = drupal_get_path('module', 'product');
-            $info['path'] = drupal_get_path('module', 'product') . '/templates';
+            $info['theme path'] = \Drupal::service('extension.list.module')->getPath('product');
+            $info['path'] = \Drupal::service('extension.list.module')->getPath('product') . '/templates';
             $info['template'] = $templateFileName;
           }
         }
@@ -432,10 +432,10 @@ function product_preprocess_node(&$variables) {
   if ($variables['node']->getType() === 'product') {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
 
-    $keySvg = file_get_contents(drupal_get_path('module', 'product') . '/images/key.svg');
-    $lockedSvg = file_get_contents(drupal_get_path('module', 'product') . '/images/locked.svg');
-    $closeSvg = file_get_contents(drupal_get_path('module', 'product') . '/images/close.svg');
-    $checkmarkSvg = file_get_contents(drupal_get_path('module', 'product') . '/images/checkmark.svg');
+    $keySvg = file_get_contents(\Drupal::service('extension.list.module')->getPath('product') . '/images/key.svg');
+    $lockedSvg = file_get_contents(\Drupal::service('extension.list.module')->getPath('product') . '/images/locked.svg');
+    $closeSvg = file_get_contents(\Drupal::service('extension.list.module')->getPath('product') . '/images/close.svg');
+    $checkmarkSvg = file_get_contents(\Drupal::service('extension.list.module')->getPath('product') . '/images/checkmark.svg');
     $variables['key_svg'] = $keySvg;
     $variables['locked_svg'] = $lockedSvg;
     $variables['close_svg'] = $closeSvg;

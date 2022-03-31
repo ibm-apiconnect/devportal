@@ -18,8 +18,10 @@
 
 namespace Drupal\apic_app\Plugin\Block;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ibm_apim\Service\UserUtils;
@@ -73,7 +75,7 @@ class NewApplicationBlock extends BlockBase implements ContainerFactoryPluginInt
     $current_user = \Drupal::currentUser();
     $config = \Drupal::config('ibm_apim.settings');
     $show_register_app = (boolean) $config->get('show_register_app');
-    return AccessResult::allowedIf($show_register_app === TRUE && !$current_user->isAnonymous() && (int) $current_user->id() !== 1 && $this->userUtils->checkHasPermission('app:manage'));
+    return AccessResult::allowedIf($show_register_app === TRUE && !$current_user->isAnonymous() && (int) $current_user->id() !== 1);
   }
 
   /**
@@ -82,10 +84,16 @@ class NewApplicationBlock extends BlockBase implements ContainerFactoryPluginInt
   public function build(): array {
     return [
       '#theme' => 'new_application',
-      '#cache' => [
-        'contexts' => ['user'],
-      ],
+      '#access' => $this->userUtils->checkHasPermission('app:manage')
     ];
+  }
+
+  public function getCacheTags(): array {
+    return Cache::mergeTags(parent::getCacheTags(), ['apic_app:new_application']);
+  }
+
+  public function getCacheContexts(): array {
+    return Cache::mergeContexts(parent::getCacheContexts(), ['user']);
   }
 
 }

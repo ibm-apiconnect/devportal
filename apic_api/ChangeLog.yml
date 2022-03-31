@@ -1,4 +1,28 @@
 changes:
+  8.x-2.8.13: null
+  8.x-2.8.12:
+  - support pathalias in test tool (#150)
+  8.x-2.8.11: null
+  8.x-2.8.10: null
+  8.x-2.8.9: null
+  8.x-2.8.8:
+  - refactor taxonomy services
+  8.x-2.8.7:
+  - remove deprecated function calls
+  8.x-2.8.6:
+  - Added example_array_items explorer option
+  8.x-2.8.5:
+  - need to call correct hooks for the placeholder icons
+  8.x-2.8.4:
+  - need a node id before this update will work
+  8.x-2.8.3:
+  - Fixed explorer redirects
+  8.x-2.8.2:
+  - git -> gitci
+  8.x-2.8.1:
+  - velox/analytics#1462 - refactor Jenkinsfile
+  8.x-2.8.0:
+  - update version 8.x-2.7.1 -> 8.x-2.8.0
   8.x-2.7.0:
   - update version 8.x-2.6.10 -> 8.x-2.7.0
   8.x-2.6.9:

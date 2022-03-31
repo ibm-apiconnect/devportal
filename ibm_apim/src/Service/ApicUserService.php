@@ -303,8 +303,10 @@ class ApicUserService {
     $user->setState($apicuser['state']);
     $customFields = $this->getCustomUserFields();
     foreach ($customFields as $field) {
-      $value = $apicuser['metadata'][$field];
-      $user->addCustomField($field, json_decode($value, TRUE, 512, JSON_THROW_ON_ERROR));
+      if (isset($apicuser['metadata'][$field])) {
+        $value = $apicuser['metadata'][$field];
+        $user->addCustomField($field, json_decode($value, TRUE, 512, JSON_THROW_ON_ERROR));
+      }
     }
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $user->getUsername());

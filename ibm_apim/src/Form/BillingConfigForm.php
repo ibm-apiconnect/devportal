@@ -27,7 +27,7 @@ class BillingConfigForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormID(): string {
+  public function getFormId(): string {
     return 'ibm_apim_billing_config_settings';
   }
 
@@ -130,6 +130,9 @@ class BillingConfigForm extends ConfigFormBase {
       ->save();
 
     parent::submitForm($form, $form_state);
+
+    // clear all caches
+    drupal_flush_all_caches();
   }
 
 }

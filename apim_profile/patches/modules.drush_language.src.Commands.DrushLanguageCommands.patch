@@ -1,0 +1,13 @@
+--- modules/drush_language/src/Commands/DrushLanguageCommands.php	2021-09-22 15:12:47.082792197 +0000
++++ modules/drush_language/src/Commands/DrushLanguageCommands.php	2021-09-22 15:12:38.662761674 +0000
+@@ -149,6 +149,10 @@
+     'force' => TRUE,
+   ]) {
+     try {
++      // convert to array if drush takes in the arg incorrectly
++      if (str_contains($options['langcodes'][0], ",")) {
++        $options['langcodes'] = explode(",", $options['langcodes'][0]);
++      }
+       $this->cliService->exportTranslations($this->io(), 'dt', $options);
+     }
+     catch (\Exception $exception) {

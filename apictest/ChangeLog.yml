@@ -1,4 +1,37 @@
 changes:
+  8.x-2.7.15: null
+  8.x-2.7.14:
+  - fix test code
+  8.x-2.7.13:
+  - fix test code
+  8.x-2.7.12:
+  - set default perms correctly
+  8.x-2.7.11:
+  - nodejs not needed here
+  8.x-2.7.10:
+  - Fix
+  8.x-2.7.9:
+  - Fix php file locations
+  8.x-2.7.8: null
+  8.x-2.7.7:
+  - Turn off cache clear in install and uninstall as the URL is NULL here
+  - Update behat package tgz
+  - Fix php-fpm log file ownership
+  - New php file locations
+  8.x-2.7.6:
+  - deprecated functions - apictest
+  8.x-2.7.5:
+  - make sure billing provider is set
+  8.x-2.7.4:
+  - Added clear users step (#220) (#222)
+  8.x-2.7.3:
+  - git -> gitci
+  8.x-2.7.2:
+  - velox/analytics#1462 - refactor Jenkinsfile
+  8.x-2.7.1:
+  - remove module_blocklist variable (#217)
+  8.x-2.7.0:
+  - update version 8.x-2.6.4 -> 8.x-2.7.0
   8.x-2.6.3:
   - move devel settings to their own config object
   8.x-2.6.2:

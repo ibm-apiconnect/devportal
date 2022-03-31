@@ -170,7 +170,11 @@ class ApplicationCreateForm extends FormBase {
 
     $restService = \Drupal::service('apic_app.rest_service');
     $result = $restService->createApplication($name, $summary, $oauthEndpoints, $certificate, $form_state);
-
+    $options = [];
+    $destination = \Drupal::request()->get('redirectto');
+    if (isset($destination) && !empty($destination)) {
+      $options['query']['redirectto'] = $destination;
+    }
     if (empty($result->data['errors']) && $result->code < 300) {
       if (isset($result->data['id'])) {
         if (!isset($result->data['client_id'], $result->data['client_secret'])) {
@@ -181,7 +185,7 @@ class ApplicationCreateForm extends FormBase {
           'client_id' => $result->data['client_id'],
           'client_secret' => $result->data['client_secret'],
         ], JSON_THROW_ON_ERROR));
-        $displayCredsUrl = Url::fromRoute('apic_app.display_creds', ['appId' => $result->data['id'], 'credentials' => $credsString]);
+        $displayCredsUrl = Url::fromRoute('apic_app.display_creds', ['appId' => $result->data['id'], 'credentials' => $credsString], $options);
         $form_state->setRedirectUrl($displayCredsUrl);
       }
       else {
@@ -190,7 +194,7 @@ class ApplicationCreateForm extends FormBase {
           '@username' => \Drupal::currentUser()->getAccountName(),
         ]);
         \Drupal::service('messenger')->addError($this->t('Application creation failed.'));
-        $form_state->setRedirectUrl(Url::fromRoute('apic_app.create'));
+        $form_state->setRedirectUrl(Url::fromRoute('apic_app.create', [], $options));
       }
     }
     else {
@@ -199,7 +203,7 @@ class ApplicationCreateForm extends FormBase {
         '@username' => \Drupal::currentUser()->getAccountName(),
       ]);
       \Drupal::service('messenger')->addError($this->t('Application creation failed.'));
-      $form_state->setRedirectUrl(Url::fromRoute('apic_app.create'));
+      $form_state->setRedirectUrl(Url::fromRoute('apic_app.create', [], $options));
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }

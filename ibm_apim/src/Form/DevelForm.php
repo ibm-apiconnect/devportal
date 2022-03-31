@@ -27,7 +27,7 @@ class DevelForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormID(): string {
+  public function getFormId(): string {
     return 'ibm_apim_devel_settings';
   }
 

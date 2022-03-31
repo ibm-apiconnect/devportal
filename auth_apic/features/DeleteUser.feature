@@ -68,6 +68,7 @@ Feature: Delete user
       # And I should see the text "andre has been deleted."
     And there are no warnings
     And there are no errors
+    Then clear users
 
   @api
   Scenario: Andre org owner - click delete
@@ -90,6 +91,7 @@ Feature: Delete user
       # And I should see the text "andre has been deleted."
     And there are no warnings
     And there are no errors
+    Then clear users
 
   @api
   Scenario: Andre multiple org owner - not allowed
@@ -142,3 +144,4 @@ Feature: Delete user
       # And I should see the text "andre has been deleted."
     And there are no warnings
     And there are no errors
+    Then clear users

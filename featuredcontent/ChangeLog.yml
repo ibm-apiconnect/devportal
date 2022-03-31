@@ -1,4 +1,19 @@
 changes:
+  8.x-2.8.7: null
+  8.x-2.8.6:
+  - needs to be node id not id
+  8.x-2.8.5:
+  - use pathalias if set
+  8.x-2.8.4:
+  - need to call correct hooks for the placeholder icons
+  8.x-2.8.3:
+  - git -> gitci
+  8.x-2.8.2:
+  - velox/analytics#1462 - refactor Jenkinsfile
+  8.x-2.8.1:
+  - wrong field name for d8/9
+  8.x-2.8.0:
+  - update version 8.x-2.7.1 -> 8.x-2.8.0
   8.x-2.7.0:
   - update version 8.x-2.6.3 -> 8.x-2.7.0
   8.x-2.6.2:

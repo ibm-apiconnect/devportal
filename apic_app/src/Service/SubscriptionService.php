@@ -22,6 +22,7 @@ use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\user\Entity\User;
+use Drupal\Core\Extension\ModuleHandler;
 use Throwable;
 
 /**
@@ -40,15 +41,23 @@ class SubscriptionService {
    */
   protected ApimUtils $apimUtils;
 
+    /**
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
+  protected ModuleHandler $moduleHandler;
+
   /**
    * CredentialsService constructor.
    *
    * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
    * @param \Drupal\ibm_apim\Service\ApimUtils $apimUtils
    */
-  public function __construct(UserUtils $userUtils, ApimUtils $apimUtils) {
+  public function __construct(UserUtils $userUtils, 
+                              ApimUtils $apimUtils, 
+                              ModuleHandler $moduleHandler) {
     $this->userUtils = $userUtils;
     $this->apimUtils = $apimUtils;
+    $this->moduleHandler = $moduleHandler;
   }
 
   /**
@@ -68,7 +77,7 @@ class SubscriptionService {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function create(string $appUrl, string $subId, string $product, string $plan, string $consumerOrgUrl, $state = 'enabled', $billingUrl = NULL, $subscription): bool {
+  public function create(string $appUrl, string $subId, string $product, string $plan, string $consumerOrgUrl, $state, $billingUrl, $subscription): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$appUrl, $subId]);
     $created = FALSE;
     $appUrl = Html::escape($this->apimUtils->removeFullyQualifiedUrl($appUrl));
@@ -405,11 +414,13 @@ class SubscriptionService {
       ->execute();
     if ($result !== NULL) {
       $record = $result->fetch();
+      $this->moduleHandler->invokeAll('apic_app_subscription_pre_delete', ['subId' => $subId]);
 
       // Delete the subscription from all relevant tables
       Database::getConnection()
         ->query("DELETE s, n, r FROM {apic_app_application_subs} s INNER JOIN {node__application_subscription_refs} n ON n.application_subscription_refs_target_id = s.id INNER JOIN {node_revision__application_subscription_refs} r ON r.application_subscription_refs_target_id = s.id WHERE s.uuid = :sub_id", [':sub_id' => $subId]);
 
+        $this->moduleHandler->invokeAll('apic_app_subscription_post_delete', ['subId' => $subId]);
       if ($record) {
         // Invalidate the tags and reset the cache of the application node
         $this->clearCaches($record->entity_id, $record->id);
@@ -430,11 +441,20 @@ class SubscriptionService {
   public function deleteAllSubsForProduct(string $productUrl): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$productUrl]);
 
-    if (isset($productUrl)) {
-      Database::getConnection()
-        ->query("DELETE s, n, r FROM {apic_app_application_subs} s INNER JOIN {node__application_subscription_refs} n ON n.application_subscription_refs_target_id = s.id INNER JOIN {node_revision__application_subscription_refs} r ON r.application_subscription_refs_target_id = s.id WHERE s.product_url = :product_url", [':product_url' => $productUrl]);
-    }
+    $db = Database::getConnection();
+    $result = $db->query("SELECT id FROM {apic_app_application_subs} s WHERE s.product_url = :product_url", [':product_url' => $productUrl]);
 
+    if ($result && $subIds = $result->fetchCol()) {
+      foreach ($subIds as $subId) {
+        $this->moduleHandler->invokeAll('apic_app_subscription_pre_delete', ['subId' => $subId]);
+      }
+      if (isset($productUrl)) {
+        $db->query("DELETE s, n, r FROM {apic_app_application_subs} s INNER JOIN {node__application_subscription_refs} n ON n.application_subscription_refs_target_id = s.id INNER JOIN {node_revision__application_subscription_refs} r ON r.application_subscription_refs_target_id = s.id WHERE s.product_url = :product_url", [':product_url' => $productUrl]);
+      }
+      foreach ($subIds as $subId) {
+        $this->moduleHandler->invokeAll('apic_app_subscription_post_delete', ['subId' => $subId]);
+      }
+    }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 

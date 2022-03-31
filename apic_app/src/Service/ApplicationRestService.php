@@ -16,6 +16,7 @@ namespace Drupal\apic_app\Service;
 use Drupal\ibm_apim\ApicRest;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_apim\Service\Utils;
 use Drupal\node\Entity\Node;
 use Throwable;
 
@@ -42,6 +43,11 @@ class ApplicationRestService implements ApplicationRestInterface {
   protected SubscriptionService $subscriptionService;
 
   /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
+  protected Utils $utils;
+
+  /**
    * ApplicationRestService constructor.
    *
    * @param \Drupal\apic_app\Service\ApplicationService $applicationService
@@ -49,11 +55,17 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param \Drupal\ibm_apim\Service\ApimUtils $apimUtils
    * @param \Drupal\apic_app\Service\SubscriptionService $subscriptionService
    */
-  public function __construct(ApplicationService $applicationService, UserUtils $userUtils, ApimUtils $apimUtils, SubscriptionService $subscriptionService) {
+  public function __construct(ApplicationService $applicationService, 
+                              UserUtils $userUtils, 
+                              ApimUtils $apimUtils, 
+                              SubscriptionService $subscriptionService,
+                              Utils $utils
+                              ) {
     $this->applicationService = $applicationService;
     $this->userUtils = $userUtils;
     $this->apimUtils = $apimUtils;
     $this->subscriptionService = $subscriptionService;
+    $this->utils = $utils;
   }
   /**
    * @inheritDoc
@@ -298,7 +310,7 @@ class ApplicationRestService implements ApplicationRestInterface {
       $config = \Drupal::config('ibm_apim.settings');
       if ((boolean) $config->get('show_placeholder_images')) {
         $rawImage = $this->applicationService->getRandomImageName($name);
-        $application_image_url = $_SERVER['HTTP_HOST'] . base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
+        $application_image_url = $_SERVER['HTTP_HOST'] . base_path() . \Drupal::service('extension.list.module')->getPath('apic_app') . '/images/' . $rawImage;
         if ($_SERVER['HTTPS'] === 'on') {
           $application_image_url = 'https://' . $application_image_url;
         }
@@ -309,7 +321,7 @@ class ApplicationRestService implements ApplicationRestInterface {
       }
 
       $customFields = $this->applicationService->getCustomFields();
-      $customFieldValues = $this->userUtils->handleFormCustomFields($customFields, $formState);
+      $customFieldValues = $this->utils->handleFormCustomFields($customFields, $formState);
       if (!empty($customFieldValues)) {
         foreach ($customFieldValues as $customField => $value) {
           $customFieldValues[$customField] = json_encode($value, JSON_THROW_ON_ERROR);

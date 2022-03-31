@@ -103,7 +103,7 @@ class DisplayCredsForm extends FormBase {
           '#markup' => Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input id="clientIDInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientIDInputLabel" value="' . $this->creds['client_id'] . '" />
                 <div id="hiddenClientIDInput" class="offscreen-field">' . $this->creds['client_id'] . '</div>
                 <button class="clipboardjs-button" type="button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientIDInput">
-                  ' . file_get_contents(drupal_get_path('module', 'apic_app') . "/images/clipboard.svg") . '</button></div></div>'),
+                  ' . file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_app') . "/images/clipboard.svg") . '</button></div></div>'),
           '#weight' => 10,
         ];
       }
@@ -112,7 +112,7 @@ class DisplayCredsForm extends FormBase {
           '#markup' => Markup::create('<div class="clientSecretContainer"><label for="client_secret" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input id="clientSecretInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientSecretInputLabel" value="' . $this->creds['client_secret'] . '" />
                 <div id="hiddenClientSecretInput" class="offscreen-field">' . $this->creds['client_secret'] . '</div>
                 <button class="clipboardjs-button" type="button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientSecretInput">
-                  ' . file_get_contents(drupal_get_path('module', 'apic_app') . "/images/clipboard.svg") . '</button></div></div>'),
+                  ' . file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_app') . "/images/clipboard.svg") . '</button></div></div>'),
           '#weight' => 20,
         ];
       }
@@ -160,7 +160,13 @@ class DisplayCredsForm extends FormBase {
    */
   public function getCancelUrl(): Url {
     $analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
-    if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
+    $destination = \Drupal::request()->get('redirectto');
+    if (isset($destination) && !empty($destination)) {
+      if ($destination[0] !== '/' && $destination[0] !== '?' && $destination[0] !== '#') {
+        $destination = '/' . $destination;
+      }
+      $url = Url::fromUserInput($destination);
+    } else if (isset($analytics_service) && $analytics_service->getClientEndpoint() !== NULL) {
       $url = Url::fromRoute('apic_app.subscriptions', ['node' => $this->node->id()]);
     }
     else {

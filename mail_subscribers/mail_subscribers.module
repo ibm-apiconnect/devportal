@@ -215,11 +215,11 @@ function mail_subscribers_preprocess(&$variables, $hook, &$info) {
     if ($templateFileName !== NULL) {
       ibm_apim_entry_trace(__FUNCTION__, 'form');
 
-      $templateFilePath = drupal_get_path('module', 'mail_subscribers') . '/templates/' . $templateFileName . '.html.twig';
+      $templateFilePath = \Drupal::service('extension.list.module')->getPath('mail_subscribers') . '/templates/' . $templateFileName . '.html.twig';
 
       if (file_exists($templateFilePath)) {
-        $info['theme path'] = drupal_get_path('module', 'mail_subscribers');
-        $info['path'] = drupal_get_path('module', 'mail_subscribers') . '/templates';
+        $info['theme path'] = \Drupal::service('extension.list.module')->getPath('mail_subscribers');
+        $info['path'] = \Drupal::service('extension.list.module')->getPath('mail_subscribers') . '/templates';
         $info['template'] = $templateFileName;
       }
 

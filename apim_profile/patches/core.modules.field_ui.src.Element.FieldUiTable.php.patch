@@ -4,8 +4,8 @@
     */
    public static function reduceOrder($array, $a) {
      $array = !$array ? [] : $array;
--    if ($a['name']) {
-+    if (array_key_exists('name', $a) && $a['name']) {
+-    if (!empty($a['name'])) {
++    if (array_key_exists('name', $a) && !empty($a['name'])) {
        $array[] = $a['name'];
      }
      if (!empty($a['children'])) {

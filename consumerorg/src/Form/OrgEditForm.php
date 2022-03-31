@@ -221,7 +221,7 @@ class OrgEditForm extends FormBase {
       $customFields = $this->consumerOrgService->getCustomFields();
       $values = $form_state->getValues();
       if (!empty($customFields)) {
-        $customFieldValues = \Drupal::service('ibm_apim.user_utils')->handleFormCustomFields($customFields, $form_state);
+        $customFieldValues = \Drupal::service('ibm_apim.utils')->handleFormCustomFields($customFields, $form_state);
         $values = array_replace($values, $customFieldValues);
       }
       $response = $this->consumerOrgService->edit($this->currentOrg, $values);

@@ -1,0 +1,19 @@
+instana_eum.settings:
+  type: mapping
+  label: 'Instana EUM Settings'
+  mapping:
+    api_key:
+      type: string
+      label: 'The API Key for the Instana server'
+    reporting_url:
+      type: string
+      label: 'The reporting URL of the Instana server'
+    track_pages:
+      type: boolean
+      label: 'Allow Instana to monitor page views, load times and JS errors for individual pages'
+    track_admin:
+      type: boolean
+      label: 'Enable monitoring of admin pages.'
+    advanced_settings:
+      type: text
+      label: 'Advanced settings for the Instana server configuration'

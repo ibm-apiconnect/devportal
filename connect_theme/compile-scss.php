@@ -23,7 +23,7 @@ $scss->addImportPath('scss/jquery-ui');
 
 $cssOut = $scss->compile('@import "style.scss";');
 
-if (!file_exists(__DIR__ . '/css')) {
-  mkdir(__DIR__ . '/css', 0755, TRUE);
+if (!file_exists(__DIR__ . '/css') && !mkdir($concurrentDirectory = __DIR__ . '/css', 0755, TRUE) && !is_dir($concurrentDirectory)) {
+  throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
 }
 file_put_contents(__DIR__ . '/css/style.css', $cssOut);

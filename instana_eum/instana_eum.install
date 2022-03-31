@@ -1,0 +1,25 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2021
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+function instana_eum_install() {
+
+  $formId = "instana_eum_admin_settings";
+  $moduleHandler = \Drupal::service('module_handler');
+
+  if ($moduleHandler->moduleExists('view_password')) {
+    $formData = \Drupal::service('config.factory')->get('view_password.settings')->get('form_ids');
+    if (!str_contains($formData, $formId)) {
+      \Drupal::configFactory()->getEditable('view_password.settings')->set('form_ids', $formData . ',' . $formId)->save(TRUE);
+    }
+  }
+}

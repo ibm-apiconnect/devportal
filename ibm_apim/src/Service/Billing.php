@@ -107,8 +107,12 @@ class Billing {
       if ($moduleHandler->moduleExists('encrypt')) {
         $ibmApimConfig = \Drupal::config('ibm_apim.settings');
         $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
-        $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
-        $encryptionService = \Drupal::service('encryption');
+        if (isset($encryptionProfileName)) {
+          $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+          $encryptionService = \Drupal::service('encryption');
+        } else {
+          \Drupal::logger('ibm_apim')->warning('Billing: No payment method encryption profile set', []);
+        }
       }
       foreach ($data as $bill) {
         $bill_url = $bill['billing_url'];
@@ -142,9 +146,15 @@ class Billing {
       if ($moduleHandler->moduleExists('encrypt')) {
         $ibmApimConfig = \Drupal::config('ibm_apim.settings');
         $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
-        $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
-        $encryptionService = \Drupal::service('encryption');
-        $data = $encryptionService->encrypt(serialize($data), $encryptionProfile);
+        if (isset($encryptionProfileName)) {
+          $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+          $encryptionService = \Drupal::service('encryption');
+          if ($encryptionProfile !== NULL) {
+            $data = $encryptionService->encrypt(serialize($data), $encryptionProfile);
+          }
+        } else {
+          \Drupal::logger('ibm_apim')->warning('Billing: No payment method encryption profile set', []);
+        }
       }
       $current_data[$key] = $data;
       $this->state->set('ibm_apim.billing_objects', $current_data);
@@ -206,9 +216,15 @@ class Billing {
       if ($moduleHandler->moduleExists('encrypt')) {
         $ibmApimConfig = \Drupal::config('ibm_apim.settings');
         $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
-        $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
-        $encryptionService = \Drupal::service('encryption');
-        $data = unserialize($encryptionService->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
+        if (isset($encryptionProfileName)) {
+          $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+          $encryptionService = \Drupal::service('encryption');
+          if ($encryptionProfile !== NULL) {
+            $data = unserialize($encryptionService->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
+          }
+        } else {
+          \Drupal::logger('ibm_apim')->warning('Billing: No payment method encryption profile set', []);
+        }
       }
     }
 

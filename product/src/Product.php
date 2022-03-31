@@ -28,11 +28,10 @@ use Throwable;
  */
 class Product {
 
-  protected $productTaxonomy;
+  protected $apicTaxonomy;
 
   public function __construct() {
-    $productTaxonomy = \Drupal::service('product.taxonomy');
-    $this->productTaxonomy = $productTaxonomy;
+    $this->apicTaxonomy = \Drupal::service('ibm_apim.taxonomy');
   }
 
   /**
@@ -93,7 +92,7 @@ class Product {
         $totalTags = [];
       }
 
-      $existingProductTags = $this->productTaxonomy->separate_categories($totalTags, $existingCategories);
+      $existingProductTags = $this->apicTaxonomy->separate_categories($totalTags, $existingCategories);
       $oldTags = [];
       if (is_array($existingProductTags) && !empty($existingProductTags)) {
         foreach ($existingProductTags as $tag) {
@@ -626,7 +625,7 @@ class Product {
         // Product Categories
         $categoriesEnabled = (boolean) $config->get('categories')['enabled'];
         if ($categoriesEnabled === TRUE && isset($product['catalog_product']['info']['categories'])) {
-          $this->productTaxonomy->process_categories($product, $node);
+          $this->apicTaxonomy->process_product_categories($product, $node);
         }
 
         // if invoked from the create code then don't invoke the update event - will be invoked from create instead
@@ -777,7 +776,7 @@ class Product {
    */
   public static function getPlaceholderImage($name): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $name);
-    $returnValue = Url::fromUri('internal:/' . drupal_get_path('module', 'product') . '/images/' . self::getRandomImageName($name))
+    $returnValue = Url::fromUri('internal:/' . \Drupal::service('extension.list.module')->getPath('product') . '/images/' . self::getRandomImageName($name))
       ->toString();
     \Drupal::moduleHandler()->alter('product_getplaceholderimage', $returnValue);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -794,7 +793,7 @@ class Product {
   public static function getPlaceholderImageURL($name): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $name);
     $rawImage = self::getRandomImageName($name);
-    $returnValue = base_path() . drupal_get_path('module', 'product') . '/images/' . $rawImage;
+    $returnValue = base_path() . \Drupal::service('extension.list.module')->getPath('product') . '/images/' . $rawImage;
     \Drupal::moduleHandler()->alter('product_getplaceholderimageurl', $returnValue);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     return $returnValue;
@@ -1324,7 +1323,7 @@ class Product {
       if ($node !== NULL) {
         $product = yaml_parse($node->product_data->value);
         if (isset($product['info']['categories'])) {
-          $this->productTaxonomy->process_categories($product, $node);
+          $this->apicTaxonomy->process_product_categories($product, $node);
         }
       }
     }
@@ -1511,7 +1510,7 @@ class Product {
 
           foreach (array_chunk($subUuids, 1000) as $chunk) {
             // Find the subscription records of any app subscribed to the source product (in the list of uuids) that already has a subscription to the target product
-            $result = $db->query("SELECT uuid FROM {apic_app_application_subs} s WHERE s.product_url = :source_product_url AND s.uuid IN (:sub_uuids[]) AND EXISTS (SELECT id FROM {apic_app_application_subs} s2 WHERE s.app_url = s2.app_url AND s2.product_url = :target_product_url);", [':source_product_url' => $sourceProductUrl, ':target_product_url' => $targetProductUrl, ':sub_uuids[]' => $chunk]);
+            $result = $db->query("SELECT uuid FROM {apic_app_application_subs} s WHERE s.product_url = :source_product_url AND s.uuid IN (:sub_uuids[]) AND EXISTS (SELECT id FROM {apic_app_application_subs} s2 WHERE s.app_url = s2.app_url AND s2.product_url = :target_product_url AND :target_product_url <> :source_product_url) ;", [':source_product_url' => $sourceProductUrl, ':target_product_url' => $targetProductUrl, ':sub_uuids[]' => $chunk]);
 
             if ($result && $subsToDelete = $result->fetchCol()) {
               foreach ($subsToDelete as $sub) {

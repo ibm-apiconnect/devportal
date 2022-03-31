@@ -723,6 +723,10 @@ ul.analyticsAppSelector li.selected {
   margin-top: 2rem;
 }
 
+li.tabs__tab a {
+  color: #006db3;
+}
+
 a.button.disabled {
   cursor: not-allowed;
 }

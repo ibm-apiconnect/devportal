@@ -14,6 +14,7 @@ namespace Drupal\ibm_apim\Service;
 
 
 use Drupal\consumerorg\ApicType\Member;
+use Drupal\Core\File\FileUrlGenerator;
 
 /**
  * Class MyOrgService
@@ -22,8 +23,17 @@ use Drupal\consumerorg\ApicType\Member;
  */
 class MyOrgService {
 
-  public function __construct() {
 
+  /**
+   * @var \Drupal\Core\File\FileUrlGenerator
+   */
+  protected FileUrlGenerator $fileUrlGenerator;
+
+  /**
+   * @param \Drupal\Core\File\FileUrlGenerator $fileUrlGenerator
+   */
+  public function __construct(FileUrlGenerator $fileUrlGenerator) {
+    $this->fileUrlGenerator = $fileUrlGenerator;
   }
 
   /**
@@ -69,7 +79,7 @@ class MyOrgService {
       if (!empty($entity->user_picture) && $entity->user_picture->isEmpty() === FALSE) {
         $image = $entity->user_picture;
         $uri = $image->entity->getFileUri();
-        $member['user_picture'] = file_create_url($uri);
+        $member['user_picture'] = $this->fileUrlGenerator->generateAbsoluteString($uri);
       }
       else {
         $member['user_picture'] = 'https://file/is/here/for/tests';

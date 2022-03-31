@@ -647,29 +647,37 @@ function apim_profile_default_apic_config() {
     ->set('show_register_app', TRUE)
     ->set('show_versions', TRUE)
     ->set('enable_api_test', TRUE)
+    ->set('validate_apis', TRUE)
     ->set('autotag_with_phase', FALSE)
     ->set('show_cors_warnings', TRUE)
     ->set('show_analytics', TRUE)
-    ->set('render_api_schema_view', TRUE)
     ->set('soap_swagger_download', FALSE)
+    ->set('render_api_schema_view', TRUE)
     ->set('optimise_oauth_ux', TRUE)
     ->set('show_mtls_header', TRUE)
-    ->set('soap_codesnippets', FALSE)
+    ->set('email_as_username', TRUE)
     ->set('application_image_upload', TRUE)
     ->set('hide_admin_registry', FALSE)
-    ->set('disable_etags', FALSE)
-    ->set('cron_drush', FALSE)
+    ->set('render_api_schema_view', TRUE)
     ->set('allow_consumerorg_creation', TRUE)
     ->set('allow_consumerorg_rename', TRUE)
     ->set('allow_consumerorg_delete', TRUE)
     ->set('allow_consumerorg_change_owner', TRUE)
+    ->set('enable_oidc_register_form', TRUE)
+    ->set('enable_oidc_login_form', FALSE)
     ->set('allow_user_delete', TRUE)
-    ->set('certificate_strip_newlines', TRUE)
-    ->set('certificate_strip_prefix', TRUE)
+    ->set('allow_new_credentials', TRUE)
+    ->set('allow_clientid_reset', TRUE)
+    ->set('allow_clientsecret_reset', TRUE)
     ->set('categories', $categories)
+    ->set('soap_codesnippets', FALSE)
     ->set('codesnippets', $codesnippets)
     ->set('router_type', 'hash')
-    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync', 'swiftmailer', 'simple_html_mail'])
+    ->set('certificate_strip_newlines', TRUE)
+    ->set('certificate_strip_prefix', TRUE)
+    ->set('payment_method_encryption_profile', 'socialblock')
+    ->set('api_max_depth', 9)
+    ->set('example_array_items', 3)
     ->save();
 
   \Drupal::service('config.factory')
@@ -1046,9 +1054,8 @@ function apim_profile_load_translations() {
     }
     else {
       $result = Gettext::fileToDatabase($file, $options);
-
       // Validate that strings were loaded in properly
-      if ((isset($result->additions, $result->updates) && $result->additions === 0 && $result->updates === 0) || (!isset($result->skipped) || $result->skipped !== 0)) {
+      if ((isset($result['additions'], $result['updates']) && $result['additions'] === 0 && $result['updates'] === 0) || (!isset($result['skips']) && $result['skips'] !== 0)) {
         \Drupal::logger('apim_profile')
           ->error('Translation import for language @lang failed to add any new strings to the database.', ['@lang' => $file->langcode]);
       }
@@ -1478,10 +1485,6 @@ function apim_profile_update_8024() {
     $module_installer->uninstall(['php']);
     \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
   }
-  \Drupal::service('config.factory')
-    ->getEditable('ibm_apim.settings')
-    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync', 'swiftmailer', 'simple_html_mail'])
-    ->save();
 }
 
 /**
@@ -1633,16 +1636,6 @@ function apim_profile_update_8027() {
       \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
     }
   }
-}
-
-/**
- * Add blocklist variable
- */
-function apim_profile_update_8028() {
-  \Drupal::service('config.factory')
-    ->getEditable('ibm_apim.settings')
-    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync', 'swiftmailer', 'simple_html_mail'])
-    ->save();
 }
 
 /**
@@ -2691,19 +2684,34 @@ function apim_profile_update_8206() {
 }
 
 /**
- * Update blocklist variable
+ * Remove blocklist variable
  */
-function apim_profile_update_8207() {
+function apim_profile_update_8208() {
+  $data = \Drupal::service('config.factory')->get('ibm_apim.settings')->get();
+  unset($data['module_blocklist']);
+
+  if (!empty($data)) {
+    \Drupal::service('config.factory')
+      ->getEditable('ibm_apim.settings')
+      ->setData($data)
+      ->save();
+  }
+}
+
+/**
+ * disable bootstrap tooltips
+ */
+function apim_profile_update_8209() {
   \Drupal::service('config.factory')
-    ->getEditable('ibm_apim.settings')
-    ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer', 'php', 'content_sync', 'swiftmailer', 'simple_html_mail'])
+    ->getEditable('connect_theme.settings')
+    ->set('tooltip_enabled', 0)
     ->save();
 }
 
 /**
  * Need to make sure devel_settings are set
  */
-function apim_profile_update_8208() {
+function apim_profile_update_8210() {
   \Drupal::service('config.factory')
     ->getEditable('ibm_apim.devel_settings')
     ->set('entry_exit_trace', FALSE)
@@ -2715,10 +2723,12 @@ function apim_profile_update_8208() {
   $data = \Drupal::service('config.factory')->get('ibm_apim.settings')->get();
   unset($data['entry_exit_trace'], $data['apim_rest_trace'], $data['acl_debug'], $data['webhook_debug']);
 
-  \Drupal::service('config.factory')
-    ->getEditable('ibm_apim.settings')
-    ->setData($data)
-    ->save();
+  if (!empty($data)) {
+    \Drupal::service('config.factory')
+      ->getEditable('ibm_apim.settings')
+      ->setData($data)
+      ->save();
+  }
 
   // if we're missing config then just reset to the defaults
   if (!array_key_exists('categories', $data) || !array_key_exists('allow_consumerorg_creation', $data)) {
@@ -2734,11 +2744,64 @@ function apim_profile_update_8208() {
 /**
  * enable view_password module for the modal_application_create_form form too
  */
-function apim_profile_update_8209() {
+function apim_profile_update_8211() {
   \Drupal::configFactory()
     ->getEditable('view_password.settings')
     ->set('form_ids', 'user_login_form,user_register_form,apic_change_pwd_form,display_app_credentials_form,apic_resetpw,modal_application_create_form')
     ->save(TRUE);
+}
+
+/**
+ * Remove blocklist variable
+ */
+function apim_profile_update_8212() {
+  $data = \Drupal::service('config.factory')->get('ibm_apim.settings')->get();
+  unset($data['module_blocklist']);
+
+  if (!empty($data)) {
+    \Drupal::service('config.factory')
+      ->getEditable('ibm_apim.settings')
+      ->setData($data)
+      ->save();
+  }
+}
+
+/**
+ * enable drush_language module
+ */
+function apim_profile_update_8213() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('drush_language')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->install(['drush_language']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  }
+}
+
+/**
+ * Need to make sure payment_method_encryption_profile is set
+ */
+function apim_profile_update_8214() {
+  $encryptionProfileName = \Drupal::config('ibm_apim.settings')->get('payment_method_encryption_profile');
+  if ($encryptionProfileName === NULL || empty($encryptionProfileName)) {
+    \Drupal::service('config.factory')
+      ->getEditable('ibm_apim.settings')
+      ->set('payment_method_encryption_profile', 'socialblock')
+      ->save();
+  }
+}
+
+/**
+ * ensure that the essential config is actually set
+ * this is due to an earlier upgrade bug in 10.0.4 apimesh/devportal#7591
+ */
+function apim_profile_update_8215() {
+  // if we're missing config then just reset to the defaults
+  $data = \Drupal::service('config.factory')->get('ibm_apim.settings')->get();
+  if (empty($data) || !array_key_exists('categories', $data) || !array_key_exists('allow_consumerorg_creation', $data)) {
+    apim_profile_default_apic_config();
+  }
 }
 
 /**

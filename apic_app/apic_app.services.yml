@@ -49,7 +49,7 @@ services:
       - { name: access_check, applies_to: _application_reset_clientsecret }
   apic_app.rest_service:
     class: Drupal\apic_app\Service\ApplicationRestService
-    arguments: [ '@apic_app.application', '@ibm_apim.user_utils', '@ibm_apim.apim_utils', '@apic_app.subscriptions' ]
+    arguments: [ '@apic_app.application', '@ibm_apim.user_utils', '@ibm_apim.apim_utils', '@apic_app.subscriptions','@ibm_apim.utils' ]
   apic_app.anonymous.response_subscriber:
     class: Drupal\apic_app\Routing\ResponseSubscriber
     arguments: [ '@current_user' ]
@@ -61,10 +61,10 @@ services:
                  '@config.factory' ]
   apic_app.credentials:
     class: Drupal\apic_app\Service\CredentialsService
-    arguments: [ '@ibm_apim.user_utils' ]
+    arguments: [ '@ibm_apim.user_utils', '@module_handler' ]
   apic_app.subscriptions:
     class: Drupal\apic_app\Service\SubscriptionService
-    arguments: [ '@ibm_apim.user_utils', '@ibm_apim.apim_utils' ]
+    arguments: [ '@ibm_apim.user_utils', '@ibm_apim.apim_utils', '@module_handler' ]
   apic_app.application:
     class: Drupal\apic_app\Service\ApplicationService
     arguments: [ '@ibm_apim.user_utils',

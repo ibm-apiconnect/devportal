@@ -1,4 +1,84 @@
 changes:
+  8.x-2.7.39:
+  - custom field fix (#803) (#804)
+  8.x-2.7.38:
+  - customFix v10.0.1 (#802)
+  8.x-2.7.37: null
+  8.x-2.7.36:
+  - Fix php80 param order
+  8.x-2.7.35:
+  - new application block needs to be cached per user
+  8.x-2.7.34:
+  - fix storage of translations (#795)
+  8.x-2.7.33:
+  - missing settings
+  8.x-2.7.32:
+  - fix case of the getFormId function
+  8.x-2.7.31:
+  - check encryption profile name is set before using it
+  8.x-2.7.30: null
+  8.x-2.7.29:
+  - Invoke post+pre sub+cred delete hooks (#789) (#791)
+  8.x-2.7.28:
+  - Address type (#786) (#788)
+  8.x-2.7.27:
+  - pointless test now with typing
+  8.x-2.7.26: null
+  8.x-2.7.25: null
+  8.x-2.7.24:
+  - refactor taxonomy services pt 2
+  8.x-2.7.23:
+  - refactor taxonomy services
+  8.x-2.7.22:
+  - fix up NLS issues in drush commands
+  - remove php8 typing for return arg
+  - fix up unit tests
+  - remove deprecated function calls
+  8.x-2.7.21: null
+  8.x-2.7.20:
+  - include invitation email address in eventlogs
+  - Added setting for example_array_items explorer option (#781) (#783)
+  8.x-2.7.19:
+  - need to call correct hooks for the placeholder icons
+  8.x-2.7.18:
+  - clear caches when setup provider
+  8.x-2.7.17:
+  - allow normal user with admin privs too
+  - only allow access if billing provider is configured
+  8.x-2.7.16:
+  - remove visual hidden check for checkboxes (#778)
+  8.x-2.7.15:
+  - Add clipboard js to subscription wizard (#777)
+  8.x-2.7.14:
+  - Accessibility (#772) (#774)
+  8.x-2.7.13:
+  - need better type checking
+  8.x-2.7.12:
+  - More access (#769) (#771)
+  8.x-2.7.11:
+  - check modules for empty description (#768)
+  8.x-2.7.10:
+  - set table to be presentation for accessibility
+  8.x-2.7.9:
+  - be more consistent with message
+  8.x-2.7.8:
+  - ensure a valid product ID is passed in
+  8.x-2.7.7:
+  - conver to drush 10 commands (#767)
+  8.x-2.7.6:
+  - Added activation_update and actvation_del webhooks
+  8.x-2.7.5:
+  - Should be deleted not set to empty
+  8.x-2.7.4:
+  - git -> gitci
+  8.x-2.7.3:
+  - velox/analytics#1462 - refactor Jenkinsfile
+  8.x-2.7.2: null
+  8.x-2.7.1:
+  - .module_blocklist.json -> module_blocklist.json (#743)
+  - Blocklist in file (#742)
+  8.x-2.7.0:
+  - update version 8.x-2.6.21 -> 8.x-2.7.0
   8.x-2.6.20: null
   8.x-2.6.19:
   - only run for enabled themes

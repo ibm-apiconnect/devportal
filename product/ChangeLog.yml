@@ -1,4 +1,23 @@
 changes:
+  8.x-2.8.9: null
+  8.x-2.8.8:
+  - use product node id not pathalias
+  8.x-2.8.7:
+  - deprecated functions - product
+  8.x-2.8.6:
+  - refactor taxonomy services
+  8.x-2.8.5:
+  - Fixed subscription migration webhook (#231) (#233)
+  8.x-2.8.4:
+  - git -> gitci
+  8.x-2.8.3:
+  - velox/analytics#1462 - refactor Jenkinsfile
+  8.x-2.8.2:
+  - Subscription wizard shows choose plan step (#230)
+  8.x-2.8.1:
+  - controller shouldnt return null
+  8.x-2.8.0:
+  - update version 8.x-2.7.1 -> 8.x-2.8.0
   8.x-2.7.0:
   - update version 8.x-2.6.9 -> 8.x-2.7.0
   8.x-2.6.8:

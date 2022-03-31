@@ -121,7 +121,7 @@ Feature: Forgot Password
     When I am at "/user/password"
     Then I should see the text "Reset Password"
     And I should see the text "@data(user_registries[0].title)"
-    And I should see the text "If you have forgotten the password for your @data(user_registries[0].title) account or 'admin', you can reset it here."
+    And I should see the text "If you have forgotten the password for your @data(user_registries[0].title) account or a local administrator, you can reset it here."
     And I should see "or" in the ".apic-user-form-or" element
     And I should see the text "or"
     And I should see the text "Select a different registry"
@@ -137,7 +137,7 @@ Feature: Forgot Password
       | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | yes     |
     When I am at "/user/password"
     And I should see the text "@data(user_registries[2].title)"
-    And I should see the text "If you have forgotten your 'admin' password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your authentication provider."
+    And I should see the text "If you have forgotten your local administrator password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your authentication provider."
 
   @api
   Scenario: Forgot password changes user registry via link
@@ -152,7 +152,7 @@ Feature: Forgot Password
     And I should see the link "@data(user_registries[2].title)"
     When I click "@data(user_registries[2].title)"
     And I should see the text "@data(user_registries[2].title)"
-    And I should see the text "If you have forgotten your 'admin' password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your authentication provider."
+    And I should see the text "If you have forgotten your local administrator password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your authentication provider."
     And I should see the link "@data(user_registries[0].title)"
 
   @api
@@ -195,7 +195,7 @@ Feature: Forgot Password
     When I am at "/user/password"
     Then I should see the text "Reset Password"
     And I should see the text "@data(user_registries[2].title)"
-    And I should see the text "If you have forgotten the password for your @data(user_registries[2].title) account or 'admin', you can reset it here."
+    And I should see the text "If you have forgotten the password for your @data(user_registries[2].title) account or a local administrator, you can reset it here."
     And I should see the text "Username or email address"
     And I should see the text "Password reset instructions will be sent to your registered email address."
     And I should see the button "Submit"

@@ -12,8 +12,8 @@
 
 namespace Drupal\ibm_apim\Service;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\TempStore\PrivateTempStore;
@@ -24,7 +24,6 @@ use Drupal\user\Entity\User;
 use Drupal\user\UserStorageInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Drupal\Component\Datetime\DateTimePlus;
 
 /**
  * User related functions.
@@ -60,10 +59,10 @@ class UserUtils {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(AccountProxyInterface $current_user,
-                              PrivateTempStoreFactory $temp_store_factory,
-                              StateInterface $state,
-                              LoggerInterface $logger,
+  public function __construct(AccountProxyInterface      $current_user,
+                              PrivateTempStoreFactory    $temp_store_factory,
+                              StateInterface             $state,
+                              LoggerInterface            $logger,
                               EntityTypeManagerInterface $entity_type_manager) {
     $this->currentUser = $current_user;
     $this->tempStore = $temp_store_factory->get('ibm_apim');
@@ -160,6 +159,8 @@ class UserUtils {
           $found = TRUE;
           $org = ['url' => $org_url];
           $this->tempStore->set('current_consumer_organization', $org);
+          \Drupal::service('cache_tags.invalidator')->invalidateTags(['consumerorg:' . Html::cleanCssIdentifier($org_url)]);
+          \Drupal::service('cache_tags.invalidator')->invalidateTags(['apic_app:new_application']);
         }
         if ($found !== TRUE) {
           $this->tempStore->set('current_consumer_organization', NULL);
@@ -478,56 +479,6 @@ class UserUtils {
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $return);
     return $return;
-  }
-
-  /**
-   * @param $customFields
-   * @param $formState
-   *
-   * @return array
-   */
-  public function handleFormCustomFields($customFields, $formState): array {
-    $customFieldValues = [];
-    if (!empty($customFields)) {
-      $userInputs = $formState->getUserInput();
-      foreach ($customFields as $customField) {
-        $value = $formState->getValue($customField);
-        if (isset($value[0]['value']) && $value[0]['value'] instanceof DateTimePlus) {
-          $format = "Y-m-d";
-          if (isset($userInputs[$customField][0]['value']) && is_array($userInputs[$customField][0]['value']) && count($userInputs[$customField][0]['value']) === 2) {
-            $format = "Y-m-d\Th:i:s";
-          }
-          $value = array_column($value, 'value');
-          foreach ($value as $key => $val) {
-            $value[$key] = $val->format($format);
-          }
-        }
-        elseif (isset($userInputs[$customField], $value)) {
-          $input = $userInputs[$customField];
-          //Remove unnecessary fields based on user Input
-          if (is_array($input)) {
-            foreach (array_keys($value) as $key) {
-              if (!array_key_exists($key, $input)) {
-                unset($value[$key]);
-              }
-              elseif (!empty($value[$key]) && is_array($value[$key])) {
-                foreach (array_keys($value[$key]) as $attr) {
-                  if ((is_array($input[$key]) && !array_key_exists($attr, $input[$key])) || $value[$key][$attr] === 'upload') {
-                    unset($value[$key][$attr]);
-                  }
-                }
-              }
-            }
-          }
-        }
-        //Don't need an array for only 1 element
-        if (is_array($value) && count($value) === 1) {
-          $value = array_pop($value);
-        }
-        $customFieldValues[$customField] = $value;
-      }
-    }
-    return $customFieldValues;
   }
 
 }

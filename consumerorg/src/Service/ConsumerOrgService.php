@@ -33,6 +33,7 @@ use Drupal\ibm_apim\Service\EventLogService;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_apim\Service\Utils;
 use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\node\Entity\Node;
@@ -134,6 +135,11 @@ class ConsumerOrgService {
   protected EventLogService $eventLogService;
 
   /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
+  protected Utils $utils;
+
+  /**
    * ConsumerOrgService constructor.
    *
    * @param \Psr\Log\LoggerInterface $logger
@@ -171,7 +177,8 @@ class ConsumerOrgService {
                               RoleService $role_service,
                               ApicAccountInterface $account_service,
                               ApicUserService $user_service,
-                              EventLogService $event_log_service
+                              EventLogService $event_log_service,
+                              Utils $utils
   ) {
     $this->logger = $logger;
     $this->siteconfig = $site_config;
@@ -190,6 +197,7 @@ class ConsumerOrgService {
     $this->accountService = $account_service;
     $this->userService = $user_service;
     $this->eventLogService = $event_log_service;
+    $this->utils = $utils;
   }
 
   /**
@@ -498,10 +506,7 @@ class ConsumerOrgService {
         $consumer->setTags([]);
       }
       $node->set('consumerorg_tags', $consumer->getTags());
-
-      foreach ($consumer->getCustomFields() as $field => $value) {
-        $node->set($field, $value);
-      }
+      $this->utils->saveCustomFields($node, $this->getCustomFields(), $consumer->getCustomFields(), FALSE);
 
       $roles = [];
       if ($consumer->getRoles() !== NULL) {
@@ -617,11 +622,7 @@ class ConsumerOrgService {
 
               // Add the custom fields to the user
               $customFields = $this->userService->getCustomUserFields();
-              foreach ($customFields as $customField) {
-                if (isset($memberArray['user'][$customField])) {
-                  $userAccount->set($customField, json_decode($memberArray['user'][$customField], TRUE, 512, JSON_THROW_ON_ERROR));
-                }
-              }
+              $this->utils->saveCustomFields($userAccount, $customFields, $memberArray['user'], TRUE);
 
               // Add the consumerorg if it isn't already associated with this user
               if (!$this->isConsumerorgAssociatedWithAccount($consumer->getUrl(), $userAccount)) {
@@ -925,7 +926,11 @@ class ConsumerOrgService {
         $eventEntity->setEvent('delete');
         $eventEntity->setArtifactUrl($invitation['url']);
         $eventEntity->setConsumerOrgUrl($invitation['consumer_org_url']);
-        $eventEntity->setData(['orgName' => $node->getTitle()]);
+        $eventData = ['orgName' => $node->getTitle()];
+        if (isset($invitation['email'])) {
+          $eventData['email'] = $invitation['email'];
+        }
+        $eventEntity->setData($eventData);
         $this->eventLogService->createIfNotExist($eventEntity);
       }
     }
@@ -1819,11 +1824,10 @@ class ConsumerOrgService {
           $orgNode->setTitle($name);
           // update any custom fields
           $customFields = $this->getCustomFields();
-          foreach ($customFields as $customField) {
-            if (isset($newData['metadata'][$customField])) {
-              $orgNode->set($customField, json_decode($newData['metadata'][$customField], TRUE, 512, JSON_THROW_ON_ERROR));
-            }
+          if (!array_key_exists('metadata', $newData)) {
+            $newData['metadata'] = [];
           }
+          $this->utils->saveCustomFields($orgNode, $customFields, $newData['metadata'], TRUE);
           $orgNode->save();
         }
       }
@@ -2248,4 +2252,3 @@ class ConsumerOrgService {
   }
 
 }
-

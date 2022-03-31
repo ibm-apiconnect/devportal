@@ -585,7 +585,12 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       'catalog_url' => '/api/catalogs/b33d299b-7eca-45ad-bca1-151323974cea/f3149806-a4b4-4e80-ae99-683ac7c98047',
       'url' => '/api/catalogs/b33d299b-7eca-45ad-bca1-151323974cea/f3149806-a4b4-4e80-ae99-683ac7c98047/configured-billings/e30e74c1-38d7-4e2f-87c5-1c522de70ff3',
     ];
-    $billingService->updateAll([$billingObject]);
+    $billingProviders = [$billingObject];
+    $billingService->updateAll($billingProviders);
+    $newMapping = [$billingObject['name'] => 'ibm_create_payment_method'];
+    \Drupal::configFactory()->getEditable('ibm_apim.settings')
+      ->set('billing_providers', serialize($newMapping))
+      ->save();
   }
 
   /**
@@ -935,7 +940,9 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
           $row['first_time_login'] = 0;
         }
         $basicUser->uid = $user->id();
-        $this->getUserManager()->addUser($basicUser);
+        if (!isset($row['delete'])) {
+          $this->getUserManager()->addUser($basicUser);
+        }
         $this->getUserManager()->setCurrentUser($basicUser);
         $this->apicUsers[$user->getAccountName()] = $basicUser;
       }
@@ -1412,36 +1419,51 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       ->set('show_register_app', TRUE)
       ->set('show_versions', TRUE)
       ->set('enable_api_test', TRUE)
+      ->set('validate_apis', TRUE)
       ->set('autotag_with_phase', FALSE)
       ->set('show_cors_warnings', TRUE)
       ->set('show_analytics', TRUE)
-      ->set('render_api_schema_view', TRUE)
       ->set('soap_swagger_download', FALSE)
-      ->set('soap_codesnippets', FALSE)
+      ->set('render_api_schema_view', TRUE)
+      ->set('optimise_oauth_ux', TRUE)
+      ->set('show_mtls_header', TRUE)
+      ->set('email_as_username', TRUE)
       ->set('application_image_upload', TRUE)
       ->set('hide_admin_registry', FALSE)
-      ->set('disable_etags', FALSE)
-      ->set('cron_drush', FALSE)
+      ->set('render_api_schema_view', TRUE)
       ->set('allow_consumerorg_creation', TRUE)
       ->set('allow_consumerorg_rename', TRUE)
       ->set('allow_consumerorg_delete', TRUE)
       ->set('allow_consumerorg_change_owner', TRUE)
+      ->set('enable_oidc_register_form', TRUE)
+      ->set('enable_oidc_login_form', FALSE)
       ->set('allow_user_delete', TRUE)
-      ->set('use_proxy', FALSE)
-      ->set('allow_user_delete', TRUE)
-      ->set('proxy_for_api', 'CONSUMER,PLATFORM,ANALYTICS')
-      ->set('proxy_type', 'CURLPROXY_HTTP')
-      ->set('proxy_url', NULL)
-      ->set('proxy_auth', NULL)
+      ->set('allow_new_credentials', TRUE)
+      ->set('allow_clientid_reset', TRUE)
+      ->set('allow_clientsecret_reset', TRUE)
       ->set('categories', $categories)
+      ->set('soap_codesnippets', FALSE)
       ->set('codesnippets', $codesnippets)
-      ->set('module_blocklist', ['domain', 'theme_editor', 'backup_migrate', 'delete_all', 'devel_themer'])
+      ->set('router_type', 'hash')
+      ->set('certificate_strip_newlines', TRUE)
+      ->set('certificate_strip_prefix', TRUE)
+      ->set('payment_method_encryption_profile', 'socialblock')
+      ->set('api_max_depth', 9)
+      ->set('example_array_items', 3)
       ->save();
     \Drupal::service('config.factory')->getEditable('ibm_apim.devel_settings')
       ->set('entry_exit_trace', FALSE)
       ->set('apim_rest_trace', FALSE)
       ->set('acl_debug', FALSE)
       ->set('webhook_debug', FALSE)->save();
+  }
+
+  /**
+   * Only to be used for tests where user has already been deleted from the db
+   * @Then clear users
+   */
+  public function clearUsers(): void {
+    $this->getUserManager()->clearUsers();
   }
 
   private function resetToDefaultRegistry(): void {

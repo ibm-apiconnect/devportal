@@ -177,7 +177,7 @@ class ApplicationController extends ControllerBase {
         }
         elseif ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
           $rawImage = $this->applicationService->getRandomImageName($node->getTitle());
-          $application_image_url = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
+          $application_image_url = base_path() . \Drupal::service('extension.list.module')->getPath('apic_app') . '/images/' . $rawImage;
         }
         $lifecycle_pending = $node->application_lifecycle_pending->value ?? NULL;
         $appnode = [
@@ -190,6 +190,7 @@ class ApplicationController extends ControllerBase {
         ];
 
         $portalAnalyticsService = \Drupal::service('ibm_apim.analytics')->getDefaultService();
+        $analyticsClientUrl = NULL;
         if ($portalAnalyticsService !== NULL) {
           $analyticsClientUrl = $portalAnalyticsService->getClientEndpoint();
         }
@@ -299,7 +300,7 @@ class ApplicationController extends ControllerBase {
       $analyticsClientUrl = $portal_analytics_service->getClientEndpoint();
     }
     if (!isset($analyticsClientUrl)) {
-      $this->messenger->addError(t('Analytics Client URL is not set.'));
+      \Drupal::service('messenger')->addError(t('Analytics Client URL is not set.'));
     }
     if (isset($node)) {
       $node = Node::load($node->id());
@@ -319,7 +320,7 @@ class ApplicationController extends ControllerBase {
         }
         elseif ($ibm_apim_show_placeholder_images === TRUE && $moduleHandler->moduleExists('apic_app')) {
           $rawImage = $this->applicationService->getRandomImageName($node->getTitle());
-          $application_image_url = base_path() . drupal_get_path('module', 'apic_app') . '/images/' . $rawImage;
+          $application_image_url = base_path() . \Drupal::service('extension.list.module')->getPath('apic_app') . '/images/' . $rawImage;
         }
         $lifecycle_pending = $node->application_lifecycle_pending->value ?? NULL;
         $appnode = [
@@ -358,7 +359,7 @@ class ApplicationController extends ControllerBase {
                 }
                 elseif ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('product')) {
                   $rawImage = Product::getRandomImageName($product->getTitle());
-                  $product_image_url = base_path() . drupal_get_path('module', 'product') . '/images/' . $rawImage;
+                  $product_image_url = base_path() . \Drupal::service('extension.list.module')->getPath('product') . '/images/' . $rawImage;
                 }
                 $plan_title = '';
                 if ($moduleHandler->moduleExists('product')) {
@@ -423,7 +424,7 @@ class ApplicationController extends ControllerBase {
       'analytics' => [
         'proxyURL' => $url,
         'translations' => $translations,
-        'analyticsDir' => base_path() . drupal_get_path('module', 'ibm_apim') . '/analytics',
+        'analyticsDir' => base_path() . \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics',
       ],
       'application' => ['id' => $node->application_id->value, 'credentials' => $credentials],
     ];
