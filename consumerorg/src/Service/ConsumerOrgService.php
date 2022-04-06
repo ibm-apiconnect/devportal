@@ -1995,7 +1995,7 @@ class ConsumerOrgService {
       $customFields = $this->getCustomFields();
       foreach ($customFields as $field) {
         if (isset($json['consumer_org']['metadata'][$field])) {
-          $org->addCustomField($field, json_decode($json['consumer_org']['metadata'][$field], TRUE, 512, JSON_THROW_ON_ERROR));
+          $org->addCustomField($field, $json['consumer_org']['metadata'][$field]);
         }
       }
       $roles = [];
