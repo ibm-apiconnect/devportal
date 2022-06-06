@@ -50,8 +50,8 @@ install:
   - blog
   - content_browser
   - big_pipe
+  - apic_letter_avatar
   - avatars
-  - letter_avatar
   - link
   - field_group
   - menu_link_content
@@ -144,15 +144,3 @@ themes:
   - bartik
   - seven
   - connect_theme
-
-
-
-
-
-
-
-
-
-
-
-

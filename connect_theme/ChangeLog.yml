@@ -1,4 +1,9 @@
 changes:
+  8.x-1.10.2:
+  - upgrade phpunit
+  8.x-1.10.1: null
+  8.x-1.10.0:
+  - update version 8.x-1.9.3 -> 8.x-1.10.0
   8.x-1.9.2:
   - git -> gitci
   8.x-1.9.1:

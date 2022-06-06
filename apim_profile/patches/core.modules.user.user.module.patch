@@ -25,7 +25,7 @@
    foreach ($values as $field => $value) {
      // Set cookie for 365 days.
 -    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), REQUEST_TIME + 31536000, '/');
-+    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), REQUEST_TIME + 31536000, '/', NULL, TRUE, TRUE);
++    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), \Drupal::time()->getRequestTime() + 31536000, '/', NULL, TRUE, TRUE);
    }
  }
  
@@ -34,7 +34,7 @@
   */
  function user_cookie_delete($cookie_name) {
 -  setrawcookie('Drupal.visitor.' . $cookie_name, '', REQUEST_TIME - 3600, '/');
-+  setrawcookie('Drupal.visitor.' . $cookie_name, '', REQUEST_TIME - 3600, '/',NULL, TRUE, TRUE);
++  setrawcookie('Drupal.visitor.' . $cookie_name, '', \Drupal::time()->getRequestTime() - 3600, '/',NULL, TRUE, TRUE);
  }
  
  /**

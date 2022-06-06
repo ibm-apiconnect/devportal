@@ -1,4 +1,189 @@
 changes:
+  8.x-20220419-1621:
+    commits:
+    - honeypot patch update
+    - drupal update
+    - Don't hardcode the fallback branches in the Jenkinsfile (#647)
+    - composer update
+    - SA-CORE 2022-008/009
+    - Composer update (#642)
+    modules:
+      ibm_apim:
+        8.x-1.11.25:
+        - Add translation project (#837) (#841)
+  8.x-20220411-0952:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.13.10:
+        - subscription migration fix.
+  8.x-20220401-1406:
+    commits:
+    - fix conflicts
+    - Apic Letter avatar (#636) (#641)
+    modules:
+      ibm_apim:
+        8.x-1.11.24:
+        - letter_avatar submodule (#814) (#818)
+  8.x-20220329-1021:
+    commits:
+    - composer update
+    - delete unneeded files
+    - delete unneeded files
+    - delete unneeded files
+    - Updated composer and patch (#621) (#635)
+    modules:
+      product:
+        8.x-1.9.13:
+        - upgrade phpunit
+      ghmarkdown:
+        8.x-1.9.4:
+        - upgrade phpunit
+      mail_subscribers:
+        8.x-1.9.4:
+        - fix unit tests
+        - fix unit test validation errors
+        - upgrade phpunit
+      featuredcontent:
+        8.x-1.9.9:
+        - upgrade phpunit
+      apic_api:
+        8.x-1.9.15:
+        - upgrade phpunit
+      ibm_apim:
+        8.x-1.11.23:
+        - upgrade phpunit
+      consumerorg:
+        8.x-1.10.9:
+        - upgrade phpunit
+      connect_theme:
+        8.x-1.10.2:
+        - upgrade phpunit
+  8.x-20220325-1621:
+    commits:
+    - use artifactory.writeDotNpmrc() (#620)
+    modules:
+      product:
+        8.x-1.9.12: null
+      apic_api:
+        8.x-1.9.14: null
+      apic_app:
+        8.x-1.13.9: null
+      ibm_apim:
+        8.x-1.11.22: null
+  8.x-20220325-1449:
+    commits: null
+    modules:
+      product:
+        8.x-1.9.11:
+        - use more secure passwords
+      apic_api:
+        8.x-1.9.13:
+        - use more secure passwords
+      apic_app:
+        8.x-1.13.8:
+        - use more secure passwords
+      ibm_apim:
+        8.x-1.11.21:
+        - use more secure passwords
+  8.x-20220321-1622:
+    commits:
+    - use more secure passwords
+    - use php8.0 password_strength (#615) (#619)
+    - drupal core SA-CORE-2022-006
+    modules:
+      auth_apic:
+        8.x-1.10.13:
+        - use more secure passwords
+      apictest:
+        8.x-1.11.8:
+        - use more secure passwords
+        8.x-1.11.7:
+        - use more secure passwords
+  8.x-20220317-1447:
+    commits: null
+    modules:
+      socialblock:
+        8.x-1.9.4:
+        - use latest version of twitteroauth library
+  8.x-20220310-1252:
+    commits:
+    - drupal 9.3.8
+    - Maintenance200 (#609) (#611)
+    modules:
+      ibm_apim:
+        8.x-1.11.20:
+        - Custom 2018.4.1 (#809)
+  8.x-20220309-1241:
+    commits:
+    - Php80 2018.4.1 (#606)
+    modules:
+      apictest:
+        8.x-1.11.6:
+        - Php80 2018.4.1 (#230)
+  8.x-20220307-1122:
+    commits: null
+    modules:
+      socialblock:
+        8.x-1.9.3: null
+      product:
+        8.x-1.9.10: null
+      ghmarkdown:
+        8.x-1.9.3: null
+      auth_apic:
+        8.x-1.10.12: null
+      mail_subscribers:
+        8.x-1.9.3: null
+      themegenerator:
+        8.x-1.9.4: null
+      featuredcontent:
+        8.x-1.9.8: null
+      apic_api:
+        8.x-1.9.12: null
+      apic_app:
+        8.x-1.13.7:
+        - Fix app page with superseded products
+      ibm_apim:
+        8.x-1.11.19: null
+      consumerorg:
+        8.x-1.10.8: null
+      connect_theme:
+        8.x-1.10.1: null
+  8.x-20220228-1121:
+    commits:
+    - drupal core 9.3.7
+    - composer update
+    modules:
+      apic_app:
+        8.x-1.13.6:
+        - fix php blowing up due to variable not set
+  8.x-20220225-1721:
+    commits: null
+    modules:
+      featuredcontent:
+        8.x-1.9.7: null
+  8.x-20220225-1347:
+    commits: null
+    modules:
+      featuredcontent:
+        8.x-1.9.6:
+        - needs to be node id not id
+  8.x-20220224-1605:
+    commits:
+    - Php80 (#580)
+    - maybe this line not needed in 2018
+    - Composer update (#601)
+    modules:
+      apictest:
+        8.x-1.11.5:
+        - nodejs not needed here
+  8.x-20220215-1022:
+    commits:
+    - update profile dependencies in build.sh
+    modules:
+      connect_theme:
+        8.x-1.10.0:
+        - update version 8.x-1.9.3 -> 8.x-1.10.0
   8.x-20220215-0826:
     commits:
     - use correct versions
@@ -2347,4 +2532,4 @@ changes:
         - update version: 8.x-1.1.46 -> 8.x-1.2.46
       apictest:
         8.x-1.3.55: null
-  8.x-20220215-1022:
+  8.x-20220519-1021:
