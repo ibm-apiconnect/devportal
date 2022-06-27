@@ -1,0 +1,33 @@
+--- modules/flood_control/src/Form/FloodUnblockAdminForm.php
++++ modules/flood_control/src/Form/FloodUnblockAdminForm.php
+@@ -9,7 +9,7 @@
+ use Drupal\Core\Url;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ use Drupal\flood_control\FloodUnblockManager;
+-use Drupal\Core\Session\AccountProxy;
++use Drupal\Core\Session\AccountProxyInterface;
+
+ /**
+  * Admin form of Flood Unblock.
+@@ -47,7 +47,7 @@
+   /**
+    * Current user object.
+    *
+-   * @var \Drupal\Core\Session\AccountProxy
++   * @var \Drupal\Core\Session\AccountProxyInterface
+    */
+   protected $currentUser;
+
+@@ -60,10 +60,10 @@
+    *   The database connection.
+    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+    *   The date formatter service.
+-   * @param \Drupal\Core\Session\AccountProxy $currentUser
++   * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
+    *   The current user service.
+    */
+-  public function __construct(FloodUnblockManager $floodUnblockManager, Connection $database, DateFormatterInterface $date_formatter, AccountProxy $currentUser) {
++  public function __construct(FloodUnblockManager $floodUnblockManager, Connection $database, DateFormatterInterface $date_formatter, AccountProxyInterface $currentUser) {
+     $this->floodUnblockManager = $floodUnblockManager;
+     $this->database = $database;
+     $this->dateFormatter = $date_formatter;

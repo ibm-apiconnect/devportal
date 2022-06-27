@@ -1168,14 +1168,14 @@ class Product {
    *
    * @return array
    */
-  public static function getProductsContainingAPI($apiRef = NULL): array {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $apiRef);
+  public static function getProductsContainingAPI($apiNid = NULL): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $apiNid);
 
     $products = [];
-    if ($apiRef !== NULL) {
+    if ($apiNid !== NULL) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product');
-      $query->condition('product_apis', $apiRef, 'CONTAINS');
+      $query->condition('product_api_nids', $apiNid, 'IN');
       $results = $query->execute();
       if ($results !== NULL && !empty($results)) {
         $products = array_values($results);

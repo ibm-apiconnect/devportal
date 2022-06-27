@@ -106,6 +106,9 @@ class ConfirmSubscribe extends IbmWizardStepBase {
               $form['#planInfo']['billingInfo'] = $billingInfo['billingText'] . ' ' . $billingInfo['trialPeriodText'];
 
               $form['#paymentMethod'] = $org->getDefaultPaymentMethod();
+              if (is_array($form['#paymentMethod']) && sizeof($form['#paymentMethod']) == 1) {
+                $form['#paymentMethod'] = array_shift($form['#paymentMethod']);
+              }
             }
           }
         }

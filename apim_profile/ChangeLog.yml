@@ -1,4 +1,239 @@
 changes:
+  8.x-20220519-1021:
+    commits:
+    - Tc2dev/20220510 (#648) (#650)
+    modules:
+      auth_apic:
+        8.x-2.9.5:
+        - 7735 redirect (#690)
+  8.x-20220518-1020:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-2.8.12:
+        - Add translation project (#837) (#838)
+  8.x-20220517-2221:
+    commits: null
+    modules:
+      apic_app:
+        8.x-2.9.5:
+        - Subscription tests (#300) (#310)
+      consumerorg:
+        8.x-2.8.6:
+        - Added monetisation test (#257) (#268)
+  8.x-20220517-1539:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-2.8.11:
+        - update site maintenance warning (#836)
+  8.x-20220517-1020:
+    commits: null
+    modules:
+      apic_app:
+        8.x-2.9.4:
+        - ignore the url_redirects field from redirect (#309)
+      ibm_apim:
+        8.x-2.8.10:
+        - tests v10.0.1 (#834)
+      apictest:
+        8.x-2.8.4:
+        - tests v10.0.1 (#233)
+  8.x-20220510-1621:
+    commits:
+    - honeypot patch update
+    - drupal update
+    modules:
+      product:
+        8.x-2.9.4:
+        - tidy url for redirect module enable
+      ibm_apim:
+        8.x-2.8.9:
+        - Delete members without consumerorgs (#831) (#833)
+      consumerorg:
+        8.x-2.8.5: null
+        8.x-2.8.4:
+        - Remove Corg from user on member del (#266)
+        - ignore the url_redirects field from redirect
+  8.x-20220506-1621:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-2.9.4:
+        - Only redirect successful change password attempts (#686)
+      ibm_apim:
+        8.x-2.8.8:
+        - Change password form no longer ends the user session (#830)
+  8.x-20220506-1020:
+    commits:
+    - Don't hardcode the fallback branches in the Jenkinsfile (#647)
+    modules:
+      auth_apic:
+        8.x-2.9.3:
+        - customFieldTests v10.0.1 (#684)
+      apic_app:
+        8.x-2.9.3:
+        - Custom field tests (#304) (#306)
+      consumerorg:
+        8.x-2.8.3:
+        - Added custom field tests (#261) (#262)
+  8.x-20220427-1621:
+    commits:
+    - fix conflicts (#644)
+    - composer update
+    modules:
+      ibm_apim:
+        8.x-2.8.7:
+        - customFieldTests v10.0.1 (#826)
+      apictest:
+        8.x-2.8.3:
+        - Added steps for adding and deleting custom fields (#231) (#232)
+  8.x-20220425-1620:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-2.9.2:
+        - url encode consumer org title (#680)
+  8.x-20220423-1505:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-2.8.6:
+        - remove X-FRAME-OPTIONS and X-XSS-PROTECTION headers (#823)
+  8.x-20220421-1621:
+    commits: null
+    modules:
+      product:
+        8.x-2.9.3:
+        - Product filtering tighened up.
+      apic_api:
+        8.x-2.9.4:
+        - apis need creating before products
+        8.x-2.9.3:
+        - Product filtering tighened up. (#152)
+      ibm_apim:
+        8.x-2.8.5:
+        - apis need creating before products
+  8.x-20220420-1021:
+    commits:
+    - SA-CORE 2022-008/009
+    - Composer update (#642)
+    modules:
+      ibm_apim:
+        8.x-2.8.4:
+        - Display name v10.0.1 (#822)
+      consumerorg:
+        8.x-2.8.2:
+        - use getDisplayName in forms
+  8.x-20220411-0903:
+    commits:
+    - apimesh/devportal#7587 - remove isPromotableBranch for slackSend
+    modules:
+      apic_app:
+        8.x-2.9.2:
+        - subscription migration fix.
+  8.x-20220401-1513:
+    commits:
+    - Apic Letter avatar (#636) (#640)
+    - apimesh/devportal#7627 - revert proxy URL
+    - Maintenance200 (#609) (#610) (#637)
+    modules:
+      ibm_apim:
+        8.x-2.8.3:
+        - letter_avatar submodule (#814) (#817)
+  8.x-20220401-1122:
+    commits:
+    - use more secure passwords
+    - composer update
+    modules:
+      product:
+        8.x-2.9.2:
+        - upgrade phpunit
+      apic_api:
+        8.x-2.9.2:
+        - upgrade phpunit
+      ibm_apim:
+        8.x-2.8.2:
+        - upgrade phpunit
+      consumerorg:
+        8.x-2.8.1:
+        - upgrade phpunit
+  8.x-20220331-1101:
+    commits:
+    - try docker proxy URLs (#614)
+    - use artifactory.writeDotNpmrc() (#620)
+    - delete unneeded files
+    - delete unneeded files
+    - delete unneeded files
+    - Updated composer and patch (#621) (#623)
+    modules:
+      ghmarkdown:
+        8.x-2.9.1:
+        - upgrade phpunit
+      auth_apic:
+        8.x-2.9.1:
+        - use more secure passwords
+      mail_subscribers:
+        8.x-2.9.1:
+        - upgrade phpunit
+      featuredcontent:
+        8.x-2.9.1:
+        - upgrade phpunit
+      apictest:
+        8.x-2.8.2:
+        - use more secure passwords
+      connect_theme:
+        8.x-2.8.1:
+        - upgrade phpunit
+  8.x-20220317-1447:
+    commits:
+    - fix conflicts (#618)
+    - drupal core SA-CORE-2022-006
+    - Update version for 10.0.1.7
+    modules:
+      socialblock:
+        8.x-2.9.1:
+        - use latest version of twitteroauth library
+      product:
+        8.x-2.9.1:
+        - use more secure passwords
+      ghmarkdown:
+        8.x-2.9.0:
+        - update version 8.x-2.8.4 -> 8.x-2.9.0
+      auth_apic:
+        8.x-2.9.0:
+        - update version 8.x-2.8.16 -> 8.x-2.9.0
+      mail_subscribers:
+        8.x-2.9.0:
+        - update version 8.x-2.8.8 -> 8.x-2.9.0
+      themegenerator:
+        8.x-2.9.0:
+        - update version 8.x-2.8.6 -> 8.x-2.9.0
+      featuredcontent:
+        8.x-2.9.0:
+        - update version 8.x-2.8.8 -> 8.x-2.9.0
+      apic_api:
+        8.x-2.9.1:
+        - use more secure passwords
+      apic_app:
+        8.x-2.9.1:
+        - use more secure passwords
+        - encrypt credentials instead of base64
+      ibm_apim:
+        8.x-2.8.1:
+        - use more secure passwords
+      consumerorg:
+        8.x-2.8.0:
+        - update version 8.x-2.7.14 -> 8.x-2.8.0
+      apictest:
+        8.x-2.8.1:
+        - use more secure passwords
+      instana_eum:
+        8.x-2.9.0:
+        - update version 8.x-2.8.6 -> 8.x-2.9.0
+      connect_theme:
+        8.x-2.8.0:
+        - update version 8.x-2.7.11 -> 8.x-2.8.0
   8.x-20220311-2321:
     commits:
     - drupal 9.3.8 (#612)
@@ -5321,4 +5556,4 @@ changes:
         - try to make it more tolerant of yum issues
         8.x-1.3.132:
         - try to make it more tolerant of yum issues
-  8.x-20220317-1447:
+  8.x-20220523-0420:

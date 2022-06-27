@@ -268,7 +268,7 @@ class ProductController extends ControllerBase {
       ]);
       $apiNid = $apiNode->id();
 
-      $productNids = Product::getProductsContainingAPI($apiNode->apic_ref->value);
+      $productNids = Product::getProductsContainingAPI($apiNid);
       if (isset($productNids) && !empty($productNids)) {
         // if only one product found then just load it and redirect
         if (count($productNids) === 1) {

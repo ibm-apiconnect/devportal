@@ -867,6 +867,16 @@ class APIMServer implements ManagementServerInterface {
     return $response;
   }
 
+  public function deletePaymentMethod($paymentMethodUrl) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $response = ApicRest::delete($paymentMethodUrl);
+    $response = $this->restResponseReader->read($response);
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $response->getCode());
+    return $response;
+  }
+
   /**
    * @return \Drupal\ibm_apim\Rest\RestResponse
    * @throws \Exception

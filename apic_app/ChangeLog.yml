@@ -1,4 +1,17 @@
 changes:
+  8.x-2.9.5:
+  - Subscription tests (#300) (#310)
+  8.x-2.9.4:
+  - ignore the url_redirects field from redirect (#309)
+  8.x-2.9.3:
+  - Custom field tests (#304) (#306)
+  8.x-2.9.2:
+  - subscription migration fix.
+  8.x-2.9.1:
+  - use more secure passwords
+  - encrypt credentials instead of base64
+  8.x-2.9.0:
+  - update version 8.x-2.8.12 -> 8.x-2.9.0
   8.x-2.8.11:
   - Fix app page with superseded products
   8.x-2.8.10:

@@ -1,4 +1,14 @@
 changes:
+  8.x-2.9.4:
+  - tidy url for redirect module enable
+  8.x-2.9.3:
+  - Product filtering tighened up.
+  8.x-2.9.2:
+  - upgrade phpunit
+  8.x-2.9.1:
+  - use more secure passwords
+  8.x-2.9.0:
+  - update version 8.x-2.8.10 -> 8.x-2.9.0
   8.x-2.8.9: null
   8.x-2.8.8:
   - use product node id not pathalias

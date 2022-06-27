@@ -1,4 +1,14 @@
 changes:
+  8.x-2.8.4:
+  - tests v10.0.1 (#233)
+  8.x-2.8.3:
+  - Added steps for adding and deleting custom fields (#231) (#232)
+  8.x-2.8.2:
+  - use more secure passwords
+  8.x-2.8.1:
+  - use more secure passwords
+  8.x-2.8.0:
+  - update version 8.x-2.7.16 -> 8.x-2.8.0
   8.x-2.7.15: null
   8.x-2.7.14:
   - fix test code

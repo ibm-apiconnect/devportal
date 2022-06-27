@@ -238,7 +238,24 @@ class CredentialsCreateForm extends FormBase {
         'credId' => $data['id'],
       ]);
 
-      $credsString = base64_encode(json_encode($data, JSON_THROW_ON_ERROR));
+      $credsJson = json_encode($data, JSON_THROW_ON_ERROR);
+      $moduleHandler = \Drupal::service('module_handler');
+      if ($moduleHandler->moduleExists('encrypt')) {
+        $ibmApimConfig = \Drupal::config('ibm_apim.settings');
+        $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
+        if (isset($encryptionProfileName)) {
+          $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+          if ($encryptionProfile !== NULL) {
+            $encryptionService = \Drupal::service('encryption');
+            $credsString = $encryptionService->encrypt($credsJson, $encryptionProfile);
+          }
+        } else {
+          \Drupal::logger('apic_app')->warning('createCredentials: No encryption profile set', []);
+          $credsString = base64_encode($credsJson);
+        }
+      } else {
+        $credsString = base64_encode($credsJson);
+      }
       $displayCredsUrl = Url::fromRoute('apic_app.display_creds', [
         'appId' => $this->node->application_id->value,
         'credentials' => $credsString,

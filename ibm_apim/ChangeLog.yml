@@ -1,4 +1,30 @@
 changes:
+  8.x-2.8.12:
+  - Add translation project (#837) (#838)
+  8.x-2.8.11:
+  - update site maintenance warning (#836)
+  8.x-2.8.10:
+  - tests v10.0.1 (#834)
+  8.x-2.8.9:
+  - Delete members without consumerorgs (#831) (#833)
+  8.x-2.8.8:
+  - Change password form no longer ends the user session (#830)
+  8.x-2.8.7:
+  - customFieldTests v10.0.1 (#826)
+  8.x-2.8.6:
+  - remove X-FRAME-OPTIONS and X-XSS-PROTECTION headers (#823)
+  8.x-2.8.5:
+  - apis need creating before products
+  8.x-2.8.4:
+  - Display name v10.0.1 (#822)
+  8.x-2.8.3:
+  - letter_avatar submodule (#814) (#817)
+  8.x-2.8.2:
+  - upgrade phpunit
+  8.x-2.8.1:
+  - use more secure passwords
+  8.x-2.8.0:
+  - update version 8.x-2.7.40 -> 8.x-2.8.0
   8.x-2.7.39:
   - custom field fix (#803) (#804)
   8.x-2.7.38:

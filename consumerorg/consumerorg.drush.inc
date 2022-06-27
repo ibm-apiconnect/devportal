@@ -749,6 +749,8 @@ function drush_consumerorg_member_delete($payload, $event = 'member_delete') {
 
     $corg->removeMember($member);
     $corg_service->createOrUpdateNode($corg, 'member_remove_drush');
+    $user =  \Drupal::service('ibm_apim.user_storage')->loadUserByUrl($payload['user_url']);
+    \Drupal::service('ibm_apim.user_utils')->removeConsumerOrgFromUser($corg->getUrl(), $user);
 
     drush_log(dt('Removed member @username from consumer org @id', [
       '@username' => $member->getUser()->getUsername(),

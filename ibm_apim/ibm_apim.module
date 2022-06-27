@@ -493,6 +493,15 @@ function ibm_apim_form_seckit_settings_form_alter(&$form, FormStateInterface $fo
   if (isset($form['seckit_xss']['csp'])) {
     unset($form['seckit_xss']['csp']);
   }
+
+  if (isset($form['seckit_xss']['x_xss'])) {
+    unset($form['seckit_xss']['x_xss']);
+    unset($form['seckit_xss']);
+  }
+
+  if (isset($form['seckit_clickjacking']['x_frame_options'])) {
+    unset($form['seckit_clickjacking']['x_frame_options']);
+  }
 }
 
 /**
@@ -709,6 +718,11 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         }
       }
       break;
+    case 'system_site_maintenance_mode':
+			if (isset($form['maintenance_mode']['#description'])) {
+        $form['maintenance_mode']['#description'] = t('<em>Important:</em> Maintenance mode is designed for short-term site maintenance; it is not meant for long-term usage. While a site is in maintenance mode, the database is not updated with new content from API Manager. As soon as the maintenance tasks are finished, you must take the site out of maintenance mode. Do not log out of the Developer Portal while the site is in maintenance mode, as you will not be able to log back in to the UI. In this case, maintenance mode can be turned off only by using the CLI; see the following instructions for details.');
+			}
+      break;
     case 'system_theme_settings':
       // automatically redirect from global settings to the theme specific variant
       // avoids usability issues with filling in a form that wont actually take effect
@@ -853,6 +867,19 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       if (!$ipBanEnabled) {
         \Drupal::messenger()
           ->addWarning(t('IP based security is currently disabled for this portal service so IP based restrictions will not work.'));
+      }
+      break;
+    case 'contact_message_feedback_form': 
+      if (\Drupal::currentUser()->isAuthenticated()) {
+        $current_user = User::load(\Drupal::currentUser()->id());
+        if (($firstname = $current_user->get('first_name')->value) && ($lastname = $current_user->get('last_name')->value)) {
+          $name = "{$firstname}  {$lastname}";
+        } else {
+          $name = $current_user->getEmail();
+        }
+        $name = $name ? "{$current_user->getAccountName()} ({$name})" : $current_user->getAccountName();
+        $form['name']['#value'] = $name;
+        $form['name']['#plain_text'] = $name;
       }
       break;
   }

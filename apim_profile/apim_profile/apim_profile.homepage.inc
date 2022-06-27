@@ -397,6 +397,19 @@ function update_gsg_block() {
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apim_profile_create_forum_block() {
+  try {
+    $block = \Drupal::entityTypeManager()
+      ->getStorage('block')
+      ->load('forumsidebar');
+    // If the block exist, just return.
+  } catch (\Exception $e) {
+    // Do Nothing.
+  }
+
+  if (!empty($block)) {
+    return;
+  }
+
   // welcome banner
   $forum_block_content = BlockContent::create([
     'info' => 'Forum Sidebar [en]',

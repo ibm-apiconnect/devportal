@@ -105,6 +105,19 @@ class ApicUser {
   /**
    * @return string|null
    */
+  public function getDisplayName(): ?string {
+    if (($firstname = $this->getFirstname()) && ($lastname = $this->getLastname())) {
+      $name = "{$firstname}  {$lastname}";
+    } else {
+      $name = $this->getMail();
+    }
+    return $name ? "{$this->getUsername()} ({$name})" : $this->getUsername();
+
+  }
+
+  /**
+   * @return string|null
+   */
   public function getUsername(): ?string {
     return $this->username;
   }

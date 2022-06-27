@@ -26,7 +26,8 @@ use Drupal\DrupalExtension\Context\DrupalContext;
 use Drupal\DrupalExtension\Context\MinkContext;
 use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\user\Entity\User;
-
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;   
 
 /**
  * Defines application features from the specific context.
@@ -489,6 +490,122 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     $analyticsService->updateAll([$analyticsObject]);
   }
 
+    /**
+   * @Given :arg1 entities have :arg2 type custom fields
+   */
+  public function addEntityCustomField($entity, $type): void
+  {
+    $singleName = 'field_single' . ($type);
+    $multiName = 'field_multi' . ($type);
+    $bundle = 'node';
+    $entityType = '';
+    if ($entity == 'user') {
+      $bundle = 'user';
+      $entityType = 'user';
+    } else if ($entity == 'application') {
+      $entityType = 'node';
+      $bundle = 'application';
+    } else if ($entity == 'consumerorg') {
+      $entityType = 'node';
+      $bundle = 'consumerorg';
+    }
+    if (FieldStorageConfig::load($entityType . '.' . $singleName)) {
+      FieldStorageConfig::load($entityType . '.' . $singleName)->delete();
+    }
+  
+      $fieldStorageConfig = FieldStorageConfig::create([
+        'field_name' => $singleName,
+        'entity_type' => $entityType,
+        'type' => $type,
+        'required' => FALSE,
+        'cardinality' => 1,
+      ]);
+      $fieldStorageConfig->save();
+
+    if (FieldConfig::load($entityType . '.' . $bundle . '.' . $singleName)) {
+      FieldConfig::load($entityType . '.' . $bundle . '.' . $singleName)->delete();
+    }
+      $fieldConfig = FieldConfig::create([
+        'field_name' => $singleName,
+        'entity_type' => $entityType,
+        'bundle' => $bundle,
+        'label' => 'Single ' .  ($type),
+      ]);
+      $fieldConfig->save();
+
+    if (FieldStorageConfig::load($entityType . '.' .  $multiName)) {
+      FieldStorageConfig::load($entityType . '.' .  $multiName)->delete();
+    }
+      $fieldStorageConfig = FieldStorageConfig::create([
+        'field_name' => $multiName,
+        'entity_type' => $entityType,
+        'type' => $type,
+        'required' => FALSE,
+        'cardinality' => 2,
+      ]);
+      $fieldStorageConfig->save();
+    if (FieldConfig::load($entityType . '.' . $bundle . '.' . $multiName)) {
+      FieldConfig::load($entityType . '.' . $bundle . '.' . $multiName)->delete();
+    }
+      $fieldConfig = FieldConfig::create([
+        'field_name' => $multiName,
+        'entity_type' => $entityType,
+        'bundle' => $bundle,
+        'label' => 'Multi  ' .  ($type),
+      ]);
+      $fieldConfig->save();
+
+
+    $formDisplay = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load($entityType . '.' . $bundle . '.default');
+    if ($formDisplay !== NULL) {
+      $formDisplay->setComponent($singleName, []);
+      $formDisplay->setComponent($multiName, []);
+      $formDisplay->save();
+    }
+    if ($entity == 'user') {
+      $formDisplay = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('user.user.register');
+      if ($formDisplay !== NULL) {
+        $formDisplay->setComponent($singleName, []);
+        $formDisplay->setComponent($multiName, []);
+        $formDisplay->save();
+      }
+    }
+    \Drupal::service('entity_display.repository')->getViewDisplay($entityType, $bundle, 'default')->setComponent($singleName, [])->save();
+    \Drupal::service('entity_display.repository')->getViewDisplay($entityType, $bundle, 'default')->setComponent($multiName, [])->save();
+  }
+  
+  /**
+   * @Given I delete the :arg1 type custom fields for :arg2 entities
+   */
+  public function deleteCustomField($type, $entity): void
+  {
+    $bundle = 'node';
+    $entityType = '';
+    if ($entity == 'user') {
+      $bundle = 'user';
+      $entityType = 'user';
+    } else if ($entity == 'application') {
+      $entityType = 'node';
+      $bundle = 'application';
+    } else if ($entity == 'consumerorg') {
+      $entityType = 'node';
+      $bundle = 'consumerorg';
+    }
+    $singleName = 'field_single' . ($type);
+    $multiName = 'field_multi' . ($type);
+    if (FieldConfig::load($entityType . '.' . $bundle . '.' . $singleName)) {
+      FieldConfig::load($entityType . '.' . $bundle . '.' . $singleName)->delete();
+    }
+    if (FieldStorageConfig::load($entityType . '.' .$singleName)) {
+      FieldStorageConfig::load($entityType . '.' . $singleName)->delete();
+    }
+    if (FieldConfig::load($entityType . '.' . $bundle . $multiName)) {
+      FieldConfig::load($entityType . '.' . $bundle . $multiName)->delete();
+    }
+    if (FieldStorageConfig::load($entityType . '.' . $multiName)) {
+      FieldStorageConfig::load($entityType . '.' . $multiName)->delete();
+    }
+  }
   /**
    * @Given I do not have an analytics service
    */
@@ -591,6 +708,28 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     \Drupal::configFactory()->getEditable('ibm_apim.settings')
       ->set('billing_providers', serialize($newMapping))
       ->save();
+  }
+
+    /**
+   * @Given I have a payment method
+   */
+  public function addPaymentMethod() {
+    $paymentMethodObject = [
+      'id' => "paymentMethodId",
+      'title' => "paymentMethod",
+      'billing_url' => "/api/catalogs/b33d299b-7eca-45ad-bca1-151323974cea/f3149806-a4b4-4e80-ae99-683ac7c98047/configured-billings/e30e74c1-38d7-4e2f-87c5-1c522de70ff3",
+      'payment_method_type_url' => "/api/cloud/integrations/payment-method/802725f9-feb8-424a-a82b-6e2c5307feef",
+      'org_url' => "/consumer-orgs/1234/5678/982318734",
+      'configuration' => [
+        "owner_email" => "andre@example.com",
+        "owner_name" => "Andre",
+        "token" => "myToken"
+      ]
+    ];
+    $paymentMethodObject['created_by'] = "";
+    $paymentMethodObject['updated_by'] = "";
+    
+    \Drupal::service('consumerorg.paymentmethod')->createOrUpdate($paymentMethodObject);
   }
 
   /**

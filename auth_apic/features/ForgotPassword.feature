@@ -16,7 +16,7 @@ Feature: Forgot Password
     Given I am not logged in
     Given users:
       | name         | mail                     | pass     | status |
-      | forgotpwtest | forgotpwtest@example.com | Qwert123 | 1      |
+      | forgotpwtest | forgotpwtest@example.com | Qwert123IsBadPassword! | 1      |
     Given consumerorgs:
       | title               | name                | id    | owner        |
       | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | forgotpwtest |
@@ -35,7 +35,7 @@ Feature: Forgot Password
     Given I am not logged in
     Given users:
       | name         | mail                     | pass     | status |
-      | forgotpwtest | forgotpwtest@example.com | Qwert123 | 1      |
+      | forgotpwtest | forgotpwtest@example.com | Qwert123IsBadPassword! | 1      |
     Given consumerorgs:
       | title               | name                | id    | owner        |
       | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | forgotpwtest |
@@ -164,8 +164,8 @@ Feature: Forgot Password
       | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | no           | no      |
     Given users:
       | name     | mail                   | pass     | status | registry_url                  |
-      | forgotpw | andre_lur@example.com  | Qwert123 | 1      | @data(user_registries[0].url) |
-      | forgotpw | andre_ldap@example.com | Qwert123 | 1      | @data(user_registries[2].url) |
+      | forgotpw | andre_lur@example.com  | Qwert123IsBadPassword! | 1      | @data(user_registries[0].url) |
+      | forgotpw | andre_ldap@example.com | Qwert123IsBadPassword! | 1      | @data(user_registries[2].url) |
     When I am at "/user/password"
     And I enter "forgotpw" for "name"
     And if the field "captcha_response" is present, enter the value "@captcha"
@@ -216,7 +216,7 @@ Feature: Forgot Password
       | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | yes          | yes     |
     Given users:
       | name         | mail                     | pass     | status |
-      | forgotpwtest | forgotpwtest@example.com | Qwert123 | 1      |
+      | forgotpwtest | forgotpwtest@example.com | Qwert123IsBadPassword! | 1      |
     Given consumerorgs:
       | title               | name                | id    | owner        |
       | forgotpwconsumerorg | forgotpwconsumerorg | 12345 | forgotpwtest |

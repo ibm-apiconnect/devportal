@@ -1,0 +1,24 @@
+--- modules/honeypot/src/HoneypotService.php	2022-05-11 11:05:08.000000000 +0100
++++ modules/honeypot/src/HoneypotService.php	2022-05-11 11:06:00.000000000 +0100
+@@ -13,6 +13,7 @@
+ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+ use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
+ use Drupal\Core\Session\AccountProxyInterface;
++use Drupal\Core\Site\Settings;
+ use Drupal\Core\StringTranslation\StringTranslationTrait;
+ use Drupal\Core\StringTranslation\TranslationInterface;
+ use Symfony\Component\HttpFoundation\RequestStack;
+@@ -321,6 +322,13 @@
+       return;
+     }
+ 
++    // Don't do anything if the client IP is whitelisted.
++    $IPAd = \Drupal::service('request_stack')->getCurrentRequest()->getClientIp();
++    $whitelist = Settings::get('reverse_proxy_addresses', 'none') ;
++    if (in_array($IPAd, $whitelist)){
++       return;
++    }
++
+     $triggering_element = $form_state->getTriggeringElement();
+     // Don't do anything if the triggering element is a preview button.
+     if ($triggering_element['#value'] == $this->t('Preview')) {

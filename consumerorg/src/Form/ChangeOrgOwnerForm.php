@@ -140,7 +140,7 @@ class ChangeOrgOwnerForm extends FormBase {
           foreach ($members as $member) {
             // Don't include the current owner in the list
             if ($member->getUser()->getUrl() !== $this->currentOrg->getOwnerUrl()) {
-              $values[$member->getUrl()] = $member->getUser()->getUsername();
+              $values[$member->getUrl()] = $member->getUser()->getDisplayName();
             }
           }
           $form['new_owner'] = [

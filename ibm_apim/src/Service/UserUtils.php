@@ -370,8 +370,12 @@ class UserUtils {
           $new_org_urls[] = $valueArray;
         }
       }
-      $account->set('consumerorg_url', $new_org_urls);
-      $account->save();
+      if (empty($new_org_urls)) {
+        $account->delete();
+      } else {
+        $account->set('consumerorg_url', $new_org_urls);
+        $account->save();
+      }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }

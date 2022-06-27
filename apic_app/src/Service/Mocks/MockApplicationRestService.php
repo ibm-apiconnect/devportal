@@ -216,6 +216,15 @@ class MockApplicationRestService implements ApplicationRestInterface {
     return $this->doREST($data);
   }
 
+  public function subscribeToPlan($appUrl = NULL, $planId = NULL): ?\stdClass {
+    $result = new \stdClass();
+    $result->data = ['id' => 'x',
+                     'plan' => 'default:plan',
+    ];
+    $result->code = 201;
+    return $result;
+  }
+
   /**
    * @inheritDoc
    */
@@ -468,7 +477,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
 
     // Insert nid in to results so that callers don't have to do a db query to find it
     $app_data = \Drupal::service('apic_app.rest_service')->fetchFromAPIC($result->data['url']);
-    $nid = \Drupal::service('apic_app.application')->create($app_data, 'create');
+    $nid = \Drupal::service('apic_app.application')->create($app_data, 'create', $formState);
 
     $result->data['nid'] = $nid;
 

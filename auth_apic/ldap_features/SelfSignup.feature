@@ -21,7 +21,7 @@ Feature: Self Sign-up LDAP
     Then print current URL
     And I enter "ldapandre_org_@now" for "Consumer organization"
     And I enter "ldapandre_@now@example.com" for "Username"
-    And I enter "Qwert123" for "Password"
+    And I enter "Qwert123IsBadPassword!" for "Password"
     And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Create new account" button
     Then there are no errors

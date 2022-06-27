@@ -566,7 +566,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       $url .= '&action=' . $action;
     }
     if (isset($invitationScope) && $invitationScope === 'consumer-org' && isset($title)) {
-      $url .= '&invitation_scope=consumer-org&title=' . $title;
+      $url .= '&invitation_scope=consumer-org&title=' . urlencode($title);
     }
 
 

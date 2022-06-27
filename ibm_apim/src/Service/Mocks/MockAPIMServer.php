@@ -137,6 +137,30 @@ class MockAPIMServer implements ManagementServerInterface {
     return $response;
   }
 
+  public function postPaymentMethod($org, $requestBody) {
+    $response = new RestResponse();
+    $response->setData([
+      "id" => "",
+      "billing_url" => "",
+      "ipayment_method_type_urld" => "",
+      "ipayment_method_type_urld" => "",
+      "updated_at" => "",
+      "created_at" => "",
+      "url" => "",
+      "configuration" => []
+    ]);
+    $response->setCode(200);
+
+    return $response;
+  }
+
+  public function deletePaymentMethod($paymentMethodUrl) {
+    $response = new RestResponse();
+    $response->setCode(200);
+
+    return $response;
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -205,7 +229,7 @@ class MockAPIMServer implements ManagementServerInterface {
     if ($orgTitle) {
       $this->createConsumerOrg(new ConsumerOrg());
     }
-    $response->setCode(201);    
+    $response->setCode(201);
     return $response;
   }
 
@@ -222,7 +246,36 @@ class MockAPIMServer implements ManagementServerInterface {
       'id' => '123',
       'owner_url' => '/user/1',
       'group_urls' => ['/groups/1'],
-      'url' => "/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958",
+      'url' => "/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3951",
+      'roles' => [
+        ["type" => "role",
+        "api_version" => "2.0.0",
+        "id" => "f66bf6d9-3098-45bf-abf2-0cc5088c4ba1",
+        "name" => "administrator",
+        "title" => "Administrator",
+        "summary" => "Administers the app developer organization",
+        "created_at" => "2022-05-03T15:48:41.000Z",
+        "updated_at" => "2022-05-03T15:48:41.000Z",
+        "org_url" => "/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3951",
+        "url" =>"/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3951/roles/f66bf6d9-3098-45bf-abf2-0cc5088c4ba1",
+        "permission_urls" => [
+          "/consumer-api/consumer/permissions/org/d8d1880e-ebd9-4ee2-baeb-2f82ebed70ac",
+          "/consumer-api/consumer/permissions/org/3e1652f1-e2f5-4d4f-9f58-2e11c312a148",
+          "/consumer-api/consumer/permissions/org/752e7ec8-583c-4ae6-8c58-a2e56116e38a",
+          "/consumer-api/consumer/permissions/org/b0e7b96f-f49b-4c3b-a0c5-d72042eb4372",
+          "/consumer-api/consumer/permissions/org/01b72da2-ad89-4b2a-b2b2-c245151c7732",
+          "/consumer-api/consumer/permissions/org/e9b21e62-96ad-4bca-b00d-702bf00d06f6",
+          "/consumer-api/consumer/permissions/org/e120f488-5921-45a8-a936-d34d4686ab8c",
+          "/consumer-api/consumer/permissions/consumer/81c86a24-c9e1-4fb5-a4e2-a137eef079c7",
+          "/consumer-api/consumer/permissions/consumer/e63e4ebc-8787-4901-8f42-16dba9aa8edd",
+          "/consumer-api/consumer/permissions/consumer/47d90d81-5080-4882-b270-778334fdbf50",
+          "/consumer-api/consumer/permissions/consumer/e20ca0b3-a2f0-419f-9a99-177c6050c98d",
+          "/consumer-api/consumer/permissions/consumer/2c9d4ee3-9348-4159-972f-69ea1ffda5ab",
+          "/consumer-api/consumer/permissions/consumer/bc1a91ee-ed73-4a79-bfa1-3dae1f277d08",
+          "/consumer-api/consumer/permissions/consumer/04ee1b04-4f3a-4061-8b99-5fce9a4f346c"
+          ]
+        ]
+      ],
       'members' => [
         [
           'type' => 'member',
@@ -237,7 +290,7 @@ class MockAPIMServer implements ManagementServerInterface {
             'id' => '9bfd584a-b907-4209-869e-9ef481f470ad',
             'name' => 'andremember',
             'title' => 'andremember',
-            'url' => '/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029/users/9bfd584a-b907-4209-869e-9ef481f470ad',
+            'url' => 'consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029/users/9bfd584a-b907-4209-869e-9ef481f470ad',
             'state' => 'enabled',
             'identity_provider' => 'dev-idp',
             'username' => 'andremember',
@@ -247,12 +300,13 @@ class MockAPIMServer implements ManagementServerInterface {
             'user_registry_url' => '/consumer-api/user-registries/57ba20c4-bec2-4166-852b-fe4d798e5029',
           ],
           'role_urls' => [
-            '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/roles/b8b957dc-15fb-4420-805a-3a7db9eb0fe9',
+            '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3951/roles/f66bf6d9-3098-45bf-abf2-0cc5088c4ba1',
           ],
           'created_at' => '2019-07-03T10:10:20.403Z',
           'updated_at' => '2019-07-03T10:10:20.403Z',
-          'org_url' => '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958',
+          'org_url' => '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3951',
           'url' => '/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958/members/cfc5ecd8-342d-4ae6-a1b9-0e49cb836c1b',
+          'user_url' => '/andre_one@example.com',
         ],
       ],
     ];
@@ -378,6 +432,17 @@ class MockAPIMServer implements ManagementServerInterface {
       $result->headers = ['Location' => $loc];
       $result->code = 302;
       $result->data = '';
+      return $this->restResponseReader->read($result);
+    }
+
+    if ($url === '/consumer-orgs/1234/5678/982318734') {
+      $result = new \stdClass();
+      $result->headers = [''];
+      $result->data = ['metadata' => [
+        'field_singletext' => "{\"value\" : \"singleVal\"}",
+        'field_multitext' => "[{\"value\" : \"first multi val\"}, {\"value\" : \"theSecond\"}"
+        ]];
+        $result->code = 200;
       return $this->restResponseReader->read($result);
     }
   }

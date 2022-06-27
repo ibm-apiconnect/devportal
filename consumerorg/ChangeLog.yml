@@ -1,4 +1,18 @@
 changes:
+  8.x-2.8.6:
+  - Added monetisation test (#257) (#268)
+  8.x-2.8.5: null
+  8.x-2.8.4:
+  - Remove Corg from user on member del (#266)
+  - ignore the url_redirects field from redirect
+  8.x-2.8.3:
+  - Added custom field tests (#261) (#262)
+  8.x-2.8.2:
+  - use getDisplayName in forms
+  8.x-2.8.1:
+  - upgrade phpunit
+  8.x-2.8.0:
+  - update version 8.x-2.7.14 -> 8.x-2.8.0
   8.x-2.7.13: null
   8.x-2.7.12:
   - check encryption profile name is set before using it

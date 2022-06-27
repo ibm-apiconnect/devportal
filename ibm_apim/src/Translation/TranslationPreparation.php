@@ -30,6 +30,7 @@ class TranslationPreparation {
     'apic_api',
     'apic_app',
     'apic_type_count',
+    'apic_letter_avatar',
     'auth_apic',
     'connect_theme',
     'consumerorg',

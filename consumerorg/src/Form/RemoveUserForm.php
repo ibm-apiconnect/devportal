@@ -162,7 +162,7 @@ class RemoveUserForm extends ConfirmFormBase {
    */
   public function getDescription(): TranslatableMarkup {
     return $this->t('Are you sure you want to remove the user <em>@user?</em>', [
-      '@user' => $this->member->getUser()->getUsername(),
+      '@user' => $this->member->getUser()->getDisplayName(),
     ]);
   }
 
@@ -178,7 +178,7 @@ class RemoveUserForm extends ConfirmFormBase {
    */
   public function getQuestion(): TranslatableMarkup {
     return $this->t('Are you sure you want to remove the user <em>@user?</em>', [
-      '@user' => $this->member->getUser()->getUsername(),
+      '@user' => $this->member->getUser()->getDisplayName(),
     ]);
   }
 

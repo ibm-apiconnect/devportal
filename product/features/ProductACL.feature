@@ -9,7 +9,7 @@ Feature: ProductACL
     # in the Then clauses below
     Given users:
       | name      | mail                  | pass     | status |
-      | andre_one | andre_one@example.com | Qwert123 | 1      |
+      | andre_one | andre_one@example.com | Qwert123IsBadPassword! | 1      |
       | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
     Given consumerorgs:
       | title          | name           | id                       | owner     | tags    |
@@ -54,7 +54,7 @@ Feature: ProductACL
   Scenario: Create product with auth visibility and test its access control
     Given users:
       | name      | mail                  | pass     | status |
-      | andre_one | andre_one@example.com | Qwert123 | 1      |
+      | andre_one | andre_one@example.com | Qwert123IsBadPassword! | 1      |
       | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
     Given consumerorgs:
       | title          | name           | id                       | owner     | tags    |
@@ -96,8 +96,8 @@ Feature: ProductACL
   Scenario: Create product with org url visibility and test its access control
     Given users:
       | name      | mail                  | pass     | status |
-      | andre_one | andre_one@example.com | Qwert123 | 1      |
-      | andre_two | andre_two@example.com | Qwert123 | 1      |
+      | andre_one | andre_one@example.com | Qwert123IsBadPassword! | 1      |
+      | andre_two | andre_two@example.com | Qwert123IsBadPassword! | 1      |
       | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
     Given consumerorgs:
       | title          | name           | id                       | owner     | tags    |
@@ -149,8 +149,8 @@ Feature: ProductACL
   Scenario: Create product with tag visibility and test its access control
     Given users:
       | name      | mail                  | pass     | status |
-      | andre_one | andre_one@example.com | Qwert123 | 1      |
-      | andre_two | andre_two@example.com | Qwert123 | 1      |
+      | andre_one | andre_one@example.com | Qwert123IsBadPassword! | 1      |
+      | andre_two | andre_two@example.com | Qwert123IsBadPassword! | 1      |
       | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
     Given consumerorgs:
       | title          | name           | id                       | owner     | tags    |
@@ -202,7 +202,7 @@ Feature: ProductACL
   Scenario: Create product with it's visibility disabled and test its access control
     Given users:
       | name      | mail                  | pass     | status |
-      | andre_one | andre_one@example.com | Qwert123 | 1      |
+      | andre_one | andre_one@example.com | Qwert123IsBadPassword! | 1      |
       | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
     Given consumerorgs:
       | title          | name           | id                       | owner     | tags    |

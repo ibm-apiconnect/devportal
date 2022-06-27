@@ -495,8 +495,8 @@ function apic_api_preprocess_node(&$variables): void {
 
       $currentRoute = \Drupal::routeMatch()->getRouteName();
       if ($currentRoute !== NULL && $currentRoute === 'entity.node.canonical') {
-        $prodNids = Product::getProductsContainingAPI($variables['node']->apic_ref->value);
         $apiNid = $variables['node']->id();
+        $prodNids = Product::getProductsContainingAPI($apiNid);
         if ($prodNids !== NULL && count($prodNids) === 1) {
           $prodNid = reset($prodNids);
           $path = Url::fromRoute('product.api', ['prodNode' => $prodNid, 'apiNode' => $apiNid])

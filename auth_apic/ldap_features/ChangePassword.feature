@@ -73,13 +73,13 @@ Scenario: Change password form for andre is not available to admin (uid=1) user
 
 
 #  When I enter "@data(admin.password)" for "current_pass"
-#  And I enter "newPassw0rd" for "pass[pass1]"
-#  And I enter "newPassw0rd" for "pass[pass2]"
+#  And I enter "newPassw0rdIsGreat!" for "pass[pass1]"
+#  And I enter "newPassw0rdIsGreat!" for "pass[pass2]"
 #  And I press the "Submit" button
 #  Then I should see the text "Your password has been changed."
 #  # unfortunately this has actually changed the admin password so we need to revert it.
 #  # admin user does not logout, so we are still on the changepassword screen.
-#  When I enter "newPassw0rd" for "current_pass"
+#  When I enter "newPassw0rdIsGreat!" for "current_pass"
 #  And I enter "@data(admin.password)" for "pass[pass1]"
 #  And I enter "@data(admin.password)" for "pass[pass2]"
 #  And I press the "Submit" button
@@ -93,8 +93,8 @@ Scenario: Change password form for andre is not available to admin (uid=1) user
 #    Given I am logged in as "@data(admin.name)"
 #    And I am at "/user/1/change-password"
 #    When I enter "thisiswrong" for "current_pass"
-#    And I enter "newPassw0rd" for "pass[pass1]"
-#    And I enter "newPassw0rd" for "pass[pass2]"
+#    And I enter "newPassw0rdIsGreat!" for "pass[pass1]"
+#    And I enter "newPassw0rdIsGreat!" for "pass[pass2]"
 #    And I press the "Submit" button
 #    Then I should see the text "The current password you provided is incorrect."
 #
@@ -109,8 +109,8 @@ Scenario: Change password form for andre is not available to admin (uid=1) user
 #  Given I am logged in as "@data(andre.name)"
 #  And I am at "/user/@uid/change-password"
 #  When I enter "thisiswrong" for "Current password"
-#  And I enter "newPassw0rd" for "Password"
-#  And I enter "newPassw0rd" for "Confirm password"
+#  And I enter "newPassw0rdIsGreat!" for "Password"
+#  And I enter "newPassw0rdIsGreat!" for "Confirm password"
 #  And I press the "Submit" button
 #  Then I should see the text "The old password is incorrect"
 #

@@ -138,7 +138,7 @@ class OrgCreateForm extends FormBase {
     if ($entity_form !== NULL) {
       foreach ($entity_form->getComponents() as $name => $options) {
 
-        if (($configuration = $entity_form->getComponent($name)) && isset($configuration['type']) && ($definition = $definitions[$name])) {
+        if (($configuration = $entity_form->getComponent($name)) && isset($configuration['type'], $definitions[$name]) && ($definition = $definitions[$name])) {
           $widget = \Drupal::service('plugin.manager.field.widget')->getInstance([
             'field_definition' => $definition,
             'form_mode' => 'default',
@@ -146,6 +146,8 @@ class OrgCreateForm extends FormBase {
             'prepare' => FALSE,
             'configuration' => $configuration,
           ]);
+        } else {
+            unset($widget);
         }
 
         if (isset($widget)) {

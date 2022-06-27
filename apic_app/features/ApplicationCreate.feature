@@ -7,7 +7,7 @@ Feature: ApplicationCreate
     Given I am not logged in
     Given users:
       | name  | pass     | mail              | status |
-      | Andre | Qwert123 | andre@example.com | 1      |
+      | Andre | Qwert123IsBadPassword! | andre@example.com | 1      |
     Given consumerorgs:
       | title       | name        | id     | owner |
       | andreconsumerorg | andreconsumerorg | 123456 | Andre |
@@ -160,7 +160,7 @@ Feature: ApplicationCreate
     Given I am not logged in
     Given users:
       | name  | pass     | mail              | status |
-      | Andre | Qwert123 | andre@example.com | 1      |
+      | Andre | Qwert123IsBadPassword! | andre@example.com | 1      |
     Given consumerorgs:
       | title       | name        | id     | owner |
       | andreconsumerorg | andreconsumerorg | 123456 | Andre |
@@ -194,7 +194,7 @@ Feature: ApplicationCreate
     Given I am not logged in
     Given users:
       | name  | pass     | mail              | status |
-      | Andre | Qwert123 | andre@example.com | 1      |
+      | Andre | Qwert123IsBadPassword! | andre@example.com | 1      |
     Given consumerorgs:
       | title       | name        | id     | owner |
       | andreconsumerorg | andreconsumerorg | 123456 | Andre |
@@ -221,3 +221,113 @@ Feature: ApplicationCreate
     And I should see the text "Delete"
     And there are no errors
     Then I delete all applications from the site
+
+  @api
+  Scenario: Create application with text custom field
+    Given I am not logged in
+    Given users:
+      | name  | pass     | mail              | status |
+      | Andre | Qwert123 | andre@example.com | 1      |
+    Given consumerorgs:
+      | title       | name        | id     | owner |
+      | andreconsumerorg | andreconsumerorg | 123456 | Andre |
+    Given application entities have text type custom fields
+    Given I am logged in as "Andre"
+    Given I do not have any applications
+    Given I am at "/application/new"
+    And I should see a "#edit-field-singletext-0-value" element
+    And I should see a "#edit-field-multitext-0-value" element
+    And I should see a "#edit-field-multitext-1-value" element
+    Given I enter "app12345xyz" for "edit-title-0-value"
+    And I enter "singleVal" for "edit-field-singletext-0-value"
+    And I enter "first multi val" for "edit-field-multitext-0-value"
+    And I enter "theSecond" for "edit-field-multitext-1-value"
+    When I press the "Save" button
+    Then there are no errors
+    When I click "OK"
+    # And I click "Dashboard"
+    Then I should see the text "singleVal"
+    Then I should see the text "first multi val"
+    Then I should see the text "theSecond"
+    Then I delete all applications from the site
+    Then I delete the text type custom fields for application entities
+
+  @api
+  Scenario: Create application with timestamp custom field
+    Given I am not logged in
+    Given users:
+      | name  | pass     | mail              | status |
+      | Andre | Qwert123 | andre@example.com | 1      |
+    Given consumerorgs:
+      | title       | name        | id     | owner |
+      | andreconsumerorg | andreconsumerorg | 123456 | Andre |
+    Given application entities have timestamp type custom fields
+    Given I am logged in as "Andre"
+    Given I do not have any applications
+    Given I am at "/application/new"
+    And I should see a "#edit-field-singletimestamp-0-value-date" element
+    And I should see a "#edit-field-multitimestamp-0-value-date" element
+    And I should see a "#edit-field-multitimestamp-1-value-date" element
+    And I should see a "#edit-field-singletimestamp-0-value-time" element
+    And I should see a "#edit-field-multitimestamp-0-value-time" element
+    And I should see a "#edit-field-multitimestamp-1-value-time" element
+    Given I enter "app12345xyz" for "edit-title-0-value"
+    And I enter "2003-12-12" for "edit-field-singletimestamp-0-value-date"
+    And I enter "2013-01-19" for "edit-field-multitimestamp-0-value-date"
+    And I enter "2022-12-24" for "edit-field-multitimestamp-1-value-date"
+    And I enter "00:00:00" for "edit-field-singletimestamp-0-value-time"
+    And I enter "12:20:20" for "edit-field-multitimestamp-0-value-time"
+    And I enter "13:13:13" for "edit-field-multitimestamp-1-value-time"
+    When I press the "Save" button
+    Then there are no errors
+    When I click "OK"
+    # And I click "Dashboard"
+    Then I should see the text "12/12/2003"
+    Then I should see the text "13:13"
+    Then I should see the text "12/24/2022"
+    Then I should see the text "12:20"
+    Then I should see the text "01/19/2013"
+    Then I should see the text "00:00"
+    Then I delete all applications from the site
+    Then I delete the timestamp type custom fields for application entities
+
+  @api
+  Scenario: Create application with datetime custom field
+    Given I am not logged in
+    Given users:
+      | name  | pass     | mail              | status |
+      | Andre | Qwert123 | andre@example.com | 1      |
+    Given consumerorgs:
+      | title       | name        | id     | owner |
+      | andreconsumerorg | andreconsumerorg | 123456 | Andre |
+    Given application entities have datetime type custom fields
+    Given I am logged in as "Andre"
+    Given I do not have any applications
+    Given I am at "/application/new"
+    And I should see a "#edit-field-singledatetime-0-value-date" element
+    And I should see a "#edit-field-multidatetime-0-value-date" element
+    And I should see a "#edit-field-multidatetime-1-value-date" element
+    And I should see a "#edit-field-singledatetime-0-value-time" element
+    And I should see a "#edit-field-multidatetime-0-value-time" element
+    And I should see a "#edit-field-multidatetime-1-value-time" element
+    Given I enter "app12345xyz" for "edit-title-0-value"
+    And I enter "2003-12-12" for "edit-field-singledatetime-0-value-date"
+    And I enter "2013-01-19" for "edit-field-multidatetime-0-value-date"
+    And I enter "2022-12-24" for "edit-field-multidatetime-1-value-date"
+    And I enter "00:00:00" for "edit-field-singledatetime-0-value-time"
+    And I enter "12:20:20" for "edit-field-multidatetime-0-value-time"
+    And I enter "13:13:13" for "edit-field-multidatetime-1-value-time"
+    When I press the "Save" button
+    Then there are no errors
+    When I click "OK"
+    # And I click "Dashboard"
+    Then I should see the text "12/12/2003"
+    Then I should see the text "13:13"
+    Then I should see the text "12/24/2022"
+    Then I should see the text "12:20"
+    Then I should see the text "01/19/2013"
+    Then I should see the text "00:00"
+    Then I delete all applications from the site
+    Then I delete the datetime type custom fields for application entities
+  
+ 

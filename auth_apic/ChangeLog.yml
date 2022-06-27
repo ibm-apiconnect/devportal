@@ -1,4 +1,16 @@
 changes:
+  8.x-2.9.5:
+  - 7735 redirect (#690)
+  8.x-2.9.4:
+  - Only redirect successful change password attempts (#686)
+  8.x-2.9.3:
+  - customFieldTests v10.0.1 (#684)
+  8.x-2.9.2:
+  - url encode consumer org title (#680)
+  8.x-2.9.1:
+  - use more secure passwords
+  8.x-2.9.0:
+  - update version 8.x-2.8.16 -> 8.x-2.9.0
   8.x-2.8.15: null
   8.x-2.8.14:
   - jwtSupport v10.0.1 (#674)

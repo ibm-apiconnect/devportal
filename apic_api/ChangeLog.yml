@@ -1,4 +1,14 @@
 changes:
+  8.x-2.9.4:
+  - apis need creating before products
+  8.x-2.9.3:
+  - Product filtering tighened up. (#152)
+  8.x-2.9.2:
+  - upgrade phpunit
+  8.x-2.9.1:
+  - use more secure passwords
+  8.x-2.9.0:
+  - update version 8.x-2.8.14 -> 8.x-2.9.0
   8.x-2.8.13: null
   8.x-2.8.12:
   - support pathalias in test tool (#150)
