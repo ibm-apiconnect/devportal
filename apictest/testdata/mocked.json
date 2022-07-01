@@ -2,7 +2,7 @@
   "admin": {
     "name": "admin",
     "mail": "adminuid1@example.com",
-    "password": "Qwert123"
+    "password": "Qwert123IsBadPassword!"
   },
   "andre": [
     {
@@ -10,7 +10,7 @@
       "mail": "andre_one@example.com",
       "firstName": "Andre",
       "lastName": "One",
-      "password": "Qwert123",
+      "password": "Qwert123IsBadPassword!",
       "consumerorg": [
         {
           "name": "andreone-consumerorg",
@@ -31,7 +31,7 @@
       "mail": "andre_two@example.com",
       "firstName": "Andre",
       "lastName": "Two",
-      "password": "Qwert123",
+      "password": "Qwert123IsBadPassword!",
       "consumerorg": [
         {
           "name": "andretwo-consumerorg",
@@ -52,21 +52,21 @@
       "mail": "andre_three@example.com",
       "firstName": "Andre",
       "lastName": "Three",
-      "password": "Qwert123"
+      "password": "Qwert123IsBadPassword!"
     },
     {
       "name": "andre_four@example.com",
       "mail": "andre_four@example.com",
       "firstName": "Andre",
       "lastName": "Four",
-      "password": "Qwert123"
+      "password": "Qwert123IsBadPassword!"
     },
     {
       "name": "andre_five@example.com",
       "mail": "andre_five@example.com",
       "firstName": "Andre",
       "lastName": "Five",
-      "password": "Qwert123"
+      "password": "Qwert123IsBadPassword!"
     }
   ],
   "user_registries": [

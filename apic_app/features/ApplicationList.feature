@@ -8,7 +8,7 @@ Feature: ApplicationList
     Given I am not logged in
     Given users:
       | name  | pass     | mail              | status |
-      | Andre | Qwert123 | andre@example.com | 1      |
+      | Andre | Qwert123IsBadPassword! | andre@example.com | 1      |
     Given consumerorgs:
       | title            | name             | id     | owner |
       | andreconsumerorg | andreconsumerorg | 123456 | Andre |

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -452,7 +452,7 @@ class ApicRest implements ApicRestInterface {
     }
 
     if ($auth === 'user') {
-      // except anonymous and admin      
+      // except anonymous and admin
       if (!$current_user->isAnonymous() && (int) $current_user->id() !== 1) {
         $bearer_token = $session_store->get('auth');
         if (isset($bearer_token)) {
@@ -496,7 +496,7 @@ class ApicRest implements ApicRestInterface {
 
     $result = self::json_http_request($url, $verb, $headers, $data, $returnResult, NULL, NULL, TRUE, $apiType);
 
-    if (!$utils->endsWith($url, '/me/sign-out') && isset($result) && (int) $result->code === 401 && $session_store->get('refresh') !== NULL) {
+    if (!$utils->endsWith($url, '/me/sign-out') && !$utils->endsWith($url, '/me/change-password') && isset($result) && (int) $result->code === 401 && $session_store->get('refresh') !== NULL) {
       $refresh_expires_in = $session_store->get('refresh_expires_in');
       if (!isset($refresh_expires_in) || (int) $refresh_expires_in > time()) {
         $refreshed = \Drupal::service('ibm_apim.mgmtserver')->refreshAuth();
@@ -550,7 +550,7 @@ class ApicRest implements ApicRestInterface {
         $returnValue = $result;
       }
     }
-    elseif (!$utils->endsWith($url, '/me/sign-out') && $current_user->isAuthenticated() && (int) $current_user->id() !== 1 && (isset($result) && ((int) $result->code === 401 || ($expires_in !== NULL && (int) $expires_in < time())))) {
+    elseif (!$utils->endsWith($url, '/me/sign-out') && !$utils->endsWith($url, '/me/change-password') && $current_user->isAuthenticated() && (int) $current_user->id() !== 1 && (isset($result) && ((int) $result->code === 401 || ($expires_in !== NULL && (int) $expires_in < time())))) {
       // handle token having expired
       // force log the user out, they can login and try again
       \Drupal::logger('ibm_apim')->notice('Session expired based on token expires_in value. Forcing logout.');

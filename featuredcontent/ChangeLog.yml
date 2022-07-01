@@ -1,30 +1,41 @@
 changes:
-  8.x-3.3.9: null
-  8.x-3.3.8:
-  - needs to be node id not id
-  8.x-3.3.7: null
-  8.x-3.3.6:
+  8.x-99.0.2:
+  - update copyright statements
+  8.x-99.0.1:
+  - Update featuredcontent.info.yml
+  8.x-4.0.18:
   - Update Jenkinsfile
-  - Update ChangeLog.yml
-  - Update featuredcontent.info.yml
-  8.x-3.3.4:
+  8.x-4.0.17:
+  - upgrade phpunit
+  8.x-4.0.16: null
+  8.x-4.0.15:
+  - Update .whitesource
+  8.x-4.0.14:
+  - needs to be node id not id
+  8.x-4.0.13:
+  - Update .whitesource
+  - Add .whitesource configuration file
+  8.x-4.0.12:
+  - use pathalias if set
+  8.x-4.0.11: null
+  8.x-4.0.10:
+  - need to call correct hooks for the placeholder icons
+  8.x-4.0.9:
   - git -> gitci
-  8.x-3.3.3:
+  8.x-4.0.8:
+  - Jenkinsfile refactor fixes
   - refactor Jenkinsfile for the new portal.groovy
-  8.x-3.3.2: null
-  8.x-3.3.1:
-  - Update featuredcontent.info.yml
-  8.x-3.2.0:
-  - update version 8.x-3.1.7 -> 8.x-3.2.0
-  8.x-3.1.6: null
-  8.x-3.1.5:
+  8.x-4.0.7:
+  - wrong field name for d8/9
+  8.x-4.0.6:
+  - load custom icons properly
+  8.x-4.0.5:
   - use "IBM API Developer Portal" instead of API Connect
-  8.x-3.1.4: null
-  8.x-3.1.3: null
-  8.x-3.1.2: null
-  8.x-3.1.1: null
-  8.x-3.1.0:
-  - update version 8.x-3.0.15 -> 8.x-3.1.0
+  8.x-4.0.4: null
+  8.x-4.0.3:
+  - code smells
+  8.x-4.0.2: null
+  8.x-4.0.1: null
   8.x-3.0.14:
   - line up the left hand side
   8.x-3.0.13:

@@ -1,25 +1,31 @@
 changes:
-  8.x-3.3.9: null
-  8.x-3.3.8: null
-  8.x-3.3.7:
+  8.x-99.0.2:
+  - update copyright statements
+  8.x-99.0.1:
+  - Update ghmarkdown.info.yml
+  8.x-4.0.13:
   - Update Jenkinsfile
-  - Update ChangeLog.yml
-  - Update ghmarkdown.info.yml
-  8.x-3.3.5:
+  8.x-4.0.12:
+  - upgrade phpunit
+  8.x-4.0.11: null
+  8.x-4.0.10:
+  - Update .whitesource
+  8.x-4.0.9:
+  - Update .whitesource
+  - Add .whitesource configuration file
+  8.x-4.0.8: null
+  8.x-4.0.7:
   - git -> gitci
-  8.x-3.3.4: null
-  8.x-3.3.3:
+  8.x-4.0.6:
+  - Jenkinsfile refactor fixes
   - refactor Jenkinsfile for the new portal.groovy
-  8.x-3.3.2: null
-  8.x-3.3.1:
-  - Update ghmarkdown.info.yml
-  8.x-3.2.0:
-  - update version 8.x-3.1.4 -> 8.x-3.2.0
-  8.x-3.1.3: null
-  8.x-3.1.2: null
-  8.x-3.1.1: null
-  8.x-3.1.0:
-  - update version 8.x-3.0.3 -> 8.x-3.1.0
+  8.x-4.0.5:
+  - add twig markdown filter
+  8.x-4.0.4: null
+  8.x-4.0.3:
+  - code smells
+  8.x-4.0.2: null
+  8.x-4.0.1: null
   8.x-3.0.2:
   - Add drupal core compatibility info
   8.x-3.0.1: null

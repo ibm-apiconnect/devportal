@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -25,7 +25,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\ibm_apim\ApicRest;
+use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\ApicUserService;
 use Drupal\ibm_apim\Service\ApimUtils;
@@ -1343,7 +1343,7 @@ class ConsumerOrgService {
    */
   public function getCustomFields(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $coreFields = ['title', 'vid', 'status', 'nid', 'revision_log', 'created'];
+    $coreFields = ['title', 'vid', 'status', 'nid', 'revision_log', 'created', 'url_redirects'];
     $diff = [];
     $entity = $this->entityTypeManager
       ->getStorage('entity_form_display')
@@ -1995,7 +1995,11 @@ class ConsumerOrgService {
       $customFields = $this->getCustomFields();
       foreach ($customFields as $field) {
         if (isset($json['consumer_org']['metadata'][$field])) {
-          $org->addCustomField($field, json_decode($json['consumer_org']['metadata'][$field], TRUE, 512, JSON_THROW_ON_ERROR));
+          try {
+            $org->addCustomField($field, json_decode( $json['consumer_org']['metadata'][$field] , TRUE, 512, JSON_THROW_ON_ERROR));
+          } catch (Throwable $e) {
+            $org->addCustomField($field, $json['consumer_org']['metadata'][$field]);
+          }
         }
       }
       $roles = [];
@@ -2172,7 +2176,7 @@ class ConsumerOrgService {
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \Exception
    */
-  public function deletePaymentMethod($paymentMethodId): ?\stdClass {
+  public function deletePaymentMethod($paymentMethodId): RestResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $result = NULL;
     $paymentMethod = PaymentMethod::load($paymentMethodId);
@@ -2181,9 +2185,9 @@ class ConsumerOrgService {
       $org = $paymentMethod->consumerorg_url();
       $url = $org . '/payment-methods/' . $paymentMethod->uuid();
 
-      $result = ApicRest::delete($url);
+      $result = $this->apimServer->deletePaymentMethod($url);
 
-      if (isset($result) && $result->code >= 200 && $result->code < 300) {
+      if (isset($result) && $result->getCode() >= 200 && $result->getCode() < 300) {
         // update the consumerorg to remove it from the list
         $query = \Drupal::entityQuery('node');
         $query->condition('type', 'consumerorg');

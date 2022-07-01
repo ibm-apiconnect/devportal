@@ -7,6 +7,9 @@ Feature: Delete user
     Given users:
       | name              | mail              | pass                  | status |
       | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.mail)"
     And I am at "/user/delete"
     Then I should see the text "Are you sure you want to delete your account?"
@@ -42,6 +45,9 @@ Feature: Delete user
     Given users:
       | name              | mail              | pass                  | status |
       | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.mail)"
     And I am at "/user/delete"
     And I should see the link "Cancel"
@@ -57,6 +63,9 @@ Feature: Delete user
     Given users:
       | name              | mail              | pass                  | status |
       | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.mail)"
     And I am at "/user/delete"
     And I should see the "Delete" button

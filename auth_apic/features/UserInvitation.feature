@@ -18,6 +18,9 @@ Feature: User Invitation Controller
     Given users:
       | name              | mail              | pass                  | status |
       | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.mail)"
     And I am at "/user/invitation"
     Then there are errors
@@ -67,6 +70,9 @@ Feature: User Invitation Controller
     Given users:
       | name              | mail              | pass                  | status |
       | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.mail)"
     And I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lKbFltUXpNREE1WkMwNE9URmpMVFJqTWpNdE9HRXdOeTB6TlRVNVlXSmhZVEV5TVdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVptRnJaUzExYzJWeVFHVjRZVzF3YkdVdVkyOXRJaXdpYVhOeklqb2lTVUpOSUVGUVNTQkRiMjV1WldOMElpd2lkRzlyWlc1ZmRIbHdaU0k2SW5SbGJYQnZjbUZ5ZVNJc0ltbGhkQ0k2TVRVeU1UUTJNVGd6Tml3aVpYaHdJam94TlRJeE5qTTBOak0yTENKelkyOXdaWE1pT25zaWFXNTJhWFJoZEdsdmJpSTZJaTlqYjI1emRXMWxjaTFoY0drdmIzSm5MV2x1ZG1sMFlYUnBiMjV6THpnelkyTXhZVFkyTFRObVpETXRORFF3WmkxaE0ySmpMV1F6TnpkbVl6YzFNelZqTlNJc0luVnliQ0k2SWk5amIyNXpkVzFsY2kxaGNHa3ZiM0puTFdsdWRtbDBZWFJwYjI1ekx6Z3pZMk14WVRZMkxUTm1aRE10TkRRd1ppMWhNMkpqTFdRek56ZG1ZemMxTXpWak5TSXNJbUZqZEdsdmJuTWlPbHNpY21WbmFYTjBaWElpTENKaFkyTmxjSFFpWFN3aWNtVmhiRzBpT2lKamIyNXpkVzFsY2pwaU4yTXlNMlk0T1MxbE1ESm1MVFJoTnpNdE9EZGxNQzB6TURVd09XVTNZVE5oTkRrNk1qWmlOamsyTXpVdE5tRTRNQzAwWXpsa0xXSXhNall0Tldaak9UZzRNR1UxTldKaUluMTkuTU5wYi1WODVUT3Y5cGVLbFhESU1MWUF3aUlFWEk5T2hjUmQ3QU9ZTkhuNA=="
     Then there are errors
@@ -80,7 +86,7 @@ Feature: User Invitation Controller
     Given I am not logged in
     Given users:
       | name           | mail                        | pass     | status |
-      | invitationuser | andreinvitation@example.com | Qwert123 | 1      |
+      | invitationuser | andreinvitation@example.com | Qwert123IsBadPassword! | 1      |
     And I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lKbFltUXpNREE1WkMwNE9URmpMVFJqTWpNdE9HRXdOeTB6TlRVNVlXSmhZVEV5TVdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVZwYm5acGRHRjBhVzl1UUdWNFlXMXdiR1V1WTI5dElpd2lhWE56SWpvaVNVSk5JRUZRU1NCRGIyNXVaV04wSWl3aWRHOXJaVzVmZEhsd1pTSTZJblJsYlhCdmNtRnllU0lzSW1saGRDSTZNVFV5TVRRMk1UZ3pOaXdpWlhod0lqb3hOVEl4TmpNME5qTTJMQ0p6WTI5d1pYTWlPbnNpYVc1MmFYUmhkR2x2YmlJNklpOWpiMjV6ZFcxbGNpMWhjR2t2YjNKbkxXbHVkbWwwWVhScGIyNXpMemd6WTJNeFlUWTJMVE5tWkRNdE5EUXdaaTFoTTJKakxXUXpOemRtWXpjMU16VmpOU0lzSW5WeWJDSTZJaTlqYjI1emRXMWxjaTFoY0drdmIzSm5MV2x1ZG1sMFlYUnBiMjV6THpnelkyTXhZVFkyTFRObVpETXRORFF3WmkxaE0ySmpMV1F6TnpkbVl6YzFNelZqTlNJc0ltRmpkR2x2Ym5NaU9sc2ljbVZuYVhOMFpYSWlMQ0poWTJObGNIUWlYU3dpY21WaGJHMGlPaUpqYjI1emRXMWxjanBpTjJNeU0yWTRPUzFsTURKbUxUUmhOek10T0RkbE1DMHpNRFV3T1dVM1lUTmhORGs2TWpaaU5qazJNelV0Tm1FNE1DMDBZemxrTFdJeE1qWXROV1pqT1RnNE1HVTFOV0ppSW4xOS5aRURFRHQwVUtQOFFTbDc5dzRva0tncUFmZm9WdXZua1kyNTZtbUxWUXRz"
     Then there are no errors
     And there are no warnings
@@ -101,7 +107,7 @@ Feature: User Invitation Controller
     And ibm_apim settings config boolean property "hide_admin_registry" value is "false"
     Given users:
       | name           | mail                        | pass     | status |
-      | invitationuser | andreinvitation@example.com | Qwert123 | 1      |
+      | invitationuser | andreinvitation@example.com | Qwert123IsBadPassword! | 1      |
     And I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lKbFltUXpNREE1WkMwNE9URmpMVFJqTWpNdE9HRXdOeTB6TlRVNVlXSmhZVEV5TVdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVZwYm5acGRHRjBhVzl1UUdWNFlXMXdiR1V1WTI5dElpd2lhWE56SWpvaVNVSk5JRUZRU1NCRGIyNXVaV04wSWl3aWRHOXJaVzVmZEhsd1pTSTZJblJsYlhCdmNtRnllU0lzSW1saGRDSTZNVFV5TVRRMk1UZ3pOaXdpWlhod0lqb3hOVEl4TmpNME5qTTJMQ0p6WTI5d1pYTWlPbnNpYVc1MmFYUmhkR2x2YmlJNklpOWpiMjV6ZFcxbGNpMWhjR2t2YjNKbkxXbHVkbWwwWVhScGIyNXpMemd6WTJNeFlUWTJMVE5tWkRNdE5EUXdaaTFoTTJKakxXUXpOemRtWXpjMU16VmpOU0lzSW5WeWJDSTZJaTlqYjI1emRXMWxjaTFoY0drdmIzSm5MV2x1ZG1sMFlYUnBiMjV6THpnelkyTXhZVFkyTFRObVpETXRORFF3WmkxaE0ySmpMV1F6TnpkbVl6YzFNelZqTlNJc0ltRmpkR2x2Ym5NaU9sc2ljbVZuYVhOMFpYSWlMQ0poWTJObGNIUWlYU3dpY21WaGJHMGlPaUpqYjI1emRXMWxjanBpTjJNeU0yWTRPUzFsTURKbUxUUmhOek10T0RkbE1DMHpNRFV3T1dVM1lUTmhORGs2TWpaaU5qazJNelV0Tm1FNE1DMDBZemxrTFdJeE1qWXROV1pqT1RnNE1HVTFOV0ppSW4xOS5aRURFRHQwVUtQOFFTbDc5dzRva0tncUFmZm9WdXZua1kyNTZtbUxWUXRz"
     Then there are no errors
     And there are no warnings
@@ -115,15 +121,15 @@ Feature: User Invitation Controller
     Given I am not logged in
     Given users:
       | name                     | mail                                   | pass     | status | first_time_login |
-      | andre_one                | andre_one@example.com                  | Qwert123 | 1      | 0                |
-      | andre_member_exists      | andre.member@example.com               | Qwert123 | 1      | 0                |
+      | andre_one                | andre_one@example.com                  | Qwert123IsBadPassword! | 1      | 0                |
+      | andre_member_exists      | andre.member@example.com               | Qwert123IsBadPassword! | 1      | 0                |
     Given consumerorgs:
       | title          | name           | id                       | owner     |
       | a1_consumerorg | a1-consumerorg | a18843f3e4b07631568a159d | andre_one |
     When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJM1lqSTBORGt4TkMwMk16UmpMVFJtTTJNdE9ERTJZUzFoTXpFd1lUQmpaR1JtTUdNaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YldWdFltVnlRR1Y0WVcxd2JHVXVZMjl0SWl3aWFYTnpJam9pU1VKTklFRlFTU0JEYjI1dVpXTjBJaXdpZEc5clpXNWZkSGx3WlNJNkltbHVkbWwwWVhScGIyNGlMQ0pwWVhRaU9qRTFOVGt6TURrME9UY3NJbVY0Y0NJNk1UVTFPVFE0TWpJNU55d2ljMk52Y0dWeklqcDdJbWx1ZG1sMFlYUnBiMjRpT2lJdlkyOXVjM1Z0WlhJdFlYQnBMMjl5WjNNdk9EWTVOR014WkdZdE16WXlOQzAwT0RnNUxXRXhZVGN0TlRZeE5URXdNamxoWmpGbUwyMWxiV0psY2kxcGJuWnBkR0YwYVc5dWN5OHhZek5tT0dWbVpTMDFOelZpTFRRd09XSXRZVFZtT0MwNFlUTTBNVEEyTmpFeE9HUWlMQ0oxY213aU9pSXZZMjl1YzNWdFpYSXRZWEJwTDI5eVozTXZPRFk1TkdNeFpHWXRNell5TkMwME9EZzVMV0V4WVRjdE5UWXhOVEV3TWpsaFpqRm1MMjFsYldKbGNpMXBiblpwZEdGMGFXOXVjeTh4WXpObU9HVm1aUzAxTnpWaUxUUXdPV0l0WVRWbU9DMDRZVE0wTVRBMk5qRXhPR1FpTENKaFkzUnBiMjV6SWpwYkluSmxaMmx6ZEdWeUlpd2lZV05qWlhCMElsMHNJbkpsWVd4dElqb2lZMjl1YzNWdFpYSTZNR013WVdVelpqSXRZalEzTkMwME1ETTBMVGd6TjJJdFlUSTBZelptTkRaa05XRTJPakEzWlRrNVlUUTNMV0ZrTXpJdE5HSXlOeTFpWlRJNExXVmxNR1F5TVRsak1qazJaaUo5ZlEuQkl5V0JFOGhiU25RdHk4NlJzNHRVMnhtdjN6ZVd0MmlGNjZJaXlDUUo3bw=="
     Then I should be on "/user/login"
     Given I enter "andre_member_exists for "Username"
-    And I enter "Qwert123" for "Password"
+    And I enter "Qwert123IsBadPassword!" for "Password"
     When I press the "Sign in" button
 #    Then I should be on the homepage - this is where the user should be, c
     Then I should see "Invitation process complete."
@@ -135,11 +141,11 @@ Feature: User Invitation Controller
     Given I am not logged in
     Given users:
       | name                     | mail                                   | pass     | status | first_time_login |
-      | andre_owner_exists      | andre.orgowner@example.com              | Qwert123 | 1      | 0                |
+      | andre_owner_exists      | andre.orgowner@example.com              | Qwert123IsBadPassword! | 1      | 0                |
     When I am at "/user/invitation?activation=ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnFkR2tpT2lJd04yUmtNMkl3TkMwNU9HSTRMVFF4TW1JdE9HWTNOQzB6TVRFMU9UbGpZV1U1TkdJaUxDSnVZVzFsYzNCaFkyVWlPaUpqYkc5MVpDSXNJbUYxWkNJNkltNHZZU0lzSW5OMVlpSTZJbTR2WVNJc0ltVnRZV2xzSWpvaVlXNWtjbVV1YjNKbmIzZHVaWEpBWlhoaGJYQnNaUzVqYjIwaUxDSnBjM01pT2lKSlFrMGdRVkJKSUVOdmJtNWxZM1FpTENKMGIydGxibDkwZVhCbElqb2lhVzUyYVhSaGRHbHZiaUlzSW1saGRDSTZNVFUxT1RNd09USTVNQ3dpWlhod0lqb3hOVFU1TkRneU1Ea3dMQ0p6WTI5d1pYTWlPbnNpYVc1MmFYUmhkR2x2YmlJNklpOWpiMjV6ZFcxbGNpMWhjR2t2YjNKbkxXbHVkbWwwWVhScGIyNXpMMkU1TlRjeE9UQXpMVGcxTkdJdE5HRTJaUzA0TmpObUxUZzJORGRtTVRNeU9UUTJOQ0lzSW5WeWJDSTZJaTlqYjI1emRXMWxjaTFoY0drdmIzSm5MV2x1ZG1sMFlYUnBiMjV6TDJFNU5UY3hPVEF6TFRnMU5HSXROR0UyWlMwNE5qTm1MVGcyTkRkbU1UTXlPVFEyTkNJc0ltRmpkR2x2Ym5NaU9sc2ljbVZuYVhOMFpYSWlMQ0poWTJObGNIUWlYU3dpY21WaGJHMGlPaUpqYjI1emRXMWxjam93WXpCaFpUTm1NaTFpTkRjMExUUXdNelF0T0RNM1lpMWhNalJqTm1ZME5tUTFZVFk2TURkbE9UbGhORGN0WVdRek1pMDBZakkzTFdKbE1qZ3RaV1V3WkRJeE9XTXlPVFptSW4xOS5GalJkNzZUUFZjdDhVaU5IRjJBamdXQzdNMDEwMldOWU8zMk5McGw1ajhz"
     Then I should be on "/user/login"
     Given I enter "andre_owner_exists for "Username"
-    And I enter "Qwert123" for "Password"
+    And I enter "Qwert123IsBadPassword!" for "Password"
     And I enter "Consorg" for "Consumer organization"
     When I press the "Sign in" button
 #    Then I should be on the homepage - this is where the user should be, c
@@ -167,8 +173,8 @@ Feature: User Invitation Controller
     And I enter "andre.member.invite@example.com" for "Email address"
     And I enter "Andre" for "First Name"
     And I enter "Member" for "Last Name"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Sign up" button
     # Password policy is an error :(
@@ -198,8 +204,8 @@ Feature: User Invitation Controller
     And I enter "Andre" for "First Name"
     And I enter "Owner" for "Last Name"
     And I enter "Consorg" for "Consumer organization"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Sign up" button
     # Password policy is an error :(

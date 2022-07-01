@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -95,15 +95,17 @@ class ApicActivationService implements ApicActivationInterface {
       $contact_link = Link::fromTextAndUrl(t('Contact the site administrator.'), Url::fromRoute('ibm_apim.support'));
     }
     $sign_in_link = $this->linkGenerator->generate(t('Sign In'), Url::fromRoute('user.login'));
-
-    if ($mgmt_response->getCode() === 401) {
+    if (!isset($mgmt_response)) {
+      $this->messenger->addError(t('There was an error while processing your activation. @contact_link', ['@contact_link' => $contact_link]));
+      $this->logger->error('Received unexpected activation url: @url', ['@url' => $jwt->getUrl()]);
+    } elseif ($mgmt_response->getCode() === 401) {
       $this->messenger->addError(t('There was an error while processing your activation. Has this activation link already been used?'));
-      $this->logger->error('Error while processing user activation. Received response code \'@code\' from backend. 
+      $this->logger->error('Error while processing user activation. Received response code \'@code\' from backend.
         Message from backend was \'@message\'.', ['@code' => $mgmt_response->getCode(), '@message' => $mgmt_response->getErrors()[0]]);
     }
     elseif ($mgmt_response->getCode() !== 204) {
       $this->messenger->addError(t('There was an error while processing your activation. @contact_link', ['@contact_link' => $contact_link]));
-      $this->logger->error('Error while processing user activation. Received response code \'@code\' from backend. 
+      $this->logger->error('Error while processing user activation. Received response code \'@code\' from backend.
         Message from backend was \'@message\'.', ['@code' => $mgmt_response->getCode(), '@message' => $mgmt_response->getErrors()[0]]);
     }
     else {

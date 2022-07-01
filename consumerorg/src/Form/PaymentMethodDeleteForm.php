@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -32,9 +32,9 @@ class PaymentMethodDeleteForm extends ConfirmFormBase {
   /**
    * The payment_method to delete
    *
-   * @var string
+   * @var int
    */
-  protected string $paymentMethodId;
+  protected int $paymentMethodId;
 
   /**
    * @var \Drupal\consumerorg\Service\ConsumerOrgService
@@ -180,7 +180,7 @@ class PaymentMethodDeleteForm extends ConfirmFormBase {
     if ($this->paymentMethodId !== NULL) {
       $apim_response = $this->consumerOrgService->deletePaymentMethod($this->paymentMethodId);
 
-      if (isset($apim_response) && $apim_response->code >= 200 && $apim_response->code < 300) {
+      if (isset($apim_response) && $apim_response->getCode() >= 200 && $apim_response->getCode() < 300) {
         $this->messenger->addMessage(t('Payment method deleted.'));
       }
       else {

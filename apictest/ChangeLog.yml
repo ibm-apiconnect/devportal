@@ -1,80 +1,165 @@
 changes:
-  8.x-3.3.15: null
-  8.x-3.3.14:
-  - fix test code
-  8.x-3.3.13:
-  - fix test code
-  8.x-3.3.12:
-  - set default perms correctly
-  8.x-3.3.11:
-  - nodejs not needed here
-  8.x-3.3.10: null
-  8.x-3.3.9:
+  8.x-99.0.2:
+  - update copyright (#235)
+  8.x-99.0.1:
+  - Update apictest.info.yml
+  8.x-4.0.77:
   - Update Jenkinsfile
-  - Update ChangeLog.yml
-  - Update apictest.info.yml
-  8.x-3.3.7:
+  8.x-4.0.76:
+  - Added steps for adding and deleting custom fields (#231)
+  8.x-4.0.75:
+  - use more secure passwords
+  8.x-4.0.74:
+  - use more secure passwords
+  8.x-4.0.73:
+  - Added steps for subscription wizard tests (#229)
+  8.x-4.0.72: null
+  8.x-4.0.71:
+  - Added step for creating payment method (#228)
+  8.x-4.0.70:
+  - Update .whitesource
+  8.x-4.0.69:
+  - fix test code
+  8.x-4.0.68:
+  - fix test code
+  8.x-4.0.67:
+  - set default perms correctly
+  8.x-4.0.66:
+  - nodejs not needed here
+  8.x-4.0.65:
+  - Update .whitesource
+  - Add .whitesource configuration file
+  8.x-4.0.64:
+  - move try inside p.common
+  8.x-4.0.63:
+  - cleanup upgradetest Jenkinsfile for v10
+  8.x-4.0.62:
+  - Turn off cache clear in install and uninstall as the URL is NULL here
+  8.x-4.0.61:
+  - Update behat package tgz
+  8.x-4.0.60:
+  - deprecated functions - apictest
+  8.x-4.0.59:
+  - Fix php-fpm log file ownership
+  8.x-4.0.58:
+  - New php file locations
+  8.x-4.0.57:
+  - Don't yum install stuff in the site template
+  8.x-4.0.56:
   - make sure billing provider is set
-  8.x-3.3.6:
+  8.x-4.0.55:
   - add test docs for extended name regex
-  8.x-3.3.5:
-  - Added clear users step (#220) (#221)
-  8.x-3.3.4:
+  8.x-4.0.54:
+  - Added clear users step (#220)
+  8.x-4.0.53:
   - git -> gitci
-  8.x-3.3.3:
+  8.x-4.0.52:
+  - Jenkinsfile refactor fixes
+  8.x-4.0.51:
   - refactor Jenkinsfile for the new portal.groovy
-  8.x-3.3.2: null
-  8.x-3.3.1:
-  - Update apictest.info.yml
-  8.x-3.2.0:
-  - update version 8.x-3.1.16 -> 8.x-3.2.0
-  8.x-3.1.15:
-  - improved visibility and subscribability tests (#212) (#213)
-  8.x-3.1.14:
-  - Tempmerge (#211)
-  8.x-3.1.13:
+  8.x-4.0.50:
+  - move devel settings to their own config object
+  8.x-4.0.49:
+  - remove module_blocklist variable (#217)
+  8.x-4.0.48:
+  - add function to delete all apis and products
+  8.x-4.0.47:
+  - improved product publishing (#215)
+  8.x-4.0.46:
+  - improved visibility and subscribability tests (#212)
+  8.x-4.0.45: null
+  8.x-4.0.44:
   - dont need a stack
   - refactor Application.php to be a service (#210)
-  8.x-3.1.12:
+  8.x-4.0.43:
   - refactor SubscriptionService to be a proper service
-  8.x-3.1.11:
+  8.x-4.0.42: null
+  8.x-4.0.41:
   - use "IBM API Developer Portal" instead of API Connect
-  8.x-3.1.10:
+  8.x-4.0.40:
   - add support functions for disabling andre invitations
-  8.x-3.1.9: null
-  8.x-3.1.8: null
-  8.x-3.1.7:
+  8.x-4.0.39:
+  - new name for tgz
+  8.x-4.0.38:
+  - Kerneltest (#205)
+  8.x-4.0.37:
+  - Update create_test_site.sh
+  8.x-4.0.36:
+  - Source drush10 variable
+  8.x-4.0.35:
   - dont call get with null
-  8.x-3.1.6: null
-  8.x-3.1.5:
+  8.x-4.0.34:
+  - need to not override existing method and use different name instead
+  8.x-4.0.33:
+  - need to set the user registry when logging in by role
+  8.x-4.0.32:
+  - use userregistry names
+  8.x-4.0.31:
+  - code smells
+  8.x-4.0.30:
+  - needs to be an object not an assoc array
+  8.x-4.0.29:
+  - code smells
+  8.x-4.0.28:
+  - need to initialise a boolean
+  8.x-4.0.27:
+  - revert these 2 files to get tests working
+  8.x-4.0.26:
+  - more attempts to get user creation working
+  8.x-4.0.25:
+  - more attempts to get user creation working
+  8.x-4.0.24:
+  - try handling nulls as we did before
+  8.x-4.0.23:
+  - dont pass in nulls
+  8.x-4.0.22:
+  - code smells
+  8.x-4.0.21:
   - deprecated function
-  8.x-3.1.4:
+  8.x-4.0.20:
   - add message to see in logs
-  8.x-3.1.3:
+  8.x-4.0.19: null
+  8.x-4.0.18:
   - use composer based drupal-check
-  8.x-3.1.2:
-  - fix up a few typos and update test data (#184)
-  8.x-3.1.1:
-  - Merge pull request
-  8.x-3.1.0:
-  - update version 8.x-3.0.41 -> 8.x-3.1.0
-  8.x-3.0.40:
+  8.x-4.0.17:
+  - use phpunit 9
+  8.x-4.0.16:
+  - remove deprecated entity.manager
+  8.x-4.0.15:
+  - remove lock
+  - use phptest 8
+  8.x-4.0.14:
+  - Remove zombie (#199)
+  8.x-4.0.13:
+  - Patches are done in template now
+  - Use patches in template
+  - Delete pdo.patch
+  - Delete settings_8.patch
+  - Use patches in template
+  8.x-4.0.12:
+  - Eventlog (#195)
+  8.x-4.0.11:
   - Use sudo instead of su to get to aegir when running the tests
-  8.x-3.0.39:
-  - revert patches (#193)
-  8.x-3.0.38:
-  - Try-patches-again (#192)
-  8.x-3.0.37:
-  - Merge pull request
-  8.x-3.0.36:
+  8.x-4.0.10:
+  - revert patch
+  - revert patch
+  8.x-4.0.9:
+  - run kernel tests too
+  8.x-4.0.8:
+  - fix settings
+  8.x-4.0.7:
   - fix patches (#186)
+  8.x-4.0.6:
   - update patches (#185)
-  8.x-3.0.35:
+  8.x-4.0.5:
+  - fix up a few typos and update test data (#184)
+  8.x-4.0.4:
   - pathalias test data
-  8.x-3.0.34:
+  8.x-4.0.3:
   - Wait for WSREP ready in create_test_site.sh
-  8.x-3.0.33:
+  8.x-4.0.2:
   - apimesh/devportal#6637 Fix WSREP ready error
+  8.x-4.0.1: null
   8.x-3.0.32:
   - /ssl -> /ssl-admin
   8.x-3.0.31:

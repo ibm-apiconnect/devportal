@@ -152,7 +152,7 @@
               <div class="planDetail--subscribe">
                 {% if subscribable %}
                   <a class="btn btn-sm btn-primary"
-                     href="{{ path('ibm_apim.subscription_wizard.noplan') }}/?productId={{ node.id }}&planTitle={{ plan.data.title }}&planId={{ planid }}">
+                     href="{{ path('ibm_apim.subscription_wizard.noplan') }}?productId={{ node.id }}&planTitle={{ plan.data.title }}&planId={{ planid }}">
                     {{ 'Select'|t }}
                   </a>
                 {% else %}

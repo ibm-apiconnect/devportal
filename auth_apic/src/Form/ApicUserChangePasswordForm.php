@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -317,9 +317,6 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    // redirect to the home page regardless of outcome.
-    $form_state->setRedirect('<front>');
-
     $moduleService = \Drupal::service('module_handler');
     if ($moduleService->moduleExists('password_policy')) {
       if (!isset($form)) {
@@ -338,6 +335,8 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
     if ((int) $this->currentUser()->id() === 1) {
       $this->logger->notice('change password form submit for admin user');
       parent::submitForm($form, $form_state);
+      // redirect to the home page regardless of outcome.
+      $form_state->setRedirect('<front>');
     }
     else {
       $success = FALSE;
@@ -347,8 +346,11 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
         $success = $this->apicPassword->changePassword($user, $form_state->getValue('current_pass'), $form_state->getValue('pass'));
       }
       if ($success) {
+        $form_state->setRedirect('<front>');
         $this->messenger->addStatus(t('Password changed successfully'));
         //$form_state->setRedirect('user.logout');
+      } else {
+        $this->messenger->addError(t('The password you entered was incorrect.'));
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

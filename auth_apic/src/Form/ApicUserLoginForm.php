@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -612,7 +612,7 @@ class ApicUserLoginForm extends UserLoginForm {
           if ($jwt !== NULL) {
             $response = $this->invitationService->acceptInvite($jwt, $login_user);
 
-            if ($response->success() === TRUE) {
+            if (isset($response) && $response->success() === TRUE) {
               if ($response->getMessage()) {
                 $this->messenger->addStatus($response->getMessage());
               }
@@ -623,7 +623,7 @@ class ApicUserLoginForm extends UserLoginForm {
             $response = $this->loginService->login($login_user);
           }
 
-          if ($response->success()) {
+          if (isset($response) && $response->success()) {
             $this->authApicSessionStore->delete('invitation_object');
             if ($response->getMessage() === 'APPROVAL') {
               $form_state->set('approval', TRUE);

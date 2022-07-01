@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -56,8 +56,13 @@ class ApicInvitationService implements ApicInvitationInterface {
 
     if ($invitedUser !== NULL) {
       $invitationResponse = $this->mgmtServer->orgInvitationsRegister($token, $invitedUser);
+      if (!isset($invitationResponse)) {
 
-      if ((int) $invitationResponse->getCode() === 201) {
+        $this->logger->error('Error during account registration: Failed to validate token @tokenUrl', ['@tokenUrl' => $token->getUrl()]);
+
+        $userMgrResponse->setMessage(t('Error during account registration. Please contact your system administrator'));
+        $userMgrResponse->setSuccess(FALSE);
+      } else if ((int) $invitationResponse->getCode() === 201) {
         $invitedUser->setState('enabled');
         $this->accountService->registerApicUser($invitedUser);
 

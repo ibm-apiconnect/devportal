@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -81,7 +81,7 @@ class ApicUserServiceTest extends UnitTestCase {
 
     self::assertEquals('andre', $result['first_name']);
     self::assertEquals('andresson', $result['last_name']);
-    self::assertEquals('Qwert123', $result['pass']);
+    self::assertEquals('Qwert123IsBadPassword!', $result['pass']);
     self::assertEquals('andre@example.com', $result['mail']);
     self::assertEquals('andreorg', $result['consumer_organization']);
     self::assertEquals('/user/url', $result['apic_url']);
@@ -105,7 +105,7 @@ class ApicUserServiceTest extends UnitTestCase {
 
     self::assertEquals('andre', $result['first_name']);
     self::assertEquals('andresson', $result['last_name']);
-    self::assertEquals('Qwert123', $result['pass']);
+    self::assertEquals('Qwert123IsBadPassword!', $result['pass']);
     self::assertEquals('andre@example.com', $result['mail']);
     self::assertEquals('andreorg', $result['consumer_organization']);
     self::assertEquals('/user/url', $result['apic_url']);
@@ -129,7 +129,7 @@ class ApicUserServiceTest extends UnitTestCase {
 
     self::assertEquals('andre', $result['first_name']);
     self::assertEquals('andresson', $result['last_name']);
-    self::assertEquals('Qwert123', $result['pass']);
+    self::assertEquals('Qwert123IsBadPassword!', $result['pass']);
     self::assertEquals('andre@example.com', $result['mail']);
     self::assertEquals('andreorg', $result['consumer_organization']);
     self::assertEquals('/user/url', $result['apic_url']);
@@ -152,7 +152,7 @@ class ApicUserServiceTest extends UnitTestCase {
     $user->setFirstname('andre');
     $user->setLastname('andresson');
     $user->setUsername('andre');
-    $user->setPassword('Qwert123');
+    $user->setPassword('Qwert123IsBadPassword!');
     $user->setMail('andre@example.com');
     $user->setOrganization('andreorg');
     $user->setUrl('/user/url');

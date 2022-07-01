@@ -53,5 +53,5 @@
 +      '@available' => implode(', ', array_keys($install_state['profiles'])),
 +    ]));
    }
-   // Check for a distribution profile.
+   // If any of the profiles are distribution profiles, return the first one.
    foreach ($install_state['profiles'] as $profile) {

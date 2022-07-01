@@ -443,7 +443,7 @@ Feature: Sign in
       | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
     When I am at "/user/login"
     Given I enter "notindatabase" for "Username"
-    And I enter "Qwert123" for "Password"
+    And I enter "Qwert123IsBadPassword!" for "Password"
     When I press the "Sign in" button
     Then there are no errors
 
@@ -494,7 +494,7 @@ Feature: Sign in
       | lur  | @data(user_registries[1].title) | @data(user_registries[1].url) | yes          | no      |
     Given users:
       | uid    | name       | mail                    | pass     | registry_url                  |
-      | 123456 | portaluser | portaluser1@example.com | Qwert123 | @data(user_registries[0].url) |
+      | 123456 | portaluser | portaluser1@example.com | Qwert123IsBadPassword! | @data(user_registries[0].url) |
       | 654321 | portaluser | portaluser2@example.com | Qwert246 | @data(user_registries[1].url) |
     Given consumerorgs:
       | title | name | id   | owner_uid |
@@ -502,7 +502,7 @@ Feature: Sign in
       | org2  | org2 | org2 | 654321    |
     When I am at "/user/login"
     Given I enter "portaluser" for "Username"
-    And I enter "Qwert123" for "Password"
+    And I enter "Qwert123IsBadPassword!" for "Password"
     When I press the "Sign in" button
   # go to edit own profile page to check we are who we think we are
     When I am at "/user/123456/edit"

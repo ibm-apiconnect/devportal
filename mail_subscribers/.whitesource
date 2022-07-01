@@ -1,0 +1,6 @@
+{
+  "settingsInheritedFrom": "whitesource-config/whitesource-config@issues_none",
+  "scanSetting": {
+    "baseBranches": ["master","v10.0","v10.0.1","2018.4.1"]
+  }
+}

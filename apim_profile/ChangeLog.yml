@@ -1,1493 +1,2845 @@
 changes:
+  8.x-20220623-2221:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-99.0.12:
+        - Handle null responses
+      ibm_apim:
+        8.x-99.0.16:
+        - Secure (#853)
+  8.x-20220621-1621:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-99.0.11:
+        - Error handling for unexpected activation url (#694)
+      ibm_apim:
+        8.x-99.0.15:
+        - Validate activation url (#852)
+  8.x-20220621-1020:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-99.0.10:
+        - Error messages should be red (#693)
+  8.x-20220620-1621:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-99.0.9: null
+  8.x-20220615-1535:
+    commits:
+    - Remove update (#677)
+    modules:
+      apic_app:
+        8.x-99.0.9:
+        - update entity tables
+        - update entity tables
+  8.x-20220611-1730:
+    commits:
+    - Fix entities updates (#673)
+    - Add update 8114 (#669)
+    modules:
+      ibm_apim:
+        8.x-99.0.14:
+        - Split into four lists (#848)
+  8.x-20220608-1621:
+    commits:
+    - drupal core security update
+    - Upgrade fix (#664)
+    - Tc2dev/20220510 (#659)
+    modules:
+      auth_apic:
+        8.x-99.0.8:
+        - users need to be in consumer orgs
+        8.x-99.0.7:
+        - users need to be in consumer orgs
+      apic_app:
+        8.x-99.0.8:
+        - Access denied when creating app without consumer org (#318)
+      ibm_apim:
+        8.x-99.0.13:
+        - Require users to be part of a consumer org (#847)
+  8.x-20220607-1621:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-99.0.12:
+        - avoid warning in the logs
+  8.x-20220531-2220:
+    commits:
+    - drupal core 9.3.15 (#657)
+    modules:
+      apic_app:
+        8.x-99.0.7:
+        - Acknowledging the 'Display Analytics' setting
+  8.x-20220530-2221:
+    commits:
+    - Fixed password policy patch
+    modules:
+      apic_app:
+        8.x-99.0.6:
+        - Rendering the right contents based on analytics access.
+  8.x-20220525-1621:
+    commits:
+    - drupal security updates
+    modules:
+      ibm_apim:
+        8.x-99.0.11:
+        - Fix for non json decodeable custom field data (#843)
+      consumerorg:
+        8.x-99.0.7:
+        - Fix for non json decodeable custom field data
+  8.x-20220524-2221:
+    commits: null
+    modules:
+      socialblock:
+        8.x-99.0.2:
+        - update copyright statements
+      product:
+        8.x-99.0.3:
+        - update copyright
+      mail_subscribers:
+        8.x-99.0.2:
+        - update copyright statements
+      themegenerator:
+        8.x-99.0.2:
+        - updated copyright statements
+  8.x-20220524-1620:
+    commits: null
+    modules:
+      ghmarkdown:
+        8.x-99.0.2:
+        - update copyright statements
+      ibm_apim:
+        8.x-99.0.10:
+        - update copyright statements (#842)
+      instana_eum:
+        8.x-99.0.2:
+        - update copyright statements
+  8.x-20220524-1457:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-99.0.6:
+        - update copyright statements (#691)
+      featuredcontent:
+        8.x-99.0.2:
+        - update copyright statements
+      apic_api:
+        8.x-99.0.2:
+        - update copyright statements (#154)
+      consumerorg:
+        8.x-99.0.6:
+        - update copyright
+      connect_theme:
+        8.x-99.0.2:
+        - update copyright statements
+  8.x-20220523-0421:
+    commits:
+    - update copyright statements
+    - patch login block to allow apiclogin
+    modules:
+      apic_app:
+        8.x-99.0.5:
+        - update copyright statements
+      apictest:
+        8.x-99.0.2:
+        - update copyright (#235)
+  8.x-20220520-2221:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-99.0.5:
+        - 7735 redirect (#690)
+  8.x-20220519-1023:
+    commits:
+    - Tc2dev/20220510 (#648)
+    modules:
+      auth_apic:
+        8.x-99.0.4:
+        - add back redirect for admin user (#689)
+  8.x-20220518-1621:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-99.0.9:
+        - Add translation project (#837)
+  8.x-20220517-2221:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-99.0.8:
+        - use correct path to analytics
+  8.x-20220517-1021:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-99.0.7:
+        - update site maintenance warning (#836)
+  8.x-20220516-1621:
+    commits: null
+    modules:
+      product:
+        8.x-99.0.2:
+        - tidy url for redirect module enable
+      apic_app:
+        8.x-99.0.4:
+        - ignore the url_redirects field from redirect (#309)
+      consumerorg:
+        8.x-99.0.5:
+        - ignore the url_redirects field from redirect
+  8.x-20220511-1350:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-99.0.6:
+        - Delete members without consumerorgs (#831)
+      consumerorg:
+        8.x-99.0.4:
+        - Remove Corg from user on member del
+  8.x-20220511-1320:
+    commits: null
+    modules:
+      apic_app:
+        8.x-99.0.3:
+        - Revert "analytics endpoint has changed name"
+  8.x-20220510-1621:
+    commits:
+    - honeypot patch update
+    - drupal update
+    modules:
+      ibm_apim:
+        8.x-99.0.5:
+        - Revert "analytics endpoint has changed name"
+  8.x-20220505-1358:
+    commits:
+    - Don't hardcode the fallback branches in the Jenkinsfile (#647)
+    modules:
+      auth_apic:
+        8.x-99.0.3:
+        - Only redirect successful change password attempts (#685)
+      ibm_apim:
+        8.x-99.0.4:
+        - Change password from no longer ends the user session (#828)
+  8.x-20220505-1147:
+    commits:
+    - Tc2dev/20220411 (#643)
+    modules:
+      consumerorg:
+        8.x-99.0.3:
+        - Added custom field tests (#261)
+  8.x-20220504-2220:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-99.0.3:
+        - Custom field tests (#825)
+  8.x-20220504-1953:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-99.0.2: null
+      apic_app:
+        8.x-99.0.2: null
+  8.x-20220504-1621:
+    commits:
+    - Update build.sh
+    modules:
+      socialblock:
+        8.x-99.0.1:
+        - Update socialblock.info.yml
+      product:
+        8.x-99.0.1:
+        - Update product.info.yml
+      ghmarkdown:
+        8.x-99.0.1:
+        - Update ghmarkdown.info.yml
+      auth_apic:
+        8.x-99.0.1:
+        - Update auth_apic.info.yml
+      mail_subscribers:
+        8.x-99.0.1:
+        - Update mail_subscribers.info.yml
+      themegenerator:
+        8.x-99.0.1:
+        - Update themegenerator.info.yml
+      featuredcontent:
+        8.x-99.0.1:
+        - Update featuredcontent.info.yml
+      apic_api:
+        8.x-99.0.1:
+        - Update apic_api.info.yml
+        - Update apic_api.info.yml
+      apic_app:
+        8.x-99.0.1:
+        - Update apic_app.info.yml
+        - Update Jenkinsfile
+        - Custom field tests (#304)
+      ibm_apim:
+        8.x-99.0.2: null
+      consumerorg:
+        8.x-99.0.2: null
+      apictest:
+        8.x-99.0.1:
+        - Update apictest.info.yml
+      instana_eum:
+        8.x-99.0.1:
+        - Update instana_eum.info.yml
+      connect_theme:
+        8.x-99.0.1:
+        - Update connect_theme.info.yml
+  8.x-20220504-1021:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-4.0.57:
+        - Uncomment tests (#682)
+        - Update Jenkinsfile
+        - Added custom field tests (#681)
+  8.x-20220503-1620:
+    commits: null
+    modules:
+      socialblock:
+        8.x-4.0.15:
+        - Update Jenkinsfile
+      product:
+        8.x-4.0.107:
+        - Update Jenkinsfile
+      ghmarkdown:
+        8.x-4.0.13:
+        - Update Jenkinsfile
+      mail_subscribers:
+        8.x-4.0.22:
+        - Update Jenkinsfile
+      themegenerator:
+        8.x-4.0.18:
+        - Update Jenkinsfile
+      featuredcontent:
+        8.x-4.0.18:
+        - Update Jenkinsfile
+      apic_api:
+        8.x-4.0.77:
+        - Update Jenkinsfile
+      ibm_apim:
+        8.x-4.0.249:
+        - Update Jenkinsfile
+      consumerorg:
+        8.x-4.0.84:
+        - Update Jenkinsfile
+      apictest:
+        8.x-4.0.77:
+        - Update Jenkinsfile
+        8.x-4.0.76:
+        - Added steps for adding and deleting custom fields (#231)
+      instana_eum:
+        8.x-4.0.7:
+        - Update Jenkinsfile
+      connect_theme:
+        8.x-4.0.48:
+        - Update Jenkinsfile
+  8.x-20220426-1621:
+    commits:
+    - composer update
+    modules:
+      ibm_apim:
+        8.x-4.0.248:
+        - Improved snapshot debugging (#824)
+  8.x-20220425-2220:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-4.0.56:
+        - url encode consumer org title (#678)
+  8.x-20220423-1501:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.247:
+        - remove X-FRAME-OPTIONS and X-XSS-PROTECTION headers (#823)
+  8.x-20220421-0810:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.106:
+        - Product filtering tighened up.
+      apic_api:
+        8.x-4.0.76:
+        - apis need creating before products
+        8.x-4.0.75:
+        - Product filtering tighened up.
+      apic_app:
+        8.x-4.0.119:
+        - analytics endpoint has changed name
+      ibm_apim:
+        8.x-4.0.246:
+        - apis need creating before products
+        8.x-4.0.245:
+        - analytics endpoint has changed name
+        - Show user's name on contact form (#820)
+  8.x-20220419-1621:
+    commits:
+    - SA-CORE 2022-008/009
+    modules:
+      ibm_apim:
+        8.x-4.0.244:
+        - added getDisplayName to ApicUser (#819)
+      consumerorg:
+        8.x-4.0.83:
+        - use getDisplayName in forms
+  8.x-20220411-0421:
+    commits:
+    - Composer update (#642)
+    - apimesh/devportal#7587 - remove isPromotableBranch for slackSend
+    modules:
+      apic_app:
+        8.x-4.0.118:
+        - subscription migration fix.
+  8.x-20220401-1541:
+    commits:
+    - add rest of data as well
+    - apimesh/devportal#7627 - revert proxy URL
+    modules:
+      ibm_apim:
+        8.x-4.0.243:
+        - make size slightly bigger
+  8.x-20220401-1354:
+    commits:
+    - fix lock file
+    - Apic Letter avatar (#636)
+    modules:
+      ibm_apim:
+        8.x-4.0.242:
+        - Colors (#815)
+  8.x-20220401-1021:
+    commits:
+    - composer update
+    modules:
+      ibm_apim:
+        8.x-4.0.241:
+        - letter_avatar submodule (#814)
+  8.x-20220329-1021:
+    commits:
+    - delete unneeded files
+    - delete unneeded files
+    - delete unneeded files
+    - Updated composer and patch (#621)
+    modules:
+      product:
+        8.x-4.0.105:
+        - upgrade phpunit
+      ghmarkdown:
+        8.x-4.0.12:
+        - upgrade phpunit
+      mail_subscribers:
+        8.x-4.0.21:
+        - upgrade phpunit
+      featuredcontent:
+        8.x-4.0.17:
+        - upgrade phpunit
+      apic_api:
+        8.x-4.0.74:
+        - upgrade phpunit
+      ibm_apim:
+        8.x-4.0.240:
+        - upgrade phpunit
+        8.x-4.0.239:
+        - Revert "add new letter avatar geneartion (#810)" (#811)
+        8.x-4.0.238:
+        - add new letter avatar geneartion (#810)
+      consumerorg:
+        8.x-4.0.82:
+        - upgrade phpunit
+      connect_theme:
+        8.x-4.0.47:
+        - upgrade phpunit
+  8.x-20220328-2221:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.104: null
+      apic_api:
+        8.x-4.0.73: null
+      ibm_apim:
+        8.x-4.0.237: null
+  8.x-20220325-1622:
+    commits:
+    - use artifactory.writeDotNpmrc() (#620)
+    modules:
+      apic_app:
+        8.x-4.0.117:
+        - encrypt credentials instead of base64
+  8.x-20220325-1059:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.116:
+        - use more secure passwords
+  8.x-20220325-1023:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.103:
+        - use more secure passwords
+      apic_api:
+        8.x-4.0.72:
+        - use more secure passwords
+      ibm_apim:
+        8.x-4.0.236:
+        - use more secure passwords
+      apictest:
+        8.x-4.0.75:
+        - use more secure passwords
+  8.x-20220321-1010:
+    commits:
+    - use more secure passwords
+    - use php8.0 password_strength (#615)
+    - drupal core SA-CORE-2022-006
+    modules:
+      auth_apic:
+        8.x-4.0.55:
+        - use more secure passwords
+      apictest:
+        8.x-4.0.74:
+        - use more secure passwords
+  8.x-20220317-1622:
+    commits:
+    - try docker proxy URLs (#614)
+    modules:
+      socialblock:
+        8.x-4.0.14:
+        - use latest version of twitteroauth library
+  8.x-20220317-1021:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.235:
+        - Save multi-value custom fields for apps (#807)
   8.x-20220311-2321:
     commits:
-    - drupal 9.3.8 (#613)
+    - drupal 9.3.8
+    - Maintenance200 (#609)
     - use releaseName for slack message
     modules:
       ibm_apim:
-        8.x-3.3.32:
-        - custom field fix (#803) (#805)
-  8.x-20220309-1242:
-    commits:
-    - patch symfony Request.php to avoid checking for trusted proxies (#605) (#607)
+        8.x-4.0.234:
+        - custom field fix (#803)
+  8.x-20220311-1721:
+    commits: null
     modules:
       ibm_apim:
-        8.x-3.3.31:
-        - customFix v10.0 (#801)
+        8.x-4.0.233:
+        - custom field fix (#800)
+  8.x-20220311-1121:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.232:
+        - Custom fix (#799)
+  8.x-20220310-1722:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.102: null
+      auth_apic:
+        8.x-4.0.54: null
+  8.x-20220310-1050:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.115:
+        - Subscription tests (#300)
+  8.x-20220309-1527:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.231:
+        - Show payment method in subscriptioon wizard (#798)
+      apictest:
+        8.x-4.0.73:
+        - Added steps for subscription wizard tests (#229)
+  8.x-20220309-1236:
+    commits:
+    - patch symfony Request.php to avoid checking for trusted proxies (#605)
+    modules:
+      socialblock:
+        8.x-4.0.13: null
+      themegenerator:
+        8.x-4.0.17: null
+      consumerorg:
+        8.x-4.0.81: null
+  8.x-20220307-1722:
+    commits:
+    - composer update
+    modules:
+      socialblock:
+        8.x-4.0.12: null
+      product:
+        8.x-4.0.101: null
+      ghmarkdown:
+        8.x-4.0.11: null
+      auth_apic:
+        8.x-4.0.53: null
+      mail_subscribers:
+        8.x-4.0.20: null
+      themegenerator:
+        8.x-4.0.16: null
+      featuredcontent:
+        8.x-4.0.16: null
+      apic_api:
+        8.x-4.0.71: null
+      apic_app:
+        8.x-4.0.114:
+        - Fix app page with superseded products
+      ibm_apim:
+        8.x-4.0.230: null
+      consumerorg:
+        8.x-4.0.80:
+        - Added monetisation test (#257)
+      apictest:
+        8.x-4.0.72: null
+      instana_eum:
+        8.x-4.0.6: null
+      connect_theme:
+        8.x-4.0.46: null
   8.x-20220307-1121:
     commits: null
     modules:
-      socialblock:
-        8.x-3.3.8: null
-      product:
-        8.x-3.3.14: null
-      ghmarkdown:
-        8.x-3.3.9: null
-      auth_apic:
-        8.x-3.3.15: null
-      mail_subscribers:
-        8.x-3.3.8: null
-      themegenerator:
-        8.x-3.3.8: null
-      featuredcontent:
-        8.x-3.3.9: null
-      apic_api:
-        8.x-3.3.13: null
-      apic_app:
-        8.x-3.3.17:
-        - Fix app page with superseded products
       ibm_apim:
-        8.x-3.3.30: null
-      consumerorg:
-        8.x-3.3.10: null
+        8.x-4.0.229:
+        - Add mocking for payment method delete (#797)
       apictest:
-        8.x-3.3.15: null
-      instana_eum:
-        8.x-3.3.8: null
-      connect_theme:
-        8.x-3.3.12: null
-  8.x-20220304-1721:
+        8.x-4.0.71:
+        - Added step for creating payment method (#228)
+  8.x-20220304-1121:
     commits: null
     modules:
       apic_app:
-        8.x-3.3.16:
+        8.x-4.0.113:
         - fix php blowing up due to variable not set
-  8.x-20220303-1740:
-    commits: null
-    modules:
-      apic_api:
-        8.x-3.3.12:
-        - support pathalias in test tool (#151)
-  8.x-20220225-1721:
+  8.x-20220228-0521:
     commits:
-    - drupal core 9.3.7 (#603)
+    - drupal core 9.3.7
     - composer update
     modules:
-      featuredcontent:
-        8.x-3.3.8:
-        - needs to be node id not id
-  8.x-20220225-1121:
+      apic_api:
+        8.x-4.0.70:
+        - support pathalias in test tool
+  8.x-20220226-0719:
     commits: null
     modules:
+      product:
+        8.x-4.0.100:
+        - Update .whitesource
+      ghmarkdown:
+        8.x-4.0.10:
+        - Update .whitesource
       auth_apic:
-        8.x-3.3.14: null
+        8.x-4.0.52:
+        - Update .whitesource
+      featuredcontent:
+        8.x-4.0.15:
+        - Update .whitesource
+      apic_api:
+        8.x-4.0.69:
+        - Update .whitesource
+      apic_app:
+        8.x-4.0.112:
+        - Update .whitesource
+      ibm_apim:
+        8.x-4.0.228:
+        - Update .whitesource (#796)
+      instana_eum:
+        8.x-4.0.5:
+        - Update .whitesource
+      connect_theme:
+        8.x-4.0.45:
+        - Update .whitesource
+  8.x-20220224-1722:
+    commits:
+    - Update .whitesource (#602)
+    modules:
+      apictest:
+        8.x-4.0.70:
+        - Update .whitesource
   8.x-20220223-1723:
     commits: null
     modules:
-      auth_apic:
-        8.x-3.3.13:
-        - remove references to 'admin'
-  8.x-20220223-1607:
-    commits: null
-    modules:
-      ibm_apim:
-        8.x-3.3.29:
-        - Fix php80 param order
-  8.x-20220223-1037:
+      featuredcontent:
+        8.x-4.0.14:
+        - needs to be node id not id
+  8.x-20220223-0940:
     commits: null
     modules:
       apic_app:
-        8.x-3.3.15: null
-        8.x-3.3.14:
-        - Fix another php80 param order issue
-        - Fix php80 param order error
+        8.x-4.0.111:
         - new application block needs to be cached per user
       ibm_apim:
-        8.x-3.3.28:
+        8.x-4.0.227:
         - new application block needs to be cached per user
   8.x-20220223-0844:
-    commits: null
+    commits:
+    - ensure that we have some settings if they did get wiped
     modules:
       apictest:
-        8.x-3.3.14:
+        8.x-4.0.69:
         - fix test code
-  8.x-20220215-1121:
+  8.x-20220214-2321:
     commits:
     - upgrade code seems to be wiping the settings
     - Composer update (#601)
+    - Tc2dev/20220124 (#598)
     - drupal core 9.3.6
     - patch the cookie message
     - patch the fileurl generator to handle subpath sites
-    modules:
-      ibm_apim:
-        8.x-3.3.27:
-        - fix storage of translations (#795)
-        8.x-3.3.26:
-        - missing settings
-      apictest:
-        8.x-3.3.13:
-        - fix test code
-        8.x-3.3.12:
-        - set default perms correctly
-        8.x-3.3.11:
-        - nodejs not needed here
-  8.x-20220214-2018:
-    commits:
     - composer update to fix svg cve
     modules:
-      apic_api:
-        8.x-3.3.11: null
-  8.x-20220214-1715:
+      ibm_apim:
+        8.x-4.0.226:
+        - fix storage of translations (#795)
+        8.x-4.0.225:
+        - missing settings
+      apictest:
+        8.x-4.0.68:
+        - fix test code
+        8.x-4.0.67:
+        - set default perms correctly
+        8.x-4.0.66:
+        - nodejs not needed here
+  8.x-20220214-1000:
     commits: null
     modules:
-      socialblock:
-        8.x-3.3.7: null
-        8.x-3.3.6:
-        - Update Jenkinsfile
-        - Update ChangeLog.yml
-        - Update socialblock.info.yml
-      product:
-        8.x-3.3.13: null
-        8.x-3.3.12:
-        - Update Jenkinsfile
-        - Update ChangeLog.yml
-        - Update product.info.yml
-      ghmarkdown:
-        8.x-3.3.8: null
-        8.x-3.3.7:
-        - Update Jenkinsfile
-        - Update ChangeLog.yml
-        - Update ghmarkdown.info.yml
-      auth_apic:
-        8.x-3.3.12: null
-        8.x-3.3.11:
-        - Update Jenkinsfile
-        - Update ChangeLog.yml
-        - Update auth_apic.info.yml
       mail_subscribers:
-        8.x-3.3.7: null
-        8.x-3.3.6:
-        - Update Jenkinsfile
-        - Update ChangeLog.yml
-        - Update mail_subscribers.info.yml
-      themegenerator:
-        8.x-3.3.7: null
-        8.x-3.3.6:
-        - Update Jenkinsfile
-        - Update ChangeLog.yml
-        - Update themegenerator.info.yml
-      featuredcontent:
-        8.x-3.3.7: null
-        8.x-3.3.6:
-        - Update Jenkinsfile
-        - Update ChangeLog.yml
-        - Update featuredcontent.info.yml
-      apic_api:
-        8.x-3.3.10: null
-        8.x-3.3.9:
-        - Update Jenkinsfile
-        - Update ChangeLog.yml
-        - Update apic_api.info.yml
-      apic_app:
-        8.x-3.3.13: null
-        8.x-3.3.12:
-        - Update Jenkinsfile
-        - Update ChangeLog.yml
-        - Update apic_app.info.yml
-      ibm_apim:
-        8.x-3.3.25: null
-        8.x-3.3.24:
-        - Update Jenkinsfile
-        - Update ChangeLog.yml
-        - Update ibm_apim.info.yml
-      consumerorg:
-        8.x-3.3.9: null
-        8.x-3.3.8:
-        - Update Jenkinsfile
-        - Update ChangeLog.yml
-        - Update consumerorg.info.yml
-      instana_eum:
-        8.x-3.3.7: null
-        8.x-3.3.6:
-        - Update Jenkinsfile
-        - Update ChangeLog.yml
-        - Update instana_eum.info.yml
-      connect_theme:
-        8.x-3.3.11: null
-  8.x-20220209-1642:
+        8.x-4.0.19: null
+  8.x-20220209-1631:
     commits:
-    - Update Jenkinsfile
-    - Update build.sh
     - fix slick uninstall
     - Up the update number (#597)
     - composer update
     modules:
-      socialblock:
-        8.x-3.3.4:
-        - git -> gitci
-      product:
-        8.x-3.3.10:
-        - use correct named upgrade functions
-      ghmarkdown:
-        8.x-3.3.5:
-        - git -> gitci
-      auth_apic:
-        8.x-3.3.7:
-        - added destination check before redirect on login (#660)
       mail_subscribers:
-        8.x-3.3.4:
-        - git -> gitci
+        8.x-4.0.18:
+        - fix unit test validation errors
+        - fix case of the getFormId function
+        - Update .whitesource
+        - Add .whitesource configuration file
       themegenerator:
-        8.x-3.3.4:
-        - git -> gitci
-      featuredcontent:
-        8.x-3.3.4:
-        - git -> gitci
-      apic_api:
-        8.x-3.3.7:
-        - use correct named upgrade functions
-      apic_app:
-        8.x-3.3.7:
-        - use correct named upgrade functions
+        8.x-4.0.15:
+        - fix case of the getFormId function
       ibm_apim:
-        8.x-3.3.17:
-        - Billingfix (#779)
-      consumerorg:
-        8.x-3.3.5:
-        - custom fields not displaying
-      apictest:
-        8.x-3.3.10: null
+        8.x-4.0.224:
+        - fix case of the getFormId function
       instana_eum:
-        8.x-3.3.2:
-        - add placeholder unit test
-        - fix build script
-        - update URL
-        - add copyright
-      connect_theme:
-        8.x-3.3.10: null
-  8.x-20220209-1213:
+        8.x-4.0.4:
+        - fix case of the getFormId function
+  8.x-20220209-1425:
     commits:
     - add a few more internal files to remove list
     modules:
+      socialblock:
+        8.x-4.0.11:
+        - Update .whitesource
+        - Add .whitesource configuration file
       product:
-        8.x-3.4.3:
-        - use product node id not pathalias
-  8.x-20220201-2321:
+        8.x-4.0.99:
+        - Update .whitesource
+        - Add .whitesource configuration file
+      ghmarkdown:
+        8.x-4.0.9:
+        - Update .whitesource
+        - Add .whitesource configuration file
+      auth_apic:
+        8.x-4.0.51:
+        - Update .whitesource
+        - Add .whitesource configuration file
+      themegenerator:
+        8.x-4.0.14:
+        - Update .whitesource
+        - Add .whitesource configuration file
+      featuredcontent:
+        8.x-4.0.13:
+        - Update .whitesource
+        - Add .whitesource configuration file
+      ibm_apim:
+        8.x-4.0.223:
+        - Configure WhiteSource for GitHub Enterprise (#794)
+      consumerorg:
+        8.x-4.0.79:
+        - Update .whitesource
+        - Add .whitesource configuration file
+      instana_eum:
+        8.x-4.0.3:
+        - Update .whitesource
+        - Add .whitesource configuration file
+  8.x-20220204-1721:
     commits:
     - upgrade needs to make sure encryption profile name is set
+    - apimesh/devportal#7506 sudo and iptables are already in the site template image (#595)
     - drupal core 9.3.5
+    modules:
+      product:
+        8.x-4.0.98:
+        - use product node id not pathalias
+      ibm_apim:
+        8.x-4.0.222:
+        - check encryption profile name is set before using it
+      consumerorg:
+        8.x-4.0.78:
+        - check encryption profile name is set before using it
+  8.x-20220201-2321:
+    commits:
     - no longer needed
     - drupal core 9.3.4
     - composer update
+    modules:
+      consumerorg:
+        8.x-4.0.77:
+        - Create new member from member_update
+  8.x-20220131-1721:
+    commits:
     - Added patch to fix Reset Password form (#592)
     modules:
-      ibm_apim:
-        8.x-3.4.12:
-        - check encryption profile name is set before using it
-      consumerorg:
-        8.x-3.4.7:
-        - check encryption profile name is set before using it
-        8.x-3.4.6:
-        - Create new member from member_update (#254)
-  8.x-20220131-1722:
-    commits: null
-    modules:
       auth_apic:
-        8.x-3.4.5:
-        - jwtSupport v10.0 (#673)
-  8.x-20220124-1722:
-    commits:
-    - remove vuln
-    - Remove overridess (#588) (#589)
-    modules:
-      featuredcontent:
-        8.x-3.4.2:
-        - use pathalias if set
+        8.x-4.0.50: null
+        8.x-4.0.49:
+        - remove dpm call (#672)
+        - Handle JWT tokens in token parser (#671)
   8.x-20220121-1121:
     commits:
-    - Php80 v10.0 (#586)
+    - remove vuln
+    - add content browser overrides back
+    - Remove overridess (#588)
     modules:
-      apictest:
-        8.x-3.4.3: null
-        8.x-3.4.2:
-        - Fix
-        - Fix php file locations
-        - Turn off cache clear in install and uninstall as the URL is NULL here
-        - Update behat package tgz
-        - Fix php-fpm log file ownership
-        - New php file locations
+      featuredcontent:
+        8.x-4.0.12:
+        - use pathalias if set
   8.x-20220120-2321:
     commits: null
     modules:
       apic_api:
-        8.x-3.4.7: null
+        8.x-4.0.67: null
       ibm_apim:
-        8.x-3.4.11: null
+        8.x-4.0.221: null
       consumerorg:
-        8.x-3.4.5: null
-  8.x-20220120-1900:
+        8.x-4.0.76: null
+  8.x-20220120-1859:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.4.10:
-        - Invoke post+pre sub+cred delete hooks (#789) (#792)
+        8.x-4.0.220:
+        - Invoke post+pre sub+cred delete hooks (#789)
   8.x-20220118-2321:
     commits:
     - update date picker too
-    - Local building with patch fix (#582) (#583)
+    - Local building with patch fix (#582)
     - update patch
     - drupal core 9.3.3
     modules:
       apic_app:
-        8.x-3.4.3:
-        - More hooks v10.0 (#289)
-  8.x-20220118-1417:
+        8.x-4.0.109:
+        - Minor hook fix
+        - Added pre+post delete hooks for subs+creds
+      apictest:
+        8.x-4.0.64:
+        - move try inside p.common
+        8.x-4.0.63:
+        - cleanup upgradetest Jenkinsfile for v10
+  8.x-20220118-1121:
+    commits: null
+    modules:
+      apic_api:
+        8.x-4.0.66: null
+      apic_app:
+        8.x-4.0.108: null
+  8.x-20220118-0835:
     commits: null
     modules:
       auth_apic:
-        8.x-3.4.4:
+        8.x-4.0.48:
         - moved custom field code
+      apic_api:
+        8.x-4.0.65: null
       apic_app:
-        8.x-3.4.2:
+        8.x-4.0.107:
         - cleaned up custom field code
-        - Save address type custom fields
       consumerorg:
-        8.x-3.4.4:
+        8.x-4.0.75:
         - ensure metadata is set
         - fix unit test
         - moved custom field code
         - address type custom field for consumerorgs
-  8.x-20220118-1121:
+  8.x-20220117-1230:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.4.9:
-        - Address type (#786) (#787)
-  8.x-20220114-1721:
+        8.x-4.0.219:
+        - Address type (#786)
+  8.x-20220113-1121:
+    commits:
+    - Php80 (#580)
+    modules:
+      apic_app:
+        8.x-4.0.106: null
+      ibm_apim:
+        8.x-4.0.218: null
+      consumerorg:
+        8.x-4.0.74:
+        - Special cased address type custom field
+  8.x-20220112-1721:
     commits: null
     modules:
-      apic_api:
-        8.x-3.4.6: null
-  8.x-20220111-1722:
+      apic_app:
+        8.x-4.0.105:
+        - Fix another php80 param order issue
+  8.x-20220111-1721:
     commits:
     - patch no longer needed
     - composer update
     modules:
-      consumerorg:
-        8.x-3.4.3:
-        - Special cased address type custom field
-  8.x-20220110-1723:
+      apic_app:
+        8.x-4.0.104:
+        - Fix php80 param order error
+      ibm_apim:
+        8.x-4.0.217:
+        - Fix php80 param order
+  8.x-20220111-1122:
     commits: null
     modules:
       auth_apic:
-        8.x-3.4.3:
-        - Check session invite token before query parameter (#666)
-  8.x-20220110-1557:
+        8.x-4.0.47:
+        - Check session invite token before query parameter
+      apictest:
+        8.x-4.0.62:
+        - Turn off cache clear in install and uninstall as the URL is NULL here
+  8.x-20220110-1555:
     commits: null
     modules:
-      ibm_apim:
-        8.x-3.4.8:
-        - pointless test now with typing
-  8.x-20220110-1121:
+      apictest:
+        8.x-4.0.61:
+        - Update behat package tgz
+  8.x-20220110-1239:
     commits:
     - crop module with php 8.1
     modules:
+      ibm_apim:
+        8.x-4.0.216:
+        - pointless test now with typing
+  8.x-20220110-1122:
+    commits: null
+    modules:
       auth_apic:
-        8.x-3.4.2: null
-        8.x-3.4.1:
+        8.x-4.0.46: null
+        8.x-4.0.45:
         - string translations - auth_apic
         - fix up unit tests 2 - auth_apic
         - fix up unit tests - auth_apic
         - deprecated functions - auth_apic
       apic_app:
-        8.x-3.4.1:
+        8.x-4.0.103:
         - deprecated functions - application
-  8.x-20220108-1342:
+  8.x-20220108-1355:
     commits: null
     modules:
+      socialblock:
+        8.x-4.0.10: null
       product:
-        8.x-3.4.2:
+        8.x-4.0.97:
         - deprecated functions - product
+        8.x-4.0.96: null
+      ghmarkdown:
+        8.x-4.0.8: null
+      auth_apic:
+        8.x-4.0.44: null
       mail_subscribers:
-        8.x-3.4.1:
+        8.x-4.0.17:
         - deprecated functions - mail_subscribers
+        8.x-4.0.16: null
       themegenerator:
-        8.x-3.4.1:
+        8.x-4.0.13:
         - deprecated functions
+      featuredcontent:
+        8.x-4.0.11: null
+      apic_app:
+        8.x-4.0.102: null
       consumerorg:
-        8.x-3.4.2:
+        8.x-4.0.73:
         - deprecated functions - consumerorg
+        8.x-4.0.72: null
       apictest:
-        8.x-3.4.1:
+        8.x-4.0.60:
         - deprecated functions - apictest
       connect_theme:
-        8.x-3.4.1:
+        8.x-4.0.43:
         - deprecated functions
   8.x-20220107-1121:
     commits: null
     modules:
       product:
-        8.x-3.4.1:
+        8.x-4.0.95:
         - refactor taxonomy services
       apic_api:
-        8.x-3.4.5:
+        8.x-4.0.64:
         - refactor taxonomy services
-        8.x-3.4.4:
+        8.x-4.0.63:
         - remove deprecated function calls
       ibm_apim:
-        8.x-3.4.7:
+        8.x-4.0.215:
         - refactor taxonomy services pt 2
-        8.x-3.4.6:
+        8.x-4.0.214:
         - refactor taxonomy services
-        8.x-3.4.5:
-        - remove php8 typing for return arg
+        8.x-4.0.213:
         - fix up NLS issues in drush commands
+        8.x-4.0.212:
         - fix up unit tests
         - remove deprecated function calls
-        8.x-3.4.4:
+        8.x-4.0.211:
         - tidy up some translation issues
-  8.x-20220106-1642:
+  8.x-20220107-1029:
     commits:
-    - fix translation adding (#573) (#574)
+    - fix translation adding (#573)
     modules:
       apic_api:
-        8.x-3.4.3:
+        8.x-4.0.62: null
+      consumerorg:
+        8.x-4.0.71: null
+  8.x-20220107-0926:
+    commits: null
+    modules:
+      apic_api:
+        8.x-4.0.61:
         - fix translation warning
-  8.x-20211217-1052:
+      ibm_apim:
+        8.x-4.0.210: null
+        8.x-4.0.209:
+        - include invitation email address in eventlogs
+      consumerorg:
+        8.x-4.0.70:
+        - include invitation email address in eventlogs
+  8.x-20220106-1747:
+    commits: null
+    modules:
+      apictest:
+        8.x-4.0.59:
+        - Fix php-fpm log file ownership
+  8.x-20211216-1721:
     commits:
-    - don't load translations on install (#569) (#570)
+    - make php-fpm log file writeable, even though we output to stderr
+    - No scl for php-fpm
+    - New php locations
+    - don't load translations on install (#569)
+    - update patch with latest commment to ensure applies cleanly
+    - revert
+    - try disabling import
+    - Revert "try new patch to disable the config translations changes"
+    - Revert "Revert "experiment if disabling use of the internet servers helps site creation speed""
+    - Revert "experiment if disabling use of the internet servers helps site creation speed"
+    - try new patch to disable the config translations changes
+    - experiment if disabling use of the internet servers helps site creation speed
     - Added default value for example_array_items explorer option (#565)
     - update patch
     - composer update
-    - Remove from bin as well (#564)
-    - composer update (#558) (#559)
-    - Tc2dev/20211111 (#555) (#556)
+    - Remove from bin as well
+    - composer update (#558)
+    - Tc2dev/20211111 (#555)
     modules:
       apic_api:
-        8.x-3.4.2:
+        8.x-4.0.60:
         - Added example_array_items explorer option
       ibm_apim:
-        8.x-3.4.3:
-        - include invitation email address in eventlogs
-        8.x-3.4.2:
-        - Added setting for example_array_items explorer option (#781) (#784)
-      consumerorg:
-        8.x-3.4.1:
-        - include invitation email address in eventlogs
-  8.x-20211125-1502:
-    commits:
-    - Update version for 10.0.5
+        8.x-4.0.208:
+        - Added setting for example_array_items explorer option (#781)
+      apictest:
+        8.x-4.0.58:
+        - New php file locations
+  8.x-20211213-2321:
+    commits: null
     modules:
-      socialblock:
-        8.x-3.4.0:
-        - update version 8.x-3.3.5 -> 8.x-3.4.0
-      product:
-        8.x-3.4.0:
-        - update version 8.x-3.3.11 -> 8.x-3.4.0
-      ghmarkdown:
-        8.x-3.4.0:
-        - update version 8.x-3.3.6 -> 8.x-3.4.0
-      auth_apic:
-        8.x-3.4.0:
-        - update version 8.x-3.3.8 -> 8.x-3.4.0
-      mail_subscribers:
-        8.x-3.4.0:
-        - update version 8.x-3.3.5 -> 8.x-3.4.0
-      themegenerator:
-        8.x-3.4.0:
-        - update version 8.x-3.3.5 -> 8.x-3.4.0
       featuredcontent:
-        8.x-3.4.1:
+        8.x-4.0.10:
         - need to call correct hooks for the placeholder icons
       apic_api:
-        8.x-3.4.1:
+        8.x-4.0.59:
         - need to call correct hooks for the placeholder icons
-      apic_app:
-        8.x-3.4.0:
-        - update version 8.x-3.3.8 -> 8.x-3.4.0
       ibm_apim:
-        8.x-3.4.1:
+        8.x-4.0.207:
         - need to call correct hooks for the placeholder icons
-      consumerorg:
-        8.x-3.4.0:
-        - update version 8.x-3.3.6 -> 8.x-3.4.0
+  8.x-20211209-1121:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.206:
+        - Strip trailing slash from analytics client URL (#780)
+  8.x-20211125-1722:
+    commits:
+    - Don't yum install stuff in the site template
+    - composer update for drupal core 9.2.10
+    modules:
       apictest:
-        8.x-3.4.0:
-        - update version 8.x-3.3.8 -> 8.x-3.4.0
-      instana_eum:
-        8.x-3.4.0:
-        - update version 8.x-3.3.3 -> 8.x-3.4.0
-      connect_theme:
-        8.x-3.4.0:
-        - update version 8.x-3.3.8 -> 8.x-3.4.0
-  8.x-20211123-0935:
+        8.x-4.0.57:
+        - Don't yum install stuff in the site template
+  8.x-20211125-1502:
+    commits: null
+    modules:
+      apic_api:
+        8.x-4.0.58:
+        - need a node id before this update will work
+  8.x-20211122-2321:
     commits:
     - unique admin tab aria-labels
     modules:
+      product:
+        8.x-4.0.94:
+        - ensure node id exists before calling update refs
       ibm_apim:
-        8.x-3.3.17:
-        - Billingfix (#779)
+        8.x-4.0.205:
+        - clear caches when setup provider
+        8.x-4.0.204:
+        - allow normal user with admin privs too
+        - only allow access if billing provider is configured
       apictest:
-        8.x-3.3.7:
+        8.x-4.0.56:
         - make sure billing provider is set
   8.x-20211118-1722:
     commits:
     - accessibility fix
     modules:
       ibm_apim:
-        8.x-3.3.16:
+        8.x-4.0.203:
         - remove visual hidden check for checkboxes (#778)
+  8.x-20211118-1121:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.202:
+        - Add clipboard js to subscription wizard (#775)
+        8.x-4.0.201:
+        - Accessibility (#772)
   8.x-20211117-1313:
     commits:
-    - SA-CORE-2021-011 (#550)
+    - SA-CORE-2021-011
     - label after checkbox or radio button (#549)
     modules:
-      ibm_apim:
-        8.x-3.3.15:
-        - Add clipboard js to subscription wizard (#776)
-        8.x-3.3.14:
-        - Accessibility (#772) (#773)
       connect_theme:
-        8.x-3.3.7:
-        - minor fix (#222) (#223)
-  8.x-20211115-1121:
+        8.x-4.0.42:
+        - minor fix (#222)
+  8.x-20211112-1723:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.3.13:
+        8.x-4.0.200:
         - need better type checking
-  8.x-20211112-1126:
+  8.x-20211112-1122:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.3.12:
-        - More access (#769) (#770)
+        8.x-4.0.199:
+        - More access (#769)
       connect_theme:
-        8.x-3.3.6:
-        - More access (#219) (#220)
+        8.x-4.0.41:
+        - More access (#219)
   8.x-20211111-2321:
     commits: null
     modules:
       product:
-        8.x-3.3.10:
+        8.x-4.0.93:
         - use correct named upgrade functions
       apic_api:
-        8.x-3.3.7:
+        8.x-4.0.57:
         - use correct named upgrade functions
       apic_app:
-        8.x-3.3.7:
+        8.x-4.0.101:
         - use correct named upgrade functions
-  8.x-20211110-1708:
+  8.x-20211110-1722:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.3.11:
+        8.x-4.0.198:
         - check modules for empty description (#768)
-  8.x-20211110-1602:
+  8.x-20211110-1009:
     commits: null
     modules:
       product:
-        8.x-3.3.9:
+        8.x-4.0.92:
         - extra product tests for extended name regex
       apic_api:
-        8.x-3.3.6:
+        8.x-4.0.56:
         - extra api tests for extended name regex
   8.x-20211108-1121:
     commits:
     - composer update
-    - Tc2dev/20211028 (#546) (#547)
+    - Tc2dev/20211028 (#546)
     modules:
       apictest:
-        8.x-3.3.6:
+        8.x-4.0.55:
         - add test docs for extended name regex
-  8.x-20211104-1622:
+  8.x-20211104-1623:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.3.10:
+        8.x-4.0.197:
         - set table to be presentation for accessibility
-        8.x-3.3.9:
+        8.x-4.0.196:
         - be more consistent with message
-  8.x-20211103-1022:
+  8.x-20211103-1021:
     commits:
     - composer update
     modules:
       connect_theme:
-        8.x-3.3.5:
+        8.x-4.0.40:
         - set multi-select table description id
   8.x-20211102-0859:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.3.8:
+        8.x-4.0.195:
         - ensure a valid product ID is passed in
-  8.x-20211028-2222:
+  8.x-20211101-1021:
     commits: null
     modules:
       consumerorg:
-        8.x-3.3.5:
+        8.x-4.0.69:
         - custom fields not displaying
-  8.x-20211028-1621:
-    commits: null
-    modules:
-      ibm_apim:
-        8.x-3.3.7: null
-  8.x-20211027-2221:
-    commits: null
-    modules:
-      apic_app:
-        8.x-3.3.6:
-        - Fixed access checks and css (#283)
-  8.x-20211025-1623:
+  8.x-20211029-1022:
     commits: null
     modules:
       auth_apic:
-        8.x-3.3.7:
-        - added destination check before redirect on login (#660)
+        8.x-4.0.43:
+        - remove references to 'admin'
+  8.x-20211028-1622:
+    commits:
+    - composer update
+    modules:
       apic_api:
-        8.x-3.3.5:
+        8.x-4.0.55: null
+  8.x-20211027-1623:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.100:
+        - Fixed access checks and css
+  8.x-20211025-1000:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-4.0.42:
+        - added destination check before redirect on login
+      apic_api:
+        8.x-4.0.54:
         - Fixed explorer redirects
       apic_app:
-        8.x-3.3.5:
-        - Added redirects for application create (#280)
-  8.x-20211020-2222:
+        8.x-4.0.99:
+        - Added redirects for application create
+  8.x-20211020-2221:
     commits:
     - fix composer update (was missing drush10)
     - composer update
     modules:
       product:
-        8.x-3.3.8:
-        - Fixed subscription migration webhook (#231) (#232)
-  8.x-20211019-2221:
-    commits: null
+        8.x-4.0.91:
+        - Fixed subscription migration webhook (#231)
+  8.x-20211018-0421:
+    commits:
+    - flash file wasnt deleted properly
     modules:
       instana_eum:
-        8.x-3.3.2:
+        8.x-4.0.2:
         - add placeholder unit test
         - fix build script
         - update URL
         - add copyright
-  8.x-20211019-1537:
+  8.x-20211015-2222:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.3.6:
-        - Added activation_update and actvation_del webhooks
-  8.x-20211019-1340:
+        8.x-4.0.194: null
+  8.x-20211015-1622:
     commits: null
     modules:
       auth_apic:
-        8.x-3.3.6:
-        - Fixed deleteLocalAccount and tests (#651) (#655)
-  8.x-20211015-1138:
-    commits:
-    - flash file wasnt deleted properly
+        8.x-4.0.41:
+        - Fixed ibm_apim tests (#656)
+        - Fixed deleteLocalAccount and tests (#651)
+  8.x-20211015-1044:
+    commits: null
     modules:
       apictest:
-        8.x-3.3.5:
-        - Added clear users step (#220) (#221)
-  8.x-20211015-1022:
-    commits:
-    - Install drush for autoload but then replace with custom files (#542)
+        8.x-4.0.54:
+        - Added clear users step (#220)
+  8.x-20211014-1825:
+    commits: null
     modules:
       auth_apic:
-        8.x-3.3.5:
-        - Fixed oidc first time form (#653)
-  8.x-20211013-2222:
+        8.x-4.0.40:
+        - Fixed oidc first time form (#652)
+  8.x-20211014-1621:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.3.5:
+        8.x-4.0.193:
         - Should be deleted not set to empty
-  8.x-20211013-1549:
+  8.x-20211013-1631:
     commits: null
     modules:
-      socialblock:
-        8.x-3.3.4:
-        - git -> gitci
-      product:
-        8.x-3.3.7:
-        - git -> gitci
-      ghmarkdown:
-        8.x-3.3.5:
-        - git -> gitci
       auth_apic:
-        8.x-3.3.4:
-        - git -> gitci
-      mail_subscribers:
-        8.x-3.3.4:
-        - git -> gitci
-      themegenerator:
-        8.x-3.3.4:
-        - git -> gitci
-      featuredcontent:
-        8.x-3.3.4:
-        - git -> gitci
-      apic_api:
-        8.x-3.3.4:
-        - git -> gitci
-      apic_app:
-        8.x-3.3.4:
-        - git -> gitci
-      ibm_apim:
-        8.x-3.3.4:
-        - git -> gitci
-      consumerorg:
-        8.x-3.3.4:
-        - git -> gitci
-      connect_theme:
-        8.x-3.3.4:
-        - git -> gitci
+        8.x-4.0.39: null
   8.x-20211012-1021:
     commits:
     - git -> gitci
+    - Install drush for autoload but then replace with custom files (#542)
     modules:
-      apictest:
-        8.x-3.3.4:
+      socialblock:
+        8.x-4.0.9:
         - git -> gitci
-  8.x-20211012-0824:
-    commits: null
+      product:
+        8.x-4.0.90:
+        - git -> gitci
+      ghmarkdown:
+        8.x-4.0.7:
+        - git -> gitci
+      auth_apic:
+        8.x-4.0.38:
+        - git -> gitci
+      mail_subscribers:
+        8.x-4.0.15:
+        - git -> gitci
+      themegenerator:
+        8.x-4.0.12:
+        - git -> gitci
+      featuredcontent:
+        8.x-4.0.9:
+        - git -> gitci
+      apic_api:
+        8.x-4.0.53:
+        - git -> gitci
+      apic_app:
+        8.x-4.0.98:
+        - git -> gitci
+      ibm_apim:
+        8.x-4.0.192:
+        - git -> gitci
+      consumerorg:
+        8.x-4.0.68:
+        - git -> gitci
+      apictest:
+        8.x-4.0.53:
+        - git -> gitci
+      connect_theme:
+        8.x-4.0.39:
+        - git -> gitci
+  8.x-20211012-0759:
+    commits:
+    - update slack emoji
     modules:
       product:
-        8.x-3.3.6:
-        - Subscription wizard shows choose plan step (#229)
-        8.x-3.3.5: null
-  8.x-20211011-2227:
+        8.x-4.0.89:
+        - fix bump version
+        - refactor Jenkinsfile for the new portal.groovy
+      ibm_apim:
+        8.x-4.0.191: null
+  8.x-20211011-1430:
     commits:
     - update patch
     - composer update
     modules:
-      product:
-        8.x-3.3.4:
-        - refactor Jenkinsfile for the new portal.groovy
-      ghmarkdown:
-        8.x-3.3.4: null
       ibm_apim:
-        8.x-3.3.3:
+        8.x-4.0.190:
         - fix version bump
+        - set build failure correctly
         - refactor Jenkinsfile for the new portal.groovy
-  8.x-20211011-1538:
-    commits: null
-    modules:
-      socialblock:
-        8.x-3.3.3:
-        - refactor Jenkinsfile for the new portal.groovy
-      auth_apic:
-        8.x-3.3.3:
-        - refactor Jenkinsfile for the new portal.groovy
-      mail_subscribers:
-        8.x-3.3.3:
-        - refactor Jenkinsfile for the new portal.groovy
-      themegenerator:
-        8.x-3.3.3:
-        - refactor Jenkinsfile for the new portal.groovy
-      featuredcontent:
-        8.x-3.3.3:
-        - refactor Jenkinsfile for the new portal.groovy
-      connect_theme:
-        8.x-3.3.3:
-        - refactor Jenkinsfile for the new portal.groovy
-  8.x-20211007-1104:
+  8.x-20211011-1021:
     commits:
-    - refactor Jenkinsfile for the new portal.groovy
     - Add remove_internal_files call for instana_eum
     - Add instana module to build file
+    modules:
+      socialblock:
+        8.x-4.0.8:
+        - Jenkinsfile refactor fixes
+        - refactor Jenkinsfile for the new portal.groovy
+      ghmarkdown:
+        8.x-4.0.6:
+        - Jenkinsfile refactor fixes
+        - refactor Jenkinsfile for the new portal.groovy
+      auth_apic:
+        8.x-4.0.37:
+        - Jenkinsfile refactor fixes
+        - refactor Jenkinsfile for the new portal.groovy
+      mail_subscribers:
+        8.x-4.0.14:
+        - Jenkinsfile refactor fixes
+        - refactor Jenkinsfile for the new portal.groovy
+      themegenerator:
+        8.x-4.0.11:
+        - Jenkinsfile refactor fixes
+        - refactor Jenkinsfile for the new portal.groovy
+      featuredcontent:
+        8.x-4.0.8:
+        - Jenkinsfile refactor fixes
+        - refactor Jenkinsfile for the new portal.groovy
+      apic_api:
+        8.x-4.0.52:
+        - Jenkinsfile refactor fixes
+        8.x-4.0.51:
+        - refactor Jenkinsfile for the new portal.groovy
+      apic_app:
+        8.x-4.0.97:
+        - Jenkinsfile refactor fixes
+        - refactor Jenkinsfile for the new portal.groovy
+      consumerorg:
+        8.x-4.0.67:
+        - Jenkinsfile refactor fixes
+        - refactor Jenkinsfile for the new portal.groovy
+      apictest:
+        8.x-4.0.52:
+        - Jenkinsfile refactor fixes
+      instana_eum:
+        8.x-4.0.1: null
+      connect_theme:
+        8.x-4.0.38:
+        - Jenkinsfile refactor fixes
+  8.x-20211011-0929:
+    commits: null
+    modules:
+      connect_theme:
+        8.x-4.0.37:
+        - refactor Jenkinsfile for the new portal.groovy
+  8.x-20211008-1621:
+    commits:
+    - refactor Jenkinsfile for the new portal.groovy
     - need to split up the long lines for translation
     modules:
-      instana_eum:
-        8.x-3.3.1:
-        - Update Jenkinsfile
-        - Update Jenkinsfile
-        - Update instana_eum.info.yml
-        - Update instana_eum.info.yml
-  8.x-20211007-0827:
+      apictest:
+        8.x-4.0.51:
+        - refactor Jenkinsfile for the new portal.groovy
+  8.x-20211007-1622:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.88:
+        - Subscription wizard shows choose plan step
+  8.x-20211005-2222:
     commits:
     - composer update
     modules:
       product:
-        8.x-3.3.3:
+        8.x-4.0.87:
         - controller shouldnt return null
-  8.x-20210716-1210:
+  8.x-20211004-1022:
+    commits:
+    - Update Jenkinsfile
+    - dont post on abort
+    modules:
+      connect_theme:
+        8.x-4.0.36:
+        - Fixed accessibility violations
+  8.x-20211001-1621:
+    commits: null
+    modules:
+      connect_theme:
+        8.x-4.0.35:
+        - delete invitation should be a modal form
+  8.x-20210930-1622:
+    commits:
+    - delete flash files
+    modules:
+      connect_theme:
+        8.x-4.0.34:
+        - make sure its not a string
+  8.x-20210928-1021:
+    commits:
+    - composer update
+    modules:
+      auth_apic:
+        8.x-4.0.36:
+        - Fixed invites for existing users (#648)
+        - Improved invitation tests (#646)
+  8.x-20210922-1621:
+    commits:
+    - Tc2dev/20210914 (#537)
+    - drupal contrib module update
+    modules:
+      mail_subscribers:
+        8.x-4.0.13:
+        - Link to the Mail subscriber settings form correctly
+  8.x-20210922-1021:
+    commits:
+    - fix drush langexp not reading array correctly
+    modules:
+      connect_theme:
+        8.x-4.0.33:
+        - fix font-family so style loaded in gmail
+  8.x-20210921-2221:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.189:
+        - need to feed in default theme name to avoid admins getting seven logo
+  8.x-20210921-1622:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.188:
+        - Changes for improved invitation tests
+  8.x-20210921-1355:
+    commits: null
+    modules:
+      featuredcontent:
+        8.x-4.0.7:
+        - wrong field name for d8/9
+  8.x-20210920-2221:
+    commits:
+    - make sure view password is loaded correctly
+    modules:
+      themegenerator:
+        8.x-4.0.10:
+        - add mail css for stub
+        - add mail.css for themes
+      apic_app:
+        8.x-4.0.96:
+        - make sure view password is loaded correctly
+  8.x-20210917-2221:
+    commits: null
+    modules:
+      themegenerator:
+        8.x-4.0.9:
+        - update scss for themegenerator
+      ibm_apim:
+        8.x-4.0.187:
+        - create twig variables for tsandcs and privacy
+        8.x-4.0.186:
+        - add padding a polish to mail template (#754)
+      connect_theme:
+        8.x-4.0.32:
+        - links in header & footer only
+        8.x-4.0.31:
+        - add padding and polish to mail template
+  8.x-20210917-1621:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.185:
+        - update template to be responsive & styled (#753)
+  8.x-20210917-0803:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-4.0.35:
+        - Fixed sign in on member invitations
+      connect_theme:
+        8.x-4.0.30:
+        - add styles for new mail template
+  8.x-20210915-1622:
+    commits:
+    - drupal security updates
+    modules:
+      featuredcontent:
+        8.x-4.0.6:
+        - load custom icons properly
+  8.x-20210915-1021:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.184: null
+        8.x-4.0.183:
+        - only run for enabled themes - drush10
+        - only run for enabled themes
+        8.x-4.0.182: null
+        8.x-4.0.181:
+        - drush10 command for compiling theme scss
+        - add drush command for compiling theme scss
+  8.x-20210914-1516:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-4.0.34:
+        - Fix for strict samesite
+      ibm_apim:
+        8.x-4.0.180:
+        - Reverting Lax samesite change
+  8.x-20210913-1021:
+    commits:
+    - add in emogrifier for inlining css in emails
+    - composer update
+    - make sure we're calling isNew on a user
+    - make sure we're calling isNew on a user
+    modules:
+      themegenerator:
+        8.x-4.0.8:
+        - make scss the default
+      ibm_apim:
+        8.x-4.0.179:
+        - inline css in emails
+  8.x-20210910-1622:
     commits: null
     modules:
       socialblock:
-        8.x-3.3.2: null
-      product:
-        8.x-3.3.2: null
-      ghmarkdown:
-        8.x-3.3.2: null
-      auth_apic:
-        8.x-3.3.2: null
-      mail_subscribers:
-        8.x-3.3.2: null
-      themegenerator:
-        8.x-3.3.2: null
-      featuredcontent:
-        8.x-3.3.2: null
-      apic_api:
-        8.x-3.3.2: null
-      apic_app:
-        8.x-3.3.2: null
-      ibm_apim:
-        8.x-3.3.2: null
-      consumerorg:
-        8.x-3.3.2: null
-      apictest:
-        8.x-3.3.2: null
-      connect_theme:
-        8.x-3.3.2: null
-  8.x-20210625-2221:
+        8.x-4.0.7:
+        - remove . to match existing string
+  8.x-20210907-1022:
     commits:
-    - Update build.sh
-    - Revert "Set version number to 10.0.3.1"
-    - fix conflicts (#520)
-    - Set version number to 10.0.3.1
+    - Tc2dev/20210809 (#530)
     modules:
-      socialblock:
-        8.x-3.3.1:
-        - Update socialblock.info.yml
-      product:
-        8.x-3.3.1:
-        - Update product.info.yml
-      ghmarkdown:
-        8.x-3.3.1:
-        - Update ghmarkdown.info.yml
-      auth_apic:
-        8.x-3.3.1:
-        - Update auth_apic.info.yml
-      mail_subscribers:
-        8.x-3.3.1:
-        - Update mail_subscribers.info.yml
-      themegenerator:
-        8.x-3.3.1:
-        - Update themegenerator.info.yml
-      featuredcontent:
-        8.x-3.3.1:
-        - Update featuredcontent.info.yml
-      apic_api:
-        8.x-3.3.1:
-        - Update apic_api.info.yml
-      apic_app:
-        8.x-3.3.1:
-        - Update apic_app.info.yml
       ibm_apim:
-        8.x-3.3.1:
-        - Update ibm_apim.info.yml
-      consumerorg:
-        8.x-3.3.1:
-        - Update consumerorg.info.yml
-      apictest:
-        8.x-3.3.1:
-        - Update apictest.info.yml
+        8.x-4.0.178:
+        - Always set samesite cookie attriubte to Lax
+  8.x-20210903-2221:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.177:
+        - translate routing options
+        - translate routing options
+  8.x-20210903-1022:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.95:
+        - remove the role attribute from the button
       connect_theme:
-        8.x-3.3.1:
-        - Update connect_theme.info.yml
-  8.x-20210622-2023:
+        8.x-4.0.29:
+        - fix contrast ratio
+  8.x-20210902-1021:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.86:
+        - support custom attributes in product info object too
+  8.x-20210902-0925:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.176: null
+  8.x-20210901-1622:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.85:
+        - render custom extensions on plans
+      ibm_apim:
+        8.x-4.0.175:
+        - render custom extensions on plans
+  8.x-20210901-1134:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.84:
+        - Fix subscriptions
+      apic_api:
+        8.x-4.0.50:
+        - Remove unnecessary use statement
+      apic_app:
+        8.x-4.0.94:
+        - Fix subscriptions
+      ibm_apim:
+        8.x-4.0.174:
+        - easier way to get the site logo
+  8.x-20210831-2222:
     commits:
-    - Update version for 10.0.4
+    - router_type is not being set
     modules:
-      socialblock:
-        8.x-3.2.0:
-        - update version 8.x-3.1.7 -> 8.x-3.2.0
-      product:
-        8.x-3.2.0:
-        - update version 8.x-3.1.48 -> 8.x-3.2.0
-      ghmarkdown:
-        8.x-3.2.0:
-        - update version 8.x-3.1.4 -> 8.x-3.2.0
-      auth_apic:
-        8.x-3.2.0:
-        - update version 8.x-3.1.15 -> 8.x-3.2.0
-      mail_subscribers:
-        8.x-3.2.0:
-        - update version 8.x-3.1.9 -> 8.x-3.2.0
-      themegenerator:
-        8.x-3.2.0:
-        - update version 8.x-3.1.7 -> 8.x-3.2.0
-      featuredcontent:
-        8.x-3.2.0:
-        - update version 8.x-3.1.7 -> 8.x-3.2.0
-      apic_api:
-        8.x-3.2.0:
-        - update version 8.x-3.1.22 -> 8.x-3.2.0
-      apic_app:
-        8.x-3.2.0:
-        - update version 8.x-3.1.59 -> 8.x-3.2.0
       ibm_apim:
-        8.x-3.2.0:
-        - update version 8.x-3.1.98 -> 8.x-3.2.0
+        8.x-4.0.173:
+        - ensure scheduled time is set
+  8.x-20210831-1608:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.93:
+        - need to ensure > 0 too
+      ibm_apim:
+        8.x-4.0.172:
+        - need to ensure > 0 too
+  8.x-20210826-0421:
+    commits:
+    - move devel settings to their own config object
+    - composer update
+    modules:
+      apic_api:
+        8.x-4.0.49:
+        - move devel settings to their own config object
+      apic_app:
+        8.x-4.0.92:
+        - move devel settings to their own config object
+      ibm_apim:
+        8.x-4.0.171:
+        - move devel settings to their own config object
       consumerorg:
-        8.x-3.2.0:
-        - update version 8.x-3.1.40 -> 8.x-3.2.0
+        8.x-4.0.66:
+        - move devel settings to their own config object
       apictest:
-        8.x-3.2.0:
-        - update version 8.x-3.1.16 -> 8.x-3.2.0
-      connect_theme:
-        8.x-3.2.0:
-        - update version 8.x-3.1.18 -> 8.x-3.2.0
-  8.x-20210619-1602:
+        8.x-4.0.50:
+        - move devel settings to their own config object
+  8.x-20210825-2221:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.170:
+        - stop mail subscribers from looping round twice
+  8.x-20210825-1715:
     commits: null
     modules:
       consumerorg:
-        8.x-3.1.39:
+        8.x-4.0.65:
+        - Use the member's id as array-key
+  8.x-20210824-2221:
+    commits:
+    - update admin_toolbar
+    modules:
+      mail_subscribers:
+        8.x-4.0.12:
+        - stop mail subscribers from looping round twice
+      consumerorg:
+        8.x-4.0.64:
+        - Use the member's email as array-key
+  8.x-20210824-1130:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.83:
+        - needs to return as yaml so needs parsing
+  8.x-20210820-1622:
+    commits:
+    - Added patches for legal
+    modules:
+      product:
+        8.x-4.0.82:
+        - add support for getting artifact document back via drush
+      apic_api:
+        8.x-4.0.48:
+        - add support for getting artifact document back via drush
+      ibm_apim:
+        8.x-4.0.169:
+        - add support for getting artifact document back via drush
+  8.x-20210819-1623:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-4.0.33:
+        - prune oidc states (#635)
+      ibm_apim:
+        8.x-4.0.168:
+        - handle null arrays for site_content_refresh
+      consumerorg:
+        8.x-4.0.63:
+        - member timestamps are int not string
+        - allow default payment method to be null
+  8.x-20210818-1706:
+    commits: null
+    modules:
+      themegenerator:
+        8.x-4.0.7: null
+  8.x-20210817-2221:
+    commits:
+    - disable bootstrap tooltips
+    - ensure selects and cshs fields have labels
+    - ensure selects and cshs fields have labels
+    modules:
+      connect_theme:
+        8.x-4.0.28:
+        - ensure selects and cshs fields have labels
+  8.x-20210816-1642:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-4.0.32:
+        - Added pending_approval state (#633)
+      ibm_apim:
+        8.x-4.0.167:
+        - Fixed tests
+        - Clear expired pending approval users
+  8.x-20210816-1340:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.91: null
+        8.x-4.0.90:
+        - get rid of coding error in intellij
+        - another fix needed for strtotime
+  8.x-20210816-1106:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.89:
+        - typo
+        - defend against trying to put value greater than max int
+        - defend against trying to put value greater than max int
+  8.x-20210816-0946:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.166:
+        - .module_blocklist.json -> module_blocklist.json (#743)
+  8.x-20210813-1129:
+    commits: null
+    modules:
+      themegenerator:
+        8.x-4.0.6:
+        - support mail overrides in subthemes
+      ibm_apim:
+        8.x-4.0.165:
+        - support mail overrides in subthemes
+      connect_theme:
+        8.x-4.0.27:
+        - use scss for mail.css too
+  8.x-20210813-1022:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.88:
+        - defend against trying to put value greater than max int
+  8.x-20210812-1714:
+    commits:
+    - drupal core security update
+    modules:
+      ibm_apim:
+        8.x-4.0.164:
+        - dont allow disabling search_api
+  8.x-20210812-1622:
+    commits:
+    - remove module_blocklist variable (#526)
+    modules:
+      apictest:
+        8.x-4.0.49:
+        - remove module_blocklist variable (#217)
+  8.x-20210811-2221:
+    commits: null
+    modules:
+      mail_subscribers:
+        8.x-4.0.11:
+        - let our mail module do the templating
+      consumerorg:
+        8.x-4.0.62: null
+        8.x-4.0.61: null
+        8.x-4.0.60: null
+        8.x-4.0.59:
+        - Delete codeStyleConfig.xml
+        - delete Project.xml
+        - Delete .idea file
+        - only show add billing button if none
+        8.x-4.0.58: null
+        8.x-4.0.57:
+        - wrong url
+        - wrong url
+      connect_theme:
+        8.x-4.0.26:
+        - missing close tag
+  8.x-20210811-1621:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-4.0.56:
+        - fix payment method type error
+        8.x-4.0.55:
+        - fix payment method type error
+  8.x-20210811-1003:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.162:
+        - use proper themeing for emails
+        - Support html email styling
+      connect_theme:
+        8.x-4.0.25:
+        - add placeholder mail.css
+  8.x-20210809-1622:
+    commits:
+    - blocklist swiftmailer and simple_html_mail
+    modules:
+      apic_api:
+        8.x-4.0.47: null
+  8.x-20210809-1021:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-4.0.31:
+        - Rename OidcRegisterForm to OidcFirstTimeLoginForm
+      mail_subscribers:
+        8.x-4.0.10:
+        - Fix mail subscribers token replacement
+  8.x-20210808-1519:
+    commits:
+    - oops accidentally reverted the module update
+    - drupal core update
+    modules:
+      auth_apic:
+        8.x-4.0.30:
+        - test doesnt work
+  8.x-20210806-1622:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-4.0.29:
+        - Change invites from sessionBasedTempStore to privateTempStore (#625)
+        8.x-4.0.28: null
+      ibm_apim:
+        8.x-4.0.161:
+        - Change invites from sessionBasedTenpStore to privateTempStore
+  8.x-20210806-1021:
+    commits: null
+    modules:
+      mail_subscribers:
+        8.x-4.0.9:
+        - Csrollbackfix (#51)
+  8.x-20210803-1022:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.81:
+        - Fix multiple subscriptions issue
+  8.x-20210726-0933:
+    commits:
+    - upgrade cshs and view_password
+    - bug in page load progress module
+    - composer update
+    modules:
+      product:
+        8.x-4.0.80:
+        - Fix caching problems
+  8.x-20210723-1109:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.160:
+        - update test
+        - update test
+        - missing
+  8.x-20210723-0918:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.79:
+        - use twig markdown filter
+  8.x-20210721-1537:
+    commits:
+    - drupal sa-core-2021-004
+    modules:
+      ghmarkdown:
+        8.x-4.0.5:
+        - add twig markdown filter
+  8.x-20210719-1623:
+    commits:
+    - add captcha to password reset page
+    - protect against captcha replay
+    - composer update
+    modules:
+      auth_apic:
+        8.x-4.0.27:
+        - update tests for captcha possibly being present
+        8.x-4.0.26:
+        - update tests for captcha possibly being present
+      ibm_apim:
+        8.x-4.0.159:
+        - Remove unnecessary use statement
+  8.x-20210715-1622:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-4.0.25:
+        - Switch to catching Throwable
+      apic_api:
+        8.x-4.0.46:
+        - Switch to catching Throwable
+      apic_app:
+        8.x-4.0.87:
+        - Switch to catching Throwable
+      ibm_apim:
+        8.x-4.0.158:
+        - Switch to catching Throwable
+      consumerorg:
+        8.x-4.0.54:
+        - Switch to catching Throwable
+  8.x-20210713-0821:
+    commits:
+    - Tc2dev/20210608 (#519)
+    modules:
+      product:
+        8.x-4.0.78:
+        - Add support for new webhooks
+      ibm_apim:
+        8.x-4.0.157:
+        - New webhook events
+  8.x-20210713-0742:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.77:
+        - need to start from empty state
+      apic_api:
+        8.x-4.0.45:
+        - need to start from empty state
+  8.x-20210712-1333:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.76:
+        - fix up product ACL tests
+        8.x-4.0.75:
+        - fix up product ACL tests
+      apic_api:
+        8.x-4.0.44: null
+      ibm_apim:
+        8.x-4.0.156:
+        - corg page  responsiveness (#727)
+      apictest:
+        8.x-4.0.48:
+        - add function to delete all apis and products
+  8.x-20210708-1134:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.74:
+        - Added visibility tests (#217)
+      apic_api:
+        8.x-4.0.43:
+        - Added api ACL tests
+      apictest:
+        8.x-4.0.47:
+        - improved product publishing (#215)
+  8.x-20210707-1621:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.155: null
+        8.x-4.0.154:
+        - Report webhook processing errors
+  8.x-20210707-1021:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.153:
+        - check the provided application ID is actually in this corg
+  8.x-20210707-0942:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.73:
+        - remove drush 10 entries in composer.json files
+      apic_api:
+        8.x-4.0.42:
+        - remove drush 10 entries in composer.json files
+      apic_app:
+        8.x-4.0.86:
+        - remove drush 10 entries in composer.json files
+      ibm_apim:
+        8.x-4.0.152:
+        - remove drush 10 entries in composer.json files
+      consumerorg:
+        8.x-4.0.53:
+        - remove drush 10 entries in composer.json files
+  8.x-20210706-2222:
+    commits:
+    - Revert "need to include drush"
+    - Revert "update composer/lock for drush 10"
+    - Revert "try removing drush symlink"
+    - try removing drush symlink
+    - update composer/lock for drush 10
+    - need to include drush
+    modules:
+      consumerorg:
+        8.x-4.0.52:
+        - use id to select current one not title
+  8.x-20210706-1823:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.151: null
+  8.x-20210706-1621:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.150:
+        - dont call to string on string
+        8.x-4.0.149:
+        - new clean exit
+  8.x-20210706-1413:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.148: null
+        8.x-4.0.147:
+        - error handling
+        - line shouldnt be here
+  8.x-20210705-1451:
+    commits:
+    - set router type for new installs
+    modules:
+      product:
+        8.x-4.0.72: null
+        8.x-4.0.71:
+        - tidy up a bit
+        8.x-4.0.70:
+        - remove dt and fix composer
+        - fix drush 10 compat
+        8.x-4.0.69:
+        - add this
+        - add drush 10 commands
+      apic_api:
+        8.x-4.0.41: null
+        8.x-4.0.40:
+        - fix composer
+        - tidy up a bit
+        8.x-4.0.39: null
+        8.x-4.0.38:
+        - Added router type config option for explorer
+        - fix function calls
+      apic_app:
+        8.x-4.0.85: null
+        8.x-4.0.84:
+        - add to composer json
+        - tidy up a bit
+        8.x-4.0.83:
+        - fix function calls
+      ibm_apim:
+        8.x-4.0.146: null
+        8.x-4.0.145:
+        - add composer.json files
+        - fix composer
+        8.x-4.0.144: null
+        8.x-4.0.143:
+        - code tidy up
+        - Added option to change explorer's router type
+        - code tidy up
+        - use root include
+        - fix up command file
+      consumerorg:
+        8.x-4.0.51: null
+        8.x-4.0.50:
+        - tidy up a bit
+        - remove dt and fix composer
+        8.x-4.0.49:
+        - fix function calls
+  8.x-20210705-1021:
+    commits:
+    - make upgrade code more resilient
+    modules:
+      ibm_apim:
+        8.x-4.0.142:
+        - better checks
+        - remove debug
+        - fix drush 10 compat
+  8.x-20210702-0959:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.82:
+        - should be type=button to stop refresh
+  8.x-20210630-1437:
+    commits: null
+    modules:
+      apic_api:
+        8.x-4.0.37:
+        - add uses
+        - fix drush 10 compat
+      apic_app:
+        8.x-4.0.81:
+        - fix drush 10 compat
+      ibm_apim:
+        8.x-4.0.141:
+        - add uses
+        - fix apic_type_count
+        - fix drush 10 compat
+  8.x-20210629-1621:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.68:
+        - show api state
+      ibm_apim:
+        8.x-4.0.140:
+        - conver to drush 10 commands
+      consumerorg:
+        8.x-4.0.48:
+        - convert to drush 10 commands
+  8.x-20210628-1622:
+    commits: null
+    modules:
+      apic_api:
+        8.x-4.0.36:
+        - add drush10 version of commands
+        8.x-4.0.35:
+        - need to use definitive sort to avoid dupes with paging
+      apic_app:
+        8.x-4.0.80:
+        - tidy up
+        - add drush10 version of commands
+      ibm_apim:
+        8.x-4.0.139:
+        - handle multiple rate limits
+  8.x-20210627-0845:
+    commits:
+    - composer update
+    modules:
+      auth_apic:
+        8.x-4.0.24:
+        - assertRegExp is deprecated use assertMatchesRegularExpression instead
+        - see if this fixes the NPE in the test
+      ibm_apim:
+        8.x-4.0.138:
+        - not correctly checking admin perms
+  8.x-20210625-1622:
+    commits: null
+    modules:
+      apic_api:
+        8.x-4.0.34:
+        - more resilient
+  8.x-20210625-1021:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.67:
+        - need to do ACL checks on /product/x/api/Y
+      ibm_apim:
+        8.x-4.0.137:
+        - hide the IP settings if ip banning is off
+  8.x-20210624-1911:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-4.0.47:
+        - needs to be org_url not consumer_org_url
+  8.x-20210624-1735:
+    commits: null
+    modules:
+      apic_api:
+        8.x-4.0.33: null
+        8.x-4.0.32:
+        - tags are urls not words
+        - fix api access check
+  8.x-20210624-1553:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.66:
+        - fix custom group product acl checks
+      ibm_apim:
+        8.x-4.0.136:
+        - hide the IP settings if ip banning is off
+  8.x-20210624-1437:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.65:
+        - fix custom group product acl checks
+  8.x-20210624-1149:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.64:
+        - fix custom product acl checks
+  8.x-20210623-1622:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.63:
+        - avoid unset reference
+        8.x-4.0.62:
+        - need to cast to int to fix ACL check
+        - need to check ACL explicitly
+      apic_api:
+        8.x-4.0.31:
+        - move check
+        - ensure attribute exists before checking it
+        - need to check ACL explicitly
+  8.x-20210623-1022:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.135:
+        - group notifications by day
+  8.x-20210622-2222:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.134:
+        - protect against running double strtotime
+      consumerorg:
+        8.x-4.0.46:
+        - protect against running double strtotime
+  8.x-20210619-1603:
+    commits:
+    - add legal module
+    - patch for captchas when logged in
+    modules:
+      consumerorg:
+        8.x-4.0.45:
         - we were double strtotime the timestamps === bang
-  8.x-20210619-0912:
+  8.x-20210617-0849:
     commits: null
     modules:
       apic_app:
-        8.x-3.1.58:
+        8.x-4.0.79:
         - make modals look how they should!
+        8.x-4.0.78:
+        - clear caches when subscribe and unsubscribe
       ibm_apim:
-        8.x-3.1.97:
+        8.x-4.0.133:
         - make modals look how they should - pt2
+        8.x-4.0.132:
         - make modals look how they should!
-  8.x-20210616-2019:
+  8.x-20210617-0604:
     commits:
     - update patch or cant install modules
     - Revert "patch no longer needed"
     modules:
-      apic_app:
-        8.x-3.1.57:
-        - clear caches when subscribe and unsubscribe
-  8.x-20210616-1815:
+      ibm_apim:
+        8.x-4.0.131: null
+  8.x-20210616-1759:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.1.96:
+        8.x-4.0.130:
         - get current consumer org not correct
         - get current consumer org not correct
         - get current consumer org not correct
       consumerorg:
-        8.x-3.1.38:
+        8.x-4.0.44:
         - need to check not empty
-  8.x-20210616-1556:
+  8.x-20210615-1732:
     commits:
     - patch no longer needed
     - update patch
     - composer update
     modules:
-      consumerorg:
-        8.x-3.1.37:
-        - get current consumer org not correct
-        - get current consumer org not correct
-        8.x-3.1.36:
-        - fix get default payment method
-        - fix billing id
-  8.x-20210615-1732:
-    commits: null
-    modules:
       ibm_apim:
-        8.x-3.1.95:
+        8.x-4.0.129:
         - include our other entity types too
-  8.x-20210614-0906:
+      consumerorg:
+        8.x-4.0.43:
+        - get current consumer org not correct
+        - get current consumer org not correct
+        8.x-4.0.42:
+        - fix get default payment method
+        8.x-4.0.41:
+        - fix billing id
+  8.x-20210614-0905:
     commits:
-    - fixed malformed translations (#510) (#511)
+    - fixed malformed translations (#510)
+    - Revert "use eu.artifactory"
+    - use eu.artifactory
+    - composer update
     modules:
       apic_api:
-        8.x-3.1.21:
-        - set embedded mode to cache per url (#120)
+        8.x-4.0.30:
+        - set embedded mode to cache per url
   8.x-20210614-0800:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.1.94:
+        8.x-4.0.128:
         - add utility function to delete users
-  8.x-20210612-0916:
-    commits: null
+  8.x-20210612-0906:
+    commits:
+    - Revert "try switching back to na.artifactory"
+    - try switching back to na.artifactory
     modules:
       product:
-        8.x-3.1.47:
+        8.x-4.0.61:
         - empty apis array means all apis
-  8.x-20210611-1332:
+  8.x-20210611-1231:
     commits:
     - see if using eu artifactory helps
     modules:
       consumerorg:
-        8.x-3.1.35:
+        8.x-4.0.40:
         - has to be entity id not table name
   8.x-20210611-1100:
     commits: null
     modules:
       apic_app:
-        8.x-3.1.56:
-        - More event log updates
-        8.x-3.1.55:
+        8.x-4.0.77:
+        - More event log updates (#262)
+        8.x-4.0.76:
         - avoid stacktrace in test run
       ibm_apim:
-        8.x-3.1.93:
-        - More event log fixes v10.0 (#718)
+        8.x-4.0.127:
+        - Update createIfNotExist function (#717)
   8.x-20210611-0942:
     commits: null
     modules:
       consumerorg:
-        8.x-3.1.34:
+        8.x-4.0.39:
         - ensure timestamps are set for members
   8.x-20210610-1623:
     commits: null
     modules:
       apic_app:
-        8.x-3.1.54:
+        8.x-4.0.75: null
+        8.x-4.0.74:
         - need to clear cache
         - need to clear cache when update app
       consumerorg:
-        8.x-3.1.33:
+        8.x-4.0.38:
         - fix upgrade error
   8.x-20210610-1254:
     commits:
-    - fix branch names
     - fix slack messages
     - fix slack posting
-    - try not to post to slack too early
     modules:
       product:
-        8.x-3.1.46:
+        8.x-4.0.60:
         - fix invalid foreach arg
       ibm_apim:
-        8.x-3.1.92:
+        8.x-4.0.126:
         - fix invalid foreach args
-  8.x-20210610-1102:
+  8.x-20210610-1104:
     commits: null
     modules:
       apic_api:
-        8.x-3.1.20:
+        8.x-4.0.29:
         - feed through app name and title
-  8.x-20210610-1023:
-    commits: null
+  8.x-20210610-1022:
+    commits:
+    - set stageName
     modules:
       product:
-        8.x-3.1.45:
+        8.x-4.0.59:
         - dont allow viewers to click on Get Access
       apic_app:
-        8.x-3.1.53:
+        8.x-4.0.73:
         - dont show links to viewers that cant use them
   8.x-20210609-2222:
     commits:
     - trivial composer lib updates
     modules:
       ibm_apim:
-        8.x-3.1.91:
+        8.x-4.0.125:
         - fix subscription cleanup
-        8.x-3.1.90:
+        8.x-4.0.124:
         - missing strtotime
       consumerorg:
-        8.x-3.1.32:
+        8.x-4.0.37:
         - missing strtotime
-        8.x-3.1.31:
+        8.x-4.0.36:
         - set timestamps for members
-        - slight tweak to eventlog entities for consumer orgs
   8.x-20210609-1622:
     commits: null
     modules:
-      apic_app:
-        8.x-3.1.52:
-        - Ensure event logs are created or updated correctly (#261)
       ibm_apim:
-        8.x-3.1.89: null
-        8.x-3.1.88:
-        - Update index to include timestamp (#716)
-        8.x-3.1.87:
-        - Check for event log using timestamp as well (#714)
-  8.x-20210609-1021:
+        8.x-4.0.123:
+        - Update index to include timestamp (#715)
+  8.x-20210609-1002:
     commits: null
     modules:
+      apic_app:
+        8.x-4.0.72:
+        - Ensure event logs are created or updated correctly (#260)
       ibm_apim:
-        8.x-3.1.86: null
-        8.x-3.1.85:
+        8.x-4.0.122:
+        - Check for event log using timestamp as well (#713)
+        8.x-4.0.121:
         - add drush commands to nuke entities and nodes
         - fix timestamp wrap
       consumerorg:
-        8.x-3.1.30:
+        8.x-4.0.35:
+        - slight tweak to eventlog entities for consumer orgs
+        8.x-4.0.34:
         - dont show notifications link to admin
-  8.x-20210608-2232:
+  8.x-20210608-2233:
     commits:
     - try using different build label
     modules:
       ibm_apim:
-        8.x-3.1.84:
+        8.x-4.0.120: null
+        8.x-4.0.119:
         - add utility function to check if a url is a consumer-api url
         - fix WSOD for notifications (#712)
       consumerorg:
-        8.x-3.1.29:
-        - Index consumer org url column
+        8.x-4.0.33: null
+        8.x-4.0.32:
         - do create and update event logs all the time (#235)
+        - do create and update event logs all the time
+  8.x-20210608-1451:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.71:
+        - dont show notifications link to admin
+      connect_theme:
+        8.x-4.0.24:
+        - don't fill the users svg in org members table
+  8.x-20210608-1106:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.58:
+        - Added visibility and subscribability tests (#210)
+      consumerorg:
+        8.x-4.0.31:
+        - Index consumer org url column
   8.x-20210607-1628:
     commits:
-    - update file versions (#508)
+    - Tc2dev/20210601 (#507)
     modules:
-      product:
-        8.x-3.1.44:
-        - Added visibility and subscribability tests (#210) (#211)
       apic_app:
-        8.x-3.1.51:
-        - dont show notifications link to admin
-        8.x-3.1.50:
-        - New indexes v10.0 (#259)
-      ibm_apim:
-        8.x-3.1.83:
-        - Indexes v10.0 (#711)
-      consumerorg:
-        8.x-3.1.28:
-        - Index consumer org url column (#234)
+        8.x-4.0.70:
+        - Index app_url column
       apictest:
-        8.x-3.1.15:
-        - improved visibility and subscribability tests (#212) (#213)
-      connect_theme:
-        8.x-3.1.17:
-        - don't fill the users svg in org members table
-  8.x-20210607-1021:
+        8.x-4.0.46:
+        - improved visibility and subscribability tests (#212)
+  8.x-20210607-1302:
     commits: null
     modules:
-      product:
-        8.x-3.1.43:
-        - fix lookup apiname in product for plan filter (#202) (#209)
       apic_app:
-        8.x-3.1.49:
+        8.x-4.0.69: null
+        8.x-4.0.68:
+        - Just index uuid and app_url columns (#257)
+        - Add index to subs and creds entities (#256)
+      ibm_apim:
+        8.x-4.0.118:
+        - Fix indexes on event_log table
+        8.x-4.0.117:
+        - add drush command to clear bans
+  8.x-20210607-1012:
+    commits:
+    - Tc2dev/20210504 (#505)
+    modules:
+      product:
+        8.x-4.0.57:
+        - fix lookup apiname in product for plan filter (#202)
+      apic_app:
+        8.x-4.0.67:
         - quote handling wrong - just let twig handle it
       ibm_apim:
-        8.x-3.1.82:
-        - add drush command to clear bans
-        8.x-3.1.81:
-        - fix use new billing parser result (#708) (#709)
-        8.x-3.1.80:
+        8.x-4.0.116:
         - missing XSSfilter
-        8.x-3.1.79:
-        - fix add product_data to mock product node (#706) (#707)
-  8.x-20210604-2223:
-    commits:
-    - update twig_tweak to v3
-    - composer update
-    modules:
-      product:
-        8.x-3.1.42:
-        - fix move get access button back to the right (#204) (#208)
-  8.x-20210604-1353:
+        8.x-4.0.115:
+        - fix use new billing parser result (#708)
+  8.x-20210607-0423:
     commits: null
     modules:
-      apic_app:
-        8.x-3.1.48:
-        - fix missing quotes in twig template
       ibm_apim:
-        8.x-3.1.78:
-        - fix WSOD
-        8.x-3.1.77:
-        - reference configuration_schema correctly
-  8.x-20210604-0955:
+        8.x-4.0.114:
+        - fix add product_data to mock product node (#706)
+  8.x-20210604-1628:
+    commits:
+    - composer update
+    modules:
+      apic_app:
+        8.x-4.0.66: null
+  8.x-20210604-0954:
     commits:
     - fix formatting error on login if provide wrong password
     modules:
-      apic_api:
-        8.x-3.1.19:
-        - feat mark applications with subscription status (#118) (#119)
       apic_app:
-        8.x-3.1.47: null
-        8.x-3.1.46:
-        - feat Introduce methods to filter applications by subscriptions (#252) (#253)
+        8.x-4.0.65:
+        - fix missing quotes in twig template (#254)
+        8.x-4.0.64:
+        - feat Introduce methods to filter applications by subscriptions (#252)
       ibm_apim:
-        8.x-3.1.76:
+        8.x-4.0.113:
+        - fix WSOD
+        8.x-4.0.112:
+        - reference configuration_schema correctly
+        8.x-4.0.111:
         - use dynamic weighting to ensure password policy is right after the password field
-  8.x-20210604-0423:
+  8.x-20210603-1731:
     commits: null
     modules:
-      auth_apic:
-        8.x-3.1.14:
-        - Show pending approval message on oidc login (#620) (#621)
       ibm_apim:
-        8.x-3.1.75: null
-        8.x-3.1.74:
-        - fix more test resources (#704) (#705)
+        8.x-4.0.110:
         - fix text alignment in sign in form
-        8.x-3.1.73:
-        - return empty token reponse on 201
-        - disabling debug options clears their drupal state
-  8.x-20210603-1701:
+        8.x-4.0.109:
+        - fix more test resources (#704)
+  8.x-20210603-1656:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.1.72:
+        8.x-4.0.108:
         - remove the blogs link if the blog view has been deleted
+      consumerorg:
+        8.x-4.0.30:
+        - use ID to load the payment method schema
   8.x-20210603-1023:
     commits: null
     modules:
       product:
-        8.x-3.1.41:
-        - remove leftover dpm (#206) (#207)
-        8.x-3.1.40:
-        - fix further plan card polish (#203) (#205)
+        8.x-4.0.56: null
+        8.x-4.0.55:
+        - fix move get access button back to the right (#204)
+        - remove leftover dpm (#206)
+        8.x-4.0.54:
+        - fix further plan card polish (#203)
+      auth_apic:
+        8.x-4.0.23:
+        - Show pending approval message on oidc login (#620)
       ibm_apim:
-        8.x-3.1.71:
+        8.x-4.0.107:
         - use ID to load the payment method schema
-        8.x-3.1.70:
-        - fix split billing text and trial text in two (#700) (#701)
-        8.x-3.1.69: null
-        8.x-3.1.68:
+        8.x-4.0.106: null
+        8.x-4.0.105:
+        - Add new indexes to event_log entity
+        8.x-4.0.104: null
+        8.x-4.0.103:
+        - fix split billing text and trial text in two (#700)
+        8.x-4.0.102: null
+        8.x-4.0.101:
         - default should be 30
         - default should be 30
-      consumerorg:
-        8.x-3.1.27:
-        - use ID to load the payment method schema
       connect_theme:
-        8.x-3.1.16:
+        8.x-4.0.23:
         - separate out ckeditor icon css
-        8.x-3.1.15:
-        - fix add prod-heading-2 and clipping fix (#213) (#214)
-  8.x-20210601-1624:
+        8.x-4.0.22:
+        - fix add prod-heading-2 and clipping fix (#213)
+  8.x-20210601-1623:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.1.67:
+        8.x-4.0.100:
         - protect against NPE
   8.x-20210528-2223:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.1.66:
-        - Remove name,version from return (#698)
-  8.x-20210528-1624:
+        8.x-4.0.99:
+        - Remove name,version from return
+  8.x-20210528-1122:
     commits: null
     modules:
       product:
-        8.x-3.1.39:
-        - fix pass product apis to new productplan service (#200) (#201)
+        8.x-4.0.53:
+        - fix pass product apis to new productplan service (#200)
       ibm_apim:
-        8.x-3.1.65:
-        - fix use actual apisafe name instead of label (#696) (#697)
-  8.x-20210528-1023:
+        8.x-4.0.98:
+        - fix use actual apisafe name instead of label (#696)
+  8.x-20210528-0920:
     commits: null
     modules:
       apic_app:
-        8.x-3.1.45:
+        8.x-4.0.63:
         - invalidate caches
-  8.x-20210527-1628:
+        8.x-4.0.62:
+        - feat add helper text to subscription blocks (#249)
+  8.x-20210526-1757:
     commits:
-    - feat rename client ID references (#503) (#504)
-    modules:
-      apic_app:
-        8.x-3.1.44:
-        - feat add helper text to subscription blocks (#249) (#251)
-        8.x-3.1.43:
-        - missing app delete event
-  8.x-20210526-1745:
-    commits:
+    - feat rename client ID references (#503)
     - Revert "Turn off SSL for PHP connections in the tests"
     - Turn off SSL for PHP connections in the tests
-    - Tempmerge (#502)
     - drupal security update
     modules:
-      socialblock:
-        8.x-3.1.6: null
-      product:
-        8.x-3.1.38:
-        - Tempmerge (#199)
-      auth_apic:
-        8.x-3.1.13: null
-      themegenerator:
-        8.x-3.1.6: null
-      featuredcontent:
-        8.x-3.1.6: null
-      apic_api:
-        8.x-3.1.18:
-        - Tempmerge (#117)
       apic_app:
-        8.x-3.1.42:
-        - Tempmerge (#250)
-      ibm_apim:
-        8.x-3.1.64:
-        - Tempmerge (#695)
-      consumerorg:
-        8.x-3.1.26:
-        - Tempmerge (#232)
-      apictest:
-        8.x-3.1.14:
-        - Tempmerge (#211)
-      connect_theme:
-        8.x-3.1.14:
-        - Tempmerge (#212)
-  8.x-20210526-1029:
+        8.x-4.0.61:
+        - missing app delete event
+  8.x-20210526-1023:
     commits: null
     modules:
       apic_app:
-        8.x-3.1.41:
+        8.x-4.0.60:
         - very small tweaks to buttons on multi-value fields
       connect_theme:
-        8.x-3.1.13:
+        8.x-4.0.21:
         - very small tweaks to buttons on multi-value fields
-  8.x-20210525-1733:
+  8.x-20210525-1801:
     commits:
     - composer update
     modules:
       product:
-        8.x-3.1.37:
+        8.x-4.0.52:
         - slight tweak to logic
   8.x-20210525-1023:
+    commits:
+    - feat rename subscribe (#500)
+    modules:
+      product:
+        8.x-4.0.51:
+        - polish plans tiles (#198)
+        8.x-4.0.50:
+        - if delete an api then remove the doc refs too
+      apic_api:
+        8.x-4.0.27:
+        - shouldnt be static
+      ibm_apim:
+        8.x-4.0.97:
+        - disable ip security features (#694)
+      connect_theme:
+        8.x-4.0.20:
+        - plans table polish
+  8.x-20210524-2223:
     commits: null
     modules:
       product:
-        8.x-3.1.36:
-        - polish plans tiles (#198)
-        8.x-3.1.35:
-        - if delete an api then remove the doc refs too
-      apic_api:
-        8.x-3.1.17:
-        - shouldnt be static
-      ibm_apim:
-        8.x-3.1.63:
-        - disable ip security features (#694)
-      connect_theme:
-        8.x-3.1.12:
-        - plans table polish
+        8.x-4.0.49:
+        - fix up some logic errors in updating doc refs
   8.x-20210524-1626:
     commits: null
     modules:
       product:
-        8.x-3.1.34:
-        - fix up some logic errors in updating doc refs
-        8.x-3.1.33:
-        - feat add expand all/shrink all twistie to plans modal (#196) (#197)
+        8.x-4.0.48:
+        - feat add expand all/shrink all twistie to plans modal (#196)
       apic_api:
-        8.x-3.1.16:
+        8.x-4.0.26:
         - polish api tile
   8.x-20210524-1023:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.1.62:
+        8.x-4.0.96:
         - deleting temp store too early
-  8.x-20210521-1253:
+  8.x-20210521-1814:
     commits: null
     modules:
       apic_api:
-        8.x-3.1.15:
+        8.x-4.0.25:
         - refactor the check for asyncapis to be much quicker
       apic_app:
-        8.x-3.1.40:
+        8.x-4.0.59:
         - selected should be same line height as non-selected
       ibm_apim:
-        8.x-3.1.61:
+        8.x-4.0.95:
         - rename internal variables to be consistent
   8.x-20210520-2223:
     commits:
+    - fix error from field_group
     - minor symfony update
     modules:
-      product:
-        8.x-3.1.32:
-        - feat add billing info to modal (#193) (#195)
-  8.x-20210520-1153:
-    commits: null
-    modules:
-      product:
-        8.x-3.1.31:
-        - tidy product card (#194)
-        8.x-3.1.30:
-        - use chunking
-      apic_api:
-        8.x-3.1.14:
-        - use chunking
       apic_app:
-        8.x-3.1.37:
-        - use chunking
-        8.x-3.1.36:
-        - 502 subscribe rename v10 (#247)
+        8.x-4.0.58: null
+        8.x-4.0.57:
+        - fix css width on app page
+        - Tabtitle (#248)
       ibm_apim:
-        8.x-3.1.59:
-        - use chunking
-        8.x-3.1.58:
-        - feat rename subscribe (#689) (#691)
-        8.x-3.1.57: null
-        8.x-3.1.56:
-        - check if service exists before calling it
-        - feat add short descriptions for concepts (#688) (#690)
-      consumerorg:
-        8.x-3.1.25:
-        - use chunking
-  8.x-20210519-2223:
+        8.x-4.0.94:
+        - Fix custom entity autocomplete matcher (#692)
+      connect_theme:
+        8.x-4.0.19:
+        - ensure jquery.once loaded for dropit
+        8.x-4.0.18:
+        - fix app and org menu dropdowns
+  8.x-20210520-1716:
     commits: null
     modules:
       product:
-        8.x-3.1.29: null
-        8.x-3.1.28:
+        8.x-4.0.47:
+        - tidy product card (#194)
+  8.x-20210520-1152:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.46:
+        - use chunking
+        8.x-4.0.45:
+        - feat add billing info to modal (#193)
+        8.x-4.0.44: null
+        8.x-4.0.43:
+        - feat rename subscribe (#191)
+      apic_api:
+        8.x-4.0.24:
+        - use chunking
+        8.x-4.0.23: null
+      apic_app:
+        8.x-4.0.56:
+        - use chunking
+        8.x-4.0.55: null
+        8.x-4.0.54:
+        - missing references from the subs rename
+        - missing references from the subs rename
+        - test failures and missing references from the subs rename
+        - feat rename subscribe (#246)
+      ibm_apim:
+        8.x-4.0.93:
+        - use chunking
+        8.x-4.0.92: null
+        8.x-4.0.91:
+        - check if service exists before calling it
+        - feat rename subscribe (#689)
+      consumerorg:
+        8.x-4.0.29:
+        - use chunking
+      connect_theme:
+        8.x-4.0.17:
+        - fix use white background (#210)
+  8.x-20210519-1820:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.42:
         - move productplan service to ibm_apim to resolve cycle (#190)
       apic_api:
-        8.x-3.1.13: null
-        8.x-3.1.12:
+        8.x-4.0.22:
         - no longer needed
         - refactor Application.php to be a service (#116)
       apic_app:
-        8.x-3.1.35: null
-        8.x-3.1.34:
+        8.x-4.0.53:
         - Services (#245)
       ibm_apim:
-        8.x-3.1.55: null
-        8.x-3.1.54:
+        8.x-4.0.90:
         - feat add short descriptions for concepts (#688)
-        8.x-3.1.53:
+        8.x-4.0.89:
         - attributes changed name
         - refactor Application.php to be a service (#687)
       consumerorg:
-        8.x-3.1.24: null
-        8.x-3.1.23:
+        8.x-4.0.28:
         - Services (#231)
       apictest:
-        8.x-3.1.13:
+        8.x-4.0.45: null
+        8.x-4.0.44:
         - dont need a stack
         - refactor Application.php to be a service (#210)
-  8.x-20210519-1824:
+  8.x-20210519-0744:
     commits: null
     modules:
-      product:
-        8.x-3.1.27:
-        - not needed imports
-  8.x-20210519-1045:
-    commits: null
-    modules:
+      apic_app:
+        8.x-4.0.52: null
       consumerorg:
-        8.x-3.1.22:
+        8.x-4.0.27:
         - there might not be any roles
       connect_theme:
-        8.x-3.1.8:
+        8.x-4.0.16:
         - fix dropit on list pages (#209)
   8.x-20210518-2223:
     commits: null
     modules:
       product:
-        8.x-3.1.26:
+        8.x-4.0.40:
         - refactor SubscriptionService to be a proper service
       apic_app:
-        8.x-3.1.33: null
-        8.x-3.1.32:
+        8.x-4.0.51:
         - refactor SubscriptionService to be a proper service
       apictest:
-        8.x-3.1.12:
+        8.x-4.0.43:
         - refactor SubscriptionService to be a proper service
-  8.x-20210518-1027:
+  8.x-20210518-1623:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.50:
+        - add function to list the credentials in the current consumer org
+  8.x-20210518-0928:
     commits: null
     modules:
       product:
-        8.x-3.1.25:
+        8.x-4.0.39:
         - chore review comments
         - feat lookup apis in a product's plans
-      apic_app:
-        8.x-3.1.31:
-        - add function to list the credentials in the current consumer org
-  8.x-20210517-2223:
+  8.x-20210517-1828:
     commits: null
     modules:
       product:
-        8.x-3.1.24:
+        8.x-4.0.38:
         - small tweak to the strings to existing translations can be used
       ibm_apim:
-        8.x-3.1.52:
+        8.x-4.0.88:
         - add title breadcrumb to asyncapi pages
-  8.x-20210517-1409:
-    commits: null
-    modules:
-      ibm_apim:
-        8.x-3.1.51:
-        - Speed up event log record look up
   8.x-20210514-1624:
     commits:
+    - composer update
     - Add APIC Concepts block
     modules:
+      apic_app:
+        8.x-4.0.49:
+        - Refactor subscription event log
       ibm_apim:
-        8.x-3.1.50:
+        8.x-4.0.87:
+        - Speed up event log record look up
+        8.x-4.0.86:
         - Add APIC Concepts block
       connect_theme:
-        8.x-3.1.7:
+        8.x-4.0.15:
         - Add APIC Concepts block
-  8.x-20210514-1031:
+  8.x-20210514-1032:
     commits: null
     modules:
       product:
-        8.x-3.1.23:
+        8.x-4.0.37:
         - last few refrences ?
         - ids arent going to be like titles
         - needs to use ref not name
@@ -1498,716 +2850,969 @@ changes:
         - use refs not names
         - update unit test
         - add tests for routing by nameversion
-      auth_apic:
-        8.x-3.1.12:
-        - Added support for account approvals
       apic_app:
-        8.x-3.1.29:
+        8.x-4.0.48:
         - Refactor subscription create / update
-      ibm_apim:
-        8.x-3.1.49:
-        - Added support for account approvals
-  8.x-20210513-1647:
+  8.x-20210513-0954:
     commits: null
     modules:
       product:
-        8.x-3.1.22:
+        8.x-4.0.36:
         - add tests for routing by nameversion
+      auth_apic:
+        8.x-4.0.22: null
       apic_api:
-        8.x-3.1.11:
+        8.x-4.0.21:
         - add tests for routing by nameversion
-  8.x-20210512-1822:
+      ibm_apim:
+        8.x-4.0.85: null
+  8.x-20210512-1751:
     commits:
     - drupal module update
     modules:
-      product:
-        8.x-3.1.21:
-        - fix undo typo
-        - fix plans table tweaks
-  8.x-20210512-1148:
+      auth_apic:
+        8.x-4.0.21:
+        - Added support for account approvals
+      ibm_apim:
+        8.x-4.0.84:
+        - Added support for account approvals
+  8.x-20210512-1347:
     commits: null
     modules:
-      auth_apic:
-        8.x-3.1.11:
-        - use "IBM API Developer Portal" instead of API Connect
-      apictest:
-        8.x-3.1.11:
-        - use "IBM API Developer Portal" instead of API Connect
+      product:
+        8.x-4.0.35:
+        - fix undo typo
+        - fix plans table tweaks
   8.x-20210511-1624:
     commits:
+    - Tc2dev/20210504 (#498)
     - use "IBM API Developer Portal" instead of API Connect
     - need to clone theme repos too
     - need to update what theme is being used
     modules:
       socialblock:
-        8.x-3.1.5:
+        8.x-4.0.6:
         - use "IBM API Developer Portal" instead of API Connect
       product:
-        8.x-3.1.20:
+        8.x-4.0.34:
         - use "IBM API Developer Portal" instead of API Connect
-        8.x-3.1.19:
+        8.x-4.0.33:
         - translation
+      auth_apic:
+        8.x-4.0.20:
+        - use "IBM API Developer Portal" instead of API Connect
       mail_subscribers:
-        8.x-3.1.8:
+        8.x-4.0.8:
         - use "IBM API Developer Portal" instead of API Connect
       themegenerator:
-        8.x-3.1.5:
+        8.x-4.0.5:
         - use "IBM API Developer Portal" instead of API Connect
       featuredcontent:
-        8.x-3.1.5:
+        8.x-4.0.5:
         - use "IBM API Developer Portal" instead of API Connect
       apic_api:
-        8.x-3.1.10:
+        8.x-4.0.20:
         - use "IBM API Developer Portal" instead of API Connect
       apic_app:
-        8.x-3.1.28:
+        8.x-4.0.47:
         - use "IBM API Developer Portal" instead of API Connect
       ibm_apim:
-        8.x-3.1.48:
+        8.x-4.0.83:
         - use "IBM API Developer Portal" instead of API Connect
       consumerorg:
-        8.x-3.1.21:
+        8.x-4.0.26:
+        - use "IBM API Developer Portal" instead of API Connect
+      apictest:
+        8.x-4.0.42: null
+        8.x-4.0.41:
         - use "IBM API Developer Portal" instead of API Connect
       connect_theme:
-        8.x-3.1.6:
+        8.x-4.0.14:
         - use "IBM API Developer Portal" instead of API Connect
-  8.x-20210511-1037:
+  8.x-20210511-1040:
     commits: null
     modules:
       product:
-        8.x-3.1.18:
+        8.x-4.0.32:
         - feat new plans cards/table (#180)
-      ibm_apim:
-        8.x-3.1.47:
-        - Try catch theme as well (#681)
   8.x-20210511-0847:
     commits: null
     modules:
       apic_app:
-        8.x-3.1.27:
+        8.x-4.0.46:
         - need to use productselect routing for apis
       ibm_apim:
-        8.x-3.1.46:
+        8.x-4.0.82:
+        - Try catch theme as well
+        8.x-4.0.81:
         - need to use productselect routing for apis
   8.x-20210510-2223:
     commits: null
     modules:
       apic_api:
-        8.x-3.1.9:
+        8.x-4.0.19:
         - move asyncapi detection to a utility function
       ibm_apim:
-        8.x-3.1.45:
+        8.x-4.0.80:
         - include cOrg invitation settings in config export
         - include cOrg invitation settings in config export
   8.x-20210510-1624:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.1.44:
+        8.x-4.0.79:
         - sort out subscription inserts
-        8.x-3.1.43:
-        - Don't throw error on flush (#678) (#679)
-  8.x-20210510-0423:
+        8.x-4.0.78:
+        - Don't throw error on flush (#678)
+  8.x-20210510-1023:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.1.42:
+        8.x-4.0.77:
         - update css for eventlog
-        8.x-3.1.41:
+        8.x-4.0.76:
         - include nodeid in the apilist output
       consumerorg:
-        8.x-3.1.20:
+        8.x-4.0.25:
         - Invitetests (#230)
+  8.x-20210509-1911:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-4.0.24: null
   8.x-20210507-2223:
     commits: null
     modules:
-      socialblock:
-        8.x-3.1.4: null
-      ghmarkdown:
-        8.x-3.1.3: null
-      auth_apic:
-        8.x-3.1.10: null
-        8.x-3.1.9: null
-      mail_subscribers:
-        8.x-3.1.7: null
-      themegenerator:
-        8.x-3.1.4: null
-      apic_api:
-        8.x-3.1.8: null
-      apic_app:
-        8.x-3.1.26: null
       ibm_apim:
-        8.x-3.1.40:
+        8.x-4.0.75:
         - add mock funcs
-        8.x-3.1.39:
+        8.x-4.0.74:
         - add support functions for disabling andre invitations
       consumerorg:
-        8.x-3.1.19:
+        8.x-4.0.23:
         - only show invitation button if enabled
-        8.x-3.1.18: null
       apictest:
-        8.x-3.1.10:
+        8.x-4.0.40:
         - add support functions for disabling andre invitations
-  8.x-20210507-1625:
+  8.x-20210507-1626:
     commits: null
     modules:
       product:
-        8.x-3.1.17: null
-        8.x-3.1.16:
+        8.x-4.0.31: null
+        8.x-4.0.30:
         - Fix bug with tags array
         - Fix app subs cache
       apic_app:
-        8.x-3.1.25:
+        8.x-4.0.45:
         - change app status terminology (#239)
+        8.x-4.0.44:
+        - Fix app subscription cache
       ibm_apim:
-        8.x-3.1.38:
+        8.x-4.0.73:
         - tidy eventlog css (#677)
-  8.x-20210507-1245:
+  8.x-20210507-1221:
     commits: null
     modules:
       product:
-        8.x-3.1.15:
+        8.x-4.0.29:
         - update product reference for replace
-      apic_app:
-        8.x-3.1.24:
-        - Fix app subscription cache
-  8.x-20210506-1624:
+  8.x-20210506-1625:
     commits:
-    - revert changelog changes
-    - corrupted file
-    - Master to v10.0 (#497)
     - update patch
     - update patch
     - composer update
     modules:
-      socialblock:
-        8.x-3.1.3: null
-      product:
-        8.x-3.1.14: null
-      ghmarkdown:
-        8.x-3.1.2: null
-      auth_apic:
-        8.x-3.1.8: null
-      mail_subscribers:
-        8.x-3.1.6: null
-      themegenerator:
-        8.x-3.1.3: null
-      featuredcontent:
-        8.x-3.1.4: null
-        8.x-3.1.3: null
-      apic_api:
-        8.x-3.1.7: null
       apic_app:
-        8.x-3.1.23: null
-        8.x-3.1.22: null
-        8.x-3.1.21:
+        8.x-4.0.43: null
+        8.x-4.0.42:
         - tweak to isset line to avoid error
+        8.x-4.0.41:
         - handle consumer_org_url in one payload but org_url in another
-      ibm_apim:
-        8.x-3.1.37: null
-      consumerorg:
-        8.x-3.1.17: null
-      apictest:
-        8.x-3.1.9: null
-        8.x-3.1.8: null
-  8.x-20210506-1002:
+  8.x-20210506-1102:
     commits: null
     modules:
       apic_app:
-        8.x-3.1.20:
+        8.x-4.0.40:
         - fix css for suspended app
       ibm_apim:
-        8.x-3.1.36:
+        8.x-4.0.72:
         - timestamp spacing
-  8.x-20210506-0645:
-    commits:
-    - stop People page blowing up
-    modules:
-      product:
-        8.x-3.1.13: null
-      apic_api:
-        8.x-3.1.6: null
-      apic_app:
-        8.x-3.1.19:
-        - need to use string not null
-        8.x-3.1.18: null
-      ibm_apim:
-        8.x-3.1.35:
-        - Eventstyling (#675)
-        8.x-3.1.34:
-        - add CSS file and library
-      consumerorg:
-        8.x-3.1.16:
-        - array not object
-  8.x-20210505-1724:
+        - first pass of event styling
+  8.x-20210506-0928:
     commits: null
     modules:
-      product:
-        8.x-3.1.12:
-        - wire up more events
-      apic_api:
-        8.x-3.1.5:
-        - wire up more events
+      consumerorg:
+        8.x-4.0.22:
+        - array not object
+  8.x-20210506-0730:
+    commits: null
+    modules:
       apic_app:
-        8.x-3.1.17:
-        - event service has moved
-        - rename activity feed Notifications
-        - wire up more events
+        8.x-4.0.39:
+        - need to use string not null
       ibm_apim:
-        8.x-3.1.33: null
-        8.x-3.1.32:
+        8.x-4.0.71:
+        - Eventstyling (#675)
+      consumerorg:
+        8.x-4.0.21: null
+  8.x-20210506-0646:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.70:
+        - add CSS file and library
+  8.x-20210505-1712:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.38:
+        - event service has moved
+      ibm_apim:
+        8.x-4.0.69: null
+        8.x-4.0.68:
         - fix missing '
-        8.x-3.1.31:
+        8.x-4.0.67: null
+        8.x-4.0.66: null
+        8.x-4.0.65:
         - handle container not being ready
+        8.x-4.0.64:
         - add sort
         - fix menu link
       consumerorg:
-        8.x-3.1.15: null
-        8.x-3.1.14:
+        8.x-4.0.20:
         - fix missing '
-        8.x-3.1.13:
+        8.x-4.0.19:
         - event service has moved
+        - handle NPE
         - use dependency injection
         - use dependency injection
         - wire up more payment methods
         - wire up more events
-  8.x-20210505-1027:
+  8.x-20210505-1202:
     commits: null
     modules:
+      product:
+        8.x-4.0.28:
+        - wire up more events
+      apic_api:
+        8.x-4.0.18:
+        - wire up more events
       apic_app:
-        8.x-3.1.16:
+        8.x-4.0.37:
+        - rename activity feed Notifications
+        8.x-4.0.36:
+        - wire up more events
+        8.x-4.0.35:
         - wire up subscription events
-        8.x-3.1.15:
-        - wire up cred reset and resetSecret
-        8.x-3.1.14:
-        - wire up cred create, update, delete
       ibm_apim:
-        8.x-3.1.30:
+        8.x-4.0.63:
         - move service to avoid circular dependencies
         - use dependency injection
+        8.x-4.0.62:
         - rename activity feed to Notifications
+        8.x-4.0.61:
         - wire up more events
-        8.x-3.1.29:
-        - flesh out the rest of the messages
-        8.x-3.1.28:
-        - wire up cred reset and resetSecret
   8.x-20210504-2223:
     commits: null
     modules:
       apic_app:
-        8.x-3.1.13:
+        8.x-4.0.34:
+        - wire up cred reset and resetSecret
+        8.x-4.0.33:
+        - wire up cred create, update, delete
+        8.x-4.0.32:
         - ensure timestamp is int
         - Make sure there is an App create event and not just an update
       ibm_apim:
-        8.x-3.1.27:
+        8.x-4.0.60:
+        - flesh out the rest of the messages
+        8.x-4.0.59:
+        - wire up cred reset and resetSecret
+        8.x-4.0.58:
         - use placeholder image for api provider
-  8.x-20210504-1624:
+  8.x-20210504-1632:
     commits: null
     modules:
       apic_app:
-        8.x-3.1.12:
+        8.x-4.0.31:
         - View and view based ACL
-        8.x-3.1.11:
+        8.x-4.0.30: null
+        8.x-4.0.29:
         - title notifications tab routing
+        8.x-4.0.28:
         - rename actvity feed
       ibm_apim:
-        8.x-3.1.26:
+        8.x-4.0.57:
         - View and view based ACL
-        8.x-3.1.25:
+        8.x-4.0.56:
         - title Notifications tab
+        8.x-4.0.55:
         - move and rename org feed tab (#674)
       consumerorg:
-        8.x-3.1.12:
+        8.x-4.0.18:
         - Notitab (#228)
-  8.x-20210504-1023:
+  8.x-20210504-1025:
     commits: null
     modules:
       product:
-        8.x-3.1.11:
+        8.x-4.0.27:
         - Reset cache after updating subscriptions
       auth_apic:
-        8.x-3.1.7:
+        8.x-4.0.19:
         - handle a 201 too
       ibm_apim:
-        8.x-3.1.24:
+        8.x-4.0.54:
         - only list events in this consumerorg
-        8.x-3.1.23:
+        8.x-4.0.53:
         - populate variables in the twig
-  8.x-20210503-1023:
+        8.x-4.0.52:
+        - Chnage to field
+        8.x-4.0.51:
+        - Remove flag not in drush10
+  8.x-20210503-1022:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.1.22:
+        8.x-4.0.50:
         - q might not exist
-  8.x-20210430-1623:
+  8.x-20210430-1351:
     commits: null
     modules:
       consumerorg:
-        8.x-3.1.11:
+        8.x-4.0.17:
         - payment methods needs to be array not objects
-  8.x-20210429-1624:
-    commits: null
-    modules:
-      ibm_apim:
-        8.x-3.1.21:
-        - get the integration with views working for eventlog entities
   8.x-20210428-2223:
+    commits:
+    - add views patch (#494)
+    - change to 9.x (#493)
+    modules:
+      ibm_apim:
+        8.x-4.0.49:
+        - get the integration with views working for eventlog entities
+        - Fix listen function execution time logging
+      apictest:
+        8.x-4.0.39:
+        - new name for tgz
+  8.x-20210428-1045:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.1.20:
-        - Fix listen function execution time logging
-  8.x-20210426-1520:
+        8.x-4.0.48:
+        - fix node title bug
+  8.x-20210427-2223:
     commits:
     - enable ibm_event_log
     modules:
-      ibm_apim:
-        8.x-3.1.19:
-        - fix node title bug
-  8.x-20210425-1027:
+      socialblock:
+        8.x-4.0.5: null
+      ghmarkdown:
+        8.x-4.0.4: null
+      auth_apic:
+        8.x-4.0.18: null
+      themegenerator:
+        8.x-4.0.4: null
+      featuredcontent:
+        8.x-4.0.4: null
+      apic_api:
+        8.x-4.0.17: null
+      apic_app:
+        8.x-4.0.27: null
+      consumerorg:
+        8.x-4.0.16: null
+  8.x-20210427-1655:
     commits: null
     modules:
       product:
-        8.x-3.1.10: null
-        8.x-3.1.9:
-        - Fix product visibility
-        - disable the subscribe buttons
-      auth_apic:
-        8.x-3.1.6:
-        - need to have a UR title set even if no URs
+        8.x-4.0.26: null
       mail_subscribers:
-        8.x-3.1.5:
-        - need to set return if type specified
+        8.x-4.0.7: null
       ibm_apim:
-        8.x-3.1.18:
-        - need to set return if type specified
-  8.x-20210424-1744:
+        8.x-4.0.47: null
+  8.x-20210427-1023:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.1.17:
+        8.x-4.0.46: null
+        8.x-4.0.45:
+        - tidy up some translation and deprecated code (#669)
+        - Use drupal logo on status page (#668)
+      apictest:
+        8.x-4.0.38:
+        - Kerneltest (#205)
+  8.x-20210427-0754:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.25: null
+      auth_apic:
+        8.x-4.0.17: null
+      mail_subscribers:
+        8.x-4.0.6:
+        - need to set return if type specified
+  8.x-20210426-1521:
+    commits:
+    - use drupal9 logo (#492)
+    - dont want overrides for our own files anymore
+    modules:
+      auth_apic:
+        8.x-4.0.16:
+        - need to set flood var on our form
+        8.x-4.0.15:
+        - fix parent constructor call
+      apictest:
+        8.x-4.0.37:
+        - Update create_test_site.sh
+  8.x-20210425-1027:
+    commits:
+    - Drupal 9 tgz (#491)
+    modules:
+      product:
+        8.x-4.0.24:
+        - Fix product visibility
+        - disable the subscribe buttons
+      auth_apic:
+        8.x-4.0.14:
+        - need to have a UR title set even if no URs
+      ibm_apim:
+        8.x-4.0.44:
+        - need to set return if type specified
+      apictest:
+        8.x-4.0.36:
+        - Source drush10 variable
+  8.x-20210424-1747:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.43:
         - json parse errors in FVT
   8.x-20210423-2223:
     commits: null
     modules:
+      apic_api:
+        8.x-4.0.16: null
       ibm_apim:
-        8.x-3.1.16:
+        8.x-4.0.42:
         - tabs in the wrong order
       consumerorg:
-        8.x-3.1.10:
+        8.x-4.0.15:
         - fix object parsing
-  8.x-20210423-1608:
+  8.x-20210423-1624:
     commits: null
     modules:
-      apic_app:
-        8.x-3.1.10: null
       ibm_apim:
-        8.x-3.1.15:
+        8.x-4.0.41:
         - fix css mess
-      consumerorg:
-        8.x-3.1.9: null
-  8.x-20210423-0956:
+  8.x-20210423-1110:
     commits: null
     modules:
-      product:
-        8.x-3.1.8:
-        - remove extra use line
-        8.x-3.1.7: null
       mail_subscribers:
-        8.x-3.1.4:
+        8.x-4.0.5:
         - more tweaks to typing take2
         - more tweaks to typing
         - need to use correct interface
-        8.x-3.1.3: null
       apic_app:
-        8.x-3.1.9:
-        - missing changes
+        8.x-4.0.26:
         - fix up the activity feed tabs for org and app
+        8.x-4.0.25: null
       ibm_apim:
-        8.x-3.1.14:
-        - missing changes
+        8.x-4.0.40:
         - needs to be string
+        8.x-4.0.39:
         - fix up the activity feed tabs for org and app
-        8.x-3.1.13:
+        8.x-4.0.38:
         - need to use empty array not null
       consumerorg:
-        8.x-3.1.8:
+        8.x-4.0.14:
         - fix up the activity feed tabs for org and app
-  8.x-20210423-0745:
+  8.x-20210423-0913:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.24:
+        - activity feed for application
+        - wire up the myorg activity feed page
+      consumerorg:
+        8.x-4.0.13:
+        - wire up the myorg activity feed page
+      apictest:
+        8.x-4.0.35:
+        - dont call get with null
+  8.x-20210422-1554:
     commits: null
     modules:
       auth_apic:
-        8.x-3.1.5:
-        - fix corrupt file
-        - Tempmerge (#615)
-      themegenerator:
-        8.x-3.1.2: null
-      apic_api:
-        8.x-3.1.4: null
-      consumerorg:
-        8.x-3.1.7:
-        - Tempmerge (#226)
+        8.x-4.0.13:
+        - dont pass in registry if not set
+        - need to not override existing method and use different name instead
+        - fix up unit tests
+        - tidy up some more warnings
+        - need to have a user registry
+        - only if url is not null
+      ibm_apim:
+        8.x-4.0.37: null
+        8.x-4.0.36:
+        - update unit test
+        - wire up the myorg activity feed page
+        8.x-4.0.35:
+        - wire up the retention settings form
+  8.x-20210422-1408:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.34:
+        - realm needs to be optional
+  8.x-20210422-1324:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.33:
+        - fix up unit tests
+  8.x-20210422-1032:
+    commits: null
+    modules:
       apictest:
-        8.x-3.1.7:
-        - dont call get with null
-  8.x-20210416-1623:
+        8.x-4.0.34:
+        - need to not override existing method and use different name instead
+  8.x-20210420-1511:
     commits:
-    - Tempmerge (#490)
     - drupal core update
     modules:
-      socialblock:
-        8.x-3.1.2: null
-      ghmarkdown:
-        8.x-3.1.1: null
-      featuredcontent:
-        8.x-3.1.2: null
-      apic_app:
-        8.x-3.1.8: null
+      product:
+        8.x-4.0.23:
+        - add subscribe button element styling (#169)
+      auth_apic:
+        8.x-4.0.12:
+        - fix render (#613)
       ibm_apim:
-        8.x-3.1.12:
-        - Tempmerge (#667)
+        8.x-4.0.32:
+        - only if url is not null
+        8.x-4.0.31:
+        - Moresmells (#666)
+      consumerorg:
+        8.x-4.0.12:
+        - Codesmells (#225)
       apictest:
-        8.x-3.1.6: null
+        8.x-4.0.33:
+        - need to set the user registry when logging in by role
+  8.x-20210420-1028:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.30:
+        - should be an array
+  8.x-20210419-1906:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-4.0.11: null
+  8.x-20210419-1651:
+    commits: null
+    modules:
+      apictest:
+        8.x-4.0.32:
+        - use userregistry names
+  8.x-20210419-1359:
+    commits: null
+    modules:
+      apic_api:
+        8.x-4.0.15:
+        - missing comma
+      apictest:
+        8.x-4.0.31:
+        - code smells
+  8.x-20210419-0939:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.23:
+        - code smells
+      apictest:
+        8.x-4.0.30:
+        - needs to be an object not an assoc array
+        8.x-4.0.29:
+        - code smells
+  8.x-20210416-1638:
+    commits:
+    - code smells
+    - use our own entity update manager
+    modules:
+      socialblock:
+        8.x-4.0.4:
+        - code smells
+      product:
+        8.x-4.0.22:
+        - code smells
+      ghmarkdown:
+        8.x-4.0.3:
+        - code smells
+      mail_subscribers:
+        8.x-4.0.4:
+        - code smells
+      themegenerator:
+        8.x-4.0.3:
+        - code smells
+      featuredcontent:
+        8.x-4.0.3:
+        - code smells
+      apic_api:
+        8.x-4.0.14:
+        - code smells
+      ibm_apim:
+        8.x-4.0.29: null
+      apictest:
+        8.x-4.0.28:
+        - need to initialise a boolean
+        8.x-4.0.27:
+        - revert these 2 files to get tests working
+        8.x-4.0.26:
+        - more attempts to get user creation working
+        8.x-4.0.25:
+        - more attempts to get user creation working
+        8.x-4.0.24:
+        - try handling nulls as we did before
+        8.x-4.0.23:
+        - dont pass in nulls
+        8.x-4.0.22:
+        - code smells
   8.x-20210416-1023:
     commits: null
     modules:
-      ibm_apim:
-        8.x-3.1.11:
-        - fix unit tests (#663) (#664)
-  8.x-20210415-1712:
-    commits: null
-    modules:
-      product:
-        8.x-3.1.6:
-        - use void
-      apic_app:
-        8.x-3.1.7:
-        - fix rearrange notification in application
-        - feat add notification for events in application metrics (#225)
-      ibm_apim:
-        8.x-3.1.10:
-        - feat add events notification in org metrics (#656)
-      consumerorg:
-        8.x-3.1.6: null
-        8.x-3.1.5:
-        - entity_reference module is now empty and not needed
-  8.x-20210415-1023:
-    commits: null
-    modules:
-      product:
-        8.x-3.1.5:
-        - Speed up product delete
       auth_apic:
-        8.x-3.1.4: null
-        8.x-3.1.3:
-        - use void
-        - deprecated function
-        8.x-3.1.2: null
-      mail_subscribers:
-        8.x-3.1.2:
-        - use void
+        8.x-4.0.10:
+        - missing group anotation
+        - fix missing password form constructor parameter
+        - urghh case issues
+        - code order matters for test
+        - fix remaining test
+        - signature is not base64 encoded json
+        - signature is not base64 encoded json
+        - fix unit tests
+        - tidy up some code smells
       apic_app:
-        8.x-3.1.6: null
-        8.x-3.1.5:
-        - use void
-        8.x-3.1.4:
-        - Subscription service webhook improvements
+        8.x-4.0.22:
+        - use our own entity update manager
       ibm_apim:
-        8.x-3.1.9: null
-        8.x-3.1.8:
-        - Merge pull request
-        - deprecated function
-        8.x-3.1.7:
-        - Log webhook event processing time
+        8.x-4.0.28:
+        - update unit tests
+        8.x-4.0.27:
+        - use our own entity update manager
+        8.x-4.0.26:
+        - fix unit tests (#663)
       consumerorg:
-        8.x-3.1.4:
+        8.x-4.0.11:
+        - use our own entity update manager
+  8.x-20210416-0759:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-4.0.10: null
+  8.x-20210415-2223:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.25:
+        - need to set default values to avoid errors accessing uninitialised
+        - need to set is new
         - use void
-        8.x-3.1.3:
         - deprecated function
-      apictest:
-        8.x-3.1.5:
-        - deprecated function
-  8.x-20210413-1027:
+        - feat add events notification in org metrics (#656)
+        - Log webhook event processing time
+        - first draft of views integration of the entity
+      consumerorg:
+        8.x-4.0.9:
+        - entity_reference module is now empty and not needed
+  8.x-20210415-1723:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.21:
+        - ensure sub disabled for anonymous (#168)
+  8.x-20210415-1023:
     commits:
-    - Master to v10.0 22844 (#488)
+    - entity_reference module is now empty and not needed
+    modules:
+      product:
+        8.x-4.0.20:
+        - use void
+        8.x-4.0.19:
+        - Speed up product delete
+      ghmarkdown:
+        8.x-4.0.2: null
+      auth_apic:
+        8.x-4.0.9: null
+        8.x-4.0.8:
+        - use void
+        - deprecated function
+        8.x-4.0.7: null
+      mail_subscribers:
+        8.x-4.0.3:
+        - use void
+        8.x-4.0.2: null
+      themegenerator:
+        8.x-4.0.2: null
+      featuredcontent:
+        8.x-4.0.2: null
+      apic_app:
+        8.x-4.0.21: null
+        8.x-4.0.20: null
+        8.x-4.0.19:
+        - use void
+        8.x-4.0.18:
+        - Subscription service webhook improvements
+      consumerorg:
+        8.x-4.0.8:
+        - use void
+        8.x-4.0.7:
+        - deprecated function
+        8.x-4.0.6: null
+      apictest:
+        8.x-4.0.21:
+        - deprecated function
+  8.x-20210414-2223:
+    commits: null
+    modules:
+      socialblock:
+        8.x-4.0.3: null
+      apic_api:
+        8.x-4.0.13: null
+      apictest:
+        8.x-4.0.20:
+        - add message to see in logs
+  8.x-20210414-1408:
+    commits: null
     modules:
       apic_app:
-        8.x-3.1.3:
+        8.x-4.0.17:
         - add consumer org to the cache tag list
-      apictest:
-        8.x-3.1.4:
-        - add message to see in logs
+  8.x-20210414-1022:
+    commits:
+    - Tc2dev/20210406 (#487)
+    modules:
+      apic_app:
+        8.x-4.0.16:
+        - feat add notification for events in application metrics (#225)
+  8.x-20210413-1623:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.24:
+        - performance improvements to eventlog entities
+  8.x-20210412-2223:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.18:
+        - Improve product_replace webhook processing
+  8.x-20210412-1023:
+    commits: null
+    modules:
+      apic_app:
+        8.x-4.0.15: null
+        8.x-4.0.14:
+        - need to set timestamp too
+        - add comment and todo
+        - add event log entity for app creation and update
+      ibm_apim:
+        8.x-4.0.23:
+        - add todo
+        - remove warning and replace with debug
+        8.x-4.0.22:
+        - remove fully qualified urls from other fields too
+        8.x-4.0.21:
+        - start rendering code
   8.x-20210412-0422:
     commits: null
     modules:
-      product:
-        8.x-3.1.4:
-        - Improve product_replace webhook processing
-  8.x-20210410-1032:
-    commits: null
-    modules:
       ibm_apim:
-        8.x-3.1.6: null
-        8.x-3.1.5:
-        - make ibm_apim load the event entity type
-        - need to load entity to flesh it out
-  8.x-20210409-2223:
+        8.x-4.0.20:
+        - create activity feed json controller
+  8.x-20210409-1623:
     commits:
-    - 6762 patch honeypot to whitelist IP (#485)
-    modules:
-      product:
-        8.x-3.1.3: null
-  8.x-20210409-1624:
-    commits: null
+    - 6762 patch honeypot to whitelist IP (#484)
     modules:
       ibm_apim:
-        8.x-3.1.4: null
+        8.x-4.0.19: null
   8.x-20210408-0423:
     commits: null
     modules:
-      ibm_apim:
-        8.x-3.1.3: null
       apictest:
-        8.x-3.1.3:
+        8.x-4.0.19: null
+        8.x-4.0.18:
         - use composer based drupal-check
-  8.x-20210331-0837:
+  8.x-20210331-2223:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.17:
+        - update basic page references
+      apic_api:
+        8.x-4.0.12:
+        - update basic page references
+  8.x-20210330-1623:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.16:
+        - Fix processing of product_replace_v2 webhooks
+  8.x-20210329-2223:
+    commits: null
+    modules:
+      apictest:
+        8.x-4.0.17:
+        - use phpunit 9
+  8.x-20210326-2223:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.18:
+        - Use new alias service (#652)
+  8.x-20210326-1623:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.15:
+        - fix drush error
+      auth_apic:
+        8.x-4.0.6: null
+      ibm_apim:
+        8.x-4.0.17: null
+  8.x-20210325-2223:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-4.0.5:
+        - remove deprecated entity.manager
+        8.x-4.0.4:
+        - Oidc invite fix (#606)
+      apic_api:
+        8.x-4.0.11: null
+        8.x-4.0.10:
+        - remove deprecated entity.manager
+        8.x-4.0.9:
+        - this should only be a notice not an error
+      apic_app:
+        8.x-4.0.13:
+        - stop running strtotime twice
+      ibm_apim:
+        8.x-4.0.16:
+        - remove deprecated entity.manager
+        8.x-4.0.15:
+        - handle product_replace_v2 type
+        8.x-4.0.14: null
+      apictest:
+        8.x-4.0.16:
+        - remove deprecated entity.manager
+        8.x-4.0.15:
+        - remove lock
+        - use phptest 8
+  8.x-20210325-1623:
+    commits: null
+    modules:
+      apictest:
+        8.x-4.0.14:
+        - Remove zombie (#199)
+  8.x-20210324-2223:
     commits:
     - use BASE_BRANCH in Jenkinsfile (#479)
-    - include drupal-check via composer instead of download
-    - Remove eroneous sleep
-    - Use sudo instead of su to get to aegir to run the tests
-    - unlock explorer version (#482)
     modules:
-      socialblock:
-        8.x-3.1.1: null
       product:
-        8.x-3.1.2: null
-        8.x-3.1.1:
-        - Createdat (#157)
-        - update basic page references
-      auth_apic:
-        8.x-3.1.1: null
-      mail_subscribers:
-        8.x-3.1.1: null
-      themegenerator:
-        8.x-3.1.1: null
-      featuredcontent:
-        8.x-3.1.1: null
-      apic_api:
-        8.x-3.1.3: null
-        8.x-3.1.2: null
-        8.x-3.1.1:
-        - Createdat (#109)
-        - update basic page references
+        8.x-4.0.14: null
+        8.x-4.0.13:
+        - process subs before deleting any left overs
+        - delete subs for a product when product deleted
       apic_app:
-        8.x-3.1.2: null
-        8.x-3.1.1:
-        - stop running strtotime twice
+        8.x-4.0.12:
         - typo
         - need to use timestamp field type for timestamps!
-        - fix up app tests
-        - fix up app tests
-        - store apic created_at and updated_at timestamps (#220)
-        - store apic created_at and updated_at timestamps
+        8.x-4.0.11:
+        - delete subs for a product when product deleted
       ibm_apim:
-        8.x-3.1.2: null
-        8.x-3.1.1:
-        - Eventlog (#643)
-      consumerorg:
-        8.x-3.1.2: null
-        8.x-3.1.1:
-        - Createdat (#221)
-      apictest:
-        8.x-3.1.2:
-        - fix up a few typos and update test data (#184)
-  8.x-20210329-1714:
-    commits:
-    - Merge pull request
+        8.x-4.0.13:
+        - need to use timestamp field type for timestamps!
+  8.x-20210319-2223:
+    commits: null
     modules:
-      apictest:
-        8.x-3.1.1:
-        - Merge pull request
-  8.x-20210318-1656:
-    commits:
-    - Update version for 10.0.3
+      ibm_apim:
+        8.x-4.0.12:
+        - delete users when deleting a UR
+  8.x-20210319-1023:
+    commits: null
     modules:
-      socialblock:
-        8.x-3.1.0:
-        - update version 8.x-3.0.12 -> 8.x-3.1.0
       product:
-        8.x-3.1.0:
-        - update version 8.x-3.0.74 -> 8.x-3.1.0
-      ghmarkdown:
-        8.x-3.1.0:
-        - update version 8.x-3.0.3 -> 8.x-3.1.0
-      auth_apic:
-        8.x-3.1.0:
-        - update version 8.x-3.0.51 -> 8.x-3.1.0
-      mail_subscribers:
-        8.x-3.1.0:
-        - update version 8.x-3.0.14 -> 8.x-3.1.0
-      themegenerator:
-        8.x-3.1.0:
-        - update version 8.x-3.0.9 -> 8.x-3.1.0
-      featuredcontent:
-        8.x-3.1.0:
-        - update version 8.x-3.0.15 -> 8.x-3.1.0
-      apic_api:
-        8.x-3.1.0:
-        - update version 8.x-3.0.57 -> 8.x-3.1.0
-      apic_app:
-        8.x-3.1.0:
-        - update version 8.x-3.0.85 -> 8.x-3.1.0
-      ibm_apim:
-        8.x-3.1.0:
-        - update version 8.x-3.0.237 -> 8.x-3.1.0
-      consumerorg:
-        8.x-3.1.0:
-        - update version 8.x-3.0.108 -> 8.x-3.1.0
-      apictest:
-        8.x-3.1.0:
-        - update version 8.x-3.0.41 -> 8.x-3.1.0
-  8.x-20210316-1624:
+        8.x-4.0.12:
+        - fix clean up plans layout (#159)
+  8.x-20210318-1227:
     commits:
-    - font-awesome 4.6.0
-    - bump npm audit pass explorer
-    - lock v10.0.2.0 explorer version (#472)
-    - fix conflicts
+    - include drupal-check via composer instead of download
+    modules:
+      ibm_apim:
+        8.x-4.0.11: null
+  8.x-20210317-1624:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.10:
+        - Removed deprecated from getRealm
+      apictest:
+        8.x-4.0.13:
+        - Patches are done in template now
+        - Use patches in template
+        - Delete pdo.patch
+        - Delete settings_8.patch
+        - Use patches in template
+  8.x-20210316-1625:
+    commits:
     - composer update (#468)
-    - fix fix reshuffling of fivestar components (#467)
+    - sqldumps
+    - New po files with updated versions added.
     modules:
       apic_app:
-        8.x-3.0.84:
+        8.x-4.0.10: null
+        8.x-4.0.9:
         - classes dont exist
         - classes dont exist
-  8.x-20210312-1916:
+  8.x-20210315-2223:
     commits: null
     modules:
       apic_app:
-        8.x-3.0.83:
+        8.x-4.0.8:
         - use x path alias from subscriptions if present (#223)
+  8.x-20210312-1723:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-4.0.9: null
+        8.x-4.0.8:
+        - Eventlog (#643)
+      apictest:
+        8.x-4.0.12:
+        - Eventlog (#195)
   8.x-20210312-1123:
     commits: null
     modules:
-      product:
-        8.x-3.0.73:
-        - handle long api and product titles in titlebar (#158)
-      consumerorg:
-        8.x-3.0.107:
-        - long corg name handling (#222)
-  8.x-20210311-2350:
+      auth_apic:
+        8.x-4.0.3:
+        - handle null response
+      apic_api:
+        8.x-4.0.8: null
+  8.x-20210312-0009:
     commits: null
     modules:
+      product:
+        8.x-4.0.11:
+        - handle long api and product titles in titlebar (#158)
       ibm_apim:
-        8.x-3.0.236: null
-        8.x-3.0.235:
+        8.x-4.0.7:
+        - fix fix overflow on search cards (#640)
         - handle long corg names (#639)
-        - fix fix overflow on search cards (#640) (#641)
-  8.x-20210311-1537:
+      consumerorg:
+        8.x-4.0.5:
+        - long corg name handling (#222)
+  8.x-20210311-1536:
     commits: null
     modules:
       apic_app:
-        8.x-3.0.82:
+        8.x-4.0.7:
         - add link to product title (#222)
   8.x-20210310-2323:
     commits:
@@ -2215,152 +3820,218 @@ changes:
     - Use sudo instead of su to get to aegir to run the tests
     modules:
       apictest:
-        8.x-3.0.40:
+        8.x-4.0.11:
         - Use sudo instead of su to get to aegir when running the tests
-  8.x-20210305-1723:
+  8.x-20210309-1311:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.10:
+        - handle title not being translated
+      apic_api:
+        8.x-4.0.7:
+        - handle title not being translated
+  8.x-20210309-1120:
+    commits: null
+    modules:
+      apictest:
+        8.x-4.0.10:
+        - revert patch
+        - revert patch
+  8.x-20210309-0922:
     commits:
-    - revert-patches (#465)
-    - update pdo
-    - update settings
-    - Fix set patch (#460) (#461)
+    - font-awesome 4.6.0
+    - composer update
+    modules:
+      apictest:
+        8.x-4.0.9:
+        - run kernel tests too
+  8.x-20210304-2323:
+    commits:
+    - Fix set patch (#460)
     - fix patches (#456)
     - update settings patch (#455)
     - update patch (#454)
     modules:
-      product:
-        8.x-3.0.72:
-        - handle title not being translated
-      apic_api:
-        8.x-3.0.56:
-        - handle title not being translated
       apictest:
-        8.x-3.0.39:
-        - revert patches (#193)
-        8.x-3.0.38:
-        - Try-patches-again (#192)
-        8.x-3.0.37:
-        - Merge pull request
-        8.x-3.0.36:
+        8.x-4.0.8:
+        - fix settings
+        8.x-4.0.7:
         - fix patches (#186)
+        8.x-4.0.6:
         - update patches (#185)
-  8.x-20210304-1150:
+  8.x-20210304-1147:
     commits: null
     modules:
       apic_api:
-        8.x-3.0.55:
-        - feat Change API protocol separator (#111)
+        8.x-4.0.6:
+        - feat Change API protocol separator (#110)
+        - make sure api title is actually set
   8.x-20210303-1724:
     commits:
     - weirdly another copy of search_content view
     - use language selector on search_content view
     modules:
       product:
-        8.x-3.0.71:
+        8.x-4.0.9: null
+        8.x-4.0.8:
         - invalidate views cache
         - delete any retired apis we're sent
       apic_app:
-        8.x-3.0.81:
+        8.x-4.0.6:
         - deal with long app names (#221)
-  8.x-20210303-1139:
+  8.x-20210303-1141:
     commits: null
     modules:
       socialblock:
-        8.x-3.0.11:
+        8.x-4.0.2:
         - use real post count
-  8.x-20210226-1044:
+  8.x-20210301-2323:
     commits:
     - composer update
     modules:
       product:
-        8.x-3.0.70:
+        8.x-4.0.7:
         - make sure api title is actually set
-      apic_api:
-        8.x-3.0.54:
-        - make sure api title is actually set
-  8.x-20210225-1135:
-    commits:
-    - try composer 2 (#450)
-    - fix build break
-    - fix split async from kafka education (#451)
-    - name-updates (#448)
-    - Tc2dev/20210201 (#447)
-    modules:
-      product:
-        8.x-3.0.69:
-        - path alias test
-      apic_api:
-        8.x-3.0.53:
-        - path alias test (#108)
-  8.x-20210224-1749:
+  8.x-20210301-1909:
     commits: null
     modules:
+      consumerorg:
+        8.x-4.0.4: null
+  8.x-20210301-1435:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.6: null
+      apic_api:
+        8.x-4.0.5: null
+      apic_app:
+        8.x-4.0.5:
+        - fix up app tests
+        - fix up app tests
+  8.x-20210301-1116:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.5:
+        - Createdat (#157)
+      apic_api:
+        8.x-4.0.4:
+        - Createdat (#109)
+      apic_app:
+        8.x-4.0.4:
+        - store apic created_at and updated_at timestamps (#220)
+      consumerorg:
+        8.x-4.0.3:
+        - Createdat (#221)
       apictest:
-        8.x-3.0.35:
-        - pathalias test data
-  8.x-20210224-1228:
-    commits: null
-    modules:
-      product:
-        8.x-3.0.68:
-        - fix productselect routing
-        - use pathaliases
-      apic_api:
-        8.x-3.0.52:
-        - use pathaliases
-      ibm_apim:
-        8.x-3.0.234:
-        - need to delete subs not in apim (#637)
-  8.x-20210223-1230:
+        8.x-4.0.5:
+        - fix up a few typos and update test data (#184)
+  8.x-20210226-1123:
     commits: null
     modules:
       apic_app:
-        8.x-3.0.80:
-        - send app_create down the create path too
-  8.x-20210222-2323:
+        8.x-4.0.3:
+        - store apic created_at and updated_at timestamps
+  8.x-20210225-2117:
     commits: null
     modules:
+      product:
+        8.x-4.0.4:
+        - path alias test
+      apic_api:
+        8.x-4.0.3:
+        - path alias test (#108)
+  8.x-20210224-2323:
+    commits:
+    - try composer 2 (#450)
+    - fix build break
+    - fix split async from kafka education (#452)
+    - Drupal names (#449)
+    - Tc2dev/20210201 (#447)
+    modules:
+      apictest:
+        8.x-4.0.4:
+        - pathalias test data
+  8.x-20210224-1729:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.3: null
+  8.x-20210223-1124:
+    commits: null
+    modules:
+      product:
+        8.x-4.0.2:
+        - new replace webhook
+      apic_api:
+        8.x-4.0.2:
+        - use pathaliases
+      apic_app:
+        8.x-4.0.2:
+        - send app_create down the create path too
       ibm_apim:
-        8.x-3.0.233:
-        - limit how many errors we store (#636)
-        8.x-3.0.232: null
-      consumerorg:
-        8.x-3.0.106: null
+        8.x-4.0.6:
+        - need to delete subs not in apim (#637)
   8.x-20210222-2104:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.0.231:
-        - Fix duplicate user exception
+        8.x-4.0.5:
+        - limit how many errors we store (#636)
       consumerorg:
-        8.x-3.0.105:
+        8.x-4.0.2:
         - Fix duplicate user exception
-  8.x-20210222-0938:
+  8.x-20210222-0937:
     commits: null
     modules:
       ibm_apim:
-        8.x-3.0.230:
+        8.x-4.0.4:
+        - Fix duplicate user exception
+        8.x-4.0.3:
         - make sure group url is set
       apictest:
-        8.x-3.0.34:
+        8.x-4.0.3:
         - Wait for WSREP ready in create_test_site.sh
-  8.x-20210212-1721:
+  8.x-20210212-2323:
     commits:
     - fix versioning to allow LTS->CD upgrade
     - ensure that image_captcha is set to use some fonts
     modules:
       ibm_apim:
-        8.x-3.0.229:
+        8.x-4.0.2:
         - make sure group is set
   8.x-20210211-2322:
     commits:
     - apimesh/devportal#6637 wait for WSREP to be ready
     - fix branch names
     - fix branch names
-    - Update build.sh
-    - 10.0.2
+    - bump version in master
     modules:
+      socialblock:
+        8.x-4.0.1: null
+      product:
+        8.x-4.0.1: null
+      ghmarkdown:
+        8.x-4.0.1: null
+      auth_apic:
+        8.x-4.0.2: null
+      mail_subscribers:
+        8.x-4.0.1: null
+      themegenerator:
+        8.x-4.0.1: null
+      featuredcontent:
+        8.x-4.0.1: null
+      apic_api:
+        8.x-4.0.1: null
+      apic_app:
+        8.x-4.0.1: null
+      ibm_apim:
+        8.x-4.0.1: null
+      consumerorg:
+        8.x-4.0.1: null
       apictest:
-        8.x-3.0.33:
+        8.x-4.0.2:
         - apimesh/devportal#6637 Fix WSREP ready error
   8.x-20210209-2323:
     commits:
@@ -6288,4 +7959,4 @@ changes:
         - try to make it more tolerant of yum issues
         8.x-1.3.132:
         - try to make it more tolerant of yum issues
-  8.x-20220317-1451:
+  8.x-20220624-1621:

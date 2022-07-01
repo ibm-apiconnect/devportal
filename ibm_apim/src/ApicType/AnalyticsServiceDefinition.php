@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -150,7 +150,7 @@ class AnalyticsServiceDefinition {
       $this->setSummary($data['summary']);
     }
     if (isset($data['client_endpoint'])) {
-      $this->setClientEndpoint($data['client_endpoint']);
+      $this->setClientEndpoint(rtrim($data['client_endpoint'],"/"));
     }
     if (isset($data['client_endpoint_tls_client_profile_url'])) {
       $this->setClientEndpointTlsClientProfileUrl($data['client_endpoint_tls_client_profile_url']);

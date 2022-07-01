@@ -182,6 +182,9 @@ Feature: Edit Profile
     Given users:
       | name              | mail | pass                  | status | registry_url                  |
       | @data(andre.name) |      | @data(andre.password) | 1      | @data(user_registries[2].url) |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.name)"
     When I am at "/user/@uid/edit"
     Then I should see the text "First Name"
@@ -212,6 +215,9 @@ Feature: Edit Profile
     Given users:
       | name              | mail | pass                  | status | registry_url                  |
       | @data(andre.name) |      | @data(andre.password) | 1      | @data(user_registries[2].url) |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.name)"
     When I am at "/user/@uid/edit"
     When I select "es" from "preferred_langcode"
@@ -234,6 +240,9 @@ Feature: Edit Profile
     Given users:
       | name              | mail              | pass                  | status | registry_url                  |
       | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      | @data(user_registries[2].url) |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.name)"
     When I am at "/user/@uid/edit"
     Then I should see the text "First Name"
@@ -270,6 +279,9 @@ Feature: Edit Profile
     Given users:
       | name              | mail              | pass                  | status | registry_url                  |
       | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      | @data(user_registries[2].url) |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.name)"
     When I am at "/user/@uid/edit"
     And I enter "Changed Name" for "First Name"
@@ -291,13 +303,13 @@ Feature: Edit Profile
       | lur  | @data(user_registries[1].title) | @data(user_registries[1].url) | yes          | no      |
     Given users:
       | uid    | name            | mail                     | pass     | registry_url                  |
-      | 345678 | editprofileuser | editprofile1@example.com | Qwert123 | @data(user_registries[0].url) |
+      | 345678 | editprofileuser | editprofile1@example.com | Qwert123IsBadPassword! | @data(user_registries[0].url) |
       | 876543 | editprofileuser | editprofile2@example.com | Qwert246 | @data(user_registries[1].url) |
     Given consumerorgs:
       | title | name | id   | owner_uid |
       | org1  | org1 | org1 | 345678    |
       | org2  | org2 | org2 | 876543    |
-    When I am logged in as "editprofileuser" from "@data(user_registries[0].url)" with "Qwert123"
+    When I am logged in as "editprofileuser" from "@data(user_registries[0].url)" with "Qwert123IsBadPassword!"
     And I am at "/user/@uid/edit"
     And I enter "USER ONE FIRST NAME" for "First Name"
     When I press the "Save" button
@@ -318,3 +330,109 @@ Feature: Edit Profile
     And there are messages
     And I should see the text "Your account has been updated."
 
+
+  @api
+  Scenario: Edit profile with text type custom fields
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+    Given members:
+      | consumerorgid                  | username             | roles                   |
+      | @data(andre.consumerorg.id)    | @data(andre.mail)    | administrator           |
+    Given user entities have text type custom fields
+    And I am logged in as "@data(andre.name)"
+    And I am at "/user/@uid/edit"
+    Then I should see a "#edit-field-singletext-0-value" element
+    And I should see a "#edit-field-multitext-0-value" element
+    And I should see a "#edit-field-multitext-1-value" element
+    And I enter "singleVal" for "edit-field-singletext-0-value"
+    And I enter "first multi val" for "edit-field-multitext-0-value"
+    And I enter "theSecond" for "edit-field-multitext-1-value"
+    When I press the "Save" button
+    Then I should see the text "Your account has been updated."
+    When I am at "/user/@uid"
+    Then I should see the text "singleVal"
+    And I should see the text "first multi val"
+    And I should see the text "theSecond"
+    Then I delete the text type custom fields for user entities
+
+
+  @api
+  Scenario: Edit profile with timestamp type custom fields
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+    Given members:
+      | consumerorgid                  | username             | roles                   |
+      | @data(andre.consumerorg.id)    | @data(andre.mail)    | administrator           |
+    Given user entities have timestamp type custom fields
+    And I am logged in as "@data(andre.name)"
+    And I am at "/user/@uid/edit"
+    And I should see a "#edit-field-singletimestamp-0-value-date" element
+    And I should see a "#edit-field-multitimestamp-0-value-date" element
+    And I should see a "#edit-field-multitimestamp-1-value-date" element
+    And I should see a "#edit-field-singletimestamp-0-value-time" element
+    And I should see a "#edit-field-multitimestamp-0-value-time" element
+    And I should see a "#edit-field-multitimestamp-1-value-time" element
+    Given I enter "2003-12-12" for "edit-field-singletimestamp-0-value-date"
+    And I enter "2013-01-19" for "edit-field-multitimestamp-0-value-date"
+    And I enter "2022-12-24" for "edit-field-multitimestamp-1-value-date"
+    And I enter "00:00:00" for "edit-field-singletimestamp-0-value-time"
+    And I enter "12:20:20" for "edit-field-multitimestamp-0-value-time"
+    And I enter "13:13:13" for "edit-field-multitimestamp-1-value-time"
+    When I press the "Save" button
+    Then I should see the text "Your account has been updated."
+    When I am at "/user/@uid"
+    Then I should see the text "12/12/2003"
+    And I should see the text "13:13"
+    And I should see the text "12/24/2022"
+    And I should see the text "12:20"
+    And I should see the text "01/19/2013"
+    And I should see the text "00:00"
+    Then I delete the timestamp type custom fields for user entities
+
+  @api
+  Scenario: Edit profile with date type custom fields
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+    Given members:
+      | consumerorgid                  | username             | roles                   |
+      | @data(andre.consumerorg.id)    | @data(andre.mail)    | administrator           |
+    Given user entities have datetime type custom fields
+    And I am logged in as "@data(andre.name)"
+    And I am at "/user/@uid/edit"
+    Then I should see a "#edit-field-singledatetime-0-value-date" element
+    And I should see a "#edit-field-multidatetime-0-value-date" element
+    And I should see a "#edit-field-multidatetime-1-value-date" element
+    And I should see a "#edit-field-singledatetime-0-value-time" element
+    And I should see a "#edit-field-multidatetime-0-value-time" element
+    And I should see a "#edit-field-multidatetime-1-value-time" element
+    Given I enter "2003-12-12" for "edit-field-singledatetime-0-value-date"
+    And I enter "2013-01-19" for "edit-field-multidatetime-0-value-date"
+    And I enter "2022-12-24" for "edit-field-multidatetime-1-value-date"
+    And I enter "00:00:00" for "edit-field-singledatetime-0-value-time"
+    And I enter "12:20:20" for "edit-field-multidatetime-0-value-time"
+    And I enter "13:13:13" for "edit-field-multidatetime-1-value-time"
+    When I press the "Save" button
+    Then I should see the text "Your account has been updated."
+    When I am at "/user/@uid"
+    Then I should see the text "12/12/2003"
+    And I should see the text "13:13"
+    And I should see the text "12/24/2022"
+    And I should see the text "12:20"
+    And I should see the text "01/19/2013"
+    And I should see the text "00:00"
+    Then I delete the datetime type custom fields for user entities

@@ -1,79 +1,151 @@
 changes:
-  8.x-3.3.14: null
-  8.x-3.3.13: null
-  8.x-3.3.12:
+  8.x-99.0.3:
+  - update copyright
+  8.x-99.0.2:
+  - tidy url for redirect module enable
+  8.x-99.0.1:
+  - Update product.info.yml
+  8.x-4.0.107:
   - Update Jenkinsfile
-  - Update ChangeLog.yml
-  - Update product.info.yml
-  8.x-3.3.10:
+  8.x-4.0.106:
+  - Product filtering tighened up.
+  8.x-4.0.105:
+  - upgrade phpunit
+  8.x-4.0.104: null
+  8.x-4.0.103:
+  - use more secure passwords
+  8.x-4.0.102: null
+  8.x-4.0.101: null
+  8.x-4.0.100:
+  - Update .whitesource
+  8.x-4.0.99:
+  - Update .whitesource
+  - Add .whitesource configuration file
+  8.x-4.0.98:
+  - use product node id not pathalias
+  8.x-4.0.97:
+  - deprecated functions - product
+  8.x-4.0.96: null
+  8.x-4.0.95:
+  - refactor taxonomy services
+  8.x-4.0.94:
+  - ensure node id exists before calling update refs
+  8.x-4.0.93:
   - use correct named upgrade functions
-  8.x-3.3.9:
+  8.x-4.0.92:
   - extra product tests for extended name regex
-  8.x-3.3.8:
-  - Fixed subscription migration webhook (#231) (#232)
-  8.x-3.3.7:
+  8.x-4.0.91:
+  - Fixed subscription migration webhook (#231)
+  8.x-4.0.90:
   - git -> gitci
-  8.x-3.3.6:
-  - Subscription wizard shows choose plan step (#229)
-  8.x-3.3.5: null
-  8.x-3.3.4:
+  8.x-4.0.89:
+  - fix bump version
   - refactor Jenkinsfile for the new portal.groovy
-  8.x-3.3.3:
+  8.x-4.0.88:
+  - Subscription wizard shows choose plan step
+  8.x-4.0.87:
   - controller shouldnt return null
-  8.x-3.3.2: null
-  8.x-3.3.1:
-  - Update product.info.yml
-  8.x-3.2.0:
-  - update version 8.x-3.1.48 -> 8.x-3.2.0
-  8.x-3.1.47:
+  8.x-4.0.86:
+  - support custom attributes in product info object too
+  8.x-4.0.85:
+  - render custom extensions on plans
+  8.x-4.0.84:
+  - Fix subscriptions
+  8.x-4.0.83:
+  - needs to return as yaml so needs parsing
+  8.x-4.0.82:
+  - add support for getting artifact document back via drush
+  8.x-4.0.81:
+  - Fix multiple subscriptions issue
+  8.x-4.0.80:
+  - Fix caching problems
+  8.x-4.0.79:
+  - use twig markdown filter
+  8.x-4.0.78:
+  - Add support for new webhooks
+  8.x-4.0.77:
+  - need to start from empty state
+  8.x-4.0.76:
+  - fix up product ACL tests
+  8.x-4.0.75:
+  - fix up product ACL tests
+  8.x-4.0.74:
+  - Added visibility tests (#217)
+  8.x-4.0.73:
+  - remove drush 10 entries in composer.json files
+  8.x-4.0.72: null
+  8.x-4.0.71:
+  - tidy up a bit
+  8.x-4.0.70:
+  - remove dt and fix composer
+  - fix drush 10 compat
+  8.x-4.0.69:
+  - add this
+  - add drush 10 commands
+  8.x-4.0.68:
+  - show api state
+  8.x-4.0.67:
+  - need to do ACL checks on /product/x/api/Y
+  8.x-4.0.66:
+  - fix custom group product acl checks
+  8.x-4.0.65:
+  - fix custom group product acl checks
+  8.x-4.0.64:
+  - fix custom product acl checks
+  8.x-4.0.63:
+  - avoid unset reference
+  8.x-4.0.62:
+  - need to cast to int to fix ACL check
+  - need to check ACL explicitly
+  8.x-4.0.61:
   - empty apis array means all apis
-  8.x-3.1.46:
+  8.x-4.0.60:
   - fix invalid foreach arg
-  8.x-3.1.45:
+  8.x-4.0.59:
   - dont allow viewers to click on Get Access
-  8.x-3.1.44:
-  - Added visibility and subscribability tests (#210) (#211)
-  8.x-3.1.43:
-  - fix lookup apiname in product for plan filter (#202) (#209)
-  8.x-3.1.42:
-  - fix move get access button back to the right (#204) (#208)
-  8.x-3.1.41:
-  - remove leftover dpm (#206) (#207)
-  8.x-3.1.40:
-  - fix further plan card polish (#203) (#205)
-  8.x-3.1.39:
-  - fix pass product apis to new productplan service (#200) (#201)
-  8.x-3.1.38:
-  - Tempmerge (#199)
-  8.x-3.1.37:
+  8.x-4.0.58:
+  - Added visibility and subscribability tests (#210)
+  8.x-4.0.57:
+  - fix lookup apiname in product for plan filter (#202)
+  8.x-4.0.56: null
+  8.x-4.0.55:
+  - fix move get access button back to the right (#204)
+  - remove leftover dpm (#206)
+  8.x-4.0.54:
+  - fix further plan card polish (#203)
+  8.x-4.0.53:
+  - fix pass product apis to new productplan service (#200)
+  8.x-4.0.52:
   - slight tweak to logic
-  8.x-3.1.36:
+  8.x-4.0.51:
   - polish plans tiles (#198)
-  8.x-3.1.35:
+  8.x-4.0.50:
   - if delete an api then remove the doc refs too
-  8.x-3.1.34:
+  8.x-4.0.49:
   - fix up some logic errors in updating doc refs
-  8.x-3.1.33:
-  - feat add expand all/shrink all twistie to plans modal (#196) (#197)
-  8.x-3.1.32:
-  - feat add billing info to modal (#193) (#195)
-  8.x-3.1.31:
+  8.x-4.0.48:
+  - feat add expand all/shrink all twistie to plans modal (#196)
+  8.x-4.0.47:
   - tidy product card (#194)
-  8.x-3.1.30:
+  8.x-4.0.46:
   - use chunking
-  8.x-3.1.29: null
-  8.x-3.1.28:
+  8.x-4.0.45:
+  - feat add billing info to modal (#193)
+  8.x-4.0.44: null
+  8.x-4.0.43:
+  - feat rename subscribe (#191)
+  8.x-4.0.42:
   - move productplan service to ibm_apim to resolve cycle (#190)
-  8.x-3.1.27:
+  8.x-4.0.41:
   - not needed imports
-  8.x-3.1.26:
+  8.x-4.0.40:
   - refactor SubscriptionService to be a proper service
-  8.x-3.1.25:
+  8.x-4.0.39:
   - chore review comments
   - feat lookup apis in a product's plans
-  8.x-3.1.24:
+  8.x-4.0.38:
   - small tweak to the strings to existing translations can be used
-  8.x-3.1.23:
+  8.x-4.0.37:
   - last few refrences ?
   - ids arent going to be like titles
   - needs to use ref not name
@@ -84,63 +156,75 @@ changes:
   - use refs not names
   - update unit test
   - add tests for routing by nameversion
-  8.x-3.1.22:
+  8.x-4.0.36:
   - add tests for routing by nameversion
-  8.x-3.1.21:
+  8.x-4.0.35:
   - fix undo typo
   - fix plans table tweaks
-  8.x-3.1.20:
+  8.x-4.0.34:
   - use "IBM API Developer Portal" instead of API Connect
-  8.x-3.1.19:
+  8.x-4.0.33:
   - translation
-  8.x-3.1.18:
+  8.x-4.0.32:
   - feat new plans cards/table (#180)
-  8.x-3.1.17: null
-  8.x-3.1.16:
+  8.x-4.0.31: null
+  8.x-4.0.30:
   - Fix bug with tags array
   - Fix app subs cache
-  8.x-3.1.15:
+  8.x-4.0.29:
   - update product reference for replace
-  8.x-3.1.14: null
-  8.x-3.1.13: null
-  8.x-3.1.12:
+  8.x-4.0.28:
   - wire up more events
-  8.x-3.1.11:
+  8.x-4.0.27:
   - Reset cache after updating subscriptions
-  8.x-3.1.10: null
-  8.x-3.1.9:
+  8.x-4.0.26: null
+  8.x-4.0.25: null
+  8.x-4.0.24:
   - Fix product visibility
   - disable the subscribe buttons
-  8.x-3.1.8:
-  - remove extra use line
-  8.x-3.1.7: null
-  8.x-3.1.6:
+  8.x-4.0.23:
+  - add subscribe button element styling (#169)
+  8.x-4.0.22:
+  - code smells
+  8.x-4.0.21:
+  - ensure sub disabled for anonymous (#168)
+  8.x-4.0.20:
   - use void
-  8.x-3.1.5:
+  8.x-4.0.19:
   - Speed up product delete
-  8.x-3.1.4:
+  8.x-4.0.18:
   - Improve product_replace webhook processing
-  8.x-3.1.3: null
-  8.x-3.1.2: null
-  8.x-3.1.1:
-  - Createdat (#157)
+  8.x-4.0.17:
   - update basic page references
-  8.x-3.1.0:
-  - update version 8.x-3.0.74 -> 8.x-3.1.0
-  8.x-3.0.73:
+  8.x-4.0.16:
+  - Fix processing of product_replace_v2 webhooks
+  8.x-4.0.15:
+  - fix drush error
+  8.x-4.0.14: null
+  8.x-4.0.13:
+  - process subs before deleting any left overs
+  - delete subs for a product when product deleted
+  8.x-4.0.12:
+  - fix clean up plans layout (#159)
+  8.x-4.0.11:
   - handle long api and product titles in titlebar (#158)
-  8.x-3.0.72:
+  8.x-4.0.10:
   - handle title not being translated
-  8.x-3.0.71:
+  8.x-4.0.9: null
+  8.x-4.0.8:
   - invalidate views cache
   - delete any retired apis we're sent
-  8.x-3.0.70:
+  8.x-4.0.7:
   - make sure api title is actually set
-  8.x-3.0.69:
+  8.x-4.0.6: null
+  8.x-4.0.5:
+  - Createdat (#157)
+  8.x-4.0.4:
   - path alias test
-  8.x-3.0.68:
-  - fix productselect routing
-  - use pathaliases
+  8.x-4.0.3: null
+  8.x-4.0.2:
+  - new replace webhook
+  8.x-4.0.1: null
   8.x-3.0.67:
   - make Terms of Service collapse cleaner
   8.x-3.0.66:

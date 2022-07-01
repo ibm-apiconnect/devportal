@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -105,8 +105,8 @@ class ApicUserDeleteForm extends ConfirmFormBase {
 
       $form = [];
       $form['description'] = [
-        '#markup' => t('You are the owner of multiple consumer organizations. 
-                        You can delete your account only when you are the owner of a single organization. 
+        '#markup' => t('You are the owner of multiple consumer organizations.
+                        You can delete your account only when you are the owner of a single organization.
                         Please transfer the ownership of, or delete, the other organizations before you delete your account.'),
       ];
 
@@ -200,8 +200,8 @@ class ApicUserDeleteForm extends ConfirmFormBase {
         $this->messenger->addStatus(t('Organization successfully deleted.'));
       }
       else {
-        $this->logger->debug('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $org_url]);
-        $this->messenger->addStatus(t('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $org_url]));
+        $this->logger->error('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $org_url]);
+        $this->messenger->addError(t('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $org_url]));
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'error deleting org');
         return;
       }
@@ -217,8 +217,8 @@ class ApicUserDeleteForm extends ConfirmFormBase {
       $this->logger->notice('Account deleted successfully from ApicUserDeleteForm.');
     }
     else {
-      $this->logger->warning('Error deleting account from ApicUserDeleteForm.');
-      $this->messenger->addStatus(t('Error deleting user. Please contact your system administrator for assistance.'));
+      $this->logger->error('Error deleting account from ApicUserDeleteForm.');
+      $this->messenger->addError(t('Error deleting user. Please contact your system administrator for assistance.'));
     }
 
     $form_state->setRedirectUrl($this->getCancelUrl());

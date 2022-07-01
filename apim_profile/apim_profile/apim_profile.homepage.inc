@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -397,6 +397,19 @@ function update_gsg_block() {
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apim_profile_create_forum_block() {
+  try {
+    $block = \Drupal::entityTypeManager()
+      ->getStorage('block')
+      ->load('forumsidebar');
+    // If the block exist, just return.
+  } catch (\Exception $e) {
+    // Do Nothing.
+  }
+
+  if (!empty($block)) {
+    return;
+  }
+
   // welcome banner
   $forum_block_content = BlockContent::create([
     'info' => 'Forum Sidebar [en]',

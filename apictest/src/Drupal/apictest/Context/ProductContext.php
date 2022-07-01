@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -474,9 +474,11 @@ class ProductContext extends RawDrupalContext {
     } else {
       $object['catalog_product']['visibility']['view']['enabled'] = true;
     }
+    $object['catalog_product']['visibility']['subscribe']['enabled'] = TRUE;
     switch ($visi) {
       case 'pub':
         // public; anyone can view
+        $object['catalog_product']['visibility']['subscribe']['type'] = 'authenticated';
         $object['catalog_product']['visibility']['view']['type'] = 'public';
         break;
       case 'auth':
@@ -499,6 +501,73 @@ class ProductContext extends RawDrupalContext {
         break;
       default:
     }
+
+    $product = new Product();
+    $nid = $product->create($object);
+    // Make sure that the call returns a number
+    if ((int) $nid >= 0) {
+      print('Saved product ' . $name . ' as nid ' . $nid . PHP_EOL);
+    }
+    else {
+      throw new \Exception("Failed to create product with the name $name");
+    }
+  }
+
+    /**
+   * @Given I publish a product with the name :arg1, id :arg2, apis :arg3 and a paid plan
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
+   */
+  public function iPublishAProductWithNameIdAPIBilling($name, $id, $api): void {
+    $random = new Random();
+    if ($name === NULL || empty($name)) {
+      $name = $random->name(8);
+    }
+    $incApi = $api . ':1.0.0';
+    $object = [];
+    $object['created_at'] = '2021-02-26T12:18:58.995Z';
+    $object['updated_at'] = '2021-02-26T12:18:58.995Z';
+    $object['catalog_product'] = [];
+    $object['catalog_product']['info'] = [];
+    $object['catalog_product']['info']['name'] = $name;
+    $object['catalog_product']['info']['title'] = $name;
+    $object['catalog_product']['info']['version'] = '1.0.0';
+    $object['catalog_product']['info']['x-pathalias'] = $name;
+    $object['state'] = 'published';
+    $object['id'] = $id;
+    $object['url'] = 'https://localhost.com';
+    $object['product_plans'] = [["apis" => []]];
+    $object['catalog_product']['plans'] = [
+      "default-plan" => [
+        "rate-limits" => [
+                "default" =>[
+                        "value" => "100/1hour"
+                        ]
+
+                ],
+        "title" => "Default Plan",
+        "description" => "Default Plan",
+        "approval" => null,
+        "apis" => [
+                $incApi => []
+        ],
+        "billing" => [
+          "billing" => "account",
+          "currency" => "USD",
+          "price" => 10,
+          "period" => 1,
+          "period-unit" => "month", 
+          "trial-period" => 0,
+          "trial-period-unit" => "day"
+        ]
+      ]
+    ];
+    $object['catalog_product']['apis'] = [$incApi => ['name' => $incApi]];
+
+    $object['catalog_product']['visibility']['view']['enabled'] = true;
+    $object['catalog_product']['visibility']['subscribe']['enabled'] = TRUE;
+    $object['catalog_product']['visibility']['subscribe']['type'] = 'authenticated';
+    $object['catalog_product']['visibility']['view']['type'] = 'public';
 
     $product = new Product();
     $nid = $product->create($object);

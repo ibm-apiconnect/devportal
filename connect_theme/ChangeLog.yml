@@ -1,64 +1,101 @@
 changes:
-  8.x-3.3.12: null
-  8.x-3.3.11: null
-  8.x-3.3.10: null
-  8.x-3.3.9:
+  8.x-99.0.2:
+  - update copyright statements
+  8.x-99.0.1:
+  - Update connect_theme.info.yml
+  8.x-4.0.48:
   - Update Jenkinsfile
-  - Update ChangeLog.yml
-  - Update connect_theme.info.yml
-  8.x-3.3.7:
-  - minor fix (#222) (#223)
-  8.x-3.3.6:
-  - More access (#219) (#220)
-  8.x-3.3.5:
+  8.x-4.0.47:
+  - upgrade phpunit
+  8.x-4.0.46: null
+  8.x-4.0.45:
+  - Update .whitesource
+  8.x-4.0.44:
+  - Update .whitesource
+  - Add .whitesource configuration file
+  8.x-4.0.43:
+  - deprecated functions
+  8.x-4.0.42:
+  - minor fix (#222)
+  8.x-4.0.41:
+  - More access (#219)
+  8.x-4.0.40:
   - set multi-select table description id
-  8.x-3.3.4:
+  8.x-4.0.39:
   - git -> gitci
-  8.x-3.3.3:
+  8.x-4.0.38:
+  - Jenkinsfile refactor fixes
+  8.x-4.0.37:
   - refactor Jenkinsfile for the new portal.groovy
-  8.x-3.3.2: null
-  8.x-3.3.1:
-  - Update connect_theme.info.yml
-  8.x-3.2.0:
-  - update version 8.x-3.1.18 -> 8.x-3.2.0
-  8.x-3.1.17:
+  8.x-4.0.36:
+  - Fixed accessibility violations
+  8.x-4.0.35:
+  - delete invitation should be a modal form
+  8.x-4.0.34:
+  - make sure its not a string
+  8.x-4.0.33:
+  - fix font-family so style loaded in gmail
+  8.x-4.0.32:
+  - links in header & footer only
+  8.x-4.0.31:
+  - add padding and polish to mail template
+  8.x-4.0.30:
+  - add styles for new mail template
+  8.x-4.0.29:
+  - fix contrast ratio
+  8.x-4.0.28:
+  - ensure selects and cshs fields have labels
+  8.x-4.0.27:
+  - use scss for mail.css too
+  8.x-4.0.26:
+  - missing close tag
+  8.x-4.0.25:
+  - add placeholder mail.css
+  8.x-4.0.24:
   - don't fill the users svg in org members table
-  8.x-3.1.16:
+  8.x-4.0.23:
   - separate out ckeditor icon css
-  8.x-3.1.15:
-  - fix add prod-heading-2 and clipping fix (#213) (#214)
-  8.x-3.1.14:
-  - Tempmerge (#212)
-  8.x-3.1.13:
+  8.x-4.0.22:
+  - fix add prod-heading-2 and clipping fix (#213)
+  8.x-4.0.21:
   - very small tweaks to buttons on multi-value fields
-  8.x-3.1.12:
+  8.x-4.0.20:
   - plans table polish
-  8.x-3.1.11:
+  8.x-4.0.19:
   - ensure jquery.once loaded for dropit
-  8.x-3.1.10:
+  8.x-4.0.18:
   - fix app and org menu dropdowns
-  8.x-3.1.9:
-  - fix use white background (#210) (#211)
-  8.x-3.1.8:
+  8.x-4.0.17:
+  - fix use white background (#210)
+  8.x-4.0.16:
   - fix dropit on list pages (#209)
-  8.x-3.1.7:
+  8.x-4.0.15:
   - Add APIC Concepts block
-  8.x-3.1.6:
+  8.x-4.0.14:
   - use "IBM API Developer Portal" instead of API Connect
-  8.x-3.1.5:
-  - feat add classes to support new plans table (#207) (#208)
-  8.x-3.1.4: null
-  8.x-3.1.3:
+  8.x-4.0.13:
+  - feat add classes to support new plans table (#207)
+  8.x-4.0.12: null
+  8.x-4.0.11:
   - refine styling of button element
-  8.x-3.1.2: null
-  8.x-3.1.1: null
-  8.x-3.1.0:
-  - update version 8.x-3.0.129 -> 8.x-3.1.0
-  8.x-3.0.128:
+  8.x-4.0.10:
+  - button element styling
+  8.x-4.0.9:
+  - code smells
+  8.x-4.0.8: null
+  8.x-4.0.7:
+  - apimesh/devportal#6746
+  8.x-4.0.6:
+  - fix clean up plans layout (#202)
+  8.x-4.0.5:
   - fix svg fonts
+  8.x-4.0.4:
   - fix IBM Plex font path in theme
-  8.x-3.0.127:
-  - Cherry pick latest styling (#201)
+  8.x-4.0.3:
+  - fix fix horiz scroll on product page
+  8.x-4.0.2:
+  - fix match field button for explorer (#199)
+  8.x-4.0.1: null
   8.x-3.0.126:
   - remove padding on table for sub wizard
   8.x-3.0.125:

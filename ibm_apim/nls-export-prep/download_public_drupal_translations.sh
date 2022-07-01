@@ -25,6 +25,48 @@ set -o nounset
 CHANGED=0
 ERROR=0
 
+function downloadNonCore() {
+  local project_list=$(echo "$1" | tr ' ' '\n')
+  local -n dllangs="$2"
+  local project_name=''
+  local project_version=''
+  local messages=()
+  # loop over all project,version entries
+  while IFS=, read -r project_name project_version
+  do
+    messages+=("$project_name ($project_version) start")
+    if [[ -z $project_version ]]
+    then
+      messages+=("  No version available - SKIPPING")
+    else
+      local failed_langs=
+      for lang in "${dllangs[@]}"
+      do
+        local url="http://ftp.drupal.org/files/translations/8.x/$project_name/$project_name-$project_version.$lang.po"
+
+        wget -q $url --no-check-certificate && RC=$? || RC=$?
+        if [[ $RC -ne 0 ]]
+        then
+          messages+=("  $lang - NO DOWNLOAD AVAILABLE")
+          ERROR=1
+          failed_langs="$failed_langs $lang"
+        else
+          messages+=("  $lang - DOWNLOADED")
+        fi
+
+      done # LANGS
+    fi
+
+    if [[ -n "$failed_langs" ]]; then
+      messages+=("  Failed to download$failed_langs translations for $project_name")
+    fi
+    messages+=("$project_name ($project_version) complete")
+
+    printf '%s\n' "${messages[@]}"
+
+  done <<< "$project_list"
+}
+
 # Use drush to list the modules. This will return all of the projects for the site.
 # Other options here included parsing the composer.lock file.
 # Format of list will be csv - machine_name,version.
@@ -53,52 +95,19 @@ cd $DLDIR
 
 echo " DOWNLOADING NON-CORE MODULES "
 
-# loop over all project,version entries
-while IFS=, read -r PROJECT_NAME PROJECT_VERSION
-do
-  echo "$PROJECT_NAME ($PROJECT_VERSION) start"
-  if [[ -z $PROJECT_VERSION ]]
-  then
-    echo "  No version available - SKIPPING"
-  else
-    #echo "Checking for translations for: $PROJECT_NAME"
+downloadNonCore "$SUB_PROJECT_LIST_ONE" DLLANGS &
+LIST_ONE_PID=$!
+downloadNonCore "$SUB_PROJECT_LIST_TWO" DLLANGS &
+LIST_TWO_PID=$!
+downloadNonCore "$SUB_PROJECT_LIST_THREE" DLLANGS &
+LIST_THREE_PID=$!
+downloadNonCore "$SUB_PROJECT_LIST_FOUR" DLLANGS &
+LIST_FOUR_PID=$!
 
-#    if [[ ! -d $PROJECT_NAME ]]
-#    then
-#      mkdir $PROJECT_NAME
-#    fi
-#    cd $PROJECT_NAME
-
-    FAILED_LANGS=
-    for LANG in "${DLLANGS[@]}"
-    do
-       #echo "Checking $LANG for $PROJECT_NAME"
-
-       URL="http://ftp.drupal.org/files/translations/8.x/$PROJECT_NAME/$PROJECT_NAME-$PROJECT_VERSION.$LANG.po"
-
-       #echo "Attempting to download from $URL to $LANG.po in $PWD"
-       wget -q $URL --no-check-certificate && RC=$? || RC=$?
-       if [[ $RC -ne 0 ]]
-       then
-         echo "  $LANG - NO DOWNLOAD AVAILABLE"
-
-	     ERROR=1
-		 FAILED_LANGS="$FAILED_LANGS $LANG"
-	   else
-	     echo "  $LANG - DOWNLOADED"
-
-       fi
-
-    done # LANGS
-  fi
-
-  if [[ ! -z "$FAILED_LANGS" ]]
-  then
-	echo "  Failed to download$FAILED_LANGS translations for $PROJECT_NAME" >&2
-  fi
-  echo "$PROJECT_NAME ($PROJECT_VERSION) complete"
-
-done <<< "$PROJECT_LIST"
+wait $LIST_ONE_PID
+wait $LIST_TWO_PID
+wait $LIST_THREE_PID
+wait $LIST_FOUR_PID
 
 echo ""
 echo " DOWNLOADING CORE MODULES "

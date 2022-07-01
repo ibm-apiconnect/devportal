@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -40,13 +40,14 @@ class DeveloperAccessCheck implements AccessInterface {
         $org = \Drupal::service("ibm_apim.consumerorg")->get($consumerorg_url);
       }
       else {
-        // TODO : why are we not just storing the corg object? Why do two service lookups when just one would do?
-        $consumerorg_url = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerOrg()['url'];
-        $org = \Drupal::service("ibm_apim.consumerorg")->get($consumerorg_url);
+        $org = \Drupal::service('ibm_apim.user_utils')->getCurrentConsumerOrg();
+        if (isset($org)) {
+          $org = \Drupal::service("ibm_apim.consumerorg")->get($org['url']);
+        }
       }
 
       $user = User::load($current_user->id());
-      if ($user !== NULL) {
+      if (isset($org) && $user !== NULL) {
         $user_url = $user->get('apic_url')->value;
         if ($org->isOwner($user_url)) {
           $allowed = TRUE;

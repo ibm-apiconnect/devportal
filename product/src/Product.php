@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -104,9 +104,10 @@ class Product {
 
       // duplicate node
       $node = $oldNode->createDuplicate();
+      $node->save();
 
       // update any apirefs on basic pages
-      $this->updateBasicPageRefs($oldNode->id(), $node->id(), FALSE);
+      self::updateBasicPageRefs($oldNode->id(), $node->id(), FALSE);
 
       // wipe all our fields to ensure they get set to new values
       $node->set('apic_tags', []);
@@ -1168,14 +1169,14 @@ class Product {
    *
    * @return array
    */
-  public static function getProductsContainingAPI($apiRef = NULL): array {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $apiRef);
+  public static function getProductsContainingAPI($apiNid = NULL): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $apiNid);
 
     $products = [];
-    if ($apiRef !== NULL) {
+    if ($apiNid !== NULL) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product');
-      $query->condition('product_apis', $apiRef, 'CONTAINS');
+      $query->condition('product_api_nids', $apiNid, 'IN');
       $results = $query->execute();
       if ($results !== NULL && !empty($results)) {
         $products = array_values($results);

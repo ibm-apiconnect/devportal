@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -843,7 +843,7 @@ class ApplicationService {
    */
   public function getCustomFields(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $coreFields = ['title', 'vid', 'status', 'nid', 'revision_log', 'created'];
+    $coreFields = ['title', 'vid', 'status', 'nid', 'revision_log', 'created', 'url_redirects'];
     $components = \Drupal::entityTypeManager()
       ->getStorage('entity_form_display')
       ->load('node.application.default')
@@ -972,6 +972,10 @@ class ApplicationService {
           if (!isset($planTitle) || empty($planTitle)) {
             $planTitle = $sub->plan();
           }
+          if (!is_array($supersedingProduct) || in_array(NULL, $supersedingProduct, TRUE)) {
+             $supersedingProduct = NULL;
+          }
+
           $subArray[] = [
             'product_title' => $product->getTitle(),
             'product_version' => $product->apic_version->value,

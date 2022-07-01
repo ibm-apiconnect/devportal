@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -140,7 +140,7 @@ class ChangeOrgOwnerForm extends FormBase {
           foreach ($members as $member) {
             // Don't include the current owner in the list
             if ($member->getUser()->getUrl() !== $this->currentOrg->getOwnerUrl()) {
-              $values[$member->getUrl()] = $member->getUser()->getUsername();
+              $values[$member->getUrl()] = $member->getUser()->getDisplayName();
             }
           }
           $form['new_owner'] = [

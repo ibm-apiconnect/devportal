@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -97,7 +97,7 @@ interface ManagementServerInterface {
    * @return \Drupal\ibm_apim\Rest\RestResponse
    *   Response from the call.
    */
-  public function orgInvitationsRegister(JWTToken $token, ApicUser $invitedUser): RestResponse;
+  public function orgInvitationsRegister(JWTToken $token, ApicUser $invitedUser): ?RestResponse;
 
   /**
    * Accept the invitation represented by the JWTToken as the ApicUser provided
@@ -261,6 +261,6 @@ interface ManagementServerInterface {
    *
    * @return \Drupal\ibm_apim\Rest\RestResponse
    */
-  public function activateFromJWT(JWTToken $jwt): RestResponse;
+  public function activateFromJWT(JWTToken $jwt): ?RestResponse;
 
 }

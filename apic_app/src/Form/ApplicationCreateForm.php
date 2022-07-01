@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -45,7 +45,7 @@ class ApplicationCreateForm extends FormBase {
     if ($entity_form !== NULL) {
       foreach ($entity_form->getComponents() as $name => $options) {
 
-        if (($configuration = $entity_form->getComponent($name)) && isset($configuration['type']) && ($definition = $definitions[$name])) {
+        if (($configuration = $entity_form->getComponent($name)) && isset($configuration['type'], $definitions[$name]) && ($definition = $definitions[$name])) {
           $widget = \Drupal::service('plugin.manager.field.widget')->getInstance([
             'field_definition' => $definition,
             'form_mode' => 'default',
@@ -53,6 +53,8 @@ class ApplicationCreateForm extends FormBase {
             'prepare' => FALSE,
             'configuration' => $configuration,
           ]);
+        } else {
+          unset($widget);
         }
 
         if (isset($widget)) {
@@ -181,10 +183,27 @@ class ApplicationCreateForm extends FormBase {
           \Drupal::messenger()->addMessage(t('Error: No application credentials were returned.', []));
         }
 
-        $credsString = base64_encode(json_encode([
+        $credsJson = json_encode([
           'client_id' => $result->data['client_id'],
           'client_secret' => $result->data['client_secret'],
-        ], JSON_THROW_ON_ERROR));
+        ], JSON_THROW_ON_ERROR);
+        $moduleHandler = \Drupal::service('module_handler');
+        if ($moduleHandler->moduleExists('encrypt')) {
+          $ibmApimConfig = \Drupal::config('ibm_apim.settings');
+          $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
+          if (isset($encryptionProfileName)) {
+            $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+            if ($encryptionProfile !== NULL) {
+              $encryptionService = \Drupal::service('encryption');
+              $credsString = $encryptionService->encrypt($credsJson, $encryptionProfile);
+            }
+          } else {
+            \Drupal::logger('apic_app')->warning('createApp: No encryption profile set', []);
+            $credsString = base64_encode($credsJson);
+          }
+        } else {
+          $credsString = base64_encode($credsJson);
+        }
         $displayCredsUrl = Url::fromRoute('apic_app.display_creds', ['appId' => $result->data['id'], 'credentials' => $credsString], $options);
         $form_state->setRedirectUrl($displayCredsUrl);
       }

@@ -43,8 +43,8 @@ Feature: Sign-up
     And I enter "andre_org_@now" for "Consumer organization"
     And I enter "andre_@now@example.com" for "Email address"
     And I enter "andre_@now@example.com" for "Username"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Sign up" button
     Then there are no errors
@@ -61,8 +61,8 @@ Feature: Sign-up
     And I enter "mcadmin" for "Last Name"
     And I enter "admin org" for "Consumer organization"
     And I enter "admin@example.com" for "Email address"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Sign up" button
     Then there are errors
@@ -78,8 +78,8 @@ Feature: Sign-up
     And I enter "mcanon" for "Last Name"
     And I enter "anon org" for "Consumer organization"
     And I enter "anon@example.com" for "Email address"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Sign up" button
     Then there are errors
@@ -98,8 +98,8 @@ Feature: Sign-up
     And I enter "andre_org_@now" for "Consumer organization"
     And I enter "andre_@now@example.com" for "Email address"
     And I enter "andre_@now@example.com" for "Username"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Sign up" button
     Then there are no errors
@@ -115,8 +115,8 @@ Feature: Sign-up
     And I enter "andre_org_@now" for "Consumer organization"
     And I enter "andre_@now@example.com" for "Email address"
     And I enter "andre_@now@example.com" for "Username"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Sign up" button
     Then there are errors
@@ -254,8 +254,8 @@ Feature: Sign-up
     And I enter "andre_org_@now" for "Consumer organization"
     And I enter "andre_@now@example.com" for "Email address"
     And I enter "andre_@now@example.com" for "Username"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "this(almostcertainly)isnotrightapologiesifitis"
     When I press the "Sign up" button
     Then there are no messages
@@ -318,8 +318,8 @@ Feature: Sign-up
     And I enter "Andreson_@now" for "Last Name"
     And I enter "andre_org_@now" for "Consumer organization"
     And I enter "andre_@now@example.com" for "Email address"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Sign up" button
     Then there are no errors
@@ -336,15 +336,15 @@ Feature: Sign-up
       | lur  | @data(user_registries[1].title) | @data(user_registries[1].url) | yes          | no      |
     Given users:
       | name                   | mail                               | pass     | status | registry_url                  |
-      | andre_existingusername | andre_existingusername@example.com | Qwert123 | 1      | @data(user_registries[0].url) |
+      | andre_existingusername | andre_existingusername@example.com | Qwert123IsBadPassword! | 1      | @data(user_registries[0].url) |
     And I am at "/user/register"
     When I enter "andre_existingusername" for "Username"
     And I enter "Andre" for "First Name"
     And I enter "Andreson_@now" for "Last Name"
     And I enter "andre_org_@now" for "Consumer organization"
     And I enter "andre_somethingelse@example.com" for "Email address"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Sign up" button
     Then there are errors
@@ -361,15 +361,15 @@ Feature: Sign-up
       | lur  | @data(user_registries[1].title) | @data(user_registries[1].url) | yes          | no      |
     Given users:
       | name                | mail                            | pass     | status | registry_url                  |
-      | andre_matchingemail | andre_matchingemail@example.com | Qwert123 | 1      | @data(user_registries[0].url) |
+      | andre_matchingemail | andre_matchingemail@example.com | Qwert123IsBadPassword! | 1      | @data(user_registries[0].url) |
     And I am at "/user/register"
     When I enter "andre_@now" for "Username"
     And I enter "Andre" for "First Name"
     And I enter "Andreson_@now" for "Last Name"
     And I enter "andre_org_@now" for "Consumer organization"
     And I enter "andre_matchingemail@example.com" for "Email address"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Sign up" button
     Then there are errors
@@ -386,15 +386,15 @@ Feature: Sign-up
       | lur  | @data(user_registries[1].title) | @data(user_registries[1].url) | yes          | no      |
     Given users:
       | name                | mail                            | pass     | status | registry_url                  |
-      | andre_matchingemail | andre_matchingemail@example.com | Qwert123 | 1      | @data(user_registries[0].url) |
+      | andre_matchingemail | andre_matchingemail@example.com | Qwert123IsBadPassword! | 1      | @data(user_registries[0].url) |
     And I am at "/user/register?registry_url=@data(user_registries[1].url)"
     When I enter "AnotherAndre" for "Username"
     And I enter "Andre" for "First Name"
     And I enter "Andreson_@now" for "Last Name"
     And I enter "andre_org_@now" for "Consumer organization"
     And I enter "andre_matchingemail@example.com" for "Email address"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Sign up" button
     Then there are errors
@@ -411,15 +411,15 @@ Feature: Sign-up
       | lur  | @data(user_registries[1].title) | @data(user_registries[1].url) | yes          | no      |
     Given users:
       | name                | mail                       | pass     | status | registry_url                  |
-      | andre_multiple_@now | andre_fromreg1@example.com | Qwert123 | 1      | @data(user_registries[0].url) |
+      | andre_multiple_@now | andre_fromreg1@example.com | Qwert123IsBadPassword! | 1      | @data(user_registries[0].url) |
     And I am at "/user/register?registry_url=@data(user_registries[1].url)"
     When I enter "andre_multiple_@now" for "Username"
     And I enter "Andre" for "First Name"
     And I enter "Andreson_@now" for "Last Name"
     And I enter "andre_org_@now" for "Consumer organization"
     And I enter "andre_fromreg2@example.com " for "Email address"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Sign up" button
     Then there are no errors
@@ -463,8 +463,8 @@ Feature: Sign-up
     And I enter "andre_org_@now" for "Consumer organization"
     And I enter "andre_@now@example.com" for "Email address"
     And I enter "andre_@now@example.com" for "Username"
-    And I enter "Qwert123" for "Password"
-    And if the field "pass[pass2]" is present, enter the value "Qwert123"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Sign up" button
     Then there are no errors
@@ -472,3 +472,29 @@ Feature: Sign-up
     And there are messages
     And I should not see the text "There was an error creating your account"
     And I should see the text "Your account was created successfully"
+
+  Scenario: Sign up with text type custom fields
+    Given I am not logged in
+    Given user entities have text type custom fields
+    Given userregistries:
+      | type | title                           | url                           | user_managed | default |
+      | lur  | @data(user_registries[0].title) | @data(user_registries[0].url) | yes          | yes     |
+    And I am at "/user/register"
+    Then I should see a "#edit-field-singletext-0-value" element
+    And I should see a "#edit-field-multitext-0-value" element
+    And I should see a "#edit-field-multitext-1-value" element
+    Given I enter "Andre" for "First Name"
+    And I enter "Andreson_@now" for "Last Name"
+    And I enter "andre_org_@now" for "Consumer organization"
+    And I enter "andre_@now@example.com" for "Email address"
+    And I enter "andre_@now@example.com" for "Username"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
+    And if the field "captcha_response" is present, enter the value "@captcha"
+    When I press the "Sign up" button
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should not see the text "There was an error creating your account"
+    And I should see the text "Your account was created successfully"
+    Then I delete the text type custom fields for user entities

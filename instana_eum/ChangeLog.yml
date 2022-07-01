@@ -1,18 +1,21 @@
 changes:
-  8.x-3.3.8: null
-  8.x-3.3.7: null
-  8.x-3.3.6:
-  - Update Jenkinsfile
-  - Update ChangeLog.yml
+  8.x-99.0.2:
+  - update copyright statements
+  8.x-99.0.1:
   - Update instana_eum.info.yml
-  8.x-3.3.2:
+  8.x-4.0.7:
+  - Update Jenkinsfile
+  8.x-4.0.6: null
+  8.x-4.0.5:
+  - Update .whitesource
+  8.x-4.0.4:
+  - fix case of the getFormId function
+  8.x-4.0.3:
+  - Update .whitesource
+  - Add .whitesource configuration file
+  8.x-4.0.2:
   - add placeholder unit test
   - fix build script
   - update URL
   - add copyright
-  8.x-3.3.1:
-  - Update Jenkinsfile
-  - Update Jenkinsfile
-  - Update instana_eum.info.yml
-  - Update instana_eum.info.yml
   8.x-4.0.1: null

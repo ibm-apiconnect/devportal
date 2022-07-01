@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -656,8 +656,35 @@ function apic_app_update_8205() {
 }
 
 /**
- * Ensures that the correct storage schema class is set for the 
- * given entity (table).  Also ensures that indexes are set on the 
+ * Clear the application_credentials_refs and application_subscription_refs tables so that we
+ * run the entity updates on them.
+ */
+function apic_app_update_8206() {
+  $database = \Drupal::database();
+  $tables = [
+    'node__application_credentials_refs',
+    'node_revision__application_credentials_refs',
+    'node__application_subscription_refs',
+    'node_revision__application_subscription_refs',
+  ];
+
+  foreach ($tables as $table) {
+    if ($database->schema() !== NULL && $database->schema()->tableExists($table)) {
+      $database->truncate($table)->execute();
+    }
+  }
+
+  try {
+    $entityDefUpManager = \Drupal::service('ibm_apim.apic_definition_update_manager');
+    $entityDefUpManager->applyUpdates();
+  } catch (Throwable $e) {
+    \Drupal::logger('apic_app: ')->notice('error: @error', ['@error' => $e->getMessage()]);
+  }
+}
+
+/**
+ * Ensures that the correct storage schema class is set for the
+ * given entity (table).  Also ensures that indexes are set on the
  * given array of field names.
  */
 function applyTableIndexUpdates($table, $storageClass, $indexFields) {

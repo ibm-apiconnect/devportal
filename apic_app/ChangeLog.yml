@@ -1,165 +1,263 @@
 changes:
-  8.x-3.3.17:
-  - Fix app page with superseded products
-  8.x-3.3.16:
-  - fix php blowing up due to variable not set
-  8.x-3.3.15: null
-  8.x-3.3.14:
-  - Fix another php80 param order issue
-  - Fix php80 param order error
-  - new application block needs to be cached per user
-  8.x-3.3.13: null
-  8.x-3.3.12:
+  8.x-99.0.9:
+  - update entity tables
+  - update entity tables
+  8.x-99.0.8:
+  - Access denied when creating app without consumer org (#318)
+  8.x-99.0.7:
+  - Acknowledging the 'Display Analytics' setting
+  8.x-99.0.6:
+  - Rendering the right contents based on analytics access.
+  8.x-99.0.5:
+  - update copyright statements
+  8.x-99.0.4:
+  - ignore the url_redirects field from redirect (#309)
+  8.x-99.0.3:
+  - Revert "analytics endpoint has changed name"
+  8.x-99.0.2: null
+  8.x-99.0.1:
+  - Update apic_app.info.yml
   - Update Jenkinsfile
-  - Update ChangeLog.yml
-  - Update apic_app.info.yml
-  8.x-3.3.7:
+  - Custom field tests (#304)
+  8.x-4.0.119:
+  - analytics endpoint has changed name
+  8.x-4.0.118:
+  - subscription migration fix.
+  8.x-4.0.117:
+  - encrypt credentials instead of base64
+  8.x-4.0.116:
+  - use more secure passwords
+  8.x-4.0.115:
+  - Subscription tests (#300)
+  8.x-4.0.114:
+  - Fix app page with superseded products
+  8.x-4.0.113:
+  - fix php blowing up due to variable not set
+  8.x-4.0.112:
+  - Update .whitesource
+  8.x-4.0.111:
+  - new application block needs to be cached per user
+  8.x-4.0.110:
+  - Update .whitesource
+  - Add .whitesource configuration file
+  8.x-4.0.109:
+  - Minor hook fix
+  - Added pre+post delete hooks for subs+creds
+  8.x-4.0.108: null
+  8.x-4.0.107:
+  - cleaned up custom field code
+  8.x-4.0.106: null
+  8.x-4.0.105:
+  - Fix another php80 param order issue
+  8.x-4.0.104:
+  - Fix php80 param order error
+  8.x-4.0.103:
+  - deprecated functions - application
+  8.x-4.0.102: null
+  8.x-4.0.101:
   - use correct named upgrade functions
-  8.x-3.3.6:
-  - Fixed access checks and css (#283)
-  8.x-3.3.5:
-  - Added redirects for application create (#280)
-  8.x-3.3.4:
+  8.x-4.0.100:
+  - Fixed access checks and css
+  8.x-4.0.99:
+  - Added redirects for application create
+  8.x-4.0.98:
   - git -> gitci
-  8.x-3.3.3:
+  8.x-4.0.97:
+  - Jenkinsfile refactor fixes
   - refactor Jenkinsfile for the new portal.groovy
-  8.x-3.3.2: null
-  8.x-3.3.1:
-  - Update apic_app.info.yml
-  8.x-3.2.0:
-  - update version 8.x-3.1.59 -> 8.x-3.2.0
-  8.x-3.1.58:
+  8.x-4.0.96:
+  - make sure view password is loaded correctly
+  8.x-4.0.95:
+  - remove the role attribute from the button
+  8.x-4.0.94:
+  - Fix subscriptions
+  8.x-4.0.93:
+  - need to ensure > 0 too
+  8.x-4.0.92:
+  - move devel settings to their own config object
+  8.x-4.0.91: null
+  8.x-4.0.90:
+  - get rid of coding error in intellij
+  - another fix needed for strtotime
+  8.x-4.0.89:
+  - typo
+  - defend against trying to put value greater than max int
+  - defend against trying to put value greater than max int
+  8.x-4.0.88:
+  - defend against trying to put value greater than max int
+  8.x-4.0.87:
+  - Switch to catching Throwable
+  8.x-4.0.86:
+  - remove drush 10 entries in composer.json files
+  8.x-4.0.85: null
+  8.x-4.0.84:
+  - add to composer json
+  - tidy up a bit
+  8.x-4.0.83:
+  - fix function calls
+  8.x-4.0.82:
+  - should be type=button to stop refresh
+  8.x-4.0.81:
+  - fix drush 10 compat
+  8.x-4.0.80:
+  - tidy up
+  - add drush10 version of commands
+  8.x-4.0.79:
   - make modals look how they should!
-  8.x-3.1.57:
+  8.x-4.0.78:
   - clear caches when subscribe and unsubscribe
-  8.x-3.1.56:
-  - More event log updates
-  8.x-3.1.55:
+  8.x-4.0.77:
+  - More event log updates (#262)
+  8.x-4.0.76:
   - avoid stacktrace in test run
-  8.x-3.1.54:
+  8.x-4.0.75: null
+  8.x-4.0.74:
   - need to clear cache
   - need to clear cache when update app
-  8.x-3.1.53:
+  8.x-4.0.73:
   - dont show links to viewers that cant use them
-  8.x-3.1.52:
-  - Ensure event logs are created or updated correctly (#261)
-  8.x-3.1.51:
+  8.x-4.0.72:
+  - Ensure event logs are created or updated correctly (#260)
+  8.x-4.0.71:
   - dont show notifications link to admin
-  8.x-3.1.50:
-  - New indexes v10.0 (#259)
-  8.x-3.1.49:
+  8.x-4.0.70:
+  - Index app_url column
+  8.x-4.0.69: null
+  8.x-4.0.68:
+  - Just index uuid and app_url columns (#257)
+  - Add index to subs and creds entities (#256)
+  8.x-4.0.67:
   - quote handling wrong - just let twig handle it
-  8.x-3.1.48:
-  - fix missing quotes in twig template
-  8.x-3.1.47: null
-  8.x-3.1.46:
-  - feat Introduce methods to filter applications by subscriptions (#252) (#253)
-  8.x-3.1.45:
+  8.x-4.0.66: null
+  8.x-4.0.65:
+  - fix missing quotes in twig template (#254)
+  8.x-4.0.64:
+  - feat Introduce methods to filter applications by subscriptions (#252)
+  8.x-4.0.63:
   - invalidate caches
-  8.x-3.1.44:
-  - feat add helper text to subscription blocks (#249) (#251)
-  8.x-3.1.43:
+  8.x-4.0.62:
+  - feat add helper text to subscription blocks (#249)
+  8.x-4.0.61:
   - missing app delete event
-  8.x-3.1.42:
-  - Tempmerge (#250)
-  8.x-3.1.41:
+  8.x-4.0.60:
   - very small tweaks to buttons on multi-value fields
-  8.x-3.1.40:
+  8.x-4.0.59:
   - selected should be same line height as non-selected
-  8.x-3.1.39: null
-  8.x-3.1.38:
+  8.x-4.0.58: null
+  8.x-4.0.57:
   - fix css width on app page
   - Tabtitle (#248)
-  8.x-3.1.37:
+  8.x-4.0.56:
   - use chunking
-  8.x-3.1.36:
-  - 502 subscribe rename v10 (#247)
-  8.x-3.1.35: null
-  8.x-3.1.34:
+  8.x-4.0.55: null
+  8.x-4.0.54:
+  - missing references from the subs rename
+  - missing references from the subs rename
+  - test failures and missing references from the subs rename
+  - feat rename subscribe (#246)
+  8.x-4.0.53:
   - Services (#245)
-  8.x-3.1.33: null
-  8.x-3.1.32:
+  8.x-4.0.52: null
+  8.x-4.0.51:
   - refactor SubscriptionService to be a proper service
-  8.x-3.1.31:
+  8.x-4.0.50:
   - add function to list the credentials in the current consumer org
-  8.x-3.1.30:
+  8.x-4.0.49:
   - Refactor subscription event log
-  8.x-3.1.29:
+  8.x-4.0.48:
   - Refactor subscription create / update
-  8.x-3.1.28:
+  8.x-4.0.47:
   - use "IBM API Developer Portal" instead of API Connect
-  8.x-3.1.27:
+  8.x-4.0.46:
   - need to use productselect routing for apis
-  8.x-3.1.26: null
-  8.x-3.1.25:
+  8.x-4.0.45:
   - change app status terminology (#239)
-  8.x-3.1.24:
+  8.x-4.0.44:
   - Fix app subscription cache
-  8.x-3.1.23: null
-  8.x-3.1.22: null
-  8.x-3.1.21:
+  8.x-4.0.43: null
+  8.x-4.0.42:
   - tweak to isset line to avoid error
+  8.x-4.0.41:
   - handle consumer_org_url in one payload but org_url in another
-  8.x-3.1.20:
+  8.x-4.0.40:
   - fix css for suspended app
-  8.x-3.1.19:
+  8.x-4.0.39:
   - need to use string not null
-  8.x-3.1.18: null
-  8.x-3.1.17:
+  8.x-4.0.38:
   - event service has moved
+  8.x-4.0.37:
   - rename activity feed Notifications
+  8.x-4.0.36:
   - wire up more events
-  8.x-3.1.16:
+  8.x-4.0.35:
   - wire up subscription events
-  8.x-3.1.15:
+  8.x-4.0.34:
   - wire up cred reset and resetSecret
-  8.x-3.1.14:
+  8.x-4.0.33:
   - wire up cred create, update, delete
-  8.x-3.1.13:
+  8.x-4.0.32:
   - ensure timestamp is int
   - Make sure there is an App create event and not just an update
-  8.x-3.1.12:
+  8.x-4.0.31:
   - View and view based ACL
-  8.x-3.1.11:
+  8.x-4.0.30: null
+  8.x-4.0.29:
   - title notifications tab routing
+  8.x-4.0.28:
   - rename actvity feed
-  8.x-3.1.10: null
-  8.x-3.1.9:
-  - missing changes
+  8.x-4.0.27: null
+  8.x-4.0.26:
   - fix up the activity feed tabs for org and app
-  8.x-3.1.8: null
-  8.x-3.1.7:
-  - fix rearrange notification in application
-  - feat add notification for events in application metrics (#225)
-  8.x-3.1.6: null
-  8.x-3.1.5:
+  8.x-4.0.25: null
+  8.x-4.0.24:
+  - activity feed for application
+  - wire up the myorg activity feed page
+  8.x-4.0.23:
+  - code smells
+  8.x-4.0.22:
+  - use our own entity update manager
+  8.x-4.0.21: null
+  8.x-4.0.20: null
+  8.x-4.0.19:
   - use void
-  8.x-3.1.4:
+  8.x-4.0.18:
   - Subscription service webhook improvements
-  8.x-3.1.3:
+  8.x-4.0.17:
   - add consumer org to the cache tag list
-  8.x-3.1.2: null
-  8.x-3.1.1:
+  8.x-4.0.16:
+  - feat add notification for events in application metrics (#225)
+  8.x-4.0.15: null
+  8.x-4.0.14:
+  - need to set timestamp too
+  - add comment and todo
+  - add event log entity for app creation and update
+  8.x-4.0.13:
   - stop running strtotime twice
+  8.x-4.0.12:
   - typo
   - need to use timestamp field type for timestamps!
-  - fix up app tests
-  - fix up app tests
-  - store apic created_at and updated_at timestamps (#220)
-  - store apic created_at and updated_at timestamps
-  8.x-3.1.0:
-  - update version 8.x-3.0.85 -> 8.x-3.1.0
-  8.x-3.0.84:
+  8.x-4.0.11:
+  - delete subs for a product when product deleted
+  8.x-4.0.10: null
+  8.x-4.0.9:
   - classes dont exist
   - classes dont exist
-  8.x-3.0.83:
+  8.x-4.0.8:
   - use x path alias from subscriptions if present (#223)
-  8.x-3.0.82:
+  8.x-4.0.7:
   - add link to product title (#222)
-  8.x-3.0.81:
+  8.x-4.0.6:
   - deal with long app names (#221)
-  8.x-3.0.80:
+  8.x-4.0.5:
+  - fix up app tests
+  - fix up app tests
+  8.x-4.0.4:
+  - store apic created_at and updated_at timestamps (#220)
+  8.x-4.0.3:
+  - store apic created_at and updated_at timestamps
+  8.x-4.0.2:
   - send app_create down the create path too
+  8.x-4.0.1: null
   8.x-3.0.79:
   - Add drupal core compatibility info
   8.x-3.0.78:

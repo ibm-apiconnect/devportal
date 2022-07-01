@@ -10,8 +10,8 @@ Feature: ApplicationACL
     Given I am not logged in
     Given users:
       | name      | mail                  | pass     | status |
-      | andre_one | andre_one@example.com | Qwert123 | 1      |
-      | andre_two | andre_two@example.com | Qwert123 | 1      |
+      | andre_one | andre_one@example.com | Qwert123IsBadPassword! | 1      |
+      | andre_two | andre_two@example.com | Qwert123IsBadPassword! | 1      |
     Given consumerorgs:
       | title     | name      | id                       | owner     | tags    |
       | a1_consumerorg | a1-consumerorg | a18843f3e4b07631568a159d | andre_one | testers |

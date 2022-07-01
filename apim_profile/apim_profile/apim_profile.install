@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -184,7 +184,6 @@ function apim_profile_install() {
     'real_aes',
     'unlimited_number',
     'avatars',
-    'letter_avatar',
     'mimemail',
     'views_autocomplete_filters',
     'multiple_fields_remove_button',
@@ -210,6 +209,8 @@ function apim_profile_install() {
     'clipboardjs',
     'securitytxt',
     'view_password',
+    'drush_language',
+    'maintenance200',
   ];
 
   $our_modules = [
@@ -220,6 +221,7 @@ function apim_profile_install() {
     'ibm_apic_flood_control_ui',
     'ibm_create_payment_method',
     'apic_type_count',
+    'apic_letter_avatar',
     'auth_apic',
     'apic_api',
     'apic_app',
@@ -2801,6 +2803,81 @@ function apim_profile_update_8215() {
   $data = \Drupal::service('config.factory')->get('ibm_apim.settings')->get();
   if (empty($data) || !array_key_exists('categories', $data) || !array_key_exists('allow_consumerorg_creation', $data)) {
     apim_profile_default_apic_config();
+  }
+}
+
+/**
+ * enable maintenance200 module
+ */
+function apim_profile_update_8216() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('maintenance200')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->install(['maintenance200']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  }
+}
+
+/**
+ * Remove letter_avatar
+ */
+function apim_profile_update_8217() {
+  $module_installer = \Drupal::service('module_installer');
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('letter_avatar')) {
+    try {
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+      $module_installer->uninstall(['letter_avatar']);
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+    } catch (Throwable $e) {
+        // if deleting the module fails (and it might since we've deleted the files), then just purge it from the db
+        \Drupal::database()->delete('key_value')
+          ->condition('collection', 'system.schema')
+          ->condition('name', ['letter_avatar'], 'IN')
+          ->execute();
+    }
+  }
+
+  \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+  $module_installer->install(['apic_letter_avatar']);
+  \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  // update config
+  \Drupal::service('config.factory')
+  ->getEditable('avatars.generator.letter_generator')
+  ->set('langcode', 'en')
+  ->set('status', TRUE)
+  ->set('dependencies', ['module' => ['apic_letter_avatar']])
+  ->set('id', 'letter_generator')
+  ->set('label', 'APIC Letter Generator')
+  ->set('weight', 0)
+  ->set('plugin', 'apic_letter_avatar')
+  ->set('provider', NULL)
+  ->set('settings', [])
+  ->save();
+}
+
+/*
+* CONTEXT: There was a bug in 2018 -> v10 Upgrade. The Upgrade numbers in v2018 got bumped to the same value after a cherry picked which should have had the
+* number changed. So when we upgraded, drupal would see 8217 would have already been applied missing out all these v10 only updates that need to be performed.
+* This is a fix to ensure that the missing updates are applied and we have bumped the upgrade number to 8300 so we can deviate from 2018 again.
+*/
+function apim_profile_update_8300() {
+  $arr = array(8029, 8030, 8101, 8102,
+  8103, 8104, 8105, 8106, 8107, 8108,
+  8109, 8110, 8111, 8112, 8113, 8114, 8116,
+  8201, 8202, 8203, 8204, 8205, 8206,
+  8208, 8209, 8210, 8211, 8212, 8213,
+  8214, 8215);
+  foreach ($arr as &$i) {
+      $apim_func = "apim_profile_update_" . $i;
+      \Drupal::logger('apim_profile')->info('Executing update: @update', [
+          '@update' => $apim_func,
+      ]);
+      $apim_func();
+      \Drupal::logger('apim_profile')->info('Finished update: @update', [
+        '@update' => $apim_func,
+      ]);
   }
 }
 

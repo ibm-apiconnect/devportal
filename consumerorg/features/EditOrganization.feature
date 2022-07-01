@@ -167,3 +167,31 @@ Feature: Edit Consumer Organization
     Then I should see the text "Access denied"
     And I should see the text "You are not authorized to access this page."
     And there are no errors
+
+  @api
+  Scenario: As an org owner, I can edit the custom fields
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.mail) |
+    Given consumerorg entities have text type custom fields
+    Given I am logged in as "@data(andre.mail)"
+    When I go to "/myorg/edit"
+    Then I should see the text "Update the consumer organization"
+    And I should see a "#edit-field-singletext-0-value" element
+    And I should see a "#edit-field-multitext-0-value" element
+    And I should see a "#edit-field-multitext-1-value" element
+    When I enter "singleVal" for "edit-field-singletext-0-value"
+    And I enter "first multi val" for "edit-field-multitext-0-value"
+    And I enter "theSecond" for "edit-field-multitext-1-value"
+    And I press the "Save" button
+    Then I should be on "/myorg"
+    And I should see the text "singleVal"
+    And I should see the text "first multi val"
+    And I should see the text "theSecond"
+    And there are messages
+    And I should see the text "Organization updated."
+    And there are no errors
+    Then I delete the text type custom fields for consumerorg entities

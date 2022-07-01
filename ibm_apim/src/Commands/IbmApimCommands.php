@@ -6,7 +6,7 @@ namespace Drupal\ibm_apim\Commands;
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -592,6 +592,16 @@ class IbmApimCommands extends DrushCommands {
     try {
       if ($type !== NULL && $type !== 'error' && $content !== NULL) {
         switch ($type) {
+          case 'api':
+            $apiCommand = new ApicApiCommands();
+            $apiList = [];
+            if (file_exists("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json")) {
+              $apiList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json"), TRUE, 512, JSON_THROW_ON_ERROR);
+            }
+            $apiList[] = $content['name'] . ':' . $content['version'];
+            file_put_contents("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json", json_encode($apiList, JSON_THROW_ON_ERROR));
+            $apiCommand->drush_apic_api_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
+            break;
           case 'product':
             $prodList = [];
             if (file_exists("/tmp/snapshot.$UUID/content_refresh_products.$UUID.json")) {
@@ -611,16 +621,6 @@ class IbmApimCommands extends DrushCommands {
                 '%product' => $content['name'],
               ]);
             }
-            break;
-          case 'api':
-            $apiCommand = new ApicApiCommands();
-            $apiList = [];
-            if (file_exists("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json")) {
-              $apiList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json"), TRUE, 512, JSON_THROW_ON_ERROR);
-            }
-            $apiList[] = $content['name'] . ':' . $content['version'];
-            file_put_contents("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json", json_encode($apiList, JSON_THROW_ON_ERROR));
-            $apiCommand->drush_apic_api_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
             break;
           case 'app':
             $appCommand = new ApicAppCommands();

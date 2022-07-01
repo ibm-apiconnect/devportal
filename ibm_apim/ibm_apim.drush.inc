@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -869,11 +869,19 @@ function processContent($content, $UUID) {
   if ($webhookDebug === TRUE) {
     $webhookPayloads = \Drupal::state()
       ->get('ibm_apim.snapshot_webhook_payloads');
-    $webhookPayloads[] = [
-      'content' => $content,
-      'type' => $type,
-      'timestamp' => time(),
-    ];
+    if ($type == 'configured_catalog_user_registry') {
+      $webhookPayloads[][$type][] = [
+        'content' => $content,
+        'type' => $type,
+        'timestamp' => time(),
+      ];
+    } else {
+      $webhookPayloads[count($webhookPayloads)-1][$type][] =  [
+        'content' => $content,
+        'type' => $type,
+        'timestamp' => time(),
+      ];
+    }
     \Drupal::state()
       ->set('ibm_apim.snapshot_webhook_payloads', $webhookPayloads);
   }
@@ -890,6 +898,15 @@ function processContent($content, $UUID) {
   try {
     if ($type !== NULL && $type !== 'error' && $content !== NULL) {
       switch ($type) {
+        case 'api':
+          $apiList = [];
+          if (file_exists("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json")) {
+            $apiList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json"), TRUE, 512, JSON_THROW_ON_ERROR);
+          }
+          $apiList[] = $content['name'] . ':' . $content['version'];
+          file_put_contents("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json", json_encode($apiList, JSON_THROW_ON_ERROR));
+          drush_apic_api_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
+          break;
         case 'product':
           $prodList = [];
           if (file_exists("/tmp/snapshot.$UUID/content_refresh_products.$UUID.json")) {
@@ -908,15 +925,6 @@ function processContent($content, $UUID) {
               '%product' => $content['name'],
             ]), 'warning');
           }
-          break;
-        case 'api':
-          $apiList = [];
-          if (file_exists("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json")) {
-            $apiList = json_decode(file_get_contents("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json"), TRUE, 512, JSON_THROW_ON_ERROR);
-          }
-          $apiList[] = $content['name'] . ':' . $content['version'];
-          file_put_contents("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.json", json_encode($apiList, JSON_THROW_ON_ERROR));
-          drush_apic_api_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
           break;
         case 'app':
           $appList = [];
@@ -1328,7 +1336,10 @@ function drush_ibm_apim_clearup($UUID, $startTime) {
   // remove any users from the db that do not have a consumerorg
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up users'), 'success');
   $query = \Drupal::entityQuery('user');
-  $query->condition('consumerorg_url', NULL, 'IS NULL');
+  $group = $query->orConditionGroup()
+  ->condition('consumerorg_url', NULL, 'IS NULL')
+  ->condition('consumerorg_url', '');
+  $query->condition($group);
   $query->condition('uid', 0, '<>');
   $query->condition('uid', 1, '<>');
   $uids = $query->execute();
@@ -2275,9 +2286,9 @@ function drush_ibm_apim_activation_del($activation) {
     }
     else if ($user->apic_state->value !== 'pending_approval') {
       drush_print($activation['username'] . ' is not in pending_approval state. Skipping rejection.');
-    } 
-    else if ($activation['root_operation'] === 'task_rejection') {  
-      // ensure they have been removed from all corg membership  
+    }
+    else if ($activation['root_operation'] === 'task_rejection') {
+      // ensure they have been removed from all corg membership
       $delete_service = \Drupal::service('auth_apic.delete_user');
       drush_print('Deleting apic user ' . $activation['username']);
       $delete_service->deleteLocalAccount($deleteUser);
@@ -2329,7 +2340,7 @@ function drush_ibm_apim_activation_update($activation) {
     }
     else if ($user->apic_state->value !== 'pending_approval') {
       drush_print($activation['username'] . ' is not in pending_approval state. Skipping approval.');
-    } 
+    }
     else if ($activation['root_operation'] === 'task_approval') {
       $editUser->setFirstname($activation['first_name']);
       $editUser->setLastname($activation['last_name']);

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -223,7 +223,7 @@ class AnalyticsController extends ControllerBase {
             // get the incoming POST payload
             $data = $request->getContent();
 
-            $url = $analyticsClientUrl . '/api/apiconnect/anv';
+            $url = $analyticsClientUrl . '/anv';
 
             $verb = 'POST';
             $url .= '?org_id=' . $pOrgId . '&catalog_id=' . $catalogId . '&developer_org_id=' . $consumerOrgId . '&manage=true&dashboard=true';

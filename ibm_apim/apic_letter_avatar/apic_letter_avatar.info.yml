@@ -1,0 +1,11 @@
+name: Apic Letter Avatar
+type: module
+description: 'Adds a letter avatar generator based on the name of a user.'
+package: IBM API Developer Portal
+dependencies:
+  - avatars
+
+version: '8.x-2.0'
+core_version_requirement: ^8.8 || ^9
+project: 'apic_letter_avatar'
+interface translation project: apic_letter_avatar

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -134,7 +134,7 @@ class ApplicationUpdateForm extends FormBase {
     if ($entity !== NULL && $entity_form !== NULL) {
       foreach ($entity_form->getComponents() as $name => $options) {
 
-        if (($configuration = $entity_form->getComponent($name)) && isset($configuration['type']) && ($definition = $definitions[$name])) {
+        if (($configuration = $entity_form->getComponent($name)) && isset($configuration['type'], $definitions[$name]) && ($definition = $definitions[$name])) {
           $widget = \Drupal::service('plugin.manager.field.widget')->getInstance([
             'field_definition' => $definition,
             'form_mode' => 'default',
@@ -142,6 +142,8 @@ class ApplicationUpdateForm extends FormBase {
             'prepare' => FALSE,
             'configuration' => $configuration,
           ]);
+        } else {
+          unset($widget);
         }
 
         if (isset($widget)) {

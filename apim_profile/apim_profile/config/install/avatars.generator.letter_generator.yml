@@ -2,10 +2,10 @@ langcode: en
 status: true
 dependencies:
   module:
-    - letter_avatar
+    - apic_letter_avatar
 id: letter_generator
-label: 'Letter Generator'
+label: 'APIC Letter Generator'
 weight: 0
-plugin: letter_avatar
+plugin: apic_letter_avatar
 provider: null
 settings: {  }

@@ -84,13 +84,14 @@
       </div>
       <div class="applicationTabs">
         <ul>
-          <li><a class="analyticsApplication"
+          <li class="selected"><a class="analyticsApplication"
                  href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Dashboard'|t }}</a></li>
-          <li class="selected"><a href="#">{{ 'Analytics'|t }}</a></li>
           <li><a class="subscriptionsApplication"
                  href="{{- path('apic_app.subscriptions', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
-          <li><a class="activityApplication"
+          {% if notifications_access %}
+            <li><a class="activityApplication"
                  href="{{- path('apic_app.activity', {'node': node.id}) -}}">{{ 'Notifications'|t }}</a></li>
+          {% endif %}
         </ul>
       </div>
     </div>

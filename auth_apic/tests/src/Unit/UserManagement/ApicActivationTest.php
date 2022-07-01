@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -126,7 +126,7 @@ namespace Drupal\Tests\auth_apic\Unit {
       $mgmtServerResponse->setCode(401);
       $mgmtServerResponse->setErrors(['mock error']);
 
-      $this->logger->error('Error while processing user activation. Received response code \'@code\' from backend. 
+      $this->logger->error('Error while processing user activation. Received response code \'@code\' from backend.
         Message from backend was \'@message\'.', ['@code' => '401', '@message' => 'mock error'])->shouldBeCalled();
 
       $this->mgmtServer->activateFromJWT($token)->willReturn($mgmtServerResponse);
@@ -160,7 +160,7 @@ namespace Drupal\Tests\auth_apic\Unit {
       $mgmtServerResponse->setCode(400);
       $mgmtServerResponse->setErrors(['mock error']);
 
-      $this->logger->error('Error while processing user activation. Received response code \'@code\' from backend. 
+      $this->logger->error('Error while processing user activation. Received response code \'@code\' from backend.
         Message from backend was \'@message\'.', ['@code' => '400', '@message' => 'mock error'])->shouldBeCalled();
 
       $this->mgmtServer->activateFromJWT($token)->willReturn($mgmtServerResponse);
@@ -227,5 +227,3 @@ namespace Drupal\Tests\auth_apic\Unit {
   }
 
 }
-
-

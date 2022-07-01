@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -90,7 +90,22 @@ class DisplayCredsForm extends FormBase {
       $this->node = $appId;
     }
     try {
-      $this->creds = json_decode(base64_decode($credentials, FALSE), TRUE, 512, JSON_THROW_ON_ERROR);
+      $moduleHandler = \Drupal::service('module_handler');
+      if ($moduleHandler->moduleExists('encrypt')) {
+        $ibmApimConfig = \Drupal::config('ibm_apim.settings');
+        $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
+        if (isset($encryptionProfileName)) {
+          $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
+          $encryptionService = \Drupal::service('encryption');
+          if ($encryptionProfile !== NULL) {
+            $this->creds = json_decode($encryptionService->decrypt($credentials, $encryptionProfile),TRUE, 512, JSON_THROW_ON_ERROR);
+          }
+        } else {
+          \Drupal::logger('apic_app')->warning('display_app_credentials_form: No encryption profile set', []);
+        }
+      } else {
+        $this->creds = json_decode(base64_decode($credentials, FALSE), TRUE, 512, JSON_THROW_ON_ERROR);
+      }
     } catch (JsonException $e) {
 
     }

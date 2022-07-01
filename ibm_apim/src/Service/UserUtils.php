@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -370,8 +370,12 @@ class UserUtils {
           $new_org_urls[] = $valueArray;
         }
       }
-      $account->set('consumerorg_url', $new_org_urls);
-      $account->save();
+      if (empty($new_org_urls)) {
+        $account->delete();
+      } else {
+        $account->set('consumerorg_url', $new_org_urls);
+        $account->save();
+      }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }

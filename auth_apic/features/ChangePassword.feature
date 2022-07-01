@@ -44,11 +44,11 @@ Feature: Change Password
     Given I am logged in as "@data(andre.name)"
     And I am at "/user/@uid/change-password"
     When I enter "@data(andre.password)" for "Current password"
-    And I enter "newPassw0rd" for "Password"
-    And I enter "newPassw0rd" for "Confirm password"
+    And I enter "newPassw0rdIsGreat!" for "Password"
+    And I enter "newPassw0rdIsGreat!" for "Confirm password"
     And I press the "Save" button
     Given I am at "/user/@uid/change-password"
-    When I enter "newPassw0rd" for "Current password"
+    When I enter "newPassw0rdIsGreat!" for "Current password"
     And I enter "@data(andre.password)" for "Password"
     And I enter "@data(andre.password)" for "Confirm password"
     And I press the "Save" button
@@ -64,8 +64,8 @@ Feature: Change Password
     Given I am logged in as a registry user with the "Administrator" role
     And I am at "/user/@uid/change-password"
     When I enter "blah" for "current_pass"
-    And I enter "newPassw0rd" for "pass[pass1]"
-    And I enter "newPassw0rd" for "pass[pass2]"
+    And I enter "newPassw0rdIsGreat!" for "pass[pass1]"
+    And I enter "newPassw0rdIsGreat!" for "pass[pass2]"
     And I press the "Save" button
     Then I should see the text "Password changed successfully"
 
@@ -77,14 +77,14 @@ Feature: Change Password
     Given I am logged in as "@data(admin.name)"
     And I am at "/user/1/change-password"
     When I enter "@data(admin.password)" for "current_pass"
-    And I enter "newPassw0rd" for "pass[pass1]"
-    And I enter "newPassw0rd" for "pass[pass2]"
+    And I enter "newPassw0rdIsGreat!" for "pass[pass1]"
+    And I enter "newPassw0rdIsGreat!" for "pass[pass2]"
     And I press the "Save" button
     Then I should see the text "Your password has been changed."
   # unfortunately this has actually changed the admin password so we need to revert it.
   # admin user does not logout, so we are still on the changepassword screen.
     Given I am at "/user/1/change-password"
-    When I enter "newPassw0rd" for "current_pass"
+    When I enter "newPassw0rdIsGreat!" for "current_pass"
     And I enter "@data(admin.password)" for "pass[pass1]"
     And I enter "@data(admin.password)" for "pass[pass2]"
     And I press the "Save" button
@@ -98,8 +98,8 @@ Feature: Change Password
     Given I am logged in as "@data(admin.name)"
     And I am at "/user/1/change-password"
     When I enter "thisiswrong" for "current_pass"
-    And I enter "newPassw0rd" for "pass[pass1]"
-    And I enter "newPassw0rd" for "pass[pass2]"
+    And I enter "newPassw0rdIsGreat!" for "pass[pass1]"
+    And I enter "newPassw0rdIsGreat!" for "pass[pass2]"
     And I press the "Save" button
     Then I should see the text "The current password you provided is incorrect."
 
@@ -117,8 +117,8 @@ Feature: Change Password
     Given I am logged in as "@data(andre.name)"
     And I am at "/user/@uid/change-password"
     When I enter "thisiswrong" for "Current password"
-    And I enter "newPassw0rd" for "Password"
-    And I enter "newPassw0rd" for "Confirm password"
+    And I enter "newPassw0rdIsGreat!" for "Password"
+    And I enter "newPassw0rdIsGreat!" for "Confirm password"
     And I press the "Save" button
     Then I should see the text "The old password is incorrect"
 
@@ -156,17 +156,17 @@ Feature: Change Password
       | lur  | @data(user_registries[1].title) | @data(user_registries[1].url) | yes          | no      |
     Given users:
       | uid    | name         | mail                  | pass     | registry_url                  |
-      | 234567 | changepwuser | changepw1@example.com | Qwert123 | @data(user_registries[0].url) |
+      | 234567 | changepwuser | changepw1@example.com | Qwert123IsBadPassword! | @data(user_registries[0].url) |
       | 765432 | changepwuser | changepw2@example.com | Qwert246 | @data(user_registries[1].url) |
     Given consumerorgs:
       | title | name | id   | owner_uid |
       | org1  | org1 | org1 | 234567    |
       | org2  | org2 | org2 | 765432    |
-    When I am logged in as "changepwuser" from "@data(user_registries[0].url)" with "Qwert123"
+    When I am logged in as "changepwuser" from "@data(user_registries[0].url)" with "Qwert123IsBadPassword!"
     And I am at "/user/@uid/change-password"
-    And I enter "Qwert123" for "Current password"
-    And I enter "newPassw0rd" for "Password"
-    And I enter "newPassw0rd" for "Confirm password"
+    And I enter "Qwert123IsBadPassword!" for "Current password"
+    And I enter "newPassw0rdIsGreat!" for "Password"
+    And I enter "newPassw0rdIsGreat!" for "Confirm password"
     And I press the "Save" button
   #And I am on "/myorg"
     Then there are no errors
@@ -176,8 +176,8 @@ Feature: Change Password
     And I am logged in as "changepwuser" from "@data(user_registries[1].url)" with "Qwert246"
     When I am at "/user/@uid/change-password"
     When I enter "Qwert246" for "Current password"
-    And I enter "newPassw0rd" for "Password"
-    And I enter "newPassw0rd" for "Confirm password"
+    And I enter "newPassw0rdIsGreat!" for "Password"
+    And I enter "newPassw0rdIsGreat!" for "Confirm password"
     And I press the "Save" button
     Then there are no errors
     And there are no warnings
@@ -193,15 +193,15 @@ Feature: Change Password
       | ldap | @data(user_registries[2].title) | @data(user_registries[2].url) | yes          | yes     |
     Given users:
       | uid    | name         | mail                  | pass     | registry_url                  |
-      | 123456 | changepwuser | changepw1@example.com | Qwert123 | @data(user_registries[2].url) |
+      | 123456 | changepwuser | changepw1@example.com | Qwert123IsBadPassword! | @data(user_registries[2].url) |
     Given consumerorgs:
       | title | name | id   | owner_uid |
       | org1  | org1 | org1 | 123456    |
-    When I am logged in as "changepwuser" from "@data(user_registries[2].url)" with "Qwert123"
+    When I am logged in as "changepwuser" from "@data(user_registries[2].url)" with "Qwert123IsBadPassword!"
     And I am at "/user/@uid/change-password"
-    And I enter "Qwert123" for "Current password"
-    And I enter "newPassw0rd" for "Password"
-    And I enter "newPassw0rd" for "Confirm password"
+    And I enter "Qwert123IsBadPassword!" for "Current password"
+    And I enter "newPassw0rdIsGreat!" for "Password"
+    And I enter "newPassw0rdIsGreat!" for "Confirm password"
     And I press the "Save" button
     Then there are no errors
     And there are no warnings
