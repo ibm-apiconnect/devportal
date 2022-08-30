@@ -152,10 +152,10 @@
                     {% if key|lower is same as('token') %}
                       {# don't render the token #}
                     {% elseif key|lower is same as('last_4') %}
-                      <p class="key {{ key|clean_class }}">{{ 'Card number'|t }}: ************{{ value }}</p>
+                      <p class="key {{ key|clean_class }}">{{ 'Card number'|t }}: ************{{ field.value }}</p>
                     {% elseif key|lower is same as('expiration_month') and payment_method.configuration.expiration_year is defined %}
-                      <p class="key cardExpiry">{{ 'Expiry'|t }}: {{ payment_method.configuration.expiration_month }}
-                        / {{ payment_method.configuration.expiration_year }}</p>
+                      <p class="key cardExpiry">{{ 'Expiry'|t }}: {{ payment_method.configuration.expiration_month.value }}
+                        / {{ payment_method.configuration.expiration_year.value }}</p>
                     {% elseif key|lower is same as('expiration_year') and payment_method.configuration.expiration_month is defined %}
                       {# do nothing since we've handled expiry above #}
                     {% elseif field.value is empty %}

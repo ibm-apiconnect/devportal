@@ -72,8 +72,8 @@
     "drupal/contact_block": "^1.4",
     "drupal/contact_storage": "^1.0@beta",
     "drupal/content_browser": "^1.0",
-    "drupal/core": "^9.2",
-    "drupal/core-composer-scaffold": "^9.3",
+    "drupal/core": "^9.4",
+    "drupal/core-composer-scaffold": "^9.4",
     "drupal/crop": "^2.0",
     "drupal/cshs": "^3.4",
     "drupal/csp": "^1.0@alpha",
@@ -203,6 +203,7 @@
     "drush/drush": "^10",
     "enyo/dropzone": "^5.1",
     "friends-of-behat/mink-browserkit-driver": "^1.4",
+    "firebase/php-jwt": "^5.0",
     "html2text/html2text": "^4.3",
     "kint-php/kint": "^3.3",
     "lasserafn/php-initial-avatar-generator": "^4",
@@ -219,7 +220,7 @@
     "wikimedia/composer-merge-plugin": "^2.0"
   },
   "require-dev": {
-    "drupal/core-dev": "^9.2",
+    "drupal/core-dev": "^9.4",
     "mglaman/drupal-check": "^1.1",
     "zaporylie/composer-drupal-optimizations": "^1.2"
   },

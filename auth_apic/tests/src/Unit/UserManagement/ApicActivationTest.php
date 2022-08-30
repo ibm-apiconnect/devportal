@@ -126,7 +126,7 @@ namespace Drupal\Tests\auth_apic\Unit {
       $mgmtServerResponse->setCode(401);
       $mgmtServerResponse->setErrors(['mock error']);
 
-      $this->logger->error('Error while processing user activation. Received response code \'@code\' from backend. 
+      $this->logger->error('Error while processing user activation. Received response code \'@code\' from backend.
         Message from backend was \'@message\'.', ['@code' => '401', '@message' => 'mock error'])->shouldBeCalled();
 
       $this->mgmtServer->activateFromJWT($token)->willReturn($mgmtServerResponse);
@@ -160,7 +160,7 @@ namespace Drupal\Tests\auth_apic\Unit {
       $mgmtServerResponse->setCode(400);
       $mgmtServerResponse->setErrors(['mock error']);
 
-      $this->logger->error('Error while processing user activation. Received response code \'@code\' from backend. 
+      $this->logger->error('Error while processing user activation. Received response code \'@code\' from backend.
         Message from backend was \'@message\'.', ['@code' => '400', '@message' => 'mock error'])->shouldBeCalled();
 
       $this->mgmtServer->activateFromJWT($token)->willReturn($mgmtServerResponse);
@@ -227,5 +227,3 @@ namespace Drupal\Tests\auth_apic\Unit {
   }
 
 }
-
-

@@ -1,6 +1,6 @@
---- core/modules/update/update.module	2018-03-06 09:30:44.000000000 +0000
-+++ core/modules/update/update.module	2018-03-06 09:31:36.000000000 +0000
-@@ -141,10 +141,10 @@
+--- core/modules/update/update.module	2022-06-15 17:34:03.000000000 +0100
++++ core/modules/update/update.module	2022-06-27 12:09:01.000000000 +0100
+@@ -51,10 +51,10 @@
 
      case 'system.modules_list':
        if (_update_manager_access()) {
@@ -9,18 +9,18 @@
        }
        else {
 -        $output = '<p>' . t('Regularly review <a href=":updates">available updates</a> to maintain a secure and current site. Always run the <a href=":update-php">update script</a> each time a module is updated.', [':update-php' => Url::fromRoute('system.db_update')->toString(), ':updates' => Url::fromRoute('update.status')->toString()]) . '</p>';
-+        $output = '<p>' . t('Regularly review <a href=":updates">available updates</a> to maintain a secure and current site.', [':updates' => Url::fromRoute('update.status')->toString()]) . '</p>';
++        $output = '<p>' . t('Regularly review and install <a href=":updates">available updates</a> to maintain a secure and current site.', [':updates' => Url::fromRoute('update.status')->toString()]) . '</p>';
        }
        return $output;
    }
-@@ -278,7 +278,9 @@
+@@ -194,7 +194,9 @@
      // If configured time between notifications elapsed, send email about
      // updates possibly available.
-     module_load_include('inc', 'update', 'update.fetch');
+     \Drupal::moduleHandler()->loadInclude('update', 'inc', 'update.fetch');
 -    _update_cron_notify();
-+    // APIC comment out the actual emails since we do not allow admins to 
++    // APIC comment out the actual emails since we do not allow admins to
 +    // update modules manually
 +    //_update_cron_notify();
    }
- 
+
    // Clear garbage from disk.

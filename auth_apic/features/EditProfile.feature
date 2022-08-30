@@ -182,6 +182,9 @@ Feature: Edit Profile
     Given users:
       | name              | mail | pass                  | status | registry_url                  |
       | @data(andre.name) |      | @data(andre.password) | 1      | @data(user_registries[2].url) |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.name)"
     When I am at "/user/@uid/edit"
     Then I should see the text "First Name"
@@ -212,6 +215,9 @@ Feature: Edit Profile
     Given users:
       | name              | mail | pass                  | status | registry_url                  |
       | @data(andre.name) |      | @data(andre.password) | 1      | @data(user_registries[2].url) |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.name)"
     When I am at "/user/@uid/edit"
     When I select "es" from "preferred_langcode"
@@ -234,6 +240,9 @@ Feature: Edit Profile
     Given users:
       | name              | mail              | pass                  | status | registry_url                  |
       | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      | @data(user_registries[2].url) |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.name)"
     When I am at "/user/@uid/edit"
     Then I should see the text "First Name"
@@ -270,6 +279,9 @@ Feature: Edit Profile
     Given users:
       | name              | mail              | pass                  | status | registry_url                  |
       | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      | @data(user_registries[2].url) |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.name)"
     When I am at "/user/@uid/edit"
     And I enter "Changed Name" for "First Name"

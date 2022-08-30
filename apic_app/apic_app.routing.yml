@@ -32,7 +32,6 @@ apic_app.subscriptions:
   requirements:
     _role: 'authenticated'
     _application_subscriptions_access_check: 'TRUE'
-    _ibm_apim_analytics_access_check: 'TRUE'
   options:
     parameters:
       node:

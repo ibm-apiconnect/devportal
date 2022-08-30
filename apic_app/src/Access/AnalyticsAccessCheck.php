@@ -32,6 +32,8 @@ class AnalyticsAccessCheck implements AccessInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $allowed = FALSE;
     $current_user = \Drupal::currentUser();
+    $config = \Drupal::config('ibm_apim.settings');
+
     // block anonymous and admin
     if (!$current_user->isAnonymous() && (int) $current_user->id() !== 1) {
 
@@ -41,6 +43,7 @@ class AnalyticsAccessCheck implements AccessInterface {
       }
 
       $user = User::load($current_user->id());
+      $show_analytics = (boolean) $config->get('show_analytics');
       if ($user !== NULL) {
         $user_url = $user->get('apic_url')->value;
         $portal_analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
@@ -49,7 +52,7 @@ class AnalyticsAccessCheck implements AccessInterface {
         }
 
         if (isset($node, $org, $analyticsClientUrl) && $node->application_consumer_org_url->value === $org->getUrl()) {
-          $allowed = $org->hasPermission($user_url, 'app-analytics:view') || $org->hasPermission($user_url, 'subscription:manage');
+          $allowed = ($org->hasPermission($user_url, 'app-analytics:view') || $org->hasPermission($user_url, 'subscription:manage')) && $show_analytics;
         }
       }
     }

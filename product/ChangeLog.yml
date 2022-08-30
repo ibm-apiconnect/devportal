@@ -1,4 +1,6 @@
 changes:
+  8.x-2.10.0:
+  - update version 8.x-2.9.5 -> 8.x-2.10.0
   8.x-2.9.4:
   - tidy url for redirect module enable
   8.x-2.9.3:

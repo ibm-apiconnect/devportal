@@ -51,6 +51,15 @@ services:
                  '@ibm_apim.mgmtserver',
                  '@logger.channel.ibm_apim',
     ]
+  consumerorg_check:
+    class: Drupal\ibm_apim\EventSubscriber\ConsumerOrgCheckSubscriber
+    tags:
+      - { name: event_subscriber }
+    arguments: [ '@ibm_apim.user_utils',
+                 '@ibm_apim.site_config',
+                 '@logger.channel.ibm_apim',
+                 '@messenger'
+    ]
   ibm_apim.vendor_extension:
     class: Drupal\ibm_apim\Service\VendorExtension
     arguments: [ '@state', '@logger.channel.ibm_apim' ]

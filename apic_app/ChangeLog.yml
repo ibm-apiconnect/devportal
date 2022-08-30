@@ -1,4 +1,12 @@
 changes:
+  8.x-2.10.3:
+  - Access denied when creating app without consumer org (#318) (#326)
+  8.x-2.10.2:
+  - Acknowledging the 'Display Analytics' setting
+  - Rendering the right contents based on analytics access.
+  8.x-2.10.1: null
+  8.x-2.10.0:
+  - update version 8.x-2.9.6 -> 8.x-2.10.0
   8.x-2.9.5:
   - Subscription tests (#300) (#310)
   8.x-2.9.4:

@@ -1,7 +1,7 @@
 type: theme
 base theme: bootstrap
 core_version_requirement: ^8 || ^9
-version: 8.x-2.8.2
+version: 8.x-2.9.2
 project: connect_theme
 name: connect_theme
 description: Uses the Bootstrap framework Sass source files and must be compiled.

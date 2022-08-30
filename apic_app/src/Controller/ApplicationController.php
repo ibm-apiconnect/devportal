@@ -198,8 +198,9 @@ class ApplicationController extends ControllerBase {
         if ($user !== NULL) {
           $userUrl = $user->get('apic_url')->value;
           $org = $this->consumerOrgService->get($node->application_consumer_org_url->value);
+          $show_analytics = (boolean) $config->get('show_analytics');
         }
-        if ($org !== NULL && $analyticsClientUrl !== NULL && $userUrl !== NULL && $org->hasPermission($userUrl, 'app-analytics:view')) {
+        if ($org !== NULL && $analyticsClientUrl !== NULL && $userUrl !== NULL && $org->hasPermission($userUrl, 'app-analytics:view') && $show_analytics) {
           $analytics_access = TRUE;
         }
 
@@ -294,6 +295,7 @@ class ApplicationController extends ControllerBase {
     $appnode = NULL;
     $credentials = [];
     $subarray = [];
+    $analytics_access = FALSE;
 
     $portal_analytics_service = \Drupal::service('ibm_apim.analytics')->getDefaultService();
     if (isset($portal_analytics_service)) {
@@ -399,6 +401,15 @@ class ApplicationController extends ControllerBase {
             }
           }
         }
+        $user = User::load($current_user->id());
+        if ($user !== NULL) {
+          $userUrl = $user->get('apic_url')->value;
+          $org = $this->consumerOrgService->get($node->application_consumer_org_url->value);
+          $show_analytics = (boolean) $config->get('show_analytics');
+        }
+        if ($org !== NULL && $analyticsClientUrl !== NULL && $userUrl !== NULL && $org->hasPermission($userUrl, 'app-analytics:view') && $show_analytics) {
+          $analytics_access = TRUE;
+        }
       }
       else {
         \Drupal::logger('apic_app')->info('Not a valid application node: %node', ['%node' => $node->id()]);
@@ -442,6 +453,8 @@ class ApplicationController extends ControllerBase {
       'credentials' => $credentials,
       'node' => $appnode,
       'applifecycleEnabled' => $applifecycleEnabled,
+      'notifications_access' => $notifications_access,
+      'analytics_access' => $analytics_access,
     ]);
     $nodeId = $node->id();
 
@@ -456,6 +469,7 @@ class ApplicationController extends ControllerBase {
       '#applifecycleEnabled' => $applifecycleEnabled,
       '#appImageUploadEnabled' => $appImageUploadEnabled,
       '#notifications_access' => $notifications_access,
+      '#analytics_access' => $analytics_access,
       '#node' => $appnode,
       '#attached' => [
         'library' => $libraries,

@@ -1,21 +1,10 @@
---- modules/captcha/captcha.module	2021-06-21 12:40:58.000000000 +0100
-+++ modules/captcha/captcha.module	2021-06-21 12:41:43.000000000 +0100
-@@ -221,8 +221,9 @@
-       }
-
-       // Get placement in form and insert in form.
--      $captcha_placement = _captcha_get_captcha_placement($form_id, $form);
--      $captchaService->insertCaptchaElement($form, $captcha_placement, $captcha_element);
-+      if ($captcha_placement = _captcha_get_captcha_placement($form_id, $form)) {
-+        $captchaService->insertCaptchaElement($form, $captcha_placement, $captcha_element);
-+      }
-
-     }
-   }
-@@ -534,6 +535,7 @@
+--- modules/captcha/captcha.module	2022-06-15 17:40:03.000000000 +0100
++++ modules/captcha/captcha.module	2022-06-27 15:08:32.000000000 +0100
+@@ -535,6 +535,7 @@
+     $solution = \Drupal::database()
        ->select('captcha_sessions', 'cs')
        ->fields('cs', ['solution'])
-       ->condition('csid', $csid)
 +      ->condition('status', CAPTCHA_STATUS_UNSOLVED)
+       ->condition('csid', $csid)
        ->execute()
        ->fetchField();

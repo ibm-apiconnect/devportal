@@ -1,4 +1,12 @@
 changes:
+  8.x-2.9.3:
+  - Delete members without org on consumerorg_delete (#278) (#280)
+  8.x-2.9.2:
+  - Fix for non json decodeable custom field data (#272)
+  8.x-2.9.1:
+  - Fixed billing template (#276)
+  8.x-2.9.0:
+  - update version 8.x-2.8.7 -> 8.x-2.9.0
   8.x-2.8.6:
   - Added monetisation test (#257) (#268)
   8.x-2.8.5: null
@@ -324,4 +332,7 @@ changes:
   - add drush command to be able to resend all invitations
   8.x-1.2.86:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since
+    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
+    are also filtered before logging them. Commits that start with 'INT' or 'bump
+    version' are omitted.

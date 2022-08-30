@@ -1502,7 +1502,7 @@ function ibm_apim_preprocess_table(&$variables) {
   }
 
   // accessibility fix for the pending module updates page
-  if (isset($variables['attributes']['class']) && in_array('update', array_values($variables['attributes']['class']), TRUE)) {
+  if (is_array($variables['attributes']['class']) && in_array('update', array_values($variables['attributes']['class']), TRUE)) {
     $variables['attributes']['role'] = 'presentation';
   }
 

@@ -7,6 +7,9 @@ Feature: Delete user
     Given users:
       | name              | mail              | pass                  | status |
       | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.mail)"
     And I am at "/user/delete"
     Then I should see the text "Are you sure you want to delete your account?"
@@ -42,6 +45,9 @@ Feature: Delete user
     Given users:
       | name              | mail              | pass                  | status |
       | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.mail)"
     And I am at "/user/delete"
     And I should see the link "Cancel"
@@ -57,13 +63,16 @@ Feature: Delete user
     Given users:
       | name              | mail              | pass                  | status |
       | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
     Given I am logged in as "@data(andre.mail)"
     And I am at "/user/delete"
     And I should see the "Delete" button
     When I press the "Delete" button
     Then I am at "/"
     And there are messages
-    And I should see the text "The update has been performed."
+    And I should see the text "Account successfully deleted."
     # the following doesn't appear while using mocks.
       # And I should see the text "andre has been deleted."
     And there are no warnings
@@ -85,8 +94,8 @@ Feature: Delete user
     When I press the "Delete" button
     Then I am at "/"
     And there are messages
+    And I should see the text "Account successfully deleted."
     And I should see the text "Organization successfully deleted."
-    And I should see the text "The update has been performed."
     # the following doesn't appear while using mocks.
       # And I should see the text "andre has been deleted."
     And there are no warnings
@@ -139,7 +148,7 @@ Feature: Delete user
     Then I am at "/"
     And there are messages
     And I should see the text "Organization successfully deleted."
-    And I should see the text "The update has been performed."
+    And I should see the text "Account successfully deleted."
     # the following doesn't appear while using mocks.
       # And I should see the text "andre has been deleted."
     And there are no warnings

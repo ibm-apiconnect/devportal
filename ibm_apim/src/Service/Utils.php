@@ -18,6 +18,7 @@ use RecursiveIteratorIterator;
 use RegexIterator;
 use Drupal\Component\Datetime\DateTimePlus;
 use Exception;
+use Throwable;
 
 /**
  * Miscellaneous utility functions.
@@ -504,10 +505,13 @@ class Utils {
           if (isset($customFieldValues[$customField])) {
             $value = $customFieldValues[$customField];
             if ($isJSON) {
-              if (strpos($value, '[') === 0) {  
+              if (strpos($value, '[') === 0) {
                 $isList = True;
               }
-              $value = json_decode($value, True, 512, JSON_THROW_ON_ERROR);
+              try {
+                $value = json_decode($value, True, 512, JSON_THROW_ON_ERROR);
+              } catch (Throwable $e) {
+              }
             }
             \Drupal::logger('ibm_apim')->info('saving custom field: @customfield', ['@customfield' => $customField]);
             $type = $node->get($customField)->getFieldDefinition()->getType();
@@ -519,7 +523,7 @@ class Utils {
               }
               $value = $valueToSave;
             } else {
-              $value = $this->handleFieldType($value, $type); 
+              $value = $this->handleFieldType($value, $type);
             }
             $node->set($customField,$value);
           }
@@ -533,7 +537,7 @@ class Utils {
   }
 }
 
-  private function handleFieldType($value, $type) { 
+  private function handleFieldType($value, $type) {
     if ($type === 'address') {
       if (isset($value['address'])) {
         $value = $value['address'];

@@ -129,7 +129,7 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function orgInvitationsRegister(JWTToken $obj, ApicUser $invitedUser): RestResponse {
+  public function orgInvitationsRegister(JWTToken $obj, ApicUser $invitedUser): ?RestResponse {
     $response = new RestResponse();
 
     $response->setCode(201);
@@ -388,7 +388,7 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * @inheritDoc
    */
-  public function activateFromJWT(JWTToken $jwt): RestResponse {
+  public function activateFromJWT(JWTToken $jwt): ?RestResponse {
     \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::activateFromJWT() is missing!');
     return new RestResponse();
   }

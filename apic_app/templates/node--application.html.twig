@@ -102,29 +102,23 @@
             </div>
           {% endif %}
         </div>
-        {% if analytics_access %}
-          <div class="applicationTabs">
-            <ul>
-              <li class="selected"><a href="#">{{ 'Dashboard'|t }}</a></li>
+        <div class="applicationTabs">
+          <ul>
+            {% if analytics_access %}
+              <li class="selected"><a class="analyticsApplication"
+                     href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Dashboard'|t }}</a></li>
               <li><a class="subscriptionsApplication"
                      href="{{- path('apic_app.subscriptions', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
-              {% if notifications_access %}
-                <li><a class="activityApplication"
-                       href="{{- path('apic_app.activity', {'node': node.id}) -}}">{{ 'Notifications'|t }}</a></li>
-              {% endif %}
-            </ul>
-          </div>
-        {% else %}
-          <div class="applicationTabs">
-            <ul>
-              <li class="selected"><a href="#">{{ 'Subscriptions'|t }}</a></li>
-              {% if notifications_access %}
-                <li><a class="activityApplication"
-                       href="{{- path('apic_app.activity', {'node': node.id}) -}}">{{ 'Notifications'|t }}</a></li>
-              {% endif %}
-            </ul>
-          </div>
-        {% endif %}
+            {% else %}
+              <li class="selected"><a class="subscriptionsApplication"
+                    href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
+            {% endif %}
+            {% if notifications_access %}
+              <li><a class="activityApplication"
+                   href="{{- path('apic_app.activity', {'node': node.id}) -}}">{{ 'Notifications'|t }}</a></li>
+            {% endif %}
+          </ul>
+        </div>
       </div>
     </header>
     {% if analytics_access and events_found %}

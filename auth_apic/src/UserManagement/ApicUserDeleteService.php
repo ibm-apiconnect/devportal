@@ -18,7 +18,7 @@ use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Psr\Log\LoggerInterface;
-
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 class ApicUserDeleteService implements ApicUserDeleteInterface {
 
   /**
@@ -41,14 +41,22 @@ class ApicUserDeleteService implements ApicUserDeleteInterface {
    */
   private AccountProxyInterface $currentUser;
 
+ /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
   public function __construct(ManagementServerInterface $mgmt_server,
                               ApicUserStorageInterface $user_storage,
                               LoggerInterface $logger,
-                              AccountProxyInterface $current_user) {
+                              AccountProxyInterface $current_user,
+                              EntityTypeManagerInterface $entity_type_manager
+                              ) {
     $this->mgmtServer = $mgmt_server;
     $this->userStorage = $user_storage;
     $this->logger = $logger;
     $this->currentUser = $current_user;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -108,7 +116,12 @@ class ApicUserDeleteService implements ApicUserDeleteInterface {
       $id = $this->currentUser->id();
     }
 
-    if ($id !== NULL) {
+    if ($id === NULL) {
+      $this->logger->error('Unable to delete local account.');
+    } else if ($this->entityTypeManager->getStorage('user')->load($id) === NULL) {
+      //The user was deleted when the consumer org was deleted
+      $response = TRUE;
+    } else {
       $this->logger->notice('Deleting user - id = @id', ['@id' => $id]);
            // DO NOT DELETE THE ADMIN USER!
       if ((int) $id > 1) {
@@ -122,9 +135,6 @@ class ApicUserDeleteService implements ApicUserDeleteInterface {
         batch_process();
       }
       $response = TRUE;
-    }
-    else {
-      $this->logger->error('Unable to delete local account.');
     }
 
     if (\function_exists('ibm_apim_exit_trace')) {

@@ -97,7 +97,7 @@ interface ManagementServerInterface {
    * @return \Drupal\ibm_apim\Rest\RestResponse
    *   Response from the call.
    */
-  public function orgInvitationsRegister(JWTToken $token, ApicUser $invitedUser): RestResponse;
+  public function orgInvitationsRegister(JWTToken $token, ApicUser $invitedUser): ?RestResponse;
 
   /**
    * Accept the invitation represented by the JWTToken as the ApicUser provided
@@ -261,6 +261,6 @@ interface ManagementServerInterface {
    *
    * @return \Drupal\ibm_apim\Rest\RestResponse
    */
-  public function activateFromJWT(JWTToken $jwt): RestResponse;
+  public function activateFromJWT(JWTToken $jwt): ?RestResponse;
 
 }

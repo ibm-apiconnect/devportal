@@ -400,7 +400,7 @@ class APIMServer implements ManagementServerInterface {
    * @return \Drupal\ibm_apim\Rest\RestResponse
    * @throws \Exception
    */
-  public function orgInvitationsRegister(JWTToken $token, ApicUser $invitedUser): RestResponse {
+  public function orgInvitationsRegister(JWTToken $token, ApicUser $invitedUser): ?RestResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $headers = [
@@ -411,9 +411,11 @@ class APIMServer implements ManagementServerInterface {
       'X-IBM-Client-Id: ' . $this->siteConfig->getClientId(),
       'X-IBM-Client-Secret: ' . $this->siteConfig->getClientSecret(),
     ];
-
     $data = [];
-
+    if (!preg_match('/^(\/consumer-api)?\/org-invitations\/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/', $token->getUrl())
+     && !preg_match('/^(\/consumer-api)?\/orgs\/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\/member-invitations\/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/', $token->getUrl())) {
+      return null;
+    }
     if (empty($invitedUser->getOrganization())) {
       // This is andre invited by another andre and obviously the request body is therefore completely different
       $data = json_decode($this->userService->getUserJSON($invitedUser), FALSE, 512, JSON_THROW_ON_ERROR);
@@ -433,6 +435,29 @@ class APIMServer implements ManagementServerInterface {
 
     return $restResponse;
 
+  }
+
+  public function updateKeys() {
+    $data = \Drupal::state()->get('ibm_apim.apim_keys');
+    // Limit updates to once every 30m
+    if (isset($data['keys']) && time() < $data['lastUpdate'] + 1800) {
+      return $data['keys'];
+    }
+    $platformApiEndpoint = $this->siteConfig->getPlatformApimEndpoint();
+    if (!isset($platformApiEndpoint)) {
+      $this->logger->error('No platform apim endpoint defined');
+
+      return NULL;
+    }
+    $url = $platformApiEndpoint . '/cloud/oauth2/certs';
+    $result = ApicRest::get($url, '', 'platform');
+    if ($result->code !== 200) {
+      $this->logger->error('Received '. $result->code . ' code when getting APIM keys');
+      return NULL;
+    }
+    $keys = $result->data['keys'];
+    \Drupal::state()->set('apim_keys',['keys' => $keys, 'lastUpdate' => time()]);
+    return $keys;
   }
 
   /**
@@ -458,6 +483,9 @@ class APIMServer implements ManagementServerInterface {
     $data = [];
     // member invite and org invite (owner) have different payloads.
     if (strpos($token->getUrl(), '/member-invitations/')) {
+      if (!preg_match('/^(\/consumer-api)?\/orgs\/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\/member-invitations\/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/', $token->getUrl())) {
+        return null;
+      }
       $user_registry = $this->registryService->get($acceptingUser->getApicUserRegistryUrl());
       if ($user_registry !== NULL) {
         $data['realm'] = $user_registry->getRealm();
@@ -466,6 +494,9 @@ class APIMServer implements ManagementServerInterface {
       $data['password'] = $acceptingUser->getPassword();
     }
     else {
+      if (!preg_match('/^(\/consumer-api)?\/org-invitations\/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/', $token->getUrl())) {
+        return null;
+      }
       $data['user'] = json_decode($this->userService->getUserJSON($acceptingUser), FALSE, 512, JSON_THROW_ON_ERROR);
       if ($orgTitle !== NULL) {
         $data['org'] = ['title' => $orgTitle];
@@ -547,8 +578,7 @@ class APIMServer implements ManagementServerInterface {
 
     $data = ['password' => $password];
     $body = json_encode($data, JSON_THROW_ON_ERROR);
-
-    $response = ApicRest::json_http_request($obj->getUrl(), 'POST', $headers, $body);
+    $response = ApicRest::json_http_request('/me/reset-password', 'POST', $headers, $body);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $this->restResponseReader->read($response);
@@ -814,9 +844,10 @@ class APIMServer implements ManagementServerInterface {
    * @inheritDoc
    * @throws \Exception
    */
-  public function activateFromJWT(JWTToken $jwt): RestResponse {
+  public function activateFromJWT(JWTToken $jwt): ?RestResponse  {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
+    $result = null;
     $headers = [
       'Content-Type: application/json',
       'Accept: application/json',
@@ -825,11 +856,19 @@ class APIMServer implements ManagementServerInterface {
       'X-IBM-Client-Id: ' . $this->siteConfig->getClientId(),
       'X-IBM-Client-Secret: ' . $this->siteConfig->getClientSecret(),
     ];
+    $pos = strpos($jwt->getUrl(), '?activation_id=');
+    if ($pos !== false) {
+      $activationID = substr($jwt->getUrl(), $pos+15);
+      if (preg_match('/^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/', $activationID)) {
+        $url = '/consumer-api/activate?activation_id='  . $activationID;
+      }
+    }
+    if (isset($url)) {
+      $mgmt_result = ApicRest::json_http_request($url, 'POST', $headers, '');
+      $result = $this->restResponseReader->read($mgmt_result);
+    }
 
-    $mgmt_result = ApicRest::json_http_request($jwt->getUrl(), 'POST', $headers, '');
-    $result = $this->restResponseReader->read($mgmt_result);
-
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $result->getCode());
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $result?->getCode());
     return $result;
   }
 

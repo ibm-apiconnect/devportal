@@ -295,9 +295,10 @@ function apic_app_preprocess_node(&$variables) {
     if ($user !== NULL) {
       $userUrl = $user->get('apic_url')->value;
       $org = \Drupal::service('ibm_apim.consumerorg')->get($variables['node']->application_consumer_org_url->value);
+      $show_analytics = (boolean) $config->get('show_analytics');
     }
     if ($variables['view_mode'] === 'full') {
-      if ($org !== NULL && $analyticsClientUrl !== NULL && $userUrl !== NULL && $org->hasPermission($userUrl, 'app-analytics:view')) {
+      if ($org !== NULL && $analyticsClientUrl !== NULL && $userUrl !== NULL && $org->hasPermission($userUrl, 'app-analytics:view') && $show_analytics) {
         $variables['#attached']['library'][] = 'ibm_apim/analytics';
         $variables['#attached']['library'][] = 'apic_app/app_analytics_dashboard';
 
@@ -422,6 +423,7 @@ function apic_app_theme($existing, $type, $theme, $path): array {
         'applifecycleEnabled' => FALSE,
         'appImageUploadEnabled' => FALSE,
         'notifications_access' => FALSE,
+        'analytics_access' => FALSE,
         'node' => NULL,
         'subscriptions' => NULL,
         'credentials' => NULL,

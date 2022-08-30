@@ -1,4 +1,18 @@
 changes:
+  8.x-2.10.6:
+  - deleteFix v10.0.1 (#714)
+  8.x-2.10.5:
+  - Don't login users on form error (#710)
+  8.x-2.10.4:
+  - Improved jwt token validation (#702) (#706)
+  8.x-2.10.3:
+  - Error messages should be red (#693) (#704)
+  8.x-2.10.2:
+  - Require consumerorg v10.0.1 (#703)
+  8.x-2.10.1:
+  - Secure v10.0.1 (#700)
+  8.x-2.10.0:
+  - update version 8.x-2.9.6 -> 8.x-2.10.0
   8.x-2.9.5:
   - 7735 redirect (#690)
   8.x-2.9.4:
@@ -186,4 +200,7 @@ changes:
   - disable caching entirely for the core user invitation / activation routes
   8.x-1.2.106:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since
+    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
+    are also filtered before logging them. Commits that start with 'INT' or 'bump
+    version' are omitted.

@@ -1,9 +1,10 @@
 name: Consumer organization
 type: module
-description: Adds the content type representing consumer organizations in the IBM API Manager
+description: Adds the content type representing consumer organizations in the IBM
+  API Manager
 package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9
-version: 8.x-2.8.7
+version: 8.x-2.9.4
 project: consumerorg
 dependencies:
 - path
