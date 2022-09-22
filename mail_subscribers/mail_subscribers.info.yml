@@ -3,7 +3,7 @@ type: module
 description: Email subscribers of a given API Management Plan, Product or API
 package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9
-version: 8.x-99.0.3
+version: 8.x-5.1.2
 project: mail_subscribers
 libraries:
 - mail_subscribers/basic

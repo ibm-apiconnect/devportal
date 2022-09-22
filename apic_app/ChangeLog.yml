@@ -1,24 +1,25 @@
 changes:
-  8.x-99.0.9:
-  - update entity tables
-  - update entity tables
-  8.x-99.0.8:
-  - Access denied when creating app without consumer org (#318)
-  8.x-99.0.7:
+  8.x-5.1.2:
+  - Merge pull request
+  8.x-5.1.1:
+  - Access denied when creating app without consumer org (#318) (#327)
+  8.x-5.1.0:
+  - update version 8.x-5.0.8 -> 8.x-5.1.0
+  8.x-5.0.7:
+  - Merge pull request
+  8.x-5.0.6:
   - Acknowledging the 'Display Analytics' setting
-  8.x-99.0.6:
+  8.x-5.0.5:
   - Rendering the right contents based on analytics access.
-  8.x-99.0.5:
+  8.x-5.0.4:
   - update copyright statements
-  8.x-99.0.4:
+  8.x-5.0.3:
   - ignore the url_redirects field from redirect (#309)
-  8.x-99.0.3:
+  8.x-5.0.2:
   - Revert "analytics endpoint has changed name"
-  8.x-99.0.2: null
-  8.x-99.0.1:
-  - Update apic_app.info.yml
-  - Update Jenkinsfile
-  - Custom field tests (#304)
+  8.x-5.0.1: null
+  8.x-5.0.0:
+  - update slack channel to $CICHAN
   8.x-4.0.119:
   - analytics endpoint has changed name
   8.x-4.0.118:
@@ -509,4 +510,7 @@ changes:
   - issue
   8.x-1.5.65:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since
+    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
+    are also filtered before logging them. Commits that start with 'INT' or 'bump
+    version' are omitted.

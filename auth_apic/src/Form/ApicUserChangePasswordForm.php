@@ -317,6 +317,8 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
+    // redirect to the home page regardless of outcome.
+
     $moduleService = \Drupal::service('module_handler');
     if ($moduleService->moduleExists('password_policy')) {
       if (!isset($form)) {

@@ -1,10 +1,14 @@
 changes:
-  8.x-99.0.3:
+  8.x-5.1.1:
+  - Set default apic_rating (#244)
+  8.x-5.1.0:
+  - update version 8.x-5.0.3 -> 8.x-5.1.0
+  8.x-5.0.2:
   - update copyright
-  8.x-99.0.2:
+  8.x-5.0.1:
   - tidy url for redirect module enable
-  8.x-99.0.1:
-  - Update product.info.yml
+  8.x-5.0.0:
+  - update slack channel to $CICHAN
   8.x-4.0.107:
   - Update Jenkinsfile
   8.x-4.0.106:
@@ -423,5 +427,8 @@ changes:
   - ensure we do not load retired products
   8.x-1.1.51:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted
+  - Logging all the changes between the two successful builds. All the commits since
+    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
+    are also filtered before logging them. Commits that start with 'INT' or 'bump
+    version' are omitted
   - styling updates

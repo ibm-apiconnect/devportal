@@ -437,6 +437,29 @@ class APIMServer implements ManagementServerInterface {
 
   }
 
+  public function updateKeys() {
+    $data = \Drupal::state()->get('ibm_apim.apim_keys');
+    // Limit updates to once every 30m
+    if (isset($data['keys']) && time() < $data['lastUpdate'] + 1800) {
+      return $data['keys'];
+    }
+    $platformApiEndpoint = $this->siteConfig->getPlatformApimEndpoint();
+    if (!isset($platformApiEndpoint)) {
+      $this->logger->error('No platform apim endpoint defined');
+
+      return NULL;
+    }
+    $url = $platformApiEndpoint . '/cloud/oauth2/certs';
+    $result = ApicRest::get($url, '', 'platform');
+    if ($result->code !== 200) {
+      $this->logger->error('Received '. $result->code . ' code when getting APIM keys');
+      return NULL;
+    }
+    $keys = $result->data['keys'];
+    \Drupal::state()->set('apim_keys',['keys' => $keys, 'lastUpdate' => time()]);
+    return $keys;
+  }
+
   /**
    * @param \Drupal\auth_apic\JWTToken $token
    * @param \Drupal\ibm_apim\ApicType\ApicUser $acceptingUser

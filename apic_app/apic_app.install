@@ -683,6 +683,27 @@ function apic_app_update_8206() {
 }
 
 /**
+ * Remove user.role.authenticated as a dependency as when we disbale forums it mean it would also remove
+ * this view.
+ */
+function apic_app_update_8207() {
+  try {
+    $key = 'dependencies.config';
+    $view = \Drupal::configFactory()->getEditable('views.view.applications');
+    $fields = $view->get($key);
+
+    $updatedFields = \array_filter($fields, static function ($element) {
+      return $element !== "user.role.authenticated";
+    });
+
+    $view->set($key, $updatedFields);
+    $view->save();
+  } catch (Throwable $e) {
+    \Drupal::logger('apic_app')->notice('error: @error', ['@error' => $e->getMessage()]);
+  }
+}
+
+/**
  * Ensures that the correct storage schema class is set for the
  * given entity (table).  Also ensures that indexes are set on the
  * given array of field names.

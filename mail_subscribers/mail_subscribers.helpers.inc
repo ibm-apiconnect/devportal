@@ -159,7 +159,7 @@ function mail_subscribers_deliver($message) {
   }
 
   $key = 'direct';
-  $headers = unserialize($message->headers, ['allowed_classes' => FALSE]);
+  $headers = $message->headers;
   $subject = (new UnstructuredHeader('subject', $message->subject))->getBodyAsString();
   $mail = [
     'to' => $message->to_mail,

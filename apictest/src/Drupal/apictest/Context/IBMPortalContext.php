@@ -27,7 +27,7 @@ use Drupal\DrupalExtension\Context\MinkContext;
 use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\user\Entity\User;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\field\Entity\FieldStorageConfig;   
+use Drupal\field\Entity\FieldStorageConfig;
 
 /**
  * Defines application features from the specific context.
@@ -512,7 +512,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     if (FieldStorageConfig::load($entityType . '.' . $singleName)) {
       FieldStorageConfig::load($entityType . '.' . $singleName)->delete();
     }
-  
+
       $fieldStorageConfig = FieldStorageConfig::create([
         'field_name' => $singleName,
         'entity_type' => $entityType,
@@ -573,7 +573,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     \Drupal::service('entity_display.repository')->getViewDisplay($entityType, $bundle, 'default')->setComponent($singleName, [])->save();
     \Drupal::service('entity_display.repository')->getViewDisplay($entityType, $bundle, 'default')->setComponent($multiName, [])->save();
   }
-  
+
   /**
    * @Given I delete the :arg1 type custom fields for :arg2 entities
    */
@@ -728,7 +728,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     ];
     $paymentMethodObject['created_by'] = "";
     $paymentMethodObject['updated_by'] = "";
-    
+
     \Drupal::service('consumerorg.paymentmethod')->createOrUpdate($paymentMethodObject);
   }
 
@@ -1795,6 +1795,14 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   public function appCertificatesAreEnabled(): void {
     print "application certificates enabled \n";
     \Drupal::state()->set('ibm_apim.application_certificates', TRUE);
+  }
+
+  /**
+   * @Given I have apim public keys stored
+   */
+  public function storeApimKeys(): void {
+    $publicKeyJWK = ['keys' => [unserialize(base64_decode(getenv('JWK_B64_KEY')))]];
+    \Drupal::state()->set('ibm_apim.apim_keys', $publicKeyJWK);
   }
 
   /**

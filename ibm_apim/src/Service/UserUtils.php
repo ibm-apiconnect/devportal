@@ -362,7 +362,7 @@ class UserUtils {
       $account = User::load($this->currentUser->id());
     }
     // update the consumerorg urls list set on the user object
-    if (!$this->currentUser->isAnonymous() && (int) $account->id() !== 1 && !empty($account->consumerorg_url->getValue())) {
+    if (isset($account) && !$this->currentUser->isAnonymous() && (int) $account->id() !== 1 && !empty($account->consumerorg_url->getValue())) {
       $org_urls = $account->consumerorg_url->getValue();
       $new_org_urls = [];
       foreach ($org_urls as $index => $valueArray) {

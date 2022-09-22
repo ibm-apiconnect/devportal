@@ -1,8 +1,14 @@
 changes:
-  8.x-99.0.2:
+  8.x-5.1.2:
+  - scssphp ^1.10.5
+  8.x-5.1.1:
+  - Load messenger icons in css (#228)
+  8.x-5.1.0:
+  - update version 8.x-5.0.2 -> 8.x-5.1.0
+  8.x-5.0.1:
   - update copyright statements
-  8.x-99.0.1:
-  - Update connect_theme.info.yml
+  8.x-5.0.0:
+  - update slack channel to $CICHAN
   8.x-4.0.48:
   - Update Jenkinsfile
   8.x-4.0.47:
@@ -369,4 +375,7 @@ changes:
   - Bump Major version in master to differentiate from the service stream
   8.x-1.1.25:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since
+    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
+    are also filtered before logging them. Commits that start with 'INT' or 'bump
+    version' are omitted.

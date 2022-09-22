@@ -19,6 +19,7 @@ namespace Drupal\Tests\auth_apic\Unit {
   use Drupal\Tests\auth_apic\Unit\UserManagement\AuthApicUserManagementBaseTestClass;
   use Prophecy\Argument;
   use Prophecy\Prophet;
+  use Drupal\user\UserStorageInterface;
 
   /**
    * @group auth_apic
@@ -26,24 +27,29 @@ namespace Drupal\Tests\auth_apic\Unit {
   class ApicUserDeleteServiceTest extends AuthApicUserManagementBaseTestClass {
 
     /**
-     * @var \Drupal\ibm_apim\Service\APIMServer|\Prophecy\Prophecy\ObjectProphecy 
+     * @var \Drupal\ibm_apim\Service\APIMServer|\Prophecy\Prophecy\ObjectProphecy
      */
     protected $mgmtServer;
 
     /**
-     * @var \Drupal\ibm_apim\Service\ApicUserStorage|\Prophecy\Prophecy\ObjectProphecy 
+     * @var \Drupal\ibm_apim\Service\ApicUserStorage|\Prophecy\Prophecy\ObjectProphecy
      */
     protected $userStorage;
 
     /**
-     * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface 
+     * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
      */
     protected $logger;
 
     /**
-     * @var \Drupal\Core\Session\AccountProxyInterface|\Prophecy\Prophecy\ObjectProphecy 
+     * @var \Drupal\Core\Session\AccountProxyInterface|\Prophecy\Prophecy\ObjectProphecy
      */
     protected $currentUser;
+
+    /**
+     * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\Prophecy\Prophecy\ObjectProphecy
+     */
+    protected $entityTypeManager;
 
     protected function setup(): void {
       $this->prophet = new Prophet();
@@ -51,6 +57,11 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->userStorage = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicUserStorage::class);
       $this->logger = $this->prophet->prophesize(\Psr\Log\LoggerInterface::class);
       $this->currentUser = $this->prophet->prophesize(\Drupal\Core\Session\AccountProxyInterface::class);
+      $this->entityTypeManager = $this->prophet->prophesize(\Drupal\Core\Entity\EntityTypeManagerInterface::class);
+      $this->drupalUserStorage = $this->prophet->prophesize(UserStorageInterface::class);
+      $this->entityTypeManager->getStorage('user')->willReturn($this->drupalUserStorage->reveal());
+      $user = $this->prophet->prophesize(User::class);
+      $this->drupalUserStorage->load(Argument::any())->willReturn($user->reveal());
     }
 
     protected function tearDown(): void {
@@ -76,7 +87,8 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = new ApicUserDeleteService($this->mgmtServer->reveal(),
         $this->userStorage->reveal(),
         $this->logger->reveal(),
-        $this->currentUser->reveal());
+        $this->currentUser->reveal(),
+        $this->entityTypeManager->reveal());
 
       $response = $service->deleteUser();
       self::assertTrue($response->success());
@@ -101,7 +113,8 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = new ApicUserDeleteService($this->mgmtServer->reveal(),
         $this->userStorage->reveal(),
         $this->logger->reveal(),
-        $this->currentUser->reveal());
+        $this->currentUser->reveal(),
+        $this->entityTypeManager->reveal());
 
       $response = $service->deleteUser();
       self::assertFalse($response->success());
@@ -117,7 +130,8 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = new ApicUserDeleteService($this->mgmtServer->reveal(),
         $this->userStorage->reveal(),
         $this->logger->reveal(),
-        $this->currentUser->reveal());
+        $this->currentUser->reveal(),
+        $this->entityTypeManager->reveal());
 
       $response = $service->deleteLocalAccount();
       self::assertTrue($response);
@@ -145,7 +159,8 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = new ApicUserDeleteService($this->mgmtServer->reveal(),
         $this->userStorage->reveal(),
         $this->logger->reveal(),
-        $this->currentUser->reveal());
+        $this->currentUser->reveal(),
+        $this->entityTypeManager->reveal());
 
       $response = $service->deleteLocalAccount($user);
       self::assertTrue($response);
@@ -171,7 +186,8 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = new ApicUserDeleteService($this->mgmtServer->reveal(),
         $this->userStorage->reveal(),
         $this->logger->reveal(),
-        $this->currentUser->reveal());
+        $this->currentUser->reveal(),
+        $this->entityTypeManager->reveal());
 
       $response = $service->deleteLocalAccount($user);
       self::assertFalse($response);
@@ -200,7 +216,8 @@ namespace Drupal\Tests\auth_apic\Unit {
       $service = new ApicUserDeleteService($this->mgmtServer->reveal(),
         $this->userStorage->reveal(),
         $this->logger->reveal(),
-        $this->currentUser->reveal());
+        $this->currentUser->reveal(),
+        $this->entityTypeManager->reveal());
 
       $response = $service->deleteLocalAccount($user);
       self::assertFalse($response);

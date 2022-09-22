@@ -17,6 +17,11 @@ use Drupal\auth_apic\JWTToken;
 use Drupal\auth_apic\Service\Interfaces\TokenParserInterface;
 use Drupal\ibm_apim\Service\Utils;
 use Psr\Log\LoggerInterface;
+use Firebase\JWT\JWT;
+use Firebase\JWT\JWK;
+use Throwable;
+use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
+use Drupal\Core\State\State;
 
 /**
  * Parse and validate activation tokens.
@@ -24,13 +29,20 @@ use Psr\Log\LoggerInterface;
 class JWTParser implements TokenParserInterface {
 
   protected LoggerInterface $logger;
-
   protected Utils $utils;
+  protected ManagementServerInterface $mgmtServer;
+  protected State $state;
+
 
   public function __construct(LoggerInterface $logger,
-                              Utils $utils) {
+                              Utils $utils,
+                              ManagementServerInterface $mgmtServer,
+                              State $state
+                              ) {
     $this->logger = $logger;
     $this->utils = $utils;
+    $this->mgmtServer = $mgmtServer;
+    $this->state = $state;
   }
 
   /**
@@ -130,10 +142,45 @@ class JWTParser implements TokenParserInterface {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
     $returnValue = TRUE;
+    $MAX_UPDATES = 1;
+    $tries = 0;
+
     if (substr_count($token, '.') !== 2) {
       $this->logger->error('Invalid JWT token. Expected 3 period separated elements.');
       $returnValue = FALSE;
     }
+    $data = $this->state->get('ibm_apim.apim_keys');
+    if (isset($data['keys']) && !empty($data['keys'])) {
+      $keys = $data['keys'];
+    } else {
+      $keys = $this->mgmtServer->updateKeys();
+      $tries++;
+    }
+    if (empty($keys)) {
+      $returnValue = FALSE;
+    }
+
+    if ($returnValue) {
+      while ($tries <= $MAX_UPDATES && !empty($keys)) {
+        $tries++;
+        $keys = ['keys' => $keys];
+        $keys = JWK::parseKeySet($keys);
+        try {
+          $elements = explode('.', $token);
+          $header = json_decode($this->utils->base64_url_decode($elements[0]), TRUE, 512, JSON_THROW_ON_ERROR);
+          JWT::decode($token, $keys, [$header['alg']]);
+          break;
+        } catch (Throwable $e) {
+          if ($tries <= $MAX_UPDATES) {
+            $keys = $this->mgmtServer->updateKeys();
+          } else {
+            $returnValue = FALSE;
+            $this->logger->error('JWT validation error: ' . $e->getMessage());
+          }
+        }
+      }
+    }
+
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     }
@@ -143,5 +190,4 @@ class JWTParser implements TokenParserInterface {
   public function isBase64($token) {
     return (bool) preg_match('/^([A-Za-z0-9+\/]{4})*([A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{2}==)?$/', $token);
   }
-
 }

@@ -72,7 +72,7 @@ Feature: Delete user
     When I press the "Delete" button
     Then I am at "/"
     And there are messages
-    And I should see the text "The update has been performed."
+    And I should see the text "Account successfully deleted."
     # the following doesn't appear while using mocks.
       # And I should see the text "andre has been deleted."
     And there are no warnings
@@ -94,8 +94,8 @@ Feature: Delete user
     When I press the "Delete" button
     Then I am at "/"
     And there are messages
+    And I should see the text "Account successfully deleted."
     And I should see the text "Organization successfully deleted."
-    And I should see the text "The update has been performed."
     # the following doesn't appear while using mocks.
       # And I should see the text "andre has been deleted."
     And there are no warnings
@@ -148,7 +148,7 @@ Feature: Delete user
     Then I am at "/"
     And there are messages
     And I should see the text "Organization successfully deleted."
-    And I should see the text "The update has been performed."
+    And I should see the text "Account successfully deleted."
     # the following doesn't appear while using mocks.
       # And I should see the text "andre has been deleted."
     And there are no warnings

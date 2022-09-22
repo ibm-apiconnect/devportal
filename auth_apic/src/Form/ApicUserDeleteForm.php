@@ -214,6 +214,7 @@ class ApicUserDeleteForm extends ConfirmFormBase {
     $delete_me_response = $this->deleteService->deleteUser();
 
     if ($delete_me_response->success()) {
+      $this->messenger->addStatus(t('Account successfully deleted.'));
       $this->logger->notice('Account deleted successfully from ApicUserDeleteForm.');
     }
     else {

@@ -37,12 +37,6 @@
 'warning': 'warning',
 'info': 'info',
 } %}
-{% set status_ico = {
-'status': '/images/ibmcarbon/svg/checkmark--glyph.svg',
-'error': '/images/ibmcarbon/svg/error--glyph.svg',
-'warning': '/images/ibmcarbon/svg/warning--glyph.svg',
-'info': '/images/ibmcarbon/svg/info--glyph.svg',
-} %}
 {% for type, messages in message_list %}
   {% if type is empty %}
     {% set type = 'status'  %}
@@ -57,7 +51,6 @@
     <div class="alert-details">
 
             <span class="icon icon-{{- type -}}" aria-hidden="true">
-                {% include directory ~ status_ico[type] %}
             </span>
       <div class="alert-text-wrapper">
         {% if status_headings[type] %}

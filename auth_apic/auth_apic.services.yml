@@ -21,7 +21,10 @@ services:
   auth_apic.jwtparser:
     class: Drupal\auth_apic\Service\JWTParser
     arguments: ['@logger.channel.auth_apic',
-                '@ibm_apim.utils']
+                '@ibm_apim.utils',
+                '@ibm_apim.mgmtserver',
+                '@state'
+                ]
   auth_apic.oidc_state:
     class: Drupal\auth_apic\Service\OidcStateService
     arguments: ['@state',
@@ -91,4 +94,5 @@ services:
     arguments: ['@ibm_apim.mgmtserver',
                 '@ibm_apim.user_storage',
                 '@logger.channel.auth_apic',
-                '@current_user']
+                '@current_user',
+                '@entity_type.manager']

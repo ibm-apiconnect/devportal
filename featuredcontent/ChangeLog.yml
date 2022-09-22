@@ -1,8 +1,10 @@
 changes:
-  8.x-99.0.2:
+  8.x-5.1.0:
+  - update version 8.x-5.0.2 -> 8.x-5.1.0
+  8.x-5.0.1:
   - update copyright statements
-  8.x-99.0.1:
-  - Update featuredcontent.info.yml
+  8.x-5.0.0:
+  - update slack channel to $CICHAN
   8.x-4.0.18:
   - Update Jenkinsfile
   8.x-4.0.17:

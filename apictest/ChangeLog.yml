@@ -1,8 +1,15 @@
 changes:
-  8.x-99.0.2:
+  8.x-5.1.1:
+  - Valid token (#237) (#238)
+  8.x-5.1.0:
+  - update version 8.x-5.0.3 -> 8.x-5.1.0
+  8.x-5.0.2:
+  - Update Jenkinsfile.upgradetest
+  8.x-5.0.1:
   - update copyright (#235)
-  8.x-99.0.1:
-  - Update apictest.info.yml
+  8.x-5.0.0:
+  - update slack channel to $CICHAN
+  - update version 8.x-4.0.78 -> 8.x-5.0.0
   8.x-4.0.77:
   - Update Jenkinsfile
   8.x-4.0.76:

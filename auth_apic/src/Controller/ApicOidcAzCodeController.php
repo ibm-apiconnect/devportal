@@ -219,7 +219,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       // Clear the JWT from the session as we're done with it now
       $this->authApicSessionStore->delete('invitation_object');
       $this->authApicSessionStore->delete('action');
-
+      $redirectTo = ltrim($this->authApicSessionStore->get('redirect_to'),'/');
       $redirect_location = $this->loginService->loginViaAzCode($authCode, $stateObj['registry_url']);
       if ($redirect_location === 'ERROR') {
         $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
@@ -231,8 +231,8 @@ class ApicOidcAzCodeController extends ControllerBase {
           $redirect_location = '<front>';
         }
         else {
-          if ($this->authApicSessionStore->get('redirect_to')) {
-            $this->requestService->getCurrentRequest()->query->set('destination', $this->authApicSessionStore->get('redirect_to'));
+          if (!empty($redirectTo)) {
+            $this->requestService->getCurrentRequest()->query->set('destination', $redirectTo);
             $this->authApicSessionStore->delete('redirect_to');
           }
         }

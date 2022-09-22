@@ -1671,7 +1671,14 @@ function apim_profile_update_8030() {
       $block = BlockContent::load($blockid);
       if ($block !== NULL) {
         foreach ($languages as $language) {
-          $translation = $block->getTranslation($language->getId());
+          $langcode = $language->getId();
+          if (!$block->hasTranslation($langcode)) {
+            \Drupal::logger('apim_profile')->info('Skipping translation update for block: @langcode', [
+              '@langcode' => $langcode,
+            ]);
+            continue;
+          }
+          $translation = $block->getTranslation($langcode);
           $bodyValue = $translation->body->value;
           if (strpos($bodyValue, $oldString1) !== FALSE && strpos($bodyValue, $oldString2) !== FALSE) {
             // remove everything before <div class="welcomebannertext"> and replace it with $newString
@@ -2028,30 +2035,32 @@ function apim_profile_update_8105() {
   }
 
   // create forum post card view mode
-  $viewDisplay = $storage->load('node.forum.card');
-  if ($viewDisplay === NULL) {
-    $newDisplay = $storage->create([
-      'targetEntityType' => 'node',
-      'bundle' => 'forum',
-      'mode' => 'card',
-      'status' => TRUE,
-    ]);
-    if ($newDisplay !== NULL) {
-      $newDisplay->setComponent('body', [
-        'weight' => 1,
-        'label' => 'hidden',
-        'settings' => ['trim_length' => 200],
-        'region' => 'content',
-        'type' => 'text_summary_or_trimmed',
+  if ($moduleHandler->moduleExists('forum')) {
+    $viewDisplay = $storage->load('node.forum.card');
+    if ($viewDisplay === NULL) {
+      $newDisplay = $storage->create([
+        'targetEntityType' => 'node',
+        'bundle' => 'forum',
+        'mode' => 'card',
+        'status' => TRUE,
       ]);
-      $newDisplay->setComponent('taxonomy_forums', [
-        'weight' => 2,
-        'label' => 'hidden',
-        'settings' => ['link' => TRUE],
-        'region' => 'content',
-        'type' => 'entity_reference_label',
-      ]);
-      $newDisplay->save();
+      if ($newDisplay !== NULL) {
+        $newDisplay->setComponent('body', [
+          'weight' => 1,
+          'label' => 'hidden',
+          'settings' => ['trim_length' => 200],
+          'region' => 'content',
+          'type' => 'text_summary_or_trimmed',
+        ]);
+        $newDisplay->setComponent('taxonomy_forums', [
+          'weight' => 2,
+          'label' => 'hidden',
+          'settings' => ['link' => TRUE],
+          'region' => 'content',
+          'type' => 'entity_reference_label',
+        ]);
+        $newDisplay->save();
+      }
     }
   }
 
@@ -2878,6 +2887,51 @@ function apim_profile_update_8300() {
       \Drupal::logger('apim_profile')->info('Finished update: @update', [
         '@update' => $apim_func,
       ]);
+  }
+}
+
+function apim_profile_update_8301()
+{
+  $config = FieldConfig::loadByName('node', 'api', 'apic_rating');
+  if ($config) {
+    if ($config->getSetting('user_window') == -1) {
+      $config->setSetting('user_window', -2);
+    }
+    if ($config->getSetting('anonymous_window') == -1) {
+      $config->setSetting('anonymous_window', -2);
+    }
+    $config->save();
+  }
+  $config = FieldConfig::loadByName('node', 'product', 'apic_rating');
+  if ($config) {
+    if ($config->getSetting('user_window') == -1) {
+      $config->setSetting('user_window', -2);
+    }
+    if ($config->getSetting('anonymous_window') == -1) {
+      $config->setSetting('anonymous_window', -2);
+    }
+    $config->save();
+  }
+  $config = FieldConfig::loadByName('node', 'consumerorg', 'apic_rating');
+  if ($config) {
+    if ($config->getSetting('user_window') == -1) {
+      $config->setSetting('user_window', -2);
+    }
+    if ($config->getSetting('anonymous_window') == -1) {
+      $config->setSetting('anonymous_window', -2);
+    }
+    $config->save();
+  }
+}
+
+
+/**
+ * Enable page_load_progress and apic_type_count modules
+ */
+function apim_profile_update_8302() {
+  $role = Role::load('content_author');
+  if ($role !== NULL) {
+    user_role_grant_permissions('content_author', ['bypass content access control', 'bypass node access', 'revert all revisions']);
   }
 }
 

@@ -677,7 +677,7 @@ body {
  * ../bootstrap/stylesheets/bootstrap/_variables.scss
  */
 table {
-  font-family: Arial, sans-serif; }
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; }
 
 table, td, div, h1, p {
   overflow-wrap: anywhere; }

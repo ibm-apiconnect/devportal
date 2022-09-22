@@ -994,8 +994,12 @@ class ConsumerOrgService {
                     unset($consumerorg_urls[$index]);
                   }
                 }
-                $account->set('consumerorg_url', $consumerorg_urls);
-                $account->save();
+                if (empty($consumerorg_urls)) {
+                  $account->delete();
+                } else {
+                  $account->set('consumerorg_url', $consumerorg_urls);
+                  $account->save();
+                }
               }
             }
           }
@@ -1547,7 +1551,7 @@ class ConsumerOrgService {
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \JsonException
    */
-  public function deleteMember(ConsumerOrg $org, Member $member): UserManagerResponse {
+  public function deleteMember(ConsumerOrg $org, Member $member, $event = 'deleteMember'): UserManagerResponse {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -1564,7 +1568,7 @@ class ConsumerOrgService {
         }
       }
       $org->setMembers($newMembers);
-      $this->createOrUpdateNode($org, 'deleteMember');
+      $this->createOrUpdateNode($org, $event);
 
       $this->logger->notice('Deleted @member (id = @id) from @org consumer org.', [
         '@member' => $member->getUser()->getUsername(),

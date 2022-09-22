@@ -235,6 +235,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
     $this->oidcStateService->delete('key')->willReturn(TRUE);
     $this->store->delete(Argument::any())->willReturn();
+    $this->store->get('redirect_to')->willReturn();
     $this->loginService->loginViaAzCode('601e0142-55c2-406e-98e3-10ba1fa3f2e8', 'registryUrl')->willReturn("ERROR");
 
     $this->logger->error(Argument::any())->shouldNotBeCalled();

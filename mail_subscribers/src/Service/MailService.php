@@ -403,7 +403,7 @@ class MailService {
         $consumerorgOwner = NULL;
         $consumerorgOwnerUrl = $node->get('consumerorg_owner')->value;
         $consumerorgOwnerAccount = $this->userStorage->loadUserByUrl($consumerorgOwnerUrl);
-        if ($consumerorgOwnerAccount !== NULL && $this->emailValidator->isValid($consumerorgOwnerAccount->getEmail())) {
+        if ($consumerorgOwnerAccount !== NULL && $consumerorgOwnerAccount->getEmail() && $this->emailValidator->isValid($consumerorgOwnerAccount->getEmail())) {
           $consumerorgOwner = $consumerorgOwnerAccount->getEmail();
         }
         // Dont add the owner address if it is already in the recipients array

@@ -96,7 +96,7 @@ class ApicActivationService implements ApicActivationInterface {
     }
     $sign_in_link = $this->linkGenerator->generate(t('Sign In'), Url::fromRoute('user.login'));
     if (!isset($mgmt_response)) {
-      $this->messenger->addError(t('There was an error while processing your activation. @contact_link', ['@contact_link' => $contact_link]));
+      $this->messenger->addError(t('There was an error while processing your activation. Contact the site administrator.'));
       $this->logger->error('Received unexpected activation url: @url', ['@url' => $jwt->getUrl()]);
     } elseif ($mgmt_response->getCode() === 401) {
       $this->messenger->addError(t('There was an error while processing your activation. Has this activation link already been used?'));
