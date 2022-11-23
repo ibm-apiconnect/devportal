@@ -19,8 +19,8 @@ default_value:
     status: '1'
 default_value_callback: ''
 settings:
-  anonymous_window: '-1'
-  user_window: '-1'
+  anonymous_window: '-2'
+  user_window: '-2'
   result_function: vote_average
   widget_format: fivestar
 field_type: voting_api_field

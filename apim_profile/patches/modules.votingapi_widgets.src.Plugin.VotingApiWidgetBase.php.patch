@@ -1,0 +1,45 @@
+--- modules/votingapi_widgets/src/Plugin/VotingApiWidgetBase.php
++++ modules/votingapi_widgets/src/Plugin/VotingApiWidgetBase.php
+@@ -208,19 +208,23 @@ abstract class VotingApiWidgetBase extends PluginBase implements VotingApiWidget
+       $timestamp_offset = $this->getWindow('anonymous_window', $entity_type, $entity_bundle, $field_name);
+     }
+
+-    $query = $this->entityTypeManager->getStorage('vote')->getQuery();
+-    foreach ($voteData as $key => $value) {
+-      $query->condition($key, $value);
+-    }
++    // Window offset 0 means rollover immediately - each next vote is unique.
++    // If different than 0, we should load the existing user vote for changing.
++    if ($timestamp_offset) {
++      $query = $this->entityTypeManager->getStorage('vote')->getQuery();
++      foreach ($voteData as $key => $value) {
++        $query->condition($key, $value);
++      }
+
+-    // Check for rollover 'never' setting.
+-    if (!empty($timestamp_offset)) {
+-      $query->condition('timestamp', time() - $timestamp_offset, '>=');
+-    }
++      // Check for rollover 'never' setting.
++      if ($timestamp_offset > -1) {
++        $query->condition('timestamp', time() - $timestamp_offset, '>=');
++      }
+
+-    $votes = $query->execute();
+-    if ($votes && count($votes) > 0) {
+-      $vote = $storage->load(array_shift($votes));
++      $votes = $query->execute();
++      if ($votes && count($votes) > 0) {
++        $vote = $storage->load(array_pop($votes));
++      }
+     }
+
+     return $vote;
+@@ -263,7 +267,7 @@ abstract class VotingApiWidgetBase extends PluginBase implements VotingApiWidget
+     $window_field_setting = $config->getSetting($window_type);
+     $use_site_default = FALSE;
+
+-    if ($window_field_setting === NULL || $window_field_setting === "-1") {
++    if ($window_field_setting === NULL || $window_field_setting === "-2") {
+       $use_site_default = TRUE;
+     }

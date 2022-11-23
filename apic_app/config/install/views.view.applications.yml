@@ -5,7 +5,6 @@ dependencies:
     - block.block.noappsblock
     - core.entity_view_mode.node.card
     - node.type.application
-    - user.role.authenticated
   module:
     - better_exposed_filters
     - masonry_views

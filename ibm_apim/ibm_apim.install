@@ -99,6 +99,9 @@ function ibm_apim_install() {
   require_once $path . '/ibm_apim.emptycontent.inc';
   ibm_apim_create_no_content_blocks();
   ibm_apim_create_blogs_no_content_blocks();
+
+  // This config automatically gets added need to remove so we don't remove the view when forums are disabled.
+  ibm_apim_removeConfigDependency("views.view.notifications", "user.role.authenticated");
 }
 
 /**
@@ -253,4 +256,29 @@ function ibm_apim_update_8205() {
     ->getEditable('ibm_apim.settings')
     ->set('daily_cron_time', '05:00')
     ->save();
+}
+
+/**
+ * This config automatically gets added need to remove so we don't remove the view when forums are disabled.
+*/
+function ibm_apim_update_8206() {
+  // This config automatically gets added need to remove so we don't remove the view when forums are disabled.
+  ibm_apim_removeConfigDependency("views.view.notifications", "user.role.authenticated");
+}
+
+function ibm_apim_removeConfigDependency($config, $dep) {
+  try {
+    $key = 'dependencies.config';
+    $view = \Drupal::configFactory()->getEditable($config);
+    $fields = $view->get($key);
+
+    $updatedFields = \array_filter($fields, static function ($element) use($dep) {
+      return $element !== $dep;
+    });
+
+    $view->set($key, $updatedFields);
+    $view->save();
+  } catch (Throwable $e) {
+    \Drupal::logger('ibm_apim')->notice('error: @error', ['@error' => $e->getMessage()]);
+  }
 }

@@ -1,7 +1,7 @@
---- core/lib/Drupal/Core/File/FileUrlGenerator.php	2022-02-16 14:02:38.085821261 +0000
-+++ core/lib/Drupal/Core/File/FileUrlGenerator.php	2022-02-16 14:07:02.830461840 +0000
+--- core/lib/Drupal/Core/File/FileUrlGenerator.php	2022-08-03 16:33:29.000000000 +0000
++++ core/lib/Drupal/Core/File/FileUrlGenerator.php	2022-08-08 17:28:29.645794855 +0000
 @@ -91,6 +91,10 @@
-
+ 
      if (!$scheme) {
        $baseUrl = $relative ? base_path() : $this->requestStack->getCurrentRequest()->getSchemeAndHttpHost() . base_path();
 +      // added by IBM for subpath sites
@@ -11,3 +11,18 @@
        return $this->generatePath($baseUrl, $uri);
      }
      elseif ($scheme == 'http' || $scheme == 'https' || $scheme == 'data') {
+@@ -189,9 +193,13 @@
+       $external_url = $wrapper->getExternalUrl();
+       $options = UrlHelper::parse($external_url);
+ 
++      // added by IBM for subpath sites
++      if (isset($GLOBALS['real_base_url']) && isset($GLOBALS['real_base_host']) && $GLOBALS['real_base_url'] != $GLOBALS['real_base_host']) {
++	return Url::fromUri($this->transformRelative(urldecode($options['path']), FALSE), $options);
++      }
+       // @todo Switch to dependency injected request_context service after
+       // https://www.drupal.org/project/drupal/issues/3256884 is fixed.
+-      if (UrlHelper::externalIsLocal($external_url, \Drupal::service('router.request_context')->getCompleteBaseUrl())) {
++      elseif (UrlHelper::externalIsLocal($external_url, \Drupal::service('router.request_context')->getCompleteBaseUrl())) {
+         // Attempt to return an external URL using the appropriate wrapper.
+         return Url::fromUri('base:' . $this->transformRelative(urldecode($options['path']), FALSE), $options);
+       }

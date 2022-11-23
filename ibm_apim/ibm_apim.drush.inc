@@ -1335,6 +1335,8 @@ function drush_ibm_apim_clearup($UUID, $startTime) {
 
   // remove any users from the db that do not have a consumerorg
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up users'), 'success');
+  \Drupal::service('ibm_apim.db_usersfielddata')->cleanUserConsumerorgUrlTable();
+
   $query = \Drupal::entityQuery('user');
   $group = $query->orConditionGroup()
   ->condition('consumerorg_url', NULL, 'IS NULL')

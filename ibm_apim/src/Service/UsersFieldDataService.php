@@ -1,4 +1,5 @@
 <?php
+
 /********************************************************* {COPYRIGHT-TOP} ***
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
@@ -21,7 +22,6 @@ use Psr\Log\LoggerInterface;
 use \Drupal\user\Entity\User;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\Component\Datetime\Time;
-
 
 /**
  * Class UsersFieldDataService
@@ -80,12 +80,12 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
    */
   protected Connection $database;
 
-    /**
+  /**
    * @var Drupal\ibm_apim\Service\SiteConfig
    */
   protected SiteConfig $siteConfig;
 
-      /**
+  /**
    * @var Drupal\Component\Datetime\Time
    */
   protected Time $time;
@@ -130,9 +130,7 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
         ]);
         $this->schema->addUniqueKey($this->users_field_data_table, $this->user_name_registry_index, $this->user_name_registry_index_fields);
       }
-
-    }
-    else {
+    } else {
       $this->logger->error('%field is not available in %table. Unable to create unique key.', [
         '%field' => $this->registry_url_column,
         '%table' => $this->users_field_data_table,
@@ -225,6 +223,31 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
     }
   }
 
+  public function cleanUserConsumerorgUrlTable(): void {
+    $this->logger->notice('Cleaning user__consumerorg_url table');
+    $options = ['target' => 'default'];
+    $query = $this->database->query("select  correctTable.urls as url, wrongTable.entity_id as id from
+    (SELECT DISTINCT GROUP_CONCAT(DISTINCT node__consumerorg_url.consumerorg_url_value order by node__consumerorg_url.consumerorg_url_value ) as urls, user__apic_url.entity_id FROM node__consumerorg_memberlist INNER JOIN node__consumerorg_url ON node__consumerorg_memberlist.entity_id=node__consumerorg_url.entity_id INNER JOIN user__apic_url ON user__apic_url.apic_url_value=node__consumerorg_memberlist.consumerorg_memberlist_value GROUP BY user__apic_url.entity_id) as correctTable
+    right join
+    (select group_concat(DISTINCT consumerorg_url_value order by consumerorg_url_value) AS urls, entity_id from user__consumerorg_url group by entity_id) as wrongTable
+    on correctTable.entity_id = wrongTable.entity_id
+    WHERE correctTable.urls <> wrongTable.urls  OR correctTable.urls is null", [], $options);
+    $results = $query->fetchAll();
+    foreach ($results as $res) {
+      $user = $this->entityTypeManager->getStorage('user')->load($res->id);
+      if ($user) {
+        $urls = $res->url;
+        if (empty($urls)) {
+          $user->set('consumerorg_url', $urls)->save();
+        } else {
+          $user->set('consumerorg_url', explode(',',$urls))->save();
+        }
+      }
+    }
+
+    $this->logger->notice('Cleaned ' . count($results) . ' users in user__consumerorg_url table.');
+  }
+
   /**
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
@@ -232,10 +255,10 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
    */
   public function deleteExpiredPendingApprovalUsers(): void {
     $now = $this->time->getCurrentTime();
-    $approvalInvtitationTTLs =  2*$this->siteConfig->getInvitationTTL();
+    $approvalInvtitationTTLs =  2 * $this->siteConfig->getInvitationTTL();
     $query = \Drupal::entityQuery('user');
     $query->condition('apic_state', 'pending_approval');
-    $query->condition('created', $now - $approvalInvtitationTTLs, "<=" );
+    $query->condition('created', $now - $approvalInvtitationTTLs, "<=");
     $uids = $query->execute();
     if (!empty($uids)) {
       foreach (array_chunk($uids, 50) as $chunk) {

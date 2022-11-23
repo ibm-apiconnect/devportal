@@ -837,7 +837,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         unset($form['submit']);
       }
       $form['intro'] = [
-        '#markup' => '<p>' . t('This functionality will be available in a future release of the IBM API Connect command line client.') . '</p>',
+        '#markup' => '<p>' . t('This functionality is available as part of the IBM API Connect developer toolkit CLI.') . '</p>',
         '#weight' => 50,
       ];
       break;
@@ -849,7 +849,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         unset($form['import_tarball']);
       }
       $form['intro'] = [
-        '#markup' => '<p>' . t('This functionality will be available in a future release of the IBM API Connect command line client.') . '</p>',
+        '#markup' => '<p>' . t('This functionality is available as part of the IBM API Connect developer toolkit CLI.') . '</p>',
         '#weight' => 50,
       ];
       break;
@@ -1502,7 +1502,7 @@ function ibm_apim_preprocess_table(&$variables) {
   }
 
   // accessibility fix for the pending module updates page
-  if (is_array($variables['attributes']['class']) && in_array('update', array_values($variables['attributes']['class']), TRUE)) {
+  if (array_key_exists('class',$variables['attributes']) && is_array($variables['attributes']['class']) && in_array('update', array_values($variables['attributes']['class']), TRUE)) {
     $variables['attributes']['role'] = 'presentation';
   }
 

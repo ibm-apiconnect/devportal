@@ -1,4 +1,8 @@
 changes:
+  8.x-2.10.1:
+  - bump the height of tile cards for apis
+  8.x-2.10.0:
+  - update version 8.x-2.9.2 -> 8.x-2.10.0
   8.x-2.9.1:
   - Load messenger icons in css (#229)
   8.x-2.9.0:

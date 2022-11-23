@@ -84,18 +84,19 @@ class ConsumerOrgCheckSubscriber implements EventSubscriberInterface
     }
     $currentCOrg = $this->userUtils->getCurrentConsumerorg();
 
-    if (!$this->siteConfig->isSelfOnboardingEnabled()) {
-      $response = new RedirectResponse(Url::fromRoute('ibm_apim.noperms')->toString());
-      $event->setResponse($response);
-      $this->logger->notice('User is not part of a consumer organization. Redirecting to no permissions');
-      $this->messenger->addError(t('You are not part of a consumer organization. Please contact your system administrator.'));
-
-    } elseif (!isset($currentCOrg)) {
-      $response = new RedirectResponse(Url::fromRoute('consumerorg.create')->toString());
-      $event->setResponse($response);
-      $this->logger->notice('User is not part of a consumer organization. Redirecting to create consumer organization');
-      $this->messenger->addError(t('You are not part of a consumer organization. Please create one before continuing.'));
-
+    if (!isset($currentCOrg)) {
+      if (!$this->siteConfig->isSelfOnboardingEnabled()) {
+        $response = new RedirectResponse(Url::fromRoute('ibm_apim.noperms')->toString());
+        $event->setResponse($response);
+        $this->logger->notice('User is not part of a consumer organization. Redirecting to no permissions');
+        $this->messenger->addError(t('You are not part of a consumer organization. Please contact your system administrator.'));
+      } else {
+        $response = new RedirectResponse(Url::fromRoute('consumerorg.create')->toString());
+        $event->setResponse($response);
+        $this->logger->notice('User is not part of a consumer organization. Redirecting to create consumer organization');
+        $this->messenger->addError(t('You are not part of a consumer organization. Please create one before continuing.'));
+  
+      }
     }
   }
 

@@ -1045,6 +1045,8 @@ class IbmApimCommands extends DrushCommands {
 
     // remove any users from the db that do not have a consumerorg
     \Drupal::logger('ibm_apim')->info('Drush drush_ibm_apim_clearup tidying up users');
+    \Drupal::service('ibm_apim.db_usersfielddata')->cleanUserConsumerorgUrlTable();
+
     $query = \Drupal::entityQuery('user');
     $query->condition('consumerorg_url', NULL, 'IS NULL');
     $query->condition('uid', 0, '<>');
@@ -1775,9 +1777,9 @@ function drush_ibm_apim_activation_del($activation) {
     }
     else if ($user->apic_state->value !== 'pending_approval') {
       Drush::output()->writeln($activation['username'] . ' is not in pending_approval state. Skipping rejection.');
-    } 
-    else if ($activation['root_operation'] === 'task_rejection') {  
-      // ensure they have been removed from all corg membership  
+    }
+    else if ($activation['root_operation'] === 'task_rejection') {
+      // ensure they have been removed from all corg membership
       $delete_service = \Drupal::service('auth_apic.delete_user');
       Drush::output()->writeln('Deleting apic user ' . $activation['username']);
       $delete_service->deleteLocalAccount($deleteUser);
@@ -1829,7 +1831,7 @@ function drush_ibm_apim_activation_update($activation) {
     }
     else if ($user->apic_state->value !== 'pending_approval') {
       Drush::output()->writeln($activation['username'] . ' is not in pending_approval state. Skipping approval.');
-    } 
+    }
     else if ($activation['root_operation'] === 'task_approval') {
       $editUser->setFirstname($activation['first_name']);
       $editUser->setLastname($activation['last_name']);

@@ -1,4 +1,11 @@
 changes:
+  8.x-2.11.2:
+  - Use new pass policy function
+  - Use new pass policy function
+  8.x-2.11.1:
+  - Fixed redirect when using OIDC (#719)
+  8.x-2.11.0:
+  - update version 8.x-2.10.7 -> 8.x-2.11.0
   8.x-2.10.6:
   - deleteFix v10.0.1 (#714)
   8.x-2.10.5:

@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 APICTESTDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 BASEDIR=$APICTESTDIR/../..
 
@@ -22,10 +21,6 @@ then
   echo Installing drupal behat extensions
   cd $BASEDIR/vendor/drupal/drupal-extension
   npm install || true
-
-  echo Patch behat
-  chmod a+x $APICTESTDIR/fix-behat.sh
-  $APICTESTDIR/fix-behat.sh
 else
   if [[ -z "$1" ]]
   then
@@ -58,6 +53,10 @@ else
   echo Extracting packaged behat drupal-extensions
   cd $BASEDIR/vendor
   tar -xf $APICTESTDIR/behat/behat-package.tar.gz
+
+  echo Installing drupal behat extensions
+  cd $BASEDIR/vendor/drupal/drupal-extension
+  npm install || true
 fi
 
 ## default to using mocks if not explicitly passed in

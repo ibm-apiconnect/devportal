@@ -1,0 +1,11 @@
+--- modules/trusted_reverse_proxy/trusted_reverse_proxy.module	2021-11-09 21:20:10.000000000 +0000
++++ modules/trusted_reverse_proxy/trusted_reverse_proxy.module	2022-10-11 19:35:31.000000000 +0100
+@@ -14,7 +14,7 @@
+
+   $container = \Drupal::getContainer();
+   $severity = $container->getParameter('trusted_reverse_proxy');
+-  $originalSeverity = $variables['requirements']['#requirements']['trusted_host_patterns']['severity'];
++  $originalSeverity = $variables['requirements']['#requirements']['trusted_host_patterns']['severity'] ?? NULL;
+   if ($originalSeverity !== $severity['severity']) {
+     $variables['requirements']['#requirements']['trusted_host_patterns']['severity'] = $severity['severity'];
+     $fakeElement = [

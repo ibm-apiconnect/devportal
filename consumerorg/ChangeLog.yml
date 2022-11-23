@@ -1,4 +1,10 @@
 changes:
+  8.x-2.10.2:
+  - Merge pull request
+  8.x-2.10.1:
+  - Set default apic_rating (#283)
+  8.x-2.10.0:
+  - update version 8.x-2.9.4 -> 8.x-2.10.0
   8.x-2.9.3:
   - Delete members without org on consumerorg_delete (#278) (#280)
   8.x-2.9.2:

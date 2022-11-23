@@ -165,7 +165,7 @@ class ApicUserPasswordResetForm extends FormBase {
     $showPasswordPolicy = FALSE;
 
     if ($this->moduleHandler->moduleExists('password_policy')) {
-      $showPasswordPolicy = _password_policy_show_policy();
+      $showPasswordPolicy = \Drupal::service('password_policy.validation_manager')->validationShouldRun();
     }
     if ($showPasswordPolicy) {
       $user = User::load($form_state->getFormObject()->getEntity()->id());
@@ -209,7 +209,7 @@ class ApicUserPasswordResetForm extends FormBase {
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if ($this->moduleHandler->moduleExists('password_policy')) {
-      $show_password_policy_status = _password_policy_show_policy();
+      $show_password_policy_status = \Drupal::service('password_policy.validation_manager')->validationShouldRun();
 
       // add validator if relevant.
       if ($show_password_policy_status) {
@@ -249,7 +249,7 @@ class ApicUserPasswordResetForm extends FormBase {
       if (!isset($form)) {
         $form = [];
       }
-      _password_policy_user_profile_form_submit($form, $form_state);
+      _password_policy_user_profile_form_update_fields($form, $form_state);
     }
 
     $resetPasswordObject = unserialize($token, ['allowed_classes' => TRUE]);
