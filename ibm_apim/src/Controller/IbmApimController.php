@@ -102,6 +102,15 @@ class IbmApimController extends ControllerBase {
           ]) . '</p>';
       }
     }
+    $filename = \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/version.json';
+    if (file_exists($filename)) {
+      $contents = file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/version.json');
+      $json = json_decode($contents, TRUE, 512, JSON_THROW_ON_ERROR);
+      $markup .= '<p>' . t('Consumer Analytics version %ver (%build)', [
+          '%ver' => $json['version']['version'],
+          '%build' => $json['version']['buildDate'],
+        ]) . '</p>';
+    }
 
     $build = [
       '#type' => 'markup',

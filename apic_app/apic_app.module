@@ -300,16 +300,10 @@ function apic_app_preprocess_node(&$variables) {
     if ($variables['view_mode'] === 'full') {
       if ($org !== NULL && $analyticsClientUrl !== NULL && $userUrl !== NULL && $org->hasPermission($userUrl, 'app-analytics:view') && $show_analytics) {
         $variables['#attached']['library'][] = 'ibm_apim/analytics';
-        $variables['#attached']['library'][] = 'apic_app/app_analytics_dashboard';
-
-        $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString();
-        $translations = \Drupal::service('ibm_apim.utils')->analytics_translations();
-        $variables['#attached']['drupalSettings']['anv'] = [];
+        $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString(TRUE)->getGeneratedUrl();
         $variables['#attached']['drupalSettings']['analytics']['proxyURL'] = $url;
-        $variables['#attached']['drupalSettings']['analytics']['translations'] = $translations;
-        $variables['#attached']['drupalSettings']['analytics']['analyticsDir'] = base_path() . \Drupal::service('extension.list.module')
-            ->getPath('ibm_apim') . '/analytics';
-        $variables['#attached']['drupalSettings']['application']['id'] = $variables['node']->application_id->value;
+        $variables['#attached']['drupalSettings']['analytics']['locale'] = \Drupal::service('ibm_apim.utils')->convert_lang_name(\Drupal::languageManager()->getCurrentLanguage()->getId());
+        $variables['#attached']['drupalSettings']['analytics']['application_id'] = $variables['node']->application_id->value;
         $variables['analytics_access'] = TRUE;
       }
       else {
@@ -478,31 +472,7 @@ function apic_app_theme($existing, $type, $theme, $path): array {
         'showVersions' => FALSE,
         'billing_enabled' => FALSE,
       ],
-    ],
-    'app_api_call_summary' => [
-      'variables' => [],
-    ],
-    'app_totals' => [
-      'variables' => [],
-    ],
-    'app_analytics_summary' => [
-      'variables' => [],
-    ],
-    'app_data_filter' => [
-      'variables' => [],
-    ],
-    'app_analytics_detail' => [
-      'variables' => [],
-    ],
-    'app_api_call_history' => [
-      'variables' => [],
-    ],
-    'app_api_call_errors' => [
-      'variables' => [],
-    ],
-    'app_cost' => [
-      'variables' => [],
-    ],
+    ]
   ];
 }
 

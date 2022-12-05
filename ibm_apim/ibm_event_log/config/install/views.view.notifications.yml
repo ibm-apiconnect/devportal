@@ -1,8 +1,6 @@
 langcode: en
 status: true
 dependencies:
-  config:
-    - user.role.authenticated
   module:
     - ibm_event_log
     - user

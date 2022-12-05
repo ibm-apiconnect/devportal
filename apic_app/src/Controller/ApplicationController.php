@@ -430,15 +430,6 @@ class ApplicationController extends ControllerBase {
     }
 
     $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString();
-    $drupalSettings = [
-      'anv' => [],
-      'analytics' => [
-        'proxyURL' => $url,
-        'translations' => $translations,
-        'analyticsDir' => base_path() . \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics',
-      ],
-      'application' => ['id' => $node->application_id->value, 'credentials' => $credentials],
-    ];
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, [
       'theme' => $theme,
@@ -473,7 +464,6 @@ class ApplicationController extends ControllerBase {
       '#node' => $appnode,
       '#attached' => [
         'library' => $libraries,
-        'drupalSettings' => $drupalSettings,
       ],
       '#cache' => [
         'tags' => [

@@ -1,4 +1,12 @@
 changes:
+  8.x-5.2.3:
+  - consumer a7s snagging
+  8.x-5.2.2:
+  - remove IE11 fix which breaks other browsers
+  8.x-5.2.1:
+  - bump the height of tile cards for apis
+  8.x-5.2.0:
+  - update version 8.x-5.1.3 -> 8.x-5.2.0
   8.x-5.1.2:
   - scssphp ^1.10.5
   8.x-5.1.1:

@@ -1,4 +1,8 @@
 changes:
+  8.x-5.2.1:
+  - Merge pull request
+  8.x-5.2.0:
+  - update version 8.x-5.1.3 -> 8.x-5.2.0
   8.x-5.1.2:
   - Set default apic_rating (#282)
   8.x-5.1.1:

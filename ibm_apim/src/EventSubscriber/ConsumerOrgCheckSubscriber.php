@@ -95,7 +95,6 @@ class ConsumerOrgCheckSubscriber implements EventSubscriberInterface
         $event->setResponse($response);
         $this->logger->notice('User is not part of a consumer organization. Redirecting to create consumer organization');
         $this->messenger->addError(t('You are not part of a consumer organization. Please create one before continuing.'));
-  
       }
     }
   }

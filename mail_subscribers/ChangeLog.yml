@@ -1,4 +1,6 @@
 changes:
+  8.x-5.2.0:
+  - update version 8.x-5.1.2 -> 8.x-5.2.0
   8.x-5.1.1:
   - Fix AJAX HTTP error and WSOD
   8.x-5.1.0:

@@ -121,28 +121,6 @@
         </div>
       </div>
     </header>
-    {% if analytics_access and events_found %}
-      <div class="enforcedEventsNotification alert short alert-info" role="alert">
-        <div class="alert-details">
-          <span class="icon icon-info" aria-hidden="true">
-            <svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg"
-                 xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd">
-              <path
-                  d="M8,0 C3.6,0 0,3.6 0,8 C0,12.4 3.6,16 8,16 C12.4,16 16,12.4 16,8 C16,3.6 12.4,0 8,0 L8,0 Z M8,4 C8.6,4 9,4.4 9,5 C9,5.6 8.6,6 8,6 C7.4,6 7,5.6 7,5 C7,4.4 7.4,4 8,4 L8,4 Z M10,12 L6,12 L6,11 L7,11 L7,8 L6,8 L6,7 L9,7 L9,11 L10,11 L10,12 L10,12 Z"
-                  id="Shape"></path>
-            </svg>
-          </span>
-          <div class="alert-text-wrapper">
-            <h4 class="sr-only">{{ 'Informative message'|t }}</h4>
-            <ul class="item-list item-list--messages">
-              <li class="item item--message">
-                {{ 'Note: Use of Event APIs will not be represented.'|t }}
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    {% endif %}
     <div class="contentInnerWrapper">
       <div class="applicationContent">
         {% if apic_state|lower|clean_class == 'disabled' %}
@@ -174,12 +152,7 @@
         {% endif %}
       </div>
       {% if analytics_access %}
-        <div class="analyticsWidgetContainer">
-          {{ drupal_block('app_analytics_summary', wrapper=false) }}
-          {{ drupal_block('app_totals', wrapper=false) }}
-          {{ drupal_block('app_api_call_history', wrapper=false) }}
-          {{ drupal_block('app_api_call_errors', wrapper=false) }}
-        </div>
+          <consumerAnalytics/>
       {% else %}
         {% if userHasAppManage %}
           {{ drupal_block('app_credentials', wrapper=false) }}

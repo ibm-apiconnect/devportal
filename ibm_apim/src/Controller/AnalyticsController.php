@@ -90,7 +90,6 @@ class AnalyticsController extends ControllerBase {
     );
   }
 
-
   /**
    * Display graphs of analytics for the current consumer organization
    *
@@ -109,8 +108,6 @@ class AnalyticsController extends ControllerBase {
     $consumerorgNid = NULL;
     $consumerorgTitle = NULL;
 
-    $eventsFound = $this->apiUtils->areEventAPIsPresent();
-
     if (isset($consumerOrg['url'])) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
@@ -127,35 +124,25 @@ class AnalyticsController extends ControllerBase {
     }
 
     $theme = 'ibm_apim_analytics';
-    $libraries = ['ibm_apim/analytics', 'ibm_apim/org_analytics'];
-    $translations = $this->utils->analytics_translations();
+    $libraries = ['ibm_apim/analytics'];
 
-    $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString();
+    $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString(TRUE)->getGeneratedUrl();
     $drupalSettings = [
-      'anv' => [],
       'analytics' => [
-        'proxyURL' => $url,
-        'translations' => $translations,
-        'analyticsDir' => base_path() . \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics',
+        'proxyURL' => \Drupal::service('ibm_apim.apim_utils')->getHostUrl() . $url,
+        'locale' => $this->utils->convert_lang_name(\Drupal::languageManager()->getCurrentLanguage()->getId())
       ],
     ];
 
     $portal_analytics = $this->analyticsService->getDefaultService();
     if (!isset($portal_analytics)) {
       \Drupal::messenger()->addError(t('No analytics service was found.'));
-    }
-    else {
+    } else {
       $analyticsClientUrl = $portal_analytics->getClientEndpoint();
       if (!isset($analyticsClientUrl)) {
         \Drupal::messenger()->addError(t('Analytics client URL is not set.'));
       }
     }
-    $nodeArray = ['id' => $consumerorgNid];
-
-    $tabs = [];
-    // tabs should be an array of additional tabs, eg. [{'title' => 'tab title', 'path' => '/tab/path'}, ... ]
-    \Drupal::moduleHandler()->alter('consumerorg_myorg_tabs', $tabs, $nodeArray);
-
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, [
       'theme' => $theme,
       'consumerorgId' => $consumerorgId,
@@ -163,9 +150,6 @@ class AnalyticsController extends ControllerBase {
       'catalogName' => $catalogName,
       'porgId' => $pOrgId,
       'consumerorgTitle' => $consumerorgTitle,
-      'node' => $nodeArray,
-      'tabs' => $tabs,
-      'eventsFound' => $eventsFound,
     ]);
 
     return [
@@ -178,10 +162,7 @@ class AnalyticsController extends ControllerBase {
       '#attached' => [
         'library' => $libraries,
         'drupalSettings' => $drupalSettings,
-      ],
-      '#node' => $nodeArray,
-      '#tabs' => $tabs,
-      '#eventsFound' => $eventsFound,
+      ]
     ];
   }
 
@@ -201,93 +182,93 @@ class AnalyticsController extends ControllerBase {
     \Drupal::service('page_cache_kill_switch')->trigger();
     $consumerOrg = $this->userUtils->getCurrentConsumerorg();
     $consumerOrgId = NULL;
-
+    $response = null;
     if (isset($consumerOrg['url'])) {
-      $portalAnalyticsService = $this->analyticsService->getDefaultService();
-      if (isset($portalAnalyticsService)) {
-        $analyticsClientUrl = $portalAnalyticsService->getClientEndpoint();
-        if (isset($analyticsClientUrl)) {
-          $query = \Drupal::entityQuery('node');
-          $query->condition('type', 'consumerorg');
-          $query->condition('consumerorg_url.value', $consumerOrg['url']);
-          $consumerOrgResults = $query->execute();
-          if (isset($consumerOrgResults) && !empty($consumerOrgResults)) {
-            $first = array_shift($consumerOrgResults);
-            $consumerorg = Node::load($first);
-            if ($consumerorg !== NULL) {
-              $consumerOrgId = $consumerorg->consumerorg_id->value;
-            }
-
-            $pOrgId = $this->siteConfig->getOrgId();
-            $catalogId = $this->siteConfig->getEnvId();
-            // get the incoming POST payload
-            $data = $request->getContent();
-
-            $url = $analyticsClientUrl . '/anv';
-
-            $verb = 'POST';
-            $url .= '?org_id=' . $pOrgId . '&catalog_id=' . $catalogId . '&developer_org_id=' . $consumerOrgId . '&manage=true&dashboard=true';
-
-            \Drupal::logger('ibm_apim')->debug('Analytics proxy URL is: %url, verb is %verb', [
-              '%url' => $url,
-              '%verb' => $verb,
-            ]);
-
-            $headers = [];
-
-            // Need to use Mutual TLS on the Analytics Client Endpoint
-            $mutualAuth = [];
-            $analyticsTlsClient = $portalAnalyticsService->getClientEndpointTlsClientProfileUrl();
-            if (isset($analyticsTlsClient)) {
-              $clientEndpointTlsClientProfileUrl = $analyticsTlsClient;
-              $tlsProfiles = \Drupal::service('ibm_apim.tls_client_profiles')->getAll();
-              if (isset($tlsProfiles) && !empty($tlsProfiles)) {
-                foreach ($tlsProfiles as $tlsProfile) {
-                  if ($tlsProfile->getUrl() === $clientEndpointTlsClientProfileUrl) {
-                    $keyfile = $tlsProfile->getKeyFile();
-                    if (isset($keyfile)) {
-                      $mutualAuth['keyFile'] = $keyfile;
-                    }
-                    $certFile = $tlsProfile->getCertFile();
-                    if ($certFile) {
-                      $mutualAuth['certFile'] = $certFile;
-                    }
-                  }
-                }
-              }
-            }
-            if (empty($mutualAuth)) {
-              $mutualAuth = NULL;
-            }
-            $headers[] = 'kbn-xsrf: 5.5.1';
-
-            $responseObject = ApicRest::proxy($url, $verb, NULL, TRUE, $data, $headers, $mutualAuth);
-            $filtered = $responseObject['content'];
-            if (!isset($responseObject['statusCode'])) {
-              $responseObject['statusCode'] = 200;
-            }
-            if (!isset($responseObject['headers'])) {
-              $responseObject['headers'] = [];
-            }
-
-            $response = new Response($filtered, $responseObject['statusCode'], $responseObject['headers']);
-          }
-          else {
-            $response = new Response(t('Invalid consumer organization.'), 400);
-          }
-        }
-        else {
-          $response = new Response(t('Invalid Analytics Client URL.'), 400);
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', 'consumerorg');
+      $query->condition('consumerorg_url.value', $consumerOrg['url']);
+      $consumerOrgResults = $query->execute();
+      if (isset($consumerOrgResults) && !empty($consumerOrgResults)) {
+        $first = array_shift($consumerOrgResults);
+        $consumerorg = Node::load($first);
+        if ($consumerorg !== NULL) {
+          $consumerOrgId = $consumerorg->consumerorg_id->value;
         }
       }
-      else {
-        $response = new Response(t('No analytics service was configured'), 400);
-      }
     }
-    else {
-      $response = new Response(t('Invalid consumer organization.'), 400);
+    if (empty($consumerOrgId)) {
+      \Drupal::logger('analytics')->error('User is not part of a valid consumer organization.');
+      $response = new Response('User is not part of a valid consumer organization.', 401, []);
     }
 
+    if (!isset($response)) {
+      $app = $this->requestStack->getCurrentRequest()->query->get('app');
+      $start = $this->requestStack->getCurrentRequest()->query->get('start');
+      $end = $this->requestStack->getCurrentRequest()->query->get('end');
+      $limit = $this->requestStack->getCurrentRequest()->query->get('limit');
+      $offset = $this->requestStack->getCurrentRequest()->query->get('offset');
+      $timeframe = $this->requestStack->getCurrentRequest()->query->get('timeframe');
+      if (empty($app)) {
+        $url = "/consumer-analytics/orgs/${consumerOrgId}/dashboard";
+
+      } else {
+        $url = "/consumer-analytics/orgs/${consumerOrgId}/apps/${app}/dashboard";
+      }
+
+      $parameters = [];
+      if (!empty($timeframe)) {
+        $parameters['timeframe'] = $timeframe;
+      }
+      if (!empty($start)) {
+        $parameters['start'] = $start;
+      }
+      if (!empty($end)) {
+        $parameters['end'] = $end;
+      }
+      if (isset($limit)) {
+        $parameters['limit'] = $limit;
+      }
+      if (isset($offset)) {
+        $parameters['offset'] = $offset;
+      }
+      if (!empty($parameters)) {
+        $url .= '?' . http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);
+      }
+
+      $apimResponse = \Drupal::service('ibm_apim.mgmtserver')->getAnalytics($url);
+      if ($apimResponse === NULL) {
+        \Drupal::logger('analytics')->error('APIM REST response not set.');
+        $response = new Response('No Response from server', 500, []);
+      } else if ($apimResponse->getCode() !== 200 || empty($apimResponse->getData()))  {
+        $errors = $apimResponse->getErrors();
+        if (\is_array($errors)) {
+          if (!empty($errors)) {
+            if (isset($errors[0]['message'])) {
+              $errors = $errors[0]['message'];
+            } else {
+              $errors = implode(', ', $errors);
+            }
+          }
+        }
+        \Drupal::logger('analytics')->error('Receieved %code response. %error', [
+          '%code' => $apimResponse->getCode(),
+          '%error' => $errors]);
+        if (empty($errors)) {
+          $errors = "The website encountered an unexpected error.";
+        }
+        $response = new Response($errors, $apimResponse->getCode(), []);
+      } else {
+        $response = new Response();
+        $data = $apimResponse->getData();
+        $data = array_shift($data);
+        $response->setContent($data);
+        $response->setStatusCode($apimResponse->getCode());
+        foreach ($apimResponse->getHeaders() as $key => $val) {
+          $response->headers->set($key, $val);
+        }
+      }
+    }
+    \Drupal::messenger()->deleteAll();
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $response;
   }

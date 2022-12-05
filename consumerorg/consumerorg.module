@@ -247,6 +247,7 @@ function consumerorg_preprocess_node(&$variables): void {
       $orgService = \Drupal::service('ibm_apim.myorgsvc');
       $cOrgService = \Drupal::service('ibm_apim.consumerorg');
       $entityTypeManager = \Drupal::service('entity_type.manager');
+      $siteConfig = \Drupal::service('ibm_apim.site_config');
 
       // only enable edit mode for users looking at their currently active consumerorg
       $org = $userUtils->getCurrentConsumerorg();
@@ -256,12 +257,23 @@ function consumerorg_preprocess_node(&$variables): void {
 
       $myorgOwnerUrl = $variables['node']->consumerorg_owner->value;
       $cOrgRoles = $variables['node']->consumerorg_roles->getValue();
+
+      $configRoles = $siteConfig->getConsumerOrgInvitationRoles();
+
       if ($cOrgRoles !== NULL) {
         $whitelist = [Role::class];
-        foreach ($cOrgRoles as $arrayValue) {
-          // Owner and member are special cases that we handle separately in the org page.
+        foreach ($cOrgRoles as $cOrgRole) {
           $role = new Role();
-          $role->createFromArray(unserialize($arrayValue['value'], ['allowed_classes' => $whitelist]));
+          $role->createFromArray(unserialize($cOrgRole['value'], ['allowed_classes' => $whitelist]));
+          $roleName = $role->getName();
+          if ($roleName !== 'owner' && $roleName !== 'member' && in_array($roleName, $configRoles, true)) {
+              $permittedcOrgRoles[] = $role;
+          }
+        }
+      }
+
+      if ($permittedcOrgRoles !== NULL) {
+        foreach ($permittedcOrgRoles as $role) {
           if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
             // use translated role names if possible
             switch ($role->getTitle()) {
@@ -326,15 +338,15 @@ function consumerorg_preprocess_node(&$variables): void {
             $role = $orgRoles[array_search($role_url, array_column($orgRoles, 'url'), TRUE)];
             // use translated role names if possible
             switch ($role->getTitle()) {
-              case 'Administrator':
-                $role->setTitle(t('Administrator'));
-                break;
-              case 'Developer':
-                $role->setTitle(t('Developer'));
-                break;
-              case 'Viewer':
-                $role->setTitle(t('Viewer'));
-                break;
+                case 'Administrator':
+                    $role->setTitle(t('Administrator'));
+                    break;
+                case 'Developer':
+                    $role->setTitle(t('Developer'));
+                    break;
+                case 'Viewer':
+                    $role->setTitle(t('Viewer'));
+                    break;
             }
             $roles[] = $role;
           }

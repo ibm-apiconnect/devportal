@@ -1,0 +1,13 @@
+--- modules/jquery_ui_accordion/jquery_ui_accordion.libraries.yml
++++ modules/jquery_ui_accordion/jquery_ui_accordion.libraries.yml
+@@ -1,8 +1,8 @@
+ accordion:
+-  version: 1.12.1
++  version: 1.13.2
+   license:
+     name: Public Domain
+-    url: https://github.com/jquery/jquery-ui/blob/1.12.1/LICENSE.txt
++    url: https://github.com/jquery/jquery-ui/blob/1.13.2/LICENSE.txt
+     gpl-compatible: true
+   js:
+     jquery.ui/ui/widgets/accordion-min.js: { minified: true }

@@ -1,4 +1,33 @@
 changes:
+  8.x-5.2.13:
+  - Fixed error messages for analytics (#894)
+  8.x-5.2.12:
+  - Fix-blocklist (#890) (#891)
+  8.x-5.2.11:
+  - Add limit and offset analytics parameters (#889)
+  8.x-5.2.10:
+  - implement consisten font-weight for org title
+  8.x-5.2.9:
+  - add a7s version info to reports (#888)
+  8.x-5.2.8:
+  - dont remove view on forums disable (#885) (#887)
+  8.x-5.2.7:
+  - Analytics v10.0.5 (#884)
+  8.x-5.2.6:
+  - Update drushadmin.drush.inc (#882)
+  8.x-5.2.5:
+  - change placeholder (#879)
+  8.x-5.2.4:
+  - Clean user__consumerorg_url table after snapshot (#870) (#874)
+  8.x-5.2.3:
+  - revise import / export message (#878)
+  8.x-5.2.2:
+  - apimesh/devportal#2880 apimesh/devportal#6647 Use the consumer-ca or platform-ca
+    for all calls to apim, if they are mounted
+  8.x-5.2.1:
+  - ibm_apim_preprocess_table check array key exists (#868) (#876)
+  8.x-5.2.0:
+  - update version 8.x-5.1.5 -> 8.x-5.2.0
   8.x-5.1.4:
   - Fixed no perms when self service is disabled (#871) (#873)
   8.x-5.1.3:

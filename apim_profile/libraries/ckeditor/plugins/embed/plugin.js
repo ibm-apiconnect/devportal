@@ -1,6 +1,6 @@
 /**
- * @license Copyright (c) 2003-2017, CKSource - Frederico Knabben. All rights reserved.
- * For licensing, see LICENSE.md or http://ckeditor.com/license
+ * @license Copyright (c) 2003-2022, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 ( function() {
@@ -91,15 +91,15 @@
  * It is recommended to set up an account on the [Iframely](https://iframely.com/) service for
  * better control over embedded content.
  *
- * Read more in the [documentation](#!/guide/dev_media_embed)
- * and see the [SDK sample](http://sdk.ckeditor.com/samples/mediaembed.html).
+ * Read more in the {@glink features/media_embed documentation}
+ * and see the {@glink examples/mediaembed example}.
  *
  * Refer to {@link CKEDITOR.plugins.embedBase.baseDefinition#providerUrl} for more information about content providers.
  *
- * **Important note:** Prior to version 4.7 this configuration option defaulted to the
+ * **Important note:** Prior to version 4.7.0 this configuration option defaulted to the
  * `//ckeditor.iframe.ly/api/oembed?url={url}&callback={callback}` string.
  *
- * @since 4.5
+ * @since 4.5.0
  * @cfg {String} [embed_provider='']
  * @member CKEDITOR.config
  */

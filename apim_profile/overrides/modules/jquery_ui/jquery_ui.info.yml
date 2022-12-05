@@ -1,0 +1,6 @@
+name: jQuery UI
+type: module
+description: 'Provides jQuery UI library.'
+package: jQuery UI
+core: 8.x
+core_version_requirement: ^8 || ^9

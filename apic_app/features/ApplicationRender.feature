@@ -21,7 +21,6 @@ Feature: Application Rendering
     When I click "MyApp"
     Then I should see the text "MyApp"
     And I should see the text "Dashboard"
-    And I should see the text "API Stats"
     And I should see the text "Subscriptions"
     And I should see the text "Credentials"
     And there are no errors
@@ -47,7 +46,6 @@ Feature: Application Rendering
     When I click "MyApp"
     Then I should see the text "MyApp"
     And I should not see the text "Dashboard"
-    And I should not see the text "API Stats"
     And I should see the text "Credentials"
     And I should see the text "Product subscriptions"
     And I should see the text "PRODUCT"
@@ -84,7 +82,6 @@ Feature: Application Rendering
     When I click "MyApp2"
     Then I should see the text "MyApp2"
     And I should see the text "Dashboard"
-    And I should see the text "API Stats"
     And I should see the text "Subscriptions"
     And I should see the text "Credentials"
     And there are no errors
@@ -124,7 +121,6 @@ Feature: Application Rendering
     When I click "MyApp2"
     Then I should see the text "MyApp2"
     And I should not see the text "Dashboard"
-    And I should not see the text "API Stats"
     And I should see the text "Product subscriptions"
     And I should see the text "Credentials"
     And there are no errors

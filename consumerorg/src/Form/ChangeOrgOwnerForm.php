@@ -22,6 +22,7 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -64,6 +65,11 @@ class ChangeOrgOwnerForm extends FormBase {
   protected $messenger;
 
   /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
+  protected SiteConfig $siteConfig;
+
+  /**
    * ChangeOrgOwnerForm constructor.
    *
    * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
@@ -72,14 +78,16 @@ class ChangeOrgOwnerForm extends FormBase {
    * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\ibm_apim\Service\SiteConfig $siteConfig
    */
-  public function __construct(ConsumerOrgService $consumer_org_service, UserUtils $user_utils, ApimUtils $apim_utils, ThemeHandler $themeHandler, AccountProxyInterface $current_user, Messenger $messenger) {
+  public function __construct(ConsumerOrgService $consumer_org_service, UserUtils $user_utils, ApimUtils $apim_utils, ThemeHandler $themeHandler, AccountProxyInterface $current_user, Messenger $messenger, SiteConfig $siteConfig) {
     $this->consumerOrgService = $consumer_org_service;
     $this->userUtils = $user_utils;
     $this->apimUtils = $apim_utils;
     $this->themeHandler = $themeHandler;
     $this->currentUser = $current_user;
     $this->messenger = $messenger;
+    $this->siteConfig = $siteConfig;
   }
 
   /**
@@ -92,7 +100,8 @@ class ChangeOrgOwnerForm extends FormBase {
       $container->get('ibm_apim.apim_utils'),
       $container->get('theme_handler'),
       $container->get('current_user'),
-      $container->get('messenger')
+      $container->get('messenger'),
+      $container->get('ibm_apim.site_config')
     );
   }
 
@@ -150,12 +159,21 @@ class ChangeOrgOwnerForm extends FormBase {
             '#options' => $values,
           ];
 
-          // These are the roles to assign to the old owner now that he isn't the owner any more
+          $configRoles = $this->siteConfig->getConsumerOrgInvitationRoles();
           $roles = $this->currentOrg->getRoles();
-          if ($roles !== NULL && count($roles) > 1) {
+
+          foreach ($roles as $role) {
+            $roleName = $role->getName();
+            if ($roleName !== 'owner' && $roleName !== 'member' && in_array($roleName, $configRoles, TRUE)) {
+              $permittedRoles[] = $role;
+            }
+          }
+
+          // These are the roles to assign to the old owner now that he isn't the owner any more
+          if ($permittedRoles !== NULL && count($permittedRoles) > 1) {
             $roles_array = [];
             $default_role = NULL;
-            foreach ($roles as $role) {
+            foreach ($permittedRoles as $role) {
               if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
                 // use translated role names if possible
                 switch ($role->getTitle()) {

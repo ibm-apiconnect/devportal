@@ -1063,3 +1063,16 @@ body.bx--global-light-ui.context--user-password {
 .apicConcepts table tr {
   border-bottom: 1px solid $ui-03;
 }
+
+.bx--global-light-ui  consumeranalytics {
+  ul {
+    padding: 0;
+    margin: 0;
+  }
+
+  button.bx--btn--icon-only {
+    padding-left: 0.9375rem;
+    padding-right: 0.9375rem;
+  }
+
+}

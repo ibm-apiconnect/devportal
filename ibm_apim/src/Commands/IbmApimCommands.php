@@ -478,7 +478,10 @@ class IbmApimCommands extends DrushCommands {
       $host_pieces = $siteConfig->parseApimHost();
       // need the apim hostname without any path component on the ingress (such as consumer-api)
       $url = $host_pieces['scheme'] . '://' . $host_pieces['host'] . ':' . $host_pieces['port'] . '/catalogs/' . $namespace . '/webhooks/snapshot';
-      ApicRest::patch($url, NULL, 'clientid', TRUE, TRUE);
+
+      // Don't think this entire function is used anymore are the director handles this, but the above look more like
+      // a platform API than a consumer one.
+      ApicRest::patch($url, NULL, 'clientid', TRUE, TRUE, 'platform');
       Drush::output()->writeln('[[0]] Content Refresh Requested');
     } catch (Throwable $e) {
       // When we have a system to test against, we need to work out what the relevant errors actually are here
@@ -1045,6 +1048,8 @@ class IbmApimCommands extends DrushCommands {
 
     // remove any users from the db that do not have a consumerorg
     \Drupal::logger('ibm_apim')->info('Drush drush_ibm_apim_clearup tidying up users');
+    \Drupal::service('ibm_apim.db_usersfielddata')->cleanUserConsumerorgUrlTable();
+
     $query = \Drupal::entityQuery('user');
     $query->condition('consumerorg_url', NULL, 'IS NULL');
     $query->condition('uid', 0, '<>');
@@ -1323,15 +1328,14 @@ class IbmApimCommands extends DrushCommands {
 
   /**
    * @param $url - APIM management url
-   * @param $insecure - Insecure certificate
-   * @param $provided_cert - Provided certificate
+   * @param $apiType - 'consumer' or 'platform'
    *
    * @command ibm_apim-checkapimcert
-   * @usage drush ibm_apim-checkapimcert [url] [insecure] [provided_cert]
+   * @usage drush ibm_apim-checkapimcert [url] [apiType]
    *   Check APIM management certificate.
    * @aliases checkcert
    */
-  public function drush_ibm_apim_checkapimcert($url, $insecure, $provided_cert): void {
+  public function drush_ibm_apim_checkapimcert($url, $apiType): void {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__FUNCTION__, NULL);
     }
@@ -1340,9 +1344,7 @@ class IbmApimCommands extends DrushCommands {
     require_once __DIR__ . '/src/ApicRest.php';
 
     try {
-      // $insecure is a string 'true' or 'false' and needs converting to a boolean
-      $insecureBool = ($insecure === 'true');
-      ApicRest::json_http_request($url, 'GET', NULL, NULL, TRUE, $insecureBool, $provided_cert, FALSE);
+      ApicRest::json_http_request($url, 'GET', NULL, NULL, TRUE, FALSE, $apiType);
       Drush::output()->writeln('[[0]] APIM certificate check complete');
     } catch (Throwable $e) {
       echo 'Caught exception: ', $e->getMessage(), "\n";
@@ -1775,9 +1777,9 @@ function drush_ibm_apim_activation_del($activation) {
     }
     else if ($user->apic_state->value !== 'pending_approval') {
       Drush::output()->writeln($activation['username'] . ' is not in pending_approval state. Skipping rejection.');
-    } 
-    else if ($activation['root_operation'] === 'task_rejection') {  
-      // ensure they have been removed from all corg membership  
+    }
+    else if ($activation['root_operation'] === 'task_rejection') {
+      // ensure they have been removed from all corg membership
       $delete_service = \Drupal::service('auth_apic.delete_user');
       Drush::output()->writeln('Deleting apic user ' . $activation['username']);
       $delete_service->deleteLocalAccount($deleteUser);
@@ -1829,7 +1831,7 @@ function drush_ibm_apim_activation_update($activation) {
     }
     else if ($user->apic_state->value !== 'pending_approval') {
       Drush::output()->writeln($activation['username'] . ' is not in pending_approval state. Skipping approval.');
-    } 
+    }
     else if ($activation['root_operation'] === 'task_approval') {
       $editUser->setFirstname($activation['first_name']);
       $editUser->setLastname($activation['last_name']);

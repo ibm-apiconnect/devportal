@@ -96,12 +96,12 @@ function drush_drushadmin_theme_delete($theme_name) {
             drupal_flush_all_caches();
           } catch (Throwable $e) {
           }
-          \Drupal::logger("drushadmin")->notice("!theme_name deleted.", ['!theme_name' => $inputTheme]);
+          \Drupal::logger("drushadmin")->notice("@theme_name deleted.", ['@theme_name' => $inputTheme]);
         }
       }
       else {
         \Drupal::logger("drushadmin")
-          ->error("!theme_name not deleted. It is either still activated or is not a custom theme.", ['!theme_name' => $inputTheme]);
+          ->error("@theme_name not deleted. It is either still activated or is not a custom theme.", ['@theme_name' => $inputTheme]);
       }
     }
   }
@@ -128,11 +128,11 @@ function drush_drushadmin_module_delete($module_name) {
           drupal_flush_all_caches();
         } catch (Throwable $e) {
         }
-        \Drupal::logger("drushadmin")->notice("!module_name deleted.", ['!module_name' => $inputModule]);
+        \Drupal::logger("drushadmin")->notice("@module_name deleted.", ['@module_name' => $inputModule]);
       }
       else {
         \Drupal::logger("drushadmin")
-          ->error("!module_name not deleted. It is either still activated or is not a custom module.", ['!module_name' => $inputModule]);
+          ->error("@module_name not deleted. It is either still activated or is not a custom module.", ['@module_name' => $inputModule]);
       }
     }
   }

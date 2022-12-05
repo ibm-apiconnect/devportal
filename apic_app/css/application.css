@@ -592,3 +592,12 @@ ul.overflow-menu.credentialsMenu.dropitmenu {
   color: transparent;
   font-size: 1px;
 }
+
+consumeranalytics .App {
+  padding-top: 0;
+}
+
+.consumer_analytics_ui .contentInnerWrapper {
+  padding-top: 1rem;
+}
+

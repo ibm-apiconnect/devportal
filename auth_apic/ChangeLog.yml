@@ -1,4 +1,11 @@
 changes:
+  8.x-5.2.2:
+  - Fix OIDC redirects to homepage (#725)
+  8.x-5.2.1:
+  - Use new pass policy function
+  - Use new pass policy function
+  8.x-5.2.0:
+  - update version 8.x-5.1.6 -> 8.x-5.2.0
   8.x-5.1.5:
   - Fixed redirect when using OIDC (#717)
   8.x-5.1.4:

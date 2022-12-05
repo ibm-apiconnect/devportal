@@ -91,8 +91,8 @@ class RestResponseReader {
           $contact_link = Link::fromTextAndUrl(t('contact'), Url::fromUri('mailto:' . $this->system_site_config->get('mail')));
         }
 
-        $this->messenger
-          ->addWarning(t('We appear to be having trouble processing your request. Please try again later or @contact_link the owner of this site if the problem persists.', ['@contact_link' => $contact_link]));
+          $this->messenger
+            ->addWarning(t('We appear to be having trouble processing your request. Please try again later or @contact_link the owner of this site if the problem persists.', ['@contact_link' => $contact_link->toString()]));
       }
       \Drupal::logger('auth_apic')
         ->error('Exception occurred while parsing response from management appliance. Exception was: @exception', ['@exception' => $exception->getMessage()]);

@@ -1,4 +1,13 @@
 changes:
+  8.x-5.2.3:
+  - refine padding for consumer analytics in app
+  8.x-5.2.2:
+  - Update apic_app.install
+  - Merge pull request
+  8.x-5.2.1:
+  - Analytics v10.0.5 (#333)
+  8.x-5.2.0:
+  - update version 8.x-5.1.3 -> 8.x-5.2.0
   8.x-5.1.2:
   - Merge pull request
   8.x-5.1.1:

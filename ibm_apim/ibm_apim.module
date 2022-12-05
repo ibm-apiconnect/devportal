@@ -386,6 +386,19 @@ function template_preprocess_status_report_general_info(&$variables) {
     $variables['explorer'] = ['value' => 'undefined', 'description' => t('Could not detect Explorer version')];
   }
 
+  $fileName = \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/version.json';
+  if (file_exists($fileName)) {
+      $contents = file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/version.json');
+      $json = json_decode($contents, TRUE);
+      $variables['consumera7s'] = [
+        'value' => $json['version']['version'],
+        'description' => $json['version']['buildDate'],
+      ];
+  }
+  else {
+    $variables['consumera7s'] = ['value' => 'undefined', 'description' => t('Could not detect Consumer Analytics version')];
+  }
+
   $customModules = [];
   $customThemes = [];
   $sitePath = \Drupal::getContainer()->getParameter('site.path');
@@ -564,7 +577,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       break;
     case 'user_multiple_cancel_confirm' :
       $form['apic_intro'] = [
-        '#markup' => '<br/><br/><p>' . t('Note: Cancelling another user\'s account in the portal will NOT delete their account from the IBM API Manager, the user\'s record in the Portal database will simply be recreated when they next login. 
+        '#markup' => '<br/><br/><p>' . t('Note: Cancelling another user\'s account in the portal will NOT delete their account from the IBM API Manager, the user\'s record in the Portal database will simply be recreated when they next login.
         Users must delete their own accounts from their \'Edit Profile\' page for them to be completely deleted from the IBM API Manager. Administrators may delete users via the toolkit, refer to the IBM API Connect Knowledge Center.') . '</p>',
         '#weight' => 20,
       ];
@@ -837,7 +850,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         unset($form['submit']);
       }
       $form['intro'] = [
-        '#markup' => '<p>' . t('This functionality will be available in a future release of the IBM API Connect command line client.') . '</p>',
+        '#markup' => '<p>' . t('This functionality is available as part of the IBM API Connect developer toolkit CLI.') . '</p>',
         '#weight' => 50,
       ];
       break;
@@ -849,7 +862,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         unset($form['import_tarball']);
       }
       $form['intro'] = [
-        '#markup' => '<p>' . t('This functionality will be available in a future release of the IBM API Connect command line client.') . '</p>',
+        '#markup' => '<p>' . t('This functionality is available as part of the IBM API Connect developer toolkit CLI.') . '</p>',
         '#weight' => 50,
       ];
       break;
@@ -869,7 +882,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
           ->addWarning(t('IP based security is currently disabled for this portal service so IP based restrictions will not work.'));
       }
       break;
-    case 'contact_message_feedback_form': 
+    case 'contact_message_feedback_form':
       if (\Drupal::currentUser()->isAuthenticated()) {
         $current_user = User::load(\Drupal::currentUser()->id());
         if (($firstname = $current_user->get('first_name')->value) && ($lastname = $current_user->get('last_name')->value)) {
@@ -1382,7 +1395,7 @@ function ibm_apim_preprocess_form(&$variables) {
 function ibm_apim_library_info_alter(&$libraries, $extension) {
   if (array_key_exists('analytics', $libraries) && file_exists(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/asset-manifest.json')) {
     $string = file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/asset-manifest.json');
-    $json = json_decode($string, TRUE);
+    $json = json_decode($string, TRUE)["files"];
     if (isset($json['main.js']) && file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/' . $json['main.js'])) {
       $libraries['analytics']['js']['analytics/' . $json['main.js']] = [
         'weight' => -1,
@@ -1502,7 +1515,7 @@ function ibm_apim_preprocess_table(&$variables) {
   }
 
   // accessibility fix for the pending module updates page
-  if (is_array($variables['attributes']['class']) && in_array('update', array_values($variables['attributes']['class']), TRUE)) {
+  if (array_key_exists('class',$variables['attributes']) && is_array($variables['attributes']['class']) && in_array('update', array_values($variables['attributes']['class']), TRUE)) {
     $variables['attributes']['role'] = 'presentation';
   }
 

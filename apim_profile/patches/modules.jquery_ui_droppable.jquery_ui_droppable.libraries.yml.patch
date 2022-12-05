@@ -1,0 +1,13 @@
+--- modules/jquery_ui_droppable/jquery_ui_droppable.libraries.yml
++++ modules/jquery_ui_droppable/jquery_ui_droppable.libraries.yml
+@@ -1,8 +1,8 @@
+ droppable:
+-  version: 1.12.1
++  version: 1.13.2
+   license:
+     name: Public Domain
+-    url: https://github.com/jquery/jquery-ui/blob/1.12.1/LICENSE.txt
++    url: https://github.com/jquery/jquery-ui/blob/1.13.2/LICENSE.txt
+     gpl-compatible: true
+   js:
+     jquery.ui/ui/widgets/droppable-min.js: { minified: true }

@@ -1,0 +1,130 @@
+core:
+  version: &jquery_ui_version 1.13.2
+  license: &jquery_ui_license
+    name: Public Domain
+    url: https://github.com/jquery/jquery-ui/blob/1.13.2/LICENSE.txt
+    gpl-compatible: true
+  js:
+    jquery.ui/ui/effect-min.js: { weight: -9, minified: true }
+
+blind:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-blind-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core
+
+bounce:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-bounce-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core
+
+clip:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-clip-min.js: { minified: true }
+  dependencies:
+    - core/jquery.ui.effects.core
+
+drop:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-drop-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core
+
+explode:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-explode-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core
+
+fade:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-fade-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core
+
+fold:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-fold-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core
+
+highlight:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-highlight-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core
+
+puff:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-puff-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core
+    - jquery_ui_effects/scale
+
+pulsate:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-pulsate-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core
+
+scale:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-scale-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core
+    - jquery_ui_effects/size
+
+shake:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-shake-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core
+
+size:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-size-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core
+
+slide:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-slide-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core
+
+transfer:
+  version: *jquery_ui_version
+  license: *jquery_ui_license
+  js:
+    jquery.ui/ui/effects/effect-transfer-min.js: { minified: true }
+  dependencies:
+    - jquery_ui_effects/core

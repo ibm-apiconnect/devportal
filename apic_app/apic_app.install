@@ -28,6 +28,11 @@ use Drupal\Core\Entity\EntityStorageException;
 use Drupal\apic_app\ApplicationSubscriptionSchema;
 use Drupal\apic_app\ApplicationCredentialsSchema;
 
+function apic_app_install() {
+  // This config automatically gets added need to remove so we don't remove the view when forums are disabled.
+  apic_app_removeConfigDependency("views.view.applications", "user.role.authenticated");
+}
+
 /**
  * Changes from 8.x-1.0 to 8.x-1.1 :
  *  - remove apic_image from application
@@ -687,14 +692,21 @@ function apic_app_update_8206() {
  * this view.
  */
 function apic_app_update_8207() {
+  apic_app_removeConfigDependency("views.view.applications", "user.role.authenticated");
+}
+
+function apic_app_removeConfigDependency($config, $dep) {
+  \Drupal::logger('apic_app')->notice('Checking @config for @dep.', ['@config' => $config, '@dep' => $dep]);
   try {
     $key = 'dependencies.config';
-    $view = \Drupal::configFactory()->getEditable('views.view.applications');
+    $view = \Drupal::configFactory()->getEditable($config);
     $fields = $view->get($key);
 
-    $updatedFields = \array_filter($fields, static function ($element) {
-      return $element !== "user.role.authenticated";
+    $updatedFields = \array_filter($fields, static function ($element) use($dep) {
+      return $element !== $dep;
     });
+
+    \Drupal::logger('apic_app')->notice('Setting @config to @dep.', ['@config' => $config, '@dep' => $updatedFields]);
 
     $view->set($key, $updatedFields);
     $view->save();

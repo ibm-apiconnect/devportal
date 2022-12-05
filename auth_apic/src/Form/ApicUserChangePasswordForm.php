@@ -165,7 +165,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       $showPasswordPolicy = FALSE;
 
       if ($this->moduleHandler->moduleExists('password_policy')) {
-        $showPasswordPolicy = _password_policy_show_policy();
+        $showPasswordPolicy = \Drupal::service('password_policy.validation_manager')->validationShouldRun();
       }
 
       if ($showPasswordPolicy) {
@@ -233,7 +233,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       $showPasswordPolicy = FALSE;
 
       if ($this->moduleHandler->moduleExists('password_policy')) {
-        $showPasswordPolicy = _password_policy_show_policy();
+        $showPasswordPolicy = \Drupal::service('password_policy.validation_manager')->validationShouldRun();
       }
 
       if ($showPasswordPolicy) {
@@ -280,7 +280,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
 
     $moduleService = \Drupal::service('module_handler');
     if ($moduleService->moduleExists('password_policy')) {
-      $show_password_policy_status = _password_policy_show_policy();
+      $show_password_policy_status = \Drupal::service('password_policy.validation_manager')->validationShouldRun();
 
       // add validator if relevant.
       if ($show_password_policy_status) {
@@ -330,7 +330,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       if (!isset($form['account']['roles']['#default_value'])) {
         $form['account']['roles']['#default_value'] = ['authenticated'];
       }
-      _password_policy_user_profile_form_submit($form, $form_state);
+      _password_policy_user_profile_form_update_fields($form, $form_state);
     }
 
     // special case original admin user who uses the drupal db.

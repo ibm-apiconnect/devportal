@@ -261,7 +261,7 @@ class APIMServer implements ManagementServerInterface {
         'X-IBM-Consumer-Context: ' . $this->siteConfig->getOrgId() . '.' . $this->siteConfig->getEnvId(),
       ];
 
-      $response = ApicRest::json_http_request('/token', 'POST', $headers, json_encode($token_request, JSON_THROW_ON_ERROR), FALSE, NULL, NULL, TRUE, 'consumer');
+      $response = ApicRest::json_http_request('/token', 'POST', $headers, json_encode($token_request, JSON_THROW_ON_ERROR), FALSE, TRUE, 'consumer');
       if (!isset($response)) {
         $this->logger->error('Failed to refresh token');
         return FALSE;
@@ -844,10 +844,9 @@ class APIMServer implements ManagementServerInterface {
    * @inheritDoc
    * @throws \Exception
    */
-  public function activateFromJWT(JWTToken $jwt): ?RestResponse  {
+  public function activateFromJWT(JWTToken $jwt): RestResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $result = null;
     $headers = [
       'Content-Type: application/json',
       'Accept: application/json',
@@ -856,19 +855,11 @@ class APIMServer implements ManagementServerInterface {
       'X-IBM-Client-Id: ' . $this->siteConfig->getClientId(),
       'X-IBM-Client-Secret: ' . $this->siteConfig->getClientSecret(),
     ];
-    $pos = strpos($jwt->getUrl(), '?activation_id=');
-    if ($pos !== false) {
-      $activationID = substr($jwt->getUrl(), $pos+15);
-      if (preg_match('/^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/', $activationID)) {
-        $url = '/consumer-api/activate?activation_id='  . $activationID;
-      }
-    }
-    if (isset($url)) {
-      $mgmt_result = ApicRest::json_http_request($url, 'POST', $headers, '');
-      $result = $this->restResponseReader->read($mgmt_result);
-    }
 
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $result?->getCode());
+    $mgmt_result = ApicRest::json_http_request($jwt->getUrl(), 'POST', $headers, '');
+    $result = $this->restResponseReader->read($mgmt_result);
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $result->getCode());
     return $result;
   }
 
@@ -883,6 +874,24 @@ class APIMServer implements ManagementServerInterface {
 
     $response = $this->restResponseReader->read(ApicRest::get($url));
 
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $response->getCode());
+    return $response;
+  }
+
+  /**
+   * @param string $url
+   *
+   * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
+   * @throws \Exception
+   */
+  public function getAnalytics(string $url) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    $response = ApicRest::get($url, 'user', false, false, true);
+    if (!is_array($response->data)) {
+      $response->data = [$response->data];
+    }
+    $response = $this->restResponseReader->read($response);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $response->getCode());
     return $response;
   }

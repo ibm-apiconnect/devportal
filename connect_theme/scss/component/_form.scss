@@ -98,7 +98,7 @@ textarea.form-control {
     margin: 1rem 1rem 1rem 0;
     background-color: $btn-default-bg;
     color: $btn-default-color;
-    border: 2px solid $btn-default-border;
+    border: 1px solid $btn-default-border;
     &:first-child {
       margin-right: 0;
     }
@@ -109,12 +109,12 @@ textarea.form-control {
     &:focus{
       color: $btn-primary-color;
       inset: $inverse-01;
-      border: $focus;
+      border: 1px solid $focus;
     }
     &.button--primary, &.btn-primary, &.btn-success{
       background-color: $btn-primary-bg;
       color: $btn-primary-color;
-      border: 2px solid $btn-primary-border;
+      border: 1px solid $btn-primary-border;
       &:hover{
         background-color: $hover-primary;
       }
@@ -187,7 +187,7 @@ input[type="checkbox"],
   margin: 0 .75rem 0 0;
   background-color: $field-01;
   border-radius: 2px;
-  border: 2px solid $ui-05;
+  border: 1px solid $ui-05;
   overflow: hidden;
   cursor: pointer;
 }
@@ -393,7 +393,7 @@ input[type="checkbox"].bx--checkbox {
 .bx--global-light-ui .bx--radio-button__appearance {
   background-color: $check-radio-bg;
   border-radius: 50%;
-  border: 2px solid $check-radio-border;
+  border: 1px solid $check-radio-border;
   height: 1.125rem;
   width: 1.125rem;
   margin-right: 0.5rem;
@@ -447,7 +447,7 @@ input[type="checkbox"].bx--checkbox {
   width: 1rem;
   margin-right: .5rem;
   background-color: $check-radio-bg;
-  border: 2px solid $check-radio-border;
+  border: 1px solid $check-radio-border;
 }
 
 .bx--global-light-ui .bx--checkbox:focus + .bx--checkbox-appearance,
@@ -603,7 +603,7 @@ input[type="checkbox"].bx--checkbox {
     background-color: $hover-ui;
   }
   &.bx--btn--ghost:focus {
-    border: $focus;
+    border:  1px solid $focus;
   }
   &.bx--btn--ghost:disabled,
   &.bx--btn--ghost[disabled]{
@@ -641,12 +641,12 @@ input[type="checkbox"].bx--checkbox {
 }
 .bx--global-light-ui .button.bx--btn--tertiary {
   background-color: transparent;
-  border: 2px solid $interactive-03;
+  border: 1px solid $interactive-03;
   color: $interactive-03;
 }
 .bx--global-light-ui .button.bx--btn--tertiary:hover {
   background-color: $hover-tertiary;
-  border: 2px solid $hover-tertiary;
+  border: 1px solid $hover-tertiary;
   color: $text-04;
 }
 .bx--global-light-ui .button.bx--btn--tertiary:active {
@@ -654,14 +654,14 @@ input[type="checkbox"].bx--checkbox {
 }
 .bx--global-light-ui .button.bx--btn--tertiary:focus {
   background-color: $interactive-03;
-  border: 2px solid $focus;
+  border: 1px solid $focus;
   inset: $inverse-01;
 }
 .bx--global-light-ui .button.bx--btn--tertiary {
   &:disabled,
   &[disabled] {
     background-color: transparent;
-    border: 2px solid $disabled-02;
+    border: 1px solid $disabled-02;
     color: $disabled-02;
   }
 }
@@ -674,17 +674,20 @@ input[type="checkbox"].bx--checkbox {
   vertical-align: inherit;
 }
 
-.bx--global-light-ui .button:hover, {
+.bx--global-light-ui .button:hover,
+.bx--global-light-ui  .bx--btn--primary:hover  {
   background-color:$hover-primary;
   color: $btn-primary-color;
 }
 
-.bx--global-light-ui .button:focus{
+.bx--global-light-ui .button:focus,
+.bx--global-light-ui .bx--btn--primary:focus {
   border-color:	$focus;
 	box-shadow: 	inset 0 0 0 1px $inverse-01;
 }
 
-.bx--global-light-ui .button:active {
+.bx--global-light-ui .button:active ,
+.bx--global-light-ui  .bx--btn--primary:active{
   background-color:$active-primary;
 }
 
@@ -693,7 +696,7 @@ input[type="checkbox"].bx--checkbox {
 .bx--global-light-ui button.apicSecondary,
 .bx--global-light-ui .bx--btn.bx--btn--secondary,
 .bx--global-light-ui button.link-edit-summary {
-  border: 2px solid $btn-default-border;
+  border: 1px solid $btn-default-border;
   color: $btn-default-color;
   background-color: $btn-default-bg;
 }
@@ -735,21 +738,24 @@ input[type="checkbox"].bx--checkbox {
 }
 
 .bx--global-light-ui .button.apicTertiary,
-.bx--global-light-ui button.apicTertiary,{
-  border: 2px solid $interactive-03;
+.bx--global-light-ui button.apicTertiary,
+.bx--global-light-ui button.bx--btn--tertiary {
+  border: 1px solid $interactive-03;
   color: $interactive-03;
   background-color: transparent;
 }
 
 .bx--global-light-ui .button.apicTertiary:focus,
-.bx--global-light-ui button.apicTertiary:focus{
+.bx--global-light-ui button.apicTertiary:focus,
+.bx--global-light-ui button.bx--btn--tertiary:focus {
   color: $interactive-03;
   inset: $inverse-01;
-  border: $focus;
+  border:  1px solid $focus;
 }
 
 .bx--global-light-ui .button.apicTertiary:hover,
-.bx--global-light-ui button.apicTertiary:hover {
+.bx--global-light-ui button.apicTertiary:hover,
+.bx--global-light-ui button.bx--btn--tertiary:hover {
   color: $text-04;
   background-color: $hover-tertiary;
 }
@@ -798,7 +804,7 @@ input[type="checkbox"].bx--checkbox {
   button {
     color: $btn-primary-color;
     background-color: $btn-primary-bg;
-    border: 2px solid $btn-primary-border;
+    border: 1px solid $btn-primary-border;
     padding: $button-padding-sm;
     height: 2rem;
     margin: 0 0.5rem 0 0 ;
@@ -806,7 +812,7 @@ input[type="checkbox"].bx--checkbox {
       background-color: $hover-primary;
     }
     &#edit-reset {
-      border: 2px solid $btn-default-border;
+      border: 1px solid $btn-default-border;
       color: $btn-default-color;
       background-color: $btn-default-bg;
 

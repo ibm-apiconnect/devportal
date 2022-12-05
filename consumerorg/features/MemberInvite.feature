@@ -165,3 +165,4 @@ Feature: Org member invitation
     And I am at "/myorg/invite"
     Then I should not see the text "Viewer"
     And there are no errors
+    Given consumer org invitation roles are administrator,developer,viewer

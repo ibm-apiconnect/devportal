@@ -121,15 +121,13 @@ class ApicRest implements ApicRestInterface {
    * @param array|null $headers
    * @param string|null $data
    * @param bool $returnResult
-   * @param null $insecure
-   * @param null $providedCertificate
    * @param bool $notifyDrupal
-   * @param string $apiType
+   * @param string $apiType - 'consumer' or 'platform'
    *
    * @return \stdClass|null
    * @throws \Exception
    */
-  public static function json_http_request(string $url, $verb = 'GET', $headers = NULL, $data = NULL, $returnResult = FALSE, $insecure = NULL, $providedCertificate = NULL, $notifyDrupal = TRUE, $apiType = 'consumer'): ?\stdClass {
+  public static function json_http_request(string $url, $verb = 'GET', $headers = NULL, $data = NULL, $returnResult = FALSE, $notifyDrupal = TRUE, $apiType = 'consumer'): ?\stdClass {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$url, $verb]);
     }
@@ -214,9 +212,8 @@ class ApicRest implements ApicRestInterface {
       curl_setopt($resource, CURLOPT_USERAGENT, 'IBM API Developer Portal/' . $apicVersion['value'] . ' (' . $apicVersion['description'] . ') ' . $hostname);
     }
 
-    // Enable auto-accept of self-signed certificates if this
-    // has been set in the module config by an admin.
-    self::curl_set_accept_ssl($resource, $insecure, $providedCertificate);
+    // Verify the server cert if we have the $apiType-ca mounted
+    self::curl_set_accept_ssl($resource, $apiType);
 
     if (\Drupal::hasContainer()) {
       $apim_rest_trace = (boolean) \Drupal::config('ibm_apim.devel_settings')->get('apim_rest_trace');
@@ -334,48 +331,27 @@ class ApicRest implements ApicRestInterface {
    * certificates.
    *
    * @param $resource
-   * @param null $insecure
-   * @param null $providedCertificate
+   * @param $apiType - 'consumer' or 'platform'
    */
-  private static function curl_set_accept_ssl($resource, $insecure = NULL, $providedCertificate = NULL): void {
+  private static function curl_set_accept_ssl($resource, $apiType = 'consumer'): void {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-    // Always set the defaults first
-    curl_setopt($resource, CURLOPT_SSL_VERIFYPEER, TRUE);
-    curl_setopt($resource, CURLOPT_SSL_VERIFYHOST, 2);
 
-    if ($insecure === NULL) {
-      $insecure = \Drupal::state()->get('ibm_apim.insecure');
-    }
+    $caIngFile = '/etc/nginx/ssl/portal-' . $apiType . '-ing-ca.crt';
+    $caSvcFile = '/etc/nginx/ssl/portal-' . $apiType . '-svc-ca.crt';
 
-    // TODO force insecure to true until we've sorted out certs
-    $insecure = TRUE;
-
-    if ($insecure) {
+    if (file_exists($caIngFile) || file_exists($caSvcFile)) {
+      curl_setopt($resource, CURLOPT_SSL_VERIFYPEER, TRUE);
+      curl_setopt($resource, CURLOPT_SSL_VERIFYHOST, 2);
+      curl_setopt($resource, CURLOPT_CAPATH, '/etc/ssl/certs');
+      \Drupal::logger('ibm_apim')->info('curl_set_accept_ssl: Calling ' . $apiType . ' API and validating server cert with the truststore'); 
+    } else {
+      \Drupal::logger('ibm_apim')->warning('curl_set_accept_ssl: Calling ' . $apiType . ' API without validating server cert as neither ' . $caIngFile . ' nor ' . $caSvcFile . ' was present.'); 
       curl_setopt($resource, CURLOPT_SSL_VERIFYPEER, FALSE);
       curl_setopt($resource, CURLOPT_SSL_VERIFYHOST, 0);
     }
-    else {
-      if ($providedCertificate === NULL) {
-        $providedCertificate = \Drupal::state()->get('ibm_apim.provided_certificate');
-      }
-      elseif ($providedCertificate === 'Default_CA') {
-        $providedCertificate = NULL;
-      }
 
-      if ($providedCertificate) {
-        // Tell curl to use the certificate the user provided
-        curl_setopt($resource, CURLOPT_CAINFO, '/etc/apim.crt');
-        if ($providedCertificate === 'mismatch') {
-          // If the certificate is does not contain the correct server name
-          // then tell curl to accept it anyway. The user gets a warning when
-          // they provide a certificate like this so they understand this is
-          // less secure than using a certificate with a matching server name.
-          curl_setopt($resource, CURLOPT_SSL_VERIFYHOST, 0);
-        }
-      }
-    }
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -434,6 +410,9 @@ class ApicRest implements ApicRestInterface {
     // remove any double /consumer-api calls
     if (mb_strpos($url, '/consumer-api/consumer-api') !== 0) {
       $url = str_replace('/consumer-api/consumer-api', '/consumer-api', $url);
+    }
+    if (mb_strpos($url, '/consumer-api/consumer-analytics') != 0) {
+      $url = str_replace('/consumer-api/consumer-analytics', '/consumer-analytics', $url);
     }
 
     $headers = [
@@ -494,7 +473,7 @@ class ApicRest implements ApicRestInterface {
     }
 
 
-    $result = self::json_http_request($url, $verb, $headers, $data, $returnResult, NULL, NULL, TRUE, $apiType);
+    $result = self::json_http_request($url, $verb, $headers, $data, $returnResult, TRUE, $apiType);
 
     if (!$utils->endsWith($url, '/me/sign-out') && !$utils->endsWith($url, '/me/change-password') && isset($result) && (int) $result->code === 401 && $session_store->get('refresh') !== NULL) {
       $refresh_expires_in = $session_store->get('refresh_expires_in');
@@ -510,7 +489,7 @@ class ApicRest implements ApicRestInterface {
               $newHeaders[] = $header;
             }
           }
-          $result = self::json_http_request($url, $verb, $newHeaders, $data, $returnResult, NULL, NULL, TRUE, $apiType);
+          $result = self::json_http_request($url, $verb, $newHeaders, $data, $returnResult, TRUE, $apiType);
           $expires_in = $session_store->get('expires_in');
         }
       }
@@ -730,8 +709,7 @@ class ApicRest implements ApicRestInterface {
     }
     curl_setopt($ch, CURLOPT_USERAGENT, 'IBM API Developer Portal/' . $apicVersion['value'] . ' (' . $apicVersion['description'] . ') ' . $hostname);
 
-    // Enable auto-accept of self-signed certificates if this
-    // has been set in the module config by an admin.
+    // Verify the server cert if we have the consumer-ca mounted
     self::curl_set_accept_ssl($ch);
 
     if (isset($mutualAuth) && !empty($mutualAuth)) {

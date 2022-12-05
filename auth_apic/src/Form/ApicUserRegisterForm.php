@@ -340,7 +340,7 @@ class ApicUserRegisterForm extends RegisterForm {
         $showPasswordPolicy = FALSE;
 
         if ($moduleService->moduleExists('password_policy')) {
-          $showPasswordPolicy = _password_policy_show_policy();
+          $showPasswordPolicy = \Drupal::service('password_policy.validation_manager')->validationShouldRun();
         }
 
         if ($showPasswordPolicy) {

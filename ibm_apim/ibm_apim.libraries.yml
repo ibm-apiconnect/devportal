@@ -22,16 +22,6 @@ analytics:
   version: 1.x
   dependencies:
     - core/drupalSettings
-  css:
-    component:
-      css/analytics.css: {}
-
-org_analytics:
-  version: 1.x
-  dependencies:
-    - ibm_apim/analytics
-  js:
-    js/org_analytics.js: {}
 
 single_click:
   version: 1.x

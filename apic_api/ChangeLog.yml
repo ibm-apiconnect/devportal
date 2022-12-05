@@ -1,4 +1,6 @@
 changes:
+  8.x-5.2.0:
+  - update version 8.x-5.1.2 -> 8.x-5.2.0
   8.x-5.1.1:
   - Set default apic_rating
   8.x-5.1.0:

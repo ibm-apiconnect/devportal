@@ -147,13 +147,13 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   /** @AfterScenario */
   public function afterScenario($event): void {
 
+    // Force log out if the test scenario didn't explicitly log out at the end
+    $this->assertAnonymousUser();
+
     // Prevent the drupal context cleanup code from deleting management node users
     foreach ($this->apicUsers as $nextUser) {
       $this->getUserManager()->removeUser($nextUser->name);
     }
-
-    // Force log out if the test scenario didn't explicitly log out at the end
-    $this->assertAnonymousUser();
 
     // reset registries
     print "Resetting to default user registry.";

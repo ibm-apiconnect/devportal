@@ -211,6 +211,7 @@ function apim_profile_install() {
     'view_password',
     'drush_language',
     'maintenance200',
+    'trusted_reverse_proxy',
   ];
 
   $our_modules = [
@@ -1812,7 +1813,14 @@ function apim_profile_update_8103() {
             $label = $block_content->get('info')->value;
             if ($label === 'Get Help [en]') {
               foreach ($languages as $language) {
-                $translation = $block_content->getTranslation($language->getId());
+                $langcode = $language->getId();
+                if (!$block_content->hasTranslation($langcode)) {
+                  \Drupal::logger('apim_profile')->info('Skipping translation update for block: @langcode', [
+                    '@langcode' => $langcode,
+                  ]);
+                  continue;
+                }
+                $translation = $block_content->getTranslation($langcode);
                 $body = $translation->get('body')->value;
                 if (strpos($body, $oldString) !== FALSE) {
                   $search0 = '<?xml version="1.0" encoding="iso-8859-1"?>';
@@ -2924,7 +2932,6 @@ function apim_profile_update_8301()
   }
 }
 
-
 /**
  * Enable page_load_progress and apic_type_count modules
  */
@@ -2932,6 +2939,19 @@ function apim_profile_update_8302() {
   $role = Role::load('content_author');
   if ($role !== NULL) {
     user_role_grant_permissions('content_author', ['bypass content access control', 'bypass node access', 'revert all revisions']);
+  }
+}
+
+/**
+ * enable trusted_reverse_proxy module
+ */
+function apim_profile_update_8303() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('trusted_reverse_proxy')) {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->install(['trusted_reverse_proxy']);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
   }
 }
 

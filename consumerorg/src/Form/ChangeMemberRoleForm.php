@@ -22,6 +22,7 @@ use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -79,6 +80,11 @@ class ChangeMemberRoleForm extends FormBase {
   protected $messenger;
 
   /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
+  protected SiteConfig $siteConfig;
+
+  /**
    * ChangeMemberRoleForm constructor.
    *
    * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumer_org_service
@@ -86,19 +92,22 @@ class ChangeMemberRoleForm extends FormBase {
    * @param \Drupal\ibm_apim\Service\ApimUtils $apim_utils
    * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
    * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\ibm_apim\Service\SiteConfig $siteConfig
    */
   public function __construct(
     ConsumerOrgService $consumer_org_service,
     UserUtils $user_utils,
     ApimUtils $apim_utils,
     ThemeHandler $themeHandler,
-    Messenger $messenger
+    Messenger $messenger,
+    SiteConfig $siteConfig
   ) {
     $this->consumerOrgService = $consumer_org_service;
     $this->userUtils = $user_utils;
     $this->apimUtils = $apim_utils;
     $this->themeHandler = $themeHandler;
     $this->messenger = $messenger;
+    $this->siteConfig = $siteConfig;
   }
 
   /**
@@ -110,7 +119,8 @@ class ChangeMemberRoleForm extends FormBase {
       $container->get('ibm_apim.user_utils'),
       $container->get('ibm_apim.apim_utils'),
       $container->get('theme_handler'),
-      $container->get('messenger')
+      $container->get('messenger'),
+      $container->get('ibm_apim.site_config')
     );
   }
 
@@ -160,9 +170,19 @@ class ChangeMemberRoleForm extends FormBase {
             }
           }
 
+          $configRoles = $this->siteConfig->getConsumerOrgInvitationRoles();
           $roles = $this->currentOrg->getRoles();
-          if (count($roles) > 1) {
-            foreach ($roles as $role) {
+
+          foreach ($roles as $role) {
+            $roleName = $role->getName();
+            if ($roleName !== 'owner' && $roleName !== 'member' && in_array($roleName, $configRoles, TRUE)) {
+              $permittedRoles[] = $role;
+            }
+          }
+
+          // These are the roles to assign to the old owner now that he isn't the owner any more
+          if ($permittedRoles !== NULL && count($permittedRoles) > 1) {
+            foreach ($permittedRoles as $role) {
               // owner and member are special cases - ignore them
               if ($role->getName() !== 'owner' && $role->getName() !== 'member') {
                 // use translated role names if possible

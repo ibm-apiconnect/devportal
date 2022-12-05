@@ -83,8 +83,7 @@ function ibm_apim_drush_command() {
     'aliases' => ['checkcert'],
     'arguments' => [
       'url' => 'APIM management url',
-      'insecure' => 'Insecure certificate',
-      'provided_cert' => 'Provided certificate',
+      'apiType' => 'platform or consumer',
     ],
   ];
   $items['ibm_apim-set_admin_timestamps'] = [
@@ -1335,6 +1334,8 @@ function drush_ibm_apim_clearup($UUID, $startTime) {
 
   // remove any users from the db that do not have a consumerorg
   drush_log(dt('Drush drush_ibm_apim_clearup tidying up users'), 'success');
+  \Drupal::service('ibm_apim.db_usersfielddata')->cleanUserConsumerorgUrlTable();
+
   $query = \Drupal::entityQuery('user');
   $group = $query->orConditionGroup()
   ->condition('consumerorg_url', NULL, 'IS NULL')
@@ -1617,11 +1618,10 @@ function drush_ibm_apim_setcreds($clientId, $clientSecret) {
 }
 
 /**
- * @param $url
- * @param $insecure
- * @param $provided_cert
+ * @param $url - APIM management url
+ * @param $apiType - 'consumer' or 'platform'
  */
-function drush_ibm_apim_checkapimcert($url, $insecure, $provided_cert) {
+function drush_ibm_apim_checkapimcert($url, $apiType = 'consumer') {
   if (function_exists('ibm_apim_entry_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
@@ -1630,9 +1630,7 @@ function drush_ibm_apim_checkapimcert($url, $insecure, $provided_cert) {
   require_once __DIR__ . '/src/ApicRest.php';
 
   try {
-    // $insecure is a string 'true' or 'false' and needs converting to a boolean
-    $insecureBool = ($insecure === 'true');
-    Drupal\ibm_apim\ApicRest::json_http_request($url, 'GET', NULL, NULL, TRUE, $insecureBool, $provided_cert, FALSE);
+    Drupal\ibm_apim\ApicRest::json_http_request($url, 'GET', NULL, NULL, TRUE, FALSE, $apiType);
     drush_print('[[0]] APIM certificate check complete');
   } catch (Throwable $e) {
 
