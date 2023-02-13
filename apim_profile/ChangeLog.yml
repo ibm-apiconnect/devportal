@@ -1,4 +1,146 @@
 changes:
+  8.x-20230113-1721:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.11.32:
+        - Added cancel button to subscription wizard (#928)
+  8.x-20221220-1141:
+    commits:
+    - bump to 2018.4.1.24
+    - composer update core 9.5.1
+    - composer update core 9.5.1
+    - drupal core 9.5.0 (#774)
+    modules:
+      auth_apic:
+        8.x-1.10.19:
+        - Revert "Jwt 2018.4.1 (#708)" (#733)
+  8.x-20221007-2220:
+    commits:
+    - use python38
+    - update lock
+    - Merge pull request
+    - Ckeditor jquery slick 2018.4.1 (#764)
+    - complete fontawesome patch upgrd (#753)
+    - update social_media_links patch (#744)
+    - composer update (#743)
+    - upgrade to Search API 8.x-1.27 (#738)
+    - patch symfony Request.php to avoid checking for trusted proxies (#605)
+    - composer update
+    - update php-jwt
+    modules:
+      apictest:
+        8.x-1.11.12:
+        - use python38
+  8.x-20220929-1510:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.11.31: null
+      apictest:
+        8.x-1.11.11:
+        - use drupalextension 3 without devDepedencies (#244)
+  8.x-20220831-1620:
+    commits:
+    - fix patch
+    - fix patch
+    - only set if jenkins
+    - Merge pull request
+    - composer update (#714)
+    modules:
+      auth_apic:
+        8.x-1.10.18:
+        - Use new pass policy function
+        - Use new pass policy function
+  8.x-20220720-0802:
+    commits:
+    - Added patch to fix Reset Password form (#592)
+    - Drush11 (#695)
+    - Modupdate (#692)
+    - deal with subpathed sites (#693)
+    - composer update Drupal core 9.4.6 (#691)
+    - composer updated using php@8.0
+    - Composer Update
+    - Composer Update
+    - composer update
+    - composer update
+    modules:
+      auth_apic:
+        8.x-1.10.17:
+        - Fixed redirect when using OIDC (#718)
+  8.x-20220712-1021:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.10.16:
+        - Don't login users on form error (#712)
+        - Jwt 2018.4.1 (#708)
+  8.x-20220706-1621:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.11.30:
+        - Valid token (#858) (#863)
+      apictest:
+        8.x-1.11.10:
+        - Valid token (#237)
+  8.x-20220629-1021:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.13.12: null
+  8.x-20220623-1021:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.10.15:
+        - Secure 2018.4.1 (#701)
+      ibm_apim:
+        8.x-1.11.29:
+        - Secure 2018.4.1 (#857)
+  8.x-20220622-1621:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-1.10.14:
+        - customFieldTests v10.0.1 (#684) (#688)
+      consumerorg:
+        8.x-1.10.11:
+        - Custom field tests 2018.4.1 (#269)
+  8.x-20220621-1621:
+    commits: null
+    modules:
+      apic_app:
+        8.x-1.13.11: null
+  8.x-20220607-1621:
+    commits:
+    - add flood control patch
+    - drupal core security update
+    modules:
+      ibm_apim:
+        8.x-1.11.28:
+        - Custom field tests 2018.4.1 (#835)
+      apictest:
+        8.x-1.11.9:
+        - Added steps for adding and deleting custom fields (#231) (#234)
+  8.x-20220606-1345:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-1.11.27:
+        - Fix for non json decodeable custom field data (#843) (#846)
+        8.x-1.11.26: null
+      consumerorg:
+        8.x-1.10.10:
+        - Fix for non json decodeable custom field data (#273)
+  8.x-20220519-1021:
+    commits:
+    - drupal core 9.3.15 (#657)
+    - Update version for 2018.4.1.21
+    modules:
+      connect_theme:
+        8.x-1.11.0:
+        - update version 8.x-1.10.3 -> 8.x-1.11.0
   8.x-20220419-1621:
     commits:
     - honeypot patch update
@@ -2532,4 +2674,4 @@ changes:
         - update version: 8.x-1.1.46 -> 8.x-1.2.46
       apictest:
         8.x-1.3.55: null
-  8.x-20220519-1021:
+  8.x-20230120-1721:

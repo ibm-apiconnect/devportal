@@ -1,8 +1,8 @@
---- modules/social_media_links/social_media_links.libraries.yml	2020-07-30 10:20:14.000000000 +0100
-+++ modules/social_media_links/social_media_links.libraries.yml	2020-07-30 10:19:59.000000000 +0100
+--- modules/social_media_links/social_media_links.libraries.yml    2022-10-27 16:36:42.000000000 +0100
++++ modules/social_media_links/social_media_links.libraries.yml    2022-10-27 16:37:33.000000000 +0100
 @@ -6,4 +6,4 @@
  fontawesome.component:
    css:
      component:
--      //maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css: { type: external }
+-      //cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css : { type: external }
 +      css/font-awesome.min.css: {}
