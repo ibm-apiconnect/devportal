@@ -3,6 +3,9 @@
 <p>This repository contains the components necessary to create a developer portal for IBM API Connect 
 using the Drupal content management system.</p>
 
+<h2>Requirements</h2>
+<p>You will require IBM API Connect v5.0.x to use this code.</p>
+
 <p><code>ibm_apim</code> = a drupal module containing the IBM API Connect integration<br/>
 <code>connect_theme</code> = a configurable drupal theme<br/>
 <code>ibm_apim_theme</code> = the drupal theme used in APIm v4<br/>
@@ -117,9 +120,6 @@ javascript libraries and theme) can be downloaded from the <a href="https://gith
 <h2>License</h2>
 <p>This code is made available under the GNU Public License v2.</p>
 <p>This is provided 'as-is' with no guarantee of official support but we will endeavour to respond to all Issues raised as best we can.</p>
-
-<h2>Requirements</h2>
-<p>You will require IBM API Connect v5.0.7.x to use this code.</p>
 
 <h2>API Management v4</h2>
 <p>The v4 version of the portal can be found on github here: <a href="https://github.com/apimanagement/drupalportal/">apimanagement/drupalportal</a></p>
