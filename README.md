@@ -4,8 +4,13 @@
 using the Drupal content management system.</p>
 
 <h2>Branches</h2>
-<p><code>master</code> - Drupal v8 based portal for use with APIC v2018 (https://github.com/ibm-apiconnect/devportal)</p>
+<p><code>master</code> - Drupal v9 based portal for use with APIC v10.0.x CD (https://github.com/ibm-apiconnect/devportal)</p>
+<p><code>APIC_v10.0.1</code> - Drupal v9 based portal for use with APIC v10.0.1 LTS (https://github.com/ibm-apiconnect/devportal/tree/APIC_v10.0.1)</p>
+<p><code>APIC_v2018</code> - Drupal v9 based portal for use with APIC v2018 (https://github.com/ibm-apiconnect/devportal/tree/APIC_v2018)</p>
 <p><code>APIC_v5</code> - Drupal v7 based portal for use with APIC v5 (https://github.com/ibm-apiconnect/devportal/tree/APIC_v5)</p>
+
+<h2>Requirements</h2>
+<p>You will require IBM API Connect v2018.x to use this code.</p>
 
 <h2>Modules</h2>
 <p><code>ibm_apim</code> = a drupal module containing the IBM API Connect integration<br/>
@@ -112,9 +117,6 @@ using the Drupal content management system.</p>
 <h2>License</h2>
 <p>This code is made available under the GNU Public License v2.</p>
 <p>This is provided 'as-is' with no guarantee of official support but we will endeavour to respond to all Issues raised as best we can.</p>
-
-<h2>Requirements</h2>
-<p>You will require IBM API Connect v2018.x to use this code.</p>
 
 <h2>API Management v4</h2>
 <p>The v4 version of the portal can be found on github here: <a href="https://github.com/apimanagement/drupalportal/">apimanagement/drupalportal</a></p>
