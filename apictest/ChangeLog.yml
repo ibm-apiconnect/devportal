@@ -1,4 +1,8 @@
 changes:
+  8.x-2.11.1:
+  - add subscribe data
+  8.x-2.11.0:
+  - update version 8.x-2.10.2 -> 8.x-2.11.0
   8.x-2.10.1:
   - use drupalextension 3 without devDepedencies (#244) (#247)
   8.x-2.10.0:

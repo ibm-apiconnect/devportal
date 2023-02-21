@@ -335,20 +335,22 @@ function consumerorg_preprocess_node(&$variables): void {
         $roles = [];
         if (array_key_exists('role_urls', $member)) {
           foreach ($member['role_urls'] as $role_url) {
-            $role = $orgRoles[array_search($role_url, array_column($orgRoles, 'url'), TRUE)];
-            // use translated role names if possible
-            switch ($role->getTitle()) {
-                case 'Administrator':
-                    $role->setTitle(t('Administrator'));
-                    break;
-                case 'Developer':
-                    $role->setTitle(t('Developer'));
-                    break;
-                case 'Viewer':
-                    $role->setTitle(t('Viewer'));
-                    break;
+            if (($key = array_search($role_url, array_column($orgRoles, 'url'), TRUE)) !== false) {
+              $role = $orgRoles[$key];
+              // use translated role names if possible
+              switch ($role->getTitle()) {
+                  case 'Administrator':
+                      $role->setTitle(t('Administrator'));
+                      break;
+                  case 'Developer':
+                      $role->setTitle(t('Developer'));
+                      break;
+                  case 'Viewer':
+                      $role->setTitle(t('Viewer'));
+                      break;
+              }
+              $roles[] = $role;
             }
-            $roles[] = $role;
           }
         }
         $member['roles'] = $roles;

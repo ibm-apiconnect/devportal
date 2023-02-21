@@ -168,7 +168,23 @@ class ApicUserPasswordResetForm extends FormBase {
       $showPasswordPolicy = \Drupal::service('password_policy.validation_manager')->validationShouldRun();
     }
     if ($showPasswordPolicy) {
-      $user = User::load($form_state->getFormObject()->getEntity()->id());
+      $user_url = explode("/", $resetPasswordObject->getPayload()['sub']);
+      $user_id = end($user_url);
+      $database = \Drupal::database();
+      $query = $database->query("SELECT entity_id FROM user__apic_url WHERE apic_url_value LIKE '%$user_id'");
+      $result = $query->fetchAll();
+      if (is_array($result) && sizeof($result) === 1) {
+        $entity_id = $result[0]->entity_id;
+        $user = User::load($entity_id);
+        $form['user_id'] = [
+          '#type' => 'hidden',
+          '#value' => $entity_id,
+        ];
+      }
+      else {
+        $user = User::load($form_state->getFormObject()->getEntity()->id());
+      }
+
       // required for password_policy
       $form['#form_id'] = $this->getFormId();
       $form['account']['roles'] = [];

@@ -1,4 +1,34 @@
 changes:
+  8.x-2.11.14:
+  - Upgrade function - Set author to admin for APIC nodes (#937)
+  8.x-2.11.13:
+  - only re-encrypt socialblock creds if exists (#935)
+  8.x-2.11.12:
+  - Save codesnippet language to apim (#930)
+  8.x-2.11.11:
+  - Fixed tests (#925)
+  8.x-2.11.10:
+  - Fix for password_policy_username on password reset form
+  8.x-2.11.9:
+  - link needs to be a string (#924)
+  8.x-2.11.8: null
+  8.x-2.11.7:
+  - Changes for saving non-custom field metadata in apim (#917)
+  - Remove search icon block access check (#918)
+  8.x-2.11.6:
+  - 1.x docs
+  - update IBM doc links (#904)
+  8.x-2.11.5:
+  - Reassign content on user delete (#909)
+  8.x-2.11.4:
+  - Allow logout and invitation error when not part of consumer org (#901) (#903)
+  8.x-2.11.3: null
+  8.x-2.11.2:
+  - When email sent fails do not expose the server error.
+  8.x-2.11.1:
+  - Fix-blocklist (#890) (#892)
+  8.x-2.11.0:
+  - update version 8.x-2.10.8 -> 8.x-2.11.0
   8.x-2.10.7:
   - dont remove view on forums disable (#885) (#886)
   8.x-2.10.6:
@@ -718,7 +748,4 @@ changes:
   - set registry_url on upgrade if it is null
   8.x-1.3.201:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since
-    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
-    are also filtered before logging them. Commits that start with 'INT' or 'bump
-    version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

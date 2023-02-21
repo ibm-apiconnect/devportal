@@ -1347,7 +1347,14 @@ function drush_ibm_apim_clearup($UUID, $startTime) {
   $uids = $query->execute();
 
   foreach ($uids as $uid) {
-    \Drupal::entityTypeManager()->getStorage('user')->load($uid)->delete();
+    user_cancel([], $uid, 'user_cancel_reassign');
+    $performBatch = TRUE;
+  }
+  if ($performBatch) {
+    $batch = &batch_get();
+    $batch['progressive'] = FALSE;
+    batch_process();
+    $performBatch = FALSE;
   }
 
   // Delete all users from db with duplicate emails

@@ -1,4 +1,16 @@
 changes:
+  8.x-2.12.5:
+  - Save codesnippet language to apim (#745)
+  8.x-2.12.4:
+  - DeleteUserForm Fix - Delete owner after corg (#744)
+  8.x-2.12.3: null
+  8.x-2.12.2:
+  - Fix for password_policy_username on password reset form
+  - metadataSave v10.0.1 (#735)
+  8.x-2.12.1:
+  - Fix OIDC redirects to homepage (#726)
+  8.x-2.12.0:
+  - update version 8.x-2.11.3 -> 8.x-2.12.0
   8.x-2.11.2:
   - Use new pass policy function
   - Use new pass policy function
@@ -207,7 +219,4 @@ changes:
   - disable caching entirely for the core user invitation / activation routes
   8.x-1.2.106:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since
-    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
-    are also filtered before logging them. Commits that start with 'INT' or 'bump
-    version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

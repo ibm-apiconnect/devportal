@@ -130,6 +130,7 @@ class OrgCreateForm extends FormBase {
 
     $entity = $this->entityTypeManager->getStorage('node')->create([
       'type' => 'consumerorg',
+      'uid' => 1,
     ]);
     $entity_form = $this->entityTypeManager->getStorage('entity_form_display')->load('node.consumerorg.default');
 

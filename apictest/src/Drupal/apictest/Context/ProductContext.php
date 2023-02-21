@@ -111,7 +111,9 @@ class ProductContext extends RawDrupalContext {
     $object['url'] = '/catalogs/1234/5678/products/' . $id;
     $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
     $object['catalog_product']['visibility']['subscribe']['enabled'] = TRUE;
+    $object['catalog_product']['visibility']['subscribe']['type'] = 'authenticated';
     $object['catalog_product']['visibility']['view']['type'] = 'public';
+
     $object['created_at'] = '2021-02-26T12:18:58.995Z';
     $object['updated_at'] = '2021-02-26T12:18:58.995Z';
 
@@ -213,6 +215,7 @@ class ProductContext extends RawDrupalContext {
     $object['url'] = 'https://localhost.com';
     $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
     $object['catalog_product']['visibility']['subscribe']['enabled'] = TRUE;
+    $object['catalog_product']['visibility']['subscribe']['type'] = 'authenticated';
     $object['catalog_product']['visibility']['view']['type'] = 'public';
     $object['created_at'] = '2021-02-26T12:18:58.995Z';
     $object['updated_at'] = '2021-02-26T12:18:58.995Z';
@@ -302,6 +305,8 @@ class ProductContext extends RawDrupalContext {
     $object['state'] = 'published';
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';
+    $object['catalog_product']['visibility']['subscribe']['enabled'] = true;
+    $object['catalog_product']['visibility']['subscribe']['type'] = 'authenticated';
     if ($enabled === "false" || $enabled === "FALSE") {
       $object['catalog_product']['visibility']['view']['enabled'] = 0;
     } else {
@@ -475,10 +480,10 @@ class ProductContext extends RawDrupalContext {
       $object['catalog_product']['visibility']['view']['enabled'] = true;
     }
     $object['catalog_product']['visibility']['subscribe']['enabled'] = TRUE;
+    $object['catalog_product']['visibility']['subscribe']['type'] = 'authenticated';
     switch ($visi) {
       case 'pub':
         // public; anyone can view
-        $object['catalog_product']['visibility']['subscribe']['type'] = 'authenticated';
         $object['catalog_product']['visibility']['view']['type'] = 'public';
         break;
       case 'auth':
@@ -556,7 +561,7 @@ class ProductContext extends RawDrupalContext {
           "currency" => "USD",
           "price" => 10,
           "period" => 1,
-          "period-unit" => "month", 
+          "period-unit" => "month",
           "trial-period" => 0,
           "trial-period-unit" => "day"
         ]
@@ -602,6 +607,8 @@ class ProductContext extends RawDrupalContext {
     $object['state'] = 'published';
     $object['id'] = $id;
     $object['url'] = 'https://localhost.com';
+    $object['catalog_product']['visibility']['subscribe']['enabled'] = TRUE;
+    $object['catalog_product']['visibility']['subscribe']['type'] = 'authenticated';
     $object['catalog_product']['visibility']['view']['enabled'] = TRUE;
     $object['catalog_product']['visibility']['view']['type'] = 'custom';
     $object['catalog_product']['visibility']['view']['orgs'] = [$org];

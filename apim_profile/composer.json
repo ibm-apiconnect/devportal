@@ -237,7 +237,8 @@
       "wikimedia/composer-merge-plugin": true,
       "drupal/console-extend-plugin": true,
       "zaporylie/composer-drupal-optimizations": true,
-      "dealerdirect/phpcodesniffer-composer-installer": true
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "phpstan/extension-installer": true
     }
   },
   "autoload": {

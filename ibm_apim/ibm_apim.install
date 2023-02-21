@@ -14,6 +14,7 @@
 
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\views\Views;
+use Drupal\node\Entity\Node;
 
 /**
  * @file
@@ -264,6 +265,26 @@ function ibm_apim_update_8205() {
 function ibm_apim_update_8206() {
   // This config automatically gets added need to remove so we don't remove the view when forums are disabled.
   ibm_apim_removeConfigDependency("views.view.notifications", "user.role.authenticated");
+}
+
+function ibm_apim_update_8501() {
+  $query = \Drupal::entityQuery('node');
+  $group = $query->orConditionGroup()
+    ->condition('type', 'api')
+    ->condition('type', 'application')
+    ->condition('type', 'consumerorg')
+    ->condition('type', 'product');
+  $query->condition($group);
+  $query->condition('uid', 1, '<>');
+  $nids = $query->accessCheck(FALSE)->execute();
+  foreach (array_chunk($nids, 50) as $chunk) {
+    $nodes = Node::loadMultiple($chunk);
+    if ($nodes !== NULL) {
+      foreach ($nodes as $node) {
+        $node->set('uid',1)->save();
+      }
+    }
+  }
 }
 
 function ibm_apim_removeConfigDependency($config, $dep) {

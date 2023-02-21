@@ -746,11 +746,6 @@ class ApicUserLoginForm extends UserLoginForm {
         $subscription_wizard_cookie = \Drupal::request()->cookies->get('Drupal_visitor_startSubscriptionWizard');
       }
 
-      // If this is the first login, set language for user to browser language.
-      if (isset($current_user) && (int) $first_time_login !== 0) {
-        $this->accountService->setDefaultLanguage($current_user);
-      }
-
       // check if the user we just logged in is a member of at least one dev org
       $current_corg = $this->userUtils->getCurrentConsumerorg();
       if (!isset($current_corg)) {

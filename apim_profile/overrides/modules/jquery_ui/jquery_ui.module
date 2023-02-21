@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * @file
+ * Contains jquery_ui.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function jquery_ui_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.jquery_ui':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Drupal 8 includes jQuery UI in core, however it is no longer actively maintained and has been marked deprecated. This module provides the jQuery UI asset library for any themes and modules that require it.') . '</p>';
+      $output .= '<p>' . t('For more information about the deprecation of jQuery UI, see this <a href=":change-record">change record</a>', [':change-record' => 'https://www.drupal.org/node/3067969']) . '</p>';
+      $output .= '<p>' . t('Visit the <a href=":project_link">jQuery UI project page</a> on Drupal.org for more information about this module.', [':project_link' => 'https://www.drupal.org/project/jquery_ui']) . '</p>';
+
+      return $output;
+  }
+}

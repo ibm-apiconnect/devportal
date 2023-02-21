@@ -371,7 +371,12 @@ class UserUtils {
         }
       }
       if (empty($new_org_urls)) {
-        $account->delete();
+        user_cancel([], $account->id(), 'user_cancel_reassign');
+        if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+          $batch = &batch_get();
+          $batch['progressive'] = FALSE;
+          batch_process();
+        }
       } else {
         $account->set('consumerorg_url', $new_org_urls);
         $account->save();

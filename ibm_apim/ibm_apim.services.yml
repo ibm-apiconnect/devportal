@@ -5,7 +5,7 @@ services:
       - { name: event_subscriber }
   ibm_apim.module_installer:
     class: Drupal\ibm_apim\Service\ModuleBlocklistModuleInstaller
-    arguments: [ '@app.root', '@module_handler', '@kernel', '@router.builder' ]
+    arguments: ['%app.root%', '@module_handler', '@kernel', '@database', '@update.update_hook_registry']
   ibm_apim.loggedin_not_admin_access_checker:
     class: Drupal\ibm_apim\Access\AuthenticatedNotAdminAccessCheck
     arguments: [ '@current_user' ]

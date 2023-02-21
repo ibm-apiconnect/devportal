@@ -2956,6 +2956,22 @@ function apim_profile_update_8303() {
 }
 
 /**
+ * Add site default and english to search filter criteria
+ */
+function apim_profile_update_8501() {
+  $view = Views::getView('search_content');
+  if ($view !== NULL) {
+    $filters = $view->getDisplay()->getOption('filters');
+    if (isset($filters['search_api_language'], $filters['search_api_language']['value'])) {
+      $filters['search_api_language']['value']['***LANGUAGE_site_default***'] = '***LANGUAGE_site_default***';
+      $filters['search_api_language']['value']['en'] = 'en';
+      $view->getDisplay()->setOption('filters', $filters);
+      $view->save();
+    }
+  }
+}
+
+/**
  * Implements hook_update_dependencies().
  */
 function apim_profile_update_dependencies(): array {

@@ -153,7 +153,7 @@ class ApicUserService {
       $user->setUrl($account->apic_url->value);
     }
 
-    $customFields = $this->getCustomUserFields();
+    $customFields = $this->getMetadataFields();
     foreach ($customFields as $field) {
       $value = $account->get($field)->getValue();
       if (isset($value)) {
@@ -301,7 +301,7 @@ class ApicUserService {
     $user->setUrl($apicuser['url']);
     $user->setApicUserRegistryUrl($apicuser['user_registry_url']);
     $user->setState($apicuser['state']);
-    $customFields = $this->getCustomUserFields();
+    $customFields = $this->getMetadataFields();
     foreach ($customFields as $field) {
       if (isset($apicuser['metadata'][$field])) {
         $value = $apicuser['metadata'][$field];
@@ -401,7 +401,6 @@ class ApicUserService {
       $merged = array_merge($coreFields, $ibmFields);
       $fields = array_diff($keys, $merged);
     }
-
     // make sure we only include actual custom fields so check there is a field config
     foreach ($fields as $key => $field) {
       $fieldConfig = FieldConfig::loadByName('user', 'user', $field);
@@ -413,6 +412,22 @@ class ApicUserService {
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $fields);
     }
+    return $fields;
+  }
+
+  /**
+   * The fields that are stored in APIM's metadata. It's just custom fields
+   * and couple more.
+   *
+   * @return array
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  public function getMetadataFields($viewMode = 'default'): array {
+    $fields = $this->getCustomUserFields($viewMode);
+    $fields[] = 'timezone';
+    $fields[] = 'preferred_langcode';
+    $fields[] = 'codesnippet';
     return $fields;
   }
 

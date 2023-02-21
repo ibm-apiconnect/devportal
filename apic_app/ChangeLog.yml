@@ -1,4 +1,10 @@
 changes:
+  8.x-2.12.2:
+  - Always create apps with admin author (#344)
+  8.x-2.12.1:
+  - Merge pull request
+  8.x-2.12.0:
+  - update version 8.x-2.11.3 -> 8.x-2.12.0
   8.x-2.11.2:
   - Update apic_app.install
   - Merge pull request
@@ -341,7 +347,4 @@ changes:
   - issue
   8.x-1.5.65:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since
-    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
-    are also filtered before logging them. Commits that start with 'INT' or 'bump
-    version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

@@ -583,7 +583,9 @@ class ApicRest implements ApicRestInterface {
         $errors = $json_result->getErrors();
         if ($errors && $messageErrors) {
           foreach ($errors as $error) {
-            \Drupal::messenger()->addError(Xss::filter($error));
+            if (!$utils->endsWith($url, '/send-email')) {
+                \Drupal::messenger()->addError(Xss::filter($error));
+            }
             $returnValue = $result;
           }
         }

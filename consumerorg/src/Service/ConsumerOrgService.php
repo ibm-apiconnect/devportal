@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2022
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -316,12 +316,13 @@ class ConsumerOrgService {
    * Delete consumer org in apim and locally.
    *
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
+   * @param int $uidToIgnore - Does not delete this user from portal
    *
    * @return \Drupal\auth_apic\UserManagerResponse
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \Drupal\Core\TempStore\TempStoreException|\JsonException
    */
-  public function delete(ConsumerOrg $org): UserManagerResponse {
+  public function delete(ConsumerOrg $org, $uidToIgnore = null): UserManagerResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $response = new UserManagerResponse();
 
@@ -336,7 +337,7 @@ class ConsumerOrgService {
       $nids = $query->execute();
       $orgNode = NULL;
       if ($nids !== NULL && !empty($nids)) {
-        $this->deleteNode(array_shift($nids));
+        $this->deleteNode(array_shift($nids), $uidToIgnore);
       }
       // invalidate the devorg select block cache
       $this->userUtils->removeConsumerOrgFromUser($org->getUrl(), NULL);
@@ -397,6 +398,7 @@ class ConsumerOrgService {
 
       // wipe all our fields to ensure they get set to new values
       $node->set('apic_hostname', NULL);
+      $node->set('uid', 1);
       $node->set('apic_catalog_id', NULL);
       $node->set('apic_provider_id', NULL);
       $node->set('apic_created_at', NULL);
@@ -420,6 +422,7 @@ class ConsumerOrgService {
     else {
       $node = Node::create([
         'type' => 'consumerorg',
+        'uid' => 1
       ]);
     }
 
@@ -621,7 +624,7 @@ class ConsumerOrgService {
               }
 
               // Add the custom fields to the user
-              $customFields = $this->userService->getCustomUserFields();
+              $customFields = $this->userService->getMetadataFields();
               $this->utils->saveCustomFields($userAccount, $customFields, $memberArray['user'], TRUE);
 
               // Add the consumerorg if it isn't already associated with this user
@@ -946,9 +949,17 @@ class ConsumerOrgService {
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function deleteNode($nid): void {
+  public function deleteNode($nid, $uidToIgnore = null): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $nid);
     $node = Node::load($nid);
+    $eventEntity = new ApicEvent();
+    $corg = $this->getByNid($nid);
+    $eventEntity->setConsumerOrgUrl($corg->getUrl());
+    $eventEntity->setData(['orgName' => $corg->getTitle()]);
+    $eventEntity->setArtifactType('consumer_org');
+    $eventEntity->setTimestamp(time());
+    $eventEntity->setEvent('delete');
+    $eventEntity->setArtifactUrl($corg->getUrl());
     if ($node !== NULL) {
       $hookData = $this->createOrgHookData($node);
       // this hook will be used in the apic_app module to delete the applications
@@ -973,7 +984,7 @@ class ConsumerOrgService {
           }
         }
       }
-
+      $performBatch = FALSE;
       // remove the consumerorg assignment from all users since we're deleting it
       $query = $this->userQuery;
       $query->condition('consumerorg_url.value', $consumerorg_url, 'CONTAINS');
@@ -994,8 +1005,9 @@ class ConsumerOrgService {
                     unset($consumerorg_urls[$index]);
                   }
                 }
-                if (empty($consumerorg_urls)) {
-                  $account->delete();
+                if (empty($consumerorg_urls) && (!isset($uidToIgnore) || $account->id() !== $uidToIgnore)) {
+                  user_cancel([], $account->id(), 'user_cancel_reassign');
+                  $performBatch = TRUE;
                 } else {
                   $account->set('consumerorg_url', $consumerorg_urls);
                   $account->save();
@@ -1005,7 +1017,11 @@ class ConsumerOrgService {
           }
         }
       }
-
+      if ($performBatch && !isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+        $batch = &batch_get();
+        $batch['progressive'] = FALSE;
+        batch_process();
+      }
       // Calling all modules implementing 'hook_consumerorg_delete':
       $description = 'The consumerorg_delete hook is deprecated and will be removed. Please use the consumerorg_pre_delete or consumerorg_post_delete hook instead.';
       $this->moduleHandler->invokeAllDeprecated($description, 'consumerorg_delete', ['node' => $node]);
@@ -1017,7 +1033,7 @@ class ConsumerOrgService {
           'data' => $hookData,
         ]);
       $this->logger->notice('Consumer organization @consumerorg deleted', ['@consumerorg' => $node->getTitle()]);
-
+      $this->eventLogService->createIfNotExist($eventEntity);
       unset($node);
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

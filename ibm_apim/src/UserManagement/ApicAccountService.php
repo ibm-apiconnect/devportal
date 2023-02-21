@@ -200,7 +200,7 @@ class ApicAccountService implements ApicAccountInterface {
       $account->set('apic_state', $user->getState());
 
       //Add the custom fields to the user
-      $customFields = $this->userService->getCustomUserFields();
+      $customFields = $this->userService->getMetadataFields();
       if (!empty($customFields)) {
         $metadata = $user->getMetadata();
         \Drupal::service('ibm_apim.utils')->saveCustomFields($account, $customFields, $metadata, TRUE);

@@ -204,7 +204,22 @@ class ApicLoginService implements ApicLoginServiceInterface {
         $account = $this->accountService->createOrUpdateLocalAccount($meUser);
         if ($account) {
           $localUser = $this->userService->parseDrupalAccount($account);
-          $customFieldValues = $localUser->getCustomFields();
+          $customFieldValues = $meUser->getCustomFields();
+          if (isset($customFieldValues['timezone'])) {
+            unset($customFieldValues['timezone']);
+          }
+          if (isset($customFieldValues['codesnippet'])) {
+            unset($customFieldValues['codesnippet']);
+          }
+          if (isset($customFieldValues['preferred_langcode'])) {
+            unset($customFieldValues['preferred_langcode']);
+          } else {
+            // If this is the first login and there's no preferred language in apim,
+            // set language for user to browser language.
+            if ((int) $account->get('first_time_login')->getString() !== '0') {
+              $this->accountService->setDefaultLanguage($account);
+            }
+          }
         }
 
         // If it first time logging in and they have custom field data then probably a new register
@@ -233,7 +248,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
         }
         else {
           //Update custom fields on local
-          $customFields = $this->userService->getCustomUserFields();
+          $customFields = $this->userService->getMetadataFields();
           if (!empty($customFields)) {
             $metadata = $meUser->getMetadata();
             $this->utils->saveCustomFields($account, $customFields, $metadata, TRUE);

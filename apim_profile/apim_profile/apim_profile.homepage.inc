@@ -380,6 +380,9 @@ function update_gsg_block() {
         if ($language->getId() === 'en') {
           continue;
         }
+        if (!$block->hasTranslation($language->getId())) {
+          continue;
+        }
         $translation = $block->getTranslation($language->getId());
         $bodyValue = $translation->body->value;
         $updated = str_replace('href="products"', 'href="product"', $bodyValue);
@@ -525,6 +528,9 @@ function apim_profile_update_forum_block() {
     $languages = \Drupal::languageManager()->getLanguages();
     foreach ($languages as $language) {
       if ($language->getId() === 'en') {
+        continue;
+      }
+      if (!$block->hasTranslation($language->getId())) {
         continue;
       }
       $translation = $block->getTranslation($language->getId());

@@ -137,14 +137,15 @@ class RemoveUserForm extends ConfirmFormBase {
       $found = FALSE;
       foreach ($this->currentOrg->getMembers() as $member) {
         if ($member->getId() === $this->memberId) {
-          if ($current_user->getAccountName() !== $member->getUser()->getUsername()) {
-            $found = TRUE;
-            $this->member = $member;
+          if ($current_user->getAccountName() === $member->getUser()->getUsername()) {
+            $this->messenger->addWarning(t('You are removing yourself from this consumer organization.'));
+            if (sizeof($this->userUtils->loadConsumerorgs()) === 1 && !(bool) \Drupal::state()->get('ibm_apim.selfSignUpEnabled')) {
+              $this->messenger->addWarning(t('Removing yourself from this consumer organization will leave you unable to access the portal.'));
+            }
+            $form_state->set('self-remove', TRUE);
           }
-          else {
-            // return error as cannot remove yourself
-            throw new BadRequestHttpException(t('Cannot remove yourself from a consumer organization.'));
-          }
+          $found = TRUE;
+          $this->member = $member;
         }
       }
       if ($found !== TRUE) {
@@ -207,8 +208,11 @@ class RemoveUserForm extends ConfirmFormBase {
           '@username' => $current_user->getAccountName(),
         ]);
     }
-
-    $form_state->setRedirectUrl($this->getCancelUrl());
+    if ($form_state->get('self-remove')) {
+      $form_state->setRedirect('user.logout');
+    } else {
+      $form_state->setRedirectUrl($this->getCancelUrl());
+    }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 

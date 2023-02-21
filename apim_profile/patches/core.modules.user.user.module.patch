@@ -18,23 +18,24 @@
 +    return FALSE;
 +  }
  }
- 
+
  /**
 @@ -1310,7 +1319,7 @@
  function user_cookie_save(array $values) {
+   $request_time = \Drupal::time()->getRequestTime();
    foreach ($values as $field => $value) {
      // Set cookie for 365 days.
--    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), REQUEST_TIME + 31536000, '/');
-+    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), \Drupal::time()->getRequestTime() + 31536000, '/', NULL, TRUE, TRUE);
+-    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), $request_time + 31536000, '/');
++    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), $request_time + 31536000, '/', NULL, TRUE, TRUE);
    }
  }
- 
+
 @@ -1321,7 +1330,7 @@
   *   A cookie name such as 'homepage'.
   */
  function user_cookie_delete($cookie_name) {
--  setrawcookie('Drupal.visitor.' . $cookie_name, '', REQUEST_TIME - 3600, '/');
-+  setrawcookie('Drupal.visitor.' . $cookie_name, '', \Drupal::time()->getRequestTime() - 3600, '/',NULL, TRUE, TRUE);
+-  setrawcookie('Drupal.visitor.' . $cookie_name, '', \Drupal::time()->getRequestTime() - 3600, '/');
++  setrawcookie('Drupal.visitor.' . $cookie_name, '', \Drupal::time()->getRequestTime() - 3600, '/', NULL, TRUE, TRUE);
  }
- 
+
  /**

@@ -43,37 +43,76 @@ Feature: APIACL
 
     Given I am on "/api/api1_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/api/api2_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/api/api3_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/api/api4_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/api/api5_@now"
-    Then the response status code should be 404
+    # Redirect to page not found
+    Then I should be on "/search/content"
 
     Given I am on "/productselect/api1_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/productselect/api2_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/productselect/api3_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/productselect/api4_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/productselect/api5_@now"
-    Then the response status code should be 404
+    # Redirect to page not found
+    Then I should be on "/search/content"
 
 
     Given I am on "/product/product1_@now/api/api1_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/product/product2_@now/api/api2_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/product/product3_@now/api/api3_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/product/product4_@now/api/api4_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/product/product4_@now/api/api5_@now"
-    Then the response status code should be 404
+    # Redirect to page not found
+    Then I should be on "/search/content"
 
    # ---------------- andre_two Tests -------------------------------------
     Given I am not logged in
@@ -90,37 +129,64 @@ Feature: APIACL
 
     Given I am on "/api/api1_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/api/api2_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/api/api3_@now"
-    Then the response status code should be 404
+    # Redirect to page not found
+    Then I should be on "/search/content"
     Given I am on "/api/api4_@now"
-    Then the response status code should be 404
+    # Redirect to page not found
+    Then I should be on "/search/content"
     Given I am on "/api/api5_@now"
-    Then the response status code should be 404
+    # Redirect to page not found
+    Then I should be on "/search/content"
 
     Given I am on "/productselect/api1_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/productselect/api2_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/productselect/api3_@now"
-    Then the response status code should be 404
+    # Redirect to page not found
+    Then I should be on "/search/content"
     Given I am on "/productselect/api4_@now"
-    Then the response status code should be 404
+    # Redirect to page not found
+    Then I should be on "/search/content"
     Given I am on "/productselect/api5_@now"
-    Then the response status code should be 404
+    # Redirect to page not found
+    Then I should be on "/search/content"
 
 
     Given I am on "/product/product1_@now/api/api1_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/product/product2_@now/api/api2_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/product/product3_@now/api/api3_@now"
-    Then the response status code should be 404
+    # Redirect to page not found
+    Then I should be on "/search/content"
     Given I am on "/product/product4_@now/api/api4_@now"
-    Then the response status code should be 404
+    # Redirect to page not found
+    Then I should be on "/search/content"
     Given I am on "/product/product4_@now/api/api5_@now"
-    Then the response status code should be 404
+    # Redirect to page not found
+    Then I should be on "/search/content"
 
    # ---------------- Admin Tests -------------------------------------
 
@@ -138,33 +204,78 @@ Feature: APIACL
 
     Given I am on "/api/api1_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/api/api2_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/api/api3_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/api/api4_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/api/api5_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
 
     Given I am on "/productselect/api1_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/productselect/api2_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/productselect/api3_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/productselect/api4_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/productselect/api5_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
 
     Given I am on "/product/product1_@now/api/api1_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/product/product2_@now/api/api2_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/product/product3_@now/api/api3_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/product/product4_@now/api/api4_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
     Given I am on "/product/product4_@now/api/api5_@now"
     Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."

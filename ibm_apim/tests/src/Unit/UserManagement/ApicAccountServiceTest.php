@@ -201,7 +201,7 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
 
     $this->mgmtServer->updateMe($user)->willReturn($meResponse);
     $this->userStorage->load($user)->willReturn($accountStub);
-    $this->userService->getCustomUserFields()->willReturn([]);
+    $this->userService->getMetadataFields()->willReturn([]);
 
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
@@ -224,7 +224,7 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
     $user = $this->createUser();
     $user->setMail(NULL);
     $meResponse = $this->createMeResponse();
-    $this->userService->getCustomUserFields()->willReturn([]);
+    $this->userService->getMetadataFields()->willReturn([]);
 
     $accountStub = $this->createAccountStub();
 
@@ -252,7 +252,7 @@ class ApicAccountServiceTest extends AuthApicTestBaseClass {
     $user = $this->createUser();
     $user->setMail('updated@example.com');
     $meResponse = $this->createMeResponse();
-    $this->userService->getCustomUserFields()->willReturn([]);
+    $this->userService->getMetadataFields()->willReturn([]);
 
     $account = $this->createAccountBase();
     $account->set('mail', 'updated@example.com')->shouldBeCalled();

@@ -1,4 +1,16 @@
 changes:
+  8.x-2.12.5:
+  - Revert "markdown fix"
+  8.x-2.12.4:
+  - markdown fix
+  8.x-2.12.3:
+  - Always create products with admin author (#252)
+  8.x-2.12.2:
+  - Fixed unreliable test (#247) (#248)
+  8.x-2.12.1:
+  - Fix productacl for new search404
+  8.x-2.12.0:
+  - update version 8.x-2.11.2 -> 8.x-2.12.0
   8.x-2.11.1:
   - Set default apic_rating (#243)
   8.x-2.11.0:
@@ -281,8 +293,5 @@ changes:
   - ensure we do not load retired products
   8.x-1.1.51:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since
-    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
-    are also filtered before logging them. Commits that start with 'INT' or 'bump
-    version' are omitted
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted
   - styling updates

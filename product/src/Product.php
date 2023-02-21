@@ -111,6 +111,7 @@ class Product {
       // wipe all our fields to ensure they get set to new values
       $node->set('apic_tags', []);
 
+      $node->set('uid', 1);
       $node->set('apic_hostname', $hostVariable);
       $node->set('apic_provider_id', $siteConfig->getOrgId());
       $node->set('apic_catalog_id', $siteConfig->getEnvId());
@@ -149,6 +150,7 @@ class Product {
         'apic_hostname' => $hostVariable,
         'apic_provider_id' => $siteConfig->getOrgId(),
         'apic_catalog_id' => $siteConfig->getEnvId(),
+        'uid' => 1,
       ]);
     }
 

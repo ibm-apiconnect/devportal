@@ -1,4 +1,20 @@
 changes:
+  8.x-2.11.7:
+  - Always create consumerorgs with admin author (#310)
+  8.x-2.11.6:
+  - Add delete consumerorg event + error fix (#308)
+  8.x-2.11.5:
+  - Added uidToIgnore param to service->delete (#304)
+  8.x-2.11.4:
+  - Changes for saving non-custom field metadata in apim (#300)
+  8.x-2.11.3:
+  - Reassign content on user delete (#296)
+  8.x-2.11.2:
+  - Allow users to remove themselves from an org (#293)
+  8.x-2.11.1:
+  - Only assign role if a valid role is provided (#288) (#290)
+  8.x-2.11.0:
+  - update version 8.x-2.10.3 -> 8.x-2.11.0
   8.x-2.10.2:
   - Merge pull request
   8.x-2.10.1:
@@ -338,7 +354,4 @@ changes:
   - add drush command to be able to resend all invitations
   8.x-1.2.86:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since
-    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
-    are also filtered before logging them. Commits that start with 'INT' or 'bump
-    version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

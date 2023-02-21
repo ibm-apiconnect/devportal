@@ -765,7 +765,9 @@ class SiteConfig {
         // decrypt socialblock config
         $socialBlockConfig = \Drupal::config('socialblock.settings');
         $data = $socialBlockConfig->get('credentials');
-        $socialBlockSettings = unserialize($encryptionService->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
+        if (!empty($data)){
+          $socialBlockSettings = unserialize($encryptionService->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
+        }
 
         // decrypt OIDC state service data
         $oidcStateService = \Drupal::service('auth_apic.oidc_state');
@@ -805,8 +807,10 @@ class SiteConfig {
         $encryptionProfile->save();
 
         // re-encrypt socialblock config
-        $encryptedSocialBlockSettings = $encryptionService->encrypt(serialize($socialBlockSettings), $encryptionProfile);
-        $this->configFactory->getEditable('socialblock.settings')->set('credentials', $encryptedSocialBlockSettings)->save();
+        if (isset($socialBlockSettings)) {
+          $encryptedSocialBlockSettings = $encryptionService->encrypt(serialize($socialBlockSettings), $encryptionProfile);
+          $this->configFactory->getEditable('socialblock.settings')->set('credentials', $encryptedSocialBlockSettings)->save();
+        }
 
         // re-encrypt OIDC state service data
         $encryptedState = [];

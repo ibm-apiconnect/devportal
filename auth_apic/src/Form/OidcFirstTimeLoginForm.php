@@ -282,7 +282,7 @@ class OidcFirstTimeLoginForm extends FormBase {
     if (empty($editUser->getMail())) {
       $editUser->setMail($this->entity->get('mail')->value);
     }
-    $customFields = $this->userService->getCustomUserFields();
+    $customFields = $this->userService->getMetadataFields();
     $customFieldValues = $this->utils->handleFormCustomFields($customFields, $form_state);
     foreach ($customFieldValues as $customField => $value) {
       $editUser->addCustomField($customField, $value);

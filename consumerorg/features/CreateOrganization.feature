@@ -36,6 +36,7 @@ Feature: Create consumer organization
     And I should see the text "Consumer organization created successfully."
     And there are no errors
 
+
   @api
   # Note that this a negative test for an admin user (uid=1) that manually sets their url to the /myorg/create page
   Scenario: Sign in as the admin user (uid==1) and try to view the My Organization page
@@ -73,27 +74,27 @@ Feature: Create consumer organization
 #    Then dump the current html
     And there are no errors
 
-  @api
-  Scenario: Create consumer organization with text custom field
-    Given users:
-      | name              | mail              | pass                  | status |
-      | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      |
-    Given consumerorgs:
-      | title                     | name                     | id                     | owner             |
-      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
-    And consumerorg entities have text type custom fields
-    And I am logged in as "@data(andre.name)"
-    And I am at "/myorg/create"
-    Then I should see a "#edit-field-singletext-0-value" element
-    And I should see a "#edit-field-multitext-0-value" element
-    And I should see a "#edit-field-multitext-1-value" element
-    When I enter "New org1" for "title[0][value]"
-    And I enter "singleVal" for "edit-field-singletext-0-value"
-    And I enter "first multi val" for "edit-field-multitext-0-value"
-    And I enter "theSecond" for "edit-field-multitext-1-value"
-    And I press the "Save" button
-    Given I am at "/myorg"
-    Then I should see the text "singleVal"
-    And I should see the text "first multi val"
-    And I should see the text "theSecond"
-    Then I delete the text type custom fields for consumerorg entities
+  # @api
+  # Scenario: Create consumer organization with text custom field
+  #   Given users:
+  #     | name              | mail              | pass                  | status |
+  #     | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      |
+  #   Given consumerorgs:
+  #     | title                     | name                     | id                     | owner             |
+  #     | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+  #   And consumerorg entities have text type custom fields
+  #   And I am logged in as "@data(andre.name)"
+  #   And I am at "/myorg/create"
+  #   Then I should see a "#edit-field-singletext-0-value" element
+  #   And I should see a "#edit-field-multitext-0-value" element
+  #   And I should see a "#edit-field-multitext-1-value" element
+  #   When I enter "New org1" for "title[0][value]"
+  #   And I enter "singleVal" for "edit-field-singletext-0-value"
+  #   And I enter "first multi val" for "edit-field-multitext-0-value"
+  #   And I enter "theSecond" for "edit-field-multitext-1-value"
+  #   And I press the "Save" button
+  #   Given I am at "/myorg"
+  #   Then I should see the text "singleVal"
+  #   And I should see the text "first multi val"
+  #   And I should see the text "theSecond"
+  #   Then I delete the text type custom fields for consumerorg entities

@@ -26,7 +26,9 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:1_@now"
-    Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
 
 
     Given I am logged in as "andre_one"
@@ -36,7 +38,9 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:1_@now"
-    Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
 
 
     Given I am logged in as "@data(admin.name)"
@@ -46,7 +50,9 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:1_@now"
-    Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
 
 
   @acl
@@ -70,7 +76,7 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:2_@now"
-    Then the response status code should be 404
+    Then I should be on "/search/content"
 
     Given I am logged in as "andre_one"
     # products view /product
@@ -79,7 +85,9 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:2_@now"
-    Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
 
     Given I am logged in as "@data(admin.name)"
     # products view /product
@@ -88,7 +96,9 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:2_@now"
-    Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
 
 
   @acl
@@ -114,7 +124,7 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:3_@now"
-    Then the response status code should be 404
+    Then I should be on "/search/content"
 
     Given I am logged in as "andre_one"
     # products view /product
@@ -123,7 +133,9 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:3_@now"
-    Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
 
     Given I am logged in as "andre_two"
     # products view /product
@@ -132,7 +144,7 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:3_@now"
-    Then the response status code should be 404
+    Then I should be on "/search/content"
 
     Given I am logged in as "@data(admin.name)"
     # products view /product
@@ -141,7 +153,9 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:3_@now"
-    Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
 
 
   @acl
@@ -167,7 +181,7 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:4_@now"
-    Then the response status code should be 404
+    Then I should be on "/search/content"
 
     Given I am logged in as "andre_one"
     # products view /product
@@ -176,7 +190,9 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:4_@now"
-    Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
 
     Given I am logged in as "andre_two"
     # products view /product
@@ -185,7 +201,7 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:4_@now"
-    Then the response status code should be 404
+    Then I should be on "/search/content"
 
     Given I am logged in as "@data(admin.name)"
     # products view /product
@@ -194,7 +210,9 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:4_@now"
-    Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
 
 
   @acl
@@ -218,7 +236,7 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:5_@now"
-    Then the response status code should be 404
+    Then I should be on "/search/content"
 
     Given I am logged in as "andre_one"
     # products view /product
@@ -227,7 +245,7 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:5_@now"
-    Then the response status code should be 404
+    Then I should be on "/search/content"
 
     Given I am logged in as "@data(admin.name)"
     # products view /product
@@ -236,6 +254,8 @@ Feature: ProductACL
     # product view
     # fixed URL /product/{url}
     Given I am on "/product/product:5_@now"
-    Then the response status code should be 200
+    # Then I should not be on "/search/content"
+    And there are no errors
+    And I should not see the text "The page you requested does not exist."
 #    Given I publish a product with the name "product:5_@now", id "productId5_@now" and visibility "subs" true
 # todo: test subscription.  Need to create an app and subscribe to the product:5_@now

@@ -231,7 +231,7 @@ function drush_consumerorg_delete($content, $event = 'consumer_org_del') {
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
       $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
-      $consumerOrgService->deleteNode($nid, $event);
+      $consumerOrgService->deleteNode($nid);
       drush_log(dt('Drush DeleteOrg deleted organization @org', ['@org' => $content['consumer_org']['title']]), 'success');
     }
     else {
@@ -272,7 +272,7 @@ function drush_consumerorg_tidy($consumerorgIds = []) {
 
     foreach ($nids as $nid) {
       $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
-      $consumerOrgService->deleteNode($nid, 'content_refresh');
+      $consumerOrgService->deleteNode($nid);
     }
   }
   ibm_apim_exit_trace(__FUNCTION__, NULL);

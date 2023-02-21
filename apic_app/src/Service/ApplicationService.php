@@ -145,6 +145,7 @@ class ApplicationService {
 
     $node = Node::create([
       'type' => 'application',
+      'uid' => 1
     ]);
 
     // get the update method to do the update for us
