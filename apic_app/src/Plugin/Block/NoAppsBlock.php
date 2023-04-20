@@ -73,7 +73,7 @@ class NoAppsBlock extends BlockBase implements ContainerFactoryPluginInterface {
   public function build(): array {
 
     return [
-      '#theme' => 'no_apps'
+      '#theme' => 'no_apps_block'
     ];
   }
 
